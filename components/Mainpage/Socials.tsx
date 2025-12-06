@@ -367,8 +367,7 @@ const ShopMarketingSection = () => {
            <SocialsRow />
         </div>
         </div>
-        
-        {/* Promo Strip */}
+    
      
       
       </div>
