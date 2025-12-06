@@ -784,7 +784,7 @@ function AccordionItem({ title, children, defaultOpen = false }: any) {
     >
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen((o: boolean) => !o)}   
         className="flex w-full items-center justify-between px-3 py-2"
       >
         <span className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
