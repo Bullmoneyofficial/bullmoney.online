@@ -23,10 +23,11 @@ const GhostCursorBackground = ({
   bloomRadius = 0.5,
   color = "#4aa0ff",
 }) => {
-  const containerRef = useRef(null);
-  const rendererRef = useRef(null);
-  const composerRef = useRef(null);
-  const materialRef = useRef(null);
+  // FIXED: Added <any> to refs to prevent TS errors on .current properties
+  const containerRef = useRef<any>(null);
+  const rendererRef = useRef<any>(null);
+  const composerRef = useRef<any>(null);
+  const materialRef = useRef<any>(null);
 
   // Configuration
   const inertia = 0.4;
@@ -37,10 +38,11 @@ const GhostCursorBackground = ({
   const fadeDuration = 1000;
 
   // State
-  const trailBufRef = useRef([]);
+  // FIXED: Typed as any[] so you can push objects into it later
+  const trailBufRef = useRef<any[]>([]);
   const headRef = useRef(0);
-  const rafRef = useRef(null);
-  const resizeObsRef = useRef(null);
+  const rafRef = useRef<any>(null);
+  const resizeObsRef = useRef<any>(null);
   const currentMouseRef = useRef(new THREE.Vector2(0.5, 0.5));
   const velocityRef = useRef(new THREE.Vector2(0, 0));
   const fadeOpacityRef = useRef(1.0);
@@ -167,7 +169,8 @@ const GhostCursorBackground = ({
     fragmentShader: `uniform sampler2D tDiffuse; varying vec2 vUv; void main(){vec4 c=texture2D(tDiffuse,vUv); float a=max(c.a,1e-5); gl_FragColor=vec4(clamp(c.rgb/a,0.0,1.0),c.a);}`
   });
 
-  function calculateScale(el) {
+  // FIXED: Explicitly typed 'el' as HTMLElement
+  function calculateScale(el: HTMLElement) {
     const r = el.getBoundingClientRect();
     const base = 800;
     const current = Math.min(Math.max(1, r.width), Math.max(1, r.height));
@@ -206,7 +209,7 @@ const GhostCursorBackground = ({
         iTime: { value: 0 },
         iResolution: { value: new THREE.Vector3(1, 1, 1) },
         iMouse: { value: new THREE.Vector2(0.5, 0.5) },
-        iPrevMouse: { value: trailBufRef.current.map(v => v.clone()) },
+        iPrevMouse: { value: trailBufRef.current.map((v: any) => v.clone()) },
         iOpacity: { value: 1.0 },
         iScale: { value: 1.0 },
         iBaseColor: { value: new THREE.Color(color) },
@@ -226,7 +229,7 @@ const GhostCursorBackground = ({
     composer.addPass(new RenderPass(scene, camera));
     const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), bloomStrength, bloomRadius, bloomThreshold);
     composer.addPass(bloomPass);
-    const filmPass = new ShaderPass(FilmGrainShader);
+    const filmPass = new ShaderPass(FilmGrainShader as any);
     composer.addPass(filmPass);
     composer.addPass(UnpremultiplyPass);
 
@@ -294,7 +297,8 @@ const GhostCursorBackground = ({
       rafRef.current = requestAnimationFrame(animate);
     };
 
-    const onPointerMove = (e) => {
+    // FIXED: Explicitly typed 'e' as any to avoid implicit any error
+    const onPointerMove = (e: any) => {
       const rect = host.getBoundingClientRect(); 
       const x = THREE.MathUtils.clamp((e.clientX - rect.left) / rect.width, 0, 1);
       const y = THREE.MathUtils.clamp(1 - (e.clientY - rect.top) / rect.height, 0, 1);
