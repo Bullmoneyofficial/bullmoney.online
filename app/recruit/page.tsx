@@ -6,7 +6,6 @@ import { gsap } from "gsap";
 import RecruitPage from "@/app/register/New";
 import { Hero } from "./Rechero"; 
 import Socials from "@/components/Mainpage/Socialsfooter";
-import GhostCursor from "@/components/Mainpage/GhostCursor"; 
 import AffiliateAdmin from "@/app/register/AffiliateAdmin";// 
 import AffiliateRecruitsDashboard from "@/app/recruit/AffiliateRecruitsDashboard";//Import your new component
 // ==========================================
