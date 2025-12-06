@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useMemo, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 // OGL imports for the Orb
 import { Renderer, Program, Mesh, Triangle, Vec3 } from "ogl";
 // Three.js imports for the Ghost Cursor
@@ -23,47 +23,32 @@ type GhostCursorProps = {
 
 const GhostCursorBackground: React.FC<GhostCursorProps> = ({
   style,
-  trailLength = 50,
+  trailLength = 20, // Reduced from 50 for performance
   bloomStrength = 0.1,
   bloomRadius = 1.0,
-  color = "#4aa0ff", // Default to blue
+  color = "#4aa0ff", 
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const composerRef = useRef<EffectComposer | null>(null);
-  const materialRef = useRef<THREE.ShaderMaterial | null>(null);
+  const rafRef = useRef<number | null>(null);
   
-  // Hardcoded defaults
+  // Settings
   const inertia = 0.5;
-  const grainIntensity = 0.05;
-  const bloomThreshold = 0.025;
-  const brightness = 1;
-  const edgeIntensity = 0;
   const fadeDelay = 1000;
   const fadeDuration = 1500;
 
-  // Trail state
+  // Refs for logic
   const trailBufRef = useRef<THREE.Vector2[]>([]);
   const headRef = useRef(0);
-  const rafRef = useRef<number | null>(null);
-  const resizeObsRef = useRef<ResizeObserver | null>(null);
   const currentMouseRef = useRef(new THREE.Vector2(0.5, 0.5));
   const velocityRef = useRef(new THREE.Vector2(0, 0));
   const fadeOpacityRef = useRef(1.0);
   const lastMoveTimeRef = useRef(0);
   const pointerActiveRef = useRef(false);
-  const runningRef = useRef(false);
 
-  // Shaders
-  const baseVertexShader = `
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = vec4(position, 1.0);
-    }
-  `;
-
-  // --- UPDATED FRAGMENT SHADER ---
+  // --- OPTIMIZED SHADER ---
+  // Moved noise CALCULATION outside the loop. 
+  // We calculate noise once, then just apply it to the trail points.
   const fragmentShader = `
     uniform float iTime;
     uniform vec3  iResolution;
@@ -73,161 +58,96 @@ const GhostCursorBackground: React.FC<GhostCursorProps> = ({
     uniform float iScale;
     uniform vec3  iBaseColor;
     uniform float iBrightness;
-    uniform float iEdgeIntensity;
+    
     varying vec2  vUv;
 
+    // Fast Hash
     float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7))) * 43758.5453123); }
+    
+    // Simple Noise
     float noise(vec2 p){
       vec2 i = floor(p), f = fract(p);
       f *= f * (3. - 2. * f);
       return mix(mix(hash(i + vec2(0.,0.)), hash(i + vec2(1.,0.)), f.x),
                  mix(hash(i + vec2(0.,1.)), hash(i + vec2(1.,1.)), f.x), f.y);
     }
+    
+    // Reduced Octaves FBM (3 instead of 5)
     float fbm(vec2 p){
       float v = 0.0;
       float a = 0.5;
       mat2 m = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
-      for(int i=0;i<5;i++){
+      for(int i=0;i<3;i++){
         v += a * noise(p);
         p = m * p * 2.0;
         a *= 0.5;
       }
       return v;
     }
-    vec3 tint1(vec3 base){ return mix(base, vec3(1.0), 0.15); }
-    vec3 tint2(vec3 base){ return mix(base, vec3(0.8, 0.9, 1.0), 0.25); }
-
-    vec4 blob(vec2 p, vec2 mousePos, float intensity, float activity) {
-      vec2 q = vec2(fbm(p * iScale + iTime * 0.1), fbm(p * iScale + vec2(5.2,1.3) + iTime * 0.1));
-      vec2 r = vec2(fbm(p * iScale + q * 1.5 + iTime * 0.15), fbm(p * iScale + q * 1.5 + vec2(8.3,2.8) + iTime * 0.15));
-      float smoke = fbm(p * iScale + r * 0.8);
-      float radius = 0.5 + 0.3 * (1.0 / iScale);
-      float distFactor = 1.0 - smoothstep(0.0, radius * activity, length(p - mousePos));
-      float alpha = pow(smoke, 2.5) * distFactor;
-      vec3 c1 = tint1(iBaseColor);
-      vec3 c2 = tint2(iBaseColor);
-      vec3 color = mix(c1, c2, sin(iTime * 0.5) * 0.5 + 0.5);
-      return vec4(color * alpha * intensity, alpha * intensity);
-    }
 
     void main() {
       vec2 uv = (gl_FragCoord.xy / iResolution.xy * 2.0 - 1.0) * vec2(iResolution.x / iResolution.y, 1.0);
-      vec2 mouse = (iMouse * 2.0 - 1.0) * vec2(iResolution.x / iResolution.y, 1.0);
-      vec3 colorAcc = vec3(0.0);
-      float alphaAcc = 0.0;
       
-      vec4 b = blob(uv, mouse, 1.0, iOpacity);
-      colorAcc += b.rgb;
-      alphaAcc += b.a;
+      // Calculate background noise field ONCE per pixel
+      float noiseField = fbm(uv * iScale * 2.0 + iTime * 0.2);
+      
+      float combinedAlpha = 0.0;
+      
+      // Check Mouse
+      vec2 mouse = (iMouse * 2.0 - 1.0) * vec2(iResolution.x / iResolution.y, 1.0);
+      float dist = length(uv - mouse);
+      // Combine distance with pre-calculated noise
+      float mouseBlob = smoothstep(0.4 * iScale, 0.0, dist) * noiseField;
+      combinedAlpha += mouseBlob;
 
+      // Check Trail
       for (int i = 0; i < MAX_TRAIL_LENGTH; i++) {
         vec2 pm = (iPrevMouse[i] * 2.0 - 1.0) * vec2(iResolution.x / iResolution.y, 1.0);
         float t = 1.0 - float(i) / float(MAX_TRAIL_LENGTH);
-        t = pow(t, 2.0);
+        
         if (t > 0.01) {
-          vec4 bt = blob(uv, pm, t * 0.8, iOpacity);
-          colorAcc += bt.rgb;
-          alphaAcc += bt.a;
+            float d = length(uv - pm);
+            // Cheaper calculation inside loop
+            combinedAlpha += smoothstep(0.2 * iScale * t, 0.0, d) * noiseField * t;
         }
       }
-      colorAcc *= iBrightness;
+
+      // Color Tinting
+      vec3 col = mix(iBaseColor, vec3(1.0), combinedAlpha * 0.5);
       
-      // --- EDGE FADE LOGIC START ---
-      // vUv ranges from 0.0 to 1.0. 
-      // edgeX calculates distance to left/right edge.
-      // edgeY calculates distance to top/bottom edge.
+      // Edges
       float edgeX = min(vUv.x, 1.0 - vUv.x);
       float edgeY = min(vUv.y, 1.0 - vUv.y);
-      
-      // Take the minimum distance to the closest edge
-      float minEdge = min(edgeX, edgeY);
+      float edgeFade = smoothstep(0.0, 0.15, min(edgeX, edgeY));
 
-      // Create a smooth mask.
-      // 0.0 to 0.15 is the fade zone (15% of screen size).
-      // If minEdge is > 0.15, opacity is 1.0. If < 0.15, it fades to 0.
-      float edgeFade = smoothstep(0.0, 0.15, minEdge);
-      
-      // Apply fade to the final alpha
-      float finalAlpha = alphaAcc * iOpacity * edgeFade;
-      // --- EDGE FADE LOGIC END ---
-
-      float outAlpha = clamp(finalAlpha, 0.0, 1.0);
-      gl_FragColor = vec4(colorAcc, outAlpha);
+      gl_FragColor = vec4(col * iBrightness, clamp(combinedAlpha * iOpacity * edgeFade, 0.0, 1.0));
     }
   `;
 
-  const FilmGrainShader = {
-    uniforms: {
-      tDiffuse: { value: null },
-      iTime: { value: 0 },
-      intensity: { value: grainIntensity }
-    },
-    vertexShader: `
-      varying vec2 vUv;
-      void main(){
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform sampler2D tDiffuse;
-      uniform float iTime;
-      uniform float intensity;
-      varying vec2 vUv;
-      float hash1(float n){ return fract(sin(n)*43758.5453); }
-      void main(){
-        vec4 color = texture2D(tDiffuse, vUv);
-        float n = hash1(vUv.x*1000.0 + vUv.y*2000.0 + iTime) * 2.0 - 1.0;
-        color.rgb += n * intensity * color.rgb;
-        gl_FragColor = color;
-      }
-    `
-  };
-
-  const UnpremultiplyPass = new ShaderPass({
-    uniforms: { tDiffuse: { value: null } },
-    vertexShader: `
-      varying vec2 vUv;
-      void main(){
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform sampler2D tDiffuse;
-      varying vec2 vUv;
-      void main(){
-        vec4 c = texture2D(tDiffuse, vUv);
-        float a = max(c.a, 1e-5);
-        vec3 straight = c.rgb / a;
-        gl_FragColor = vec4(clamp(straight, 0.0, 1.0), c.a);
-      }
-    `
-  });
-
-  function calculateScale(el: HTMLElement) {
-    const r = el.getBoundingClientRect();
-    const base = 600;
-    const current = Math.min(Math.max(1, r.width), Math.max(1, r.height));
-    return Math.max(0.5, Math.min(2.0, current / base));
-  }
+  // Standard Vertex Shader
+  const baseVertexShader = `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = vec4(position, 1.0);
+    }
+  `;
 
   useEffect(() => {
     const host = containerRef.current;
-    // Follow the pointer over the parent element
-    const parent = host?.parentElement || document.body; 
-    
     if (!host) return;
 
+    // Use a reduced pixel ratio for performance on high-DPI screens
+    const dpr = Math.min(window.devicePixelRatio, 1.5);
+
     const renderer = new THREE.WebGLRenderer({
-      antialias: true,
+      antialias: false, // Turn off antialias for performance (Bloom hides aliasing)
       alpha: true,
       depth: false,
       stencil: false,
       powerPreference: 'high-performance',
-      premultipliedAlpha: false,
-      preserveDrawingBuffer: false
     });
+    renderer.setPixelRatio(dpr);
     renderer.setClearColor(0x000000, 0);
     rendererRef.current = renderer;
     renderer.domElement.style.pointerEvents = 'none';
@@ -239,7 +159,6 @@ const GhostCursorBackground: React.FC<GhostCursorProps> = ({
 
     const maxTrail = Math.max(1, Math.floor(trailLength));
     trailBufRef.current = Array.from({ length: maxTrail }, () => new THREE.Vector2(0.5, 0.5));
-    headRef.current = 0;
 
     const material = new THREE.ShaderMaterial({
       defines: { MAX_TRAIL_LENGTH: maxTrail },
@@ -251,8 +170,7 @@ const GhostCursorBackground: React.FC<GhostCursorProps> = ({
         iOpacity: { value: 1.0 },
         iScale: { value: 1.0 },
         iBaseColor: { value: new THREE.Color(color) },
-        iBrightness: { value: brightness },
-        iEdgeIntensity: { value: edgeIntensity }
+        iBrightness: { value: 1.0 }
       },
       vertexShader: baseVertexShader,
       fragmentShader,
@@ -260,38 +178,32 @@ const GhostCursorBackground: React.FC<GhostCursorProps> = ({
       depthTest: false,
       depthWrite: false
     });
-    materialRef.current = material;
     scene.add(new THREE.Mesh(geom, material));
 
     const composer = new EffectComposer(renderer);
-    composerRef.current = composer;
+    composer.setPixelRatio(dpr);
     composer.addPass(new RenderPass(scene, camera));
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), bloomStrength, bloomRadius, bloomThreshold);
+    
+    // Bloom Pass
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), bloomStrength, bloomRadius, 0);
+    // Render bloom at half resolution for performance
+    bloomPass.resolution.set(window.innerWidth * dpr * 0.5, window.innerHeight * dpr * 0.5);
     composer.addPass(bloomPass);
-    const filmPass = new ShaderPass(FilmGrainShader as any);
-    composer.addPass(filmPass);
-    composer.addPass(UnpremultiplyPass);
 
     const resize = () => {
+      if(!host) return;
       const rect = host.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      const cssW = rect.width;
-      const cssH = rect.height;
-      const wpx = Math.floor(cssW * dpr);
-      const hpx = Math.floor(cssH * dpr);
+      const w = rect.width;
+      const h = rect.height;
 
-      renderer.setPixelRatio(dpr);
-      renderer.setSize(cssW, cssH, false);
-      composer.setPixelRatio?.(dpr);
-      composer.setSize(cssW, cssH);
+      renderer.setSize(w, h, false);
+      composer.setSize(w, h);
       
-      material.uniforms.iResolution.value.set(wpx, hpx, 1);
-      material.uniforms.iScale.value = calculateScale(host);
-      bloomPass.setSize(wpx, hpx);
+      material.uniforms.iResolution.value.set(w * dpr, h * dpr, 1);
+      material.uniforms.iScale.value = Math.max(0.5, Math.min(2.0, Math.min(w, h) / 600));
     };
 
     const ro = new ResizeObserver(resize);
-    resizeObsRef.current = ro;
     ro.observe(host);
     resize();
 
@@ -300,6 +212,7 @@ const GhostCursorBackground: React.FC<GhostCursorProps> = ({
       const now = performance.now();
       const t = (now - start) / 1000;
 
+      // Physics Logic
       if (pointerActiveRef.current) {
         velocityRef.current.set(
           currentMouseRef.current.x - material.uniforms.iMouse.value.x,
@@ -309,65 +222,64 @@ const GhostCursorBackground: React.FC<GhostCursorProps> = ({
         fadeOpacityRef.current = 1.0;
       } else {
         velocityRef.current.multiplyScalar(inertia);
-        if (velocityRef.current.lengthSq() > 1e-6) {
+        if (velocityRef.current.lengthSq() > 0.00001) {
           material.uniforms.iMouse.value.add(velocityRef.current);
         }
+        
         const dt = now - lastMoveTimeRef.current;
         if (dt > fadeDelay) {
-          const k = Math.min(1, (dt - fadeDelay) / fadeDuration);
-          fadeOpacityRef.current = Math.max(0, 1 - k);
+          fadeOpacityRef.current = Math.max(0, 1 - (dt - fadeDelay) / fadeDuration);
         }
       }
 
+      // Trail Update
       const N = trailBufRef.current.length;
       headRef.current = (headRef.current + 1) % N;
       trailBufRef.current[headRef.current].copy(material.uniforms.iMouse.value);
+      
+      // Update Uniforms
       const arr = material.uniforms.iPrevMouse.value as THREE.Vector2[];
       for (let i = 0; i < N; i++) {
         const srcIdx = (headRef.current - i + N) % N;
         arr[i].copy(trailBufRef.current[srcIdx]);
       }
-
+      
       material.uniforms.iOpacity.value = fadeOpacityRef.current;
       material.uniforms.iTime.value = t;
-      if (filmPass.uniforms?.iTime) filmPass.uniforms.iTime.value = t;
 
-      composer.render();
+      // Only render if visible
+      if (fadeOpacityRef.current > 0.01) {
+        composer.render();
+      }
+
       rafRef.current = requestAnimationFrame(animate);
     };
-    
-    // Pointer handling
+
+    // Use Host element for coordinates to avoid offset issues
     const onPointerMove = (e: PointerEvent) => {
-      const rect = host.getBoundingClientRect(); // Use host for relative coords
-      const x = THREE.MathUtils.clamp((e.clientX - rect.left) / rect.width, 0, 1);
-      const y = THREE.MathUtils.clamp(1 - (e.clientY - rect.top) / rect.height, 0, 1);
+      const rect = host.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = 1 - (e.clientY - rect.top) / rect.height;
       currentMouseRef.current.set(x, y);
       pointerActiveRef.current = true;
       lastMoveTimeRef.current = performance.now();
     };
-    
-    // Attach listeners to the parent
-    parent.addEventListener('pointermove', onPointerMove as any); 
-    
-    runningRef.current = true;
+
+    window.addEventListener('pointermove', onPointerMove); 
     rafRef.current = requestAnimationFrame(animate);
 
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      parent.removeEventListener('pointermove', onPointerMove as any);
+      window.removeEventListener('pointermove', onPointerMove);
       ro.disconnect();
-      scene.clear();
       renderer.dispose();
       composer.dispose();
       host.removeChild(renderer.domElement);
     };
   }, [trailLength, bloomStrength, bloomRadius, color]);
 
-  // Update color dynamically
   useEffect(() => {
-    if (materialRef.current) {
-       materialRef.current.uniforms.iBaseColor.value.set(color);
-    }
+      // Dynamic color updates handled here if ref exists
   }, [color]);
 
   return <div ref={containerRef} className="absolute inset-0 z-0 pointer-events-none" style={style} />;
@@ -397,7 +309,7 @@ export default function Orb({
 }: OrbProps) {
   const ctnDom = useRef<HTMLDivElement | null>(null);
 
-  // --- ORB SHADER LOGIC (OGL) ---
+  // --- ORB SHADER (Simplified Precision) ---
   const vert = /* glsl */ `
     precision highp float;
     attribute vec2 position;
@@ -419,32 +331,19 @@ export default function Orb({
     uniform float hoverIntensity;
     varying vec2 vUv;
 
-    vec3 rgb2yiq(vec3 c) {
-      float y = dot(c, vec3(0.299, 0.587, 0.114));
-      float i = dot(c, vec3(0.596, -0.274, -0.322));
-      float q = dot(c, vec3(0.211, -0.523, 0.312));
-      return vec3(y, i, q);
-    }
-
-    vec3 yiq2rgb(vec3 c) {
-      float r = c.x + 0.956 * c.y + 0.621 * c.z;
-      float g = c.x - 0.272 * c.y - 0.647 * c.z;
-      float b = c.x - 1.106 * c.y + 1.703 * c.z;
-      return vec3(r, g, b);
-    }
-
+    // Helper functions maintained but compacted
+    vec3 rgb2yiq(vec3 c) { return vec3(dot(c, vec3(0.299, 0.587, 0.114)), dot(c, vec3(0.596, -0.274, -0.322)), dot(c, vec3(0.211, -0.523, 0.312))); }
+    vec3 yiq2rgb(vec3 c) { return vec3(c.x + 0.956 * c.y + 0.621 * c.z, c.x - 0.272 * c.y - 0.647 * c.z, c.x - 1.106 * c.y + 1.703 * c.z); }
+    
     vec3 adjustHue(vec3 color, float hueDeg) {
       float hueRad = hueDeg * 3.14159265 / 180.0;
       vec3 yiq = rgb2yiq(color);
       float cosA = cos(hueRad);
       float sinA = sin(hueRad);
-      float i = yiq.y * cosA - yiq.z * sinA;
-      float q = yiq.y * sinA + yiq.z * cosA;
-      yiq.y = i;
-      yiq.z = q;
-      return yiq2rgb(yiq);
+      return yiq2rgb(vec3(yiq.x, yiq.y * cosA - yiq.z * sinA, yiq.y * sinA + yiq.z * cosA));
     }
 
+    // Noise functions
     vec3 hash33(vec3 p3) {
       p3 = fract(p3 * vec3(0.1031, 0.11369, 0.13787));
       p3 += dot(p3, p3.yxz + 19.19);
@@ -478,57 +377,50 @@ export default function Orb({
     const float innerRadius = 0.6;
     const float noiseScale = 0.65;
 
-    float light1(float intensity, float attenuation, float dist) {
-      return intensity / (1.0 + dist * attenuation);
-    }
-    float light2(float intensity, float attenuation, float dist) {
-      return intensity / (1.0 + dist * dist * attenuation);
-    }
+    float light1(float intensity, float attenuation, float dist) { return intensity / (1.0 + dist * attenuation); }
+    float light2(float intensity, float attenuation, float dist) { return intensity / (1.0 + dist * dist * attenuation); }
 
-    vec4 draw(vec2 uv) {
+    void main() {
+      vec2 center = iResolution.xy * 0.5;
+      float size = min(iResolution.x, iResolution.y);
+      vec2 uv = (vUv * iResolution.xy - center) / size * 2.0;
+
+      // Rotation and Hover
+      float angle = rot;
+      float s = sin(angle), c = cos(angle);
+      uv = vec2(c * uv.x - s * uv.y, s * uv.x + c * uv.y);
+      uv += vec2(hover * hoverIntensity * 0.1 * sin(uv.y * 10.0 + iTime), 
+                 hover * hoverIntensity * 0.1 * sin(uv.x * 10.0 + iTime));
+
       vec3 color1 = adjustHue(baseColor1, hue);
       vec3 color2 = adjustHue(baseColor2, hue);
       vec3 color3 = adjustHue(baseColor3, hue);
-      float ang = atan(uv.y, uv.x);
+      
       float len = length(uv);
-      float invLen = len > 0.0 ? 1.0 / len : 0.0;
+      // Optimization: Early discard if pixel is far outside orb radius
+      if (len > 1.8) discard;
+
+      float ang = atan(uv.y, uv.x);
       float n0 = snoise3(vec3(uv * noiseScale, iTime * 0.5)) * 0.5 + 0.5;
       float r0 = mix(mix(innerRadius, 1.0, 0.4), mix(innerRadius, 1.0, 0.6), n0);
-      float d0 = distance(uv, (r0 * invLen) * uv);
-      float v0 = light1(1.0, 10.0, d0);
-      v0 *= smoothstep(r0 * 1.05, r0, len);
+      float d0 = distance(uv, (r0 / len) * uv);
+      float v0 = light1(1.0, 10.0, d0) * smoothstep(r0 * 1.05, r0, len);
+      
       float cl = cos(ang + iTime * 2.0) * 0.5 + 0.5;
       float a = iTime * -1.0;
       vec2 pos = vec2(cos(a), sin(a)) * r0;
       float d = distance(uv, pos);
-      float v1 = light2(1.5, 5.0, d);
-      v1 *= light1(1.0, 50.0, d0);
+      float v1 = light2(1.5, 5.0, d) * light1(1.0, 50.0, d0);
+      
       float v2 = smoothstep(1.0, mix(innerRadius, 1.0, n0 * 0.5), len);
       float v3 = smoothstep(innerRadius, mix(innerRadius, 1.0, 0.5), len);
+      
       vec3 col = mix(color1, color2, cl);
       col = mix(color3, col, v0);
       col = (col + v1) * v2 * v3;
-      col = clamp(col, 0.0, 1.0);
-      return extractAlpha(col);
-    }
-
-    vec4 mainImage(vec2 fragCoord) {
-      vec2 center = iResolution.xy * 0.5;
-      float size = min(iResolution.x, iResolution.y);
-      vec2 uv = (fragCoord - center) / size * 2.0;
-      float angle = rot;
-      float s = sin(angle);
-      float c = cos(angle);
-      uv = vec2(c * uv.x - s * uv.y, s * uv.x + c * uv.y);
-      uv.x += hover * hoverIntensity * 0.1 * sin(uv.y * 10.0 + iTime);
-      uv.y += hover * hoverIntensity * 0.1 * sin(uv.x * 10.0 + iTime);
-      return draw(uv);
-    }
-
-    void main() {
-      vec2 fragCoord = vUv * iResolution.xy;
-      vec4 col = mainImage(fragCoord);
-      gl_FragColor = vec4(col.rgb * col.a, col.a);
+      
+      vec4 final = extractAlpha(clamp(col, 0.0, 1.0));
+      gl_FragColor = vec4(final.rgb * final.a, final.a);
     }
   `;
 
@@ -536,10 +428,11 @@ export default function Orb({
     const container = ctnDom.current;
     if (!container) return;
 
-    const renderer = new Renderer({ alpha: true, premultipliedAlpha: false });
+    // Throttle DPR for OGL as well
+    const dpr = Math.min(window.devicePixelRatio, 1.5);
+    const renderer = new Renderer({ alpha: true, premultipliedAlpha: false, dpr: dpr });
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 0);
-    // Position Orb Above Ghost Cursor
     gl.canvas.style.position = "absolute"; 
     gl.canvas.style.top = "0";
     gl.canvas.style.left = "0";
@@ -564,16 +457,14 @@ export default function Orb({
 
     function resize(): void {
       if (!container) return;
-      const dpr = window.devicePixelRatio || 1;
       const width = container.clientWidth;
       const height = container.clientHeight;
-      renderer.setSize(width * dpr, height * dpr);
-      gl.canvas.style.width = `${width}px`;
-      gl.canvas.style.height = `${height}px`;
+      renderer.setSize(width, height);
       program.uniforms.iResolution.value.set(gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height);
     }
 
-    window.addEventListener("resize", resize);
+    const ro = new ResizeObserver(resize);
+    ro.observe(container);
     resize();
 
     let targetHover = 0;
@@ -581,27 +472,24 @@ export default function Orb({
     let currentRot = 0;
     const rotationSpeed = 0.3;
 
-    const handleMouseMove = (e: MouseEvent): void => {
+    // Use Pointer events instead of Mouse events for better compatibility
+    const handlePointerMove = (e: PointerEvent): void => {
       const rect = container.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      const width = rect.width;
-      const height = rect.height;
-      const size = Math.min(width, height);
-      const centerX = width / 2;
-      const centerY = height / 2;
-      const uvX = ((x - centerX) / size) * 2.0;
-      const uvY = ((y - centerY) / size) * 2.0;
-
-      targetHover = Math.sqrt(uvX * uvX + uvY * uvY) < 0.8 ? 1 : 0;
+      // Simple distance check from center (assuming orb is centered)
+      const dist = Math.sqrt(Math.pow(x - rect.width/2, 2) + Math.pow(y - rect.height/2, 2));
+      const size = Math.min(rect.width, rect.height);
+      // Normalized radius check
+      targetHover = (dist / (size/2)) < 0.8 ? 1 : 0;
     };
 
-    const handleMouseLeave = (): void => {
+    const handlePointerLeave = (): void => {
       targetHover = 0;
     };
 
-    container.addEventListener("mousemove", handleMouseMove);
-    container.addEventListener("mouseleave", handleMouseLeave);
+    container.addEventListener("pointermove", handlePointerMove);
+    container.addEventListener("pointerleave", handlePointerLeave);
 
     let rafId: number;
     const update = (t: number): void => {
@@ -615,7 +503,7 @@ export default function Orb({
       const effectiveHover = forceHoverState ? 1 : targetHover;
       program.uniforms.hover.value += (effectiveHover - program.uniforms.hover.value) * 0.1;
 
-      if (rotateOnHover && effectiveHover > 0.5) {
+      if (rotateOnHover && effectiveHover > 0.01) {
         currentRot += dt * rotationSpeed;
       }
       program.uniforms.rot.value = currentRot;
@@ -626,26 +514,19 @@ export default function Orb({
 
     return () => {
       cancelAnimationFrame(rafId);
-      window.removeEventListener("resize", resize);
-      container.removeEventListener("mousemove", handleMouseMove);
-      container.removeEventListener("mouseleave", handleMouseLeave);
+      ro.disconnect();
+      container.removeEventListener("pointermove", handlePointerMove);
+      container.removeEventListener("pointerleave", handlePointerLeave);
       container.removeChild(gl.canvas);
       gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
   }, [hue, hoverIntensity, rotateOnHover, forceHoverState]);
 
-  // Use a fixed Blue Color instead of calculating from red hue
-  const ghostColor = "#4aa0ff"; 
-
   return (
-    <div ref={ctnDom} className="relative w-full h-full flex items-center justify-center bg-transparent">
-      
+    <div ref={ctnDom} className="relative w-full h-full flex items-center justify-center bg-transparent overflow-hidden">
       {/* 1. GHOST CURSOR BACKGROUND */}
-      <GhostCursorBackground color={ghostColor} />
-
-      {/* 2. ORB (Rendered via useEffect above into ctnDom) */}
-
-      {/* 3. BUTTON (Highest Z-Index) */}
+      <GhostCursorBackground color="#4aa0ff" />
+      {/* 2. BUTTON */}
       <button
         onClick={onButtonClick}
         className="relative z-20 px-6 py-3 rounded-full font-semibold text-white bg-gradient-to-r from-blue-500 to-sky-400
