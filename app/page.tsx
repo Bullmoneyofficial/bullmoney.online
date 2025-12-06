@@ -18,11 +18,6 @@ import Socials from "../components/Mainpage/Socials";
 import RegisterPage from "./register/pagemode"; 
 import Heromain from "../app/VIP/heromain"; 
 // --- NEW IMPORTS FOR GHOST CURSOR (Three.js) ---
-import * as THREE from "three";
-import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
-import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import Chartnews from "@/app/Blogs/Chartnews";
 
 // =========================================
