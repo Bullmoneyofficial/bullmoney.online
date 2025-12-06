@@ -31,7 +31,7 @@ import {
 
 import { IconMenu2, IconX } from "@tabler/icons-react";
 import Link from "next/link";
-import { Button } from "./button";
+import { Button } from "@/components/Mainpage/button";
 import { Logo } from "./logo";
 
 // --- TYPES ---
