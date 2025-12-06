@@ -485,9 +485,10 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
            gsap.to(cursorRef.current, {
                          rotation: normalizedRotation + 360,
                          duration: spinDuration * (1 - normalizedRotation / 360),
-                         ease: 'none',
-                         // FIX: Wrapped in curly braces to return void instead of Timeline
-                         onComplete: () => { spinTl.current?.restart(); }
+                          ease: 'none',
+                        onComplete: () => {
+                        spinTl.current?.restart();
+                                }
             });
           }
       
