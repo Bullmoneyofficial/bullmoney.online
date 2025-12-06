@@ -3,7 +3,7 @@
 import React, { useMemo, useState, useEffect, useRef, useCallback, ReactNode, RefObject } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger"; 
+import { ScrollTrigger } from "gsap/ScrollTrigger"; // Ensure installed
 import { useBlog, BlogPost } from "./BlogContext"; 
 import AdminLoginModal from "./AdminLoginModal";
 import AdminPanel from "./AdminPanel";
@@ -394,7 +394,8 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
               rotation: normalizedRotation + 360,
               duration: spinDuration * (1 - normalizedRotation / 360),
               ease: 'none',
-              onComplete: () => { spinTl.current?.restart(); } // <--- FIXED: Added curly braces
+              // --- FIX APPLIED BELOW: CURLY BRACES ADDED ---
+              onComplete: () => { spinTl.current?.restart(); } 
             });
           }
           resumeTimeout = null;
