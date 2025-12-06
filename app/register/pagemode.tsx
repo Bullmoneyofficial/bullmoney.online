@@ -1522,7 +1522,7 @@ const generateRandomString = (length: number) => {
 };
 
 // --- XM Card (Blue/Green) ---
- const EvervaultCard = ({ text }: { text?: string }) => {
+const EvervaultCard = ({ text }: { text?: string }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const [randomString, setRandomString] = useState("");

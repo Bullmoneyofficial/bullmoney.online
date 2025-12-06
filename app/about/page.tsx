@@ -6,7 +6,7 @@ import { gsap } from "gsap";
 import { AboutContent } from "./AboutContent";
 import { Pricing } from "@/app/shop/pricing"; 
 import { Why } from "@/components/Mainpage/Why"; 
-import RecruitPage from "@/app/register/page";
+import RecruitPage from "@/app/register/pagemode";
 import Socials from "@/components/Mainpage/Socialsfooter";
 import Shopmain from "@/components/Mainpage/ShopMainpage";
 // ==========================================

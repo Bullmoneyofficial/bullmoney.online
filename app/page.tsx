@@ -15,7 +15,7 @@ import Shopmain from "../components/Mainpage/ShopMainpage";
 import Blogs from "./Blogs/Chart";
 import Socialsfooter from "../components/Mainpage/Socialsfooter";
 import Socials from "../components/Mainpage/Socials";
-import RegisterPage from "./register/page"; 
+import RegisterPage from "./register/pagemode"; 
 import Heromain from "../app/VIP/heromain"; 
 // --- NEW IMPORTS FOR GHOST CURSOR (Three.js) ---
 import * as THREE from "three";
