@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/mongodb";
 import Hero from "@/models/Hero";
 
+// Add this line to stop the build from crashing
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   await dbConnect();
   let hero = await Hero.findOne();

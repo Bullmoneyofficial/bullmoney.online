@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/mongodb";
 import BlogHero from "@/models/BlogHero";
 
+// Add this line here as well
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   await dbConnect();
   // Find the single hero document, or create a default one if it doesn't exist
