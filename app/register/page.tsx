@@ -1522,7 +1522,7 @@ const generateRandomString = (length: number) => {
 };
 
 // --- XM Card (Blue/Green) ---
-export const EvervaultCard = ({ text }: { text?: string }) => {
+ const EvervaultCard = ({ text }: { text?: string }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const [randomString, setRandomString] = useState("");
@@ -1562,7 +1562,7 @@ function CardPattern({ mouseX, mouseY, randomString }: any) {
 }
 
 // --- Vantage Card (Red/Purple) ---
-export const EvervaultCardRed = ({ text }: { text?: string }) => {
+const EvervaultCardRed = ({ text }: { text?: string }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const [randomString, setRandomString] = useState("");
