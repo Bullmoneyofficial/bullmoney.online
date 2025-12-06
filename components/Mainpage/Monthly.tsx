@@ -176,7 +176,7 @@ const Card = ({ plan, onClick }: { plan: Plan; onClick: () => void }) => {
               </span>
             </div>
           </div>
-          <Button variant="gradient" className="w-full mt-10" onClick={onClick}>
+          <Button variant="primary"  className="w-full mt-10" onClick={onClick}>
             {plan.buttonText}
           </Button>
         </div>
