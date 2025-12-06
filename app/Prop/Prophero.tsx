@@ -8,7 +8,6 @@ import Link from "next/link";
 import { Button } from "../../components/Mainpage/button";
 import { useCalEmbed } from "@/app/hooks/useCalEmbed";
 import { CONSTANTS } from "@/constants/links";
-// Import the component created in Step 1. Adjust path as needed.
 import { ContainerScroll } from "@/components/Mainpage/container-scroll-animation";
 
 interface HeroProps {
@@ -135,7 +134,7 @@ export function Hero() {
                 <Button
                   as={Link}
                   href="https://checkout.goatfundedtrader.com/aff/Bullmoney/"
-                  variant="dark"
+                  variant="primary"
                   className="hidden md:block w-60 text-center"
                 >
                   GOATFUNDEDTRADER
@@ -144,10 +143,10 @@ export function Hero() {
                 <Button
                   as={Link}
                   href="https://trader.ftmo.com/sso?affiliates=fGDPMCcFOXviWzowTyxV"
-                  variant="dark"
+                  variant="primary"
                   className="hidden md:block w-60 text-center"
                 >
-                  FTMO CHALLANGES
+                  FTMO CHALLENGES
                 </Button>
               </motion.div>
             </>
