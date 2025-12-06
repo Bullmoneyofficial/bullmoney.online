@@ -354,11 +354,11 @@ const ShopMarketingSection = () => {
           particleColor="#60a5fa"
         />
       </div>
-      
-      <div className="relative z-10 flex w-full flex-col items-center justify-center py-16 sm:py-24">
-          
+         
         {/* Promo Strip */}
         <PromoBanner />
+      <div className="relative z-10 flex w-full flex-col items-center justify-center py-16 sm:py-24">
+       
         {/* Shop Extras (Interactive Cards) */}
         <div className="flex flex-col flex-wrap items-center justify-center gap-6 px-4 sm:flex-row sm:gap-8">
           <LiveViewers /> <DealTimer />

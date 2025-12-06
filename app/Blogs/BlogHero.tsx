@@ -55,7 +55,7 @@ function LoginPortal({ onLogin, onClose }: { onLogin: () => void, onClose: () =>
 
   return (
     <div className="relative w-full h-full min-h-[500px] flex flex-col items-center justify-center p-4 bg-[#020617] overflow-hidden rounded-3xl">
-      <GhostCursorBackground />
+    
       <div className="relative z-10 w-full max-w-md">
         <div className="rounded-3xl overflow-hidden border border-slate-800 bg-slate-950/80 backdrop-blur-xl shadow-2xl">
           <div className="p-8">
