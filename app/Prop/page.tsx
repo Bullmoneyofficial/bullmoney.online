@@ -272,9 +272,11 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
               duration: spinDuration * (1 - normalizedRotation / 360),
               ease: 'none',
               // FIXED HERE: Wrapped in curly braces to return void
-               onComplete: () => { spinTl.current?.restart(); }
+              // FIX: Wrapped in curly braces to return void instead of Timeline
+              onComplete: () => { spinTl.current?.restart(); }
             });
           }
+          
      
         }, 50);
         cleanupTarget(target);
