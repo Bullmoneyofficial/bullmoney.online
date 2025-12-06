@@ -3,7 +3,7 @@
 import React, { useMemo, useState, useEffect, useRef, useCallback, ReactNode, RefObject } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger"; // Ensure installed
+import { ScrollTrigger } from "gsap/ScrollTrigger"; 
 import { useBlog, BlogPost } from "./BlogContext"; 
 import AdminLoginModal from "./AdminLoginModal";
 import AdminPanel from "./AdminPanel";
