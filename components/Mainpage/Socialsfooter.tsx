@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef, useMemo, JSX } from "react";
+import React, { useState, useEffect, useRef, useMemo, JSX, useCallback } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -9,7 +9,38 @@ import { loadSlim } from "@tsparticles/slim";
 import type { Engine } from "@tsparticles/engine";
 
 // ==========================================
-// 1. PIXEL CARD LOGIC (Embedded)
+// 1. UTILS & HOOKS
+// ==========================================
+
+// Shared hook to detect mobile/low-power mode
+const usePerformanceMode = () => {
+  const [isPerformanceMode, setIsPerformanceMode] = useState(false);
+
+  useEffect(() => {
+    const checkPerformance = () => {
+      // Treat mobile (<768px) or reduced motion as "Performance Mode"
+      const isMobile = window.innerWidth < 768;
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      setIsPerformanceMode(isMobile || reducedMotion);
+    };
+    
+    checkPerformance();
+    // Debounce resize listener for performance
+    let timeout: NodeJS.Timeout;
+    const handleResize = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(checkPerformance, 200);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return isPerformanceMode;
+};
+
+// ==========================================
+// 2. PIXEL CARD LOGIC
 // ==========================================
 
 class Pixel {
@@ -114,20 +145,6 @@ class Pixel {
   }
 }
 
-function getEffectiveSpeed(value: number, reducedMotion: boolean) {
-  const min = 0;
-  const max = 100;
-  const throttle = 0.001;
-
-  if (value <= min || reducedMotion) {
-    return min;
-  } else if (value >= max) {
-    return max * throttle;
-  } else {
-    return value * throttle;
-  }
-}
-
 const VARIANTS = {
   default: {
     activeColor: null,
@@ -140,7 +157,6 @@ const VARIANTS = {
     activeColor: '#e0f2fe',
     gap: 10,
     speed: 25,
-    // Slightly more vibrant blues
     colors: '#60a5fa,#3b82f6,#2563eb', 
     noFocus: false
   },
@@ -148,7 +164,6 @@ const VARIANTS = {
     activeColor: '#dcfce7',
     gap: 6,
     speed: 20,
-    // Brighter, neon-like greens for better contrast against dark bg
     colors: '#4ade80,#22c55e,#86efac', 
     noFocus: true
   }
@@ -179,9 +194,8 @@ const PixelCard = ({
   const animationRef = useRef<number | null>(null);
   const timePreviousRef = useRef(typeof performance !== 'undefined' ? performance.now() : 0);
   
-  const reducedMotion = typeof window !== 'undefined' 
-    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches 
-    : false;
+  // OPTIMIZATION: Check if we are on mobile/performance mode
+  const isPerformanceMode = usePerformanceMode();
 
   const variantCfg = VARIANTS[variant] || VARIANTS.default;
   const finalGap = gap ?? variantCfg.gap;
@@ -189,13 +203,16 @@ const PixelCard = ({
   const finalColors = colors ?? variantCfg.colors;
   const finalNoFocus = noFocus ?? variantCfg.noFocus;
 
-  const initPixels = () => {
-    if (!containerRef.current || !canvasRef.current) return;
+  const initPixels = useCallback(() => {
+    // CRITICAL: Abort if on mobile or canvas not ready
+    if (!containerRef.current || !canvasRef.current || isPerformanceMode) return;
 
     const rect = containerRef.current.getBoundingClientRect();
     const width = Math.floor(rect.width);
     const height = Math.floor(rect.height);
     const ctx = canvasRef.current.getContext('2d');
+
+    if (!ctx) return;
 
     canvasRef.current.width = width;
     canvasRef.current.height = height;
@@ -204,27 +221,32 @@ const PixelCard = ({
 
     const colorsArray = finalColors.split(',');
     const pxs = [];
-    for (let x = 0; x < width; x += parseInt(finalGap.toString(), 10)) {
-      for (let y = 0; y < height; y += parseInt(finalGap.toString(), 10)) {
+    
+    // Safety: Ensure gap isn't too small causing infinite loops
+    const safeGap = Math.max(4, parseInt(finalGap.toString(), 10));
+
+    for (let x = 0; x < width; x += safeGap) {
+      for (let y = 0; y < height; y += safeGap) {
         const color = colorsArray[Math.floor(Math.random() * colorsArray.length)];
 
         const dx = x - width / 2;
         const dy = y - height / 2;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        const delay = reducedMotion ? 0 : distance;
+        const delay = distance;
         
-        if (!ctx) return;
-        pxs.push(new Pixel(canvasRef.current, ctx, x, y, color, getEffectiveSpeed(finalSpeed, reducedMotion), delay));
+        pxs.push(new Pixel(canvasRef.current, ctx, x, y, color, finalSpeed * 0.001, delay));
       }
     }
     pixelsRef.current = pxs;
-  };
+  }, [finalColors, finalGap, finalSpeed, isPerformanceMode]);
 
   const doAnimate = (fnName: keyof Pixel) => {
     animationRef.current = requestAnimationFrame(() => doAnimate(fnName));
     const timeNow = performance.now();
     const timePassed = timeNow - timePreviousRef.current;
-    const timeInterval = 1000 / 60;
+    
+    // FPS Cap: 30FPS is plenty for this effect and saves battery
+    const timeInterval = 1000 / 30; 
 
     if (timePassed < timeInterval) return;
     timePreviousRef.current = timeNow - (timePassed % timeInterval);
@@ -249,6 +271,9 @@ const PixelCard = ({
   };
 
   const handleAnimation = (name: keyof Pixel) => {
+    // Don't animate on mobile
+    if (isPerformanceMode) return;
+    
     if (animationRef.current !== null) {
       cancelAnimationFrame(animationRef.current);
     }
@@ -267,20 +292,24 @@ const PixelCard = ({
   };
 
   useEffect(() => {
-    initPixels();
-    const observer = new ResizeObserver(() => {
+    // Only init logic if not in performance mode
+    if (!isPerformanceMode) {
       initPixels();
-    });
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
-    return () => {
-      observer.disconnect();
-      if (animationRef.current !== null) {
-        cancelAnimationFrame(animationRef.current);
+      const observer = new ResizeObserver(() => {
+        // Debounce resize
+        setTimeout(initPixels, 100);
+      });
+      if (containerRef.current) {
+        observer.observe(containerRef.current);
       }
-    };
-  }, [finalGap, finalSpeed, finalColors, finalNoFocus]);
+      return () => {
+        observer.disconnect();
+        if (animationRef.current !== null) {
+          cancelAnimationFrame(animationRef.current);
+        }
+      };
+    }
+  }, [initPixels, isPerformanceMode]);
 
   return (
     <div
@@ -292,10 +321,13 @@ const PixelCard = ({
       onBlur={finalNoFocus ? undefined : onBlur}
       tabIndex={finalNoFocus ? -1 : 0}
     >
-      <canvas 
-        className="absolute inset-0 z-0 h-full w-full pointer-events-none" 
-        ref={canvasRef} 
-      />
+      {/* Conditionally render canvas to save DOM weight on mobile */}
+      {!isPerformanceMode && (
+        <canvas 
+          className="absolute inset-0 z-0 h-full w-full pointer-events-none" 
+          ref={canvasRef} 
+        />
+      )}
       <div className="relative z-10">
         {children}
       </div>
@@ -323,7 +355,7 @@ const ShopMarketingSection = () => {
           background="transparent"
           minSize={1}
           maxSize={3}
-          particleDensity={30}
+          // Dynamic density controlled inside SparklesCore
           className="h-full w-full"
           particleColor="#60a5fa"
         />
@@ -356,6 +388,7 @@ export default ShopMarketingSection;
 // ==========================================
 
 export const PromoBanner = () => {
+  // Static element, PixelCard is fine (it will auto-disable on mobile)
   return (
     <PixelCard 
       variant="blue" 
@@ -364,7 +397,6 @@ export const PromoBanner = () => {
       noFocus={true}
       className="group relative z-50 w-full border-b border-blue-500/20 bg-blue-950/30 py-3 backdrop-blur-md transition-colors hover:bg-blue-900/40"
     >
-      {/* Glowing Line Top */}
       <div className="absolute left-0 top-0 h-[1px] w-full bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-50 shadow-[0_0_10px_rgba(59,130,246,0.8)]" />
       
       <div className="relative flex w-full items-center">
@@ -374,7 +406,7 @@ export const PromoBanner = () => {
         <motion.div
           initial={{ x: "0%" }}
           animate={{ x: "-50%" }}
-          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
           className="flex whitespace-nowrap will-change-transform group-hover:[animation-play-state:paused]"
         >
           {[...Array(6)].map((_, i) => (
@@ -437,8 +469,8 @@ export const SocialsRow = () => {
         <motion.div
           initial={{ x: 0 }}
           animate={{ x: "-33.33%" }}
-          transition={{ duration: 25, ease: "linear", repeat: Infinity }}
-          className="flex min-w-full min-h-full items-center gap-20 px-10 sm:gap-40"
+          transition={{ duration: 30, ease: "linear", repeat: Infinity }}
+          className="flex min-w-full min-h-full items-center gap-20 px-10 sm:gap-40 will-change-transform"
         >
           {marqueeSocials.map((s, i) => (
             <SocialIcon key={`${s.alt}-${i}`} {...s} />
@@ -450,10 +482,9 @@ export const SocialsRow = () => {
 };
 
 // ==========================================
-// FIX APPLIED HERE:
-// 1. Added 'shrink-0' to container
-// 2. Fixed height to 'h-32'
-// 3. Fixed typo in inner div transition class
+// OPTIMIZATION: Removed PixelCard from here
+// Moving Canvases in a marquee = LAG
+// Replaced with CSS-only lookalike
 // ==========================================
 const SocialIcon = ({ href, icon, alt }: { href: string; icon: string; alt: string }) => {
   return (
@@ -461,21 +492,14 @@ const SocialIcon = ({ href, icon, alt }: { href: string; icon: string; alt: stri
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group block shrink-0" // Added shrink-0
+      className="group block shrink-0"
     >
       <motion.div
         animate={{ scale: [1, 1.15, 1] }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
       >
-        <PixelCard
-          variant="blue"
-          gap={5}
-          speed={20}
-          noFocus={true}
-          // Changed h-30 (invalid) to h-32 (valid) and added shrink-0
-          className="flex h-32 w-40 shrink-0 items-center justify-center rounded-xl border border-white/5 bg-neutral-900/50 shadow-lg backdrop-blur-xl transition-all duration-300 hover:border-blue-500/30 hover:shadow-[0_0_25px_-5px_rgba(59,130,246,0.4)]"
-        >
-           {/* Fixed typo: w-10transition -> w-10 transition */}
+        {/* REPLACED: CSS Only Div instead of Canvas PixelCard */}
+        <div className="flex h-32 w-40 shrink-0 items-center justify-center rounded-xl border border-white/5 bg-neutral-900/50 shadow-lg backdrop-blur-xl transition-all duration-300 hover:border-blue-500/30 hover:shadow-[0_0_25px_-5px_rgba(59,130,246,0.4)]">
            <div className="relative h-10 w-10 transition-transform duration-300 sm:h-10 sm:w-10">
               <Image 
                  src={icon} 
@@ -485,55 +509,56 @@ const SocialIcon = ({ href, icon, alt }: { href: string; icon: string; alt: stri
                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
            </div>
-        </PixelCard>
+        </div>
       </motion.div>
     </a>
   );
 };
 
-// Updated to accept width/height props for scaling
 const MiniTradingChart = ({ width = 60, height = 24 }: { width?: number; height?: number }) => {
   const [path, setPath] = useState("");
   const [areaPath, setAreaPath] = useState("");
+  const dataPointsRef = useRef([20, 30, 25, 35, 30, 45, 40, 50, 45, 60]);
+
+  // Memoized path generator
+  const generatePaths = useCallback((data: number[]) => {
+    const max = 70;
+    const points = data.map((val, i) => {
+      const x = (i / (data.length - 1)) * width;
+      const y = height - (val / max) * height;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(" ");
+    return {
+      line: `M${points}`,
+      area: `M0,${height} L${points} L${width},${height} Z`
+    };
+  }, [width, height]);
 
   useEffect(() => {
-    let dataPoints = [20, 30, 25, 35, 30, 45, 40, 50, 45, 60];
-
-    const generatePaths = (data: number[]) => {
-      const max = 70;
-      const points = data.map((val, i) => {
-        const x = (i / (data.length - 1)) * width;
-        const y = height - (val / max) * height;
-        return `${x},${y}`;
-      }).join(" ");
-      return {
-        line: `M${points}`,
-        area: `M0,${height} L${data.map((val, i) => `${(i / (data.length - 1)) * width},${height - (val / max) * height}`).join(" L")} L${width},${height} Z`
-      };
-    };
+    // Init
+    const initialPaths = generatePaths(dataPointsRef.current);
+    setPath(initialPaths.line);
+    setAreaPath(initialPaths.area);
 
     const updateChart = () => {
-      const last = dataPoints[dataPoints.length - 1];
+      const currentData = dataPointsRef.current;
+      const last = currentData[currentData.length - 1];
       const change = (Math.random() - 0.45) * 15;
       let newValue = Math.max(10, Math.min(65, last + change));
       
-      const newData = [...dataPoints.slice(1), newValue];
-      dataPoints = newData;
+      const newData = [...currentData.slice(1), newValue];
+      dataPointsRef.current = newData;
       
       const paths = generatePaths(newData);
       setPath(paths.line);
       setAreaPath(paths.area);
     };
 
-    const initialPaths = generatePaths(dataPoints);
-    setPath(initialPaths.line);
-    setAreaPath(initialPaths.area);
-
-    const interval = setInterval(updateChart, 800);
+    const interval = setInterval(updateChart, 1000); // 1s interval is sufficient
     return () => clearInterval(interval);
-  }, [width, height]);
+  }, [generatePaths]);
 
-  if (!path) return <div style={{ width, height }} className="animate-pulse bg-green-500/10" />;
+  if (!path) return <div style={{ width, height }} className="animate-pulse bg-green-500/10 rounded" />;
 
   return (
     <div style={{ width, height }} className="relative overflow-hidden">
@@ -549,7 +574,7 @@ const MiniTradingChart = ({ width = 60, height = 24 }: { width?: number; height?
           fill="url(#chartFill)" 
           stroke="none"
           animate={{ d: areaPath }}
-          transition={{ duration: 0.8, ease: "linear" }}
+          transition={{ duration: 1, ease: "linear" }}
         />
         <motion.path
           d={path}
@@ -559,7 +584,7 @@ const MiniTradingChart = ({ width = 60, height = 24 }: { width?: number; height?
           strokeLinecap="round"
           strokeLinejoin="round"
           animate={{ d: path }}
-          transition={{ duration: 0.8, ease: "linear" }}
+          transition={{ duration: 1, ease: "linear" }}
           style={{ filter: "drop-shadow(0 0 2px rgba(74, 222, 128, 0.5))" }}
         />
       </svg>
@@ -568,17 +593,16 @@ const MiniTradingChart = ({ width = 60, height = 24 }: { width?: number; height?
 }
 
 export const LiveViewers = () => {
-  const [viewers, setViewers] = useState<number | null>(null);
+  const [viewers, setViewers] = useState<number | null>(42);
 
   useEffect(() => {
-    setViewers(42);
     const interval = setInterval(() => {
       setViewers(prev => {
         if (!prev) return 42;
         const change = Math.floor(Math.random() * 7) - 3; 
         return Math.max(35, Math.min(150, prev + change));
       });
-    }, 2500);
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -591,12 +615,10 @@ export const LiveViewers = () => {
         variant="green"
         gap={5} 
         speed={20}
-        // Rebalanced size: Not huge, but still impactful
         className="group relative flex items-center gap-6 rounded-xl border border-green-500/20 bg-neutral-900/80 px-8 py-4 shadow-xl backdrop-blur-xl transition-all duration-300 hover:shadow-[0_0_40px_-5px_rgba(34,197,94,0.3)]"
         noFocus={true}
       >
         <div className="flex flex-col items-center justify-center">
-          {/* Adjusted Chart Size for balance */}
           <MiniTradingChart width={70} height={32} />
         </div>
 
@@ -608,9 +630,8 @@ export const LiveViewers = () => {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500"></span>
             </span>
-            {/* Text size balanced to 2xl */}
             <span className="text-2xl font-bold text-green-400 tabular-nums shadow-green-500/50 drop-shadow-sm">
-               {viewers !== null ? viewers : "--"}
+               {viewers}
             </span>
           </div>
           <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
@@ -643,7 +664,6 @@ export const DealTimer = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Matched styling with LiveViewers
   return (
     <motion.div
       animate={{ scale: [1, 1.02, 1] }}
@@ -673,14 +693,16 @@ export const DealTimer = () => {
   );
 };
 
-const BackgroundGrids = () => {
+// Memoized to prevent re-renders
+const BackgroundGrids = React.memo(() => {
   return (
     <div className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-20">
        <div className="absolute left-1/2 top-0 h-[1000px] w-[1000px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600/20 blur-[100px]" />
        <div className="absolute bottom-0 h-full w-full bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
     </div>
   );
-};
+});
+BackgroundGrids.displayName = "BackgroundGrids";
 
 export const SparklesCore = (props: {
   id?: string;
@@ -704,6 +726,7 @@ export const SparklesCore = (props: {
   } = props;
   
   const [init, setInit] = useState(false);
+  const isPerformanceMode = usePerformanceMode();
   
   useEffect(() => {
     initParticlesEngine(async (engine: Engine) => {
@@ -713,47 +736,52 @@ export const SparklesCore = (props: {
     });
   }, []);
 
-  const options = useMemo(() => ({
-    background: { color: { value: background } },
-    fullScreen: { enable: false, zIndex: 1 },
-    fpsLimit: 60,
-    interactivity: {
-      events: {
-        onClick: { enable: true, mode: "push" },
-        onHover: { enable: true, mode: "bubble" },
-        resize: { enable: true },
+  const options = useMemo(() => {
+    // Drastically reduce particles on mobile
+    const densityValue = isPerformanceMode ? 30 : particleDensity;
+
+    return {
+      background: { color: { value: background } },
+      fullScreen: { enable: false, zIndex: 1 },
+      fpsLimit: 60,
+      interactivity: {
+        events: {
+          onClick: { enable: !isPerformanceMode, mode: "push" }, // Disable click on mobile
+          onHover: { enable: !isPerformanceMode, mode: "bubble" }, // Disable hover on mobile
+          resize: { enable: true },
+        },
+        modes: {
+          push: { quantity: 4 },
+          bubble: { distance: 200, size: maxSize * 1.5, duration: 2, opacity: 0.8, speed: 3 },
+        },
       },
-      modes: {
-        push: { quantity: 4 },
-        bubble: { distance: 200, size: maxSize * 1.5, duration: 2, opacity: 0.8, speed: 3 },
+      particles: {
+        bounce: { horizontal: { value: 1 }, vertical: { value: 1 } },
+        color: { value: particleColor },
+        move: {
+          enable: true,
+          speed: speed,
+          direction: "none",
+          random: true,
+          straight: false,
+          outModes: { default: "out" },
+        },
+        number: {
+          density: { enable: true, width: 1920, height: 1080 },
+          value: densityValue,
+        },
+        opacity: {
+          value: { min: 0.1, max: 0.5 },
+          animation: { enable: true, speed: speed * 0.5, sync: false },
+        },
+        shape: { type: "circle" },
+        size: {
+          value: { min: minSize, max: maxSize },
+        },
       },
-    },
-    particles: {
-      bounce: { horizontal: { value: 1 }, vertical: { value: 1 } },
-      color: { value: particleColor },
-      move: {
-        enable: true,
-        speed: speed,
-        direction: "none",
-        random: true,
-        straight: false,
-        outModes: { default: "out" },
-      },
-      number: {
-        density: { enable: true, width: 1920, height: 1080 },
-        value: particleDensity,
-      },
-      opacity: {
-        value: { min: 0.1, max: 0.5 },
-        animation: { enable: true, speed: speed * 0.5, sync: false },
-      },
-      shape: { type: "circle" },
-      size: {
-        value: { min: minSize, max: maxSize },
-      },
-    },
-    detectRetina: true,
-  }), [background, particleColor, speed, particleDensity, minSize, maxSize]);
+      detectRetina: true,
+    }
+  }, [background, particleColor, speed, particleDensity, minSize, maxSize, isPerformanceMode]);
 
   return (
     <div className={cn("opacity-0 transition-opacity duration-1000", init && "opacity-100", className)}>
