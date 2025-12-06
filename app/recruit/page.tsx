@@ -4,7 +4,7 @@ import React, { useRef, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { gsap } from "gsap";
 import RecruitPage from "@/app/register/New";
-import { Hero } from "./Rechero"; 
+
 import Socials from "@/components/Mainpage/Socialsfooter";
 import AffiliateAdmin from "@/app/register/AffiliateAdmin";// 
 import AffiliateRecruitsDashboard from "@/app/recruit/AffiliateRecruitsDashboard";//Import your new component
@@ -341,7 +341,7 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
       
       <Socials />
             <Shopmain />
-   
+    
       <RecruitPage onUnlock={() => {}} />
       <AffiliateRecruitsDashboard onBack={() => router.push("/")} />
    

@@ -17,7 +17,7 @@ import Socialsfooter from "../components/Mainpage/Socialsfooter";
 import Socials from "../components/Mainpage/Socials";
 import RegisterPage from "./register/pagemode"; 
 import Heromain from "../app/VIP/heromain"; 
-// --- NEW IMPORTS FOR GHOST CURSOR (Three.js) ---
+
 import Chartnews from "@/app/Blogs/Chartnews";
 
 // =========================================

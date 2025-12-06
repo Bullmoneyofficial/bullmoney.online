@@ -10,229 +10,8 @@ import RecruitPage from "@/app/register/pageVip";
 import Socials from "@/components/Mainpage/Socialsfooter";
 import Socialsfooter from "@/components/Mainpage/Socials";
 import Faq from "@/app/shop/Faq";
-// --- THREE.JS IMPORTS FOR GHOST CURSOR ---
-import * as THREE from "three";
-import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
-import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+
 import Shopmain from "@/components/Mainpage/ShopMainpage";
-// =========================================
-// 1. GHOST CURSOR BACKGROUND (Three.js)
-// =========================================
-
-type GhostCursorProps = {
-  style?: React.CSSProperties;
-  trailLength?: number;
-  bloomStrength?: number;
-  bloomRadius?: number;
-  color?: string; 
-};
-
-const GhostCursorBackground: React.FC<GhostCursorProps> = ({
-  style,
-  trailLength = 50,
-  bloomStrength = 0.1,
-  bloomRadius = 1.0,
-  color = "#4aa0ff", // 🔵 Electric Blue
-}) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const host = containerRef.current;
-    if (!host) return;
-
-    // Config
-    const inertia = 0.5;
-    const grainIntensity = 0.05;
-    const bloomThreshold = 0.025;
-    const brightness = 1;
-    const edgeIntensity = 0;
-    const fadeDelay = 1000;
-    const fadeDuration = 1500;
-
-    // State
-    const trailBuf = Array.from({ length: Math.max(1, trailLength) }, () => new THREE.Vector2(0.5, 0.5));
-    let head = 0;
-    let rafId: number | null = null;
-    const currentMouse = new THREE.Vector2(0.5, 0.5);
-    const velocity = new THREE.Vector2(0, 0);
-    let fadeOpacity = 1.0;
-    let lastMoveTime = performance.now();
-    let pointerActive = false;
-
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-      depth: false,
-      powerPreference: 'high-performance',
-      premultipliedAlpha: false,
-    });
-    renderer.setClearColor(0x000000, 0);
-    renderer.domElement.style.pointerEvents = 'none';
-    host.appendChild(renderer.domElement);
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const geom = new THREE.PlaneGeometry(2, 2);
-
-    // Shaders
-    const material = new THREE.ShaderMaterial({
-      defines: { MAX_TRAIL_LENGTH: trailLength },
-      uniforms: {
-        iTime: { value: 0 },
-        iResolution: { value: new THREE.Vector3(1, 1, 1) },
-        iMouse: { value: new THREE.Vector2(0.5, 0.5) },
-        iPrevMouse: { value: trailBuf.map(v => v.clone()) },
-        iOpacity: { value: 1.0 },
-        iScale: { value: 1.0 },
-        iBaseColor: { value: new THREE.Color(color) },
-        iBrightness: { value: brightness },
-        iEdgeIntensity: { value: edgeIntensity }
-      },
-      vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position, 1.0); }`,
-      fragmentShader: `
-        uniform float iTime; uniform vec3 iResolution; uniform vec2 iMouse;
-        uniform vec2 iPrevMouse[MAX_TRAIL_LENGTH]; uniform float iOpacity;
-        uniform float iScale; uniform vec3 iBaseColor; uniform float iBrightness;
-        varying vec2 vUv;
-        float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7))) * 43758.5453123); }
-        float noise(vec2 p){
-          vec2 i = floor(p), f = fract(p); f *= f * (3. - 2. * f);
-          return mix(mix(hash(i + vec2(0.,0.)), hash(i + vec2(1.,0.)), f.x),
-                     mix(hash(i + vec2(0.,1.)), hash(i + vec2(1.,1.)), f.x), f.y);
-        }
-        float fbm(vec2 p){
-          float v = 0.0; float a = 0.5;
-          mat2 m = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
-          for(int i=0;i<5;i++){ v += a * noise(p); p = m * p * 2.0; a *= 0.5; }
-          return v;
-        }
-        vec3 tint1(vec3 base){ return mix(base, vec3(1.0), 0.15); }
-        vec3 tint2(vec3 base){ return mix(base, vec3(0.8, 0.9, 1.0), 0.25); }
-        vec4 blob(vec2 p, vec2 mousePos, float intensity, float activity) {
-          vec2 q = vec2(fbm(p * iScale + iTime * 0.1), fbm(p * iScale + vec2(5.2,1.3) + iTime * 0.1));
-          vec2 r = vec2(fbm(p * iScale + q * 1.5 + iTime * 0.15), fbm(p * iScale + q * 1.5 + vec2(8.3,2.8) + iTime * 0.15));
-          float smoke = fbm(p * iScale + r * 0.8);
-          float radius = 0.5 + 0.3 * (1.0 / iScale);
-          float distFactor = 1.0 - smoothstep(0.0, radius * activity, length(p - mousePos));
-          float alpha = pow(smoke, 2.5) * distFactor;
-          vec3 c1 = tint1(iBaseColor); vec3 c2 = tint2(iBaseColor);
-          vec3 color = mix(c1, c2, sin(iTime * 0.5) * 0.5 + 0.5);
-          return vec4(color * alpha * intensity, alpha * intensity);
-        }
-        void main() {
-          vec2 uv = (gl_FragCoord.xy / iResolution.xy * 2.0 - 1.0) * vec2(iResolution.x / iResolution.y, 1.0);
-          vec2 mouse = (iMouse * 2.0 - 1.0) * vec2(iResolution.x / iResolution.y, 1.0);
-          vec3 colorAcc = vec3(0.0); float alphaAcc = 0.0;
-          vec4 b = blob(uv, mouse, 1.0, iOpacity);
-          colorAcc += b.rgb; alphaAcc += b.a;
-          for (int i = 0; i < MAX_TRAIL_LENGTH; i++) {
-            vec2 pm = (iPrevMouse[i] * 2.0 - 1.0) * vec2(iResolution.x / iResolution.y, 1.0);
-            float t = 1.0 - float(i) / float(MAX_TRAIL_LENGTH);
-            t = pow(t, 2.0);
-            if (t > 0.01) {
-              vec4 bt = blob(uv, pm, t * 0.8, iOpacity);
-              colorAcc += bt.rgb; alphaAcc += bt.a;
-            }
-          }
-          colorAcc *= iBrightness;
-          gl_FragColor = vec4(colorAcc, clamp(alphaAcc * iOpacity, 0.0, 1.0));
-        }
-      `,
-      transparent: true,
-      depthTest: false,
-    });
-    scene.add(new THREE.Mesh(geom, material));
-
-    // Post Processing
-    const composer = new EffectComposer(renderer);
-    composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), bloomStrength, bloomRadius, bloomThreshold));
-    composer.addPass(new ShaderPass({
-      uniforms: { tDiffuse: { value: null }, iTime: { value: 0 }, intensity: { value: grainIntensity } },
-      vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `
-        uniform sampler2D tDiffuse; uniform float iTime; uniform float intensity; varying vec2 vUv;
-        float hash1(float n){ return fract(sin(n)*43758.5453); }
-        void main(){
-          vec4 color = texture2D(tDiffuse, vUv);
-          float n = hash1(vUv.x*1000.0 + vUv.y*2000.0 + iTime) * 2.0 - 1.0;
-          color.rgb += n * intensity * color.rgb;
-          gl_FragColor = color;
-        }
-      `
-    } as any));
-    composer.addPass(new ShaderPass({
-      uniforms: { tDiffuse: { value: null } },
-      vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `uniform sampler2D tDiffuse; varying vec2 vUv; void main(){ vec4 c = texture2D(tDiffuse, vUv); float a = max(c.a, 1e-5); gl_FragColor = vec4(clamp(c.rgb / a, 0.0, 1.0), c.a); }`
-    }));
-
-    // Resize
-    const resize = () => {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      renderer.setPixelRatio(dpr);
-      renderer.setSize(w, h);
-      composer.setSize(w, h);
-      material.uniforms.iResolution.value.set(w * dpr, h * dpr, 1);
-      material.uniforms.iScale.value = Math.max(0.5, Math.min(2.0, Math.min(w, h) / 600));
-    };
-    window.addEventListener('resize', resize);
-    resize();
-
-    // Animate
-    const start = performance.now();
-    const animate = () => {
-      const now = performance.now();
-      const t = (now - start) / 1000;
-      if (pointerActive) {
-        velocity.set(currentMouse.x - material.uniforms.iMouse.value.x, currentMouse.y - material.uniforms.iMouse.value.y);
-        material.uniforms.iMouse.value.copy(currentMouse);
-        fadeOpacity = 1.0;
-      } else {
-        velocity.multiplyScalar(inertia);
-        if (velocity.lengthSq() > 0.000001) material.uniforms.iMouse.value.add(velocity);
-        const dt = now - lastMoveTime;
-        if (dt > fadeDelay) fadeOpacity = Math.max(0, 1 - (dt - fadeDelay) / fadeDuration);
-      }
-      head = (head + 1) % trailLength;
-      trailBuf[head].copy(material.uniforms.iMouse.value);
-      const arr = material.uniforms.iPrevMouse.value;
-      for (let i = 0; i < trailLength; i++) {
-        arr[i].copy(trailBuf[(head - i + trailLength) % trailLength]);
-      }
-      material.uniforms.iOpacity.value = fadeOpacity;
-      material.uniforms.iTime.value = t;
-      composer.render();
-      rafId = requestAnimationFrame(animate);
-    };
-    rafId = requestAnimationFrame(animate);
-
-    const onPointerMove = (e: MouseEvent) => {
-      currentMouse.set(e.clientX / window.innerWidth, 1 - (e.clientY / window.innerHeight));
-      pointerActive = true;
-      lastMoveTime = performance.now();
-    };
-    window.addEventListener('mousemove', onPointerMove);
-
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', onPointerMove);
-      scene.clear();
-      renderer.dispose();
-      composer.dispose();
-      if (host.contains(renderer.domElement)) host.removeChild(renderer.domElement);
-    };
-  }, [trailLength, bloomStrength, bloomRadius, color]);
-
-  return <div ref={containerRef} className="fixed inset-0 z-0 pointer-events-none" style={style} />;
-};
 
 // =========================================
 // 2. TARGET CURSOR (GSAP Foreground)
@@ -569,8 +348,7 @@ export default function ShopPage() {
     <ShopProvider>
       <div className="relative min-h-screen bg-slate-950 text-white animate-in fade-in duration-1000">
         
-        {/* 1. BACKGROUND: Ghost Cursor (Z-0) */}
-        <GhostCursorBackground color="#4aa0ff" />
+  
         
         {/* 2. FOREGROUND: Target Cursor (Fixed Z-9999) */}
         <CursorStyles />
@@ -581,7 +359,7 @@ export default function ShopPage() {
         />
         
         {/* 3. CONTENT (Z-10) */}
-        {/* Ensure containers are relative so they stack above the ghost cursor */}
+        
         <div className="relative z-10">
           <Socials />
           

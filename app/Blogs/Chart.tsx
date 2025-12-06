@@ -115,50 +115,8 @@ const TradingViewMarketOverview: React.FC<{ height?: number; tabs: any }> = ({
   );
 };
 
-/* --------------------------- GHOST CURSOR COMPONENT --------------------------- */
-function GhostCursor({ containerRef }: { containerRef: React.RefObject<HTMLDivElement> }) {
-  const cursorX = useMotionValue(-100);
-  const cursorY = useMotionValue(-100);
-  
-  const springConfig = { damping: 25, stiffness: 700 };
-  const cursorXSpring = useSpring(cursorX, springConfig);
-  const cursorYSpring = useSpring(cursorY, springConfig);
 
-  React.useEffect(() => {
-    const moveCursor = (e: MouseEvent) => {
-      // Update motion values directly
-      if (containerRef.current) {
-         // Calculate position relative to the viewport to handle fixed/absolute properly
-         cursorX.set(e.clientX - 16); // Center offset (half of w-8)
-         cursorY.set(e.clientY - 16); // Center offset (half of h-8)
-      }
-    };
 
-    const container = containerRef.current;
-    if (container) {
-       // Attach listener to window to ensure smooth tracking even if mouse moves fast
-       window.addEventListener("mousemove", moveCursor);
-    }
-
-    return () => {
-      window.removeEventListener("mousemove", moveCursor);
-    };
-  }, [containerRef, cursorX, cursorY]);
-
-  return (
-    <motion.div
-      className="pointer-events-none fixed z-50 h-8 w-8 rounded-full border border-sky-400 bg-sky-500/20 blur-[1px] backdrop-blur-sm"
-      style={{
-        x: cursorXSpring,
-        y: cursorYSpring,
-        boxShadow: "0 0 20px 2px rgba(56, 189, 248, 0.4)",
-      }}
-      initial={{ opacity: 0, scale: 0 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0 }}
-    />
-  );
-}
 
 /* ---------------------- MINIMAL FUTURE-RUSTIC HERO ---------------------- */
 function FuturisticHero({ onShow }: { onShow: () => void }) {
@@ -174,10 +132,7 @@ function FuturisticHero({ onShow }: { onShow: () => void }) {
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
-      {/* Ghost Cursor Integration */}
-      <AnimatePresence>
-        {isHovering && <GhostCursor containerRef={heroRef} />}
-      </AnimatePresence>
+     
 
       {/* Animated gradient background */}
       <motion.div
