@@ -538,7 +538,7 @@ function EditUserModal({ user, onClose }: { user: AffiliateUser | null; onClose:
     }
   }, [user]);
 
-  const handleSave = async (e: React.FormEvent) => {
+const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     setIsSaving(true);
@@ -547,7 +547,8 @@ function EditUserModal({ user, onClose }: { user: AffiliateUser | null; onClose:
       const payload = {
         ...formData,
         commission_balance: Number(formData.commission_balance),
-        total_referred_manual: formData.total_referred_manual = '' || formData.total_referred_manual === null 
+        // FIXED: Cast to (any) to allow comparison with empty string
+        total_referred_manual: (formData.total_referred_manual as any) === '' || formData.total_referred_manual === null 
           ? null 
           : Number(formData.total_referred_manual)
       };
@@ -560,7 +561,6 @@ function EditUserModal({ user, onClose }: { user: AffiliateUser | null; onClose:
       setIsSaving(false);
     }
   };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
