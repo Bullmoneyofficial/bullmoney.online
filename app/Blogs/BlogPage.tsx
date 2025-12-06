@@ -394,7 +394,7 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
               rotation: normalizedRotation + 360,
               duration: spinDuration * (1 - normalizedRotation / 360),
               ease: 'none',
-              onComplete: () => spinTl.current?.restart()
+              onComplete: () => { spinTl.current?.restart(); } // <--- FIXED: Added curly braces to avoid return value
             });
           }
           resumeTimeout = null;
