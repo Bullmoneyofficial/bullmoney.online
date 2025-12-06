@@ -1,17 +1,14 @@
 "use client";
-
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { gsap } from "gsap"; // Ensure gsap is installed
-import { Features } from "@/components/Mainpage/features";
-import { Footer } from "@/components/Mainpage/footer";
-import { Hero } from "@/app/Prop/Prophero";
-import { AboutContent } from "../Testimonial";
-import Image from "next/image";
-import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Analytics } from "@vercel/analytics/next";
-import RecruitPage from "@/app/register/pageVip"; 
+import Shopmain from "@/components/Mainpage/ShopMainpage";
+import React, { useRef, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { gsap } from "gsap";
+import RecruitPage from "@/app/register/New";
+import { Hero } from "./Rechero"; 
 import Socials from "@/components/Mainpage/Socialsfooter";
-
+import GhostCursor from "@/components/Mainpage/GhostCursor"; 
+import AffiliateAdmin from "@/app/register/AffiliateAdmin";// 
+import AffiliateRecruitsDashboard from "@/app/recruit/AffiliateRecruitsDashboard";//Import your new component
 // ==========================================
 // 1. CURSOR LOGIC & STYLES
 // ==========================================
@@ -82,7 +79,7 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     if (typeof window === 'undefined') return false;
     const hasTouchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     const isSmallScreen = window.innerWidth <= 768;
-    return (hasTouchScreen && isSmallScreen);
+    return hasTouchScreen && isSmallScreen;
   }, []);
 
   const constants = useMemo(() => ({ borderWidth: 3, cornerSize: 12 }), []);
@@ -267,15 +264,15 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
             spinTl.current = gsap.timeline({ repeat: -1 })
               .to(cursorRef.current, { rotation: '+=360', duration: spinDuration, ease: 'none' });
               
-           gsap.to(cursorRef.current, {
-                         rotation: normalizedRotation + 360,
-                         duration: spinDuration * (1 - normalizedRotation / 360),
-                    ease: 'none',
-              onComplete: () => {
-                 spinTl.current?.restart();
-                        }
-            });
-          }
+            gsap.to(cursorRef.current, {
+                          rotation: normalizedRotation + 360,
+                          duration: spinDuration * (1 - normalizedRotation / 360),
+                          ease: 'none',
+                          // FIX: Wrapped in curly braces to return void instead of Timeline
+                          onComplete: () => { spinTl.current?.restart(); }
+                        });
+                      }
+          resumeTimeout = null;
         }, 50);
         cleanupTarget(target);
       };
@@ -315,31 +312,26 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
 };
 
 // ==========================================
-// 2. HOME PAGE COMPONENT
+// 2. PAGE COMPONENT
 // ==========================================
 
-export default function Home() {
-  const [isUnlocked, setIsUnlocked] = useState(false); // Track registration state
+export default function Page({ searchParams }: { searchParams?: { src?: string } }) {
+  const router = useRouter();
 
-  // Handle unlocking the content after the registration form is completed
-  const handleUnlock = () => {
-    setIsUnlocked(true); // Unlock content after registration
-  };
+  useEffect(() => {
+    // Client-side redirect check
+    if (searchParams?.src !== "nav") {
+      router.push("/");
+    }
+  }, [searchParams, router]);
 
-  // If the site is not unlocked, show the registration page
-  if (!isUnlocked) {
-    return (
-      <main className="min-h-screen bg-slate-950 text-white">
-        {/* Pass the function to unlock the site when the form is done */}
-        <RecruitPage onUnlock={handleUnlock} />
-      </main>
-    );
+  // Prevent flashing content if not authorized
+  if (searchParams?.src !== "nav") {
+    return null;
   }
 
-  // Render the main content after the registration is unlocked
   return (
-    <main>
-      {/* INJECT CURSOR HERE */}
+    <>
       <CursorStyles />
       <TargetCursor 
         hideDefaultCursor={true}
@@ -348,13 +340,13 @@ export default function Home() {
         targetSelector="button, a, input, .cursor-target"
       />
       
-      <Analytics />
-      <SpeedInsights />
       <Socials />
+            <Shopmain />
       <Hero />
-      <Features />
-      <AboutContent />
-      <Footer />
-    </main>
+      <RecruitPage onUnlock={() => {}} />
+      <AffiliateRecruitsDashboard onBack={() => router.push("/")} />
+   
+      <AffiliateAdmin />
+    </>
   );
 }
