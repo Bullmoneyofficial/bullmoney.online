@@ -398,7 +398,7 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
               onComplete: () => { spinTl.current?.restart(); }
             });
           }
-          resumeTimeout = null;
+         
         }, 50);
         cleanupTarget(target);
       };
