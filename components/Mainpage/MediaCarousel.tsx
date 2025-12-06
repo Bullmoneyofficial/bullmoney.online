@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link"; // <--- 1. Import this
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "./button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -104,11 +105,17 @@ export const MediaCarousel: React.FC<MediaCarouselProps> = ({
             {slide.description && (
               <p className="text-lg mb-6 max-w-2xl">{slide.description}</p>
             )}
+            
+            {/* --- FIXED SECTION BELOW --- */}
             {slide.buttonText && slide.buttonLink && (
-              <Button as="a" href={slide.buttonLink} variant="primary">
-                {slide.buttonText}
-              </Button>
+              <Link href={slide.buttonLink}>
+                <Button variant="primary">
+                  {slide.buttonText}
+                </Button>
+              </Link>
             )}
+            {/* --------------------------- */}
+            
           </div>
         </motion.div>
       </AnimatePresence>
