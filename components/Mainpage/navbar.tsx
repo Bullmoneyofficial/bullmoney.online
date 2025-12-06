@@ -31,7 +31,7 @@ import {
 
 import { IconMenu2, IconX } from "@tabler/icons-react";
 import Link from "next/link";
-import { Button } from "@/components/Mainpage/button";
+import { Button } from "./button";
 import { Logo } from "./logo";
 
 // --- TYPES ---
@@ -54,7 +54,7 @@ function cn(...classes: (string | undefined | null | false)[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-// --- MAIN
+// --- MAIN NAVBAR COMPONENT ---
 
 export const Navbar = () => {
   const navItems: NavItem[] = [

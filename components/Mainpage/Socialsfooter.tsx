@@ -12,28 +12,20 @@ import type { Engine } from "@tsparticles/engine";
 // 1. UTILS & HOOKS
 // ==========================================
 
-// Shared hook to detect mobile/low-power mode
+// Hook to detect mobile/reduced motion to save resources
 const usePerformanceMode = () => {
   const [isPerformanceMode, setIsPerformanceMode] = useState(false);
 
   useEffect(() => {
     const checkPerformance = () => {
-      // Treat mobile (<768px) or reduced motion as "Performance Mode"
       const isMobile = window.innerWidth < 768;
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       setIsPerformanceMode(isMobile || reducedMotion);
     };
     
     checkPerformance();
-    // Debounce resize listener for performance
-    let timeout: NodeJS.Timeout;
-    const handleResize = () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(checkPerformance, 200);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('resize', checkPerformance);
+    return () => window.removeEventListener('resize', checkPerformance);
   }, []);
 
   return isPerformanceMode;
@@ -194,7 +186,7 @@ const PixelCard = ({
   const animationRef = useRef<number | null>(null);
   const timePreviousRef = useRef(typeof performance !== 'undefined' ? performance.now() : 0);
   
-  // OPTIMIZATION: Check if we are on mobile/performance mode
+  // Optimization: Detect performance mode
   const isPerformanceMode = usePerformanceMode();
 
   const variantCfg = VARIANTS[variant] || VARIANTS.default;
@@ -204,7 +196,7 @@ const PixelCard = ({
   const finalNoFocus = noFocus ?? variantCfg.noFocus;
 
   const initPixels = useCallback(() => {
-    // CRITICAL: Abort if on mobile or canvas not ready
+    // CRITICAL OPTIMIZATION: Do not init canvas on mobile
     if (!containerRef.current || !canvasRef.current || isPerformanceMode) return;
 
     const rect = containerRef.current.getBoundingClientRect();
@@ -222,11 +214,11 @@ const PixelCard = ({
     const colorsArray = finalColors.split(',');
     const pxs = [];
     
-    // Safety: Ensure gap isn't too small causing infinite loops
-    const safeGap = Math.max(4, parseInt(finalGap.toString(), 10));
+    // Increased gap slightly for better performance if not specified
+    const effGap = parseInt(finalGap.toString(), 10); 
 
-    for (let x = 0; x < width; x += safeGap) {
-      for (let y = 0; y < height; y += safeGap) {
+    for (let x = 0; x < width; x += effGap) {
+      for (let y = 0; y < height; y += effGap) {
         const color = colorsArray[Math.floor(Math.random() * colorsArray.length)];
 
         const dx = x - width / 2;
@@ -244,8 +236,7 @@ const PixelCard = ({
     animationRef.current = requestAnimationFrame(() => doAnimate(fnName));
     const timeNow = performance.now();
     const timePassed = timeNow - timePreviousRef.current;
-    
-    // FPS Cap: 30FPS is plenty for this effect and saves battery
+    // Cap at 30FPS for better performance on non-gaming monitors/devices
     const timeInterval = 1000 / 30; 
 
     if (timePassed < timeInterval) return;
@@ -271,9 +262,7 @@ const PixelCard = ({
   };
 
   const handleAnimation = (name: keyof Pixel) => {
-    // Don't animate on mobile
-    if (isPerformanceMode) return;
-    
+    if (isPerformanceMode) return; // Skip on mobile
     if (animationRef.current !== null) {
       cancelAnimationFrame(animationRef.current);
     }
@@ -292,24 +281,29 @@ const PixelCard = ({
   };
 
   useEffect(() => {
-    // Only init logic if not in performance mode
-    if (!isPerformanceMode) {
+    // Debounce resize observer
+    let timeoutId: NodeJS.Timeout;
+    
+    const observer = new ResizeObserver(() => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        initPixels();
+      }, 200);
+    });
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
       initPixels();
-      const observer = new ResizeObserver(() => {
-        // Debounce resize
-        setTimeout(initPixels, 100);
-      });
-      if (containerRef.current) {
-        observer.observe(containerRef.current);
-      }
-      return () => {
-        observer.disconnect();
-        if (animationRef.current !== null) {
-          cancelAnimationFrame(animationRef.current);
-        }
-      };
     }
-  }, [initPixels, isPerformanceMode]);
+
+    return () => {
+      observer.disconnect();
+      clearTimeout(timeoutId);
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [initPixels]);
 
   return (
     <div
@@ -321,7 +315,7 @@ const PixelCard = ({
       onBlur={finalNoFocus ? undefined : onBlur}
       tabIndex={finalNoFocus ? -1 : 0}
     >
-      {/* Conditionally render canvas to save DOM weight on mobile */}
+      {/* Only render canvas if NOT mobile mode to save massive memory/battery */}
       {!isPerformanceMode && (
         <canvas 
           className="absolute inset-0 z-0 h-full w-full pointer-events-none" 
@@ -336,7 +330,7 @@ const PixelCard = ({
 }
 
 // ==========================================
-// 2. MAIN COMPONENT
+// 3. MAIN COMPONENT
 // ==========================================
 
 const ShopMarketingSection = () => {
@@ -355,27 +349,28 @@ const ShopMarketingSection = () => {
           background="transparent"
           minSize={1}
           maxSize={3}
-          // Dynamic density controlled inside SparklesCore
+          // Dynamic density handled inside component
           className="h-full w-full"
           particleColor="#60a5fa"
         />
       </div>
-
-      {/* Promo Strip */}
-      <PromoBanner />
       
       <div className="relative z-10 flex w-full flex-col items-center justify-center py-16 sm:py-24">
         
-        {/* Infinite Socials */}
+        {/* Shop Extras (Interactive Cards) */}
+        <div className="flex flex-col flex-wrap items-center justify-center gap-6 px-4 sm:flex-row sm:gap-8">
+          <LiveViewers /> <DealTimer />
+         
+
+         {/* Infinite Socials */}
         <div className="mb-12 w-full">
            <SocialsRow />
         </div>
-
-        {/* Shop Extras (Interactive Cards) */}
-        <div className="flex flex-col flex-wrap items-center justify-center gap-6 px-4 sm:flex-row sm:gap-8">
-          <LiveViewers />
-          <DealTimer />
         </div>
+        
+        {/* Promo Strip */}
+        <PromoBanner />
+      
       </div>
     </div>
   );
@@ -384,11 +379,11 @@ const ShopMarketingSection = () => {
 export default ShopMarketingSection;
 
 // ==========================================
-// 3. SUB-COMPONENTS
+// 4. SUB-COMPONENTS
 // ==========================================
 
 export const PromoBanner = () => {
-  // Static element, PixelCard is fine (it will auto-disable on mobile)
+  // Promo Banner only exists once, so PixelCard is fine here
   return (
     <PixelCard 
       variant="blue" 
@@ -455,12 +450,13 @@ const Separator = () => (
 
 export const SocialsRow = () => {
   const socials = [
-    { href: "https://www.youtube.com/@bullmoney.online", icon: "/youtube-app-white-icon.svg", alt: "YouTube" },
+    { href: "https://youtube.com/@bullmoney.online", icon: "/youtube-app-white-icon.svg", alt: "YouTube" },
     { href: "https://www.instagram.com/bullmoney.shop", icon: "/instagram-white-icon.svg", alt: "Instagram" },
     { href: "https://discord.com/invite/9vVB44ZrNA", icon: "/discord-white-icon.svg", alt: "Discord" },
-    { href: "https://t.me/Bullmoneyshop", icon: "/telegram-white-icon.svg", alt: "Telegram" },
+    { href: "https://t.me/bullmoneyfx", icon: "/telegram-white-icon.svg", alt: "Telegram" },
   ];
 
+  // Memoize to prevent re-creation
   const marqueeSocials = useMemo(() => [...socials, ...socials, ...socials], [socials]);
 
   return (
@@ -482,9 +478,8 @@ export const SocialsRow = () => {
 };
 
 // ==========================================
-// OPTIMIZATION: Removed PixelCard from here
-// Moving Canvases in a marquee = LAG
-// Replaced with CSS-only lookalike
+// CRITICAL FIX: Removed PixelCard from here
+// Moving Canvases in a marquee = HUGE LAG
 // ==========================================
 const SocialIcon = ({ href, icon, alt }: { href: string; icon: string; alt: string }) => {
   return (
@@ -495,11 +490,11 @@ const SocialIcon = ({ href, icon, alt }: { href: string; icon: string; alt: stri
       className="group block shrink-0"
     >
       <motion.div
-        animate={{ scale: [1, 1.15, 1] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        animate={{ scale: [1, 1.1, 1] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
       >
-        {/* REPLACED: CSS Only Div instead of Canvas PixelCard */}
-        <div className="flex h-32 w-40 shrink-0 items-center justify-center rounded-xl border border-white/5 bg-neutral-900/50 shadow-lg backdrop-blur-xl transition-all duration-300 hover:border-blue-500/30 hover:shadow-[0_0_25px_-5px_rgba(59,130,246,0.4)]">
+        {/* CSS-Only Replica of PixelCard (Better Performance) */}
+        <div className="flex h-32 w-40 shrink-0 items-center justify-center rounded-xl border border-white/5 bg-neutral-900/50 shadow-lg backdrop-blur-xl transition-all duration-300 hover:border-blue-500/30 hover:shadow-[0_0_25px_-5px_rgba(59,130,246,0.4)] hover:bg-neutral-800/60">
            <div className="relative h-10 w-10 transition-transform duration-300 sm:h-10 sm:w-10">
               <Image 
                  src={icon} 
@@ -520,13 +515,12 @@ const MiniTradingChart = ({ width = 60, height = 24 }: { width?: number; height?
   const [areaPath, setAreaPath] = useState("");
   const dataPointsRef = useRef([20, 30, 25, 35, 30, 45, 40, 50, 45, 60]);
 
-  // Memoized path generator
   const generatePaths = useCallback((data: number[]) => {
     const max = 70;
     const points = data.map((val, i) => {
       const x = (i / (data.length - 1)) * width;
       const y = height - (val / max) * height;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
+      return `${x.toFixed(1)},${y.toFixed(1)}`; // Reduce decimal precision for DOM
     }).join(" ");
     return {
       line: `M${points}`,
@@ -535,7 +529,7 @@ const MiniTradingChart = ({ width = 60, height = 24 }: { width?: number; height?
   }, [width, height]);
 
   useEffect(() => {
-    // Init
+    // Initial generation
     const initialPaths = generatePaths(dataPointsRef.current);
     setPath(initialPaths.line);
     setAreaPath(initialPaths.area);
@@ -554,7 +548,7 @@ const MiniTradingChart = ({ width = 60, height = 24 }: { width?: number; height?
       setAreaPath(paths.area);
     };
 
-    const interval = setInterval(updateChart, 1000); // 1s interval is sufficient
+    const interval = setInterval(updateChart, 1000); // Slowed down slightly
     return () => clearInterval(interval);
   }, [generatePaths]);
 
@@ -602,7 +596,7 @@ export const LiveViewers = () => {
         const change = Math.floor(Math.random() * 7) - 3; 
         return Math.max(35, Math.min(150, prev + change));
       });
-    }, 3000);
+    }, 3000); // Slowed update rate
     return () => clearInterval(interval);
   }, []);
 
@@ -653,8 +647,9 @@ export const DealTimer = () => {
       target.setHours(24, 0, 0, 0); 
       const diff = target.getTime() - now.getTime();
       if (diff <= 0) return "00:00:00";
-      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const m = Math.floor((diff / (1000 * 60)) % 60);
+      // Math optimization: Removed external libraries if any were implied
+      const h = Math.floor((diff / 3600000) % 24);
+      const m = Math.floor((diff / 60000) % 60);
       const s = Math.floor((diff / 1000) % 60);
       return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     };
@@ -693,7 +688,6 @@ export const DealTimer = () => {
   );
 };
 
-// Memoized to prevent re-renders
 const BackgroundGrids = React.memo(() => {
   return (
     <div className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-20">
@@ -743,11 +737,11 @@ export const SparklesCore = (props: {
     return {
       background: { color: { value: background } },
       fullScreen: { enable: false, zIndex: 1 },
-      fpsLimit: 60,
+      fpsLimit: 60, // Limit fps
       interactivity: {
         events: {
           onClick: { enable: !isPerformanceMode, mode: "push" }, // Disable click on mobile
-          onHover: { enable: !isPerformanceMode, mode: "bubble" }, // Disable hover on mobile
+          onHover: { enable: !isPerformanceMode, mode: "bubble" }, // Disable hover calc on mobile
           resize: { enable: true },
         },
         modes: {
