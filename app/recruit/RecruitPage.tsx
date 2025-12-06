@@ -240,7 +240,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       <div className="w-full max-w-xl relative z-10">
         <div className="mb-8 text-center">
            <h1 className="text-2xl font-black text-white tracking-tight opacity-50">
-            BULLMONEY<span className={cn("transition-colors duration-300", isVantage ? "text-purple-600" : "text-blue-600")}>FX</span>
+            BULLMONEY<span className={cn("transition-colors duration-300", isVantage ? "text-purple-600" : "text-blue-600")}>FREE</span>
           </h1>
         </div>
 
