@@ -10,15 +10,6 @@ import { useCalEmbed } from "@/app/hooks/useCalEmbed";
 import { CONSTANTS } from "@/constants/links";
 import { ContainerScroll } from "@/components/Mainpage/container-scroll-animation";
 
-// --- THREE.JS IMPORTS FOR GHOST CURSOR ---
-import * as THREE from "three";
-import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
-import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
-
-
-
 // --- NEW COMPONENT: EncryptedText ---
 // A placeholder for a complex text animation component (like the Aceternity UI version)
 // Replace with your actual implementation if different.
