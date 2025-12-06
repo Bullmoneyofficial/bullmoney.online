@@ -54,7 +54,7 @@ function cn(...classes: (string | undefined | null | false)[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-// --- MAIN NAVBAR COMPONENT ---
+// --- MAIN NAVBAR COMPONENT -----
 
 export const Navbar = () => {
   const navItems: NavItem[] = [
