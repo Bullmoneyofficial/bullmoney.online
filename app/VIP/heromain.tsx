@@ -445,184 +445,7 @@ const SparklesCore = (props: {
   );
 };
 
-// =========================================
-// 4. GHOST CURSOR (Inlined with Edge Fading Fix)
-// =========================================
-const GhostCursor = ({
-  trailLength = 50,
-  bloomStrength = 0.4,
-  bloomRadius = 0.5,
-  color = "#4aa0ff",
-}) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  
-  // Logic Refs
-  const trailBufRef = useRef<THREE.Vector2[]>([]);
-  const headRef = useRef(0);
-  const currentMouseRef = useRef(new THREE.Vector2(0.5, 0.5));
-  const pointerActiveRef = useRef(false);
 
-  // Shader Code
-  const baseVertexShader = `varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position, 1.0); }`;
-
-  const fragmentShader = `
-    uniform float iTime;
-    uniform vec3  iResolution;
-    uniform vec2  iMouse;
-    uniform vec2  iPrevMouse[MAX_TRAIL_LENGTH];
-    uniform float iOpacity;
-    uniform float iScale;
-    uniform vec3  iBaseColor;
-    varying vec2  vUv; // vUv represents UV coordinates (0 to 1 across the plane)
-
-    float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7))) * 43758.5453123); }
-    float noise(vec2 p){
-      vec2 i = floor(p), f = fract(p);
-      f *= f * (3. - 2. * f);
-      return mix(mix(hash(i + vec2(0.,0.)), hash(i + vec2(1.,0.)), f.x),
-                 mix(hash(i + vec2(0.,1.)), hash(i + vec2(1.,1.)), f.x), f.y);
-    }
-    float fbm(vec2 p){
-      float v = 0.0; float a = 0.5;
-      mat2 m = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
-      for(int i=0;i<5;i++){ v += a * noise(p); p = m * p * 2.0; a *= 0.5; }
-      return v;
-    }
-    vec4 blob(vec2 p, vec2 mousePos, float intensity, float activity) {
-      vec2 q = vec2(fbm(p * iScale + iTime * 0.1), fbm(p * iScale + vec2(5.2,1.3) + iTime * 0.1));
-      float smoke = fbm(p * iScale + q * 1.5);
-      float distFactor = 1.0 - smoothstep(0.0, 0.5 + 0.3/iScale, length(p - mousePos));
-      float alpha = pow(smoke, 2.5) * distFactor;
-      return vec4(iBaseColor * alpha * intensity, alpha * intensity);
-    }
-    void main() {
-      vec2 uv = (gl_FragCoord.xy / iResolution.xy * 2.0 - 1.0) * vec2(iResolution.x / iResolution.y, 1.0);
-      vec2 mouse = (iMouse * 2.0 - 1.0) * vec2(iResolution.x / iResolution.y, 1.0);
-      vec3 colorAcc = vec3(0.0);
-      float alphaAcc = 0.0;
-      vec4 b = blob(uv, mouse, 1.0, iOpacity);
-      colorAcc += b.rgb; alphaAcc += b.a;
-      for (int i = 0; i < MAX_TRAIL_LENGTH; i++) {
-        vec2 pm = (iPrevMouse[i] * 2.0 - 1.0) * vec2(iResolution.x / iResolution.y, 1.0);
-        float t = 1.0 - float(i) / float(MAX_TRAIL_LENGTH);
-        t = pow(t, 2.0);
-        if (t > 0.01) {
-          vec4 bt = blob(uv, pm, t * 0.8, iOpacity);
-          colorAcc += bt.rgb; alphaAcc += bt.a;
-        }
-      }
-      
-      // --- EDGE FADING LOGIC ---
-      float fadeAmount = 0.1; // Distance from edge (0.0 to 0.5) where fade starts
-      float edgeX = smoothstep(0.0, fadeAmount, vUv.x) * smoothstep(0.0, fadeAmount, 1.0 - vUv.x);
-      float edgeY = smoothstep(0.0, fadeAmount, vUv.y) * smoothstep(0.0, fadeAmount, 1.0 - vUv.y);
-      float edgeFade = min(edgeX, edgeY); // Fade based on the closest edge
-      
-      gl_FragColor = vec4(colorAcc, alphaAcc * iOpacity * edgeFade); // Apply fading to final alpha
-    }
-  `;
-
-  useEffect(() => {
-    const host = containerRef.current;
-    if (!host) return;
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, depth: false });
-    renderer.setClearColor(0x000000, 0);
-    rendererRef.current = renderer;
-    renderer.domElement.style.pointerEvents = 'none';
-    host.appendChild(renderer.domElement);
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const geom = new THREE.PlaneGeometry(2, 2);
-
-    const maxTrail = Math.floor(trailLength);
-    trailBufRef.current = Array.from({ length: maxTrail }, () => new THREE.Vector2(0.5, 0.5));
-
-    const material = new THREE.ShaderMaterial({
-      defines: { MAX_TRAIL_LENGTH: maxTrail },
-      uniforms: {
-        iTime: { value: 0 },
-        iResolution: { value: new THREE.Vector3(1, 1, 1) },
-        iMouse: { value: new THREE.Vector2(0.5, 0.5) },
-        iPrevMouse: { value: trailBufRef.current.map(v => v.clone()) },
-        iOpacity: { value: 1.0 },
-        iScale: { value: 1.0 },
-        iBaseColor: { value: new THREE.Color(color) }
-      },
-      vertexShader: baseVertexShader,
-      fragmentShader,
-      transparent: true,
-      depthTest: false
-    });
-    scene.add(new THREE.Mesh(geom, material));
-
-    const composer = new EffectComposer(renderer);
-    const renderPass = new RenderPass(scene, camera);
-    composer.addPass(renderPass);
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), bloomStrength, bloomRadius, 0);
-    composer.addPass(bloomPass);
-
-    const resize = () => {
-      const rect = host.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      renderer.setPixelRatio(dpr);
-      renderer.setSize(rect.width, rect.height, false);
-      composer.setSize(rect.width, rect.height);
-      material.uniforms.iResolution.value.set(rect.width * dpr, rect.height * dpr, 1);
-      material.uniforms.iScale.value = Math.max(0.5, Math.min(2.0, Math.min(rect.width, rect.height) / 600));
-      bloomPass.setSize(rect.width * dpr, rect.height * dpr);
-    };
-    const ro = new ResizeObserver(resize);
-    ro.observe(host);
-    resize();
-
-    const start = performance.now();
-    let rafId: number;
-
-    const animate = () => {
-      const now = performance.now();
-      const t = (now - start) / 1000;
-      
-      const N = trailBufRef.current.length;
-      headRef.current = (headRef.current + 1) % N;
-      trailBufRef.current[headRef.current].copy(currentMouseRef.current);
-      
-      const arr = material.uniforms.iPrevMouse.value as THREE.Vector2[];
-      for (let i = 0; i < N; i++) {
-        arr[i].copy(trailBufRef.current[(headRef.current - i + N) % N]);
-      }
-
-      material.uniforms.iOpacity.value = 1.0;
-      material.uniforms.iTime.value = t;
-
-      composer.render();
-      rafId = requestAnimationFrame(animate);
-    };
-
-    const onPointerMove = (e: PointerEvent) => {
-      const rect = host.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = 1 - (e.clientY - rect.top) / rect.height;
-      currentMouseRef.current.set(x, y);
-      pointerActiveRef.current = true;
-    };
-
-    window.addEventListener('pointermove', onPointerMove);
-    rafId = requestAnimationFrame(animate);
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      window.removeEventListener('pointermove', onPointerMove);
-      ro.disconnect();
-      renderer.dispose();
-      host.removeChild(renderer.domElement);
-    };
-  }, [trailLength, bloomStrength, bloomRadius, color]);
-
-  return <div ref={containerRef} className="absolute inset-0 z-0 pointer-events-none" />;
-};
 
 // =========================================
 // 5. ADMIN CONFIG & TYPES
@@ -670,7 +493,7 @@ function LoginPortal({ onLogin, onClose }: { onLogin: () => void, onClose: () =>
 
   return (
     <div className="relative w-full h-full min-h-[500px] flex flex-col items-center justify-center p-4 bg-[#020617] overflow-hidden rounded-3xl">
-      <GhostCursor />
+    
       <div className="relative z-10 w-full max-w-md">
         <div className="rounded-3xl border border-slate-800 bg-slate-950/80 backdrop-blur-xl shadow-2xl p-8">
           <div className="flex justify-between items-center mb-8">
@@ -837,8 +660,7 @@ export default function Hero() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-start overflow-hidden bg-neutral-950 w-full">
-      {/* UPDATED GHOST CURSOR */}
-      <GhostCursor />
+     
 
       {/* SPARKLES BACKGROUND */}
       <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
