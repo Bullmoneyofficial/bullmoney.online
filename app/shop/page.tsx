@@ -491,7 +491,7 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
               }
             });
           }
-          resumeTimeout = null;
+      
         }, 50);
         cleanupTarget(target);
       };
