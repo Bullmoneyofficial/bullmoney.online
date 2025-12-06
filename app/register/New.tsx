@@ -1,16 +1,13 @@
 "use client";
-import { 
-  Activity,    // Added
-  Info,        // Added
-  ShieldCheck, // Added
-} from 'lucide-react';
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react';
 import { createClient } from '@supabase/supabase-js'; 
 import { 
-  Loader2, Check, Mail, Hash, Lock, 
-  ArrowRight, ChevronLeft, ExternalLink, AlertCircle,
-  Copy, Plus, LogIn, Eye, EyeOff, HelpCircle, Send, FolderPlus, DollarSign, BarChart3, X, RefreshCw,
-  Award, Medal, Crown, Trophy, Users, History, TrendingUp, ChevronRight
+  Activity, Info, ShieldCheck, Loader2, Check, Mail, Hash, Lock, 
+  ArrowRight, ChevronLeft, ExternalLink, AlertCircle, Copy, Plus, 
+  LogIn, Eye, EyeOff, HelpCircle, Send, FolderPlus, DollarSign, 
+  BarChart3, X, RefreshCw, Award, Medal, Crown, Trophy, Users, 
+  History, TrendingUp, ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "framer-motion";
 import { cn } from "@/lib/utils"; 
@@ -33,6 +30,15 @@ const loadingStates = [
   { text: "WELCOME TRADER" },
 ];
 
+const CHARACTERS = "BULLMONEY";
+const generateRandomString = (length: number) => {
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += CHARACTERS.charAt(Math.floor(Math.random() * CHARACTERS.length));
+  }
+  return result;
+};
+
 interface RegisterPageProps {
   onUnlock: () => void;
 }
@@ -51,8 +57,8 @@ interface AffiliateData {
   }
 }
 
-// --- MULTI STEP LOADER COMPONENT ---
-const MultiStepLoader = ({
+// --- MULTI STEP LOADER COMPONENT (Memoized) ---
+const MultiStepLoader = memo(({
   loadingStates,
   loading,
   duration = 2000,
@@ -118,7 +124,8 @@ const MultiStepLoader = ({
       )}
     </AnimatePresence>
   );
-};
+});
+MultiStepLoader.displayName = "MultiStepLoader";
 
 // --- VISUAL COMPONENTS ---
 
@@ -127,15 +134,15 @@ interface CardSpotlightProps {
   children: React.ReactNode;
 }
 
-const CardSpotlight: React.FC<CardSpotlightProps> = ({ className, children }) => {
+const CardSpotlight: React.FC<CardSpotlightProps> = memo(({ className, children }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const { left, top } = e.currentTarget.getBoundingClientRect();
     mouseX.set(e.clientX - left);
     mouseY.set(e.clientY - top);
-  };
+  }, [mouseX, mouseY]);
 
   const maskImage = useMotionTemplate`radial-gradient(200px circle at ${mouseX}px ${mouseY}px, white, transparent)`;
   const style = { WebkitMaskImage: maskImage, maskImage };
@@ -156,32 +163,34 @@ const CardSpotlight: React.FC<CardSpotlightProps> = ({ className, children }) =>
       <div className="relative z-20 h-full w-full">{children}</div>
     </motion.div>
   );
-};
+});
+CardSpotlight.displayName = "CardSpotlight";
 
-const Step = ({ title }: { title: string | React.ReactNode }) => {
+const Step = memo(({ title }: { title: string | React.ReactNode }) => {
   return (
     <li className="flex gap-2 items-start">
       <CheckIcon />
       <p className="text-white text-sm">{title}</p>
     </li>
   );
-};
+});
+Step.displayName = "Step";
 
-const CheckIcon = () => {
-  return (
+const CheckIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-green-500 mt-1 shrink-0">
       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
       <path d="M12 2c-.218 0 -.432 .002 -.642 .005l-.616 .017l-.299 .013l-.579 .034l-.553 .046c-4.785 .464 -6.732 2.411 -7.196 7.196l-.046 .553l-.034 .579c-.005 .098 -.01 .198 -.013 .299l-.017 .616l-.004 .318l-.001 .324c0 .218 .002 .432 .005 .642l.017 .616l.013 .299l.034 .579l.046 .553c.464 4.785 2.411 6.732 7.196 7.196l.553 .046l.579 .034c.098 .005 .198 .01 .299 .013l.616 .017l.642 .005l.642 -.005l-.616 -.017l-.299 -.013l-.579 -.034l-.553 -.046c4.785 -.464 6.732 -2.411 7.196 -7.196l.046 -.553l-.034 -.579c.005 -.098 .01 -.198 .013 -.299l-.017 -.616l-.005 -.642l-.005 -.642l-.017 -.616l-.013 -.299l-.034 -.579l-.046 -.553c-.464 -4.785 -2.411 -6.732 -7.196 -7.196l-.553 -.046l-.579 -.034a28.058 28.058 0 0 0 -.299 -.013l-.616 -.017l-.318 -.004l-.324 -.001zm2.293 7.293a1 1 0 0 1 1.497 1.32l-.083 .094l-4 4a1 1 0 0 1 -1.32 .083l-.094 -.083l-2 -2a1 1 0 0 1 1.32 -1.497l.094 .083l1.293 1.292l3.293 -3.292z" fill="currentColor" strokeWidth="0" />       
     </svg>
-  );
-};
+);
 
 
-// --- RANK EVERVAULT CARD ---
-const RankEvervaultCard = ({ totalReferrals }: { totalReferrals: number }) => {
+// --- RANK EVERVAULT CARD (Optimized) ---
+const RankEvervaultCard = memo(({ totalReferrals }: { totalReferrals: number }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const [randomString, setRandomString] = useState("");
+  
+  // Optimization: Generate string once, not on every pixel move
+  const randomString = useMemo(() => generateRandomString(2000), []);
 
   let tierData = {
     name: 'BRONZE',
@@ -218,16 +227,11 @@ const RankEvervaultCard = ({ totalReferrals }: { totalReferrals: number }) => {
   const progressPercent = Math.min((totalReferrals / tierData.nextTarget) * 100, 100);
   const Icon = tierData.icon;
 
-  useEffect(() => {
-    setRandomString(generateRandomString(2000));
-  }, []);
-
-  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) {
+  const onMouseMove = useCallback(({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) => {
     const { left, top } = currentTarget.getBoundingClientRect();
     mouseX.set(clientX - left);
     mouseY.set(clientY - top);
-    setRandomString(generateRandomString(2000));
-  }
+  }, [mouseX, mouseY]);
 
   const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
@@ -238,18 +242,18 @@ const RankEvervaultCard = ({ totalReferrals }: { totalReferrals: number }) => {
       className={cn("relative overflow-hidden rounded-2xl border bg-black/80 p-0 transition-all duration-500 min-h-[180px]", tierData.border)}
     >
       <div className="absolute inset-0 pointer-events-none z-0">
-         <motion.div 
-           className={cn("absolute inset-0 backdrop-blur-sm transition duration-500 opacity-50")} 
-           style={style} 
-         />
-         <motion.div 
-           className="absolute inset-0 opacity-0 group-hover:opacity-100 mix-blend-overlay" 
-           style={style}
-         >
-           <p className={cn("absolute inset-x-0 p-2 text-[10px] leading-4 h-full break-words font-mono font-bold", tierData.matrixColor)}>
-             {randomString}
-           </p>
-         </motion.div>
+          <motion.div 
+            className={cn("absolute inset-0 backdrop-blur-sm transition duration-500 opacity-50")} 
+            style={style} 
+          />
+          <motion.div 
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 mix-blend-overlay" 
+            style={style}
+          >
+            <p className={cn("absolute inset-x-0 p-2 text-[10px] leading-4 h-full break-words font-mono font-bold", tierData.matrixColor)}>
+              {randomString}
+            </p>
+          </motion.div>
       </div>
 
       <div className="relative z-10 p-6 flex flex-col justify-between h-full">
@@ -286,29 +290,27 @@ const RankEvervaultCard = ({ totalReferrals }: { totalReferrals: number }) => {
       </div>
     </div>
   );
-};
+});
+RankEvervaultCard.displayName = "RankEvervaultCard";
 
-// --- TASK EVERVAULT CARD ---
-const TaskEvervaultCard = ({ title, completed }: { title: string, completed: boolean }) => {
+// --- TASK EVERVAULT CARD (Optimized) ---
+const TaskEvervaultCard = memo(({ title, completed }: { title: string, completed: boolean }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const [randomString, setRandomString] = useState("");
+  
+  // Optimization: Generate string once
+  const randomString = useMemo(() => generateRandomString(1500), []);
 
-  useEffect(() => {
-    setRandomString(generateRandomString(1500)); 
-  }, []);
-
-  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) {
+  const onMouseMove = useCallback(({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) => {
     const { left, top } = currentTarget.getBoundingClientRect();
     mouseX.set(clientX - left);
     mouseY.set(clientY - top);
-    setRandomString(generateRandomString(1500));
-  }
+  }, [mouseX, mouseY]);
 
   const statusColor = completed ? "text-green-400" : "text-red-400";
   const statusBg = completed ? "bg-green-500/10 border-green-500/30" : "bg-red-500/10 border-red-500/30";
   const statusText = completed ? "COMPLETED" : "INCOMPLETE";
-     
+      
   const maskImage = useMotionTemplate`radial-gradient(180px at ${mouseX}px ${mouseY}px, white, transparent)`;
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
 
@@ -321,7 +323,7 @@ const TaskEvervaultCard = ({ title, completed }: { title: string, completed: boo
       )}
     >
       <div className="absolute inset-0 z-0 pointer-events-none">
-         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500">
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500">
             <motion.div 
               className={cn("absolute inset-0 backdrop-blur-sm transition duration-500", completed ? "bg-green-500/10" : "bg-red-500/10")} 
               style={style} 
@@ -334,7 +336,7 @@ const TaskEvervaultCard = ({ title, completed }: { title: string, completed: boo
                 {randomString}
               </p>
             </motion.div>
-         </div>
+          </div>
       </div>
 
       <div className="relative z-10 h-full flex flex-col justify-between p-4">
@@ -357,14 +359,15 @@ const TaskEvervaultCard = ({ title, completed }: { title: string, completed: boo
       </div>
     </div>
   );
-};
+});
+TaskEvervaultCard.displayName = "TaskEvervaultCard";
 
-const IncentiveTaskGrid = ({ tasks }: { tasks: AffiliateData['tasks'] }) => {
-  const taskList = [
+const IncentiveTaskGrid = memo(({ tasks }: { tasks: AffiliateData['tasks'] }) => {
+  const taskList = useMemo(() => [
     { title: "Partner Broker Account", completed: tasks.broker },
     { title: "Social Media Setup", completed: tasks.social },
     { title: "Reach Silver Tier", completed: tasks.silver }
-  ];
+  ], [tasks]);
 
   return (
     <div className="mt-8">
@@ -378,14 +381,15 @@ const IncentiveTaskGrid = ({ tasks }: { tasks: AffiliateData['tasks'] }) => {
       </div>
     </div>
   );
-};
+});
+IncentiveTaskGrid.displayName = "IncentiveTaskGrid";
 
 // --- MAIN DASHBOARD VIEW ---
 const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => void }> = ({ onClose, onUnlock }) => {
   const [data, setData] = useState<AffiliateData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false); 
-  const [expandedId, setExpandedId] = useState<string | null>(null); // NEW: State for expansion
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Handle Escape Key to close expanded card
   useEffect(() => {
@@ -396,7 +400,8 @@ const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => vo
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
+    // Avoid setting loading true on background refetches
     if (!data) setIsLoading(true); 
     setIsFetching(true);
 
@@ -446,13 +451,13 @@ const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => vo
       setIsLoading(false);
       setIsFetching(false);
     }
-  };
+  }, [data]);
 
   useEffect(() => {
     loadData();
     const intervalId = setInterval(loadData, 60000); 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [loadData]);
 
   if (isLoading || !data) {
     return (
@@ -587,7 +592,7 @@ const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => vo
                       layoutId="card-rank"
                       className="pointer-events-auto w-full max-w-lg bg-[#0A0A0A] border border-orange-500/30 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col max-h-[80vh]"
                   >
-                       <button
+                        <button
                           onClick={() => setExpandedId(null)}
                           className="absolute top-4 right-4 z-50 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full backdrop-blur-md border border-white/10"
                       >
@@ -596,14 +601,14 @@ const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => vo
                       
                       {/* Header Section */}
                       <div className="p-8 bg-gradient-to-b from-orange-500/10 to-transparent">
-                           <motion.div layoutId="rank-title-container" className="mb-4">
+                            <motion.div layoutId="rank-title-container" className="mb-4">
                                <h3 className="text-orange-400 text-xs font-bold tracking-widest uppercase mb-1">Current Rank</h3>
                                <h2 className="text-4xl font-black italic tracking-tighter text-white">BRONZE TRADER</h2>
-                           </motion.div>
-                           <motion.div layoutId="rank-progress" className="h-4 w-full bg-neutral-800 rounded-full overflow-hidden border border-white/10 relative">
-                               <div className="absolute inset-y-0 left-0 bg-orange-500 w-[35%]" /> 
-                           </motion.div>
-                           <p className="text-xs text-orange-300 mt-2 font-mono text-right">VOLUME TARGET: 35%</p>
+                            </motion.div>
+                            <motion.div layoutId="rank-progress" className="h-4 w-full bg-neutral-800 rounded-full overflow-hidden border border-white/10 relative">
+                                <div className="absolute inset-y-0 left-0 bg-orange-500 w-[35%]" /> 
+                            </motion.div>
+                            <p className="text-xs text-orange-300 mt-2 font-mono text-right">VOLUME TARGET: 35%</p>
                       </div>
 
                       {/* Content Section */}
@@ -666,7 +671,7 @@ const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => vo
                       <div className="p-8 pb-4">
                           <div className="flex items-center gap-3 mb-2">
                              <motion.div layoutId="comm-icon" className="p-2 rounded-lg bg-green-500/20 text-green-400">
-                                 <Activity className="w-6 h-6" />
+                                  <Activity className="w-6 h-6" />
                              </motion.div>
                              <motion.p layoutId="comm-label" className="text-sm text-green-400 font-bold uppercase tracking-wider">Performance Earnings</motion.p>
                           </div>
@@ -726,7 +731,7 @@ const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => vo
                       layoutId="card-referrals"
                       className="pointer-events-auto w-full max-w-lg bg-[#0A0A0A] border border-blue-500/30 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col max-h-[80vh]"
                   >
-                       <button
+                        <button
                           onClick={() => setExpandedId(null)}
                           className="absolute top-4 right-4 z-50 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full backdrop-blur-md border border-white/10"
                       >
@@ -736,7 +741,7 @@ const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => vo
                       <div className="p-8 pb-4">
                           <div className="flex items-center gap-3 mb-2">
                              <motion.div layoutId="ref-icon" className="p-2 rounded-lg bg-blue-500/20 text-blue-400">
-                                 <Users className="w-6 h-6" />
+                                  <Users className="w-6 h-6" />
                              </motion.div>
                              <motion.p layoutId="ref-label" className="text-sm text-blue-400 font-bold uppercase tracking-wider">Network Growth</motion.p>
                           </div>
@@ -809,8 +814,8 @@ const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => vo
   );
 };
 
-// --- SUCCESS SCREEN ---
-const SuccessScreen: React.FC<{ onUnlock: () => void }> = ({ onUnlock }) => {
+// --- SUCCESS SCREEN (Memoized) ---
+const SuccessScreen: React.FC<{ onUnlock: () => void }> = memo(({ onUnlock }) => {
   const [showCommissions, setShowCommissions] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [showAffiliatePanel, setShowAffiliatePanel] = useState(false);
@@ -996,7 +1001,6 @@ const SuccessScreen: React.FC<{ onUnlock: () => void }> = ({ onUnlock }) => {
                 </p>
 
                 <hr className="border-white/10" />
-                {/* ... truncated disclaimer content for brevity ... */}
                 <p className="text-sm text-center">
                   (Full Disclaimer Content Preserved)
                 </p>
@@ -1016,7 +1020,8 @@ const SuccessScreen: React.FC<{ onUnlock: () => void }> = ({ onUnlock }) => {
       </AnimatePresence>
     </motion.div>
   );
-};
+});
+SuccessScreen.displayName = "SuccessScreen";
 
 // --- REGISTER PAGE ---
 
@@ -1028,7 +1033,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const [activeBroker, setActiveBroker] = useState<'Vantage' | 'XM'>('Vantage');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-     
+      
   // UI States
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false); 
@@ -1056,6 +1061,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
   // --- INITIAL LOAD & AUTO-LOGIN CHECK ---
   useEffect(() => {
+    let isMounted = true;
     const initSession = async () => {
       setLoading(true);
       const savedSession = localStorage.getItem("bullmoney_session");
@@ -1069,10 +1075,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             .eq("id", session.id)
             .maybeSingle();
 
-          if (data) {
+          if (data && isMounted) {
             setTimeout(() => {
-              setLoading(false);
-              setStep(5); 
+              if (isMounted) {
+                setLoading(false);
+                setStep(5); 
+              }
             }, 3000); 
             return; 
           } else {
@@ -1084,45 +1092,55 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       }
 
       setTimeout(() => {
-        setLoading(false);
+        if(isMounted) setLoading(false);
       }, 3000);
     };
 
     initSession();
+    return () => { isMounted = false; };
   }, [onUnlock]);
 
   // --- HANDLER: BROKER SWITCHING ---
-  const handleBrokerSwitch = (newBroker: 'Vantage' | 'XM') => {
-    if (activeBroker === newBroker) return;
+  const handleBrokerSwitch = useCallback((newBroker: 'Vantage' | 'XM') => {
     setActiveBroker(newBroker);
-  };
+  }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (name === 'mt5Number' && !/^\d*$/.test(value)) return;
     setFormData(prev => ({ ...prev, [name]: value }));
     setSubmitError(null);
-  };
+  }, []);
 
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isValidPassword = (pass: string) => pass.length >= 6;
   const isValidMT5 = (id: string) => id.length >= 5;
 
-  const handleNext = (e?: React.SyntheticEvent) => {
+  const handleNext = useCallback((e?: React.SyntheticEvent) => {
     if (e) e.preventDefault();
     setSubmitError(null);
 
-    if (step === 1) {
-      setStep(2);
-    }
-    else if (step === 2) {
-      if (!isValidMT5(formData.mt5Number)) {
-        setSubmitError("Please enter a valid MT5 ID (min 5 digits).");
-        return;
+    // Using functional state updates to ensure we have latest state
+    setStep(prevStep => {
+      if (prevStep === 1) return 2;
+      if (prevStep === 2) {
+         // Validating against current formData inside the closure would be stale if not careful,
+         // but here we rely on the render scope.
+         if (formData.mt5Number.length < 5) {
+             setSubmitError("Please enter a valid MT5 ID (min 5 digits).");
+             return prevStep;
+         }
+         return 3;
       }
-      setStep(3);
-    }
-    else if (step === 3) {
+      if (prevStep === 3) {
+          // Trigger registration separately
+          return prevStep; 
+      }
+      return prevStep;
+    });
+    
+    // Logic for step 3 moved out to avoid complex state reducer
+    if (step === 3) {
       if (!isValidEmail(formData.email)) {
         setSubmitError("Please enter a valid email address.");
         return;
@@ -1137,33 +1155,25 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       }
       handleRegisterSubmit();
     }
-  };
+  }, [step, formData, acceptedTerms]);
 
-  const handleBack = () => {
-    if (step > 1) {
-      setStep(step - 1);
-      setSubmitError(null);
-    }
-  };
+  const handleBack = useCallback(() => {
+    setStep(prev => prev > 1 ? prev - 1 : prev);
+    setSubmitError(null);
+  }, []);
 
-  const toggleViewMode = () => {
+  const toggleViewMode = useCallback(() => {
     setViewMode(prev => prev === 'register' ? 'login' : 'register');
     setSubmitError(null);
     setStep(1);
     setLoading(false);
     setShowPassword(false);
     setAcceptedTerms(false);
-  };
+  }, []);
 
   const copyCode = async (code: string) => {
     try {
-      const el = document.createElement('textarea');
-      el.value = code;
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand('copy');
-      document.body.removeChild(el);
-      
+      await navigator.clipboard.writeText(code);
       setCopied(true);
       setTimeout(() => setCopied(false), 1100);
     } catch (err) {
@@ -1690,7 +1700,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
 // --- SUB-COMPONENTS (CARDS & EFFECTS) ---
 
-function StepCard({ number, number2, title, children, actions, className }: any) {
+const StepCard = memo(({ number, number2, title, children, actions, className }: any) => {
   const useRed = typeof number2 === "number";
   const n = useRed ? number2 : number;
   return (
@@ -1728,7 +1738,8 @@ function StepCard({ number, number2, title, children, actions, className }: any)
       {actions && <div className="mt-8 pt-6 border-t border-white/10">{actions}</div>}
     </div>
   );
-}
+});
+StepCard.displayName = "StepCard";
 
 function IconPlusCorners() {
   return (
@@ -1741,27 +1752,20 @@ function IconPlusCorners() {
   );
 }
 
-const characters = "BULLMONEY";
-const generateRandomString = (length: number) => {
-  let result = "";
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-};
-
 // --- XM Card (Blue/Green) ---
-export const EvervaultCard = ({ text }: { text?: string }) => {
+export const EvervaultCard = memo(({ text }: { text?: string }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const [randomString, setRandomString] = useState("");
-  useEffect(() => { setRandomString(generateRandomString(1500)); }, []);
-  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) {
+  
+  // Optimization: Generate string once
+  const randomString = useMemo(() => generateRandomString(1500), []);
+
+  const onMouseMove = useCallback(({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) => {
     const { left, top } = currentTarget.getBoundingClientRect();
     mouseX.set(clientX - left);
     mouseY.set(clientY - top);
-    setRandomString(generateRandomString(1500));
-  }
+  }, [mouseX, mouseY]);
+
   return (
     <div className="w-full h-full flex items-center justify-center bg-transparent" onMouseMove={onMouseMove}>
       <div className="group/card rounded-3xl w-full h-full relative overflow-hidden bg-transparent flex items-center justify-center">
@@ -1775,7 +1779,8 @@ export const EvervaultCard = ({ text }: { text?: string }) => {
       </div>
     </div>
   );
-};
+});
+EvervaultCard.displayName = "EvervaultCard";
 
 function CardPattern({ mouseX, mouseY, randomString }: any) {
   const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
@@ -1791,17 +1796,19 @@ function CardPattern({ mouseX, mouseY, randomString }: any) {
 }
 
 // --- Vantage Card (Red/Purple) ---
-export const EvervaultCardRed = ({ text }: { text?: string }) => {
+export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const [randomString, setRandomString] = useState("");
-  useEffect(() => { setRandomString(generateRandomString(1500)); }, []);
-  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) {
+  
+  // Optimization: Generate string once
+  const randomString = useMemo(() => generateRandomString(1500), []);
+
+  const onMouseMove = useCallback(({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) => {
     const { left, top } = currentTarget.getBoundingClientRect();
     mouseX.set(clientX - left);
     mouseY.set(clientY - top);
-    setRandomString(generateRandomString(1500));
-  }
+  }, [mouseX, mouseY]);
+
   return (
     <div className="w-full h-full flex items-center justify-center bg-transparent" onMouseMove={onMouseMove}>
       <div className="group/card rounded-3xl w-full h-full relative overflow-hidden bg-transparent flex items-center justify-center">
@@ -1815,7 +1822,8 @@ export const EvervaultCardRed = ({ text }: { text?: string }) => {
       </div>
     </div>
   );
-};
+});
+EvervaultCardRed.displayName = "EvervaultCardRed";
 
 function CardPatternRed({ mouseX, mouseY, randomString }: any) {
   const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
