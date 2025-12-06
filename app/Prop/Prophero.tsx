@@ -124,31 +124,7 @@ export function Hero() {
                 challenges. Start your journey to becoming a funded trader in
                 2025. Join top challenges like FTMO and GoatFundedTrader today!
               </motion.p>
-              
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: 0.7 }}
-                className="mb-10 mt-8 flex w-full flex-col items-center justify-center gap-4 px-8 sm:flex-row md:mb-20"
-              >
-                <Button
-                  as={Link}
-                  href="https://checkout.goatfundedtrader.com/aff/Bullmoney/"
-                  variant="primary"
-                  className="hidden md:block w-60 text-center"
-                >
-                  GOATFUNDEDTRADER
-                </Button>
-
-                <Button
-                  as={Link}
-                  href="https://trader.ftmo.com/sso?affiliates=fGDPMCcFOXviWzowTyxV"
-                  variant="primary"
-                  className="hidden md:block w-60 text-center"
-                >
-                  FTMO CHALLENGES
-                </Button>
-              </motion.div>
+            
             </>
           }
         >
