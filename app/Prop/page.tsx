@@ -271,7 +271,8 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
               rotation: normalizedRotation + 360,
               duration: spinDuration * (1 - normalizedRotation / 360),
               ease: 'none',
-              onComplete: () => spinTl.current?.restart()
+              // FIXED HERE: Wrapped in curly braces to return void
+              onComplete: () => { spinTl.current?.restart(); }
             });
           }
           resumeTimeout = null;
@@ -353,7 +354,7 @@ export default function Home() {
       <Hero />
       <Features />
       <AboutContent />
-      
+      <Footer />
     </main>
   );
 }
