@@ -341,7 +341,7 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
       
       <Socials />
             <Shopmain />
-      <Hero />
+   
       <RecruitPage onUnlock={() => {}} />
       <AffiliateRecruitsDashboard onBack={() => router.push("/")} />
    
