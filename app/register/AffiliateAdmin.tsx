@@ -20,239 +20,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// =========================================
-// 2. GHOST CURSOR ENGINE (Visuals)
-// =========================================
 
-type GhostCursorProps = {
-  style?: React.CSSProperties;
-  trailLength?: number;
-  bloomStrength?: number;
-  bloomRadius?: number;
-  color?: string; 
-};
-
-const GhostCursorBackground: React.FC<GhostCursorProps> = ({
-  style,
-  trailLength = 50,
-  bloomStrength = 0.6, // Increased slightly for the dark login screen
-  bloomRadius = 0.5,
-  color = "#0ea5e9", // Sky-500 to match your UI
-}) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const composerRef = useRef<EffectComposer | null>(null);
-  
-  // Logic Refs
-  const trailBufRef = useRef<THREE.Vector2[]>([]);
-  const headRef = useRef(0);
-  const rafRef = useRef<number | null>(null);
-  const lastMoveTimeRef = useRef(0);
-  const pointerActiveRef = useRef(false);
-  const currentMouseRef = useRef(new THREE.Vector2(0.5, 0.5));
-  const velocityRef = useRef(new THREE.Vector2(0, 0));
-  const fadeOpacityRef = useRef(1.0);
-
-  // Shader Code (Smoky Trail)
-  const baseVertexShader = `
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = vec4(position, 1.0);
-    }
-  `;
-
-  const fragmentShader = `
-    uniform float iTime;
-    uniform vec3  iResolution;
-    uniform vec2  iMouse;
-    uniform vec2  iPrevMouse[MAX_TRAIL_LENGTH];
-    uniform float iOpacity;
-    uniform float iScale;
-    uniform vec3  iBaseColor;
-    varying vec2  vUv;
-
-    float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7))) * 43758.5453123); }
-    float noise(vec2 p){
-      vec2 i = floor(p), f = fract(p);
-      f *= f * (3. - 2. * f);
-      return mix(mix(hash(i + vec2(0.,0.)), hash(i + vec2(1.,0.)), f.x),
-                 mix(hash(i + vec2(0.,1.)), hash(i + vec2(1.,1.)), f.x), f.y);
-    }
-    float fbm(vec2 p){
-      float v = 0.0; float a = 0.5;
-      mat2 m = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
-      for(int i=0;i<5;i++){ v += a * noise(p); p = m * p * 2.0; a *= 0.5; }
-      return v;
-    }
-    vec4 blob(vec2 p, vec2 mousePos, float intensity, float activity) {
-      vec2 q = vec2(fbm(p * iScale + iTime * 0.1), fbm(p * iScale + vec2(5.2,1.3) + iTime * 0.1));
-      float smoke = fbm(p * iScale + q * 1.5);
-      float distFactor = 1.0 - smoothstep(0.0, 0.5 + 0.3/iScale, length(p - mousePos));
-      float alpha = pow(smoke, 2.5) * distFactor;
-      return vec4(iBaseColor * alpha * intensity, alpha * intensity);
-    }
-
-    void main() {
-      vec2 uv = (gl_FragCoord.xy / iResolution.xy * 2.0 - 1.0) * vec2(iResolution.x / iResolution.y, 1.0);
-      vec2 mouse = (iMouse * 2.0 - 1.0) * vec2(iResolution.x / iResolution.y, 1.0);
-      vec3 colorAcc = vec3(0.0);
-      float alphaAcc = 0.0;
-      
-      vec4 b = blob(uv, mouse, 1.0, iOpacity);
-      colorAcc += b.rgb; alphaAcc += b.a;
-
-      for (int i = 0; i < MAX_TRAIL_LENGTH; i++) {
-        vec2 pm = (iPrevMouse[i] * 2.0 - 1.0) * vec2(iResolution.x / iResolution.y, 1.0);
-        float t = 1.0 - float(i) / float(MAX_TRAIL_LENGTH);
-        t = pow(t, 2.0);
-        if (t > 0.01) {
-          vec4 bt = blob(uv, pm, t * 0.8, iOpacity);
-          colorAcc += bt.rgb; alphaAcc += bt.a;
-        }
-      }
-      
-      float edgeFade = smoothstep(0.0, 0.15, min(vUv.x, 1.0 - vUv.x)) * smoothstep(0.0, 0.15, min(vUv.y, 1.0 - vUv.y));
-      gl_FragColor = vec4(colorAcc, alphaAcc * iOpacity * edgeFade);
-    }
-  `;
-
-  // Film Grain to hide banding
-  const FilmGrainShader = {
-    uniforms: { tDiffuse: { value: null }, iTime: { value: 0 }, intensity: { value: 0.05 } },
-    vertexShader: baseVertexShader,
-    fragmentShader: `
-      uniform sampler2D tDiffuse; uniform float iTime; uniform float intensity; varying vec2 vUv;
-      float hash1(float n){ return fract(sin(n)*43758.5453); }
-      void main(){
-        vec4 color = texture2D(tDiffuse, vUv);
-        float n = hash1(vUv.x*1000.0 + vUv.y*2000.0 + iTime) * 2.0 - 1.0;
-        color.rgb += n * intensity * color.rgb;
-        gl_FragColor = color;
-      }
-    `
-  };
-
-  useEffect(() => {
-    const host = containerRef.current;
-    if (!host) return;
-
-    const renderer = new THREE.WebGLRenderer({
-      antialias: true, alpha: true, depth: false, powerPreference: 'high-performance', premultipliedAlpha: false
-    });
-    renderer.setClearColor(0x000000, 0);
-    rendererRef.current = renderer;
-    renderer.domElement.style.pointerEvents = 'none';
-    host.appendChild(renderer.domElement);
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const geom = new THREE.PlaneGeometry(2, 2);
-
-    const maxTrail = Math.floor(trailLength);
-    trailBufRef.current = Array.from({ length: maxTrail }, () => new THREE.Vector2(0.5, 0.5));
-
-    const material = new THREE.ShaderMaterial({
-      defines: { MAX_TRAIL_LENGTH: maxTrail },
-      uniforms: {
-        iTime: { value: 0 },
-        iResolution: { value: new THREE.Vector3(1, 1, 1) },
-        iMouse: { value: new THREE.Vector2(0.5, 0.5) },
-        iPrevMouse: { value: trailBufRef.current.map(v => v.clone()) },
-        iOpacity: { value: 1.0 },
-        iScale: { value: 1.0 },
-        iBaseColor: { value: new THREE.Color(color) }
-      },
-      vertexShader: baseVertexShader,
-      fragmentShader,
-      transparent: true,
-      depthTest: false
-    });
-    scene.add(new THREE.Mesh(geom, material));
-
-    const composer = new EffectComposer(renderer);
-    composerRef.current = composer;
-    composer.addPass(new RenderPass(scene, camera));
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), bloomStrength, bloomRadius, 0);
-    composer.addPass(bloomPass);
-    const filmPass = new ShaderPass(FilmGrainShader as any);
-    composer.addPass(filmPass);
-
-    const resize = () => {
-      const rect = host.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      renderer.setPixelRatio(dpr);
-      renderer.setSize(rect.width, rect.height, false);
-      composer.setSize(rect.width, rect.height);
-      material.uniforms.iResolution.value.set(rect.width * dpr, rect.height * dpr, 1);
-      material.uniforms.iScale.value = Math.max(0.5, Math.min(2.0, Math.min(rect.width, rect.height) / 600));
-      bloomPass.setSize(rect.width * dpr, rect.height * dpr);
-    };
-    const ro = new ResizeObserver(resize);
-    ro.observe(host);
-    resize();
-
-    const start = performance.now();
-    const animate = () => {
-      const now = performance.now();
-      const t = (now - start) / 1000;
-      
-      // Inertia & Fade Logic
-      if (pointerActiveRef.current) {
-        velocityRef.current.set(
-          currentMouseRef.current.x - material.uniforms.iMouse.value.x,
-          currentMouseRef.current.y - material.uniforms.iMouse.value.y
-        );
-        material.uniforms.iMouse.value.copy(currentMouseRef.current);
-        fadeOpacityRef.current = 1.0;
-      } else {
-        velocityRef.current.multiplyScalar(0.9); // inertia
-        if (velocityRef.current.lengthSq() > 1e-6) material.uniforms.iMouse.value.add(velocityRef.current);
-        if (now - lastMoveTimeRef.current > 500) {
-           fadeOpacityRef.current = Math.max(0, fadeOpacityRef.current - 0.02);
-        }
-      }
-
-      // Update Trail
-      const N = trailBufRef.current.length;
-      headRef.current = (headRef.current + 1) % N;
-      trailBufRef.current[headRef.current].copy(material.uniforms.iMouse.value);
-      const arr = material.uniforms.iPrevMouse.value as THREE.Vector2[];
-      for (let i = 0; i < N; i++) {
-        arr[i].copy(trailBufRef.current[(headRef.current - i + N) % N]);
-      }
-
-      material.uniforms.iOpacity.value = fadeOpacityRef.current;
-      material.uniforms.iTime.value = t;
-      filmPass.uniforms.iTime.value = t;
-
-      composer.render();
-      rafRef.current = requestAnimationFrame(animate);
-    };
-
-    const onPointerMove = (e: PointerEvent) => {
-      const rect = host.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = 1 - (e.clientY - rect.top) / rect.height;
-      currentMouseRef.current.set(x, y);
-      pointerActiveRef.current = true;
-      lastMoveTimeRef.current = performance.now();
-    };
-
-    window.addEventListener('pointermove', onPointerMove);
-    rafRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      window.removeEventListener('pointermove', onPointerMove);
-      ro.disconnect();
-      renderer.dispose();
-      host.removeChild(renderer.domElement);
-    };
-  }, [trailLength, bloomStrength, bloomRadius, color]);
-
-  return <div ref={containerRef} className="absolute inset-0 z-0 pointer-events-none" style={style} />;
-};
 
 // =========================================
 // 3. TYPES & LOGIC
@@ -404,9 +172,7 @@ function AccessPortal() {
   return (
     <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-4 relative overflow-hidden">
       
-      {/* --- GHOST GLOW BACKGROUND --- */}
-      {/* Replaces the static blur blobs */}
-      <GhostCursorBackground />
+      
       
       <AnimatePresence mode="wait">
         {!showLogin ? (
@@ -537,8 +303,7 @@ function EditUserModal({ user, onClose }: { user: AffiliateUser | null; onClose:
       });
     }
   }, [user]);
-
-  const handleSave = async (e: React.FormEvent) => {
+const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     setIsSaving(true);
@@ -547,10 +312,15 @@ function EditUserModal({ user, onClose }: { user: AffiliateUser | null; onClose:
       const payload = {
         ...formData,
         commission_balance: Number(formData.commission_balance),
-        total_referred_manual: formData.total_referred_manual = '' || formData.total_referred_manual === null 
-          ? null 
-          : Number(formData.total_referred_manual)
+        // FIXED LOGIC BELOW:
+        // 1. Changed = to ===
+        // 2. Added (as any) to handle the temporary string value from the form input
+        total_referred_manual: 
+          (formData.total_referred_manual as any) === '' || formData.total_referred_manual === null 
+            ? null 
+            : Number(formData.total_referred_manual)
       };
+      
       await updateAffiliate(user.id, payload as any);
       onClose();
     } catch (err: any) {
@@ -560,7 +330,6 @@ function EditUserModal({ user, onClose }: { user: AffiliateUser | null; onClose:
       setIsSaving(false);
     }
   };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
