@@ -17,7 +17,7 @@ import {
   useMotionValue,
   useSpring,
 } from "framer-motion";
-import { getSupabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import { SparklesCore } from "./sparkles"; 
 
 
