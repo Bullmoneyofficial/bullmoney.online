@@ -1072,7 +1072,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       <div className="w-full max-w-xl relative z-10">
         <div className="mb-8 text-center">
            <h1 className="text-2xl font-black text-white tracking-tight opacity-50">
-            BULLMONEY <span className={cn("transition-colors duration-300", isVantage ? "text-purple-600" : "text-blue-600")}>SIGNUP</span>
+            BULLMONEY <span className={cn("transition-colors duration-300", isVantage ? "text-purple-600" : "text-blue-600")}>COMMUNITY</span>
           </h1>
         </div>
 
@@ -1522,7 +1522,7 @@ const generateRandomString = (length: number) => {
 };
 
 // --- XM Card (Blue/Green) ---
-const EvervaultCard = ({ text }: { text?: string }) => {
+export const EvervaultCard = ({ text }: { text?: string }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const [randomString, setRandomString] = useState("");
@@ -1562,7 +1562,7 @@ function CardPattern({ mouseX, mouseY, randomString }: any) {
 }
 
 // --- Vantage Card (Red/Purple) ---
-const EvervaultCardRed = ({ text }: { text?: string }) => {
+export const EvervaultCardRed = ({ text }: { text?: string }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const [randomString, setRandomString] = useState("");
