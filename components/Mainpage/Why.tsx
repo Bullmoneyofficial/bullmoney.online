@@ -18,7 +18,7 @@ import {
   useSpring,
 } from "framer-motion";
 import { useRef } from "react";
-import { getSupabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 
 
 
