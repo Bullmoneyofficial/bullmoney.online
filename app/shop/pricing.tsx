@@ -18,8 +18,7 @@ import {
   useSpring,
 } from "framer-motion";
 import { useRef } from "react";
-import { getSupabase } from "@/lib/supabaseClient";
-const supabase = getSupabase();
+import { supabase } from "@/lib/supabaseClient"; // <-- FIX APPLIED
 
 const structuredData = {
   "@context": "https://schema.org",
