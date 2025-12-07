@@ -1,26 +1,33 @@
-@import "tailwindcss";
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
+/* --- 1. Define Root CSS Variables --- */
+/* These variables define your light/dark mode color palette. */
 :root {
+  /* Light mode colors */
   --background: #ffffff;
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 @media (prefers-color-scheme: dark) {
   :root {
+    /* Dark mode colors */
     --background: #0a0a0a;
     --foreground: #ededed;
   }
 }
 
+/* --- 2. Remove Font Variables and Apply Colors --- */
+/* The non-standard @theme block is removed. 
+   Font configuration is handled in layout.tsx and tailwind.config.ts. */
+
 body {
+  /* Apply the color variables for the background and text color */
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  
+  /* Remove the font-family definition here, 
+     as it should be managed by the font classes applied in layout.tsx 
+     (e.g., inter.className or font-sans) */
 }
