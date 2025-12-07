@@ -1,16 +1,12 @@
 "use client";
-import { 
-  Activity,    // Added
-  Info,        // Added
-  ShieldCheck, // Added
-} from 'lucide-react';
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { createClient } from '@supabase/supabase-js'; 
 import { 
   Loader2, Check, Mail, Hash, Lock, 
   ArrowRight, ChevronLeft, ExternalLink, AlertCircle,
   Copy, Plus, LogIn, Eye, EyeOff, HelpCircle, Send, FolderPlus, DollarSign, BarChart3, X, RefreshCw,
-  Award, Medal, Crown, Trophy, Users, History, TrendingUp, ChevronRight
+  Award, Medal, Crown, Trophy, Users, History, TrendingUp, ChevronRight, Activity, Info, ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "framer-motion";
 import { cn } from "@/lib/utils"; 
@@ -51,8 +47,18 @@ interface AffiliateData {
   }
 }
 
-// --- MULTI STEP LOADER COMPONENT ---
-const MultiStepLoader = ({
+// --- UTILS ---
+const characters = "BULLMONEY";
+const generateRandomString = (length: number) => {
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+};
+
+// --- MULTI STEP LOADER COMPONENT (OPTIMIZED) ---
+const MultiStepLoader = memo(({
   loadingStates,
   loading,
   duration = 2000,
@@ -90,9 +96,10 @@ const MultiStepLoader = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#050B14]"
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#050B14] cursor-wait"
         >
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none" />
+          {/* Reduced blur for mobile performance */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/20 rounded-full blur-[60px] md:blur-[100px] pointer-events-none will-change-transform" />
           
           <div className="relative z-10 flex flex-col items-center">
             <div className="w-20 h-20 border-t-2 border-l-2 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] rounded-full animate-spin mb-8"></div>
@@ -118,16 +125,16 @@ const MultiStepLoader = ({
       )}
     </AnimatePresence>
   );
-};
+});
 
-// --- VISUAL COMPONENTS ---
+// --- VISUAL COMPONENTS (MEMOIZED) ---
 
 interface CardSpotlightProps {
   className?: string;
   children: React.ReactNode;
 }
 
-const CardSpotlight: React.FC<CardSpotlightProps> = ({ className, children }) => {
+const CardSpotlight = memo<CardSpotlightProps>(({ className, children }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -150,13 +157,13 @@ const CardSpotlight: React.FC<CardSpotlightProps> = ({ className, children }) =>
     >
       <div className="absolute inset-0 z-10 bg-neutral-900/50 [mask-image:radial-gradient(transparent,black)] pointer-events-none" />
       <motion.div
-        className="absolute inset-0 z-10 bg-gradient-to-r from-green-500/40 to-blue-500/40 opacity-0 transition duration-500 group-hover:opacity-100"
+        className="absolute inset-0 z-10 bg-gradient-to-r from-green-500/40 to-blue-500/40 opacity-0 transition duration-500 group-hover:opacity-100 will-change-transform"
         style={style}
       />
       <div className="relative z-20 h-full w-full">{children}</div>
     </motion.div>
   );
-};
+});
 
 const Step = ({ title }: { title: string | React.ReactNode }) => {
   return (
@@ -167,18 +174,16 @@ const Step = ({ title }: { title: string | React.ReactNode }) => {
   );
 };
 
-const CheckIcon = () => {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-green-500 mt-1 shrink-0">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-      <path d="M12 2c-.218 0 -.432 .002 -.642 .005l-.616 .017l-.299 .013l-.579 .034l-.553 .046c-4.785 .464 -6.732 2.411 -7.196 7.196l-.046 .553l-.034 .579c-.005 .098 -.01 .198 -.013 .299l-.017 .616l-.004 .318l-.001 .324c0 .218 .002 .432 .005 .642l.017 .616l.013 .299l.034 .579l.046 .553c.464 4.785 2.411 6.732 7.196 7.196l.553 .046l.579 .034c.098 .005 .198 .01 .299 .013l.616 .017l.642 .005l.642 -.005l-.616 -.017l-.299 -.013l-.579 -.034l-.553 -.046c4.785 -.464 6.732 -2.411 7.196 -7.196l.046 -.553l-.034 -.579c.005 -.098 .01 -.198 .013 -.299l-.017 -.616l-.005 -.642l-.005 -.642l-.017 -.616l-.013 -.299l-.034 -.579l-.046 -.553c-.464 -4.785 -2.411 -6.732 -7.196 -7.196l-.553 -.046l-.579 -.034a28.058 28.058 0 0 0 -.299 -.013l-.616 -.017l-.318 -.004l-.324 -.001zm2.293 7.293a1 1 0 0 1 1.497 1.32l-.083 .094l-4 4a1 1 0 0 1 -1.32 .083l-.094 -.083l-2 -2a1 1 0 0 1 1.32 -1.497l.094 .083l1.293 1.292l3.293 -3.292z" fill="currentColor" strokeWidth="0" />       
-    </svg>
-  );
-};
+const CheckIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-green-500 mt-1 shrink-0">
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    <path d="M12 2c-.218 0 -.432 .002 -.642 .005l-.616 .017l-.299 .013l-.579 .034l-.553 .046c-4.785 .464 -6.732 2.411 -7.196 7.196l-.046 .553l-.034 .579c-.005 .098 -.01 .198 -.013 .299l-.017 .616l-.004 .318l-.001 .324c0 .218 .002 .432 .005 .642l.017 .616l.013 .299l.034 .579l.046 .553c.464 4.785 2.411 6.732 7.196 7.196l.553 .046l.579 .034c.098 .005 .198 .01 .299 .013l.616 .017l.642 .005l.642 -.005l-.616 -.017l-.299 -.013l-.579 -.034l-.553 -.046c4.785 -.464 6.732 -2.411 7.196 -7.196l.046 -.553l-.034 -.579c.005 -.098 .01 -.198 .013 -.299l-.017 -.616l-.005 -.642l-.005 -.642l-.017 -.616l-.013 -.299l-.034 -.579l-.046 -.553c-.464 -4.785 -2.411 -6.732 -7.196 -7.196l-.553 -.046l-.579 -.034a28.058 28.058 0 0 0 -.299 -.013l-.616 -.017l-.318 -.004l-.324 -.001zm2.293 7.293a1 1 0 0 1 1.497 1.32l-.083 .094l-4 4a1 1 0 0 1 -1.32 .083l-.094 -.083l-2 -2a1 1 0 0 1 1.32 -1.497l.094 .083l1.293 1.292l3.293 -3.292z" fill="currentColor" strokeWidth="0" />       
+  </svg>
+);
 
 
-// --- RANK EVERVAULT CARD ---
-const RankEvervaultCard = ({ totalReferrals }: { totalReferrals: number }) => {
+// --- RANK EVERVAULT CARD (OPTIMIZED) ---
+const RankEvervaultCard = memo(({ totalReferrals }: { totalReferrals: number }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const [randomString, setRandomString] = useState("");
@@ -222,12 +227,14 @@ const RankEvervaultCard = ({ totalReferrals }: { totalReferrals: number }) => {
     setRandomString(generateRandomString(2000));
   }, []);
 
-  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) {
-    const { left, top } = currentTarget.getBoundingClientRect();
-    mouseX.set(clientX - left);
-    mouseY.set(clientY - top);
+  const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top } = e.currentTarget.getBoundingClientRect();
+    mouseX.set(e.clientX - left);
+    mouseY.set(e.clientY - top);
+    // Optimized: Only generate string occasionally or use a debounce, 
+    // but for this visual effect, raw generation is usually accepted if component is memoized.
     setRandomString(generateRandomString(2000));
-  }
+  }, [mouseX, mouseY]);
 
   const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
@@ -243,10 +250,10 @@ const RankEvervaultCard = ({ totalReferrals }: { totalReferrals: number }) => {
            style={style} 
          />
          <motion.div 
-           className="absolute inset-0 opacity-0 group-hover:opacity-100 mix-blend-overlay" 
+           className="absolute inset-0 opacity-0 group-hover:opacity-100 mix-blend-overlay will-change-transform" 
            style={style}
          >
-           <p className={cn("absolute inset-x-0 p-2 text-[10px] leading-4 h-full break-words font-mono font-bold", tierData.matrixColor)}>
+           <p className={cn("absolute inset-x-0 p-2 text-[10px] leading-4 h-full break-words font-mono font-bold select-none", tierData.matrixColor)}>
              {randomString}
            </p>
          </motion.div>
@@ -286,10 +293,10 @@ const RankEvervaultCard = ({ totalReferrals }: { totalReferrals: number }) => {
       </div>
     </div>
   );
-};
+});
 
-// --- TASK EVERVAULT CARD ---
-const TaskEvervaultCard = ({ title, completed }: { title: string, completed: boolean }) => {
+// --- TASK EVERVAULT CARD (OPTIMIZED) ---
+const TaskEvervaultCard = memo(({ title, completed }: { title: string, completed: boolean }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const [randomString, setRandomString] = useState("");
@@ -298,17 +305,17 @@ const TaskEvervaultCard = ({ title, completed }: { title: string, completed: boo
     setRandomString(generateRandomString(1500)); 
   }, []);
 
-  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) {
-    const { left, top } = currentTarget.getBoundingClientRect();
-    mouseX.set(clientX - left);
-    mouseY.set(clientY - top);
+  const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top } = e.currentTarget.getBoundingClientRect();
+    mouseX.set(e.clientX - left);
+    mouseY.set(e.clientY - top);
     setRandomString(generateRandomString(1500));
-  }
+  }, [mouseX, mouseY]);
 
   const statusColor = completed ? "text-green-400" : "text-red-400";
   const statusBg = completed ? "bg-green-500/10 border-green-500/30" : "bg-red-500/10 border-red-500/30";
   const statusText = completed ? "COMPLETED" : "INCOMPLETE";
-     
+      
   const maskImage = useMotionTemplate`radial-gradient(180px at ${mouseX}px ${mouseY}px, white, transparent)`;
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
 
@@ -327,10 +334,10 @@ const TaskEvervaultCard = ({ title, completed }: { title: string, completed: boo
               style={style} 
             />
             <motion.div 
-              className="absolute inset-0 opacity-50 mix-blend-overlay" 
+              className="absolute inset-0 opacity-50 mix-blend-overlay will-change-transform" 
               style={style}
             >
-              <p className={cn("absolute inset-x-0 p-2 text-[8px] leading-3 h-full break-words font-mono font-bold", completed ? "text-green-200" : "text-red-200")}>
+              <p className={cn("absolute inset-x-0 p-2 text-[8px] leading-3 h-full break-words font-mono font-bold select-none", completed ? "text-green-200" : "text-red-200")}>
                 {randomString}
               </p>
             </motion.div>
@@ -357,9 +364,9 @@ const TaskEvervaultCard = ({ title, completed }: { title: string, completed: boo
       </div>
     </div>
   );
-};
+});
 
-const IncentiveTaskGrid = ({ tasks }: { tasks: AffiliateData['tasks'] }) => {
+const IncentiveTaskGrid = memo(({ tasks }: { tasks: AffiliateData['tasks'] }) => {
   const taskList = [
     { title: "Partner Broker Account", completed: tasks.broker },
     { title: "Social Media Setup", completed: tasks.social },
@@ -378,16 +385,15 @@ const IncentiveTaskGrid = ({ tasks }: { tasks: AffiliateData['tasks'] }) => {
       </div>
     </div>
   );
-};
+});
 
 // --- MAIN DASHBOARD VIEW ---
 const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => void }> = ({ onClose, onUnlock }) => {
   const [data, setData] = useState<AffiliateData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false); 
-  const [expandedId, setExpandedId] = useState<string | null>(null); // NEW: State for expansion
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Handle Escape Key to close expanded card
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setExpandedId(null);
@@ -396,7 +402,7 @@ const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => vo
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!data) setIsLoading(true); 
     setIsFetching(true);
 
@@ -446,13 +452,13 @@ const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => vo
       setIsLoading(false);
       setIsFetching(false);
     }
-  };
+  }, [data]);
 
   useEffect(() => {
     loadData();
     const intervalId = setInterval(loadData, 60000); 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [loadData]);
 
   if (isLoading || !data) {
     return (
@@ -474,8 +480,8 @@ const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => vo
       className="min-h-screen bg-[#050B14] flex flex-col items-center justify-start pt-10 p-4 relative w-full pb-20 overflow-x-hidden"
     >
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px]" />
+          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[60px] md:blur-[120px] will-change-transform" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[60px] md:blur-[120px] will-change-transform" />
       </div>
 
       <div className="w-full max-w-xl relative z-10">
@@ -587,7 +593,7 @@ const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => vo
                       layoutId="card-rank"
                       className="pointer-events-auto w-full max-w-lg bg-[#0A0A0A] border border-orange-500/30 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col max-h-[80vh]"
                   >
-                       <button
+                        <button
                           onClick={() => setExpandedId(null)}
                           className="absolute top-4 right-4 z-50 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full backdrop-blur-md border border-white/10"
                       >
@@ -631,14 +637,14 @@ const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => vo
                                   <div className="p-3 rounded bg-white/5 border border-white/5">
                                       <div className="flex justify-between text-sm text-white font-bold mb-1">
                                           <span>SILVER</span>
-                                          <span className="text-slate-400">20% Rate</span>
+                                      <span className="text-slate-400">20% Rate</span>
                                       </div>
                                       <p className="text-[10px] text-slate-500">Requires 50 Active Referrals & Verified Volume.</p>
                                   </div>
                                   <div className="p-3 rounded bg-white/5 border border-white/5 opacity-50">
                                       <div className="flex justify-between text-sm text-white font-bold mb-1">
                                           <span>GOLD</span>
-                                          <span className="text-yellow-500">30% Rate</span>
+                                      <span className="text-yellow-500">30% Rate</span>
                                       </div>
                                       <p className="text-[10px] text-slate-500">Unlock maximum earning potential.</p>
                                   </div>
@@ -726,7 +732,7 @@ const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => vo
                       layoutId="card-referrals"
                       className="pointer-events-auto w-full max-w-lg bg-[#0A0A0A] border border-blue-500/30 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col max-h-[80vh]"
                   >
-                       <button
+                      <button
                           onClick={() => setExpandedId(null)}
                           className="absolute top-4 right-4 z-50 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full backdrop-blur-md border border-white/10"
                       >
@@ -826,7 +832,7 @@ const SuccessScreen: React.FC<{ onUnlock: () => void }> = ({ onUnlock }) => {
       transition={{ duration: 0.8, ease: "easeOut" }}
       className="min-h-screen bg-[#050B14] flex items-center justify-center p-4 relative"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-[#050B14] to-[#050B14]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-[#050B14] to-[#050B14] will-change-transform" />
       
       <div className="bg-[#0A1120] border border-blue-500/30 p-8 rounded-2xl shadow-[0_0_80px_rgba(59,130,246,0.2)] text-center max-w-lg w-full relative z-10">
         
@@ -1028,7 +1034,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const [activeBroker, setActiveBroker] = useState<'Vantage' | 'XM'>('Vantage');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-     
+      
   // UI States
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false); 
@@ -1304,7 +1310,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   if (step === 4) {
     return (
       <div className="min-h-screen bg-[#050B14] flex flex-col items-center justify-center relative">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none" />
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/20 rounded-full blur-[60px] pointer-events-none" />
         <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-4" />
         <h2 className="text-xl font-bold text-white">Saving Credentials...</h2>
       </div>
@@ -1319,13 +1325,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         isVantage ? "via-purple-600" : "via-blue-600"
       )} />
       <div className={cn(
-        "absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none transition-colors duration-500",
+        "absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[60px] md:blur-[120px] pointer-events-none transition-colors duration-500 will-change-transform",
         isVantage ? "bg-purple-600/5" : "bg-blue-600/5"
       )} />
 
       <div className="w-full max-w-xl relative z-10">
         <div className="mb-8 text-center">
-            <h1 className="text-2xl font-black text-white tracking-tight opacity-50">
+           <h1 className="text-2xl font-black text-white tracking-tight opacity-50">
             BULLMONEY <span className={cn("transition-colors duration-300", isVantage ? "text-purple-600" : "text-blue-600")}>COMMUNITY</span>
           </h1>
         </div>
@@ -1511,10 +1517,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           animate={{ scale: [1, 1.05, 1] }}
                           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
                           className={cn(
-                           "flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-bold tracking-widest border transition-all w-full",
-                           isVantage 
-                            ? "bg-purple-500/10 border-purple-500/50 text-purple-100 shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] hover:bg-purple-500/20"
-                            : "bg-sky-500/10 border-sky-500/50 text-sky-100 shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] hover:bg-sky-500/20"
+                            "flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-bold tracking-widest border transition-all w-full",
+                            isVantage 
+                             ? "bg-purple-500/10 border-purple-500/50 text-purple-100 shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] hover:bg-purple-500/20"
+                             : "bg-sky-500/10 border-sky-500/50 text-sky-100 shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] hover:bg-sky-500/20"
                           )}
                         >
                           SKIP & LOGIN <LogIn className="w-3 h-3" />
@@ -1690,7 +1696,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
 // --- SUB-COMPONENTS (CARDS & EFFECTS) ---
 
-function StepCard({ number, number2, title, children, actions, className }: any) {
+const StepCard = memo(({ number, number2, title, children, actions, className }: any) => {
   const useRed = typeof number2 === "number";
   const n = useRed ? number2 : number;
   return (
@@ -1728,7 +1734,7 @@ function StepCard({ number, number2, title, children, actions, className }: any)
       {actions && <div className="mt-8 pt-6 border-t border-white/10">{actions}</div>}
     </div>
   );
-}
+});
 
 function IconPlusCorners() {
   return (
@@ -1741,27 +1747,20 @@ function IconPlusCorners() {
   );
 }
 
-const characters = "BULLMONEY";
-const generateRandomString = (length: number) => {
-  let result = "";
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-};
-
 // --- XM Card (Blue/Green) ---
-export const EvervaultCard = ({ text }: { text?: string }) => {
+export const EvervaultCard = memo(({ text }: { text?: string }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const [randomString, setRandomString] = useState("");
   useEffect(() => { setRandomString(generateRandomString(1500)); }, []);
-  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) {
-    const { left, top } = currentTarget.getBoundingClientRect();
-    mouseX.set(clientX - left);
-    mouseY.set(clientY - top);
+  
+  const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top } = e.currentTarget.getBoundingClientRect();
+    mouseX.set(e.clientX - left);
+    mouseY.set(e.clientY - top);
     setRandomString(generateRandomString(1500));
-  }
+  }, [mouseX, mouseY]);
+
   return (
     <div className="w-full h-full flex items-center justify-center bg-transparent" onMouseMove={onMouseMove}>
       <div className="group/card rounded-3xl w-full h-full relative overflow-hidden bg-transparent flex items-center justify-center">
@@ -1775,15 +1774,15 @@ export const EvervaultCard = ({ text }: { text?: string }) => {
       </div>
     </div>
   );
-};
+});
 
 function CardPattern({ mouseX, mouseY, randomString }: any) {
   const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-700 opacity:0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
-      <motion.div className="absolute inset-0 opacity:0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
+      <motion.div className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-700 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
         <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>
     </div>
@@ -1791,17 +1790,19 @@ function CardPattern({ mouseX, mouseY, randomString }: any) {
 }
 
 // --- Vantage Card (Red/Purple) ---
-export const EvervaultCardRed = ({ text }: { text?: string }) => {
+export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const [randomString, setRandomString] = useState("");
   useEffect(() => { setRandomString(generateRandomString(1500)); }, []);
-  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) {
-    const { left, top } = currentTarget.getBoundingClientRect();
-    mouseX.set(clientX - left);
-    mouseY.set(clientY - top);
+  
+  const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top } = e.currentTarget.getBoundingClientRect();
+    mouseX.set(e.clientX - left);
+    mouseY.set(e.clientY - top);
     setRandomString(generateRandomString(1500));
-  }
+  }, [mouseX, mouseY]);
+
   return (
     <div className="w-full h-full flex items-center justify-center bg-transparent" onMouseMove={onMouseMove}>
       <div className="group/card rounded-3xl w-full h-full relative overflow-hidden bg-transparent flex items-center justify-center">
@@ -1815,15 +1816,15 @@ export const EvervaultCardRed = ({ text }: { text?: string }) => {
       </div>
     </div>
   );
-};
+});
 
 function CardPatternRed({ mouseX, mouseY, randomString }: any) {
   const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-600 opacity:0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
-      <motion.div className="absolute inset-0 opacity:0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
+      <motion.div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-600 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
         <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-violet-100/90 font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>
     </div>

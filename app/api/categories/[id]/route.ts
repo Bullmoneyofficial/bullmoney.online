@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server";
-import { dbConnect } from "@/lib/mongodb";
-import Category from "@/models/Category";
+import { supabase } from "@/lib/supabaseClient";
 
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  await dbConnect();
-  await Category.findByIdAndDelete(params.id);
-  return NextResponse.json({ ok: true });
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const { error } = await supabase
+    .from("product_categories")
+    .delete()
+    .eq("id", params.id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ message: "Category deleted" });
 }

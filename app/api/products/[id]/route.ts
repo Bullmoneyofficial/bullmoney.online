@@ -1,31 +1,13 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
 
-// GET: Fetch all products
-export async function GET() {
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  // MAP: DB (snake_case) -> Frontend (camelCase)
-  const formatted = data.map((p) => ({
-    ...p,
-    id: p._id, // Map _id to id for UI compatibility
-    imageUrl: p.image_url,
-    buyUrl: p.buy_url,
-  }));
-
-  return NextResponse.json(formatted);
-}
-
-// POST: Create a new product
-export async function POST(req: Request) {
-  const body = await req.json();
+// PUT: Update a product
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const body = await request.json();
+  const id = params.id;
 
   // MAP: Frontend (camelCase) -> DB (snake_case)
   const payload = {
@@ -38,9 +20,11 @@ export async function POST(req: Request) {
     visible: body.visible,
   };
 
+  // Update where _id matches
   const { data, error } = await supabase
     .from("products")
-    .insert(payload)
+    .update(payload)
+    .eq("_id", id) 
     .select()
     .single();
 
@@ -48,7 +32,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Return formatted object to frontend
+  // Return formatted response
   const formatted = {
     ...data,
     id: data._id,
@@ -57,4 +41,23 @@ export async function POST(req: Request) {
   };
 
   return NextResponse.json(formatted);
+}
+
+// DELETE: Remove a product
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const id = params.id;
+
+  const { error } = await supabase
+    .from("products")
+    .delete()
+    .eq("_id", id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ message: "Product deleted successfully" });
 }

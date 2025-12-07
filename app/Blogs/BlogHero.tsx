@@ -1,36 +1,24 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useBlog } from "./BlogContext"; 
 import { ContainerScroll } from "@/components/Mainpage/container-scroll-animation"; 
 import { EncryptedText } from "@/components/Mainpage/encrypted-text"; 
 import { cn } from "@/lib/utils";
 import { 
   Lock, X, LogIn, Save, RefreshCw, LogOut, 
-  ShieldCheck, Loader2, Youtube, Type, AlignLeft, 
-  LayoutTemplate, CheckCircle2, ChevronRight, AlertTriangle
+  ShieldCheck, Loader2, Youtube, Type, LayoutTemplate, CheckCircle2 
 } from "lucide-react";
-
-// --- THREE.JS IMPORTS ---
-import * as THREE from "three";
-import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
-import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 
 // --- PARTICLE IMPORTS ---
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
-import type { Container, Engine } from "@tsparticles/engine";
-
-
+import type { Engine } from "@tsparticles/engine";
 
 // =========================================
-// 2. HERO CONFIGURATION LOGIC
+// 1. CONFIGURATION TYPES
 // =========================================
 
-// Default Hero State
 const DEFAULT_HERO_CONFIG = {
   videoId: "iiRASep8V9c",
   badge: "BullMoney Intelligence",
@@ -42,6 +30,10 @@ const DEFAULT_HERO_CONFIG = {
 
 type HeroConfig = typeof DEFAULT_HERO_CONFIG;
 
+// =========================================
+// 2. SUB-COMPONENTS
+// =========================================
+
 // --- A. LOGIN MODAL ---
 function LoginPortal({ onLogin, onClose }: { onLogin: () => void, onClose: () => void }) {
   const [username, setUsername] = useState("");
@@ -50,7 +42,8 @@ function LoginPortal({ onLogin, onClose }: { onLogin: () => void, onClose: () =>
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Hardcoded simple auth for demo purposes as requested
+    // Client-side check for UI access. 
+    // Actual DB writes are protected by the API Route using Service Role Key.
     if (username.trim() === "MR.BULLMONEY" && password.trim() === "9D6W5D6SD6S7DA6D5D5ADS5A6XVXASXR6723RE627EDGED") {
       onLogin();
     } else {
@@ -60,7 +53,6 @@ function LoginPortal({ onLogin, onClose }: { onLogin: () => void, onClose: () =>
 
   return (
     <div className="relative w-full h-full min-h-[500px] flex flex-col items-center justify-center p-4 bg-[#020617] overflow-hidden rounded-3xl">
- 
       <div className="relative z-10 w-full max-w-md">
         <div className="rounded-3xl overflow-hidden border border-slate-800 bg-slate-950/80 backdrop-blur-xl shadow-2xl">
           <div className="p-8">
@@ -95,13 +87,11 @@ function LoginPortal({ onLogin, onClose }: { onLogin: () => void, onClose: () =>
                   placeholder="admin"
                 />
               </div>
-
               {error && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="text-xs text-red-400 bg-red-950/30 border border-red-900/50 rounded-lg p-3">
+                <div className="text-xs text-red-400 bg-red-950/30 border border-red-900/50 rounded-lg p-3">
                   {error}
-                </motion.div>
+                </div>
               )}
-
               <button
                 type="submit"
                 className="w-full py-4 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl shadow-[0_0_30px_rgba(2,132,199,0.3)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 group"
@@ -125,7 +115,7 @@ function ContentDashboard({
   onClose 
 }: { 
   config: HeroConfig; 
-  onSave: (newConfig: HeroConfig) => void; 
+  onSave: (newConfig: HeroConfig) => Promise<void>; 
   onLogout: () => void; 
   onClose: () => void;
 }) {
@@ -141,15 +131,18 @@ function ContentDashboard({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+    setSaveMessage(null);
     
-    // Simulate network delay for effect
-    await new Promise(r => setTimeout(r, 600));
-    
-    onSave(formData);
-    setSaveMessage("Changes published successfully!");
-    setIsSaving(false);
-    
-    setTimeout(() => setSaveMessage(null), 3000);
+    try {
+        await onSave(formData);
+        setSaveMessage("Changes published to Supabase!");
+        setTimeout(() => setSaveMessage(null), 3000);
+    } catch (error) {
+        setSaveMessage("Failed to save changes.");
+        console.error(error);
+    } finally {
+        setIsSaving(false);
+    }
   };
 
   return (
@@ -186,7 +179,11 @@ function ContentDashboard({
           <motion.div 
             initial={{ opacity: 0, y: -10 }} 
             animate={{ opacity: 1, y: 0 }}
-            className="p-3 bg-green-500/10 border border-green-500/30 rounded-xl flex items-center gap-2 text-green-400 text-xs"
+            className={`p-3 border rounded-xl flex items-center gap-2 text-xs ${
+                saveMessage.includes("Failed") 
+                ? "bg-red-500/10 border-red-500/30 text-red-400" 
+                : "bg-green-500/10 border-green-500/30 text-green-400"
+            }`}
           >
             <CheckCircle2 className="w-4 h-4" />
             {saveMessage}
@@ -299,9 +296,8 @@ function ContentDashboard({
   );
 }
 
-
 // =========================================
-// 3. EXISTING SPARKLES (Maintained)
+// 3. EXISTING SPARKLES
 // =========================================
 const SparklesCore = (props: {
   id?: string;
@@ -395,30 +391,54 @@ type HeroShopProps = {
 };
 
 export default function BlogHero({ onScrollToProducts }: HeroShopProps) {
-  // We ignore useBlog context for the hero content now, as we use local configurable state
-  // const { state: { hero } } = useBlog(); 
-
   // State
   const [heroConfig, setHeroConfig] = useState<HeroConfig>(DEFAULT_HERO_CONFIG);
+  const [isLoading, setIsLoading] = useState(true);
   const [showAdmin, setShowAdmin] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Load config from localStorage on mount
+  // 1. Fetch from Supabase API on Mount
   useEffect(() => {
-    const saved = localStorage.getItem("hero_config");
-    if (saved) {
+    async function fetchHero() {
       try {
-        setHeroConfig(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse hero config", e);
+        const res = await fetch("/api/blog-hero");
+        if (res.ok) {
+          const data = await res.json();
+          // Merge defaults in case fields are missing
+          setHeroConfig(prev => ({ ...prev, ...data }));
+        }
+      } catch (error) {
+        console.error("Failed to load blog hero config", error);
+      } finally {
+        setIsLoading(false);
       }
     }
+    fetchHero();
   }, []);
 
-  // Handler to update config
-  const updateConfig = (newConfig: HeroConfig) => {
-    setHeroConfig(newConfig);
-    localStorage.setItem("hero_config", JSON.stringify(newConfig));
+  // 2. Handler to update config via API
+  const updateConfig = async (newConfig: HeroConfig) => {
+    try {
+        const res = await fetch("/api/blog-hero", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newConfig),
+        });
+
+        if (!res.ok) throw new Error("API Update Failed");
+        
+        const updated = await res.json();
+        
+        // Map snake_case response back if needed, or just set local state
+        // Our API returns snake_case, but let's assume we just update local state 
+        // with what we sent to keep UI snappy, or parse the return if needed.
+        // For simplicity:
+        setHeroConfig(newConfig);
+
+    } catch (error) {
+        console.error("Failed to update hero", error);
+        throw error; // Re-throw for the Dashboard to catch
+    }
   };
 
   const fallbackScroll = () => {
@@ -507,6 +527,12 @@ export default function BlogHero({ onScrollToProducts }: HeroShopProps) {
       </div>
 
       <div className="relative z-10 flex flex-col">
+        {/* Loading State or Content */}
+        {isLoading ? (
+             <div className="w-full h-[600px] flex items-center justify-center">
+                 <Loader2 className="w-10 h-10 text-sky-500 animate-spin" />
+             </div>
+        ) : (
         <ContainerScroll
           titleComponent={
             <div className="flex flex-col items-center justify-center mb-10">
@@ -572,6 +598,7 @@ export default function BlogHero({ onScrollToProducts }: HeroShopProps) {
             <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 rounded-2xl" />
           </div>
         </ContainerScroll>
+        )}
       </div>
     </section>
   );

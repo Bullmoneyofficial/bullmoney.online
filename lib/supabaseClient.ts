@@ -1,17 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
 
-/**
- * Safe Supabase client creator.
- * It won't crash the build if env vars are missing (e.g., during Vercel prerender).
- */
-export const getSupabase = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
- if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("❌ Missing Supabase environment variables. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.");
+// PRIORITIZE SERVICE KEY:
+// We try to use the Service Role Key first (for API routes/Admin actions).
+// If not found, we fall back to the Anon Key (for client-side read-only).
+const supabaseKey = 
+  process.env.SUPABASE_SERVICE_ROLE_KEY || 
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error("❌ Missing Supabase environment variables. Check .env.local");
 }
 
-
-  return createClient(supabaseUrl, supabaseAnonKey);
-};
+// Create a single instance
+export const supabase = createClient(supabaseUrl, supabaseKey);

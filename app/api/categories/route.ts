@@ -1,16 +1,37 @@
 import { NextResponse } from "next/server";
-import { dbConnect } from "@/lib/mongodb";
-import Category from "@/models/Category";
+import { supabase } from "@/lib/supabaseClient";
 
 export async function GET() {
-  await dbConnect();
-  const cats = await Category.find().sort({ name: 1 });
-  return NextResponse.json(cats);
+  const { data, error } = await supabase
+    .from("product_categories")
+    .select("*")
+    .order("id", { ascending: true });
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Ensure _id exists for frontend compatibility
+  const formatted = data.map(c => ({
+    ...c,
+    _id: c.id 
+  }));
+
+  return NextResponse.json(formatted);
 }
 
 export async function POST(req: Request) {
-  await dbConnect();
   const body = await req.json();
-  const created = await Category.create(body);
-  return NextResponse.json(created);
+
+  const { data, error } = await supabase
+    .from("product_categories")
+    .insert({ name: body.name })
+    .select()
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ ...data, _id: data.id });
 }

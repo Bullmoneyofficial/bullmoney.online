@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useShop, Product } from "../VIP/ShopContext"; // Ensure this path is correct
+import { useShop, Product } from "../VIP/ShopContext";
 import AdminLoginModal from "./AdminLoginModal";
 import AdminPanel from "./AdminPanel";
 import { gsap } from "gsap";
@@ -15,19 +15,17 @@ const MOBILE_BREAKPOINT = 768;
 
 const useMobileDetection = () => {
   const [isMobile, setIsMobile] = useState(false);
-
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
-
   return isMobile;
 };
 
 // =========================================
-// 2. INTERACTIVE CARD WRAPPER
+// 2. INTERACTIVE CARD WRAPPER (FIXED)
 // =========================================
 
 type InteractiveCardProps = {
@@ -39,8 +37,8 @@ type InteractiveCardProps = {
   clickEffect?: boolean;
   enableMagnetism?: boolean;
   disableAnimations?: boolean;
-  layoutId?: string; // Added for Framer Motion shared layout
-  onClick?: () => void; // Added click handler
+  layoutId?: string;
+  onClick?: () => void;
 };
 
 const InteractiveCardWrapper: React.FC<InteractiveCardProps> = ({
@@ -60,7 +58,6 @@ const InteractiveCardWrapper: React.FC<InteractiveCardProps> = ({
 
   useEffect(() => {
     if (disableAnimations || !cardRef.current) return;
-
     const element = cardRef.current;
 
     const handleMouseEnter = () => {
@@ -77,12 +74,7 @@ const InteractiveCardWrapper: React.FC<InteractiveCardProps> = ({
 
     const handleMouseLeave = () => {
       if (enableTilt) {
-        gsap.to(element, {
-          rotateX: 0,
-          rotateY: 0,
-          duration: 0.3,
-          ease: "power2.out",
-        });
+        gsap.to(element, { rotateX: 0, rotateY: 0, duration: 0.3, ease: "power2.out" });
       }
       if (enableMagnetism) {
         gsap.to(element, { x: 0, y: 0, duration: 0.3, ease: "power2.out" });
@@ -91,7 +83,6 @@ const InteractiveCardWrapper: React.FC<InteractiveCardProps> = ({
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!enableTilt && !enableMagnetism) return;
-
       const rect = element.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -124,12 +115,10 @@ const InteractiveCardWrapper: React.FC<InteractiveCardProps> = ({
 
     const handleClick = (e: MouseEvent) => {
       if (!clickEffect) return;
-
-      // Create ripple effect
       const rect = element.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      const maxDistance = Math.max(Math.hypot(x, y), Math.hypot(x - rect.width, y)); // Simplified hypot check
+      const maxDistance = Math.max(Math.hypot(x, y), Math.hypot(x - rect.width, y));
 
       const ripple = document.createElement("div");
       ripple.style.cssText = `
@@ -146,7 +135,6 @@ const InteractiveCardWrapper: React.FC<InteractiveCardProps> = ({
       element.appendChild(ripple);
       gsap.fromTo(ripple, { scale: 0, opacity: 1 }, { scale: 1, opacity: 0, duration: 0.8, ease: "power2.out", onComplete: () => ripple.remove() });
       
-      // Trigger external onClick if provided
       if (onClick) onClick();
     };
 
@@ -164,15 +152,21 @@ const InteractiveCardWrapper: React.FC<InteractiveCardProps> = ({
     };
   }, [disableAnimations, enableTilt, enableMagnetism, clickEffect, glowColor, onClick]);
 
+  // FIX: Separate Framer Motion (Wrapper) from GSAP (Inner Ref)
+  // This prevents GSAP transforms from conflicting with Framer layout animations
   return (
-    <motion.article
-      layoutId={layoutId} // Pass layoutId here
-      ref={cardRef}
+    <motion.div 
+      layoutId={layoutId} 
       className={className}
-      style={{ position: "relative", overflow: "hidden", cursor: "pointer", ...style }}
+      style={{ position: "relative", zIndex: 1, ...style }} // zIndex ensures card stays above background
     >
-      {children}
-    </motion.article>
+      <div 
+        ref={cardRef} 
+        style={{ width: '100%', height: '100%', cursor: 'pointer', overflow: 'hidden' }}
+      >
+        {children}
+      </div>
+    </motion.div>
   );
 };
 
@@ -186,7 +180,7 @@ type ProductBentoCardProps = {
   onDelete: () => void;
   onToggleVisibility: () => void;
   disableAnimations: boolean;
-  onClick: () => void; // Parent controls expansion
+  onClick: () => void;
 };
 
 function ProductBentoCard({
@@ -199,7 +193,7 @@ function ProductBentoCard({
   onClick,
 }: ProductBentoCardProps) {
   const handleBuyNow = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card expansion
+    e.stopPropagation();
     const url = product.buyUrl?.trim();
     if (!url) {
       alert("This product does not have a Buy now link set yet.");
@@ -272,24 +266,15 @@ function ProductBentoCard({
       {isAdmin && (
         <div 
           className="mt-4 flex flex-wrap gap-2 text-xs pt-3 border-t border-neutral-800 z-20"
-          onClick={(e) => e.stopPropagation()} // Prevent expand on admin click
+          onClick={(e) => e.stopPropagation()}
         >
-          <button
-            onClick={onEdit}
-            className="px-3 py-1 rounded-full bg-neutral-800 hover:bg-neutral-700 text-slate-200"
-          >
+          <button onClick={onEdit} className="px-3 py-1 rounded-full bg-neutral-800 hover:bg-neutral-700 text-slate-200">
             Edit
           </button>
-          <button
-            onClick={onToggleVisibility}
-            className="px-3 py-1 rounded-full bg-neutral-800 hover:bg-neutral-700 text-slate-200"
-          >
+          <button onClick={onToggleVisibility} className="px-3 py-1 rounded-full bg-neutral-800 hover:bg-neutral-700 text-slate-200">
             {product.visible ? "Hide" : "Show"}
           </button>
-          <button
-            onClick={onDelete}
-            className="px-3 py-1 rounded-full bg-red-900/50 border border-red-900 hover:bg-red-900/80 text-red-200"
-          >
+          <button onClick={onDelete} className="px-3 py-1 rounded-full bg-red-900/50 border border-red-900 hover:bg-red-900/80 text-red-200">
             Delete
           </button>
         </div>
@@ -319,6 +304,7 @@ const GlobalSpotlightComponent: React.FC<{
 
     const spotlight = document.createElement("div");
     spotlight.className = "global-spotlight-effect";
+    // FIX: z-index lowered to 10 so it is behind Modals (which are z-50+)
     spotlight.style.cssText = `
         position: fixed;
         width: ${spotlightRadius * 2}px;
@@ -333,7 +319,7 @@ const GlobalSpotlightComponent: React.FC<{
             rgba(${glowColor}, 0.01) 65%,
             transparent 70%
         );
-        z-index: 200;
+        z-index: 10; 
         opacity: 0;
         transform: translate(-50%, -50%);
         mix-blend-mode: screen;
@@ -343,7 +329,6 @@ const GlobalSpotlightComponent: React.FC<{
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!spotlightRef.current) return;
-
       const section = gridRef.current?.closest(".bento-section");
       const rect = section?.getBoundingClientRect();
 
@@ -365,11 +350,7 @@ const GlobalSpotlightComponent: React.FC<{
 
     const handleMouseLeave = () => {
       if (spotlightRef.current) {
-        gsap.to(spotlightRef.current, {
-          opacity: 0,
-          duration: 0.3,
-          ease: "power2.out",
-        });
+        gsap.to(spotlightRef.current, { opacity: 0, duration: 0.3, ease: "power2.out" });
       }
     };
 
@@ -419,12 +400,20 @@ export default function ProductsSection() {
   const isMobile = useMobileDetection();
   const disableAnimations = isMobile;
 
-  // Handle Escape Key to close expanded card
+  // Handle Body Scroll Lock
+  useEffect(() => {
+    if (expandedId) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [expandedId]);
+
+  // Handle Escape Key
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setExpandedId(null);
-      }
+      if (event.key === "Escape") setExpandedId(null);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -433,22 +422,16 @@ export default function ProductsSection() {
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       if (!p.visible && !isAdmin) return false;
-
-      const searchMatch = p.name
-        .toLowerCase()
-        .includes(filters.search.toLowerCase());
-
-      const categoryMatch =
-        filters.category === "all" || p.category === filters.category;
-
+      const searchMatch = p.name.toLowerCase().includes(filters.search.toLowerCase());
+      const categoryMatch = filters.category === "all" || p.category === filters.category;
       const min = filters.minPrice ? Number(filters.minPrice) : 0;
       const max = filters.maxPrice ? Number(filters.maxPrice) : Infinity;
       const priceMatch = p.price >= min && p.price <= max;
-
       return searchMatch && categoryMatch && priceMatch;
     });
   }, [products, filters, isAdmin]);
 
+  // Clear editing state if admin mode is disabled
   useEffect(() => {
     if (!isAdmin) setEditing(null);
   }, [isAdmin]);
@@ -467,12 +450,9 @@ export default function ProductsSection() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pt-8">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white">
-              BULLMONEY VIP
-            </h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white">BULLMONEY VIP</h2>
             <p className="mt-1 text-sm text-slate-400">
-              Filter by category, price or name. Admins can edit everything in
-              real time.
+              Filter by category, price or name. Admins can edit everything in real time.
             </p>
           </div>
 
@@ -495,9 +475,7 @@ export default function ProductsSection() {
             <span className="text-xs text-slate-400">Search</span>
             <input
               value={filters.search}
-              onChange={(e) =>
-                setFilters((f) => ({ ...f, search: e.target.value }))
-              }
+              onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
               placeholder="Type product name..."
               className="flex-1 bg-transparent outline-none text-sm placeholder:text-slate-600 text-white"
             />
@@ -505,16 +483,12 @@ export default function ProductsSection() {
 
           <select
             value={filters.category}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, category: e.target.value }))
-            }
+            onChange={(e) => setFilters((f) => ({ ...f, category: e.target.value }))}
             className="rounded-2xl bg-neutral-900/50 border border-neutral-800 px-3 py-2.5 text-sm outline-none text-slate-300 backdrop-blur-sm"
           >
             <option value="all">All categories</option>
             {categories.map((c) => (
-              <option key={c._id || c.id} value={c.name}>
-                {c.name}
-              </option>
+              <option key={c._id || c.id} value={c.name}>{c.name}</option>
             ))}
           </select>
 
@@ -523,9 +497,7 @@ export default function ProductsSection() {
             min={0}
             placeholder="Min price"
             value={filters.minPrice}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, minPrice: e.target.value }))
-            }
+            onChange={(e) => setFilters((f) => ({ ...f, minPrice: e.target.value }))}
             className="rounded-2xl bg-neutral-900/50 border border-neutral-800 px-3 py-2.5 text-sm outline-none text-white backdrop-blur-sm placeholder:text-slate-600"
           />
           <input
@@ -533,9 +505,7 @@ export default function ProductsSection() {
             min={0}
             placeholder="Max price"
             value={filters.maxPrice}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, maxPrice: e.target.value }))
-            }
+            onChange={(e) => setFilters((f) => ({ ...f, maxPrice: e.target.value }))}
             className="rounded-2xl bg-neutral-900/50 border border-neutral-800 px-3 py-2.5 text-sm outline-none text-white backdrop-blur-sm placeholder:text-slate-600"
           />
         </div>
@@ -578,14 +548,13 @@ export default function ProductsSection() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setExpandedId(null)}
-                className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm"
+                // FIX: Increased z-index to 9999 to ensure it sits on top of everything, including spotlight
+                className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm"
               />
               
               {/* Expanded Card Container */}
-              <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 pointer-events-none">
-                 {/* We find the active product. 
-                   We use the same layoutIds to morph the grid item into this view.
-                 */}
+              {/* FIX: z-index higher than backdrop */}
+              <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 pointer-events-none">
                  {products.filter(p => (p._id || p.id!) === expandedId).map(p => {
                     const pid = p._id || p.id!;
                     return (
@@ -660,7 +629,6 @@ export default function ProductsSection() {
                                         {p.description}
                                     </p>
                                     
-                                    {/* Placeholder for extra details */}
                                     <div className="mt-8 pt-8 border-t border-white/10 grid grid-cols-2 gap-4">
                                         <div>
                                             <h4 className="text-white font-semibold mb-1">Availability</h4>

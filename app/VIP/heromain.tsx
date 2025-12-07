@@ -2,9 +2,7 @@
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import Image from "next/image";
 import Balancer from "react-wrap-balancer";
-import { getCalApi } from "@calcom/embed-react";
 import { 
   ChevronLeft, ChevronRight, Lock, X, LogIn, 
   Save, RefreshCw, LogOut, ShieldCheck, Loader2, 
@@ -16,17 +14,12 @@ import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import utc from "dayjs/plugin/utc";
 import { cn } from "@/lib/utils";
-
-
+import { createClient } from "@supabase/supabase-js";
 
 // Particle Imports
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import type { Container, Engine } from "@tsparticles/engine";
-
-// REMOVED CONFLICTING RELATIVE IMPORTS: 
-// import { ContainerScroll } from "./container-scroll-animation";
-// import { EncryptedText } from "./encrypted-text";
 
 dayjs.extend(duration);
 dayjs.extend(utc);
@@ -34,10 +27,17 @@ dayjs.extend(utc);
 const russo = Russo_One({ weight: "400", subsets: ["latin"] });
 
 // =========================================
-// INLINED UTILITIES / MOCKUPS
+// SUPABASE CLIENT INITIALIZATION
+// =========================================
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// =========================================
+// UTILITIES / MOCKUPS
 // =========================================
 
-// --- Mock EncryptedText (Inlined logic) ---
+// --- EncryptedText ---
 const EncryptedText = ({
     text,
     interval = 50,
@@ -53,10 +53,17 @@ const EncryptedText = ({
     encryptedClassName?: string;
     revealDelayMs?: number;
 }) => {
-    const [displayedText, setDisplayedText] = useState(text.replace(/./g, '█'));
+    const safeText = text || "";
+    const [displayedText, setDisplayedText] = useState(safeText.replace(/./g, '█'));
     const [isRevealed, setIsRevealed] = useState(false);
 
     useEffect(() => {
+        setDisplayedText(safeText.replace(/./g, '█'));
+        setIsRevealed(false);
+        
+        // Prevent animation if text is empty
+        if (!safeText) return;
+
         let index = 0;
         let animationFrameId: number;
 
@@ -71,14 +78,14 @@ const EncryptedText = ({
             
             elapsed -= revealDelayMs;
 
-            const targetLength = Math.min(text.length, Math.floor(elapsed / interval));
+            const targetLength = Math.min(safeText.length, Math.floor(elapsed / interval));
 
-            if (index < text.length) {
-                const newText = text.substring(0, targetLength) + text.substring(targetLength).replace(/./g, '█');
+            if (index < safeText.length) {
+                const newText = safeText.substring(0, targetLength) + safeText.substring(targetLength).replace(/./g, '█');
                 setDisplayedText(newText);
                 index = targetLength;
                 
-                if (index < text.length) {
+                if (index < safeText.length) {
                     animationFrameId = requestAnimationFrame(decrypt);
                 } else {
                     setIsRevealed(true);
@@ -90,7 +97,7 @@ const EncryptedText = ({
         animationFrameId = requestAnimationFrame(decrypt);
 
         return () => cancelAnimationFrame(animationFrameId);
-    }, [text, interval, revealDelayMs]);
+    }, [safeText, interval, revealDelayMs]);
 
     return (
         <span className={cn(className, isRevealed ? revealedClassName : encryptedClassName)}>
@@ -99,7 +106,7 @@ const EncryptedText = ({
     );
 };
 
-// --- Mock ContainerScroll (Inlined logic) ---
+// --- ContainerScroll ---
 const ContainerScroll = ({ titleComponent, children }: { titleComponent: React.ReactNode, children: React.ReactNode }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [percentScrolled, setPercentScrolled] = useState(0);
@@ -120,22 +127,13 @@ const ContainerScroll = ({ titleComponent, children }: { titleComponent: React.R
         return () => window.removeEventListener("scroll", handleScroll);
     }, [handleScroll]);
 
-    // Rotation from 0 to -20 degrees as scroll goes from 0% to 100%
     const rotate = (p: number) => (p / 100) * -20; 
-    // Perspective scale from 0.8 to 1.0
     const scale = (p: number) => 0.8 + (p / 100) * 0.2; 
-    
-    // Y-translation to lift the item slightly at full scroll
     const translateY = (p: number) => (p / 100) * 50; 
 
     return (
         <div ref={containerRef} className="relative flex flex-col items-center justify-center pt-[50vh] pb-[10vh]">
-            <motion.div 
-                style={{ 
-                    rotateX: 0, // This is controlled by the outer scroll animation
-                    perspective: '1000px',
-                }}
-            >
+            <motion.div style={{ rotateX: 0, perspective: '1000px' }}>
                 {titleComponent}
             </motion.div>
             
@@ -156,51 +154,31 @@ const ContainerScroll = ({ titleComponent, children }: { titleComponent: React.R
     );
 };
 
-// =========================================
-// 1. FLIP WORDS (Inlined)
-// =========================================
-const FlipWords = ({
-  words,
-  duration = 3000,
-  className,
-}: {
-  words: string[];
-  duration?: number;
-  className?: string;
-}) => {
-  const [currentWord, setCurrentWord] = useState(words[0]);
+// --- FlipWords ---
+const FlipWords = ({ words, duration = 3000, className }: { words: string[]; duration?: number; className?: string; }) => {
+  const safeWords = words && words.length > 0 ? words : ["Loading..."];
+  const [currentWord, setCurrentWord] = useState(safeWords[0]);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
   const startAnimation = useCallback(() => {
-    // Safety check for empty words list
-    if (words.length === 0) return;
-    
-    const currentIndex = words.indexOf(currentWord);
-    const nextIndex = (currentIndex + 1) % words.length;
-    const word = words[nextIndex];
-
+    const currentIndex = safeWords.indexOf(currentWord);
+    const nextIndex = (currentIndex + 1) % safeWords.length;
+    const word = safeWords[nextIndex];
     setCurrentWord(word);
     setIsAnimating(true);
-  }, [currentWord, words]);
+  }, [currentWord, safeWords]);
 
   useEffect(() => {
-    if (!isAnimating && words.length > 0) {
+    if (!isAnimating && safeWords.length > 0) {
       const timeoutId = setTimeout(() => {
         startAnimation();
       }, duration);
       return () => clearTimeout(timeoutId);
     }
-  }, [isAnimating, duration, startAnimation, words.length]);
-
-  if (words.length === 0) return <span className={cn("text-neutral-500", className)}>...</span>;
+  }, [isAnimating, duration, startAnimation, safeWords.length]);
 
   return (
-    <AnimatePresence
-      mode="wait"
-      onExitComplete={() => {
-        setIsAnimating(false);
-      }}
-    >
+    <AnimatePresence mode="wait" onExitComplete={() => setIsAnimating(false)}>
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -236,9 +214,7 @@ const FlipWords = ({
   );
 };
 
-// =========================================
-// 2. MEDIA CAROUSEL
-// =========================================
+// --- MediaCarousel ---
 interface Slide {
   type: "image" | "video" | "youtube";
   src: string;
@@ -254,22 +230,18 @@ interface MediaCarouselProps {
   autoSlideInterval?: number;
 }
 
-export const MediaCarousel: React.FC<MediaCarouselProps> = ({
-  slides,
-  height = 540,
-  autoSlideInterval = 8000,
-}) => {
+export const MediaCarousel: React.FC<MediaCarouselProps> = ({ slides = [], height = 540, autoSlideInterval = 8000 }) => {
   const [current, setCurrent] = useState(0);
   
   useEffect(() => {
-    if (slides.length === 0) return;
+    if (!slides || slides.length === 0) return;
     const timer = setInterval(() => {
       setCurrent((prev) => (prev + 1) % slides.length);
     }, autoSlideInterval);
     return () => clearInterval(timer);
-  }, [slides.length, autoSlideInterval]);
+  }, [slides, autoSlideInterval]);
 
-  if (slides.length === 0) {
+  if (!slides || slides.length === 0) {
     return (
       <div className="w-full h-full bg-neutral-900/30 flex items-center justify-center text-neutral-500 border border-neutral-800 rounded-[32px]">
         <div className="text-center">
@@ -280,16 +252,15 @@ export const MediaCarousel: React.FC<MediaCarouselProps> = ({
     );
   }
 
-  const slide = slides[current];
+  const slide = slides[current] || slides[0];
 
-  // Helper function to extract YouTube ID
   const getYoutubeId = (src: string): string => {
     if (src.includes("youtube.com") || src.includes("youtu.be")) {
       try {
         const url = new URL(src.includes("http") ? src : `https://www.youtube.com/watch?v=${src}`);
         return url.searchParams.get("v") || src.split("/").pop()?.split("?")[0] || src;
       } catch {
-        return src; // Fallback to raw string if URL parsing fails
+        return src;
       }
     }
     return src;
@@ -298,12 +269,8 @@ export const MediaCarousel: React.FC<MediaCarouselProps> = ({
   const videoId = getYoutubeId(slide.src);
   const videoSrc = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&modestbranding=1&loop=1&playlist=${videoId}&vq=hd1080`;
 
-
   return (
-    <div
-      className="relative w-full overflow-hidden rounded-[32px] bg-neutral-900/30 border border-neutral-800 shadow-2xl"
-      style={{ aspectRatio: "16 / 9", height: "100%", minHeight: 320 }}
-    >
+    <div className="relative w-full overflow-hidden rounded-[32px] bg-neutral-900/30 border border-neutral-800 shadow-2xl" style={{ aspectRatio: "16 / 9", height: "100%", minHeight: 320 }}>
       <AnimatePresence mode="wait">
         <motion.div
           key={current}
@@ -315,145 +282,67 @@ export const MediaCarousel: React.FC<MediaCarouselProps> = ({
         >
           {slide.type === "image" && (
             <div className="relative w-full h-full">
-              {/* FIX: Using standard img tag to bypass Next/Image external host configuration requirement */}
-              <img
-                src={slide.src}
-                alt={slide.title || "Slide image"}
-                className="absolute inset-0 w-full h-full object-cover object-center"
-                draggable={false}
-              />
+              <img src={slide.src} alt={slide.title || "Slide"} className="absolute inset-0 w-full h-full object-cover object-center" draggable={false} />
             </div>
           )}
           {slide.type === "video" && (
-            <video
-              className="absolute inset-0 w-full h-full object-cover"
-              autoPlay
-              loop
-              muted
-              playsInline
-            >
+            <video className="absolute inset-0 w-full h-full object-cover" autoPlay loop muted playsInline>
               <source src={slide.src} type="video/mp4" />
             </video>
           )}
           {slide.type === "youtube" && (
             <div className="absolute inset-0 w-full h-full">
-               <iframe
-                className="w-full h-full object-cover"
-                src={videoSrc}
-                title={slide.title || "YouTube video"}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+               <iframe className="w-full h-full object-cover" src={videoSrc} title={slide.title} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
             </div>
           )}
-          
-          {/* Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation */}
-      <button
-        onClick={() => setCurrent((p) => (p - 1 + slides.length) % slides.length)}
-        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 p-2 rounded-full hover:bg-black/60 z-20 border border-white/10 backdrop-blur-sm transition-all active:scale-95"
-      >
+      <button onClick={() => setCurrent((p) => (p - 1 + slides.length) % slides.length)} className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 p-2 rounded-full hover:bg-black/60 z-20 border border-white/10 backdrop-blur-sm transition-all active:scale-95">
         <ChevronLeft className="text-white w-6 h-6" />
       </button>
-      <button
-        onClick={() => setCurrent((p) => (p + 1) % slides.length)}
-        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 p-2 rounded-full hover:bg-black/60 z-20 border border-white/10 backdrop-blur-sm transition-all active:scale-95"
-      >
+      <button onClick={() => setCurrent((p) => (p + 1) % slides.length)} className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 p-2 rounded-full hover:bg-black/60 z-20 border border-white/10 backdrop-blur-sm transition-all active:scale-95">
         <ChevronRight className="text-white w-6 h-6" />
       </button>
 
-      {/* Dots */}
       <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-20">
         {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrent(index)}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              index === current ? "bg-white w-6" : "bg-neutral-500/50 w-2 hover:bg-neutral-400"
-            }`}
-          />
+          <button key={index} onClick={() => setCurrent(index)} className={`h-1.5 rounded-full transition-all duration-300 ${index === current ? "bg-white w-6" : "bg-neutral-500/50 w-2 hover:bg-neutral-400"}`} />
         ))}
       </div>
     </div>
   );
 };
 
-// =========================================
-// 3. SPARKLES COMPONENT (Inlined)
-// =========================================
-const SparklesCore = (props: {
-  id?: string;
-  className?: string;
-  background?: string;
-  minSize?: number;
-  maxSize?: number;
-  speed?: number;
-  particleColor?: string;
-  particleDensity?: number;
-}) => {
-  const {
-    id = "tsparticles",
-    className,
-    background = "transparent",
-    minSize = 0.6,
-    maxSize = 1.4,
-    speed = 1,
-    particleColor = "#ffffff",
-    particleDensity = 100,
-  } = props;
+// --- Sparkles ---
+const SparklesCore = (props: { id?: string; className?: string; background?: string; minSize?: number; maxSize?: number; speed?: number; particleColor?: string; particleDensity?: number; }) => {
+  const { id = "tsparticles", className, background = "transparent", minSize = 0.6, maxSize = 1.4, speed = 1, particleColor = "#ffffff", particleDensity = 100 } = props;
   const [init, setInit] = useState(false);
   
   useEffect(() => {
-    initParticlesEngine(async (engine: Engine) => {
-      await loadSlim(engine);
-    }).then(() => {
-      setInit(true);
-    });
+    initParticlesEngine(async (engine: Engine) => { await loadSlim(engine); }).then(() => { setInit(true); });
   }, []);
 
   return (
     <div className={cn("opacity-0 transition-opacity duration-1000", init && "opacity-100", className)}>
       {init && (
-        <Particles
-          id={id}
-          className={cn("h-full w-full")}
-          options={{
-            background: { color: { value: background } },
-            fullScreen: { enable: false, zIndex: 1 },
-            fpsLimit: 120,
-            particles: {
-              color: { value: particleColor },
-              move: { enable: true, speed: speed },
-              number: { density: { enable: true, width: 1920, height: 1080 }, value: particleDensity },
-              opacity: { value: { min: 0.1, max: 0.5 }, animation: { enable: true, speed: speed } },
-              size: { value: { min: minSize, max: maxSize } },
-            },
-          } as any}
-        />
+        <Particles id={id} className={cn("h-full w-full")} options={{ background: { color: { value: background } }, fullScreen: { enable: false, zIndex: 1 }, fpsLimit: 120, particles: { color: { value: particleColor }, move: { enable: true, speed: speed }, number: { density: { enable: true, width: 1920, height: 1080 }, value: particleDensity }, opacity: { value: { min: 0.1, max: 0.5 }, animation: { enable: true, speed: speed } }, size: { value: { min: minSize, max: maxSize } } } } as any} />
       )}
     </div>
   );
 };
 
-
-
 // =========================================
 // 5. ADMIN CONFIG & TYPES
 // =========================================
 
-// Config Type
+// Frontend Config Type (CamelCase for React)
 type HeroConfig = {
   title: string;
-  // Flip Words Lists
   flipList1: string;
   flipList2: string;
   flipList3: string;
-  // Slides
   slides: Slide[];
 };
 
@@ -465,9 +354,6 @@ const DEFAULT_CONFIG: HeroConfig = {
   slides: [
     { type: "video", src: "/newhero.mp4", title: "Hero Video" },
     { type: "image", src: "https://placehold.co/1600x900/1e293b/FFFFFF?text=Fvfront.png", title: "Dashboard" },
-    { type: "youtube", src: "wWB_SeA15dU", title: "Demo 1" },
-    { type: "youtube", src: "ZWKp63JTvgE", title: "Demo 2" },
-    { type: "image", src: "https://placehold.co/1600x900/1e293b/FFFFFF?text=bullmoneyvantage.png", title: "Analytics" },
   ]
 };
 
@@ -488,7 +374,6 @@ function LoginPortal({ onLogin, onClose }: { onLogin: () => void, onClose: () =>
 
   return (
     <div className="relative w-full h-full min-h-[500px] flex flex-col items-center justify-center p-4 bg-[#020617] overflow-hidden rounded-3xl">
-      
       <div className="relative z-10 w-full max-w-md">
         <div className="rounded-3xl border border-slate-800 bg-slate-950/80 backdrop-blur-xl shadow-2xl p-8">
           <div className="flex justify-between items-center mb-8">
@@ -519,12 +404,13 @@ function LoginPortal({ onLogin, onClose }: { onLogin: () => void, onClose: () =>
 }
 
 // --- CONTENT DASHBOARD ---
-function ContentDashboard({ config, onSave, onLogout, onClose }: { config: HeroConfig; onSave: (newConfig: HeroConfig) => void; onLogout: () => void; onClose: () => void; }) {
+function ContentDashboard({ config, onSave, onLogout, onClose }: { config: HeroConfig; onSave: (newConfig: HeroConfig) => Promise<void>; onLogout: () => void; onClose: () => void; }) {
   const [formData, setFormData] = useState<HeroConfig>(config);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
-  // Slide Editor State
+  useEffect(() => { setFormData(config); }, [config]);
+
   const [newSlideType, setNewSlideType] = useState<"image" | "video" | "youtube">("image");
   const [newSlideSrc, setNewSlideSrc] = useState("");
   const [newSlideTitle, setNewSlideTitle] = useState("");
@@ -548,11 +434,17 @@ function ContentDashboard({ config, onSave, onLogout, onClose }: { config: HeroC
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    await new Promise(r => setTimeout(r, 600));
-    onSave(formData);
-    setSaveMessage("Published successfully!");
-    setIsSaving(false);
-    setTimeout(() => setSaveMessage(null), 3000);
+    setSaveMessage(null);
+    try {
+        await onSave(formData);
+        setSaveMessage("Saved to Supabase successfully!");
+    } catch (err) {
+        console.error(err);
+        setSaveMessage("Error saving data.");
+    } finally {
+        setIsSaving(false);
+        setTimeout(() => setSaveMessage(null), 3000);
+    }
   };
 
   return (
@@ -567,7 +459,7 @@ function ContentDashboard({ config, onSave, onLogout, onClose }: { config: HeroC
       </div>
 
       <form onSubmit={handleSave} className="flex-1 overflow-y-auto pr-2 z-10 space-y-5">
-        {saveMessage && <div className="p-3 bg-green-500/10 text-green-400 text-xs rounded-xl flex gap-2"><CheckCircle2 className="w-4 h-4" />{saveMessage}</div>}
+        {saveMessage && <div className={cn("p-3 text-xs rounded-xl flex gap-2", saveMessage.includes("Error") ? "bg-red-500/10 text-red-400" : "bg-green-500/10 text-green-400")}><CheckCircle2 className="w-4 h-4" />{saveMessage}</div>}
         
         {/* TEXT EDITOR */}
         <div className="p-4 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-4">
@@ -583,7 +475,6 @@ function ContentDashboard({ config, onSave, onLogout, onClose }: { config: HeroC
         <div className="p-4 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-3">
            <div className="flex items-center gap-2 text-sky-400 mb-1"><LayoutList className="w-4 h-4" /><h3 className="text-xs font-bold uppercase">Carousel Slides</h3></div>
            
-           {/* Add New Slide */}
            <div className="flex flex-col gap-2 p-3 bg-black/30 rounded-xl border border-dashed border-slate-700">
               <div className="flex gap-2">
                  <select value={newSlideType} onChange={(e) => setNewSlideType(e.target.value as any)} className="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white outline-none">
@@ -599,7 +490,6 @@ function ContentDashboard({ config, onSave, onLogout, onClose }: { config: HeroC
               </div>
            </div>
 
-           {/* List Slides */}
            <div className="space-y-2 mt-2">
               {formData.slides.map((slide, idx) => (
                 <div key={idx} className="flex items-center justify-between p-2 bg-slate-800/50 rounded-lg border border-slate-700 group">
@@ -634,30 +524,71 @@ export default function Hero() {
   const [heroConfig, setHeroConfig] = useState<HeroConfig>(DEFAULT_CONFIG);
   const [showAdmin, setShowAdmin] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // FETCH FROM SUPABASE ON MOUNT
   useEffect(() => {
-    (async () => {
-      // NOTE: getCalApi dependency removed, but we keep the mock initialization structure
-      // const cal = await getCalApi({ namespace: "15min" });
-      // cal("ui", { theme: "dark", hideEventTypeDetails: false, layout: "month_view" });
-    })();
+    const fetchConfig = async () => {
+        setIsLoading(true);
+        try {
+            // Updated to fetch from 'main_hero' per your SQL
+            const { data, error } = await supabase
+                .from('main_hero')
+                .select('*')
+                .single(); 
+            
+            if (error) {
+                console.warn("Supabase fetch error, using default:", error.message);
+            } else if (data) {
+                // Manually map Snake_Case DB columns to CamelCase React State
+                setHeroConfig({
+                  title: data.title,
+                  flipList1: data.flip_list_1, // Map flip_list_1 -> flipList1
+                  flipList2: data.flip_list_2, // Map flip_list_2 -> flipList2
+                  flipList3: data.flip_list_3, // Map flip_list_3 -> flipList3
+                  slides: data.slides || []
+                });
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    fetchConfig();
   }, []);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("new_hero_config");
-    if (saved) try { setHeroConfig(JSON.parse(saved)); } catch (e) { console.error(e); }
-  }, []);
-
-  const updateConfig = (newConfig: HeroConfig) => {
+  // SAVE TO SUPABASE
+  const updateConfig = async (newConfig: HeroConfig) => {
+    // Optimistic UI update
     setHeroConfig(newConfig);
-    localStorage.setItem("new_hero_config", JSON.stringify(newConfig));
+
+    // Map CamelCase React State back to Snake_Case DB columns
+    const dbPayload = {
+      id: true, // SQL: id BOOLEAN PRIMARY KEY DEFAULT TRUE
+      title: newConfig.title,
+      flip_list_1: newConfig.flipList1,
+      flip_list_2: newConfig.flipList2,
+      flip_list_3: newConfig.flipList3,
+      slides: newConfig.slides
+    };
+
+    const { error } = await supabase
+        .from('main_hero')
+        .upsert(dbPayload);
+
+    if (error) {
+        throw new Error(error.message);
+    }
   };
+
+  const flipList1 = heroConfig?.flipList1 ? heroConfig.flipList1.split(',').map(s => s.trim()) : [];
+  const flipList2 = heroConfig?.flipList2 ? heroConfig.flipList2.split(',').map(s => s.trim()) : [];
+  const flipList3 = heroConfig?.flipList3 ? heroConfig.flipList3.split(',').map(s => s.trim()) : [];
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-start overflow-hidden bg-neutral-950 w-full">
-      {/* UPDATED GHOST CURSOR */}
-    
-
+      
       {/* SPARKLES BACKGROUND */}
       <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
         <SparklesCore
@@ -707,8 +638,9 @@ export default function Hero() {
                       <h2
                         className={`${russo.className} uppercase leading-none text-white text-2xl sm:text-4xl md:text-5xl lg:text-6xl tracking-[0.08em] drop-shadow-[0_2px_10px_rgba(255,255,255,0.12)]`}
                       >
+                         {/* Pass loading state or empty string to prevent hydration mismatch before data loads */}
                         <EncryptedText 
-                          text={heroConfig.title}
+                          text={heroConfig?.title || "LOADING..."}
                           interval={40}
                           className="whitespace-normal" 
                         />
@@ -732,20 +664,19 @@ export default function Hero() {
                 className="relative z-20 mx-auto mt-0 max-w-2xl px-4 text-center text-xs sm:text-base/6 text-gray-200 uppercase"
               >
                 MASTER{" "}
-                <FlipWords words={heroConfig.flipList1.split(',').map(s => s.trim())} duration={4000} className="px-0 font-bold text-blue-500" />
+                <FlipWords words={flipList1} duration={4000} className="px-0 font-bold text-blue-500" />
                 , SHARPEN YOUR{" "}
-                <FlipWords words={heroConfig.flipList2.split(',').map(s => s.trim())} duration={4000} className="px-0 font-bold text-blue-500" />
+                <FlipWords words={flipList2} duration={4000} className="px-0 font-bold text-blue-500" />
                 , AND TRADE{" "}
-                <FlipWords words={heroConfig.flipList3.split(',').map(s => s.trim())} duration={4000} className="px-0 font-bold text-blue-500" />
+                <FlipWords words={flipList3} duration={4000} className="px-0 font-bold text-blue-500" />
                 WITH CONFIDENCE.
               </motion.p>
             </div>
           }
         >
-          <MediaCarousel slides={heroConfig.slides} />
+          <MediaCarousel slides={heroConfig?.slides || []} />
         </ContainerScroll>
       </div>
-
     </div>
   );
 }
