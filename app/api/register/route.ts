@@ -1,11 +1,14 @@
 // app/api/register/route.ts
 import { NextResponse } from 'next/server';
-import { getSupabase } from '@/lib/supabaseClient';
+// Corrected
+import { supabase } from '@/lib/supabaseClient'; // Import the client instance directly
 
 export async function POST(request: Request) {
-  const supabase = getSupabase();
+  // const supabase = getSupabase(); // REMOVE this line
+  // The 'supabase' client is now available directly from the import.
 
   try {
+// ...
     // 1. Parse the incoming JSON data from the frontend
     const body = await request.json();
     const { name, email, mt5Number } = body;
