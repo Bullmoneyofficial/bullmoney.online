@@ -17,12 +17,7 @@ import duration from "dayjs/plugin/duration";
 import utc from "dayjs/plugin/utc";
 import { cn } from "@/lib/utils";
 
-// Three.js Imports
-import * as THREE from "three";
-import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
-import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+
 
 // Particle Imports
 import Particles, { initParticlesEngine } from "@tsparticles/react";
@@ -493,7 +488,7 @@ function LoginPortal({ onLogin, onClose }: { onLogin: () => void, onClose: () =>
 
   return (
     <div className="relative w-full h-full min-h-[500px] flex flex-col items-center justify-center p-4 bg-[#020617] overflow-hidden rounded-3xl">
-    
+      
       <div className="relative z-10 w-full max-w-md">
         <div className="rounded-3xl border border-slate-800 bg-slate-950/80 backdrop-blur-xl shadow-2xl p-8">
           <div className="flex justify-between items-center mb-8">
@@ -660,7 +655,8 @@ export default function Hero() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-start overflow-hidden bg-neutral-950 w-full">
-     
+      {/* UPDATED GHOST CURSOR */}
+    
 
       {/* SPARKLES BACKGROUND */}
       <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
