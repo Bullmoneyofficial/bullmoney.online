@@ -532,7 +532,7 @@ const HeroParallax = () => {
                  )}
 
                 <h1 className="text-5xl md:text-8xl font-sans font-black text-white leading-[0.9] tracking-tighter">
-                {hero.title.split(" ").map((word, i) => (
+                {hero.title.split(" ").map((word: string, i: number) => (
                     <span key={i} className="inline-block mr-3 text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-sky-900">
                       {word}
                     </span>
