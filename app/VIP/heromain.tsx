@@ -606,7 +606,7 @@ const HeroParallax = () => {
 
                 {/* --- SHIMMER TITLE UPDATE --- */}
                 <h1 className="text-5xl md:text-8xl font-sans font-black text-white leading-[0.9] tracking-tighter">
-                {(hero?.title || "Welcome VIP").split(" ").map((word, i) => (
+                {(hero?.title || "Welcome VIP").split(" ").map((word: string, i: number) => (
                     <span 
                         key={i} 
                         className="inline-block mr-3 text-transparent bg-clip-text bg-[linear-gradient(110deg,#FFFFFF,45%,#38BDF8,55%,#FFFFFF)] bg-[length:250%_100%] animate-shimmer"
