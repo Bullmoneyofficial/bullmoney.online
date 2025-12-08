@@ -62,14 +62,36 @@ const SparklesCore = React.memo((props: { id?: string; className?: string; backg
   return (
     <div className={cn("opacity-0 transition-opacity duration-1000", init && "opacity-100", className)}>
       {init && (
-        <Particles id={id} className={cn("h-full w-full")} options={{ background: { color: { value: background } }, fullScreen: { enable: false, zIndex: 1 }, fpsLimit: 60, interactivity: { events: { onClick: { enable: true, mode: "push" }, onHover: { enable: false, mode: "repulse" }, resize: { enable: true } }, modes: { push: { quantity: 4 }, repulse: { distance: 200, duration: 0.4 } } }, particles: { bounce: { horizontal: { value: 1 }, vertical: { value: 1 } }, color: { value: particleColor }, move: { enable: true, speed: speed, direction: "none", random: false, straight: false, outModes: { default: "out" } }, number: { density: { enable: true, width: 1920, height: 1080 }, value: particleDensity }, opacity: { value: { min: 0.1, max: 0.5 }, animation: { enable: true, speed: speed, sync: false } }, shape: { type: "circle" }, size: { value: { min: minSize, max: maxSize } } }, detectRetina: true } as any} />
+        <Particles 
+            id={id} 
+            className={cn("h-full w-full")} 
+            options={{ 
+                background: { color: { value: background } }, 
+                fullScreen: { enable: false, zIndex: 1 }, 
+                fpsLimit: 60, // Optimization for mobile battery
+                interactivity: { 
+                    events: { onClick: { enable: true, mode: "push" }, onHover: { enable: false, mode: "repulse" }, resize: { enable: true } }, 
+                    modes: { push: { quantity: 4 }, repulse: { distance: 200, duration: 0.4 } } 
+                }, 
+                particles: { 
+                    bounce: { horizontal: { value: 1 }, vertical: { value: 1 } }, 
+                    color: { value: particleColor }, 
+                    move: { enable: true, speed: speed, direction: "none", random: false, straight: false, outModes: { default: "out" } }, 
+                    number: { density: { enable: true, width: 1920, height: 1080 }, value: particleDensity }, 
+                    opacity: { value: { min: 0.1, max: 0.5 }, animation: { enable: true, speed: speed, sync: false } }, 
+                    shape: { type: "circle" }, 
+                    size: { value: { min: minSize, max: maxSize } } 
+                }, 
+                detectRetina: true 
+            } as any} 
+        />
       )}
     </div>
   );
 });
 SparklesCore.displayName = "SparklesCore";
 
-// --- VIDEO CARD COMPONENT (UPDATED FOR MOBILE AUTOPLAY) ---
+// --- VIDEO CARD COMPONENT (UPDATED FOR MOBILE) ---
 const VideoCard = React.memo(({
   product,
   uniqueLayoutId,
@@ -90,15 +112,15 @@ const VideoCard = React.memo(({
       whileHover={{ y: -10 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => setActive(product, uniqueLayoutId)}
-      className="group/product h-[16rem] w-[20rem] md:h-[22rem] md:w-[32rem] relative flex-shrink-0 cursor-pointer"
+      // OPTIMIZATION: Reduced width/height for mobile (h-[14rem] w-[18rem])
+      className="group/product h-[14rem] w-[18rem] md:h-[22rem] md:w-[32rem] relative flex-shrink-0 cursor-pointer"
     >
-      <div className="block h-full w-full group-hover/product:shadow-[0_0_40px_rgba(220,38,38,0.4)] transition-all duration-500 rounded-[24px]">
+      <div className="block h-full w-full group-hover/product:shadow-[0_0_40px_rgba(220,38,38,0.4)] transition-all duration-500 rounded-[20px] md:rounded-[24px]">
         <motion.div 
             layoutId={uniqueLayoutId}
-            className="relative h-full w-full rounded-[24px] overflow-hidden bg-neutral-900 border border-neutral-800 group-hover/product:border-red-600/50 transition-colors"
+            className="relative h-full w-full rounded-[20px] md:rounded-[24px] overflow-hidden bg-neutral-900 border border-neutral-800 group-hover/product:border-red-600/50 transition-colors"
         >
             {/* --- LIVE VIDEO LAYER --- */}
-            {/* pointer-events-none is CRITICAL: it allows the user to click "through" the video to open the modal */}
             {videoId ? (
                 <div className="absolute inset-0 w-full h-full bg-black pointer-events-none">
                     <iframe
@@ -106,7 +128,6 @@ const VideoCard = React.memo(({
                         className="w-[300%] h-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[1.5] object-cover pointer-events-none"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         title={product.name}
-                        // Loading lazy helps mobile performance slightly
                         loading="lazy"
                     />
                 </div>
@@ -122,21 +143,20 @@ const VideoCard = React.memo(({
 
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90 pointer-events-none"></div>
             
-            {/* Only show play button on hover if video is playing, to keep view clean */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                 <div className="bg-white/10 backdrop-blur-sm p-4 rounded-full opacity-0 group-hover/product:opacity-100 transition-opacity duration-300 scale-75 group-hover/product:scale-100 border border-white/20">
-                    <PlayCircle className="text-white w-8 h-8 fill-red-600/20" />
+                 <div className="bg-white/10 backdrop-blur-sm p-3 md:p-4 rounded-full opacity-0 group-hover/product:opacity-100 transition-opacity duration-300 scale-75 group-hover/product:scale-100 border border-white/20">
+                    <PlayCircle className="text-white w-6 h-6 md:w-8 md:h-8 fill-red-600/20" />
                  </div>
             </div>
 
-            <div className="absolute bottom-0 left-0 w-full p-6 translate-y-2 group-hover/product:translate-y-0 transition-transform duration-500 pointer-events-none">
+            <div className="absolute bottom-0 left-0 w-full p-4 md:p-6 translate-y-2 group-hover/product:translate-y-0 transition-transform duration-500 pointer-events-none">
                  <div className="flex items-center gap-2 mb-2">
-                    <span className="px-2 py-1 rounded bg-black/60 text-white text-[10px] font-bold uppercase tracking-wider backdrop-blur-md flex items-center gap-1 border border-white/10">
-                    <Youtube size={12} className="text-red-500" />
+                    <span className="px-2 py-0.5 md:py-1 rounded bg-black/60 text-white text-[8px] md:text-[10px] font-bold uppercase tracking-wider backdrop-blur-md flex items-center gap-1 border border-white/10">
+                    <Youtube size={10} className="text-red-500" />
                     {product.category || "VIDEO"}
                     </span>
                 </div>
-                <h2 className="text-white font-sans font-bold text-lg md:text-xl leading-tight truncate w-full shadow-black drop-shadow-lg">
+                <h2 className="text-white font-sans font-bold text-base md:text-xl leading-tight truncate w-full shadow-black drop-shadow-lg">
                     {product.name}
                 </h2>
             </div>
@@ -149,7 +169,6 @@ VideoCard.displayName = "VideoCard";
 
 // --- MAIN HERO PARALLAX ---
 const HeroParallax = () => {
-  // FIX: Cast useShop() to 'any' to avoid type errors with missing context methods
   const { state, updateProduct, deleteProduct, createProduct } = useShop() as any; 
   const { products = [], hero, isAdmin, loading, categories = [] } = state || {};
   const isMobile = useIsMobile();
@@ -163,7 +182,6 @@ const HeroParallax = () => {
   // --- PARALLAX DATA PREP ---
   const displayProducts = useMemo(() => {
     if (videoProducts.length === 0) return [];
-    // Ensure we have enough items for the grid by duplicating if necessary
     let filledProducts = [...videoProducts];
     while (filledProducts.length < 15) {
       filledProducts = [...filledProducts, ...videoProducts];
@@ -183,14 +201,17 @@ const HeroParallax = () => {
 
   const springConfig = { stiffness: 300, damping: 30, bounce: 100 };
   
-  // Mobile adjustments: Reduce travel distance and disable 3D rotation
-  const translateX = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? 200 : 600]), springConfig);
-  const translateXReverse = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? -200 : -600]), springConfig);
+  // OPTIMIZATION: Reduce translation distances for mobile to prevent overflow
+  // On mobile, we only move 150px instead of 600px
+  const translateX = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? 150 : 600]), springConfig);
+  const translateXReverse = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? -150 : -600]), springConfig);
   
+  // OPTIMIZATION: Disable 3D rotation on mobile for cleaner look
   const rotateX = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? 0 : 15, 0]), springConfig);
   const rotateZ = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? 0 : 20, 0]), springConfig);
+  
   const opacity = useSpring(useTransform(scrollYProgress, [0, 0.2], [0.2, 1]), springConfig);
-  const translateY = useSpring(useTransform(scrollYProgress, [0, 0.2], [-700, 200]), springConfig);
+  const translateY = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? -200 : -700, isMobile ? 50 : 200]), springConfig);
 
   // --- STATE ---
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
@@ -251,7 +272,6 @@ const HeroParallax = () => {
           payload.imageUrl = `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`;
       }
       
-      // Remove ID fields safely before sending
       // @ts-ignore
       delete payload._id; 
       // @ts-ignore
@@ -312,7 +332,6 @@ const HeroParallax = () => {
   return (
     <div className="bg-black relative selection:bg-red-500/30">
         
-    {/* --- INJECTED STYLES FOR SHIMMER ANIMATION --- */}
     <style jsx global>{`
       @keyframes shimmer {
         0% { background-position: 200% 0; }
@@ -342,10 +361,10 @@ const HeroParallax = () => {
         <div className="fixed bottom-8 right-8 z-[9990] flex flex-col gap-2">
             <button 
                 onClick={handleCreateNewVideo}
-                className="bg-green-600 hover:bg-green-500 text-white p-4 rounded-full shadow-lg shadow-green-900/50 transition-all hover:scale-110 flex items-center justify-center"
+                className="bg-green-600 hover:bg-green-500 text-white p-3 md:p-4 rounded-full shadow-lg shadow-green-900/50 transition-all hover:scale-110 flex items-center justify-center"
                 title="Add New Video Card"
             >
-                {isSaving ? <Loader2 className="animate-spin" /> : <Plus size={24} />}
+                {isSaving ? <Loader2 className="animate-spin" /> : <Plus size={20} />}
             </button>
         </div>
     )}
@@ -382,7 +401,8 @@ const HeroParallax = () => {
                     )}
 
                     {/* LEFT: MEDIA SECTION */}
-                    <div className="w-full md:w-3/4 bg-black flex flex-col relative group h-[40vh] md:h-full shrink-0">
+                    {/* OPTIMIZATION: Fixed height on mobile to allow reading content below */}
+                    <div className="w-full md:w-3/4 bg-black flex flex-col relative group h-[35vh] sm:h-[45vh] md:h-full shrink-0">
                         {!isEditing ? (
                             <div className="relative w-full h-full">
                                 {(() => {
@@ -418,15 +438,15 @@ const HeroParallax = () => {
                     </div>
 
                     {/* RIGHT: CONTENT SIDEBAR */}
+                    {/* OPTIMIZATION: Ensure vertical scroll and padding for mobile */}
                     <div className="w-full md:w-1/4 flex flex-col bg-neutral-900 border-l border-neutral-800 h-full overflow-hidden">
-                        <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+                        <div className="flex-1 overflow-y-auto p-5 md:p-8 custom-scrollbar">
                         {isEditing ? (
-                          <div className="space-y-6 animate-in fade-in duration-300" onClick={(e) => e.stopPropagation()}>
-                             
-                             {/* --- CATEGORY DROPDOWN --- */}
+                          <div className="space-y-6 animate-in fade-in duration-300 pb-12" onClick={(e) => e.stopPropagation()}>
+                             {/* EDIT FORM (Simplified for brevity) */}
                              <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800 mb-4">
                                 <label className="text-[10px] uppercase text-sky-500 font-bold mb-2 flex items-center gap-2">
-                                  Category <span className="text-neutral-500 font-normal normal-case">(Select from existing)</span>
+                                  Category
                                 </label>
                                 <select
                                   value={editForm.category || "VIDEO"}
@@ -434,22 +454,12 @@ const HeroParallax = () => {
                                   className="w-full bg-neutral-900 p-3 rounded-lg text-sm outline-none border border-neutral-700 focus:border-sky-500 text-white cursor-pointer"
                                 >
                                     {categories.map((c: any) => (
-                                        <option key={c._id || c.id} value={c.name}>
-                                            {c.name}
-                                        </option>
+                                        <option key={c._id || c.id} value={c.name}>{c.name}</option>
                                     ))}
                                     {editForm.category && !categories.find((c: any) => c.name === editForm.category) && (
                                         <option value={editForm.category}>{editForm.category}</option>
                                     )}
                                 </select>
-                                {editForm.category !== "VIDEO" && (
-                                  <div className="flex gap-2 items-start mt-2 p-2 bg-yellow-500/10 rounded border border-yellow-500/20">
-                                     <AlertCircle size={14} className="text-yellow-500 shrink-0 mt-0.5" />
-                                     <p className="text-[10px] text-yellow-200 leading-tight">
-                                        Warning: Changing category to something other than "VIDEO" will remove this item from the Hero Grid.
-                                     </p>
-                                  </div>
-                                )}
                              </div>
 
                              <div>
@@ -480,7 +490,8 @@ const HeroParallax = () => {
                              </div>
                           </div>
                         ) : (
-                          <div className="flex flex-col h-full">
+                          // VIEW MODE
+                          <div className="flex flex-col h-full pb-10">
                             <motion.div
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -495,7 +506,7 @@ const HeroParallax = () => {
                                 initial={{ y: 20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: 0.3 }}
-                                className="text-2xl font-sans font-bold text-white mb-6 leading-tight"
+                                className="text-xl md:text-2xl font-sans font-bold text-white mb-4 leading-tight"
                             >
                                 {activeProduct.name}
                             </motion.h3>
@@ -503,7 +514,7 @@ const HeroParallax = () => {
                                 initial={{ y: 20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: 0.4 }}
-                                className="text-neutral-400 text-sm leading-relaxed whitespace-pre-line"
+                                className="text-neutral-400 text-xs md:text-sm leading-relaxed whitespace-pre-line"
                             >
                                 {activeProduct.description || "No description provided."}
                             </motion.div>
@@ -511,7 +522,7 @@ const HeroParallax = () => {
                         )}
                         </div>
 
-                        <div className="p-6 border-t border-neutral-800 bg-neutral-900 shrink-0">
+                        <div className="p-4 md:p-6 border-t border-neutral-800 bg-neutral-900 shrink-0">
                              {isEditing ? (
                                 <div className="flex gap-2">
                                     <button 
@@ -525,7 +536,6 @@ const HeroParallax = () => {
                                     onClick={handleDelete}
                                     disabled={isSaving}
                                     className="bg-red-500/10 hover:bg-red-500 hover:text-white text-red-500 p-3 rounded-lg transition-colors"
-                                    title="Delete Video"
                                     >
                                     <Trash2 size={18} />
                                     </button>
@@ -545,7 +555,7 @@ const HeroParallax = () => {
                                         initial={{ y: 20, opacity: 0 }}
                                         animate={{ y: 0, opacity: 1 }}
                                         transition={{ delay: 0.5 }}
-                                        className="w-full py-4 bg-white text-black rounded-xl font-bold uppercase tracking-widest hover:bg-neutral-200 transition-all flex items-center justify-center gap-2"
+                                        className="w-full py-3 md:py-4 bg-white text-black rounded-xl font-bold uppercase tracking-widest hover:bg-neutral-200 transition-all flex items-center justify-center gap-2 text-xs md:text-sm"
                                     >
                                         Open on YouTube <ExternalLink size={16} />
                                     </motion.a>
@@ -575,12 +585,13 @@ const HeroParallax = () => {
     </AnimatePresence>
 
     {/* --- HERO SCROLL SECTION --- */}
+    {/* Adjusted height for mobile to prevent excessive scrolling blank space */}
     <div
         ref={ref}
-        className="h-[240vh] pt-10 pb-0 overflow-hidden bg-black antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d]"
+        className="h-[180vh] md:h-[240vh] pt-10 pb-0 overflow-hidden bg-black antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d]"
     >
         {/* HEADER SECTION */}
-        <div className="max-w-7xl relative mx-auto py-20 md:py-32 px-4 w-full z-20 mb-10 md:mb-32">
+        <div className="max-w-7xl relative mx-auto py-12 md:py-32 px-4 w-full z-20 mb-10 md:mb-32">
              <div className="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-60">
                 <SparklesCore
                     id="parallax-sparkles"
@@ -598,13 +609,12 @@ const HeroParallax = () => {
                     <motion.div 
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-400 text-xs font-mono tracking-wider uppercase backdrop-blur-md"
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-400 text-[10px] md:text-xs font-mono tracking-wider uppercase backdrop-blur-md"
                         >
-                        <Zap size={12} className="fill-sky-400" /> {hero.badge}
+                        <Zap size={10} className="fill-sky-400" /> {hero.badge}
                     </motion.div>
                  )}
 
-                {/* --- SHIMMER TITLE UPDATE --- */}
                 <h1 className="text-5xl md:text-8xl font-sans font-black text-white leading-[0.9] tracking-tighter">
                 {(hero?.title || "Welcome VIP").split(" ").map((word: string, i: number) => (
                     <span 
@@ -620,7 +630,7 @@ const HeroParallax = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.2 }}
-                    className="max-w-2xl text-lg md:text-xl mt-6 text-neutral-400 font-normal leading-relaxed"
+                    className="max-w-2xl text-base md:text-xl mt-4 md:mt-6 text-neutral-400 font-normal leading-relaxed"
                     >
                     {hero?.subtitle || "Premium video content for exclusive members."}
                 </motion.p>
@@ -630,10 +640,10 @@ const HeroParallax = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
-                className="mt-10 flex flex-col sm:flex-row gap-6 items-center relative z-30"
+                className="mt-8 md:mt-10 flex flex-col sm:flex-row gap-6 items-start sm:items-center relative z-30"
             >
                 <Faq />
-                <div className="flex items-center gap-4 pl-4 border-l border-neutral-800">
+                <div className="flex items-center gap-4 pl-0 sm:pl-4 border-l-0 sm:border-l border-neutral-800">
                     <div className="flex -space-x-3">
                         {[1,2,3].map(i => (
                             <div key={i} className="w-8 h-8 rounded-full bg-neutral-800 border-2 border-black flex items-center justify-center text-[10px] text-neutral-500">
@@ -659,13 +669,14 @@ const HeroParallax = () => {
             translateY, 
             opacity 
         }}
-        className="relative z-10"
+        className="relative z-10 will-change-transform"
     >
-        <div className={cn("flex flex-col", isMobile ? "gap-6 px-4" : "")}>
+        <div className={cn("flex flex-col", isMobile ? "gap-2 px-0" : "")}>
             {videoProducts.length > 0 ? (
                 <>
+                {/* OPTIMIZATION: Tighter spacing (space-x-4) on mobile */}
                 {/* ROW 1 */}
-                <motion.div className={cn("flex flex-row-reverse space-x-reverse", isMobile ? "space-x-6 mb-2" : "space-x-20 mb-20")}>
+                <motion.div className={cn("flex flex-row-reverse space-x-reverse", isMobile ? "space-x-4 mb-2" : "space-x-20 mb-20")}>
                 {firstRow.map((product, idx) => (
                     <VideoCard 
                         key={`row1-${product._id || product.id}-${idx}`}
@@ -678,7 +689,7 @@ const HeroParallax = () => {
                 </motion.div>
 
                 {/* ROW 2 */}
-                <motion.div className={cn("flex flex-row", isMobile ? "space-x-6 mb-2" : "space-x-20 mb-20")}>
+                <motion.div className={cn("flex flex-row", isMobile ? "space-x-4 mb-2" : "space-x-20 mb-20")}>
                 {secondRow.map((product, idx) => (
                     <VideoCard 
                         key={`row2-${product._id || product.id}-${idx}`}
@@ -691,7 +702,7 @@ const HeroParallax = () => {
                 </motion.div>
 
                 {/* ROW 3 */}
-                <motion.div className={cn("flex flex-row-reverse space-x-reverse", isMobile ? "space-x-6" : "space-x-20")}>
+                <motion.div className={cn("flex flex-row-reverse space-x-reverse", isMobile ? "space-x-4" : "space-x-20")}>
                 {thirdRow.map((product, idx) => (
                     <VideoCard 
                         key={`row3-${product._id || product.id}-${idx}`}
@@ -723,9 +734,8 @@ const HeroParallax = () => {
     )}
 
     {/* --- FOOTER / ADMIN ACCESS --- */}
-    {/* Added mt-20 to ensure footer is pushed down correctly */}
-    <div className="relative z-30 bg-black text-neutral-500 py-16 px-8 text-center border-t border-neutral-900 mt-1">
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 mb-12 text-xs uppercase tracking-widest text-neutral-400">
+    <div className="relative z-30 bg-black text-neutral-500 py-12 md:py-16 px-8 text-center border-t border-neutral-900 mt-1">
+        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 mb-12 text-xs uppercase tracking-widest text-neutral-400">
             <div className="flex flex-col items-center gap-3">
                 <Youtube className="text-red-500 mb-1" />
                 <span>Exclusive Content</span>

@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { motion, useMotionValue, useMotionTemplate, AnimatePresence } from "framer-motion";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Clock, Copy, Check, Sparkles, Scissors, QrCode, X, CreditCard, Users } from "lucide-react";
+import { Copy, Check, Sparkles, Scissors, QrCode, X, CreditCard, Users, Timer } from "lucide-react";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import type { Engine } from "@tsparticles/engine";
@@ -36,7 +36,7 @@ const usePerformanceMode = () => {
 };
 
 // ==========================================
-// 2. MODAL SYSTEM (Context + Portals)
+// 2. MODAL SYSTEM
 // ==========================================
 
 interface ModalContextType {
@@ -68,7 +68,7 @@ export function Modal({ children }: { children: ReactNode }) {
 export const ModalTrigger = ({ children, className }: { children: ReactNode; className?: string }) => {
   const { setOpen } = useModal();
   return (
-    <button onClick={() => setOpen(true)} className={cn("w-full h-full cursor-pointer focus:outline-none", className)}>
+    <button onClick={() => setOpen(true)} className={cn("cursor-pointer focus:outline-none", className)}>
       {children}
     </button>
   );
@@ -92,7 +92,7 @@ export const ModalBody = ({ children, className }: { children: ReactNode; classN
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[9999] flex items-start justify-center p-4 pt-16 sm:pt-24">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -101,20 +101,23 @@ export const ModalBody = ({ children, className }: { children: ReactNode; classN
             className="absolute inset-0 bg-neutral-950/80 backdrop-blur-md cursor-pointer"
           />
           <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            transition={{ type: "spring", damping: 24, stiffness: 300 }}
-            className={cn("relative w-full max-w-lg z-10 pointer-events-none", className)}
+            initial={{ y: -50, opacity: 0, scale: 0.95 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: -50, opacity: 0, scale: 0.95 }}
+            transition={{ type: "spring", damping: 20, stiffness: 200 }}
+            className={cn(
+              "relative w-full max-w-2xl z-10 pointer-events-none overflow-hidden",
+              className
+            )}
           >
-            <button 
-              onClick={() => setOpen(false)}
-              className="absolute -top-12 right-0 p-2 bg-neutral-900 text-white hover:bg-neutral-800 rounded-full transition-colors pointer-events-auto border border-white/10"
-            >
-              <X size={18} strokeWidth={1.5} />
-            </button>
-            <div className="pointer-events-auto">
-              {children}
+            <div className="pointer-events-auto relative w-full">
+                <button 
+                onClick={() => setOpen(false)}
+                className="absolute right-4 top-4 z-50 p-2 bg-neutral-800/50 text-white hover:bg-neutral-700 rounded-full transition-colors border border-white/10"
+                >
+                <X size={16} strokeWidth={2} />
+                </button>
+                {children}
             </div>
           </motion.div>
         </div>
@@ -403,7 +406,6 @@ const BullRewardsCard = () => {
 
   return (
     <div className="relative w-full aspect-[1.58/1] perspective-1000 group select-none">
-        {/* REWARD LAYER (Revealed after tear) */}
         <div className={cn(
           "absolute inset-0 bg-white rounded-none border border-zinc-200 flex flex-col items-center justify-center text-center p-6 transition-opacity duration-500",
           isTorn ? "opacity-100 delay-300 z-0" : "opacity-0 -z-10"
@@ -415,7 +417,6 @@ const BullRewardsCard = () => {
           <p className="text-zinc-500 text-xs uppercase tracking-widest">Use on Whop Checkout</p>
         </div>
 
-        {/* CARD WRAPPER */}
         <AnimatePresence>
           {!isTorn && (
             <motion.div
@@ -438,7 +439,6 @@ const BullRewardsCard = () => {
           )}
         </AnimatePresence>
 
-        {/* TEAR PIECES */}
         {isTorn && (
           <>
             <motion.div
@@ -478,7 +478,7 @@ const BullRewardsCard = () => {
 
 const ShopMarketingSection = () => {
   return (
-    <div className="relative flex min-h-[600px] w-full flex-col overflow-hidden bg-neutral-950 text-white selection:bg-blue-500/30 selection:text-blue-200">
+    <div className="relative flex min-h-0 w-full flex-col overflow-hidden bg-neutral-950 text-white selection:bg-blue-500/30 selection:text-blue-200 sm:min-h-[500px]">
       <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-950/20 via-neutral-950 to-neutral-950" />
       <BackgroundGrids />
       <div className="absolute inset-0 z-0 h-full w-full pointer-events-none">
@@ -488,51 +488,14 @@ const ShopMarketingSection = () => {
       {/* 1. PROMO BANNER */}
       <PromoBanner />
       
-      <div className="relative z-10 flex w-full flex-col items-center justify-center pt-8 pb-16 sm:py-24">
-        
-        {/* HERO TEXT PLACEHOLDER (If you have one, it goes here so it's visible now) */}
-        
-        {/* 2. STATS & REWARDS & SOCIALS (Horizontal Scroll on Mobile) */}
-        {/* Added 'no-scrollbar' to hide scrollbar, check CSS note below */}
-        <div className="flex w-full snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-8 sm:max-w-5xl sm:flex-row sm:flex-wrap sm:justify-center sm:overflow-visible sm:pb-0 sm:px-4">
+      <div className="relative z-10 flex w-full flex-col items-center justify-start pt-8 pb-12 sm:justify-center sm:pt-24 sm:pb-24 px-4">
           
-          {/* Active Traders */}
-          <div className="flex-none w-[85vw] snap-center sm:w-auto">
-             <LiveViewers /> 
-          </div>
-
-          {/* Deal Timer -> Modal */}
-          <div className="flex-none w-[85vw] snap-center sm:w-auto h-full">
-            <Modal>
-              <ModalTrigger>
-                 <DealTimerButton />
-              </ModalTrigger>
-              <ModalBody>
-                 <BullRewardsCard />
-              </ModalBody>
-            </Modal>
-          </div>
-
-          {/* Socials -> Modal Trigger */}
-          <div className="flex-none w-[85vw] snap-center sm:w-auto h-full">
-            <Modal>
-              <ModalTrigger>
-                <SocialsTrigger />
-              </ModalTrigger>
-              <ModalBody className="max-w-2xl bg-neutral-950/90 border border-white/10 p-8 rounded-2xl">
-                 <div className="text-center mb-6">
-                    <h3 className="text-2xl font-bold text-white mb-2">Join the Community</h3>
-                    <p className="text-neutral-400 text-sm">Follow us for updates, signals and exclusive rewards.</p>
-                 </div>
-                 <div className="w-full relative overflow-hidden -mx-4 sm:mx-0 py-4">
-                    <SocialsRow />
-                 </div>
-              </ModalBody>
-            </Modal>
-          </div>
-
+        {/* 2. LIVE TRADERS "COMMAND CENTER" (Consolidated) */}
+        {/* This now contains everything: Live stats, Timer trigger, and Socials trigger */}
+        <div className="w-full max-w-2xl">
+           <LiveViewersDashboard /> 
         </div>
-          
+
       </div>
     </div>
   );
@@ -543,6 +506,131 @@ export default ShopMarketingSection;
 // ==========================================
 // 6. SUB-COMPONENTS
 // ==========================================
+
+export const LiveViewersDashboard = () => {
+  const [viewers, setViewers] = useState<number | null>(42);
+  const [timeLeft, setTimeLeft] = useState("00:00:00");
+
+  // Logic for Viewers simulation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setViewers(prev => {
+        if (!prev) return 42;
+        const change = Math.floor(Math.random() * 7) - 3;
+        return Math.max(35, Math.min(150, prev + change));
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Logic for Timer
+  useEffect(() => {
+    const calculateTime = () => {
+      const now = new Date();
+      const target = new Date();
+      target.setHours(24, 0, 0, 0);
+      const diff = target.getTime() - now.getTime();
+      if (diff <= 0) return "00:00:00";
+      const h = Math.floor((diff / 3600000) % 24);
+      const m = Math.floor((diff / 60000) % 60);
+      const s = Math.floor((diff / 1000) % 60);
+      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    };
+    setTimeLeft(calculateTime());
+    const interval = setInterval(() => setTimeLeft(calculateTime()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <motion.div animate={{ y: [0, -2, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
+      <PixelCard variant="green" gap={5} speed={20} className="group relative rounded-2xl shadow-xl transition-all duration-300 hover:shadow-[0_0_40px_-5px_rgba(34,197,94,0.3)] bg-zinc-950/80" noFocus={true}>
+        
+        {/* Responsive Layout: Column on Mobile, Row on Desktop */}
+        <div className="flex flex-col md:flex-row items-center justify-between p-6 gap-6 md:gap-8">
+            
+            {/* LEFT SIDE: Live Stats */}
+            <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-start">
+                <div className="flex flex-col items-center justify-center">
+                    <MiniTradingChart width={80} height={35} />
+                </div>
+                
+                <div className="flex items-center gap-4">
+                    <div className="h-10 w-[1px] bg-white/10 hidden md:block"></div>
+                    <div className="flex flex-col leading-none items-end">
+                        <div className="flex items-center gap-2">
+                            <span className="relative flex h-2.5 w-2.5">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
+                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500"></span>
+                            </span>
+                            <span className="text-2xl font-bold text-green-400 tabular-nums shadow-green-500/50 drop-shadow-sm">{viewers}</span>
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Live Traders</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* SEPARATOR (Desktop only) */}
+            <div className="hidden md:block w-[1px] h-12 bg-white/5" />
+            
+            {/* SEPARATOR (Mobile only) */}
+            <div className="md:hidden w-full h-[1px] bg-white/5" />
+
+            {/* RIGHT SIDE: Actions (Nested Modals) */}
+            <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                
+                {/* 1. REWARD BUTTON */}
+                <Modal>
+                    <ModalTrigger className="w-full md:w-auto">
+                        <motion.div 
+                            whileHover={{ scale: 1.05 }} 
+                            whileTap={{ scale: 0.95 }}
+                            className="flex items-center justify-between md:justify-center gap-3 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 px-4 py-2 rounded-lg transition-colors group/btn w-full md:w-auto"
+                        >
+                            <div className="flex items-center gap-2">
+                                <Timer className="w-4 h-4 text-blue-400 animate-pulse" />
+                                <span className="font-mono text-sm font-bold text-blue-100 tabular-nums">{timeLeft}</span>
+                            </div>
+                            <span className="text-[10px] uppercase font-bold text-blue-400 tracking-wider md:hidden">Claim</span>
+                        </motion.div>
+                    </ModalTrigger>
+                    <ModalBody>
+                        <BullRewardsCard />
+                    </ModalBody>
+                </Modal>
+
+                {/* 2. SOCIALS BUTTON */}
+                <Modal>
+                    <ModalTrigger className="w-full md:w-auto">
+                        <motion.div 
+                             whileHover={{ scale: 1.05 }} 
+                             whileTap={{ scale: 0.95 }}
+                             className="flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 p-2.5 rounded-lg transition-colors w-full md:w-auto"
+                        >
+                             <Users className="w-4 h-4 text-zinc-300" />
+                        </motion.div>
+                    </ModalTrigger>
+                    <ModalBody className="max-w-4xl bg-neutral-950/90 border-b border-white/10 p-6 rounded-b-2xl sm:rounded-2xl border sm:border-white/10">
+                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                            <div className="text-left">
+                                <h3 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
+                                    <Sparkles className="w-5 h-5 text-blue-400" />
+                                    Community
+                                </h3>
+                                <p className="text-neutral-400 text-sm">Follow for signals & rewards.</p>
+                            </div>
+                            <div className="w-full md:w-auto overflow-hidden">
+                                <SocialsRow />
+                            </div>
+                         </div>
+                    </ModalBody>
+                </Modal>
+
+            </div>
+        </div>
+      </PixelCard>
+    </motion.div>
+  );
+};
 
 export const PromoBanner = () => {
   return (
@@ -727,105 +815,6 @@ const MiniTradingChart = ({ width = 60, height = 24 }: { width?: number; height?
     </div>
   );
 }
-
-export const LiveViewers = () => {
-  const [viewers, setViewers] = useState<number | null>(42);
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setViewers(prev => {
-        if (!prev) return 42;
-        const change = Math.floor(Math.random() * 7) - 3;
-        return Math.max(35, Math.min(150, prev + change));
-      });
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <motion.div animate={{ scale: [1, 1.02, 1] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
-      <PixelCard variant="green" gap={5} speed={20} className="group relative flex items-center justify-between gap-6 rounded-xl px-8 py-4 shadow-xl transition-all duration-300 hover:shadow-[0_0_40px_-5px_rgba(34,197,94,0.3)]" noFocus={true}>
-        <div className="flex flex-col items-center justify-center">
-          <MiniTradingChart width={70} height={32} />
-        </div>
-        <div className="h-10 w-[1px] bg-white/10"></div>
-        <div className="flex flex-col leading-none items-end">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500"></span>
-            </span>
-            <span className="text-2xl font-bold text-green-400 tabular-nums shadow-green-500/50 drop-shadow-sm">{viewers}</span>
-          </div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Live Traders</span>
-        </div>
-      </PixelCard>
-    </motion.div>
-  );
-};
-
-export const SocialsTrigger = () => {
-  return (
-    <motion.div
-      className="h-full"
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      <PixelCard variant="default" gap={5} speed={35} noFocus={true} className="group relative flex items-center justify-between gap-4 rounded-xl px-8 py-4 shadow-xl transition-all duration-300 hover:shadow-[0_0_40px_-5px_rgba(255,255,255,0.1)] h-full bg-zinc-900/50 border-zinc-800">
-        <div className="absolute inset-0 -z-10 rounded-xl bg-gradient-to-r from-zinc-800/50 to-transparent opacity-50 transition-opacity group-hover:opacity-100" />
-        
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800 group-hover:bg-zinc-700 transition-colors">
-            <Users className="h-5 w-5 text-zinc-200" />
-        </div>
-        
-        <div className="flex flex-col items-end">
-          <span className="text-xs font-medium text-zinc-400">Join Us</span>
-          <span className="font-mono text-xl font-bold leading-none text-white tabular-nums tracking-wider drop-shadow-sm">Socials</span>
-        </div>
-      </PixelCard>
-    </motion.div>
-  );
-};
-
-export const DealTimerButton = () => {
-  const [timeLeft, setTimeLeft] = useState("00:00:00");
-  useEffect(() => {
-    const calculateTime = () => {
-      const now = new Date();
-      const target = new Date();
-      target.setHours(24, 0, 0, 0);
-      const diff = target.getTime() - now.getTime();
-      if (diff <= 0) return "00:00:00";
-      const h = Math.floor((diff / 3600000) % 24);
-      const m = Math.floor((diff / 60000) % 60);
-      const s = Math.floor((diff / 1000) % 60);
-      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    };
-    setTimeLeft(calculateTime());
-    const interval = setInterval(() => setTimeLeft(calculateTime()), 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <motion.div 
-      className="h-full"
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      <PixelCard variant="blue" gap={5} speed={20} noFocus={true} className="group relative flex items-center justify-between gap-4 rounded-xl px-8 py-4 shadow-xl transition-all duration-300 hover:shadow-[0_0_40px_-5px_rgba(59,130,246,0.3)] h-full">
-        <div className="absolute inset-0 -z-10 rounded-xl bg-gradient-to-r from-blue-500/10 to-transparent opacity-50 transition-opacity group-hover:opacity-100" />
-        
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
-            <CreditCard className="h-5 w-5 text-blue-400" />
-        </div>
-        
-        <div className="flex flex-col items-end">
-          <span className="text-xs font-medium text-blue-200">Get Reward</span>
-          <span className="font-mono text-xl font-bold leading-none text-white tabular-nums tracking-wider drop-shadow-sm">{timeLeft}</span>
-        </div>
-      </PixelCard>
-    </motion.div>
-  );
-};
 
 const BackgroundGrids = React.memo(() => {
   return (
