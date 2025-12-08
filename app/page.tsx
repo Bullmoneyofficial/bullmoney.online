@@ -7,7 +7,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { MessageCircle } from 'lucide-react';
 
-// --- COMPONENTS (Keep your existing imports) ---
+// --- COMPONENTS ---
 import { Features } from "@/components/Mainpage/features";
 import { Hero } from "@/components/Mainpage/hero";
 import { Pricing } from "../components/Mainpage/pricing"; 
@@ -32,7 +32,6 @@ const useIsMobile = () => {
 
   useEffect(() => {
     const checkMobile = () => {
-      // Robust mobile detection
       const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       const isSmall = window.innerWidth <= 768;
       const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
@@ -50,7 +49,7 @@ const useIsMobile = () => {
 };
 
 // =========================================
-// 1. SUPPORT WIDGET (With ID for targeting)
+// 1. SUPPORT WIDGET
 // =========================================
 const SupportWidget = () => {
   const [isHovered, setIsHovered] = useState(false);
@@ -65,7 +64,7 @@ const SupportWidget = () => {
 
   return (
     <div 
-      id="support-widget-container" // ID Added for Cursor Targeting
+      id="support-widget-container" 
       className={`fixed bottom-8 right-8 z-[9999] transition-all duration-700 ease-out transform ${
         isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'
       }`}
@@ -112,7 +111,7 @@ const SupportWidget = () => {
 };
 
 // =========================================
-// 2. STYLES (Unified Blue Square Look)
+// 2. STYLES (Identical Desktop & Mobile Look)
 // =========================================
 const CursorStyles = () => (
   <style jsx global>{`
@@ -121,30 +120,35 @@ const CursorStyles = () => (
       top: 0; left: 0; 
       z-index: 10000; 
       pointer-events: none;
-      will-change: transform; /* Performance Boost */
+      will-change: transform;
     }
+    
+    /* --- THE DOT --- */
     .target-cursor-dot {
-      width: 6px; height: 6px; 
+      width: 8px; height: 8px; /* Slightly bigger base size */
       background-color: #0066ff; 
       border-radius: 50%;
       position: absolute; top: 0; left: 0; 
       transform: translate(-50%, -50%);
       box-shadow: 0 0 10px #0066ff;
     }
+
+    /* --- THE SQUARE BRACKETS --- */
     .target-cursor-corner {
       position: absolute; 
-      width: 14px; height: 14px; 
+      width: 16px; height: 16px; /* Bigger brackets */
       border: 2px solid #0066ff;
       box-shadow: 0 0 4px rgba(0, 102, 255, 0.4);
       will-change: transform;
     }
-    /* Corner Positioning */
-    .corner-tl { top: -8px; left: -8px; border-right: none; border-bottom: none; }
-    .corner-tr { top: -8px; right: -8px; border-left: none; border-bottom: none; }
-    .corner-br { bottom: -8px; right: -8px; border-left: none; border-top: none; }
-    .corner-bl { bottom: -8px; left: -8px; border-right: none; border-top: none; }
 
-    /* Shimmer for Support Button */
+    /* Corner Positioning (Offsets) */
+    .corner-tl { top: -10px; left: -10px; border-right: none; border-bottom: none; }
+    .corner-tr { top: -10px; right: -10px; border-left: none; border-bottom: none; }
+    .corner-br { bottom: -10px; right: -10px; border-left: none; border-top: none; }
+    .corner-bl { bottom: -10px; left: -10px; border-right: none; border-top: none; }
+
+    /* Shimmer Animation */
     @keyframes shimmer {
       0% { transform: translateX(-150%) skewX(-15deg); }
       50%, 100% { transform: translateX(150%) skewX(-15deg); }
@@ -156,7 +160,7 @@ const CursorStyles = () => (
 );
 
 // =========================================
-// 3. TARGET CURSOR LOGIC (Dual Mode)
+// 3. TARGET CURSOR LOGIC
 // =========================================
 
 interface TargetCursorProps {
@@ -202,107 +206,117 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
         const corners = cornersRef.current!;
 
         // ------------------------------------------
-        // MODE A: MOBILE AUTO-PILOT (Screenshot Path)
+        // MODE A: MOBILE AUTO-PILOT (AI PATHING)
         // ------------------------------------------
         if (isMobile) {
-            // Start center
-            gsap.set(cursor, { x: window.innerWidth / 2, y: window.innerHeight / 2, opacity: 0, scale: 0.5 });
-            gsap.to(cursor, { opacity: 1, scale: 1, duration: 0.8 });
+            // 1. Init: Start bigger on mobile for visibility
+            gsap.set(cursor, { 
+                x: window.innerWidth / 2, 
+                y: window.innerHeight / 2, 
+                opacity: 0, 
+                scale: 1.3 // Mobile Scale Up
+            });
+            gsap.to(cursor, { opacity: 1, duration: 0.5 });
 
-            // Helper to expand/contract corners (Pulse Effect)
-            const pulseCorners = () => {
-                const tl = gsap.timeline();
-                tl.to(corners, { x: (i) => [ -5, 5, 5, -5 ][i], y: (i) => [ -5, -5, 5, 5 ][i], duration: 0.2 })
-                  .to(corners, { x: 0, y: 0, duration: 0.2 });
-                return tl;
+            // 2. Pulse Animation (The "Scanning" look)
+            const pulse = () => {
+                gsap.to(corners, { scale: 1.5, duration: 0.2, yoyo: true, repeat: 1 });
+                gsap.to(dotRef.current, { scale: 1.5, duration: 0.2, yoyo: true, repeat: 1 });
             };
 
-            const autoPilotTour = () => {
-                // 1. Define High Value Targets based on Screenshot
-                // Try to find the Nav, The Center, and The Support Button
-                const navTarget = document.querySelector('nav') || document.querySelector('header');
-                const supportTarget = document.querySelector('#support-widget-container');
-                const centerButtons = Array.from(document.querySelectorAll('button, a.btn-primary'));
+            // 3. The "AI Brain" - Decides where to go next
+            const runAiMovement = () => {
+                // Determine next action randomly
+                const roll = Math.random();
+                let nextAction = "";
+                let targetX = 0;
+                let targetY = 0;
+                let speed = 1;
+                let delay = 0;
+
+                // --- ACTION 1: GO TO NAV (Top Right) ---
+                // Higher probability if we haven't been there lately, or random
+                if (roll < 0.3) {
+                     // HARDCODED NAV POSITION: High up (y: 30) and Right (width - 50)
+                     targetX = window.innerWidth - (30 + Math.random() * 40);
+                     targetY = 30 + Math.random() * 20; // Very close to top
+                     speed = 1.2;
+                     delay = 1.5; // Stay on nav for a moment
+                }
                 
-                // Find a visible center button
-                const mainTarget = centerButtons.find(el => {
-                    const r = el.getBoundingClientRect();
-                    return r.top > 100 && r.top < window.innerHeight / 2 + 100;
-                }) || { getBoundingClientRect: () => ({ left: window.innerWidth/2 - 20, top: window.innerHeight/2 - 20, width: 40, height: 40 }) };
-
-                // Build the Tour Timeline
-                const masterTl = gsap.timeline({ repeat: -1, repeatDelay: 0.5 });
-
-                // PATH 1: Go to Nav (Top)
-                if (navTarget) {
-                    const r = navTarget.getBoundingClientRect();
-                    masterTl.to(cursor, { 
-                        x: r.left + r.width - 50, // Top Right (Menu area)
-                        y: r.top + (r.height / 2) + 20, 
-                        duration: 1.5, 
-                        ease: "power2.inOut",
-                        force3D: true
-                    })
-                    .add(pulseCorners()); // Scan effect
+                // --- ACTION 2: GO TO SUPPORT (Bottom Right) ---
+                else if (roll < 0.5) {
+                    const supportEl = document.getElementById('support-widget-container');
+                    if (supportEl) {
+                        const rect = supportEl.getBoundingClientRect();
+                        targetX = rect.left + rect.width / 2;
+                        targetY = rect.top + rect.height / 2;
+                        speed = 1.4;
+                        delay = 1;
+                    } else {
+                        // Fallback
+                        targetX = window.innerWidth - 60;
+                        targetY = window.innerHeight - 60;
+                    }
                 }
 
-                // PATH 2: Go to Center Content (VIP/Hero)
-                if (mainTarget) {
-                    const r = (mainTarget as Element).getBoundingClientRect();
-                    masterTl.to(cursor, { 
-                        x: r.left + r.width / 2, 
-                        y: r.top + r.height / 2, 
-                        duration: 1.2, 
-                        ease: "power2.inOut",
-                        force3D: true
-                    })
-                    .add(pulseCorners()); // Lock-on effect
+                // --- ACTION 3: FIND CENTER BUTTON (The main attraction) ---
+                else {
+                    // Find all buttons in the viewport
+                    const allBtns = Array.from(document.querySelectorAll('button, a.btn-primary, .cursor-target'));
+                    const visibleBtns = allBtns.filter(el => {
+                        const r = el.getBoundingClientRect();
+                        return r.top > 100 && r.bottom < window.innerHeight - 100 && r.width > 20;
+                    });
+
+                    if (visibleBtns.length > 0) {
+                        const btn = visibleBtns[Math.floor(Math.random() * visibleBtns.length)];
+                        const rect = btn.getBoundingClientRect();
+                        targetX = rect.left + rect.width / 2;
+                        targetY = rect.top + rect.height / 2;
+                        speed = 1; // Slower, precise movement
+                        delay = 0.8;
+                    } else {
+                        // Roam randomly in center
+                        targetX = (window.innerWidth / 2) + (Math.random() * 100 - 50);
+                        targetY = (window.innerHeight / 2) + (Math.random() * 100 - 50);
+                        speed = 2; // Float slow
+                    }
                 }
 
-                // PATH 3: Go to Support (Bottom Right)
-                if (supportTarget) {
-                    const r = supportTarget.getBoundingClientRect();
-                    masterTl.to(cursor, { 
-                        x: r.left + r.width / 2, 
-                        y: r.top + r.height / 2, 
-                        duration: 1.5, 
-                        ease: "power2.inOut",
-                        force3D: true
-                    })
-                    .add(pulseCorners()); // Lock-on effect
-                }
-
-                // PATH 4: Return to Center (Loop smoothly)
-                masterTl.to(cursor, { 
-                    x: window.innerWidth / 2, 
-                    y: window.innerHeight / 2, 
-                    duration: 1.5, 
-                    ease: "sine.inOut" 
+                // EXECUTE MOVE
+                gsap.to(cursor, {
+                    x: targetX,
+                    y: targetY,
+                    duration: speed,
+                    ease: "power2.inOut",
+                    onComplete: () => {
+                        // Pulse when we hit a target
+                        if (roll < 0.8) pulse();
+                        // Schedule next move
+                        setTimeout(runAiMovement, delay * 1000);
+                    }
                 });
             };
 
-            // Start Tour
-            setTimeout(autoPilotTour, 1000);
+            // Start the AI Loop
+            setTimeout(runAiMovement, 500);
         }
 
         // ------------------------------------------
-        // MODE B: DESKTOP MOUSE FOLLOW (Interactive)
+        // MODE B: DESKTOP MOUSE FOLLOW (Unchanged)
         // ------------------------------------------
         else {
-            // Initial positioning
             gsap.set(cursor, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
 
-            // 1. Spin Animation (Only corners spin for bracket effect)
             const spinTl = gsap.timeline({ repeat: -1 })
                 .to(cursor, { rotation: 360, duration: spinDuration, ease: 'none' });
 
-            // 2. Mouse Movement
             const moveCursor = (e: MouseEvent) => {
                 gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: 'power3.out', force3D: true });
             };
             window.addEventListener('mousemove', moveCursor);
 
-            // 3. Click Effects
             const handleDown = () => {
                 gsap.to(dotRef.current, { scale: 0.5, duration: 0.2 });
                 gsap.to(corners, { scale: 0.8, duration: 0.2 });
@@ -314,7 +328,6 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
             window.addEventListener('mousedown', handleDown);
             window.addEventListener('mouseup', handleUp);
 
-            // 4. Magnetic/Targeting Logic
             gsap.ticker.add(() => {
                 if (!state.current.isActive || !state.current.targetPositions) return;
                 const strength = state.current.activeStrength.val;
@@ -323,7 +336,6 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
                 const cursorX = gsap.getProperty(cursor, 'x') as number;
                 const cursorY = gsap.getProperty(cursor, 'y') as number;
 
-                // Move corners to target
                 corners.forEach((corner, i) => {
                     const currentX = gsap.getProperty(corner, 'x') as number;
                     const currentY = gsap.getProperty(corner, 'y') as number;
@@ -337,14 +349,13 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
                 });
             });
 
-            // 5. Hover Events
             const handleHover = (e: MouseEvent) => {
                 const target = (e.target as Element).closest(targetSelector);
                 if (target && target !== state.current.activeTarget) {
                     state.current.activeTarget = target;
                     state.current.isActive = true;
                     spinTl.pause();
-                    gsap.to(cursor, { rotation: 0, duration: 0.3 }); // Reset rotation
+                    gsap.to(cursor, { rotation: 0, duration: 0.3 }); 
 
                     const rect = target.getBoundingClientRect();
                     const borderWidth = 4; const cornerSize = 14;
@@ -364,14 +375,6 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
                         state.current.isActive = false;
                         state.current.targetPositions = null;
                         gsap.to(state.current.activeStrength, { val: 0, duration: 0.2, overwrite: true });
-                        
-                        // Reset corners to square
-                        const cSize = 14;
-                        const pos = [
-                            { x: -8, y: -8 }, { x: -8, y: -8 }, // Offsets handled by CSS, reset transforms
-                            { x: -8, y: -8 }, { x: -8, y: -8 }
-                        ];
-                        // Reset transforms
                         corners.forEach((c) => gsap.to(c, { x: 0, y: 0, duration: 0.3 }));
                         spinTl.restart();
                     };
