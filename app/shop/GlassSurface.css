@@ -62,7 +62,7 @@
     /* Bottom-Right Shadow (The "Thickness") */
     inset -1px -1px 0px 0px rgba(47, 24, 100, 0.2),
     /* Outer Shadow */
-    0 20px 40px -10px rgba(36, 31, 175, 0.264);
+    0 20px 40px -10px rgba(36, 31, 175, 0);
     
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
