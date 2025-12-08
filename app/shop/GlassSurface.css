@@ -44,13 +44,13 @@
   /* 1. Stronger standard blur to replace the displacement 
      2. Use saturate to mimic the refraction intensity
   */
-  backdrop-filter: blur(10px) saturate(1.4);
-  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  backdrop-filter: blur(5px) saturate(1.4);
+  -webkit-backdrop-filter: blur(5px) saturate(1.4);
   
   /* 3. A gradient background that creates "volume" */
   background: linear-gradient(
     135deg, 
-    rgba(255, 255, 255, 0.15) 0%, 
+    rgba(255, 255, 255, 0.04) 0%, 
     rgba(255, 255, 255, 0.01) 50%, 
     rgba(255, 255, 255, 0.05) 100%
   );
@@ -62,7 +62,7 @@
     /* Bottom-Right Shadow (The "Thickness") */
     inset -1px -1px 0px 0px rgba(47, 24, 100, 0.2),
     /* Outer Shadow */
-    0 20px 40px -10px rgba(36, 31, 175, 0.581);
+    0 20px 40px -10px rgba(36, 31, 175, 0.264);
     
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -78,7 +78,7 @@
   /* Create the "Oil Slick" / Chromatic Aberration look */
   background: radial-gradient(
     circle at 50% 50%,
-    rgba(255, 0, 21, 0.366),
+    rgba(18, 183, 114, 0.366),
     transparent 60%
   ),
   radial-gradient(

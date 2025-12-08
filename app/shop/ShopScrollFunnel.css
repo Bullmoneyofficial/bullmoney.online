@@ -166,11 +166,19 @@
     50% { transform: translateY(-10px); } 
   }
 
-  /* --- NEW ADDITION HERE --- */
   /* 7. Make Button Smaller */
   .enter-shop-btn {
-    padding: 0.5rem 1.2rem; /* Reduced from 0.8rem 2rem */
-    font-size: 0.75rem;     /* Reduced from 0.85rem */
-    width: auto;            /* Ensures it doesn't stretch */
+    /* First value controls HEIGHT, Second value controls WIDTH */
+    padding: 0.35rem 1rem !important; 
+    
+    /* Make text smaller to fit the smaller button */
+    font-size: 0.7rem !important;     
+    
+    /* Ensures text stays centered vertically */
+    line-height: 1.2;                 
+    
+    /* Prevents the button from stretching to full width */
+    width: fit-content;               
+    margin: 0 auto; /* Centers the button if it's a block element */
   }
 }
