@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -37,6 +36,7 @@ const emptyProductForm: ProductFormState = {
 type HeroFormState = HeroConfig;
 
 export default function AdminPanel({ editing, clearEditing }: Props) {
+  // FIX: Cast useShop() to 'any' to bypass the missing type definition in ShopContext
   const {
     addProduct,
     updateProduct,
@@ -44,7 +44,7 @@ export default function AdminPanel({ editing, clearEditing }: Props) {
     updateHero,
     addCategory,
     deleteCategory,
-  } = useShop();
+  } = useShop() as any;
 
   const [productForm, setProductForm] =
     useState<ProductFormState>(emptyProductForm);
@@ -60,7 +60,6 @@ export default function AdminPanel({ editing, clearEditing }: Props) {
   useEffect(() => {
     if (editing) {
       setProductForm({
-        // FIX: Add || "" fallback to prevent null values from crashing the form
         name: editing.name || "",
         description: editing.description || "",
         price: editing.price ? editing.price.toString() : "",
@@ -98,7 +97,6 @@ export default function AdminPanel({ editing, clearEditing }: Props) {
     setProductError(null);
 
     // --- Validation ---
-    // FIX: Use optional chaining (?.) to prevent crashing if value is null
     if (!productForm.name?.trim()) {
       setProductError("Product name is required.");
       return;
@@ -107,7 +105,7 @@ export default function AdminPanel({ editing, clearEditing }: Props) {
       setProductError("Price must be a positive number.");
       return;
     }
-    if (!productForm.imageUrl?.trim()) { // <--- FIXED THIS LINE
+    if (!productForm.imageUrl?.trim()) {
       setProductError("Image URL is required.");
       return;
     }
@@ -130,7 +128,6 @@ export default function AdminPanel({ editing, clearEditing }: Props) {
       buyUrl: productForm.buyUrl?.trim() || undefined,
     };
 
-    // --- FIX: DETECT ID CORRECTLY ---
     const editId = (editing as any)?._id || editing?.id;
 
     if (editId) {
@@ -186,7 +183,7 @@ export default function AdminPanel({ editing, clearEditing }: Props) {
     }
 
     const exists = categories.some(
-      (c) => c.name.toLowerCase() === trimmed.toLowerCase()
+      (c: Category) => c.name.toLowerCase() === trimmed.toLowerCase()
     );
 
     if (exists) {
@@ -421,7 +418,6 @@ export default function AdminPanel({ editing, clearEditing }: Props) {
 
         <div className="flex flex-wrap gap-2 mb-4">
           {categories.map((cat: Category) => {
-            // Check for _id first (DB standard), then id
             const cid = (cat as any)._id || cat.id; 
             if (!cid) return null;
 

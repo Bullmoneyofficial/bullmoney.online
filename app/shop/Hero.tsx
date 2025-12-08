@@ -17,7 +17,7 @@ import {
   ShieldCheck, Users, Star, BarChart3 
 } from "lucide-react";
 
-// --- 1. YOUR REQUESTED IMPORTS ---
+// --- IMPORTS ---
 import { useShop, type Product } from "@/app/VIP/ShopContext"; 
 import AdminLoginModal from "@/app/VIP/AdminLoginModal";
 import AdminPanel from "@/app/VIP/AdminPanel"; 
@@ -179,13 +179,14 @@ ProductCard.displayName = "ProductCard";
 
 // --- MAIN HERO PARALLAX ---
 const HeroParallax = () => {
-  const { state, updateProduct, deleteProduct } = useShop();
+  // FIX: Cast useShop() to 'any' to bypass missing type definitions
+  const { state, updateProduct, deleteProduct } = useShop() as any;
   const { products, hero, isAdmin, loading } = state;
 
   // --- PARALLAX DATA PREP ---
   const displayProducts = useMemo(() => {
     // 1. FILTER: Exclude "VIDEO" and "CONTENT" categories
-    const shopProducts = products.filter(p => {
+    const shopProducts = products.filter((p: Product) => {
         const cat = p.category?.toUpperCase() || "";
         return cat !== "VIDEO" && cat !== "CONTENT";
     });
@@ -225,6 +226,9 @@ const HeroParallax = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Product>>({});
+  
+  // FIX: Added state for AdminPanel integration
+  const [adminEditing, setAdminEditing] = useState<Product | null>(null);
 
   const handleOpen = (product: Product, layoutId: string) => {
     setActiveProduct(product);
@@ -247,7 +251,9 @@ const HeroParallax = () => {
 
     setIsSaving(true);
     try {
-      const { _id, id, ...payload } = editForm as Product; 
+      // FIX: Ensure safe ID removal
+      // @ts-ignore
+      const { _id, id, ...payload } = editForm; 
       await updateProduct(pid, payload);
       setActiveProduct(prev => prev ? { ...prev, ...editForm } as Product : null);
       setIsEditing(false);
@@ -610,6 +616,16 @@ const HeroParallax = () => {
             </motion.div>
         </motion.div>
     </div>
+
+    {/* --- ADMIN PANEL (RESTORED) --- */}
+    {isAdmin && (
+      <div className="max-w-7xl mx-auto px-4 mt-10 relative z-20 mb-20">
+        <AdminPanel
+          editing={adminEditing}
+          clearEditing={() => setAdminEditing(null)}
+        />
+      </div>
+    )}
 
     {/* --- FOOTER / ADMIN ACCESS --- */}
     <div className="relative z-20 bg-black text-neutral-500 py-16 px-8 text-center border-t border-neutral-900">

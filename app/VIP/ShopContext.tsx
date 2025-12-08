@@ -42,6 +42,8 @@ export type Category = {
   name: string;
 };
 
+// ... (DEFAULT_HERO, ShopState, LoginResult, ShopContextValue types) ...
+
 const DEFAULT_HERO: HeroConfig = {
   badge: "BullMoney FX Shop",
   title: "Gear up for your next market session.",
@@ -76,9 +78,7 @@ type ShopContextValue = {
 
   refreshAll: () => Promise<void>;
 
-  // ✅ FIXED: Renamed from addProduct to createProduct to match your error log
-  createProduct: (product: Omit<Product, "_id" | "id">) => Promise<void>;
-  
+  addProduct: (product: Omit<Product, "_id" | "id">) => Promise<void>;
   updateProduct: (
     id: string,
     product: Omit<Product, "_id" | "id">
@@ -91,6 +91,7 @@ type ShopContextValue = {
   addCategory: (name: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
 };
+
 
 const ADMIN_USERNAME = "MR.BULLMONEY";
 const ADMIN_PASSWORD = "9D6W5D6SD6S7DA6D5D5ADS5A6XVXASXR6723RE627EDGED";
@@ -172,8 +173,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
   const logout = () => dispatch({ type: "LOGOUT" });
 
-  // ✅ FIXED: Renamed function from addProduct to createProduct
-  const createProduct = async (product: Omit<Product, "_id" | "id">) => {
+  const addProduct = async (product: Omit<Product, "_id" | "id">) => {
     await fetch("/api/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -228,6 +228,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     await refreshAll();
   };
 
+
   return (
     <ShopContext.Provider
       value={{
@@ -235,7 +236,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         refreshAll,
-        createProduct, // ✅ Passed the renamed function here
+        addProduct,
         updateProduct,
         deleteProduct,
         toggleVisibility,
@@ -249,6 +250,9 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// ==========================================
+// ✅ ADDED THIS PART: useShop Hook Export
+// ==========================================
 export const useShop = () => {
   const context = useContext(ShopContext);
   if (context === undefined) {
@@ -257,9 +261,6 @@ export const useShop = () => {
   return context;
 };
 
-// RootLayout would remain here if this file is your layout, 
-// but usually Providers are in their own file. 
-// If this is all one file, keep the RootLayout definition below.
 export default function RootLayout({
   children,
 }: {
@@ -268,6 +269,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        {/* Wrap children in the Provider */}
         <ShopProvider>
           {children}
         </ShopProvider>
