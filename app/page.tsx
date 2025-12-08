@@ -21,7 +21,7 @@ import ShopFunnel from "../app/shop/ShopFunnel";
 import Chartnews from "@/app/Blogs/Chartnews";
 
 // =========================================
-// 0. AESTHETIC SUPPORT WIDGET COMPONENT
+// 0. AESTHETIC SUPPORT WIDGET COMPONENT (Unchanged)
 // =========================================
 const SupportWidget = () => {
   const [isHovered, setIsHovered] = useState(false);
@@ -97,7 +97,7 @@ const SupportWidget = () => {
 };
 
 // =========================================
-// 2. TARGET CURSOR STYLES (GSAP)
+// 2. TARGET CURSOR STYLES (GSAP) (Unchanged)
 // =========================================
 
 const CursorStyles = () => (
@@ -108,12 +108,12 @@ const CursorStyles = () => (
       left: 0;
       z-index: 9999;
       pointer-events: none;
-      mix-blend-mode: difference;
+      /* mix-blend-mode: difference; // Removed to ensure visibility on mobile */
     }
     .target-cursor-dot {
       width: 8px;
       height: 8px;
-      background-color: white;
+      background-color: #0066ff; /* Changed color for mobile/desktop dot */
       border-radius: 50%;
       position: absolute;
       top: 0;
@@ -124,7 +124,7 @@ const CursorStyles = () => (
       position: absolute;
       width: 12px;
       height: 12px;
-      border: 2px solid white;
+      border: 2px solid #0066ff; /* Changed color for mobile/desktop corners */
     }
     .corner-tl { top: -6px; left: -6px; border-right: none; border-bottom: none; }
     .corner-tr { top: -6px; right: -6px; border-left: none; border-bottom: none; }
@@ -139,11 +139,104 @@ const CursorStyles = () => (
     .animate-shimmer {
       animation: shimmer 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }
+
+    /* --- MOBILE CURSOR SPECIFIC STYLES --- */
+    @keyframes spin-mobile {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
   `}</style>
 );
 
 // =========================================
-// 3. TARGET CURSOR COMPONENT (GSAP)
+// A. MOBILE AUTO-PILOT CURSOR COMPONENT
+// =========================================
+const MobileAutoPilotCursor = ({ spinDuration = 2 }: { spinDuration?: number }) => {
+    const cursorRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        let isMounted = true;
+        
+        // Ensure the cursor starts somewhere visible
+        if (cursorRef.current) {
+            gsap.set(cursorRef.current, { x: window.innerWidth / 2, y: window.innerHeight / 2, opacity: 1 });
+        }
+
+        const autoPilot = () => {
+            if (!cursorRef.current || !isMounted) return;
+
+            // Find all interactive elements (buttons, links, etc.)
+            const targets = Array.from(document.querySelectorAll('button, a, input, [role="button"]'));
+            
+            // Filter targets that are currently visible in the viewport and have a positive height/width
+            const visibleTargets = targets.filter((el) => {
+                const rect = el.getBoundingClientRect();
+                return (
+                    rect.top >= 0 &&
+                    rect.left >= 0 &&
+                    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                    rect.right <= (window.innerWidth || document.documentElement.clientWidth) &&
+                    rect.height > 0 && rect.width > 0 // Ensure it's not a zero-size element
+                );
+            });
+
+            if (visibleTargets.length > 0) {
+                // Pick a random visible target
+                const randomTarget = visibleTargets[Math.floor(Math.random() * visibleTargets.length)];
+                const rect = randomTarget.getBoundingClientRect();
+
+                // Animate cursor to center of that target
+                gsap.to(cursorRef.current, {
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2,
+                    scale: 1.2, // Simulate "focus"
+                    borderWidth: '4px', // Thicker border on target
+                    duration: 1.5, // Slower duration for a "floating" feel
+                    ease: "power2.inOut",
+                    onComplete: () => {
+                       // Pause briefly on the button, then move to next
+                       if (isMounted) {
+                          gsap.to(cursorRef.current, { scale: 1, borderWidth: '2px', duration: 0.5 }); // Return to normal size
+                          setTimeout(autoPilot, 1000); // 1-second pause
+                       }
+                    }
+                });
+            } else {
+                // If no buttons visible, float randomly in the center area
+                 gsap.to(cursorRef.current, {
+                    x: window.innerWidth / 2 + (Math.random() - 0.5) * 100,
+                    y: window.innerHeight / 2 + (Math.random() - 0.5) * 100,
+                    duration: 2.5,
+                    ease: "sine.inOut",
+                    onComplete: () => {
+                       if (isMounted) setTimeout(autoPilot, 2000);
+                    }
+                });
+            }
+        };
+
+        // Start the loop
+        autoPilot();
+
+        return () => { isMounted = false; };
+    }, [spinDuration]);
+
+
+    return (
+        <div
+            ref={cursorRef}
+            className="fixed w-8 h-8 border-2 border-[#0066ff] rounded-full pointer-events-none z-[10000] opacity-0"
+            style={{
+                transform: 'translate(-50%, -50%)',
+                animation: `spin-mobile ${spinDuration}s linear infinite`,
+            }}
+        />
+    );
+};
+
+
+// =========================================
+// 3. TARGET CURSOR COMPONENT (GSAP) (Modified for Dual Render)
 // =========================================
 interface TargetCursorProps {
   targetSelector?: string;
@@ -153,18 +246,21 @@ interface TargetCursorProps {
   parallaxOn?: boolean;
 }
 
-const TargetCursor: React.FC<TargetCursorProps> = ({
-  targetSelector = 'button, a, .cursor-target', 
-  spinDuration = 2,
-  hideDefaultCursor = true,
-  hoverDuration = 0.2,
-  parallaxOn = true
-}) => {
+const TargetCursor: React.FC<TargetCursorProps> = (props) => {
+  const { 
+    targetSelector = 'button, a, .cursor-target', 
+    spinDuration = 2,
+    hideDefaultCursor = true,
+    hoverDuration = 0.2,
+    parallaxOn = true
+  } = props;
+  
   const cursorRef = useRef<HTMLDivElement>(null);
   const cornersRef = useRef<NodeListOf<HTMLDivElement> | null>(null);
   const spinTl = useRef<gsap.core.Timeline | null>(null);
   const dotRef = useRef<HTMLDivElement>(null);
 
+  // ... (rest of the refs, constants, and moveCursor function)
   const isActiveRef = useRef(false);
   const targetCornerPositionsRef = useRef<{ x: number; y: number }[] | null>(null);
   const tickerFnRef = useRef<(() => void) | null>(null);
@@ -179,17 +275,25 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     const isMobileUserAgent = mobileRegex.test(userAgent.toLowerCase());
     return (hasTouchScreen && isSmallScreen) || isMobileUserAgent;
   }, []);
-
+  
   const constants = useMemo(() => ({ borderWidth: 3, cornerSize: 12 }), []);
 
   const moveCursor = useCallback((x: number, y: number) => {
     if (!cursorRef.current) return;
     gsap.to(cursorRef.current, { x, y, duration: 0.1, ease: 'power3.out' });
   }, []);
+  // ... (End of refs, constants, moveCursor)
 
+
+  // ------------------------------------------------------------------
+  // CORE DESKTOP GSAP LOGIC (Moved into useEffect, remains mostly unchanged)
+  // ------------------------------------------------------------------
   useEffect(() => {
+    // EXIT EARLY IF MOBILE
     if (isMobile || !cursorRef.current) return;
 
+    // --- DESKTOP INITIALIZATION ---
+    // (Existing setup logic here...)
     const originalCursor = document.body.style.cursor;
     if (hideDefaultCursor) {
       document.body.style.cursor = 'none';
@@ -227,6 +331,7 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
 
     createSpinTimeline();
 
+    // --- DESKTOP TICKER & HANDLERS ---
     const tickerFn = () => {
       if (!targetCornerPositionsRef.current || !cursorRef.current || !cornersRef.current) {
         return;
@@ -420,10 +525,15 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     }
   }, [spinDuration, isMobile]);
 
+  // ------------------------------------------------------------------
+  // CONDITIONAL RENDER
+  // ------------------------------------------------------------------
   if (isMobile) {
-    return null;
+    // RENDER THE SIMPLE AUTO-PILOT CURSOR FOR MOBILE
+    return <MobileAutoPilotCursor spinDuration={spinDuration} />;
   }
 
+  // RENDER THE SOPHISTICATED GSAP CURSOR FOR DESKTOP
   return (
     <div ref={cursorRef} className="target-cursor-wrapper">
       <div ref={dotRef} className="target-cursor-dot" />
@@ -437,7 +547,7 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
 
 
 // =========================================
-// 4. MAIN APP COMPONENT
+// 4. MAIN APP COMPONENT (Simplified Render)
 // =========================================
 export default function Home() {
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -457,8 +567,6 @@ export default function Home() {
   return (
     <main className="animate-in fade-in duration-1000 relative">
  
-     
-
       {/* 2. Target Cursor (Foreground Layer) */}
       <CursorStyles />
       <TargetCursor 
