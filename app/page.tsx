@@ -26,7 +26,6 @@ const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), {
 // =========================================
 // 0. CUSTOM HOOKS
 // =========================================
-
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -111,44 +110,33 @@ const SupportWidget = () => {
 };
 
 // =========================================
-// 2. STYLES (Identical Desktop & Mobile Look)
+// 2. STYLES 
 // =========================================
 const CursorStyles = () => (
   <style jsx global>{`
     .target-cursor-wrapper {
-      position: fixed; 
-      top: 0; left: 0; 
-      z-index: 10000; 
-      pointer-events: none;
+      position: fixed; top: 0; left: 0; z-index: 10000; pointer-events: none;
       will-change: transform;
     }
-    
-    /* --- THE DOT --- */
     .target-cursor-dot {
-      width: 8px; height: 8px; /* Slightly bigger base size */
+      width: 8px; height: 8px; 
       background-color: #0066ff; 
       border-radius: 50%;
       position: absolute; top: 0; left: 0; 
       transform: translate(-50%, -50%);
       box-shadow: 0 0 10px #0066ff;
     }
-
-    /* --- THE SQUARE BRACKETS --- */
     .target-cursor-corner {
-      position: absolute; 
-      width: 16px; height: 16px; /* Bigger brackets */
+      position: absolute; width: 16px; height: 16px; 
       border: 2px solid #0066ff;
       box-shadow: 0 0 4px rgba(0, 102, 255, 0.4);
       will-change: transform;
     }
-
-    /* Corner Positioning (Offsets) */
     .corner-tl { top: -10px; left: -10px; border-right: none; border-bottom: none; }
     .corner-tr { top: -10px; right: -10px; border-left: none; border-bottom: none; }
     .corner-br { bottom: -10px; right: -10px; border-left: none; border-top: none; }
     .corner-bl { bottom: -10px; left: -10px; border-right: none; border-top: none; }
 
-    /* Shimmer Animation */
     @keyframes shimmer {
       0% { transform: translateX(-150%) skewX(-15deg); }
       50%, 100% { transform: translateX(150%) skewX(-15deg); }
@@ -160,9 +148,8 @@ const CursorStyles = () => (
 );
 
 // =========================================
-// 3. TARGET CURSOR LOGIC
+// 3. LOGIC
 // =========================================
-
 interface TargetCursorProps {
   targetSelector?: string;
   spinDuration?: number;
@@ -172,7 +159,7 @@ interface TargetCursorProps {
 }
 
 const TargetCursorComponent: React.FC<TargetCursorProps> = ({ 
-    targetSelector = 'button, a, .cursor-target', 
+    targetSelector = 'button, a, input, [role="button"], .cursor-target', 
     spinDuration = 2,
     hideDefaultCursor = true,
     hoverDuration = 0.2,
@@ -183,7 +170,7 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
   const dotRef = useRef<HTMLDivElement>(null);
   const cornersRef = useRef<NodeListOf<HTMLDivElement> | null>(null);
   
-  // Logic State
+  // State to track animation status
   const state = useRef({
       isActive: false,
       targetPositions: null as { x: number; y: number }[] | null,
@@ -194,140 +181,125 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
   useEffect(() => {
     if (!cursorRef.current || typeof window === 'undefined') return;
 
-    // --- SETUP VISUALS ---
+    // Hide default cursor on desktop
     const originalCursor = document.body.style.cursor;
-    if (hideDefaultCursor) document.body.style.cursor = 'none';
+    if (hideDefaultCursor && !isMobile) document.body.style.cursor = 'none';
     
-    // Cache corner refs
+    // Get refs
     cornersRef.current = cursorRef.current.querySelectorAll('.target-cursor-corner');
 
     const ctx = gsap.context(() => {
         const cursor = cursorRef.current!;
         const corners = cornersRef.current!;
 
-        // ------------------------------------------
-        // MODE A: MOBILE AUTO-PILOT (AI PATHING)
-        // ------------------------------------------
+        // ----------------------------------------------------
+        // MOBILE LOGIC: SYSTEMATIC SCANNER (Taps ALL Elements)
+        // ----------------------------------------------------
         if (isMobile) {
-            // 1. Init: Start bigger on mobile for visibility
-            gsap.set(cursor, { 
-                x: window.innerWidth / 2, 
-                y: window.innerHeight / 2, 
-                opacity: 0, 
-                scale: 1.3 // Mobile Scale Up
-            });
+            // Mobile Init
+            gsap.set(cursor, { x: window.innerWidth/2, y: window.innerHeight/2, opacity: 0, scale: 1.3 });
             gsap.to(cursor, { opacity: 1, duration: 0.5 });
 
-            // 2. Pulse Animation (The "Scanning" look)
-            const pulse = () => {
-                gsap.to(corners, { scale: 1.5, duration: 0.2, yoyo: true, repeat: 1 });
-                gsap.to(dotRef.current, { scale: 1.5, duration: 0.2, yoyo: true, repeat: 1 });
+            // Helper: Pulse visual
+            const tapEffect = () => {
+                gsap.to(corners, { scale: 1.6, borderColor: '#00ffff', duration: 0.15, yoyo: true, repeat: 1 });
+                gsap.to(dotRef.current, { scale: 2, backgroundColor: '#ffffff', duration: 0.15, yoyo: true, repeat: 1 });
             };
 
-            // 3. The "AI Brain" - Decides where to go next
-            const runAiMovement = () => {
-                // Determine next action randomly
-                const roll = Math.random();
-                let nextAction = "";
-                let targetX = 0;
-                let targetY = 0;
-                let speed = 1;
-                let delay = 0;
+            // SCANNER LOGIC
+            const runScanner = async () => {
+                // 1. Gather ALL interactive elements
+                const selectors = 'a, button, input, [role="button"], select, textarea, .cursor-target';
+                const allElements = Array.from(document.querySelectorAll(selectors));
 
-                // --- ACTION 1: GO TO NAV (Top Right) ---
-                // Higher probability if we haven't been there lately, or random
-                if (roll < 0.3) {
-                     // HARDCODED NAV POSITION: High up (y: 30) and Right (width - 50)
-                     targetX = window.innerWidth - (30 + Math.random() * 40);
-                     targetY = 30 + Math.random() * 20; // Very close to top
-                     speed = 1.2;
-                     delay = 1.5; // Stay on nav for a moment
-                }
-                
-                // --- ACTION 2: GO TO SUPPORT (Bottom Right) ---
-                else if (roll < 0.5) {
-                    const supportEl = document.getElementById('support-widget-container');
-                    if (supportEl) {
-                        const rect = supportEl.getBoundingClientRect();
-                        targetX = rect.left + rect.width / 2;
-                        targetY = rect.top + rect.height / 2;
-                        speed = 1.4;
-                        delay = 1;
-                    } else {
-                        // Fallback
-                        targetX = window.innerWidth - 60;
-                        targetY = window.innerHeight - 60;
-                    }
-                }
-
-                // --- ACTION 3: FIND CENTER BUTTON (The main attraction) ---
-                else {
-                    // Find all buttons in the viewport
-                    const allBtns = Array.from(document.querySelectorAll('button, a.btn-primary, .cursor-target'));
-                    const visibleBtns = allBtns.filter(el => {
-                        const r = el.getBoundingClientRect();
-                        return r.top > 100 && r.bottom < window.innerHeight - 100 && r.width > 20;
-                    });
-
-                    if (visibleBtns.length > 0) {
-                        const btn = visibleBtns[Math.floor(Math.random() * visibleBtns.length)];
-                        const rect = btn.getBoundingClientRect();
-                        targetX = rect.left + rect.width / 2;
-                        targetY = rect.top + rect.height / 2;
-                        speed = 1; // Slower, precise movement
-                        delay = 0.8;
-                    } else {
-                        // Roam randomly in center
-                        targetX = (window.innerWidth / 2) + (Math.random() * 100 - 50);
-                        targetY = (window.innerHeight / 2) + (Math.random() * 100 - 50);
-                        speed = 2; // Float slow
-                    }
-                }
-
-                // EXECUTE MOVE
-                gsap.to(cursor, {
-                    x: targetX,
-                    y: targetY,
-                    duration: speed,
-                    ease: "power2.inOut",
-                    onComplete: () => {
-                        // Pulse when we hit a target
-                        if (roll < 0.8) pulse();
-                        // Schedule next move
-                        setTimeout(runAiMovement, delay * 1000);
-                    }
+                // 2. Filter: Must be visible and on screen
+                const targets = allElements.filter(el => {
+                    const r = el.getBoundingClientRect();
+                    const style = window.getComputedStyle(el);
+                    return (
+                        style.display !== 'none' && 
+                        style.visibility !== 'hidden' && 
+                        style.opacity !== '0' &&
+                        r.width > 20 && r.height > 20 && // Ignore tiny hitboxes
+                        r.top >= 0 && r.left >= 0 // Must be somewhat on screen (we can scroll later if needed)
+                    );
+                }).sort((a, b) => {
+                    // Sort top-to-bottom, left-to-right
+                    const ra = a.getBoundingClientRect();
+                    const rb = b.getBoundingClientRect();
+                    return ra.top - rb.top || ra.left - rb.left;
                 });
+
+                // 3. Iterate through them systematically
+                if (targets.length > 0) {
+                    for (const target of targets) {
+                        const r = target.getBoundingClientRect();
+                        
+                        // Check if it's still in viewport (user might have scrolled)
+                        if (r.top < -50 || r.bottom > window.innerHeight + 50) continue; 
+
+                        // Move Cursor
+                        await new Promise<void>(resolve => {
+                            gsap.to(cursor, {
+                                x: r.left + r.width / 2,
+                                y: r.top + r.height / 2,
+                                duration: 0.8, // Speed of travel
+                                ease: "power2.inOut",
+                                onComplete: () => {
+                                    tapEffect(); // "Tap" it
+                                    setTimeout(resolve, 600); // Wait on the element for 0.6s
+                                }
+                            });
+                        });
+                    }
+                    
+                    // 4. After finishing list, loop back or float to center
+                    runScanner(); 
+                } else {
+                    // No targets? Float randomly
+                    gsap.to(cursor, {
+                        x: window.innerWidth / 2 + (Math.random() - 0.5) * 100,
+                        y: window.innerHeight / 2 + (Math.random() - 0.5) * 100,
+                        duration: 2,
+                        onComplete: () => { runScanner(); }
+                    });
+                }
             };
 
-            // Start the AI Loop
-            setTimeout(runAiMovement, 500);
+            // Start scanning after a slight delay
+            setTimeout(runScanner, 1000);
         }
 
-        // ------------------------------------------
-        // MODE B: DESKTOP MOUSE FOLLOW (Unchanged)
-        // ------------------------------------------
+        // ----------------------------------------------------
+        // DESKTOP LOGIC: ORIGINAL + ANIMATED
+        // ----------------------------------------------------
         else {
+            // Start center
             gsap.set(cursor, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
 
+            // 1. Continuous Spin (The "Animate Feature")
             const spinTl = gsap.timeline({ repeat: -1 })
                 .to(cursor, { rotation: 360, duration: spinDuration, ease: 'none' });
 
+            // 2. Movement
             const moveCursor = (e: MouseEvent) => {
                 gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: 'power3.out', force3D: true });
             };
             window.addEventListener('mousemove', moveCursor);
 
+            // 3. Click Interactions
             const handleDown = () => {
                 gsap.to(dotRef.current, { scale: 0.5, duration: 0.2 });
-                gsap.to(corners, { scale: 0.8, duration: 0.2 });
+                gsap.to(corners, { scale: 1.2, borderColor: '#00ffff', duration: 0.2 }); // Expand on click
             };
             const handleUp = () => {
                 gsap.to(dotRef.current, { scale: 1, duration: 0.2 });
-                gsap.to(corners, { scale: 1, duration: 0.2 });
+                gsap.to(corners, { scale: 1, borderColor: '#0066ff', duration: 0.2 });
             };
             window.addEventListener('mousedown', handleDown);
             window.addEventListener('mouseup', handleUp);
 
+            // 4. Magnetic Targeting
             gsap.ticker.add(() => {
                 if (!state.current.isActive || !state.current.targetPositions) return;
                 const strength = state.current.activeStrength.val;
@@ -349,6 +321,7 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
                 });
             });
 
+            // 5. Hover Detection
             const handleHover = (e: MouseEvent) => {
                 const target = (e.target as Element).closest(targetSelector);
                 if (target && target !== state.current.activeTarget) {
@@ -358,7 +331,7 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
                     gsap.to(cursor, { rotation: 0, duration: 0.3 }); 
 
                     const rect = target.getBoundingClientRect();
-                    const borderWidth = 4; const cornerSize = 14;
+                    const borderWidth = 4; const cornerSize = 16;
 
                     state.current.targetPositions = [
                         { x: rect.left - borderWidth, y: rect.top - borderWidth },
@@ -387,7 +360,7 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
     }, cursorRef); 
 
     return () => {
-        document.body.style.cursor = originalCursor;
+        if (!isMobile) document.body.style.cursor = originalCursor;
         ctx.revert();
         window.removeEventListener('mousemove', () => {}); 
     };
@@ -411,7 +384,6 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
 export default function Home() {
   const [isUnlocked, setIsUnlocked] = useState(false);
 
-  // If the website is NOT unlocked, show the Register Page
   if (!isUnlocked) {
     return (
       <main>
@@ -422,7 +394,6 @@ export default function Home() {
     );
   }
 
-  // Once unlocked, show the rest of the website
   return (
     <main className="animate-in fade-in duration-1000 relative">
       <CursorStyles />
