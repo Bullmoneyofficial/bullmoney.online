@@ -14,7 +14,7 @@ import { twMerge } from "tailwind-merge";
 import { 
   Loader2, Edit2, Save, X, Trash2, 
   Lock, TrendingUp, Zap, Globe, 
-  ShieldCheck, Users, Star, BarChart3 
+  ShieldCheck, Users, Star, BarChart3, ArrowDown 
 } from "lucide-react";
 
 // --- IMPORTS ---
@@ -177,8 +177,13 @@ const ProductCard = React.memo(({
 });
 ProductCard.displayName = "ProductCard";
 
+// 1. Define Props Interface
+interface HeroProps {
+  onScrollToProducts: () => void;
+}
+
 // --- MAIN HERO PARALLAX ---
-const HeroParallax = () => {
+const HeroParallax = ({ onScrollToProducts }: HeroProps) => {
   // FIX: Cast useShop() to 'any' to bypass missing type definitions
   const { state, updateProduct, deleteProduct } = useShop() as any;
   const { products, hero, isAdmin, loading } = state;
@@ -334,7 +339,7 @@ const HeroParallax = () => {
                         onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
                         className="absolute top-4 right-16 z-50 p-2 bg-sky-600 rounded-full text-white hover:bg-sky-500 transition-colors shadow-[0_0_15px_rgba(14,165,233,0.5)] flex gap-2 items-center px-4 font-bold text-xs uppercase"
                       >
-                         <Edit2 size={14} /> Edit
+                          <Edit2 size={14} /> Edit
                       </button>
                     )}
 
@@ -547,6 +552,17 @@ const HeroParallax = () => {
                     >
                     {hero.subtitle}
                 </motion.p>
+                
+                {/* 3. NEW BUTTON TO TRIGGER THE SCROLL */}
+                <motion.button
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.3 }}
+                    onClick={onScrollToProducts}
+                    className="mt-6 px-8 py-3 bg-white text-black rounded-full font-bold uppercase tracking-widest hover:bg-neutral-200 transition-colors flex items-center gap-2"
+                >
+                    Start Shopping <ArrowDown size={16} />
+                </motion.button>
 
                 {/* SOCIAL PROOF */}
                 <motion.div 
