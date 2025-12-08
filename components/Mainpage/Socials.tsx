@@ -1,8 +1,10 @@
 "use client";
-import React, { useState, useEffect, useRef, useMemo, JSX, useCallback } from "react";
-import { motion, useMotionValue, useMotionTemplate } from "framer-motion";
-import { cn } from "@/lib/utils";
-import { Clock, Copy, Check } from "lucide-react";
+import React, { useState, useEffect, useRef, useMemo, JSX, useCallback, createContext, useContext, ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { motion, useMotionValue, useMotionTemplate, AnimatePresence } from "framer-motion";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { Clock, Copy, Check, Sparkles, Scissors, QrCode, X, CreditCard, Users } from "lucide-react";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import type { Engine } from "@tsparticles/engine";
@@ -10,6 +12,10 @@ import type { Engine } from "@tsparticles/engine";
 // ==========================================
 // 1. UTILS & HOOKS
 // ==========================================
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 const usePerformanceMode = () => {
   const [isPerformanceMode, setIsPerformanceMode] = useState(false);
@@ -30,7 +36,96 @@ const usePerformanceMode = () => {
 };
 
 // ==========================================
-// 2. PIXEL CARD LOGIC (Canvas - Desktop Only)
+// 2. MODAL SYSTEM (Context + Portals)
+// ==========================================
+
+interface ModalContextType {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}
+
+const ModalContext = createContext<ModalContextType | undefined>(undefined);
+
+const useModal = () => {
+  const context = useContext(ModalContext);
+  if (!context) throw new Error('useModal must be used within a ModalProvider');
+  return context;
+};
+
+export function Modal({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : 'auto';
+  }, [open]);
+
+  return (
+    <ModalContext.Provider value={{ open, setOpen }}>
+      {children}
+    </ModalContext.Provider>
+  );
+}
+
+export const ModalTrigger = ({ children, className }: { children: ReactNode; className?: string }) => {
+  const { setOpen } = useModal();
+  return (
+    <button onClick={() => setOpen(true)} className={cn("w-full h-full cursor-pointer focus:outline-none", className)}>
+      {children}
+    </button>
+  );
+};
+
+export const ModalBody = ({ children, className }: { children: ReactNode; className?: string }) => {
+  const { open, setOpen } = useModal();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    if (open) window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, setOpen]);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setOpen(false)}
+            className="absolute inset-0 bg-neutral-950/80 backdrop-blur-md cursor-pointer"
+          />
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            transition={{ type: "spring", damping: 24, stiffness: 300 }}
+            className={cn("relative w-full max-w-lg z-10 pointer-events-none", className)}
+          >
+            <button 
+              onClick={() => setOpen(false)}
+              className="absolute -top-12 right-0 p-2 bg-neutral-900 text-white hover:bg-neutral-800 rounded-full transition-colors pointer-events-auto border border-white/10"
+            >
+              <X size={18} strokeWidth={1.5} />
+            </button>
+            <div className="pointer-events-auto">
+              {children}
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>,
+    document.body
+  );
+};
+
+// ==========================================
+// 3. PIXEL CARD LOGIC
 // ==========================================
 
 class Pixel {
@@ -53,15 +148,7 @@ class Pixel {
   isReverse: boolean;
   isShimmer: boolean;
 
-  constructor(
-    canvas: HTMLCanvasElement,
-    context: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    color: string,
-    speed: number,
-    delay: number
-  ) {
+  constructor(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, x: number, y: number, color: string, speed: number, delay: number) {
     this.width = canvas.width;
     this.height = canvas.height;
     this.ctx = context;
@@ -82,9 +169,7 @@ class Pixel {
     this.isShimmer = false;
   }
 
-  getRandomValue(min: number, max: number) {
-    return Math.random() * (max - min) + min;
-  }
+  getRandomValue(min: number, max: number) { return Math.random() * (max - min) + min; }
 
   draw() {
     const centerOffset = this.maxSizeInteger * 0.5 - this.size * 0.5;
@@ -98,14 +183,9 @@ class Pixel {
       this.counter += this.counterStep;
       return;
     }
-    if (this.size >= this.maxSize) {
-      this.isShimmer = true;
-    }
-    if (this.isShimmer) {
-      this.shimmer();
-    } else {
-      this.size += this.sizeStep;
-    }
+    if (this.size >= this.maxSize) this.isShimmer = true;
+    if (this.isShimmer) this.shimmer();
+    else this.size += this.sizeStep;
     this.draw();
   }
 
@@ -115,23 +195,15 @@ class Pixel {
     if (this.size <= 0) {
       this.isIdle = true;
       return;
-    } else {
-      this.size -= 0.1;
-    }
+    } else this.size -= 0.1;
     this.draw();
   }
 
   shimmer() {
-    if (this.size >= this.maxSize) {
-      this.isReverse = true;
-    } else if (this.size <= this.minSize) {
-      this.isReverse = false;
-    }
-    if (this.isReverse) {
-      this.size -= this.speed;
-    } else {
-      this.size += this.speed;
-    }
+    if (this.size >= this.maxSize) this.isReverse = true;
+    else if (this.size <= this.minSize) this.isReverse = false;
+    if (this.isReverse) this.size -= this.speed;
+    else this.size += this.speed;
   }
 }
 
@@ -243,7 +315,6 @@ const PixelCard = ({ variant = 'default', gap, speed, colors, noFocus, className
   return (
     <div
       ref={containerRef}
-      // Added background styles here for when canvas is disabled on mobile
       className={cn("relative overflow-hidden bg-neutral-900/40 backdrop-blur-sm border border-white/5", className)}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -258,7 +329,151 @@ const PixelCard = ({ variant = 'default', gap, speed, colors, noFocus, className
 }
 
 // ==========================================
-// 3. MAIN COMPONENT
+// 4. BULL REWARDS CARD (Tear Logic)
+// ==========================================
+
+const TEAR_AMPLITUDE = 5;
+const CENTER_X = 50;
+
+const generateJaggedPath = (side: 'left' | 'right') => {
+  let path = side === 'left' ? 'polygon(0% 0%, ' : 'polygon(100% 0%, ';
+  const steps = 20;
+  for (let i = 0; i <= steps; i++) {
+    const y = (i / steps) * 100;
+    const xOffset = i % 2 === 0 ? 0 : (side === 'left' ? TEAR_AMPLITUDE : -TEAR_AMPLITUDE);
+    const x = CENTER_X + xOffset;
+    path += `${x}% ${y}%, `;
+  }
+  path += side === 'left' ? '0% 100%)' : '100% 100%)';
+  return path;
+};
+
+const LEFT_CLIP = generateJaggedPath('left');
+const RIGHT_CLIP = generateJaggedPath('right');
+
+const CardDesign = () => (
+  <div className="absolute inset-0 flex flex-col justify-between p-8 bg-zinc-950 border border-zinc-800 overflow-hidden">
+    <div className="absolute inset-0 opacity-[0.08] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] pointer-events-none mix-blend-overlay" />
+    <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-900/20 rounded-full blur-3xl pointer-events-none" />
+    <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-blue-900/20 rounded-full blur-3xl pointer-events-none" />
+
+    <div className="flex justify-between items-start z-10">
+      <div className="flex flex-col">
+        <div className="flex items-center gap-2 mb-1">
+            <Sparkles className="w-4 h-4 text-blue-400" />
+            <span className="font-bold text-white text-lg tracking-wide uppercase">BullMoney</span>
+        </div>
+        <span className="text-[10px] text-zinc-500 uppercase tracking-[0.2em]">Loyalty Program</span>
+      </div>
+      <div className="px-3 py-1 bg-blue-600/20 text-blue-200 border border-blue-500/30 rounded-full text-[10px] font-bold uppercase tracking-widest">
+        VIP
+      </div>
+    </div>
+
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <span className="text-9xl font-black text-zinc-800/30 tracking-tighter transform -rotate-12">BULL</span>
+    </div>
+
+    <div className="z-10 mt-auto">
+      <div className="flex justify-between items-end mb-3">
+        <div className="text-zinc-500 text-[10px] uppercase tracking-widest">Points Balance</div>
+        <div className="text-3xl font-light text-white tracking-tight">5,000</div>
+      </div>
+      
+      <div className="w-full h-[1px] bg-zinc-800 mt-2 relative">
+        <div className="absolute top-0 left-0 h-full w-[80%] bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+      </div>
+      <div className="flex justify-between mt-2">
+         <span className="text-[9px] text-zinc-600 font-mono">ID: 8829-22</span>
+         <span className="text-[9px] text-blue-400/80 font-mono">TIER: PLATINUM</span>
+      </div>
+    </div>
+  </div>
+);
+
+const BullRewardsCard = () => {
+  const [isTorn, setIsTorn] = useState(false);
+
+  useEffect(() => { setIsTorn(false); }, []);
+
+  const handleInteraction = () => {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
+    setIsTorn(true);
+  };
+
+  return (
+    <div className="relative w-full aspect-[1.58/1] perspective-1000 group select-none">
+        {/* REWARD LAYER (Revealed after tear) */}
+        <div className={cn(
+          "absolute inset-0 bg-white rounded-none border border-zinc-200 flex flex-col items-center justify-center text-center p-6 transition-opacity duration-500",
+          isTorn ? "opacity-100 delay-300 z-0" : "opacity-0 -z-10"
+        )}>
+          <div className="bg-zinc-950 p-3 mb-4 shadow-xl border border-zinc-200">
+             <QrCode className="w-16 h-16 text-white" strokeWidth={1} />
+          </div>
+          <h3 className="text-zinc-950 font-bold text-2xl mb-1">CODE: BULL</h3>
+          <p className="text-zinc-500 text-xs uppercase tracking-widest">Use on Whop Checkout</p>
+        </div>
+
+        {/* CARD WRAPPER */}
+        <AnimatePresence>
+          {!isTorn && (
+            <motion.div
+              className="absolute inset-0 z-20 cursor-pointer"
+              whileHover={{ scale: 1.02, rotate: 1 }}
+              whileTap={{ scale: 0.95, rotate: -1 }}
+              onClick={handleInteraction}
+              exit={{ opacity: 0, transition: { duration: 0.1 } }}
+            >
+               <div className="w-full h-full overflow-hidden shadow-2xl shadow-black/50 relative bg-zinc-950">
+                  <CardDesign />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-zinc-950/60 backdrop-blur-[2px]">
+                    <div className="flex flex-col items-center text-white">
+                      <Scissors className="w-6 h-6 mb-3 animate-pulse text-blue-400" strokeWidth={1.5} />
+                      <span className="font-medium text-lg tracking-wide uppercase">Click to Tear</span>
+                    </div>
+                  </div>
+               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* TEAR PIECES */}
+        {isTorn && (
+          <>
+            <motion.div
+              className="absolute inset-0 z-30 pointer-events-none drop-shadow-2xl"
+              initial={{ x: 0, y: 0, rotate: 0 }}
+              animate={{ x: -60, y: 100, rotate: -25, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 120, damping: 14, opacity: { duration: 0.8, delay: 0.2 } }}
+              style={{ clipPath: LEFT_CLIP }}
+            >
+              <div className="w-full h-full overflow-hidden">
+                <CardDesign />
+                <div className="absolute right-0 top-0 bottom-0 w-[1px] bg-white/50 shadow-[0_0_10px_white]" style={{ left: '50%' }} />
+              </div>
+            </motion.div>
+
+            <motion.div
+              className="absolute inset-0 z-30 pointer-events-none drop-shadow-2xl"
+              initial={{ x: 0, y: 0, rotate: 0 }}
+              animate={{ x: 60, y: 150, rotate: 25, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 120, damping: 14, opacity: { duration: 0.8, delay: 0.2 } }}
+              style={{ clipPath: RIGHT_CLIP }}
+            >
+              <div className="w-full h-full overflow-hidden">
+                <CardDesign />
+                <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-white/50 shadow-[0_0_10px_white]" style={{ left: '50%' }} />
+              </div>
+            </motion.div>
+          </>
+        )}
+    </div>
+  );
+};
+
+// ==========================================
+// 5. MAIN COMPONENT (INTEGRATED)
 // ==========================================
 
 const ShopMarketingSection = () => {
@@ -270,24 +485,52 @@ const ShopMarketingSection = () => {
         <SparklesCore id="shop-fullpage-sparkles" background="transparent" minSize={1} maxSize={3} className="h-full w-full" particleColor="#60a5fa" />
       </div>
       
+      {/* 1. PROMO BANNER (Kept Outside) */}
       <PromoBanner />
       
       <div className="relative z-10 flex w-full flex-col items-center justify-center py-16 sm:py-24">
-        {/* Dashboard / Stats Row */}
-        {/* MOBILE OPTIMIZATION: flex-col on mobile, flex-row on desktop. w-full on mobile. */}
-        <div className="flex w-full max-w-4xl flex-col items-center justify-center gap-4 px-4 mb-16 sm:flex-row sm:gap-8">
+        
+        {/* 2. STATS & REWARDS & SOCIALS GRID */}
+        <div className="flex w-full max-w-5xl flex-col items-center justify-center gap-4 px-4 mb-16 sm:flex-row sm:gap-6 flex-wrap">
+          
+          {/* Active Traders */}
           <div className="w-full sm:w-auto">
              <LiveViewers /> 
           </div>
-          <div className="w-full sm:w-auto">
-             <DealTimer />
+
+          {/* Deal Timer -> Modal */}
+          <div className="w-full sm:w-auto h-full">
+            <Modal>
+              <ModalTrigger>
+                 <DealTimerButton />
+              </ModalTrigger>
+              <ModalBody>
+                 <BullRewardsCard />
+              </ModalBody>
+            </Modal>
           </div>
+
+          {/* 3. NEW: Socials -> Modal Trigger */}
+          <div className="w-full sm:w-auto h-full">
+            <Modal>
+              <ModalTrigger>
+                <SocialsTrigger />
+              </ModalTrigger>
+              <ModalBody className="max-w-2xl bg-neutral-950/90 border border-white/10 p-8 rounded-2xl">
+                 <div className="text-center mb-6">
+                    <h3 className="text-2xl font-bold text-white mb-2">Join the Community</h3>
+                    <p className="text-neutral-400 text-sm">Follow us for updates, signals and exclusive rewards.</p>
+                 </div>
+                 {/* Marquee Wrapper for Modal */}
+                 <div className="w-full relative overflow-hidden -mx-4 sm:mx-0 py-4">
+                    <SocialsRow />
+                 </div>
+              </ModalBody>
+            </Modal>
+          </div>
+
         </div>
-         
-        {/* Socials Row (Optimized Evervault Style) */}
-        <div className="w-full">
-           <SocialsRow />
-        </div>
+          
       </div>
     </div>
   );
@@ -296,7 +539,7 @@ const ShopMarketingSection = () => {
 export default ShopMarketingSection;
 
 // ==========================================
-// 4. SUB-COMPONENTS
+// 6. SUB-COMPONENTS
 // ==========================================
 
 export const PromoBanner = () => {
@@ -344,7 +587,6 @@ const Separator = () => (<div className="h-1 w-1 rounded-full bg-blue-500/50 sha
 
 // ==========================================
 // NEW: Evervault Social Components
-// Optimized for mobile & missing images
 // ==========================================
 
 const BrandIcons = {
@@ -370,7 +612,6 @@ export const SocialsRow = () => {
     { href: "https://t.me/bullmoneyfx", Icon: BrandIcons.Telegram, color: "text-blue-400", label: "Telegram" },
   ];
 
-  // Increase array size to ensure seamless loop
   const marqueeSocials = useMemo(() => [...socials, ...socials, ...socials, ...socials], [socials]);
 
   return (
@@ -378,7 +619,7 @@ export const SocialsRow = () => {
       <div className="flex w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]">
         <motion.div
           initial={{ x: 0 }}
-          animate={{ x: "-25%" }} // Adjusted for 4 sets of items
+          animate={{ x: "-25%" }} 
           transition={{ duration: 30, ease: "linear", repeat: Infinity }}
           className="flex min-w-full items-center gap-6 px-4 sm:gap-10 will-change-transform"
         >
@@ -391,7 +632,6 @@ export const SocialsRow = () => {
   );
 };
 
-// CSS-Only Evervault Replica (No Canvas, SVG Icons, Works on Mobile)
 const LightweightEvervaultCard = ({ href, Icon, color, label }: { href: string; Icon: any; color: string; label: string }) => {
   let mouseX = useMotionValue(0);
   let mouseY = useMotionValue(0);
@@ -404,38 +644,26 @@ const LightweightEvervaultCard = ({ href, Icon, color, label }: { href: string; 
 
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" className="group relative block h-28 w-28 shrink-0 sm:h-32 sm:w-32" onMouseMove={onMouseMove}>
-      {/* Container */}
       <div className="relative h-full w-full overflow-hidden rounded-xl bg-neutral-950 border border-white/10">
-        
-        {/* Mobile: Radar Sweep Effect (CSS Only - Low CPU) */}
         <div className="absolute inset-0 block sm:hidden">
             <div className="absolute inset-0 animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_270deg,rgba(59,130,246,0.2)_360deg)] opacity-50" />
         </div>
-
-        {/* Desktop: Mouse Follow Gradient */}
         <motion.div
           className="pointer-events-none absolute -inset-px rounded-xl opacity-0 transition duration-300 group-hover:opacity-100 hidden sm:block"
           style={{
             background: useMotionTemplate`radial-gradient(400px circle at ${mouseX}px ${mouseY}px, rgba(59, 130, 246, 0.15), transparent 80%)`,
           }}
         />
-        
-        {/* Content */}
         <div className="relative flex h-full w-full flex-col items-center justify-center gap-2">
-            {/* Icon Wrapper with Glow */}
             <div className="relative flex items-center justify-center">
                 <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                 <Icon className={cn("h-8 w-8 transition-all duration-300 group-hover:scale-110", color)} />
             </div>
-            {/* Label (Reveals on hover) */}
             <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 transition-colors group-hover:text-white">
                 {label}
             </span>
         </div>
-
-        {/* The "Evervault" Matrix Grid (CSS Pattern) */}
         <div className="pointer-events-none absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay" />
-        {/* Optional: Add a subtle grid overlay for that "tech" feel */}
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:12px_12px]" />
       </div>
     </a>
@@ -443,7 +671,7 @@ const LightweightEvervaultCard = ({ href, Icon, color, label }: { href: string; 
 };
 
 // ==========================================
-// 5. OTHER CHARTS & TIMERS
+// 7. OTHER CHARTS & TIMERS
 // ==========================================
 
 const MiniTradingChart = ({ width = 60, height = 24 }: { width?: number; height?: number }) => {
@@ -533,7 +761,30 @@ export const LiveViewers = () => {
   );
 };
 
-export const DealTimer = () => {
+export const SocialsTrigger = () => {
+  return (
+    <motion.div
+      className="h-full"
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <PixelCard variant="default" gap={5} speed={35} noFocus={true} className="group relative flex items-center justify-between gap-4 rounded-xl px-8 py-4 shadow-xl transition-all duration-300 hover:shadow-[0_0_40px_-5px_rgba(255,255,255,0.1)] h-full bg-zinc-900/50 border-zinc-800">
+        <div className="absolute inset-0 -z-10 rounded-xl bg-gradient-to-r from-zinc-800/50 to-transparent opacity-50 transition-opacity group-hover:opacity-100" />
+        
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800 group-hover:bg-zinc-700 transition-colors">
+            <Users className="h-5 w-5 text-zinc-200" />
+        </div>
+        
+        <div className="flex flex-col items-end">
+          <span className="text-xs font-medium text-zinc-400">Join Us</span>
+          <span className="font-mono text-xl font-bold leading-none text-white tabular-nums tracking-wider drop-shadow-sm">Socials</span>
+        </div>
+      </PixelCard>
+    </motion.div>
+  );
+};
+
+export const DealTimerButton = () => {
   const [timeLeft, setTimeLeft] = useState("00:00:00");
   useEffect(() => {
     const calculateTime = () => {
@@ -553,12 +804,20 @@ export const DealTimer = () => {
   }, []);
 
   return (
-    <motion.div animate={{ scale: [1, 1.02, 1] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
-      <PixelCard variant="blue" gap={5} speed={20} noFocus={true} className="group relative flex items-center justify-between gap-4 rounded-xl px-8 py-4 shadow-xl transition-all duration-300 hover:shadow-[0_0_40px_-5px_rgba(59,130,246,0.3)]">
+    <motion.div 
+      className="h-full"
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <PixelCard variant="blue" gap={5} speed={20} noFocus={true} className="group relative flex items-center justify-between gap-4 rounded-xl px-8 py-4 shadow-xl transition-all duration-300 hover:shadow-[0_0_40px_-5px_rgba(59,130,246,0.3)] h-full">
         <div className="absolute inset-0 -z-10 rounded-xl bg-gradient-to-r from-blue-500/10 to-transparent opacity-50 transition-opacity group-hover:opacity-100" />
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10"><Clock className="h-5 w-5 text-blue-400" /></div>
+        
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
+            <CreditCard className="h-5 w-5 text-blue-400" />
+        </div>
+        
         <div className="flex flex-col items-end">
-          <span className="text-xs font-medium text-blue-200">Whop Code: <span className="font-bold text-white">BULL</span></span>
+          <span className="text-xs font-medium text-blue-200">Get Reward</span>
           <span className="font-mono text-xl font-bold leading-none text-white tabular-nums tracking-wider drop-shadow-sm">{timeLeft}</span>
         </div>
       </PixelCard>

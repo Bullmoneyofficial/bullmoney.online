@@ -6,6 +6,9 @@ import { Navbar } from "@/components/Mainpage/navbar";
 import { Footer } from "@/components/Mainpage/footer";
 import { ThemeProvider } from "@/context/providers";
 
+// ✅ ADDED: Import the ShopProvider
+import { ShopProvider } from "@/app/VIP/ShopContext";
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -57,9 +60,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Navbar />
-          {children}
-          <Footer />
+          {/* ✅ ADDED: ShopProvider starts here */}
+          <ShopProvider>
+            <Navbar />
+            {children}
+            <Footer />
+          </ShopProvider>
+          {/* ✅ ADDED: ShopProvider ends here */}
+          
         </ThemeProvider>
       </body>
     </html>

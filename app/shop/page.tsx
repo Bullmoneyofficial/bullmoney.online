@@ -368,8 +368,8 @@ export default function ShopPage() {
           <div ref={productsRef}>
             <ProductsSection />
              <Shopmain />
-            <Faq />
-               <Socialsfooter />
+     
+            
           </div>
         </div>
         

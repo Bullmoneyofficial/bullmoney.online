@@ -25,7 +25,7 @@ const useMobileDetection = () => {
 };
 
 // =========================================
-// 2. INTERACTIVE CARD WRAPPER (FIXED)
+// 2. INTERACTIVE CARD WRAPPER
 // =========================================
 
 type InteractiveCardProps = {
@@ -152,13 +152,11 @@ const InteractiveCardWrapper: React.FC<InteractiveCardProps> = ({
     };
   }, [disableAnimations, enableTilt, enableMagnetism, clickEffect, glowColor, onClick]);
 
-  // FIX: Separate Framer Motion (Wrapper) from GSAP (Inner Ref)
-  // This prevents GSAP transforms from conflicting with Framer layout animations
   return (
     <motion.div 
       layoutId={layoutId} 
       className={className}
-      style={{ position: "relative", zIndex: 1, ...style }} // zIndex ensures card stays above background
+      style={{ position: "relative", zIndex: 1, ...style }} 
     >
       <div 
         ref={cardRef} 
@@ -304,7 +302,6 @@ const GlobalSpotlightComponent: React.FC<{
 
     const spotlight = document.createElement("div");
     spotlight.className = "global-spotlight-effect";
-    // FIX: z-index lowered to 10 so it is behind Modals (which are z-50+)
     spotlight.style.cssText = `
         position: fixed;
         width: ${spotlightRadius * 2}px;
@@ -419,9 +416,17 @@ export default function ProductsSection() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  // --- MODIFIED FILTER LOGIC ---
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
+      // 1. EXCLUDE HERO/VIDEO CONTENT (This is the Fix)
+      const cat = p.category?.toUpperCase() || "";
+      if (cat === "VIDEO" || cat === "CONTENT") return false;
+
+      // 2. VISIBILITY CHECK
       if (!p.visible && !isAdmin) return false;
+
+      // 3. STANDARD FILTERS
       const searchMatch = p.name.toLowerCase().includes(filters.search.toLowerCase());
       const categoryMatch = filters.category === "all" || p.category === filters.category;
       const min = filters.minPrice ? Number(filters.minPrice) : 0;
@@ -548,12 +553,10 @@ export default function ProductsSection() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setExpandedId(null)}
-                // FIX: Increased z-index to 9999 to ensure it sits on top of everything, including spotlight
                 className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm"
               />
               
               {/* Expanded Card Container */}
-              {/* FIX: z-index higher than backdrop */}
               <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 pointer-events-none">
                  {products.filter(p => (p._id || p.id!) === expandedId).map(p => {
                     const pid = p._id || p.id!;

@@ -1,128 +1,39 @@
 "use client";
+import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useSpring,
+  MotionValue,
+  AnimatePresence,
+} from "framer-motion";
+import Image from "next/image";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { 
+  Loader2, Edit2, Save, X, Trash2, 
+  Lock, TrendingUp, Zap, Globe, 
+  ShieldCheck, Users, Star, BarChart3 
+} from "lucide-react";
 
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useShop } from "../VIP/ShopContext"; // Ensure this path is correct for your project structure
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+// --- 1. YOUR REQUESTED IMPORTS ---
+import { useShop, type Product } from "@/app/VIP/ShopContext"; 
+import AdminLoginModal from "@/app/VIP/AdminLoginModal";
+import AdminPanel from "@/app/VIP/AdminPanel"; 
 
-// --- PARTICLE IMPORTS ---
+// --- EXTERNAL IMPORTS ---
+import Faq from "./Faq"; 
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
-import type { Container, Engine } from "@tsparticles/engine";
+import type { Engine } from "@tsparticles/engine";
 
-// --- TYPES FOR CAROUSEL ---
-interface Slide {
-  type: "image" | "video" | "youtube";
-  src: string;
-  title?: string;
+// --- UTILS ---
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
 }
 
-interface MediaCarouselProps {
-  slides: Slide[];
-  autoSlideInterval?: number;
-}
-
-// --- MEDIA CAROUSEL COMPONENT ---
-const MediaCarousel: React.FC<MediaCarouselProps> = ({
-  slides,
-  autoSlideInterval = 6000,
-}) => {
-  const [current, setCurrent] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % slides.length);
-    }, autoSlideInterval);
-    return () => clearInterval(timer);
-  }, [slides.length, autoSlideInterval]);
-
-  const slide = slides[current];
-
-  return (
-    <div className="relative w-full aspect-[4/3] sm:aspect-[16/9] lg:aspect-[4/3] overflow-hidden rounded-[32px] border border-neutral-800 bg-neutral-800/30 shadow-2xl">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={current}
-          initial={{ opacity: 0, scale: 1.05 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.6, ease: "easeInOut" }}
-          className="absolute inset-0 flex items-center justify-center bg-black"
-        >
-          {slide.type === "image" && (
-            <div className="relative w-full h-full">
-               {/* Using standard img for broad compatibility */}
-               <img
-                src={slide.src}
-                alt={slide.title || "Slide"}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
-            </div>
-          )}
-          {slide.type === "video" && (
-            <video
-              className="absolute inset-0 w-full h-full object-cover"
-              autoPlay
-              loop
-              muted
-              playsInline
-            >
-              <source src={slide.src} type="video/mp4" />
-            </video>
-          )}
-          {slide.type === "youtube" && (
-            <iframe
-              className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-              src={`https://www.youtube-nocookie.com/embed/${
-                slide.src.includes("youtube.com") || slide.src.includes("youtu.be")
-                  ? new URL(slide.src).searchParams.get("v") ||
-                    slide.src.split("/").pop()?.split("?")[0]
-                  : slide.src
-              }?autoplay=1&mute=1&controls=0&loop=1&playlist=${
-                 new URL(slide.src).searchParams.get("v") ||
-                 slide.src.split("/").pop()?.split("?")[0]
-              }`}
-              title="YouTube"
-              frameBorder="0"
-              allow="autoplay; encrypted-media"
-            />
-          )}
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Navigation Buttons */}
-      <button
-        onClick={() => setCurrent((p) => (p - 1 + slides.length) % slides.length)}
-        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-sky-500/80 p-2 rounded-full backdrop-blur-md transition-colors border border-white/10 z-20"
-      >
-        <ChevronLeft className="text-white w-5 h-5" />
-      </button>
-      <button
-        onClick={() => setCurrent((p) => (p + 1) % slides.length)}
-        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-sky-500/80 p-2 rounded-full backdrop-blur-md transition-colors border border-white/10 z-20"
-      >
-        <ChevronRight className="text-white w-5 h-5" />
-      </button>
-
-      {/* Pagination Dots */}
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-20">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrent(index)}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              index === current ? "bg-sky-500 w-6" : "bg-white/30 w-1.5 hover:bg-white/60"
-            }`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// --- SPARKLES CORE COMPONENT ---
+// --- SPARKLES COMPONENT ---
 const SparklesCore = (props: {
   id?: string;
   className?: string;
@@ -137,8 +48,8 @@ const SparklesCore = (props: {
     id = "tsparticles",
     className,
     background = "transparent",
-    minSize = 1.6,
-    maxSize = 4.4,
+    minSize = 0.6,
+    maxSize = 1.4,
     speed = 1,
     particleColor = "#ffffff",
     particleDensity = 100,
@@ -206,189 +117,533 @@ const SparklesCore = (props: {
   );
 };
 
-// --- MAIN HERO SHOP COMPONENT ---
-type HeroShopProps = {
-  onScrollToProducts?: () => void;
-};
-
-export default function HeroShop({ onScrollToProducts }: HeroShopProps) {
-  const {
-    state: { hero },
-  } = useShop();
-
-  const fallbackScroll = () => {
-    const el = document.getElementById("products-section");
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  const scrollToProducts = onScrollToProducts || fallbackScroll;
-
-  // Construct slides from Shop Context + Defaults to make the carousel active
-  const carouselSlides: Slide[] = [
-    {
-      type: "image",
-      src: hero.featuredImageUrl || "https://images.pexels.com/photos/7671169/pexels-photo-7671169.jpeg",
-      title: hero.featuredTitle,
-    },
-    {
-      type: "video",
-      src: "/newhero.mp4", // Using your asset
-    },
-    {
-      type: "image",
-      src: "/bullmoneyvantage.png", // Using your asset
-    },
-    {
-       type: "youtube", 
-       src: "https://www.youtube.com/watch?v=wWB_SeA15dU" 
-    }
-  ];
-
+// --- PRODUCT CARD COMPONENT ---
+const ProductCard = React.memo(({
+  product,
+  uniqueLayoutId, 
+  translate,
+  setActive,
+}: {
+  product: Product;
+  uniqueLayoutId: string;
+  translate: MotionValue<number>;
+  setActive: (product: Product, layoutId: string) => void; 
+}) => {
   return (
-    <section
-    
-      // Changed bg to black
-      className="relative overflow-hidden flex items-center justify-center px-6 py-20 sm:py-28 bg-black"
+    <motion.div
+      style={{ x: translate }}
+      whileHover={{ y: -10 }}
+      onClick={() => setActive(product, uniqueLayoutId)} 
+      className="group/product h-[20rem] w-[16rem] md:h-[26rem] md:w-[22rem] relative flex-shrink-0 cursor-pointer"
     >
-      {/* --- SPARKLES BACKGROUND --- */}
-      <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
-        <SparklesCore
-          id="hero-sparkles"
-          background="transparent"
-          minSize={0.6}
-          maxSize={1.4}
-          particleDensity={50}
-          className="w-full h-full"
-          particleColor="#FFFFFF"
-        />
-      </div>
-
-      {/* Background Ambience (Subtle Gradients over black) */}
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top,#1e293b_0%,transparent_45%,transparent_100%)] opacity-40" />
-      
-      {/* Glow orbs */}
-      <motion.div
-        className="pointer-events-none absolute -top-24 -left-10 h-72 w-72 rounded-full bg-blue-900/20 blur-[100px]"
-        animate={{ opacity: [0.4, 0.6, 0.4], scale: [1, 1.1, 1] }}
-        transition={{ repeat: Infinity, duration: 8 }}
-      />
-      <motion.div
-        className="pointer-events-none absolute bottom-0 right-0 h-72 w-72 rounded-full bg-blue-900/20 blur-[100px]"
-        animate={{ opacity: [0.3, 0.5, 0.3], scale: [1, 1.15, 1] }}
-        transition={{ repeat: Infinity, duration: 10 }}
-      />
-
-      <div className="relative z-10 max-w-7xl w-full grid lg:grid-cols-2 gap-12 items-center">
-        
-        {/* --- LEFT CONTENT --- */}
-        <div className="flex flex-col items-start text-left">
-          {!!hero.badge && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-900/10 border border-sky-900/30 backdrop-blur-sm mb-6"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-900 animate-pulse"/>
-              <span className="text-sky-700 text-xs font-bold tracking-widest uppercase">
-                {hero.badge}
-              </span>
-            </motion.div>
-          )}
-
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-5xl md:text-6xl font-black text-white leading-[1.1] tracking-tight"
-          >
-            {hero.title}
-          </motion.h1>
-
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mt-6 text-base sm:text-lg text-neutral-400 max-w-xl leading-relaxed"
-          >
-            {hero.subtitle}
-          </motion.p>
-
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8 flex flex-wrap gap-4"
-          >
-            <button
-              onClick={scrollToProducts}
-              className="px-8 py-3.5 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold text-sm hover:shadow-[0_0_25px_rgba(14,165,233,0.4)] transition-all transform hover:scale-105"
-            >
-              {hero.primaryCtaLabel || "Shop Now"}
-            </button>
-
-            {!!hero.secondaryCtaLabel && (
-              <button
-                onClick={scrollToProducts}
-                className="px-8 py-3.5 rounded-full border border-neutral-800 bg-neutral-900/50 text-white font-bold text-sm hover:border-sky-500 hover:text-sky-400 transition-all"
-              >
-                {hero.secondaryCtaLabel}
-              </button>
-            )}
-          </motion.div>
-
-          {/* Trust/Stats Small Row */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="mt-10 pt-6 border-t border-white/5 w-full flex gap-8"
-          >
-             <div>
-                <p className="text-2xl font-bold text-white">2.5k+</p>
-                <p className="text-xs text-neutral-500 uppercase tracking-wider">Traders</p>
-             </div>
-             <div>
-                <p className="text-2xl font-bold text-white">4.9/5</p>
-                <p className="text-xs text-neutral-500 uppercase tracking-wider">Rating</p>
-             </div>
-          </motion.div>
-        </div>
-
-        {/* --- RIGHT: 3D MEDIA CAROUSEL --- */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="relative group"
+      <div className="block group-hover/product:shadow-[0_0_30px_rgba(14,165,233,0.3)] transition-all duration-500 rounded-[20px]">
+        <motion.div 
+            layoutId={uniqueLayoutId}
+            className="relative h-[20rem] md:h-[26rem] w-full rounded-[20px] overflow-hidden bg-neutral-900 border border-neutral-800 group-hover/product:border-sky-500/50 transition-colors"
         >
-          {/* Decorative glow behind carousel */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-sky-500/20 to-indigo-500/20 rounded-[34px] blur-xl opacity-50 group-hover:opacity-75 transition duration-1000" />
-          
-          <div className="relative">
-             <div className="absolute -top-4 -right-4 z-20">
-                <span className="px-4 py-1.5 bg-sky-500 text-white text-xs font-black uppercase tracking-widest rounded-full shadow-lg rotate-3 border border-sky-400">
-                  {hero.featuredTagLabel || "New Drop"}
-                </span>
-             </div>
-             
-             {/* The Integrated Scroll Component */}
-             <MediaCarousel slides={carouselSlides} />
-
-             {/* Caption Overlay */}
-             <div className="mt-4 flex items-center justify-between px-2">
-                <div>
-                   <h3 className="text-lg font-bold text-white">{hero.featuredTitle}</h3>
-                   <p className="text-xs text-neutral-400">{hero.featuredSubtitle}</p>
+            <Image
+                src={product.imageUrl}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                priority={false}
+                className="object-cover object-center absolute h-full w-full inset-0 opacity-80 group-hover/product:opacity-100 group-hover/product:scale-105 transition-all duration-700"
+                alt={product.name}
+            />
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90"></div>
+            
+            <div className="absolute bottom-0 left-0 w-full p-5 translate-y-2 group-hover/product:translate-y-0 transition-transform duration-500">
+                <div className="flex justify-between items-end">
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                             <span className="px-2 py-0.5 rounded bg-sky-500/20 text-sky-400 text-[10px] font-bold uppercase tracking-wider border border-sky-500/20 backdrop-blur-sm">
+                                {product.category || "Vip"}
+                             </span>
+                        </div>
+                        <h2 className="text-white font-sans font-bold text-lg leading-tight mb-1 truncate max-w-[160px]">
+                            {product.name}
+                        </h2>
+                        {product.price > 0 && <p className="text-sky-400 font-mono text-sm font-bold">${product.price}</p>}
+                    </div>
+                    <div className="h-8 w-8 rounded-full bg-sky-600 text-white flex items-center justify-center opacity-0 group-hover/product:opacity-100 transition-all scale-75 group-hover/product:scale-100 shadow-lg shadow-sky-500/30">
+                        <TrendingUp size={16} />
+                    </div>
                 </div>
-                <div className="text-right">
-                   <p className="text-xl font-bold text-sky-400">{hero.featuredPriceLabel}</p>
-                   <p className="text-[10px] text-neutral-500 uppercase">{hero.featuredNote}</p>
-                </div>
-             </div>
-          </div>
+            </div>
         </motion.div>
       </div>
-      
-    </section>
+    </motion.div>
   );
-}
+});
+ProductCard.displayName = "ProductCard";
+
+// --- MAIN HERO PARALLAX ---
+const HeroParallax = () => {
+  const { state, updateProduct, deleteProduct } = useShop();
+  const { products, hero, isAdmin, loading } = state;
+
+  // --- PARALLAX DATA PREP ---
+  const displayProducts = useMemo(() => {
+    // 1. FILTER: Exclude "VIDEO" and "CONTENT" categories
+    const shopProducts = products.filter(p => {
+        const cat = p.category?.toUpperCase() || "";
+        return cat !== "VIDEO" && cat !== "CONTENT";
+    });
+
+    if (shopProducts.length === 0) return [];
+
+    let filledProducts = [...shopProducts];
+    // Fill until at least 15 items for smooth grid using only Shop Products
+    while (filledProducts.length < 15) {
+      filledProducts = [...filledProducts, ...shopProducts];
+    }
+    return filledProducts;
+  }, [products]);
+
+  const firstRow = displayProducts.slice(0, 5);
+  const secondRow = displayProducts.slice(5, 10);
+  const thirdRow = displayProducts.slice(10, 15);
+
+  const ref = React.useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end start"],
+  });
+
+  const springConfig = { stiffness: 300, damping: 30, bounce: 100 };
+  const translateX = useSpring(useTransform(scrollYProgress, [0, 1], [0, 800]), springConfig);
+  const translateXReverse = useSpring(useTransform(scrollYProgress, [0, 1], [0, -800]), springConfig);
+  const rotateX = useSpring(useTransform(scrollYProgress, [0, 0.2], [15, 0]), springConfig);
+  const opacity = useSpring(useTransform(scrollYProgress, [0, 0.1], [0.2, 1]), springConfig);
+  const rotateZ = useSpring(useTransform(scrollYProgress, [0, 0.2], [20, 0]), springConfig);
+  const translateY = useSpring(useTransform(scrollYProgress, [0, 0.2], [-700, 200]), springConfig);
+
+  // --- STATE ---
+  const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
+  const [activeProduct, setActiveProduct] = useState<Product | null>(null);
+  const [activeLayoutId, setActiveLayoutId] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Product>>({});
+
+  const handleOpen = (product: Product, layoutId: string) => {
+    setActiveProduct(product);
+    setActiveLayoutId(layoutId); 
+    setEditForm({ ...product });
+    setIsEditing(false);
+  };
+
+  const handleClose = useCallback(() => {
+    setActiveProduct(null);
+    setActiveLayoutId(null);
+    setIsEditing(false);
+  }, []);
+
+  const handleSaveEdit = async (e?: React.MouseEvent) => {
+    if(e) e.stopPropagation();
+    if(!activeProduct) return;
+    const pid = activeProduct._id || activeProduct.id;
+    if(!pid) return;
+
+    setIsSaving(true);
+    try {
+      const { _id, id, ...payload } = editForm as Product; 
+      await updateProduct(pid, payload);
+      setActiveProduct(prev => prev ? { ...prev, ...editForm } as Product : null);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Save failed:", error);
+      alert("Failed to save. Check console.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if(!activeProduct) return;
+    const pid = activeProduct._id || activeProduct.id;
+    if(!pid) return;
+
+    if(window.confirm("Are you sure? This cannot be undone.")) {
+      setIsSaving(true);
+      try {
+        await deleteProduct(pid);
+        handleClose();
+      } catch (error) {
+        alert("Failed to delete.");
+      } finally {
+        setIsSaving(false);
+      }
+    }
+  }
+
+  useEffect(() => {
+    document.body.style.overflow = activeProduct ? "hidden" : "auto";
+    return () => { document.body.style.overflow = "auto"; }
+  }, [activeProduct]);
+
+  if (loading) {
+      return (
+          <div className="h-screen w-full flex items-center justify-center bg-black text-sky-500">
+              <Loader2 className="animate-spin w-10 h-10" />
+          </div>
+      )
+  }
+
+  return (
+    <div className="bg-black relative selection:bg-sky-500/30">
+        
+    {/* --- ADMIN LOGIN MODAL --- */}
+    <AdminLoginModal 
+        open={isAdminLoginOpen} 
+        onClose={() => setIsAdminLoginOpen(false)} 
+    />
+
+    {/* --- PRODUCT OVERLAY (MODAL) --- */}
+    <AnimatePresence>
+        {activeProduct && activeLayoutId && (
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[999] grid place-items-center bg-black/90 backdrop-blur-xl p-4"
+                onClick={handleClose}
+            >
+                <motion.div
+                    layoutId={activeLayoutId} 
+                    className="relative w-full max-w-4xl bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[85vh]"
+                    onClick={(e) => e.stopPropagation()} 
+                >
+                    <button
+                        onClick={handleClose}
+                        className="absolute top-4 right-4 z-50 p-2 bg-black/40 backdrop-blur rounded-full text-white hover:bg-black/60 transition-colors border border-white/10"
+                    >
+                        <X size={20} />
+                    </button>
+
+                    {/* EDIT TRIGGER (Only if Admin) */}
+                    {isAdmin && !isEditing && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+                        className="absolute top-4 right-16 z-50 p-2 bg-sky-600 rounded-full text-white hover:bg-sky-500 transition-colors shadow-[0_0_15px_rgba(14,165,233,0.5)] flex gap-2 items-center px-4 font-bold text-xs uppercase"
+                      >
+                         <Edit2 size={14} /> Edit
+                      </button>
+                    )}
+
+                    {/* LEFT: IMAGE SECTION */}
+                    <div className="w-full md:w-1/2 h-64 md:h-auto relative bg-neutral-800">
+                         <Image
+                            src={isEditing ? (editForm.imageUrl || "") : activeProduct.imageUrl}
+                            fill
+                            priority={true}
+                            className="object-cover"
+                            alt={activeProduct.name}
+                        />
+                         {isEditing && (
+                           <div className="absolute inset-0 bg-black/50 flex items-center justify-center p-4">
+                              <p className="text-white text-xs font-mono bg-black/50 p-2 rounded">Preview Mode</p>
+                           </div>
+                        )}
+                    </div>
+
+                    {/* RIGHT: CONTENT SECTION */}
+                    <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center overflow-y-auto bg-neutral-900 text-neutral-100">
+                        {isEditing ? (
+                          <div className="space-y-4 animate-in fade-in duration-300" onClick={(e) => e.stopPropagation()}>
+                             {/* EDIT FORM */}
+                             <div>
+                                <label className="text-[10px] uppercase text-neutral-500 font-bold">Product Name</label>
+                                <input 
+                                  value={editForm.name || ""} 
+                                  onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                                  className="w-full bg-neutral-800 p-2 rounded text-sm outline-none border border-transparent focus:border-sky-500 text-white placeholder-neutral-500"
+                                />
+                             </div>
+                             <div>
+                                <label className="text-[10px] uppercase text-neutral-500 font-bold">Image URL</label>
+                                <input 
+                                  value={editForm.imageUrl || ""} 
+                                  onChange={(e) => setEditForm({...editForm, imageUrl: e.target.value})}
+                                  className="w-full bg-neutral-800 p-2 rounded text-sm outline-none border border-transparent focus:border-sky-500 text-white placeholder-neutral-500 font-mono"
+                                />
+                             </div>
+                             <div>
+                                <label className="text-[10px] uppercase text-neutral-500 font-bold">Description</label>
+                                <textarea 
+                                  rows={4}
+                                  value={editForm.description || ""} 
+                                  onChange={(e) => setEditForm({...editForm, description: e.target.value})}
+                                  className="w-full bg-neutral-800 p-2 rounded text-sm outline-none border border-transparent focus:border-sky-500 text-white resize-none"
+                                />
+                             </div>
+                             <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="text-[10px] uppercase text-neutral-500 font-bold">Price ($)</label>
+                                  <input 
+                                    type="number"
+                                    value={editForm.price || 0} 
+                                    onChange={(e) => setEditForm({...editForm, price: parseFloat(e.target.value)})}
+                                    className="w-full bg-neutral-800 p-2 rounded text-sm outline-none border border-transparent focus:border-sky-500 text-white"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] uppercase text-neutral-500 font-bold">Category</label>
+                                  <input 
+                                    value={editForm.category || ""} 
+                                    onChange={(e) => setEditForm({...editForm, category: e.target.value})}
+                                    className="w-full bg-neutral-800 p-2 rounded text-sm outline-none border border-transparent focus:border-sky-500 text-white"
+                                  />
+                                </div>
+                             </div>
+                             <div>
+                                <label className="text-[10px] uppercase text-neutral-500 font-bold">Link / Buy URL</label>
+                                <input 
+                                  value={editForm.buyUrl || ""} 
+                                  onChange={(e) => setEditForm({...editForm, buyUrl: e.target.value})}
+                                  className="w-full bg-neutral-800 p-2 rounded text-sm outline-none border border-transparent focus:border-sky-500 text-white font-mono"
+                                />
+                             </div>
+
+                             <div className="flex gap-2 pt-4 border-t border-neutral-800 mt-4">
+                                <button 
+                                  onClick={handleSaveEdit} 
+                                  disabled={isSaving}
+                                  className="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 rounded flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+                                >
+                                  {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : <><Save size={16} /> Save Product</>}
+                                </button>
+                                <button 
+                                  onClick={handleDelete}
+                                  disabled={isSaving}
+                                  className="bg-red-500/10 hover:bg-red-500 hover:text-white text-red-500 p-2 rounded transition-colors"
+                                >
+                                  <Trash2 size={18} />
+                                </button>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); setIsEditing(false); setEditForm({ ...activeProduct }); }}
+                                  className="text-neutral-500 hover:text-white text-xs px-2"
+                                >
+                                  Cancel
+                                </button>
+                             </div>
+                          </div>
+                        ) : (
+                          // --- VIEW MODE ---
+                          <>
+                            <motion.h3 
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.2 }}
+                                className="text-3xl font-sans font-bold text-white mb-2"
+                            >
+                                {activeProduct.name}
+                            </motion.h3>
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.3 }}
+                                className="flex gap-2 mb-6"
+                            >
+                                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20 font-mono">
+                                   {activeProduct.visible ? "Available" : "Hidden"}
+                                </span>
+                                <span className="text-[10px] bg-neutral-800 text-neutral-400 px-2 py-1 rounded border border-neutral-700 font-mono">
+                                   {activeProduct.category}
+                                </span>
+                            </motion.div>
+                            
+                            <motion.p
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.3 }}
+                                className="text-neutral-400 mb-8 text-sm leading-relaxed border-l-2 border-sky-500 pl-4"
+                            >
+                                {activeProduct.description || "Unlock superior market analysis with this exclusive tool."}
+                            </motion.p>
+                            
+                            <motion.div 
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.4 }}
+                                className="space-y-4 mb-10"
+                            >
+                                <div className="flex justify-between items-center bg-black/50 p-3 rounded border border-sky-500/20">
+                                    <span className="text-xs font-bold text-sky-400 uppercase tracking-widest">Price</span>
+                                    <span className="text-xl text-white font-bold font-mono">${activeProduct.price}</span>
+                                </div>
+                            </motion.div>
+
+                            <motion.a
+                                href={activeProduct.buyUrl || "#"}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.5 }}
+                                className="w-full py-4 bg-gradient-to-r from-sky-600 to-blue-500 text-white rounded-lg font-bold uppercase tracking-widest hover:shadow-[0_0_20px_rgba(14,165,233,0.4)] active:scale-95 transition-all flex items-center justify-center gap-2"
+                            >
+                                Get Access <Zap size={16} className="fill-white" />
+                            </motion.a>
+                          </>
+                        )}
+                    </div>
+                </motion.div>
+            </motion.div>
+        )}
+    </AnimatePresence>
+
+    {/* --- HERO SCROLL SECTION --- */}
+    <div
+        ref={ref}
+        className="h-[220vh] pt-10 pb-0 overflow-hidden bg-black antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d]"
+    >
+        {/* HEADER SECTION WITH SPARKLES */}
+        <div className="max-w-7xl relative mx-auto py-20 md:py-32 px-4 w-full z-20 mb-32">
+             <div className="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-60">
+                <SparklesCore
+                    id="parallax-sparkles"
+                    background="transparent"
+                    minSize={0.6}
+                    maxSize={1.4}
+                    particleDensity={50}
+                    className="w-full h-full"
+                    particleColor="#FFFFFF"
+                />
+            </div>
+            
+            {/* Header Content from DB */}
+            <div className="relative z-20 flex flex-col items-start gap-4">
+                 {!!hero.badge && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-700/30 bg-sky-900/10 text-sky-900 text-xs font-mono tracking-wider uppercase"
+                        >
+                        <Zap size={12} className="fill-sky-400" /> {hero.badge}
+                    </motion.div>
+                 )}
+
+                <h1 className="text-5xl md:text-8xl font-sans font-black text-white leading-[0.9] tracking-tighter">
+                {hero.title.split(" ").map((word, i) => (
+                    <span key={i} className="inline-block mr-3 text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-sky-900">
+                      {word}
+                    </span>
+                ))}
+                </h1>
+
+                <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                    className="max-w-2xl text-lg md:text-xl mt-6 text-neutral-400 font-normal leading-relaxed"
+                    >
+                    {hero.subtitle}
+                </motion.p>
+
+                {/* SOCIAL PROOF */}
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                    className="mt-10 flex flex-col sm:flex-row gap-6 items-center"
+                >
+                    <Faq />
+                    
+                    <div className="flex items-center gap-4 pl-4 border-l border-neutral-800">
+                        <div className="flex -space-x-3">
+                            {[1,2,3].map(i => (
+                                <div key={i} className="w-8 h-8 rounded-full bg-neutral-800 border-2 border-black flex items-center justify-center text-[10px] text-neutral-500">
+                                <Users size={12} />
+                                </div>
+                            ))}
+                        </div>
+                        <div className="text-xs">
+                            <div className="text-white font-bold flex items-center gap-1">2.5k+ Traders <ShieldCheck size={10} className="text-sky-500" /></div>
+                            <div className="text-neutral-500 flex items-center gap-1">
+                                <Star size={10} className="fill-yellow-500 text-yellow-500" /> 4.9/5 Rating
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
+        </div>
+        
+        {/* PARALLAX GRID */}
+        <motion.div
+            style={{ rotateX, rotateZ, translateY, opacity }}
+            className="relative z-10"
+        >
+            <motion.div className="flex flex-row-reverse space-x-reverse space-x-10 md:space-x-20 mb-10 md:mb-20">
+            {firstRow.map((product, idx) => (
+                <ProductCard 
+                    key={`row1-${product._id || product.id}-${idx}`}
+                    product={product} 
+                    uniqueLayoutId={`image-${product._id || product.id}-row1-${idx}`} 
+                    translate={translateX} 
+                    setActive={handleOpen} 
+                />
+            ))}
+            </motion.div>
+            <motion.div className="flex flex-row mb-10 md:mb-20 space-x-10 md:space-x-20">
+            {secondRow.map((product, idx) => (
+                <ProductCard 
+                    key={`row2-${product._id || product.id}-${idx}`}
+                    product={product} 
+                    uniqueLayoutId={`image-${product._id || product.id}-row2-${idx}`} 
+                    translate={translateXReverse} 
+                    setActive={handleOpen} 
+                />
+            ))}
+            </motion.div>
+            <motion.div className="flex flex-row-reverse space-x-reverse space-x-10 md:space-x-20">
+            {thirdRow.map((product, idx) => (
+                <ProductCard 
+                    key={`row3-${product._id || product.id}-${idx}`}
+                    product={product} 
+                    uniqueLayoutId={`image-${product._id || product.id}-row3-${idx}`} 
+                    translate={translateX} 
+                    setActive={handleOpen} 
+                />
+            ))}
+            </motion.div>
+        </motion.div>
+    </div>
+
+    {/* --- FOOTER / ADMIN ACCESS --- */}
+    <div className="relative z-20 bg-black text-neutral-500 py-16 px-8 text-center border-t border-neutral-900">
+        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 text-xs uppercase tracking-widest text-neutral-400">
+            <div className="flex flex-col items-center gap-3">
+                <Globe className="text-sky-500 mb-1" />
+                <span>Free Worldwide Shipping</span>
+            </div>
+            <div className="flex flex-col items-center gap-3">
+                <BarChart3 className="text-sky-500 mb-1" />
+                <span>Cutting-edge Tools</span>
+            </div>
+            <div className="flex flex-col items-center gap-3">
+                <ShieldCheck className="text-sky-500 mb-1" />
+                <span>Secure Checkout</span>
+            </div>
+        </div>
+        
+        <div className="flex flex-col items-center gap-4">
+            <p className="text-[10px] opacity-50">&copy; {new Date().getFullYear()} BULLMONEY VIP. All rights reserved.</p>
+            
+            {/* ADMIN LOGIN TRIGGER */}
+            {!isAdmin && (
+                <button 
+                  onClick={() => setIsAdminLoginOpen(true)}
+                  className="flex items-center gap-2 text-[10px] opacity-20 hover:opacity-100 transition-opacity uppercase tracking-widest hover:text-sky-500"
+                >
+                  <Lock size={10} /> Admin Access
+                </button>
+            )}
+        </div>
+    </div>
+    </div>
+  );
+};
+
+export default HeroParallax;

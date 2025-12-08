@@ -282,10 +282,10 @@ type HeroConfig = {
 };
 
 const DEFAULT_CONFIG: HeroConfig = {
-  title: "Shop the Future of Finance",
-  flipList1: "PRO TOOLS, INDICATORS, ALGORITHMS",
-  flipList2: "MERCHANDISE, HOODIES, ACCESSORIES",
-  flipList3: "MASTERY COURSES, MENTORSHIP",
+  title: "Unlock VIP Access",
+  flipList1: "Access insider knowledge, trade smarter, and stay ahead of the curve.",
+  flipList2: "Join the Elite BullMoney VIP Community",
+  flipList3: "Access insider knowledge, trade smarter, and stay ahead of the curve.",
   slides: [
     { type: "image", src: "https://images.unsplash.com/photo-1611974765270-ca1258634369?q=80&w=1600&auto=format&fit=crop", title: "Trading Station Pro" },
     { type: "image", src: "https://images.unsplash.com/photo-1642543492481-44e81e3914a7?q=80&w=1600&auto=format&fit=crop", title: "Bullmoney Hoodie Vol.1" },

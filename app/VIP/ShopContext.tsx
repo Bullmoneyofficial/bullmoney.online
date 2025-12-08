@@ -8,7 +8,7 @@ import React, {
   ReactNode,
 } from "react";
 
-// --- Type Definitions (Kept the same, they look correct) ---
+// --- Type Definitions ---
 
 export type Product = {
   _id?: string;
@@ -42,7 +42,7 @@ export type Category = {
   name: string;
 };
 
-// ... (DEFAULT_HERO, ShopState, LoginResult, ShopContextValue types are omitted for brevity, as they were correct) ...
+// ... (DEFAULT_HERO, ShopState, LoginResult, ShopContextValue types) ...
 
 const DEFAULT_HERO: HeroConfig = {
   badge: "BullMoney FX Shop",
@@ -63,7 +63,7 @@ const DEFAULT_HERO: HeroConfig = {
 type ShopState = {
   products: Product[];
   categories: Category[];
-  hero: HeroConfig; // ✅ NOT NULL anymore
+  hero: HeroConfig;
   isAdmin: boolean;
   loading: boolean;
 };
@@ -137,34 +137,28 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const refreshAll = async () => {
     dispatch({ type: "SET_LOADING", payload: true });
 
-    // FIX 1: Fetch and destructure the results correctly.
-    // The hero query returns an array of one item, [heroConfig].
     const [products, heroConfigArray, categories] = await Promise.all([
       fetch("/api/products").then((r) => r.json()),
       fetch("/api/hero").then((r) => r.json()),
       fetch("/api/categories").then((r) => r.json()),
     ]);
     
-    // Extract the first (and only) item from the hero array, or null if empty.
     const heroFromDb = heroConfigArray && heroConfigArray.length > 0 ? heroConfigArray[0] : null;
 
-    dispatch({ type: "SET_PRODUCTS", payload: products });
+    dispatch({ type: "SET_PRODUCTS", payload: products || [] });
     
     dispatch({
       type: "SET_HERO",
-      // FIX 2: Use a null check on heroFromDb, and spread the existing default config first
-      // to ensure all fields are present even if the DB only returns a subset.
       payload: { ...DEFAULT_HERO, ...(heroFromDb || {}) },
     });
     
-    dispatch({ type: "SET_CATEGORIES", payload: categories });
+    dispatch({ type: "SET_CATEGORIES", payload: categories || [] });
     dispatch({ type: "SET_LOADING", payload: false });
   };
 
   useEffect(() => {
-    // FIX 3: Add an immediate function call to the effect
     refreshAll();
-  }, []); // Empty dependency array means it runs once on mount
+  }, []);
 
   const login = (username: string, password: string): LoginResult => {
     if (!username || !password) {
@@ -192,7 +186,6 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     id: string,
     product: Omit<Product, "_id" | "id">
   ) => {
-    // FIX 4: The endpoint for update should typically be /api/products/:id, not just /api/products
     await fetch(`/api/products/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -202,24 +195,17 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteProduct = async (id: string) => {
-    // FIX 5: The endpoint for delete should be /api/products/:id
     await fetch(`/api/products/${id}`, { method: "DELETE" });
     await refreshAll();
   };
 
   const toggleVisibility = async (id: string) => {
-    // Correctly find product by checking both _id (Supabase/Postgres) and id (UI compatibility)
     const p = state.products.find((x) => (x._id || x.id) === id); 
     if (!p) return;
-    // Pass the correct product data to updateProduct
     await updateProduct(id, { ...p, visible: !p.visible }); 
   };
 
   const updateHero = async (hero: HeroConfig) => {
-    // FIX 6: The Shop Hero table is a singleton, meaning updates should typically target the single row. 
-    // If your API is set up to update by the primary key, 'true' (which is the only ID), 
-    // or simply handles a general PUT for the singleton, this endpoint is fine. 
-    // Assuming the API handles the singleton update.
     await fetch("/api/hero", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -228,7 +214,6 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     await refreshAll();
   };
   
-  // FIX 7: Fixed addCategory to use correct endpoint and payload structure
   const addCategory = async (name: string) => {
     await fetch("/api/categories", {
       method: "POST",
@@ -238,7 +223,6 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     await refreshAll();
   };
 
-  // FIX 8: Fixed deleteCategory to use correct endpoint
   const deleteCategory = async (id: string) => {
     await fetch(`/api/categories/${id}`, { method: "DELETE" });
     await refreshAll();
@@ -266,8 +250,30 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useShop() {
-  const ctx = useContext(ShopContext);
-  if (!ctx) throw new Error("useShop must be used inside ShopProvider");
-  return ctx;
+// ==========================================
+// ✅ ADDED THIS PART: useShop Hook Export
+// ==========================================
+export const useShop = () => {
+  const context = useContext(ShopContext);
+  if (context === undefined) {
+    throw new Error("useShop must be used within a ShopProvider");
+  }
+  return context;
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        {/* Wrap children in the Provider */}
+        <ShopProvider>
+          {children}
+        </ShopProvider>
+      </body>
+    </html>
+  );
 }
