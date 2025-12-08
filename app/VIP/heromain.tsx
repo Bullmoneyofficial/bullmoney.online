@@ -7,6 +7,8 @@ import {
   useSpring,
   MotionValue,
   AnimatePresence,
+  useInView,
+  useWillChange
 } from "framer-motion";
 import Image from "next/image";
 import { clsx, type ClassValue } from "clsx";
@@ -14,7 +16,8 @@ import { twMerge } from "tailwind-merge";
 import {
   Loader2, Edit2, Save, X, Trash2,
   Lock, Zap, ShieldCheck, Users, Star, BarChart3,
-  Youtube, PlayCircle, ExternalLink, Plus, AlertCircle, Copy, Check
+  Youtube, PlayCircle, ExternalLink, Plus, Copy, Check,
+  ChevronLeft
 } from "lucide-react";
 
 import { useShop, type Product } from "@/app/VIP/ShopContext";
@@ -30,19 +33,24 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Hook to detect mobile screen for layout adjustments
 const useIsMobile = () => {
     const [isMobile, setIsMobile] = useState(false);
     useEffect(() => {
-        const checkMobile = () => setIsMobile(window.innerWidth < 768);
-        checkMobile();
-        window.addEventListener("resize", checkMobile);
-        return () => window.removeEventListener("resize", checkMobile);
+        const mediaQuery = window.matchMedia("(max-width: 768px)");
+        setIsMobile(mediaQuery.matches);
+        const handleChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+        
+        if (mediaQuery.addEventListener) {
+            mediaQuery.addEventListener("change", handleChange);
+            return () => mediaQuery.removeEventListener("change", handleChange);
+        } else {
+            mediaQuery.addListener(handleChange);
+            return () => mediaQuery.removeListener(handleChange);
+        }
     }, []);
     return isMobile;
 };
 
-// Robust YouTube ID Extractor
 const getYoutubeId = (url: string | undefined): string | null => {
   if (!url) return null;
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -51,8 +59,8 @@ const getYoutubeId = (url: string | undefined): string | null => {
 };
 
 // --- SPARKLES COMPONENT ---
-const SparklesCore = React.memo((props: { id?: string; className?: string; background?: string; minSize?: number; maxSize?: number; speed?: number; particleColor?: string; particleDensity?: number; }) => {
-  const { id = "tsparticles", className, background = "transparent", minSize = 0.6, maxSize = 1.4, speed = 1, particleColor = "#ffffff", particleDensity = 100 } = props;
+const SparklesCore = React.memo((props: { id?: string; className?: string; background?: string; minSize?: number; maxSize?: number; speed?: number; particleColor?: string; particleDensity?: number; isMobile?: boolean }) => {
+  const { id = "tsparticles", className, background = "transparent", minSize = 0.6, maxSize = 1.4, speed = 1, particleColor = "#ffffff", particleDensity = 100, isMobile = false } = props;
   const [init, setInit] = useState(false);
   
   useEffect(() => {
@@ -60,7 +68,7 @@ const SparklesCore = React.memo((props: { id?: string; className?: string; backg
   }, []);
 
   return (
-    <div className={cn("opacity-0 transition-opacity duration-1000", init && "opacity-100", className)}>
+    <div className={cn("opacity-0 transition-opacity duration-1000 pointer-events-none", init && "opacity-100", className)}>
       {init && (
         <Particles 
             id={id} 
@@ -68,21 +76,25 @@ const SparklesCore = React.memo((props: { id?: string; className?: string; backg
             options={{ 
                 background: { color: { value: background } }, 
                 fullScreen: { enable: false, zIndex: 1 }, 
-                fpsLimit: 60, // Optimization for mobile battery
+                fpsLimit: isMobile ? 30 : 60, 
                 interactivity: { 
-                    events: { onClick: { enable: true, mode: "push" }, onHover: { enable: false, mode: "repulse" }, resize: { enable: true } }, 
-                    modes: { push: { quantity: 4 }, repulse: { distance: 200, duration: 0.4 } } 
+                    events: { 
+                        onClick: { enable: !isMobile, mode: "push" }, 
+                        onHover: { enable: !isMobile, mode: "repulse" }, 
+                        resize: { enable: true } 
+                    }, 
+                    modes: { push: { quantity: 2 }, repulse: { distance: 100, duration: 0.4 } } 
                 }, 
                 particles: { 
                     bounce: { horizontal: { value: 1 }, vertical: { value: 1 } }, 
                     color: { value: particleColor }, 
                     move: { enable: true, speed: speed, direction: "none", random: false, straight: false, outModes: { default: "out" } }, 
-                    number: { density: { enable: true, width: 1920, height: 1080 }, value: particleDensity }, 
+                    number: { density: { enable: true, width: 1920, height: 1080 }, value: isMobile ? particleDensity / 2 : particleDensity }, 
                     opacity: { value: { min: 0.1, max: 0.5 }, animation: { enable: true, speed: speed, sync: false } }, 
                     shape: { type: "circle" }, 
                     size: { value: { min: minSize, max: maxSize } } 
                 }, 
-                detectRetina: true 
+                detectRetina: !isMobile 
             } as any} 
         />
       )}
@@ -91,45 +103,61 @@ const SparklesCore = React.memo((props: { id?: string; className?: string; backg
 });
 SparklesCore.displayName = "SparklesCore";
 
-// --- VIDEO CARD COMPONENT (UPDATED FOR MOBILE) ---
+// --- VIDEO CARD COMPONENT ---
 const VideoCard = React.memo(({
   product,
   uniqueLayoutId,
   translate,
   setActive,
+  isMobile,
 }: {
   product: Product;
   uniqueLayoutId: string;
   translate: MotionValue<number>;
   setActive: (product: Product, layoutId: string) => void;
+  isMobile: boolean;
 }) => {
   
   const videoId = getYoutubeId(product.buyUrl);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { margin: "200px 0px 200px 0px", once: false });
+  const willChange = useWillChange();
+  const qualityParam = isMobile ? "medium" : "hd1080";
 
   return (
     <motion.div
-      style={{ x: translate }}
+      ref={ref}
+      style={{ x: translate, willChange }}
       whileHover={{ y: -10 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => setActive(product, uniqueLayoutId)}
-      // OPTIMIZATION: Reduced width/height for mobile (h-[14rem] w-[18rem])
-      className="group/product h-[14rem] w-[18rem] md:h-[22rem] md:w-[32rem] relative flex-shrink-0 cursor-pointer"
+      className="group/product h-[14rem] w-[18rem] md:h-[22rem] md:w-[32rem] relative flex-shrink-0 cursor-pointer backface-hidden transform-gpu"
     >
-      <div className="block h-full w-full group-hover/product:shadow-[0_0_40px_rgba(220,38,38,0.4)] transition-all duration-500 rounded-[20px] md:rounded-[24px]">
+      <div className="block h-full w-full md:group-hover/product:shadow-[0_0_40px_rgba(220,38,38,0.4)] transition-all duration-500 rounded-[20px] md:rounded-[24px] safari-fix-layer">
         <motion.div 
             layoutId={uniqueLayoutId}
-            className="relative h-full w-full rounded-[20px] md:rounded-[24px] overflow-hidden bg-neutral-900 border border-neutral-800 group-hover/product:border-red-600/50 transition-colors"
+            className="relative h-full w-full rounded-[20px] md:rounded-[24px] overflow-hidden bg-neutral-900 border border-neutral-800 md:group-hover/product:border-red-600/50 transition-colors safari-mask-fix"
         >
-            {/* --- LIVE VIDEO LAYER --- */}
             {videoId ? (
                 <div className="absolute inset-0 w-full h-full bg-black pointer-events-none">
-                    <iframe
-                        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&playsinline=1&showinfo=0&rel=0&iv_load_policy=3&disablekb=1&modestbranding=1`}
-                        className="w-[300%] h-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[1.5] object-cover pointer-events-none"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        title={product.name}
-                        loading="lazy"
-                    />
+                     {isInView ? (
+                        <iframe
+                            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&playsinline=1&showinfo=0&rel=0&iv_load_policy=3&disablekb=1&modestbranding=1&vq=${qualityParam}`}
+                            className="w-[300%] h-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[1.5] object-cover pointer-events-none"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            title={product.name}
+                            loading="lazy"
+                          
+                        />
+                     ) : (
+                        <Image
+                            src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+                            fill
+                            sizes="(max-width: 768px) 300px, 500px"
+                            className="object-cover opacity-50 blur-sm scale-110"
+                            alt="Loading"
+                        />
+                     )}
                 </div>
             ) : (
                 <Image
@@ -144,14 +172,14 @@ const VideoCard = React.memo(({
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90 pointer-events-none"></div>
             
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                 <div className="bg-white/10 backdrop-blur-sm p-3 md:p-4 rounded-full opacity-0 group-hover/product:opacity-100 transition-opacity duration-300 scale-75 group-hover/product:scale-100 border border-white/20">
+                 <div className="bg-white/10 backdrop-blur-sm p-3 md:p-4 rounded-full opacity-100 md:opacity-0 md:group-hover/product:opacity-100 transition-opacity duration-300 scale-100 md:scale-75 md:group-hover/product:scale-100 border border-white/20">
                     <PlayCircle className="text-white w-6 h-6 md:w-8 md:h-8 fill-red-600/20" />
                  </div>
             </div>
 
-            <div className="absolute bottom-0 left-0 w-full p-4 md:p-6 translate-y-2 group-hover/product:translate-y-0 transition-transform duration-500 pointer-events-none">
+            <div className="absolute bottom-0 left-0 w-full p-4 md:p-6 translate-y-0 md:translate-y-2 md:group-hover/product:translate-y-0 transition-transform duration-500 pointer-events-none">
                  <div className="flex items-center gap-2 mb-2">
-                    <span className="px-2 py-0.5 md:py-1 rounded bg-black/60 text-white text-[8px] md:text-[10px] font-bold uppercase tracking-wider backdrop-blur-md flex items-center gap-1 border border-white/10">
+                    <span className="px-2 py-0.5 md:py-1 rounded bg-black/80 md:bg-black/60 text-white text-[8px] md:text-[10px] font-bold uppercase tracking-wider md:backdrop-blur-md flex items-center gap-1 border border-white/10">
                     <Youtube size={10} className="text-red-500" />
                     {product.category || "VIDEO"}
                     </span>
@@ -172,26 +200,27 @@ const HeroParallax = () => {
   const { state, updateProduct, deleteProduct, createProduct } = useShop() as any; 
   const { products = [], hero, isAdmin, loading, categories = [] } = state || {};
   const isMobile = useIsMobile();
+  const willChange = useWillChange();
 
-  // --- FILTERING LOGIC ---
   const videoProducts = useMemo(() => {
     if (!products) return [];
     return products.filter((p: Product) => p.category === "VIDEO");
   }, [products]);
 
-  // --- PARALLAX DATA PREP ---
   const displayProducts = useMemo(() => {
     if (videoProducts.length === 0) return [];
     let filledProducts = [...videoProducts];
-    while (filledProducts.length < 15) {
+    const limit = isMobile ? 6 : 15; 
+    while (filledProducts.length < limit) {
       filledProducts = [...filledProducts, ...videoProducts];
     }
-    return filledProducts.slice(0, 15);
-  }, [videoProducts]);
+    return filledProducts.slice(0, limit);
+  }, [videoProducts, isMobile]);
 
-  const firstRow = displayProducts.slice(0, 5);
-  const secondRow = displayProducts.slice(5, 10);
-  const thirdRow = displayProducts.slice(10, 15);
+  const itemsPerRow = Math.ceil(displayProducts.length / 3);
+  const firstRow = displayProducts.slice(0, itemsPerRow);
+  const secondRow = displayProducts.slice(itemsPerRow, itemsPerRow * 2);
+  const thirdRow = displayProducts.slice(itemsPerRow * 2, displayProducts.length);
 
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -201,17 +230,12 @@ const HeroParallax = () => {
 
   const springConfig = { stiffness: 300, damping: 30, bounce: 100 };
   
-  // OPTIMIZATION: Reduce translation distances for mobile to prevent overflow
-  // On mobile, we only move 150px instead of 600px
-  const translateX = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? 150 : 600]), springConfig);
-  const translateXReverse = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? -150 : -600]), springConfig);
-  
-  // OPTIMIZATION: Disable 3D rotation on mobile for cleaner look
+  const translateX = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? 50 : 600]), springConfig);
+  const translateXReverse = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? -50 : -600]), springConfig);
   const rotateX = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? 0 : 15, 0]), springConfig);
   const rotateZ = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? 0 : 20, 0]), springConfig);
-  
   const opacity = useSpring(useTransform(scrollYProgress, [0, 0.2], [0.2, 1]), springConfig);
-  const translateY = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? -200 : -700, isMobile ? 50 : 200]), springConfig);
+  const translateY = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? -100 : -700, isMobile ? 0 : 200]), springConfig);
 
   // --- STATE ---
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
@@ -223,12 +247,21 @@ const HeroParallax = () => {
   const [adminEditing, setAdminEditing] = useState<Product | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const handleOpen = (product: Product, layoutId: string) => {
+  // --- NEW: RELATED VIDEOS LOGIC ---
+  const relatedProducts = useMemo(() => {
+    if (!products || !activeProduct) return [];
+    // Shuffle or just filter excluding current
+    return products
+      .filter((p: Product) => (p._id || p.id) !== (activeProduct._id || activeProduct.id))
+      .slice(0, 3); // Take top 3
+  }, [products, activeProduct]);
+
+  const handleOpen = useCallback((product: Product, layoutId: string) => {
     setActiveProduct(product);
     setActiveLayoutId(layoutId); 
     setEditForm({ ...product });
     setIsEditing(false);
-  };
+  }, []);
 
   const handleClose = useCallback(() => {
     setActiveProduct(null);
@@ -266,17 +299,14 @@ const HeroParallax = () => {
     setIsSaving(true);
     try {
       let payload = { ...editForm };
-      
       const ytId = getYoutubeId(payload.buyUrl);
       if (ytId) {
           payload.imageUrl = `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`;
       }
-      
       // @ts-ignore
       delete payload._id; 
       // @ts-ignore
       delete payload.id;
-
       await updateProduct(pid, payload as Product);
       setActiveProduct(prev => prev ? { ...prev, ...payload } as Product : null);
       setIsEditing(false);
@@ -293,7 +323,6 @@ const HeroParallax = () => {
     if(!activeProduct) return;
     const pid = activeProduct._id || activeProduct.id;
     if(!pid) return;
-
     if(window.confirm("Delete this video permanently?")) {
       setIsSaving(true);
       try {
@@ -310,14 +339,11 @@ const HeroParallax = () => {
   useEffect(() => {
     if (activeProduct) {
         document.body.style.overflow = "hidden";
-        document.body.style.touchAction = "none";
     } else {
         document.body.style.overflow = "auto";
-        document.body.style.touchAction = "auto";
     }
     return () => { 
         document.body.style.overflow = "auto"; 
-        document.body.style.touchAction = "auto";
     }
   }, [activeProduct]);
 
@@ -330,7 +356,7 @@ const HeroParallax = () => {
   }
 
   return (
-    <div className="bg-black relative selection:bg-red-500/30">
+    <div className="bg-black relative selection:bg-red-500/30 overflow-hidden w-full">
         
     <style jsx global>{`
       @keyframes shimmer {
@@ -344,6 +370,24 @@ const HeroParallax = () => {
       .custom-scrollbar::-webkit-scrollbar-track { background: #171717; }
       .custom-scrollbar::-webkit-scrollbar-thumb { background: #404040; border-radius: 3px; }
       .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #525252; }
+      
+      .backface-hidden { 
+          -webkit-backface-visibility: hidden;
+          backface-visibility: hidden; 
+      }
+      .transform-gpu { 
+          transform: translate3d(0,0,0);
+          -webkit-transform: translate3d(0,0,0);
+      }
+      .safari-mask-fix {
+          -webkit-mask-image: -webkit-radial-gradient(white, black);
+          mask-image: radial-gradient(white, black);
+          isolation: isolate;
+      }
+      .safari-fix-layer {
+          transform: translateZ(0);
+          -webkit-transform: translateZ(0);
+      }
     `}</style>
         
     {/* --- ADMIN LOGIN MODAL --- */}
@@ -376,17 +420,26 @@ const HeroParallax = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[9999] grid place-items-center bg-black/95 backdrop-blur-xl p-0 md:p-4"
+                className="fixed inset-0 z-[9999] grid place-items-center bg-black/95 md:backdrop-blur-xl p-0 md:p-4 will-change-opacity"
                 onClick={handleClose}
             >
                 <motion.div
                     layoutId={activeLayoutId} 
-                    className="relative w-full max-w-7xl bg-neutral-900 border border-neutral-800 rounded-none md:rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[100dvh] md:h-[85vh] md:max-h-[800px]"
+                    className="relative w-full max-w-7xl bg-neutral-900 border border-neutral-800 rounded-none md:rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[100dvh] md:h-[85vh] md:max-h-[800px] safari-fix-layer"
                     onClick={(e) => e.stopPropagation()} 
                 >
+                    {/* FIXED: BACK BUTTON MOVED DOWN (top-24) to clear Navbar */}
                     <button
                         onClick={handleClose}
-                        className="absolute top-4 right-4 z-50 p-2 bg-black/50 backdrop-blur rounded-full text-white hover:bg-red-600 transition-colors border border-white/10 group"
+                        className="absolute top-24 md:top-4 left-4 z-50 p-2 bg-black/50 backdrop-blur rounded-full text-white hover:bg-neutral-800 transition-colors border border-white/10 group flex items-center justify-center shadow-lg"
+                    >
+                         <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                    </button>
+
+                    {/* FIXED: CLOSE BUTTON MOVED DOWN (top-24) to clear Navbar */}
+                    <button
+                        onClick={handleClose}
+                        className="absolute top-24 md:top-4 right-4 z-50 p-2 bg-black/50 backdrop-blur rounded-full text-white hover:bg-red-600 transition-colors border border-white/10 group shadow-lg"
                     >
                         <X size={20} className="group-hover:rotate-90 transition-transform" />
                     </button>
@@ -394,14 +447,13 @@ const HeroParallax = () => {
                     {isAdmin && !isEditing && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-                        className="absolute top-4 right-16 z-50 p-2 bg-sky-600 rounded-full text-white hover:bg-sky-500 transition-colors shadow-[0_0_15px_rgba(14,165,233,0.5)] flex gap-2 items-center px-4 font-bold text-xs uppercase"
+                        className="absolute top-24 md:top-4 right-16 z-50 p-2 bg-sky-600 rounded-full text-white hover:bg-sky-500 transition-colors shadow-[0_0_15px_rgba(14,165,233,0.5)] flex gap-2 items-center px-4 font-bold text-xs uppercase"
                       >
                           <Edit2 size={14} /> Edit
                       </button>
                     )}
 
                     {/* LEFT: MEDIA SECTION */}
-                    {/* OPTIMIZATION: Fixed height on mobile to allow reading content below */}
                     <div className="w-full md:w-3/4 bg-black flex flex-col relative group h-[35vh] sm:h-[45vh] md:h-full shrink-0">
                         {!isEditing ? (
                             <div className="relative w-full h-full">
@@ -438,12 +490,11 @@ const HeroParallax = () => {
                     </div>
 
                     {/* RIGHT: CONTENT SIDEBAR */}
-                    {/* OPTIMIZATION: Ensure vertical scroll and padding for mobile */}
                     <div className="w-full md:w-1/4 flex flex-col bg-neutral-900 border-l border-neutral-800 h-full overflow-hidden">
                         <div className="flex-1 overflow-y-auto p-5 md:p-8 custom-scrollbar">
                         {isEditing ? (
                           <div className="space-y-6 animate-in fade-in duration-300 pb-12" onClick={(e) => e.stopPropagation()}>
-                             {/* EDIT FORM (Simplified for brevity) */}
+                             {/* EDIT FORM */}
                              <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800 mb-4">
                                 <label className="text-[10px] uppercase text-sky-500 font-bold mb-2 flex items-center gap-2">
                                   Category
@@ -518,6 +569,51 @@ const HeroParallax = () => {
                             >
                                 {activeProduct.description || "No description provided."}
                             </motion.div>
+
+                            {/* --- FILLER CONTENT: UP NEXT --- */}
+                            <div className="mt-8 pt-8 border-t border-neutral-800/50">
+                                <h4 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                   <PlayCircle size={12} /> Up Next
+                                </h4>
+                                <div className="flex flex-col gap-3">
+                                    {relatedProducts.length > 0 ? relatedProducts.map((rp: Product, i: number) => {
+                                        const thumbId = getYoutubeId(rp.buyUrl);
+                                        return (
+                                            <div 
+                                                key={i} 
+                                                onClick={() => setActiveProduct(rp)}
+                                                className="flex gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer group/related transition-colors"
+                                            >
+                                                <div className="relative w-24 h-14 bg-neutral-800 rounded overflow-hidden shrink-0">
+                                                    {thumbId ? (
+                                                        <Image 
+                                                            src={`https://img.youtube.com/vi/${thumbId}/mqdefault.jpg`} 
+                                                            fill 
+                                                            className="object-cover opacity-60 group-hover/related:opacity-100 transition-opacity" 
+                                                            alt={rp.name} 
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
+                                                            <Youtube size={16} className="text-neutral-600"/>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col justify-center min-w-0">
+                                                    <h5 className="text-xs font-bold text-neutral-300 group-hover/related:text-white truncate transition-colors leading-tight mb-1">
+                                                        {rp.name}
+                                                    </h5>
+                                                    <span className="text-[10px] text-neutral-600 uppercase tracking-wider">
+                                                        {rp.category || "Video"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )
+                                    }) : (
+                                        <div className="text-neutral-600 text-xs italic p-2">No other videos available.</div>
+                                    )}
+                                </div>
+                            </div>
+
                           </div>
                         )}
                         </div>
@@ -585,7 +681,6 @@ const HeroParallax = () => {
     </AnimatePresence>
 
     {/* --- HERO SCROLL SECTION --- */}
-    {/* Adjusted height for mobile to prevent excessive scrolling blank space */}
     <div
         ref={ref}
         className="h-[180vh] md:h-[240vh] pt-10 pb-0 overflow-hidden bg-black antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d]"
@@ -598,7 +693,9 @@ const HeroParallax = () => {
                     background="transparent"
                     minSize={0.6}
                     maxSize={1.4}
-                    particleDensity={isMobile ? 30 : 50}
+                    // OPTIMIZATION: Reduced particles
+                    particleDensity={isMobile ? 10 : 50} 
+                    isMobile={isMobile}
                     className="w-full h-full"
                     particleColor="#FFFFFF"
                 />
@@ -609,7 +706,8 @@ const HeroParallax = () => {
                     <motion.div 
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-400 text-[10px] md:text-xs font-mono tracking-wider uppercase backdrop-blur-md"
+                        // OPTIMIZATION: Removed blur on mobile badge
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-400 text-[10px] md:text-xs font-mono tracking-wider uppercase md:backdrop-blur-md"
                         >
                         <Zap size={10} className="fill-sky-400" /> {hero.badge}
                     </motion.div>
@@ -667,14 +765,15 @@ const HeroParallax = () => {
             rotateX, 
             rotateZ, 
             translateY, 
-            opacity 
+            opacity,
+            willChange // Hint to browser
         }}
-        className="relative z-10 will-change-transform"
+        // SAFARI FIX: Use 3d transform for container
+        className="relative z-10 will-change-transform backface-hidden transform-gpu safari-fix-layer"
     >
         <div className={cn("flex flex-col", isMobile ? "gap-2 px-0" : "")}>
             {videoProducts.length > 0 ? (
                 <>
-                {/* OPTIMIZATION: Tighter spacing (space-x-4) on mobile */}
                 {/* ROW 1 */}
                 <motion.div className={cn("flex flex-row-reverse space-x-reverse", isMobile ? "space-x-4 mb-2" : "space-x-20 mb-20")}>
                 {firstRow.map((product, idx) => (
@@ -684,6 +783,7 @@ const HeroParallax = () => {
                         uniqueLayoutId={`video-${product._id || product.id}-row1-${idx}`} 
                         translate={translateX} 
                         setActive={handleOpen} 
+                        isMobile={isMobile}
                     />
                 ))}
                 </motion.div>
@@ -697,6 +797,7 @@ const HeroParallax = () => {
                         uniqueLayoutId={`video-${product._id || product.id}-row2-${idx}`} 
                         translate={translateXReverse} 
                         setActive={handleOpen} 
+                        isMobile={isMobile}
                     />
                 ))}
                 </motion.div>
@@ -710,6 +811,7 @@ const HeroParallax = () => {
                         uniqueLayoutId={`video-${product._id || product.id}-row3-${idx}`} 
                         translate={translateX} 
                         setActive={handleOpen} 
+                        isMobile={isMobile}
                     />
                 ))}
                 </motion.div>
