@@ -485,21 +485,24 @@ const ShopMarketingSection = () => {
         <SparklesCore id="shop-fullpage-sparkles" background="transparent" minSize={1} maxSize={3} className="h-full w-full" particleColor="#60a5fa" />
       </div>
       
-      {/* 1. PROMO BANNER (Kept Outside) */}
+      {/* 1. PROMO BANNER */}
       <PromoBanner />
       
-      <div className="relative z-10 flex w-full flex-col items-center justify-center py-16 sm:py-24">
+      <div className="relative z-10 flex w-full flex-col items-center justify-center pt-8 pb-16 sm:py-24">
         
-        {/* 2. STATS & REWARDS & SOCIALS GRID */}
-        <div className="flex w-full max-w-5xl flex-col items-center justify-center gap-4 px-4 mb-16 sm:flex-row sm:gap-6 flex-wrap">
+        {/* HERO TEXT PLACEHOLDER (If you have one, it goes here so it's visible now) */}
+        
+        {/* 2. STATS & REWARDS & SOCIALS (Horizontal Scroll on Mobile) */}
+        {/* Added 'no-scrollbar' to hide scrollbar, check CSS note below */}
+        <div className="flex w-full snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-8 sm:max-w-5xl sm:flex-row sm:flex-wrap sm:justify-center sm:overflow-visible sm:pb-0 sm:px-4">
           
           {/* Active Traders */}
-          <div className="w-full sm:w-auto">
+          <div className="flex-none w-[85vw] snap-center sm:w-auto">
              <LiveViewers /> 
           </div>
 
           {/* Deal Timer -> Modal */}
-          <div className="w-full sm:w-auto h-full">
+          <div className="flex-none w-[85vw] snap-center sm:w-auto h-full">
             <Modal>
               <ModalTrigger>
                  <DealTimerButton />
@@ -510,8 +513,8 @@ const ShopMarketingSection = () => {
             </Modal>
           </div>
 
-          {/* 3. NEW: Socials -> Modal Trigger */}
-          <div className="w-full sm:w-auto h-full">
+          {/* Socials -> Modal Trigger */}
+          <div className="flex-none w-[85vw] snap-center sm:w-auto h-full">
             <Modal>
               <ModalTrigger>
                 <SocialsTrigger />
@@ -521,7 +524,6 @@ const ShopMarketingSection = () => {
                     <h3 className="text-2xl font-bold text-white mb-2">Join the Community</h3>
                     <p className="text-neutral-400 text-sm">Follow us for updates, signals and exclusive rewards.</p>
                  </div>
-                 {/* Marquee Wrapper for Modal */}
                  <div className="w-full relative overflow-hidden -mx-4 sm:mx-0 py-4">
                     <SocialsRow />
                  </div>
