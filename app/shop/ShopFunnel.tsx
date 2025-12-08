@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link'; // <--- 1. Import Link
 import GlassSurface from './GlassSurface';
 import './ShopScrollFunnel.css';
 
@@ -42,9 +43,20 @@ const ShopFunnel: React.FC = () => {
             mixBlendMode="normal"
             className="glass-lens"
           >
-            <button className="enter-shop-btn">
-              VIP ACCESS
-            </button>
+            {/* 2. Wrapped Button in Link to go to /shop */}
+            <Link href="/shop" style={{ textDecoration: 'none' }}>
+                <button 
+                  className="enter-shop-btn"
+                  style={{ 
+                    cursor: 'pointer', 
+                    position: 'relative', 
+                    zIndex: 999 // Forces it above the glass texture
+                  }}
+                >
+                  VIP ACCESS
+                </button>
+            </Link>
+
           </GlassSurface>
         </div>
       </div>

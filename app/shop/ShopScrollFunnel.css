@@ -37,8 +37,8 @@
 }
 
 .enter-shop-btn {
-  background: rgba(255, 255, 255, 0.9);
-  color: black;
+  background: rgba(255, 255, 255, 0);
+  color: rgb(255, 255, 255);
   border: none;
   padding: 0.8rem 2rem;
   font-size: 0.85rem;
@@ -47,14 +47,14 @@
   cursor: pointer;
   letter-spacing: 1px;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0);
   white-space: nowrap; /* Prevents button text wrapping */
 }
 
 .enter-shop-btn:hover {
   transform: scale(1.05);
-  background: white;
-  box-shadow: 0 0 30px rgba(255,255,255,0.4);
+  background: rgba(255, 255, 255, 0);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0);
 }
 
 /* --- SCROLLING CONTENT --- */
