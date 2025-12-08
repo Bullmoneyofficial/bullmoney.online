@@ -1,24 +1,22 @@
-/* app/shop/GlassSurface.css */
-
 .glass-surface {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  max-width: 100%;
 }
 
 .glass-surface__filter {
   position: absolute;
-  inset: 0;
-  opacity: 0;
+  width: 0;
+  height: 0;
   pointer-events: none;
-  z-index: -1;
 }
 
 .glass-surface__content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: 100%;
   height: 100%;
   display: flex;
@@ -26,19 +24,77 @@
   justify-content: center;
 }
 
-/* THE IMPORTANT PART FOR DISTORTION */
-.glass-surface--svg {
-  /* This backdrop-filter applies the ID generated in the TSX file */
-  backdrop-filter: var(--filter-id, url(#glass-filter)) saturate(var(--glass-saturation, 1));
-  
-  /* Background styles for the "frosted" look */
-  background: rgba(255, 255, 255, 0.05);
+/* =========================================
+   DESKTOP / ANDROID (Real SVG Distortion)
+   ========================================= */
+.glass-desktop-svg {
+  /* This uses the real SVG map defined in React */
+  backdrop-filter: var(--filter-id) saturate(var(--glass-saturation, 1.2));
+  /* Fallback frost if filter loads slow */
+  background: rgba(255, 255, 255, 0.03); 
   box-shadow: 
     inset 0 0 0 1px rgba(255, 255, 255, 0.2),
-    0 20px 50px rgba(0,0,0,0.2);
+    0 10px 40px rgba(0,0,0,0.5);
 }
 
-.glass-surface--fallback {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+/* =========================================
+   IOS / MOBILE OPTIMIZED (Simulated 3D)
+   ========================================= */
+.glass-mobile-3d {
+  /* 1. Stronger standard blur to replace the displacement 
+     2. Use saturate to mimic the refraction intensity
+  */
+  backdrop-filter: blur(20px) saturate(1.8);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  
+  /* 3. A gradient background that creates "volume" */
+  background: linear-gradient(
+    135deg, 
+    rgba(255, 255, 255, 0.15) 0%, 
+    rgba(255, 255, 255, 0.01) 50%, 
+    rgba(255, 255, 255, 0.05) 100%
+  );
+
+  /* 4. Complex border/shadow to fake the 3D edge */
+  box-shadow: 
+    /* Top-Left Highlight (The "Light Source") */
+    inset 1px 1px 0px 0px rgba(255, 255, 255, 0.4),
+    /* Bottom-Right Shadow (The "Thickness") */
+    inset -1px -1px 0px 0px rgba(0, 0, 0, 0.2),
+    /* Outer Shadow */
+    0 20px 40px -10px rgba(0, 0, 0, 0.5);
+    
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* The Fake Liquid Layer (Mobile Only) */
+.mobile-liquid-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.6;
+  
+  /* Create the "Oil Slick" / Chromatic Aberration look */
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 0, 0, 0.15),
+    transparent 60%
+  ),
+  radial-gradient(
+    circle at 80% 20%,
+    rgba(0, 0, 255, 0.15),
+    transparent 50%
+  );
+  
+  /* Blend it to look like lighting, not paint */
+  mix-blend-mode: overlay;
+  
+  /* Animate it slightly to feel "liquid" */
+  animation: liquid-breathing 8s ease-in-out infinite alternate;
+}
+
+@keyframes liquid-breathing {
+  0% { transform: scale(1); filter: hue-rotate(0deg); }
+  100% { transform: scale(1.1); filter: hue-rotate(30deg); }
 }

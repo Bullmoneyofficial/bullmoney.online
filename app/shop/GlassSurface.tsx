@@ -1,6 +1,4 @@
-'use client';
-
-import React, { useEffect, useRef, useId } from 'react';
+import React, { useEffect, useRef, useId, useState } from 'react';
 import './GlassSurface.css';
 
 export interface GlassSurfaceProps {
@@ -28,8 +26,8 @@ export interface GlassSurfaceProps {
 
 const GlassSurface: React.FC<GlassSurfaceProps> = ({
   children,
-  width = 300,
-  height = 100,
+  width = '100%',
+  height = '100%',
   borderRadius = 50,
   borderWidth = 0.5,
   brightness = 50,
@@ -51,9 +49,8 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   const id = useId();
   const cleanId = id.replace(/:/g, '');
   const filterId = `glass-filter-${cleanId}`;
-  const redGradId = `red-grad-${cleanId}`;
-  const blueGradId = `blue-grad-${cleanId}`;
-
+  
+  // Refs for SVG manipulation
   const containerRef = useRef<HTMLDivElement>(null);
   const feImageRef = useRef<SVGFEImageElement>(null);
   const redChannelRef = useRef<SVGFEDisplacementMapElement>(null);
@@ -61,42 +58,59 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   const blueChannelRef = useRef<SVGFEDisplacementMapElement>(null);
   const gaussianBlurRef = useRef<SVGFEGaussianBlurElement>(null);
 
-  const generateDisplacementMap = () => {
-    const rect = containerRef.current?.getBoundingClientRect();
-    const actualWidth = rect?.width || 400;
-    const actualHeight = rect?.height || 200;
-    const edgeSize = Math.min(actualWidth, actualHeight) * (borderWidth * 0.5);
+  const [isIOS, setIsIOS] = useState(false);
 
+  // Detect iOS specifically (because it strictly blocks SVG backdrop-filters)
+  useEffect(() => {
+    const checkIOS = () => {
+      if (typeof window === 'undefined') return false;
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      return /iphone|ipad|ipod/.test(userAgent);
+    };
+    setIsIOS(checkIOS());
+  }, []);
+
+  const generateDisplacementMap = () => {
+    if (!containerRef.current) return '';
+    const rect = containerRef.current.getBoundingClientRect();
+    const w = rect.width || 300;
+    const h = rect.height || 150;
+    
+    // Create a dynamic liquid gradient map
     const svgContent = `
-      <svg viewBox="0 0 ${actualWidth} ${actualHeight}" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="${redGradId}" x1="100%" y1="0%" x2="0%" y2="0%">
-            <stop offset="0%" stop-color="#0000"/>
-            <stop offset="100%" stop-color="red"/>
+          <linearGradient id="gradRed" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#000" />
+            <stop offset="50%" stop-color="#f00" />
+            <stop offset="100%" stop-color="#000" />
           </linearGradient>
-          <linearGradient id="${blueGradId}" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#0000"/>
-            <stop offset="100%" stop-color="blue"/>
+          <linearGradient id="gradBlue" x1="100%" y1="0%" x2="0%" y2="100%">
+             <stop offset="0%" stop-color="#000" />
+             <stop offset="50%" stop-color="#00f" />
+             <stop offset="100%" stop-color="#000" />
           </linearGradient>
         </defs>
-        <rect x="0" y="0" width="${actualWidth}" height="${actualHeight}" fill="black"></rect>
-        <rect x="0" y="0" width="${actualWidth}" height="${actualHeight}" rx="${borderRadius}" fill="url(#${redGradId})" />
-        <rect x="0" y="0" width="${actualWidth}" height="${actualHeight}" rx="${borderRadius}" fill="url(#${blueGradId})" style="mix-blend-mode: ${mixBlendMode}" />
-        <rect x="${edgeSize}" y="${edgeSize}" width="${actualWidth - edgeSize * 2}" height="${actualHeight - edgeSize * 2}" rx="${borderRadius}" fill="hsl(0 0% ${brightness}% / ${opacity})" style="filter:blur(${blur}px)" />
+        <rect width="100%" height="100%" fill="black" />
+        <circle cx="${w/2}" cy="${h/2}" r="${Math.min(w,h)/1.5}" fill="url(#gradRed)" />
+        <rect width="100%" height="100%" fill="url(#gradBlue)" style="mix-blend-mode: screen" />
       </svg>
     `;
-
     return `data:image/svg+xml,${encodeURIComponent(svgContent)}`;
   };
 
-  const updateDisplacementMap = () => {
-    if (feImageRef.current) {
+  const updateSVG = () => {
+    if (feImageRef.current && !isIOS) {
       feImageRef.current.setAttribute('href', generateDisplacementMap());
     }
   };
 
   useEffect(() => {
-    updateDisplacementMap();
+    if (isIOS) return;
+
+    updateSVG();
+    
+    // Update SVG parameters dynamically
     [
       { ref: redChannelRef, offset: redOffset },
       { ref: greenChannelRef, offset: greenOffset },
@@ -113,75 +127,63 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
       gaussianBlurRef.current.setAttribute('stdDeviation', displace.toString());
     }
   }, [
-    width, height, borderRadius, borderWidth, brightness, opacity,
-    blur, displace, distortionScale, redOffset, greenOffset,
-    blueOffset, xChannel, yChannel, mixBlendMode
+    distortionScale, redOffset, greenOffset, blueOffset, 
+    xChannel, yChannel, displace, isIOS, width, height
   ]);
 
+  // Resize observer to keep the map proportional
   useEffect(() => {
-    if (!containerRef.current) return;
-    const resizeObserver = new ResizeObserver(() => {
-      setTimeout(updateDisplacementMap, 0);
-    });
+    if (!containerRef.current || isIOS) return;
+    const resizeObserver = new ResizeObserver(() => requestAnimationFrame(updateSVG));
     resizeObserver.observe(containerRef.current);
     return () => resizeObserver.disconnect();
-  }, []);
-
-  const supportsSVGFilters = () => {
-    if (typeof navigator === 'undefined') return true;
-    const isWebkit = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-    const isFirefox = /Firefox/.test(navigator.userAgent);
-    if (isWebkit || isFirefox) return false;
-    
-    const div = document.createElement('div');
-    div.style.backdropFilter = `url(#${filterId})`;
-    return div.style.backdropFilter !== '';
-  };
+  }, [isIOS]);
 
   const containerStyle = {
     ...style,
     width: typeof width === 'number' ? `${width}px` : width,
     height: typeof height === 'number' ? `${height}px` : height,
     borderRadius: `${borderRadius}px`,
-    '--glass-frost': backgroundOpacity,
+    '--glass-opacity': isIOS ? Math.max(0.1, backgroundOpacity) : backgroundOpacity,
     '--glass-saturation': saturation,
-    '--filter-id': `url(#${filterId})`
+    '--filter-id': `url(#${filterId})`,
+    '--chromatic-offset': `${distortionScale}px` // Used for CSS simulation on mobile
   } as React.CSSProperties;
 
   return (
     <div
       ref={containerRef}
-      className={`glass-surface ${supportsSVGFilters() ? 'glass-surface--svg' : 'glass-surface--fallback'} ${className}`}
+      className={`glass-surface ${isIOS ? 'glass-mobile-3d' : 'glass-desktop-svg'} ${className}`}
       style={containerStyle}
     >
-      {/* CRITICAL FIX: 
-         pointerEvents: 'none' stops the SVG from blocking clicks.
-         position: 'absolute' takes it out of flow.
+      {/* On Mobile/iOS, we inject a "fake" chromatic aberration layer 
+        using gradients to mimic the liquid look without the SVG filter 
       */}
-      <svg 
-        className="glass-surface__filter" 
-        xmlns="http://www.w3.org/2000/svg"
-        style={{ pointerEvents: 'none', position: 'absolute', inset: 0, zIndex: -1 }}
-      >
-        <defs>
-          <filter id={filterId} colorInterpolationFilters="sRGB" x="0%" y="0%" width="100%" height="100%">
-            <feImage ref={feImageRef} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="map" />
-            <feDisplacementMap ref={redChannelRef} in="SourceGraphic" in2="map" result="dispRed" />
-            <feColorMatrix in="dispRed" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red" />
-            <feDisplacementMap ref={greenChannelRef} in="SourceGraphic" in2="map" result="dispGreen" />
-            <feColorMatrix in="dispGreen" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="green" />
-            <feDisplacementMap ref={blueChannelRef} in="SourceGraphic" in2="map" result="dispBlue" />
-            <feColorMatrix in="dispBlue" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue" />
-            <feBlend in="red" in2="green" mode="screen" result="rg" />
-            <feBlend in="rg" in2="blue" mode="screen" result="output" />
-            <feGaussianBlur ref={gaussianBlurRef} in="output" stdDeviation="0.7" />
-          </filter>
-        </defs>
-      </svg>
-      {/* CRITICAL FIX: Z-Index ensures content (buttons) are clickable */}
-      <div className="glass-surface__content" style={{ position: 'relative', zIndex: 10 }}>
-        {children}
-      </div>
+      {isIOS && (
+        <div className="mobile-liquid-layer"></div>
+      )}
+
+      {/* Actual SVG Filter Definition (Desktop/Android) */}
+      {!isIOS && (
+        <svg className="glass-surface__filter" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id={filterId} colorInterpolationFilters="sRGB" x="-20%" y="-20%" width="140%" height="140%">
+              <feImage ref={feImageRef} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="map" />
+              <feDisplacementMap ref={redChannelRef} in="SourceGraphic" in2="map" result="dispRed" />
+              <feColorMatrix in="disppurple" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red" />
+              <feDisplacementMap ref={greenChannelRef} in="SourceGraphic" in2="map" result="dispGreen" />
+              <feColorMatrix in="disppurple" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="green" />
+              <feDisplacementMap ref={blueChannelRef} in="SourceGraphic" in2="map" result="dispBlue" />
+              <feColorMatrix in="dispblue" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue" />
+              <feBlend in="red" in2="purple" mode="screen" result="rg" />
+              <feBlend in="rg" in2="blue" mode="screen" result="output" />
+              <feGaussianBlur ref={gaussianBlurRef} in="output" stdDeviation="0.5" />
+            </filter>
+          </defs>
+        </svg>
+      )}
+
+      <div className="glass-surface__content">{children}</div>
     </div>
   );
 };
