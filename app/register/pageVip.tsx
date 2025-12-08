@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { createClient } from '@supabase/supabase-js'; 
 import { gsap } from 'gsap';
+import dynamic from 'next/dynamic'; // Added for Cursor
 import { 
   Loader2, Check, Mail, Hash, Lock, 
   ArrowRight, ChevronLeft, ExternalLink, AlertCircle,
@@ -25,7 +26,6 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 // --- UTILS: MOBILE DETECTION HOOK ---
-// Moved purely to hook to avoid hydration mismatches and excessive re-checks
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -52,7 +52,7 @@ const CursorStyles = () => (
       z-index: 9999;
       pointer-events: none;
       mix-blend-mode: difference;
-      will-change: transform; /* OPTIMIZATION */
+      will-change: transform;
     }
     .target-cursor-dot {
       width: 8px;
@@ -69,22 +69,21 @@ const CursorStyles = () => (
       width: 12px;
       height: 12px;
       border: 2px solid white;
-      will-change: transform; /* OPTIMIZATION */
+      will-change: transform;
     }
     .corner-tl { top: -6px; left: -6px; border-right: none; border-bottom: none; }
     .corner-tr { top: -6px; right: -6px; border-left: none; border-bottom: none; }
     .corner-br { bottom: -6px; right: -6px; border-left: none; border-top: none; }
     .corner-bl { bottom: -6px; left: -6px; border-right: none; border-top: none; }
     
-    /* Hardware acceleration helpers */
-    .gpu-accel {
-      transform: translate3d(0,0,0);
-      backface-visibility: hidden;
+    body.custom-cursor-active {
+      cursor: none !important;
     }
   `}</style>
 );
 
-// --- 3. CURSOR COMPONENT (OPTIMIZED) ---
+// --- 3. DYNAMIC CURSOR COMPONENT ---
+// We define the component first, then wrap it in dynamic
 interface TargetCursorProps {
   targetSelector?: string;
   spinDuration?: number;
@@ -93,197 +92,220 @@ interface TargetCursorProps {
   parallaxOn?: boolean;
 }
 
-const TargetCursor = memo(({
-  targetSelector = 'button, a, .cursor-target, [role="button"]', 
+const TargetCursorComponent = memo(({
+  targetSelector = 'button, a, input, [role="button"], .cursor-target', 
   spinDuration = 2,
   hideDefaultCursor = true,
   hoverDuration = 0.2,
   parallaxOn = true
 }: TargetCursorProps) => {
+  const isMobile = useIsMobile();
   const cursorRef = useRef<HTMLDivElement>(null);
   const cornersRef = useRef<NodeListOf<HTMLDivElement> | null>(null);
   const spinTl = useRef<gsap.core.Timeline | null>(null);
   const dotRef = useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile(); // Use the hook
-
-  // Memoize constants
-  const constants = useMemo(() => ({ borderWidth: 3, cornerSize: 12 }), []);
 
   // Refs for logic to avoid state re-renders
   const stateRef = useRef({
     isActive: false,
     activeStrength: { current: 0 },
     targetCornerPositions: null as { x: number; y: number }[] | null,
-    tickerFn: null as (() => void) | null
+    tickerFn: null as (() => void) | null,
+    activeTarget: null as Element | null
   });
 
-  const moveCursor = useCallback((x: number, y: number) => {
-    if (!cursorRef.current) return;
-    gsap.to(cursorRef.current, { x, y, duration: 0.1, ease: 'power3.out', overwrite: 'auto' });
-  }, []);
-
   useEffect(() => {
-    // Completely disable logic on mobile
-    if (isMobile || !cursorRef.current) return;
+    if (!cursorRef.current || typeof window === 'undefined') return;
 
-    const originalCursor = document.body.style.cursor;
-    if (hideDefaultCursor) document.body.style.cursor = 'none';
+    // Hide default cursor on desktop
+    if (hideDefaultCursor && !isMobile) {
+      document.body.classList.add('custom-cursor-active');
+    }
 
     const cursor = cursorRef.current;
     cornersRef.current = cursor.querySelectorAll<HTMLDivElement>('.target-cursor-corner');
 
-    let activeTarget: Element | null = null;
-    let currentLeaveHandler: (() => void) | null = null;
-    let resumeTimeout: ReturnType<typeof setTimeout> | null = null;
+    const ctx = gsap.context(() => {
+        const corners = cornersRef.current!;
 
-    const cleanupTarget = (target: Element) => {
-      if (currentLeaveHandler) target.removeEventListener('mouseleave', currentLeaveHandler);
-      currentLeaveHandler = null;
-    };
+        // ----------------------------------------------------
+        // MOBILE LOGIC: SYSTEMATIC SCANNER
+        // ----------------------------------------------------
+        if (isMobile) {
+            // Init
+            gsap.set(cursor, { x: window.innerWidth/2, y: window.innerHeight/2, opacity: 0, scale: 1.3 });
+            gsap.to(cursor, { opacity: 1, duration: 0.5 });
 
-    // Center initially
-    gsap.set(cursor, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
+            // Visual Pulse
+            const tapEffect = () => {
+                if(!dotRef.current) return;
+                gsap.to(corners, { scale: 1.6, borderColor: '#00ffff', duration: 0.15, yoyo: true, repeat: 1 });
+                gsap.to(dotRef.current, { scale: 2, backgroundColor: '#ffffff', duration: 0.15, yoyo: true, repeat: 1 });
+            };
 
-    const createSpinTimeline = () => {
-      if (spinTl.current) spinTl.current.kill();
-      spinTl.current = gsap.timeline({ repeat: -1 })
-        .to(cursor, { rotation: '+=360', duration: spinDuration, ease: 'none' });
-    };
-    createSpinTimeline();
+            const runScanner = async () => {
+                // Find all clickable elements
+                const allElements = Array.from(document.querySelectorAll(targetSelector));
 
-    // The Ticker (Heavy logic)
-    const tickerFn = () => {
-      const state = stateRef.current;
-      if (!state.targetCornerPositions || !cursorRef.current || !cornersRef.current) return;
-      
-      const strength = state.activeStrength.current;
-      if (strength === 0) return;
+                const targets = allElements.filter(el => {
+                    const r = el.getBoundingClientRect();
+                    const style = window.getComputedStyle(el);
+                    return (
+                        style.display !== 'none' && 
+                        style.visibility !== 'hidden' && 
+                        style.opacity !== '0' &&
+                        r.width > 20 && r.height > 20 && 
+                        r.top >= 0 && r.left >= 0 
+                    );
+                }).sort((a, b) => {
+                    const ra = a.getBoundingClientRect();
+                    const rb = b.getBoundingClientRect();
+                    return ra.top - rb.top || ra.left - rb.left;
+                });
 
-      const cursorX = gsap.getProperty(cursorRef.current, 'x') as number;
-      const cursorY = gsap.getProperty(cursorRef.current, 'y') as number;
-      const corners = cornersRef.current; // NodeList is not iterable directly in some setups without Array.from, but standard now
+                if (targets.length > 0) {
+                    for (const target of targets) {
+                        const r = target.getBoundingClientRect();
+                        // Viewport check
+                        if (r.top < -50 || r.bottom > window.innerHeight + 50) continue; 
 
-      // Using standard loop for perf
-      for(let i = 0; i < corners.length; i++) {
-        const corner = corners[i];
-        const currentX = gsap.getProperty(corner, 'x') as number;
-        const currentY = gsap.getProperty(corner, 'y') as number;
-        const targetX = state.targetCornerPositions[i].x - cursorX;
-        const targetY = state.targetCornerPositions[i].y - cursorY;
-        const finalX = currentX + (targetX - currentX) * strength;
-        const finalY = currentY + (targetY - currentY) * strength;
-        
-        const duration = strength >= 0.99 ? (parallaxOn ? 0.2 : 0) : 0.05;
-        
-        gsap.to(corner, {
-          x: finalX, 
-          y: finalY, 
-          duration: duration, 
-          ease: duration === 0 ? 'none' : 'power1.out', 
-          overwrite: 'auto'
-        });
-      }
-    };
+                        await new Promise<void>(resolve => {
+                            gsap.to(cursor, {
+                                x: r.left + r.width / 2,
+                                y: r.top + r.height / 2,
+                                duration: 0.8,
+                                ease: "power2.inOut",
+                                onComplete: () => {
+                                    tapEffect(); 
+                                    setTimeout(resolve, 600); 
+                                }
+                            });
+                        });
+                    }
+                    // Recursion
+                    runScanner(); 
+                } else {
+                    // Fallback roaming
+                    gsap.to(cursor, {
+                        x: window.innerWidth / 2 + (Math.random() - 0.5) * 100,
+                        y: window.innerHeight / 2 + (Math.random() - 0.5) * 100,
+                        duration: 2,
+                        onComplete: () => { runScanner(); }
+                    });
+                }
+            };
 
-    stateRef.current.tickerFn = tickerFn;
+            setTimeout(runScanner, 1000);
+        }
 
-    // Use passive event listeners for scrolling performance
-    const moveHandler = (e: MouseEvent) => moveCursor(e.clientX, e.clientY);
-    window.addEventListener('mousemove', moveHandler, { passive: true });
+        // ----------------------------------------------------
+        // DESKTOP LOGIC: MAGNETIC + SPIN
+        // ----------------------------------------------------
+        else {
+            gsap.set(cursor, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
 
-    const scrollHandler = () => {
-      if (!activeTarget || !cursorRef.current) return;
-      // Basic check - omitted for brevity in optimized version to save cycles
-    };
-    window.addEventListener('scroll', scrollHandler, { passive: true });
+            const spinTl = gsap.timeline({ repeat: -1 })
+                .to(cursor, { rotation: 360, duration: spinDuration, ease: 'none' });
 
-    const enterHandler = (e: MouseEvent) => {
-      const directTarget = e.target as Element;
-      // Quick check using closest to avoid while loop if possible
-      const target = directTarget.closest(targetSelector);
-      
-      if (!target || !cursorRef.current || !cornersRef.current) return;
-      if (activeTarget === target) return;
-      
-      if (activeTarget) cleanupTarget(activeTarget);
-      if (resumeTimeout) { clearTimeout(resumeTimeout); resumeTimeout = null; }
+            const moveCursor = (e: MouseEvent) => {
+                gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: 'power3.out', overwrite: 'auto' });
+            };
+            window.addEventListener('mousemove', moveCursor, { passive: true });
 
-      activeTarget = target;
-      const corners = cornersRef.current;
-      gsap.killTweensOf(corners);
-      gsap.killTweensOf(cursorRef.current, 'rotation');
-      spinTl.current?.pause();
-      gsap.set(cursorRef.current, { rotation: 0 });
+            // Clicks
+            const handleDown = () => {
+                if(!dotRef.current) return;
+                gsap.to(dotRef.current, { scale: 0.5, duration: 0.2 });
+                gsap.to(corners, { scale: 1.2, borderColor: '#00ffff', duration: 0.2 });
+            };
+            const handleUp = () => {
+                if(!dotRef.current) return;
+                gsap.to(dotRef.current, { scale: 1, duration: 0.2 });
+                gsap.to(corners, { scale: 1, borderColor: '#ffffff', duration: 0.2 });
+            };
+            window.addEventListener('mousedown', handleDown);
+            window.addEventListener('mouseup', handleUp);
 
-      const rect = target.getBoundingClientRect();
-      const { borderWidth, cornerSize } = constants;
-      const cursorX = gsap.getProperty(cursorRef.current, 'x') as number;
-      const cursorY = gsap.getProperty(cursorRef.current, 'y') as number;
+            // Magnetic Ticker
+            const tickerFn = () => {
+                const state = stateRef.current;
+                if (!state.targetCornerPositions) return;
+                
+                const strength = state.activeStrength.current;
+                if (strength === 0) return;
 
-      stateRef.current.targetCornerPositions = [
-        { x: rect.left - borderWidth, y: rect.top - borderWidth },
-        { x: rect.right + borderWidth - cornerSize, y: rect.top - borderWidth },
-        { x: rect.right + borderWidth - cornerSize, y: rect.bottom + borderWidth - cornerSize },
-        { x: rect.left - borderWidth, y: rect.bottom + borderWidth - cornerSize }
-      ];
+                const cursorX = gsap.getProperty(cursor, 'x') as number;
+                const cursorY = gsap.getProperty(cursor, 'y') as number;
 
-      stateRef.current.isActive = true;
-      gsap.ticker.add(stateRef.current.tickerFn!);
-      gsap.to(stateRef.current.activeStrength, { current: 1, duration: hoverDuration, ease: 'power2.out' });
+                for(let i = 0; i < corners.length; i++) {
+                    const corner = corners[i];
+                    const currentX = gsap.getProperty(corner, 'x') as number;
+                    const currentY = gsap.getProperty(corner, 'y') as number;
+                    const targetX = state.targetCornerPositions[i].x - cursorX;
+                    const targetY = state.targetCornerPositions[i].y - cursorY;
 
-      // Initial snap to position
-      const pos = stateRef.current.targetCornerPositions;
-      corners.forEach((corner, i) => {
-        gsap.to(corner, { x: pos[i].x - cursorX, y: pos[i].y - cursorY, duration: 0.2, ease: 'power2.out' });
-      });
+                    const finalX = currentX + (targetX - currentX) * strength;
+                    const finalY = currentY + (targetY - currentY) * strength;
+                    
+                    const duration = strength >= 0.99 ? (parallaxOn ? 0.2 : 0) : 0.05;
+                    gsap.to(corner, { x: finalX, y: finalY, duration: duration, ease: duration === 0 ? 'none' : 'power1.out', overwrite: 'auto' });
+                }
+            };
+            stateRef.current.tickerFn = tickerFn;
+            gsap.ticker.add(tickerFn);
 
-      const leaveHandler = () => {
-        gsap.ticker.remove(stateRef.current.tickerFn!);
-        stateRef.current.isActive = false;
-        stateRef.current.targetCornerPositions = null;
-        gsap.set(stateRef.current.activeStrength, { current: 0, overwrite: true });
-        
-        activeTarget = null;
-        
-        // Reset Corners
-        const positions = [
-          { x: -constants.cornerSize * 1.5, y: -constants.cornerSize * 1.5 },
-          { x: constants.cornerSize * 0.5, y: -constants.cornerSize * 1.5 },
-          { x: constants.cornerSize * 0.5, y: constants.cornerSize * 0.5 },
-          { x: -constants.cornerSize * 1.5, y: constants.cornerSize * 0.5 }
-        ];
-        
-        corners.forEach((corner, index) => {
-          gsap.to(corner, { x: positions[index].x, y: positions[index].y, duration: 0.3, ease: 'power3.out' });
-        });
+            // Hover Events
+            const handleHover = (e: MouseEvent) => {
+                const target = (e.target as Element).closest(targetSelector);
+                if (target && target !== stateRef.current.activeTarget) {
+                    stateRef.current.activeTarget = target;
+                    stateRef.current.isActive = true;
+                    spinTl.pause();
+                    gsap.to(cursor, { rotation: 0, duration: 0.3 }); 
 
-        resumeTimeout = setTimeout(() => {
-            if(!activeTarget && spinTl.current) {
-                spinTl.current.restart(); 
-            }
-            resumeTimeout = null;
-        }, 50);
-        cleanupTarget(target);
-      };
+                    const rect = target.getBoundingClientRect();
+                    const borderWidth = 3; const cornerSize = 12;
 
-      currentLeaveHandler = leaveHandler;
-      target.addEventListener('mouseleave', leaveHandler);
-    };
+                    stateRef.current.targetCornerPositions = [
+                        { x: rect.left - borderWidth, y: rect.top - borderWidth },
+                        { x: rect.right + borderWidth - cornerSize, y: rect.top - borderWidth },
+                        { x: rect.right + borderWidth - cornerSize, y: rect.bottom + borderWidth - cornerSize },
+                        { x: rect.left - borderWidth, y: rect.bottom + borderWidth - cornerSize }
+                    ];
 
-    window.addEventListener('mouseover', enterHandler as EventListener, { passive: true });
+                    gsap.to(stateRef.current.activeStrength, { current: 1, duration: hoverDuration, ease: 'power2.out' });
+
+                    const handleLeave = () => {
+                        target.removeEventListener('mouseleave', handleLeave);
+                        stateRef.current.activeTarget = null;
+                        stateRef.current.isActive = false;
+                        stateRef.current.targetCornerPositions = null;
+                        gsap.to(stateRef.current.activeStrength, { current: 0, duration: 0.2, overwrite: true });
+                        
+                        // Reset positions
+                         const positions = [
+                          { x: -18, y: -18 },
+                          { x: 6, y: -18 },
+                          { x: 6, y: 6 },
+                          { x: -18, y: 6 }
+                        ];
+                        corners.forEach((c, i) => gsap.to(c, { x: positions[i].x, y: positions[i].y, duration: 0.3, ease: 'power3.out' }));
+                        spinTl.restart();
+                    };
+                    target.addEventListener('mouseleave', handleLeave);
+                }
+            };
+            window.addEventListener('mouseover', handleHover, { passive: true });
+        }
+    }, cursorRef); 
 
     return () => {
-      if (stateRef.current.tickerFn) gsap.ticker.remove(stateRef.current.tickerFn);
-      window.removeEventListener('mousemove', moveHandler);
-      window.removeEventListener('mouseover', enterHandler as EventListener);
-      window.removeEventListener('scroll', scrollHandler);
-      if (activeTarget) cleanupTarget(activeTarget);
-      spinTl.current?.kill();
-      document.body.style.cursor = originalCursor;
+        document.body.classList.remove('custom-cursor-active');
+        if(stateRef.current.tickerFn) gsap.ticker.remove(stateRef.current.tickerFn);
+        ctx.revert();
+        window.removeEventListener('mousemove', () => {}); 
     };
-  }, [targetSelector, spinDuration, moveCursor, constants, hideDefaultCursor, isMobile, hoverDuration, parallaxOn]);
-
-  if (isMobile) return null;
+  }, [isMobile, hideDefaultCursor, spinDuration, targetSelector, hoverDuration, parallaxOn]);
 
   return (
     <div ref={cursorRef} className="target-cursor-wrapper">
@@ -295,6 +317,12 @@ const TargetCursor = memo(({
     </div>
   );
 });
+
+// Dynamic import to avoid SSR issues
+const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { 
+  ssr: false 
+});
+
 
 // --- 4. ENCRYPTED TEXT (OPTIMIZED WITH MEMO) ---
 const CHARS = "!@#$%^&*()_+-=[]{}|;:,.<>?/~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -380,7 +408,7 @@ const MatrixBackground = memo(() => {
                     <EncryptedText 
                         key={i} 
                         text={line} 
-                        className="text-[10px] md:text-xs font-mono text-blue-500" 
+                        className="text-[10px] md:text-xs font-mono text-purple-500" 
                         revealDelayMs={100 + (i * 150)} 
                     />
                 ))}
@@ -390,7 +418,7 @@ const MatrixBackground = memo(() => {
                     <EncryptedText 
                         key={i} 
                         text={line} 
-                        className="text-[10px] md:text-xs font-mono text-blue-500" 
+                        className="text-[10px] md:text-xs font-mono text-purple-500" 
                         revealDelayMs={200 + (i * 150)} 
                     />
                 ))}
@@ -418,7 +446,7 @@ const GhostLoaderCursor = memo(() => {
   const y3 = useSpring(mouse.y, smoothOptions3);
 
   useEffect(() => {
-    if (isMobile) return; // Don't attach listener on mobile
+    if (isMobile) return; 
     
     const manageMouseMove = (e: MouseEvent) => {
       const { clientX, clientY } = e;
@@ -472,12 +500,11 @@ const MultiStepLoader = ({
     const totalSteps = loadingStates.length;
     const stepDuration = duration;
     
-    // Use slightly less aggressive intervals
     const stepInterval = setInterval(() => {
       setCurrentStep((prev) => (prev < totalSteps - 1 ? prev + 1 : prev));
     }, stepDuration);
 
-    const updateFrequency = 50; // Update every 50ms instead of ~10ms for perf
+    const updateFrequency = 50; 
     const increment = 100 / ( (totalSteps * stepDuration) / updateFrequency );
 
     const progressInterval = setInterval(() => {
@@ -509,27 +536,24 @@ const MultiStepLoader = ({
           transition={{ duration: 0.8 }}
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#010309] overflow-hidden perspective-[1000px] cursor-none"
         >
-           {/* --- ULTRA DARK BACKGROUND --- */}
-          <div className="absolute inset-0 bg-purple gpu-accel">
+          <div className="absolute inset-0 bg-[#010309] gpu-accel">
               <MatrixBackground />
               <GhostLoaderCursor />
 
-              {/* Reduced blur on mobile to save GPU */}
               <motion.div 
                 animate={{ rotate: 360, scale: [1, 1.1, 1] }} 
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,black,_transparent_50%)] blur-[40px] md:blur-[120px] will-change-transform" 
+                className="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,_rgba(23,37,84,0.15)_0%,_transparent_50%)] blur-[40px] md:blur-[120px] will-change-transform" 
               />
               <motion.div 
                 animate={{ rotate: -360, scale: [1, 1.2, 1] }} 
                 transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                className="absolute -bottom-[50%] -right-[50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,black%,_transparent_50%)] blur-[40px] md:blur-[120px] will-change-transform" 
+                className="absolute -bottom-[50%] -right-[50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,_rgba(30,27,75,0.1)_0%,_transparent_50%)] blur-[40px] md:blur-[120px] will-change-transform" 
               />
           </div>
 
           <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-md px-4 pointer-events-none">
             
-            {/* --- 3D GYROSCOPE RINGS --- */}
             <div className="relative w-48 h-48 mb-16 flex items-center justify-center perspective-[1000px]">
               
               <div className="absolute inset-0 bg-purple-900/10 rounded-full blur-[40px] md:blur-[60px] animate-pulse" />
@@ -537,22 +561,21 @@ const MultiStepLoader = ({
               <motion.div
                 animate={{ rotateZ: 360, rotateY: [0, 15, 0, -15, 0], rotateX: [0, 10, 0, -10, 0] }}
                 transition={{ rotateZ: { duration: 10, repeat: Infinity, ease: "linear" }, default: { duration: 6, repeat: Infinity, ease: "easeInOut" } }}
-                className="absolute inset-0 rounded-full border-[3px] border-dashed border-purple-900/40 shadow-purple-800/40] will-change-transform"
+                className="absolute inset-0 rounded-full border-[3px] border-dashed border-purple-900/40 shadow-[0_0_20px_rgba(30,58,138,0.2)] will-change-transform"
                 style={{ transformStyle: 'preserve-3d' }}
               />
               <motion.div
                 animate={{ rotateZ: -360, rotateY: [0, -20, 0, 20, 0], rotateX: [0, -15, 0, 15, 0] }}
                 transition={{ rotateZ: { duration: 12, repeat: Infinity, ease: "linear" }, default: { duration: 8, repeat: Infinity, ease: "easeInOut" } }}
-                className="absolute inset-4 rounded-full border-[3px] border-dashed border-purple-900/40 shadow-purple-800/40] will-change-transform"
+                className="absolute inset-4 rounded-full border-[3px] border-dashed border-indigo-900/40 shadow-[0_0_20px_rgba(49,46,129,0.2)] will-change-transform"
                 style={{ transformStyle: 'preserve-3d' }}
               />
               
-              <div className="relative w-24 h-24 bg-purple-850/40 rounded-full flex items-center justify-center border border-purple-900/50 shadow-purple-800/40] z-20">
-                 <Loader2 className="w-10 h-10 text-purple-500 animate-[spin_2s_linear_infinite] drop-shadow-purple-800/40]" />
-                 <motion.div animate={{ scale: [1, 1.5, 1], opacity: [0.8, 0, 0.8] }} transition={{ duration: 2, repeat: Infinity }} className="absolute inset-0 rounded-full border-2 border-blue-800/30" />
+              <div className="relative w-24 h-24 bg-[#02040a] rounded-full flex items-center justify-center border border-purple-900/50 shadow-[inset_0_0_30px_rgba(30,58,138,0.4)] z-20">
+                 <Loader2 className="w-10 h-10 text-purple-500 animate-[spin_2s_linear_infinite] drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                 <motion.div animate={{ scale: [1, 1.5, 1], opacity: [0.8, 0, 0.8] }} transition={{ duration: 2, repeat: Infinity }} className="absolute inset-0 rounded-full border-2 border-purple-800/30" />
               </div>
 
-              {/* Progress Bar */}
               <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none z-10 overflow-visible" viewBox="0 0 160 160">
                 <circle cx="80" cy="80" r="70" className="stroke-purple-950/30 stroke-[6] fill-none" />
                  <motion.circle
@@ -575,13 +598,12 @@ const MultiStepLoader = ({
               </svg>
             </div>
 
-            {/* --- ENHANCED TEXT CONTENT --- */}
             <div className="flex flex-col items-center space-y-6 w-full">
               <div className="relative">
-                <h1 className="text-5xl font-black text-purple-50 tracking-tighter relative z-10 text-shadow-purple-800">
+                <h1 className="text-5xl font-black text-purple-50 tracking-tighter relative z-10 text-shadow-[0_0_7px_#1e3a8a,0_0_15px_#1e3a8a]">
                     BULLMONEY VIP
                 </h1>
-                <h1 className="text-5xl font-black text-purple-800 tracking-tighter absolute inset-0 blur-[8px] z-0 animate-pulse opacity-80">
+                <h1 className="text-5xl font-black text-purple-950 tracking-tighter absolute inset-0 blur-[8px] z-0 animate-pulse opacity-80">
                     BULLMONEY VIP
                 </h1>
               </div>
@@ -679,10 +701,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             .eq("id", session.id)
             .maybeSingle();
 
-          if (error) {
-            console.error("Supabase Error:", error);
-            throw error;
-          }
+          if (error) throw error;
 
           if (data && mounted) {
             setTimeout(() => { onUnlock(); }, 3500); 
@@ -886,11 +905,11 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         <CursorStyles />
         <TargetCursor />
         
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-[#010309] to-[#010309] gpu-accel" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/10 via-[#010309] to-[#010309] gpu-accel" />
         
-        <div className="bg-[#0A1120] border border-blue-500/20 p-8 rounded-2xl shadow-[0_0_50px_rgba(30,58,138,0.2)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
+        <div className="bg-[#0A1120] border border-purple-500/20 p-8 rounded-2xl shadow-[0_0_50px_rgba(30,58,138,0.2)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
           <div className="mx-auto w-24 h-24 relative mb-6">
-            <div className="absolute inset-0 rounded-full border-4 border-blue-900 animate-[spin_3s_linear_infinite]" />
+            <div className="absolute inset-0 rounded-full border-4 border-purple-900 animate-[spin_3s_linear_infinite]" />
             <div className="absolute inset-0 bg-green-500 rounded-full scale-0 animate-[scale-up_0.5s_ease-out_forwards_0.2s] flex items-center justify-center">
               <Check className="w-12 h-12 text-white stroke-[3] opacity-0 animate-[fade-in_0.3s_ease-out_forwards_0.6s]" />
             </div>
@@ -899,12 +918,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           <h2 className="text-3xl font-bold text-white mb-2">Free Access Granted</h2>
           <p className="text-slate-400 mb-8">
             Your account is verified.<br/>
-            <span className="text-blue-400 font-medium">Add the Telegram Folder</span> to access all groups.
+            <span className="text-purple-400 font-medium">Add the Telegram Folder</span> to access all groups.
           </p>
           
           <button 
             onClick={() => window.open(TELEGRAM_GROUP_LINK, '_blank')}
-            className="w-full py-4 bg-[#229ED9] hover:bg-[#1b8bc2] text-white rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(34,158,217,0.3)] hover:shadow-[0_0_30px_rgba(34,158,217,0.5)] group flex items-center justify-center mb-4"
+            className="w-full py-4 bg-[#229ED9] hover:bg-[#1b8bc2] text-white rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(34,158,217,0.3)] hover:shadow-[0_0_30px_rgba(34,158,217,0.5)] group flex items-center justify-center mb-4 cursor-target"
           >
             <FolderPlus className="w-5 h-5 mr-2 -ml-1 fill-white/10" />
             FREE ACCESS  
@@ -913,7 +932,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
           <button 
             onClick={onUnlock}
-            className="text-sm text-slate-500 hover:text-white transition-colors underline underline-offset-4"
+            className="text-sm text-slate-500 hover:text-white transition-colors underline underline-offset-4 cursor-target"
           >
             Go to Dashboard
           </button>
@@ -940,7 +959,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   return (
     <div className="min-h-screen bg-[#010309] flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
       <CursorStyles />
-      <TargetCursor />
+      <TargetCursor 
+        targetSelector="button, a, input, [role='button'], .cursor-target"
+        hideDefaultCursor={true}
+        spinDuration={2}
+        parallaxOn={true}
+      />
 
       <MultiStepLoader loadingStates={loadingStates} loading={loading} duration={1200} />
       
@@ -956,7 +980,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       <div className="w-full max-w-xl relative z-10">
         <div className="mb-8 text-center">
            <h1 className="text-2xl font-black text-white tracking-tight opacity-50">
-            BULLMONEY <span className={cn("transition-colors duration-300", isVantage ? "text-purple-600" : "text-blue-600")}>VIP</span>
+            BULLMONEY <span className={cn("transition-colors duration-300", isVantage ? "text-purple-600" : "text-purple-600")}>VIP</span>
           </h1>
         </div>
 
@@ -984,7 +1008,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
                         placeholder="Email Address"
-                        className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50 transition-all"
+                        className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-purple-500/50 transition-all cursor-target"
                       />
                     </div>
 
@@ -995,12 +1019,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         placeholder="Password"
-                        className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-12 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50 transition-all"
+                        className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-12 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-purple-500/50 transition-all cursor-target"
                       />
                       <button 
                         type="button" 
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors cursor-target"
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -1015,7 +1039,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     <button
                       type="submit"
                       disabled={!loginEmail || !loginPassword}
-                      className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-bold tracking-wide transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-4 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white rounded-xl font-bold tracking-wide transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-target"
                     >
                       LOGIN
                       <ArrowRight className="w-4 h-4" />
@@ -1023,7 +1047,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 </form>
 
                 <div className="mt-6 text-center border-t border-white/5 pt-4">
-                  <button onClick={toggleViewMode} className="text-sm text-slate-500 hover:text-white transition-colors">
+                  <button onClick={toggleViewMode} className="text-sm text-slate-500 hover:text-white transition-colors cursor-target">
                     Don't have a password? <span className="underline">Register Now</span>
                   </button>
                 </div>
@@ -1041,7 +1065,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       key={partner}
                       onClick={() => handleBrokerSwitch(partner)}
                       className={cn(
-                        "relative px-6 py-2 rounded-full font-semibold transition-all duration-300 z-20",
+                        "relative px-6 py-2 rounded-full font-semibold transition-all duration-300 z-20 cursor-target",
                         isActive ? "text-white" : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
                       )}
                     >
@@ -1053,7 +1077,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             "absolute inset-0 -z-10 rounded-full",
                             partner === "Vantage"
                               ? "bg-gradient-to-r from-purple-500 to-violet-600 shadow-[0_0_25px_rgba(168,85,247,0.45)]"
-                              : "bg-gradient-to-r from-sky-500 to-blue-600 shadow-[0_0_25px_rgba(56,189,248,0.45)]"
+                              : "bg-gradient-to-r from-purple-500 to-purple-600 shadow-[0_0_25px_rgba(56,189,248,0.45)]"
                           )}
                           transition={{ type: "spring", stiffness: 400, damping: 28 }}
                         />
@@ -1078,7 +1102,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     title={`Open ${activeBroker} Account`}
                     className={isVantage 
                       ? "bg-gradient-to-br from-purple-950/40 via-slate-950 to-neutral-950"
-                      : "bg-gradient-to-br from-sky-950/40 via-slate-950 to-neutral-950"
+                      : "bg-gradient-to-br from-purple-950/40 via-slate-950 to-neutral-950"
                     }
                     actions={
                       <div className="flex flex-col gap-4">
@@ -1086,10 +1110,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           <button
                             onClick={() => copyCode(brokerCode)}
                             className={cn(
-                              "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold ring-1 ring-inset transition",
+                              "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold ring-1 ring-inset transition cursor-target",
                               isVantage 
                                 ? "text-purple-300 ring-purple-500/40 hover:bg-purple-500/10" 
-                                : "text-sky-300 ring-sky-500/40 hover:bg-sky-500/10"
+                                : "text-purple-300 ring-purple-500/40 hover:bg-purple-500/10"
                             )}
                           >
                             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -1099,10 +1123,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           <button
                             onClick={handleBrokerClick}
                             className={cn(
-                              "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white shadow transition",
+                              "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white shadow transition cursor-target",
                               isVantage
                                 ? "bg-gradient-to-r from-purple-500 to-violet-600 hover:from-violet-600 hover:to-fuchsia-700"
-                                : "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700"
+                                : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
                             )}
                           >
                             <span>Open {activeBroker} Account</span>
@@ -1128,10 +1152,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           className={cn(
-                           "flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-bold tracking-widest border transition-all w-full",
+                           "flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-bold tracking-widest border transition-all w-full cursor-target",
                            isVantage 
                             ? "bg-purple-500/10 border-purple-500/50 text-purple-100 shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] hover:bg-purple-500/20"
-                            : "bg-sky-500/10 border-sky-500/50 text-sky-100 shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] hover:bg-sky-500/20"
+                            : "bg-purple-500/10 border-purple-500/50 text-purple-100 shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] hover:bg-purple-500/20"
                           )}
                         >
                           NEXT STEP <ArrowRight className="w-3 h-3" />
@@ -1142,10 +1166,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           className={cn(
-                            "flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-bold tracking-widest border transition-all w-full",
+                            "flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-bold tracking-widest border transition-all w-full cursor-target",
                             isVantage 
                              ? "bg-purple-500/10 border-purple-500/50 text-purple-100 shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] hover:bg-purple-500/20"
-                             : "bg-sky-500/10 border-sky-500/50 text-sky-100 shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] hover:bg-sky-500/20"
+                             : "bg-purple-500/10 border-purple-500/50 text-purple-100 shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] hover:bg-purple-500/20"
                           )}
                         >
                           SKIP & LOGIN <LogIn className="w-3 h-3" />
@@ -1171,9 +1195,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         onClick={handleNext}
                         disabled={!formData.mt5Number}
                         className={cn(
-                          "w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg",
+                          "w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target",
                           !formData.mt5Number ? "opacity-50 cursor-not-allowed bg-slate-800 text-slate-500" :
-                          isVantage ? "bg-white text-purple-950 hover:bg-purple-50" : "bg-white text-blue-950 hover:bg-blue-50"
+                          isVantage ? "bg-white text-purple-950 hover:bg-purple-50" : "bg-white text-purple-950 hover:bg-purple-50"
                         )}
                       >
                         Next Step <ArrowRight className="w-4 h-4" />
@@ -1200,12 +1224,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           value={formData.mt5Number}
                           onChange={handleChange}
                           placeholder="e.g. 8839201"
-                          className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all"
+                          className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target"
                         />
                       </div>
                     </div>
                   </StepCard>
-                  <button onClick={handleBack} className="mt-4 flex items-center text-slate-500 hover:text-slate-300 text-sm mx-auto transition-colors">
+                  <button onClick={handleBack} className="mt-4 flex items-center text-slate-500 hover:text-slate-300 text-sm mx-auto transition-colors cursor-target">
                     <ChevronLeft className="w-4 h-4 mr-1" /> Back
                   </button>
                 </motion.div>
@@ -1227,9 +1251,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         onClick={handleNext}
                         disabled={!formData.email || !formData.password || !acceptedTerms}
                         className={cn(
-                          "w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg",
+                          "w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target",
                           (!formData.email || !formData.password || !acceptedTerms) ? "opacity-50 cursor-not-allowed bg-slate-800 text-slate-500" :
-                          isVantage ? "bg-white text-purple-950 hover:bg-purple-50" : "bg-white text-blue-950 hover:bg-blue-50"
+                          isVantage ? "bg-white text-purple-950 hover:bg-purple-50" : "bg-white text-purple-950 hover:bg-purple-50"
                         )}
                       >
                         Complete Registration <ArrowRight className="w-4 h-4" />
@@ -1248,7 +1272,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             value={formData.email}
                             onChange={handleChange}
                             placeholder="john@example.com"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target"
                           />
                         </div>
                       </div>
@@ -1263,12 +1287,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             value={formData.password}
                             onChange={handleChange}
                             placeholder="Create a password"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-12 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-12 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target"
                           />
                           <button 
                             type="button" 
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors cursor-target"
                           >
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
@@ -1286,19 +1310,19 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             value={formData.referralCode}
                             onChange={handleChange}
                             placeholder="Enter Code (e.g. bmt_justin)"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target"
                           />
                         </div>
                       </div>
 
                         <div 
                         onClick={() => setAcceptedTerms(!acceptedTerms)}
-                        className="flex items-start gap-3 p-3 rounded-lg border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+                        className="flex items-start gap-3 p-3 rounded-lg border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors cursor-target"
                       >
                         <div className={cn(
                           "w-5 h-5 rounded border flex items-center justify-center mt-0.5 transition-colors",
                           acceptedTerms 
-                            ? (isVantage ? "bg-purple-600 border-purple-600" : "bg-blue-600 border-blue-600") 
+                            ? (isVantage ? "bg-purple-600 border-purple-600" : "bg-purple-600 border-purple-600") 
                             : "border-slate-500"
                         )}>
                           {acceptedTerms && <Check className="w-3.5 h-3.5 text-white" />}
@@ -1319,7 +1343,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     )}
                   </StepCard>
 
-                  <button onClick={handleBack} className="mt-4 flex items-center text-slate-500 hover:text-slate-300 text-sm mx-auto transition-colors">
+                  <button onClick={handleBack} className="mt-4 flex items-center text-slate-500 hover:text-slate-300 text-sm mx-auto transition-colors cursor-target">
                     <ChevronLeft className="w-4 h-4 mr-1" /> Back
                   </button>
                 </motion.div>
@@ -1346,24 +1370,24 @@ const StepCard = memo(({ number, number2, title, children, actions, className }:
     )}>
       <div className={cn(
         "pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l blur-2xl",
-        useRed ? "from-purple-500/15 via-violet-500/10 to-transparent" : "from-sky-500/15 via-blue-500/10 to-transparent"
+        useRed ? "from-purple-500/15 via-violet-500/10 to-transparent" : "from-purple-500/15 via-purple-500/10 to-transparent"
       )} />
       <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
       <div className="flex items-center justify-between mb-6">
         <span className={cn(
           "inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md ring-1",
-          useRed ? "text-purple-300/90 ring-purple-500/30 bg-purple-500/10" : "text-sky-300/90 ring-sky-500/30 bg-sky-500/10"
+          useRed ? "text-purple-300/90 ring-purple-500/30 bg-purple-500/10" : "text-purple-300/90 ring-purple-500/30 bg-purple-500/10"
         )}>
           Step {n}
         </span>
         <span className="relative text-4xl font-black bg-clip-text text-transparent">
           <span className={cn("bg-gradient-to-br bg-clip-text text-transparent",
-            useRed ? "from-purple-400 via-violet-500 to-fuchsia-400" : "from-sky-400 via-blue-500 to-indigo-400"
+            useRed ? "from-purple-400 via-violet-500 to-fuchsia-400" : "from-purple-400 via-purple-500 to-indigo-400"
           )}>
             {n}
           </span>
           <span className={cn("pointer-events-none absolute inset-0 -z-10 blur-2xl bg-gradient-to-br",
-            useRed ? "from-purple-500/40 via-violet-600/30 to-fuchsia-500/40" : "from-sky-500/40 via-blue-600/30 to-indigo-500/40"
+            useRed ? "from-purple-500/40 via-violet-600/30 to-fuchsia-500/40" : "from-purple-500/40 via-purple-600/30 to-indigo-500/40"
           )} />
         </span>
       </div>
@@ -1394,7 +1418,7 @@ const generateRandomString = (length: number) => {
   return result;
 };
 
-// --- XM Card (Blue/Green) ---
+// --- XM Card (purple/Green) ---
 export const EvervaultCard = memo(({ text }: { text?: string }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -1426,7 +1450,7 @@ function CardPattern({ mouseX, mouseY, randomString }: any) {
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-700 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 bg-gradient-to-r from-green-500 to-purple-700 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
       <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
         <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>

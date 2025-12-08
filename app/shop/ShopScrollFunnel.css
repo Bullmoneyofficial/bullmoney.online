@@ -120,35 +120,35 @@
 }
 
 /* =========================================
-   MOBILE OPTIMIZATIONS (The Fix)
+   MOBILE OPTIMIZATIONS
    ========================================= */
 @media (max-width: 768px) {
   
   /* 1. Reduce overall scroll length */
   .funnel-page-wrapper {
-    min-height: 180vh; /* Shorter track */
+    min-height: 180vh; 
   }
 
   /* 2. Tighten vertical spacing */
   .scrolling-content {
     padding-top: 5vh;
     padding-bottom: 10vh;
-    gap: 5vh; /* Less gap between items */
+    gap: 5vh; 
   }
 
-  /* 3. Make sections shorter so you don't scroll forever */
+  /* 3. Make sections shorter */
   .scroll-section {
-    min-height: 50vh; /* Was 80vh */
+    min-height: 50vh; 
   }
   
-  /* 4. Special tweak for footer to ensure it's visible */
+  /* 4. Footer tweak */
   .footer-sect {
     min-height: 30vh;
   }
 
-  /* 5. Adjust Fonts for narrow screens */
+  /* 5. Adjust Fonts */
   .scroll-title {
-    font-size: 3.5rem; /* Cap the size */
+    font-size: 3.5rem; 
   }
   
   .scroll-subtitle {
@@ -156,13 +156,21 @@
     letter-spacing: 2px;
   }
 
-  /* 6. Adjust Animation for performance */
+  /* 6. Adjust Animation */
   .glass-bobbing-layer {
-    animation: float-vertical 4s ease-in-out infinite; /* Faster bob */
+    animation: float-vertical 4s ease-in-out infinite; 
   }
   
   @keyframes float-vertical {
     0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); } /* Less movement */
+    50% { transform: translateY(-10px); } 
+  }
+
+  /* --- NEW ADDITION HERE --- */
+  /* 7. Make Button Smaller */
+  .enter-shop-btn {
+    padding: 0.5rem 1.2rem; /* Reduced from 0.8rem 2rem */
+    font-size: 0.75rem;     /* Reduced from 0.85rem */
+    width: auto;            /* Ensures it doesn't stretch */
   }
 }
