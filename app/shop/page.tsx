@@ -10,7 +10,7 @@ import RecruitPage from "@/app/register/pageVip";
 import Socials from "@/components/Mainpage/Socialsfooter";
 import Socialsfooter from "@/components/Mainpage/Socials";
 import Faq from "@/app/shop/Faq";
-
+import ShopFunnel from "@/app/shop/ShopFunnel"; 
 import Shopmain from "@/components/Mainpage/ShopMainpage";
 
 // =========================================
@@ -367,6 +367,7 @@ export default function ShopPage() {
 
           <div ref={productsRef}>
             <ProductsSection />
+             <ShopFunnel />
              <Shopmain />
      
             
