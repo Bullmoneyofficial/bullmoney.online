@@ -17,7 +17,7 @@ import Socialsfooter from "../components/Mainpage/Socialsfooter";
 import Socials from "../components/Mainpage/Socials";
 import RegisterPage from "./register/pagemode"; 
 import Heromain from "../app/VIP/heromain"; 
-
+import ShopFunnel from "../app/shop/ShopFunnel"; 
 import Chartnews from "@/app/Blogs/Chartnews";
 
 // =========================================
@@ -476,6 +476,7 @@ export default function Home() {
         <SpeedInsights />
         <Socialsfooter />
         <Heromain />
+         <ShopFunnel />
         <Shopmain />
         <Pricing />
         <Chartnews />

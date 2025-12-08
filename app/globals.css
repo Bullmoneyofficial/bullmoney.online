@@ -1,3 +1,10 @@
+/* Add to top of globals.css */
+html, body {
+  overflow-x: hidden;
+  overflow-y: auto; /* Force vertical scroll */
+  height: auto;
+  min-height: 100vh;
+}
 @import "tailwindcss";
 @import "tw-animate-css";
 

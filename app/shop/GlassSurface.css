@@ -1,0 +1,44 @@
+/* app/shop/GlassSurface.css */
+
+.glass-surface {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.glass-surface__filter {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.glass-surface__content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* THE IMPORTANT PART FOR DISTORTION */
+.glass-surface--svg {
+  /* This backdrop-filter applies the ID generated in the TSX file */
+  backdrop-filter: var(--filter-id, url(#glass-filter)) saturate(var(--glass-saturation, 1));
+  
+  /* Background styles for the "frosted" look */
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+    0 20px 50px rgba(0,0,0,0.2);
+}
+
+.glass-surface--fallback {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
