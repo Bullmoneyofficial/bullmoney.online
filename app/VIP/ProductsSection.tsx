@@ -639,26 +639,35 @@ export default function ProductsSection() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pt-8">
           
-          {/* ✨ SPARKLES TITLE - UPDATED TO INDIGO */}
-          <div className="h-[10rem] w-full flex flex-col items-center justify-center overflow-hidden rounded-md"> 
-            <h1 className="md:text-7xl text-3xl lg:text-8xl font-bold text-center text-white relative z-20">
+          {/* ✨ SPARKLES TITLE - FIX: Removed h-[10rem] from outer div */}
+          <div className="w-full flex flex-col items-center justify-center overflow-hidden rounded-md"> 
+            <h1 className="text-3xl md:text-7xl lg:text-8xl font-bold text-center text-white relative z-20">
               BULLMONEY VIP
             </h1>
             <p className="mt-1 text-sm text-slate-400 relative z-20">
              Filter by category, price or name. Admins can edit everything in real time.
             </p>
-            <div className="w-[40rem] h-40 relative">
-              <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-[2px] w-3/4 blur-sm" />
-              <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-px w-3/4" />
-              <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-purple-500 to-transparent h-[5px] w-1/4 blur-sm" />
-              <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-purple-500 to-transparent h-px w-1/4" />
+            
+            {/* FIX: Removed h-40 and w-[40rem] from container, used w-full */}
+            <div className="w-full relative py-8"> 
+              <div className="absolute inset-x-0 bottom-4 flex justify-center w-full"> 
+                {/* Indigo Line Blur (Top) */}
+                <div className="absolute top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-[2px] w-3/4 blur-sm" />
+                {/* Indigo Line (Top) */}
+                <div className="absolute top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-px w-3/4" />
+                
+                {/* Purple Line Blur (Top) */}
+                <div className="absolute top-0 bg-gradient-to-r from-transparent via-purple-500 to-transparent h-[5px] w-1/4 blur-sm" style={{ left: '60%' }} />
+                {/* Purple Line (Top) */}
+                <div className="absolute top-0 bg-gradient-to-r from-transparent via-purple-500 to-transparent h-px w-1/4" style={{ left: '60%' }} />
+              </div>
 
               <SparklesCore
                 background="transparent"
                 minSize={0.4}
                 maxSize={1}
                 particleDensity={1200}
-                className="w-full h-full"
+                className="w-full h-full min-h-[100px]" // Min height for sparkle area
                 particleColor="#FFFFFF"
               />
 
