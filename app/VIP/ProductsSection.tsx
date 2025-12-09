@@ -11,6 +11,24 @@ import { gsap } from "gsap";
 type SortDirection = 'asc' | 'desc';
 
 // =========================================
+// 0. PRICE FORMATTING UTILITY (NEW)
+// =========================================
+
+/**
+ * Ensures the price is displayed with exactly two decimal places.
+ * Handles potential non-numeric input gracefully.
+ * @param price The price value from the product object.
+ * @returns Formatted price string (e.g., "2.50" or "10.00").
+ */
+const formatPriceDisplay = (price: string | number | undefined): string => {
+  if (price === undefined || price === null) return "0.00";
+  const num = Number(price);
+  if (isNaN(num)) return "0.00";
+  return num.toFixed(2);
+};
+
+
+// =========================================
 // 0. CSS STYLES FOR ANIMATIONS
 // =========================================
 const GlobalStyles = () => (
@@ -362,7 +380,8 @@ function ProductBentoCard({
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                ${product.price}
+                {/* 🎯 FIX APPLIED HERE: Format the price for display */}
+                ${formatPriceDisplay(product.price)} 
               </span>
               
               <button
@@ -818,7 +837,8 @@ export default function ProductsSection() {
                                         WebkitTextFillColor: 'transparent',
                                       }}
                                     >
-                                      ${p.price}
+                                      {/* 🎯 FIX APPLIED HERE: Format the price for display */}
+                                      ${formatPriceDisplay(p.price)}
                                     </span>
                                     <button
                                         onClick={() => {
