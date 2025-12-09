@@ -5,7 +5,12 @@ import Link from 'next/link';
 import GlassSurface from './GlassSurface'; 
 import './ShopScrollFunnel.css';
 
-const ShopScrollFunnel: React.FC = () => {
+// 1. Define Props to accept the state from your parent/layout
+interface ShopScrollFunnelProps {
+  isMenuOpen?: boolean; // Default to false if not passed
+}
+
+const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
 
@@ -47,12 +52,14 @@ const ShopScrollFunnel: React.FC = () => {
   
   // Unlocks at 75% scroll
   const isUnlocked = progress > 0.75;
+  
+  // 2. Logic: Only show if scrolled AND menu is closed
+  const shouldShowButton = isUnlocked && !isMenuOpen;
 
   return (
     <div className="funnel-scroll-container" ref={containerRef}>
       <div className="funnel-sticky-wrapper">
         
-        {/* FIX 1: Explicit pointerEvents: 'none' ensures this text never blocks clicks */}
         <div className="bg-text" style={{ 
           transform: `translate(-50%, calc(-50% + ${progress * 150}px))`,
           color: `rgba(255, 215, 0, ${0.1 + (progress * 0.1)})`,
@@ -92,16 +99,17 @@ const ShopScrollFunnel: React.FC = () => {
                 LOCKED
               </h1>
 
-              {/* FIX 2: High Z-Index to force it to the top layer */}
+              {/* 3. Updated Style Logic */}
               <div className="action-area" style={{ 
-                opacity: progress > 0.75 ? 1 : 0, 
+                opacity: shouldShowButton ? 1 : 0, 
                 transform: `translateY(${(1 - progress) * 40}px)`,
-                pointerEvents: isUnlocked ? 'auto' : 'none',
+                // Important: Ensure pointer events are off when hidden
+                pointerEvents: shouldShowButton ? 'auto' : 'none', 
                 position: 'relative',
-                zIndex: 100 
+                zIndex: 100,
+                transition: 'opacity 0.3s ease' // Smooth fade out when menu opens
               }}>
                 
-                {/* FIX 3: Modern Link Syntax (No <a> tag inside) */}
                 <Link href="/shop" className="enter-shop-btn">
                     VIP ACCESS
                 </Link>
