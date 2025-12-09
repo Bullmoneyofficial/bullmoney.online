@@ -134,27 +134,50 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     loading: true,
   });
 
+  // ------------------------------------------------------------------
+  // ✅ MODIFIED: The logic here is made robust to handle array or object response
+  // ------------------------------------------------------------------
   const refreshAll = async () => {
     dispatch({ type: "SET_LOADING", payload: true });
 
-    const [products, heroConfigArray, categories] = await Promise.all([
-      fetch("/api/products").then((r) => r.json()),
-      fetch("/api/hero").then((r) => r.json()),
-      fetch("/api/categories").then((r) => r.json()),
-    ]);
-    
-    const heroFromDb = heroConfigArray && heroConfigArray.length > 0 ? heroConfigArray[0] : null;
+    try {
+        const [products, heroDataRaw, categories] = await Promise.all([
+            fetch("/api/products").then((r) => r.json()),
+            fetch("/api/hero").then((r) => r.json()), // heroDataRaw can be [] or {}
+            fetch("/api/categories").then((r) => r.json()),
+        ]);
+        
+        // --- 🔎 Robustly determine the single hero object ---
+        let heroFromDb = null;
+        
+        if (Array.isArray(heroDataRaw) && heroDataRaw.length > 0) {
+            // Case 1: API returns an array, take the first item
+            heroFromDb = heroDataRaw[0];
+        } else if (heroDataRaw && typeof heroDataRaw === 'object' && !Array.isArray(heroDataRaw)) {
+            // Case 2: API returns a single object
+            heroFromDb = heroDataRaw;
+        }
 
-    dispatch({ type: "SET_PRODUCTS", payload: products || [] });
-    
-    dispatch({
-      type: "SET_HERO",
-      payload: { ...DEFAULT_HERO, ...(heroFromDb || {}) },
-    });
-    
-    dispatch({ type: "SET_CATEGORIES", payload: categories || [] });
-    dispatch({ type: "SET_LOADING", payload: false });
+        // Optional: Log data to console to verify key names (e.g., 'title' vs 'headline')
+        console.log("🛒 Shop Context - Hero Data Found:", heroFromDb);
+
+        dispatch({ type: "SET_PRODUCTS", payload: products || [] });
+        
+        dispatch({
+            type: "SET_HERO",
+            // Use spread to merge the DB data over the defaults
+            payload: { ...DEFAULT_HERO, ...(heroFromDb || {}) },
+        });
+        
+        dispatch({ type: "SET_CATEGORIES", payload: categories || [] });
+        
+    } catch(error) {
+        console.error("❌ Failed to fetch shop configuration:", error);
+    } finally {
+        dispatch({ type: "SET_LOADING", payload: false });
+    }
   };
+  // ------------------------------------------------------------------
 
   useEffect(() => {
     refreshAll();

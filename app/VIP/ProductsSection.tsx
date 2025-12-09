@@ -7,19 +7,105 @@ import AdminLoginModal from "./AdminLoginModal";
 import AdminPanel from "./AdminPanel";
 import { gsap } from "gsap";
 
+// Define the Sort Direction type for clarity
+type SortDirection = 'asc' | 'desc';
+
+// =========================================
+// 0. CSS STYLES FOR ANIMATIONS
+// =========================================
+const GlobalStyles = () => (
+  <style jsx global>{`
+    /* FIX 1: Ensure body has full coverage and black background */
+    html, body {
+      background-color: #000000;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh; 
+      height: auto; 
+    }
+    
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    .shimmer-animation {
+      animation: shimmer 2.5s infinite linear;
+    }
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .custom-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .custom-scrollbar {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+    }
+  `}</style>
+);
+
+// =========================================
+// INTEGRATED UI COMPONENTS
+// =========================================
+
+// 1. SparklesCore Definition
+interface SparklesCoreProps {
+  id?: string;
+  className?: string;
+  background?: string;
+  minSize?: number;
+  maxSize?: number;
+  particleDensity?: number;
+  particleColor?: string;
+  children?: React.ReactNode;
+}
+
+const SparklesCore = ({
+  id,
+  className = "",
+  background,
+  minSize,
+  maxSize,
+  particleDensity,
+  particleColor,
+  children,
+}: SparklesCoreProps) => {
+  return (
+    <div 
+      id={id}
+      className={className}
+      style={{ background: background || "transparent" }}
+    >
+      {children}
+    </div>
+  );
+};
+
+// 2. CometCard Definition
+interface CometCardProps {
+  className?: string;
+  children: React.ReactNode;
+}
+
+const CometCard: React.FC<CometCardProps> = ({ children, className = "" }) => (
+  <div className={`comet-card-wrapper ${className}`}>
+    {children}
+  </div>
+);
+
 // =========================================
 // 1. CONSTANTS AND UTILS
 // =========================================
-const DEFAULT_GLOW_COLOR = "132, 0, 255";
+const DEFAULT_GLOW_COLOR = "132, 0, 255"; // Indigo/Purple
 const MOBILE_BREAKPOINT = 768;
 
 const useMobileDetection = () => {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
+    const checkMobile = () => window.innerWidth <= MOBILE_BREAKPOINT;
+    const handleResize = () => setIsMobile(checkMobile());
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
   return isMobile;
 };
@@ -155,7 +241,7 @@ const InteractiveCardWrapper: React.FC<InteractiveCardProps> = ({
   return (
     <motion.div 
       layoutId={layoutId} 
-      className={className}
+      className={`${className} shadow-xl hover:shadow-2xl transition-shadow duration-300`}
       style={{ position: "relative", zIndex: 1, ...style }} 
     >
       <div 
@@ -169,7 +255,7 @@ const InteractiveCardWrapper: React.FC<InteractiveCardProps> = ({
 };
 
 // =========================================
-// 3. PRODUCT BENTO CARD
+// 3. PRODUCT BENTO CARD - ENHANCED & FIXED
 // =========================================
 type ProductBentoCardProps = {
   product: Product & { id: string };
@@ -200,9 +286,12 @@ function ProductBentoCard({
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const baseClassName = `magic-bento-card magic-bento-card--text-autohide magic-bento-card--border-glow`;
+  const baseClassName = `magic-bento-card magic-bento-card--text-autohide magic-bento-card--border-glow 
+                         border border-neutral-800 hover:border-indigo-500/50 transition-colors duration-300`;
+                         
   const cardStyle = {
-    backgroundColor: "#060010",
+    // Background color of the card content
+    backgroundColor: "#060010", 
     "--glow-color": DEFAULT_GLOW_COLOR,
   } as React.CSSProperties;
 
@@ -216,67 +305,98 @@ function ProductBentoCard({
       enableMagnetism={true}
       onClick={onClick}
     >
-      <div className="magic-bento-card__header">
-        <motion.div 
-          layoutId={`card-category-${product.id}`}
-          className="magic-bento-card__label"
-        >
-          {product.category}
-        </motion.div>
-        {isAdmin && !product.visible && (
-          <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full border border-yellow-500/30 text-yellow-500 bg-yellow-500/10 z-20">
-            Hidden
-          </span>
-        )}
-      </div>
+      <CometCard> 
+        {/* Card Background Overlay with deeper glow/shimmer effect */}
+        <div className="absolute inset-0 z-0 opacity-20 bg-[radial-gradient(circle_at_center,rgba(132,0,255,0.08)_0%,transparent_70%)] pointer-events-none rounded-[1.4rem]" />
 
-      <div className="relative aspect-[4/3] overflow-hidden rounded-xl mb-3">
-        <motion.img
-          layoutId={`card-image-${product.id}`}
-          src={product.imageUrl}
-          alt={product.name}
-          className="w-full h-full object-cover"
-        />
-      </div>
+        <div className="p-4 md:p-6 w-full h-full relative flex flex-col justify-between"> 
+          
+          {/* HEADER: Category and Admin Status */}
+          <div className="magic-bento-card__header relative z-10 flex justify-between items-center mb-3">
+            <motion.div 
+              layoutId={`card-category-${product.id}`}
+              className="px-3 py-1 rounded-full bg-indigo-900/40 text-indigo-300 text-xs font-semibold uppercase tracking-widest border border-indigo-500/30 shadow-md"
+            >
+              {product.category}
+            </motion.div>
+            {isAdmin && !product.visible && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full border border-yellow-500/30 text-yellow-500 bg-yellow-500/10 z-20 font-medium">
+                HIDDEN
+              </span>
+            )}
+          </div>
 
-      <div className="magic-bento-card__content">
-        <motion.h2 
-          layoutId={`card-title-${product.id}`}
-          className="magic-bento-card__title"
-        >
-          {product.name}
-        </motion.h2>
-        <p className="magic-bento-card__description line-clamp-2">
-          {product.description}
-        </p>
+          {/* IMAGE CONTAINER: Aspect ratio maintained, added Shimmer/Glow */}
+          <div className="relative aspect-[4/3] overflow-hidden rounded-xl my-3 z-10 group">
+            {/* Shimmer Effect Overlay */}
+            <div className="absolute inset-0 z-20 pointer-events-none rounded-xl overflow-hidden">
+                <div className="absolute inset-[-100%] bg-gradient-to-r from-transparent via-white/5 to-transparent shimmer-animation" />
+            </div>
+            
+            <motion.img
+              layoutId={`card-image-${product.id}`}
+              src={product.imageUrl}
+              alt={product.name}
+              className="w-full h-full object-cover saturate-105 shadow-xl transition-all duration-500 group-hover:scale-[1.05] group-hover:ring-2 ring-indigo-500/50"
+            />
+          </div>
 
-        <div className="mt-4 flex items-center justify-between">
-          <span className="text-xl font-bold text-white">${product.price}</span>
-          <button
-            onClick={handleBuyNow}
-            className="px-4 py-1.5 rounded-full bg-sky-600 text-white text-sm font-bold shadow-[0_0_15px_rgba(2,132,199,0.4)] hover:bg-sky-500 transition-colors z-20"
-          >
-            Buy now
-          </button>
+          {/* CONTENT AND ACTIONS */}
+          <div className="magic-bento-card__content relative z-10 flex flex-col flex-grow">
+            <motion.h2 
+              layoutId={`card-title-${product.id}`}
+              className="text-xl font-extrabold text-white mb-2 leading-tight"
+            >
+              {product.name}
+            </motion.h2>
+            <p className="magic-bento-card__description line-clamp-2 text-slate-400 text-sm flex-grow">
+              {product.description}
+            </p>
+
+            <div className="mt-5 flex items-center justify-between pt-3 border-t border-neutral-800">
+              <span 
+                className="text-3xl font-bold inline-block"
+                style={{
+                  background: 'linear-gradient(90deg, #8B5CF6 0%, #FFFFFF 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                ${product.price}
+              </span>
+              
+              <button
+                onClick={handleBuyNow}
+                className="px-5 py-2 rounded-lg bg-indigo-600 text-white text-md font-semibold shadow-[0_0_15px_rgba(124,58,237,0.6)] hover:bg-indigo-500 transition-all duration-300 hover:shadow-[0_0_25px_rgba(124,58,237,1)] z-20 transform hover:scale-[1.05]"
+              >
+                Get Access
+              </button>
+            </div>
+          </div>
+
+          {/* ADMIN BUTTON BLOCK */}
+          {isAdmin && (
+            <div 
+              className="mt-4 pt-4 border-t border-neutral-700/70 flex justify-end gap-3 text-sm z-20"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button onClick={onEdit} className="px-4 py-1 rounded-lg bg-neutral-800 text-neutral-300 border border-neutral-700 hover:bg-neutral-700/80 hover:text-white transition-colors shadow-sm hover:shadow-md">Edit</button>
+              <button 
+                onClick={onToggleVisibility} 
+                className={`
+                  px-4 py-1 rounded-lg font-medium shadow-sm hover:shadow-md transition-colors
+                  ${product.visible
+                    ? 'bg-amber-600/20 text-amber-300 border border-amber-600 hover:bg-amber-600/40'
+                    : 'bg-green-600/20 text-green-300 border border-green-600 hover:bg-green-600/40'
+                  }`}
+              >
+                {product.visible ? "Hide" : "Show"}
+              </button>
+              <button onClick={onDelete} className="px-4 py-1 rounded-lg font-medium bg-red-700/40 border border-red-700 text-red-300 hover:bg-red-700/80 hover:text-white transition-colors shadow-sm hover:shadow-md">Delete</button>
+            </div>
+          )}
         </div>
-      </div>
-
-      {isAdmin && (
-        <div 
-          className="mt-4 flex flex-wrap gap-2 text-xs pt-3 border-t border-neutral-800 z-20"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button onClick={onEdit} className="px-3 py-1 rounded-full bg-neutral-800 hover:bg-neutral-700 text-slate-200">
-            Edit
-          </button>
-          <button onClick={onToggleVisibility} className="px-3 py-1 rounded-full bg-neutral-800 hover:bg-neutral-700 text-slate-200">
-            {product.visible ? "Hide" : "Show"}
-          </button>
-          <button onClick={onDelete} className="px-3 py-1 rounded-full bg-red-900/50 border border-red-900 hover:bg-red-900/80 text-red-200">
-            Delete
-          </button>
-        </div>
-      )}
+      </CometCard> 
     </InteractiveCardWrapper>
   );
 }
@@ -365,7 +485,7 @@ const GlobalSpotlightComponent: React.FC<{
 };
 
 // =========================================
-// 5. MAIN PRODUCT SECTION
+// 5. MAIN PRODUCT SECTION - FIXED SORTING
 // =========================================
 
 type Filters = {
@@ -389,6 +509,9 @@ export default function ProductsSection() {
     maxPrice: "",
   });
 
+  // NEW STATE: To control the active sort direction
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc'); // 'asc' = Cheapest First
+
   const [loginOpen, setLoginOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const productGridRef = useRef<HTMLDivElement>(null);
@@ -396,6 +519,11 @@ export default function ProductsSection() {
 
   const isMobile = useMobileDetection();
   const disableAnimations = isMobile;
+
+  // Handler to toggle the sort direction
+  const toggleSortDirection = () => {
+    setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
+  };
 
   // Handle Body Scroll Lock
   useEffect(() => {
@@ -416,67 +544,139 @@ export default function ProductsSection() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  // --- MODIFIED FILTER LOGIC ---
-  const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
-      // 1. EXCLUDE HERO/VIDEO CONTENT (This is the Fix)
-      const cat = p.category?.toUpperCase() || "";
-      if (cat === "VIDEO" || cat === "CONTENT") return false;
-
-      // 2. VISIBILITY CHECK
+  // --- FILTER AND SORT LOGIC: NOW DEPENDS ON sortDirection STATE ---
+  const filteredAndSortedProducts = useMemo(() => {
+    if (!products || !Array.isArray(products)) return [];
+    
+    // 1. FILTERING
+    const filtered = products.filter((p) => {
+      if (p.category === 'VIDEO' || p.category === 'CONTENT') return false;
       if (!p.visible && !isAdmin) return false;
 
-      // 3. STANDARD FILTERS
       const searchMatch = p.name.toLowerCase().includes(filters.search.toLowerCase());
       const categoryMatch = filters.category === "all" || p.category === filters.category;
+      
       const min = filters.minPrice ? Number(filters.minPrice) : 0;
       const max = filters.maxPrice ? Number(filters.maxPrice) : Infinity;
-      const priceMatch = p.price >= min && p.price <= max;
+      
+      // Parse Price for filtering (removing symbols)
+      const priceStr = String(p.price).replace(/[^0-9.]/g, '');
+      const price = parseFloat(priceStr) || 0;
+      
+      const priceMatch = price >= min && price <= max;
+      
       return searchMatch && categoryMatch && priceMatch;
     });
-  }, [products, filters, isAdmin]);
+
+    // 2. SORTING (Robust Parsing)
+    return filtered.sort((a, b) => {
+      // Robustly parse prices: turn "$1,200" -> 1200
+      const priceA = parseFloat(String(a.price).replace(/[^0-9.]/g, '')) || 0;
+      const priceB = parseFloat(String(b.price).replace(/[^0-9.]/g, '')) || 0;
+
+      if (sortDirection === 'asc') {
+        return priceA - priceB; // Cheapest first
+      } else {
+        return priceB - priceA; // Expensive first
+      }
+    });
+
+  }, [products, filters, isAdmin, sortDirection]); // Dependency array includes sortDirection!
 
   // Clear editing state if admin mode is disabled
   useEffect(() => {
     if (!isAdmin) setEditing(null);
   }, [isAdmin]);
 
+  const inputBaseClasses = "rounded-2xl bg-neutral-900/50 border border-neutral-800 px-3 py-2.5 text-sm outline-none backdrop-blur-sm placeholder:text-slate-600 transition-colors focus:border-indigo-500";
+
+  // Dynamic content for the sort button
+  const sortButtonText = sortDirection === 'asc' ? 'Cheapest First' : 'Expensive First';
+  const sortButtonIcon = sortDirection === 'asc' 
+    ? ( // Ascending Icon (Up Arrow)
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
+        </svg>
+      )
+    : ( // Descending Icon (Down Arrow)
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4 4m0 0l4-4m-4 4V4"/>
+        </svg>
+      );
+
+
   return (
-    <section className="bento-section relative inset-0 w-full h-full pointer-events-auto">
+    <section className="bento-section relative inset-0 w-full min-h-screen bg-black pointer-events-auto">
+      <GlobalStyles />
       <GlobalSpotlightComponent
         gridRef={productGridRef}
         disableAnimations={disableAnimations}
         glowColor={DEFAULT_GLOW_COLOR}
       />
 
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,#1e293b_0%,transparent_55%,transparent_100%)] opacity-30 z-0" />
+      <div className="absolute inset-0 pointer-events-none bg-black z-0" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pt-8">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white">BULLMONEY VIP</h2>
-            <p className="mt-1 text-sm text-slate-400">
-              Filter by category, price or name. Admins can edit everything in real time.
+          
+          {/* ✨ SPARKLES TITLE - UPDATED TO INDIGO */}
+          <div className="h-[10rem] w-full flex flex-col items-center justify-center overflow-hidden rounded-md"> 
+            <h1 className="md:text-7xl text-3xl lg:text-8xl font-bold text-center text-white relative z-20">
+              BULLMONEY VIP
+            </h1>
+            <p className="mt-1 text-sm text-slate-400 relative z-20">
+             Filter by category, price or name. Admins can edit everything in real time.
             </p>
+            <div className="w-[40rem] h-40 relative">
+              <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-[2px] w-3/4 blur-sm" />
+              <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-px w-3/4" />
+              <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-purple-500 to-transparent h-[5px] w-1/4 blur-sm" />
+              <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-purple-500 to-transparent h-px w-1/4" />
+
+              <SparklesCore
+                background="transparent"
+                minSize={0.4}
+                maxSize={1}
+                particleDensity={1200}
+                className="w-full h-full"
+                particleColor="#FFFFFF"
+              />
+
+              {/* Keep this mask image for the sparkle effect fade */}
+              <div className="absolute inset-0 w-full h-full bg-black [mask-image:radial-gradient(350px_200px_at_top,transparent_20%,white)]"></div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 self-end sm:self-auto">
-            <span className="text-xs text-slate-400">
-              {isAdmin ? "Admin mode" : "Customer view"}
-            </span>
+          <div className="flex flex-col gap-3 sm:flex-row items-center justify-end self-end sm:self-auto">
+            
+            {/* INTERACTIVE SORT CONTROL BUTTON */}
             <button
-              onClick={() => setLoginOpen(true)}
-              className="text-xs px-3 py-1.5 rounded-full border border-slate-700 bg-slate-900/70 text-slate-200 hover:border-sky-500/70 hover:text-sky-200 transition-colors backdrop-blur-md"
+              onClick={toggleSortDirection}
+              className="text-xs px-3 py-1.5 rounded-full border border-indigo-700 bg-indigo-900/50 text-indigo-300 hover:bg-indigo-900/70 transition-colors backdrop-blur-md flex items-center gap-1 font-medium"
             >
-              {isAdmin ? "Switch admin / logout" : "Admin login"}
+              {sortButtonIcon}
+              {sortButtonText}
             </button>
+
+            {/* ADMIN LOGIN BUTTON */}
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-slate-400">
+                {isAdmin ? "Admin mode" : "Customer view"}
+              </span>
+              <button
+                onClick={() => setLoginOpen(true)}
+                className="text-xs px-3 py-1.5 rounded-full border border-slate-700 bg-slate-900/70 text-slate-200 hover:border-indigo-500/70 hover:text-indigo-200 transition-colors backdrop-blur-md"
+              >
+                {isAdmin ? "Switch admin / logout" : "Admin login"}
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Filters - UPDATED STYLING */}
         <div className="grid gap-3 sm:grid-cols-[2fr,1fr,1fr,1fr] mb-8">
-          <div className="flex items-center gap-2 rounded-2xl bg-neutral-900/50 border border-neutral-800 px-3 py-2.5 backdrop-blur-sm">
+          <div className="flex items-center gap-2 rounded-2xl bg-neutral-900/50 border border-neutral-800 px-3 py-2.5 backdrop-blur-sm transition-colors focus-within:border-indigo-500">
             <span className="text-xs text-slate-400">Search</span>
             <input
               value={filters.search}
@@ -489,11 +689,12 @@ export default function ProductsSection() {
           <select
             value={filters.category}
             onChange={(e) => setFilters((f) => ({ ...f, category: e.target.value }))}
-            className="rounded-2xl bg-neutral-900/50 border border-neutral-800 px-3 py-2.5 text-sm outline-none text-slate-300 backdrop-blur-sm"
+            className={`${inputBaseClasses} text-slate-300 appearance-none pr-8 cursor-pointer`}
+            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2394a3b8'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z' clip-rule='evenodd' /%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1.5em 1.5em' }}
           >
-            <option value="all">All categories</option>
+            <option value="all" className="bg-neutral-900">All categories</option>
             {categories.map((c) => (
-              <option key={c._id || c.id} value={c.name}>{c.name}</option>
+              <option key={c._id || c.id} value={c.name} className="bg-neutral-900">{c.name}</option>
             ))}
           </select>
 
@@ -503,7 +704,7 @@ export default function ProductsSection() {
             placeholder="Min price"
             value={filters.minPrice}
             onChange={(e) => setFilters((f) => ({ ...f, minPrice: e.target.value }))}
-            className="rounded-2xl bg-neutral-900/50 border border-neutral-800 px-3 py-2.5 text-sm outline-none text-white backdrop-blur-sm placeholder:text-slate-600"
+            className={`${inputBaseClasses} text-white`}
           />
           <input
             type="number"
@@ -511,7 +712,7 @@ export default function ProductsSection() {
             placeholder="Max price"
             value={filters.maxPrice}
             onChange={(e) => setFilters((f) => ({ ...f, maxPrice: e.target.value }))}
-            className="rounded-2xl bg-neutral-900/50 border border-neutral-800 px-3 py-2.5 text-sm outline-none text-white backdrop-blur-sm placeholder:text-slate-600"
+            className={`${inputBaseClasses} text-white`}
           />
         </div>
 
@@ -520,23 +721,23 @@ export default function ProductsSection() {
             ref={productGridRef}
             className="card-grid grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
         >
-            {filteredProducts.map((p) => {
+            {filteredAndSortedProducts.map((p) => { 
             const pid = p._id || p.id!;
             return (
-                <ProductBentoCard
-                    key={pid}
-                    product={{ ...p, id: pid }}
-                    isAdmin={isAdmin}
-                    onEdit={() => setEditing({ ...p, id: pid })}
-                    onDelete={() => deleteProduct(pid)}
-                    onToggleVisibility={() => toggleVisibility(pid)}
-                    disableAnimations={disableAnimations}
-                    onClick={() => setExpandedId(pid)}
-                />
+              <ProductBentoCard
+                key={pid}
+                product={{ ...p, id: pid }}
+                isAdmin={isAdmin}
+                onEdit={() => setEditing({ ...p, id: pid })}
+                onDelete={() => deleteProduct(pid)}
+                onToggleVisibility={() => toggleVisibility(pid)}
+                disableAnimations={disableAnimations}
+                onClick={() => setExpandedId(pid)}
+              />
             );
             })}
 
-            {filteredProducts.length === 0 && (
+            {filteredAndSortedProducts.length === 0 && (
             <div className="col-span-full text-center text-sm text-slate-400 py-10">
                 No products match those filters yet.
             </div>
@@ -553,7 +754,7 @@ export default function ProductsSection() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setExpandedId(null)}
-                className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm"
+                className="fixed inset-0 z-[9999] bg-[#000000]/90 backdrop-blur-lg bg-[radial-gradient(circle_at_center,rgba(132,0,255,0.1)_0%,transparent_70%)]"
               />
               
               {/* Expanded Card Container */}
@@ -564,7 +765,7 @@ export default function ProductsSection() {
                         <motion.div
                             layoutId={`card-container-${pid}`}
                             key={pid}
-                            className="pointer-events-auto w-full max-w-2xl max-h-[90vh] flex flex-col bg-[#060010] border border-neutral-700 rounded-3xl overflow-hidden shadow-2xl relative"
+                            className="pointer-events-auto w-full max-w-2xl max-h-[90vh] flex flex-col bg-[#060010] border border-indigo-700/50 rounded-3xl overflow-hidden shadow-2xl relative"
                         >
                             {/* Close Button */}
                             <button
@@ -587,13 +788,13 @@ export default function ProductsSection() {
                                     alt={p.name}
                                     className="w-full h-full object-cover"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-[#060010] to-transparent opacity-80" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#060010] via-transparent to-transparent opacity-90" />
                                 
                                 <motion.div 
                                     layoutId={`card-category-${pid}`}
                                     className="absolute top-4 left-4 z-20"
                                 >
-                                    <span className="px-3 py-1.5 rounded-md bg-black/60 backdrop-blur-md border border-sky-500/30 text-xs font-bold uppercase tracking-wider text-sky-400 shadow-xl">
+                                    <span className="px-3 py-1.5 rounded-md bg-black/60 backdrop-blur-md border border-indigo-500/30 text-xs font-bold uppercase tracking-wider text-indigo-400 shadow-xl">
                                         {p.category}
                                     </span>
                                 </motion.div>
@@ -609,14 +810,23 @@ export default function ProductsSection() {
                                 </motion.h2>
 
                                 <div className="flex items-center gap-4 mb-6">
-                                     <span className="text-2xl font-bold text-sky-400">${p.price}</span>
-                                     <button
+                                    <span 
+                                      className="text-2xl font-bold"
+                                      style={{
+                                        background: 'linear-gradient(90deg, #8B5CF6 0%, #FFFFFF 100%)',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent',
+                                      }}
+                                    >
+                                      ${p.price}
+                                    </span>
+                                    <button
                                         onClick={() => {
                                             const url = p.buyUrl?.trim();
                                             if (url) window.open(url, "_blank");
                                             else alert("No buy link available");
                                         }}
-                                        className="px-6 py-2 rounded-full bg-sky-600 text-white font-bold shadow-lg hover:bg-sky-500 transition-colors"
+                                        className="px-6 py-2 rounded-lg bg-indigo-600 text-white font-bold text-md shadow-[0_0_15px_rgba(124,58,237,0.6)] hover:bg-indigo-500 transition-all duration-300 hover:shadow-[0_0_25px_rgba(124,58,237,1)] transform hover:scale-[1.05]"
                                     >
                                         Buy Now
                                     </button>
