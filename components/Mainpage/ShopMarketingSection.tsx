@@ -6,8 +6,8 @@ import { Clock } from "lucide-react";
 
 // --- Import the separated effects ---
 // Ensure these paths match where you saved the files
-import GhostCursor from "@/components/effects/GhostCursor"; 
-import { SparklesCore } from "@/components/effects/SparklesBackground"; 
+import GhostCursor from "@/components/Mainpage/GhostCursor"; 
+import { SparklesCore } from "@/components/Mainpage/SparklesBackground"; 
 
 // --- MAIN COMPONENT ---
 const ShopMarketingSection = () => {

@@ -1,13 +1,133 @@
 // components/cta.tsx
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IconExternalLink, IconRefresh } from "@tabler/icons-react";
-import { ChevronDown, ChartBar } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ChevronDown, ChartBar, Newspaper, X, Maximize2, ArrowRight } from "lucide-react";
 
-/* --------------------------- CHART CONFIGS --------------------------- */
+// Assuming cn is correctly imported or defined locally
+function cn(...classes: (string | undefined | null | false)[]) {
+  return classes.filter(Boolean).join(" ");
+}
+
+/* --------------------------- HIGH AESTHETIC CARD COMPONENT (MODIFIED FOR RECTANGLE) --------------------------- */
+
+// This component is the universal, highly aesthetic trigger for both the Chart and News Modals.
+function HighAestheticCard({ 
+    title, 
+    subtitle, 
+    icon: Icon, 
+    onShow, 
+    isChart = false 
+}: { 
+    title: string, 
+    subtitle: string, 
+    icon: React.ElementType, 
+    onShow: () => void,
+    isChart?: boolean
+}) {
+    return (
+        <motion.div
+            className="relative flex flex-col items-center justify-center overflow-hidden rounded-3xl py-12 md:py-16 cursor-pointer"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            onClick={onShow}
+        >
+            {/* Animated gradient background (Shimmer Effect) */}
+            <motion.div
+                className="absolute inset-0 bg-gradient-to-br from-[#0b1729] via-[#111827] to-[#1e293b] opacity-90"
+                animate={{
+                    backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                }}
+                transition={{
+                    duration: 15,
+                    repeat: Infinity,
+                    ease: "linear",
+                }}
+            />
+
+            {/* Soft motion glow */}
+            <motion.div
+                className="absolute inset-0 opacity-30 blur-3xl"
+                style={{
+                    background: "radial-gradient(circle at 50% 60%, rgba(56,189,248,.3), transparent 60%)",
+                }}
+                animate={{
+                    scale: [1, 1.05, 1],
+                    opacity: [0.4, 0.6, 0.4],
+                }}
+                transition={{
+                    duration: 6,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                }}
+            />
+
+            {/* Floating sparkles */}
+            <div className="absolute inset-0 pointer-events-none">
+                {Array.from({ length: 20 }).map((_, i) => (
+                    <motion.span
+                        key={i}
+                        className="absolute h-[2px] w-[2px] rounded-full bg-sky-400/60"
+                        style={{
+                            top: `${Math.random() * 100}%`,
+                            left: `${Math.random() * 100}%`,
+                        }}
+                        animate={{
+                            y: [0, -10, 0],
+                            opacity: [0.4, 1, 0.4],
+                        }}
+                        transition={{
+                            duration: 4 + Math.random() * 4,
+                            repeat: Infinity,
+                            delay: Math.random() * 2,
+                        }}
+                    />
+                ))}
+            </div>
+
+            {/* Content Container */}
+            <div className="relative z-10 flex flex-col items-center justify-center text-center">
+                
+                {/* Icon */}
+                <motion.div
+                    className="flex h-16 w-16 items-center justify-center rounded-xl bg-sky-500/20 text-sky-400 ring-2 ring-sky-500/50 mb-4"
+                    animate={isChart ? {} : { rotate: [0, -5, 5, 0] }} // Subtle animation for News
+                    transition={isChart ? {} : { duration: 0.8, repeat: Infinity, delay: 3 }}
+                >
+                    <Icon className="h-8 w-8" />
+                </motion.div>
+
+                <h2 className="mt-2 text-3xl font-bold tracking-tight text-white md:text-4xl">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-blue-400">
+                        {title}
+                    </span>
+                </h2>
+                
+                <p className="mt-2 text-sm text-sky-300/80 max-w-sm">
+                    {subtitle}
+                </p>
+
+                {/* Main Action Button */}
+                <motion.button
+                    className="relative z-10 mt-6 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-semibold text-white 
+                             shadow-[0_0_35px_rgba(56,189,248,0.4)] 
+                             bg-[linear-gradient(100deg,#0284c7_0%,#2563eb_50%,#312e81_100%)]
+                             ring-2 ring-sky-400/40 transition-all duration-300"
+                >
+                    Launch Terminal 
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </motion.button>
+            </div>
+        </motion.div>
+    );
+}
+
+
+/* --------------------------- CHART CONFIGS (KEPT AS IS) --------------------------- */
 
 const charts = [
   {
@@ -75,7 +195,7 @@ const charts = [
   },
 ];
 
-/* --------------------------- TRADINGVIEW WIDGET --------------------------- */
+/* --------------------------- TRADINGVIEW WIDGET (KEPT AS IS) --------------------------- */
 const TradingViewMarketOverview: React.FC<{ height?: number; tabs: any }> = ({
   height = 560,
   tabs,
@@ -115,101 +235,21 @@ const TradingViewMarketOverview: React.FC<{ height?: number; tabs: any }> = ({
   );
 };
 
-/* ---------------------- MINIMAL FUTURE-RUSTIC HERO ---------------------- */
+/* ---------------------- MINIMAL FUTURE-RUSTIC HERO (KEPT AS IS) ---------------------- */
+// The functionality of FuturisticHero is now moved to HighAestheticCard.
 function FuturisticHero({ onShow }: { onShow: () => void }) {
   return (
-    <motion.div
-      className="relative flex flex-col items-center justify-center overflow-hidden rounded-3xl py-28 md:py-32"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      {/* Animated gradient background */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-[#0b1729] via-[#111827] to-[#1e293b]"
-        animate={{
-          backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-        }}
-        transition={{
-          duration: 15,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-      />
-
-      {/* Soft motion glow */}
-      <motion.div
-        className="absolute inset-0 opacity-30 blur-3xl"
-        style={{
-          background:
-            "radial-gradient(circle at 50% 60%, rgba(56,189,248,.2), transparent 60%)",
-        }}
-        animate={{
-          scale: [1, 1.05, 1],
-          opacity: [0.3, 0.45, 0.3],
-        }}
-        transition={{
-          duration: 6,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
-
-      {/* Floating sparkles */}
-      <div className="absolute inset-0 pointer-events-none">
-        {Array.from({ length: 25 }).map((_, i) => (
-          <motion.span
-            key={i}
-            className="absolute h-[2px] w-[2px] rounded-full bg-sky-400/60"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -10, 0],
-              opacity: [0.4, 1, 0.4],
-            }}
-            transition={{
-              duration: 4 + Math.random() * 4,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Button with glowing border */}
-<motion.button
-  onClick={onShow}
-  whileHover={{ scale: 1.05 }}
-  whileTap={{ scale: 0.96 }}
-  className="relative z-10 flex items-center gap-2 rounded-full px-12 py-4 text-lg font-semibold text-white 
-             shadow-[0_0_35px_rgba(56,189,248,0.4)] 
-             bg-[linear-gradient(100deg,#0284c7_0%,#2563eb_50%,#312e81_100%)]
-             ring-2 ring-sky-400/40 hover:ring-sky-300/70 transition-all duration-300"
->
-  Show Live Market Charts
-  <motion.span
-    className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-sky-500/40 opacity-0 blur-md"
-    whileHover={{ opacity: 0.4, scale: 1.1 }}
-    transition={{ duration: 0.4, ease: 'easeOut' }}
-  />
-</motion.button>
-
-
-      {/* Subtitle */}
-      <motion.p
-        className="relative z-10 mt-5 text-sm text-sky-300/80"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        Experience live markets with a touch of the future.
-      </motion.p>
-    </motion.div>
+    <HighAestheticCard
+      title="Show Live Market Charts"
+      subtitle="Experience live markets with a touch of the future."
+      icon={ChartBar}
+      onShow={onShow}
+      isChart={true}
+    />
   );
 }
 
-/* --------------------------- CHART SECTION --------------------------- */
+/* --------------------------- CHART SECTION (KEPT AS IS) --------------------------- */
 export const TradingViewDropdown = ({
   onMarketChange,
 }: {
@@ -314,30 +354,7 @@ export const TradingViewDropdown = ({
   );
 };
 
-/* --------------------------- PAGE WRAPPER --------------------------- */
-
-export function CTA() {
-  const [activeMarket, setActiveMarket] = React.useState<
-    "all" | "crypto" | "stocks" | "forex" | "metals"
-  >("all");
-
-  return (
-    <div id="market-dashboard" className="w-full bg-white px-4 py-10 dark:bg-neutral-950 md:px-8">
-      <div className="mx-auto max-w-7xl">
-        <Header />
-        <div className="mt-10">
-          <TradingViewDropdown onMarketChange={setActiveMarket} />
-        </div>
-        <div className="mt-10">
-          <NewsFeed activeMarket={activeMarket} />
-        </div>
-      </div>
-    </div>
-  );
-}
-export default CTA;
-
-/* --------------------------- HEADER --------------------------- */
+/* --------------------------- HEADER (KEPT AS IS) --------------------------- */
 function Header() {
   return (
     <header className="text-center">
@@ -354,13 +371,15 @@ function Header() {
   );
 }
 
-/* ----------------------------- NEWS FEED SECTION ----------------------------- */
+/* ----------------------------- NEWS FEED SECTION (MODAL REPLACEMENT) ----------------------------- */
+
+type MarketFilter = "all" | "crypto" | "stocks" | "forex" | "metals";
 type NewsItem = {
   title: string;
   link: string;
   source?: string;
   published_at?: string;
-  category?: string;
+  category?: MarketFilter | "other";
 };
 
 const MARKET_KEYWORDS = {
@@ -384,10 +403,10 @@ function timeAgo(iso?: string) {
   return `${d}d ago`;
 }
 
-function detectCategory(title: string): "crypto" | "stocks" | "forex" | "metals" | "other" {
+function detectCategory(title: string): MarketFilter | "other" {
   const lower = title.toLowerCase();
   for (const [category, words] of Object.entries(MARKET_KEYWORDS)) {
-    if (words.some((w) => lower.includes(w))) return category as any;
+    if (words.some((w) => lower.includes(w))) return category as MarketFilter;
   }
   return "other";
 }
@@ -406,190 +425,339 @@ function score(item: NewsItem) {
   return recency * 0.6 + Math.min(1, kw / 3) * 0.35 + sourceBoost;
 }
 
-function NewsFeed({ activeMarket }: { activeMarket: string }) {
-  const [items, setItems] = React.useState<NewsItem[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [lastUpdated, setLastUpdated] = React.useState<Date | null>(null);
-  const [count, setCount] = React.useState<number>(10);
+// --- Internal Modal Content Component (KEPT AS IS) ---
+function NewsFeedContent({ activeMarket, onClose }: { activeMarket: MarketFilter, onClose: () => void }) {
+    const [items, setItems] = useState<NewsItem[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+    const [count, setCount] = useState<number>(10);
+    const [refreshKey, setRefreshKey] = useState(0);
 
-  const load = React.useCallback(async () => {
-    setLoading(true);
-    try {
-      const r = await fetch("/api/crypto-news", { cache: "no-store" });
-      const json = await r.json();
-      const rawItems: NewsItem[] = Array.isArray(json?.items) ? json.items : [];
-      const tagged = rawItems.map((n) => ({ ...n, category: detectCategory(n.title || "") }));
-      setItems(tagged);
-      setLastUpdated(new Date());
-    } catch {
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    const load = useCallback(async () => {
+        setLoading(true);
+        try {
+            // Replace with your actual news API call
+            const r = await fetch("/api/crypto-news", { cache: "no-store" });
+            const json = await r.json();
+            const rawItems: NewsItem[] = Array.isArray(json?.items) ? json.items : [];
+            const tagged = rawItems.map((n) => ({ ...n, category: detectCategory(n.title || "") }));
+            setItems(tagged);
+            setLastUpdated(new Date());
+        } catch {
+            setItems([]);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
-  React.useEffect(() => {
-    load();
-    const id = setInterval(load, 60000);
-    return () => clearInterval(id);
-  }, [load]);
+    useEffect(() => {
+        load();
+    }, [load, refreshKey]);
 
-  const filtered = React.useMemo(
-    () => (activeMarket === "all" ? items : items.filter((i) => i.category === activeMarket)),
-    [items, activeMarket]
-  );
+    useEffect(() => {
+        const id = setInterval(load, 60000);
+        return () => clearInterval(id);
+    }, [load]);
 
-  const ranked = React.useMemo(() => [...filtered].sort((a, b) => score(b) - score(a)), [filtered]);
-  const top5 = ranked.slice(0, 5);
-  const rest = ranked.slice(5, 5 + count);
+    const filtered = useMemo(
+        () => (activeMarket === "all" ? items : items.filter((i) => i.category === activeMarket)),
+        [items, activeMarket]
+    );
+
+    const ranked = useMemo(() => [...filtered].sort((a, b) => score(b) - score(a)), [filtered]);
+    const top5 = ranked.slice(0, 5); 
+    const rest = ranked.slice(5, 5 + count);
+
+    const marketTitle = activeMarket === "all" ? "Global Feed" : activeMarket.charAt(0).toUpperCase() + activeMarket.slice(1) + " News";
+
+    return (
+        <div className="flex h-[80vh] flex-col md:h-[700px] overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-white/5 px-6 py-4 backdrop-blur-xl">
+                <div className="flex items-center gap-2">
+                    <Newspaper className="h-5 w-5 text-sky-400" />
+                    <span className="font-semibold text-white">{marketTitle}</span>
+                    <span className="ml-4 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
+                      Live
+                    </span>
+                </div>
+                <div className="flex items-center gap-3">
+                    {lastUpdated && (
+                        <span className="text-xs text-neutral-500 hidden sm:block">
+                            Updated {lastUpdated.toLocaleTimeString()}
+                        </span>
+                    )}
+                    <button 
+                        onClick={() => setRefreshKey(p => p + 1)}
+                        className="group rounded-full p-2 transition-colors hover:bg-white/10"
+                    >
+                        <IconRefresh className={cn("h-4 w-4 text-neutral-400 group-hover:text-white", loading && "animate-spin")} />
+                    </button>
+                    <button 
+                        onClick={onClose}
+                        className="rounded-full bg-white/5 p-2 text-neutral-400 transition hover:bg-red-500/20 hover:text-red-400"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
+                </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto bg-neutral-950/90">
+                
+                {/* Top Headlines Grid */}
+                <div className="p-4">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-extrabold text-white/90">MAJOR HEADLINES</h3>
+                        <div className="h-px w-1/2 bg-gradient-to-r from-sky-500/50 via-blue-500/30 to-transparent" />
+                    </div>
+
+                    <div className="mt-3 grid gap-3 md:grid-cols-5">
+                        {loading
+                            ? Array.from({ length: 5 }).map((_, i) => (
+                                <div key={i} className="h-24 animate-pulse rounded-lg bg-white/5 ring-1 ring-white/10" />
+                            ))
+                            : top5.map((item, i) => (
+                                <motion.a
+                                    key={`${item.link}-${i}`}
+                                    href={item.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="group relative rounded-lg bg-neutral-900/60 p-3 ring-1 ring-white/10 transition hover:ring-sky-500/40"
+                                    whileHover={{ y: -2 }}
+                                >
+                                    <div className="text-[11px] uppercase tracking-wide text-sky-300/80">
+                                        {(item.category || "Market").toUpperCase()}
+                                    </div>
+                                    <div className="mt-1 line-clamp-3 text-sm font-semibold text-white/90">{item.title}</div>
+                                    <div className="mt-1 text-xs text-neutral-400">{timeAgo(item.published_at)}</div>
+                                    <span className="pointer-events-none absolute -inset-px rounded-lg bg-gradient-to-r from-sky-500/0 via-blue-600/0 to-indigo-500/0 opacity-0 transition group-hover:opacity-30" />
+                                </motion.a>
+                            ))}
+                    </div>
+                </div>
+
+                {/* Remaining Headlines List */}
+                <div className="border-t border-white/10">
+                    <div className="sticky top-0 z-10 bg-neutral-950/80 px-4 py-2 backdrop-blur-sm">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-extrabold text-white/90">
+                                All Headlines ({rest.length} Items)
+                            </h3>
+                            <div className="flex items-center gap-2">
+                                <label className="text-xs text-neutral-500 dark:text-neutral-400">Show</label>
+                                <select
+                                    value={count}
+                                    onChange={(e) => setCount(Number(e.target.value))}
+                                    className="rounded-md bg-white/5 px-2 py-1 text-sm text-neutral-200 ring-1 ring-white/10 outline-none hover:ring-sky-500/30"
+                                >
+                                    {[5, 10, 20, 50].map((n) => (
+                                        <option key={n} value={n}>
+                                            {n}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul className="divide-y divide-white/10">
+                        <AnimatePresence initial={false}>
+                            {loading &&
+                                Array.from({ length: 8 }).map((_, i) => (
+                                    <li key={i} className="animate-pulse p-4">
+                                        <div className="h-3 w-1/3 rounded bg-white/10" />
+                                        <div className="mt-2 h-4 w-2/3 rounded bg-white/10" />
+                                    </li>
+                                ))}
+
+                            {!loading &&
+                                rest.map((n, i) => (
+                                    <motion.li
+                                        key={`${n.link}-${i}`}
+                                        initial={{ opacity: 0, y: 8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -8 }}
+                                        transition={{ duration: 0.18 }}
+                                        className="group px-4 py-3 transition hover:bg-white/[0.035]"
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <span className="mt-1 h-2 w-2 rounded-full bg-sky-400/80 shadow-[0_0_12px_rgba(56,189,248,.6)]" />
+                                            <div className="min-w-0 flex-1">
+                                                <a
+                                                    href={n.link}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-2"
+                                                >
+                                                    <h3 className="truncate text-[15px] font-semibold text-white md:text-base">{n.title}</h3>
+                                                    <IconExternalLink className="h-4 w-4 text-neutral-400 opacity-0 transition group-hover:opacity-100" />
+                                                </a>
+                                                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-400">
+                                                    {n.category && n.category !== 'other' && (
+                                                        <span className="rounded-md bg-white/5 px-2 py-0.5 ring-1 ring-white/10">{n.category}</span>
+                                                    )}
+                                                    {n.published_at && (
+                                                        <time dateTime={n.published_at}>{timeAgo(n.published_at)}</time>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.li>
+                                ))}
+
+                            {!loading && ranked.length === 0 && (
+                                <motion.li
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="px-4 py-10 text-center text-sm text-neutral-400"
+                                >
+                                    No free headlines available right now. Try another market or refresh.
+                                </motion.li>
+                            )}
+                        </AnimatePresence>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// --- Wrapper Component that replaces the old NewsFeed inline rendering ---
+function NewsFeedModal({ activeMarket }: { activeMarket: string }) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => e.key === "Escape" && setIsOpen(false);
+        window.addEventListener("keydown", handleEsc);
+        return () => window.removeEventListener("keydown", handleEsc);
+    }, []);
+
+    // Prevent body scroll when modal is open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "unset";
+        }
+        return () => { document.body.style.overflow = "unset"; };
+    }, [isOpen]);
+
+    return (
+        <>
+            {/* The NEW, RECTANGULAR, HIGH-AESTHETIC TRIGGER BUTTON */}
+            <div className="w-full flex justify-center">
+                <motion.button
+                    onClick={() => setIsOpen(true)}
+                    whileHover={{ scale: 1.01, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    // Max-width limited to prevent it from dominating the page too much, 
+                    // but wide enough for a clear rectangular shape.
+                    className="group relative w-full max-w-xl overflow-hidden rounded-xl bg-neutral-900 p-1 transition-shadow duration-300 hover:shadow-2xl hover:shadow-sky-500/20"
+                >
+                    {/* Animated Outer Ring/Glow (Simulates the Chart's shimmer effect) */}
+                    <motion.div 
+                        className="absolute inset-0 rounded-lg bg-gradient-to-r from-sky-400 via-blue-500 to-sky-400 opacity-20 transition-opacity duration-500 group-hover:opacity-40"
+                        animate={{
+                            opacity: [0.2, 0.4, 0.2],
+                            scale: [1, 1.02, 1],
+                        }}
+                        transition={{
+                            duration: 8,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                        }}
+                    />
+
+                    {/* Card Content (Structured horizontally for rectangular look) */}
+                    <div className="relative flex items-center justify-between rounded-[7px] bg-[#0a0a0a] px-6 py-4">
+                        
+                        <div className="flex items-center gap-4">
+                            {/* Animated Icon */}
+                            <motion.div
+                                className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-500/20 text-sky-400 ring-1 ring-sky-500/30"
+                                animate={{ rotate: [0, -5, 5, 0] }}
+                                transition={{ duration: 0.8, repeat: Infinity, delay: 3 }}
+                            >
+                                <Newspaper className="h-5 w-5" />
+                            </motion.div>
+                            
+                            <div className="text-left">
+                                <h4 className="text-lg font-bold text-white">Open Live News Feed</h4>
+                                <p className="text-sm text-neutral-400">
+                                    {activeMarket !== 'all' 
+                                        ? `View ${activeMarket.charAt(0).toUpperCase() + activeMarket.slice(1)} Headlines`
+                                        : "Global real-time market updates and analysis"
+                                    }
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Action Arrow */}
+                        <motion.div
+                            className="text-sky-400 transition-transform duration-300 group-hover:translate-x-1"
+                            animate={{ x: [0, 3, 0] }}
+                            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", repeatDelay: 2 }}
+                        >
+                            <ArrowRight className="h-5 w-5" />
+                        </motion.div>
+                    </div>
+                </motion.button>
+            </div>
+
+            {/* Modal Overlay (The modal content is untouched) */}
+            <AnimatePresence>
+                {isOpen && (
+                    <div className="fixed inset-0 z-[101] flex items-center justify-center p-4">
+                        
+                        {/* Backdrop */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsOpen(false)}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                        />
+
+                        {/* Modal Container */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            transition={{ type: "spring", bounce: 0.3, duration: 0.5 }}
+                            className="relative w-full max-w-4xl overflow-hidden rounded-3xl border border-white/10 bg-[#0a0a0a] shadow-2xl"
+                        >
+                            <NewsFeedContent activeMarket={activeMarket as MarketFilter} onClose={() => setIsOpen(false)} />
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </>
+    );
+}
+
+/* --------------------------- PAGE WRAPPER (CTA) --------------------------- */
+
+export function CTA() {
+  const [activeMarket, setActiveMarket] = React.useState<
+    "all" | "crypto" | "stocks" | "forex" | "metals"
+  >("all");
 
   return (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-2xl ring-1 ring-white/10",
-        "bg-gradient-to-br from-white/[0.03] to-white/[0.015] backdrop-blur-sm",
-        "shadow-[0_1px_1px_rgba(0,0,0,0.05),0_12px_60px_rgba(2,6,23,0.35)]"
-      )}
-    >
-      <div className="flex flex-col gap-3 border-b border-white/10 p-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_14px_rgba(16,185,129,.8)]" />
-          <span className="text-sm text-neutral-300">
-            {loading ? "Fetching latest…" : `Top 5 + ${rest.length} more`}
-          </span>
-          {lastUpdated && (
-            <span className="ml-2 text-xs text-neutral-500">Updated {lastUpdated.toLocaleTimeString()}</span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-neutral-500 dark:text-neutral-400">Show</label>
-          <select
-            value={count}
-            onChange={(e) => setCount(Number(e.target.value))}
-            className="rounded-md bg-white/5 px-2 py-1 text-sm text-neutral-200 ring-1 ring-white/10 outline-none hover:ring-sky-500/30"
-          >
-            {[5, 10, 20, 50].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={load}
-            className="ml-2 inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold
-              text-black bg-gradient-to-r from-gray-200 via-gray-300 to-gray-400
-              hover:from-gray-300 hover:via-gray-400 hover:to-gray-500
-              shadow-lg shadow-gray-900/40 transition"
-          >
-            <IconRefresh className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Top Headlines */}
-      <div className="p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-extrabold text-white/90">MAJOR HEADLINES</h3>
-          <div className="h-px w-1/2 bg-gradient-to-r from-sky-500/50 via-blue-500/30 to-transparent" />
+    <div id="market-dashboard" className="w-full bg-white px-4 py-10 dark:bg-neutral-950 md:px-8">
+      <div className="mx-auto max-w-7xl">
+        <Header />
+        
+        {/* NEWS FEED SECTION: MOVED ABOVE CHART, RECTANGULAR BUTTON */}
+        <div className="mt-10">
+          <NewsFeedModal activeMarket={activeMarket} />
         </div>
 
-        <div className="mt-3 grid gap-3 md:grid-cols-5">
-          {loading
-            ? Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-24 animate-pulse rounded-lg bg-white/5 ring-1 ring-white/10" />
-              ))
-            : top5.map((item, i) => (
-                <motion.a
-                  key={`${item.link}-${i}`}
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative rounded-lg bg-neutral-900/60 p-3 ring-1 ring-white/10 transition hover:ring-sky-500/40"
-                  whileHover={{ y: -2 }}
-                >
-                  <div className="text-[11px] uppercase tracking-wide text-sky-300/80">
-                    {(item.category || "Market").toUpperCase()}
-                  </div>
-                  <div className="mt-1 line-clamp-3 text-sm font-semibold text-white/90">{item.title}</div>
-                  <div className="mt-1 text-xs text-neutral-400">{timeAgo(item.published_at)}</div>
-                  <span className="pointer-events-none absolute -inset-px rounded-lg bg-gradient-to-r from-sky-500/0 via-blue-600/0 to-indigo-500/0 opacity-0 transition group-hover:opacity-30" />
-                </motion.a>
-              ))}
-        </div>
-      </div>
-
-      {/* Remaining Headlines */}
-      <div className="border-t border-white/10">
-        <div className="sticky top-0 z-10 bg-neutral-950/80 px-4 py-2 backdrop-blur-sm">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-extrabold text-white/90">
-              All Headlines (
-              {activeMarket === "all" ? "All Markets" : activeMarket.charAt(0).toUpperCase() + activeMarket.slice(1)}
-              )
-            </h3>
-            <span className="text-xs text-neutral-400">Showing {rest.length} of {Math.max(0, ranked.length - 5)}</span>
-          </div>
-        </div>
-
-        <div className="max-h-[520px] overflow-auto">
-          <ul className="divide-y divide-white/10">
-            <AnimatePresence initial={false}>
-              {loading &&
-                Array.from({ length: 8 }).map((_, i) => (
-                  <li key={i} className="animate-pulse p-4">
-                    <div className="h-3 w-1/3 rounded bg-white/10" />
-                    <div className="mt-2 h-4 w-2/3 rounded bg-white/10" />
-                  </li>
-                ))}
-
-              {!loading &&
-                rest.map((n, i) => (
-                  <motion.li
-                    key={`${n.link}-${i}`}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.18 }}
-                    className="group px-4 py-3 transition hover:bg-white/[0.035]"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="mt-1 h-2 w-2 rounded-full bg-sky-400/80 shadow-[0_0_12px_rgba(56,189,248,.6)]" />
-                      <div className="min-w-0 flex-1">
-                        <a
-                          href={n.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2"
-                        >
-                          <h3 className="truncate text-[15px] font-semibold text-white md:text-base">{n.title}</h3>
-                          <IconExternalLink className="h-4 w-4 text-neutral-400 opacity-0 transition group-hover:opacity-100" />
-                        </a>
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-400">
-                          {n.category && (
-                            <span className="rounded-md bg-white/5 px-2 py-0.5 ring-1 ring-white/10">{n.category}</span>
-                          )}
-                          {n.published_at && (
-                            <time dateTime={n.published_at}>{timeAgo(n.published_at)}</time>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.li>
-                ))}
-
-              {!loading && ranked.length === 0 && (
-                <motion.li
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="px-4 py-10 text-center text-sm text-neutral-400"
-                >
-                  No free headlines available right now. Try another market or refresh.
-                </motion.li>
-              )}
-            </AnimatePresence>
-          </ul>
+        {/* CHART SECTION: KEPT ORIGINAL LOGIC/AESTHETIC */}
+        <div className="mt-10">
+          <TradingViewDropdown onMarketChange={setActiveMarket} />
         </div>
       </div>
     </div>
   );
 }
+export default CTA;

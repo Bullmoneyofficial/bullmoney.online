@@ -403,11 +403,12 @@ export default function Home() {
         <Analytics/>
         <SpeedInsights />
         <Socialsfooter />
-        <Heromain />
-        <ShopFunnel />
+         <Chartnews />
+            <Heromain />
+                <Shopmain />
+          <ShopFunnel />
         <Shopmain />
         <Pricing />
-        <Chartnews />
         <Features />
       </div>
     </main>
