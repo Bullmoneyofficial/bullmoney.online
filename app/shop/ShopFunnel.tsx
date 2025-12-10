@@ -31,7 +31,7 @@ const ShopFunnel: React.FC = () => {
         <div className="glass-bobbing-layer">
           <GlassSurface
             // RESPONSIVE WIDTH: 85% of phone screen, or 320px max
-            width="min(20vw, 200px)"
+            width="min(30vw, 250px)"
             height="50px"
             borderRadius={60}
             borderWidth={0.5}
