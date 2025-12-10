@@ -410,7 +410,7 @@ export default function Page({
         <Socials />
         <ShopProvider>
           <main className="min-h-screen bg-slate-950 text-white">
-            <HeroShop onScrollToProducts={handleScrollToProducts} />
+            <HeroShop />
             <BlogPage />
             <Shopmain />
             <Chartnews />
