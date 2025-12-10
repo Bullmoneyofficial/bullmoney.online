@@ -92,7 +92,6 @@ type ShopContextValue = {
   deleteCategory: (id: string) => Promise<void>;
 };
 
-
 const ADMIN_USERNAME = "MR.BULLMONEY";
 const ADMIN_PASSWORD = "9D6W5D6SD6S7DA6D5D5ADS5A6XVXASXR6723RE627EDGED";
 
@@ -250,7 +249,6 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     await fetch(`/api/categories/${id}`, { method: "DELETE" });
     await refreshAll();
   };
-
 
   return (
     <ShopContext.Provider

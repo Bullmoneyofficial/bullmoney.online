@@ -569,7 +569,7 @@ export default function ProductsSection() {
     
     // 1. FILTERING
     const filtered = products.filter((p) => {
-      if (p.category === 'VIDEO' || p.category === 'CONTENT') return false;
+      if (p.category === 'VIDEO' || p.category === 'BLOGVIDEO'|| p.category === 'LIVESTREAMS'|| p.category === 'BLOGS') return false;
       if (!p.visible && !isAdmin) return false;
 
       const searchMatch = p.name.toLowerCase().includes(filters.search.toLowerCase());

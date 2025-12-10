@@ -7,7 +7,7 @@ import { MessageCircle } from 'lucide-react';
 
 // --- EXISTING IMPORTS ---
 import { ShopProvider } from "../VIP/ShopContext"; 
-import HeroShop from "@/app/shop/Hero"; 
+import HeroShop from "@/app/shop/ShopHero"; 
 import ProductsSection from "@/app/VIP/ProductsSection"; 
 import RecruitPage from "@/app/register/pageVip";
 import Socials from "@/components/Mainpage/Socialsfooter";
@@ -413,7 +413,7 @@ export default function ShopPage() {
         <div className="relative z-10">
           <Socials />
           
-          <HeroShop onScrollToProducts={handleScrollToProducts} />
+          <HeroShop />
 
           <div ref={productsRef}>
             <ProductsSection />
