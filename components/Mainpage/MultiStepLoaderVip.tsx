@@ -180,7 +180,7 @@ const LiveChromeHeader = memo(({ assetKey }: { assetKey: AssetKey }) => {
     <motion.div
       initial={{ y: -50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: 0.3, duration: 0.8 }}
+      transition={{ delay: 0.4, duration: 0.8 }}
       className="absolute top-0 left-0 right-0 z-50 flex justify-between items-start p-5 md:p-8 w-full max-w-[100vw]"
     >
       {/* LEFT: Asset Identity with VIP Style */}
