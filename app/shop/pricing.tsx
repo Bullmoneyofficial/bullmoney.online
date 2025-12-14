@@ -18,7 +18,7 @@ import {
   useSpring,
 } from "framer-motion";
 import { useRef } from "react";
-import { supabase } from "@/lib/supabaseClient"; // <-- FIX APPLIED
+import { supabase } from "@/lib/supabaseClient"; // <-- ENSURED CORRECT SUPABASE IMPORT
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -343,9 +343,8 @@ function XMThreeSteps({ copyPartnerCode, copied }: any) {
   return (
     <div
       className={cn(
-        "w-full px-4 mt-10 grid gap-6 md:mt-12",
-        "grid-cols-1",      
-        "md:grid-cols-2"     // FIXED: clean 3-col responsive system
+        "w-full mt-10 grid gap-6 md:mt-12",        // FIX: Removed inner px-4
+        "grid-cols-1 md:grid-cols-2"               // FIX: Standardized 2-col grid
       )}
     >
 
@@ -353,7 +352,7 @@ function XMThreeSteps({ copyPartnerCode, copied }: any) {
       <StepCard
         number={1}
         title="Step 1 — Open Your XM Live Account With Our Code"
-        className="col-span-3 p-6 md:p-8 bg-gradient-to-br from-sky-950 via-slate-950 to-neutral-950"
+        className="col-span-1 md:col-span-2 p-6 md:p-8 bg-gradient-to-br from-sky-950 via-slate-950 to-neutral-950" // FIX: Spans 2 cols on desktop
         actions={
           <div className="flex flex-wrap items-center justify-center gap-3">
             <button
@@ -429,7 +428,7 @@ function XMThreeSteps({ copyPartnerCode, copied }: any) {
       <StepCard
         number={2}
         title="Step 2 — Trade Actively for 30 Days on XM"
-        className="col-span-3 lg:col-span-1"   // FIX: aligns evenly under Step 1
+        className="col-span-1"   // FIX: Now correctly aligns side-by-side with Step 3 on desktop
         actions={
           <a
             href="/BULLMONEYULTRA.pdf"
@@ -503,7 +502,7 @@ function XMThreeSteps({ copyPartnerCode, copied }: any) {
       <StepCard
         number={3}
         title="Submit Proof using our code: X3R7P"
-        className="col-span-3 lg:col-span-1"  // FIX
+        className="col-span-1"  // FIX: Now correctly aligns side-by-side with Step 2 on desktop
       >
         <SubmitProofForm />
       </StepCard>
@@ -513,15 +512,15 @@ function XMThreeSteps({ copyPartnerCode, copied }: any) {
 
 
 /* ============================================================================
-   VANTAGE FIXED — same 3-column system
+   VANTAGE FIXED — same 2-column system
 ============================================================================ */
 
 function VantageThreeSteps({ copyPartnerCode, copied }: any) {
   return (
    <div
   className={cn(
-    "w-full px-4 mt-10 grid gap-6 md:mt-12",
-    "grid-cols-1 md:grid-cols-2"   
+    "w-full mt-10 grid gap-6 md:mt-12", // FIX: Removed inner px-4
+    "grid-cols-1 md:grid-cols-2"        // FIX: Standardized 2-col grid
   )}
 >
 
@@ -530,7 +529,7 @@ function VantageThreeSteps({ copyPartnerCode, copied }: any) {
       <StepCard
         number2={1}
         title="Open Your Vantage Live Account With BULLMONEY"
-        className="col-span-3 p-6 md:p-8 bg-gradient-to-br from-purple-950 via-slate-950 to-neutral-950"
+        className="col-span-1 md:col-span-2 p-6 md:p-8 bg-gradient-to-br from-purple-950 via-slate-950 to-neutral-950" // FIX: Spans 2 cols on desktop
         actions={
           <div className="flex flex-wrap items-center justify-center gap-3">
             <button
@@ -604,7 +603,7 @@ function VantageThreeSteps({ copyPartnerCode, copied }: any) {
       <StepCard
         number2={2}
         title="Trade Actively for 30 Days on Vantage"
-        className="col-span-3 lg:col-span-1"
+        className="col-span-1" // FIX: Now correctly aligns side-by-side with Step 3 on desktop
         
       >
         <p className="text-[15px] leading-relaxed text-neutral-300">
@@ -663,7 +662,7 @@ function VantageThreeSteps({ copyPartnerCode, copied }: any) {
       <StepCard
         number2={3}
         title="Submit Proof using our code: BULLMONEY"
-        className="col-span-3 lg:col-span-1"
+        className="col-span-1" // FIX: Now correctly aligns side-by-side with Step 2 on desktop
       >
         <SubmitProofForm />
       </StepCard>
@@ -1001,7 +1000,7 @@ export const EvervaultCard = ({
         <div className="relative z-10 flex items-center justify-center">
           <div className="relative h-40 w-40 sm:h-44 sm:w-44 rounded-full flex items-center justify-center">
             <div className="absolute inset-0 rounded-full bg-white/80 dark:bg-black/80 blur-md" />
-            <span className="relative z-20 font-extrabold text-3xl sm:text-4xl text-black dark:text-white select-none">
+            <span className="relative z-20 font-extrabold text-2xl sm:text-4xl text-black dark:text-white select-none">
               {text}
             </span>
           </div>
@@ -1084,7 +1083,7 @@ export const EvervaultCardRed = ({
           <div className="relative h-40 w-40 sm:h-44 sm:w-44 rounded-full flex items-center justify-center">
             {/* subtle glass behind the code */}
             <div className="absolute inset-0 rounded-full bg-white/85 dark:bg-black/80 blur-md" />
-            <span className="relative z-20 font-extrabold text-3xl sm:text-4xl text-black dark:text-white select-none">
+            <span className="relative z-20 font-extrabold text-2xl sm:text-4xl text-black dark:text-white select-none">
               {text}
             </span>
           </div>
