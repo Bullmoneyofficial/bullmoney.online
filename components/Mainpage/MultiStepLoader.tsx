@@ -389,6 +389,20 @@ export const MultiStepLoader = ({
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const selectedAsset: AssetKey = "BTC";
+  
+  // *** FIX 1: Scroll Lock Logic ***
+  useEffect(() => {
+    if (loading) {
+      document.body.classList.add("loader-active");
+    } else {
+      document.body.classList.remove("loader-active");
+    }
+    // Cleanup function to ensure the class is removed when component unmounts
+    return () => {
+      document.body.classList.remove("loader-active");
+    };
+  }, [loading]);
+  // *****************************
 
   useEffect(() => {
     if (!loading) {
@@ -530,7 +544,14 @@ export const MultiStepLoader = ({
             </div>
           </div>
 
+          {/* *** FIX 2: Added Global Style for Scroll Lock *** */}
           <style jsx global>{`
+            .loader-active {
+              overflow: hidden !important; /* Disables all scrolling */
+              height: 100vh !important; /* Locks height to viewport */
+              width: 100vw !important; /* Locks width to viewport */
+            }
+
             @keyframes shine {
               0% {
                 transform: translateX(-100%) skewX(-12deg);
@@ -544,6 +565,7 @@ export const MultiStepLoader = ({
               animation: shine 3.5s infinite linear;
             }
           `}</style>
+          {/* ********************************************* */}
         </motion.div>
       )}
     </AnimatePresence>
