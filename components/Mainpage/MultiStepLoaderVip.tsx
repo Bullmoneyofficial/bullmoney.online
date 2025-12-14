@@ -115,7 +115,7 @@ const TradingViewBackground = memo(({ assetKey }: { assetKey: AssetKey }) => {
     script.innerHTML = JSON.stringify({
       autosize: true,
       symbol: asset.symbol,
-      interval: "D",
+      interval: "1",
       timezone: "Etc/UTC",
       theme: "dark",
       style: "1",
@@ -377,7 +377,7 @@ interface MultiStepLoaderProps {
   duration?: number;
 }
 
-export const MultiStepLoader = ({
+export const MultiStepLoaderVip = ({
   loadingStates,
   loading,
   duration = 2000,
@@ -442,7 +442,8 @@ export const MultiStepLoader = ({
           exit={{ opacity: 0, filter: "blur(15px)", scale: 1.05 }}
           transition={{ duration: 0.8 }}
           // Background: Deep Void Purple (Almost Black)
-          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#05010d] overflow-hidden cursor-none font-sans h-[100dvh] w-screen"
+          // FIX 2: Added z-[9999999] just to be safe
+          className="fixed inset-0 z-[9999999] flex flex-col items-center justify-center bg-[#05010d] overflow-hidden cursor-none font-sans h-[100dvh] w-screen"
         >
           {/* A. Background Layers */}
           <GhostLoaderCursor />
@@ -455,7 +456,8 @@ export const MultiStepLoader = ({
           <LiveChromeHeader assetKey={selectedAsset} />
 
           {/* C. Main Content */}
-          <div className="relative z-20 flex flex-col items-center justify-center p-4 w-full h-full">
+          {/* FIX 3: ADDED pb-24 md:pb-32. This pushes content up from bottom */}
+          <div className="relative z-20 flex flex-col items-center justify-center p-4 w-full h-full pb-24 md:pb-32">
             {/* 1. LIQUID LOGO */}
             <div className="mb-4 md:mb-6 relative z-50">
               <ReactiveLiquidLogo src="/favicon.svg" />

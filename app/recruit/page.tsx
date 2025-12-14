@@ -12,6 +12,9 @@ import Socials from "@/components/Mainpage/Socialsfooter";
 import AffiliateAdmin from "@/app/register/AffiliateAdmin";
 import AffiliateRecruitsDashboard from "@/app/recruit/AffiliateRecruitsDashboard";
 
+// --- LOADER IMPORT ---
+import { MultiStepLoader } from "@/components/Mainpage/MultiStepLoaderAffiliate"; 
+
 // --- DYNAMIC IMPORTS ---
 const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { 
   ssr: false 
@@ -73,6 +76,18 @@ const CursorStyles = () => (
     body.custom-cursor-active {
       cursor: none !important;
     }
+    
+    /* ADDED: Loader Overlay Class */
+    .loader-overlay-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 999999; /* Forces it above NavBar */
+        pointer-events: all; /* Captures all clicks/scrolls */
+        background-color: black; /* Optional: ensures no content bleed-through */
+    }
   `}</style>
 );
 
@@ -110,36 +125,27 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
   useEffect(() => {
     if (!cursorRef.current || typeof window === 'undefined') return;
 
-    // Handle cursor visibility
     if (hideDefaultCursor && !isMobile) {
       document.body.classList.add('custom-cursor-active');
     }
 
-    // Get refs
     cornersRef.current = cursorRef.current.querySelectorAll('.target-cursor-corner');
 
     const ctx = gsap.context(() => {
         const cursor = cursorRef.current!;
         const corners = cornersRef.current!;
 
-        // ----------------------------------------------------
-        // MOBILE LOGIC: SYSTEMATIC SCANNER
-        // ----------------------------------------------------
         if (isMobile) {
-            // Init
             gsap.set(cursor, { x: window.innerWidth/2, y: window.innerHeight/2, opacity: 0, scale: 1.3 });
             gsap.to(cursor, { opacity: 1, duration: 0.5 });
 
-            // Visual Pulse
             const tapEffect = () => {
                 gsap.to(corners, { scale: 1.6, borderColor: '#00ffff', duration: 0.15, yoyo: true, repeat: 1 });
                 gsap.to(dotRef.current, { scale: 2, backgroundColor: '#ffffff', duration: 0.15, yoyo: true, repeat: 1 });
             };
 
             const runScanner = async () => {
-                // Find all clickable elements inside Shopmain, RecruitPage, etc.
                 const allElements = Array.from(document.querySelectorAll(targetSelector));
-
                 const targets = allElements.filter(el => {
                     const r = el.getBoundingClientRect();
                     const style = window.getComputedStyle(el);
@@ -176,7 +182,6 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
                     }
                     runScanner(); 
                 } else {
-                    // Fallback roaming
                     gsap.to(cursor, {
                         x: window.innerWidth / 2 + (Math.random() - 0.5) * 100,
                         y: window.innerHeight / 2 + (Math.random() - 0.5) * 100,
@@ -188,10 +193,6 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
 
             setTimeout(runScanner, 1000);
         }
-
-        // ----------------------------------------------------
-        // DESKTOP LOGIC: MAGNETIC + ANIMATED
-        // ----------------------------------------------------
         else {
             gsap.set(cursor, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
 
@@ -203,7 +204,6 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
             };
             window.addEventListener('mousemove', moveCursor);
 
-            // Clicks
             const handleDown = () => {
                 gsap.to(dotRef.current, { scale: 0.5, duration: 0.2 });
                 gsap.to(corners, { scale: 1.2, borderColor: '#00ffff', duration: 0.2 });
@@ -215,7 +215,6 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
             window.addEventListener('mousedown', handleDown);
             window.addEventListener('mouseup', handleUp);
 
-            // Magnetic Ticker
             gsap.ticker.add(() => {
                 if (!state.current.isActive || !state.current.targetPositions) return;
                 const strength = state.current.activeStrength.val;
@@ -237,7 +236,6 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
                 });
             });
 
-            // Hover Events
             const handleHover = (e: MouseEvent) => {
                 const target = (e.target as Element).closest(targetSelector);
                 if (target && target !== state.current.activeTarget) {
@@ -297,17 +295,50 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
 // 3. MAIN PAGE COMPONENT
 // ==========================================
 
+const affiliateLoadingStates = [
+  { text: "ESTABLISHING SECURE CONNECTION" },
+  { text: "VERIFYING AFFILIATE PROTOCOLS" },
+  { text: "SYNCING RECRUIT DATABASE" },
+  { text: "DECRYPTING DASHBOARD ACCESS" },
+  { text: "WELCOME, ADMIN" },
+];
+
 export default function Page({ searchParams }: { searchParams?: { src?: string } }) {
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  // ----------------------------------------------------
+  // ADDED: SCROLL LOCK EFFECT
+  // ----------------------------------------------------
+  useEffect(() => {
+    if (loading) {
+      // Disable scrolling
+      document.body.style.overflow = 'hidden';
+      document.body.style.height = '100vh'; // Ensures mobile browsers don't collapse UI
+    } else {
+      // Re-enable scrolling
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+    }
+
+    // Cleanup when component unmounts
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+    };
+  }, [loading]);
 
   useEffect(() => {
-    // Check access logic
     if (searchParams?.src !== "nav") {
       router.push("/");
+    } else {
+      const timer = setTimeout(() => {
+        setLoading(false);
+      }, 5000); 
+      return () => clearTimeout(timer);
     }
   }, [searchParams, router]);
 
-  // Authorization Check
   if (searchParams?.src !== "nav") {
     return null; 
   }
@@ -315,6 +346,22 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
   return (
     <>
       <CursorStyles />
+      
+      {/* ADDED: Wrapper Div
+        - position: fixed/top:0/left:0 covers screen
+        - z-index: 999999 ensures it's above NavBar
+      */}
+      {loading && (
+        <div className="loader-overlay-wrapper">
+          <MultiStepLoader 
+            loadingStates={affiliateLoadingStates} 
+            loading={loading} 
+            duration={1000} 
+          />
+        </div>
+      )}
+
+      {/* Target Cursor Component */}
       <TargetCursor 
         hideDefaultCursor={true}
         spinDuration={2}
@@ -322,12 +369,14 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
         targetSelector="button, a, input, [role='button'], .cursor-target"
       />
       
-      <Socials />
-      <Shopmain />
-      
-      <RecruitPage onUnlock={() => {}} />
-      <AffiliateRecruitsDashboard onBack={() => router.push("/")} />
-      <AffiliateAdmin />
+      {/* Content under loader */}
+      <div style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.5s ease' }}>
+        <Socials />
+        <Shopmain />
+        <RecruitPage onUnlock={() => {}} />
+        <AffiliateRecruitsDashboard onBack={() => router.push("/")} />
+        <AffiliateAdmin />
+      </div>
     </>
   );
 }

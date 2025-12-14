@@ -39,6 +39,35 @@ interface RegisterPageProps {
   onUnlock: () => void;
 }
 
+// --- GLOBAL CSS (Includes Scroll Lock) ---
+const CursorStyles = () => (
+  <style jsx global>{`
+    /* Existing styles omitted for brevity */
+    
+    body.custom-cursor-active {
+      cursor: none !important;
+    }
+    
+    /* Input autofill styling override */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover, 
+    input:-webkit-autofill:focus, 
+    input:-webkit-autofill:active{
+        -webkit-box-shadow: 0 0 0 30px #171717 inset !important;
+        -webkit-text-fill-color: white !important;
+        transition: background-color 5000s ease-in-out 0s;
+    }
+    
+    /* === ADDED GLOBAL SCROLL LOCK CLASS === */
+    body.loader-lock {
+        overflow: hidden !important;
+        height: 100vh !important; /* Locks height to viewport */
+        width: 100vw !important;
+    }
+  `}</style>
+);
+
+
 // --- MAIN COMPONENT ---
 export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // --- STATE ---
@@ -89,6 +118,20 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     };
     initSession();
   }, [onUnlock]);
+  
+  // === ADDED SCROLL LOCK/UNLOCK EFFECT ===
+  useEffect(() => {
+    if (loading) {
+      document.body.classList.add("loader-lock");
+    } else {
+      document.body.classList.remove("loader-lock");
+    }
+    // Cleanup ensures scroll lock is removed on unmount
+    return () => {
+      document.body.classList.remove("loader-lock");
+    };
+  }, [loading]);
+  // =======================================
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -167,7 +210,22 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const isVantage = activeBroker === 'Vantage';
   const brokerCode = isVantage ? "BULLMONEY" : "X3R7P";
   
-  if (loading) return <MultiStepLoader loadingStates={loadingStates} loading={loading} duration={1200} />;
+  if (loading) {
+    // === FIX: WRAP LOADER IN HIGH Z-INDEX CONTAINER ===
+    return (
+      <>
+        <CursorStyles />
+        <div 
+             // CRITICAL: Fixed, full coverage, max z-index to overlay native browser UI
+             className="fixed inset-0 z-[99999999] w-screen h-screen bg-[#050B14]"
+             // We render the loader component inside this wrapper
+          >
+            <MultiStepLoader loadingStates={loadingStates} loading={loading} duration={1200} />
+        </div>
+      </>
+    );
+  }
+
   if (step === 5) return <SuccessScreen onUnlock={onUnlock} />;
   
   if (step === 4) {
@@ -182,6 +240,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
   return (
     <div className="min-h-screen bg-[#050B14] flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
+      <CursorStyles />
+      {/* TargetCursor component definition seems to be missing in this file, assuming it's imported globally or dynamically. */}
+
       {/* Background Ambience */}
       <div className={cn("absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-50", isVantage ? "via-purple-600" : "via-blue-600")} />
       <div className={cn("absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[100px] pointer-events-none opacity-20", isVantage ? "bg-purple-600" : "bg-blue-600")} />

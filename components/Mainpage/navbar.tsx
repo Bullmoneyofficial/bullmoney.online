@@ -124,7 +124,8 @@ export const Navbar = () => {
       {/* Top Navbar */}
       <motion.div
         ref={ref}
-        className="w-full fixed top-0 inset-x-0 z-50 pointer-events-none pt-6"
+        // FIX APPLIED: Increased z-index to a high value (z-[1000]) to guarantee it sits above normal content.
+        className="w-full fixed top-0 inset-x-0 z-[1000] pointer-events-none pt-6"
       >
         <div className="flex justify-center w-full">
           <DesktopNav navItems={navItems} />
@@ -487,7 +488,7 @@ function DockLabel({
           exit={{ opacity: 0, y: -10, x: "-50%" }}
           transition={{ duration: 0.2 }}
           className={cn(
-            "absolute top-full mt-2 left-1/2 px-3 py-1 rounded-md bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs font-bold whitespace-nowrap pointer-events-none z-50 shadow-xl",
+            "absolute top-full mt-2 left-1/2 px-3 py-1 rounded-md bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs font-bold whitespace-nowrap pointer-events-none z-[1050] shadow-xl", // FIX APPLIED: Increased z-index
             className
           )}
         >
@@ -529,6 +530,7 @@ const MobileNav = ({ navItems, footerNavItems }: MobileNavProps) => {
       }}
       transition={{ type: "spring", stiffness: 200, damping: 50 }}
       className={cn(
+        // The mobile nav container uses z-50 implicitly via the parent's stacking context. No change needed here.
         "flex pointer-events-auto relative flex-col lg:hidden w-[95%] justify-between items-center mx-auto px-4 py-3 rounded-2xl z-50 transition-all duration-300",
         "bg-white/80 dark:bg-neutral-950/80 backdrop-blur-md shadow-lg border border-neutral-200 dark:border-white/10"
       )}

@@ -1,20 +1,20 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { createClient } from '@supabase/supabase-js'; 
 import { gsap } from 'gsap';
 import dynamic from 'next/dynamic';
 import { 
   Check, Mail, Hash, Lock, 
   ArrowRight, ChevronLeft, ExternalLink, AlertCircle,
-  Copy, Plus, LogIn, Eye, EyeOff, HelpCircle, FolderPlus, Loader2
+  Copy, Plus, LogIn, Eye, EyeOff, HelpCircle, FolderPlus, Loader2, ShieldCheck, Clock, User
 } from 'lucide-react';
 
 import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-// --- IMPORT THE VIP LOADER ---
-import { MultiStepLoader } from "@/components/Mainpage/MultiStepLoaderVip"; 
+// --- IMPORT SEPARATE LOADER COMPONENT ---
+import { MultiStepLoaderVip } from "@/components/Mainpage/MultiStepLoaderVip"; 
 
 // --- 1. SUPABASE SETUP ---
 const TELEGRAM_GROUP_LINK = "https://t.me/addlist/uswKuwT2JUQ4YWI8";
@@ -45,9 +45,10 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-// --- 2. INTERNAL CSS FOR CURSOR ---
+// --- 2. INTERNAL CSS FOR GLOBAL CURSOR & SCROLL LOCK ---
 const CursorStyles = () => (
   <style jsx global>{`
+    /* EXISTING CURSOR STYLES */
     .target-cursor-wrapper {
       position: fixed;
       top: 0;
@@ -82,10 +83,27 @@ const CursorStyles = () => (
     body.custom-cursor-active {
       cursor: none !important;
     }
+    
+    /* Input autofill styling override */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover, 
+    input:-webkit-autofill:focus, 
+    input:-webkit-autofill:active{
+        -webkit-box-shadow: 0 0 0 30px #171717 inset !important;
+        -webkit-text-fill-color: white !important;
+        transition: background-color 5000s ease-in-out 0s;
+    }
+
+    /* === ADDED GLOBAL SCROLL LOCK CLASS === */
+    body.loader-lock {
+        overflow: hidden !important;
+        height: 100vh !important; /* Locks height to viewport */
+        width: 100vw !important;
+    }
   `}</style>
 );
 
-// --- 3. DYNAMIC CURSOR COMPONENT ---
+// --- 3. DYNAMIC CURSOR COMPONENT (GLOBAL) ---
 interface TargetCursorProps {
   targetSelector?: string;
   spinDuration?: number;
@@ -149,6 +167,7 @@ const TargetCursorComponent = memo(({
     
     let ctx = gsap.context(() => {});
 
+    // DESKTOP LOGIC
     if (!isMobile) {
         ctx = gsap.context(() => {
             const corners = cornersRef.current!;
@@ -162,6 +181,7 @@ const TargetCursorComponent = memo(({
             window.addEventListener('mousedown', handleDown);
             window.addEventListener('mouseup', handleUp);
 
+            // Magnetic Ticker
             const tickerFn = () => {
                 const state = stateRef.current;
                 if (!state.targetCornerPositions || !cursorRef.current) return;
@@ -195,6 +215,8 @@ const TargetCursorComponent = memo(({
             stateRef.current.tickerFn = tickerFn;
             gsap.ticker.add(tickerFn);
 
+
+            // Hover Events
             const handleHover = (e: MouseEvent) => {
                 const target = (e.target as Element).closest(targetSelector);
                 if (target && target !== stateRef.current.activeTarget) {
@@ -243,6 +265,7 @@ const TargetCursorComponent = memo(({
         });
     }
 
+    // --- CLEANUP FUNCTION ---
     return () => {
         document.body.classList.remove('custom-cursor-active');
         window.removeEventListener('mousemove', moveCursor);
@@ -271,11 +294,11 @@ const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), {
 
 // --- LOADING STATES DATA ---
 const loadingStates = [
-  { text: "INITIALIZING QUANTUM LINK" },
-  { text: "SYNCING BLOCKCHAIN NODES" },
-  { text: "VERIFYING BIOMETRIC HASH" },
-  { text: "ENCRYPTING DATA STREAM" },
-  { text: "ACCESS GRANTED // WELCOME" },
+  { text: "INITIALIZING..." },
+  { text: "RESTORING SESSION" }, 
+  { text: "VERIFYING CREDENTIALS" },
+  { text: "UNLOCKING DASHBOARD" },
+  { text: "WELCOME BACK" },
 ];
 
 interface RegisterPageProps {
@@ -286,7 +309,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // --- STATE ---
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'register' | 'login'>('register');
-  const [step, setStep] = useState(1); 
+  const [step, setStep] = useState(0); 
   const [activeBroker, setActiveBroker] = useState<'Vantage' | 'XM'>('Vantage');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -306,46 +329,103 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const isVantage = activeBroker === 'Vantage';
   const brokerCode = isVantage ? "BULLMONEY" : "X3R7P";
 
+  // --- DRAFT SAVER (Auto-Save partial progress) ---
+  useEffect(() => {
+    // Only save if we have data and are not logged in
+    if (step > 0 && step < 5 && (formData.email || formData.mt5Number)) {
+        const draft = {
+            step,
+            formData,
+            activeBroker,
+            timestamp: Date.now()
+        };
+        localStorage.setItem("bullmoney_draft", JSON.stringify(draft));
+    }
+  }, [step, formData, activeBroker]);
+
+
   // --- INITIAL LOAD & AUTO-LOGIN CHECK ---
   useEffect(() => {
     let mounted = true;
 
     const initSession = async () => {
-      setLoading(true);
+      // 1. Check for completed session
       const savedSession = localStorage.getItem("bullmoney_session");
-
+      
       if (savedSession) {
         try {
           const session = JSON.parse(savedSession);
-          // REAL DB CHECK
+          // Verify ID exists in Supabase (async)
           const { data, error } = await supabase
             .from("recruits")
             .select("id")
             .eq("id", session.id)
             .maybeSingle();
 
-          if (error) throw error;
-
-          if (data && mounted) {
-            setTimeout(() => { onUnlock(); }, 3500); 
-            return; 
-          } else {
-            localStorage.removeItem("bullmoney_session");
+          if (!error && data && mounted) {
+             console.log("Session valid, auto-unlocking...");
+             // Clear any old drafts since we are logged in
+             localStorage.removeItem("bullmoney_draft");
+             
+             // FORCE LOADER TO PLAY FOR 2.5s EVEN ON SUCCESS
+             setTimeout(() => {
+                 onUnlock(); 
+             }, 2500); 
+             return; 
+          } 
+          
+          if(error || !data) {
+             localStorage.removeItem("bullmoney_session");
           }
         } catch (e) {
-          console.error("Session check failed:", e);
           localStorage.removeItem("bullmoney_session");
         }
       }
 
+      // 2. DRAFT RESTORE PATH: If no session, check for partial form data
+      const savedDraft = localStorage.getItem("bullmoney_draft");
+      if (savedDraft) {
+          try {
+              const draft = JSON.parse(savedDraft);
+              // Only restore if less than 24 hours old
+              if (Date.now() - draft.timestamp < 24 * 60 * 60 * 1000) {
+                  if (mounted) {
+                      setFormData(draft.formData);
+                      setStep(draft.step);
+                      setActiveBroker(draft.activeBroker || 'Vantage');
+                  }
+              }
+          } catch (e) {
+              localStorage.removeItem("bullmoney_draft");
+          }
+      }
+
+      // 3. DONE LOADING (If no session was found)
       if (mounted) {
-        setTimeout(() => { setLoading(false); }, 4000);
+        // Allow the "Initializing" text to read before showing form
+        setTimeout(() => { setLoading(false); }, 1500);
       }
     };
 
     initSession();
     return () => { mounted = false; };
   }, [onUnlock]);
+
+
+  // === ADDED SCROLL LOCK/UNLOCK EFFECT ===
+  useEffect(() => {
+    if (loading) {
+      document.body.classList.add("loader-lock");
+    } else {
+      document.body.classList.remove("loader-lock");
+    }
+    // Cleanup ensures scroll lock is removed on unmount
+    return () => {
+      document.body.classList.remove("loader-lock");
+    };
+  }, [loading]);
+  // =======================================
+
 
   const handleBrokerSwitch = (newBroker: 'Vantage' | 'XM') => {
     if (activeBroker === newBroker) return;
@@ -367,9 +447,15 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     if (e) e.preventDefault();
     setSubmitError(null);
 
-    if (step === 1) {
+    // INTRO -> STEP 1
+    if (step === 0) {
+      setStep(1);
+    }
+    // STEP 1 -> STEP 2
+    else if (step === 1) {
       setStep(2);
     }
+    // STEP 2 -> STEP 3
     else if (step === 2) {
       if (!isValidMT5(formData.mt5Number)) {
         setSubmitError("Please enter a valid MT5 ID (min 5 digits).");
@@ -377,6 +463,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       }
       setStep(3);
     }
+    // STEP 3 -> SUBMIT
     else if (step === 3) {
       if (!isValidEmail(formData.email)) {
         setSubmitError("Please enter a valid email address.");
@@ -395,16 +482,21 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   };
 
   const handleBack = () => {
-    if (step > 1) {
+    if (step > 0) {
       setStep(step - 1);
       setSubmitError(null);
     }
   };
 
   const toggleViewMode = () => {
-    setViewMode(prev => prev === 'register' ? 'login' : 'register');
+    if (viewMode === 'register') {
+      setViewMode('login');
+      setStep(0); 
+    } else {
+      setViewMode('register');
+      setStep(0);
+    }
     setSubmitError(null);
-    setStep(1);
     setLoading(false);
     setShowPassword(false);
     setAcceptedTerms(false);
@@ -428,7 +520,6 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     setSubmitError(null);
 
     try {
-      // 1. Check if email exists
       const { data: existingUser } = await supabase
         .from("recruits")
         .select("id")
@@ -439,7 +530,6 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         throw new Error("This email is already registered. Please Login.");
       }
 
-      // 2. Insert new user
       const insertPayload = {
         email: formData.email,
         mt5_id: formData.mt5Number,
@@ -456,13 +546,15 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       
       if (error) throw error;
 
-      // 3. Save Session
       if (newUser) {
+        // Save persistent session
         localStorage.setItem("bullmoney_session", JSON.stringify({
           id: newUser.id,
           email: formData.email,
           timestamp: Date.now()
         }));
+        // Clear draft
+        localStorage.removeItem("bullmoney_draft");
       }
 
       setTimeout(() => {
@@ -500,6 +592,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         throw new Error("Invalid email or password.");
       }
 
+      // Save persistent session
       localStorage.setItem("bullmoney_session", JSON.stringify({
         id: data.id,
         email: loginEmail,
@@ -509,7 +602,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       setTimeout(() => {
         setLoading(false);
         onUnlock();
-      }, 2000);
+      }, 1000); 
 
     } catch (err: any) {
       setLoading(false);
@@ -521,7 +614,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     return isVantage ? { number2: currentStep } : { number: currentStep };
   };
 
-  // --- RENDER: SUCCESS (FREE TELEGRAM ACCESS) ---
+  // --- RENDER: SUCCESS (SCREEN 5) ---
   if (step === 5 && viewMode === 'register') {
     return (
       <div className="min-h-screen bg-[#010309] flex items-center justify-center p-4 relative">
@@ -530,7 +623,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-[#010309] to-[#010309] gpu-accel" />
         
-        <div className="bg-[#0A1120] border border-blue-500/20 p-8 rounded-2xl shadow-[0_0_50px_rgba(30,58,138,0.2)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
+        <div className="bg-[#0A1120] border border-blue-500/20 p-6 md:p-8 rounded-2xl shadow-[0_0_50px_rgba(30,58,138,0.2)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
           <div className="mx-auto w-24 h-24 relative mb-6">
             <div className="absolute inset-0 rounded-full border-4 border-blue-900 animate-[spin_3s_linear_infinite]" />
             <div className="absolute inset-0 bg-green-500 rounded-full scale-0 animate-[scale-up_0.5s_ease-out_forwards_0.2s] flex items-center justify-center">
@@ -538,26 +631,24 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             </div>
           </div>
           
-          <h2 className="text-3xl font-bold text-white mb-2">Free Access Granted</h2>
-          <p className="text-slate-400 mb-8">
-            Your account is verified.<br/>
-            <span className="text-blue-400 font-medium">Add the Telegram Folder</span> to access all groups.
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">You're In 🚀</h2>
+          <p className="text-slate-400 mb-8 text-sm md:text-base">
+            Your VIP BullMoney access is now active.<br/>
           </p>
           
           <button 
-            onClick={() => window.open(TELEGRAM_GROUP_LINK, '_blank')}
+            onClick={onUnlock}
             className="w-full py-4 bg-[#229ED9] hover:bg-[#1b8bc2] text-white rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(34,158,217,0.3)] hover:shadow-[0_0_30px_rgba(34,158,217,0.5)] group flex items-center justify-center mb-4 cursor-target"
           >
-            <FolderPlus className="w-5 h-5 mr-2 -ml-1 fill-white/10" />
-            FREE ACCESS  
+            Go to Dashboard  
             <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
           </button>
 
-          <button 
-            onClick={onUnlock}
-            className="text-sm text-slate-500 hover:text-white transition-colors underline underline-offset-4 cursor-target"
+           <button 
+            onClick={() => window.open(TELEGRAM_GROUP_LINK, '_blank')}
+            className="text-sm text-slate-500 hover:text-white transition-colors flex items-center justify-center gap-2 mx-auto cursor-target"
           >
-            Go to Dashboard
+            <FolderPlus className="w-4 h-4" /> Join Free Telegram
           </button>
         </div>
         <style jsx global>{`
@@ -568,12 +659,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     );
   }
 
+  // --- RENDER: LOADING (SCREEN 4 AFTER SUBMIT) ---
   if (step === 4) {
     return (
       <div className="min-h-screen bg-[#010309] flex flex-col items-center justify-center relative">
          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-900/10 rounded-full blur-[60px] pointer-events-none" />
         <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-4" />
-        <h2 className="text-xl font-bold text-white">Saving Credentials...</h2>
+        <h2 className="text-xl font-bold text-white">Unlocking Platform...</h2>
       </div>
     );
   }
@@ -588,22 +680,38 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         spinDuration={2}
         parallaxOn={true}
       />
-
-      <MultiStepLoader loadingStates={loadingStates} loading={loading} duration={1200} />
       
-      <div className={cn(
-        "absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-50 transition-colors duration-500",
-        isVantage ? "via-purple-900" : "via-blue-900"
-      )} />
-      <div className={cn(
-        "absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel",
-        isVantage ? "bg-purple-900/10" : "bg-blue-900/10"
-      )} />
+      {/* === FIX: HIGH Z-INDEX WRAPPER FOR LOADER === */}
+      {loading && (
+          <div 
+             // CRITICAL: Fixed, full coverage, max z-index to overlay native browser UI
+             className="fixed inset-0 z-[99999999] w-screen h-screen bg-[#05010d]"
+             // We render the loader component inside this wrapper
+          >
+            <MultiStepLoaderVip loadingStates={loadingStates} loading={loading} duration={1200} />
+          </div>
+      )}
+      {/* =========================================== */}
 
-      <div className="w-full max-w-xl relative z-10">
-        <div className="mb-8 text-center">
-           <h1 className="text-2xl font-black text-white tracking-tight opacity-50">
-            BULLMONEY  <span className={cn("transition-colors duration-300", isVantage ? "text-purple-800" : "text-blue-600")}>VIP</span>
+      {/* RENDER CONTENT ONLY IF NOT LOADING or if content opacity is handled by the loader */}
+      <div className={cn(
+        // Opacity transition for a smooth reveal after loading is done
+        "transition-opacity duration-500 w-full max-w-xl relative z-10",
+        loading ? "opacity-0 pointer-events-none" : "opacity-100"
+      )}>
+
+        <div className={cn(
+          "absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-50 transition-colors duration-500",
+          isVantage ? "via-purple-900" : "via-blue-900"
+        )} />
+        <div className={cn(
+          "absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel",
+          isVantage ? "bg-purple-900/10" : "bg-blue-900/10"
+        )} />
+
+        <div className="mb-6 md:mb-8 text-center">
+          <h1 className="text-xl md:text-2xl font-black text-white tracking-tight opacity-50">
+            BULLMONEY <span className={cn("transition-colors duration-300", isVantage ? "text-purple-600" : "text-blue-600")}>VIP</span>
           </h1>
         </div>
 
@@ -614,24 +722,27 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             animate={{ opacity: 1, scale: 1 }}
             className="w-full"
           >
-             <div className="bg-neutral-900/80 ring-1 ring-white/10 backdrop-blur-md p-8 rounded-2xl shadow-2xl relative overflow-hidden">
+             <div className="bg-neutral-900/80 ring-1 ring-white/10 backdrop-blur-md p-6 md:p-8 rounded-2xl shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
                     <Lock className="w-32 h-32 text-white" />
                 </div>
                 
                 <h2 className="text-2xl font-bold text-white mb-2 relative z-10">Member Login</h2>
-                <p className="text-slate-400 mb-6 relative z-10">Sign in to access the platform.</p>
+                <p className="text-slate-400 mb-6 relative z-10 text-sm md:text-base">Sign in to access the platform.</p>
 
-                <form onSubmit={handleLoginSubmit} className="space-y-4 relative z-10">
+                <form onSubmit={handleLoginSubmit} className="space-y-4 relative z-10" autoComplete="on">
                    <div className="relative group">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-white transition-colors" />
                       <input
                         autoFocus
                         type="email"
+                        name="email"
+                        id="login-email"
+                        autoComplete="username"
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
                         placeholder="Email Address"
-                        className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50 transition-all cursor-target"
+                        className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-4 py-3.5 md:py-4 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50 transition-all cursor-target text-base"
                       />
                     </div>
 
@@ -639,10 +750,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-white transition-colors" />
                       <input
                         type={showPassword ? "text" : "password"}
+                        name="password"
+                        id="login-password"
+                        autoComplete="current-password"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         placeholder="Password"
-                        className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-12 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50 transition-all cursor-target"
+                        className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-12 py-3.5 md:py-4 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50 transition-all cursor-target text-base"
                       />
                       <button 
                         type="button" 
@@ -662,7 +776,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     <button
                       type="submit"
                       disabled={!loginEmail || !loginPassword}
-                      className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-bold tracking-wide transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-target"
+                      className="w-full py-3.5 md:py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-bold tracking-wide transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-target text-base"
                     >
                       LOGIN
                       <ArrowRight className="w-4 h-4" />
@@ -677,7 +791,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
              </div>
           </motion.div>
         ) : (
-          /* ================= REGISTER VIEW ================= */
+          /* ================= UNLOCK FLOW VIEW ================= */
           <>
             {step === 1 && (
               <div className="flex justify-center gap-3 mb-8">
@@ -688,7 +802,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       key={partner}
                       onClick={() => handleBrokerSwitch(partner)}
                       className={cn(
-                        "relative px-6 py-2 rounded-full font-semibold transition-all duration-300 z-20 cursor-target",
+                        "relative px-6 py-2 rounded-full font-semibold transition-all duration-300 z-20 cursor-target text-sm md:text-base",
                         isActive ? "text-white" : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
                       )}
                     >
@@ -712,6 +826,66 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             )}
 
             <AnimatePresence mode="wait">
+                
+              {/* --- SCREEN 1: ENTRY GATE (Step 0) --- */}
+              {step === 0 && (
+                 <motion.div
+                  key="step0"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                 >
+                   <div className="bg-neutral-900/80 ring-1 ring-white/10 backdrop-blur-md p-6 md:p-8 rounded-2xl shadow-2xl relative overflow-hidden text-center">
+                      <div className="absolute top-0 right-0 p-4 opacity-5">
+                        <Lock className="w-32 h-32 text-white" />
+                      </div>
+
+                      <div className="mb-6 flex justify-center">
+                         <div className="h-16 w-16 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.2)]">
+                            <ShieldCheck className="w-8 h-8 text-blue-400" />
+                         </div>
+                      </div>
+
+                      <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-3">Unlock VIP BullMoney Access</h2>
+                      <p className="text-slate-300 text-sm md:text-base mb-8 max-w-sm mx-auto leading-relaxed">
+                        Get VIP trading setups and community access. <br/>
+                        <span className="text-slate-500">No payment. Takes about 2 minutes.</span>
+                      </p>
+
+                      <motion.button 
+                        onClick={handleNext}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full py-3.5 md:py-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-xl font-bold text-base md:text-lg tracking-wide transition-all shadow-[0_0_20px_rgba(34,158,217,0.3)] hover:shadow-[0_0_30px_rgba(34,158,217,0.5)] flex items-center justify-center cursor-target"
+                      >
+                        Start VIP Access <ArrowRight className="w-5 h-5 ml-2" />
+                      </motion.button>
+                      
+                      <div className="mt-4 space-y-3">
+                         <div className="flex items-center justify-center gap-2 text-xs text-slate-600">
+                             <Lock className="w-3 h-3" /> No credit card required
+                         </div>
+
+                         {/* DYNAMIC BUTTON FOR EXISTING USERS */}
+                         <motion.button 
+                           onClick={toggleViewMode}
+                           whileHover={{ scale: 1.01 }}
+                           className={cn(
+                               "w-full py-3 rounded-lg text-sm font-semibold transition-all border border-transparent hover:border-white/10 mt-2",
+                               isVantage
+                                 ? "bg-purple-900/30 text-purple-200 hover:bg-purple-900/50"
+                                 : "bg-blue-900/30 text-blue-200 hover:bg-blue-900/50"
+                           )}
+                         >
+                            Already a member? Login here
+                         </motion.button>
+                      </div>
+                   </div>
+                 </motion.div>
+              )}
+
+              {/* --- SCREEN 2: OPEN ACCOUNT (Step 1) --- */}
               {step === 1 && (
                 <motion.div
                   key="step1"
@@ -722,86 +896,80 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 >
                   <StepCard
                     {...getStepProps(1)}
-                    title={`Open ${activeBroker} Account`}
+                    title="Open Free Account"
                     className={isVantage 
                       ? "bg-gradient-to-br from-purple-950/40 via-slate-950 to-neutral-950"
                       : "bg-gradient-to-br from-sky-950/40 via-slate-950 to-neutral-950"
                     }
                     actions={
-                      <div className="flex flex-col gap-4">
-                        <div className="flex flex-wrap items-center justify-center gap-3">
+                      <div className="flex flex-col gap-3 md:gap-4">
+                        <p className="text-xs text-center text-slate-500 flex items-center justify-center gap-1">
+                          <Clock className="w-3 h-3" /> Takes about 1 minute • No deposit required
+                        </p>
+                        
+                        <div className="flex flex-col items-center justify-center gap-3">
+                           {/* COPY CODE BUTTON */}
                           <button
                             onClick={() => copyCode(brokerCode)}
                             className={cn(
-                              "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold ring-1 ring-inset transition cursor-target",
+                              "inline-flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold ring-1 ring-inset transition cursor-target w-full justify-center mb-1",
                               isVantage 
                                 ? "text-purple-300 ring-purple-500/40 hover:bg-purple-500/10" 
                                 : "text-sky-300 ring-sky-500/40 hover:bg-sky-500/10"
                             )}
                           >
                             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                            {copied ? "Copied" : "Copy Code"}
+                            {copied ? "Copied" : `Copy Code: ${brokerCode}`}
                           </button>
 
+                           {/* EXTERNAL LINK BUTTON */}
                           <button
                             onClick={handleBrokerClick}
                             className={cn(
-                              "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white shadow transition cursor-target",
+                              "w-full py-3.5 rounded-xl font-bold text-white shadow transition flex items-center justify-center gap-2 cursor-target text-base",
                               isVantage
                                 ? "bg-gradient-to-r from-purple-500 to-violet-600 hover:from-violet-600 hover:to-fuchsia-700"
                                 : "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700"
                             )}
                           >
-                            <span>Open {activeBroker} Account</span>
+                            <span>Open Free Account</span>
                             <ExternalLink className="h-4 w-4" />
                           </button>
                         </div>
+                        
+                        {/* DYNAMIC SECONDARY BUTTON FOR "ALREADY HAVE ACCOUNT" */}
+                        <button 
+                            onClick={handleNext}
+                            className={cn(
+                                "w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border mt-1",
+                                isVantage 
+                                 ? "border-purple-500/30 text-purple-300 bg-purple-500/5 hover:bg-purple-500/10" 
+                                 : "border-blue-500/30 text-blue-300 bg-blue-500/5 hover:bg-blue-500/10"
+                            )}
+                        >
+                            I already have an account
+                        </button>
                       </div>
                     }
                   >
-                    <p className="text-[15px] leading-relaxed text-neutral-300 mb-4 text-center">
-                      To unlock <span className="text-white font-bold">Free Telegram Access</span>, open a real account using code <strong className="text-white">{brokerCode}</strong>.
+                    <p className="text-sm md:text-[15px] leading-relaxed text-neutral-300 mb-4 text-center">
+                      BullMoney works with regulated brokers. <br className="hidden md:block" />
+                      This free account lets us verify your access.
                     </p>
-                    <div className="relative mx-auto w-full max-w-[320px] h-44 rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
+                    
+                    {/* VISUAL ELEMENT (CARD) */}
+                    <div className="relative mx-auto w-full max-w-[280px] h-32 md:h-40 rounded-3xl border border-white/10 overflow-hidden shadow-2xl mb-2 opacity-80 hover:opacity-100 transition-opacity">
                       <IconPlusCorners />
                       <div className="absolute inset-0 p-2">
-                        {isVantage ? <EvervaultCardRed text="BULLMONEY" /> : <EvervaultCard text="X3R7P" />}
+                        {isVantage ? <EvervaultCardRed text="VANTAGE" /> : <EvervaultCard text="X3R7P" />}
                       </div>
                     </div>
-                    
-                    <div className="mt-8 grid grid-cols-2 gap-3 w-full">
-                        <motion.button 
-                          onClick={handleNext} 
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className={cn(
-                           "flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-bold tracking-widest border transition-all w-full cursor-target",
-                           isVantage 
-                            ? "bg-purple-500/10 border-purple-500/50 text-purple-100 shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] hover:bg-purple-500/20"
-                            : "bg-sky-500/10 border-sky-500/50 text-sky-100 shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] hover:bg-sky-500/20"
-                          )}
-                        >
-                          NEXT STEP <ArrowRight className="w-3 h-3" />
-                        </motion.button>
-                        
-                        <motion.button 
-                          onClick={toggleViewMode} 
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className={cn(
-                            "flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-bold tracking-widest border transition-all w-full cursor-target",
-                            isVantage 
-                             ? "bg-purple-500/10 border-purple-500/50 text-purple-100 shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] hover:bg-purple-500/20"
-                             : "bg-sky-500/10 border-sky-500/50 text-sky-100 shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] hover:bg-sky-500/20"
-                          )}
-                        >
-                          SKIP & LOGIN <LogIn className="w-3 h-3" />
-                        </motion.button>
-                    </div>
+
                   </StepCard>
                 </motion.div>
               )}
 
+              {/* --- SCREEN 3: VERIFY ID (Step 2) --- */}
               {step === 2 && (
                 <motion.div
                   key="step2"
@@ -812,44 +980,39 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 >
                   <StepCard
                     {...getStepProps(2)}
-                    title="Verify Account"
+                    title="Confirm Your Account ID"
                     actions={
                       <button
                         onClick={handleNext}
                         disabled={!formData.mt5Number}
                         className={cn(
-                          "w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target",
+                          "w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base",
                           !formData.mt5Number ? "opacity-50 cursor-not-allowed bg-slate-800 text-slate-500" :
                           isVantage ? "bg-white text-purple-950 hover:bg-purple-50" : "bg-white text-blue-950 hover:bg-blue-50"
                         )}
                       >
-                        Next Step <ArrowRight className="w-4 h-4" />
+                        Continue <ArrowRight className="w-4 h-4" />
                       </button>
                     }
                   >
                     <div className="space-y-4 pt-2">
                       <div className="flex items-center justify-between">
-                          <p className="text-slate-300 text-sm">Enter the MT5 ID you received.</p>
-                          <div className="group relative">
-                           <HelpCircle className="w-4 h-4 text-slate-500 hover:text-white cursor-help" />
-                           <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-neutral-800 border border-white/10 rounded-lg text-[10px] text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                             Check your email from {activeBroker} for your login credentials.
-                           </div>
-                          </div>
+                          <p className="text-slate-300 text-sm">After opening your account, you’ll receive an email with your trading ID (MT5 ID).</p>
                       </div>
                       
                       <div className="relative group">
                         <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-white transition-colors" />
                         <input
                           autoFocus
-                          type="text"
+                          type="tel" // optimized for mobile number pad
                           name="mt5Number"
                           value={formData.mt5Number}
                           onChange={handleChange}
-                          placeholder="e.g. 8839201"
-                          className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target"
+                          placeholder="Enter MT5 ID (numbers only)"
+                          className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target text-base"
                         />
                       </div>
+                      <p className="text-xs text-slate-500 flex items-center gap-1"><Lock className="w-3 h-3"/> Used only to verify access</p>
                     </div>
                   </StepCard>
                   <button onClick={handleBack} className="mt-4 flex items-center text-slate-500 hover:text-slate-300 text-sm mx-auto transition-colors cursor-target">
@@ -858,6 +1021,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 </motion.div>
               )}
 
+              {/* --- SCREEN 4: CREATE LOGIN (Step 3) --- */}
               {step === 3 && (
                 <motion.div
                   key="step3"
@@ -868,49 +1032,51 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 >
                   <StepCard
                     {...getStepProps(3)}
-                    title="Create Access"
+                    title="Create BullMoney Login"
                     actions={
                       <button
                         onClick={handleNext}
                         disabled={!formData.email || !formData.password || !acceptedTerms}
                         className={cn(
-                          "w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target",
+                          "w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base",
                           (!formData.email || !formData.password || !acceptedTerms) ? "opacity-50 cursor-not-allowed bg-slate-800 text-slate-500" :
                           isVantage ? "bg-white text-purple-950 hover:bg-purple-50" : "bg-white text-blue-950 hover:bg-blue-50"
                         )}
                       >
-                        Complete Registration <ArrowRight className="w-4 h-4" />
+                        Unlock My Access <ArrowRight className="w-4 h-4" />
                       </button>
                     }
                   >
-                    <div className="space-y-4 pt-2">
+                     <p className="text-slate-400 text-xs md:text-sm mb-4">This lets you access <span className="text-white font-medium">setups</span>, tools, and the community.</p>
+                    <div className="space-y-4 pt-1">
                       <div>
-                        <label className="text-xs text-slate-400 uppercase font-bold mb-1.5 block ml-1">Email</label>
                         <div className="relative group">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-white transition-colors" />
                           <input
                             autoFocus
                             type="email"
                             name="email"
+                            autoComplete="username" // Enables browser autofill
                             value={formData.email}
                             onChange={handleChange}
-                            placeholder="john@example.com"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target"
+                            placeholder="Email address"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target text-base"
                           />
                         </div>
+                        <p className="text-[10px] text-slate-500 mt-1 ml-1">We'll send your login details here.</p>
                       </div>
 
                       <div>
-                        <label className="text-xs text-slate-400 uppercase font-bold mb-1.5 block ml-1">Set Password</label>
                         <div className="relative group">
                           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-white transition-colors" />
                           <input
                             type={showPassword ? "text" : "password"}
                             name="password"
+                            autoComplete="new-password" // Enables browser to save this password
                             value={formData.password}
                             onChange={handleChange}
-                            placeholder="Create a password"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-12 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target"
+                            placeholder="Create password (min 6 chars)"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-12 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target text-base"
                           />
                           <button 
                             type="button" 
@@ -920,22 +1086,22 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-1 ml-1">This will be your key to login later.</p>
+                        <p className="text-[10px] text-slate-500 mt-1 ml-1">Must be at least 6 characters.</p>
                       </div>
 
                       <div>
-                        <label className="text-xs text-slate-400 uppercase font-bold mb-1.5 block ml-1">Referral Code (Optional)</label>
                         <div className="relative group">
-                          <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-white transition-colors" />
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-white transition-colors" />
                           <input
                             type="text"
                             name="referralCode"
                             value={formData.referralCode}
                             onChange={handleChange}
-                            placeholder="Enter Code (e.g. bmt_justin)"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target"
+                            placeholder="Referral Code (Optional)"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target text-base"
                           />
                         </div>
+                        <p className="text-[10px] text-slate-500 mt-1 ml-1">Leave blank if you don't have one.</p>
                       </div>
 
                         <div 
@@ -943,7 +1109,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         className="flex items-start gap-3 p-3 rounded-lg border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors cursor-target"
                       >
                         <div className={cn(
-                          "w-5 h-5 rounded border flex items-center justify-center mt-0.5 transition-colors",
+                          "w-5 h-5 rounded border flex items-center justify-center mt-0.5 transition-colors shrink-0",
                           acceptedTerms 
                             ? (isVantage ? "bg-purple-600 border-purple-600" : "bg-blue-600 border-blue-600") 
                             : "border-slate-500"
@@ -952,7 +1118,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         </div>
                         <div className="flex-1">
                           <p className="text-xs text-slate-300 leading-tight">
-                            I agree to the <span className="text-white font-semibold">Terms of Service</span>.
+                            I agree to the Terms of Service and understand this is educational content.
                           </p>
                         </div>
                       </div>
@@ -986,7 +1152,7 @@ const StepCard = memo(({ number, number2, title, children, actions, className }:
   const n = useRed ? number2 : number;
   return (
     <div className={cn(
-      "group relative overflow-hidden rounded-2xl p-6",
+      "group relative overflow-hidden rounded-2xl p-6 md:p-8",
       "bg-neutral-900/80 ring-1 ring-white/10 backdrop-blur-md",
       "shadow-[0_1px_1px_rgba(0,0,0,0.05),0_8px_40px_rgba(2,6,23,0.35)]",
       className
@@ -996,27 +1162,17 @@ const StepCard = memo(({ number, number2, title, children, actions, className }:
         useRed ? "from-purple-500/15 via-violet-500/10 to-transparent" : "from-sky-500/15 via-blue-500/10 to-transparent"
       )} />
       <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 md:mb-6">
         <span className={cn(
           "inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md ring-1",
           useRed ? "text-purple-300/90 ring-purple-500/30 bg-purple-500/10" : "text-sky-300/90 ring-sky-500/30 bg-sky-500/10"
         )}>
-          Step {n}
-        </span>
-        <span className="relative text-4xl font-black bg-clip-text text-transparent">
-          <span className={cn("bg-gradient-to-br bg-clip-text text-transparent",
-            useRed ? "from-purple-400 via-violet-500 to-fuchsia-400" : "from-sky-400 via-blue-500 to-indigo-400"
-          )}>
-            {n}
-          </span>
-          <span className={cn("pointer-events-none absolute inset-0 -z-10 blur-2xl bg-gradient-to-br",
-            useRed ? "from-purple-500/40 via-violet-600/30 to-fuchsia-500/40" : "from-sky-500/40 via-blue-600/30 to-indigo-500/40"
-          )} />
+          Step {n} of 3
         </span>
       </div>
-      <h3 className="text-2xl font-extrabold text-white mb-4">{title}</h3>
+      <h3 className="text-xl md:text-2xl font-extrabold text-white mb-4">{title}</h3>
       <div className="flex-1">{children}</div>
-      {actions && <div className="mt-8 pt-6 border-t border-white/10">{actions}</div>}
+      {actions && <div className="mt-6 md:mt-8 pt-6 border-t border-white/10">{actions}</div>}
     </div>
   );
 });
@@ -1060,7 +1216,7 @@ export const EvervaultCard = memo(({ text }: { text?: string }) => {
         <div className="relative z-10">
           <div className="relative h-32 w-32 rounded-full flex items-center justify-center">
             <div className="absolute inset-0 rounded-full bg-white/10 blur-md" />
-            <span className="relative z-20 font-extrabold text-3xl text-white select-none">{text}</span>
+            <span className="relative z-20 font-extrabold text-2xl md:text-3xl text-white select-none">{text}</span>
           </div>
         </div>
       </div>
@@ -1079,7 +1235,7 @@ function CardPattern({ mouseX, mouseY, randomString }: any) {
       </motion.div>
     </div>
   );
-}
+};
 
 // --- Vantage Card (Red/Purple) ---
 export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
@@ -1100,7 +1256,7 @@ export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
         <div className="relative z-10">
           <div className="relative h-32 w-32 rounded-full flex items-center justify-center">
             <div className="absolute inset-0 rounded-full bg-white/10 blur-md" />
-            <span className="relative z-20 font-extrabold text-3xl text-white select-none">{text}</span>
+            <span className="relative z-20 font-extrabold text-2xl md:text-3xl text-white select-none">{text}</span>
           </div>
         </div>
       </div>

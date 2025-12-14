@@ -408,7 +408,7 @@ const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => vo
             onClick={() => setExpandedId('rank')}
             className="cursor-pointer group hover:scale-[1.01] transition-transform duration-300"
         >
-             <RankEvervaultCard totalReferrals={affiliateData.referrals} />
+             <RankEvervaultCard totalReferrals={affiliateData.referrals} /> 
         </motion.div>
 
         {/* FIX: Changed grid-cols-2 to support mobile properly */}

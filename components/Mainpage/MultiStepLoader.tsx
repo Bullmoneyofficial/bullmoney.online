@@ -117,7 +117,7 @@ const TradingViewBackground = memo(({ assetKey }: { assetKey: AssetKey }) => {
     script.innerHTML = JSON.stringify({
       autosize: true,
       symbol: asset.symbol,
-      interval: "D",
+      interval: "1",
       timezone: "Etc/UTC",
       theme: "dark",
       style: "1",
