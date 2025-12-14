@@ -1,6 +1,11 @@
 import React, { useEffect, useRef, useId, useState } from 'react';
 import './GlassSurface.css';
 
+// Define explicit types for SVG elements to prevent TS errors
+type SVGFEDisplacementMapElement = React.ComponentProps<'feDisplacementMap'>;
+type SVGFEGaussianBlurElement = React.ComponentProps<'feGaussianBlur'>;
+type SVGFEImageElement = React.ComponentProps<'feImage'>;
+
 export interface GlassSurfaceProps {
   children?: React.ReactNode;
   width?: number | string;
@@ -9,8 +14,8 @@ export interface GlassSurfaceProps {
   borderWidth?: number;
   brightness?: number;
   opacity?: number;
-  blur?: number;
-  displace?: number;
+  blur?: number;           // Controls mobile blur amount
+  displace?: number;       // Controls desktop liquid distortion
   backgroundOpacity?: number;
   saturation?: number;
   distortionScale?: number;
@@ -29,11 +34,8 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   width = '100%',
   height = '100%',
   borderRadius = 50,
-  borderWidth = 0.5,
-  brightness = 50,
-  opacity = 1,
   blur = 8,
-  displace = 0,
+  displace = 0, // Ensure this is destructured so it is defined
   backgroundOpacity = 0,
   saturation = 1.2,
   distortionScale = 20,
@@ -42,7 +44,6 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   blueOffset = 15,
   xChannel = 'R',
   yChannel = 'G',
-  mixBlendMode = 'normal',
   className = '',
   style = {}
 }) => {
@@ -50,33 +51,36 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   const cleanId = id.replace(/:/g, '');
   const filterId = `glass-filter-${cleanId}`;
   
-  // Refs for SVG manipulation
+  // Refs
   const containerRef = useRef<HTMLDivElement>(null);
-  const feImageRef = useRef<SVGFEImageElement>(null);
-  const redChannelRef = useRef<SVGFEDisplacementMapElement>(null);
-  const greenChannelRef = useRef<SVGFEDisplacementMapElement>(null);
-  const blueChannelRef = useRef<SVGFEDisplacementMapElement>(null);
-  const gaussianBlurRef = useRef<SVGFEGaussianBlurElement>(null);
+  // We use `any` here for simplicity with SVG refs in TS, or you can use specific types defined above
+  const feImageRef = useRef<any>(null);
+  const redChannelRef = useRef<any>(null);
+  const greenChannelRef = useRef<any>(null);
+  const blueChannelRef = useRef<any>(null);
+  const gaussianBlurRef = useRef<any>(null);
 
   const [isIOS, setIsIOS] = useState(false);
 
-  // Detect iOS specifically (because it strictly blocks SVG backdrop-filters)
+  // 1. Detect iOS
   useEffect(() => {
     const checkIOS = () => {
       if (typeof window === 'undefined') return false;
       const userAgent = window.navigator.userAgent.toLowerCase();
-      return /iphone|ipad|ipod/.test(userAgent);
+      // Detect iPhone, iPad, iPod or Mac with Touch (iPad Pro)
+      return /iphone|ipad|ipod/.test(userAgent) || 
+             (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     };
     setIsIOS(checkIOS());
   }, []);
 
+  // 2. Logic for generating the Desktop Liquid Map
   const generateDisplacementMap = () => {
     if (!containerRef.current) return '';
     const rect = containerRef.current.getBoundingClientRect();
     const w = rect.width || 300;
     const h = rect.height || 150;
     
-    // Create a dynamic liquid gradient map
     const svgContent = `
       <svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -105,12 +109,12 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     }
   };
 
+  // 3. Update SVG Filters (Desktop Only)
   useEffect(() => {
     if (isIOS) return;
 
     updateSVG();
     
-    // Update SVG parameters dynamically
     [
       { ref: redChannelRef, offset: redOffset },
       { ref: greenChannelRef, offset: greenOffset },
@@ -124,6 +128,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     });
 
     if (gaussianBlurRef.current) {
+      // This is where 'displace' is used. It is defined in props above.
       gaussianBlurRef.current.setAttribute('stdDeviation', displace.toString());
     }
   }, [
@@ -131,7 +136,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     xChannel, yChannel, displace, isIOS, width, height
   ]);
 
-  // Resize observer to keep the map proportional
+  // 4. Resize Observer
   useEffect(() => {
     if (!containerRef.current || isIOS) return;
     const resizeObserver = new ResizeObserver(() => requestAnimationFrame(updateSVG));
@@ -144,40 +149,47 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     width: typeof width === 'number' ? `${width}px` : width,
     height: typeof height === 'number' ? `${height}px` : height,
     borderRadius: `${borderRadius}px`,
-    '--glass-opacity': isIOS ? Math.max(0.1, backgroundOpacity) : backgroundOpacity,
+    '--glass-opacity': backgroundOpacity,
     '--glass-saturation': saturation,
+    '--blur': `${blur}px`, // Passed to CSS for mobile
     '--filter-id': `url(#${filterId})`,
-    '--chromatic-offset': `${distortionScale}px` // Used for CSS simulation on mobile
   } as React.CSSProperties;
+
+  // Determine active class
+  const surfaceClass = isIOS ? 'glass-mobile-3d' : 'glass-desktop-svg';
 
   return (
     <div
       ref={containerRef}
-      className={`glass-surface ${isIOS ? 'glass-mobile-3d' : 'glass-desktop-svg'} ${className}`}
+      className={`glass-surface ${surfaceClass} ${className}`}
       style={containerStyle}
     >
-      {/* On Mobile/iOS, we inject a "fake" chromatic aberration layer 
-        using gradients to mimic the liquid look without the SVG filter 
-      */}
-      {isIOS && (
-        <div className="mobile-liquid-layer"></div>
-      )}
+      {/* IOS: Fake Liquid Layer (CSS Gradients) */}
+      {isIOS && <div className="mobile-liquid-layer"></div>}
 
-      {/* Actual SVG Filter Definition (Desktop/Android) */}
+      {/* DESKTOP: Real SVG Filter */}
       {!isIOS && (
         <svg className="glass-surface__filter" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <filter id={filterId} colorInterpolationFilters="sRGB" x="-20%" y="-20%" width="140%" height="140%">
               <feImage ref={feImageRef} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="map" />
+              
+              {/* Red Channel */}
               <feDisplacementMap ref={redChannelRef} in="SourceGraphic" in2="map" result="dispRed" />
-              <feColorMatrix in="disppurple" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red" />
+              <feColorMatrix in="dispRed" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red" />
+              
+              {/* Green Channel */}
               <feDisplacementMap ref={greenChannelRef} in="SourceGraphic" in2="map" result="dispGreen" />
-              <feColorMatrix in="disppurple" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="green" />
+              <feColorMatrix in="dispGreen" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="green" />
+              
+              {/* Blue Channel */}
               <feDisplacementMap ref={blueChannelRef} in="SourceGraphic" in2="map" result="dispBlue" />
-              <feColorMatrix in="dispblue" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue" />
-              <feBlend in="red" in2="purple" mode="screen" result="rg" />
+              <feColorMatrix in="dispBlue" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue" />
+              
+              <feBlend in="red" in2="green" mode="screen" result="rg" />
               <feBlend in="rg" in2="blue" mode="screen" result="output" />
-              <feGaussianBlur ref={gaussianBlurRef} in="output" stdDeviation="0.5" />
+              
+              <feGaussianBlur ref={gaussianBlurRef} in="output" stdDeviation={displace} />
             </filter>
           </defs>
         </svg>

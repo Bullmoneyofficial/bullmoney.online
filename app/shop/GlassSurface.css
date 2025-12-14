@@ -5,13 +5,16 @@
   justify-content: center;
   overflow: hidden;
   max-width: 100%;
+  transition: opacity 0.26s ease-out;
 }
 
+/* Ensure the SVG filter definition takes up no space */
 .glass-surface__filter {
   position: absolute;
   width: 0;
   height: 0;
   pointer-events: none;
+  opacity: 0;
 }
 
 .glass-surface__content {
@@ -22,79 +25,87 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0.5rem;
+  border-radius: inherit;
 }
 
 /* =========================================
    DESKTOP / ANDROID (Real SVG Distortion)
    ========================================= */
 .glass-desktop-svg {
-  /* This uses the real SVG map defined in React */
+  /* Connects to the SVG filter ID defined in React */
   backdrop-filter: var(--filter-id) saturate(var(--glass-saturation, 1.2));
-  /* Fallback frost if filter loads slow */
-  background: rgba(255, 255, 255, 0.03); 
+  -webkit-backdrop-filter: var(--filter-id) saturate(var(--glass-saturation, 1.2));
+  
+  /* Fallback background if filter is slow to load */
+  background: rgba(255, 255, 255, 0.02); 
   box-shadow: 
     inset 0 0 0 1px rgba(255, 255, 255, 0.2),
     0 10px 40px rgba(0,0,0,0.5);
 }
 
 /* =========================================
-   IOS / MOBILE OPTIMIZED (Simulated 3D)
+   IOS / MOBILE OPTIMIZED (Native Blur + Simulation)
    ========================================= */
 .glass-mobile-3d {
-  /* 1. Stronger standard blur to replace the displacement 
-     2. Use saturate to mimic the refraction intensity
-  */
-  backdrop-filter: blur(5px) saturate(1.4);
-  -webkit-backdrop-filter: blur(5px) saturate(1.4);
+  /* 1. CRITICAL for iOS: Use native blur, NOT the SVG filter url() */
+  backdrop-filter: blur(var(--blur, 8px)) saturate(var(--glass-saturation, 1.4));
+  -webkit-backdrop-filter: blur(var(--blur, 8px)) saturate(var(--glass-saturation, 1.4));
   
-  /* 3. A gradient background that creates "volume" */
+  /* 2. Semi-transparent background to ensure visibility */
   background: linear-gradient(
     135deg, 
-    rgba(255, 255, 255, 0.04) 0%, 
-    rgba(255, 255, 255, 0.01) 50%, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.02) 50%, 
     rgba(255, 255, 255, 0.05) 100%
   );
 
-  /* 4. Complex border/shadow to fake the 3D edge */
+  /* 3. 3D Border effect */
+  border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 
-    /* Top-Left Highlight (The "Light Source") */
-    inset 1px 1px 0px 0px rgba(160, 15, 15, 0.503),
-    /* Bottom-Right Shadow (The "Thickness") */
-    inset -1px -1px 0px 0px rgba(47, 24, 100, 0),
-    /* Outer Shadow */
-    0 20px 40px -10px rgba(36, 31, 175, 0);
-    
-  border: 1px solid rgba(255, 255, 255, 0.1);
+    0 10px 30px rgba(0,0,0,0.2),
+    inset 1px 1px 0px 0px rgba(255, 255, 255, 0.15);
 }
 
-/* The Fake Liquid Layer (Mobile Only) */
+/* Dark mode adjustment for mobile */
+@media (prefers-color-scheme: dark) {
+  .glass-mobile-3d {
+    background: linear-gradient(
+      135deg, 
+      rgba(0, 0, 0, 0.2) 0%, 
+      rgba(0, 0, 0, 0.05) 50%, 
+      rgba(0, 0, 0, 0.1) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* The "Fake" Liquid Layer for Mobile 
+   Simulates the chromatic aberration without SVG overhead */
 .mobile-liquid-layer {
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.5;
+  border-radius: inherit;
   
-  /* Create the "Oil Slick" / Chromatic Aberration look */
   background: radial-gradient(
-    circle at 50% 50%,
-    rgba(18, 183, 114, 0.268),
-    transparent 60%
+    circle at 30% 70%,
+    rgba(255, 0, 0, 0.12),
+    transparent 50%
   ),
   radial-gradient(
-    circle at 80% 20%,
-    rgba(0, 0, 255, 0.135),
+    circle at 70% 30%,
+    rgba(0, 0, 255, 0.12),
     transparent 50%
   );
   
-  /* Blend it to look like lighting, not paint */
   mix-blend-mode: overlay;
-  
-  /* Animate it slightly to feel "liquid" */
-  animation: liquid-breathing 8s ease-in-out infinite alternate;
+  animation: mobile-breathing 6s ease-in-out infinite alternate;
 }
 
-@keyframes liquid-breathing {
+@keyframes mobile-breathing {
   0% { transform: scale(1); filter: hue-rotate(0deg); }
-  100% { transform: scale(1.1); filter: hue-rotate(30deg); }
+  100% { transform: scale(1.1); filter: hue-rotate(20deg); }
 }
