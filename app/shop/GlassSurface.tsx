@@ -56,7 +56,6 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   // We use `any` here for simplicity with SVG refs in TS, or you can use specific types defined above
   const feImageRef = useRef<any>(null);
   const redChannelRef = useRef<any>(null);
-  const greenChannelRef = useRef<any>(null);
   const blueChannelRef = useRef<any>(null);
   const gaussianBlurRef = useRef<any>(null);
 
@@ -117,7 +116,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     
     [
       { ref: redChannelRef, offset: redOffset },
-      { ref: greenChannelRef, offset: greenOffset },
+  
       { ref: blueChannelRef, offset: blueOffset }
     ].forEach(({ ref, offset }) => {
       if (ref.current) {
@@ -178,10 +177,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
               <feDisplacementMap ref={redChannelRef} in="SourceGraphic" in2="map" result="dispRed" />
               <feColorMatrix in="dispRed" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red" />
               
-              {/* Green Channel */}
-              <feDisplacementMap ref={greenChannelRef} in="SourceGraphic" in2="map" result="dispGreen" />
-              <feColorMatrix in="dispGreen" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="green" />
-              
+             
               {/* Blue Channel */}
               <feDisplacementMap ref={blueChannelRef} in="SourceGraphic" in2="map" result="dispBlue" />
               <feColorMatrix in="dispBlue" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue" />
