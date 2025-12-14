@@ -3,15 +3,19 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { createClient } from '@supabase/supabase-js'; 
 import { gsap } from 'gsap';
-import dynamic from 'next/dynamic'; // Added for Cursor
+import dynamic from 'next/dynamic';
 import { 
-  Loader2, Check, Mail, Hash, Lock, 
+  Check, Mail, Hash, Lock, 
   ArrowRight, ChevronLeft, ExternalLink, AlertCircle,
-  Copy, Plus, LogIn, Eye, EyeOff, HelpCircle, FolderPlus
+  Copy, Plus, LogIn, Eye, EyeOff, HelpCircle, FolderPlus, Loader2
 } from 'lucide-react';
 
-import { motion, AnimatePresence, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
+import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "framer-motion";
 import { cn } from "@/lib/utils";
+
+// --- IMPORT SEPARATE LOADER COMPONENT ---
+// ADJUST THIS PATH:
+import { MultiStepLoader } from "@/components/Mainpage/MultiStepLoader"; 
 
 // --- 1. SUPABASE SETUP ---
 const TELEGRAM_GROUP_LINK = "https://t.me/addlist/uswKuwT2JUQ4YWI8";
@@ -26,6 +30,7 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 // --- UTILS: MOBILE DETECTION HOOK ---
+// Kept here because the main Page Cursor uses it
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -42,7 +47,7 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-// --- 2. INTERNAL CSS FOR CURSOR ---
+// --- 2. INTERNAL CSS FOR GLOBAL CURSOR ---
 const CursorStyles = () => (
   <style jsx global>{`
     .target-cursor-wrapper {
@@ -82,8 +87,7 @@ const CursorStyles = () => (
   `}</style>
 );
 
-// --- 3. DYNAMIC CURSOR COMPONENT ---
-// We define the component first, then wrap it in dynamic
+// --- 3. DYNAMIC CURSOR COMPONENT (GLOBAL) ---
 interface TargetCursorProps {
   targetSelector?: string;
   spinDuration?: number;
@@ -102,10 +106,9 @@ const TargetCursorComponent = memo(({
   const isMobile = useIsMobile();
   const cursorRef = useRef<HTMLDivElement>(null);
   const cornersRef = useRef<NodeListOf<HTMLDivElement> | null>(null);
-  const spinTl = useRef<gsap.core.Timeline | null>(null);
+  const spinTlRef = useRef<gsap.core.Timeline | null>(null);
   const dotRef = useRef<HTMLDivElement>(null);
 
-  // Refs for logic to avoid state re-renders
   const stateRef = useRef({
     isActive: false,
     activeStrength: { current: 0 },
@@ -114,125 +117,67 @@ const TargetCursorComponent = memo(({
     activeTarget: null as Element | null
   });
 
+  const moveCursor = useCallback((e: MouseEvent) => {
+    if (cursorRef.current && !isMobile) {
+      gsap.to(cursorRef.current, { x: e.clientX, y: e.clientY, duration: 0.1, ease: 'power3.out', overwrite: 'auto' });
+    }
+  }, [isMobile]);
+
+  const handleDown = useCallback(() => {
+    const corners = cornersRef.current;
+    if (dotRef.current && corners) {
+      gsap.to(dotRef.current, { scale: 0.5, duration: 0.2 });
+      gsap.to(corners, { scale: 1.2, borderColor: '#00ffff', duration: 0.2 });
+    }
+  }, []);
+
+  const handleUp = useCallback(() => {
+    const corners = cornersRef.current;
+    if (dotRef.current && corners) {
+      gsap.to(dotRef.current, { scale: 1, duration: 0.2 });
+      gsap.to(corners, { scale: 1, borderColor: '#ffffff', duration: 0.2 });
+    }
+  }, []);
+
   useEffect(() => {
     if (!cursorRef.current || typeof window === 'undefined') return;
 
-    // Hide default cursor on desktop
     if (hideDefaultCursor && !isMobile) {
       document.body.classList.add('custom-cursor-active');
     }
 
     const cursor = cursorRef.current;
     cornersRef.current = cursor.querySelectorAll<HTMLDivElement>('.target-cursor-corner');
+    
+    let ctx = gsap.context(() => {});
 
-    const ctx = gsap.context(() => {
-        const corners = cornersRef.current!;
+    // DESKTOP LOGIC
+    if (!isMobile) {
+        ctx = gsap.context(() => {
+            const corners = cornersRef.current!;
 
-        // ----------------------------------------------------
-        // MOBILE LOGIC: SYSTEMATIC SCANNER
-        // ----------------------------------------------------
-        if (isMobile) {
-            // Init
-            gsap.set(cursor, { x: window.innerWidth/2, y: window.innerHeight/2, opacity: 0, scale: 1.3 });
-            gsap.to(cursor, { opacity: 1, duration: 0.5 });
-
-            // Visual Pulse
-            const tapEffect = () => {
-                if(!dotRef.current) return;
-                gsap.to(corners, { scale: 1.6, borderColor: '#00ffff', duration: 0.15, yoyo: true, repeat: 1 });
-                gsap.to(dotRef.current, { scale: 2, backgroundColor: '#ffffff', duration: 0.15, yoyo: true, repeat: 1 });
-            };
-
-            const runScanner = async () => {
-                // Find all clickable elements
-                const allElements = Array.from(document.querySelectorAll(targetSelector));
-
-                const targets = allElements.filter(el => {
-                    const r = el.getBoundingClientRect();
-                    const style = window.getComputedStyle(el);
-                    return (
-                        style.display !== 'none' && 
-                        style.visibility !== 'hidden' && 
-                        style.opacity !== '0' &&
-                        r.width > 20 && r.height > 20 && 
-                        r.top >= 0 && r.left >= 0 
-                    );
-                }).sort((a, b) => {
-                    const ra = a.getBoundingClientRect();
-                    const rb = b.getBoundingClientRect();
-                    return ra.top - rb.top || ra.left - rb.left;
-                });
-
-                if (targets.length > 0) {
-                    for (const target of targets) {
-                        const r = target.getBoundingClientRect();
-                        // Viewport check
-                        if (r.top < -50 || r.bottom > window.innerHeight + 50) continue; 
-
-                        await new Promise<void>(resolve => {
-                            gsap.to(cursor, {
-                                x: r.left + r.width / 2,
-                                y: r.top + r.height / 2,
-                                duration: 0.8,
-                                ease: "power2.inOut",
-                                onComplete: () => {
-                                    tapEffect(); 
-                                    setTimeout(resolve, 600); 
-                                }
-                            });
-                        });
-                    }
-                    // Recursion
-                    runScanner(); 
-                } else {
-                    // Fallback roaming
-                    gsap.to(cursor, {
-                        x: window.innerWidth / 2 + (Math.random() - 0.5) * 100,
-                        y: window.innerHeight / 2 + (Math.random() - 0.5) * 100,
-                        duration: 2,
-                        onComplete: () => { runScanner(); }
-                    });
-                }
-            };
-
-            setTimeout(runScanner, 1000);
-        }
-
-        // ----------------------------------------------------
-        // DESKTOP LOGIC: MAGNETIC + SPIN
-        // ----------------------------------------------------
-        else {
             gsap.set(cursor, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
 
-            const spinTl = gsap.timeline({ repeat: -1 })
+            spinTlRef.current = gsap.timeline({ repeat: -1 })
                 .to(cursor, { rotation: 360, duration: spinDuration, ease: 'none' });
 
-            const moveCursor = (e: MouseEvent) => {
-                gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: 'power3.out', overwrite: 'auto' });
-            };
             window.addEventListener('mousemove', moveCursor, { passive: true });
-
-            // Clicks
-            const handleDown = () => {
-                if(!dotRef.current) return;
-                gsap.to(dotRef.current, { scale: 0.5, duration: 0.2 });
-                gsap.to(corners, { scale: 1.2, borderColor: '#00ffff', duration: 0.2 });
-            };
-            const handleUp = () => {
-                if(!dotRef.current) return;
-                gsap.to(dotRef.current, { scale: 1, duration: 0.2 });
-                gsap.to(corners, { scale: 1, borderColor: '#ffffff', duration: 0.2 });
-            };
             window.addEventListener('mousedown', handleDown);
             window.addEventListener('mouseup', handleUp);
 
             // Magnetic Ticker
             const tickerFn = () => {
                 const state = stateRef.current;
-                if (!state.targetCornerPositions) return;
+                if (!state.targetCornerPositions || !cursorRef.current) return;
                 
                 const strength = state.activeStrength.current;
-                if (strength === 0) return;
+                if (strength === 0) {
+                    if (stateRef.current.tickerFn) {
+                        gsap.ticker.remove(stateRef.current.tickerFn);
+                        stateRef.current.tickerFn = null;
+                    }
+                    return;
+                }
 
                 const cursorX = gsap.getProperty(cursor, 'x') as number;
                 const cursorY = gsap.getProperty(cursor, 'y') as number;
@@ -254,13 +199,14 @@ const TargetCursorComponent = memo(({
             stateRef.current.tickerFn = tickerFn;
             gsap.ticker.add(tickerFn);
 
+
             // Hover Events
             const handleHover = (e: MouseEvent) => {
                 const target = (e.target as Element).closest(targetSelector);
                 if (target && target !== stateRef.current.activeTarget) {
                     stateRef.current.activeTarget = target;
                     stateRef.current.isActive = true;
-                    spinTl.pause();
+                    spinTlRef.current?.pause();
                     gsap.to(cursor, { rotation: 0, duration: 0.3 }); 
 
                     const rect = target.getBoundingClientRect();
@@ -274,6 +220,11 @@ const TargetCursorComponent = memo(({
                     ];
 
                     gsap.to(stateRef.current.activeStrength, { current: 1, duration: hoverDuration, ease: 'power2.out' });
+                    
+                    if (!stateRef.current.tickerFn) {
+                        stateRef.current.tickerFn = tickerFn;
+                        gsap.ticker.add(tickerFn);
+                    }
 
                     const handleLeave = () => {
                         target.removeEventListener('mouseleave', handleLeave);
@@ -282,7 +233,6 @@ const TargetCursorComponent = memo(({
                         stateRef.current.targetCornerPositions = null;
                         gsap.to(stateRef.current.activeStrength, { current: 0, duration: 0.2, overwrite: true });
                         
-                        // Reset positions
                          const positions = [
                           { x: -18, y: -18 },
                           { x: 6, y: -18 },
@@ -290,22 +240,26 @@ const TargetCursorComponent = memo(({
                           { x: -18, y: 6 }
                         ];
                         corners.forEach((c, i) => gsap.to(c, { x: positions[i].x, y: positions[i].y, duration: 0.3, ease: 'power3.out' }));
-                        spinTl.restart();
+                        spinTlRef.current?.restart();
                     };
                     target.addEventListener('mouseleave', handleLeave);
                 }
             };
             window.addEventListener('mouseover', handleHover, { passive: true });
-        }
-    }, cursorRef); 
+        });
+    }
 
+    // --- CLEANUP FUNCTION ---
     return () => {
         document.body.classList.remove('custom-cursor-active');
+        window.removeEventListener('mousemove', moveCursor);
+        window.removeEventListener('mousedown', handleDown);
+        window.removeEventListener('mouseup', handleUp);
+        
         if(stateRef.current.tickerFn) gsap.ticker.remove(stateRef.current.tickerFn);
-        ctx.revert();
-        window.removeEventListener('mousemove', () => {}); 
+        ctx.revert(); 
     };
-  }, [isMobile, hideDefaultCursor, spinDuration, targetSelector, hoverDuration, parallaxOn]);
+  }, [isMobile, hideDefaultCursor, spinDuration, targetSelector, hoverDuration, parallaxOn, moveCursor, handleDown, handleUp]);
 
   return (
     <div ref={cursorRef} className="target-cursor-wrapper">
@@ -318,335 +272,11 @@ const TargetCursorComponent = memo(({
   );
 });
 
-// Dynamic import to avoid SSR issues
 const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { 
   ssr: false 
 });
 
-
-// --- 4. ENCRYPTED TEXT (OPTIMIZED WITH MEMO) ---
-const CHARS = "!@#$%^&*()_+-=[]{}|;:,.<>?/~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-// Memoize to prevent re-render when Parent (Loader) progress changes
-const EncryptedText = memo(({
-  text,
-  interval = 50,
-  revealDelayMs = 50,
-  className,
-  encryptedClassName,
-  revealedClassName,
-}: {
-  text: string;
-  interval?: number;
-  revealDelayMs?: number;
-  className?: string;
-  encryptedClassName?: string;
-  revealedClassName?: string;
-}) => {
-  const [displayText, setDisplayText] = useState<string>(text);
-  const [revealedIndex, setRevealedIndex] = useState(0);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    
-    const scramble = () => {
-      let output = "";
-      const len = text.length;
-      const charsLen = CHARS.length;
-      for (let i = 0; i < len; i++) {
-        if (i < revealedIndex) {
-          output += text[i];
-        } else {
-          output += CHARS[Math.floor(Math.random() * charsLen)];
-        }
-      }
-      setDisplayText(output);
-    };
-
-    timer = setInterval(scramble, interval);
-
-    const revealTimer = setInterval(() => {
-        setRevealedIndex((prev) => {
-            if (prev < text.length) return prev + 1;
-            clearInterval(revealTimer);
-            return prev;
-        });
-    }, revealDelayMs);
-
-    return () => {
-      clearInterval(timer);
-      clearInterval(revealTimer);
-    };
-  }, [text, interval, revealedIndex, revealDelayMs]);
-
-  return (
-    <span className={cn("inline-block whitespace-nowrap cursor-default", className)} aria-label={text}>
-      {displayText}
-    </span>
-  );
-});
-
-// --- 5. BACKGROUND MATRIX LAYER (MEMOIZED) ---
-const MatrixBackground = memo(() => {
-    // Static arrays
-    const leftColumn = [
-        "SYS_INIT_SEQUENCE_0x1", "LOADING_KERNAL_MODULES", "BYPASS_FIREWALL_PROXY",
-        "ESTABLISHING_HANDSHAKE", "PACKET_LOSS_0.002%", "MEM_ALLOC_STACK_HEAP",
-        "ENCRYPTION_KEY_256BIT", "NODE_SYNC_PENDING...", "ROOT_ACCESS_VERIFIED"
-    ];
-
-    const rightColumn = [
-        "0x4F3A2B1C9D8E", "PROTOCOL_V4_SECURE", "LATENCY_CHECK_12ms",
-        "DATA_INTEGRITY_OK", "BUFFER_OVERFLOW_NULL", "THREAD_POOL_ACTIVE",
-        "GPU_ACCEL_ENABLED", "RENDER_PIPELINE_ON", "SESSION_ID_GENERATED"
-    ];
-
-    return (
-        <div className="absolute inset-0 z-0 flex justify-between p-8 pointer-events-none overflow-hidden select-none">
-            <div className="flex flex-col gap-6 opacity-10">
-                {leftColumn.map((line, i) => (
-                    <EncryptedText 
-                        key={i} 
-                        text={line} 
-                        className="text-[10px] md:text-xs font-mono text-blue-500" 
-                        revealDelayMs={100 + (i * 150)} 
-                    />
-                ))}
-            </div>
-            <div className="hidden md:flex flex-col gap-6 opacity-10 items-end">
-                {rightColumn.map((line, i) => (
-                    <EncryptedText 
-                        key={i} 
-                        text={line} 
-                        className="text-[10px] md:text-xs font-mono text-blue-500" 
-                        revealDelayMs={200 + (i * 150)} 
-                    />
-                ))}
-            </div>
-        </div>
-    );
-});
-
-// --- NEW COMPONENT: GHOST CURSOR FOR LOADER (DESKTOP ONLY) ---
-const GhostLoaderCursor = memo(() => {
-  const isMobile = useIsMobile();
-  
-  const mouse = { x: useMotionValue(0), y: useMotionValue(0) };
-  
-  // Use less damping/stiffness for better perf on mobile if forced, but we are hiding it
-  const smoothOptions = { damping: 20, stiffness: 300, mass: 0.5 };
-  const smoothOptions2 = { damping: 30, stiffness: 200, mass: 0.8 };
-  const smoothOptions3 = { damping: 40, stiffness: 150, mass: 1 };
-
-  const x = useSpring(mouse.x, smoothOptions);
-  const y = useSpring(mouse.y, smoothOptions);
-  const x2 = useSpring(mouse.x, smoothOptions2);
-  const y2 = useSpring(mouse.y, smoothOptions2);
-  const x3 = useSpring(mouse.x, smoothOptions3);
-  const y3 = useSpring(mouse.y, smoothOptions3);
-
-  useEffect(() => {
-    if (isMobile) return; 
-    
-    const manageMouseMove = (e: MouseEvent) => {
-      const { clientX, clientY } = e;
-      mouse.x.set(clientX);
-      mouse.y.set(clientY);
-    };
-    window.addEventListener("mousemove", manageMouseMove, { passive: true });
-    return () => window.removeEventListener("mousemove", manageMouseMove);
-  }, [mouse.x, mouse.y, isMobile]);
-
-  if (isMobile) return null;
-
-  return (
-    <div className="fixed inset-0 z-[60] pointer-events-none"> 
-      <motion.div 
-        style={{ left: x3, top: y3 }}
-        className="fixed w-32 h-32 rounded-full bg-blue-600/30 blur-[40px] -translate-x-1/2 -translate-y-1/2 mix-blend-screen will-change-transform"
-      />
-      <motion.div 
-        style={{ left: x2, top: y2 }}
-        className="fixed w-12 h-12 rounded-full bg-blue-400/50 blur-[12px] -translate-x-1/2 -translate-y-1/2 mix-blend-screen will-change-transform"
-      />
-      <motion.div 
-        style={{ left: x, top: y }}
-        className="fixed w-4 h-4 rounded-full bg-cyan-100 shadow-[0_0_40px_rgba(34,211,238,1)] -translate-x-1/2 -translate-y-1/2 z-10 will-change-transform"
-      />
-    </div>
-  );
-});
-
-// --- 6. DARKER & COOLER LOADER COMPONENT (OPTIMIZED) ---
-const MultiStepLoader = ({
-  loadingStates,
-  loading,
-  duration = 2000,
-}: {
-  loadingStates: { text: string }[];
-  loading: boolean;
-  duration?: number;
-}) => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    if (!loading) {
-      setCurrentStep(0);
-      setProgress(0);
-      return;
-    }
-
-    const totalSteps = loadingStates.length;
-    const stepDuration = duration;
-    
-    const stepInterval = setInterval(() => {
-      setCurrentStep((prev) => (prev < totalSteps - 1 ? prev + 1 : prev));
-    }, stepDuration);
-
-    const updateFrequency = 50; 
-    const increment = 100 / ( (totalSteps * stepDuration) / updateFrequency );
-
-    const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          return 100;
-        }
-        return Math.min(prev + increment, 100);
-      });
-    }, updateFrequency);
-
-    return () => {
-      clearInterval(stepInterval);
-      clearInterval(progressInterval);
-    };
-  }, [loading, loadingStates.length, duration]);
-
-  const circumference = 2 * Math.PI * 70; 
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
-
-  return (
-    <AnimatePresence mode="wait">
-      {loading && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
-          transition={{ duration: 0.8 }}
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#010309] overflow-hidden perspective-[1000px] cursor-none"
-        >
-          <div className="absolute inset-0 bg-[#010309] gpu-accel">
-              <MatrixBackground />
-              <GhostLoaderCursor />
-
-              <motion.div 
-                animate={{ rotate: 360, scale: [1, 1.1, 1] }} 
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,_rgba(23,37,84,0.15)_0%,_transparent_50%)] blur-[40px] md:blur-[120px] will-change-transform" 
-              />
-              <motion.div 
-                animate={{ rotate: -360, scale: [1, 1.2, 1] }} 
-                transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                className="absolute -bottom-[50%] -right-[50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,_rgba(30,27,75,0.1)_0%,_transparent_50%)] blur-[40px] md:blur-[120px] will-change-transform" 
-              />
-          </div>
-
-          <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-md px-4 pointer-events-none">
-            
-            <div className="relative w-48 h-48 mb-16 flex items-center justify-center perspective-[1000px]">
-              
-              <div className="absolute inset-0 bg-blue-900/10 rounded-full blur-[40px] md:blur-[60px] animate-pulse" />
-
-              <motion.div
-                animate={{ rotateZ: 360, rotateY: [0, 15, 0, -15, 0], rotateX: [0, 10, 0, -10, 0] }}
-                transition={{ rotateZ: { duration: 10, repeat: Infinity, ease: "linear" }, default: { duration: 6, repeat: Infinity, ease: "easeInOut" } }}
-                className="absolute inset-0 rounded-full border-[3px] border-dashed border-blue-900/40 shadow-[0_0_20px_rgba(30,58,138,0.2)] will-change-transform"
-                style={{ transformStyle: 'preserve-3d' }}
-              />
-              <motion.div
-                animate={{ rotateZ: -360, rotateY: [0, -20, 0, 20, 0], rotateX: [0, -15, 0, 15, 0] }}
-                transition={{ rotateZ: { duration: 12, repeat: Infinity, ease: "linear" }, default: { duration: 8, repeat: Infinity, ease: "easeInOut" } }}
-                className="absolute inset-4 rounded-full border-[3px] border-dashed border-indigo-900/40 shadow-[0_0_20px_rgba(49,46,129,0.2)] will-change-transform"
-                style={{ transformStyle: 'preserve-3d' }}
-              />
-              
-              <div className="relative w-24 h-24 bg-[#02040a] rounded-full flex items-center justify-center border border-blue-900/50 shadow-[inset_0_0_30px_rgba(30,58,138,0.4)] z-20">
-                 <Loader2 className="w-10 h-10 text-blue-500 animate-[spin_2s_linear_infinite] drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-                 <motion.div animate={{ scale: [1, 1.5, 1], opacity: [0.8, 0, 0.8] }} transition={{ duration: 2, repeat: Infinity }} className="absolute inset-0 rounded-full border-2 border-blue-800/30" />
-              </div>
-
-              <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none z-10 overflow-visible" viewBox="0 0 160 160">
-                <circle cx="80" cy="80" r="70" className="stroke-blue-950/30 stroke-[6] fill-none" />
-                 <motion.circle
-                  cx="80" cy="80" r="70"
-                  className="stroke-blue-600/30 stroke-[8] fill-none blur-[8px] md:blur-[12px]"
-                  strokeDasharray={circumference}
-                  initial={{ strokeDashoffset: circumference }}
-                  animate={{ strokeDashoffset: strokeDashoffset }}
-                  transition={{ ease: "linear", duration: 0.2 }}
-                />
-                <motion.circle
-                  cx="80" cy="80" r="70"
-                  className="stroke-blue-500 stroke-[4] fill-none drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]"
-                  strokeDasharray={circumference}
-                  initial={{ strokeDashoffset: circumference }}
-                  animate={{ strokeDashoffset: strokeDashoffset }}
-                  transition={{ ease: "linear", duration: 0.2 }}
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
-
-            <div className="flex flex-col items-center space-y-6 w-full">
-              <div className="relative">
-                <h1 className="text-5xl font-black text-blue-50 tracking-tighter relative z-10 text-shadow-[0_0_7px_#1e3a8a,0_0_15px_#1e3a8a]">
-                    BULLMONEY FREE
-                </h1>
-                <h1 className="text-5xl font-black text-blue-950 tracking-tighter absolute inset-0 blur-[8px] z-0 animate-pulse opacity-80">
-                    BULLMONEY FREE
-                </h1>
-              </div>
-
-              <div className="w-full max-w-[280px] flex flex-col items-center justify-center relative p-4 bg-blue-950/10 rounded-xl border border-blue-800/30 backdrop-blur-md overflow-hidden">
-                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/5 to-transparent h-[4px] w-full animate-scan pointer-events-none" />
-                
-                <div className="text-3xl font-mono font-bold text-blue-400 mb-2 tabular-nums tracking-widest drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">
-                  {Math.floor(progress).toString().padStart(3, '0')}%
-                </div>
-
-                <div className="h-6 flex items-center justify-center">
-                    <EncryptedText
-                      text={loadingStates[currentStep]?.text || "LOADING"}
-                      key={currentStep}
-                      className="text-blue-200/80 font-bold text-xs tracking-[0.2em] uppercase"
-                      encryptedClassName="text-blue-800"
-                      revealedClassName="text-blue-200"
-                      interval={30}
-                      revealDelayMs={20}
-                    />
-                </div>
-              </div>
-            </div>
-            
-          </div>
-          
-          <style jsx global>{`
-            @keyframes scan {
-              0% { transform: translateY(-200%); opacity: 0; }
-              50% { opacity: 1; }
-              100% { transform: translateY(200%); opacity: 0; }
-            }
-            .animate-scan {
-              animation: scan 3s ease-in-out infinite;
-            }
-          `}</style>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-};
-
+// --- LOADING STATES DATA ---
 const loadingStates = [
   { text: "INITIALIZING QUANTUM LINK" },
   { text: "SYNCING BLOCKCHAIN NODES" },

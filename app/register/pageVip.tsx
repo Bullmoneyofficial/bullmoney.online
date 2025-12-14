@@ -3,15 +3,18 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { createClient } from '@supabase/supabase-js'; 
 import { gsap } from 'gsap';
-import dynamic from 'next/dynamic'; // Added for Cursor
+import dynamic from 'next/dynamic';
 import { 
-  Loader2, Check, Mail, Hash, Lock, 
+  Check, Mail, Hash, Lock, 
   ArrowRight, ChevronLeft, ExternalLink, AlertCircle,
-  Copy, Plus, LogIn, Eye, EyeOff, HelpCircle, FolderPlus
+  Copy, Plus, LogIn, Eye, EyeOff, HelpCircle, FolderPlus, Loader2
 } from 'lucide-react';
 
-import { motion, AnimatePresence, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
+import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "framer-motion";
 import { cn } from "@/lib/utils";
+
+// --- IMPORT THE VIP LOADER ---
+import { MultiStepLoader } from "@/components/Mainpage/MultiStepLoaderVip"; 
 
 // --- 1. SUPABASE SETUP ---
 const TELEGRAM_GROUP_LINK = "https://t.me/addlist/uswKuwT2JUQ4YWI8";
@@ -83,7 +86,6 @@ const CursorStyles = () => (
 );
 
 // --- 3. DYNAMIC CURSOR COMPONENT ---
-// We define the component first, then wrap it in dynamic
 interface TargetCursorProps {
   targetSelector?: string;
   spinDuration?: number;
@@ -102,10 +104,9 @@ const TargetCursorComponent = memo(({
   const isMobile = useIsMobile();
   const cursorRef = useRef<HTMLDivElement>(null);
   const cornersRef = useRef<NodeListOf<HTMLDivElement> | null>(null);
-  const spinTl = useRef<gsap.core.Timeline | null>(null);
+  const spinTlRef = useRef<gsap.core.Timeline | null>(null);
   const dotRef = useRef<HTMLDivElement>(null);
 
-  // Refs for logic to avoid state re-renders
   const stateRef = useRef({
     isActive: false,
     activeStrength: { current: 0 },
@@ -114,125 +115,65 @@ const TargetCursorComponent = memo(({
     activeTarget: null as Element | null
   });
 
+  const moveCursor = useCallback((e: MouseEvent) => {
+    if (cursorRef.current && !isMobile) {
+      gsap.to(cursorRef.current, { x: e.clientX, y: e.clientY, duration: 0.1, ease: 'power3.out', overwrite: 'auto' });
+    }
+  }, [isMobile]);
+
+  const handleDown = useCallback(() => {
+    const corners = cornersRef.current;
+    if (dotRef.current && corners) {
+      gsap.to(dotRef.current, { scale: 0.5, duration: 0.2 });
+      gsap.to(corners, { scale: 1.2, borderColor: '#00ffff', duration: 0.2 });
+    }
+  }, []);
+
+  const handleUp = useCallback(() => {
+    const corners = cornersRef.current;
+    if (dotRef.current && corners) {
+      gsap.to(dotRef.current, { scale: 1, duration: 0.2 });
+      gsap.to(corners, { scale: 1, borderColor: '#ffffff', duration: 0.2 });
+    }
+  }, []);
+
   useEffect(() => {
     if (!cursorRef.current || typeof window === 'undefined') return;
 
-    // Hide default cursor on desktop
     if (hideDefaultCursor && !isMobile) {
       document.body.classList.add('custom-cursor-active');
     }
 
     const cursor = cursorRef.current;
     cornersRef.current = cursor.querySelectorAll<HTMLDivElement>('.target-cursor-corner');
+    
+    let ctx = gsap.context(() => {});
 
-    const ctx = gsap.context(() => {
-        const corners = cornersRef.current!;
+    if (!isMobile) {
+        ctx = gsap.context(() => {
+            const corners = cornersRef.current!;
 
-        // ----------------------------------------------------
-        // MOBILE LOGIC: SYSTEMATIC SCANNER
-        // ----------------------------------------------------
-        if (isMobile) {
-            // Init
-            gsap.set(cursor, { x: window.innerWidth/2, y: window.innerHeight/2, opacity: 0, scale: 1.3 });
-            gsap.to(cursor, { opacity: 1, duration: 0.5 });
-
-            // Visual Pulse
-            const tapEffect = () => {
-                if(!dotRef.current) return;
-                gsap.to(corners, { scale: 1.6, borderColor: '#00ffff', duration: 0.15, yoyo: true, repeat: 1 });
-                gsap.to(dotRef.current, { scale: 2, backgroundColor: '#ffffff', duration: 0.15, yoyo: true, repeat: 1 });
-            };
-
-            const runScanner = async () => {
-                // Find all clickable elements
-                const allElements = Array.from(document.querySelectorAll(targetSelector));
-
-                const targets = allElements.filter(el => {
-                    const r = el.getBoundingClientRect();
-                    const style = window.getComputedStyle(el);
-                    return (
-                        style.display !== 'none' && 
-                        style.visibility !== 'hidden' && 
-                        style.opacity !== '0' &&
-                        r.width > 20 && r.height > 20 && 
-                        r.top >= 0 && r.left >= 0 
-                    );
-                }).sort((a, b) => {
-                    const ra = a.getBoundingClientRect();
-                    const rb = b.getBoundingClientRect();
-                    return ra.top - rb.top || ra.left - rb.left;
-                });
-
-                if (targets.length > 0) {
-                    for (const target of targets) {
-                        const r = target.getBoundingClientRect();
-                        // Viewport check
-                        if (r.top < -50 || r.bottom > window.innerHeight + 50) continue; 
-
-                        await new Promise<void>(resolve => {
-                            gsap.to(cursor, {
-                                x: r.left + r.width / 2,
-                                y: r.top + r.height / 2,
-                                duration: 0.8,
-                                ease: "power2.inOut",
-                                onComplete: () => {
-                                    tapEffect(); 
-                                    setTimeout(resolve, 600); 
-                                }
-                            });
-                        });
-                    }
-                    // Recursion
-                    runScanner(); 
-                } else {
-                    // Fallback roaming
-                    gsap.to(cursor, {
-                        x: window.innerWidth / 2 + (Math.random() - 0.5) * 100,
-                        y: window.innerHeight / 2 + (Math.random() - 0.5) * 100,
-                        duration: 2,
-                        onComplete: () => { runScanner(); }
-                    });
-                }
-            };
-
-            setTimeout(runScanner, 1000);
-        }
-
-        // ----------------------------------------------------
-        // DESKTOP LOGIC: MAGNETIC + SPIN
-        // ----------------------------------------------------
-        else {
             gsap.set(cursor, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
 
-            const spinTl = gsap.timeline({ repeat: -1 })
+            spinTlRef.current = gsap.timeline({ repeat: -1 })
                 .to(cursor, { rotation: 360, duration: spinDuration, ease: 'none' });
 
-            const moveCursor = (e: MouseEvent) => {
-                gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: 'power3.out', overwrite: 'auto' });
-            };
             window.addEventListener('mousemove', moveCursor, { passive: true });
-
-            // Clicks
-            const handleDown = () => {
-                if(!dotRef.current) return;
-                gsap.to(dotRef.current, { scale: 0.5, duration: 0.2 });
-                gsap.to(corners, { scale: 1.2, borderColor: '#00ffff', duration: 0.2 });
-            };
-            const handleUp = () => {
-                if(!dotRef.current) return;
-                gsap.to(dotRef.current, { scale: 1, duration: 0.2 });
-                gsap.to(corners, { scale: 1, borderColor: '#ffffff', duration: 0.2 });
-            };
             window.addEventListener('mousedown', handleDown);
             window.addEventListener('mouseup', handleUp);
 
-            // Magnetic Ticker
             const tickerFn = () => {
                 const state = stateRef.current;
-                if (!state.targetCornerPositions) return;
+                if (!state.targetCornerPositions || !cursorRef.current) return;
                 
                 const strength = state.activeStrength.current;
-                if (strength === 0) return;
+                if (strength === 0) {
+                    if (stateRef.current.tickerFn) {
+                        gsap.ticker.remove(stateRef.current.tickerFn);
+                        stateRef.current.tickerFn = null;
+                    }
+                    return;
+                }
 
                 const cursorX = gsap.getProperty(cursor, 'x') as number;
                 const cursorY = gsap.getProperty(cursor, 'y') as number;
@@ -254,13 +195,12 @@ const TargetCursorComponent = memo(({
             stateRef.current.tickerFn = tickerFn;
             gsap.ticker.add(tickerFn);
 
-            // Hover Events
             const handleHover = (e: MouseEvent) => {
                 const target = (e.target as Element).closest(targetSelector);
                 if (target && target !== stateRef.current.activeTarget) {
                     stateRef.current.activeTarget = target;
                     stateRef.current.isActive = true;
-                    spinTl.pause();
+                    spinTlRef.current?.pause();
                     gsap.to(cursor, { rotation: 0, duration: 0.3 }); 
 
                     const rect = target.getBoundingClientRect();
@@ -274,6 +214,11 @@ const TargetCursorComponent = memo(({
                     ];
 
                     gsap.to(stateRef.current.activeStrength, { current: 1, duration: hoverDuration, ease: 'power2.out' });
+                    
+                    if (!stateRef.current.tickerFn) {
+                        stateRef.current.tickerFn = tickerFn;
+                        gsap.ticker.add(tickerFn);
+                    }
 
                     const handleLeave = () => {
                         target.removeEventListener('mouseleave', handleLeave);
@@ -282,7 +227,6 @@ const TargetCursorComponent = memo(({
                         stateRef.current.targetCornerPositions = null;
                         gsap.to(stateRef.current.activeStrength, { current: 0, duration: 0.2, overwrite: true });
                         
-                        // Reset positions
                          const positions = [
                           { x: -18, y: -18 },
                           { x: 6, y: -18 },
@@ -290,22 +234,25 @@ const TargetCursorComponent = memo(({
                           { x: -18, y: 6 }
                         ];
                         corners.forEach((c, i) => gsap.to(c, { x: positions[i].x, y: positions[i].y, duration: 0.3, ease: 'power3.out' }));
-                        spinTl.restart();
+                        spinTlRef.current?.restart();
                     };
                     target.addEventListener('mouseleave', handleLeave);
                 }
             };
             window.addEventListener('mouseover', handleHover, { passive: true });
-        }
-    }, cursorRef); 
+        });
+    }
 
     return () => {
         document.body.classList.remove('custom-cursor-active');
+        window.removeEventListener('mousemove', moveCursor);
+        window.removeEventListener('mousedown', handleDown);
+        window.removeEventListener('mouseup', handleUp);
+        
         if(stateRef.current.tickerFn) gsap.ticker.remove(stateRef.current.tickerFn);
-        ctx.revert();
-        window.removeEventListener('mousemove', () => {}); 
+        ctx.revert(); 
     };
-  }, [isMobile, hideDefaultCursor, spinDuration, targetSelector, hoverDuration, parallaxOn]);
+  }, [isMobile, hideDefaultCursor, spinDuration, targetSelector, hoverDuration, parallaxOn, moveCursor, handleDown, handleUp]);
 
   return (
     <div ref={cursorRef} className="target-cursor-wrapper">
@@ -318,335 +265,11 @@ const TargetCursorComponent = memo(({
   );
 });
 
-// Dynamic import to avoid SSR issues
 const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { 
   ssr: false 
 });
 
-
-// --- 4. ENCRYPTED TEXT (OPTIMIZED WITH MEMO) ---
-const CHARS = "!@#$%^&*()_+-=[]{}|;:,.<>?/~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-// Memoize to prevent re-render when Parent (Loader) progress changes
-const EncryptedText = memo(({
-  text,
-  interval = 50,
-  revealDelayMs = 50,
-  className,
-  encryptedClassName,
-  revealedClassName,
-}: {
-  text: string;
-  interval?: number;
-  revealDelayMs?: number;
-  className?: string;
-  encryptedClassName?: string;
-  revealedClassName?: string;
-}) => {
-  const [displayText, setDisplayText] = useState<string>(text);
-  const [revealedIndex, setRevealedIndex] = useState(0);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    
-    const scramble = () => {
-      let output = "";
-      const len = text.length;
-      const charsLen = CHARS.length;
-      for (let i = 0; i < len; i++) {
-        if (i < revealedIndex) {
-          output += text[i];
-        } else {
-          output += CHARS[Math.floor(Math.random() * charsLen)];
-        }
-      }
-      setDisplayText(output);
-    };
-
-    timer = setInterval(scramble, interval);
-
-    const revealTimer = setInterval(() => {
-        setRevealedIndex((prev) => {
-            if (prev < text.length) return prev + 1;
-            clearInterval(revealTimer);
-            return prev;
-        });
-    }, revealDelayMs);
-
-    return () => {
-      clearInterval(timer);
-      clearInterval(revealTimer);
-    };
-  }, [text, interval, revealedIndex, revealDelayMs]);
-
-  return (
-    <span className={cn("inline-block whitespace-nowrap cursor-default", className)} aria-label={text}>
-      {displayText}
-    </span>
-  );
-});
-
-// --- 5. BACKGROUND MATRIX LAYER (MEMOIZED) ---
-const MatrixBackground = memo(() => {
-    // Static arrays
-    const leftColumn = [
-        "SYS_INIT_SEQUENCE_0x1", "LOADING_KERNAL_MODULES", "BYPASS_FIREWALL_PROXY",
-        "ESTABLISHING_HANDSHAKE", "PACKET_LOSS_0.002%", "MEM_ALLOC_STACK_HEAP",
-        "ENCRYPTION_KEY_256BIT", "NODE_SYNC_PENDING...", "ROOT_ACCESS_VERIFIED"
-    ];
-
-    const rightColumn = [
-        "0x4F3A2B1C9D8E", "PROTOCOL_V4_SECURE", "LATENCY_CHECK_12ms",
-        "DATA_INTEGRITY_OK", "BUFFER_OVERFLOW_NULL", "THREAD_POOL_ACTIVE",
-        "GPU_ACCEL_ENABLED", "RENDER_PIPELINE_ON", "SESSION_ID_GENERATED"
-    ];
-
-    return (
-        <div className="absolute inset-0 z-0 flex justify-between p-8 pointer-events-none overflow-hidden select-none">
-            <div className="flex flex-col gap-6 opacity-10">
-                {leftColumn.map((line, i) => (
-                    <EncryptedText 
-                        key={i} 
-                        text={line} 
-                        className="text-[10px] md:text-xs font-mono text-purple-500" 
-                        revealDelayMs={100 + (i * 150)} 
-                    />
-                ))}
-            </div>
-            <div className="hidden md:flex flex-col gap-6 opacity-10 items-end">
-                {rightColumn.map((line, i) => (
-                    <EncryptedText 
-                        key={i} 
-                        text={line} 
-                        className="text-[10px] md:text-xs font-mono text-purple-500" 
-                        revealDelayMs={200 + (i * 150)} 
-                    />
-                ))}
-            </div>
-        </div>
-    );
-});
-
-// --- NEW COMPONENT: GHOST CURSOR FOR LOADER (DESKTOP ONLY) ---
-const GhostLoaderCursor = memo(() => {
-  const isMobile = useIsMobile();
-  
-  const mouse = { x: useMotionValue(0), y: useMotionValue(0) };
-  
-  // Use less damping/stiffness for better perf on mobile if forced, but we are hiding it
-  const smoothOptions = { damping: 20, stiffness: 300, mass: 0.5 };
-  const smoothOptions2 = { damping: 30, stiffness: 200, mass: 0.8 };
-  const smoothOptions3 = { damping: 40, stiffness: 150, mass: 1 };
-
-  const x = useSpring(mouse.x, smoothOptions);
-  const y = useSpring(mouse.y, smoothOptions);
-  const x2 = useSpring(mouse.x, smoothOptions2);
-  const y2 = useSpring(mouse.y, smoothOptions2);
-  const x3 = useSpring(mouse.x, smoothOptions3);
-  const y3 = useSpring(mouse.y, smoothOptions3);
-
-  useEffect(() => {
-    if (isMobile) return; 
-    
-    const manageMouseMove = (e: MouseEvent) => {
-      const { clientX, clientY } = e;
-      mouse.x.set(clientX);
-      mouse.y.set(clientY);
-    };
-    window.addEventListener("mousemove", manageMouseMove, { passive: true });
-    return () => window.removeEventListener("mousemove", manageMouseMove);
-  }, [mouse.x, mouse.y, isMobile]);
-
-  if (isMobile) return null;
-
-  return (
-    <div className="fixed inset-0 z-[60] pointer-events-none"> 
-      <motion.div 
-        style={{ left: x3, top: y3 }}
-        className="fixed w-32 h-32 rounded-full bg-purple-600/30 blur-[40px] -translate-x-1/2 -translate-y-1/2 mix-blend-screen will-change-transform"
-      />
-      <motion.div 
-        style={{ left: x2, top: y2 }}
-        className="fixed w-12 h-12 rounded-full bg-purple-400/50 blur-[12px] -translate-x-1/2 -translate-y-1/2 mix-blend-screen will-change-transform"
-      />
-      <motion.div 
-        style={{ left: x, top: y }}
-        className="fixed w-4 h-4 rounded-full bg-purple-100 shadow-[0_0_40px_rgba(34,211,238,1)] -translate-x-1/2 -translate-y-1/2 z-10 will-change-transform"
-      />
-    </div>
-  );
-});
-
-// --- 6. DARKER & COOLER LOADER COMPONENT (OPTIMIZED) ---
-const MultiStepLoader = ({
-  loadingStates,
-  loading,
-  duration = 2000,
-}: {
-  loadingStates: { text: string }[];
-  loading: boolean;
-  duration?: number;
-}) => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    if (!loading) {
-      setCurrentStep(0);
-      setProgress(0);
-      return;
-    }
-
-    const totalSteps = loadingStates.length;
-    const stepDuration = duration;
-    
-    const stepInterval = setInterval(() => {
-      setCurrentStep((prev) => (prev < totalSteps - 1 ? prev + 1 : prev));
-    }, stepDuration);
-
-    const updateFrequency = 50; 
-    const increment = 100 / ( (totalSteps * stepDuration) / updateFrequency );
-
-    const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          return 100;
-        }
-        return Math.min(prev + increment, 100);
-      });
-    }, updateFrequency);
-
-    return () => {
-      clearInterval(stepInterval);
-      clearInterval(progressInterval);
-    };
-  }, [loading, loadingStates.length, duration]);
-
-  const circumference = 2 * Math.PI * 70; 
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
-
-  return (
-    <AnimatePresence mode="wait">
-      {loading && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
-          transition={{ duration: 0.8 }}
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#010309] overflow-hidden perspective-[1000px] cursor-none"
-        >
-          <div className="absolute inset-0 bg-[#010309] gpu-accel">
-              <MatrixBackground />
-              <GhostLoaderCursor />
-
-              <motion.div 
-                animate={{ rotate: 360, scale: [1, 1.1, 1] }} 
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,_rgba(23,37,84,0.15)_0%,_transparent_50%)] blur-[40px] md:blur-[120px] will-change-transform" 
-              />
-              <motion.div 
-                animate={{ rotate: -360, scale: [1, 1.2, 1] }} 
-                transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                className="absolute -bottom-[50%] -right-[50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,_rgba(30,27,75,0.1)_0%,_transparent_50%)] blur-[40px] md:blur-[120px] will-change-transform" 
-              />
-          </div>
-
-          <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-md px-4 pointer-events-none">
-            
-            <div className="relative w-48 h-48 mb-16 flex items-center justify-center perspective-[1000px]">
-              
-              <div className="absolute inset-0 bg-purple-900/10 rounded-full blur-[40px] md:blur-[60px] animate-pulse" />
-
-              <motion.div
-                animate={{ rotateZ: 360, rotateY: [0, 15, 0, -15, 0], rotateX: [0, 10, 0, -10, 0] }}
-                transition={{ rotateZ: { duration: 10, repeat: Infinity, ease: "linear" }, default: { duration: 6, repeat: Infinity, ease: "easeInOut" } }}
-                className="absolute inset-0 rounded-full border-[3px] border-dashed border-purple-900/40 shadow-[0_0_20px_rgba(30,58,138,0.2)] will-change-transform"
-                style={{ transformStyle: 'preserve-3d' }}
-              />
-              <motion.div
-                animate={{ rotateZ: -360, rotateY: [0, -20, 0, 20, 0], rotateX: [0, -15, 0, 15, 0] }}
-                transition={{ rotateZ: { duration: 12, repeat: Infinity, ease: "linear" }, default: { duration: 8, repeat: Infinity, ease: "easeInOut" } }}
-                className="absolute inset-4 rounded-full border-[3px] border-dashed border-indigo-900/40 shadow-[0_0_20px_rgba(49,46,129,0.2)] will-change-transform"
-                style={{ transformStyle: 'preserve-3d' }}
-              />
-              
-              <div className="relative w-24 h-24 bg-[#02040a] rounded-full flex items-center justify-center border border-purple-900/50 shadow-[inset_0_0_30px_rgba(30,58,138,0.4)] z-20">
-                 <Loader2 className="w-10 h-10 text-purple-500 animate-[spin_2s_linear_infinite] drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-                 <motion.div animate={{ scale: [1, 1.5, 1], opacity: [0.8, 0, 0.8] }} transition={{ duration: 2, repeat: Infinity }} className="absolute inset-0 rounded-full border-2 border-purple-800/30" />
-              </div>
-
-              <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none z-10 overflow-visible" viewBox="0 0 160 160">
-                <circle cx="80" cy="80" r="70" className="stroke-purple-950/30 stroke-[6] fill-none" />
-                 <motion.circle
-                  cx="80" cy="80" r="70"
-                  className="stroke-purple-600/30 stroke-[8] fill-none blur-[8px] md:blur-[12px]"
-                  strokeDasharray={circumference}
-                  initial={{ strokeDashoffset: circumference }}
-                  animate={{ strokeDashoffset: strokeDashoffset }}
-                  transition={{ ease: "linear", duration: 0.2 }}
-                />
-                <motion.circle
-                  cx="80" cy="80" r="70"
-                  className="stroke-purple-500 stroke-[4] fill-none drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]"
-                  strokeDasharray={circumference}
-                  initial={{ strokeDashoffset: circumference }}
-                  animate={{ strokeDashoffset: strokeDashoffset }}
-                  transition={{ ease: "linear", duration: 0.2 }}
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
-
-            <div className="flex flex-col items-center space-y-6 w-full">
-              <div className="relative">
-                <h1 className="text-5xl font-black text-purple-50 tracking-tighter relative z-10 text-shadow-[0_0_7px_#1e3a8a,0_0_15px_#1e3a8a]">
-                    BULLMONEY VIP
-                </h1>
-                <h1 className="text-5xl font-black text-purple-950 tracking-tighter absolute inset-0 blur-[8px] z-0 animate-pulse opacity-80">
-                    BULLMONEY VIP
-                </h1>
-              </div>
-
-              <div className="w-full max-w-[280px] flex flex-col items-center justify-center relative p-4 bg-purple-950/10 rounded-xl border border-purple-800/30 backdrop-blur-md overflow-hidden">
-                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/5 to-transparent h-[4px] w-full animate-scan pointer-events-none" />
-                
-                <div className="text-3xl font-mono font-bold text-purple-400 mb-2 tabular-nums tracking-widest drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">
-                  {Math.floor(progress).toString().padStart(3, '0')}%
-                </div>
-
-                <div className="h-6 flex items-center justify-center">
-                    <EncryptedText
-                      text={loadingStates[currentStep]?.text || "LOADING"}
-                      key={currentStep}
-                      className="text-purple-200/80 font-bold text-xs tracking-[0.2em] uppercase"
-                      encryptedClassName="text-purple-800"
-                      revealedClassName="text-purple-200"
-                      interval={30}
-                      revealDelayMs={20}
-                    />
-                </div>
-              </div>
-            </div>
-            
-          </div>
-          
-          <style jsx global>{`
-            @keyframes scan {
-              0% { transform: translateY(-200%); opacity: 0; }
-              50% { opacity: 1; }
-              100% { transform: translateY(200%); opacity: 0; }
-            }
-            .animate-scan {
-              animation: scan 3s ease-in-out infinite;
-            }
-          `}</style>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-};
-
+// --- LOADING STATES DATA ---
 const loadingStates = [
   { text: "INITIALIZING QUANTUM LINK" },
   { text: "SYNCING BLOCKCHAIN NODES" },
@@ -905,11 +528,11 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         <CursorStyles />
         <TargetCursor />
         
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/10 via-[#010309] to-[#010309] gpu-accel" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-[#010309] to-[#010309] gpu-accel" />
         
-        <div className="bg-[#0A1120] border border-purple-500/20 p-8 rounded-2xl shadow-[0_0_50px_rgba(30,58,138,0.2)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
+        <div className="bg-[#0A1120] border border-blue-500/20 p-8 rounded-2xl shadow-[0_0_50px_rgba(30,58,138,0.2)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
           <div className="mx-auto w-24 h-24 relative mb-6">
-            <div className="absolute inset-0 rounded-full border-4 border-purple-900 animate-[spin_3s_linear_infinite]" />
+            <div className="absolute inset-0 rounded-full border-4 border-blue-900 animate-[spin_3s_linear_infinite]" />
             <div className="absolute inset-0 bg-green-500 rounded-full scale-0 animate-[scale-up_0.5s_ease-out_forwards_0.2s] flex items-center justify-center">
               <Check className="w-12 h-12 text-white stroke-[3] opacity-0 animate-[fade-in_0.3s_ease-out_forwards_0.6s]" />
             </div>
@@ -918,7 +541,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           <h2 className="text-3xl font-bold text-white mb-2">Free Access Granted</h2>
           <p className="text-slate-400 mb-8">
             Your account is verified.<br/>
-            <span className="text-purple-400 font-medium">Add the Telegram Folder</span> to access all groups.
+            <span className="text-blue-400 font-medium">Add the Telegram Folder</span> to access all groups.
           </p>
           
           <button 
@@ -948,8 +571,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   if (step === 4) {
     return (
       <div className="min-h-screen bg-[#010309] flex flex-col items-center justify-center relative">
-         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-900/10 rounded-full blur-[60px] pointer-events-none" />
-        <Loader2 className="w-16 h-16 text-purple-500 animate-spin mb-4" />
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-900/10 rounded-full blur-[60px] pointer-events-none" />
+        <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-4" />
         <h2 className="text-xl font-bold text-white">Saving Credentials...</h2>
       </div>
     );
@@ -970,17 +593,17 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       
       <div className={cn(
         "absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-50 transition-colors duration-500",
-        isVantage ? "via-purple-900" : "via-purple-900"
+        isVantage ? "via-purple-900" : "via-blue-900"
       )} />
       <div className={cn(
         "absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel",
-        isVantage ? "bg-purple-900/10" : "bg-purple-900/10"
+        isVantage ? "bg-purple-900/10" : "bg-blue-900/10"
       )} />
 
       <div className="w-full max-w-xl relative z-10">
         <div className="mb-8 text-center">
            <h1 className="text-2xl font-black text-white tracking-tight opacity-50">
-            BULLMONEY <span className={cn("transition-colors duration-300", isVantage ? "text-purple-600" : "text-purple-600")}>VIP</span>
+            BULLMONEY  <span className={cn("transition-colors duration-300", isVantage ? "text-purple-800" : "text-blue-600")}>VIP</span>
           </h1>
         </div>
 
@@ -1008,7 +631,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
                         placeholder="Email Address"
-                        className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-purple-500/50 transition-all cursor-target"
+                        className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50 transition-all cursor-target"
                       />
                     </div>
 
@@ -1019,7 +642,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         placeholder="Password"
-                        className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-12 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-purple-500/50 transition-all cursor-target"
+                        className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-12 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50 transition-all cursor-target"
                       />
                       <button 
                         type="button" 
@@ -1039,7 +662,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     <button
                       type="submit"
                       disabled={!loginEmail || !loginPassword}
-                      className="w-full py-4 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white rounded-xl font-bold tracking-wide transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-target"
+                      className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-bold tracking-wide transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-target"
                     >
                       LOGIN
                       <ArrowRight className="w-4 h-4" />
@@ -1077,7 +700,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             "absolute inset-0 -z-10 rounded-full",
                             partner === "Vantage"
                               ? "bg-gradient-to-r from-purple-500 to-violet-600 shadow-[0_0_25px_rgba(168,85,247,0.45)]"
-                              : "bg-gradient-to-r from-purple-500 to-purple-600 shadow-[0_0_25px_rgba(56,189,248,0.45)]"
+                              : "bg-gradient-to-r from-sky-500 to-blue-600 shadow-[0_0_25px_rgba(56,189,248,0.45)]"
                           )}
                           transition={{ type: "spring", stiffness: 400, damping: 28 }}
                         />
@@ -1102,7 +725,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     title={`Open ${activeBroker} Account`}
                     className={isVantage 
                       ? "bg-gradient-to-br from-purple-950/40 via-slate-950 to-neutral-950"
-                      : "bg-gradient-to-br from-purple-950/40 via-slate-950 to-neutral-950"
+                      : "bg-gradient-to-br from-sky-950/40 via-slate-950 to-neutral-950"
                     }
                     actions={
                       <div className="flex flex-col gap-4">
@@ -1113,7 +736,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                               "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold ring-1 ring-inset transition cursor-target",
                               isVantage 
                                 ? "text-purple-300 ring-purple-500/40 hover:bg-purple-500/10" 
-                                : "text-purple-300 ring-purple-500/40 hover:bg-purple-500/10"
+                                : "text-sky-300 ring-sky-500/40 hover:bg-sky-500/10"
                             )}
                           >
                             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -1126,7 +749,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                               "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white shadow transition cursor-target",
                               isVantage
                                 ? "bg-gradient-to-r from-purple-500 to-violet-600 hover:from-violet-600 hover:to-fuchsia-700"
-                                : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
+                                : "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700"
                             )}
                           >
                             <span>Open {activeBroker} Account</span>
@@ -1155,7 +778,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                            "flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-bold tracking-widest border transition-all w-full cursor-target",
                            isVantage 
                             ? "bg-purple-500/10 border-purple-500/50 text-purple-100 shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] hover:bg-purple-500/20"
-                            : "bg-purple-500/10 border-purple-500/50 text-purple-100 shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] hover:bg-purple-500/20"
+                            : "bg-sky-500/10 border-sky-500/50 text-sky-100 shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] hover:bg-sky-500/20"
                           )}
                         >
                           NEXT STEP <ArrowRight className="w-3 h-3" />
@@ -1169,7 +792,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             "flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-bold tracking-widest border transition-all w-full cursor-target",
                             isVantage 
                              ? "bg-purple-500/10 border-purple-500/50 text-purple-100 shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] hover:bg-purple-500/20"
-                             : "bg-purple-500/10 border-purple-500/50 text-purple-100 shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] hover:bg-purple-500/20"
+                             : "bg-sky-500/10 border-sky-500/50 text-sky-100 shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] hover:bg-sky-500/20"
                           )}
                         >
                           SKIP & LOGIN <LogIn className="w-3 h-3" />
@@ -1197,7 +820,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         className={cn(
                           "w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target",
                           !formData.mt5Number ? "opacity-50 cursor-not-allowed bg-slate-800 text-slate-500" :
-                          isVantage ? "bg-white text-purple-950 hover:bg-purple-50" : "bg-white text-purple-950 hover:bg-purple-50"
+                          isVantage ? "bg-white text-purple-950 hover:bg-purple-50" : "bg-white text-blue-950 hover:bg-blue-50"
                         )}
                       >
                         Next Step <ArrowRight className="w-4 h-4" />
@@ -1253,7 +876,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         className={cn(
                           "w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target",
                           (!formData.email || !formData.password || !acceptedTerms) ? "opacity-50 cursor-not-allowed bg-slate-800 text-slate-500" :
-                          isVantage ? "bg-white text-purple-950 hover:bg-purple-50" : "bg-white text-purple-950 hover:bg-purple-50"
+                          isVantage ? "bg-white text-purple-950 hover:bg-purple-50" : "bg-white text-blue-950 hover:bg-blue-50"
                         )}
                       >
                         Complete Registration <ArrowRight className="w-4 h-4" />
@@ -1322,7 +945,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         <div className={cn(
                           "w-5 h-5 rounded border flex items-center justify-center mt-0.5 transition-colors",
                           acceptedTerms 
-                            ? (isVantage ? "bg-purple-600 border-purple-600" : "bg-purple-600 border-purple-600") 
+                            ? (isVantage ? "bg-purple-600 border-purple-600" : "bg-blue-600 border-blue-600") 
                             : "border-slate-500"
                         )}>
                           {acceptedTerms && <Check className="w-3.5 h-3.5 text-white" />}
@@ -1370,24 +993,24 @@ const StepCard = memo(({ number, number2, title, children, actions, className }:
     )}>
       <div className={cn(
         "pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l blur-2xl",
-        useRed ? "from-purple-500/15 via-violet-500/10 to-transparent" : "from-purple-500/15 via-purple-500/10 to-transparent"
+        useRed ? "from-purple-500/15 via-violet-500/10 to-transparent" : "from-sky-500/15 via-blue-500/10 to-transparent"
       )} />
       <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
       <div className="flex items-center justify-between mb-6">
         <span className={cn(
           "inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md ring-1",
-          useRed ? "text-purple-300/90 ring-purple-500/30 bg-purple-500/10" : "text-purple-300/90 ring-purple-500/30 bg-purple-500/10"
+          useRed ? "text-purple-300/90 ring-purple-500/30 bg-purple-500/10" : "text-sky-300/90 ring-sky-500/30 bg-sky-500/10"
         )}>
           Step {n}
         </span>
         <span className="relative text-4xl font-black bg-clip-text text-transparent">
           <span className={cn("bg-gradient-to-br bg-clip-text text-transparent",
-            useRed ? "from-purple-400 via-violet-500 to-fuchsia-400" : "from-purple-400 via-purple-500 to-indigo-400"
+            useRed ? "from-purple-400 via-violet-500 to-fuchsia-400" : "from-sky-400 via-blue-500 to-indigo-400"
           )}>
             {n}
           </span>
           <span className={cn("pointer-events-none absolute inset-0 -z-10 blur-2xl bg-gradient-to-br",
-            useRed ? "from-purple-500/40 via-violet-600/30 to-fuchsia-500/40" : "from-purple-500/40 via-purple-600/30 to-indigo-500/40"
+            useRed ? "from-purple-500/40 via-violet-600/30 to-fuchsia-500/40" : "from-sky-500/40 via-blue-600/30 to-indigo-500/40"
           )} />
         </span>
       </div>
@@ -1418,7 +1041,7 @@ const generateRandomString = (length: number) => {
   return result;
 };
 
-// --- XM Card (purple/Green) ---
+// --- XM Card (Blue/Green) ---
 export const EvervaultCard = memo(({ text }: { text?: string }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -1450,7 +1073,7 @@ function CardPattern({ mouseX, mouseY, randomString }: any) {
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-green-500 to-purple-700 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-700 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
       <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
         <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>

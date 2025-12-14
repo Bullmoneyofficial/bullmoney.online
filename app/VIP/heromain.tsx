@@ -10,7 +10,7 @@ import {
   useInView,
   useWillChange
 } from "framer-motion";
-import Image from "next/image";
+import dynamic from "next/dynamic";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
@@ -24,7 +24,12 @@ import { useShop, type Product } from "@/app/VIP/ShopContext";
 import AdminLoginModal from "@/app/VIP/AdminLoginModal";
 import AdminPanel from "./AdminPanel";
 import Faq from "@/app/shop/Faq";
-import Particles, { initParticlesEngine } from "@tsparticles/react";
+
+// --- DYNAMIC IMPORTS ---
+const Particles = dynamic(() => import("@tsparticles/react").then((mod) => mod.default), {
+  ssr: false,
+  loading: () => <div className="absolute inset-0 bg-transparent" />,
+});
 import { loadSlim } from "@tsparticles/slim";
 import type { Engine } from "@tsparticles/engine";
 
@@ -36,17 +41,10 @@ function cn(...inputs: ClassValue[]) {
 const useIsMobile = () => {
     const [isMobile, setIsMobile] = useState(false);
     useEffect(() => {
-        const mediaQuery = window.matchMedia("(max-width: 768px)");
-        setIsMobile(mediaQuery.matches);
-        const handleChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-        
-        if (mediaQuery.addEventListener) {
-            mediaQuery.addEventListener("change", handleChange);
-            return () => mediaQuery.removeEventListener("change", handleChange);
-        } else {
-            mediaQuery.addListener(handleChange);
-            return () => mediaQuery.removeListener(handleChange);
-        }
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
     }, []);
     return isMobile;
 };
@@ -67,8 +65,13 @@ const SparklesCore = React.memo((props: { id?: string; className?: string; backg
     initParticlesEngine(async (engine: Engine) => { await loadSlim(engine); }).then(() => { setInit(true); });
   }, []);
 
+  const initParticlesEngine = async (callback: (engine: Engine) => Promise<void>) => {
+      const { initParticlesEngine } = await import("@tsparticles/react");
+      await initParticlesEngine(callback);
+  };
+
   return (
-    <div className={cn("opacity-0 transition-opacity duration-1000 pointer-events-none", init && "opacity-100", className)}>
+    <div className={cn("opacity-0 transition-opacity duration-1000 pointer-events-none absolute inset-0", init && "opacity-100", className)}>
       {init && (
         <Particles 
             id={id} 
@@ -79,17 +82,17 @@ const SparklesCore = React.memo((props: { id?: string; className?: string; backg
                 fpsLimit: isMobile ? 30 : 60, 
                 interactivity: { 
                     events: { 
-                        onClick: { enable: !isMobile, mode: "push" }, 
+                        onClick: { enable: false }, 
                         onHover: { enable: !isMobile, mode: "repulse" }, 
                         resize: { enable: true } 
                     }, 
-                    modes: { push: { quantity: 2 }, repulse: { distance: 100, duration: 0.4 } } 
+                    modes: { repulse: { distance: 100, duration: 0.4 } } 
                 }, 
                 particles: { 
                     bounce: { horizontal: { value: 1 }, vertical: { value: 1 } }, 
                     color: { value: particleColor }, 
                     move: { enable: true, speed: speed, direction: "none", random: false, straight: false, outModes: { default: "out" } }, 
-                    number: { density: { enable: true, width: 1920, height: 1080 }, value: isMobile ? particleDensity / 2 : particleDensity }, 
+                    number: { density: { enable: true, width: 1920, height: 1080 }, value: isMobile ? 15 : particleDensity }, 
                     opacity: { value: { min: 0.1, max: 0.5 }, animation: { enable: true, speed: speed, sync: false } }, 
                     shape: { type: "circle" }, 
                     size: { value: { min: minSize, max: maxSize } } 
@@ -103,7 +106,7 @@ const SparklesCore = React.memo((props: { id?: string; className?: string; backg
 });
 SparklesCore.displayName = "SparklesCore";
 
-// --- VIDEO CARD COMPONENT ---
+// --- VIDEO CARD COMPONENT (FIXED THUMBNAIL) ---
 const VideoCard = React.memo(({
   product,
   uniqueLayoutId,
@@ -122,13 +125,18 @@ const VideoCard = React.memo(({
   const ref = useRef(null);
   const isInView = useInView(ref, { margin: "200px 0px 200px 0px", once: false });
   const willChange = useWillChange();
-  const qualityParam = isMobile ? "medium" : "hd1080";
+  
+  // Logic: Show video IF (Desktop AND InView AND HasID). Otherwise show Image.
+  const showVideo = !isMobile && isInView && videoId;
+
+  // FIX: Use hqdefault.jpg as it is more reliable than maxresdefault.jpg
+  const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : (product.imageUrl || "https://via.placeholder.com/500");
 
   return (
     <motion.div
       ref={ref}
       style={{ x: translate, willChange }}
-      whileHover={{ y: -10 }}
+      whileHover={{ y: isMobile ? 0 : -10 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => setActive(product, uniqueLayoutId)}
       className="group/product h-[14rem] w-[18rem] md:h-[22rem] md:w-[32rem] relative flex-shrink-0 cursor-pointer backface-hidden transform-gpu"
@@ -138,41 +146,44 @@ const VideoCard = React.memo(({
             layoutId={uniqueLayoutId}
             className="relative h-full w-full rounded-[20px] md:rounded-[24px] overflow-hidden bg-neutral-900 border border-neutral-800 md:group-hover/product:border-red-600/50 transition-colors safari-mask-fix"
         >
-            {videoId ? (
+            {/* HYBRID RENDERING LOGIC */}
+            {showVideo ? (
+                // --- DESKTOP VIDEO MODE ---
                 <div className="absolute inset-0 w-full h-full bg-black pointer-events-none">
-                     {isInView ? (
-                        <iframe
-                            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&playsinline=1&showinfo=0&rel=0&iv_load_policy=3&disablekb=1&modestbranding=1&vq=${qualityParam}`}
-                            className="w-[300%] h-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[1.5] object-cover pointer-events-none"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            title={product.name}
-                            loading="lazy"
-                          
-                        />
-                     ) : (
-                        <Image
-                            src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
-                            fill
-                            sizes="(max-width: 768px) 300px, 500px"
-                            className="object-cover opacity-50 blur-sm scale-110"
-                            alt="Loading"
-                        />
-                     )}
+                     <iframe
+                        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&playsinline=1&showinfo=0&rel=0&iv_load_policy=3&disablekb=1&modestbranding=1&vq=hd1080`}
+                        className="w-[300%] h-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[1.5] object-cover pointer-events-none"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        title={product.name}
+                        loading="lazy"
+                    />
                 </div>
             ) : (
-                <Image
-                    src={product.imageUrl || "https://via.placeholder.com/500"}
-                    fill
-                    sizes="(max-width: 768px) 300px, 500px"
-                    className="object-cover opacity-60 group-hover/product:opacity-100 transition-opacity duration-500"
-                    alt={product.name}
-                />
+                // --- MOBILE / THUMBNAIL MODE (Using standard img tag and hqdefault.jpg) ---
+                <div className="absolute inset-0 w-full h-full bg-black">
+                     {/* eslint-disable-next-line @next/next/no-img-element */}
+                     <img
+                        src={thumbnailUrl}
+                        className="w-full h-full object-cover opacity-80 group-hover/product:opacity-100 transition-opacity duration-500 scale-105"
+                        alt={product.name}
+                        loading="lazy"
+                        // Fallback included just in case hqdefault fails (extremely rare)
+                        onError={(e) => {
+                             const target = e.target as HTMLImageElement;
+                             if(videoId && target.src.includes('hqdefault.jpg')) {
+                                target.src = `https://img.youtube.com/vi/${videoId}/default.jpg`;
+                             } else if (!videoId) {
+                                target.src = "https://via.placeholder.com/500";
+                             }
+                        }}
+                    />
+                </div>
             )}
 
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90 pointer-events-none"></div>
             
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                 <div className="bg-white/10 backdrop-blur-sm p-3 md:p-4 rounded-full opacity-100 md:opacity-0 md:group-hover/product:opacity-100 transition-opacity duration-300 scale-100 md:scale-75 md:group-hover/product:scale-100 border border-white/20">
+                 <div className="bg-white/10 backdrop-blur-sm p-3 md:p-4 rounded-full opacity-100 md:opacity-0 md:group-hover/product:opacity-100 transition-opacity duration-300 scale-100 md:scale-75 md:group-hover/product:scale-100 border border-white/20 shadow-xl">
                     <PlayCircle className="text-white w-6 h-6 md:w-8 md:h-8 fill-red-600/20" />
                  </div>
             </div>
@@ -230,12 +241,13 @@ const HeroParallax = () => {
 
   const springConfig = { stiffness: 300, damping: 30, bounce: 100 };
   
-  const translateX = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? 50 : 600]), springConfig);
-  const translateXReverse = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? -50 : -600]), springConfig);
+  const translateX = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? 20 : 600]), springConfig);
+  const translateXReverse = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? -20 : -600]), springConfig);
+  
   const rotateX = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? 0 : 15, 0]), springConfig);
   const rotateZ = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? 0 : 20, 0]), springConfig);
   const opacity = useSpring(useTransform(scrollYProgress, [0, 0.2], [0.2, 1]), springConfig);
-  const translateY = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? -100 : -700, isMobile ? 0 : 200]), springConfig);
+  const translateY = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? -50 : -700, isMobile ? 0 : 200]), springConfig);
 
   // --- STATE ---
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
@@ -247,13 +259,12 @@ const HeroParallax = () => {
   const [adminEditing, setAdminEditing] = useState<Product | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // --- NEW: RELATED VIDEOS LOGIC ---
+  // --- RELATED VIDEOS ---
   const relatedProducts = useMemo(() => {
     if (!products || !activeProduct) return [];
-    // Shuffle or just filter excluding current
     return products
       .filter((p: Product) => (p._id || p.id) !== (activeProduct._id || activeProduct.id))
-      .slice(0, 3); // Take top 3
+      .slice(0, 3); 
   }, [products, activeProduct]);
 
   const handleOpen = useCallback((product: Product, layoutId: string) => {
@@ -300,8 +311,9 @@ const HeroParallax = () => {
     try {
       let payload = { ...editForm };
       const ytId = getYoutubeId(payload.buyUrl);
+      // NOTE: We only update the database image URL with the highly reliable hqdefault.jpg
       if (ytId) {
-          payload.imageUrl = `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`;
+          payload.imageUrl = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
       }
       // @ts-ignore
       delete payload._id; 
@@ -356,7 +368,7 @@ const HeroParallax = () => {
   }
 
   return (
-    <div className="bg-black relative selection:bg-red-500/30 overflow-hidden w-full">
+    <div className="bg-black relative selection:bg-red-500/30 overflow-x-hidden w-full">
         
     <style jsx global>{`
       @keyframes shimmer {
@@ -371,6 +383,7 @@ const HeroParallax = () => {
       .custom-scrollbar::-webkit-scrollbar-thumb { background: #404040; border-radius: 3px; }
       .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #525252; }
       
+      /* GPU Acceleration Classes */
       .backface-hidden { 
           -webkit-backface-visibility: hidden;
           backface-visibility: hidden; 
@@ -428,7 +441,6 @@ const HeroParallax = () => {
                     className="relative w-full max-w-7xl bg-neutral-900 border border-neutral-800 rounded-none md:rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[100dvh] md:h-[85vh] md:max-h-[800px] safari-fix-layer"
                     onClick={(e) => e.stopPropagation()} 
                 >
-                    {/* FIXED: BACK BUTTON MOVED DOWN (top-24) to clear Navbar */}
                     <button
                         onClick={handleClose}
                         className="absolute top-24 md:top-4 left-4 z-50 p-2 bg-black/50 backdrop-blur rounded-full text-white hover:bg-neutral-800 transition-colors border border-white/10 group flex items-center justify-center shadow-lg"
@@ -436,7 +448,6 @@ const HeroParallax = () => {
                          <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                     </button>
 
-                    {/* FIXED: CLOSE BUTTON MOVED DOWN (top-24) to clear Navbar */}
                     <button
                         onClick={handleClose}
                         className="absolute top-24 md:top-4 right-4 z-50 p-2 bg-black/50 backdrop-blur rounded-full text-white hover:bg-red-600 transition-colors border border-white/10 group shadow-lg"
@@ -578,6 +589,7 @@ const HeroParallax = () => {
                                 <div className="flex flex-col gap-3">
                                     {relatedProducts.length > 0 ? relatedProducts.map((rp: Product, i: number) => {
                                         const thumbId = getYoutubeId(rp.buyUrl);
+                                        const relatedThumbnailUrl = thumbId ? `https://img.youtube.com/vi/${thumbId}/mqdefault.jpg` : (rp.imageUrl || "https://via.placeholder.com/500");
                                         return (
                                             <div 
                                                 key={i} 
@@ -586,10 +598,10 @@ const HeroParallax = () => {
                                             >
                                                 <div className="relative w-24 h-14 bg-neutral-800 rounded overflow-hidden shrink-0">
                                                     {thumbId ? (
-                                                        <Image 
-                                                            src={`https://img.youtube.com/vi/${thumbId}/mqdefault.jpg`} 
-                                                            fill 
-                                                            className="object-cover opacity-60 group-hover/related:opacity-100 transition-opacity" 
+                                                        // eslint-disable-next-line @next/next/no-img-element
+                                                        <img 
+                                                            src={relatedThumbnailUrl} 
+                                                            className="w-full h-full object-cover opacity-60 group-hover/related:opacity-100 transition-opacity" 
                                                             alt={rp.name} 
                                                         />
                                                     ) : (
@@ -693,8 +705,8 @@ const HeroParallax = () => {
                     background="transparent"
                     minSize={0.6}
                     maxSize={1.4}
-                    // OPTIMIZATION: Reduced particles
-                    particleDensity={isMobile ? 10 : 50} 
+                    // Low density on mobile
+                    particleDensity={isMobile ? 15 : 50} 
                     isMobile={isMobile}
                     className="w-full h-full"
                     particleColor="#FFFFFF"
@@ -706,7 +718,6 @@ const HeroParallax = () => {
                     <motion.div 
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        // OPTIMIZATION: Removed blur on mobile badge
                         className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-400 text-[10px] md:text-xs font-mono tracking-wider uppercase md:backdrop-blur-md"
                         >
                         <Zap size={10} className="fill-sky-400" /> {hero.badge}
@@ -736,7 +747,7 @@ const HeroParallax = () => {
             
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="mt-8 md:mt-10 flex flex-col sm:flex-row gap-6 items-start sm:items-center relative z-30"
             >
@@ -768,7 +779,6 @@ const HeroParallax = () => {
             opacity,
             willChange // Hint to browser
         }}
-        // SAFARI FIX: Use 3d transform for container
         className="relative z-10 will-change-transform backface-hidden transform-gpu safari-fix-layer"
     >
         <div className={cn("flex flex-col", isMobile ? "gap-2 px-0" : "")}>
