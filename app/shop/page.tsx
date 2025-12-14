@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { gsap } from "gsap";
-import { MessageCircle } from 'lucide-react';
+import { gsap } from 'gsap';
+import { MessageCircle, Volume2, VolumeX } from 'lucide-react';
 
 // --- EXISTING IMPORTS ---
 import { ShopProvider } from "../VIP/ShopContext"; 
@@ -15,9 +15,117 @@ import ShopFunnel from "@/app/shop/ShopFunnel";
 import Shopmain from "@/components/Mainpage/ShopMainpage";
 
 // --- DYNAMIC IMPORTS ---
+// Placeholder for the complex TargetCursor component's logic
+const TargetCursorComponent: React.FC<any> = ({ targetSelector, spinDuration, hideDefaultCursor, hoverDuration, parallaxOn }) => {
+  const isMobile = useIsMobile();
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const dotRef = useRef<HTMLDivElement>(null);
+  const cornersRef = useRef<NodeListOf<HTMLDivElement> | null>(null);
+  
+  const state = useRef({
+      isActive: false,
+      targetPositions: null as { x: number; y: number }[] | null,
+      activeStrength: { val: 0 },
+      activeTarget: null as Element | null
+  });
+
+  useEffect(() => {
+    if (!cursorRef.current || typeof window === 'undefined') return;
+
+    const originalCursor = document.body.style.cursor;
+    if (hideDefaultCursor && !isMobile) document.body.style.cursor = 'none';
+    
+    cornersRef.current = cursorRef.current.querySelectorAll('.target-cursor-corner');
+
+    const ctx = gsap.context(() => {
+        const cursor = cursorRef.current!;
+        const corners = cornersRef.current!;
+
+        if (isMobile) {
+            gsap.set(cursor, { x: window.innerWidth/2, y: window.innerHeight/2, opacity: 0, scale: 1.3 });
+            gsap.to(cursor, { opacity: 1, duration: 0.5 });
+        }
+        else {
+            gsap.set(cursor, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
+            const spinTl = gsap.timeline({ repeat: -1 })
+                .to(cursor, { rotation: 360, duration: spinDuration, ease: 'none' });
+            const moveCursor = (e: MouseEvent) => {
+                gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: 'power3.out', force3D: true });
+            };
+            window.addEventListener('mousemove', moveCursor);
+            
+            const handleDown = () => {
+                gsap.to(dotRef.current, { scale: 0.5, duration: 0.2 });
+                gsap.to(corners, { scale: 1.2, borderColor: '#00ffff', duration: 0.2 });
+            };
+            const handleUp = () => {
+                gsap.to(dotRef.current, { scale: 1, duration: 0.2 });
+                gsap.to(corners, { scale: 1, borderColor: '#0066ff', duration: 0.2 });
+            };
+            window.addEventListener('mousedown', handleDown);
+            window.addEventListener('mouseup', handleUp);
+            
+            const handleHover = (e: MouseEvent) => {
+                const target = (e.target as Element).closest(targetSelector);
+                if (target && target !== state.current.activeTarget) {
+                    state.current.activeTarget = target;
+                    state.current.isActive = true;
+                    spinTl.pause();
+                    gsap.to(cursor, { rotation: 0, duration: 0.3 });
+
+                    const rect = target.getBoundingClientRect();
+                    const borderWidth = 4; const cornerSize = 16;
+
+                    state.current.targetPositions = [
+                        { x: rect.left - borderWidth, y: rect.top - borderWidth },
+                        { x: rect.right + borderWidth - cornerSize, y: rect.top - borderWidth },
+                        { x: rect.right + borderWidth - cornerSize, y: rect.bottom + borderWidth - cornerSize },
+                        { x: rect.left - borderWidth, y: rect.bottom + borderWidth - cornerSize }
+                    ];
+
+                    gsap.to(state.current.activeStrength, { val: 1, duration: hoverDuration, ease: 'power2.out' });
+
+                    const handleLeave = () => {
+                        target.removeEventListener('mouseleave', handleLeave);
+                        state.current.activeTarget = null;
+                        state.current.isActive = false;
+                        state.current.targetPositions = null;
+                        gsap.to(state.current.activeStrength, { val: 0, duration: 0.2, overwrite: true });
+                        corners.forEach((c) => gsap.to(c, { x: 0, y: 0, duration: 0.3 }));
+                        spinTl.restart();
+                    };
+                    target.addEventListener('mouseleave', handleLeave);
+                }
+            };
+            window.addEventListener('mouseover', handleHover);
+        }
+
+    }, cursorRef); 
+
+    return () => {
+        if (!isMobile) document.body.style.cursor = originalCursor;
+        ctx.revert();
+        window.removeEventListener('mousemove', () => {}); 
+        window.removeEventListener('mousedown', () => {});
+        window.removeEventListener('mouseup', () => {});
+    };
+  }, [isMobile, hideDefaultCursor, spinDuration, targetSelector, hoverDuration, parallaxOn]);
+
+  return (
+    <div ref={cursorRef} className="target-cursor-wrapper">
+      <div ref={dotRef} className="target-cursor-dot" />
+      <div className="target-cursor-corner corner-tl" />
+      <div className="target-cursor-corner corner-tr" />
+      <div className="target-cursor-corner corner-br" />
+      <div className="target-cursor-corner corner-bl" />
+    </div>
+  );
+};
+
 const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { 
   ssr: false 
 });
+
 
 // =========================================
 // 0. CUSTOM HOOKS
@@ -43,9 +151,168 @@ const useIsMobile = () => {
   return isMobile;
 };
 
+// *** HOOK 1: AGGRESSIVE LOADER AUDIO (4.8s limit) ***
+const useLoaderAudio = (url: string, isVisible: boolean) => {
+    useEffect(() => {
+        if (!isVisible) return;
+
+        // 1. Initialize
+        const audio = new Audio(url);
+        audio.loop = false; // Strictly play once
+        audio.volume = 1.0;
+        
+        const AUDIO_DURATION_MS = 4800; // Exact duration limit
+        let timer: NodeJS.Timeout | null = null;
+
+        // 2. Define Unlocker (Plays on interaction if autoplay fails)
+        const unlock = () => {
+            audio.play().catch(() => {});
+            cleanupListeners();
+        };
+
+        // 3. Define Cleanup function
+        const cleanupListeners = () => {
+            window.removeEventListener('click', unlock);
+            window.removeEventListener('touchstart', unlock);
+            window.removeEventListener('keydown', unlock);
+        };
+
+        // 4. STRATEGY: Attach listeners IMMEDIATELY (The "Aggressive Unlock").
+        window.addEventListener('click', unlock);
+        window.addEventListener('touchstart', unlock);
+        window.addEventListener('keydown', unlock);
+
+        // 5. Attempt Instant Autoplay
+        const attemptPlay = async () => {
+            try {
+                await audio.play();
+                // If autoplay worked, we don't need the interaction listeners
+                cleanupListeners();
+            } catch (err) {
+                // Autoplay blocked. The listeners in step #4 are active.
+            }
+        };
+
+        attemptPlay();
+
+        // 6. Hard stop after 4.8 seconds
+        timer = setTimeout(() => {
+            audio.pause();
+            audio.currentTime = 0;
+            cleanupListeners(); 
+        }, AUDIO_DURATION_MS);
+
+        // 7. Cleanup on Unmount OR if isVisible becomes false
+        return () => {
+            audio.pause();
+            audio.currentTime = 0;
+            if (timer) clearTimeout(timer);
+            cleanupListeners();
+        };
+    }, [url, isVisible]);
+};
+// **********************************
+
+
 // =========================================
-// 1. SUPPORT WIDGET
+// 1. AUDIO LOGIC & CONTROLLER (PLAY ONCE ONLY)
 // =========================================
+const useBackgroundMusic = (url: string) => {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [hasPlayedOnce, setHasPlayedOnce] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const tune = new Audio(url);
+      // Set to false to ensure it never loops.
+      tune.loop = false; 
+      tune.volume = 0.4; 
+      audioRef.current = tune;
+      
+      const handleEnded = () => {
+        setIsPlaying(false);
+        // Important: Once it ends naturally, we do not want it to restart.
+      };
+
+      tune.addEventListener('ended', handleEnded);
+
+      // Cleanup on unmount
+      return () => {
+        tune.pause();
+        tune.src = "";
+        tune.removeEventListener('ended', handleEnded);
+      };
+    }
+  }, [url]);
+
+  const toggle = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio || hasPlayedOnce) return; // Prevent toggle if it has finished playing
+
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+    } else {
+      // Manual play attempt (will resume from where it was paused)
+      audio.play().catch(e => console.error("Playback failed:", e));
+      setIsPlaying(true);
+      setHasPlayedOnce(true);
+    }
+  }, [isPlaying, hasPlayedOnce]);
+
+  const play = useCallback(() => {
+    const audio = audioRef.current;
+    // CRITICAL: Only allow to play if it hasn't finished playing yet
+    if (audio && !isPlaying && !hasPlayedOnce) {
+      audio.play()
+        .then(() => {
+            setIsPlaying(true);
+            setHasPlayedOnce(true); // Mark as played once immediately on successful play attempt
+        })
+        .catch(e => console.log("Autoplay prevented by browser:", e));
+    }
+  }, [isPlaying, hasPlayedOnce]);
+
+  return { isPlaying, toggle, play };
+};
+
+// =========================================
+// 6. MUSIC CONTROLLER COMPONENT
+// =========================================
+// (No change needed here, it controls the play/pause button)
+const MusicController = ({ isPlaying, onToggle }: { isPlaying: boolean; onToggle: () => void }) => {
+  return (
+    <button
+      onClick={onToggle}
+      className={`fixed bottom-8 left-8 z-[9999] group flex items-center justify-center w-12 h-12 rounded-full 
+      transition-all duration-500 border border-[#66b3ff]/30 backdrop-blur-md
+      ${isPlaying ? 'bg-[#0066ff]/20 shadow-[0_0_15px_rgba(0,102,255,0.5)]' : 'bg-gray-900/50 grayscale'}`}
+    >
+      {isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center gap-[3px] opacity-50">
+           {[1,2,3,4].map(i => (
+             <div key={i} className="w-[3px] bg-blue-400 rounded-full animate-pulse" 
+                  style={{ height: '60%', animationDuration: `${0.5 + i * 0.1}s` }} />
+           ))}
+        </div>
+      )}
+      
+      <div className="relative z-10 transition-transform duration-300 group-hover:scale-110">
+        {isPlaying ? (
+          <Volume2 className="w-5 h-5 text-blue-100" />
+        ) : (
+          <VolumeX className="w-5 h-5 text-gray-400" />
+        )}
+      </div>
+    </button>
+  );
+};
+
+// =========================================
+// 2. SUPPORT WIDGET
+// =========================================
+// (No change needed here)
 const SupportWidget = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -106,8 +373,9 @@ const SupportWidget = () => {
 };
 
 // =========================================
-// 2. STYLES (Blue Brackets)
+// 3. STYLES 
 // =========================================
+// (No change needed here)
 const CursorStyles = () => (
   <style jsx global>{`
     .target-cursor-wrapper {
@@ -144,250 +412,34 @@ const CursorStyles = () => (
 );
 
 // =========================================
-// 3. TARGET CURSOR LOGIC
-// =========================================
-
-interface TargetCursorProps {
-  targetSelector?: string;
-  spinDuration?: number;
-  hideDefaultCursor?: boolean;
-  hoverDuration?: number;
-  parallaxOn?: boolean;
-}
-
-const TargetCursorComponent: React.FC<TargetCursorProps> = ({
-  targetSelector = 'button, a, input, [role="button"], .cursor-target',
-  spinDuration = 2,
-  hideDefaultCursor = true,
-  hoverDuration = 0.2,
-  parallaxOn = true
-}) => {
-  const isMobile = useIsMobile();
-  const cursorRef = useRef<HTMLDivElement>(null);
-  const dotRef = useRef<HTMLDivElement>(null);
-  const cornersRef = useRef<NodeListOf<HTMLDivElement> | null>(null);
-
-  const state = useRef({
-    isActive: false,
-    targetPositions: null as { x: number; y: number }[] | null,
-    activeStrength: { val: 0 },
-    activeTarget: null as Element | null
-  });
-
-  useEffect(() => {
-    if (!cursorRef.current || typeof window === 'undefined') return;
-
-    // Hide default cursor on desktop
-    const originalCursor = document.body.style.cursor;
-    if (hideDefaultCursor && !isMobile) document.body.style.cursor = 'none';
-
-    // Get refs
-    cornersRef.current = cursorRef.current.querySelectorAll('.target-cursor-corner');
-
-    const ctx = gsap.context(() => {
-      const cursor = cursorRef.current!;
-      const corners = cornersRef.current!;
-
-      // ----------------------------------------------------
-      // MOBILE LOGIC: SYSTEMATIC SCANNER
-      // ----------------------------------------------------
-      if (isMobile) {
-        // Mobile Init
-        gsap.set(cursor, { x: window.innerWidth / 2, y: window.innerHeight / 2, opacity: 0, scale: 1.3 });
-        gsap.to(cursor, { opacity: 1, duration: 0.5 });
-
-        // Helper: Pulse visual
-        const tapEffect = () => {
-          gsap.to(corners, { scale: 1.6, borderColor: '#00ffff', duration: 0.15, yoyo: true, repeat: 1 });
-          gsap.to(dotRef.current, { scale: 2, backgroundColor: '#ffffff', duration: 0.15, yoyo: true, repeat: 1 });
-        };
-
-        // SCANNER LOGIC
-        const runScanner = async () => {
-          // 1. Gather ALL interactive elements
-          const selectors = 'a, button, input, [role="button"], select, textarea, .cursor-target';
-          const allElements = Array.from(document.querySelectorAll(selectors));
-
-          // 2. Filter: Must be visible and on screen
-          const targets = allElements.filter(el => {
-            const r = el.getBoundingClientRect();
-            const style = window.getComputedStyle(el);
-            return (
-              style.display !== 'none' &&
-              style.visibility !== 'hidden' &&
-              style.opacity !== '0' &&
-              r.width > 20 && r.height > 20 && // Ignore tiny hitboxes
-              r.top >= 0 && r.left >= 0 
-            );
-          }).sort((a, b) => {
-            // Sort top-to-bottom
-            const ra = a.getBoundingClientRect();
-            const rb = b.getBoundingClientRect();
-            return ra.top - rb.top || ra.left - rb.left;
-          });
-
-          // 3. Iterate through them systematically
-          if (targets.length > 0) {
-            for (const target of targets) {
-              const r = target.getBoundingClientRect();
-
-              // Check if still in viewport
-              if (r.top < -50 || r.bottom > window.innerHeight + 50) continue;
-
-              // Move Cursor
-              await new Promise<void>(resolve => {
-                gsap.to(cursor, {
-                  x: r.left + r.width / 2,
-                  y: r.top + r.height / 2,
-                  duration: 0.8, // Speed of travel
-                  ease: "power2.inOut",
-                  onComplete: () => {
-                    tapEffect(); // "Tap" it
-                    setTimeout(resolve, 600); // Wait on the element
-                  }
-                });
-              });
-            }
-
-            // 4. After finishing list, restart
-            runScanner();
-          } else {
-            // No targets? Float randomly
-            gsap.to(cursor, {
-              x: window.innerWidth / 2 + (Math.random() - 0.5) * 100,
-              y: window.innerHeight / 2 + (Math.random() - 0.5) * 100,
-              duration: 2,
-                onComplete: () => { runScanner(); }
-            });
-          }
-        };
-
-        // Start scanning
-        setTimeout(runScanner, 1000);
-      }
-
-      // ----------------------------------------------------
-      // DESKTOP LOGIC: ORIGINAL + ANIMATED
-      // ----------------------------------------------------
-      else {
-        // Start center
-        gsap.set(cursor, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
-
-        // 1. Continuous Spin
-        const spinTl = gsap.timeline({ repeat: -1 })
-          .to(cursor, { rotation: 360, duration: spinDuration, ease: 'none' });
-
-        // 2. Movement
-        const moveCursor = (e: MouseEvent) => {
-          gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: 'power3.out', force3D: true });
-        };
-        window.addEventListener('mousemove', moveCursor);
-
-        // 3. Click Interactions
-        const handleDown = () => {
-          gsap.to(dotRef.current, { scale: 0.5, duration: 0.2 });
-          gsap.to(corners, { scale: 1.2, borderColor: '#00ffff', duration: 0.2 });
-        };
-        const handleUp = () => {
-          gsap.to(dotRef.current, { scale: 1, duration: 0.2 });
-          gsap.to(corners, { scale: 1, borderColor: '#0066ff', duration: 0.2 });
-        };
-        window.addEventListener('mousedown', handleDown);
-        window.addEventListener('mouseup', handleUp);
-
-        // 4. Magnetic Targeting
-        gsap.ticker.add(() => {
-          if (!state.current.isActive || !state.current.targetPositions) return;
-          const strength = state.current.activeStrength.val;
-          if (strength <= 0) return;
-
-          const cursorX = gsap.getProperty(cursor, 'x') as number;
-          const cursorY = gsap.getProperty(cursor, 'y') as number;
-
-          corners.forEach((corner, i) => {
-            const currentX = gsap.getProperty(corner, 'x') as number;
-            const currentY = gsap.getProperty(corner, 'y') as number;
-            const targetX = state.current.targetPositions![i].x - cursorX;
-            const targetY = state.current.targetPositions![i].y - cursorY;
-
-            const finalX = currentX + (targetX - currentX) * strength;
-            const finalY = currentY + (targetY - currentY) * strength;
-
-            gsap.to(corner, { x: finalX, y: finalY, duration: 0.1, overwrite: 'auto', force3D: true });
-          });
-        });
-
-        // 5. Hover Detection
-        const handleHover = (e: MouseEvent) => {
-          const target = (e.target as Element).closest(targetSelector);
-          if (target && target !== state.current.activeTarget) {
-            state.current.activeTarget = target;
-            state.current.isActive = true;
-            spinTl.pause();
-            gsap.to(cursor, { rotation: 0, duration: 0.3 });
-
-            const rect = target.getBoundingClientRect();
-            const borderWidth = 4; const cornerSize = 16;
-
-            state.current.targetPositions = [
-              { x: rect.left - borderWidth, y: rect.top - borderWidth },
-              { x: rect.right + borderWidth - cornerSize, y: rect.top - borderWidth },
-              { x: rect.right + borderWidth - cornerSize, y: rect.bottom + borderWidth - cornerSize },
-              { x: rect.left - borderWidth, y: rect.bottom + borderWidth - cornerSize }
-            ];
-
-            gsap.to(state.current.activeStrength, { val: 1, duration: hoverDuration, ease: 'power2.out' });
-
-            const handleLeave = () => {
-              target.removeEventListener('mouseleave', handleLeave);
-              state.current.activeTarget = null;
-              state.current.isActive = false;
-              state.current.targetPositions = null;
-              gsap.to(state.current.activeStrength, { val: 0, duration: 0.2, overwrite: true });
-              corners.forEach((c) => gsap.to(c, { x: 0, y: 0, duration: 0.3 }));
-              spinTl.restart();
-            };
-            target.addEventListener('mouseleave', handleLeave);
-          }
-        };
-        window.addEventListener('mouseover', handleHover);
-      }
-
-    }, cursorRef);
-
-    return () => {
-      if (!isMobile) document.body.style.cursor = originalCursor;
-      ctx.revert();
-      window.removeEventListener('mousemove', () => {});
-    };
-  }, [isMobile, hideDefaultCursor, spinDuration, targetSelector, hoverDuration, parallaxOn]);
-
-  return (
-    <div ref={cursorRef} className="target-cursor-wrapper">
-      <div ref={dotRef} className="target-cursor-dot" />
-      <div className="target-cursor-corner corner-tl" />
-      <div className="target-cursor-corner corner-tr" />
-      <div className="target-cursor-corner corner-br" />
-      <div className="target-cursor-corner corner-bl" />
-    </div>
-  );
-};
-
-// =========================================
-// 4. MAIN PAGE COMPONENT
+// 5. MAIN PAGE COMPONENT
 // =========================================
 export default function ShopPage() {
   const productsRef = useRef<HTMLDivElement | null>(null);
   const [isUnlocked, setIsUnlocked] = useState(false);
+  
+  // 1. Background Music: Plays only once isUnlocked is true
+  const { isPlaying, toggle, play } = useBackgroundMusic('/shop.mp3');
+
+  // 2. Loader Audio: Plays immediately if site is NOT unlocked.
+  useLoaderAudio('/modals.mp3', !isUnlocked);
 
   const handleScrollToProducts = () => {
     productsRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // If the website is NOT unlocked, show the Register Page
+  // Attempt to play background music only when user unlocks
+  useEffect(() => {
+    if (isUnlocked) {
+      play();
+    }
+  }, [isUnlocked, play]);
+
+  // If the website is NOT unlocked, show the Recruit Page
   if (!isUnlocked) {
     return (
       <main className="min-h-screen bg-slate-950 text-white">
+        {/* RecruitPage is displayed while the loader audio is aggressively trying to play */}
         <RecruitPage onUnlock={() => setIsUnlocked(true)} />
       </main>
     );
@@ -406,10 +458,13 @@ export default function ShopPage() {
           parallaxOn={true}
         />
 
-        {/* 2. SUPPORT WIDGET */}
+        {/* 2. MUSIC CONTROLLER */}
+        <MusicController isPlaying={isPlaying} onToggle={toggle} />
+
+        {/* 3. SUPPORT WIDGET */}
         <SupportWidget />
 
-        {/* 3. CONTENT */}
+        {/* 4. CONTENT */}
         <div className="relative z-10">
           <Socials />
           

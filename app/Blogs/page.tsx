@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import dynamic from 'next/dynamic';
 import { gsap } from "gsap";
-import { MessageCircle } from 'lucide-react';
+// Added Volume icons
+import { MessageCircle, Volume2, VolumeX } from 'lucide-react';
 
 // --- USER IMPORTS ---
 import { ShopProvider } from "../VIP/ShopContext"; 
@@ -22,7 +23,7 @@ const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), {
 });
 
 // =========================================
-// 0. CUSTOM HOOKS
+// 0. CUSTOM HOOKS (MOBILE CHECK & AUDIO)
 // =========================================
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -45,10 +46,169 @@ const useIsMobile = () => {
   return isMobile;
 };
 
+// *** AGGRESSIVE LOADER AUDIO HOOK (MODALS.MP3 - Plays max 4.8s on load) ***
+const useLoaderAudio = (url: string, isVisible: boolean) => {
+    useEffect(() => {
+        // Only run if the loader is visible (i.e., isUnlocked is false)
+        if (!isVisible) return;
+
+        // 1. Initialize
+        const audio = new Audio(url);
+        audio.loop = false; // Strictly play once
+        audio.volume = 1.0;
+        const AUDIO_DURATION_MS = 4800; // Exact duration limit
+        let timer: NodeJS.Timeout | null = null;
+
+        // 2. Define Unlocker (Plays on interaction if autoplay fails)
+        const unlock = () => {
+            audio.play().catch(() => {});
+            cleanupListeners();
+        };
+
+        // 3. Define Cleanup function
+        const cleanupListeners = () => {
+            window.removeEventListener('click', unlock);
+            window.removeEventListener('touchstart', unlock);
+            window.removeEventListener('keydown', unlock);
+        };
+
+        // 4. STRATEGY: Attach listeners IMMEDIATELY (The "Aggressive Unlock").
+        window.addEventListener('click', unlock);
+        window.addEventListener('touchstart', unlock);
+        window.addEventListener('keydown', unlock);
+
+        // 5. Attempt Instant Autoplay
+        const attemptPlay = async () => {
+            try {
+                await audio.play();
+                // If autoplay worked, we don't need the interaction listeners
+                cleanupListeners();
+            } catch (err) {
+                // Autoplay blocked. The listeners in step #4 are active.
+            }
+        };
+
+        attemptPlay();
+
+        // 6. Hard stop after 4.8 seconds
+        timer = setTimeout(() => {
+            audio.pause();
+            audio.currentTime = 0;
+            // Also stop listening for clicks if time runs out
+            cleanupListeners(); 
+        }, AUDIO_DURATION_MS);
+
+        // 7. Cleanup on Unmount (e.g., when isUnlocked becomes true)
+        return () => {
+            audio.pause();
+            audio.currentTime = 0;
+            if (timer) clearTimeout(timer);
+            cleanupListeners();
+        };
+    }, [url, isVisible]);
+};
+// **********************************
+
+// --- AUDIO HOOK FOR NEWS.MP3 (MODIFIED: PLAY ONCE ONLY) ---
+const useBackgroundMusic = (url: string) => {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  // New state to ensure the track is only played once from the start
+  const [hasPlayedOnce, setHasPlayedOnce] = useState(false); 
+  
+  // Note: Removed timerRef as we no longer want the 5-minute restart loop.
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const tune = new Audio(url);
+      tune.loop = false; // Ensures it stops after the track ends
+      tune.volume = 0.4; 
+      audioRef.current = tune;
+
+      // Handle the audio ending naturally (NO RESTART LOGIC HERE)
+      const handleEnded = () => {
+        setIsPlaying(false);
+        // The track has finished. hasPlayedOnce remains true, preventing restart.
+      };
+
+      tune.addEventListener('ended', handleEnded);
+
+      return () => {
+        tune.pause();
+        tune.src = "";
+        tune.removeEventListener('ended', handleEnded);
+      };
+    }
+  }, [url]);
+
+  const toggle = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    
+    // Allow toggle only if we haven't finished the track, or if we are currently playing/paused (current time > 0)
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+    } else if (!hasPlayedOnce || audio.currentTime > 0) {
+      // User manually playing (either first time, or resuming from a pause)
+      audio.play().catch(e => console.error("Playback failed:", e));
+      setIsPlaying(true);
+      setHasPlayedOnce(true); // Mark as played/started
+    }
+  }, [isPlaying, hasPlayedOnce]);
+
+  const play = useCallback(() => {
+    const audio = audioRef.current;
+    // CRITICAL: Only allow to play if it hasn't finished playing yet (current time is 0)
+    // AND if it is not currently playing.
+    if (audio && !isPlaying && audio.currentTime === 0 && !hasPlayedOnce) {
+      audio.play()
+        .then(() => {
+            setIsPlaying(true);
+            setHasPlayedOnce(true); // Mark as played once
+        })
+        .catch(e => console.log("Autoplay prevented by browser:", e));
+    }
+  }, [isPlaying, hasPlayedOnce]);
+
+  return { isPlaying, toggle, play };
+};
+
 // =========================================
-// 1. SUPPORT WIDGET
+// 1. WIDGETS (SUPPORT & MUSIC)
 // =========================================
+
+const MusicController = ({ isPlaying, onToggle }: { isPlaying: boolean; onToggle: () => void }) => {
+// ... (MusicController component remains the same)
+  return (
+    <button
+      onClick={onToggle}
+      className={`fixed bottom-8 left-8 z-[9999] group flex items-center justify-center w-12 h-12 rounded-full 
+      transition-all duration-500 border border-[#66b3ff]/30 backdrop-blur-md
+      ${isPlaying ? 'bg-[#0066ff]/20 shadow-[0_0_15px_rgba(0,102,255,0.5)]' : 'bg-gray-900/50 grayscale'}`}
+    >
+      {isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center gap-[3px] opacity-50">
+           {[1,2,3,4].map(i => (
+             <div key={i} className="w-[3px] bg-blue-400 rounded-full animate-pulse" 
+                  style={{ height: '60%', animationDuration: `${0.5 + i * 0.1}s` }} />
+           ))}
+        </div>
+      )}
+      
+      <div className="relative z-10 transition-transform duration-300 group-hover:scale-110">
+        {isPlaying ? (
+          <Volume2 className="w-5 h-5 text-blue-100" />
+        ) : (
+          <VolumeX className="w-5 h-5 text-gray-400" />
+        )}
+      </div>
+    </button>
+  );
+};
+
 const SupportWidget = () => {
+// ... (SupportWidget component remains the same)
   const [isHovered, setIsHovered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -111,6 +271,7 @@ const SupportWidget = () => {
 // 2. STYLES (Blue Brackets)
 // =========================================
 const CursorStyles = () => (
+// ... (CursorStyles component remains the same)
   <style jsx global>{`
     .target-cursor-wrapper {
       position: fixed; top: 0; left: 0; z-index: 10000; pointer-events: none;
@@ -151,8 +312,9 @@ const CursorStyles = () => (
 );
 
 // =========================================
-// 3. TARGET CURSOR LOGIC
+// 3. TARGET CURSOR LOGIC (Omitted for brevity)
 // =========================================
+// ... (TargetCursorComponent logic remains the same)
 
 interface TargetCursorProps {
   targetSelector?: string;
@@ -184,7 +346,6 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
   useEffect(() => {
     if (!cursorRef.current || typeof window === 'undefined') return;
 
-    // Handle cursor visibility
     if (hideDefaultCursor && !isMobile) {
       document.body.classList.add('custom-cursor-active');
     }
@@ -195,24 +356,17 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
         const cursor = cursorRef.current!;
         const corners = cornersRef.current!;
 
-        // ----------------------------------------------------
-        // MOBILE LOGIC: SYSTEMATIC SCANNER
-        // ----------------------------------------------------
         if (isMobile) {
-            // Init
             gsap.set(cursor, { x: window.innerWidth/2, y: window.innerHeight/2, opacity: 0, scale: 1.3 });
             gsap.to(cursor, { opacity: 1, duration: 0.5 });
 
-            // Visual Pulse
             const tapEffect = () => {
                 gsap.to(corners, { scale: 1.6, borderColor: '#00ffff', duration: 0.15, yoyo: true, repeat: 1 });
                 gsap.to(dotRef.current, { scale: 2, backgroundColor: '#ffffff', duration: 0.15, yoyo: true, repeat: 1 });
             };
 
             const runScanner = async () => {
-                // Find all clickable elements
                 const allElements = Array.from(document.querySelectorAll(targetSelector));
-
                 const targets = allElements.filter(el => {
                     const r = el.getBoundingClientRect();
                     const style = window.getComputedStyle(el);
@@ -232,9 +386,7 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
                 if (targets.length > 0) {
                     for (const target of targets) {
                         const r = target.getBoundingClientRect();
-                        // Viewport check
                         if (r.top < -50 || r.bottom > window.innerHeight + 50) continue; 
-
                         await new Promise<void>(resolve => {
                             gsap.to(cursor, {
                                 x: r.left + r.width / 2,
@@ -248,26 +400,18 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
                             });
                         });
                     }
-                    // Loop back after list
                     runScanner(); 
                 } else {
-                    // Fallback roaming if page is empty/loading
                     gsap.to(cursor, {
                         x: window.innerWidth / 2 + (Math.random() - 0.5) * 100,
                         y: window.innerHeight / 2 + (Math.random() - 0.5) * 100,
                         duration: 2,
-                        // FIX: Ensure recursion happens on complete
                         onComplete: () => { runScanner(); }
                     });
                 }
             };
-
             setTimeout(runScanner, 1000);
         }
-
-        // ----------------------------------------------------
-        // DESKTOP LOGIC
-        // ----------------------------------------------------
         else {
             gsap.set(cursor, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
 
@@ -279,7 +423,6 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
             };
             window.addEventListener('mousemove', moveCursor);
 
-            // Clicks
             const handleDown = () => {
                 gsap.to(dotRef.current, { scale: 0.5, duration: 0.2 });
                 gsap.to(corners, { scale: 1.2, borderColor: '#00ffff', duration: 0.2 });
@@ -291,7 +434,6 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
             window.addEventListener('mousedown', handleDown);
             window.addEventListener('mouseup', handleUp);
 
-            // Magnetic
             gsap.ticker.add(() => {
                 if (!state.current.isActive || !state.current.targetPositions) return;
                 const strength = state.current.activeStrength.val;
@@ -313,7 +455,6 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
                 });
             });
 
-            // Hover
             const handleHover = (e: MouseEvent) => {
                 const target = (e.target as Element).closest(targetSelector);
                 if (target && target !== state.current.activeTarget) {
@@ -369,6 +510,7 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
   );
 };
 
+
 // =========================================
 // 4. MAIN PAGE COMPONENT
 // =========================================
@@ -377,12 +519,27 @@ export default function Page({
 }: {
   searchParams?: { src?: string };
 }) {
+  // FIX APPLIED HERE: Initialize useRef with null
   const productsRef = useRef<HTMLDivElement | null>(null);
+  
   const [isUnlocked, setIsUnlocked] = useState(false);
+  
+  // 1. Hook for the main background music (plays once on unlock)
+  const { isPlaying, toggle, play } = useBackgroundMusic('/news.mp3');
+
+  // 2. AGGRESSIVE Hook for the loader audio (plays max 4.8s while locked)
+  useLoaderAudio('/modals.mp3', !isUnlocked);
 
   const handleScrollToProducts = () => {
     productsRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Attempt to play music automatically when user unlocks
+  useEffect(() => {
+    if (isUnlocked) {
+      play();
+    }
+  }, [isUnlocked, play]);
 
   // If the website is NOT unlocked, show the Register Page
   if (!isUnlocked) {
@@ -397,13 +554,14 @@ export default function Page({
     <BlogProvider>
       <div className="relative animate-in fade-in duration-1000">
         
-        {/* 1. CURSOR & WIDGET */}
+        {/* 1. CURSOR, MUSIC & WIDGET */}
         <CursorStyles />
         <TargetCursor 
             hideDefaultCursor={true}
             spinDuration={2}
             parallaxOn={true}
         />
+        <MusicController isPlaying={isPlaying} onToggle={toggle} />
         <SupportWidget />
 
         {/* 2. MAIN CONTENT */}
@@ -415,7 +573,7 @@ export default function Page({
             <Shopmain />
             <Chartnews />
             
-            <div ref={productsRef}>
+            <div ref={productsRef}> {/* Ensure productsRef is used correctly here */}
                 {/* Product Section Refs */}
             </div>
           </main>

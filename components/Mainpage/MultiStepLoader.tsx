@@ -264,14 +264,14 @@ const ReactiveLiquidLogo = ({ src }: { src: string }) => {
     e: React.MouseEvent | React.TouchEvent | React.PointerEvent
   ) => {
     let clientX, clientY;
+    // Check if the event object has 'touches' (i.e., it's a TouchEvent)
     if ("touches" in e) {
       if (e.touches.length === 0) return;
       clientX = e.touches[0].clientX;
       clientY = e.touches[0].clientY;
     } else {
-      // @ts-ignore
+      // It's a MouseEvent or PointerEvent
       clientX = e.clientX;
-      // @ts-ignore
       clientY = e.clientY;
     }
     x.set(clientX);
@@ -279,6 +279,7 @@ const ReactiveLiquidLogo = ({ src }: { src: string }) => {
   };
 
   const handleReset = () => {
+    // Reset to a default position (0,0) or a central point if needed
     x.set(0);
     y.set(0);
   };
@@ -391,6 +392,7 @@ export const MultiStepLoader = ({
   const selectedAsset: AssetKey = "BTC";
   
   // *** FIX 1: Scroll Lock Logic ***
+  // Prevents scrolling on the body while the loader is active
   useEffect(() => {
     if (loading) {
       document.body.classList.add("loader-active");
@@ -404,6 +406,79 @@ export const MultiStepLoader = ({
   }, [loading]);
   // *****************************
 
+  // *** AUDIO LOGIC: PLAYS ONCE FOR 4.8 SECONDS MAX ***
+  // FIX: Use a ref to store the audio object and listener function for reliable cleanup
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const unlockListenerRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    let stopTimeout: NodeJS.Timeout | null = null;
+    const AUDIO_DURATION_MS = 4800; 
+
+    // Define the unlock listener once inside useEffect to access current `loading` state (indirectly)
+    // and rely on the cleanup function to remove it.
+    const unlockAudio = () => {
+        if (audioRef.current && loading) { // Use the current loading state
+            audioRef.current.play().catch(() => {});
+        }
+        // Always remove listeners after the first interaction
+        window.removeEventListener("click", unlockAudio);
+        window.removeEventListener("touchstart", unlockAudio);
+        window.removeEventListener("keydown", unlockAudio);
+        unlockListenerRef.current = null; // Clear the ref
+    };
+
+    if (loading) {
+      // 1. Initialize Audio
+      audioRef.current = new Audio("/modals.mp3");
+      audioRef.current.loop = false;
+      audioRef.current.volume = 1.0; 
+
+      const playAudio = async () => {
+        try {
+          await audioRef.current!.play();
+          
+          // 2. Set Timeout to stop playback after 4.8 seconds
+          stopTimeout = setTimeout(() => {
+            if (audioRef.current) {
+              audioRef.current.pause();
+              audioRef.current.currentTime = 0;
+            }
+          }, AUDIO_DURATION_MS);
+
+        } catch (err) {
+          // 3. Autoplay blocked: Attach the single, reliable listener
+          unlockListenerRef.current = unlockAudio;
+          window.addEventListener("click", unlockListenerRef.current);
+          window.addEventListener("touchstart", unlockListenerRef.current);
+          window.addEventListener("keydown", unlockListenerRef.current);
+        }
+      };
+
+      playAudio();
+    }
+
+    // Cleanup: Runs when 'loading' changes to false or component unmounts
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current = null; // Clear the audio ref
+      }
+      if (stopTimeout) {
+        clearTimeout(stopTimeout);
+      }
+      // CRITICAL: Ensure the event listener is removed using the function stored in the ref
+      if (unlockListenerRef.current) {
+        window.removeEventListener("click", unlockListenerRef.current);
+        window.removeEventListener("touchstart", unlockListenerRef.current);
+        window.removeEventListener("keydown", unlockListenerRef.current);
+        unlockListenerRef.current = null;
+      }
+    };
+  }, [loading]); // Dependency ensures the effect runs only when the loading state changes
+  // *************************************
+
   useEffect(() => {
     if (!loading) {
       setCurrentStep(0);
@@ -413,13 +488,16 @@ export const MultiStepLoader = ({
     const totalSteps = loadingStates.length;
     const stepDuration = duration;
     
+    // Interval for updating the text steps
     const stepInterval = setInterval(
       () => setCurrentStep((prev) => (prev < totalSteps - 1 ? prev + 1 : prev)),
       stepDuration
     );
 
-    const updateFrequency = 30;
-    const increment = 100 / ((totalSteps * stepDuration) / updateFrequency);
+    // Interval for updating the progress bar percentage
+    const updateFrequency = 30; // 33 FPS roughly
+    const totalTime = totalSteps * stepDuration;
+    const increment = (100 / totalTime) * updateFrequency; // Calculation for smooth 0-100 progress
     
     const progressInterval = setInterval(() => {
       setProgress((prev) => {

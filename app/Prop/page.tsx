@@ -39,6 +39,69 @@ const useIsMobile = () => {
   return isMobile;
 };
 
+// *** AGGRESSIVE LOADER AUDIO HOOK (MODALS.MP3 - Plays max 4.8s on load) ***
+const useLoaderAudio = (url: string, isVisible: boolean) => {
+    useEffect(() => {
+        // Only run if the loader is visible (i.e., isUnlocked is false)
+        if (!isVisible) return;
+
+        // 1. Initialize
+        const audio = new Audio(url);
+        audio.loop = false; // Strictly play once
+        audio.volume = 1.0;
+        const AUDIO_DURATION_MS = 4800; // Exact duration limit
+        let timer: NodeJS.Timeout | null = null;
+
+        // 2. Define Unlocker (Plays on interaction if autoplay fails)
+        const unlock = () => {
+            audio.play().catch(() => {});
+            cleanupListeners();
+        };
+
+        // 3. Define Cleanup function
+        const cleanupListeners = () => {
+            window.removeEventListener('click', unlock);
+            window.removeEventListener('touchstart', unlock);
+            window.removeEventListener('keydown', unlock);
+        };
+
+        // 4. STRATEGY: Attach listeners IMMEDIATELY (The "Aggressive Unlock").
+        window.addEventListener('click', unlock);
+        window.addEventListener('touchstart', unlock);
+        window.addEventListener('keydown', unlock);
+
+        // 5. Attempt Instant Autoplay
+        const attemptPlay = async () => {
+            try {
+                await audio.play();
+                // If autoplay worked, we don't need the interaction listeners
+                cleanupListeners();
+            } catch (err) {
+                // Autoplay blocked. The listeners in step #4 are active.
+            }
+        };
+
+        attemptPlay();
+
+        // 6. Hard stop after 4.8 seconds
+        timer = setTimeout(() => {
+            audio.pause();
+            audio.currentTime = 0;
+            // Also stop listening for clicks if time runs out
+            cleanupListeners(); 
+        }, AUDIO_DURATION_MS);
+
+        // 7. Cleanup on Unmount (e.g., when isUnlocked becomes true)
+        return () => {
+            audio.pause();
+            audio.currentTime = 0;
+            if (timer) clearTimeout(timer);
+            cleanupListeners();
+        };
+    }, [url, isVisible]);
+};
+// **********************************
+
 // =========================================
 // 1. SUPPORT WIDGET (Target for Mobile Scanner)
 // =========================================
@@ -369,6 +432,10 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
 
 export default function Home() {
   const [isUnlocked, setIsUnlocked] = useState(false);
+
+  // 1. AGGRESSIVE Hook for the loader audio
+  // Plays /modals.mp3 for max 4.8s while the site is NOT unlocked.
+  useLoaderAudio('/modals.mp3', !isUnlocked);
 
   // If the site is not unlocked, show the registration page
   if (!isUnlocked) {
