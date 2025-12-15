@@ -55,15 +55,19 @@ const getYoutubeId = (url: string | undefined): string | null => {
 
 const SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #3b82f6 50%, #00000000 100%)";
 
-// --- HELPER TIP COMPONENT ---
+// --- HELPER TIP COMPONENT (Positioned Below) ---
 const HelperTip = ({ text }: { text: string }) => (
   <motion.div
-    initial={{ opacity: 0, y: 10, scale: 0.8 }}
+    initial={{ opacity: 0, y: -10, scale: 0.8 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, y: 10, scale: 0.8 }}
+    exit={{ opacity: 0, y: -10, scale: 0.8 }}
     transition={{ type: "spring", stiffness: 300, damping: 20 }}
-    className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center pointer-events-none min-w-max"
+    // Changed to 'top-full mt-3' to appear BELOW the icon
+    className="absolute top-full mt-3 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center pointer-events-none min-w-max"
   >
+    {/* Pointer pointing UP (Attached to top of tooltip) */}
+    <div className="w-2 h-2 bg-neutral-900 rotate-45 translate-y-[4px] relative z-10 border-t border-l border-white/10" />
+
     {/* Tip Container */}
     <div className="relative p-[1.5px] overflow-hidden rounded-full shadow-lg">
         <motion.div 
@@ -78,8 +82,6 @@ const HelperTip = ({ text }: { text: string }) => (
             </span>
         </div>
     </div>
-    {/* Pointer pointing down */}
-    <div className="w-2 h-2 bg-neutral-900 rotate-45 -translate-y-[4px] relative z-10 border-b border-r border-neutral-800" />
   </motion.div>
 );
 
@@ -294,9 +296,8 @@ const HeroParallax = () => {
   const willChange = useWillChange();
 
   // --- FOOTER HELPERS LOGIC ---
-  // 0-2: Grid items, 3: Admin Button
   const [activeFooterIndex, setActiveFooterIndex] = useState(0);
-  const TOTAL_FOOTER_ITEMS = 4; // 3 Grid items + 1 Admin button
+  const TOTAL_FOOTER_ITEMS = 4;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -530,9 +531,7 @@ const HeroParallax = () => {
                     layoutId={activeLayoutId} 
                     className="relative w-full h-full bg-neutral-900 flex flex-col md:flex-row safari-fix-layer"
                 >
-                    {/* ... (Existing Modal Content) ... */}
-                    {/* Simplified for brevity - existing modal logic remains here */}
-                    {/* Close Buttons, Video Iframe, Edit Form etc. */}
+                    {/* ... (Existing Modal Content logic same as previous) ... */}
                     <div className="absolute top-24 md:top-4 left-4 z-50">
                         <ShimmerBorder rounded="rounded-full">
                             <button onClick={handleClose} className="p-2 bg-black/80 text-white hover:bg-neutral-800 transition-colors flex items-center justify-center group"><ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform text-blue-400" /></button>
@@ -543,9 +542,8 @@ const HeroParallax = () => {
                             <button onClick={handleClose} className="p-2 bg-black/80 text-white hover:bg-neutral-800 transition-colors group"><X size={20} className="group-hover:rotate-90 transition-transform text-blue-400" /></button>
                         </ShimmerBorder>
                     </div>
-                    {/* Content Section ... */}
+                    
                     <div className="w-full md:w-3/4 bg-black flex flex-col relative group h-[35vh] sm:h-[45vh] md:h-full shrink-0 border-r border-blue-900/20">
-                         {/* Iframe Logic... */}
                          <div className="relative w-full h-full">
                             {getYoutubeId(activeProduct.buyUrl) ? (
                                 <iframe className="w-full h-full absolute inset-0" src={`https://www.youtube.com/embed/${getYoutubeId(activeProduct.buyUrl)}?autoplay=1&rel=0&modestbranding=1&playsinline=1`} title={activeProduct.name} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
@@ -559,7 +557,6 @@ const HeroParallax = () => {
                            <h3 className="text-xl md:text-2xl font-sans font-bold text-white mb-4 leading-tight">{activeProduct.name}</h3>
                            <div className="text-neutral-400 text-xs md:text-sm leading-relaxed whitespace-pre-line">{activeProduct.description || "No description provided."}</div>
                         </div>
-                        {/* Footer Buttons... */}
                          <div className="p-4 md:p-6 border-t border-blue-900/20 bg-neutral-900 shrink-0">
                                 <ShimmerBorder rounded="rounded-xl">
                                     <motion.a href={activeProduct.buyUrl || "#"} target="_blank" rel="noopener noreferrer" className="w-full py-3 md:py-4 bg-neutral-800/50 text-white font-bold uppercase tracking-widest hover:bg-neutral-800 transition-all flex items-center justify-center gap-2 text-xs md:text-sm">Open on YouTube <ExternalLink size={16} className="text-blue-500" /></motion.a>
@@ -739,7 +736,13 @@ const HeroParallax = () => {
         {/* Footer Grid */}
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 mb-12 text-xs uppercase tracking-widest text-neutral-400">
             {/* Item 1: YouTube */}
-            <div className="flex flex-col items-center gap-3">
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="flex flex-col items-center gap-3"
+            >
                 <FooterItemWrapper 
                     isActive={activeFooterIndex === 0} 
                     tipText="Watch Videos"
@@ -747,10 +750,16 @@ const HeroParallax = () => {
                     <Youtube className="w-5 h-5 text-red-500" />
                 </FooterItemWrapper>
                 <span>Exclusive Content</span>
-            </div>
+            </motion.div>
 
             {/* Item 2: Market Analysis */}
-            <div className="flex flex-col items-center gap-3">
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="flex flex-col items-center gap-3"
+            >
                 <FooterItemWrapper 
                     isActive={activeFooterIndex === 1} 
                     tipText="View Charts"
@@ -758,10 +767,16 @@ const HeroParallax = () => {
                     <BarChart3 className="w-5 h-5 text-blue-500" />
                 </FooterItemWrapper>
                 <span>Market Analysis</span>
-            </div>
+            </motion.div>
 
             {/* Item 3: Verified Data */}
-            <div className="flex flex-col items-center gap-3">
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="flex flex-col items-center gap-3"
+            >
                 <FooterItemWrapper 
                     isActive={activeFooterIndex === 2} 
                     tipText="Check Stats"
@@ -769,11 +784,17 @@ const HeroParallax = () => {
                     <ShieldCheck className="w-5 h-5 text-blue-500" />
                 </FooterItemWrapper>
                 <span>Verified Data</span>
-            </div>
+            </motion.div>
         </div>
         
         {/* Bottom Section */}
-        <div className="flex flex-col items-center gap-4">
+        <motion.div 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="flex flex-col items-center gap-4"
+        >
             <p className="text-[10px] opacity-50">&copy; {new Date().getFullYear()} BULLMONEY VIP. All rights reserved.</p>
             
             {!isAdmin && (
@@ -789,7 +810,7 @@ const HeroParallax = () => {
                     </div>
                 </FooterItemWrapper>
             )}
-        </div>
+        </motion.div>
     </div>
     </div>
   );

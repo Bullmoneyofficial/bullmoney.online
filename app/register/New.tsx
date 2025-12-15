@@ -220,7 +220,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
              className="fixed inset-0 z-[99999999] w-screen h-screen bg-[#050B14]"
              // We render the loader component inside this wrapper
           >
-            <MultiStepLoader loadingStates={loadingStates} loading={loading} duration={1200} />
+            <MultiStepLoader loadingStates={loadingStates} loading={loading} />
         </div>
       </>
     );
