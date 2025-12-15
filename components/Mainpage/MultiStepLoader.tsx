@@ -379,35 +379,35 @@ export interface LoadingState {
 interface MultiStepLoaderProps {
   loadingStates: LoadingState[];
   loading: boolean;
-  duration?: number;
+  // Removed 'duration' prop from here, as it's now fixed internally to 6000ms.
+  // duration?: number; 
 }
+
+// *** CONSTANT: Set the target duration for 6 seconds ***
+const TARGET_DURATION_MS = 6000; 
 
 export const MultiStepLoader = ({
   loadingStates,
   loading,
-  duration = 2000,
+  // Removed 'duration' from destructuring, as it's no longer used for the timing
 }: MultiStepLoaderProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const selectedAsset: AssetKey = "BTC";
   
   // *** FIX 1: Scroll Lock Logic ***
-  // Prevents scrolling on the body while the loader is active
   useEffect(() => {
     if (loading) {
       document.body.classList.add("loader-active");
     } else {
       document.body.classList.remove("loader-active");
     }
-    // Cleanup function to ensure the class is removed when component unmounts
     return () => {
       document.body.classList.remove("loader-active");
     };
   }, [loading]);
-  // *****************************
 
   // *** AUDIO LOGIC: PLAYS ONCE FOR 4.8 SECONDS MAX ***
-  // FIX: Use a ref to store the audio object and listener function for reliable cleanup
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const unlockListenerRef = useRef<(() => void) | null>(null);
 
@@ -415,21 +415,17 @@ export const MultiStepLoader = ({
     let stopTimeout: NodeJS.Timeout | null = null;
     const AUDIO_DURATION_MS = 4800; 
 
-    // Define the unlock listener once inside useEffect to access current `loading` state (indirectly)
-    // and rely on the cleanup function to remove it.
     const unlockAudio = () => {
-        if (audioRef.current && loading) { // Use the current loading state
+        if (audioRef.current && loading) { 
             audioRef.current.play().catch(() => {});
         }
-        // Always remove listeners after the first interaction
         window.removeEventListener("click", unlockAudio);
         window.removeEventListener("touchstart", unlockAudio);
         window.removeEventListener("keydown", unlockAudio);
-        unlockListenerRef.current = null; // Clear the ref
+        unlockListenerRef.current = null; 
     };
 
     if (loading) {
-      // 1. Initialize Audio
       audioRef.current = new Audio("/modals.mp3");
       audioRef.current.loop = false;
       audioRef.current.volume = 1.0; 
@@ -438,7 +434,6 @@ export const MultiStepLoader = ({
         try {
           await audioRef.current!.play();
           
-          // 2. Set Timeout to stop playback after 4.8 seconds
           stopTimeout = setTimeout(() => {
             if (audioRef.current) {
               audioRef.current.pause();
@@ -447,28 +442,24 @@ export const MultiStepLoader = ({
           }, AUDIO_DURATION_MS);
 
         } catch (err) {
-          // 3. Autoplay blocked: Attach the single, reliable listener
           unlockListenerRef.current = unlockAudio;
           window.addEventListener("click", unlockListenerRef.current);
           window.addEventListener("touchstart", unlockListenerRef.current);
           window.addEventListener("keydown", unlockListenerRef.current);
         }
       };
-
       playAudio();
     }
 
-    // Cleanup: Runs when 'loading' changes to false or component unmounts
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
-        audioRef.current = null; // Clear the audio ref
+        audioRef.current = null; 
       }
       if (stopTimeout) {
         clearTimeout(stopTimeout);
       }
-      // CRITICAL: Ensure the event listener is removed using the function stored in the ref
       if (unlockListenerRef.current) {
         window.removeEventListener("click", unlockListenerRef.current);
         window.removeEventListener("touchstart", unlockListenerRef.current);
@@ -476,7 +467,7 @@ export const MultiStepLoader = ({
         unlockListenerRef.current = null;
       }
     };
-  }, [loading]); // Dependency ensures the effect runs only when the loading state changes
+  }, [loading]); 
   // *************************************
 
   useEffect(() => {
@@ -485,19 +476,25 @@ export const MultiStepLoader = ({
       setProgress(0);
       return;
     }
-    const totalSteps = loadingStates.length;
-    const stepDuration = duration;
     
-    // Interval for updating the text steps
+    const totalSteps = loadingStates.length;
+    // --- START MODIFICATION FOR 6 SECONDS ---
+    const totalTime = TARGET_DURATION_MS; // Fixed at 6000ms
+    
+    // Distribute 6000ms evenly across all loading states
+    const stepDuration = totalTime / totalSteps; 
+    // --- END MODIFICATION ---
+    
+    // 1. Interval for updating the text steps
     const stepInterval = setInterval(
       () => setCurrentStep((prev) => (prev < totalSteps - 1 ? prev + 1 : prev)),
-      stepDuration
+      stepDuration // Uses the calculated duration
     );
 
-    // Interval for updating the progress bar percentage
+    // 2. Interval for updating the progress bar percentage
     const updateFrequency = 30; // 33 FPS roughly
-    const totalTime = totalSteps * stepDuration;
-    const increment = (100 / totalTime) * updateFrequency; // Calculation for smooth 0-100 progress
+    // Calculate increment based on 100% / 6000ms * updateFrequency
+    const increment = (100 / totalTime) * updateFrequency; 
     
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
@@ -513,7 +510,8 @@ export const MultiStepLoader = ({
       clearInterval(stepInterval);
       clearInterval(progressInterval);
     };
-  }, [loading, loadingStates.length, duration]);
+    // Removed 'duration' from dependency array
+  }, [loading, loadingStates.length]); 
 
   return (
     <AnimatePresence mode="wait">

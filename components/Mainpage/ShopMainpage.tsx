@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useMotionValue, useMotionTemplate, motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { ClassValue, clsx } from "clsx";
@@ -13,15 +13,19 @@ import {
   TrendingUp,
   Youtube,
   ExternalLink,
-  ArrowRight,
   X,
   Play
 } from "lucide-react";
 
 // --- IMPORTS ---
-import Orb from "../Mainpage/Vorb";
-import { SparklesCore } from "./sparkles";
+// Assuming Orb is the main entry point and must remain.
+import Orb from "../Mainpage/Vorb"; 
+// Removed: import { SparklesCore } from "./sparkles";
 // ----------------
+
+// --- CONFIG ---
+const RANDOM_STRING_LENGTH = 300; // Drastically reduced for performance
+// --- UTILS ---
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -44,7 +48,8 @@ const EvervaultCard = ({
   const [randomString, setRandomString] = useState("");
 
   useEffect(() => {
-    const str = generateRandomString(1500);
+    // Used optimized length
+    const str = generateRandomString(RANDOM_STRING_LENGTH); 
     setRandomString(str);
   }, []);
 
@@ -58,8 +63,8 @@ const EvervaultCard = ({
     <div className={cn("bg-transparent aspect-auto flex w-full h-full relative", className)}>
       <div
         onMouseMove={onMouseMove}
-        // Updated styles for dark blue theme
-        className="group/card rounded-2xl w-full relative overflow-hidden flex items-center justify-center h-full border border-blue-950/30 bg-gradient-to-b from-blue-950/30 to-blue-950/00 hover:border-blue-800/30 transition-all duration-500 hover:shadow-[0_0_25px_rgba(30,64,175,0.2)]"
+        // Increased transition duration for a slower, less jittery feel
+        className="group/card rounded-2xl w-full relative overflow-hidden flex items-center justify-center h-full border border-blue-950/30 bg-gradient-to-b from-blue-950/30 to-blue-950/00 hover:border-blue-800/30 transition-all duration-700 hover:shadow-[0_0_15px_rgba(30,64,175,0.15)]"
       >
         {/* The Matrix Effect Pattern sits behind the content */}
         <CardPattern mouseX={mouseX} mouseY={mouseY} randomString={randomString} />
@@ -76,22 +81,24 @@ const EvervaultCard = ({
 };
 
 function CardPattern({ mouseX, mouseY, randomString }: { mouseX: any; mouseY: any; randomString: string }) {
-  const maskImage = useMotionTemplate`radial-gradient(220px at ${mouseX}px ${mouseY}px, white, transparent)`;
+  // Reduced radial-gradient size for smaller effective mask area
+  const maskImage = useMotionTemplate`radial-gradient(150px at ${mouseX}px ${mouseY}px, white, transparent)`; 
   const style = { maskImage, WebkitMaskImage: maskImage };
 
   return (
     <div className="pointer-events-none absolute inset-0">
-      <div className="absolute inset-0 rounded-xl [mask-image:linear-gradient(white,transparent)] group-hover/card:opacity-50" />
+      <div className="absolute inset-0 rounded-xl [mask-image:linear-gradient(white,transparent)] group-hover/card:opacity-30" />
       <motion.div
-        // Changed gradient to be more blue-centric
-        className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-500 to-blue-400 opacity-0 group-hover/card:opacity-100 backdrop-blur-sm transition-opacity duration-500"
+        // Reduced opacity and removed backdrop-blur (expensive) for performance
+        className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-500 to-blue-400 opacity-0 group-hover/card:opacity-50 transition-opacity duration-700" 
         style={style}
       />
       <motion.div
-        className="absolute inset-0 rounded-xl opacity-0 mix-blend-overlay group-hover/card:opacity-100"
+        // Reduced opacity
+        className="absolute inset-0 rounded-xl opacity-0 mix-blend-overlay group-hover/card:opacity-70"
         style={style}
       >
-        <p className="absolute inset-x-0 inset-y-0 text-[9px] h-full break-words whitespace-pre-wrap text-blue-100 font-mono font-bold transition duration-500 select-none overflow-hidden p-4">
+        <p className="absolute inset-x-0 inset-y-0 text-[10px] h-full break-words whitespace-pre-wrap text-blue-100 font-mono font-bold transition duration-700 select-none overflow-hidden p-4">
           {randomString}
         </p>
       </motion.div>
@@ -113,6 +120,7 @@ const generateRandomString = (length: number) => {
 // ==========================================
 
 const LiveVideoPreview = ({ isLive }: { isLive: boolean }) => {
+  // Keeping video state logic, but ensuring minimal animation
   const [playVideo, setPlayVideo] = useState(false);
   const VIDEO_ID = "jfKfPfyJRdk"; 
 
@@ -131,11 +139,12 @@ const LiveVideoPreview = ({ isLive }: { isLive: boolean }) => {
   return (
     <div 
       onClick={() => setPlayVideo(true)}
-      className="absolute inset-0 flex flex-col items-center justify-center bg-[#050a18]/60 cursor-pointer group hover:bg-[#050a18]/40 transition-colors"
+      // Increased transition duration for a slower hover/tap feel
+      className="absolute inset-0 flex flex-col items-center justify-center bg-[#050a18]/60 cursor-pointer group hover:bg-[#050a18]/40 transition-colors duration-500"
     >
       {isLive ? (
         <>
-          <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(220,38,38,0.5)]">
+          <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center mb-2 motion-safe:group-hover:scale-105 transition-transform duration-500 shadow-[0_0_10px_rgba(220,38,38,0.3)]">
             <Play className="w-5 h-5 text-white fill-current ml-0.5" />
           </div>
           <p className="text-white font-bold tracking-widest text-xs">WATCH LIVE</p>
@@ -201,11 +210,8 @@ export default function RecruitPage() {
   }, []);
 
   useEffect(() => {
-    if (open) {
-        document.body.style.overflow = "hidden";
-    } else {
-        document.body.style.overflow = "auto";
-    }
+    // Simple state management for body overflow
+    document.body.style.overflow = open ? "hidden" : "auto";
     return () => { document.body.style.overflow = "auto"; };
   }, [open]);
 
@@ -219,19 +225,10 @@ export default function RecruitPage() {
         overflow: "hidden",
       }}
     >
-      <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
-        <SparklesCore
-          id="tsparticlesrecruit"
-          background="transparent"
-          minSize={1.2}
-          maxSize={3.0}
-          particleDensity={70}
-          className="w-full h-full"
-          particleColor="#FFFFFF"
-        />
-      </div>
-
+      {/* REMOVED: SparklesCore component */}
+      
       <div className="relative z-10 w-full h-full flex items-center justify-center">
+        {/* Assuming Orb component handles its own internal performance */}
         <Orb
           hoverIntensity={0.5}
           rotateOnHover={true}
@@ -246,17 +243,19 @@ export default function RecruitPage() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
+              // Increased transition duration
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }} 
               className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-[#020611]/70 p-4"
               onClick={() => setOpen(false)}
             >
               <motion.div
-                initial={{ y: 20, opacity: 0, scale: 0.95 }}
+                initial={{ y: 30, opacity: 0, scale: 0.9 }} // Slightly slower entry
                 animate={{ y: 0, opacity: 1, scale: 1 }}
-                exit={{ y: 20, opacity: 0, scale: 0.95 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                exit={{ y: 30, opacity: 0, scale: 0.9 }}
+                // Increased damping and reduced stiffness for slower spring effect
+                transition={{ type: "spring", damping: 30, stiffness: 200 }} 
                 onClick={(e) => e.stopPropagation()}
-                // Changed modal bg to dark blue
                 className="relative w-full max-w-5xl bg-[#050a18] border border-blue-950/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
               >
                 {/* Header */}
@@ -269,7 +268,7 @@ export default function RecruitPage() {
                     </div>
                     <button 
                         onClick={() => setOpen(false)}
-                        className="p-1.5 rounded-full bg-blue-900/20 hover:bg-blue-900/40 transition-colors text-blue-300 hover:text-white"
+                        className="p-1.5 rounded-full bg-blue-900/20 hover:bg-blue-900/40 transition-colors duration-500 text-blue-300 hover:text-white"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -294,20 +293,22 @@ export default function RecruitPage() {
                                 </div>
                                 {isLive && (
                                     <span className="flex items-center gap-1.5 px-2 py-0.5 bg-red-500/10 border border-red-500/20 rounded-full">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                        {/* Using motion-safe for the pulse animation */}
+                                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 motion-safe:animate-pulse" /> 
                                         <span className="text-[9px] font-bold text-red-500 tracking-wider">LIVE</span>
                                     </span>
                                 )}
                             </div>
 
-                            <div className="relative flex-grow rounded-lg overflow-hidden border border-blue-900/30 bg-[#050a18]/50 group-hover:border-red-500/30 transition-colors">
+                            <div className="relative flex-grow rounded-lg overflow-hidden border border-blue-900/30 bg-[#050a18]/50 group-hover:border-red-500/30 transition-colors duration-500">
                                 <LiveVideoPreview isLive={isLive} />
                             </div>
                             
                             <div className="mt-3">
                                 <button
                                     onClick={() => window.open("https://youtube.com/@BULLMONEY.ONLINE", "_blank")}
-                                    className="w-full py-2 bg-blue-950/50 border border-blue-900/30 text-blue-100 hover:bg-blue-900/50 hover:text-white font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-2"
+                                    // Slower transition for button hover
+                                    className="w-full py-2 bg-blue-950/50 border border-blue-900/30 text-blue-100 hover:bg-blue-900/50 hover:text-white font-bold text-xs rounded-lg transition-all duration-500 flex items-center justify-center gap-2"
                                 >
                                     <span>OPEN CHANNEL</span>
                                     <ExternalLink className="w-3 h-3" />
@@ -336,13 +337,14 @@ export default function RecruitPage() {
                                   )}>
                                       <div className={isLastItem ? "flex items-center gap-4" : ""}>
                                           <div className={cn(
-                                              "rounded-xl bg-blue-950/30 border border-blue-900/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-500",
+                                              // Slower transition for icon scale effect
+                                              "rounded-xl bg-blue-950/30 border border-blue-900/30 flex items-center justify-center motion-safe:group-hover:scale-105 transition-transform duration-700",
                                               isLastItem ? "w-14 h-14" : "w-10 h-10 mb-4"
                                           )}>
                                               {item.icon}
                                           </div>
                                           <div>
-                                              <h3 className="text-base font-bold text-white tracking-wide group-hover:text-blue-400 transition-colors">{item.name}</h3>
+                                              <h3 className="text-base font-bold text-white tracking-wide group-hover:text-blue-400 transition-colors duration-500">{item.name}</h3>
                                               <p className="text-blue-200/60 text-xs mt-1 leading-relaxed max-w-[200px]">
                                                   {item.desc}
                                               </p>
@@ -358,12 +360,13 @@ export default function RecruitPage() {
                                               "relative w-full rounded-lg overflow-hidden text-center",
                                               "border border-blue-900/30 bg-blue-950/40",
                                               "bg-[linear-gradient(110deg,transparent,45%,rgba(59,130,246,0.2),55%,transparent)] bg-[length:250%_100%]",
-                                              "animate-shimmer-blue",
-                                              "group-hover/btn:border-blue-500/50 group-hover/btn:bg-blue-900/30 transition-all duration-300",
+                                              // Increased duration for the shimmer animation
+                                              "animate-shimmer-blue", 
+                                              "group-hover/btn:border-blue-500/50 group-hover/btn:bg-blue-900/30 transition-all duration-500",
                                               isLastItem ? "py-3 px-6" : "py-2"
                                               )}
                                           >
-                                              <span className="relative z-10 text-blue-100 text-xs font-bold tracking-wide group-hover/btn:text-white transition-colors">
+                                              <span className="relative z-10 text-blue-100 text-xs font-bold tracking-wide group-hover/btn:text-white transition-colors duration-500">
                                                   ACCESS
                                               </span>
                                           </div>
@@ -382,15 +385,18 @@ export default function RecruitPage() {
       </div>
 
       <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(2, 6, 17, 0.2); }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(30, 58, 138, 0.3); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.5); }
+        /* Reduced scrollbar width and color saturation */
+        .custom-scrollbar::-webkit-scrollbar { width: 3px; } 
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(2, 6, 17, 0.1); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(30, 58, 138, 0.2); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.3); }
+        
+        /* Increased duration for shimmer animation */
         @keyframes shimmer-blue {
           from { background-position: 0% 0%; }
           to { background-position: -250% 0%; }
         }
-        .animate-shimmer-blue { animation: shimmer-blue 6s linear infinite; }
+        .animate-shimmer-blue { animation: shimmer-blue 10s linear infinite; } 
       `}</style>
     </div>
   );

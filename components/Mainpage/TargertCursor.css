@@ -1,0 +1,40 @@
+.target-cursor-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0; /* Wrapper shouldn't have size */
+  height: 0;
+  z-index: 99999;
+  pointer-events: none; /* ESSENTIAL: Lets you click buttons underneath */
+  will-change: transform; /* Hint for iOS GPU optimization */
+  mix-blend-mode: exclusion; /* Makes it visible on white or black backgrounds */
+}
+
+.target-cursor-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  background-color: white;
+  border-radius: 50%;
+  transform: translate(-50%, -50%); /* Centers the dot exactly on the coordinate */
+}
+
+/* Corner Styles */
+.target-cursor-corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 2px solid white;
+  /* Corners start centered on the dot */
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -50%); 
+}
+
+/* Specific borders for each corner */
+.corner-tl { border-right: none; border-bottom: none; }
+.corner-tr { border-left: none; border-bottom: none; }
+.corner-br { border-left: none; border-top: none; }
+.corner-bl { border-right: none; border-top: none; }

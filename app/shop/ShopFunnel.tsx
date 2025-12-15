@@ -1,56 +1,100 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import Link from 'next/link'; // <--- 1. Import Link
+import Link from 'next/link';
 import GlassSurface from './GlassSurface';
 import './ShopScrollFunnel.css';
 
+// --- NEW UTILITY FUNCTION: Debounce a function call ---
+// This ensures setScrollPos is not called hundreds of times per second.
+const debounce = (func: (...args: any[]) => void, delay: number) => {
+  let timeout: NodeJS.Timeout | null = null;
+  return function(this: any, ...args: any[]) {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    timeout = setTimeout(() => {
+      func.apply(this, args);
+      timeout = null;
+    }, delay);
+  };
+};
+
+// --- OPTIMIZATION 1: Use CSS-friendly state management for scroll ---
 const ShopFunnel: React.FC = () => {
-  const [scrollPos, setScrollPos] = useState(0);
+  // We switch to a ref/local variable for high-frequency scroll updates
+  // to avoid causing excessive component re-renders.
+  const latestScrollPosRef = useRef(0); 
+  
+  // This state is now only updated for the visual component on a DEBOUNCED timer.
+  const [visualScrollPos, setVisualScrollPos] = useState(0); 
+
+  // Debounced setter for the visual state
+  const debouncedSetVisualScroll = useCallback(
+    debounce((scrolledValue: number) => {
+      setVisualScrollPos(scrolledValue);
+    }, 16), // Debounce to ~60 FPS (1000ms / 60 frames = ~16ms)
+    []
+  );
 
   useEffect(() => {
     const handleScroll = () => {
       const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
       const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
       const scrolled = winScroll / height;
-      setScrollPos(scrolled);
+
+      latestScrollPosRef.current = scrolled; // Update ref immediately
+      debouncedSetVisualScroll(scrolled);    // Update state debounced
     };
+
+    // OPTIMIZATION 2: Throttle scroll updates by debouncing the state setter.
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [debouncedSetVisualScroll]);
 
-  const dynamicDistortion = 15 + (scrollPos * 45);
-  const dynamicBlur = 4 + (scrollPos * 4);
+  // OPTIMIZATION 3: Limit the distortion and blur range slightly 
+  // to reduce the extreme calculations on the GPU.
+  // We use the debounced state here.
+  const scrollValue = visualScrollPos;
+  const dynamicDistortion = 10 + (scrollValue * 40); // Reduced range from 15-60 to 10-50
+  const dynamicBlur = 3 + (scrollValue * 3);         // Reduced range from 4-8 to 3-6
+  
+  // NOTE: If performance is still an issue, consider removing the 
+  // dynamic blur and distortion entirely and using a fixed value.
 
   return (
     <div className="funnel-page-wrapper">
       
       {/* --- LAYER 1: FIXED LENS --- */}
       <div className="glass-centering-wrapper">
-        <div className="glass-bobbing-layer">
+        <div 
+          className="glass-bobbing-layer"
+          // OPTIMIZATION 4: Force hardware acceleration on the bobbing container
+          // to isolate its movement from the rest of the page layout.
+          style={{ transform: 'translateZ(0)' }} 
+        >
           <GlassSurface
-            // RESPONSIVE WIDTH: 85% of phone screen, or 320px max
             width="min(30vw, 250px)"
             height="50px"
             borderRadius={60}
             borderWidth={0.5}
-            distortionScale={dynamicDistortion}
-            redOffset={10 + (scrollPos * 10)}
-            blueOffset={-10 - (scrollPos * 10)}
+            // Use the debounced/limited values
+            distortionScale={dynamicDistortion} 
+            redOffset={10 + (scrollValue * 10)}
+            blueOffset={-10 - (scrollValue * 10)}
             blur={dynamicBlur}
             opacity={0.7}
             mixBlendMode="normal"
             className="glass-lens"
           >
-            {/* 2. Wrapped Button in Link to go to /shop */}
             <Link href="/shop" style={{ textDecoration: 'none' }}>
                 <button 
                   className="enter-shop-btn"
                   style={{ 
                     cursor: 'pointer', 
                     position: 'relative', 
-                    zIndex: 999 // Forces it above the glass texture
+                    zIndex: 999 
                   }}
                 >
                   VIP ACCESS
@@ -70,7 +114,7 @@ const ShopFunnel: React.FC = () => {
           <h1 className="scroll-title">GET INTO THE BULLMONEY VIP <br/>COMMUNITY</h1>
         </div>
 
-        {/* Image Section */}
+        {/* Image Section - This image is large, ensure it's properly compressed */}
         <div className="scroll-section image-sect">
            <div className="image-wrapper">
              <Image 
