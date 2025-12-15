@@ -363,7 +363,7 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
           <MultiStepLoader 
             loadingStates={affiliateLoadingStates} 
             loading={loading} 
-            duration={1000} 
+             
           />
         </div>
       )}
