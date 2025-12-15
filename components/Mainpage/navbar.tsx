@@ -81,11 +81,11 @@ export const Navbar = () => {
             </div>
         </div>
 
-        {/* --- MOBILE LAYOUT (Flexbox) --- */}
+        {/* --- MOBILE/TAB LAYOUT --- */}
         <div className="lg:hidden flex justify-between items-start w-full px-4 pt-4 z-[1010]">
             
             {/* 1. Mobile Logo (Left) */}
-            <div className="pointer-events-auto pt-2 shrink-0">
+            <div className="pointer-events-auto pt-2 shrink-0 relative z-50">
                <AnimatedLogoWrapper>
                   <div className="scale-110 origin-top-left min-w-max whitespace-nowrap">
                      <Logo />
@@ -94,8 +94,8 @@ export const Navbar = () => {
             </div>
 
             {/* 2. Mobile Nav Pill (Right) */}
-            {/* UPDATED: Added min-w-0 to allow flex child to scroll internally */}
-            <div className="pointer-events-auto ml-2 max-w-[75%] flex justify-end min-w-0">
+            {/* Added md:max-w-md to allow more space on tablets */}
+            <div className="pointer-events-auto ml-2 flex justify-end min-w-0 flex-1 relative z-50">
                <MobileNav />
             </div>
         </div>
@@ -213,11 +213,14 @@ const DockItem = memo(({ mouseX, item, isTipActive }: any) => {
 });
 DockItem.displayName = "DockItem";
 
-// --- MOBILE NAV ---
+// --- MOBILE NAV (FIXED HELPERS) ---
 const MobileNav = memo(() => {
   const [open, setOpen] = useState(false);
   const [activeTipIndex, setActiveTipIndex] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const itemsRef = useRef<(HTMLAnchorElement | null)[]>([]);
 
+  // Cycle Tips
   useEffect(() => {
     const intervalId = setInterval(() => {
       setActiveTipIndex((prev) => (prev + 1) % NAV_ITEMS.length);
@@ -225,20 +228,49 @@ const MobileNav = memo(() => {
     return () => clearInterval(intervalId);
   }, []);
 
+  // Auto-Scroll to Active Tip
+  useEffect(() => {
+    const container = scrollRef.current;
+    const activeItem = itemsRef.current[activeTipIndex];
+
+    if (container && activeItem) {
+      const containerWidth = container.offsetWidth;
+      const itemLeft = activeItem.offsetLeft;
+      const itemWidth = activeItem.offsetWidth;
+      const scrollLeft = itemLeft - (containerWidth / 2) + (itemWidth / 2);
+
+      container.scrollTo({
+        left: scrollLeft,
+        behavior: "smooth",
+      });
+    }
+  }, [activeTipIndex]);
+
   return (
     <motion.div 
-      animate={{ width: open ? "auto" : "auto" }}
+      animate={{ width: "auto" }}
+      // REMOVED 'overflow-hidden' here to let tips breathe if needed, handled by inner containers
       className="flex flex-col items-end bg-white/95 dark:bg-neutral-950/95 border border-neutral-200 dark:border-white/10 shadow-lg rounded-2xl relative max-w-full"
     >
       
-      {/* 1. HEADER ROW: Icons + Menu Toggle */}
-      {/* UPDATED: Added max-w-full to container */}
+      {/* 1. HEADER ROW */}
       <div className="flex items-center gap-1.5 p-1.5 relative z-20 max-w-full"> 
          
-         {/* UPDATED: Scrollable container for icons */}
-         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar mask-gradient pr-1 max-w-[200px] xs:max-w-full">
+         {/* CRITICAL FIX: 
+            1. Added 'pb-8' to give vertical space for the tooltip inside the scroll container.
+            2. Added 'md:max-w-none' so on tablets (small tabs) it expands fully and doesn't scroll unnecessarily.
+         */}
+         <div 
+            ref={scrollRef}
+            className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth pr-1 pb-8 mb-[-32px] max-w-[50vw] sm:max-w-[60vw] md:max-w-none"
+         >
             {NAV_ITEMS.map((item, i) => (
-               <Link key={i} href={item.link as any} className="relative flex-shrink-0 flex flex-col items-center">
+               <Link 
+                 key={i} 
+                 href={item.link as any} 
+                 ref={(el) => { itemsRef.current[i] = el; }}
+                 className="relative flex-shrink-0 flex flex-col items-center group pt-1" // Added pt-1
+               >
                   <div className="w-8 h-8 relative flex items-center justify-center rounded-full overflow-hidden shadow-sm z-20">
                       <motion.div
                         className="absolute inset-[-100%]" 
@@ -254,6 +286,7 @@ const MobileNav = memo(() => {
                   </div>
 
                   {/* Helper Tip (Mobile) */}
+                  {/* Positioned slightly higher (top-9) to fit within the pb-8 padding */}
                   <AnimatePresence mode="wait">
                     {activeTipIndex === i && !open && (
                       <HelperTip item={item} isMobile={true} />
@@ -263,11 +296,9 @@ const MobileNav = memo(() => {
             ))}
          </div>
 
-         {/* Fixed Divider & Menu Button */}
-         <div className="flex-shrink-0 flex items-center bg-white/95 dark:bg-neutral-950/95 pl-1">
-            <div className="w-[1px] h-5 bg-neutral-200 dark:bg-neutral-800 mx-0.5" />
-            
-            <button onClick={() => setOpen(!open)} className="p-1">
+         {/* FIXED SEPARATOR & MENU BUTTON */}
+         <div className="flex-shrink-0 flex items-center pl-1 border-l border-neutral-200 dark:border-white/10 bg-white/95 dark:bg-neutral-950/95 z-30 h-8 self-start mt-1">
+            <button onClick={() => setOpen(!open)} className="p-1 ml-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
                 {open ? <IconX className="w-5 h-5 dark:text-white" /> : <IconMenu2 className="w-5 h-5 dark:text-white" />}
             </button>
          </div>
@@ -280,9 +311,9 @@ const MobileNav = memo(() => {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="w-full min-w-[200px] overflow-hidden rounded-b-2xl" 
+            className="w-full min-w-[200px] overflow-hidden rounded-b-2xl relative z-40" 
           >
-            <div className="px-4 pb-4 pt-2 flex flex-col gap-3 border-t border-neutral-100 dark:border-white/5 w-full">
+            <div className="px-4 pb-4 pt-2 flex flex-col gap-3 border-t border-neutral-100 dark:border-white/5 w-full bg-white/95 dark:bg-neutral-950/95">
               {[...FOOTER_NAV_ITEMS, ...NAV_ITEMS].map((item, i) => (
                 <Link
                   key={i}
@@ -319,11 +350,12 @@ MobileNav.displayName = "MobileNav";
 // --- REUSABLE COMPONENT: HELPER TIP ---
 const HelperTip = ({ item, isMobile = false }: { item: any, isMobile?: boolean }) => (
   <motion.div
-    initial={{ opacity: 0, y: -10, scale: 0.8 }}
+    initial={{ opacity: 0, y: -5, scale: 0.8 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, y: -10, scale: 0.8 }}
-    transition={{ type: "spring", stiffness: 300, damping: 20 }}
-    className={`absolute ${isMobile ? 'top-[42px]' : 'top-full mt-2'} left-1/2 -translate-x-1/2 z-50 flex flex-col items-center pointer-events-none`}
+    exit={{ opacity: 0, y: -5, scale: 0.8 }}
+    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+    // Fixed: Adjusted top position to sit tightly under the icon inside the padding area
+    className={`absolute ${isMobile ? 'top-[36px]' : 'top-full mt-2'} left-1/2 -translate-x-1/2 z-[60] flex flex-col items-center pointer-events-none`}
   >
     <div className="w-2 h-2 bg-neutral-900 rotate-45 translate-y-[4px] relative z-10 border-t border-l border-transparent" />
     <div className="relative p-[1.5px] overflow-hidden rounded-full shadow-lg">
@@ -333,8 +365,8 @@ const HelperTip = ({ item, isMobile = false }: { item: any, isMobile?: boolean }
             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
             style={{ background: SHIMMER_GRADIENT }}
         />
-        <div className="relative z-10 px-3 py-1 bg-neutral-900 rounded-full flex items-center justify-center">
-            <span className="text-white text-[10px] font-bold whitespace-nowrap">
+        <div className="relative z-10 px-2.5 py-0.5 bg-neutral-900 rounded-full flex items-center justify-center">
+            <span className="text-white text-[9px] font-bold whitespace-nowrap">
                 Click {item.name}
             </span>
         </div>
