@@ -104,7 +104,7 @@ const useBackgroundLoop = (url: string) => {
   
     const start = useCallback(() => {
       if (audioRef.current && audioRef.current.paused) {
-        audioRef.current.volume = 0.005; 
+        audioRef.current.volume = 0.01; 
         
         audioRef.current.play()
           .then(() => setIsPlaying(true))
@@ -118,7 +118,7 @@ const useBackgroundLoop = (url: string) => {
         audioRef.current.pause();
         setIsPlaying(false);
       } else {
-        audioRef.current.volume = 0.005; 
+        audioRef.current.volume = 0.01; 
         audioRef.current.play().catch(() => {});
         setIsPlaying(true);
       }

@@ -1,167 +1,258 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
 import { gsap } from "gsap";
 
-// --- EXISTING IMPORTS ---
-import Shopmain from "@/components/Mainpage/ShopMainpage";
-import RecruitPage from "@/app/register/New";
-import Socials from "@/components/Mainpage/Socialsfooter";
-import AffiliateAdmin from "@/app/register/AffiliateAdmin";
-import AffiliateRecruitsDashboard from "@/app/recruit/AffiliateRecruitsDashboard";
-
-// --- LOADER IMPORT ---
+// --- CORE STATIC IMPORTS ---
 import { MultiStepLoader } from "@/components/Mainpage/MultiStepLoaderAffiliate"; 
+import RecruitPage from "@/app/register/New"; // Assuming this is part of the core structure/loader context
+import Socials from "@/components/Mainpage/Socialsfooter"; // Assuming lightweight/critical footer
 
-// --- DYNAMIC IMPORTS ---
-const TargetCursorComponent: React.FC<any> = ({ targetSelector, spinDuration, hideDefaultCursor, hoverDuration, parallaxOn }) => {
-  const isMobile = useIsMobile();
-  const cursorRef = useRef<HTMLDivElement>(null);
-  const dotRef = useRef<HTMLDivElement>(null);
-  const cornersRef = useRef<NodeListOf<HTMLDivElement> | null>(null);
-  
-  // Omitted cursor logic for brevity, keeping structure...
-  useEffect(() => {
-    if (!cursorRef.current || typeof window === 'undefined') return;
+// --- DYNAMIC IMPORTS FOR HEAVY CONTENT SECTIONS ---
+const Shopmain = dynamic(() => import("@/components/Mainpage/ShopMainpage"), { ssr: false });
+const AffiliateAdmin = dynamic(() => import("@/app/register/AffiliateAdmin"), { ssr: false });
+const AffiliateRecruitsDashboard = dynamic(() => import("@/app/recruit/AffiliateRecruitsDashboard"), { ssr: false });
 
-    if (hideDefaultCursor && !isMobile) {
-      document.body.classList.add('custom-cursor-active');
-    }
-
-    cornersRef.current = cursorRef.current.querySelectorAll('.target-cursor-corner');
-
-    const ctx = gsap.context(() => {
-        const cursor = cursorRef.current!;
-        const corners = cornersRef.current!;
-
-        if (isMobile) {
-            gsap.set(cursor, { x: window.innerWidth/2, y: window.innerHeight/2, opacity: 0, scale: 1.3 });
-            // ... mobile logic ...
-        }
-        else {
-            gsap.set(cursor, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
-            const moveCursor = (e: MouseEvent) => {
-                gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: 'power3.out', force3D: true });
-            };
-            window.addEventListener('mousemove', moveCursor);
-            // ... desktop logic ...
-        }
-    }, cursorRef); 
-
-    return () => {
-        document.body.classList.remove('custom-cursor-active');
-        ctx.revert();
-        window.removeEventListener('mousemove', () => {}); 
-    };
-  }, [isMobile, hideDefaultCursor, spinDuration, targetSelector, hoverDuration, parallaxOn]);
-
-  return (
-    <div ref={cursorRef} className="target-cursor-wrapper">
-      <div ref={dotRef} className="target-cursor-dot" />
-      <div className="target-cursor-corner corner-tl" />
-      <div className="target-cursor-corner corner-tr" />
-      <div className="target-cursor-corner corner-br" />
-      <div className="target-cursor-corner corner-bl" />
-    </div>
-  );
-};
-
-const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { 
-  ssr: false 
-});
 
 // =========================================
-// 0. CUSTOM HOOKS
+// 0. CURSOR LOGIC & UTILITIES (Inlined for dynamic import reference)
 // =========================================
+
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
-
   useEffect(() => {
     const checkMobile = () => {
       const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       const isSmall = window.innerWidth <= 768;
       const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
       const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
-      
       setIsMobile((hasTouch && isSmall) || mobileRegex.test(userAgent.toLowerCase()));
     };
-
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
   return isMobile;
 };
 
-// *** AUDIO HOOK: PLAYS ONCE PER APPEARANCE ***
+
+// TargetCursor Component Implementation (Identical Logic)
+const TargetCursorComponent: React.FC<any> = ({ targetSelector, spinDuration, hideDefaultCursor, hoverDuration = 0.3, parallaxOn }) => {
+    const isMobile = useIsMobile();
+    const cursorRef = useRef<HTMLDivElement>(null);
+    const dotRef = useRef<HTMLDivElement>(null);
+    const cornersRef = useRef<NodeListOf<HTMLDivElement> | null>(null);
+    
+    const state = useRef({
+        isActive: false,
+        activeTarget: null as Element | null
+    });
+
+    useEffect(() => {
+      if (!cursorRef.current || typeof window === 'undefined') return;
+
+      if (hideDefaultCursor && !isMobile) {
+        document.body.classList.add('custom-cursor-active');
+      }
+      
+      cornersRef.current = cursorRef.current.querySelectorAll('.target-cursor-corner');
+
+      const ctx = gsap.context(() => {
+          const cursor = cursorRef.current!;
+          const corners = cornersRef.current!;
+          const dot = dotRef.current!; // Added dot ref
+
+          if (isMobile) {
+              gsap.set(cursor, { x: window.innerWidth/2, y: window.innerHeight/2, opacity: 0, scale: 1.3 });
+              gsap.to(cursor, { opacity: 1, duration: 0.5 });
+          }
+          else {
+              gsap.set(cursor, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
+              
+              const spinTl = gsap.timeline({ repeat: -1 })
+                  .to(cursor, { rotation: spinDuration ? 360 : 0, duration: spinDuration || 1, ease: 'none' });
+
+              const moveCursor = (e: MouseEvent) => {
+                  if (state.current.isActive) return;
+                  gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: 'power3.out', force3D: true });
+              };
+              window.addEventListener('mousemove', moveCursor);
+              
+              const handleDown = () => {
+                  gsap.to(dot, { scale: 0.5, duration: 0.2 });
+                  gsap.to(corners, { scale: 1.2, borderColor: '#00ffff', duration: 0.2 });
+              };
+              const handleUp = () => {
+                  gsap.to(dot, { scale: 1, duration: 0.2 });
+                  gsap.to(corners, { scale: 1, borderColor: '#0066ff', duration: 0.2 });
+              };
+              window.addEventListener('mousedown', handleDown);
+              window.addEventListener('mouseup', handleUp);
+              
+              const handleHover = (e: MouseEvent) => {
+                  const target = (e.target as Element).closest(targetSelector);
+                  if (target && target !== state.current.activeTarget) {
+                      state.current.activeTarget = target;
+                      state.current.isActive = true;
+                      spinTl.pause();
+                      gsap.to(cursor, { rotation: 0, duration: 0.3 });
+
+                      const rect = target.getBoundingClientRect();
+                      const borderWidth = 4; const cornerSize = 16;
+                      
+                      // Move wrapper to center (or a close pivot point)
+                      gsap.to(cursor, { 
+                          x: rect.left + rect.width / 2, 
+                          y: rect.top + rect.height / 2, 
+                          duration: 0.3 
+                      });
+                      
+                      const padding = 10;
+                      const width = rect.width + padding;
+                      const height = rect.height + padding;
+
+                      // Move corners to frame the element relative to the wrapper center
+                      gsap.to(corners[0], { x: -width/2, y: -height/2, duration: 0.3 }); // TL
+                      gsap.to(corners[1], { x: width/2, y: -height/2, duration: 0.3 });  // TR
+                      gsap.to(corners[2], { x: width/2, y: height/2, duration: 0.3 });   // BR
+                      gsap.to(corners[3], { x: -width/2, y: height/2, duration: 0.3 });  // BL
+
+
+                      const handleLeave = () => {
+                          target.removeEventListener('mouseleave', handleLeave);
+                          state.current.activeTarget = null;
+                          state.current.isActive = false;
+                          
+                          gsap.to(corners, { x: 0, y: 0, duration: 0.3 });
+                          spinTl.restart();
+                      };
+                      target.addEventListener('mouseleave', handleLeave);
+                  }
+              };
+              window.addEventListener('mouseover', handleHover);
+          }
+
+      }, cursorRef); 
+
+      return () => {
+          document.body.classList.remove('custom-cursor-active');
+          ctx.revert();
+          window.removeEventListener('mousemove', () => {}); 
+          window.removeEventListener('mousedown', () => {});
+          window.removeEventListener('mouseup', () => {});
+          window.removeEventListener('mouseover', () => {});
+      };
+    }, [isMobile, hideDefaultCursor, spinDuration, targetSelector, hoverDuration, parallaxOn]);
+
+    return (
+      <div ref={cursorRef} className="target-cursor-wrapper">
+        <div ref={dotRef} className="target-cursor-dot" />
+        <div className="target-cursor-corner corner-tl" />
+        <div className="target-cursor-corner corner-tr" />
+        <div className="target-cursor-corner corner-br" />
+        <div className="target-cursor-corner corner-bl" />
+      </div>
+    );
+};
+// Use the original dynamic implementation
+const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { 
+  ssr: false 
+});
+
+// =========================================
+// 1. CUSTOM HOOKS (Audio)
+// =========================================
 const useLoaderAudio = (url: string, isVisible: boolean) => {
     useEffect(() => {
-        // Stop everything if the modal/loader is not showing
         if (!isVisible) return;
-
-        // 1. Initialize Audio
         const audio = new Audio(url);
-        audio.loop = false; // CRITICAL: Ensures it only plays once
+        audio.loop = false;
         audio.volume = 1.0;
         
-        const AUDIO_DURATION_MS = 4800; // Duration of your loader sound
+        const AUDIO_DURATION_MS = 4800;
         let timer: NodeJS.Timeout | null = null;
 
-        // 2. Interaction Listener (Fallback if autoplay fails)
-        const unlock = () => {
-            audio.play().catch(() => {});
-            cleanupListeners(); // Remove listeners immediately after first interaction
-        };
-
-        // 3. Cleanup Listeners Helper
+        const unlock = () => { audio.play().catch(() => {}); cleanupListeners(); };
         const cleanupListeners = () => {
             window.removeEventListener('click', unlock);
             window.removeEventListener('touchstart', unlock);
             window.removeEventListener('keydown', unlock);
         };
 
-        // 4. Attach listeners IMMEDIATELY (Race Condition)
         window.addEventListener('click', unlock);
         window.addEventListener('touchstart', unlock);
         window.addEventListener('keydown', unlock);
 
-        // 5. Attempt Instant Autoplay
         const attemptPlay = async () => {
             try {
                 await audio.play();
-                // If autoplay succeeded, we don't need the interaction listeners anymore
                 cleanupListeners();
             } catch (err) {
-                // If blocked, the listeners in step #4 are already waiting.
+                // Play blocked, listeners are waiting
             }
         };
-
         attemptPlay();
 
-        // 6. Hard stop after 4.8 seconds (prevents looping/trailing audio)
         timer = setTimeout(() => {
             audio.pause();
             audio.currentTime = 0;
             cleanupListeners(); 
         }, AUDIO_DURATION_MS);
 
-        // 7. Cleanup on Unmount OR when isVisible becomes false
-        // This ensures if the modal closes, audio cuts instantly.
         return () => {
             audio.pause();
             audio.currentTime = 0;
             if (timer) clearTimeout(timer);
             cleanupListeners();
         };
-    }, [url, isVisible]); // Re-runs every time 'isVisible' toggles to true
+    }, [url, isVisible]);
 };
-// **********************************
+// Hook 3: Background Music (background.mp3) - FIXED VOLUME LOGIC
+const useBackgroundLoop = (url: string) => {
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+  
+    useEffect(() => {
+      const audio = new Audio(url);
+      audio.loop = true;
+      audio.volume = 0.01; 
+      audioRef.current = audio;
+  
+      return () => {
+        audio.pause();
+        audio.src = "";
+      };
+    }, [url]);
+  
+    const start = useCallback(() => {
+      if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.volume = 0.01; 
+        
+        audioRef.current.play()
+          .then(() => setIsPlaying(true))
+          .catch(() => setIsPlaying(false));
+      }
+    }, []);
+  
+    const toggle = useCallback(() => {
+      if (!audioRef.current) return;
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        audioRef.current.volume = 0.01; 
+        audioRef.current.play().catch(() => {});
+        setIsPlaying(true);
+      }
+    }, [isPlaying]);
+  
+    return { isPlaying, start, toggle };
+};
 
 // =========================================
-// 1. STYLES (Optimized Blue Brackets)
+// 2. STYLES (Retained Original Styles)
 // =========================================
 const CursorStyles = () => (
   <style jsx global>{`
@@ -193,16 +284,16 @@ const CursorStyles = () => (
       cursor: none !important;
     }
     
-    /* ADDED: Loader Overlay Class */
+    /* Loader Overlay Class */
     .loader-overlay-wrapper {
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        z-index: 999999; /* Forces it above NavBar */
-        pointer-events: all; /* Captures all clicks/scrolls */
-        background-color: black; /* Optional: ensures no content bleed-through */
+        z-index: 999999; 
+        pointer-events: all; 
+        background-color: black;
     }
   `}</style>
 );
@@ -223,32 +314,25 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
-  // *** ACTIVATE AUDIO HOOK ***
-  // Logic: When 'loading' is true, play modals.mp3 instantly.
-  // It handles autoplay restrictions and stops after 4.8s.
+  // Activate Audio Hook
   useLoaderAudio('/modals.mp3', loading);
 
-  // ----------------------------------------------------
-  // ADDED: SCROLL LOCK EFFECT
-  // ----------------------------------------------------
+  // Scroll Lock Effect
   useEffect(() => {
     if (loading) {
-      // Disable scrolling
       document.body.style.overflow = 'hidden';
-      document.body.style.height = '100vh'; // Ensures mobile browsers don't collapse UI
+      document.body.style.height = '100vh';
     } else {
-      // Re-enable scrolling
       document.body.style.overflow = '';
       document.body.style.height = '';
     }
-
-    // Cleanup when component unmounts
     return () => {
       document.body.style.overflow = '';
       document.body.style.height = '';
     };
   }, [loading]);
 
+  // Navigation Logic
   useEffect(() => {
     if (searchParams?.src !== "nav") {
       router.push("/");
@@ -268,7 +352,7 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
     <>
       <CursorStyles />
       
-      {/* ADDED: Wrapper Div for Loader */}
+      {/* Loader Wrapper */}
       {loading && (
         <div className="loader-overlay-wrapper">
           <MultiStepLoader 
@@ -287,13 +371,13 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
         targetSelector="button, a, input, [role='button'], .cursor-target"
       />
       
-      {/* Content under loader */}
+      {/* Content under loader (using dynamic imports) */}
       <div style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.5s ease' }}>
         <Socials />
-        <Shopmain />
-        <RecruitPage onUnlock={() => {}} />
-        <AffiliateRecruitsDashboard onBack={() => router.push("/")} />
-        <AffiliateAdmin />
+        <Shopmain /> {/* Dynamic */}
+        <RecruitPage onUnlock={() => {}} /> 
+        <AffiliateRecruitsDashboard onBack={() => router.push("/")} /> {/* Dynamic */}
+        <AffiliateAdmin /> {/* Dynamic */}
       </div>
     </>
   );

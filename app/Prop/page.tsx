@@ -1,19 +1,23 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import dynamic from 'next/dynamic'; // Import dynamic
 import { gsap } from "gsap"; 
 import Image from "next/image";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import { MessageCircle } from 'lucide-react';
 
-// --- EXISTING IMPORTS ---
-import { Features } from "@/components/Mainpage/features";
-import { Footer } from "@/components/Mainpage/footer";
-import { Hero } from "@/app/Prop/Prophero";
-import { AboutContent } from "../Testimonial";
-import RecruitPage from "@/app/register/pageVip"; 
-import Socials from "@/components/Mainpage/Socialsfooter";
+// --- STATIC IMPORTS (Core Layout/Loader) ---
+import RecruitPage from "@/app/register/pageVip"; // The loader/unlock screen
+import Socials from "@/components/Mainpage/Socialsfooter"; // Usually static/lightweight
+
+// --- DYNAMIC IMPORTS FOR MAIN CONTENT SECTIONS ---
+const Features = dynamic(() => import("@/components/Mainpage/features").then(mod => mod.Features), { ssr: false });
+const Footer = dynamic(() => import("@/components/Mainpage/footer").then(mod => mod.Footer), { ssr: false });
+const Hero = dynamic(() => import("@/app/Prop/Prophero").then(mod => mod.Hero), { ssr: false });
+const AboutContent = dynamic(() => import("../Testimonial").then(mod => mod.AboutContent), { ssr: false });
+
 
 // =========================================
 // 0. CUSTOM HOOKS
@@ -39,59 +43,44 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-// *** AGGRESSIVE LOADER AUDIO HOOK (MODALS.MP3 - Plays max 4.8s on load) ***
+// AGGRESSIVE LOADER AUDIO HOOK (MODALS.MP3)
 const useLoaderAudio = (url: string, isVisible: boolean) => {
     useEffect(() => {
-        // Only run if the loader is visible (i.e., isUnlocked is false)
         if (!isVisible) return;
-
-        // 1. Initialize
         const audio = new Audio(url);
-        audio.loop = false; // Strictly play once
+        audio.loop = false;
         audio.volume = 1.0;
-        const AUDIO_DURATION_MS = 4800; // Exact duration limit
+        const AUDIO_DURATION_MS = 4800;
         let timer: NodeJS.Timeout | null = null;
 
-        // 2. Define Unlocker (Plays on interaction if autoplay fails)
-        const unlock = () => {
-            audio.play().catch(() => {});
-            cleanupListeners();
-        };
-
-        // 3. Define Cleanup function
+        const unlock = () => { audio.play().catch(() => {}); cleanupListeners(); };
         const cleanupListeners = () => {
             window.removeEventListener('click', unlock);
             window.removeEventListener('touchstart', unlock);
             window.removeEventListener('keydown', unlock);
         };
 
-        // 4. STRATEGY: Attach listeners IMMEDIATELY (The "Aggressive Unlock").
         window.addEventListener('click', unlock);
         window.addEventListener('touchstart', unlock);
         window.addEventListener('keydown', unlock);
 
-        // 5. Attempt Instant Autoplay
         const attemptPlay = async () => {
             try {
                 await audio.play();
-                // If autoplay worked, we don't need the interaction listeners
                 cleanupListeners();
             } catch (err) {
-                // Autoplay blocked. The listeners in step #4 are active.
+                // Autoplay blocked. Listeners are active.
             }
         };
 
         attemptPlay();
 
-        // 6. Hard stop after 4.8 seconds
         timer = setTimeout(() => {
             audio.pause();
             audio.currentTime = 0;
-            // Also stop listening for clicks if time runs out
             cleanupListeners(); 
         }, AUDIO_DURATION_MS);
 
-        // 7. Cleanup on Unmount (e.g., when isUnlocked becomes true)
         return () => {
             audio.pause();
             audio.currentTime = 0;
@@ -100,10 +89,52 @@ const useLoaderAudio = (url: string, isVisible: boolean) => {
         };
     }, [url, isVisible]);
 };
+// Hook 3: Background Music (background.mp3) - FIXED VOLUME LOGIC
+const useBackgroundLoop = (url: string) => {
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+  
+    useEffect(() => {
+      const audio = new Audio(url);
+      audio.loop = true;
+      audio.volume = 0.01; 
+      audioRef.current = audio;
+  
+      return () => {
+        audio.pause();
+        audio.src = "";
+      };
+    }, [url]);
+  
+    const start = useCallback(() => {
+      if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.volume = 0.01; 
+        
+        audioRef.current.play()
+          .then(() => setIsPlaying(true))
+          .catch(() => setIsPlaying(false));
+      }
+    }, []);
+  
+    const toggle = useCallback(() => {
+      if (!audioRef.current) return;
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        audioRef.current.volume = 0.01; 
+        audioRef.current.play().catch(() => {});
+        setIsPlaying(true);
+      }
+    }, [isPlaying]);
+  
+    return { isPlaying, start, toggle };
+};
+
 // **********************************
 
 // =========================================
-// 1. SUPPORT WIDGET (Target for Mobile Scanner)
+// 1. SUPPORT WIDGET 
 // =========================================
 const SupportWidget = () => {
   const [isHovered, setIsHovered] = useState(false);
@@ -208,7 +239,7 @@ const CursorStyles = () => (
 );
 
 // =========================================
-// 3. TARGET CURSOR LOGIC
+// 3. TARGET CURSOR LOGIC (Component)
 // =========================================
 
 interface TargetCursorProps {
@@ -219,7 +250,7 @@ interface TargetCursorProps {
   parallaxOn?: boolean;
 }
 
-const TargetCursor: React.FC<TargetCursorProps> = ({
+const TargetCursorComponent: React.FC<TargetCursorProps> = ({
   targetSelector = 'button, a, input, [role="button"], .cursor-target', 
   spinDuration = 2,
   hideDefaultCursor = true,
@@ -241,7 +272,6 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
   useEffect(() => {
     if (!cursorRef.current || typeof window === 'undefined') return;
 
-    // Handle cursor visibility
     if (hideDefaultCursor && !isMobile) {
       document.body.classList.add('custom-cursor-active');
     }
@@ -253,21 +283,19 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
         const corners = cornersRef.current!;
 
         // ----------------------------------------------------
-        // MOBILE LOGIC: SYSTEMATIC SCANNER
+        // MOBILE LOGIC: SYSTEMATIC SCANNER (For Mobile Experience)
         // ----------------------------------------------------
         if (isMobile) {
             // Init
             gsap.set(cursor, { x: window.innerWidth/2, y: window.innerHeight/2, opacity: 0, scale: 1.3 });
             gsap.to(cursor, { opacity: 1, duration: 0.5 });
 
-            // Visual Pulse
             const tapEffect = () => {
                 gsap.to(corners, { scale: 1.6, borderColor: '#00ffff', duration: 0.15, yoyo: true, repeat: 1 });
                 gsap.to(dotRef.current, { scale: 2, backgroundColor: '#ffffff', duration: 0.15, yoyo: true, repeat: 1 });
             };
 
             const runScanner = async () => {
-                // Find all clickable elements
                 const allElements = Array.from(document.querySelectorAll(targetSelector));
 
                 const targets = allElements.filter(el => {
@@ -289,7 +317,6 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
                 if (targets.length > 0) {
                     for (const target of targets) {
                         const r = target.getBoundingClientRect();
-                        // Viewport check
                         if (r.top < -50 || r.bottom > window.innerHeight + 50) continue; 
 
                         await new Promise<void>(resolve => {
@@ -305,16 +332,13 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
                             });
                         });
                     }
-                    // Recursion
                     runScanner(); 
                 } else {
-                    // Fallback roaming
                     gsap.to(cursor, {
                         x: window.innerWidth / 2 + (Math.random() - 0.5) * 100,
                         y: window.innerHeight / 2 + (Math.random() - 0.5) * 100,
                         duration: 2,
-                        // FIX: Wrapped in curly braces for void return
-                        onComplete: () => { runScanner(); }
+                    onComplete: () => { runScanner(); } // FIX: The wrapper function returns void, satisfying GSAP.
                     });
                 }
             };
@@ -410,8 +434,12 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
 
     return () => {
         document.body.classList.remove('custom-cursor-active');
+        // Clean up ticker if it was started
+        gsap.ticker.remove(() => {});
         ctx.revert();
         window.removeEventListener('mousemove', () => {}); 
+        window.removeEventListener('mousedown', () => {});
+        window.removeEventListener('mouseup', () => {});
     };
   }, [isMobile, hideDefaultCursor, spinDuration, targetSelector, hoverDuration, parallaxOn]);
 
@@ -426,6 +454,14 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
   );
 };
 
+// Use dynamic() to ensure client-side rendering
+const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { 
+    ssr: false,
+    // Add loading state if needed, though Promise.resolve usually means it loads fast
+    loading: () => <div className="hidden"></div> 
+});
+
+
 // ==========================================
 // 4. MAIN PAGE COMPONENT
 // ==========================================
@@ -434,7 +470,6 @@ export default function Home() {
   const [isUnlocked, setIsUnlocked] = useState(false);
 
   // 1. AGGRESSIVE Hook for the loader audio
-  // Plays /modals.mp3 for max 4.8s while the site is NOT unlocked.
   useLoaderAudio('/modals.mp3', !isUnlocked);
 
   // If the site is not unlocked, show the registration page
@@ -463,11 +498,11 @@ export default function Home() {
       <SpeedInsights />
       <Socials />
 
-      {/* 3. PAGE CONTENT */}
-      <Hero />
-      <Features />
-      <AboutContent />
-      <Footer />
+      {/* 3. PAGE CONTENT (Now Dynamically Loaded) */}
+      <Hero /> {/* Dynamic */}
+      <Features /> {/* Dynamic */}
+      <AboutContent /> {/* Dynamic */}
+
     </main>
   );
 }
