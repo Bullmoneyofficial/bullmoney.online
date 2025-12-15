@@ -11,7 +11,7 @@ function cn(...classes: (string | undefined | null | false)[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-// --- HOOK: DEVICE CHECK (For Conditional Rendering) ---
+// --- HOOK: DEVICE CHECK ---
 const useIsMobile = () => {
     const [isMobile, setIsMobile] = useState(false);
     useEffect(() => {
@@ -23,7 +23,7 @@ const useIsMobile = () => {
     return isMobile;
 };
 
-// --- GLOBAL STYLES ---
+// --- GLOBAL STYLES (Includes Shimmer Animations) ---
 const GLOBAL_STYLES = `
   @keyframes gradient-xy {
     0% { background-position: 0% 50%; }
@@ -35,6 +35,11 @@ const GLOBAL_STYLES = `
     50% { transform: translateY(-10px) scale(1.2); opacity: 1; }
     100% { transform: translateY(0) scale(1); opacity: 0.4; }
   }
+  @keyframes text-shimmer {
+    0% { background-position: 0% 50%; }
+    100% { background-position: -200% 50%; }
+  }
+
   .animate-gradient-xy {
     animation: gradient-xy 15s ease infinite;
     background-size: 200% 200%;
@@ -42,6 +47,24 @@ const GLOBAL_STYLES = `
   .animate-float-slow {
     animation: float-particle 6s ease-in-out infinite;
   }
+  
+  /* CYBER BLUE TEXT SHIMMER (Sky -> White -> Indigo) */
+  .animate-text-shimmer {
+    background: linear-gradient(
+      110deg, 
+      #38bdf8 20%,   /* Sky 400 */
+      #ffffff 48%,   /* White Peak */
+      #818cf8 52%,   /* Indigo 400 */
+      #38bdf8 80%    /* Sky 400 */
+    );
+    background-size: 200% auto;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: text-shimmer 3s linear infinite;
+  }
+
   .gpu-layer {
     transform: translateZ(0);
     will-change: transform, opacity;
@@ -50,28 +73,36 @@ const GLOBAL_STYLES = `
 `;
 
 // ==========================================
-// NEW: SHIMMER BORDER COMPONENT (Thickened border)
+// SHIMMER BORDER COMPONENT
 // ==========================================
 
-const shimmerGradient = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #3b82f6 50%, #00000000 100%)";
+// Matches the Sky/Indigo Theme
+const shimmerGradient = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #38bdf8 50%, #00000000 100%)";
 
 interface ShimmerBorderProps {
     children: ReactNode;
     className?: string;
-    borderRadius?: string; // e.g. 'rounded-xl'
-    borderWidth?: string; // e.g. 'inset-[3px]' <--- CHANGED DEFAULT
+    borderRadius?: string; 
+    borderWidth?: string; 
     speed?: number;
     colorOverride?: string;
     innerClassName?: string;
 }
 
-const ShimmerBorder = ({ children, className, borderRadius = 'rounded-xl', borderWidth = 'inset-[3px]', speed = 3, colorOverride, innerClassName }: ShimmerBorderProps) => {
+const ShimmerBorder = ({ 
+    children, 
+    className, 
+    borderRadius = 'rounded-xl', 
+    borderWidth = 'inset-[2px]', 
+    speed = 3, 
+    colorOverride, 
+    innerClassName 
+}: ShimmerBorderProps) => {
     const finalGradient = colorOverride || shimmerGradient;
     
     return (
         <div className={cn("relative overflow-hidden group/shimmer", borderRadius, className)}>
-            
-            {/* Layer 1: The Spinning Gradient (The Border) */}
+            {/* Layer 1: The Spinning Gradient */}
             <motion.div
                 className="absolute inset-[-100%]" 
                 animate={{ rotate: 360 }}
@@ -83,12 +114,11 @@ const ShimmerBorder = ({ children, className, borderRadius = 'rounded-xl', borde
                 style={{ background: finalGradient }}
             />
 
-            {/* Layer 2: Inner Mask (The actual content background) */}
-            <div className={cn("absolute bg-neutral-900/90 flex items-center justify-center z-10", borderRadius, borderWidth, innerClassName)}>
-                {/* Optional: Render children here if the outer div is just for sizing */}
+            {/* Layer 2: Inner Mask */}
+            <div className={cn("absolute bg-neutral-950 flex items-center justify-center z-10", borderRadius, borderWidth, innerClassName)}>
             </div>
             
-            {/* Ensure content is positioned over the mask */}
+            {/* Content */}
             <div className="relative z-20 h-full w-full">
                 {children}
             </div>
@@ -131,19 +161,16 @@ const HighAestheticCard = memo(({
         <Particle key={i} delay={Math.random() * 2} />
     )), []);
 
-    const bgClass = isMobile ? "bg-neutral-1000" : "animate-gradient-xy";
-    const containerClass = isMobile ? "" : "gpu-layer";
-
     return (
         <motion.div
-            className={cn(containerClass, "relative flex flex-col items-center justify-center overflow-hidden rounded-3xl py-12 md:py-16 cursor-pointer")}
+            className="relative flex flex-col items-center justify-center overflow-hidden rounded-3xl py-12 md:py-16 cursor-pointer gpu-layer"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ scale: isMobile ? 1.0 : 1.01 }}
             whileTap={{ scale: 0.99 }}
             onClick={onShow}
         >
-            <div className={cn("absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111827] to-[#1e293b] opacity-90", bgClass)} />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#1e1b4b] opacity-90 animate-gradient-xy" />
 
             {!isMobile && (
                 <>
@@ -153,29 +180,29 @@ const HighAestheticCard = memo(({
             )}
 
             <div className="relative z-10 flex flex-col items-center justify-center text-center">
-                <div className={`flex h-16 w-16 items-center justify-center rounded-xl bg-sky-500/20 text-sky-400 ring-2 ring-sky-500/50 mb-4 ${!isChart && !isMobile ? "animate-float-slow" : ""}`}>
+                <div className={`flex h-16 w-16 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 ring-1 ring-sky-500/50 mb-4 shadow-[0_0_20px_rgba(56,189,248,0.3)] ${!isChart && !isMobile ? "animate-float-slow" : ""}`}>
                     <Icon className="h-8 w-8" />
                 </div>
 
-                <h2 className="mt-2 text-3xl font-bold tracking-tight text-white md:text-4xl">
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-blue-400">
-                        {title}
-                    </span>
+                {/* Shimmering Title */}
+                <h2 className="mt-2 text-3xl font-black tracking-tight md:text-4xl animate-text-shimmer">
+                    {title}
                 </h2>
                 
-                <p className="mt-2 text-sm text-sky-300/80 max-w-sm px-4">
+                <p className="mt-2 text-sm text-sky-200/60 max-w-sm px-4">
                     {subtitle}
                 </p>
 
-                {/* Apply ShimmerBorder to the Launch Terminal button - Increased border thickness */}
-                <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[3px]" speed={3}>
-                    <div className="relative z-10 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-semibold text-white 
-                                 shadow-[0_0_20px_rgba(56,189,248,0.2)] 
-                                 bg-neutral-900/90 transition-all duration-300 group">
-                        Launch Terminal 
-                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </div>
-                </ShimmerBorder>
+                <div className="mt-8">
+                  <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[2px]" speed={3}>
+                      <div className="relative z-10 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-bold text-white 
+                                  shadow-[0_0_25px_rgba(56,189,248,0.25)] 
+                                  bg-neutral-900/80 transition-all duration-300 group hover:bg-neutral-900">
+                          <span className="animate-text-shimmer bg-[length:200%_auto]">Launch Terminal</span>
+                          <ArrowRight className="h-4 w-4 text-sky-400 transition-transform group-hover:translate-x-1" />
+                      </div>
+                  </ShimmerBorder>
+                </div>
             </div>
         </motion.div>
     );
@@ -183,7 +210,7 @@ const HighAestheticCard = memo(({
 HighAestheticCard.displayName = "HighAestheticCard";
 
 
-/* --------------------------- DATA CONFIG (Static) --------------------------- */
+/* --------------------------- DATA CONFIG --------------------------- */
 const CHARTS = [
   { label: "Crypto Markets", category: "crypto", tabConfig: [{ title: "Crypto", symbols: [{ s: "BINANCE:BTCUSDT", d: "BTC / USDT" }, { s: "BINANCE:ETHUSDT", d: "ETH / USDT" }, { s: "BINANCE:SOLUSDT", d: "SOL / USDT" }, { s: "BINANCE:XRPUSDT", d: "XRP / USDT" }, { s: "BINANCE:DOGEUSDT", d: "DOGE / USDT" }] }] },
   { label: "Stock Markets", category: "stocks", tabConfig: [{ title: "US Stocks", symbols: [{ s: "NASDAQ:AAPL", d: "Apple" }, { s: "NASDAQ:MSFT", d: "Microsoft" }, { s: "NASDAQ:TSLA", d: "Tesla" }, { s: "NASDAQ:AMZN", d: "Amazon" }, { s: "NASDAQ:NVDA", d: "NVIDIA" }] }] },
@@ -191,19 +218,16 @@ const CHARTS = [
   { label: "Metals", category: "metals", tabConfig: [{ title: "Metals", symbols: [{ s: "TVC:GOLD", d: "Gold" }, { s: "TVC:SILVER", d: "Silver" }, { s: "TVC:PLATINUM", d: "Platinum" }, { s: "TVC:PALLADIUM", d: "Palladium" }] }] },
 ];
 
-/* --------------------------- TRADINGVIEW WIDGET (Final Optimized) --------------------------- */
+/* --------------------------- TRADINGVIEW WIDGET --------------------------- */
 const TradingViewMarketOverview = memo(({ height = 560, tabs }: { height?: number; tabs: any }) => {
   const ref = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     if (!ref.current) return;
-    
     const currentScript = ref.current.querySelector("script");
     const newConfig = JSON.stringify(tabs);
 
-    if (currentScript && currentScript.getAttribute('data-config') === newConfig) {
-        return; 
-    }
+    if (currentScript && currentScript.getAttribute('data-config') === newConfig) return; 
 
     ref.current.innerHTML = ""; 
 
@@ -213,7 +237,7 @@ const TradingViewMarketOverview = memo(({ height = 560, tabs }: { height?: numbe
     script.setAttribute('data-config', newConfig); 
     script.innerHTML = JSON.stringify({
       colorTheme: "dark",
-      isTransparent: false,
+      isTransparent: false , // Transparent to blend with bg
       width: "100%",
       height,
       dateRange: "1D",
@@ -227,7 +251,7 @@ const TradingViewMarketOverview = memo(({ height = 560, tabs }: { height?: numbe
   }, [height, tabs]); 
 
   return (
-    <div ref={ref} className="w-full bg-neutral-900 rounded-xl overflow-hidden" style={{ minHeight: height }}>
+    <div ref={ref} className="w-full bg-[#030712] rounded-xl overflow-hidden border border-white/5" style={{ minHeight: height }}>
       <div className="tradingview-widget-container__widget" style={{ height }} />
     </div>
   );
@@ -235,11 +259,7 @@ const TradingViewMarketOverview = memo(({ height = 560, tabs }: { height?: numbe
 TradingViewMarketOverview.displayName = "TradingViewMarketOverview";
 
 /* --------------------------- CHART SECTION --------------------------- */
-export const TradingViewDropdown = memo(({
-  onMarketChange,
-}: {
-  onMarketChange?: (v: "all" | "crypto" | "stocks" | "forex" | "metals") => void;
-}) => {
+export const TradingViewDropdown = memo(({ onMarketChange }: { onMarketChange?: (v: string) => void }) => {
   const [selected, setSelected] = useState(CHARTS[0]);
   const [open, setOpen] = useState(false);
   const [showChart, setShowChart] = useState(false);
@@ -253,11 +273,11 @@ export const TradingViewDropdown = memo(({
   }, [onMarketChange]);
 
   return (
-    <div className="relative mx-auto w-full max-w-screen-xl rounded-3xl border border-neutral-700/60 bg-neutral-900/40 p-4 md:p-6 shadow-2xl transition-all">
+    <div className="relative mx-auto w-full max-w-screen-xl rounded-3xl border border-white/5 bg-black/40 p-4 md:p-6 shadow-2xl backdrop-blur-sm">
       {!showChart && (
         <HighAestheticCard
             title="Show Live Market Charts"
-            subtitle="Experience live markets with a touch of the future."
+            subtitle="Real-time institutional grade data visualization."
             icon={ChartBar}
             onShow={() => setShowChart(true)}
             isChart={true}
@@ -274,20 +294,18 @@ export const TradingViewDropdown = memo(({
             transition={{ duration: 0.4 }}
             className="will-change-transform"
           >
-            {/* Dropdown Button - Wrapped in ShimmerBorder - Increased border thickness */}
             <div className="mb-4 flex items-center justify-between">
-                <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[3px]" speed={2}>
+                <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[2px]" speed={2}>
                     <button
                       onClick={() => setOpen((p) => !p)}
-                      className="group relative flex items-center gap-3 rounded-full bg-neutral-900/90 px-5 py-2 text-sm font-semibold text-white shadow-lg transition"
+                      className="group relative flex items-center gap-3 rounded-full bg-neutral-950 px-6 py-2 text-sm font-semibold text-white shadow-lg transition"
                     >
-                      <span className="relative z-10 text-sky-400">{selected.label}</span>
-                      <ChevronDown className={`h-4 w-4 relative z-10 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
+                      <span className="relative z-10 animate-text-shimmer">{selected.label}</span>
+                      <ChevronDown className={`h-4 w-4 relative z-10 text-sky-400 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
                     </button>
                 </ShimmerBorder>
             </div>
 
-            {/* Dropdown Menu - No shimmer for performance, just styled */}
             <AnimatePresence>
               {open && (
                 <motion.div
@@ -295,15 +313,15 @@ export const TradingViewDropdown = memo(({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute z-20 mt-2 w-64 overflow-hidden rounded-xl border border-neutral-700 bg-neutral-900/95 shadow-lg"
+                  className="absolute z-20 mt-2 w-64 overflow-hidden rounded-xl border border-white/10 bg-[#0a0a0a] shadow-2xl"
                 >
                   {CHARTS.map((chart, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleSelect(chart)}
                       className={cn(
-                        "block w-full px-4 py-2 text-left text-sm text-white transition-all duration-200 hover:bg-sky-600/20",
-                        selected.label === chart.label && "bg-sky-600/60 font-bold"
+                        "block w-full px-4 py-3 text-left text-sm text-neutral-400 transition-all duration-200 hover:text-white hover:bg-white/5",
+                        selected.label === chart.label && "text-sky-400 bg-sky-900/20 font-bold"
                       )}
                     >
                       {chart.label}
@@ -313,24 +331,17 @@ export const TradingViewDropdown = memo(({
               )}
             </AnimatePresence>
 
-            {/* Live Chart */}
-            <div className="relative mt-4 w-full rounded-2xl border border-neutral-700 bg-neutral-950/40 p-1 md:p-2" style={{ minHeight: chartHeight }}>
+            <div className="relative mt-4 w-full rounded-2xl border border-white/10 bg-neutral-950 p-1 md:p-2" style={{ minHeight: chartHeight }}>
               <TradingViewMarketOverview height={chartHeight} tabs={selected.tabConfig} />
             </div>
 
-            {/* Hide Chart Button - Wrapped in ShimmerBorder - Increased border thickness */}
             <div className="mt-6 flex justify-center">
-                <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[3px]" speed={3}>
-                    <button
-                      onClick={() => {
-                        setOpen(false);
-                        setShowChart(false);
-                      }}
-                      className="relative rounded-full border border-transparent bg-neutral-900 px-8 py-2 text-sm text-neutral-300 transition-all hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
-                    >
-                      Hide Chart
-                    </button>
-                </ShimmerBorder>
+                <button
+                    onClick={() => { setOpen(false); setShowChart(false); }}
+                    className="text-xs text-neutral-500 hover:text-white uppercase tracking-widest transition-colors py-2"
+                >
+                    Close Chart Viewer
+                </button>
             </div>
           </motion.div>
         )}
@@ -340,7 +351,7 @@ export const TradingViewDropdown = memo(({
 });
 TradingViewDropdown.displayName = "TradingViewDropdown";
 
-/* --------------------------- NEWS FEED LOGIC (Pure Functions) --------------------------- */
+/* --------------------------- NEWS FEED LOGIC --------------------------- */
 type MarketFilter = "all" | "crypto" | "stocks" | "forex" | "metals";
 type NewsItem = { title: string; link: string; source?: string; published_at?: string; category?: MarketFilter | "other"; };
 
@@ -385,7 +396,7 @@ const score = (item: NewsItem) => {
   return recency * 0.6 + Math.min(1, kw / 3) * 0.35 + sourceBoost;
 };
 
-/* --------------------------- NEWS FEED CONTENT (Optimized) --------------------------- */
+/* --------------------------- NEWS FEED CONTENT --------------------------- */
 const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketFilter, onClose: () => void }) => {
     const [items, setItems] = useState<NewsItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -393,7 +404,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
     const [count, setCount] = useState<number>(10);
     const [refreshKey, setRefreshKey] = useState(0);
 
-    const NEWS_REFRESH_RATE = 20000; // 20 seconds
+    const NEWS_REFRESH_RATE = 20000; 
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -432,37 +443,28 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
 
     return (
         <div className="flex h-[90vh] max-h-[90vh] flex-col md:h-[700px] md:max-h-[700px] overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-white/5 px-4 md:px-6 py-4">
+            <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-black/40 px-4 md:px-6 py-4 backdrop-blur-md">
                 <div className="flex items-center gap-2">
                     <Newspaper className="h-5 w-5 text-sky-400" />
-                    <span className="font-semibold text-white truncate max-w-[150px] md:max-w-none">{marketTitle}</span>
-                    <span className="ml-2 md:ml-4 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] font-medium text-emerald-400 hidden sm:block">Live</span>
+                    <span className="font-bold text-white truncate max-w-[150px] md:max-w-none animate-text-shimmer">{marketTitle}</span>
+                    <span className="ml-2 md:ml-4 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-500 hidden sm:block border border-red-500/20">Live</span>
                 </div>
                 <div className="flex items-center gap-3">
-                    {lastUpdated && <span className="text-xs text-neutral-500 hidden sm:block">Updated {lastUpdated.toLocaleTimeString()}</span>}
-                    {/* Refresh Button - Wrapped in ShimmerBorder - Increased border thickness */}
-                    <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[3px]" speed={1.5}>
-                        <button onClick={() => setRefreshKey(p => p + 1)} className="group relative rounded-full p-2 transition-colors bg-neutral-900 hover:bg-white/10">
-                            <IconRefresh className={cn("h-4 w-4 text-neutral-400 group-hover:text-white", loading && "animate-spin")} />
-                        </button>
-                    </ShimmerBorder>
-                    {/* Close Button - Wrapped in ShimmerBorder - Increased border thickness */}
-                    <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[3px]" speed={1.5} colorOverride="conic-gradient(from 90deg at 50% 50%, #00000000 0%, #ef4444 50%, #00000000 100%)">
-                        <button onClick={onClose} className="relative rounded-full bg-neutral-900 p-2 text-neutral-400 transition hover:bg-red-500/20 hover:text-red-400">
-                            <X className="h-5 w-5" />
-                        </button>
-                    </ShimmerBorder>
+                    {lastUpdated && <span className="text-xs text-neutral-600 hidden sm:block font-mono">{lastUpdated.toLocaleTimeString()}</span>}
+                    <button onClick={() => setRefreshKey(p => p + 1)} className="group relative rounded-full p-2 transition-colors hover:bg-white/5">
+                        <IconRefresh className={cn("h-4 w-4 text-neutral-500 group-hover:text-white", loading && "animate-spin")} />
+                    </button>
+                    <button onClick={onClose} className="relative rounded-full p-2 text-neutral-500 transition hover:bg-red-500/10 hover:text-red-500">
+                        <X className="h-5 w-5" />
+                    </button>
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto bg-neutral-950/90">
-                
-                {/* Top Headlines Grid */}
+            <div className="flex-1 overflow-y-auto bg-black/90 scrollbar-hide">
                 <div className="p-4">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-extrabold text-white/90">MAJOR HEADLINES</h3>
-                        <div className="h-px w-1/2 bg-gradient-to-r from-sky-500/50 via-blue-500/30 to-transparent ml-4 hidden md:block" />
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Major Headlines</h3>
+                        <div className="h-px w-1/2 bg-gradient-to-r from-sky-500/20 to-transparent ml-4 hidden md:block" />
                     </div>
 
                     <div className="mt-3 grid gap-3 md:grid-cols-5">
@@ -474,58 +476,53 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                     href={item.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="group relative rounded-lg bg-neutral-900/60 p-3 ring-1 ring-white/10 transition hover:ring-sky-500/40 hover:-translate-y-1 duration-200"
+                                    className="group relative rounded-lg bg-[#0a0a0a] p-3 ring-1 ring-white/5 transition hover:ring-sky-500/40 hover:-translate-y-1 duration-200"
                                 >
-                                    <div className="text-[10px] uppercase tracking-wide text-sky-300/80">{(item.category || "Market").toUpperCase()}</div>
-                                    <div className="mt-1 line-clamp-3 text-sm font-semibold text-white/90">{item.title}</div>
-                                    <div className="mt-1 text-xs text-neutral-400">{timeAgo(item.published_at)}</div>
+                                    <div className="text-[9px] font-bold uppercase tracking-wider text-sky-500/80 mb-2">{(item.category || "Market")}</div>
+                                    <div className="line-clamp-3 text-xs font-semibold text-neutral-300 group-hover:text-white transition-colors">{item.title}</div>
+                                    <div className="mt-2 text-[10px] text-neutral-600 font-mono">{timeAgo(item.published_at)}</div>
                                 </a>
                             ))}
                     </div>
                 </div>
 
-                {/* Remaining Headlines List */}
-                <div className="border-t border-white/10">
-                    <div className="sticky top-0 z-10 bg-neutral-950/95 px-4 py-2">
+                <div className="border-t border-white/5">
+                    <div className="sticky top-0 z-10 bg-black/95 px-4 py-2 border-b border-white/5 backdrop-blur">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-extrabold text-white/90">
-                                All Headlines ({allItemsCount} Available)
+                            <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-500">
+                                Latest Feed ({allItemsCount})
                             </h3>
                             <div className="flex items-center gap-2">
-                                <label className="text-xs text-neutral-500">Show</label>
-                                <select value={count} onChange={(e) => setCount(Number(e.target.value))} className="rounded-md bg-white/5 px-2 py-1 text-sm text-neutral-200 ring-1 ring-white/10 outline-none">
+                                <select value={count} onChange={(e) => setCount(Number(e.target.value))} className="rounded bg-white/5 px-2 py-1 text-[10px] text-neutral-400 ring-1 ring-white/10 outline-none uppercase font-bold">
                                     {[5, 10, 20, 50].map((n) => <option key={n} value={n}>{n}</option>)}
                                 </select>
                             </div>
                         </div>
                     </div>
-                    <ul className="divide-y divide-white/10">
+                    <ul className="divide-y divide-white/5">
                         {loading && Array.from({ length: 8 }).map((_, i) => (
                             <li key={i} className="animate-pulse p-4">
-                                <div className="h-3 w-1/3 rounded bg-white/10" />
-                                <div className="mt-2 h-4 w-2/3 rounded bg-white/10" />
+                                <div className="h-3 w-1/3 rounded bg-white/5" />
+                                <div className="mt-2 h-4 w-2/3 rounded bg-white/5" />
                             </li>
                         ))}
                         {!loading && rest.map((n, i) => (
-                            <li key={`${n.link}-${i}`} className="group px-4 py-3 transition hover:bg-white/[0.035]">
+                            <li key={`${n.link}-${i}`} className="group px-4 py-3 transition hover:bg-white/[0.02]">
                                 <div className="flex items-start gap-3">
-                                    <span className="mt-1 h-2 w-2 rounded-full bg-sky-400/80 shadow-[0_0_12px_rgba(56,189,248,.6)]" />
+                                    <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-sky-500/50 shadow-[0_0_8px_rgba(56,189,248,.6)] group-hover:bg-sky-400 transition-colors" />
                                     <div className="min-w-0 flex-1">
-                                        <a href={n.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2">
-                                            <h3 className="truncate text-[15px] font-semibold text-white md:text-base">{n.title}</h3>
-                                            <IconExternalLink className="h-4 w-4 text-neutral-400 opacity-0 transition group-hover:opacity-100" />
+                                        <a href={n.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 group/link">
+                                            <h3 className="truncate text-sm font-medium text-neutral-400 group-hover/link:text-sky-400 transition-colors">{n.title}</h3>
+                                            <IconExternalLink className="h-3 w-3 text-neutral-600 opacity-0 transition group-hover/link:opacity-100" />
                                         </a>
-                                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-400">
-                                            {n.category && n.category !== 'other' && <span className="rounded-md bg-white/5 px-2 py-0.5 ring-1 ring-white/10">{n.category}</span>}
-                                            {n.published_at && <time dateTime={n.published_at}>{timeAgo(n.published_at)}</time>}
+                                        <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[10px] text-neutral-600 font-mono uppercase">
+                                            {n.category && n.category !== 'other' && <span className="text-sky-700">{n.category}</span>}
+                                            {n.published_at && <time dateTime={n.published_at}>• {timeAgo(n.published_at)}</time>}
                                         </div>
                                     </div>
                                 </div>
                             </li>
                         ))}
-                        {!loading && allItemsCount === 0 && (
-                            <li className="px-4 py-10 text-center text-sm text-neutral-400">No free headlines available right now. Try another market or refresh.</li>
-                        )}
                     </ul>
                 </div>
             </div>
@@ -553,29 +550,29 @@ function NewsFeedModal({ activeMarket }: { activeMarket: string }) {
     return (
         <>
             <div className="w-full flex justify-center">
-                {/* Modal Trigger Button - Wrapped in ShimmerBorder - Increased border thickness */}
-                <ShimmerBorder borderRadius="rounded-xl" borderWidth="inset-[3px]" speed={4} className="w-full max-w-xl">
+                <ShimmerBorder borderRadius="rounded-xl" borderWidth="inset-[2px]" speed={4} className="w-full max-w-xl">
                     <button
                         onClick={() => setIsOpen(true)}
-                        className="group relative w-full max-w-xl overflow-hidden rounded-xl bg-neutral-900 p-1 transition-all duration-300 hover:shadow-2xl hover:shadow-sky-500/20 hover:-translate-y-1 hover:scale-[1.005]"
+                        className="group relative w-full max-w-xl overflow-hidden rounded-xl bg-[#0a0a0a] p-1 transition-all duration-300 hover:shadow-2xl hover:shadow-sky-500/10 hover:-translate-y-1"
                     >
-                        
-                        <div className="relative flex items-center justify-between rounded-[7px] bg-neutral-950 px-4 py-3 md:px-6 md:py-4">
+                        <div className="relative flex items-center justify-between rounded-[9px] bg-[#0a0a0a] px-4 py-3 md:px-6 md:py-4">
                             <div className="flex items-center gap-4">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-500/20 text-sky-400 ring-1 ring-sky-500/30 animate-float-slow">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-900/10 text-sky-400 ring-1 ring-sky-500/20 animate-float-slow">
                                     <Newspaper className="h-5 w-5" />
                                 </div>
                                 <div className="text-left truncate">
-                                    <h4 className="text-lg font-bold text-white truncate">Open Live News Feed</h4>
-                                    <p className="text-sm text-neutral-400 truncate max-w-[200px] sm:max-w-none">
+                                    <h4 className="text-lg font-black text-white truncate animate-text-shimmer">
+                                        Open News Feed
+                                    </h4>
+                                    <p className="text-xs text-neutral-500 truncate max-w-[200px] sm:max-w-none font-mono uppercase tracking-wide">
                                         {activeMarket !== 'all' 
-                                            ? `View ${activeMarket.charAt(0).toUpperCase() + activeMarket.slice(1)} Headlines`
-                                            : "Global real-time market updates and analysis"
+                                            ? `LIVE ${activeMarket} HEADLINES`
+                                            : "GLOBAL MARKET INTELLIGENCE"
                                         }
                                     </p>
                                 </div>
                             </div>
-                            <div className="text-sky-400 transition-transform duration-300 group-hover:translate-x-1">
+                            <div className="text-neutral-600 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-sky-400">
                                 <ArrowRight className="h-5 w-5" />
                             </div>
                         </div>
@@ -589,16 +586,16 @@ function NewsFeedModal({ activeMarket }: { activeMarket: string }) {
                         <motion.div
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             onClick={() => setIsOpen(false)}
-                            className="absolute inset-0 bg-black/80"
+                            className="absolute inset-0 bg-black/90 backdrop-blur-sm"
                         />
-                        {/* Modal Body - Wrapped in ShimmerBorder - Increased border thickness */}
-                        <ShimmerBorder borderRadius="rounded-t-3xl md:rounded-3xl" borderWidth="inset-[3px]" speed={5} className="w-full max-w-4xl h-full md:h-auto">
+                        {/* Modal Body with Shimmer Border */}
+                        <ShimmerBorder borderRadius="rounded-t-3xl md:rounded-3xl" borderWidth="inset-[2px]" speed={5} className="w-full max-w-4xl h-full md:h-auto">
                             <motion.div
-                                initial={{ opacity: 0, scale: 1, y: 100 }}
+                                initial={{ opacity: 0, scale: 0.95, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 1, y: 100 }}
-                                transition={{ type: "spring", bounce: 0.3, duration: 0.5 }}
-                                className="relative w-full max-w-4xl overflow-hidden rounded-t-3xl md:rounded-3xl border border-transparent bg-neutral-950 shadow-2xl"
+                                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                                transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                                className="relative w-full max-w-4xl overflow-hidden rounded-t-3xl md:rounded-3xl border border-transparent bg-black shadow-2xl"
                             >
                                 <NewsFeedContent activeMarket={activeMarket as MarketFilter} onClose={() => setIsOpen(false)} />
                             </motion.div>
@@ -613,20 +610,28 @@ function NewsFeedModal({ activeMarket }: { activeMarket: string }) {
 /* --------------------------- MAIN EXPORT --------------------------- */
 
 export function CTA() {
-  const [activeMarket, setActiveMarket] = useState<"all" | "crypto" | "stocks" | "forex" | "metals">("all");
+  const [activeMarket, setActiveMarket] = useState<any>("all");
 
   return (
-    <div id="market-dashboard" className="w-full overflow-x-hidden bg-black px-0 md:px-8 py-10 dark:bg-neutral-988">
+    <div id="market-dashboard" className="w-full overflow-x-hidden bg-black px-0 md:px-8 py-10">
       <style>{GLOBAL_STYLES}</style>
       <div className="mx-auto max-w-7xl px-4 md:px-0">
-        <header className="text-center">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-sky-400/80">Live • Market Updates</p>
-            <h1 className="mt-1 text-2xl font-black tracking-tight text-white md:text-4xl">
-                Real-Time Global Market Dashboard
+        <header className="text-center mb-12">
+           
+            
+            <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-neutral-500 animate-text-shimmer drop-shadow-2xl">
+                MARKET DASHBOARD
             </h1>
-            <p className="mt-2 text-xs text-neutral-400 md:text-sm">
-                Covering Crypto, Stocks, Forex, and Metals — updated every minute.
+            <p className="mt-4 text-sm text-neutral-400 md:text-base max-w-2xl mx-auto">
+                Real-time institutional grade data covering <span className="text-sky-400">Crypto</span>, <span className="text-sky-400">Stocks</span>, <span className="text-sky-400">Forex</span>, and <span className="text-sky-400">Metals</span>.
             </p>
+             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-sky-500/20 bg-sky-900/10 text-sky-400 text-[10px] font-mono tracking-widest uppercase mb-4">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-full w-full bg-sky-500"></span>
+                </span>
+                System Online
+            </div>
         </header>
         
         <div className="mt-10">

@@ -289,13 +289,16 @@ export default function Home() {
           
             {/* The rest of your page components */}
             <Socialsfooter />
+                <Heromain />
+               <ShopFunnel />
+                <Shopmain />
             <Chartnews />
-       
-            <Shopmain />
-            <ShopFunnel />
-            <Heromain />
+      
+          
+         
+        
             <div className="py-10">
-              <Shopmain />
+     
             </div>
             <Pricing />
             <Features />

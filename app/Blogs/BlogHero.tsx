@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import React, { useEffect, useState, useCallback, useMemo, useRef, ReactNode } from "react";
 import {
   motion,
   useScroll,
@@ -56,6 +56,56 @@ const getYoutubeId = (url: string | undefined): string | null => {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
   const match = url.match(regExp);
   return (match && match[2].length === 11) ? match[2] : null;
+};
+
+// ==========================================
+// NEW: SHIMMER BORDER COMPONENT
+// ==========================================
+
+// Blue/Sky gradient
+const shimmerGradient = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #38bdf8 50%, #00000000 100%)";
+
+interface ShimmerBorderProps {
+    children: ReactNode;
+    className?: string;
+    borderRadius?: string;
+    borderWidth?: string;
+    speed?: number;
+    colorOverride?: string;
+}
+
+const ShimmerBorder = ({ 
+    children, 
+    className, 
+    borderRadius = 'rounded-xl', 
+    borderWidth = 'inset-[1.5px]', 
+    speed = 3, 
+    colorOverride 
+}: ShimmerBorderProps) => {
+    const finalGradient = colorOverride || shimmerGradient;
+    
+    return (
+        <div className={cn("relative overflow-hidden group/shimmer", borderRadius, className)}>
+            <motion.div
+                className="absolute inset-[-100%]" 
+                animate={{ rotate: 360 }}
+                transition={{ 
+                    duration: speed, 
+                    repeat: Infinity, 
+                    ease: "linear" 
+                }}
+                style={{ background: finalGradient }}
+            />
+            {/* Inner Mask (The actual content background) */}
+            <div className={cn("absolute bg-neutral-900/90 flex items-center justify-center z-10", borderRadius, borderWidth)}>
+                {/* Mask Layer */}
+            </div>
+            {/* Content Layer */}
+            <div className="relative z-20 h-full w-full">
+                {children}
+            </div>
+        </div>
+    );
 };
 
 // --- SPARKLES COMPONENT ---
@@ -147,7 +197,6 @@ const VideoCard = React.memo(({
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             title={product.name}
                             loading="lazy"
-                          
                         />
                      ) : (
                         <Image
@@ -204,7 +253,7 @@ const HeroParallax = () => {
 
   const videoProducts = useMemo(() => {
     if (!products) return [];
-    return products.filter((p: Product) => p.category === "BLOGVIDEO");
+    return products.filter((p: Product) => p.category === "SUBSCRIPTIONS");
   }, [products]);
 
   const displayProducts = useMemo(() => {
@@ -247,13 +296,12 @@ const HeroParallax = () => {
   const [adminEditing, setAdminEditing] = useState<Product | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // --- NEW: RELATED VIDEOS LOGIC ---
+  // --- RELATED VIDEOS ---
   const relatedProducts = useMemo(() => {
     if (!products || !activeProduct) return [];
-    // Shuffle or just filter excluding current
     return products
       .filter((p: Product) => (p._id || p.id) !== (activeProduct._id || activeProduct.id))
-      .slice(0, 3); // Take top 3
+      .slice(0, 3); 
   }, [products, activeProduct]);
 
   const handleOpen = useCallback((product: Product, layoutId: string) => {
@@ -363,9 +411,33 @@ const HeroParallax = () => {
         0% { background-position: 200% 0; }
         100% { background-position: -200% 0; }
       }
+      
+      @keyframes text-shimmer {
+        0% { background-position: 0% 50%; }
+        100% { background-position: -200% 50%; }
+      }
+
       .animate-shimmer {
         animation: shimmer 3s linear infinite;
       }
+
+      /* GLOBAL SKY/INDIGO SHIMMER */
+      .animate-text-shimmer {
+        background: linear-gradient(
+          110deg, 
+          #38bdf8 20%,   /* Sky 400 */
+          #ffffff 48%,   /* White Peak */
+          #818cf8 52%,   /* Indigo 400 */
+          #38bdf8 80%    /* Sky 400 */
+        );
+        background-size: 200% auto;
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+        animation: text-shimmer 3s linear infinite;
+      }
+
       .custom-scrollbar::-webkit-scrollbar { width: 6px; }
       .custom-scrollbar::-webkit-scrollbar-track { background: #171717; }
       .custom-scrollbar::-webkit-scrollbar-thumb { background: #404040; border-radius: 3px; }
@@ -400,16 +472,18 @@ const HeroParallax = () => {
         </div>
     </div>
 
-    {/* --- ADMIN CONTROLS --- */}
+    {/* --- ADMIN CONTROLS (Floating) --- */}
     {isAdmin && (
         <div className="fixed bottom-8 right-8 z-[9990] flex flex-col gap-2">
-            <button 
-                onClick={handleCreateNewVideo}
-                className="bg-green-600 hover:bg-green-500 text-white p-3 md:p-4 rounded-full shadow-lg shadow-green-900/50 transition-all hover:scale-110 flex items-center justify-center"
-                title="Add New Video Card"
-            >
-                {isSaving ? <Loader2 className="animate-spin" /> : <Plus size={20} />}
-            </button>
+            <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[1.5px]" speed={4} colorOverride="conic-gradient(from 90deg at 50% 50%, #00000000 0%, #22c55e 50%, #00000000 100%)">
+                <button 
+                    onClick={handleCreateNewVideo}
+                    className="bg-neutral-900/90 text-green-500 p-3 md:p-4 rounded-full transition-all hover:bg-neutral-800 flex items-center justify-center w-full h-full"
+                    title="Add New Video Card"
+                >
+                    {isSaving ? <Loader2 className="animate-spin" /> : <Plus size={24} />}
+                </button>
+            </ShimmerBorder>
         </div>
     )}
 
@@ -423,259 +497,239 @@ const HeroParallax = () => {
                 className="fixed inset-0 z-[9999] grid place-items-center bg-black/95 md:backdrop-blur-xl p-0 md:p-4 will-change-opacity"
                 onClick={handleClose}
             >
-                <motion.div
-                    layoutId={activeLayoutId} 
-                    className="relative w-full max-w-7xl bg-neutral-900 border border-neutral-800 rounded-none md:rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[100dvh] md:h-[85vh] md:max-h-[800px] safari-fix-layer"
-                    onClick={(e) => e.stopPropagation()} 
-                >
-                    {/* FIXED: BACK BUTTON MOVED DOWN (top-24) to clear Navbar */}
-                    <button
-                        onClick={handleClose}
-                        className="absolute top-24 md:top-4 left-4 z-50 p-2 bg-black/50 backdrop-blur rounded-full text-white hover:bg-neutral-800 transition-colors border border-white/10 group flex items-center justify-center shadow-lg"
+                <ShimmerBorder borderRadius="rounded-none md:rounded-3xl" borderWidth="inset-[2px]" speed={5}>
+                    <motion.div
+                        layoutId={activeLayoutId} 
+                        className="relative w-full max-w-7xl bg-neutral-900 border border-transparent rounded-none md:rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[100dvh] md:h-[85vh] md:max-h-[800px] safari-fix-layer"
+                        onClick={(e) => e.stopPropagation()} 
                     >
-                         <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-                    </button>
+                        {/* FIXED: BACK BUTTON MOVED DOWN (top-24) to clear Navbar */}
+                        <button
+                            onClick={handleClose}
+                            className="absolute top-24 md:top-4 left-4 z-50 p-2 bg-black/50 backdrop-blur rounded-full text-white hover:bg-neutral-800 transition-colors border border-white/10 group flex items-center justify-center shadow-lg"
+                        >
+                            <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                        </button>
 
-                    {/* FIXED: CLOSE BUTTON MOVED DOWN (top-24) to clear Navbar */}
-                    <button
-                        onClick={handleClose}
-                        className="absolute top-24 md:top-4 right-4 z-50 p-2 bg-black/50 backdrop-blur rounded-full text-white hover:bg-red-600 transition-colors border border-white/10 group shadow-lg"
-                    >
-                        <X size={20} className="group-hover:rotate-90 transition-transform" />
-                    </button>
+                        {/* FIXED: CLOSE BUTTON MOVED DOWN (top-24) to clear Navbar */}
+                        <button
+                            onClick={handleClose}
+                            className="absolute top-24 md:top-4 right-4 z-50 p-2 bg-black/50 backdrop-blur rounded-full text-white hover:bg-red-600 transition-colors border border-white/10 group shadow-lg"
+                        >
+                            <X size={20} className="group-hover:rotate-90 transition-transform" />
+                        </button>
 
-                    {isAdmin && !isEditing && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-                        className="absolute top-24 md:top-4 right-16 z-50 p-2 bg-sky-600 rounded-full text-white hover:bg-sky-500 transition-colors shadow-[0_0_15px_rgba(14,165,233,0.5)] flex gap-2 items-center px-4 font-bold text-xs uppercase"
-                      >
-                          <Edit2 size={14} /> Edit
-                      </button>
-                    )}
-
-                    {/* LEFT: MEDIA SECTION */}
-                    <div className="w-full md:w-3/4 bg-black flex flex-col relative group h-[35vh] sm:h-[45vh] md:h-full shrink-0">
-                        {!isEditing ? (
-                            <div className="relative w-full h-full">
-                                {(() => {
-                                    const videoId = getYoutubeId(activeProduct.buyUrl);
-                                    if (videoId) {
-                                        return (
-                                            <iframe 
-                                                className="w-full h-full absolute inset-0"
-                                                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`} 
-                                                title={activeProduct.name}
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                                allowFullScreen 
-                                            />
-                                        );
-                                    } else {
-                                        return (
-                                            <div className="w-full h-full grid place-items-center text-neutral-500">
-                                                <div className="text-center">
-                                                    <Youtube size={48} className="mx-auto mb-2 opacity-50" />
-                                                    <p>Invalid YouTube Link</p>
-                                                </div>
-                                            </div>
-                                        );
-                                    }
-                                })()}
-                            </div>
-                        ) : (
-                            <div className="relative w-full h-full bg-neutral-950 flex flex-col items-center justify-center border-r border-neutral-800">
-                                <Youtube size={64} className="text-red-600 mb-4 opacity-50" />
-                                <p className="text-neutral-400 text-sm">Preview disabled while editing</p>
-                            </div>
+                        {isAdmin && !isEditing && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+                            className="absolute top-24 md:top-4 right-16 z-50 p-2 bg-sky-600 rounded-full text-white hover:bg-sky-500 transition-colors shadow-[0_0_15px_rgba(14,165,233,0.5)] flex gap-2 items-center px-4 font-bold text-xs uppercase"
+                        >
+                            <Edit2 size={14} /> Edit
+                        </button>
                         )}
-                    </div>
 
-                    {/* RIGHT: CONTENT SIDEBAR */}
-                    <div className="w-full md:w-1/4 flex flex-col bg-neutral-900 border-l border-neutral-800 h-full overflow-hidden">
-                        <div className="flex-1 overflow-y-auto p-5 md:p-8 custom-scrollbar">
-                        {isEditing ? (
-                          <div className="space-y-6 animate-in fade-in duration-300 pb-12" onClick={(e) => e.stopPropagation()}>
-                             {/* EDIT FORM */}
-                             <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800 mb-4">
-                                <label className="text-[10px] uppercase text-sky-500 font-bold mb-2 flex items-center gap-2">
-                                  Category
-                                </label>
-                                <select
-                                  value={editForm.category || "VIDEO"}
-                                  onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                                  className="w-full bg-neutral-900 p-3 rounded-lg text-sm outline-none border border-neutral-700 focus:border-sky-500 text-white cursor-pointer"
+                        {/* LEFT: MEDIA SECTION */}
+                        <div className="w-full md:w-3/4 bg-black flex flex-col relative group h-[35vh] sm:h-[45vh] md:h-full shrink-0">
+                            {/* ... video player / editing preview ... */}
+                            {!isEditing ? (
+                                <div className="relative w-full h-full">
+                                    {(() => {
+                                        const videoId = getYoutubeId(activeProduct.buyUrl);
+                                        if (videoId) {
+                                            return (
+                                                <iframe 
+                                                    className="w-full h-full absolute inset-0"
+                                                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`} 
+                                                    title={activeProduct.name}
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                    allowFullScreen 
+                                                />
+                                            );
+                                        } else {
+                                            return (
+                                                <div className="w-full h-full grid place-items-center text-neutral-500">
+                                                    <div className="text-center">
+                                                        <Youtube size={48} className="mx-auto mb-2 opacity-50" />
+                                                        <p>Invalid YouTube Link</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
+                                    })()}
+                                </div>
+                            ) : (
+                                <div className="relative w-full h-full bg-neutral-950 flex flex-col items-center justify-center border-r border-neutral-800">
+                                    <Youtube size={64} className="text-red-600 mb-4 opacity-50" />
+                                    <p className="text-neutral-400 text-sm">Preview disabled while editing</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* RIGHT: CONTENT SIDEBAR */}
+                        <div className="w-full md:w-1/4 flex flex-col bg-neutral-900 border-l border-neutral-800 h-full overflow-hidden">
+                            <div className="flex-1 overflow-y-auto p-5 md:p-8 custom-scrollbar">
+                            {isEditing ? (
+                            <div className="space-y-6 animate-in fade-in duration-300 pb-12" onClick={(e) => e.stopPropagation()}>
+                                {/* EDIT FORM */}
+                                <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800 mb-4">
+                                    <label className="text-[10px] uppercase text-sky-500 font-bold mb-2 flex items-center gap-2">Category</label>
+                                    <select
+                                    value={editForm.category || "VIDEO"}
+                                    onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                                    className="w-full bg-neutral-900 p-3 rounded-lg text-sm outline-none border border-neutral-700 focus:border-sky-500 text-white cursor-pointer"
+                                    >
+                                        {categories.map((c: any) => (<option key={c._id || c.id} value={c.name}>{c.name}</option>))}
+                                        {editForm.category && !categories.find((c: any) => c.name === editForm.category) && (<option value={editForm.category}>{editForm.category}</option>)}
+                                    </select>
+                                </div>
+                                <div><label className="text-[10px] uppercase text-neutral-500 font-bold mb-1 block">YouTube URL</label><input value={editForm.buyUrl || ""} onChange={(e) => setEditForm({...editForm, buyUrl: e.target.value})} placeholder="Paste YouTube Link..." className="w-full bg-neutral-950 p-3 rounded-lg text-sm outline-none border border-neutral-800 focus:border-sky-500 text-white font-mono" /></div>
+                                <div><label className="text-[10px] uppercase text-neutral-500 font-bold mb-1 block">Title</label><input value={editForm.name || ""} onChange={(e) => setEditForm({...editForm, name: e.target.value})} className="w-full bg-neutral-950 p-3 rounded-lg text-sm outline-none border border-neutral-800 focus:border-sky-500 text-white" /></div>
+                                <div><label className="text-[10px] uppercase text-neutral-500 font-bold mb-1 block">Description</label><textarea rows={8} value={editForm.description || ""} onChange={(e) => setEditForm({...editForm, description: e.target.value})} className="w-full bg-neutral-950 p-3 rounded-lg text-sm outline-none border border-neutral-800 focus:border-sky-500 text-white resize-none" /></div>
+                            </div>
+                            ) : (
+                            // VIEW MODE
+                            <div className="flex flex-col h-full pb-10">
+                                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="flex gap-2 mb-4">
+                                    <span className="text-[10px] bg-red-600 text-white px-2 py-1 rounded font-bold font-mono uppercase tracking-widest flex items-center gap-1">
+                                    <Youtube size={12} className="fill-white" /> {activeProduct.category}
+                                    </span>
+                                </motion.div>
+                                <motion.h3 
+                                    initial={{ y: 20, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.3 }}
+                                    className="text-xl md:text-2xl font-sans font-bold text-white mb-4 leading-tight animate-text-shimmer"
                                 >
-                                    {categories.map((c: any) => (
-                                        <option key={c._id || c.id} value={c.name}>{c.name}</option>
-                                    ))}
-                                    {editForm.category && !categories.find((c: any) => c.name === editForm.category) && (
-                                        <option value={editForm.category}>{editForm.category}</option>
-                                    )}
-                                </select>
-                             </div>
+                                    {activeProduct.name}
+                                </motion.h3>
+                                <motion.div 
+                                    initial={{ y: 20, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.4 }}
+                                    className="text-neutral-400 text-xs md:text-sm leading-relaxed whitespace-pre-line"
+                                >
+                                    {activeProduct.description || "No description provided."}
+                                </motion.div>
 
-                             <div>
-                                <label className="text-[10px] uppercase text-neutral-500 font-bold mb-1 block">YouTube URL</label>
-                                <input 
-                                  value={editForm.buyUrl || ""} 
-                                  onChange={(e) => setEditForm({...editForm, buyUrl: e.target.value})}
-                                  placeholder="Paste YouTube Link..."
-                                  className="w-full bg-neutral-950 p-3 rounded-lg text-sm outline-none border border-neutral-800 focus:border-sky-500 text-white font-mono"
-                                />
-                             </div>
-                             <div>
-                                <label className="text-[10px] uppercase text-neutral-500 font-bold mb-1 block">Title</label>
-                                <input 
-                                  value={editForm.name || ""} 
-                                  onChange={(e) => setEditForm({...editForm, name: e.target.value})}
-                                  className="w-full bg-neutral-950 p-3 rounded-lg text-sm outline-none border border-neutral-800 focus:border-sky-500 text-white"
-                                />
-                             </div>
-                             <div>
-                                <label className="text-[10px] uppercase text-neutral-500 font-bold mb-1 block">Description</label>
-                                <textarea 
-                                  rows={8}
-                                  value={editForm.description || ""} 
-                                  onChange={(e) => setEditForm({...editForm, description: e.target.value})}
-                                  className="w-full bg-neutral-950 p-3 rounded-lg text-sm outline-none border border-neutral-800 focus:border-sky-500 text-white resize-none"
-                                />
-                             </div>
-                          </div>
-                        ) : (
-                          // VIEW MODE
-                          <div className="flex flex-col h-full pb-10">
-                            <motion.div
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.2 }}
-                                className="flex gap-2 mb-4"
-                            >
-                                <span className="text-[10px] bg-red-600 text-white px-2 py-1 rounded font-bold font-mono uppercase tracking-widest flex items-center gap-1">
-                                   <Youtube size={12} className="fill-white" /> {activeProduct.category}
-                                </span>
-                            </motion.div>
-                            <motion.h3 
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.3 }}
-                                className="text-xl md:text-2xl font-sans font-bold text-white mb-4 leading-tight"
-                            >
-                                {activeProduct.name}
-                            </motion.h3>
-                            <motion.div 
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.4 }}
-                                className="text-neutral-400 text-xs md:text-sm leading-relaxed whitespace-pre-line"
-                            >
-                                {activeProduct.description || "No description provided."}
-                            </motion.div>
-
-                            {/* --- FILLER CONTENT: UP NEXT --- */}
-                            <div className="mt-8 pt-8 border-t border-neutral-800/50">
-                                <h4 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                   <PlayCircle size={12} /> Up Next
-                                </h4>
-                                <div className="flex flex-col gap-3">
-                                    {relatedProducts.length > 0 ? relatedProducts.map((rp: Product, i: number) => {
-                                        const thumbId = getYoutubeId(rp.buyUrl);
-                                        return (
-                                            <div 
-                                                key={i} 
-                                                onClick={() => setActiveProduct(rp)}
-                                                className="flex gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer group/related transition-colors"
-                                            >
-                                                <div className="relative w-24 h-14 bg-neutral-800 rounded overflow-hidden shrink-0">
-                                                    {thumbId ? (
-                                                        <Image 
-                                                            src={`https://img.youtube.com/vi/${thumbId}/mqdefault.jpg`} 
-                                                            fill 
-                                                            className="object-cover opacity-60 group-hover/related:opacity-100 transition-opacity" 
-                                                            alt={rp.name} 
-                                                        />
-                                                    ) : (
-                                                        <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
-                                                            <Youtube size={16} className="text-neutral-600"/>
-                                                        </div>
-                                                    )}
+                                {/* --- FILLER CONTENT: UP NEXT --- */}
+                                <div className="mt-8 pt-8 border-t border-neutral-800/50">
+                                    <h4 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <PlayCircle size={12} /> Up Next
+                                    </h4>
+                                    <div className="flex flex-col gap-3">
+                                        {relatedProducts.length > 0 ? relatedProducts.map((rp: Product, i: number) => {
+                                            const thumbId = getYoutubeId(rp.buyUrl);
+                                            return (
+                                                <div 
+                                                    key={i} 
+                                                    onClick={() => setActiveProduct(rp)}
+                                                    className="flex gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer group/related transition-colors"
+                                                >
+                                                    <div className="relative w-24 h-14 bg-neutral-800 rounded overflow-hidden shrink-0">
+                                                        {thumbId ? (
+                                                            <Image 
+                                                                src={`https://img.youtube.com/vi/${thumbId}/mqdefault.jpg`} 
+                                                                fill 
+                                                                className="object-cover opacity-60 group-hover/related:opacity-100 transition-opacity" 
+                                                                alt={rp.name} 
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
+                                                                <Youtube size={16} className="text-neutral-600"/>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-col justify-center min-w-0">
+                                                        <h5 className="text-xs font-bold text-neutral-300 group-hover/related:text-white truncate transition-colors leading-tight mb-1">
+                                                            {rp.name}
+                                                        </h5>
+                                                        <span className="text-[10px] text-neutral-600 uppercase tracking-wider">
+                                                            {rp.category || "Video"}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex flex-col justify-center min-w-0">
-                                                    <h5 className="text-xs font-bold text-neutral-300 group-hover/related:text-white truncate transition-colors leading-tight mb-1">
-                                                        {rp.name}
-                                                    </h5>
-                                                    <span className="text-[10px] text-neutral-600 uppercase tracking-wider">
-                                                        {rp.category || "Video"}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        )
-                                    }) : (
-                                        <div className="text-neutral-600 text-xs italic p-2">No other videos available.</div>
-                                    )}
+                                            )
+                                        }) : (
+                                            <div className="text-neutral-600 text-xs italic p-2">No other videos available.</div>
+                                        )}
+                                    </div>
                                 </div>
+
+                            </div>
+                            )}
                             </div>
 
-                          </div>
-                        )}
-                        </div>
+                            <div className="p-4 md:p-6 border-t border-neutral-800 bg-neutral-900 shrink-0">
+                                {isEditing ? (
+                                    <div className="flex gap-2">
+                                        {/* SAVE BUTTON */}
+                                        <ShimmerBorder borderRadius="rounded-lg" borderWidth="inset-px" speed={2} className="flex-1" colorOverride="conic-gradient(from 90deg at 50% 50%, #00000000 0%, #38bdf8 50%, #00000000 100%)">
+                                            <button 
+                                            onClick={handleSaveEdit} 
+                                            disabled={isSaving}
+                                            className="bg-neutral-900/90 text-white font-bold py-3 flex items-center justify-center gap-2 text-sm disabled:opacity-50 w-full"
+                                            >
+                                            {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : <><Save size={16} /> Save</>}
+                                            </button>
+                                        </ShimmerBorder>
 
-                        <div className="p-4 md:p-6 border-t border-neutral-800 bg-neutral-900 shrink-0">
-                             {isEditing ? (
-                                <div className="flex gap-2">
-                                    <button 
-                                    onClick={handleSaveEdit} 
-                                    disabled={isSaving}
-                                    className="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 text-sm disabled:opacity-50"
-                                    >
-                                    {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : <><Save size={16} /> Save</>}
-                                    </button>
-                                    <button 
-                                    onClick={handleDelete}
-                                    disabled={isSaving}
-                                    className="bg-red-500/10 hover:bg-red-500 hover:text-white text-red-500 p-3 rounded-lg transition-colors"
-                                    >
-                                    <Trash2 size={18} />
-                                    </button>
-                                    <button 
-                                    onClick={(e) => { e.stopPropagation(); setIsEditing(false); setEditForm({ ...activeProduct }); }}
-                                    className="text-neutral-500 hover:text-white text-xs px-2"
-                                    >
-                                    Cancel
-                                    </button>
-                                </div>
-                             ) : (
-                                <div className="flex flex-col gap-3">
-                                    <motion.a
-                                        href={activeProduct.buyUrl || "#"}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        initial={{ y: 20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.5 }}
-                                        className="w-full py-3 md:py-4 bg-white text-black rounded-xl font-bold uppercase tracking-widest hover:bg-neutral-200 transition-all flex items-center justify-center gap-2 text-xs md:text-sm"
-                                    >
-                                        Open on Whop <ExternalLink size={16} />
-                                    </motion.a>
-                                    <motion.button
-                                        onClick={() => {
-                                            if(activeProduct.buyUrl) {
-                                                navigator.clipboard.writeText(activeProduct.buyUrl);
-                                                setCopied(true);
-                                                setTimeout(() => setCopied(false), 2000);
-                                            }
-                                        }}
-                                        initial={{ y: 20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.6 }}
-                                        className="w-full py-2 bg-neutral-800 text-neutral-400 text-xs rounded-xl font-mono uppercase tracking-widest hover:bg-neutral-700 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        {copied ? <Check size={12} className="text-green-500"/> : <Copy size={12}/>} 
-                                        {copied ? "Link Copied" : "Copy Link"}
-                                    </motion.button>
-                                </div>
-                             )}
+                                        {/* DELETE BUTTON */}
+                                        <ShimmerBorder borderRadius="rounded-lg" borderWidth="inset-px" speed={1.5} colorOverride="conic-gradient(from 90deg at 50% 50%, #00000000 0%, #ef4444 50%, #00000000 100%)">
+                                            <button 
+                                            onClick={handleDelete}
+                                            disabled={isSaving}
+                                            className="bg-red-500/10 hover:bg-red-500 hover:text-white text-red-500 p-3 transition-colors"
+                                            >
+                                            <Trash2 size={18} />
+                                            </button>
+                                        </ShimmerBorder>
+                                        
+                                        <button 
+                                        onClick={(e) => { e.stopPropagation(); setIsEditing(false); setEditForm({ ...activeProduct }); }}
+                                        className="text-neutral-500 hover:text-white text-xs px-2"
+                                        >
+                                        Cancel
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col gap-3">
+                                        {/* SHIMMER BORDER on MAIN ACTION BUTTON */}
+                                        <ShimmerBorder borderRadius="rounded-xl" borderWidth="inset-[1.5px]" speed={4} className="w-full">
+                                            <motion.a
+                                                href={activeProduct.buyUrl || "#"}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                initial={{ y: 20, opacity: 0 }}
+                                                animate={{ y: 0, opacity: 1 }}
+                                                transition={{ delay: 0.5 }}
+                                                className="w-full py-3 md:py-4 bg-white text-black font-bold uppercase tracking-widest hover:bg-neutral-200 transition-all flex items-center justify-center gap-2 text-xs md:text-sm"
+                                            >
+                                                Open on Whop <ExternalLink size={16} />
+                                            </motion.a>
+                                        </ShimmerBorder>
+
+                                        <motion.button
+                                            onClick={() => {
+                                                if(activeProduct.buyUrl) {
+                                                    navigator.clipboard.writeText(activeProduct.buyUrl);
+                                                    setCopied(true);
+                                                    setTimeout(() => setCopied(false), 2000);
+                                                }
+                                            }}
+                                            initial={{ y: 20, opacity: 0 }}
+                                            animate={{ y: 0, opacity: 1 }}
+                                            transition={{ delay: 0.6 }}
+                                            className="w-full py-2 bg-neutral-800 text-neutral-400 text-xs rounded-xl font-mono uppercase tracking-widest hover:bg-neutral-700 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            {copied ? <Check size={12} className="text-green-500"/> : <Copy size={12}/>} 
+                                            {copied ? "Link Copied" : "Copy Link"}
+                                        </motion.button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                </motion.div>
+                    </motion.div>
+                </ShimmerBorder>
             </motion.div>
         )}
     </AnimatePresence>
@@ -693,7 +747,6 @@ const HeroParallax = () => {
                     background="transparent"
                     minSize={0.6}
                     maxSize={1.4}
-                    // OPTIMIZATION: Reduced particles
                     particleDensity={isMobile ? 10 : 50} 
                     isMobile={isMobile}
                     className="w-full h-full"
@@ -706,27 +759,20 @@ const HeroParallax = () => {
                     <motion.div 
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        // OPTIMIZATION: Removed blur on mobile badge
                         className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-400 text-[10px] md:text-xs font-mono tracking-wider uppercase md:backdrop-blur-md"
                         >
                         <Zap size={10} className="fill-sky-400" /> {hero.badge}
                     </motion.div>
                  )}
 
-                <h1 className="text-5xl md:text-8xl font-sans font-black text-white leading-[0.9] tracking-tighter">
-                {(hero?.title || "Welcome VIP").split(" ").map((word: string, i: number) => (
-                    <span 
-                        key={i} 
-                        className="inline-block mr-3 text-transparent bg-clip-text bg-[linear-gradient(110deg,#FFFFFF,45%,#38BDF8,55%,#FFFFFF)] bg-[length:250%_100%] animate-shimmer"
-                    >
-                      {word}
-                    </span>
-                ))}
+                {/* ANIMATED TEXT SHIMMER FOR TITLE */}
+                <h1 className="text-5xl md:text-8xl font-sans font-black leading-[0.9] tracking-tighter animate-text-shimmer">
+                {hero?.title || "Welcome VIP"}
                 </h1>
 
                 <motion.p
                     initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
                     transition={{ duration: 0.8, delay: 0.2 }}
                     className="max-w-2xl text-base md:text-xl mt-4 md:mt-6 text-neutral-400 font-normal leading-relaxed"
                     >
@@ -768,7 +814,6 @@ const HeroParallax = () => {
             opacity,
             willChange // Hint to browser
         }}
-        // SAFARI FIX: Use 3d transform for container
         className="relative z-10 will-change-transform backface-hidden transform-gpu safari-fix-layer"
     >
         <div className={cn("flex flex-col", isMobile ? "gap-2 px-0" : "")}>
