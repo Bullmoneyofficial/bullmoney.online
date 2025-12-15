@@ -4,20 +4,21 @@ import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
 import { gsap } from "gsap";
+import { Volume2, VolumeX } from 'lucide-react'; // Required for the controller
 
 // --- CORE STATIC IMPORTS ---
 import { MultiStepLoader } from "@/components/Mainpage/MultiStepLoaderAffiliate"; 
-import RecruitPage from "@/app/register/New"; // Assuming this is part of the core structure/loader context
-import Socials from "@/components/Mainpage/Socialsfooter"; // Assuming lightweight/critical footer
+import RecruitPage from "@/app/register/New"; 
+import Socials from "@/components/Mainpage/Socialsfooter"; 
 
-// --- DYNAMIC IMPORTS FOR HEAVY CONTENT SECTIONS ---
+// --- DYNAMIC IMPORTS ---
 const Shopmain = dynamic(() => import("@/components/Mainpage/ShopMainpage"), { ssr: false });
 const AffiliateAdmin = dynamic(() => import("@/app/register/AffiliateAdmin"), { ssr: false });
 const AffiliateRecruitsDashboard = dynamic(() => import("@/app/recruit/AffiliateRecruitsDashboard"), { ssr: false });
 
 
 // =========================================
-// 0. CURSOR LOGIC & UTILITIES (Inlined for dynamic import reference)
+// 0. CURSOR LOGIC & UTILITIES
 // =========================================
 
 const useIsMobile = () => {
@@ -37,18 +38,13 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-
-// TargetCursor Component Implementation (Identical Logic)
 const TargetCursorComponent: React.FC<any> = ({ targetSelector, spinDuration, hideDefaultCursor, hoverDuration = 0.3, parallaxOn }) => {
     const isMobile = useIsMobile();
     const cursorRef = useRef<HTMLDivElement>(null);
     const dotRef = useRef<HTMLDivElement>(null);
     const cornersRef = useRef<NodeListOf<HTMLDivElement> | null>(null);
     
-    const state = useRef({
-        isActive: false,
-        activeTarget: null as Element | null
-    });
+    const state = useRef({ isActive: false, activeTarget: null as Element | null });
 
     useEffect(() => {
       if (!cursorRef.current || typeof window === 'undefined') return;
@@ -62,7 +58,7 @@ const TargetCursorComponent: React.FC<any> = ({ targetSelector, spinDuration, hi
       const ctx = gsap.context(() => {
           const cursor = cursorRef.current!;
           const corners = cornersRef.current!;
-          const dot = dotRef.current!; // Added dot ref
+          const dot = dotRef.current!; 
 
           if (isMobile) {
               gsap.set(cursor, { x: window.innerWidth/2, y: window.innerHeight/2, opacity: 0, scale: 1.3 });
@@ -100,9 +96,7 @@ const TargetCursorComponent: React.FC<any> = ({ targetSelector, spinDuration, hi
                       gsap.to(cursor, { rotation: 0, duration: 0.3 });
 
                       const rect = target.getBoundingClientRect();
-                      const borderWidth = 4; const cornerSize = 16;
                       
-                      // Move wrapper to center (or a close pivot point)
                       gsap.to(cursor, { 
                           x: rect.left + rect.width / 2, 
                           y: rect.top + rect.height / 2, 
@@ -113,12 +107,10 @@ const TargetCursorComponent: React.FC<any> = ({ targetSelector, spinDuration, hi
                       const width = rect.width + padding;
                       const height = rect.height + padding;
 
-                      // Move corners to frame the element relative to the wrapper center
                       gsap.to(corners[0], { x: -width/2, y: -height/2, duration: 0.3 }); // TL
                       gsap.to(corners[1], { x: width/2, y: -height/2, duration: 0.3 });  // TR
                       gsap.to(corners[2], { x: width/2, y: height/2, duration: 0.3 });   // BR
                       gsap.to(corners[3], { x: -width/2, y: height/2, duration: 0.3 });  // BL
-
 
                       const handleLeave = () => {
                           target.removeEventListener('mouseleave', handleLeave);
@@ -133,7 +125,6 @@ const TargetCursorComponent: React.FC<any> = ({ targetSelector, spinDuration, hi
               };
               window.addEventListener('mouseover', handleHover);
           }
-
       }, cursorRef); 
 
       return () => {
@@ -156,14 +147,14 @@ const TargetCursorComponent: React.FC<any> = ({ targetSelector, spinDuration, hi
       </div>
     );
 };
-// Use the original dynamic implementation
-const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { 
-  ssr: false 
-});
+
+const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { ssr: false });
 
 // =========================================
 // 1. CUSTOM HOOKS (Audio)
 // =========================================
+
+// Hook 1: Loader Audio (Fixed 4.8s duration)
 const useLoaderAudio = (url: string, isVisible: boolean) => {
     useEffect(() => {
         if (!isVisible) return;
@@ -189,9 +180,7 @@ const useLoaderAudio = (url: string, isVisible: boolean) => {
             try {
                 await audio.play();
                 cleanupListeners();
-            } catch (err) {
-                // Play blocked, listeners are waiting
-            }
+            } catch (err) { /* Play blocked, listeners are waiting */ }
         };
         attemptPlay();
 
@@ -209,7 +198,8 @@ const useLoaderAudio = (url: string, isVisible: boolean) => {
         };
     }, [url, isVisible]);
 };
-// Hook 3: Background Music (background.mp3) - FIXED VOLUME LOGIC
+
+// Hook 2: Background Loop (Starts manually or via effect)
 const useBackgroundLoop = (url: string) => {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -229,7 +219,6 @@ const useBackgroundLoop = (url: string) => {
     const start = useCallback(() => {
       if (audioRef.current && audioRef.current.paused) {
         audioRef.current.volume = 0.01; 
-        
         audioRef.current.play()
           .then(() => setIsPlaying(true))
           .catch(() => setIsPlaying(false));
@@ -252,7 +241,32 @@ const useBackgroundLoop = (url: string) => {
 };
 
 // =========================================
-// 2. STYLES (Retained Original Styles)
+// 2. UI COMPONENTS
+// =========================================
+
+const MusicController = ({ isPlaying, onToggle }: { isPlaying: boolean; onToggle: () => void }) => (
+    <button
+      onClick={onToggle}
+      className={`fixed bottom-8 left-8 z-[9999] group flex items-center justify-center w-12 h-12 rounded-full 
+      transition-all duration-500 border border-[#66b3ff]/30 backdrop-blur-md
+      ${isPlaying ? 'bg-[#0066ff]/20 shadow-[0_0_15px_rgba(0,102,255,0.5)]' : 'bg-gray-900/50 grayscale'}`}
+    >
+      {isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center gap-[3px] opacity-50">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="w-[3px] bg-blue-400 rounded-full animate-pulse" 
+                  style={{ height: '60%', animationDuration: `${0.5 + i * 0.1}s` }} />
+            ))}
+        </div>
+      )}
+      <div className="relative z-10 transition-transform duration-300 group-hover:scale-110">
+        {isPlaying ? <Volume2 className="w-5 h-5 text-blue-100" /> : <VolumeX className="w-5 h-5 text-gray-400" />}
+      </div>
+    </button>
+);
+
+// =========================================
+// 3. STYLES
 // =========================================
 const CursorStyles = () => (
   <style jsx global>{`
@@ -279,27 +293,17 @@ const CursorStyles = () => (
     .corner-br { bottom: -10px; right: -10px; border-left: none; border-top: none; }
     .corner-bl { bottom: -10px; left: -10px; border-right: none; border-top: none; }
 
-    /* Hide Default Cursor only when custom one is active */
-    body.custom-cursor-active {
-      cursor: none !important;
-    }
+    body.custom-cursor-active { cursor: none !important; }
     
-    /* Loader Overlay Class */
     .loader-overlay-wrapper {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        z-index: 999999; 
-        pointer-events: all; 
-        background-color: black;
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        z-index: 999999; pointer-events: all; background-color: black;
     }
   `}</style>
 );
 
 // ==========================================
-// 3. MAIN PAGE COMPONENT
+// 4. MAIN PAGE COMPONENT
 // ==========================================
 
 const affiliateLoadingStates = [
@@ -314,10 +318,11 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
-  // Activate Audio Hook
-  useLoaderAudio('/modals.mp3', loading);
+  // 1. Initialize Audio Hooks
+  useLoaderAudio('/modals.mp3', loading); 
+  const { isPlaying, start: startBgLoop, toggle: toggleBgLoop } = useBackgroundLoop('/background.mp3');
 
-  // Scroll Lock Effect
+  // Scroll Lock
   useEffect(() => {
     if (loading) {
       document.body.style.overflow = 'hidden';
@@ -332,21 +337,21 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
     };
   }, [loading]);
 
-  // Navigation Logic
+  // Navigation & Audio Transition Logic
   useEffect(() => {
     if (searchParams?.src !== "nav") {
       router.push("/");
     } else {
       const timer = setTimeout(() => {
         setLoading(false);
+        // 2. Start the ambient loop immediately after loader finishes
+        startBgLoop(); 
       }, 5000); 
       return () => clearTimeout(timer);
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, startBgLoop]);
 
-  if (searchParams?.src !== "nav") {
-    return null; 
-  }
+  if (searchParams?.src !== "nav") return null; 
 
   return (
     <>
@@ -363,7 +368,6 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
         </div>
       )}
 
-      {/* Target Cursor Component */}
       <TargetCursor 
         hideDefaultCursor={true}
         spinDuration={2}
@@ -371,13 +375,18 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
         targetSelector="button, a, input, [role='button'], .cursor-target"
       />
       
-      {/* Content under loader (using dynamic imports) */}
+      {/* 3. Audio Controller (Only visible when dashboard is live) */}
+      {!loading && (
+        <MusicController isPlaying={isPlaying} onToggle={toggleBgLoop} />
+      )}
+      
+      {/* Content */}
       <div style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.5s ease' }}>
         <Socials />
-        <Shopmain /> {/* Dynamic */}
+        <Shopmain /> 
         <RecruitPage onUnlock={() => {}} /> 
-        <AffiliateRecruitsDashboard onBack={() => router.push("/")} /> {/* Dynamic */}
-        <AffiliateAdmin /> {/* Dynamic */}
+        <AffiliateRecruitsDashboard onBack={() => router.push("/")} /> 
+        <AffiliateAdmin /> 
       </div>
     </>
   );

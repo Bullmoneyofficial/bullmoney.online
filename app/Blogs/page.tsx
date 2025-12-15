@@ -5,14 +5,13 @@ import dynamic from 'next/dynamic';
 import { gsap } from "gsap";
 import { MessageCircle, Volume2, VolumeX } from 'lucide-react';
 
-// --- STATIC IMPORTS (Core Layout/Loader/Contexts) ---
+// --- STATIC IMPORTS ---
 import { ShopProvider } from "../VIP/ShopContext"; 
 import { BlogProvider } from "@/app/Blogs/BlogContext"; 
 import RecruitPage from "@/app/register/pageVip";
 import Socials from "@/components/Mainpage/Socialsfooter";
 
-// --- DYNAMIC IMPORTS (Main Content Sections) ---
-// Loading these dynamically drastically improves TTI (Time to Interactive)
+// --- DYNAMIC IMPORTS ---
 const HeroShop = dynamic(() => import("@/app/Blogs/BlogHero"), { ssr: false });
 const BlogPage = dynamic(() => import("@/app/Blogs/BlogPage"), { ssr: false });
 const Livestreams = dynamic(() => import("@/app/Blogs/Livestreams"), { ssr: false });
@@ -40,7 +39,7 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-// *** AGGRESSIVE LOADER AUDIO HOOK (MODALS.MP3) ***
+// Hook 1: Loader Audio
 const useLoaderAudio = (url: string, isVisible: boolean) => {
     useEffect(() => {
         if (!isVisible) return;
@@ -65,9 +64,7 @@ const useLoaderAudio = (url: string, isVisible: boolean) => {
             try {
                 await audio.play();
                 cleanupListeners();
-            } catch (err) {
-                // Autoplay blocked, listeners waiting
-            }
+            } catch (err) { /* Autoplay blocked */ }
         };
         attemptPlay();
 
@@ -85,53 +82,13 @@ const useLoaderAudio = (url: string, isVisible: boolean) => {
         };
     }, [url, isVisible]);
 };
-// Hook 3: Background Music (background.mp3) - FIXED VOLUME LOGIC
-const useBackgroundLoop = (url: string) => {
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-    const [isPlaying, setIsPlaying] = useState(false);
-  
-    useEffect(() => {
-      const audio = new Audio(url);
-      audio.loop = true;
-      audio.volume = 0.01; 
-      audioRef.current = audio;
-  
-      return () => {
-        audio.pause();
-        audio.src = "";
-      };
-    }, [url]);
-  
-    const start = useCallback(() => {
-      if (audioRef.current && audioRef.current.paused) {
-        audioRef.current.volume = 0.01; 
-        
-        audioRef.current.play()
-          .then(() => setIsPlaying(true))
-          .catch(() => setIsPlaying(false));
-      }
-    }, []);
-  
-    const toggle = useCallback(() => {
-      if (!audioRef.current) return;
-      if (isPlaying) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        audioRef.current.volume = 0.01; 
-        audioRef.current.play().catch(() => {});
-        setIsPlaying(true);
-      }
-    }, [isPlaying]);
-  
-    return { isPlaying, start, toggle };
-};
 
-// *** BACKGROUND MUSIC HOOK (NEWS.MP3 - SINGLE PLAY) ***
-const useBackgroundMusic = (url: string) => {
+// Hook 2: One-Time Track (Modified to track finish state)
+const useOneTimeTrack = (url: string) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasPlayedOnce, setHasPlayedOnce] = useState(false); 
+  const [isFinished, setIsFinished] = useState(false); // <--- NEW STATE
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -142,6 +99,7 @@ const useBackgroundMusic = (url: string) => {
 
       const handleEnded = () => {
         setIsPlaying(false);
+        setIsFinished(true); // <--- Track finished
       };
       tune.addEventListener('ended', handleEnded);
 
@@ -179,7 +137,48 @@ const useBackgroundMusic = (url: string) => {
     }
   }, [isPlaying, hasPlayedOnce]);
 
-  return { isPlaying, toggle, play };
+  return { isPlaying, isFinished, toggle, play };
+};
+
+// Hook 3: Background Loop (Ambient)
+const useBackgroundLoop = (url: string) => {
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+  
+    useEffect(() => {
+      const audio = new Audio(url);
+      audio.loop = true;
+      audio.volume = 0.01; 
+      audioRef.current = audio;
+  
+      return () => {
+        audio.pause();
+        audio.src = "";
+      };
+    }, [url]);
+  
+    const start = useCallback(() => {
+      if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.volume = 0.01; 
+        audioRef.current.play()
+          .then(() => setIsPlaying(true))
+          .catch(() => setIsPlaying(false));
+      }
+    }, []);
+  
+    const toggle = useCallback(() => {
+      if (!audioRef.current) return;
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        audioRef.current.volume = 0.01; 
+        audioRef.current.play().catch(() => {});
+        setIsPlaying(true);
+      }
+    }, [isPlaying]);
+  
+    return { isPlaying, start, toggle };
 };
 
 
@@ -272,7 +271,7 @@ const CursorStyles = () => (
 );
 
 // =========================================
-// 3. TARGET CURSOR LOGIC (With TS FIX)
+// 3. TARGET CURSOR LOGIC
 // =========================================
 
 interface TargetCursorProps {
@@ -364,7 +363,6 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
                         x: window.innerWidth / 2 + (Math.random() - 0.5) * 100,
                         y: window.innerHeight / 2 + (Math.random() - 0.5) * 100,
                         duration: 2,
-                        // FIX APPLIED: Wrapped runScanner() in a synchronous function to satisfy Callback type
                         onComplete: () => { runScanner(); } 
                     });
                 }
@@ -372,7 +370,6 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
             setTimeout(runScanner, 1000);
         }
         else {
-            // Desktop Logic
             gsap.set(cursor, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
             const spinTl = gsap.timeline({ repeat: -1 })
                 .to(cursor, { rotation: 360, duration: spinDuration, ease: 'none' });
@@ -465,8 +462,6 @@ const TargetCursorComponent: React.FC<TargetCursorProps> = ({
     </div>
   );
 };
-
-// Use dynamic import for the cursor
 const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { ssr: false });
 
 // =========================================
@@ -476,25 +471,52 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
   const productsRef = useRef<HTMLDivElement | null>(null);
   const [isUnlocked, setIsUnlocked] = useState(false);
   
-  // 1. Hooks
-  const { isPlaying, toggle, play } = useBackgroundMusic('/news.mp3');
+  // 1. Initialize Audio Hooks
   useLoaderAudio('/modals.mp3', !isUnlocked);
 
-  const handleScrollToProducts = () => {
-    productsRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const { 
+    isPlaying: isNewsPlaying, 
+    isFinished: isNewsFinished, 
+    play: playNews, 
+    toggle: toggleNews 
+  } = useOneTimeTrack('/news.mp3');
 
+  const { 
+    isPlaying: isLoopPlaying, 
+    start: startLoop, 
+    toggle: toggleLoop 
+  } = useBackgroundLoop('/background.mp3');
+
+  // 2. Logic: Unlock triggers News
+  const handleUnlock = useCallback(() => {
+    setIsUnlocked(true);
+    playNews();
+  }, [playNews]);
+
+  // 3. Logic: News Finish triggers Loop
   useEffect(() => {
-    if (isUnlocked) {
-      play();
+    if (isNewsFinished && !isLoopPlaying) {
+        startLoop();
     }
-  }, [isUnlocked, play]);
+  }, [isNewsFinished, isLoopPlaying, startLoop]);
 
-  // Loader state
+  // 4. Logic: Smart Toggle
+  const handleMusicToggle = useCallback(() => {
+    if (isNewsPlaying) {
+        toggleNews();
+    } else {
+        toggleLoop();
+    }
+  }, [isNewsPlaying, toggleNews, toggleLoop]);
+
+  const isAnyAudioPlaying = isNewsPlaying || isLoopPlaying;
+
+
+  // Loader State
   if (!isUnlocked) {
     return (
       <main className="min-h-screen bg-slate-950 text-white">
-        <RecruitPage onUnlock={() => setIsUnlocked(true)} />
+        <RecruitPage onUnlock={handleUnlock} />
       </main>
     );
   }
@@ -506,7 +528,9 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
         {/* 1. GLOBAL UI ELEMENTS */}
         <CursorStyles />
         <TargetCursor hideDefaultCursor={true} spinDuration={2} parallaxOn={true} />
-        <MusicController isPlaying={isPlaying} onToggle={toggle} />
+        
+        {/* Unified Audio Controller */}
+        <MusicController isPlaying={isAnyAudioPlaying} onToggle={handleMusicToggle} />
         <SupportWidget />
 
         {/* 2. CONTENT */}

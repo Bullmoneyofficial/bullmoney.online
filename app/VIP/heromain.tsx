@@ -53,7 +53,32 @@ const getYoutubeId = (url: string | undefined): string | null => {
   return (match && match[2].length === 11) ? match[2] : null;
 };
 
-// --- SPARKLES COMPONENT (OPTIMIZED) ---
+// --- SHIMMER COMPONENT ---
+// This wraps any content with a moving blue gradient border
+const ShimmerBorder = ({ 
+  children, 
+  className, 
+  rounded = "rounded-xl",
+  background = "bg-neutral-900"
+}: { 
+  children: React.ReactNode, 
+  className?: string,
+  rounded?: string,
+  background?: string
+}) => {
+  return (
+    <div className={cn("relative p-[1px] overflow-hidden group/shimmer", rounded, className)}>
+      {/* The Moving Gradient */}
+      <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent,45%,#3b82f6,55%,transparent)] bg-[length:250%_100%] animate-shimmer opacity-100" />
+      {/* The Content Container */}
+      <div className={cn("relative h-full w-full overflow-hidden", background, rounded)}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
+// --- SPARKLES COMPONENT ---
 const SparklesCore = React.memo((props: { id?: string; className?: string; background?: string; minSize?: number; maxSize?: number; speed?: number; particleColor?: string; particleDensity?: number; isMobile?: boolean }) => {
   const { id = "tsparticles", className, background = "transparent", minSize = 0.6, maxSize = 1.4, speed = 1, particleColor = "#ffffff", particleDensity = 100, isMobile = false } = props;
   const [init, setInit] = useState(false);
@@ -62,7 +87,6 @@ const SparklesCore = React.memo((props: { id?: string; className?: string; backg
     initParticlesEngine(async (engine: Engine) => { await loadSlim(engine); }).then(() => { setInit(true); });
   }, []);
 
-  // OPTIMIZATION: Don't render component at all if not init to save DOM nodes
   if (!init) return null;
 
   return (
@@ -73,7 +97,6 @@ const SparklesCore = React.memo((props: { id?: string; className?: string; backg
             options={{ 
                 background: { color: { value: background } }, 
                 fullScreen: { enable: false, zIndex: 1 }, 
-                // OPTIMIZATION: Cap FPS on mobile
                 fpsLimit: isMobile ? 30 : 60, 
                 interactivity: { 
                     events: { 
@@ -87,7 +110,6 @@ const SparklesCore = React.memo((props: { id?: string; className?: string; backg
                     bounce: { horizontal: { value: 1 }, vertical: { value: 1 } }, 
                     color: { value: particleColor }, 
                     move: { enable: true, speed: speed, direction: "none", random: false, straight: false, outModes: { default: "out" } }, 
-                    // OPTIMIZATION: Drastically reduce density on mobile
                     number: { density: { enable: true, width: 1920, height: 1080 }, value: isMobile ? 15 : particleDensity }, 
                     opacity: { value: { min: 0.1, max: 0.5 }, animation: { enable: true, speed: speed, sync: false } }, 
                     shape: { type: "circle" }, 
@@ -101,7 +123,7 @@ const SparklesCore = React.memo((props: { id?: string; className?: string; backg
 });
 SparklesCore.displayName = "SparklesCore";
 
-// --- VIDEO CARD COMPONENT (OPTIMIZED) ---
+// --- VIDEO CARD COMPONENT ---
 const VideoCard = React.memo(({
   product,
   uniqueLayoutId,
@@ -118,26 +140,24 @@ const VideoCard = React.memo(({
   
   const videoId = getYoutubeId(product.buyUrl);
   const ref = useRef(null);
-  // OPTIMIZATION: Only check Viewport on Desktop. Mobile uses thumbnail always.
   const isInView = useInView(ref, { margin: "200px 0px 200px 0px", once: false });
   const willChange = useWillChange();
-  
-  // OPTIMIZATION: Never load iframe in grid on mobile to prevent blocking main thread
   const shouldLoadPreview = !isMobile && isInView;
 
   return (
     <motion.div
       ref={ref}
       style={{ x: translate, willChange }}
-      whileHover={isMobile ? undefined : { y: -10 }} // Disable hover physics on mobile
+      whileHover={isMobile ? undefined : { y: -10 }} 
       whileTap={{ scale: 0.98 }}
       onClick={() => setActive(product, uniqueLayoutId)}
       className="group/product h-[14rem] w-[18rem] md:h-[22rem] md:w-[32rem] relative flex-shrink-0 cursor-pointer backface-hidden transform-gpu"
     >
-      <div className="block h-full w-full md:group-hover/product:shadow-[0_0_40px_rgba(220,38,38,0.4)] transition-all duration-500 rounded-[20px] md:rounded-[24px] safari-fix-layer">
+      <div className="block h-full w-full md:group-hover/product:shadow-[0_0_40px_rgba(59,130,246,0.2)] transition-all duration-500 rounded-[20px] md:rounded-[24px] safari-fix-layer">
         <motion.div 
             layoutId={uniqueLayoutId}
-            className="relative h-full w-full rounded-[20px] md:rounded-[24px] overflow-hidden bg-neutral-900 border border-neutral-800 md:group-hover/product:border-red-600/50 transition-colors safari-mask-fix"
+            // CHANGED: Added border-blue-900/50 to base state
+            className="relative h-full w-full rounded-[20px] md:rounded-[24px] overflow-hidden bg-neutral-900 border border-blue-900/30 md:group-hover/product:border-blue-500/50 transition-colors safari-mask-fix"
         >
             {videoId ? (
                 <div className="absolute inset-0 w-full h-full bg-black pointer-events-none">
@@ -172,15 +192,15 @@ const VideoCard = React.memo(({
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90 pointer-events-none"></div>
             
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                 <div className="bg-white/10 backdrop-blur-sm p-3 md:p-4 rounded-full opacity-100 md:opacity-0 md:group-hover/product:opacity-100 transition-opacity duration-300 scale-100 md:scale-75 md:group-hover/product:scale-100 border border-white/20">
-                    <PlayCircle className="text-white w-6 h-6 md:w-8 md:h-8 fill-red-600/20" />
+                 <div className="bg-blue-500/10 backdrop-blur-sm p-3 md:p-4 rounded-full opacity-100 md:opacity-0 md:group-hover/product:opacity-100 transition-opacity duration-300 scale-100 md:scale-75 md:group-hover/product:scale-100 border border-blue-500/30">
+                    <PlayCircle className="text-white w-6 h-6 md:w-8 md:h-8 fill-blue-600/20" />
                  </div>
             </div>
 
             <div className="absolute bottom-0 left-0 w-full p-4 md:p-6 translate-y-0 md:translate-y-2 md:group-hover/product:translate-y-0 transition-transform duration-500 pointer-events-none">
                  <div className="flex items-center gap-2 mb-2">
-                    <span className="px-2 py-0.5 md:py-1 rounded bg-black/80 md:bg-black/60 text-white text-[8px] md:text-[10px] font-bold uppercase tracking-wider md:backdrop-blur-md flex items-center gap-1 border border-white/10">
-                    <Youtube size={10} className="text-red-500" />
+                    <span className="px-2 py-0.5 md:py-1 rounded bg-blue-950/80 md:bg-black/60 text-blue-200 text-[8px] md:text-[10px] font-bold uppercase tracking-wider md:backdrop-blur-md flex items-center gap-1 border border-blue-500/20">
+                    <Youtube size={10} className="text-blue-500" />
                     {product.category || "VIDEO"}
                     </span>
                 </div>
@@ -210,7 +230,6 @@ const HeroParallax = () => {
   const displayProducts = useMemo(() => {
     if (videoProducts.length === 0) return [];
     let filledProducts = [...videoProducts];
-    // OPTIMIZATION: Reduce render count on mobile
     const limit = isMobile ? 6 : 15; 
     while (filledProducts.length < limit) {
       filledProducts = [...filledProducts, ...videoProducts];
@@ -230,19 +249,13 @@ const HeroParallax = () => {
   });
 
   const springConfig = { stiffness: 300, damping: 30, bounce: 100 };
-  
-  // OPTIMIZATION: Drastically simplified Physics for Mobile
   const translateX = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? 20 : 600]), springConfig);
   const translateXReverse = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? -20 : -600]), springConfig);
-  
-  // OPTIMIZATION: Disable 3D transforms on mobile (Performance Killer)
   const rotateX = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? 0 : 15, 0]), springConfig);
   const rotateZ = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? 0 : 20, 0]), springConfig);
-  
   const opacity = useSpring(useTransform(scrollYProgress, [0, 0.2], [0.2, 1]), springConfig);
   const translateY = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? -50 : -700, isMobile ? 0 : 200]), springConfig);
 
-  // --- STATE ---
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
   const [activeLayoutId, setActiveLayoutId] = useState<string | null>(null);
@@ -252,7 +265,6 @@ const HeroParallax = () => {
   const [adminEditing, setAdminEditing] = useState<Product | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // --- NEW: RELATED VIDEOS LOGIC ---
   const relatedProducts = useMemo(() => {
     if (!products || !activeProduct) return [];
     return products
@@ -360,20 +372,20 @@ const HeroParallax = () => {
   }
 
   return (
-    <div className="bg-black relative selection:bg-red-500/30 overflow-hidden w-full">
+    <div className="bg-black relative selection:bg-blue-500/30 overflow-hidden w-full">
         
     <style jsx global>{`
       @keyframes shimmer {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
+        0% { background-position: 0% 0%; }
+        100% { background-position: -250% 0%; }
       }
       .animate-shimmer {
         animation: shimmer 3s linear infinite;
       }
       .custom-scrollbar::-webkit-scrollbar { width: 6px; }
       .custom-scrollbar::-webkit-scrollbar-track { background: #171717; }
-      .custom-scrollbar::-webkit-scrollbar-thumb { background: #404040; border-radius: 3px; }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #525252; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 3px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #60a5fa; }
       
       .backface-hidden { 
           -webkit-backface-visibility: hidden;
@@ -404,16 +416,18 @@ const HeroParallax = () => {
         </div>
     </div>
 
-    {/* --- ADMIN CONTROLS --- */}
+    {/* --- ADMIN CONTROLS (FLOATING) --- */}
     {isAdmin && (
         <div className="fixed bottom-8 right-8 z-[9990] flex flex-col gap-2">
-            <button 
-                onClick={handleCreateNewVideo}
-                className="bg-green-600 hover:bg-green-500 text-white p-3 md:p-4 rounded-full shadow-lg shadow-green-900/50 transition-all hover:scale-110 flex items-center justify-center"
-                title="Add New Video Card"
-            >
-                {isSaving ? <Loader2 className="animate-spin" /> : <Plus size={20} />}
-            </button>
+            <ShimmerBorder rounded="rounded-full">
+                <button 
+                    onClick={handleCreateNewVideo}
+                    className="bg-neutral-900 hover:bg-neutral-800 text-white p-3 md:p-4 rounded-full flex items-center justify-center transition-colors"
+                    title="Add New Video Card"
+                >
+                    {isSaving ? <Loader2 className="animate-spin" /> : <Plus size={20} className="text-blue-500" />}
+                </button>
+            </ShimmerBorder>
         </div>
     )}
 
@@ -427,36 +441,50 @@ const HeroParallax = () => {
                 className="fixed inset-0 z-[9999] grid place-items-center bg-black/95 md:backdrop-blur-xl p-0 md:p-4 will-change-opacity"
                 onClick={handleClose}
             >
+                <div onClick={(e) => e.stopPropagation()} className="w-full max-w-7xl h-[100dvh] md:h-[85vh] md:max-h-[800px]">
+                <ShimmerBorder rounded="rounded-none md:rounded-3xl" className="h-full w-full">
                 <motion.div
                     layoutId={activeLayoutId} 
-                    className="relative w-full max-w-7xl bg-neutral-900 border border-neutral-800 rounded-none md:rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[100dvh] md:h-[85vh] md:max-h-[800px] safari-fix-layer"
-                    onClick={(e) => e.stopPropagation()} 
+                    className="relative w-full h-full bg-neutral-900 flex flex-col md:flex-row safari-fix-layer"
                 >
-                    <button
-                        onClick={handleClose}
-                        className="absolute top-24 md:top-4 left-4 z-50 p-2 bg-black/50 backdrop-blur rounded-full text-white hover:bg-neutral-800 transition-colors border border-white/10 group flex items-center justify-center shadow-lg"
-                    >
-                         <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-                    </button>
+                    {/* MODAL CONTROLS */}
+                    <div className="absolute top-24 md:top-4 left-4 z-50">
+                        <ShimmerBorder rounded="rounded-full">
+                            <button
+                                onClick={handleClose}
+                                className="p-2 bg-black/80 text-white hover:bg-neutral-800 transition-colors flex items-center justify-center group"
+                            >
+                                <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform text-blue-400" />
+                            </button>
+                        </ShimmerBorder>
+                    </div>
 
-                    <button
-                        onClick={handleClose}
-                        className="absolute top-24 md:top-4 right-4 z-50 p-2 bg-black/50 backdrop-blur rounded-full text-white hover:bg-red-600 transition-colors border border-white/10 group shadow-lg"
-                    >
-                        <X size={20} className="group-hover:rotate-90 transition-transform" />
-                    </button>
+                    <div className="absolute top-24 md:top-4 right-4 z-50">
+                        <ShimmerBorder rounded="rounded-full">
+                            <button
+                                onClick={handleClose}
+                                className="p-2 bg-black/80 text-white hover:bg-neutral-800 transition-colors group"
+                            >
+                                <X size={20} className="group-hover:rotate-90 transition-transform text-blue-400" />
+                            </button>
+                        </ShimmerBorder>
+                    </div>
 
                     {isAdmin && !isEditing && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-                        className="absolute top-24 md:top-4 right-16 z-50 p-2 bg-sky-600 rounded-full text-white hover:bg-sky-500 transition-colors shadow-[0_0_15px_rgba(14,165,233,0.5)] flex gap-2 items-center px-4 font-bold text-xs uppercase"
-                      >
-                          <Edit2 size={14} /> Edit
-                      </button>
+                      <div className="absolute top-24 md:top-4 right-16 z-50">
+                        <ShimmerBorder rounded="rounded-full">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+                            className="p-2 px-4 bg-black/80 text-white hover:bg-neutral-800 transition-colors flex gap-2 items-center font-bold text-xs uppercase"
+                          >
+                              <Edit2 size={14} className="text-blue-500" /> Edit
+                          </button>
+                        </ShimmerBorder>
+                      </div>
                     )}
 
                     {/* LEFT: MEDIA SECTION */}
-                    <div className="w-full md:w-3/4 bg-black flex flex-col relative group h-[35vh] sm:h-[45vh] md:h-full shrink-0">
+                    <div className="w-full md:w-3/4 bg-black flex flex-col relative group h-[35vh] sm:h-[45vh] md:h-full shrink-0 border-r border-blue-900/20">
                         {!isEditing ? (
                             <div className="relative w-full h-full">
                                 {(() => {
@@ -475,7 +503,7 @@ const HeroParallax = () => {
                                         return (
                                             <div className="w-full h-full grid place-items-center text-neutral-500">
                                                 <div className="text-center">
-                                                    <Youtube size={48} className="mx-auto mb-2 opacity-50" />
+                                                    <Youtube size={48} className="mx-auto mb-2 opacity-50 text-blue-500" />
                                                     <p>Invalid YouTube Link</p>
                                                 </div>
                                             </div>
@@ -484,27 +512,27 @@ const HeroParallax = () => {
                                 })()}
                             </div>
                         ) : (
-                            <div className="relative w-full h-full bg-neutral-950 flex flex-col items-center justify-center border-r border-neutral-800">
-                                <Youtube size={64} className="text-red-600 mb-4 opacity-50" />
+                            <div className="relative w-full h-full bg-neutral-950 flex flex-col items-center justify-center">
+                                <Youtube size={64} className="text-blue-600 mb-4 opacity-50" />
                                 <p className="text-neutral-400 text-sm">Preview disabled while editing</p>
                             </div>
                         )}
                     </div>
 
                     {/* RIGHT: CONTENT SIDEBAR */}
-                    <div className="w-full md:w-1/4 flex flex-col bg-neutral-900 border-l border-neutral-800 h-full overflow-hidden">
+                    <div className="w-full md:w-1/4 flex flex-col bg-neutral-900 h-full overflow-hidden">
                         <div className="flex-1 overflow-y-auto p-5 md:p-8 custom-scrollbar">
                         {isEditing ? (
                           <div className="space-y-6 animate-in fade-in duration-300 pb-12" onClick={(e) => e.stopPropagation()}>
                              {/* EDIT FORM */}
-                             <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800 mb-4">
-                                <label className="text-[10px] uppercase text-sky-500 font-bold mb-2 flex items-center gap-2">
+                             <div className="bg-neutral-950 p-4 rounded-xl border border-blue-900/30 mb-4">
+                                <label className="text-[10px] uppercase text-blue-500 font-bold mb-2 flex items-center gap-2">
                                   Category
                                 </label>
                                 <select
                                   value={editForm.category || "VIDEO"}
                                   onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                                  className="w-full bg-neutral-900 p-3 rounded-lg text-sm outline-none border border-neutral-700 focus:border-sky-500 text-white cursor-pointer"
+                                  className="w-full bg-neutral-900 p-3 rounded-lg text-sm outline-none border border-neutral-700 focus:border-blue-500 text-white cursor-pointer"
                                 >
                                     {categories.map((c: any) => (
                                         <option key={c._id || c.id} value={c.name}>{c.name}</option>
@@ -521,7 +549,7 @@ const HeroParallax = () => {
                                   value={editForm.buyUrl || ""} 
                                   onChange={(e) => setEditForm({...editForm, buyUrl: e.target.value})}
                                   placeholder="Paste YouTube Link..."
-                                  className="w-full bg-neutral-950 p-3 rounded-lg text-sm outline-none border border-neutral-800 focus:border-sky-500 text-white font-mono"
+                                  className="w-full bg-neutral-950 p-3 rounded-lg text-sm outline-none border border-neutral-800 focus:border-blue-500 text-white font-mono"
                                 />
                              </div>
                              <div>
@@ -529,7 +557,7 @@ const HeroParallax = () => {
                                 <input 
                                   value={editForm.name || ""} 
                                   onChange={(e) => setEditForm({...editForm, name: e.target.value})}
-                                  className="w-full bg-neutral-950 p-3 rounded-lg text-sm outline-none border border-neutral-800 focus:border-sky-500 text-white"
+                                  className="w-full bg-neutral-950 p-3 rounded-lg text-sm outline-none border border-neutral-800 focus:border-blue-500 text-white"
                                 />
                              </div>
                              <div>
@@ -538,7 +566,7 @@ const HeroParallax = () => {
                                   rows={8}
                                   value={editForm.description || ""} 
                                   onChange={(e) => setEditForm({...editForm, description: e.target.value})}
-                                  className="w-full bg-neutral-950 p-3 rounded-lg text-sm outline-none border border-neutral-800 focus:border-sky-500 text-white resize-none"
+                                  className="w-full bg-neutral-950 p-3 rounded-lg text-sm outline-none border border-neutral-800 focus:border-blue-500 text-white resize-none"
                                 />
                              </div>
                           </div>
@@ -551,8 +579,8 @@ const HeroParallax = () => {
                                 transition={{ delay: 0.2 }}
                                 className="flex gap-2 mb-4"
                             >
-                                <span className="text-[10px] bg-red-600 text-white px-2 py-1 rounded font-bold font-mono uppercase tracking-widest flex items-center gap-1">
-                                   <Youtube size={12} className="fill-white" /> {activeProduct.category}
+                                <span className="text-[10px] bg-blue-900/50 border border-blue-500/30 text-blue-100 px-2 py-1 rounded font-bold font-mono uppercase tracking-widest flex items-center gap-1">
+                                   <Youtube size={12} className="fill-blue-400 text-blue-400" /> {activeProduct.category}
                                 </span>
                             </motion.div>
                             <motion.h3 
@@ -573,8 +601,8 @@ const HeroParallax = () => {
                             </motion.div>
 
                             {/* --- FILLER CONTENT: UP NEXT --- */}
-                            <div className="mt-8 pt-8 border-t border-neutral-800/50">
-                                <h4 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <div className="mt-8 pt-8 border-t border-blue-900/20">
+                                <h4 className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                                    <PlayCircle size={12} /> Up Next
                                 </h4>
                                 <div className="flex flex-col gap-3">
@@ -586,7 +614,7 @@ const HeroParallax = () => {
                                                 onClick={() => setActiveProduct(rp)}
                                                 className="flex gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer group/related transition-colors"
                                             >
-                                                <div className="relative w-24 h-14 bg-neutral-800 rounded overflow-hidden shrink-0">
+                                                <div className="relative w-24 h-14 bg-neutral-800 rounded overflow-hidden shrink-0 border border-blue-900/20">
                                                     {thumbId ? (
                                                         <Image 
                                                             src={`https://img.youtube.com/vi/${thumbId}/mqdefault.jpg`} 
@@ -604,7 +632,7 @@ const HeroParallax = () => {
                                                     <h5 className="text-xs font-bold text-neutral-300 group-hover/related:text-white truncate transition-colors leading-tight mb-1">
                                                         {rp.name}
                                                     </h5>
-                                                    <span className="text-[10px] text-neutral-600 uppercase tracking-wider">
+                                                    <span className="text-[10px] text-blue-500/60 uppercase tracking-wider">
                                                         {rp.category || "Video"}
                                                     </span>
                                                 </div>
@@ -620,64 +648,75 @@ const HeroParallax = () => {
                         )}
                         </div>
 
-                        <div className="p-4 md:p-6 border-t border-neutral-800 bg-neutral-900 shrink-0">
+                        <div className="p-4 md:p-6 border-t border-blue-900/20 bg-neutral-900 shrink-0">
                              {isEditing ? (
                                 <div className="flex gap-2">
+                                    <div className="flex-1">
+                                        <ShimmerBorder rounded="rounded-lg">
+                                            <button 
+                                                onClick={handleSaveEdit} 
+                                                disabled={isSaving}
+                                                className="w-full bg-blue-600/20 hover:bg-blue-600/40 text-blue-100 font-bold py-3 flex items-center justify-center gap-2 text-sm disabled:opacity-50 transition-colors"
+                                            >
+                                                {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : <><Save size={16} /> Save</>}
+                                            </button>
+                                        </ShimmerBorder>
+                                    </div>
+                                    
+                                    <div>
+                                        <ShimmerBorder rounded="rounded-lg">
+                                            <button 
+                                                onClick={handleDelete}
+                                                disabled={isSaving}
+                                                className="bg-red-950/30 hover:bg-red-900/50 text-red-500 p-3 flex items-center justify-center transition-colors h-full"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </ShimmerBorder>
+                                    </div>
+
                                     <button 
-                                    onClick={handleSaveEdit} 
-                                    disabled={isSaving}
-                                    className="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+                                        onClick={(e) => { e.stopPropagation(); setIsEditing(false); setEditForm({ ...activeProduct }); }}
+                                        className="text-neutral-500 hover:text-white text-xs px-2"
                                     >
-                                    {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : <><Save size={16} /> Save</>}
-                                    </button>
-                                    <button 
-                                    onClick={handleDelete}
-                                    disabled={isSaving}
-                                    className="bg-red-500/10 hover:bg-red-500 hover:text-white text-red-500 p-3 rounded-lg transition-colors"
-                                    >
-                                    <Trash2 size={18} />
-                                    </button>
-                                    <button 
-                                    onClick={(e) => { e.stopPropagation(); setIsEditing(false); setEditForm({ ...activeProduct }); }}
-                                    className="text-neutral-500 hover:text-white text-xs px-2"
-                                    >
-                                    Cancel
+                                        Cancel
                                     </button>
                                 </div>
                              ) : (
                                 <div className="flex flex-col gap-3">
-                                    <motion.a
-                                        href={activeProduct.buyUrl || "#"}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        initial={{ y: 20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.5 }}
-                                        className="w-full py-3 md:py-4 bg-white text-black rounded-xl font-bold uppercase tracking-widest hover:bg-neutral-200 transition-all flex items-center justify-center gap-2 text-xs md:text-sm"
-                                    >
-                                        Open on YouTube <ExternalLink size={16} />
-                                    </motion.a>
-                                    <motion.button
-                                        onClick={() => {
-                                            if(activeProduct.buyUrl) {
-                                                navigator.clipboard.writeText(activeProduct.buyUrl);
-                                                setCopied(true);
-                                                setTimeout(() => setCopied(false), 2000);
-                                            }
-                                        }}
-                                        initial={{ y: 20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.6 }}
-                                        className="w-full py-2 bg-neutral-800 text-neutral-400 text-xs rounded-xl font-mono uppercase tracking-widest hover:bg-neutral-700 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        {copied ? <Check size={12} className="text-green-500"/> : <Copy size={12}/>} 
-                                        {copied ? "Link Copied" : "Copy Link"}
-                                    </motion.button>
+                                    <ShimmerBorder rounded="rounded-xl">
+                                        <motion.a
+                                            href={activeProduct.buyUrl || "#"}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="w-full py-3 md:py-4 bg-neutral-800/50 text-white font-bold uppercase tracking-widest hover:bg-neutral-800 transition-all flex items-center justify-center gap-2 text-xs md:text-sm"
+                                        >
+                                            Open on YouTube <ExternalLink size={16} className="text-blue-500" />
+                                        </motion.a>
+                                    </ShimmerBorder>
+                                    
+                                    <ShimmerBorder rounded="rounded-xl">
+                                        <motion.button
+                                            onClick={() => {
+                                                if(activeProduct.buyUrl) {
+                                                    navigator.clipboard.writeText(activeProduct.buyUrl);
+                                                    setCopied(true);
+                                                    setTimeout(() => setCopied(false), 2000);
+                                                }
+                                            }}
+                                            className="w-full py-2 bg-neutral-900/80 text-neutral-400 text-xs font-mono uppercase tracking-widest hover:bg-neutral-800 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            {copied ? <Check size={12} className="text-green-500"/> : <Copy size={12}/>} 
+                                            {copied ? "Link Copied" : "Copy Link"}
+                                        </motion.button>
+                                    </ShimmerBorder>
                                 </div>
                              )}
                         </div>
                     </div>
                 </motion.div>
+                </ShimmerBorder>
+                </div>
             </motion.div>
         )}
     </AnimatePresence>
@@ -695,11 +734,10 @@ const HeroParallax = () => {
                     background="transparent"
                     minSize={0.6}
                     maxSize={1.4}
-                    // OPTIMIZATION: drastically reduce density for mobile
                     particleDensity={isMobile ? 15 : 50} 
                     isMobile={isMobile}
                     className="w-full h-full"
-                    particleColor="#FFFFFF"
+                    particleColor="#3b82f6" // Changed to Blue to match theme
                 />
             </div>
             
@@ -708,10 +746,9 @@ const HeroParallax = () => {
                     <motion.div 
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        // OPTIMIZATION: removed blur for mobile
-                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-400 text-[10px] md:text-xs font-mono tracking-wider uppercase md:backdrop-blur-md"
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-[10px] md:text-xs font-mono tracking-wider uppercase md:backdrop-blur-md"
                         >
-                        <Zap size={10} className="fill-sky-400" /> {hero.badge}
+                        <Zap size={10} className="fill-blue-400" /> {hero.badge}
                     </motion.div>
                  )}
 
@@ -719,7 +756,7 @@ const HeroParallax = () => {
                 {(hero?.title || "Welcome VIP").split(" ").map((word: string, i: number) => (
                     <span 
                         key={i} 
-                        className="inline-block mr-3 text-transparent bg-clip-text bg-[linear-gradient(110deg,#FFFFFF,45%,#38BDF8,55%,#FFFFFF)] bg-[length:250%_100%] animate-shimmer"
+                        className="inline-block mr-3 text-transparent bg-clip-text bg-[linear-gradient(110deg,#FFFFFF,45%,#3b82f6,55%,#FFFFFF)] bg-[length:250%_100%] animate-shimmer"
                     >
                       {word}
                     </span>
@@ -742,7 +779,13 @@ const HeroParallax = () => {
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="mt-8 md:mt-10 flex flex-col sm:flex-row gap-6 items-start sm:items-center relative z-30"
             >
-                <Faq />
+                {/* Wrapped FAQ in Shimmer */}
+                <ShimmerBorder rounded="rounded-xl">
+                     <div className="bg-neutral-900/50 p-1 rounded-xl">
+                        <Faq />
+                     </div>
+                </ShimmerBorder>
+
                 <div className="flex items-center gap-4 pl-0 sm:pl-4 border-l-0 sm:border-l border-neutral-800">
                     <div className="flex -space-x-3">
                         {[1,2,3].map(i => (
@@ -752,7 +795,7 @@ const HeroParallax = () => {
                         ))}
                     </div>
                     <div className="text-xs">
-                        <div className="text-white font-bold flex items-center gap-1">2.5k+ Members <ShieldCheck size={10} className="text-sky-500" /></div>
+                        <div className="text-white font-bold flex items-center gap-1">2.5k+ Members <ShieldCheck size={10} className="text-blue-500" /></div>
                         <div className="text-neutral-500 flex items-center gap-1">
                             <Star size={10} className="fill-yellow-500 text-yellow-500" /> 4.9/5 Rating
                         </div>
@@ -768,9 +811,8 @@ const HeroParallax = () => {
             rotateZ, 
             translateY, 
             opacity,
-            willChange // Hint to browser
+            willChange 
         }}
-        // SAFARI FIX: Use 3d transform for container
         className="relative z-10 will-change-transform backface-hidden transform-gpu safari-fix-layer"
     >
         <div className={cn("flex flex-col", isMobile ? "gap-2 px-0" : "")}>
@@ -830,10 +872,14 @@ const HeroParallax = () => {
     {/* --- ADMIN PANEL --- */}
     {isAdmin && (
       <div className="max-w-7xl mx-auto px-4 mt-10 relative z-20 mb-20">
-        <AdminPanel
-          editing={adminEditing}
-          clearEditing={() => setAdminEditing(null)}
-        />
+        <ShimmerBorder rounded="rounded-xl">
+            <div className="bg-neutral-900/50 rounded-xl p-1">
+                <AdminPanel
+                editing={adminEditing}
+                clearEditing={() => setAdminEditing(null)}
+                />
+            </div>
+        </ShimmerBorder>
       </div>
     )}
 
@@ -841,15 +887,21 @@ const HeroParallax = () => {
     <div className="relative z-30 bg-black text-neutral-500 py-12 md:py-16 px-8 text-center border-t border-neutral-900 mt-1">
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 mb-12 text-xs uppercase tracking-widest text-neutral-400">
             <div className="flex flex-col items-center gap-3">
-                <Youtube className="text-red-500 mb-1" />
+                <div className="p-2 bg-neutral-900 rounded-full border border-neutral-800">
+                    <Youtube className="text-red-500 mb-1" />
+                </div>
                 <span>Exclusive Content</span>
             </div>
             <div className="flex flex-col items-center gap-3">
-                <BarChart3 className="text-sky-500 mb-1" />
+                <div className="p-2 bg-neutral-900 rounded-full border border-neutral-800">
+                    <BarChart3 className="text-blue-500 mb-1" />
+                </div>
                 <span>Market Analysis</span>
             </div>
             <div className="flex flex-col items-center gap-3">
-                <ShieldCheck className="text-sky-500 mb-1" />
+                <div className="p-2 bg-neutral-900 rounded-full border border-neutral-800">
+                     <ShieldCheck className="text-blue-500 mb-1" />
+                </div>
                 <span>Verified Data</span>
             </div>
         </div>
@@ -860,7 +912,7 @@ const HeroParallax = () => {
             {!isAdmin && (
                 <button 
                   onClick={() => setIsAdminLoginOpen(true)}
-                  className="flex items-center gap-2 text-[10px] opacity-50 hover:opacity-100 transition-opacity uppercase tracking-widest hover:text-sky-500 py-4"
+                  className="flex items-center gap-2 text-[10px] opacity-30 hover:opacity-100 transition-opacity uppercase tracking-widest hover:text-blue-500 py-4"
                 >
                   <Lock size={10} /> Admin Access
                 </button>

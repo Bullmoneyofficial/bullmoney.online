@@ -1,7 +1,7 @@
 // components/cta.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo, memo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, memo, ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IconExternalLink, IconRefresh } from "@tabler/icons-react";
 import { ChevronDown, ChartBar, Newspaper, X, ArrowRight } from "lucide-react";
@@ -49,6 +49,54 @@ const GLOBAL_STYLES = `
   }
 `;
 
+// ==========================================
+// NEW: SHIMMER BORDER COMPONENT (Thickened border)
+// ==========================================
+
+const shimmerGradient = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #3b82f6 50%, #00000000 100%)";
+
+interface ShimmerBorderProps {
+    children: ReactNode;
+    className?: string;
+    borderRadius?: string; // e.g. 'rounded-xl'
+    borderWidth?: string; // e.g. 'inset-[3px]' <--- CHANGED DEFAULT
+    speed?: number;
+    colorOverride?: string;
+    innerClassName?: string;
+}
+
+const ShimmerBorder = ({ children, className, borderRadius = 'rounded-xl', borderWidth = 'inset-[3px]', speed = 3, colorOverride, innerClassName }: ShimmerBorderProps) => {
+    const finalGradient = colorOverride || shimmerGradient;
+    
+    return (
+        <div className={cn("relative overflow-hidden group/shimmer", borderRadius, className)}>
+            
+            {/* Layer 1: The Spinning Gradient (The Border) */}
+            <motion.div
+                className="absolute inset-[-100%]" 
+                animate={{ rotate: 360 }}
+                transition={{ 
+                    duration: speed, 
+                    repeat: Infinity, 
+                    ease: "linear" 
+                }}
+                style={{ background: finalGradient }}
+            />
+
+            {/* Layer 2: Inner Mask (The actual content background) */}
+            <div className={cn("absolute bg-neutral-900/90 flex items-center justify-center z-10", borderRadius, borderWidth, innerClassName)}>
+                {/* Optional: Render children here if the outer div is just for sizing */}
+            </div>
+            
+            {/* Ensure content is positioned over the mask */}
+            <div className="relative z-20 h-full w-full">
+                {children}
+            </div>
+        </div>
+    );
+};
+
+
 /* --------------------------- OPTIMIZED HIGH AESTHETIC CARD --------------------------- */
 
 const Particle = memo(({ delay }: { delay: number }) => (
@@ -83,7 +131,7 @@ const HighAestheticCard = memo(({
         <Particle key={i} delay={Math.random() * 2} />
     )), []);
 
-    const bgClass = isMobile ? "bg-neutral-900" : "animate-gradient-xy";
+    const bgClass = isMobile ? "bg-neutral-1000" : "animate-gradient-xy";
     const containerClass = isMobile ? "" : "gpu-layer";
 
     return (
@@ -95,7 +143,7 @@ const HighAestheticCard = memo(({
             whileTap={{ scale: 0.99 }}
             onClick={onShow}
         >
-            <div className={cn("absolute inset-0 bg-gradient-to-br from-[#0b1729] via-[#111827] to-[#1e293b] opacity-90", bgClass)} />
+            <div className={cn("absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111827] to-[#1e293b] opacity-90", bgClass)} />
 
             {!isMobile && (
                 <>
@@ -119,13 +167,15 @@ const HighAestheticCard = memo(({
                     {subtitle}
                 </p>
 
-                <div className="relative z-10 mt-6 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-semibold text-white 
-                             shadow-[0_0_35px_rgba(56,189,248,0.4)] 
-                             bg-[linear-gradient(100deg,#0284c7_0%,#2563eb_50%,#312e81_100%)]
-                             ring-2 ring-sky-400/40 transition-all duration-300 group">
-                    Launch Terminal 
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </div>
+                {/* Apply ShimmerBorder to the Launch Terminal button - Increased border thickness */}
+                <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[3px]" speed={3}>
+                    <div className="relative z-10 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-semibold text-white 
+                                 shadow-[0_0_20px_rgba(56,189,248,0.2)] 
+                                 bg-neutral-900/90 transition-all duration-300 group">
+                        Launch Terminal 
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </div>
+                </ShimmerBorder>
             </div>
         </motion.div>
     );
@@ -142,28 +192,25 @@ const CHARTS = [
 ];
 
 /* --------------------------- TRADINGVIEW WIDGET (Final Optimized) --------------------------- */
-// CRITICAL FIX: Removed the periodic iframe reload (setInterval)
 const TradingViewMarketOverview = memo(({ height = 560, tabs }: { height?: number; tabs: any }) => {
   const ref = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     if (!ref.current) return;
     
-    // Check if the script exists and if the tabs configuration has changed.
     const currentScript = ref.current.querySelector("script");
     const newConfig = JSON.stringify(tabs);
 
     if (currentScript && currentScript.getAttribute('data-config') === newConfig) {
-        return; // Tabs are the same, do nothing.
+        return; 
     }
 
-    // Force script removal before re-insertion
     ref.current.innerHTML = ""; 
 
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js";
     script.async = true;
-    script.setAttribute('data-config', newConfig); // Store config to prevent unnecessary re-load
+    script.setAttribute('data-config', newConfig); 
     script.innerHTML = JSON.stringify({
       colorTheme: "dark",
       isTransparent: false,
@@ -177,8 +224,6 @@ const TradingViewMarketOverview = memo(({ height = 560, tabs }: { height?: numbe
     });
     ref.current.appendChild(script);
 
-    // FIX: Removed the setInterval (was forcing a new iframe every 60s, causing lag)
-    // The TradingView iframe updates itself internally.
   }, [height, tabs]); 
 
   return (
@@ -199,7 +244,6 @@ export const TradingViewDropdown = memo(({
   const [open, setOpen] = useState(false);
   const [showChart, setShowChart] = useState(false);
   const isMobile = useIsMobile();
-  // Adjusted mobile chart height for better fit on small screens
   const chartHeight = isMobile ? 300 : 560;
 
   const handleSelect = useCallback((chart: any) => {
@@ -230,18 +274,20 @@ export const TradingViewDropdown = memo(({
             transition={{ duration: 0.4 }}
             className="will-change-transform"
           >
-            {/* Dropdown */}
+            {/* Dropdown Button - Wrapped in ShimmerBorder - Increased border thickness */}
             <div className="mb-4 flex items-center justify-between">
-              <button
-                onClick={() => setOpen((p) => !p)}
-                className="group relative flex items-center gap-3 rounded-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-lg transition"
-              >
-                <span className="relative z-10">{selected.label}</span>
-                <ChevronDown className={`h-4 w-4 relative z-10 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
-              </button>
+                <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[3px]" speed={2}>
+                    <button
+                      onClick={() => setOpen((p) => !p)}
+                      className="group relative flex items-center gap-3 rounded-full bg-neutral-900/90 px-5 py-2 text-sm font-semibold text-white shadow-lg transition"
+                    >
+                      <span className="relative z-10 text-sky-400">{selected.label}</span>
+                      <ChevronDown className={`h-4 w-4 relative z-10 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
+                    </button>
+                </ShimmerBorder>
             </div>
 
-            {/* Dropdown Menu */}
+            {/* Dropdown Menu - No shimmer for performance, just styled */}
             <AnimatePresence>
               {open && (
                 <motion.div
@@ -249,7 +295,7 @@ export const TradingViewDropdown = memo(({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute z-20 mt-2 w-64 overflow-hidden rounded-xl border border-neutral-700 bg-neutral-800/95 shadow-lg"
+                  className="absolute z-20 mt-2 w-64 overflow-hidden rounded-xl border border-neutral-700 bg-neutral-900/95 shadow-lg"
                 >
                   {CHARTS.map((chart, idx) => (
                     <button
@@ -267,22 +313,24 @@ export const TradingViewDropdown = memo(({
               )}
             </AnimatePresence>
 
-            {/* Live Chart - Uses optimized component */}
+            {/* Live Chart */}
             <div className="relative mt-4 w-full rounded-2xl border border-neutral-700 bg-neutral-950/40 p-1 md:p-2" style={{ minHeight: chartHeight }}>
               <TradingViewMarketOverview height={chartHeight} tabs={selected.tabConfig} />
             </div>
 
-            {/* Hide Chart */}
+            {/* Hide Chart Button - Wrapped in ShimmerBorder - Increased border thickness */}
             <div className="mt-6 flex justify-center">
-              <button
-                onClick={() => {
-                  setOpen(false);
-                  setShowChart(false);
-                }}
-                className="rounded-full border border-neutral-700 bg-neutral-800 px-8 py-2 text-sm text-neutral-300 transition-all hover:bg-neutral-700 hover:text-white hover:scale-105 active:scale-95"
-              >
-                Hide Chart
-              </button>
+                <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[3px]" speed={3}>
+                    <button
+                      onClick={() => {
+                        setOpen(false);
+                        setShowChart(false);
+                      }}
+                      className="relative rounded-full border border-transparent bg-neutral-900 px-8 py-2 text-sm text-neutral-300 transition-all hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
+                    >
+                      Hide Chart
+                    </button>
+                </ShimmerBorder>
             </div>
           </motion.div>
         )}
@@ -293,8 +341,6 @@ export const TradingViewDropdown = memo(({
 TradingViewDropdown.displayName = "TradingViewDropdown";
 
 /* --------------------------- NEWS FEED LOGIC (Pure Functions) --------------------------- */
-// ... (omitted for brevity, as logic is static and optimized)
-
 type MarketFilter = "all" | "crypto" | "stocks" | "forex" | "metals";
 type NewsItem = { title: string; link: string; source?: string; published_at?: string; category?: MarketFilter | "other"; };
 
@@ -340,8 +386,6 @@ const score = (item: NewsItem) => {
 };
 
 /* --------------------------- NEWS FEED CONTENT (Optimized) --------------------------- */
-// ... (omitted for brevity, component structure remains the same)
-
 const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketFilter, onClose: () => void }) => {
     const [items, setItems] = useState<NewsItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -349,7 +393,6 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
     const [count, setCount] = useState<number>(10);
     const [refreshKey, setRefreshKey] = useState(0);
 
-    // FIX: Changed fetch interval to 15s/20s as requested (for the news content)
     const NEWS_REFRESH_RATE = 20000; // 20 seconds
 
     const load = useCallback(async () => {
@@ -398,12 +441,18 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                 </div>
                 <div className="flex items-center gap-3">
                     {lastUpdated && <span className="text-xs text-neutral-500 hidden sm:block">Updated {lastUpdated.toLocaleTimeString()}</span>}
-                    <button onClick={() => setRefreshKey(p => p + 1)} className="group rounded-full p-2 transition-colors hover:bg-white/10">
-                        <IconRefresh className={cn("h-4 w-4 text-neutral-400 group-hover:text-white", loading && "animate-spin")} />
-                    </button>
-                    <button onClick={onClose} className="rounded-full bg-white/5 p-2 text-neutral-400 transition hover:bg-red-500/20 hover:text-red-400">
-                        <X className="h-5 w-5" />
-                    </button>
+                    {/* Refresh Button - Wrapped in ShimmerBorder - Increased border thickness */}
+                    <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[3px]" speed={1.5}>
+                        <button onClick={() => setRefreshKey(p => p + 1)} className="group relative rounded-full p-2 transition-colors bg-neutral-900 hover:bg-white/10">
+                            <IconRefresh className={cn("h-4 w-4 text-neutral-400 group-hover:text-white", loading && "animate-spin")} />
+                        </button>
+                    </ShimmerBorder>
+                    {/* Close Button - Wrapped in ShimmerBorder - Increased border thickness */}
+                    <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[3px]" speed={1.5} colorOverride="conic-gradient(from 90deg at 50% 50%, #00000000 0%, #ef4444 50%, #00000000 100%)">
+                        <button onClick={onClose} className="relative rounded-full bg-neutral-900 p-2 text-neutral-400 transition hover:bg-red-500/20 hover:text-red-400">
+                            <X className="h-5 w-5" />
+                        </button>
+                    </ShimmerBorder>
                 </div>
             </div>
 
@@ -487,8 +536,6 @@ NewsFeedContent.displayName = "NewsFeedContent";
 
 
 /* --------------------------- NEWS FEED MODAL WRAPPER --------------------------- */
-// ... (omitted for brevity)
-
 function NewsFeedModal({ activeMarket }: { activeMarket: string }) {
     const [isOpen, setIsOpen] = useState(false);
 
@@ -506,32 +553,34 @@ function NewsFeedModal({ activeMarket }: { activeMarket: string }) {
     return (
         <>
             <div className="w-full flex justify-center">
-                <button
-                    onClick={() => setIsOpen(true)}
-                    className="group relative w-full max-w-xl overflow-hidden rounded-xl bg-neutral-900 p-1 transition-all duration-300 hover:shadow-2xl hover:shadow-sky-500/20 hover:-translate-y-1 hover:scale-[1.01]"
-                >
-                    <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-sky-400 via-blue-500 to-sky-400 opacity-20 animate-gradient-xy" />
-
-                    <div className="relative flex items-center justify-between rounded-[7px] bg-[#0a0a0a] px-4 py-3 md:px-6 md:py-4">
-                        <div className="flex items-center gap-4">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-500/20 text-sky-400 ring-1 ring-sky-500/30 animate-float-slow">
-                                <Newspaper className="h-5 w-5" />
+                {/* Modal Trigger Button - Wrapped in ShimmerBorder - Increased border thickness */}
+                <ShimmerBorder borderRadius="rounded-xl" borderWidth="inset-[3px]" speed={4} className="w-full max-w-xl">
+                    <button
+                        onClick={() => setIsOpen(true)}
+                        className="group relative w-full max-w-xl overflow-hidden rounded-xl bg-neutral-900 p-1 transition-all duration-300 hover:shadow-2xl hover:shadow-sky-500/20 hover:-translate-y-1 hover:scale-[1.005]"
+                    >
+                        
+                        <div className="relative flex items-center justify-between rounded-[7px] bg-neutral-950 px-4 py-3 md:px-6 md:py-4">
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-500/20 text-sky-400 ring-1 ring-sky-500/30 animate-float-slow">
+                                    <Newspaper className="h-5 w-5" />
+                                </div>
+                                <div className="text-left truncate">
+                                    <h4 className="text-lg font-bold text-white truncate">Open Live News Feed</h4>
+                                    <p className="text-sm text-neutral-400 truncate max-w-[200px] sm:max-w-none">
+                                        {activeMarket !== 'all' 
+                                            ? `View ${activeMarket.charAt(0).toUpperCase() + activeMarket.slice(1)} Headlines`
+                                            : "Global real-time market updates and analysis"
+                                        }
+                                    </p>
+                                </div>
                             </div>
-                            <div className="text-left truncate">
-                                <h4 className="text-lg font-bold text-white truncate">Open Live News Feed</h4>
-                                <p className="text-sm text-neutral-400 truncate max-w-[200px] sm:max-w-none">
-                                    {activeMarket !== 'all' 
-                                        ? `View ${activeMarket.charAt(0).toUpperCase() + activeMarket.slice(1)} Headlines`
-                                        : "Global real-time market updates and analysis"
-                                    }
-                                </p>
+                            <div className="text-sky-400 transition-transform duration-300 group-hover:translate-x-1">
+                                <ArrowRight className="h-5 w-5" />
                             </div>
                         </div>
-                        <div className="text-sky-400 transition-transform duration-300 group-hover:translate-x-1">
-                            <ArrowRight className="h-5 w-5" />
-                        </div>
-                    </div>
-                </button>
+                    </button>
+                </ShimmerBorder>
             </div>
 
             <AnimatePresence>
@@ -542,15 +591,18 @@ function NewsFeedModal({ activeMarket }: { activeMarket: string }) {
                             onClick={() => setIsOpen(false)}
                             className="absolute inset-0 bg-black/80"
                         />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 1, y: 100 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 1, y: 100 }}
-                            transition={{ type: "spring", bounce: 0.3, duration: 0.5 }}
-                            className="relative w-full max-w-4xl overflow-hidden rounded-t-3xl md:rounded-3xl border border-white/10 bg-[#0a0a0a] shadow-2xl"
-                        >
-                            <NewsFeedContent activeMarket={activeMarket as MarketFilter} onClose={() => setIsOpen(false)} />
-                        </motion.div>
+                        {/* Modal Body - Wrapped in ShimmerBorder - Increased border thickness */}
+                        <ShimmerBorder borderRadius="rounded-t-3xl md:rounded-3xl" borderWidth="inset-[3px]" speed={5} className="w-full max-w-4xl h-full md:h-auto">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 1, y: 100 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 1, y: 100 }}
+                                transition={{ type: "spring", bounce: 0.3, duration: 0.5 }}
+                                className="relative w-full max-w-4xl overflow-hidden rounded-t-3xl md:rounded-3xl border border-transparent bg-neutral-950 shadow-2xl"
+                            >
+                                <NewsFeedContent activeMarket={activeMarket as MarketFilter} onClose={() => setIsOpen(false)} />
+                            </motion.div>
+                        </ShimmerBorder>
                     </div>
                 )}
             </AnimatePresence>
@@ -564,15 +616,15 @@ export function CTA() {
   const [activeMarket, setActiveMarket] = useState<"all" | "crypto" | "stocks" | "forex" | "metals">("all");
 
   return (
-    <div id="market-dashboard" className="w-full overflow-x-hidden bg-white px-0 md:px-8 py-10 dark:bg-neutral-950">
+    <div id="market-dashboard" className="w-full overflow-x-hidden bg-black px-0 md:px-8 py-10 dark:bg-neutral-950">
       <style>{GLOBAL_STYLES}</style>
       <div className="mx-auto max-w-7xl px-4 md:px-0">
         <header className="text-center">
             <p className="text-[11px] uppercase tracking-[0.18em] text-sky-400/80">Live • Market Updates</p>
-            <h1 className="mt-1 text-2xl font-black tracking-tight text-neutral-900 dark:text-white md:text-4xl">
+            <h1 className="mt-1 text-2xl font-black tracking-tight text-white md:text-4xl">
                 Real-Time Global Market Dashboard
             </h1>
-            <p className="mt-2 text-xs text-neutral-600 dark:text-neutral-400 md:text-sm">
+            <p className="mt-2 text-xs text-neutral-400 md:text-sm">
                 Covering Crypto, Stocks, Forex, and Metals — updated every minute.
             </p>
         </header>

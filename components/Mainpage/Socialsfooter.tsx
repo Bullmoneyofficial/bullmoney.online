@@ -5,22 +5,12 @@ import { motion, useMotionValue, useMotionTemplate, AnimatePresence } from "fram
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Copy, Check, Sparkles, Scissors, QrCode, X, Users, Timer } from "lucide-react";
-// Removed: Particles, initParticlesEngine, loadSlim, Engine imports for SparklesCore removal
 
-// NOTE ON MOBILE VIEWPORT:
-// For optimal mobile display, ensure your public HTML <head> includes the viewport meta tag:
-// <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-
-
-// ==========================================
-// 1. UTILS & HOOKS
-// ==========================================
-
+// --- GLOBAL STYLES & UTILS ---
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Added an FPS-cap constant for clarity in PixelCard
 const MAX_FPS = 30; // Global target FPS for non-essential animations
 
 const usePerformanceMode = () => {
@@ -28,11 +18,8 @@ const usePerformanceMode = () => {
 
   useEffect(() => {
     const checkPerformance = () => {
-      // Prioritize reduced motion settings
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      // Also consider mobile as performance mode (768px breakpoint)
       const isMobile = window.innerWidth < 768; 
-      // isPerformanceMode is true if on mobile OR if reduced motion is requested
       setIsPerformanceMode(isMobile || reducedMotion);
     };
     
@@ -42,6 +29,52 @@ const usePerformanceMode = () => {
   }, []);
 
   return isPerformanceMode;
+};
+
+// ==========================================
+// NEW: SHIMMER BORDER COMPONENT (Copied from Nav UI)
+// ==========================================
+
+const shimmerGradient = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #3b82f6 50%, #00000000 100%)";
+
+interface ShimmerBorderProps {
+    children: ReactNode;
+    className?: string;
+    borderRadius?: string; // e.g. 'rounded-xl'
+    borderWidth?: string; // e.g. 'inset-[1.5px]'
+    speed?: number;
+    colorOverride?: string;
+}
+
+const ShimmerBorder = ({ children, className, borderRadius = 'rounded-xl', borderWidth = 'inset-[1.5px]', speed = 3, colorOverride }: ShimmerBorderProps) => {
+    const finalGradient = colorOverride || shimmerGradient;
+    
+    return (
+        <div className={cn("relative overflow-hidden group/shimmer", borderRadius, className)}>
+            
+            {/* Layer 1: The Spinning Gradient (The Border) */}
+            <motion.div
+                className="absolute inset-[-100%]" 
+                animate={{ rotate: 360 }}
+                transition={{ 
+                    duration: speed, 
+                    repeat: Infinity, 
+                    ease: "linear" 
+                }}
+                style={{ background: finalGradient }}
+            />
+
+            {/* Layer 2: Inner Mask (The actual content background) */}
+            <div className={cn("absolute bg-neutral-900/90 flex items-center justify-center z-10", borderRadius, borderWidth)}>
+                {children}
+            </div>
+            
+            {/* Ensure content is positioned over the mask */}
+            <div className="relative z-20">
+                {children}
+            </div>
+        </div>
+    );
 };
 
 // ==========================================
@@ -64,7 +97,6 @@ const useModal = () => {
 export function Modal({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    // Only set overflow hidden when modal is open to prevent background scroll on mobile
     document.body.style.overflow = open ? 'hidden' : 'auto';
     return () => {
       document.body.style.overflow = 'auto';
@@ -104,18 +136,16 @@ export const ModalBody = ({ children, className }: { children: ReactNode; classN
 
   if (!mounted) return null;
 
-  // Use createPortal to ensure the modal is mounted directly under body for mobile z-index and overflow control.
   return createPortal(
     <AnimatePresence>
       {open && (
-        // Modal is fixed and fullscreen
         <div className="fixed inset-0 z-[9999] flex items-start justify-center p-4 pt-16 sm:pt-24">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-neutral-950/80 backdrop-blur-md cursor-pointer"
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm cursor-pointer"
           />
           <motion.div
             initial={{ y: -50, opacity: 0, scale: 0.95 }}
@@ -123,20 +153,24 @@ export const ModalBody = ({ children, className }: { children: ReactNode; classN
             exit={{ y: -50, opacity: 0, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 150 }} 
             className={cn(
-              // Allow vertical scrolling on mobile if content exceeds screen height
               "relative w-full max-w-2xl z-10 pointer-events-none overflow-y-auto max-h-[90vh] sm:max-h-auto", 
               className
             )}
           >
-            <div className="pointer-events-auto relative w-full">
-                <button 
-                onClick={() => setOpen(false)}
-                className="absolute right-4 top-4 z-50 p-2 bg-neutral-800/50 text-white hover:bg-neutral-700 rounded-full transition-colors border border-white/10"
-                >
-                <X size={16} strokeWidth={2} />
-                </button>
-                {children}
-            </div>
+            {/* The Modal itself now has the Shimmer Border */}
+            <ShimmerBorder borderRadius="rounded-2xl" borderWidth="inset-[1.5px]" className="w-full">
+                <div className="pointer-events-auto relative w-full p-4 sm:p-6 bg-neutral-900 rounded-2xl">
+                    <button 
+                    onClick={() => setOpen(false)}
+                    className="absolute right-4 top-4 z-50 p-2 bg-neutral-800/50 text-white hover:bg-neutral-700 rounded-full transition-colors border border-white/10"
+                    >
+                    <X size={16} strokeWidth={2} />
+                    </button>
+                    <div className="pt-4 sm:pt-0">
+                       {children}
+                    </div>
+                </div>
+            </ShimmerBorder>
           </motion.div>
         </div>
       )}
@@ -150,6 +184,7 @@ export const ModalBody = ({ children, className }: { children: ReactNode; classN
 // ==========================================
 
 class Pixel {
+  // ... (Pixel class remains the same)
   width: number;
   height: number;
   ctx: CanvasRenderingContext2D;
@@ -173,19 +208,18 @@ class Pixel {
     this.width = canvas.width;
     this.height = canvas.height;
     this.ctx = context;
-    // Reduced speed multipliers for a slower look
-    this.speed = this.getRandomValue(0.05, 0.4) * speed * 0.5; // Reduced multiplier and overall speed
+    this.speed = this.getRandomValue(0.05, 0.4) * speed * 0.5;
     this.x = x;
     this.y = y;
     this.color = color;
     this.size = 0;
-    this.sizeStep = Math.random() * 0.2; // Slower growth
+    this.sizeStep = Math.random() * 0.2;
     this.minSize = 0.5;
     this.maxSizeInteger = 2;
     this.maxSize = this.getRandomValue(this.minSize, this.maxSizeInteger);
     this.delay = delay;
     this.counter = 0;
-    this.counterStep = Math.random() * 2 + (this.width + this.height) * 0.005; // Slower delay increment
+    this.counterStep = Math.random() * 2 + (this.width + this.height) * 0.005;
     this.isIdle = false;
     this.isReverse = false;
     this.isShimmer = false;
@@ -217,15 +251,15 @@ class Pixel {
     if (this.size <= 0) {
       this.isIdle = true;
       return;
-    } else this.size -= 0.05; // Slower disappearance
+    } else this.size -= 0.05;
     this.draw();
   }
 
   shimmer() {
     if (this.size >= this.maxSize) this.isReverse = true;
     else if (this.size <= this.minSize) this.isReverse = false;
-    if (this.isReverse) this.size -= this.speed * 0.5; // Slower shimmer
-    else this.size += this.speed * 0.5; // Slower shimmer
+    if (this.isReverse) this.size -= this.speed * 0.5;
+    else this.size += this.speed * 0.5;
   }
 }
 
@@ -260,7 +294,6 @@ const PixelCard = ({ variant = 'default', gap, speed, colors, noFocus, className
   const finalNoFocus = noFocus ?? variantCfg.noFocus;
 
   const initPixels = useCallback(() => {
-    // Canvas initialization skipped entirely in performance mode (which includes mobile)
     if (!containerRef.current || !canvasRef.current || isPerformanceMode) return; 
     const rect = containerRef.current.getBoundingClientRect();
     const width = Math.floor(rect.width);
@@ -330,7 +363,6 @@ const PixelCard = ({ variant = 'default', gap, speed, colors, noFocus, className
     let timeoutId: NodeJS.Timeout;
     const observer = new ResizeObserver(() => {
       clearTimeout(timeoutId);
-      // Debounce resize to prevent rapid re-initialization on mobile
       timeoutId = setTimeout(() => initPixels(), 200); 
     });
     if (containerRef.current) {
@@ -437,10 +469,10 @@ const BullRewardsCard = () => {
   return (
     <div className="relative w-full aspect-[1.58/1] perspective-1000 group select-none">
         <div className={cn(
-          "absolute inset-0 bg-white rounded-none border border-zinc-200 flex flex-col items-center justify-center text-center p-6 transition-opacity duration-700", 
+          "absolute inset-0 bg-white rounded-xl flex flex-col items-center justify-center text-center p-6 transition-opacity duration-700", 
           isTorn ? "opacity-100 delay-500 z-0" : "opacity-0 -z-10" 
         )}>
-          <div className="bg-zinc-950 p-3 mb-4 shadow-lg border border-zinc-200">
+          <div className="bg-zinc-950 p-3 mb-4 shadow-lg border border-zinc-200 rounded-lg">
              <QrCode className="w-16 h-16 text-white" strokeWidth={1} />
           </div>
           <h3 className="text-zinc-950 font-bold text-2xl mb-1">CODE: BULL</h3>
@@ -456,7 +488,7 @@ const BullRewardsCard = () => {
               onClick={handleInteraction}
               exit={{ opacity: 0, transition: { duration: 0.2 } }}
             >
-               <div className="w-full h-full overflow-hidden shadow-xl shadow-black/40 relative bg-zinc-950">
+               <div className="w-full h-full overflow-hidden shadow-xl shadow-black/40 relative bg-zinc-950 rounded-xl">
                   <CardDesign />
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-zinc-950/70 backdrop-blur-[2px]">
                     <div className="flex flex-col items-center text-white">
@@ -472,26 +504,26 @@ const BullRewardsCard = () => {
         {isTorn && (
           <>
             <motion.div
-              className="absolute inset-0 z-30 pointer-events-none drop-shadow-lg"
+              className="absolute inset-0 z-30 pointer-events-none drop-shadow-lg rounded-xl"
               initial={{ x: 0, y: 0, rotate: 0 }}
               animate={{ x: -40, y: 80, rotate: -15, opacity: 0 }} 
               transition={{ type: "spring", stiffness: 80, damping: 10, opacity: { duration: 1.2, delay: 0.4 } }} 
               style={{ clipPath: LEFT_CLIP }}
             >
-              <div className="w-full h-full overflow-hidden">
+              <div className="w-full h-full overflow-hidden rounded-xl">
                 <CardDesign />
                 <div className="absolute right-0 top-0 bottom-0 w-[1px] bg-white/50 shadow-[0_0_5px_white]" style={{ left: '50%' }} />
               </div>
             </motion.div>
 
             <motion.div
-              className="absolute inset-0 z-30 pointer-events-none drop-shadow-lg"
+              className="absolute inset-0 z-30 pointer-events-none drop-shadow-lg rounded-xl"
               initial={{ x: 0, y: 0, rotate: 0 }}
               animate={{ x: 40, y: 100, rotate: 15, opacity: 0 }} 
               transition={{ type: "spring", stiffness: 80, damping: 10, opacity: { duration: 1.2, delay: 0.4 } }}
               style={{ clipPath: RIGHT_CLIP }}
             >
-              <div className="w-full h-full overflow-hidden">
+              <div className="w-full h-full overflow-hidden rounded-xl">
                 <CardDesign />
                 <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-white/50 shadow-[0_0_5px_white]" style={{ left: '50%' }} />
               </div>
@@ -508,16 +540,20 @@ const BullRewardsCard = () => {
 
 const ShopMarketingSection = () => {
   return (
-    <div className="relative flex min-h-0 w-full flex-col overflow-hidden bg-neutral-950 text-white selection:bg-blue-500/30 selection:text-blue-200 sm:min-h-[500px]">
-      <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-950/20 via-neutral-950 to-neutral-950" />
+    // Changed bg-neutral-950 to bg-black
+    <div className="relative flex min-h-0 w-full flex-col overflow-hidden bg-black text-white selection:bg-blue-500/30 selection:text-blue-200 sm:min-h-[500px]">
+      {/* Adjusted gradient for black background */}
+      <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-black to-black" />
       <BackgroundGrids />
       
-      {/* 1. PROMO BANNER (Full width, visible on mobile) */}
-      <PromoBanner />
+      {/* 1. PROMO BANNER (Now with ShimmerBorder) */}
+      <ShimmerBorder borderRadius="rounded-none" borderWidth="inset-0" speed={5}>
+        <PromoBanner />
+      </ShimmerBorder>
       
       <div className="relative z-10 flex w-full flex-col items-center justify-start pt-8 pb-12 sm:justify-center sm:pt-24 sm:pb-24 px-4">
           
-        {/* 2. LIVE TRADERS "COMMAND CENTER" (Consolidated) */}
+        {/* 2. LIVE TRADERS "COMMAND CENTER" */}
         <div className="w-full max-w-2xl">
            <LiveViewersDashboard /> 
         </div>
@@ -567,111 +603,116 @@ export const LiveViewersDashboard = () => {
 
   return (
     <motion.div 
-      // Floating animation respects reduced motion preferences
       animate={{ y: [0, -1.5, 0] }} 
       transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
     >
-      <PixelCard variant="green" gap={6} speed={10} className="group relative rounded-2xl shadow-xl transition-all duration-500 hover:shadow-[0_0_30px_-5px_rgba(34,197,94,0.2)] bg-zinc-950/80" noFocus={true}>
-        
-        {/* Responsive Layout: Column on Mobile, Row on Desktop */}
-        <div className="flex flex-col md:flex-row items-center justify-between p-6 gap-6 md:gap-8">
+        {/* Shimmer Border around the main dashboard card */}
+        <ShimmerBorder borderRadius="rounded-2xl" borderWidth="inset-[1.5px]" speed={5}>
+          <PixelCard variant="green" gap={6} speed={10} className="group relative rounded-2xl shadow-none transition-all duration-500 hover:shadow-[0_0_30px_-5px_rgba(34,197,94,0.2)] bg-neutral-900/90 border-none" noFocus={true}>
             
-            {/* LEFT SIDE: Live Stats */}
-            <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-start">
-                <div className="flex flex-col items-center justify-center">
-                    <MiniTradingChart width={80} height={35} />
-                </div>
+            {/* Responsive Layout: Column on Mobile, Row on Desktop */}
+            <div className="flex flex-col md:flex-row items-center justify-between p-6 gap-6 md:gap-8">
                 
-                <div className="flex items-center gap-4">
-                    {/* Separator hidden on mobile */}
-                    <div className="h-10 w-[1px] bg-white/10 hidden md:block"></div> 
-                    <div className="flex flex-col leading-none items-end">
-                        <div className="flex items-center gap-2">
-                            <span className="relative flex h-2.5 w-2.5">
-                            {/* Ping animation uses motion-safe */}
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75 motion-safe:animate-ping"></span> 
-                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500"></span>
-                            </span>
-                            <span className="text-2xl font-bold text-green-400 tabular-nums shadow-green-500/50 drop-shadow-sm">{viewers}</span>
+                {/* LEFT SIDE: Live Stats */}
+                <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-start">
+                    <div className="flex flex-col items-center justify-center">
+                        <MiniTradingChart width={80} height={35} />
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
+                        {/* Separator hidden on mobile */}
+                        <div className="h-10 w-[1px] bg-white/10 hidden md:block"></div> 
+                        <div className="flex flex-col leading-none items-end">
+                            <div className="flex items-center gap-2">
+                                <span className="relative flex h-2.5 w-2.5">
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75 motion-safe:animate-ping"></span> 
+                                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500"></span>
+                                </span>
+                                <span className="text-2xl font-bold text-green-400 tabular-nums shadow-green-500/50 drop-shadow-sm">{viewers}</span>
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Live Traders</span>
                         </div>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Live Traders</span>
                     </div>
                 </div>
-            </div>
 
-            {/* SEPARATOR (Desktop only) */}
-            <div className="hidden md:block w-[1px] h-12 bg-white/5" />
-            
-            {/* SEPARATOR (Mobile only, spans full width) */}
-            <div className="md:hidden w-full h-[1px] bg-white/5" />
-
-            {/* RIGHT SIDE: Actions (Nested Modals) */}
-            <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                {/* SEPARATOR (Desktop only) */}
+                <div className="hidden md:block w-[1px] h-12 bg-white/5" />
                 
-                {/* 1. REWARD BUTTON (Wider on mobile) */}
-                <Modal>
-                    <ModalTrigger className="w-full md:w-auto">
-                        <motion.div 
-                            whileHover={{ scale: 1.03 }} 
-                            whileTap={{ scale: 0.97 }}  
-                            className="flex items-center justify-between md:justify-center gap-3 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 px-4 py-2 rounded-lg transition-colors group/btn w-full md:w-auto"
-                        >
-                            <div className="flex items-center gap-2">
-                                <Timer className="w-4 h-4 text-blue-400 motion-safe:animate-pulse" />
-                                <span className="font-mono text-sm font-bold text-blue-100 tabular-nums">{timeLeft}</span>
-                            </div>
-                            {/* "Claim" label is mobile-only for clarity */}
-                            <span className="text-[10px] uppercase font-bold text-blue-400 tracking-wider md:hidden">Claim</span> 
-                        </motion.div>
-                    </ModalTrigger>
-                    <ModalBody>
-                        <BullRewardsCard />
-                    </ModalBody>
-                </Modal>
+                {/* SEPARATOR (Mobile only, spans full width) */}
+                <div className="md:hidden w-full h-[1px] bg-white/5" />
 
-                {/* 2. SOCIALS BUTTON (Full width on mobile) */}
-                <Modal>
-                    <ModalTrigger className="w-full md:w-auto">
-                        <motion.div 
-                             whileHover={{ scale: 1.03 }} 
-                             whileTap={{ scale: 0.97 }} 
-                             className="flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 p-2.5 rounded-lg transition-colors w-full md:w-auto"
-                        >
-                             <Users className="w-4 h-4 text-zinc-300" />
-                        </motion.div>
-                    </ModalTrigger>
-                    {/* Modal for Socials, uses flexible layout */}
-                    <ModalBody className="max-w-4xl bg-neutral-950/90 border-b border-white/10 p-6 rounded-b-2xl sm:rounded-2xl border sm:border-white/10">
-                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                            <div className="text-left">
-                                <h3 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
-                                    <Sparkles className="w-5 h-5 text-blue-400" />
-                                    Community
-                                </h3>
-                                <p className="text-neutral-400 text-sm">Follow for signals & rewards.</p>
-                            </div>
-                            <div className="w-full md:w-auto overflow-hidden">
-                                <SocialsRow />
-                            </div>
-                         </div>
-                    </ModalBody>
-                </Modal>
+                {/* RIGHT SIDE: Actions (Nested Modals) */}
+                <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                    
+                    {/* 1. REWARD BUTTON (Wider on mobile) - Wrapped in ShimmerBorder */}
+                    <Modal>
+                        <ModalTrigger className="w-full md:w-auto">
+                           <ShimmerBorder borderRadius="rounded-lg" borderWidth="inset-px" speed={1.5} colorOverride="conic-gradient(from 90deg at 50% 50%, #00000000 0%, #34d399 50%, #00000000 100%)">
+                              <motion.div 
+                                whileHover={{ scale: 1.03 }} 
+                                whileTap={{ scale: 0.97 }}  
+                                className="flex items-center justify-between md:justify-center gap-3 bg-blue-500/10 border border-transparent hover:bg-blue-500/20 px-4 py-2 rounded-lg transition-colors group/btn w-full md:w-auto"
+                              >
+                                <div className="flex items-center gap-2">
+                                    <Timer className="w-4 h-4 text-blue-400 motion-safe:animate-pulse" />
+                                    <span className="font-mono text-sm font-bold text-blue-100 tabular-nums">{timeLeft}</span>
+                                </div>
+                                <span className="text-[10px] uppercase font-bold text-blue-400 tracking-wider md:hidden">Claim</span> 
+                              </motion.div>
+                           </ShimmerBorder>
+                        </ModalTrigger>
+                        <ModalBody>
+                            <BullRewardsCard />
+                        </ModalBody>
+                    </Modal>
 
+                    {/* 2. SOCIALS BUTTON (Full width on mobile) - Wrapped in ShimmerBorder */}
+                    <Modal>
+                        <ModalTrigger className="w-full md:w-auto">
+                            <ShimmerBorder borderRadius="rounded-lg" borderWidth="inset-px" speed={1.5} colorOverride="conic-gradient(from 90deg at 50% 50%, #00000000 0%, #3b82f6 50%, #00000000 100%)">
+                                <motion.div 
+                                    whileHover={{ scale: 1.03 }} 
+                                    whileTap={{ scale: 0.97 }} 
+                                    className="flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 border border-transparent p-2.5 rounded-lg transition-colors w-full md:w-auto"
+                                >
+                                     <Users className="w-4 h-4 text-zinc-300" />
+                                </motion.div>
+                            </ShimmerBorder>
+                        </ModalTrigger>
+                        {/* Modal for Socials, uses flexible layout */}
+                        <ModalBody className="max-w-4xl p-0">
+                             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 p-6">
+                                <div className="text-left">
+                                    <h3 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
+                                        <Sparkles className="w-5 h-5 text-blue-400" />
+                                        Community
+                                    </h3>
+                                    <p className="text-neutral-400 text-sm">Follow for signals & rewards.</p>
+                                </div>
+                                <div className="w-full md:w-auto overflow-hidden">
+                                    <SocialsRow />
+                                </div>
+                             </div>
+                        </ModalBody>
+                    </Modal>
+
+                </div>
             </div>
-        </div>
-      </PixelCard>
+          </PixelCard>
+        </ShimmerBorder>
     </motion.div>
   );
 };
 
-export const PromoBanner = () => {
+export const PromoBanner = ({ children }: { children?: ReactNode }) => {
   return (
-    <PixelCard variant="blue" gap={6} speed={10} noFocus={true} className="group relative z-50 w-full border-b border-blue-500/20 bg-blue-950/30 py-3 backdrop-blur-md transition-colors hover:bg-blue-900/40">
+    // Inner structure is kept, ShimmerBorder is now around it
+    <PixelCard variant="blue" gap={6} speed={10} noFocus={true} className="group relative z-50 w-full border-none bg-blue-950/20 py-3 backdrop-blur-md transition-colors hover:bg-blue-900/30 rounded-none">
       <div className="absolute left-0 top-0 h-[1px] w-full bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-50 shadow-[0_0_5px_rgba(59,130,246,0.5)]" /> 
       <div className="relative flex w-full items-center overflow-hidden">
-        {/* Gradient mask ensures text fades nicely at screen edges on mobile */}
-        <div className="pointer-events-none absolute left-0 z-10 h-full w-20 bg-gradient-to-r from-neutral-950 to-transparent" />
-        <div className="pointer-events-none absolute right-0 z-10 h-full w-20 bg-gradient-to-l from-neutral-950 to-transparent" />
+        {/* Adjusted mask for black background */}
+        <div className="pointer-events-none absolute left-0 z-10 h-full w-20 bg-gradient-to-r from-black via-transparent to-transparent" />
+        <div className="pointer-events-none absolute right-0 z-10 h-full w-20 bg-gradient-to-l from-black via-transparent to-transparent" />
         <motion.div 
           initial={{ x: "0%" }} 
           animate={{ x: "-50%" }} 
@@ -688,6 +729,7 @@ export const PromoBanner = () => {
           ))}
         </motion.div>
       </div>
+      {children}
     </PixelCard>
   );
 };

@@ -10,7 +10,6 @@ import RecruitPage from "@/app/register/pageVip";
 import Socials from "@/components/Mainpage/Socialsfooter";
 
 // --- DYNAMIC IMPORTS (Main Content) ---
-// Loading these dynamically improves initial load performance
 const HeroShop = dynamic(() => import("@/app/shop/ShopHero"), { ssr: false });
 const ProductsSection = dynamic(() => import("@/app/VIP/ProductsSection"), { ssr: false });
 const ShopFunnel = dynamic(() => import("@/app/shop/ShopFunnel"), { ssr: false });
@@ -23,9 +22,10 @@ const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor')
 });
 
 // =========================================
-// 1. AUDIO LOGIC
+// 1. AUDIO LOGIC (MODIFIED)
 // =========================================
 
+// Hook 1: Loader Audio (No Change)
 const useLoaderAudio = (url: string, isVisible: boolean) => {
     useEffect(() => {
         if (!isVisible) return;
@@ -51,10 +51,12 @@ const useLoaderAudio = (url: string, isVisible: boolean) => {
     }, [url, isVisible]);
 };
 
-const useBackgroundMusic = (url: string) => {
+// Hook 2: One-Time Music Track (MODIFIED to track finish state)
+const useOneTimeTrack = (url: string) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasPlayedOnce, setHasPlayedOnce] = useState(false);
+  const [isFinished, setIsFinished] = useState(false); // <--- NEW STATE
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -63,7 +65,10 @@ const useBackgroundMusic = (url: string) => {
       tune.volume = 0.4; 
       audioRef.current = tune;
       
-      const handleEnded = () => { setIsPlaying(false); };
+      const handleEnded = () => { 
+          setIsPlaying(false); 
+          setIsFinished(true); // <--- SET to true when the track finishes
+      };
       tune.addEventListener('ended', handleEnded);
 
       return () => {
@@ -76,12 +81,13 @@ const useBackgroundMusic = (url: string) => {
 
   const toggle = useCallback(() => {
     const audio = audioRef.current;
-    if (!audio || hasPlayedOnce) return;
+    if (!audio) return;
 
     if (isPlaying) {
       audio.pause();
       setIsPlaying(false);
-    } else {
+    } else if (!hasPlayedOnce) {
+      // Only play/resume if it hasn't finished yet
       audio.play().catch(() => {});
       setIsPlaying(true);
       setHasPlayedOnce(true);
@@ -98,9 +104,11 @@ const useBackgroundMusic = (url: string) => {
     }
   }, [isPlaying, hasPlayedOnce]);
 
-  return { isPlaying, toggle, play };
+  // Return the new isFinished state
+  return { isPlaying, isFinished, toggle, play }; 
 };
-// Hook 3: Background Music (background.mp3) - FIXED VOLUME LOGIC
+
+// Hook 3: Background Loop (useBackgroundLoop - No Change)
 const useBackgroundLoop = (url: string) => {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -143,8 +151,10 @@ const useBackgroundLoop = (url: string) => {
 };
 
 // =========================================
-// 2. UI COMPONENTS
+// 2. UI COMPONENTS (No Change)
 // =========================================
+
+// ... (MusicController and SupportWidget components remain the same) ...
 
 const MusicController = ({ isPlaying, onToggle }: { isPlaying: boolean; onToggle: () => void }) => (
   <button
@@ -193,9 +203,7 @@ const SupportWidget = () => {
   );
 };
 
-// =========================================
-// 3. GLOBAL STYLES (MATCHING REFERENCE EXACTLY)
-// =========================================
+// ... (CursorStyles component remains the same) ...
 const CursorStyles = () => (
   <style jsx global>{`
     html { scroll-behavior: smooth; }
@@ -207,10 +215,10 @@ const CursorStyles = () => (
       top: 0; 
       left: 0; 
       z-index: 10000;
-      mix-blend-mode: difference; /* CRITICAL: Adds the inverse color effect */
+      mix-blend-mode: difference;
     }
     .target-cursor-dot {
-      width: 6px; /* CRITICAL: Smaller size */
+      width: 6px; 
       height: 6px; 
       background-color: #0066ff; 
       border-radius: 50%;
@@ -223,9 +231,9 @@ const CursorStyles = () => (
     }
     .target-cursor-corner {
       position: absolute; 
-      width: 12px; /* CRITICAL: Smaller corners */
+      width: 12px; 
       height: 12px; 
-      border: 3px solid #0066ff; /* CRITICAL: Thicker border */
+      border: 3px solid #0066ff; 
       opacity: 1;
       will-change: transform, opacity, border-color;
     }
@@ -237,20 +245,54 @@ const CursorStyles = () => (
   `}</style>
 );
 
+
 // =========================================
-// 4. SHOP PAGE MAIN COMPONENT
+// 4. SHOP PAGE MAIN COMPONENT (MODIFIED INTEGRATION)
 // =========================================
 export default function ShopPage() {
   const productsRef = useRef<HTMLDivElement | null>(null);
   const [isUnlocked, setIsUnlocked] = useState(false);
   
-  const { isPlaying, toggle, play } = useBackgroundMusic('/shop.mp3');
+  // 1. Initialize both tracks
+  const { 
+    isPlaying: isTrackPlaying, 
+    isFinished: isTrackFinished, // Retrieve the finished state
+    toggle: toggleOneTimeTrack, 
+    play: playOneTimeTrack 
+  } = useOneTimeTrack('/shop.mp3'); 
+
+  const {
+    isPlaying: isLooping, 
+    start: startBgLoop, 
+    toggle: toggleBgLoop 
+  } = useBackgroundLoop('/background.mp3'); 
+
+  // Determine the primary playing state for the UI
+  const isAnyAudioPlaying = isTrackPlaying || isLooping;
+
   useLoaderAudio('/modals.mp3', !isUnlocked);
 
   const handleUnlock = useCallback(() => {
     setIsUnlocked(true);
-    play(); 
-  }, [play]);
+    playOneTimeTrack(); // Start the high-volume one-time track
+  }, [playOneTimeTrack]);
+
+  // 2. EFFECT: Start the low-volume loop when the one-time track ends
+  useEffect(() => {
+    if (isTrackFinished && !isLooping) {
+      startBgLoop(); 
+    }
+  }, [isTrackFinished, isLooping, startBgLoop]);
+
+  // 3. COMBINED TOGGLE: Decide which track to control (prioritize the main track)
+  const handleMusicToggle = useCallback(() => {
+    if (isTrackPlaying) {
+        toggleOneTimeTrack(); // Toggle the main track
+    } else {
+        toggleBgLoop(); // Toggle the low-volume loop (only runs if main track is paused/finished)
+    }
+  }, [isTrackPlaying, toggleOneTimeTrack, toggleBgLoop]);
+
 
   if (!isUnlocked) {
     return (
@@ -265,14 +307,15 @@ export default function ShopPage() {
       <div className="relative min-h-screen bg-slate-950 text-white animate-in fade-in duration-1000">
         <CursorStyles />
         
+        
         {/* EXACT CURSOR IMPLEMENTATION */}
         <TargetCursor
           spinDuration={2}
           hideDefaultCursor={true}
           targetSelector=".cursor-target, a, button"
         />
-
-        <MusicController isPlaying={isPlaying} onToggle={toggle} />
+        {/* Use the combined state and toggle function */}
+        <MusicController isPlaying={isAnyAudioPlaying} onToggle={handleMusicToggle} />
         <SupportWidget />
 
         <div className="relative z-10">
