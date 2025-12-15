@@ -2,10 +2,44 @@
 
 import { cn } from "@/lib/utils";
 import React, { useEffect, useRef, useState } from "react";
-import { motion, useMotionValue, useMotionTemplate } from "framer-motion";
+import { motion, useMotionValue, useMotionTemplate, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import createGlobe from "cobe";
-import { TextGenerateEffect } from "./text-generate-effect";
+
+// --- THEME CONSTANTS ---
+const GOLD_SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #D9BD6A 50%, #00000000 100%)";
+const GOLD_TEXT_GRADIENT = "bg-[linear-gradient(90deg,#F6E7B6,#D9BD6A_35%,#B8983A_65%,#F6E7B6)]";
+
+/* =====================================================================================
+   HELPER TIP COMPONENT (GOLD EDITION)
+===================================================================================== */
+
+const HelperTip = ({ label, className }: { label: string; className?: string }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 5, scale: 0.9 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    exit={{ opacity: 0, y: 5, scale: 0.9 }}
+    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    className={cn("absolute z-50 flex flex-col items-center pointer-events-none", className)}
+  >
+    {/* The Bubble */}
+    <div className="relative p-[1.5px] overflow-hidden rounded-full shadow-lg shadow-[#B8983A]/20">
+        <motion.div 
+            className="absolute inset-[-100%]"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            style={{ background: GOLD_SHIMMER_GRADIENT }}
+        />
+        <div className="relative z-10 px-3 py-1 bg-[#0a0a0a] rounded-full flex items-center justify-center border border-[#B8983A]/40">
+            <span className={cn("bg-clip-text text-transparent text-[10px] font-bold whitespace-nowrap", GOLD_TEXT_GRADIENT)}>
+                {label}
+            </span>
+        </div>
+    </div>
+    {/* The Triangle Pointer (pointing down) */}
+    <div className="w-2 h-2 bg-[#0a0a0a] rotate-45 -translate-y-[4px] relative z-10 border-b border-r border-[#B8983A]/40" />
+  </motion.div>
+);
 
 /* =====================================================================================
    Features
@@ -13,6 +47,17 @@ import { TextGenerateEffect } from "./text-generate-effect";
 
 export function Features() {
   const [copied, setCopied] = React.useState(false);
+  
+  // --- TIP LOGIC ---
+  const [activeTipIndex, setActiveTipIndex] = useState(0);
+
+  // Cycle tips every 4 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+        setActiveTipIndex(prev => (prev + 1) % 3);
+    }, 4000); 
+    return () => clearInterval(interval);
+  }, []);
 
   const copyPartnerCode = async () => {
     try {
@@ -20,7 +65,6 @@ export function Features() {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      // fallback if clipboard blocked
       const el = document.createElement("textarea");
       el.value = "BM15";
       document.body.appendChild(el);
@@ -41,7 +85,7 @@ export function Features() {
         <h2
           className={cn(
             "font-sans text-bold text-xl text-center md:text-4xl w-fit mx-auto font-bold tracking-tight",
-            "bg-[linear-gradient(90deg,#F6E7B6,#D9BD6A_35%,#B8983A_65%,#F6E7B6)] bg-clip-text text-transparent"
+            GOLD_TEXT_GRADIENT, "bg-clip-text text-transparent"
           )}
         >
           Bullmoney Prop Firms
@@ -53,17 +97,18 @@ export function Features() {
       </p>
 
       <div className="mt-20 grid cols-1 md:grid-cols-5 gap-4 md:auto-rows-[25rem] max-w-7xl mx-auto">
-        {/* Left – 3 cols :: JOIN US (keep content; now black & your gold gradient) */}
+        
+        {/* Left – 3 cols :: JOIN US */}
         <Card className="flex flex-col justify-between md:col-span-3 bg-gradient-to-br from-black via-neutral-950 to-black border border-[#B8983A]/60">
           <CardSkeletonBody>
             <SkeletonOne />
           </CardSkeletonBody>
 
-          <CardContent className="h-40 [&_*]:font-extrabold">
+          <CardContent className="h-40 [&_*]:font-extrabold relative">
             <h3
               className={cn(
                 "font-sans text-base md:text-lg font-extrabold tracking-tight",
-                "bg-[linear-gradient(90deg,#F6E7B6,#D9BD6A_35%,#B8983A_65%,#F6E7B6)] bg-clip-text text-transparent"
+                GOLD_TEXT_GRADIENT, "bg-clip-text text-transparent"
               )}
             >
               JOIN US ON GOAT FUNDED
@@ -71,44 +116,49 @@ export function Features() {
 
             <p className="mt-2 text-sm leading-relaxed text-neutral-200 font-extrabold">
               Trade With Our Community Using Partner Code{" "}
-              <button
-                type="button"
-                onClick={copyPartnerCode}
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-xs md:text-sm font-bold",
-                  "ring-1 ring-inset ring-[#B8983A]/40 text-black transition",
-                  "bg-[linear-gradient(90deg,#F6E7B6,#D9BD6A_35%,#B8983A_65%,#F6E7B6)]",
-                  "hover:ring-[#B8983A]/60"
-                )}
-                aria-live="polite"
-              >
-                BM15
-                <span
-                  className={`ml-1 inline-block h-2 w-2 rounded-full ${
-                    copied ? "bg-emerald-400" : "bg-[#B8983A]"
-                  }`}
-                />
-              </button>
+              <span className="relative inline-block">
+                  {/* TIP 0: Partner Code */}
+                  <AnimatePresence>
+                    {activeTipIndex === 0 && (
+                        <HelperTip label="Click to Copy" className="-top-10 left-1/2 -translate-x-1/2" />
+                    )}
+                  </AnimatePresence>
+                  
+                  <button
+                    type="button"
+                    onClick={copyPartnerCode}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-xs md:text-sm font-bold",
+                      "ring-1 ring-inset ring-[#B8983A]/40 text-black transition",
+                      GOLD_TEXT_GRADIENT,
+                      "hover:ring-[#B8983A]/60"
+                    )}
+                  >
+                    BM15
+                    <span
+                      className={`ml-1 inline-block h-2 w-2 rounded-full ${
+                        copied ? "bg-emerald-400" : "bg-[#B8983A]"
+                      }`}
+                    />
+                  </button>
+              </span>
               .
             </p>
 
             <div className="mt-3 flex items-center gap-3">
-              {/* Primary CTA: opens link */}
               <a
                 href="https://checkout.goatfundedtrader.com/aff/Bullmoney/"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Open Goat Funded partner code BM15"
                 className={cn(
                   "inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold text-black shadow",
-                  "bg-[linear-gradient(90deg,#F6E7B6,#D9BD6A_35%,#B8983A_65%,#F6E7B6)]",
+                  GOLD_TEXT_GRADIENT,
                   "hover:shadow-lg active:scale-[0.98] transition"
                 )}
               >
                 Open with code <span className="font-mono font-semibold">BM15</span>
               </a>
 
-              {/* Secondary: explicit copy button */}
               <button
                 type="button"
                 onClick={copyPartnerCode}
@@ -120,14 +170,10 @@ export function Features() {
           </CardContent>
         </Card>
 
-        {/* Top-right – 2 cols :: Goat Funded info (replaces "Learn the skill") */}
+        {/* Top-right – 2 cols :: Goat Funded info */}
         <Card className="flex flex-col justify-between md:col-span-2 bg-gradient-to-br from-black via-neutral-950 to-black border border-[#B8983A]/60">
           <CardContent className="h-40">
-            <CardTitle
-              className={cn(
-                "bg-[linear-gradient(90deg,#F6E7B6,#D9BD6A_35%,#B8983A_65%,#F6E7B6)] bg-clip-text text-transparent"
-              )}
-            >
+            <CardTitle className={cn(GOLD_TEXT_GRADIENT, "bg-clip-text text-transparent")}>
               Goat Funded Trader
             </CardTitle>
 
@@ -144,19 +190,19 @@ export function Features() {
                   pass a multi‑step challenge, trade company capital, and keep a high profit
                   split with flexible trading conditions.
                 </motion.p>
-
-                {/* animated underline */}
-                <span
-                  className="mt-1 block h-[2px] w-0 rounded-full
-                             bg-[linear-gradient(90deg,#F6E7B6,#D9BD6A_35%,#B8983A_65%,#F6E7B6)]
-                             transition-all duration-500 group-hover/line:w-full"
-                />
+                <span className={cn("mt-1 block h-[2px] w-0 rounded-full transition-all duration-500 group-hover/line:w-full", GOLD_TEXT_GRADIENT)} />
               </div>
             </CardDescription>
           </CardContent>
 
           <CardSkeletonBody>
-            <div className="w-full h-full p-4 rounded-lg bg-neutral-950 border border-[#B8983A]/60 ml-6 mt-2 flex items-center justify-center">
+            <div className="w-full h-full p-4 rounded-lg bg-neutral-950 border border-[#B8983A]/60 ml-6 mt-2 flex items-center justify-center relative">
+               {/* TIP 1: Goat Logo */}
+               <AnimatePresence>
+                    {activeTipIndex === 1 && (
+                        <HelperTip label="Our Partner" className="top-2" />
+                    )}
+                </AnimatePresence>
               <Image
                 src="/GTFLOGO.png"
                 alt="Goat Funded Trader Logo"
@@ -168,15 +214,10 @@ export function Features() {
           </CardSkeletonBody>
         </Card>
 
-        {/* Bottom-left – 2 cols :: Community links -> Goat Funded & FTMO */}
+        {/* Bottom-left – 2 cols :: Community links */}
         <Card className="flex flex-col justify-between md:col-span-2 bg-gradient-to-br from-black via-neutral-950 to-black border border-[#B8983A]/60">
           <CardContent className="h-40">
-            <h3
-              className={cn(
-                "font-sans text-base md:text-lg font-extrabold tracking-tight",
-                "bg-[linear-gradient(90deg,#F6E7B6,#D9BD6A_35%,#B8983A_65%,#F6E7B6)] bg-clip-text text-transparent"
-              )}
-            >
+            <h3 className={cn("font-sans text-base md:text-lg font-extrabold tracking-tight", GOLD_TEXT_GRADIENT, "bg-clip-text text-transparent")}>
               Find Our Links Below
             </h3>
 
@@ -189,32 +230,15 @@ export function Features() {
               items={[
                 {
                   label: "Goat Funded Trader",
-                  href: "https://www.goatfundedtrader.com", // replace with your link if needed
-                  icon: (
-                    <Image
-                      src="/GTFLOGO.png"
-                      alt="Goat Funded"
-                      width={20}
-                      height={20}
-                    />
-                  ),
-                  // custom gradient class for the button block
-                  gradient:
-                    "bg-[linear-gradient(90deg,#F6E7B6,#D9BD6A_35%,#B8983A_65%,#F6E7B6)] text-black",
+                  href: "https://www.goatfundedtrader.com", 
+                  icon: (<Image src="/GTFLOGO.png" alt="Goat Funded" width={20} height={20} />),
+                  gradient: cn(GOLD_TEXT_GRADIENT, "text-black"),
                 },
                 {
                   label: "FTMO",
-                  href: "https://trader.ftmo.com/?affiliates=fGDPMCcFOXviWzowTyxV", // replace with your link if needed
-                  icon: (
-                    <Image
-                      src="/FTMO_LOGOB.png"
-                      alt="FTMO"
-                      width={20}
-                      height={20}
-                    />
-                  ),
-                  gradient:
-                    "bg-[linear-gradient(90deg,#F6E7B6,#D9BD6A_35%,#B8983A_65%,#F6E7B6)] text-black",
+                  href: "https://trader.ftmo.com/?affiliates=fGDPMCcFOXviWzowTyxV", 
+                  icon: (<Image src="/FTMO_LOGOB.png" alt="FTMO" width={20} height={20} />),
+                  gradient: cn(GOLD_TEXT_GRADIENT, "text-black"),
                 },
               ]}
             />
@@ -225,14 +249,10 @@ export function Features() {
           </CardSkeletonBody>
         </Card>
 
-        {/* Bottom-right – 3 cols :: FTMO info (replaces USD ⇄ ZAR Converter) */}
+        {/* Bottom-right – 3 cols :: FTMO info */}
         <Card className="flex flex-col justify-between md:col-span-3 bg-gradient-to-br from-black via-neutral-950 to-black border border-[#B8983A]/60">
           <CardContent className="h-auto">
-            <CardTitle
-              className={cn(
-                "bg-[linear-gradient(90deg,#F6E7B6,#D9BD6A_35%,#B8983A_65%,#F6E7B6)] bg-clip-text text-transparent"
-              )}
-            >
+            <CardTitle className={cn(GOLD_TEXT_GRADIENT, "bg-clip-text text-transparent")}>
               FTMO
             </CardTitle>
 
@@ -248,18 +268,19 @@ export function Features() {
                   </ShimmerText>{" "}
                   validate your trading strategy, access funded company capital, and earn profit shares while using advanced professional tools trusted by a global community of successful traders.
                 </motion.p>
-
-                <span
-                  className="mt-1 block h-[2px] w-0 rounded-full
-                             bg-[linear-gradient(90deg,#F6E7B6,#D9BD6A_35%,#B8983A_65%,#F6E7B6)]
-                             transition-all duration-500 group-hover/line:w-full"
-                />
+                <span className={cn("mt-1 block h-[2px] w-0 rounded-full transition-all duration-500 group-hover/line:w-full", GOLD_TEXT_GRADIENT)} />
               </div>
             </CardDescription>
           </CardContent>
 
           <CardSkeletonBody>
-            <div className="w-full h-full p-4 rounded-lg bg-neutral-950 border border-[#B8983A]/60 ml-6 mt-2 flex items-center justify-center">
+            <div className="w-full h-full p-4 rounded-lg bg-neutral-950 border border-[#B8983A]/60 ml-6 mt-2 flex items-center justify-center relative">
+               {/* TIP 2: FTMO Logo */}
+               <AnimatePresence>
+                    {activeTipIndex === 2 && (
+                        <HelperTip label="Top Tier Firm" className="top-2" />
+                    )}
+                </AnimatePresence>
               <Image
                 src="/FTMO_LOGO.png"
                 alt="FTMO Logo"
@@ -369,7 +390,7 @@ const CardPattern = ({ mouseX, mouseY, randomString }: any) => {
         className="absolute inset-0 rounded-2xl opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
         style={style}
       >
-        <div className="w-full h-full bg-[linear-gradient(90deg,#F6E7B6,#D9BD6A_35%,#B8983A_65%,#F6E7B6)]" />
+        <div className={cn("w-full h-full", GOLD_TEXT_GRADIENT)} />
       </motion.div>
       <motion.div
         className="absolute inset-0 rounded-2xl opacity-0 mix-blend-overlay group-hover/card:opacity-100"
@@ -402,7 +423,7 @@ const generateRandomString = (length: number) =>
   Array.from({ length }, () => characters[Math.floor(Math.random() * characters.length)]).join("");
 
 /* =====================================================================================
-   SkeletonOne (3 tiles inside) — first tile uses local EvervaultCard + Icon
+   SkeletonOne
 ===================================================================================== */
 
 export const SkeletonOne = () => {
@@ -425,7 +446,7 @@ export const SkeletonOne = () => {
 
   return (
     <div className="relative flex items-center justify-center w-full h-full">
-      {/* decorative paths (now gold gradient stroke) */}
+      {/* decorative paths */}
       <svg
         width="128"
         height="69"
@@ -491,7 +512,7 @@ export const SkeletonOne = () => {
 
       {/* The three tiles */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-lg mx-auto w-full relative z-30 [perspective:1000px] [transform-style:preserve-3d] p-8 sm:p-0">
-        {/* 1) Partner code — Evervault-style card */}
+        {/* 1) Partner code */}
         <Container
           initial={{ y: 0 }}
           animate={{ y: [0, -10, 0], rotateX: [0, 10, 0] }}
@@ -560,7 +581,6 @@ export const SkeletonOne = () => {
 export const SkeletonTwo = () => {
   return (
     <div className="h-60 md:h-60 flex flex-col items-center relative bg-transparent dark:bg-transparent mt-10">
-      {/* Globe sits visually above, but all events pass through */}
       <Globe className="absolute -right-0 md:-right-10 -bottom-80 md:-bottom-72 z-10" />
     </div>
   );
@@ -583,9 +603,8 @@ export const Globe = ({ className }: { className?: string }) => {
       diffuse: 1.2,
       mapSamples: 16000,
       mapBrightness: 6,
-      // subtle gold tones
-      baseColor: [0.85, 0.78, 0.55], // ~ #D9BD6A normalized
-      markerColor: [0.72, 0.60, 0.23], // ~ #B8983A normalized
+      baseColor: [0.85, 0.78, 0.55], // ~ #D9BD6A
+      markerColor: [0.72, 0.60, 0.23], // ~ #B8983A
       glowColor: [1, 1, 1],
       markers: [
         { location: [37.7595, -122.4367], size: 0.03 },
@@ -701,8 +720,7 @@ const ShimmerText = ({
   <motion.span
     className={cn(
       "bg-clip-text text-transparent",
-      // your exact gradient
-      "bg-[linear-gradient(90deg,#F6E7B6,#D9BD6A_35%,#B8983A_65%,#F6E7B6)]",
+      GOLD_TEXT_GRADIENT,
       "bg-[length:200%_100%]",
       className
     )}
@@ -713,7 +731,7 @@ const ShimmerText = ({
   </motion.span>
 );
 
-/* Fancy dropdown with framer-motion — full-click blocks (no hardcoded bg-gradient-to-r now) */
+/* Fancy dropdown with framer-motion */
 const SocialsDropdown = ({
   items,
   triggerClassName = "",
@@ -725,7 +743,6 @@ const SocialsDropdown = ({
 
   return (
     <div className={cn("w-full max-w-sm relative z-30", triggerClassName)}>
-      {/* Trigger */}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -743,7 +760,6 @@ const SocialsDropdown = ({
         <Chevron className={cn("h-4 w-4 transition-transform", open && "rotate-180")} />
       </button>
 
-      {/* Content */}
       <motion.div
         initial={false}
         animate={{ height: open ? "auto" : 0, opacity: open ? 1 : 0 }}
@@ -770,23 +786,10 @@ const SocialsDropdown = ({
                 {it.icon}
                 <span>{it.label}</span>
               </span>
-
-              {/* sheen on right edge */}
               <span className="pointer-events-none absolute inset-y-0 right-0 w-1/4 rounded-xl bg-white/10 blur-md" />
-
-              {/* enhanced bottom fade toward globe */}
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2
-                           bg-[linear-gradient(to_bottom,rgba(0,0,0,0)_0%,rgba(0,0,0,0.10)_25%,rgba(0,0,0,0.30)_100%)]"
-              />
-
-              {/* subtle radial fade from bottom-right (matches globe area) */}
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute -right-2 -bottom-2 h-32 w-40
-                           bg-[radial-gradient(ellipse_at_bottom_right,rgba(0,0,0,0.35)_0%,rgba(0,0,0,0.15)_45%,transparent_75%)]
-                           blur-[2px] opacity-90"
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(to_bottom,rgba(0,0,0,0)_0%,rgba(0,0,0,0.10)_25%,rgba(0,0,0,0.30)_100%)]"
               />
             </motion.a>
           ))}
@@ -796,34 +799,6 @@ const SocialsDropdown = ({
   );
 };
 
-/* Icons */
-const TelegramIcon = ({ className = "" }: { className?: string }) => (
-  <svg viewBox="0 0 240 240" className={className} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <defs>
-      <linearGradient id="tggrad" x1="0" x2="1" y1="0" y2="1">
-        <stop offset="0%" stopColor="#38bdf8" />
-        <stop offset="100%" stopColor="#2563eb" />
-      </linearGradient>
-    </defs>
-    <circle cx="120" cy="120" r="120" fill="url(#tggrad)" />
-    <path
-      fill="#fff"
-      d="M178.3 72.2c2.7-1 4.9.7 4.3 4.1l-20 94.3c-.7 3.3-2.7 4.1-5.6 2.6l-31-22.9-15 14.5c-1.7 1.7-3.1 3.1-6.4 3.1l2.3-32.5 59.2-53.3c2.6-2.3-.6-3.6-3.9-1.3l-73.2 46.1-31.5-9.9c-3.3-1-3.4-3.3.7-4.8l116.1-39.9z"
-    />
-  </svg>
-);
-
-const YouTubeIcon = ({ className = "" }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" className={className} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <path
-      fill="#FF0033"
-      d="M23.5 6.2a4 4 0 0 0-2.8-2.8C18.9 3 12 3 12 3s-6.9 0-8.7.4A4 4 0 0 0 .5 6.2 41 41 0 0 0 0 12a41 41 0 0 0 .5 5.8 4 4 0 0 0 2.8 2.8C5.1 21 12 21 12 21s6.9 0 8.7-.4a4 4 0 0 0 2.8-2.8 41 41 0 0 0 .5-5.8 41 41 0 0 0-.5-5.8Z"
-    />
-    <path fill="#fff" d="M9.75 8.5v7l6-3.5-6-3.5Z" />
-  </svg>
-);
-
-/* Simple chevron + sparkle glyphs */
 const Chevron = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M6 9l6 6 6-6" />
@@ -834,223 +809,3 @@ const Sparkle = ({ className = "" }: { className?: string }) => (
     <path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8L5 16zm14 0l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16z" />
   </svg>
 );
-
-/* =====================================================================================
-   (Optional legacy) CurrencyConverter — kept here to preserve your file's default export.
-   Not used on the page after replacing the tile with FTMO info.
-===================================================================================== */
-
-const CurrencyConverter = () => {
-  const [amount, setAmount] = React.useState<number>(100);
-  const [from, setFrom] = React.useState<"USD" | "ZAR">("USD");
-  const [to, setTo] = React.useState<"USD" | "ZAR">("ZAR");
-  const [rate, setRate] = React.useState<number | null>(null);
-  const [loading, setLoading] = React.useState<boolean>(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const [updatedAt, setUpdatedAt] = React.useState<Date | null>(null);
-
-  const fetchRate = React.useCallback(
-    async (base: "USD" | "ZAR", sym: "USD" | "ZAR") => {
-      if (base === sym) {
-        setRate(1);
-        setUpdatedAt(new Date());
-        setError(null);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-        const res = await fetch(
-          `https://api.exchangerate.host/latest?base=${base}&symbols=${sym}`,
-          { cache: "no-store" }
-        );
-        const data = await res.json();
-        const r = data?.rates?.[sym];
-        if (typeof r === "number") {
-          setRate(r);
-          setUpdatedAt(new Date());
-        } else {
-          throw new Error("Bad rate");
-        }
-      } catch {
-        // safe fallback
-        const fallback = base === "USD" && sym === "ZAR" ? 18.0 : 1 / 18.5;
-        setRate(fallback);
-        setError(" ");
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
-
-  React.useEffect(() => {
-    fetchRate(from, to);
-    const id = setInterval(() => fetchRate(from, to), 10 * 60 * 1000);
-    return () => clearInterval(id);
-  }, [from, to, fetchRate]);
-
-  const swap = () => {
-    setFrom(to);
-    setTo(from);
-  };
-
-  const refresh = () => fetchRate(from, to);
-
-  const fmt = (ccy: "USD" | "ZAR", val: number) =>
-    new Intl.NumberFormat(ccy === "USD" ? "en-US" : "en-ZA", {
-      style: "currency",
-      currency: ccy,
-      maximumFractionDigits: 2,
-    }).format(val);
-
-  const converted = rate ? amount * rate : 0;
-
-  return (
-    <div
-      className={cn(
-        "relative rounded-2xl p-4 md:p-5",
-        "ring-1 ring-inset ring-[#B8983A]/25",
-        "bg-[linear-gradient(90deg,rgba(246,231,182,0.10),rgba(217,189,106,0.10)_35%,rgba(184,152,58,0.10)_65%,rgba(246,231,182,0.10))]"
-      )}
-    >
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-2xl"
-        style={{
-          background:
-            "linear-gradient(120deg, rgba(246,231,182,0.25), rgba(217,189,106,0.18), rgba(184,152,58,0.25))",
-          maskImage: "linear-gradient(#000, transparent 60%)",
-          WebkitMaskImage: "linear-gradient(#000, transparent 60%)",
-        }}
-        animate={{ opacity: [0.4, 0.7, 0.4] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      <div className="flex items-center justify-between gap-3">
-        <span className="inline-flex items-center gap-2 text-xs md:text-sm text-[#D9BD6A]">
-          <span className="h-2 w-2 rounded-full bg-[#D9BD6A]/80 shadow-[0_0_12px_rgba(217,189,106,0.65)]" />
-          {loading ? "Loading rate…" : `1 ${from} = ${rate?.toFixed(3)} ${to}`}
-        </span>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={refresh}
-            className="text-xs rounded-md px-2 py-1 ring-1 ring-[#B8983A]/40 text-[#D9BD6A] hover:bg-[#F6E7B6]/10 focus:outline-none focus:ring-2 focus:ring-[#B8983A]/60 transition"
-          >
-            Refresh
-          </button>
-          <button
-            onClick={swap}
-            className={cn(
-              "text-xs rounded-md px-2 py-1 text-black focus:outline-none focus:ring-2 focus:ring-[#B8983A]/60 transition",
-              "bg-[linear-gradient(90deg,#F6E7B6,#D9BD6A_35%,#B8983A_65%,#F6E7B6)]"
-            )}
-          >
-            Swap
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="rounded-xl p-3 bg-white/10 backdrop-blur-md dark:bg-neutral-900/70 ring-1 ring-[#B8983A]/30">
-          <label className="flex items-center justify-between mb-1">
-            <span className="text-xs text-neutral-300">From</span>
-            <select
-              value={from}
-              onChange={(e) => setFrom(e.target.value as "USD" | "ZAR")}
-              className={cn(
-                "bg-neutral-900 text-white text-[13px] md:text-sm font-semibold rounded-md",
-                "px-2 py-1 outline-none border border-neutral-700/70",
-                "hover:border-[#B8983A]/60 focus:ring-2 focus:ring-[#B8983A]/60 focus:border-[#B8983A]",
-                "transition-colors"
-              )}
-            >
-              <option value="USD" className="dark:bg-neutral-900 bg-white">
-                USD — US Dollar
-              </option>
-              <option value="ZAR" className="dark:bg-neutral-900 bg-white">
-                ZAR — South African Rand
-              </option>
-            </select>
-          </label>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono px-2 py-1 rounded-md ring-1 ring-[#B8983A]/40 text-[#B8983A] bg-[#B8983A]/5">
-              {from}
-            </span>
-            <input
-              type="number"
-              inputMode="decimal"
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value || 0))}
-              className="w-full bg-transparent dark:text-white text-neutral-100 text-lg md:text-xl font-semibold outline-none"
-              min={0}
-            />
-          </div>
-        </div>
-
-        <div className="relative rounded-xl p-3 bg-white/10 backdrop-blur-md dark:bg-neutral-900/70 ring-1 ring-[#B8983A]/30 overflow-hidden">
-          <span
-            aria-hidden
-            className="pointer-events-none absolute -right-4 -bottom-6 h-40 w-56
-                       bg-[radial-gradient(ellipse_at_bottom_right,rgba(0,0,0,0.35)_0%,rgba(0,0,0,0.15)_45%,transparent_75%)]"
-          />
-          <label className="flex items-center justify-between mb-1">
-            <span className="text-xs text-neutral-300">To</span>
-            <select
-              value={to}
-              onChange={(e) => setTo(e.target.value as "USD" | "ZAR")}
-              className={cn(
-                "bg-neutral-900 text-white text-[13px] md:text-sm font-semibold rounded-md",
-                "px-2 py-1 outline-none border border-neutral-700/70",
-                "hover:border-[#B8983A]/60 focus:ring-2 focus:ring-[#B8983A]/60 focus:border-[#B8983A]",
-                "transition-colors"
-              )}
-            >
-              <option value="ZAR" className="dark:bg-neutral-900 bg-white">
-                ZAR — South African Rand
-              </option>
-              <option value="USD" className="dark:bg-neutral-900 bg-white">
-                USD — US Dollar
-              </option>
-            </select>
-          </label>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono px-2 py-1 rounded-md ring-1 ring-[#B8983A]/40 text-[#B8983A] bg-[#B8983A]/5">
-              {to}
-            </span>
-            <output className="w-full text-lg md:text-xl font-semibold dark:text-white">
-              {loading || rate === null ? "—" : fmt(to, converted)}
-            </output>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-3 flex items-center justify-between text-xs text-neutral-400">
-        <span className={cn(error ? "text-rose-400" : undefined)}>
-          {error ? error : "Live rates via exchangerate.host"}
-        </span>
-        <span>{updatedAt ? `Updated ${updatedAt.toLocaleTimeString()}` : ""}</span>
-      </div>
-
-      <style jsx global>{`
-        select option {
-          background-color: #0a0a0a; /* dark panel */
-          color: #ffffff;
-        }
-        @media (prefers-color-scheme: light) {
-          select option {
-            background-color: #ffffff;
-            color: #0a0a0a;
-          }
-        }
-      `}</style>
-    </div>
-  );
-};
-
-export default CurrencyConverter;

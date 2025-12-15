@@ -11,19 +11,21 @@ import {
   useWillChange
 } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
   Loader2, Edit2, Save, X, Trash2,
   Lock, Zap, ShieldCheck, Users, Star, BarChart3,
   Youtube, PlayCircle, ExternalLink, Plus, Copy, Check,
-  ChevronLeft
+  ChevronLeft, HelpCircle, Terminal, Code2, Binary
 } from "lucide-react";
 
 import { useShop, type Product } from "@/app/VIP/ShopContext";
 import AdminLoginModal from "@/app/VIP/AdminLoginModal";
 import AdminPanel from "./AdminPanel";
 import Faq from "@/app/shop/Faq";
+import LogoImage from "@/public/bullmoney-logo.png"; 
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import type { Engine } from "@tsparticles/engine";
@@ -55,78 +57,291 @@ const getYoutubeId = (url: string | undefined): string | null => {
 
 const SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #3b82f6 50%, #00000000 100%)";
 
-// --- HELPER TIP COMPONENT (Positioned Below) ---
-const HelperTip = ({ text }: { text: string }) => (
-  <motion.div
-    initial={{ opacity: 0, y: -10, scale: 0.8 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, y: -10, scale: 0.8 }}
-    transition={{ type: "spring", stiffness: 300, damping: 20 }}
-    // Changed to 'top-full mt-3' to appear BELOW the icon
-    className="absolute top-full mt-3 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center pointer-events-none min-w-max"
-  >
-    {/* Pointer pointing UP (Attached to top of tooltip) */}
-    <div className="w-2 h-2 bg-neutral-900 rotate-45 translate-y-[4px] relative z-10 border-t border-l border-white/10" />
+// Simple Typewriter helper for the overlay
+const Typewriter = ({ text, speed }: { text: string, speed: number }) => {
+  const [displayed, setDisplayed] = useState("");
+  useEffect(() => {
+    let i = 0;
+    const timer = setInterval(() => {
+        setDisplayed(text.substring(0, i));
+        i++;
+        if (i > text.length) clearInterval(timer);
+    }, speed);
+    return () => clearInterval(timer);
+  }, [text, speed]);
+  return <span>{displayed}</span>;
+};
 
-    {/* Tip Container */}
-    <div className="relative p-[1.5px] overflow-hidden rounded-full shadow-lg">
-        <motion.div 
-            className="absolute inset-[-100%]"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            style={{ background: SHIMMER_GRADIENT }}
-        />
-        <div className="relative z-10 px-3 py-1 bg-neutral-900 rounded-full flex items-center justify-center border border-white/10">
-            <span className="text-white text-[10px] font-bold whitespace-nowrap">
-                {text}
-            </span>
+// --- SYSTEM OVERRIDE OVERLAY (FULL SCREEN EASTER EGG) ---
+const SystemOverrideOverlay = ({ onClose }: { onClose: () => void }) => {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    // Sequence of animations
+    const t1 = setTimeout(() => setStep(1), 800); // Decrypting
+    const t2 = setTimeout(() => setStep(2), 2000); // Access Granted
+    const t3 = setTimeout(() => {
+        setStep(3); // Exit
+        setTimeout(onClose, 800);
+    }, 3500);
+
+    return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+    };
+  }, [onClose]);
+
+  return (
+    <motion.div
+        initial={{ y: "100%" }}
+        animate={{ y: "0%" }}
+        exit={{ y: "-100%" }}
+        transition={{ duration: 0.5, ease: "circInOut" }}
+        className="fixed inset-0 z-[100000] bg-black flex flex-col items-center justify-center font-mono text-blue-500 overflow-hidden"
+    >
+        {/* Matrix Rain Background (Simplified) */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+             {Array.from({ length: 20 }).map((_, i) => (
+                 <motion.div
+                    key={i}
+                    initial={{ y: -100, x: Math.random() * 100 + "%" }}
+                    animate={{ y: "120vh" }}
+                    transition={{ duration: Math.random() * 2 + 1, repeat: Infinity, ease: "linear", delay: Math.random() }}
+                    className="absolute text-xs"
+                 >
+                    {Math.random() > 0.5 ? "101010" : "010101"}
+                 </motion.div>
+             ))}
         </div>
-    </div>
-  </motion.div>
-);
 
-// --- FOOTER ITEM WRAPPER ---
-const FooterItemWrapper = ({ 
+        <div className="relative z-10 flex flex-col items-center gap-6">
+            
+            {/* STAGE 0: LOCK ICON */}
+            {step === 0 && (
+                <motion.div 
+                    initial={{ scale: 0 }} 
+                    animate={{ scale: 1 }} 
+                    className="p-6 rounded-full border-2 border-blue-500/50 bg-blue-500/10"
+                >
+                    <Lock size={48} className="animate-pulse" />
+                </motion.div>
+            )}
+
+            {/* STAGE 1: DECRYPTING */}
+            {step === 1 && (
+                <motion.div 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }}
+                    className="text-center"
+                >
+                    <div className="flex items-center gap-2 text-2xl font-bold mb-2">
+                        <Terminal size={24} /> 
+                        <Typewriter text="BYPASSING SECURITY..." speed={50} />
+                    </div>
+                    <div className="w-64 h-2 bg-neutral-800 rounded-full overflow-hidden mt-4">
+                        <motion.div 
+                            initial={{ width: 0 }} 
+                            animate={{ width: "100%" }} 
+                            transition={{ duration: 1 }} 
+                            className="h-full bg-blue-500" 
+                        />
+                    </div>
+                </motion.div>
+            )}
+
+            {/* STAGE 2: ACCESS GRANTED */}
+            {step >= 2 && (
+                <motion.div 
+                    initial={{ scale: 0.8, opacity: 0 }} 
+                    animate={{ scale: 1.2, opacity: 1 }}
+                    className="text-center"
+                >
+                    <div className="relative w-48 h-16 mx-auto mb-6">
+                        <Image src={LogoImage} alt="Bull Money" fill className="object-contain" />
+                    </div>
+                    <h2 className="text-4xl font-black text-white tracking-tighter uppercase mb-2">
+                        System Override
+                    </h2>
+                    <div className="inline-block px-4 py-1 bg-blue-600 text-black font-bold text-sm rounded">
+                        ACCESS GRANTED
+                    </div>
+                </motion.div>
+            )}
+        </div>
+    </motion.div>
+  );
+};
+
+
+// --- MATRIX DECODER TOOLTIP COMPONENT ---
+const MatrixLogoDecoder = ({ trigger }: { trigger: boolean }) => {
+  const [decoded, setDecoded] = useState(false);
+  const [text, setText] = useState("");
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&";
+
+  useEffect(() => {
+    if (trigger) {
+      setDecoded(false);
+      let iterations = 0;
+      const interval = setInterval(() => {
+        setText(Array(8).fill(0).map(() => chars[Math.floor(Math.random() * chars.length)]).join(""));
+        iterations++;
+        if (iterations > 10) { 
+          clearInterval(interval);
+          setDecoded(true);
+        }
+      }, 50);
+      return () => clearInterval(interval);
+    }
+  }, [trigger]);
+
+  return (
+    <div className="relative w-[100px] h-[30px] flex items-center justify-center overflow-hidden">
+      {!decoded ? (
+        <span className="font-mono text-xs text-blue-500 font-bold animate-pulse tracking-widest">
+          {text}
+        </span>
+      ) : (
+        <motion.div 
+            initial={{ opacity: 0, scale: 0.8, filter: "blur(4px)" }}
+            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+            className="relative w-full h-full"
+        >
+            <Image src={LogoImage} alt="Bull Money Logo" fill className="object-contain" />
+            <motion.div 
+                initial={{ left: "-100%" }}
+                animate={{ left: "100%" }}
+                transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3, ease: "linear" }}
+                className="absolute top-0 bottom-0 w-[20px] bg-gradient-to-r from-transparent via-white/50 to-transparent -skew-x-12 z-10"
+            />
+        </motion.div>
+      )}
+    </div>
+  );
+};
+
+// --- HELPER TIP COMPONENT ---
+const HelperTip = ({ 
+    text, 
+    children, 
+    position = "top", 
+    delay = 0,
+    animateClick = false 
+}: { 
+    text?: string, 
+    children?: React.ReactNode, 
+    position?: "top" | "bottom",
+    delay?: number,
+    animateClick?: boolean 
+}) => {
+  const isTop = position === "top";
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: isTop ? 10 : -10, scale: 0.8 }}
+      // Apply the bounce animation if animateClick is true
+      animate={animateClick 
+        ? { opacity: 1, y: isTop ? 5 : -5, scale: 1.1 } 
+        : { opacity: 1, y: 0, scale: 1 }
+      }
+      exit={{ opacity: 0, y: isTop ? 10 : -10, scale: 0.8 }}
+      transition={{ 
+        type: "spring", 
+        stiffness: 300, 
+        damping: animateClick ? 10 : 20, 
+        delay 
+      }}
+      className={cn(
+          "absolute left-1/2 -translate-x-1/2 z-[70] flex flex-col items-center pointer-events-none min-w-max",
+          isTop ? "bottom-full mb-5" : "top-full mt-5" 
+      )}
+    >
+      {/* Pointer (Triangle) */}
+      <div 
+        className={cn(
+            "w-2 h-2 bg-neutral-900 rotate-45 relative z-10",
+            isTop ? "-translate-y-[4px] border-b border-r border-white/10" : "translate-y-[4px] border-t border-l border-white/10"
+        )}
+      />
+
+      {/* Tip Container (The bubble) */}
+      <div className="relative p-[1.5px] overflow-hidden rounded-full shadow-lg">
+          <motion.div 
+              className="absolute inset-[-100%]"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              style={{ background: SHIMMER_GRADIENT }}
+          />
+          <div className="relative z-10 px-3 py-1 bg-neutral-900 rounded-full flex items-center justify-center border border-white/10 min-h-[30px] min-w-[80px]">
+              {text ? (
+                <span className="text-white text-[10px] font-bold whitespace-nowrap">
+                    {text}
+                </span>
+              ) : children}
+          </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// --- WRAPPER FOR HOVER/AUTO TIPS ---
+const TipWrapper = ({ 
   children, 
   isActive, 
   tipText,
+  tipChildren,
   onClick,
-  className
+  className,
+  position = "top"
 }: { 
   children: React.ReactNode, 
   isActive: boolean, 
-  tipText: string,
-  onClick?: () => void,
-  className?: string
+  tipText?: string,
+  tipChildren?: React.ReactNode,
+  onClick?: (e: React.MouseEvent) => void, // Allow onClick to be passed
+  className?: string,
+  position?: "top" | "bottom"
 }) => {
   const [hovered, setHovered] = useState(false);
+  const [clicked, setClicked] = useState(false);
+
+  // Custom click handler to trigger the helper bounce animation
+  const handleClick = (e: React.MouseEvent) => {
+    if (onClick) {
+        // 1. Trigger bounce animation
+        setClicked(true);
+        setTimeout(() => setClicked(false), 500); // Bounce duration
+
+        // 2. Execute original onClick function after a slight delay
+        setTimeout(() => onClick(e), 100); 
+    } else {
+        // If no custom onClick, let the click pass through to children (like Link)
+    }
+  };
 
   return (
     <div 
       className={cn("relative flex flex-col items-center group cursor-pointer", className)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={onClick}
+      // Use handleClick for the custom animation, if onClick is provided
+      {...(onClick && { onClick: handleClick })}
+      // Otherwise, rely on children's native click events (e.g., Link)
     >
-      <div className="relative p-[1.5px] rounded-full overflow-hidden">
-         {/* Shimmer Border */}
-         <motion.div 
-            className="absolute inset-[-100%]"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            style={{ background: SHIMMER_GRADIENT }}
-        />
-        {/* Inner Content */}
-        <div className="relative z-10 bg-neutral-900 rounded-full p-2 border border-white/5">
-            {children}
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {(isActive && !hovered) && (
-            <HelperTip text={tipText} />
-        )}
-      </AnimatePresence>
+        {children}
+        <AnimatePresence>
+            {(isActive || hovered) && (
+                <HelperTip 
+                    text={tipText} 
+                    position={position}
+                    // Apply bounce animation if this wrapper has an onClick handler and was just clicked
+                    animateClick={clicked && !!onClick} 
+                >
+                    {tipChildren}
+                </HelperTip>
+            )}
+        </AnimatePresence>
     </div>
   );
 };
@@ -215,8 +430,23 @@ const VideoCard = React.memo(({
   const videoId = getYoutubeId(product.buyUrl);
   const ref = useRef(null);
   const isInView = useInView(ref, { margin: "200px 0px 200px 0px", once: false });
+  const [showTip, setShowTip] = useState(false);
+  
   const willChange = useWillChange();
   const shouldLoadPreview = !isMobile && isInView;
+
+  useEffect(() => {
+    if (isInView) {
+        const t = setTimeout(() => {
+            setShowTip(true);
+            const t2 = setTimeout(() => setShowTip(false), 3000);
+            return () => clearTimeout(t2);
+        }, 500);
+        return () => clearTimeout(t);
+    } else {
+        setShowTip(false);
+    }
+  }, [isInView]);
 
   return (
     <motion.div
@@ -227,7 +457,13 @@ const VideoCard = React.memo(({
       onClick={() => setActive(product, uniqueLayoutId)}
       className="group/product h-[14rem] w-[18rem] md:h-[22rem] md:w-[32rem] relative flex-shrink-0 cursor-pointer backface-hidden transform-gpu"
     >
-      <div className="block h-full w-full md:group-hover/product:shadow-[0_0_40px_rgba(59,130,246,0.2)] transition-all duration-500 rounded-[20px] md:rounded-[24px] safari-fix-layer">
+      <div className="relative block h-full w-full md:group-hover/product:shadow-[0_0_40px_rgba(59,130,246,0.2)] transition-all duration-500 rounded-[20px] md:rounded-[24px] safari-fix-layer">
+        <AnimatePresence>
+            {showTip && (
+                <HelperTip text="Check me out" position="top" />
+            )}
+        </AnimatePresence>
+
         <motion.div 
             layoutId={uniqueLayoutId}
             className="relative h-full w-full rounded-[20px] md:rounded-[24px] overflow-hidden bg-neutral-900 border border-blue-900/30 md:group-hover/product:border-blue-500/50 transition-colors safari-mask-fix"
@@ -295,16 +531,32 @@ const HeroParallax = () => {
   const isMobile = useIsMobile();
   const willChange = useWillChange();
 
-  // --- FOOTER HELPERS LOGIC ---
   const [activeFooterIndex, setActiveFooterIndex] = useState(0);
   const TOTAL_FOOTER_ITEMS = 4;
 
+  const [logoTrigger, setLogoTrigger] = useState(false);
+  const [showEasterEgg, setShowEasterEgg] = useState(false); // State for full-screen overlay
+
   useEffect(() => {
+    // Initial trigger when component mounts to show decode effect
+    setLogoTrigger(true);
+    
+    // Cycle footer helpers
     const interval = setInterval(() => {
         setActiveFooterIndex(prev => (prev + 1) % TOTAL_FOOTER_ITEMS);
     }, 4000);
     return () => clearInterval(interval);
   }, []);
+
+  // Handle Logo Click (Triggers animation and full screen takeover)
+  const handleLogoClick = (e: React.MouseEvent) => {
+    // 1. Re-trigger the decoder animation in the tooltip
+    setLogoTrigger(false);
+    setTimeout(() => setLogoTrigger(true), 10);
+    
+    // 2. Trigger the full-screen Easter Egg overlay
+    setShowEasterEgg(true); 
+  };
 
   const videoProducts = useMemo(() => {
     if (!products) return [];
@@ -490,6 +742,13 @@ const HeroParallax = () => {
       .safari-fix-layer { transform: translateZ(0); -webkit-transform: translateZ(0); }
     `}</style>
         
+    {/* --- FULL SCREEN EASTER EGG OVERLAY --- */}
+    <AnimatePresence>
+        {showEasterEgg && (
+            <SystemOverrideOverlay onClose={() => setShowEasterEgg(false)} />
+        )}
+    </AnimatePresence>
+        
     {/* --- ADMIN LOGIN MODAL --- */}
     <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-[99999]">
         <div className="pointer-events-auto">
@@ -531,7 +790,6 @@ const HeroParallax = () => {
                     layoutId={activeLayoutId} 
                     className="relative w-full h-full bg-neutral-900 flex flex-col md:flex-row safari-fix-layer"
                 >
-                    {/* ... (Existing Modal Content logic same as previous) ... */}
                     <div className="absolute top-24 md:top-4 left-4 z-50">
                         <ShimmerBorder rounded="rounded-full">
                             <button onClick={handleClose} className="p-2 bg-black/80 text-white hover:bg-neutral-800 transition-colors flex items-center justify-center group"><ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform text-blue-400" /></button>
@@ -601,16 +859,25 @@ const HeroParallax = () => {
                     </motion.div>
                  )}
 
-                <h1 className="text-5xl md:text-8xl font-sans font-black text-white leading-[0.9] tracking-tighter">
-                {(hero?.title || "Welcome VIP").split(" ").map((word: string, i: number) => (
-                    <span 
-                        key={i} 
-                        className="inline-block mr-3 text-transparent bg-clip-text bg-[linear-gradient(110deg,#FFFFFF,45%,#3b82f6,55%,#FFFFFF)] bg-[length:250%_100%] animate-shimmer"
-                    >
-                      {word}
-                    </span>
-                ))}
-                </h1>
+                {/* MAIN TITLE WITH LOGO HELPER - EASTER EGG */}
+                <TipWrapper 
+                    isActive={true} 
+                    position="top" 
+                    className="pointer-events-auto"
+                    onClick={handleLogoClick}
+                    tipText="TAP/CLICK TITLE FOR ENCRYPTION"
+                >
+                    <h1 className="text-5xl md:text-8xl font-sans font-black text-white leading-[0.9] tracking-tighter cursor-default">
+                    {(hero?.title || "Welcome VIP").split(" ").map((word: string, i: number) => (
+                        <span 
+                            key={i} 
+                            className="inline-block mr-3 text-transparent bg-clip-text bg-[linear-gradient(110deg,#FFFFFF,45%,#3b82f6,55%,#FFFFFF)] bg-[length:250%_100%] animate-shimmer"
+                        >
+                        {word}
+                        </span>
+                    ))}
+                    </h1>
+                </TipWrapper>
 
                 <motion.p
                     initial={{ opacity: 0, y: 20 }}
@@ -628,11 +895,19 @@ const HeroParallax = () => {
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="mt-8 md:mt-10 flex flex-col sm:flex-row gap-6 items-start sm:items-center relative z-30"
             >
-                <ShimmerBorder rounded="rounded-xl">
-                     <div className="bg-neutral-900/50 p-1 rounded-xl">
-                        <Faq />
-                     </div>
-                </ShimmerBorder>
+                {/* FAQ HELPER */}
+                <TipWrapper 
+                    isActive={false} // Only on hover
+                    tipText="Common Questions" 
+                    position="top"
+                    className="pointer-events-auto"
+                >
+                    <ShimmerBorder rounded="rounded-xl">
+                        <div className="bg-neutral-900/50 p-1 rounded-xl">
+                            <Faq />
+                        </div>
+                    </ShimmerBorder>
+                </TipWrapper>
 
                 <div className="flex items-center gap-4 pl-0 sm:pl-4 border-l-0 sm:border-l border-neutral-800">
                     <div className="flex -space-x-3">
@@ -732,10 +1007,10 @@ const HeroParallax = () => {
     )}
 
     {/* --- FOOTER / ADMIN ACCESS --- */}
-    <div className="relative z-30 bg-black text-neutral-500 py-12 md:py-16 px-8 text-center border-t border-neutral-900 mt-1">
+    <div className="relative z-30 bg-black text-neutral-500 py-16 md:py-20 px-8 text-center border-t border-neutral-900 mt-1">
         {/* Footer Grid */}
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 mb-12 text-xs uppercase tracking-widest text-neutral-400">
-            {/* Item 1: YouTube */}
+            {/* Item 1: YouTube -> /Blogs */}
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -743,16 +1018,27 @@ const HeroParallax = () => {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="flex flex-col items-center gap-3"
             >
-                <FooterItemWrapper 
+                <TipWrapper 
                     isActive={activeFooterIndex === 0} 
                     tipText="Watch Videos"
+                    position="top"
                 >
-                    <Youtube className="w-5 h-5 text-red-500" />
-                </FooterItemWrapper>
+                    <Link href="/Blogs" className="relative p-[1.5px] rounded-full overflow-hidden block">
+                        <motion.div 
+                            className="absolute inset-[-100%]"
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                            style={{ background: SHIMMER_GRADIENT }}
+                        />
+                        <div className="relative z-10 bg-neutral-900 rounded-full p-2 border border-white/5 hover:bg-neutral-800 transition-colors">
+                            <Youtube className="w-5 h-5 text-red-500" />
+                        </div>
+                    </Link>
+                </TipWrapper>
                 <span>Exclusive Content</span>
             </motion.div>
 
-            {/* Item 2: Market Analysis */}
+            {/* Item 2: Market Analysis -> /Prop */}
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -760,12 +1046,23 @@ const HeroParallax = () => {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="flex flex-col items-center gap-3"
             >
-                <FooterItemWrapper 
+                <TipWrapper 
                     isActive={activeFooterIndex === 1} 
                     tipText="View Charts"
+                    position="top"
                 >
-                    <BarChart3 className="w-5 h-5 text-blue-500" />
-                </FooterItemWrapper>
+                    <Link href="/Prop" className="relative p-[1.5px] rounded-full overflow-hidden block">
+                        <motion.div 
+                            className="absolute inset-[-100%]"
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                            style={{ background: SHIMMER_GRADIENT }}
+                        />
+                        <div className="relative z-10 bg-neutral-900 rounded-full p-2 border border-white/5 hover:bg-neutral-800 transition-colors">
+                            <BarChart3 className="w-5 h-5 text-blue-500" />
+                        </div>
+                    </Link>
+                </TipWrapper>
                 <span>Market Analysis</span>
             </motion.div>
 
@@ -777,12 +1074,23 @@ const HeroParallax = () => {
                 transition={{ duration: 0.6, delay: 0.3 }}
                 className="flex flex-col items-center gap-3"
             >
-                <FooterItemWrapper 
+                <TipWrapper 
                     isActive={activeFooterIndex === 2} 
                     tipText="Check Stats"
+                    position="top"
                 >
-                    <ShieldCheck className="w-5 h-5 text-blue-500" />
-                </FooterItemWrapper>
+                    <div className="relative p-[1.5px] rounded-full overflow-hidden">
+                        <motion.div 
+                            className="absolute inset-[-100%]"
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                            style={{ background: SHIMMER_GRADIENT }}
+                        />
+                        <div className="relative z-10 bg-neutral-900 rounded-full p-2 border border-white/5">
+                            <ShieldCheck className="w-5 h-5 text-blue-500" />
+                        </div>
+                    </div>
+                </TipWrapper>
                 <span>Verified Data</span>
             </motion.div>
         </div>
@@ -798,17 +1106,26 @@ const HeroParallax = () => {
             <p className="text-[10px] opacity-50">&copy; {new Date().getFullYear()} BULLMONEY VIP. All rights reserved.</p>
             
             {!isAdmin && (
-                <FooterItemWrapper 
+                <TipWrapper 
                     isActive={activeFooterIndex === 3} 
                     tipText="Admin Only"
+                    position="top"
                     className="mt-4"
                     onClick={() => setIsAdminLoginOpen(true)}
                 >
-                    <div className="flex items-center gap-2 text-[10px] px-2 uppercase tracking-widest text-neutral-400 hover:text-white transition-colors">
-                        <Lock size={12} />
-                        <span>Admin Access</span>
+                    <div className="relative p-[1.5px] rounded-full overflow-hidden group cursor-pointer">
+                         <motion.div 
+                            className="absolute inset-[-100%]"
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                            style={{ background: SHIMMER_GRADIENT }}
+                        />
+                        <div className="relative z-10 bg-neutral-900 rounded-full px-3 py-1 border border-white/5 flex items-center gap-2 hover:bg-neutral-800 transition-colors">
+                             <Lock size={12} className="text-neutral-400 group-hover:text-white transition-colors" />
+                             <span className="text-[10px] uppercase tracking-widest text-neutral-400 group-hover:text-white transition-colors">Admin Access</span>
+                        </div>
                     </div>
-                </FooterItemWrapper>
+                </TipWrapper>
             )}
         </motion.div>
     </div>

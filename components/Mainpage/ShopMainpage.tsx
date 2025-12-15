@@ -28,9 +28,12 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// --- SHIMMER STYLE CONSTANTS ---
-// This creates the moving shine effect
+// --- SHIMMER STYLES & CONSTANTS ---
+// 1. Existing Background Shimmer
 const SHIMMER_BG_CLASS = "bg-[linear-gradient(110deg,transparent,45%,rgba(59,130,246,0.3),55%,transparent)] bg-[length:250%_100%] animate-shimmer-fast";
+
+// 2. New Border Shimmer for Tips (From Navbar)
+const SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #3b82f6 50%, #00000000 100%)";
 
 // ==========================================
 // 1. EVERVAULT CARD
@@ -151,7 +154,38 @@ const LiveVideoPreview = ({ isLive }: { isLive: boolean }) => {
 };
 
 // ==========================================
-// 3. DATA
+// 3. HELPER TIP COMPONENT (NEW)
+// ==========================================
+
+const HelperTip = ({ label }: { label: string }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 10, scale: 0.8 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    exit={{ opacity: 0, y: 10, scale: 0.8 }}
+    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    className="absolute -top-3 right-4 z-50 flex flex-col items-center pointer-events-none"
+  >
+    <div className="relative p-[1.5px] overflow-hidden rounded-full shadow-lg shadow-blue-900/40">
+        {/* Rotating Shimmer Gradient */}
+        <motion.div 
+            className="absolute inset-[-100%]"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            style={{ background: SHIMMER_GRADIENT }}
+        />
+        <div className="relative z-10 px-3 py-1 bg-[#020611] rounded-full flex items-center justify-center border border-blue-500/20">
+            <span className="text-blue-100 text-[10px] font-bold whitespace-nowrap">
+                Click {label}
+            </span>
+        </div>
+    </div>
+    {/* Triangle Pointer */}
+    <div className="w-2 h-2 bg-[#020611] rotate-45 -translate-y-[4px] relative z-10 border-b border-r border-blue-500/20" />
+  </motion.div>
+);
+
+// ==========================================
+// 4. DATA
 // ==========================================
 
 const directoryItems = [
@@ -189,16 +223,30 @@ const directoryItems = [
 ];
 
 // ==========================================
-// 4. MAIN PAGE
+// 5. MAIN PAGE
 // ==========================================
 
 export default function RecruitPage() {
   const [open, setOpen] = useState(false);
   const [isLive, setIsLive] = useState(false);
+  
+  // -- Helper Tip Logic --
+  const [activeTipIndex, setActiveTipIndex] = useState(0);
 
   useEffect(() => {
     setIsLive(true);
   }, []);
+
+  // Cycle through tips only when modal is open
+  useEffect(() => {
+    if (!open) return;
+    
+    const intervalId = setInterval(() => {
+      setActiveTipIndex((prev) => (prev + 1) % directoryItems.length);
+    }, 3000); // Cycles every 3 seconds
+
+    return () => clearInterval(intervalId);
+  }, [open]);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "auto";
@@ -242,13 +290,12 @@ export default function RecruitPage() {
                 exit={{ y: 30, opacity: 0, scale: 0.9 }}
                 transition={{ type: "spring", damping: 30, stiffness: 200 }} 
                 onClick={(e) => e.stopPropagation()}
-                // Added "p-[1px]" to create space for the gradient border to show
                 className="relative w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden p-[1px]"
               >
                 
                 {/* 1. ANIMATED BORDER LAYER */}
                 <div className={cn("absolute inset-0 opacity-50", SHIMMER_BG_CLASS)} />
-                <div className="absolute inset-0 bg-blue-900/20" /> {/* Static blue glow base */}
+                <div className="absolute inset-0 bg-blue-900/20" /> 
                 
                 {/* 2. MAIN MODAL CONTENT */}
                 <div className="relative w-full h-full bg-[#050a18] rounded-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -299,13 +346,12 @@ export default function RecruitPage() {
                                 </div>
                                 
                                 <div className="mt-3">
-                                    {/* BUTTON WITH SHIMMER */}
                                     <button
                                         onClick={() => window.open("https://youtube.com/@BULLMONEY.ONLINE", "_blank")}
                                         className={cn(
                                             "w-full py-2 border border-blue-900/30 text-blue-100 hover:text-white font-bold text-xs rounded-lg transition-all duration-500 flex items-center justify-center gap-2 overflow-hidden relative",
-                                            "bg-blue-950/50 hover:bg-blue-900/50", // Base colors
-                                            SHIMMER_BG_CLASS // The shimmer effect
+                                            "bg-blue-950/50 hover:bg-blue-900/50", 
+                                            SHIMMER_BG_CLASS 
                                         )}
                                     >
                                         <span className="relative z-10 flex items-center gap-2">
@@ -325,10 +371,17 @@ export default function RecruitPage() {
                             <div 
                                 key={idx} 
                                 className={cn(
-                                "h-[200px]", 
+                                "h-[200px] relative", // Added relative for absolute HelperTip positioning
                                 isLastItem ? "md:col-span-2 lg:col-span-3 lg:h-[140px]" : "" 
                                 )}
                             >
+                                {/* Helper Tip - Only shows if active index matches */}
+                                <AnimatePresence>
+                                    {activeTipIndex === idx && (
+                                        <HelperTip label={item.name} />
+                                    )}
+                                </AnimatePresence>
+
                                 <EvervaultCard>
                                     <div className={cn(
                                         "flex h-full w-full relative z-20",
@@ -357,7 +410,6 @@ export default function RecruitPage() {
                                                 className={cn(
                                                 "relative w-full rounded-lg overflow-hidden text-center",
                                                 "border border-blue-900/30 bg-blue-950/40",
-                                                // Using the unified Shimmer here
                                                 SHIMMER_BG_CLASS, 
                                                 "group-hover/btn:border-blue-500/50 group-hover/btn:bg-blue-900/30 transition-all duration-500",
                                                 isLastItem ? "py-3 px-6" : "py-2"
@@ -392,7 +444,6 @@ export default function RecruitPage() {
           from { background-position: 0% 0%; }
           to { background-position: -250% 0%; }
         }
-        /* Sped up from 10s to 3s for higher visibility */
         .animate-shimmer-fast { animation: shimmer-fast 3s linear infinite; } 
       `}</style>
     </div>

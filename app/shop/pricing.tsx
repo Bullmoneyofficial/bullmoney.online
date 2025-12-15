@@ -20,6 +20,46 @@ import {
 import { useRef } from "react";
 import { supabase } from "@/lib/supabaseClient"; // <-- ENSURED CORRECT SUPABASE IMPORT
 
+// --- THEME CONSTANTS FOR HELPERS ---
+const BLUE_SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #38bdf8 50%, #00000000 100%)";
+const BLUE_TEXT_GRADIENT = "bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400";
+
+// ============================================================================
+// HELPER TIP COMPONENT (BLUE/BLACK THEME)
+// ============================================================================
+
+const HelperTip = ({ label, className }: { label: string; className?: string }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 5, scale: 0.9 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    exit={{ opacity: 0, y: 5, scale: 0.9 }}
+    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    // z-[100] ensures the tip is over everything
+    className={cn("absolute z-[100] flex flex-col items-center pointer-events-none", className)}
+  >
+    {/* The Bubble */}
+    <div className="relative p-[1.5px] overflow-hidden rounded-full shadow-lg shadow-sky-500/20">
+        <motion.div 
+            className="absolute inset-[-100%]"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            style={{ background: BLUE_SHIMMER_GRADIENT }}
+        />
+        <div className="relative z-10 px-3 py-1 bg-[#0a0a0a] rounded-full flex items-center justify-center border border-sky-500/40">
+            <span className={cn("bg-clip-text text-transparent text-[10px] font-bold whitespace-nowrap", BLUE_TEXT_GRADIENT)}>
+                {label}
+            </span>
+        </div>
+    </div>
+    {/* The Triangle Pointer (pointing down) */}
+    <div className="w-2 h-2 bg-[#0a0a0a] rotate-45 -translate-y-[4px] relative z-10 border-b border-r border-sky-500/40" />
+  </motion.div>
+);
+
+// ============================================================================
+// PRICING COMPONENT (MAIN EXPORT)
+// ============================================================================
+
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "WebPage",
@@ -57,7 +97,7 @@ const structuredData = {
         ],
       },
       {
-        "@type": "HowToStep",
+      "@type": "HowToStep",
         position: 3,
         name: "Submit proof and unlock BullMoney Free Access",
         itemListElement: [
@@ -75,6 +115,16 @@ export function Pricing() {
   const [activePartner, setActivePartner] = React.useState<"Vantage broker" | "XM">(
     "Vantage broker"
   );
+  // --- TIP LOGIC ---
+  const [activeTipIndex, setActiveTipIndex] = React.useState(0);
+  
+  // Cycle tips: 0 = CTA, 1 = Tabs, 2 = Step 1 Code, 3 = Step 3 Submit
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+        setActiveTipIndex(prev => (prev + 1) % 4); 
+    }, 4000); 
+    return () => clearInterval(interval);
+  }, []);
 
   const copyPartnerCode = async (code: string) => {
     try {
@@ -138,17 +188,26 @@ export function Pricing() {
         </div>
       </header>
 
-      {/* Video / Sign-up CTA */}
-      <SignUpCTA
-        activePartner={activePartner}
-        vantageHref="https://youtu.be/Q3dSjSP3t8I?si=79NQfv3gmbbjy2IB"
-        xmHref="https://youtu.be/NVkHSPVnacM?si=WYgUacleLzV1X0r1"
-      />
+      {/* Video / Sign-up CTA (TIP 0) */}
+      <div className="relative">
+          <AnimatePresence>
+            {activeTipIndex === 0 && <HelperTip label="Watch How-To Video" className="top-8 left-1/2 -translate-x-1/2" />}
+          </AnimatePresence>
+          <SignUpCTA
+            activePartner={activePartner}
+            vantageHref="https://youtu.be/Q3dSjSP3t8I?si=79NQfv3gmbbjy2IB"
+            xmHref="https://youtu.be/NVkHSPVnacM?si=WYgUacleLzV1X0r1"
+          />
+      </div>
+
       {/* What you get with Free Access */}
 <div className="mx-auto mt-10 max-w-5xl text-center">
 
- {/* Partner Tabs (with animated glow) */}
-      <div className="mt-10 flex justify-center gap-3">
+ {/* Partner Tabs (with animated glow) (TIP 1) */}
+      <div className="mt-10 flex justify-center gap-3 relative">
+        <AnimatePresence>
+            {activeTipIndex === 1 && <HelperTip label="Choose Your Broker" className="-top-10 left-1/2 -translate-x-1/2" />}
+        </AnimatePresence>
         {(["Vantage broker", "XM"] as const).map((partner) => {
           const isActive = activePartner === partner;
           return (
@@ -181,7 +240,7 @@ export function Pricing() {
         })}
       </div>
 
-      {/* Animated Steps switcher — now with full-width Step 1 hero */}
+      {/* Animated Steps switcher */}
       <div className="relative mt-8">
         <AnimatePresence mode="wait">
           <motion.div
@@ -192,9 +251,19 @@ export function Pricing() {
             transition={{ duration: 0.45, ease: "easeInOut" }}
           >
             {activePartner === "XM" ? (
-              <XMThreeSteps copyPartnerCode={copyPartnerCode} copied={copied} />
+              <XMThreeSteps 
+                copyPartnerCode={copyPartnerCode} 
+                copied={copied} 
+                showCodeTip={activeTipIndex === 2}
+                showSubmitTip={activeTipIndex === 3}
+              />
             ) : (
-              <VantageThreeSteps copyPartnerCode={copyPartnerCode} copied={copied} />
+              <VantageThreeSteps 
+                copyPartnerCode={copyPartnerCode} 
+                copied={copied} 
+                showCodeTip={activeTipIndex === 2}
+                showSubmitTip={activeTipIndex === 3}
+              />
             )}
           </motion.div>
         </AnimatePresence>
@@ -336,15 +405,15 @@ export function Pricing() {
   );
 }
 /* --------------------------------------------------------------------------
-   Partner-specific step layouts (Step 1 = full-width hero, Step 3 UNTOUCHED)
+   Partner-specific step layouts 
 -------------------------------------------------------------------------- */
 
-function XMThreeSteps({ copyPartnerCode, copied }: any) {
+function XMThreeSteps({ copyPartnerCode, copied, showCodeTip, showSubmitTip }: any) {
   return (
     <div
       className={cn(
-        "w-full mt-10 grid gap-6 md:mt-12",        // FIX: Removed inner px-4
-        "grid-cols-1 md:grid-cols-2"               // FIX: Standardized 2-col grid
+        "w-full mt-10 grid gap-6 md:mt-12",        
+        "grid-cols-1 md:grid-cols-2"               
       )}
     >
 
@@ -352,9 +421,14 @@ function XMThreeSteps({ copyPartnerCode, copied }: any) {
       <StepCard
         number={1}
         title="Step 1 — Open Your XM Live Account With Our Code"
-        className="col-span-1 md:col-span-2 p-6 md:p-8 bg-gradient-to-br from-sky-950 via-slate-950 to-neutral-950" // FIX: Spans 2 cols on desktop
+        className="col-span-1 md:col-span-2 p-6 md:p-8 bg-gradient-to-br from-sky-950 via-slate-950 to-neutral-950 relative" // Added relative for tip
         actions={
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-3 relative">
+            {/* TIP 2: Code Button */}
+            <AnimatePresence>
+                {showCodeTip && <HelperTip label="Copy Code First" className="-top-12 left-[15%]" />}
+            </AnimatePresence>
+            
             <button
               onClick={() => copyPartnerCode("X3R7P")}
               className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold
@@ -428,7 +502,7 @@ function XMThreeSteps({ copyPartnerCode, copied }: any) {
       <StepCard
         number={2}
         title="Step 2 — Trade Actively for 30 Days on XM"
-        className="col-span-1"   // FIX: Now correctly aligns side-by-side with Step 3 on desktop
+        className="col-span-1"   
         actions={
           <a
             href="/BULLMONEYULTRA.pdf"
@@ -502,9 +576,9 @@ function XMThreeSteps({ copyPartnerCode, copied }: any) {
       <StepCard
         number={3}
         title="Submit Proof using our code: X3R7P"
-        className="col-span-1"  // FIX: Now correctly aligns side-by-side with Step 2 on desktop
+        className="col-span-1" 
       >
-        <SubmitProofForm />
+        <SubmitProofForm showTip={showSubmitTip} />
       </StepCard>
     </div>
   );
@@ -512,15 +586,15 @@ function XMThreeSteps({ copyPartnerCode, copied }: any) {
 
 
 /* ============================================================================
-   VANTAGE FIXED — same 2-column system
+   VANTAGE FIXED
 ============================================================================ */
 
-function VantageThreeSteps({ copyPartnerCode, copied }: any) {
+function VantageThreeSteps({ copyPartnerCode, copied, showCodeTip, showSubmitTip }: any) {
   return (
    <div
   className={cn(
-    "w-full mt-10 grid gap-6 md:mt-12", // FIX: Removed inner px-4
-    "grid-cols-1 md:grid-cols-2"        // FIX: Standardized 2-col grid
+    "w-full mt-10 grid gap-6 md:mt-12", 
+    "grid-cols-1 md:grid-cols-2"        
   )}
 >
 
@@ -529,9 +603,14 @@ function VantageThreeSteps({ copyPartnerCode, copied }: any) {
       <StepCard
         number2={1}
         title="Open Your Vantage Live Account With BULLMONEY"
-        className="col-span-1 md:col-span-2 p-6 md:p-8 bg-gradient-to-br from-purple-950 via-slate-950 to-neutral-950" // FIX: Spans 2 cols on desktop
+        className="col-span-1 md:col-span-2 p-6 md:p-8 bg-gradient-to-br from-purple-950 via-slate-950 to-neutral-950 relative" // Added relative for tip
         actions={
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-3 relative">
+            {/* TIP 2: Code Button */}
+            <AnimatePresence>
+                {showCodeTip && <HelperTip label="Copy Code First" className="-top-12 left-[15%]" />}
+            </AnimatePresence>
+
             <button
               onClick={() => copyPartnerCode("BULLMONEY")}
               className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold
@@ -603,7 +682,7 @@ function VantageThreeSteps({ copyPartnerCode, copied }: any) {
       <StepCard
         number2={2}
         title="Trade Actively for 30 Days on Vantage"
-        className="col-span-1" // FIX: Now correctly aligns side-by-side with Step 3 on desktop
+        className="col-span-1" 
         
       >
         <p className="text-[15px] leading-relaxed text-neutral-300">
@@ -664,7 +743,7 @@ function VantageThreeSteps({ copyPartnerCode, copied }: any) {
         title="Submit Proof using our code: BULLMONEY"
         className="col-span-1" // FIX: Now correctly aligns side-by-side with Step 2 on desktop
       >
-        <SubmitProofForm />
+        <SubmitProofForm showTip={showSubmitTip} />
       </StepCard>
     </div>
   );
@@ -767,7 +846,7 @@ function StepCard({
 }
 
 function Accordion({ className, children }: any) {
-  return <div className={cn("space-y-2", className)}>{children}</div>;
+  return <div className="space-y-2">{children}</div>;
 }
 
 function AccordionItem({ title, children, defaultOpen = false }: any) {
@@ -810,7 +889,7 @@ function AccordionItem({ title, children, defaultOpen = false }: any) {
 
 
 /* ============================================================================
-   VIP panel with mouse-follow shimmer
+   VIP panel with mouse-follow shimmer (unchanged)
 ============================================================================ */
 
 function ShimmerPanel({
@@ -871,7 +950,7 @@ function ShimmerPanel({
 }
 
 /* ============================================================================
-   Small bits
+   Small bits (unchanged)
 ============================================================================ */
 
 function ProofItem({ children }: { children: React.ReactNode }) {
@@ -929,7 +1008,7 @@ export function Accent2({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* Decorative corner plus glyphs for the code box */
+/* Decorative corner plus glyphs for the code box (unchanged) */
 function IconPlusCorners() {
   return (
     <>
@@ -956,7 +1035,7 @@ function PlusMini({ className = "" }: { className?: string }) {
 }
 
 /* ============================================================================
-   INLINE Evervault-style Card (reactive code badge)
+   INLINE Evervault-style Card (reactive code badge) (unchanged)
 ============================================================================ */
 
 export const EvervaultCard = ({
@@ -1139,10 +1218,10 @@ export const generateRandomString = (length: number) => {
 };
 
 /* ============================================================================
-   Step 3 Submit Proof Form — aligned with /api/submit-proof (FIXED)
+   Step 3 Submit Proof Form
 ============================================================================ */
 
-function SubmitProofForm() {
+function SubmitProofForm({ showTip }: { showTip: boolean }) {
   const [email, setEmail] = React.useState("");
   const [mt5Id, setMt5Id] = React.useState("");
   const [usedCode, setUsedCode] = React.useState("yes");
@@ -1157,7 +1236,6 @@ function SubmitProofForm() {
     setError(null);
     setSuccess(false);
 
-    // ✅ Basic validation
     if (!/^\S+@\S+\.\S+$/.test(email)) {
       setError("Please enter a valid email address.");
       return;
@@ -1173,11 +1251,8 @@ function SubmitProofForm() {
       const { error } = await supabase.from("recruits").insert([
         {
           email,
-          // New schema field: password (required by schema, using default)
           password: 'password', 
           mt5_id: mt5Id,
-          
-          // Map to new schema fields
           referred_by_code: referredByCode || null, 
           social_handle: socialHandle || null,
           used_code: usedCode === "yes",
@@ -1186,15 +1261,13 @@ function SubmitProofForm() {
 
       if (error) throw error;
 
-      // ✅ Clear form + show success
       setEmail("");
       setMt5Id("");
       setUsedCode("yes");
-      setReferredByCode(""); // Clear new state
-      setSocialHandle(""); // Clear new state
+      setReferredByCode(""); 
+      setSocialHandle(""); 
       setSuccess(true);
 
-      // ✅ Redirect to Telegram group after a short delay (1.5s)
       setTimeout(() => {
         window.location.href = "https://t.me/addlist/gg09afc4lp45YjQ0";
       }, 1500);
@@ -1207,7 +1280,7 @@ function SubmitProofForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4 relative">
       {/* Email */}
       <label className="text-sm font-medium text-neutral-300">
         Email
@@ -1269,8 +1342,13 @@ function SubmitProofForm() {
       </label>
 
 
-      {/* Submit Button */}
-      <div className="mt-2 flex items-center justify-center pt-4 border-t border-white/10">
+      {/* Submit Button (TIP 3) */}
+      <div className="mt-2 flex items-center justify-center pt-4 border-t border-white/10 relative">
+        <AnimatePresence>
+            {showTip && !success && (
+                <HelperTip label="Submit Final Proof" className="-top-10 left-1/2 -translate-x-1/2" />
+            )}
+        </AnimatePresence>
         <button
           type="submit"
           disabled={sending}
@@ -1296,13 +1374,13 @@ function SubmitProofForm() {
 }
 
 /* ============================================================================
-   LuxeCardReactive — Dynamic Broker Colors (Purple / Green / Neutral)
+   LuxeCardReactive (unchanged)
 ============================================================================ */
 
 export function LuxeCardReactive({
   children,
   className,
-  variant = "vantage", // "vantage" | "xm" | "neutral"
+  variant = "vantage", 
 }: {
   children: React.ReactNode;
   className?: string;
@@ -1310,10 +1388,9 @@ export function LuxeCardReactive({
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
 
-  // dynamic broker color palettes
   const theme = {
     vantage: {
-      glow1: "rgba(168,85,247,0.20)", // purple-500
+      glow1: "rgba(168,85,247,0.20)", 
       glow2: "rgba(147,51,234,0.10)",
       ring: "rgba(147,51,234,0.35)",
       border: "rgba(168,85,247,0.25)",
@@ -1323,7 +1400,7 @@ export function LuxeCardReactive({
         "conic-gradient(from 180deg, rgba(168,85,247,.22), rgba(147,51,234,.22), rgba(126,34,206,.22), rgba(168,85,247,.22))",
     },
     xm: {
-      glow1: "rgba(16,185,129,0.20)", // emerald-500
+      glow1: "rgba(16,185,129,0.20)", 
       glow2: "rgba(5,150,105,0.10)",
       ring: "rgba(5,150,105,0.35)",
       border: "rgba(16,185,129,0.25)",
@@ -1344,7 +1421,6 @@ export function LuxeCardReactive({
     },
   }[variant];
 
-  // cursor position (smoothed)
   const mx = useSpring(useMotionValue(0), {
     stiffness: 220,
     damping: 26,
@@ -1379,7 +1455,6 @@ export function LuxeCardReactive({
     tiltY.set(0);
   };
 
-  // broker-colored glow
   const glow = useMotionTemplate`
     radial-gradient(220px at ${mx}px ${my}px,
       ${theme.glow1},
@@ -1477,7 +1552,7 @@ export function LuxeCardReactive({
 }
 
 /* ============================================================================
-   3 Badge
+   3 Badge (unchanged)
 ============================================================================ */
 
 function ThreeBadge({ activePartner }: { activePartner: "Vantage broker" | "XM" }) {
@@ -1510,7 +1585,7 @@ function ThreeBadge({ activePartner }: { activePartner: "Vantage broker" | "XM" 
 }
 
 /* ============================================================================
-   SignUpCTA (kept, but copy tuned for SEO / clarity + type fixed)
+   SignUpCTA (unchanged)
 ============================================================================ */
 
 function SignUpCTA({

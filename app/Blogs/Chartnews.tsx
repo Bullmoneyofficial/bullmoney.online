@@ -1,4 +1,3 @@
-// components/cta.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo, memo, ReactNode } from "react";
@@ -126,6 +125,36 @@ const ShimmerBorder = ({
     );
 };
 
+// ==========================================
+// HELPER TIP COMPONENT (NEW)
+// ==========================================
+
+const HelperTip = ({ label, className }: { label: string; className?: string }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 5, scale: 0.9 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    exit={{ opacity: 0, y: 5, scale: 0.9 }}
+    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    className={cn("absolute z-50 flex flex-col items-center pointer-events-none", className)}
+  >
+    {/* The Bubble */}
+    <div className="relative p-[1.5px] overflow-hidden rounded-full shadow-lg shadow-sky-500/20">
+        <motion.div 
+            className="absolute inset-[-100%]"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            style={{ background: shimmerGradient }}
+        />
+        <div className="relative z-10 px-3 py-1 bg-[#020611] rounded-full flex items-center justify-center border border-sky-500/20">
+            <span className="text-sky-100 text-[10px] font-bold whitespace-nowrap">
+                {label}
+            </span>
+        </div>
+    </div>
+    {/* The Triangle Pointer (pointing down) */}
+    <div className="w-2 h-2 bg-[#020611] rotate-45 -translate-y-[4px] relative z-10 border-b border-r border-sky-500/20" />
+  </motion.div>
+);
 
 /* --------------------------- OPTIMIZED HIGH AESTHETIC CARD --------------------------- */
 
@@ -147,13 +176,17 @@ const HighAestheticCard = memo(({
     subtitle, 
     icon: Icon, 
     onShow, 
-    isChart = false 
+    isChart = false,
+    showTip = false, // Added prop
+    tipLabel = "Click Here" // Added prop
 }: { 
     title: string, 
     subtitle: string, 
     icon: React.ElementType, 
     onShow: () => void,
-    isChart?: boolean
+    isChart?: boolean,
+    showTip?: boolean,
+    tipLabel?: string
 }) => {
     const isMobile = useIsMobile();
     
@@ -180,11 +213,17 @@ const HighAestheticCard = memo(({
             )}
 
             <div className="relative z-10 flex flex-col items-center justify-center text-center">
+                {/* TIP FOR CARD ICON/TITLE */}
+                <AnimatePresence>
+                    {showTip && isChart && (
+                         <HelperTip label={tipLabel} className="-top-8" />
+                    )}
+                </AnimatePresence>
+
                 <div className={`flex h-16 w-16 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 ring-1 ring-sky-500/50 mb-4 shadow-[0_0_20px_rgba(56,189,248,0.3)] ${!isChart && !isMobile ? "animate-float-slow" : ""}`}>
                     <Icon className="h-8 w-8" />
                 </div>
 
-                {/* Shimmering Title */}
                 <h2 className="mt-2 text-3xl font-black tracking-tight md:text-4xl animate-text-shimmer">
                     {title}
                 </h2>
@@ -193,15 +232,22 @@ const HighAestheticCard = memo(({
                     {subtitle}
                 </p>
 
-                <div className="mt-8">
-                  <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[2px]" speed={3}>
-                      <div className="relative z-10 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-bold text-white 
-                                  shadow-[0_0_25px_rgba(56,189,248,0.25)] 
-                                  bg-neutral-900/80 transition-all duration-300 group hover:bg-neutral-900">
-                          <span className="animate-text-shimmer bg-[length:200%_auto]">Launch Terminal</span>
-                          <ArrowRight className="h-4 w-4 text-sky-400 transition-transform group-hover:translate-x-1" />
-                      </div>
-                  </ShimmerBorder>
+                <div className="mt-8 relative">
+                    {/* TIP FOR LAUNCH BUTTON */}
+                    <AnimatePresence>
+                        {showTip && !isChart && (
+                             <HelperTip label={tipLabel} className="-top-12 left-1/2 -translate-x-1/2" />
+                        )}
+                    </AnimatePresence>
+
+                    <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[2px]" speed={3}>
+                        <div className="relative z-10 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-bold text-white 
+                                    shadow-[0_0_25px_rgba(56,189,248,0.25)] 
+                                    bg-neutral-900/80 transition-all duration-300 group hover:bg-neutral-900">
+                            <span className="animate-text-shimmer bg-[length:200%_auto]">Launch Terminal</span>
+                            <ArrowRight className="h-4 w-4 text-sky-400 transition-transform group-hover:translate-x-1" />
+                        </div>
+                    </ShimmerBorder>
                 </div>
             </div>
         </motion.div>
@@ -259,7 +305,7 @@ const TradingViewMarketOverview = memo(({ height = 560, tabs }: { height?: numbe
 TradingViewMarketOverview.displayName = "TradingViewMarketOverview";
 
 /* --------------------------- CHART SECTION --------------------------- */
-export const TradingViewDropdown = memo(({ onMarketChange }: { onMarketChange?: (v: string) => void }) => {
+export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarketChange?: (v: string) => void, showTip?: boolean }) => {
   const [selected, setSelected] = useState(CHARTS[0]);
   const [open, setOpen] = useState(false);
   const [showChart, setShowChart] = useState(false);
@@ -281,6 +327,8 @@ export const TradingViewDropdown = memo(({ onMarketChange }: { onMarketChange?: 
             icon={ChartBar}
             onShow={() => setShowChart(true)}
             isChart={true}
+            showTip={showTip} // Pass tip prop
+            tipLabel="Open Charts"
         />
       )}
 
@@ -533,7 +581,7 @@ NewsFeedContent.displayName = "NewsFeedContent";
 
 
 /* --------------------------- NEWS FEED MODAL WRAPPER --------------------------- */
-function NewsFeedModal({ activeMarket }: { activeMarket: string }) {
+function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTip?: boolean }) {
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
@@ -549,7 +597,14 @@ function NewsFeedModal({ activeMarket }: { activeMarket: string }) {
 
     return (
         <>
-            <div className="w-full flex justify-center">
+            <div className="w-full flex justify-center relative">
+                {/* HELPER TIP FOR NEWS */}
+                <AnimatePresence>
+                    {showTip && (
+                        <HelperTip label="Latest News" className="-top-12" />
+                    )}
+                </AnimatePresence>
+
                 <ShimmerBorder borderRadius="rounded-xl" borderWidth="inset-[2px]" speed={4} className="w-full max-w-xl">
                     <button
                         onClick={() => setIsOpen(true)}
@@ -611,6 +666,15 @@ function NewsFeedModal({ activeMarket }: { activeMarket: string }) {
 
 export function CTA() {
   const [activeMarket, setActiveMarket] = useState<any>("all");
+  const [activeTipIndex, setActiveTipIndex] = useState(0);
+
+  // Cycle through the tips: 0 = News, 1 = Charts, 2 = None (pause)
+  useEffect(() => {
+    const interval = setInterval(() => {
+        setActiveTipIndex(prev => (prev + 1) % 3);
+    }, 4000); 
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div id="market-dashboard" className="w-full overflow-x-hidden bg-black px-0 md:px-8 py-10">
@@ -635,11 +699,13 @@ export function CTA() {
         </header>
         
         <div className="mt-10">
-          <NewsFeedModal activeMarket={activeMarket} />
+          {/* Tip Index 0: News */}
+          <NewsFeedModal activeMarket={activeMarket} showTip={activeTipIndex === 0} />
         </div>
 
         <div className="mt-10">
-          <TradingViewDropdown onMarketChange={setActiveMarket} />
+          {/* Tip Index 1: Charts */}
+          <TradingViewDropdown onMarketChange={setActiveMarket} showTip={activeTipIndex === 1} />
         </div>
       </div>
     </div>

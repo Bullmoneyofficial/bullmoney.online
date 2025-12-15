@@ -12,7 +12,6 @@ import {
   useMotionValue,
   useSpring,
   useTransform,
-  MotionValue,
 } from "framer-motion";
 import {
   Gift,
@@ -95,7 +94,8 @@ export const Navbar = () => {
             </div>
 
             {/* 2. Mobile Nav Pill (Right) */}
-            <div className="pointer-events-auto shrink-0 ml-2 max-w-[75%]">
+            {/* UPDATED: Added min-w-0 to allow flex child to scroll internally */}
+            <div className="pointer-events-auto ml-2 max-w-[75%] flex justify-end min-w-0">
                <MobileNav />
             </div>
         </div>
@@ -228,15 +228,17 @@ const MobileNav = memo(() => {
   return (
     <motion.div 
       animate={{ width: open ? "auto" : "auto" }}
-      // REMOVED 'overflow-hidden' from here so Tooltips can hang outside
-      className="flex flex-col items-end bg-white/95 dark:bg-neutral-950/95 border border-neutral-200 dark:border-white/10 shadow-lg rounded-2xl relative"
+      className="flex flex-col items-end bg-white/95 dark:bg-neutral-950/95 border border-neutral-200 dark:border-white/10 shadow-lg rounded-2xl relative max-w-full"
     >
       
       {/* 1. HEADER ROW: Icons + Menu Toggle */}
-      <div className="flex items-center gap-1.5 p-1.5 relative z-20"> 
-         <div className="flex items-center gap-1.5">
+      {/* UPDATED: Added max-w-full to container */}
+      <div className="flex items-center gap-1.5 p-1.5 relative z-20 max-w-full"> 
+         
+         {/* UPDATED: Scrollable container for icons */}
+         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar mask-gradient pr-1 max-w-[200px] xs:max-w-full">
             {NAV_ITEMS.map((item, i) => (
-               <Link key={i} href={item.link as any} className="relative flex flex-col items-center">
+               <Link key={i} href={item.link as any} className="relative flex-shrink-0 flex flex-col items-center">
                   <div className="w-8 h-8 relative flex items-center justify-center rounded-full overflow-hidden shadow-sm z-20">
                       <motion.div
                         className="absolute inset-[-100%]" 
@@ -251,7 +253,7 @@ const MobileNav = memo(() => {
                       </div>
                   </div>
 
-                  {/* Helper Tip (Mobile) - Positioned absolute below */}
+                  {/* Helper Tip (Mobile) */}
                   <AnimatePresence mode="wait">
                     {activeTipIndex === i && !open && (
                       <HelperTip item={item} isMobile={true} />
@@ -261,14 +263,17 @@ const MobileNav = memo(() => {
             ))}
          </div>
 
-         <div className="w-[1px] h-5 bg-neutral-200 dark:bg-neutral-800 mx-0.5" />
-         
-         <button onClick={() => setOpen(!open)} className="p-1">
-            {open ? <IconX className="w-5 h-5 dark:text-white" /> : <IconMenu2 className="w-5 h-5 dark:text-white" />}
-         </button>
+         {/* Fixed Divider & Menu Button */}
+         <div className="flex-shrink-0 flex items-center bg-white/95 dark:bg-neutral-950/95 pl-1">
+            <div className="w-[1px] h-5 bg-neutral-200 dark:bg-neutral-800 mx-0.5" />
+            
+            <button onClick={() => setOpen(!open)} className="p-1">
+                {open ? <IconX className="w-5 h-5 dark:text-white" /> : <IconMenu2 className="w-5 h-5 dark:text-white" />}
+            </button>
+         </div>
       </div>
 
-      {/* 2. EXPANDABLE LIST - Overflow Hidden moved here */}
+      {/* 2. EXPANDABLE LIST */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -318,12 +323,10 @@ const HelperTip = ({ item, isMobile = false }: { item: any, isMobile?: boolean }
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, y: -10, scale: 0.8 }}
     transition={{ type: "spring", stiffness: 300, damping: 20 }}
-    // Mobile Top position increased to clear the button + padding
     className={`absolute ${isMobile ? 'top-[42px]' : 'top-full mt-2'} left-1/2 -translate-x-1/2 z-50 flex flex-col items-center pointer-events-none`}
   >
     <div className="w-2 h-2 bg-neutral-900 rotate-45 translate-y-[4px] relative z-10 border-t border-l border-transparent" />
     <div className="relative p-[1.5px] overflow-hidden rounded-full shadow-lg">
-        {/* Shimmer inside Tip */}
         <motion.div 
             className="absolute inset-[-100%]"
             animate={{ rotate: 360 }}
