@@ -7,7 +7,6 @@ import GlassSurface from './GlassSurface';
 import './ShopScrollFunnel.css';
 
 // --- NEW UTILITY FUNCTION: Debounce a function call ---
-// This ensures setScrollPos is not called hundreds of times per second.
 const debounce = (func: (...args: any[]) => void, delay: number) => {
   let timeout: NodeJS.Timeout | null = null;
   return function(this: any, ...args: any[]) {
@@ -21,20 +20,14 @@ const debounce = (func: (...args: any[]) => void, delay: number) => {
   };
 };
 
-// --- OPTIMIZATION 1: Use CSS-friendly state management for scroll ---
 const ShopFunnel: React.FC = () => {
-  // We switch to a ref/local variable for high-frequency scroll updates
-  // to avoid causing excessive component re-renders.
   const latestScrollPosRef = useRef(0); 
-  
-  // This state is now only updated for the visual component on a DEBOUNCED timer.
   const [visualScrollPos, setVisualScrollPos] = useState(0); 
 
-  // Debounced setter for the visual state
   const debouncedSetVisualScroll = useCallback(
     debounce((scrolledValue: number) => {
       setVisualScrollPos(scrolledValue);
-    }, 16), // Debounce to ~60 FPS (1000ms / 60 frames = ~16ms)
+    }, 16), 
     []
   );
 
@@ -44,34 +37,68 @@ const ShopFunnel: React.FC = () => {
       const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
       const scrolled = winScroll / height;
 
-      latestScrollPosRef.current = scrolled; // Update ref immediately
-      debouncedSetVisualScroll(scrolled);    // Update state debounced
+      latestScrollPosRef.current = scrolled; 
+      debouncedSetVisualScroll(scrolled);    
     };
 
-    // OPTIMIZATION 2: Throttle scroll updates by debouncing the state setter.
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [debouncedSetVisualScroll]);
 
-  // OPTIMIZATION 3: Limit the distortion and blur range slightly 
-  // to reduce the extreme calculations on the GPU.
-  // We use the debounced state here.
   const scrollValue = visualScrollPos;
-  const dynamicDistortion = 10 + (scrollValue * 40); // Reduced range from 15-60 to 10-50
-  const dynamicBlur = 3 + (scrollValue * 3);         // Reduced range from 4-8 to 3-6
-  
-  // NOTE: If performance is still an issue, consider removing the 
-  // dynamic blur and distortion entirely and using a fixed value.
+  const dynamicDistortion = 10 + (scrollValue * 40); 
+  const dynamicBlur = 3 + (scrollValue * 3);         
 
   return (
     <div className="funnel-page-wrapper">
       
+      {/* --- STYLES FOR TEXT SHIMMER --- */}
+      <style jsx global>{`
+        /* Define the gradient animation */
+        @keyframes text-shimmer {
+          0% { background-position: 0% 50%; }
+          100% { background-position: -200% 50%; }
+        }
+
+        .animate-text-shimmer {
+          /* Premium Grey to White to Blue-ish White Gradient */
+          background: linear-gradient(
+            110deg, 
+            #64748b 20%,   /* Darker Grey Start */
+            #ffffff 48%,   /* White Peak */
+            #a5b4fc 52%,   /* Subtle Indigo Hint */
+            #64748b 80%    /* Darker Grey End */
+          );
+          background-size: 200% auto;
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          color: transparent;
+          animation: text-shimmer 3s linear infinite;
+          display: inline-block;
+        }
+
+        /* Make the button text shimmer too */
+        .btn-text-shimmer {
+            background: linear-gradient(
+            110deg, 
+            #ffffff 40%, 
+            #4f46e5 50%, 
+            #ffffff 60%
+          );
+          background-size: 200% auto;
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: text-shimmer 2.5s linear infinite;
+          font-weight: 900;
+        }
+      `}</style>
+
       {/* --- LAYER 1: FIXED LENS --- */}
       <div className="glass-centering-wrapper">
         <div 
           className="glass-bobbing-layer"
-          // OPTIMIZATION 4: Force hardware acceleration on the bobbing container
-          // to isolate its movement from the rest of the page layout.
           style={{ transform: 'translateZ(0)' }} 
         >
           <GlassSurface
@@ -79,7 +106,6 @@ const ShopFunnel: React.FC = () => {
             height="50px"
             borderRadius={60}
             borderWidth={0.5}
-            // Use the debounced/limited values
             distortionScale={dynamicDistortion} 
             redOffset={10 + (scrollValue * 10)}
             blueOffset={-10 - (scrollValue * 10)}
@@ -94,10 +120,11 @@ const ShopFunnel: React.FC = () => {
                   style={{ 
                     cursor: 'pointer', 
                     position: 'relative', 
-                    zIndex: 999 
+                    zIndex: 999,
+                    background: 'rgba(0,0,0,0.5)' // Added slight backing so shimmer pops
                   }}
                 >
-                  VIP ACCESS
+                  <span className="btn-text-shimmer">VIP ACCESS</span>
                 </button>
             </Link>
 
@@ -110,15 +137,19 @@ const ShopFunnel: React.FC = () => {
         
         {/* Intro Section */}
         <div className="scroll-section intro">
-          <h2 className="scroll-subtitle">SCROLL DOWN</h2>
-          <h1 className="scroll-title">GET INTO THE BULLMONEY VIP <br/>COMMUNITY</h1>
+          <h2 className="scroll-subtitle animate-text-shimmer" style={{ fontSize: '0.9rem', letterSpacing: '0.2em' }}>
+            SCROLL DOWN
+          </h2>
+          <h1 className="scroll-title animate-text-shimmer">
+            GET INTO THE BULLMONEY VIP <br/>COMMUNITY
+          </h1>
         </div>
 
-        {/* Image Section - This image is large, ensure it's properly compressed */}
+        {/* Image Section */}
         <div className="scroll-section image-sect">
            <div className="image-wrapper">
              <Image 
-               src="https://img-v2-prod.whop.com/unsafe/rs:fit:256:0/plain/https%3A%2F%2Fassets-2-prod.whop.com%2Fuploads%2Fuser_7019238%2Fimage%2Faccess_passes%2F2025-11-21%2F27d96f33-7030-40a7-8f60-1097622d31b5.png@avif?w=256&q=75" 
+               src="https://images.pexels.com/photos/35224942/pexels-photo-35224942.png" 
                alt="Distorted Water"
                width={800}
                height={600}
@@ -130,15 +161,19 @@ const ShopFunnel: React.FC = () => {
 
         {/* Text Section */}
         <div className="scroll-section text-sect">
-           <h1 className="scroll-title"> REAL PREMIUM<br/>REAL QUALITY TRADES</h1>
+           <h1 className="scroll-title animate-text-shimmer">
+             REAL PREMIUM<br/>REAL QUALITY TRADES
+           </h1>
         </div>
 
         {/* Footer Section */}
         <div className="scroll-section footer-sect">
-           <p className="scroll-subtitle">The Ultimate Trading Hub
-BullMoney is built for traders who demand more. Here, you'll access cutting-edge tools, premium insights, and real-time live trading streams to help you stay ahead of the market. Our community thrives on collaboration, consistency, and success join us today and take your trading to the next level.
-Trading involves risk and may not be suitable for everyone.
-BullMoney provides educational resources, tools, and strategies. Results vary, and we encourage responsible trading. </p>
+           <p className="scroll-subtitle animate-text-shimmer" style={{ opacity: 0.9 }}>
+             The Ultimate Trading Hub
+             BullMoney is built for traders who demand more. Here, you'll access cutting-edge tools, premium insights, and real-time live trading streams to help you stay ahead of the market. Our community thrives on collaboration, consistency, and success join us today and take your trading to the next level.
+             Trading involves risk and may not be suitable for everyone.
+             BullMoney provides educational resources, tools, and strategies. Results vary, and we encourage responsible trading.
+           </p>
         </div>
       </div>
     </div>

@@ -616,7 +616,7 @@ export function CTA() {
   const [activeMarket, setActiveMarket] = useState<"all" | "crypto" | "stocks" | "forex" | "metals">("all");
 
   return (
-    <div id="market-dashboard" className="w-full overflow-x-hidden bg-black px-0 md:px-8 py-10 dark:bg-neutral-950">
+    <div id="market-dashboard" className="w-full overflow-x-hidden bg-black px-0 md:px-8 py-10 dark:bg-neutral-988">
       <style>{GLOBAL_STYLES}</style>
       <div className="mx-auto max-w-7xl px-4 md:px-0">
         <header className="text-center">

@@ -382,6 +382,48 @@ const HeroParallax = () => {
       .animate-shimmer {
         animation: shimmer 3s linear infinite;
       }
+      
+      /* Styles copied from the first component for text shimmer */
+      /* Define the gradient animation */
+      @keyframes text-shimmer {
+        0% { background-position: 0% 50%; }
+        100% { background-position: -200% 50%; }
+      }
+
+      .animate-text-shimmer {
+        /* Premium Grey to White to Blue-ish White Gradient */
+        background: linear-gradient(
+          110deg, 
+          #64748b 20%,   /* Darker Grey Start */
+          #ffffff 48%,   /* White Peak */
+          #a5b4fc 52%,   /* Subtle Indigo Hint */
+          #64748b 80%    /* Darker Grey End */
+        );
+        background-size: 200% auto;
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+        animation: text-shimmer 3s linear infinite;
+        display: inline-block;
+      }
+
+      /* Make the button text shimmer too */
+      .btn-text-shimmer {
+          background: linear-gradient(
+          110deg, 
+          #ffffff 40%, 
+          #4f46e5 50%, 
+          #ffffff 60%
+        );
+        background-size: 200% auto;
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: text-shimmer 2.5s linear infinite;
+        font-weight: 900;
+      }
+      
       .custom-scrollbar::-webkit-scrollbar { width: 6px; }
       .custom-scrollbar::-webkit-scrollbar-track { background: #171717; }
       .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 3px; }
