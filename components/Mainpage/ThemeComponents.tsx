@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
   TrendingUp, DollarSign, Shield, Zap, Lock, Activity, 
-  Menu, X, Volume2, VolumeX, Settings, Monitor, RefreshCw, Wifi, WifiOff, Layers, Hash, Command, MessageCircle, ArrowRight, SkipForward, Check
+  Menu, X, Volume2, VolumeX, Settings, Monitor, Wifi, Layers, Command, MessageCircle, ArrowRight, SkipForward, Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -489,7 +489,7 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    // FIX: Lock body scroll when mobile menu is open, but ensure main isn't locked by default
+    // FIX: Lock body scroll ONLY when mobile menu is open
     useEffect(() => {
         if (isMobileMenuOpen) {
             document.body.style.overflow = 'hidden';
@@ -506,7 +506,6 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
     }, [isMuted]);
 
     return (
-        // KEY FIX: overflow-x-hidden instead of overflow-hidden (last fix). This allows vertical scroll.
         <main 
             className="relative min-h-screen bg-black overflow-x-hidden font-sans selection:bg-blue-500/30 text-white"
             style={{ filter: isMobile ? activeTheme.mobileFilter : activeTheme.filter, transition: 'filter 0.5s ease-in-out' }}
@@ -569,13 +568,19 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
 
             <WelcomeBackModal isOpen={showWelcome} onContinue={() => { setShowWelcome(false); setIsMuted(false); }} onSkip={() => setShowWelcome(false)} />
 
-            {/* --- MAIN DASHBOARD GRID (Issue was here) --- */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-24 md:pt-28 pb-6 px-4 md:px-6 min-h-screen flex flex-col z-10 relative max-w-[1600px] mx-auto" style={{ filter: showWelcome ? 'blur(10px)' : 'none' }}>
+            {/* --- MAIN DASHBOARD GRID (SCROLL FIX APPLIED HERE) --- */}
+            {/* Removed 'h-screen' and 'flex-col'. Added 'min-h-screen' and 'h-auto'. */}
+            <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                className="pt-24 md:pt-28 pb-6 px-4 md:px-6 min-h-screen h-auto block z-10 relative max-w-[1600px] mx-auto" 
+                style={{ filter: showWelcome ? 'blur(10px)' : 'none' }}
+            >
                 <div className="mb-4 md:mb-6 shrink-0">
                     <h1 className="text-2xl md:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-600">COMMAND DECK</h1>
                 </div>
 
-                {/* KEY FIX: Removed flex-1 and min-h-0 from this container. It should now flow naturally, allowing the main body scroll. */}
+                {/* Removed 'min-h-0' to let content grow freely on mobile */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 lg:overflow-visible pb-20 lg:pb-0">
                     
                     {/* LEFT SECTION - Mobile content */}

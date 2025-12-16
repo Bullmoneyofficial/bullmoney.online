@@ -37,7 +37,8 @@ import Faq from "@/app/shop/Faq";
 
 // --- TYPE DEFINITION ---
 type ThemeControlProps = {
-  setShowConfigurator: (show: boolean) => void;
+  // ✅ FIX APPLIED HERE: Made setShowConfigurator optional with '?'
+  setShowConfigurator?: (show: boolean) => void; 
   activeThemeId?: string;
   onThemeChange?: (themeId: string) => void;
 };
@@ -74,7 +75,10 @@ const FOOTER_NAV_ITEMS = [
 const SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #3b82f6 50%, #00000000 100%)";
 
 // --- MAIN NAVBAR COMPONENT ---
-export const Navbar = ({ setShowConfigurator }: ThemeControlProps) => {
+export const Navbar = ({ 
+  // ✅ FIX APPLIED HERE: Provide a default empty function if the prop is missing (for Server Components)
+  setShowConfigurator = () => {} 
+}: ThemeControlProps) => {
   return (
     <>
       <style jsx global>{GLOBAL_STYLES}</style>
@@ -138,6 +142,10 @@ export const Navbar = ({ setShowConfigurator }: ThemeControlProps) => {
 };
 
 // --- SUB COMPONENTS (ThemeTrigger, Dock, MobileNav, etc) ---
+
+// NOTE: ThemeTrigger, DesktopNav, and MobileNav must still check if the prop exists 
+// before calling it, but since we defaulted it to () => {} above, the inner components
+// are safe to use the prop as if it always exists.
 
 const ThemeTrigger = ({ setShowConfigurator }: { setShowConfigurator: (show: boolean) => void }) => {
   return (
@@ -290,6 +298,7 @@ const MobileNav = memo(({ setShowConfigurator }: { setShowConfigurator: (show: b
   
   const handleOpenConfigurator = useCallback(() => {
     setOpen(false); 
+    // This call is now safe because setShowConfigurator is guaranteed to be a function
     setShowConfigurator(true); 
   }, [setShowConfigurator]);
 
