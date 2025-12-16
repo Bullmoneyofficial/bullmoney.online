@@ -4,28 +4,18 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { 
   TrendingUp, DollarSign, Shield, Zap, Lock, Activity, 
   Menu, X, Volume2, VolumeX, Settings, Monitor, RefreshCw, Wifi, WifiOff, Layers, Hash, Command, MessageCircle, ArrowRight, SkipForward, Check, MapPin, Sun, Brain, Smile
-} from 'lucide-react'; // Added MapPin, Sun, Brain, Smile for new categories
+} from 'lucide-react'; 
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ============================================================================
-// 1. TYPES & THEMES (Refactored to include all 250+ themes)
+// 1. TYPES & THEMES (No structural change from previous complete step)
 // ============================================================================
 
 export type SoundProfile = 'MECHANICAL' | 'SOROS' | 'SCI-FI' | 'SILENT'; 
-// EXPANDED ThemeCategory to include all new categories
 export type ThemeCategory = 
-  | 'SPECIAL' 
-  | 'SENTIMENT' 
-  | 'ASSETS' 
-  | 'CRYPTO' 
-  | 'HISTORICAL' 
-  | 'OPTICS' 
-  | 'GLITCH' 
-  | 'EXOTIC' 
-  | 'LOCATION' // New
-  | 'ELEMENTAL' // New
-  | 'CONCEPTS' // New
-  | 'MEME'; // New
+  | 'SPECIAL' | 'SENTIMENT' | 'ASSETS' | 'CRYPTO' 
+  | 'HISTORICAL' | 'OPTICS' | 'GLITCH' | 'EXOTIC' 
+  | 'LOCATION' | 'ELEMENTAL' | 'CONCEPTS' | 'MEME'; 
 
 export type Theme = { 
   id: string; name: string; description: string; 
@@ -44,10 +34,9 @@ export const BASE_THEMES: Theme[] = [
     name: 'Bull Money Chrome', 
     description: 'REFRESH TO REVEAL', 
     category: 'SPECIAL', 
-    // Reverted to original filter but fixed it in the separate system code (assuming this array is read-only here)
-    filter: 'url(#chrome-liquid) sepia(1) hue-rotate(190deg) saturate(4) contrast(1.1) brightness(1.1) drop-shadow(0 0 5px rgba(0,255,255,0.5))', 
+    filter: ' sepia(1) hue-rotate(190deg) saturate(4) contrast(1.1) brightness(1.1) drop-shadow(0 0 5px rgba(0,255,255,0.5))', 
     mobileFilter: 'sepia(1) hue-rotate(190deg) saturate(3) contrast(1.2)', 
-    illusion: 'SCANLINES', 
+    illusion: 'NONE', 
     accentColor: '#00FFFF', 
     status: 'AVAILABLE' 
   },
@@ -59,7 +48,7 @@ export const BASE_THEMES: Theme[] = [
   { id: 'c05', name: 'Monero Dark', description: 'Privacy', category: 'CRYPTO', filter: 'grayscale(1) contrast(2) brightness(0.4)', mobileFilter: 'grayscale(1) contrast(1.5)', illusion: 'NOISE', accentColor: '#FF6600', status: 'UNAVAILABLE' },
 
   // --- SENTIMENT ---
-  { id: 't01', name: 'Terminal', description: 'Default', category: 'SENTIMENT', filter: 'none', mobileFilter: 'none', illusion: 'NONE', accentColor: '#ffffff', status: 'AVAILABLE' },
+  { id: 't01', name: 'ORIGINAL', description: 'Default', category: 'SENTIMENT', filter: 'none', mobileFilter: 'none', illusion: 'NONE', accentColor: '#ffffff', status: 'AVAILABLE' },
   { id: 't02', name: 'God Candle', description: 'Up Only', category: 'SENTIMENT', filter: 'sepia(1) hue-rotate(60deg) saturate(3) brightness(1.1)', mobileFilter: 'sepia(1) hue-rotate(60deg) saturate(2)', illusion: 'VIGNETTE', accentColor: '#10B981', status: 'AVAILABLE' },
   { id: 't03', name: 'Blood Bath', description: 'Capitulation', category: 'SENTIMENT', filter: 'sepia(1) hue-rotate(320deg) saturate(4) contrast(1.2)', mobileFilter: 'sepia(1) hue-rotate(320deg)', illusion: 'NOISE', accentColor: '#EF4444', status: 'UNAVAILABLE' },
   { id: 't04', name: 'Moon Mission', description: 'ATH Break', category: 'SENTIMENT', filter: 'brightness(1.2) contrast(1.1) saturate(0) sepia(0.2) drop-shadow(0 0 5px white)', mobileFilter: 'brightness(1.2) grayscale(1)', illusion: 'VIGNETTE', accentColor: '#FFFFFF', status: 'UNAVAILABLE' },
@@ -175,7 +164,7 @@ export const NEW_THEMES_DATA: Theme[] = [
   { id: 'a26', name: 'AUD Dollar', description: 'Aussie', category: 'ASSETS', filter: 'sepia(1) hue-rotate(130deg) saturate(2) contrast(1.1)', mobileFilter: 'hue-rotate(130deg)', illusion: 'NONE', accentColor: '#059669', status: 'UNAVAILABLE' },
   { id: 'a27', name: 'CAD Dollar', description: 'Loonie', category: 'ASSETS', filter: 'sepia(1) hue-rotate(330deg) saturate(3) contrast(1.2)', mobileFilter: 'hue-rotate(330deg)', illusion: 'NONE', accentColor: '#DC2626', status: 'AVAILABLE' },
   { id: 'a28', name: 'NZD Dollar', description: 'Kiwi', category: 'ASSETS', filter: 'sepia(1) hue-rotate(300deg) saturate(1) brightness(0.8)', mobileFilter: 'hue-rotate(300deg)', illusion: 'NONE', accentColor: '#111827', status: 'UNAVAILABLE' },
-  { id: 'a29', name: 'CHF Franc', description: 'Swiss', category: 'ASSETS', filter: 'grayscale(1) brightness(1.3) contrast(1.1) drop-shadow(0 0 2px red)', mobileFilter: 'grayscale(1)', isLight: true, illusion: 'NONE', accentColor: '#B91C1C', status: 'AVAILABLE' },
+  { id: 'a29', name: 'CHF Franc', description: 'Swiss', category: 'ASSETS', filter: 'grayscale(1) brightness(1.3) contrast(1.1) drop-shadow(0 0 2px red)', mobileFilter: 'grayscale(1)', isLight: true, illusion: 'NONE', accentColor: '#DC2626', status: 'AVAILABLE' },
   { id: 'a30', name: 'ZAR Rand', description: 'South Africa', category: 'ASSETS', filter: 'sepia(1) hue-rotate(70deg) saturate(3) brightness(0.9)', mobileFilter: 'hue-rotate(70deg)', illusion: 'NONE', accentColor: '#16A34A', status: 'UNAVAILABLE' },
   { id: 'a31', name: 'CNY Yuan', description: 'Renminbi', category: 'ASSETS', filter: 'sepia(1) hue-rotate(340deg) saturate(2) brightness(0.8)', mobileFilter: 'hue-rotate(340deg)', illusion: 'NONE', accentColor: '#B91C1C', status: 'AVAILABLE' },
   { id: 'a32', name: 'INR Rupee', description: 'India', category: 'ASSETS', filter: 'sepia(1) hue-rotate(20deg) saturate(2) contrast(1.1)', mobileFilter: 'hue-rotate(20deg)', illusion: 'NONE', accentColor: '#EA580C', status: 'UNAVAILABLE' },
@@ -188,7 +177,7 @@ export const NEW_THEMES_DATA: Theme[] = [
   { id: 'a39', name: 'Dax 40', description: 'Germany', category: 'ASSETS', filter: 'sepia(1) hue-rotate(50deg) saturate(2) brightness(0.5)', mobileFilter: 'hue-rotate(50deg)', illusion: 'NONE', accentColor: '#FCD34D', status: 'AVAILABLE' },
   { id: 'a40', name: 'FTSE 100', description: 'UK', category: 'ASSETS', filter: 'grayscale(1) sepia(0.3) brightness(0.8)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#4B5563', status: 'UNAVAILABLE' },
   { id: 'a41', name: 'Nikkei 225', description: 'Japan', category: 'ASSETS', filter: 'invert(1) hue-rotate(320deg) contrast(1.2)', mobileFilter: 'invert(1)', isLight: true, illusion: 'NONE', accentColor: '#BE123C', status: 'AVAILABLE' },
-  { id: 'a42', name: 'Hang Seng', description: 'HK', category: 'ASSETS', filter: 'sepia(1) hue-rotate(340deg) saturate(2) brightness(0.6)', mobileFilter: 'hue-rotate(340deg)', illusion: 'NONE', accentColor: '#991B1B', status: 'UNAVAILABLE' },
+  { id: 'a42', name: 'Hang Seng', description: 'HK', category: 'ASSETS', filter: 'sepia(1) hue-rotate(340deg) saturate(2) brightness(0.6)', mobileFilter: 'hue-rotate(340deg)', illusion: 'NONE', accentColor: '#991B1C', status: 'UNAVAILABLE' },
   { id: 'a43', name: 'VIX', description: 'Fear Index', category: 'ASSETS', filter: 'contrast(2) brightness(0.5) grayscale(1)', mobileFilter: 'contrast(1.5)', illusion: 'NOISE', accentColor: '#FFFFFF', status: 'AVAILABLE' },
   { id: 'a44', name: 'Bonds 10Y', description: 'Yield', category: 'ASSETS', filter: 'sepia(1) hue-rotate(200deg) saturate(0.5) brightness(1.2)', mobileFilter: 'hue-rotate(200deg)', illusion: 'NONE', accentColor: '#93C5FD', status: 'UNAVAILABLE' },
   { id: 'a45', name: 'DXY', description: 'Dollar Index', category: 'ASSETS', filter: 'sepia(1) hue-rotate(120deg) saturate(2) contrast(1.1)', mobileFilter: 'hue-rotate(120deg)', illusion: 'NONE', accentColor: '#10B981', status: 'AVAILABLE' },
@@ -372,7 +361,6 @@ export const ALL_THEMES: Theme[] = [...BASE_THEMES, ...NEW_THEMES_DATA];
 // ============================================================================
 // 2. CORE PRIMITIVES (No Change)
 // ============================================================================
-// ... (The rest of the unchanged core primitives like SHIMMER_GRADIENT_BLUE, ShimmerBorder, etc.)
 const SHIMMER_GRADIENT_BLUE = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #2563eb 50%, #00000000 100%)";
 const GLOBAL_STYLES = `
   .mac-gpu-accelerate { transform: translateZ(0); will-change: transform, opacity; backface-visibility: hidden; }
@@ -446,7 +434,7 @@ export const GlobalSvgFilters = () => (
 
 
 // ============================================================================
-// 3. UI COMPONENTS (Updated to use ALL_THEMES and new categories)
+// 3. UI COMPONENTS (UPDATED PREVIEW)
 // ============================================================================
 
 // FIXED: Pointer events set to none to ensure clicking/scrolling through this layer works
@@ -459,24 +447,68 @@ export const IllusionLayer = ({ type = 'SCANLINES' }: { type?: string }) => (
     </div>
 );
 
+// FIX: MiniDashboardPreview - Brighter, more trading-related.
 const MiniDashboardPreview = ({ color, isUnavailable }: { color: string, isUnavailable: boolean }) => (
-    <div className={`w-full h-full p-2 flex flex-col gap-1 bg-black/50 ${isUnavailable ? 'opacity-50' : ''}`}>
-      <div className="w-1/3 h-1 bg-white/20 rounded-full mb-1" />
-      <div className="flex gap-1 h-full">
-        <div className="w-1/2 h-full rounded border border-white/10 flex flex-col justify-center items-center">
-          <div className="w-4 h-4 rounded-full mb-1" style={{ backgroundColor: color, opacity: 0.8 }} />
-          <div className="w-8 h-1 bg-white/20 rounded-full" />
-        </div>
-        <div className="w-1/2 h-full flex flex-col gap-1">
-           <div className="h-1/2 rounded border border-white/10 bg-white/5" />
-           <div className="h-1/2 rounded border border-white/10" />
-        </div>
+    // Apply significant brightness filter here to counteract the parent theme filter (which might be dark)
+    // and make the internal elements sharp and visible.
+    <div className={`w-full h-full p-2 flex flex-col gap-1 ${isUnavailable ? 'opacity-50' : 'bg-gray-900'}`} style={{ filter: 'brightness(2.0)' }}>
+      
+      {/* Ticker/Status Bar */}
+      <div className="flex justify-between items-center h-2 mb-1">
+        <div className="w-1/4 h-full bg-white/50 rounded-sm font-mono text-[8px]">BTC</div>
+        <div className="w-1/5 h-full rounded-sm text-[8px]" style={{ backgroundColor: color, opacity: 0.8 }}>+1.2%</div>
+      </div>
+
+      <div className="flex flex-1 w-full gap-1">
+          {/* Main Chart Area (Candlestick simulation) */}
+          <div className="w-2/3 h-full rounded border border-white/10 p-[2px] flex flex-col justify-end overflow-hidden bg-gray-950">
+            {/* Simulated Candles (Red/Green/Accent) */}
+            <div className="flex h-full w-full justify-between items-end">
+              {[...Array(12)].map((_, i) => {
+                const isGreen = i % 3 === 0 || i % 4 === 1;
+                const height = (i % 6) * 10 + 20;
+                const candleColor = isGreen ? '#10B981' : '#EF4444'; // Use green/red for trading context
+
+                return (
+                  <div key={i} className="flex flex-col items-center justify-end w-[4px] mx-[1px]" style={{ height: '90%' }}>
+                    {/* Wick */}
+                    <div className="w-[1px] bg-white/50" style={{ height: `${100 - height}%` }} />
+                    {/* Body */}
+                    <div className="w-[3px] rounded-t-[1px]" style={{ height: `${height}%`, backgroundColor: candleColor }} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* Simulated Order Book / Price Ladder */}
+          <div className="w-1/3 h-full rounded border border-white/10 flex flex-col justify-between overflow-hidden text-[7px] font-mono">
+              <div className="flex flex-col flex-1 gap-[1px] p-[1px]">
+                  {/* ASKS (Red/Top) */}
+                  {[...Array(4)].map((_, i) => (
+                      <div key={`ask-${i}`} className="h-1/8 bg-red-800/40" style={{ width: `${60 - i * 10}%` }}>SELL</div>
+                  ))}
+              </div>
+              
+              {/* Mid Price (Accent) */}
+              <div className="h-3 bg-white/10 flex items-center justify-center font-bold" style={{ color }}>
+                  PRICE
+              </div>
+              
+              <div className="flex flex-col flex-1 gap-[1px] p-[1px]">
+                  {/* BIDS (Green/Bottom) */}
+                  {[...Array(4)].map((_, i) => (
+                      <div key={`bid-${i}`} className="h-1/8 bg-green-800/40 text-right" style={{ width: `${30 + i * 15}%`, marginLeft: 'auto' }}>BUY</div>
+                  ))}
+              </div>
+          </div>
       </div>
     </div>
 );
 
+
 // ----------------------------------------------------------------------------
-// SoundSelector 
+// SetupThemeInterface, ThemeConfigModal, etc. remain the same.
 // ----------------------------------------------------------------------------
 const SoundSelector = ({ active, onSelect }: { active: SoundProfile, onSelect: (id: SoundProfile) => void }) => {
     const packs: {id: SoundProfile, label: string, icon: any}[] = [
@@ -502,9 +534,6 @@ const SoundSelector = ({ active, onSelect }: { active: SoundProfile, onSelect: (
     );
 };
 
-// ----------------------------------------------------------------------------
-// SetupThemeInterface (FIXED HEIGHT/OVERFLOW)
-// ----------------------------------------------------------------------------
 const SetupThemeInterface = ({ 
     activeThemeId, setActiveThemeId, activeCategory, setActiveCategory, 
     isMobile, currentSound, setCurrentSound, isMuted, setIsMuted,
@@ -518,16 +547,12 @@ const SetupThemeInterface = ({
     onSave: (themeId: string) => void,
     onExit: () => void
 }) => {
-    // UPDATED: Use ALL_THEMES
     const filteredThemes = useMemo(() => ALL_THEMES.filter((t) => t.category === activeCategory), [activeCategory]);
     const allCategories = useMemo(() => Array.from(new Set(ALL_THEMES.map(t => t.category))), []);
-    // UPDATED: Include new categories in the preferred display order
     const preferredOrder: ThemeCategory[] = ['SPECIAL', 'CRYPTO', 'SENTIMENT', 'ASSETS', 'CONCEPTS', 'LOCATION', 'ELEMENTAL', 'OPTICS', 'GLITCH', 'EXOTIC', 'MEME', 'HISTORICAL'];
     const sortedCategories = preferredOrder.filter(cat => allCategories.includes(cat));
-    // UPDATED: Use ALL_THEMES
     const currentTheme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
 
-    // UPDATED: Added icons for new categories
     const getCategoryIcon = (cat: ThemeCategory) => {
         if (cat === 'SPECIAL') return <Zap className="w-3 h-3 text-yellow-500" />;
         if (cat === 'CRYPTO') return <DollarSign className="w-3 h-3" />;
@@ -544,7 +569,6 @@ const SetupThemeInterface = ({
     };
 
     return (
-        // REMOVED fixed h-full/lg:h-full here to allow content to dictate size, letting the parent Modal scroll
         <div className="flex flex-col lg:flex-row w-full border border-white/10 rounded-lg bg-black/40"> 
             
             {/* LEFT RAIL (Desktop) / TOP SCROLL (Mobile) - CATEGORY SELECTION */}
@@ -581,7 +605,6 @@ const SetupThemeInterface = ({
             </div>
 
             {/* RIGHT PANEL: CONTENT */}
-            {/* REMOVED h-full and overflow-y-hidden, content will now push the parent modal scrollbar */}
             <div className="flex-1 flex flex-col"> 
                 <div className="flex-1 p-4 md:p-6 flex flex-col gap-6">
                      
@@ -891,32 +914,32 @@ const TARGET_PAIRS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'DO
 const LOWER_CASE_PAIRS = TARGET_PAIRS.map(p => p.toLowerCase());
 
 export const useBinanceTickers = () => {
-  const [tickers, setTickers] = useState<Record<string, TickerData>>({});
-  const [status, setStatus] = useState<'CONNECTING' | 'CONNECTED' | 'DISCONNECTED'>('DISCONNECTED');
-  const wsRef = useRef<WebSocket | null>(null);
+    const [tickers, setTickers] = useState<Record<string, TickerData>>({});
+    const [status, setStatus] = useState<'CONNECTING' | 'CONNECTED' | 'DISCONNECTED'>('DISCONNECTED');
+    const wsRef = useRef<WebSocket | null>(null);
 
-  useEffect(() => {
-    let isMounted = true; 
-    const streams = LOWER_CASE_PAIRS.map(p => `${p}@miniTicker`).join('/');
-    const wsUrl = `wss://stream.binance.com:9443/ws/${streams}`;
-    if (isMounted) setStatus('CONNECTING');
-    wsRef.current = new WebSocket(wsUrl);
-    wsRef.current.onopen = () => { if (isMounted) setStatus('CONNECTED'); };
-    const handleMessage = (event: MessageEvent) => { 
-      const data = JSON.parse(event.data);
-      if (isMounted) {
-          setTickers(prev => {
-            const symbol = data.s; const currentPrice = parseFloat(data.c || '0').toFixed(2); 
-            return { ...prev, [symbol]: { symbol: data.s, price: currentPrice, percentChange: parseFloat(data.P || '0').toFixed(2), prevPrice: prev[symbol] ? prev[symbol].price : currentPrice } };
-          });
-      }
-    };
-    wsRef.current.onmessage = handleMessage;
-    wsRef.current.onclose = () => { if (isMounted) setStatus('DISCONNECTED'); };
-    wsRef.current.onerror = () => { if (isMounted) setStatus('DISCONNECTED'); };
-    return () => { isMounted = false; if (wsRef.current) wsRef.current.close(); };
-  }, []);
-  return { tickers, status };
+    useEffect(() => {
+        let isMounted = true; 
+        const streams = LOWER_CASE_PAIRS.map(p => `${p}@miniTicker`).join('/');
+        const wsUrl = `wss://stream.binance.com:9443/ws/${streams}`;
+        if (isMounted) setStatus('CONNECTING');
+        wsRef.current = new WebSocket(wsUrl);
+        wsRef.current.onopen = () => { if (isMounted) setStatus('CONNECTED'); };
+        const handleMessage = (event: MessageEvent) => { 
+            const data = JSON.parse(event.data);
+            if (isMounted) {
+                setTickers(prev => {
+                    const symbol = data.s; const currentPrice = parseFloat(data.c || '0').toFixed(2); 
+                    return { ...prev, [symbol]: { symbol: data.s, price: currentPrice, percentChange: parseFloat(data.P || '0').toFixed(2), prevPrice: prev[symbol] ? prev[symbol].price : currentPrice } };
+                });
+            }
+        };
+        wsRef.current.onmessage = handleMessage;
+        wsRef.current.onclose = () => { if (isMounted) setStatus('DISCONNECTED'); };
+        wsRef.current.onerror = () => { if (isMounted) setStatus('DISCONNECTED'); };
+        return () => { isMounted = false; if (wsRef.current) wsRef.current.close(); };
+    }, []);
+    return { tickers, status };
 };
 
 export const useBinanceChart = (symbol: string = 'BTCUSDT') => {
@@ -938,32 +961,32 @@ export const useBinanceChart = (symbol: string = 'BTCUSDT') => {
 };
 
 const LivePriceDisplay = ({ price, prevPrice }: { price: string, prevPrice: string }) => {
-  const direction = parseFloat(price) > parseFloat(prevPrice) ? 'up' : parseFloat(price) < parseFloat(prevPrice) ? 'down' : 'neutral';
-  return (
-    <span className={`transition-colors duration-300 ${direction === 'up' ? 'text-green-400' : direction === 'down' ? 'text-red-400' : 'text-white'}`}>
-      ${Number(price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-    </span>
-  );
+    const direction = parseFloat(price) > parseFloat(prevPrice) ? 'up' : parseFloat(price) < parseFloat(prevPrice) ? 'down' : 'neutral';
+    return (
+        <span className={`transition-colors duration-300 ${direction === 'up' ? 'text-green-400' : direction === 'down' ? 'text-red-400' : 'text-white'}`}>
+            ${Number(price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </span>
+    );
 };
 
 const LiveTickerTape = ({ tickers }: { tickers: Record<string, TickerData> }) => {
-  const tickerList = TARGET_PAIRS.map(symbol => tickers[symbol]).filter(Boolean);
-  const displayList = tickerList.length > 0 ? tickerList : TARGET_PAIRS.map(p => ({ symbol: p, price: '---', percentChange: '0.00', prevPrice: '0' }));
-  return (
-    <div className="relative w-full h-8 md:h-10 shrink-0 z-50 bg-black border-b border-white/10">
-      <div className="w-full h-full bg-neutral-950/80 backdrop-blur-sm flex items-center overflow-hidden">
-        <motion.div className="flex whitespace-nowrap" animate={{ x: [0, -1000] }} transition={{ repeat: Infinity, duration: 40, ease: "linear" }}>
-          {[...displayList, ...displayList, ...displayList].map((t, i) => (
-             <div key={`${t.symbol}-${i}`} className="flex items-center gap-3 px-6 border-r border-white/10 h-10">
-                <span className="font-bold text-blue-500 text-[10px] md:text-xs">{t.symbol.replace('USDT', '')}</span>
-                <span className="text-white font-mono text-[10px] md:text-xs">{t.price === '---' ? t.price : `$${t.price}`}</span>
-                <span className={`text-[10px] ${parseFloat(t.percentChange) >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{parseFloat(t.percentChange) > 0 ? '+' : ''}{t.percentChange}%</span>
-             </div>
-          ))}
-        </motion.div>
-      </div>
-    </div>
-  );
+    const tickerList = TARGET_PAIRS.map(symbol => tickers[symbol]).filter(Boolean);
+    const displayList = tickerList.length > 0 ? tickerList : TARGET_PAIRS.map(p => ({ symbol: p, price: '---', percentChange: '0.00', prevPrice: '0' }));
+    return (
+        <div className="relative w-full h-8 md:h-10 shrink-0 z-50 bg-black border-b border-white/10">
+            <div className="w-full h-full bg-neutral-950/80 backdrop-blur-sm flex items-center overflow-hidden">
+                <motion.div className="flex whitespace-nowrap" animate={{ x: [0, -1000] }} transition={{ repeat: Infinity, duration: 40, ease: "linear" }}>
+                    {[...displayList, ...displayList, ...displayList].map((t, i) => (
+                        <div key={`${t.symbol}-${i}`} className="flex items-center gap-3 px-6 border-r border-white/10 h-10">
+                            <span className="font-bold text-blue-500 text-[10px] md:text-xs">{t.symbol.replace('USDT', '')}</span>
+                            <span className="text-white font-mono text-[10px] md:text-xs">{t.price === '---' ? t.price : `$${t.price}`}</span>
+                            <span className={`text-[10px] ${parseFloat(t.percentChange) >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{parseFloat(t.percentChange) > 0 ? '+' : ''}{t.percentChange}%</span>
+                        </div>
+                    ))}
+                </motion.div>
+            </div>
+        </div>
+    );
 };
 
 // ----------------------------------------------------------------------------
@@ -1155,8 +1178,8 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
                         <div className="flex-1 w-full">
                             <ShimmerCard className="h-full">
                                 <div className="p-5 h-full flex flex-col w-full items-center justify-center">
-                                    <h2 className="text-xl font-bold text-blue-500 mb-2">Primary Chart/Data View</h2>
-                                    <p className="text-gray-500 text-sm">Theme configuration is now accessed via the **Modal**</p>
+                                    <h2 className="text-xl font-bold text-blue-500 mb-2">PICKTHEME</h2>
+                                    <p className="text-gray-500 text-sm">Theme configuration</p>
                                     <ShimmerButton onClick={() => setIsConfigModalOpen(true)} icon={Settings} className="mt-6 max-w-sm">OPEN FULL CONFIGURATION</ShimmerButton>
                                 </div>
                             </ShimmerCard>

@@ -6,42 +6,6 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Volume2, VolumeX, Music, Settings, X } from 'lucide-react';
 
-// --- REMOVED OLD IMPORT: import { THEMES, Theme } from '@/components/Mainpage/ThemeComponents';
-// The full data structure is now assumed to be in the ALL_THEMES array below, which the dynamic configurator also uses.
-
-// --- RE-INJECT MINIMAL THEME DATA & TYPES FOR LOCAL LOOKUP CONSISTENCY ---
-// NOTE: In a real project, ALL_THEMES (the list of 250+ themes) would be imported here.
-export type ThemeCategory = 'SPECIAL' | 'SENTIMENT' | 'ASSETS' | 'CRYPTO' | 'HISTORICAL' | 'OPTICS' | 'GLITCH' | 'EXOTIC'; // Minimal set
-export type Theme = { 
-  id: string; name: string; description: string; 
-  filter: string; mobileFilter: string; category: ThemeCategory; 
-  isLight?: boolean; illusion?: 'SCANLINES' | 'VIGNETTE' | 'NOISE' | 'NONE'; 
-  accentColor?: string; status: 'AVAILABLE' | 'UNAVAILABLE';
-};
-
-// Placeholder for the complete, merged ALL_THEMES list used by the configurator.
-// Includes the fixed custom theme and the default theme.
-export const ALL_THEMES: Theme[] = [
-    // FIXED BULL MONEY FILTER (Clear/Premium Blue Chrome)
-    { 
-        id: 'bull-money-special', 
-        name: 'Bull Money Chrome', 
-        description: 'Premium Logic', 
-        category: 'SPECIAL', 
-        filter: 'saturate(1.5) contrast(1.2) brightness(1.1) hue-rotate(10deg) sepia(0.1)', // The corrected filter
-        mobileFilter: 'saturate(1.5) contrast(1.2)', 
-        illusion: 'NONE', 
-        accentColor: '#00FFFF', 
-        status: 'AVAILABLE' 
-    },
-    // DEFAULT/TERMINAL THEME (t01)
-    { id: 't01', name: 'Terminal', description: 'Default', category: 'SENTIMENT', filter: 'none', mobileFilter: 'none', illusion: 'NONE', accentColor: '#ffffff', status: 'AVAILABLE' },
-    // DUMMY THEME
-    { id: 'c02', name: 'Ethereum Glow', description: 'ETH Gas', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(180deg) saturate(2) brightness(1.1) drop-shadow(0 0 5px #627EEA)', mobileFilter: 'hue-rotate(180deg)', illusion: 'VIGNETTE', accentColor: '#627EEA', status: 'AVAILABLE' },
-    // ... (Placeholder for all other 250+ themes)
-];
-
-
 // --- IMPORT NAVBAR (Using named import) ---
 import { Navbar } from "@/components/Mainpage/navbar"; 
 
@@ -50,6 +14,10 @@ const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor')
   ssr: false,
   loading: () => <div className="hidden">Loading Cursor...</div> 
 });
+
+// Assuming FixedThemeConfigurator and ALL_THEMES are defined and exported 
+// in the same ThemeComponents file. We need to import the data it defines.
+import { ALL_THEMES as THEME_DATA, Theme, ThemeCategory } from '@/components/Mainpage/ThemeComponents';
 
 const FixedThemeConfigurator = dynamic(
     () => import('@/components/Mainpage/ThemeComponents').then((mod) => mod.default), 
@@ -61,7 +29,7 @@ const FixedThemeConfigurator = dynamic(
 
 // --- OTHER COMPONENTS (No Change) ---
 import { Features } from "@/components/Mainpage/features";
-import { Hero } from "@/components/Mainpage/hero";
+import { Hero } from "../components/Mainpage/hero";
 import { Pricing } from "../components/Mainpage/pricing"; 
 import Shopmain from "../components/Mainpage/ShopMainpage"; 
 import Socialsfooter from "../components/Mainpage/Socialsfooter";
@@ -140,7 +108,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [showContent, setShowContent] = useState(false);
   
-  // FIX 1A: Initialize state from localStorage (No change needed here)
+  // FIX 1A: Initialize state from localStorage 
   const [activeThemeId, setActiveThemeId] = useState<string>(() => {
     if (typeof window !== 'undefined') {
         return localStorage.getItem('user_theme_id') || 't01';
@@ -152,14 +120,14 @@ export default function Home() {
   const [contentReady, setContentReady] = useState(false); 
   const minTimeRef = useRef(false);
 
-  // FIX 1B: Correct theme lookup using ALL_THEMES
+  // FIX 1B: Correct theme lookup using the imported THEME_DATA
   const activeTheme: Theme = useMemo(() => {
-    // Find theme in the local mock/placeholder ALL_THEMES (representing the actual merged list)
-    return ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
+    // FIX: Use the imported theme data (now named THEME_DATA) for lookup.
+    return THEME_DATA.find(t => t.id === activeThemeId) || THEME_DATA[0];
   }, [activeThemeId]);
 
 
-  // FIX 4: Correct dependency array for useCallback
+  // FIX 4: Correct dependency array for useCallback (No change needed here from the previous step, but kept for clarity)
   const { isPlaying, start: startBgMusic, toggle: toggleBgMusic } = useBackgroundLoop('/background.mp3');
   
   const handleManualUnlock = useCallback(() => {
@@ -168,9 +136,9 @@ export default function Home() {
     setLoading(false);
     setShowContent(true); 
     startBgMusic(); 
-  }, [startBgMusic]); // Added startBgMusic dependency
+  }, [startBgMusic]); 
 
-  // FIX 2: Theme change handler now saves to localStorage (No change needed here)
+  // FIX 2: Theme change handler now saves to localStorage 
   const handleThemeChange = useCallback((themeId: string) => {
     setActiveThemeId(themeId);
     if (typeof window !== 'undefined') {
@@ -202,14 +170,14 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [contentReady, startBgMusic]); 
 
-  // FIX 3: Dynamic GlobalStyles with fix for bull-money-special if needed
+  // FIX 3: Dynamic GlobalStyles (No change needed here, as the lookup uses the correctly imported theme object)
   const GlobalStyles = () => (
     <style jsx global>{`
       html, body, #__next {
         scroll-behavior: smooth; 
         min-height: 100vh;
         background-color: black; 
-        transition: filter 0.5s ease-in-out; /* Added smooth transition */
+        transition: filter 0.5s ease-in-out; 
         
         /* Apply the theme filter for desktop/global */
         filter: ${activeTheme.filter};
