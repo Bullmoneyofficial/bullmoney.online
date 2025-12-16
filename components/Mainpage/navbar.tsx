@@ -26,24 +26,18 @@ import {
 } from "lucide-react";
 import { IconMenu2, IconX } from "@tabler/icons-react";
 import Link from "next/link";
-
-// --- FIX 1: Import Next.js Image ---
 import Image from "next/image";
-
-// --- FIX 2: Import SVG as a data source (path) ---
 import BullLogo from "@/public/BULL.svg"; 
-
 import Faq from "@/app/shop/Faq";
 
 // --- TYPE DEFINITION ---
 type ThemeControlProps = {
-  // ✅ FIX APPLIED HERE: Made setShowConfigurator optional with '?'
   setShowConfigurator?: (show: boolean) => void; 
   activeThemeId?: string;
   onThemeChange?: (themeId: string) => void;
 };
 
-// --- GLOBAL STYLES (Unchanged) ---
+// --- GLOBAL STYLES ---
 const GLOBAL_STYLES = `
   .mac-gpu-accelerate {
     transform: translateZ(0);
@@ -59,7 +53,7 @@ const GLOBAL_STYLES = `
   }
 `;
 
-// --- DATA (Unchanged) ---
+// --- DATA ---
 const NAV_ITEMS = [
   { name: "FREE", link: { pathname: "/about", query: { src: "nav" } }, icon: <Gift className="h-full w-full text-neutral-500 dark:text-neutral-300" /> },
   { name: "VIP SHOP", link: { pathname: "/shop", query: { src: "nav" } }, icon: <ShoppingCart className="h-full w-full text-neutral-500 dark:text-neutral-300" /> },
@@ -76,7 +70,6 @@ const SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #3
 
 // --- MAIN NAVBAR COMPONENT ---
 export const Navbar = ({ 
-  // ✅ FIX APPLIED HERE: Provide a default empty function if the prop is missing (for Server Components)
   setShowConfigurator = () => {} 
 }: ThemeControlProps) => {
   return (
@@ -88,19 +81,22 @@ export const Navbar = ({
         
         {/* --- DESKTOP LAYOUT --- */}
         <div className="hidden lg:block">
-            <div className="absolute left-10 top-8 z-[1010] pointer-events-auto">
+            {/* Adjusted top position slightly for larger logo centering */}
+            <div className="absolute left-10 top-6 z-[1010] pointer-events-auto">
                 <AnimatedLogoWrapper>
-                    {/* UPDATED: Circle Pill Layout for Desktop */}
-                    <div className="flex items-center justify-center w-14 h-14 rounded-full bg-neutral-900/80 border border-white/10 shadow-[0_0_15px_rgba(0,0,0,0.5)] backdrop-blur-md overflow-hidden p-3">
-                        <Image 
-                          src={BullLogo} 
-                          alt="Bull Logo" 
-                          width={32} 
-                          height={32} 
-                          className="w-full h-full object-contain"
-                          priority
-                        />
-                    </div>
+                    {/* Logo Image */}
+                    <Image 
+                      src={BullLogo} 
+                      alt="Bull Logo" 
+                      width={55}  // Increased size
+                      height={55} // Increased size
+                      className="object-contain drop-shadow-sm"
+                      priority
+                    />
+                    {/* BULLMONEY Text */}
+                    <span className="font-black text-2xl tracking-tighter text-neutral-900 dark:text-white">
+                      BULLMONEY
+                    </span>
                 </AnimatedLogoWrapper>
             </div>
             <div className="flex justify-center w-full relative pt-6">
@@ -114,17 +110,19 @@ export const Navbar = ({
             {/* 1. Mobile Logo (Left) */}
             <div className="pointer-events-auto pt-2 shrink-0 relative z-50">
                <AnimatedLogoWrapper>
-                  {/* UPDATED: Circle Pill Layout for Mobile */}
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-neutral-900/80 border border-white/10 shadow-lg backdrop-blur-md overflow-hidden p-2.5">
-                     <Image 
-                        src={BullLogo} 
-                        alt="Bull Logo" 
-                        width={28} 
-                        height={28} 
-                        className="w-full h-full object-contain"
-                        priority
-                     />
-                  </div>
+                   {/* Logo Image */}
+                   <Image 
+                      src={BullLogo} 
+                      alt="Bull Logo" 
+                      width={45} // Increased size for mobile
+                      height={45} 
+                      className="object-contain drop-shadow-sm"
+                      priority
+                   />
+                   {/* BULLMONEY Text */}
+                   <span className="font-black text-xl tracking-tighter text-neutral-900 dark:text-white">
+                      BULLMONEY
+                   </span>
                </AnimatedLogoWrapper>
             </div>
 
@@ -141,24 +139,7 @@ export const Navbar = ({
   );
 };
 
-// --- SUB COMPONENTS (ThemeTrigger, Dock, MobileNav, etc) ---
-
-// NOTE: ThemeTrigger, DesktopNav, and MobileNav must still check if the prop exists 
-// before calling it, but since we defaulted it to () => {} above, the inner components
-// are safe to use the prop as if it always exists.
-
-const ThemeTrigger = ({ setShowConfigurator }: { setShowConfigurator: (show: boolean) => void }) => {
-  return (
-    <button 
-      onClick={() => setShowConfigurator(true)} 
-      className="relative group flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-    >
-      <Layers className="w-4 h-4 text-neutral-600 dark:text-neutral-300" />
-      <span className="text-sm font-medium text-neutral-600 dark:text-neutral-300">Theme</span>
-    </button>
-  );
-};
-
+// --- DESKTOP NAV ---
 const DesktopNav = memo(({ setShowConfigurator }: { setShowConfigurator: (show: boolean) => void }) => {
   return (
     <motion.div
@@ -166,11 +147,9 @@ const DesktopNav = memo(({ setShowConfigurator }: { setShowConfigurator: (show: 
       animate={{ y: 0, opacity: 1 }}
       className="flex items-center gap-4 pointer-events-auto px-6 py-2 rounded-2xl transition-colors duration-300 bg-white/95 dark:bg-neutral-950/95 border border-neutral-200 dark:border-white/10 shadow-xl"
     >
-      <Dock items={NAV_ITEMS} />
-      <div className="flex justify-end ml-4 gap-2 items-center">
-        <div className="hidden md:block">
-            <ThemeTrigger setShowConfigurator={setShowConfigurator} />
-        </div>
+      <Dock items={NAV_ITEMS} setShowConfigurator={setShowConfigurator} />
+      
+      <div className="flex justify-end ml-2 gap-2 items-center border-l border-neutral-200 dark:border-white/10 pl-4">
         <div className="hidden md:block">
             <Faq />
         </div>
@@ -180,16 +159,24 @@ const DesktopNav = memo(({ setShowConfigurator }: { setShowConfigurator: (show: 
 });
 DesktopNav.displayName = "DesktopNav";
 
-const Dock = memo(({ items }: { items: typeof NAV_ITEMS }) => {
+// --- DOCK COMPONENT ---
+const Dock = memo(({ items, setShowConfigurator }: { items: typeof NAV_ITEMS, setShowConfigurator: (show: boolean) => void }) => {
   const mouseX = useMotionValue(Infinity);
+  // Total items is NAV_ITEMS.length + 1 (for Theme)
   const [activeTipIndex, setActiveTipIndex] = useState(0);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      setActiveTipIndex((prev) => (prev + 1) % items.length);
-    }, 5000); 
+      setActiveTipIndex((prev) => (prev + 1) % (items.length + 1));
+    }, 4000); 
     return () => clearInterval(intervalId);
   }, [items.length]);
+
+  const themeItemData = {
+    name: "THEME",
+    icon: <Layers className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
+    link: null
+  };
 
   return (
     <div
@@ -205,13 +192,22 @@ const Dock = memo(({ items }: { items: typeof NAV_ITEMS }) => {
           isTipActive={i === activeTipIndex} 
         />
       ))}
+
+      <DockItem 
+        mouseX={mouseX}
+        item={themeItemData}
+        isTipActive={activeTipIndex === items.length}
+        onClick={() => setShowConfigurator(true)}
+      />
     </div>
   );
 });
 Dock.displayName = "Dock";
 
-const DockItem = memo(({ mouseX, item, isTipActive }: any) => {
+// --- DOCK ITEM ---
+const DockItem = memo(({ mouseX, item, isTipActive, onClick }: any) => {
   const ref = useRef<HTMLDivElement>(null);
+  
   const distance = useTransform(mouseX, (val: number) => {
     const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
     return val - bounds.x - bounds.width / 2;
@@ -221,8 +217,8 @@ const DockItem = memo(({ mouseX, item, isTipActive }: any) => {
   const width = useSpring(widthSync, { mass: 0.1, stiffness: 180, damping: 12 });
   const [hovered, setHovered] = useState(false);
 
-  return (
-    <Link href={item.link} className="no-underline relative group flex flex-col items-center justify-end">
+  const content = (
+    <>
       <motion.div
         ref={ref}
         style={{ width, height: width }}
@@ -261,20 +257,40 @@ const DockItem = memo(({ mouseX, item, isTipActive }: any) => {
           <HelperTip item={item} />
         )}
       </AnimatePresence>
+    </>
+  );
+
+  if (onClick) {
+    return (
+        <button onClick={onClick} className="relative group flex flex-col items-center justify-end outline-none">
+            {content}
+        </button>
+    );
+  }
+
+  return (
+    <Link href={item.link} className="no-underline relative group flex flex-col items-center justify-end">
+      {content}
     </Link>
   );
 });
 DockItem.displayName = "DockItem";
 
+// --- MOBILE NAV ---
 const MobileNav = memo(({ setShowConfigurator }: { setShowConfigurator: (show: boolean) => void }) => {
   const [open, setOpen] = useState(false);
   const [activeTipIndex, setActiveTipIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const itemsRef = useRef<(HTMLAnchorElement | null)[]>([]);
+  const itemsRef = useRef<(HTMLElement | null)[]>([]);
+
+  const themeItem = { 
+    name: "THEME", 
+    icon: <Layers className="h-full w-full text-neutral-500 dark:text-neutral-300" /> 
+  };
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      setActiveTipIndex((prev) => (prev + 1) % NAV_ITEMS.length);
+      setActiveTipIndex((prev) => (prev + 1) % (NAV_ITEMS.length + 1));
     }, 4000); 
     return () => clearInterval(intervalId);
   }, []);
@@ -298,7 +314,6 @@ const MobileNav = memo(({ setShowConfigurator }: { setShowConfigurator: (show: b
   
   const handleOpenConfigurator = useCallback(() => {
     setOpen(false); 
-    // This call is now safe because setShowConfigurator is guaranteed to be a function
     setShowConfigurator(true); 
   }, [setShowConfigurator]);
 
@@ -312,6 +327,7 @@ const MobileNav = memo(({ setShowConfigurator }: { setShowConfigurator: (show: b
             ref={scrollRef}
             className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth pr-1 pb-8 mb-[-32px] max-w-[50vw] sm:max-w-[60vw] md:max-w-none"
          >
+            {/* 1. Loop standard items */}
             {NAV_ITEMS.map((item, i) => (
                <Link 
                  key={i} 
@@ -319,19 +335,7 @@ const MobileNav = memo(({ setShowConfigurator }: { setShowConfigurator: (show: b
                  ref={(el) => { itemsRef.current[i] = el; }}
                  className="relative flex-shrink-0 flex flex-col items-center group pt-1" 
                >
-                  <div className="w-8 h-8 relative flex items-center justify-center rounded-full overflow-hidden shadow-sm z-20">
-                      <motion.div
-                        className="absolute inset-[-100%]" 
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                        style={{ background: SHIMMER_GRADIENT }}
-                      />
-                      <div className="absolute inset-[1.5px] rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center z-10">
-                         <div className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-300">
-                           {item.icon}
-                         </div>
-                      </div>
-                  </div>
+                  <MobileNavItemContent item={item} />
 
                   <AnimatePresence mode="wait">
                     {activeTipIndex === i && !open && (
@@ -340,6 +344,21 @@ const MobileNav = memo(({ setShowConfigurator }: { setShowConfigurator: (show: b
                   </AnimatePresence>
                </Link>
             ))}
+
+            {/* 2. Add Theme Button to scroll list */}
+            <button
+                onClick={handleOpenConfigurator}
+                ref={(el) => { itemsRef.current[NAV_ITEMS.length] = el; }}
+                className="relative flex-shrink-0 flex flex-col items-center group pt-1"
+            >
+                <MobileNavItemContent item={themeItem} />
+                
+                <AnimatePresence mode="wait">
+                    {activeTipIndex === NAV_ITEMS.length && !open && (
+                      <HelperTip item={themeItem} isMobile={true} />
+                    )}
+                </AnimatePresence>
+            </button>
          </div>
 
          <div className="flex-shrink-0 flex items-center pl-1 border-l border-neutral-200 dark:border-white/10 bg-white/95 dark:bg-neutral-950/95 z-30 h-8 self-start mt-1">
@@ -382,9 +401,6 @@ const MobileNav = memo(({ setShowConfigurator }: { setShowConfigurator: (show: b
                 </Link>
               ))}
               <div className="mt-2 flex justify-center gap-4 flex-wrap">
-                 <div className="scale-90">
-                    <ThemeTrigger setShowConfigurator={handleOpenConfigurator} />
-                 </div>
                  <Faq />
               </div>
             </div>
@@ -395,6 +411,22 @@ const MobileNav = memo(({ setShowConfigurator }: { setShowConfigurator: (show: b
   );
 });
 MobileNav.displayName = "MobileNav";
+
+const MobileNavItemContent = ({ item }: { item: any }) => (
+    <div className="w-8 h-8 relative flex items-center justify-center rounded-full overflow-hidden shadow-sm z-20">
+        <motion.div
+        className="absolute inset-[-100%]" 
+        animate={{ rotate: 360 }}
+        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+        style={{ background: SHIMMER_GRADIENT }}
+        />
+        <div className="absolute inset-[1.5px] rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center z-10">
+            <div className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-300">
+                {item.icon}
+            </div>
+        </div>
+    </div>
+);
 
 const HelperTip = ({ item, isMobile = false }: { item: any, isMobile?: boolean }) => (
   <motion.div
@@ -446,8 +478,14 @@ const SupportWidget = memo(() => {
 });
 SupportWidget.displayName = "SupportWidget";
 
+// Updated AnimatedLogoWrapper to use motion.div for entrance animation and added gap
 const AnimatedLogoWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="hover:scale-105 transition-transform duration-200 active:scale-95 cursor-pointer flex items-center">
+  <motion.div 
+    initial={{ opacity: 0, x: -20 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ duration: 0.5, ease: "easeOut" }}
+    className="hover:scale-105 transition-transform duration-200 active:scale-95 cursor-pointer flex items-center gap-2 lg:gap-3"
+  >
     {children}
-  </div>
+  </motion.div>
 );
