@@ -459,9 +459,10 @@ const useModal = () => {
 
 // --- Modal Components ---
 
-export function Modal({ children }: { children: React.ReactNode }) {
-  return <ModalProvider>{children}</ModalProvider>;
-}
+// NOTE: The original Modal function is now commented out/removed as it was redundant.
+// export function Modal({ children }: { children: React.ReactNode }) {
+//   return <ModalProvider>{children}</ModalProvider>;
+// }
 
 export const ModalTrigger = ({ children, className }: { children: React.ReactNode; className?: string }) => {
   const { setOpen } = useModal();
@@ -697,7 +698,7 @@ function FAQCategoryItem({ data }: { data: FAQCategoryData }) {
 
 export default function BullMoneyModal() {
   return (
-    <Modal>
+    <ModalProvider> {/* <-- FIX: Wrap the children in ModalProvider directly */}
       {/* 1. The Trigger Button */}
       <ModalTrigger>
          <span className="flex items-center gap-2">
@@ -771,6 +772,6 @@ export default function BullMoneyModal() {
              </a>
           </div>
       </ModalBody>
-    </Modal>
+    </ModalProvider>
   );
 }

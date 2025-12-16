@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
   memo,
+  useCallback,
 } from "react";
 import {
   motion,
@@ -21,13 +22,27 @@ import {
   TrendingUp,
   Home,
   MessageCircle,
+  Layers, 
 } from "lucide-react";
 import { IconMenu2, IconX } from "@tabler/icons-react";
 import Link from "next/link";
-import { Logo } from "./logo";
+
+// --- FIX 1: Import Next.js Image ---
+import Image from "next/image";
+
+// --- FIX 2: Import SVG as a data source (path) ---
+import BullLogo from "@/public/BULL.svg"; 
+
 import Faq from "@/app/shop/Faq";
 
-// --- GLOBAL STYLES ---
+// --- TYPE DEFINITION ---
+type ThemeControlProps = {
+  setShowConfigurator: (show: boolean) => void;
+  activeThemeId?: string;
+  onThemeChange?: (themeId: string) => void;
+};
+
+// --- GLOBAL STYLES (Unchanged) ---
 const GLOBAL_STYLES = `
   .mac-gpu-accelerate {
     transform: translateZ(0);
@@ -43,7 +58,7 @@ const GLOBAL_STYLES = `
   }
 `;
 
-// --- DATA ---
+// --- DATA (Unchanged) ---
 const NAV_ITEMS = [
   { name: "FREE", link: { pathname: "/about", query: { src: "nav" } }, icon: <Gift className="h-full w-full text-neutral-500 dark:text-neutral-300" /> },
   { name: "VIP SHOP", link: { pathname: "/shop", query: { src: "nav" } }, icon: <ShoppingCart className="h-full w-full text-neutral-500 dark:text-neutral-300" /> },
@@ -58,8 +73,8 @@ const FOOTER_NAV_ITEMS = [
 
 const SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #3b82f6 50%, #00000000 100%)";
 
-// --- MAIN NAVBAR ---
-export const Navbar = () => {
+// --- MAIN NAVBAR COMPONENT ---
+export const Navbar = ({ setShowConfigurator }: ThemeControlProps) => {
   return (
     <>
       <style jsx global>{GLOBAL_STYLES}</style>
@@ -71,13 +86,21 @@ export const Navbar = () => {
         <div className="hidden lg:block">
             <div className="absolute left-10 top-8 z-[1010] pointer-events-auto">
                 <AnimatedLogoWrapper>
-                    <div className="scale-150 origin-top-left min-w-max whitespace-nowrap">
-                        <Logo />
+                    {/* UPDATED: Circle Pill Layout for Desktop */}
+                    <div className="flex items-center justify-center w-14 h-14 rounded-full bg-neutral-900/80 border border-white/10 shadow-[0_0_15px_rgba(0,0,0,0.5)] backdrop-blur-md overflow-hidden p-3">
+                        <Image 
+                          src={BullLogo} 
+                          alt="Bull Logo" 
+                          width={32} 
+                          height={32} 
+                          className="w-full h-full object-contain"
+                          priority
+                        />
                     </div>
                 </AnimatedLogoWrapper>
             </div>
             <div className="flex justify-center w-full relative pt-6">
-                <DesktopNav />
+                <DesktopNav setShowConfigurator={setShowConfigurator} />
             </div>
         </div>
 
@@ -87,16 +110,23 @@ export const Navbar = () => {
             {/* 1. Mobile Logo (Left) */}
             <div className="pointer-events-auto pt-2 shrink-0 relative z-50">
                <AnimatedLogoWrapper>
-                  <div className="scale-110 origin-top-left min-w-max whitespace-nowrap">
-                     <Logo />
+                  {/* UPDATED: Circle Pill Layout for Mobile */}
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-neutral-900/80 border border-white/10 shadow-lg backdrop-blur-md overflow-hidden p-2.5">
+                     <Image 
+                        src={BullLogo} 
+                        alt="Bull Logo" 
+                        width={28} 
+                        height={28} 
+                        className="w-full h-full object-contain"
+                        priority
+                     />
                   </div>
                </AnimatedLogoWrapper>
             </div>
 
             {/* 2. Mobile Nav Pill (Right) */}
-            {/* Added md:max-w-md to allow more space on tablets */}
             <div className="pointer-events-auto ml-2 flex justify-end min-w-0 flex-1 relative z-50">
-               <MobileNav />
+               <MobileNav setShowConfigurator={setShowConfigurator} />
             </div>
         </div>
       </div>
@@ -107,8 +137,21 @@ export const Navbar = () => {
   );
 };
 
-// --- DESKTOP NAV ---
-const DesktopNav = memo(() => {
+// --- SUB COMPONENTS (ThemeTrigger, Dock, MobileNav, etc) ---
+
+const ThemeTrigger = ({ setShowConfigurator }: { setShowConfigurator: (show: boolean) => void }) => {
+  return (
+    <button 
+      onClick={() => setShowConfigurator(true)} 
+      className="relative group flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+    >
+      <Layers className="w-4 h-4 text-neutral-600 dark:text-neutral-300" />
+      <span className="text-sm font-medium text-neutral-600 dark:text-neutral-300">Theme</span>
+    </button>
+  );
+};
+
+const DesktopNav = memo(({ setShowConfigurator }: { setShowConfigurator: (show: boolean) => void }) => {
   return (
     <motion.div
       initial={{ y: -20, opacity: 0 }}
@@ -116,7 +159,10 @@ const DesktopNav = memo(() => {
       className="flex items-center gap-4 pointer-events-auto px-6 py-2 rounded-2xl transition-colors duration-300 bg-white/95 dark:bg-neutral-950/95 border border-neutral-200 dark:border-white/10 shadow-xl"
     >
       <Dock items={NAV_ITEMS} />
-      <div className="flex justify-end ml-4">
+      <div className="flex justify-end ml-4 gap-2 items-center">
+        <div className="hidden md:block">
+            <ThemeTrigger setShowConfigurator={setShowConfigurator} />
+        </div>
         <div className="hidden md:block">
             <Faq />
         </div>
@@ -126,7 +172,6 @@ const DesktopNav = memo(() => {
 });
 DesktopNav.displayName = "DesktopNav";
 
-// --- DOCK ---
 const Dock = memo(({ items }: { items: typeof NAV_ITEMS }) => {
   const mouseX = useMotionValue(Infinity);
   const [activeTipIndex, setActiveTipIndex] = useState(0);
@@ -144,7 +189,7 @@ const Dock = memo(({ items }: { items: typeof NAV_ITEMS }) => {
       onMouseLeave={() => mouseX.set(Infinity)}
       className="mx-2 flex h-[50px] items-end gap-3 px-2"
     >
-      {items.map((item, i) => (
+      {NAV_ITEMS.map((item, i) => (
         <DockItem 
           key={i} 
           mouseX={mouseX} 
@@ -213,14 +258,12 @@ const DockItem = memo(({ mouseX, item, isTipActive }: any) => {
 });
 DockItem.displayName = "DockItem";
 
-// --- MOBILE NAV (FIXED HELPERS) ---
-const MobileNav = memo(() => {
+const MobileNav = memo(({ setShowConfigurator }: { setShowConfigurator: (show: boolean) => void }) => {
   const [open, setOpen] = useState(false);
   const [activeTipIndex, setActiveTipIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<(HTMLAnchorElement | null)[]>([]);
 
-  // Cycle Tips
   useEffect(() => {
     const intervalId = setInterval(() => {
       setActiveTipIndex((prev) => (prev + 1) % NAV_ITEMS.length);
@@ -228,7 +271,6 @@ const MobileNav = memo(() => {
     return () => clearInterval(intervalId);
   }, []);
 
-  // Auto-Scroll to Active Tip
   useEffect(() => {
     const container = scrollRef.current;
     const activeItem = itemsRef.current[activeTipIndex];
@@ -245,21 +287,18 @@ const MobileNav = memo(() => {
       });
     }
   }, [activeTipIndex]);
+  
+  const handleOpenConfigurator = useCallback(() => {
+    setOpen(false); 
+    setShowConfigurator(true); 
+  }, [setShowConfigurator]);
 
   return (
     <motion.div 
       animate={{ width: "auto" }}
-      // REMOVED 'overflow-hidden' here to let tips breathe if needed, handled by inner containers
       className="flex flex-col items-end bg-white/95 dark:bg-neutral-950/95 border border-neutral-200 dark:border-white/10 shadow-lg rounded-2xl relative max-w-full"
     >
-      
-      {/* 1. HEADER ROW */}
       <div className="flex items-center gap-1.5 p-1.5 relative z-20 max-w-full"> 
-         
-         {/* CRITICAL FIX: 
-            1. Added 'pb-8' to give vertical space for the tooltip inside the scroll container.
-            2. Added 'md:max-w-none' so on tablets (small tabs) it expands fully and doesn't scroll unnecessarily.
-         */}
          <div 
             ref={scrollRef}
             className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth pr-1 pb-8 mb-[-32px] max-w-[50vw] sm:max-w-[60vw] md:max-w-none"
@@ -269,7 +308,7 @@ const MobileNav = memo(() => {
                  key={i} 
                  href={item.link as any} 
                  ref={(el) => { itemsRef.current[i] = el; }}
-                 className="relative flex-shrink-0 flex flex-col items-center group pt-1" // Added pt-1
+                 className="relative flex-shrink-0 flex flex-col items-center group pt-1" 
                >
                   <div className="w-8 h-8 relative flex items-center justify-center rounded-full overflow-hidden shadow-sm z-20">
                       <motion.div
@@ -285,8 +324,6 @@ const MobileNav = memo(() => {
                       </div>
                   </div>
 
-                  {/* Helper Tip (Mobile) */}
-                  {/* Positioned slightly higher (top-9) to fit within the pb-8 padding */}
                   <AnimatePresence mode="wait">
                     {activeTipIndex === i && !open && (
                       <HelperTip item={item} isMobile={true} />
@@ -296,7 +333,6 @@ const MobileNav = memo(() => {
             ))}
          </div>
 
-         {/* FIXED SEPARATOR & MENU BUTTON */}
          <div className="flex-shrink-0 flex items-center pl-1 border-l border-neutral-200 dark:border-white/10 bg-white/95 dark:bg-neutral-950/95 z-30 h-8 self-start mt-1">
             <button onClick={() => setOpen(!open)} className="p-1 ml-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
                 {open ? <IconX className="w-5 h-5 dark:text-white" /> : <IconMenu2 className="w-5 h-5 dark:text-white" />}
@@ -304,7 +340,6 @@ const MobileNav = memo(() => {
          </div>
       </div>
 
-      {/* 2. EXPANDABLE LIST */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -337,7 +372,12 @@ const MobileNav = memo(() => {
                     </div>
                 </Link>
               ))}
-              <div className="mt-2 flex justify-center"><Faq /></div>
+              <div className="mt-2 flex justify-center gap-4 flex-wrap">
+                 <div className="scale-90">
+                    <ThemeTrigger setShowConfigurator={handleOpenConfigurator} />
+                 </div>
+                 <Faq />
+              </div>
             </div>
           </motion.div>
         )}
@@ -347,14 +387,12 @@ const MobileNav = memo(() => {
 });
 MobileNav.displayName = "MobileNav";
 
-// --- REUSABLE COMPONENT: HELPER TIP ---
 const HelperTip = ({ item, isMobile = false }: { item: any, isMobile?: boolean }) => (
   <motion.div
     initial={{ opacity: 0, y: -5, scale: 0.8 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, y: -5, scale: 0.8 }}
     transition={{ type: "spring", stiffness: 400, damping: 25 }}
-    // Fixed: Adjusted top position to sit tightly under the icon inside the padding area
     className={`absolute ${isMobile ? 'top-[36px]' : 'top-full mt-2'} left-1/2 -translate-x-1/2 z-[60] flex flex-col items-center pointer-events-none`}
   >
     <div className="w-2 h-2 bg-neutral-900 rotate-45 translate-y-[4px] relative z-10 border-t border-l border-transparent" />
@@ -374,7 +412,6 @@ const HelperTip = ({ item, isMobile = false }: { item: any, isMobile?: boolean }
   </motion.div>
 );
 
-// --- SUPPORT WIDGET ---
 const SupportWidget = memo(() => {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -405,5 +442,3 @@ const AnimatedLogoWrapper = ({ children }: { children: React.ReactNode }) => (
     {children}
   </div>
 );
-
-export default Navbar;
