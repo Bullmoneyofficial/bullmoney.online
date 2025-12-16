@@ -33,7 +33,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-, "components/Orb.jsx", "components/LaserFlow.jsx", "components/Mainpage/OrbV2tsx"  ],
+, "components/Orb.jsx", "components/LaserFlow.jsx", "components/Mainpage/OrbV2tsx", "components/Mainpage/ThemeComponentsui.tsx"  ],
   "exclude": [
     "node_modules"
   ]

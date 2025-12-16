@@ -64,7 +64,7 @@ export default function RootLayout({
           <ShopProvider>
             <Navbar />
             {children}
-            <Footer />
+          
           </ShopProvider>
           {/* ✅ ADDED: ShopProvider ends here */}
           
