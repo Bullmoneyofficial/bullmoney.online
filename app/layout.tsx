@@ -62,7 +62,9 @@ export default function RootLayout({
         >
           {/* ✅ ADDED: ShopProvider starts here */}
           <ShopProvider>
-            <Navbar />
+            <Navbar setShowConfigurator={function (show: boolean): void {
+              throw new Error("Function not implemented.");
+            } } />
             {children}
           
           </ShopProvider>
