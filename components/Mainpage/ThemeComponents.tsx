@@ -8,7 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ============================================================================
-// 1. TYPES & THEMES
+// 1. TYPES & THEMES (No Change)
 // ============================================================================
 
 export type SoundProfile = 'MECHANICAL' | 'SOROS' | 'SCI-FI' | 'SILENT'; 
@@ -69,7 +69,7 @@ export const THEMES: Theme[] = [
 
 
 // ============================================================================
-// 2. CORE PRIMITIVES
+// 2. CORE PRIMITIVES (No Change)
 // ============================================================================
 
 const SHIMMER_GRADIENT_BLUE = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #2563eb 50%, #00000000 100%)";
@@ -84,15 +84,20 @@ const GLOBAL_STYLES = `
     animation: textShine 3s linear infinite;
   }
   .text-glow { text-shadow: 0 0 10px rgba(37, 99, 235, 0.5), 0 0 20px rgba(37, 99, 235, 0.3); }
+  
+  /* SCROLLBAR & TOUCH UTILITIES */
   .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(59, 130, 246, 0.5); border-radius: 2px; }
   .custom-scrollbar::-webkit-scrollbar-track { background-color: rgba(0, 0, 0, 0.1); }
+  
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   
-  /* Snap utilities for smooth mobile scrolling */
   .snap-x-mandatory { scroll-snap-type: x mandatory; }
   .snap-center { scroll-snap-align: center; }
+  
+  /* Ensure smooth scrolling on iOS */
+  .touch-scroll { -webkit-overflow-scrolling: touch; }
 `;
 
 export const ShimmerBorder = ({ active = true }: { active?: boolean }) => (
@@ -142,8 +147,9 @@ export const GlobalSvgFilters = () => (
 // 3. UI COMPONENTS
 // ============================================================================
 
+// FIXED: Pointer events set to none to ensure clicking/scrolling through this layer works
 export const IllusionLayer = ({ type = 'SCANLINES' }: { type?: string }) => (
-    <div className="fixed inset-0 pointer-events-none z-[40] mix-blend-overlay opacity-30">
+    <div className="fixed inset-0 pointer-events-none z-[40] mix-blend-overlay opacity-30 select-none">
         <div className="w-full h-full" style={{
             background: type === 'SCANLINES' ? 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))' : 'none',
             backgroundSize: type === 'SCANLINES' ? '100% 2px, 3px 100%' : 'auto'
@@ -178,7 +184,7 @@ const SoundSelector = ({ active, onSelect }: { active: SoundProfile, onSelect: (
         { id: 'SILENT', label: 'MUTE', icon: VolumeX },
     ];
     return (
-        <div className="grid grid-cols-4 gap-2 md:gap-3 w-full"> 
+        <div className="grid grid-cols-4 gap-2 md:gap-3 w-full shrink-0"> 
             {packs.map((pack) => (
                 <button 
                     key={pack.id} 
@@ -187,7 +193,6 @@ const SoundSelector = ({ active, onSelect }: { active: SoundProfile, onSelect: (
                         ${pack.id === active ? 'border-blue-500 bg-blue-900/30 text-blue-400' : 'border-white/10 text-gray-400 hover:border-blue-500/50'}
                     `}
                 >
-                    {/* Simplified for mobile: Always show text, trust the grid */}
                     <span className="truncate px-1">{pack.label}</span>
                 </button>
             ))}
@@ -196,22 +201,26 @@ const SoundSelector = ({ active, onSelect }: { active: SoundProfile, onSelect: (
 };
 
 // ----------------------------------------------------------------------------
-// SetupThemeInterface (FIXED FOR MOBILE SCROLLING)
+// SetupThemeInterface (FIXED HEIGHT/OVERFLOW)
 // ----------------------------------------------------------------------------
 const SetupThemeInterface = ({ 
     activeThemeId, setActiveThemeId, activeCategory, setActiveCategory, 
-    isMobile, currentSound, setCurrentSound, isMuted, setIsMuted 
+    isMobile, currentSound, setCurrentSound, isMuted, setIsMuted,
+    onSave, onExit
 }: { 
     activeThemeId: string, setActiveThemeId: (id: string) => void,
     activeCategory: ThemeCategory, setActiveCategory: (cat: ThemeCategory) => void,
     isMobile: boolean,
     currentSound: SoundProfile, setCurrentSound: (s: SoundProfile) => void,
-    isMuted: boolean, setIsMuted: (m: boolean) => void
+    isMuted: boolean, setIsMuted: (m: boolean) => void,
+    onSave: (themeId: string) => void,
+    onExit: () => void
 }) => {
     const filteredThemes = useMemo(() => THEMES.filter((t) => t.category === activeCategory), [activeCategory]);
     const allCategories = useMemo(() => Array.from(new Set(THEMES.map(t => t.category))), []);
     const preferredOrder: ThemeCategory[] = ['SPECIAL', 'CRYPTO', 'SENTIMENT', 'ASSETS', 'HISTORICAL', 'OPTICS', 'EXOTIC', 'GLITCH'];
     const sortedCategories = preferredOrder.filter(cat => allCategories.includes(cat));
+    const currentTheme = THEMES.find(t => t.id === activeThemeId) || THEMES[0];
 
     const getCategoryIcon = (cat: ThemeCategory) => {
         if (cat === 'SPECIAL') return <Zap className="w-3 h-3 text-yellow-500" />;
@@ -225,19 +234,18 @@ const SetupThemeInterface = ({
     };
 
     return (
-        // KEY FIX: Removed fixed height constraints on mobile (h-auto) and added min-height only on desktop.
-        // This prevents the "scrollception" where mobile content gets hidden inside a fixed-height box.
-        <div className="flex flex-col lg:flex-row h-auto lg:h-full lg:min-h-[450px] border border-white/10 rounded-lg overflow-hidden bg-black/40">
+        // REMOVED fixed h-full/lg:h-full here to allow content to dictate size, letting the parent Modal scroll
+        <div className="flex flex-col lg:flex-row w-full border border-white/10 rounded-lg bg-black/40"> 
             
-            {/* LEFT RAIL (Desktop) / TOP SCROLL (Mobile) */}
+            {/* LEFT RAIL (Desktop) / TOP SCROLL (Mobile) - CATEGORY SELECTION */}
             <div className="
                 w-full lg:w-48 bg-[#000000]/80 
                 border-b lg:border-b-0 lg:border-r border-white/10 flex-shrink-0 
                 flex flex-row lg:flex-col 
                 overflow-x-auto lg:overflow-y-auto 
-                custom-scrollbar no-scrollbar
+                touch-scroll custom-scrollbar no-scrollbar
             ">
-                <div className="flex flex-row lg:flex-col p-2 gap-2 lg:gap-1">
+                <div className="flex flex-row lg:flex-col p-2 gap-2 lg:gap-1 min-w-max lg:min-w-0">
                     <div className="hidden lg:flex items-center gap-2 px-4 py-3 text-blue-500 font-bold text-xs tracking-widest border-b border-white/10 mb-2">
                         <Layers className="w-3 h-3" /> CATEGORIES
                     </div>
@@ -263,73 +271,85 @@ const SetupThemeInterface = ({
             </div>
 
             {/* RIGHT PANEL: CONTENT */}
-            {/* KEY FIX: 'overflow-visible' on mobile, 'overflow-y-auto' on desktop. 
-                This ensures mobile users scroll the whole page, not a tiny internal box. */}
-            <div className="flex-1 p-4 md:p-6 overflow-visible lg:overflow-y-auto custom-scrollbar flex flex-col gap-6">
-                 
-                 {/* 1. AUDIO PROFILE SECTION */}
-                <div>
-                    <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
-                        <Volume2 className="w-3 h-3 text-blue-500"/> AUDIO_PROFILE
-                    </h3>
-                    <SoundSelector 
-                        active={currentSound} 
-                        onSelect={(s) => { 
-                            setCurrentSound(s); 
-                            if (s === 'SILENT') setIsMuted(true); 
-                            else if (isMuted) setIsMuted(false); 
-                        }} 
-                    />
-                </div>
+            {/* REMOVED h-full and overflow-y-hidden, content will now push the parent modal scrollbar */}
+            <div className="flex-1 flex flex-col"> 
+                <div className="flex-1 p-4 md:p-6 flex flex-col gap-6">
+                     
+                     {/* 1. AUDIO PROFILE SECTION */}
+                    <div className="shrink-0">
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
+                            <Volume2 className="w-3 h-3 text-blue-500"/> AUDIO_PROFILE
+                        </h3>
+                        <SoundSelector 
+                            active={currentSound} 
+                            onSelect={(s) => { 
+                                setCurrentSound(s); 
+                                if (s === 'SILENT') setIsMuted(true); 
+                                else if (isMuted) setIsMuted(false); 
+                            }} 
+                        />
+                    </div>
 
-                {/* 2. VISUAL INTERFACE SECTION (Themes) */}
-                <div className="flex-1">
-                    <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
-                        <Monitor className="w-3 h-3 text-blue-500"/> VISUAL_INTERFACE
-                    </h3>
-                    
-                    {/* Grid adapts to screen size */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 pb-4">
-                        {filteredThemes.map((theme) => {
-                            const isAvailable = theme.status === 'UNAVAILABLE';
-                            
-                            return (
-                                <button
-                                    key={theme.id}
-                                    onClick={() => !isAvailable && setActiveThemeId(theme.id)}
-                                    disabled={isAvailable}
-                                    className={`
-                                        relative group text-left rounded-xl overflow-hidden border transition-all duration-300 w-full aspect-video
-                                        ${isAvailable ? 'opacity-40 cursor-not-allowed border-white/5 grayscale'
-                                        : activeThemeId === theme.id ? 'border-blue-500 ring-1 ring-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.15)]' : 'border-white/10 hover:border-white/30 bg-black'}
-                                    `}
-                                >
-                                    {isAvailable && (
-                                        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/80 backdrop-blur-[2px]">
-                                            <Lock className="w-5 h-5 text-gray-500" />
+                    {/* 2. VISUAL INTERFACE SECTION (Themes) */}
+                    <div className="flex-1 pb-4">
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
+                            <Monitor className="w-3 h-3 text-blue-500"/> VISUAL_INTERFACE: <GlowText text={currentTheme.name.toUpperCase()} className="text-blue-300 ml-1"/>
+                        </h3>
+                        
+                        {/* Grid adapts to screen size */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                            {filteredThemes.map((theme) => {
+                                const isUnavailable = theme.status === 'UNAVAILABLE';
+                                
+                                return (
+                                    <button
+                                        key={theme.id}
+                                        onClick={() => !isUnavailable && setActiveThemeId(theme.id)}
+                                        disabled={isUnavailable}
+                                        className={`
+                                            relative group text-left rounded-xl overflow-hidden border transition-all duration-300 w-full aspect-video shrink-0
+                                            ${isUnavailable ? 'opacity-40 cursor-not-allowed border-white/5 grayscale'
+                                            : activeThemeId === theme.id ? 'border-blue-500 ring-1 ring-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.15)]' : 'border-white/10 hover:border-white/30 bg-black'}
+                                        `}
+                                    >
+                                        {isUnavailable && (
+                                            <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/80 backdrop-blur-[2px]">
+                                                <Lock className="w-5 h-5 text-gray-500" />
+                                            </div>
+                                        )}
+                                        {/* Preview */}
+                                        <div className="w-full h-full relative overflow-hidden bg-gray-950">
+                                            <div 
+                                                className={`w-full h-full absolute inset-0 transition-all duration-500 ${activeThemeId === theme.id ? 'scale-105' : 'group-hover:scale-105'}`}
+                                                style={{ filter: isMobile ? theme.mobileFilter : theme.filter }}
+                                            >
+                                                <MiniDashboardPreview color={theme.accentColor || '#3b82f6'} isUnavailable={isUnavailable} />
+                                            </div>
                                         </div>
-                                    )}
-                                    {/* Preview */}
-                                    <div className="w-full h-full relative overflow-hidden bg-gray-950">
-                                        <div 
-                                            className={`w-full h-full absolute inset-0 transition-all duration-500 ${activeThemeId === theme.id ? 'scale-105' : 'group-hover:scale-105'}`}
-                                            style={{ filter: isMobile ? theme.mobileFilter : theme.filter }}
-                                        >
-                                            <MiniDashboardPreview color={theme.accentColor || '#3b82f6'} isUnavailable={isAvailable} />
+                                        
+                                        {/* Label */}
+                                        <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/90 to-transparent flex items-end justify-between">
+                                            <div>
+                                                <span className={`block text-[10px] font-bold uppercase tracking-wider ${activeThemeId === theme.id ? 'text-white text-glow' : 'text-gray-400'}`}>{theme.name}</span>
+                                                <span className="text-[8px] text-gray-600 font-mono">{theme.description}</span>
+                                            </div>
+                                            {activeThemeId === theme.id && <div className="bg-blue-500 rounded-full p-0.5"><Check className="w-2 h-2 text-black" /></div>}
                                         </div>
-                                    </div>
-                                    
-                                    {/* Label */}
-                                    <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/90 to-transparent flex items-end justify-between">
-                                        <div>
-                                            <span className={`block text-[10px] font-bold uppercase tracking-wider ${activeThemeId === theme.id ? 'text-white text-glow' : 'text-gray-400'}`}>{theme.name}</span>
-                                            <span className="text-[8px] text-gray-600 font-mono">{theme.description}</span>
-                                        </div>
-                                        {activeThemeId === theme.id && <div className="bg-blue-500 rounded-full p-0.5"><Check className="w-2 h-2 text-black" /></div>}
-                                    </div>
-                                </button>
-                            );
-                        })}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+                {/* Modal Footer/Save Bar */}
+                <div className="shrink-0 p-4 md:p-6 border-t border-white/10 bg-black/50">
+                    <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
+                        <ShimmerButton icon={Check} onClick={() => onSave(activeThemeId)} className="h-10 text-xs text-green-500">
+                            APPLY & CLOSE
+                        </ShimmerButton>
+                        <ShimmerButton icon={X} onClick={onExit} className="h-10 text-xs text-red-500/80">
+                            CANCEL
+                        </ShimmerButton>
                     </div>
                 </div>
             </div>
@@ -337,8 +357,114 @@ const SetupThemeInterface = ({
     );
 };
 
+
 // ----------------------------------------------------------------------------
-// HELPER: Simulated Stats Card
+// NEW COMPONENT: ThemeConfigModal (Minor adjustment to rely on outer scroll)
+// ----------------------------------------------------------------------------
+const ThemeConfigModal = ({ 
+    isOpen, onClose, onSave, initialThemeId, 
+    initialCategory, initialSound, initialMuted,
+    isMobile,
+}: {
+    isOpen: boolean,
+    onClose: () => void,
+    onSave: (themeId: string, sound: SoundProfile, muted: boolean) => void,
+    initialThemeId: string,
+    initialCategory: ThemeCategory,
+    initialSound: SoundProfile,
+    initialMuted: boolean,
+    isMobile: boolean
+}) => {
+    // State is managed locally while the modal is open
+    const [tempThemeId, setTempThemeId] = useState(initialThemeId);
+    const [tempCategory, setTempCategory] = useState(initialCategory);
+    const [tempSound, setTempSound] = useState(initialSound);
+    const [tempMuted, setTempMuted] = useState(initialMuted);
+    
+    // Reset state when opening
+    useEffect(() => {
+        if (isOpen) {
+            setTempThemeId(initialThemeId);
+            setTempCategory(initialCategory);
+            setTempSound(initialSound);
+            setTempMuted(initialMuted);
+        }
+    }, [isOpen, initialThemeId, initialCategory, initialSound, initialMuted]);
+
+    const handleApply = () => {
+        onSave(tempThemeId, tempSound, tempMuted);
+        onClose();
+    };
+
+    const handleCancel = () => {
+        onClose();
+    };
+
+    // Determine the current theme for the preview filter while inside the modal
+    const currentTheme = useMemo(() => THEMES.find(t => t.id === tempThemeId) || THEMES[0], [tempThemeId]);
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                // Modal Backdrop - High Z-index. Use overflow-y-auto here for the full viewport scroll.
+                <motion.div 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    exit={{ opacity: 0 }} 
+                    transition={{ duration: 0.3 }}
+                    className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md font-sans overflow-y-auto custom-scrollbar touch-scroll flex justify-center items-center"
+                    onClick={handleCancel} // Close on backdrop click
+                >
+                    {/* Modal Content - Higher Z-index and prevents click-through. Use a defined max-width/height. */}
+                    <motion.div 
+                        initial={{ scale: isMobile ? 1 : 0.95, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: isMobile ? 1 : 0.95, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        // Max height and width on desktop
+                        className="w-full h-full lg:max-w-7xl lg:max-h-[90vh] bg-[#050505] rounded-xl overflow-hidden border border-blue-500/50 shadow-[0_0_50px_rgba(37,99,235,0.5)] flex flex-col my-4 mx-4 lg:m-0"
+                        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+                        style={{ 
+                            // Apply theme filter to the whole modal content for live preview
+                            filter: isMobile ? currentTheme.mobileFilter : currentTheme.filter, 
+                            transition: 'filter 0.5s ease-in-out'
+                        }}
+                    >
+                        {/* Modal Header */}
+                        <div className="shrink-0 p-4 md:p-6 border-b border-white/10 flex justify-between items-center bg-black/70">
+                            <h2 className="text-lg md:text-xl font-bold tracking-widest text-shimmer-effect uppercase flex items-center gap-3">
+                                <Settings className="w-5 h-5 text-blue-500" /> 
+                                SYNTHESIS_OS CONFIGURATION
+                            </h2>
+                            <button onClick={handleCancel} className="p-2 rounded-full hover:bg-white/10 transition-colors text-white">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        {/* Modal Body - Main scrolling container */}
+                        {/* The body container now takes all remaining space (flex-1) and forces internal scrolling */}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar touch-scroll p-0"> 
+                            {/* SetupThemeInterface content dictates the scroll height */}
+                            <SetupThemeInterface 
+                                activeThemeId={tempThemeId} setActiveThemeId={setTempThemeId}
+                                activeCategory={tempCategory} setActiveCategory={setTempCategory}
+                                isMobile={isMobile} currentSound={tempSound} setCurrentSound={setTempSound}
+                                isMuted={tempMuted} setIsMuted={setTempMuted}
+                                // Pass apply/cancel functions to the internal component to handle button presses
+                                onSave={handleApply} 
+                                onExit={handleCancel}
+                            />
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+};
+
+
+// ----------------------------------------------------------------------------
+// HELPER: Simulated Stats Card (No Change)
 // ----------------------------------------------------------------------------
 
 const SimulatedStatsCard = ({ label, value, icon: Icon }: { label: string, value: string, icon: any }) => (
@@ -354,27 +480,73 @@ const SimulatedStatsCard = ({ label, value, icon: Icon }: { label: string, value
 );
 
 // ----------------------------------------------------------------------------
-// ControlPanel (Sidebar Content)
+// FixedBottomSaveBar (No Change - preserved for general dashboard actions)
+// ----------------------------------------------------------------------------
+const FixedBottomSaveBar = ({ activeThemeId, onSaveTheme, onExit, isMobileMenuOpen }: { 
+    activeThemeId: string, 
+    onSaveTheme: (themeId: string) => void,
+    onExit: () => void,
+    isMobileMenuOpen: boolean
+}) => {
+    return (
+        <AnimatePresence>
+            {!isMobileMenuOpen && (
+                <motion.div
+                    initial={{ y: 100, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 100, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    // FIXED: z-50 to float above almost everything, fixed bottom-0
+                    className="fixed bottom-0 left-0 right-0 z-50 lg:hidden p-4 bg-black/90 backdrop-blur-md border-t border-blue-500/30 shadow-[0_-5px_30px_rgba(37,99,235,0.2)]"
+                >
+                    <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
+                        {/* NOTE: This bar is for general actions now, not necessarily theme saving */}
+                        <ShimmerButton icon={RefreshCw} onClick={() => alert("Simulated Refresh...")} className="h-10 text-xs text-yellow-500">
+                            REFRESH DATA
+                        </ShimmerButton>
+                        <ShimmerButton icon={ArrowRight} onClick={onExit} className="h-10 text-xs">
+                            EXIT
+                        </ShimmerButton>
+                    </div>
+                    {/* Safe area padding for iPhone home bar */}
+                    <div className="h-2 w-full" /> 
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+};
+
+// ----------------------------------------------------------------------------
+// ControlPanel (Sidebar Content - Desktop actions remain here, modified for modal trigger)
 // ----------------------------------------------------------------------------
 const ControlPanel = ({ 
-    activeThemeId, setActiveThemeId, activeCategory, setActiveCategory, 
-    isMobile, isMuted, setIsMuted, currentSound, setCurrentSound,
-    onAction, onSaveTheme 
+    activeThemeId, onAction, onSaveTheme, onOpenConfig
 }: {
-    activeThemeId: string, setActiveThemeId: (id: string) => void,
-    activeCategory: ThemeCategory, setActiveCategory: (cat: ThemeCategory) => void,
-    isMobile: boolean,
-    isMuted: boolean, setIsMuted: (muted: boolean) => void,
-    currentSound: SoundProfile, setCurrentSound: (sound: SoundProfile) => void,
+    activeThemeId: string, 
     onAction: (action: string) => void,
-    onSaveTheme: (themeId: string) => void
+    onSaveTheme: (themeId: string) => void,
+    onOpenConfig: () => void // New prop to open the modal
 }) => {
     // Simulated values for the sidebar
     const simulatedTraders = '18,451';
     const simulatedAssets = '$2.13B';
 
     return (
-        <div className="flex flex-col h-full gap-4">
+        <div className="flex flex-col h-full gap-4 overflow-y-auto custom-scrollbar">
+            {/* TOP: CONFIG BUTTON CARD (New placement for modal trigger) */}
+            <ShimmerCard className="h-24 md:h-28 shrink-0 cursor-pointer group" onClick={onOpenConfig}>
+                <div className="p-4 md:p-5 flex flex-col justify-center h-full">
+                    <div className="flex items-center justify-between">
+                        <span className="font-bold text-sm tracking-wider text-blue-400 group-hover:text-blue-200 transition-colors">THEME/AUDIO CONFIG</span>
+                        <Settings className="w-5 h-5 text-blue-500 group-hover:rotate-45 transition-transform" />
+                    </div>
+                    <div className="mt-1 flex items-center gap-2">
+                        <GlowText text="Open Full Setup" className="text-[10px] md:text-xs"/>
+                        <ArrowRight className="w-3 h-3 text-blue-500"/>
+                    </div>
+                </div>
+            </ShimmerCard>
+
             {/* BOTTOM: QUICK OPS & SIMULATED STATS */}
             <ShimmerCard className="shrink-0">
                 <div className="p-4 md:p-5">
@@ -388,9 +560,10 @@ const ControlPanel = ({
                         <SimulatedStatsCard label="Simulated Assets" value={simulatedAssets} icon={DollarSign} />
                     </div>
 
-                    {/* Action Buttons Section */}
-                    <div className="grid grid-cols-1 gap-3">
-                        <ShimmerButton icon={Check} onClick={() => onSaveTheme(activeThemeId)} className="h-10 text-xs text-green-500">SAVE THEME TO PAGE</ShimmerButton>
+                    {/* Action Buttons Section - Visible only on LG screens (Desktop Sidebar) */}
+                    <div className="hidden lg:grid grid-cols-1 gap-3"> 
+                        {/* Desktop Save/Exit is preserved for quick actions if needed, though full config is in modal */}
+                        <ShimmerButton icon={Check} onClick={() => onSaveTheme(activeThemeId)} className="h-10 text-xs text-green-500">APPLY CURRENT THEME</ShimmerButton>
                         <ShimmerButton icon={ArrowRight} onClick={() => onAction('exit')} className="h-10 text-xs">EXIT TO DASHBOARD</ShimmerButton>
                     </div>
                 </div>
@@ -401,7 +574,7 @@ const ControlPanel = ({
 
 
 // ============================================================================
-// 4. DATA ENGINES
+// 4. DATA ENGINES (No Change)
 // ============================================================================
 
 const TARGET_PAIRS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'DOGEUSDT'];
@@ -474,7 +647,7 @@ const LiveTickerTape = ({ tickers }: { tickers: Record<string, TickerData> }) =>
              <div key={`${t.symbol}-${i}`} className="flex items-center gap-3 px-6 border-r border-white/10 h-10">
                 <span className="font-bold text-blue-500 text-[10px] md:text-xs">{t.symbol.replace('USDT', '')}</span>
                 <span className="text-white font-mono text-[10px] md:text-xs">{t.price === '---' ? t.price : `$${t.price}`}</span>
-                <span className={`text-[10px] ${parseFloat(t.percentChange) >= 0 ? 'text-green-500' : 'text-red-500'}`}>{parseFloat(t.percentChange) > 0 ? '+' : ''}{t.percentChange}%</span>
+                <span className={`text-[10px] ${parseFloat(t.percentChange) >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{parseFloat(t.percentChange) > 0 ? '+' : ''}{t.percentChange}%</span>
              </div>
           ))}
         </motion.div>
@@ -483,11 +656,18 @@ const LiveTickerTape = ({ tickers }: { tickers: Record<string, TickerData> }) =>
   );
 };
 
+// ----------------------------------------------------------------------------
+// MODIFIED WelcomeBackModal (Scrollable fix applied)
+// ----------------------------------------------------------------------------
 export const WelcomeBackModal = ({ isOpen, onContinue, onSkip }: { isOpen: boolean, onContinue: () => void, onSkip: () => void }) => (
     <AnimatePresence>
         {isOpen && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 md:p-6 font-sans">
-                <div className="max-w-lg w-full">
+            // FIX: Added overflow-y-auto to the backdrop and used items-start to enable content scrolling on small devices.
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
+                className="fixed inset-0 z-[100] flex items-start justify-center bg-black/95 backdrop-blur-md p-4 md:p-6 font-sans overflow-y-auto"
+            >
+                {/* Wrap content and add top/bottom margin for centering effect on large screens */}
+                <div className="max-w-lg w-full mt-[10vh] mb-[10vh] flex-shrink-0"> 
                     <ShimmerCard className="p-0">
                         <div className="px-6 md:px-8 py-8 md:py-10 flex flex-col items-center justify-center text-center">
                             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4 text-shimmer-effect uppercase">Welcome Back</h2>
@@ -509,7 +689,8 @@ export const WelcomeBackModal = ({ isOpen, onContinue, onSkip }: { isOpen: boole
 );
 
 export const SupportWidget = () => (
-    <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[90]">
+    // FIXED: Adjusted z-index to be high but below modals
+    <div className="fixed bottom-24 right-4 md:bottom-6 md:right-6 z-[45]">
         <button className="relative flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#050505] border border-blue-900/50 shadow-[0_0_30px_rgba(37,99,235,0.4)] overflow-hidden group hover:scale-110 transition-transform">
             <ShimmerBorder active={true} />
             <div className="absolute inset-[2px] rounded-full bg-black flex items-center justify-center z-10">
@@ -520,12 +701,13 @@ export const SupportWidget = () => (
 );
 
 // ============================================================================
-// 5. MAIN PAGE COMPONENT
+// 5. MAIN PAGE COMPONENT (Refactored to use Modal)
 // ============================================================================
 
 export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }: { initialThemeId: string, onThemeChange: (themeId: string) => void }) {
     // --- HOOKS ---
     const { tickers, status: wsStatus } = useBinanceTickers();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const chartData = useBinanceChart('BTCUSDT'); 
     
     // --- STATE ---
@@ -533,10 +715,14 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
     const [showWelcome, setShowWelcome] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
     const [isMuted, setIsMuted] = useState(true);
-    const [activeCategory, setActiveCategory] = useState<ThemeCategory>('SENTIMENT');
-    const [isMobile, setIsMobile] = useState(false); 
+    // Initial state for config needs to be saved
+    const [activeCategory, setActiveCategory] = useState<ThemeCategory>('SENTIMENT'); 
     const [currentSound, setCurrentSound] = useState<SoundProfile>('MECHANICAL');
-    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const [isMobile, setIsMobile] = useState(false); 
+    // NEW: Modal State
+    const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+    
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
     // --- DERIVED ---
     const activeTheme = useMemo(() => THEMES.find(t => t.id === activeThemeId) || THEMES[0], [activeThemeId]);
@@ -544,18 +730,22 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
     const ethData = tickers['ETHUSDT'] || { price: '0.00', percentChange: '0.00', prevPrice: '0' };
     const portfolioValue = useMemo(() => (parseFloat(btcData.price) * 0.45) + (parseFloat(ethData.price) * 12.5) + 15240, [btcData.price, ethData.price]);
     
-    // Chart Mini-Logic
-    const normalizedChartBars = useMemo(() => {
-        if (chartData.length === 0) return Array(12).fill(50);
-        const min = Math.min(...chartData); const max = Math.max(...chartData);
-        return chartData.slice(-12).map(val => ((val - min) / (max - min || 1)) * 40 + 10); 
-    }, [chartData]);
-
-    const handleSaveTheme = useCallback((themeId: string) => {
+    // --- HANDLERS ---
+    const handleSaveTheme = useCallback((themeId: string, sound: SoundProfile = currentSound, muted: boolean = isMuted) => {
+        setActiveThemeId(themeId); 
         onThemeChange(themeId); 
-        setIsMobileMenuOpen(false); 
-    }, [onThemeChange]);
+        setCurrentSound(sound);
+        setIsMuted(muted);
+        setIsMobileMenuOpen(false); // Close mobile menu if open
+        setIsConfigModalOpen(false); // Close modal if open
+    }, [onThemeChange, currentSound, isMuted]);
+    
+    const handleExit = useCallback(() => {
+        // In a real application, you would navigate away here.
+        alert("Exiting to Dashboard... (Simulated Action)");
+    }, []);
 
+    // --- EFFECTS ---
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 1024); 
         checkMobile();
@@ -566,17 +756,22 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
     useEffect(() => {
         if(audioRef.current) {
             audioRef.current.volume = 0.15;
+            // NOTE: Ensure you have an actual audio file at /assets/ambient-drone.mp3
             !isMuted ? audioRef.current.play().catch(() => setIsMuted(true)) : audioRef.current.pause();
         }
     }, [isMuted]);
 
     return (
+        // FIXED: pb-32 adds HUGE padding on mobile to ensure the fixed bottom bar never covers content. 
+        // FIXED: overflow-x-hidden prevents accidental horizontal scrolling of the body.
         <main 
-            className="relative min-h-screen bg-black overflow-hidden font-sans selection:bg-blue-500/30 text-white"
+            className="relative min-h-screen bg-black font-sans selection:bg-blue-500/30 text-white pb-32 lg:pb-10 overflow-x-hidden"
+            // Filter is applied to the entire main content
             style={{ filter: isMobile ? activeTheme.mobileFilter : activeTheme.filter, transition: 'filter 0.5s ease-in-out' }}
         >
             <GlobalSvgFilters />
-            <div className="fixed inset-0 z-0 pointer-events-none opacity-50 mix-blend-overlay"><IllusionLayer type={activeTheme.illusion} /></div>
+            {/* FIXED: pointer-events-none ensures this layer never hijacks clicks or scrolls */}
+            <div className="fixed inset-0 z-0 pointer-events-none opacity-50 mix-blend-overlay overflow-hidden"><IllusionLayer type={activeTheme.illusion} /></div>
             <audio ref={audioRef} loop src="/assets/ambient-drone.mp3" />
 
             {/* --- HEADER --- */}
@@ -594,50 +789,31 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
                             <span className="text-[10px] font-mono text-gray-400">UPLINK: {wsStatus}</span>
                         </div>
                     </div>
-                    <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="lg:hidden p-1 text-white">
-                        {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                    {/* On mobile, use the menu button to open the config modal directly */}
+                    <button onClick={() => setIsConfigModalOpen(true)} className="lg:hidden p-1 text-white">
+                        <Settings className="w-5 h-5" />
                     </button>
                 </div>
             </header>
 
-            {/* --- MOBILE DRAWER (For Config Actions) --- */}
-            <AnimatePresence>
-                {isMobileMenuOpen && (
-                    <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed inset-0 z-[60] bg-black lg:hidden pt-20 px-4 overflow-y-auto">
-                        <div className="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-                            <h2 className="text-lg font-bold tracking-widest text-blue-500">SYSTEM CONFIG</h2>
-                            <button onClick={() => setIsMobileMenuOpen(false)}><X className="w-6 h-6 text-white" /></button>
-                        </div>
-                        <div className="h-full pb-10"> 
-                             <ControlPanel 
-                                activeThemeId={activeThemeId} setActiveThemeId={setActiveThemeId}
-                                activeCategory={activeCategory} setActiveCategory={setActiveCategory}
-                                isMobile={true} currentSound={currentSound} setCurrentSound={setCurrentSound}
-                                isMuted={isMuted} setIsMuted={setIsMuted}
-                                onAction={() => setIsMobileMenuOpen(false)}
-                                onSaveTheme={handleSaveTheme}
-                             />
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {/* --- MOBILE DRAWER (REMOVED - Use Modal instead) --- 
+            <AnimatePresence>...</AnimatePresence>
+            */}
 
             <WelcomeBackModal isOpen={showWelcome} onContinue={() => { setShowWelcome(false); setIsMuted(false); }} onSkip={() => setShowWelcome(false)} />
 
             {/* --- MAIN DASHBOARD GRID --- */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-24 md:pt-28 pb-6 px-4 md:px-6 h-screen flex flex-col z-10 relative max-w-[1600px] mx-auto" style={{ filter: showWelcome ? 'blur(10px)' : 'none' }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-28 md:pt-32 px-4 md:px-6 min-h-[calc(100vh-8rem)] flex flex-col z-10 relative max-w-[1600px] mx-auto" style={{ filter: showWelcome ? 'blur(10px)' : 'none' }}>
                 <div className="mb-4 md:mb-6 shrink-0">
                     <h1 className="text-2xl md:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-600">COMMAND DECK</h1>
                 </div>
 
-                {/* KEY FIX: 'overflow-y-auto' on desktop, 'lg:overflow-visible' on mobile. 
-                    This allows the content to expand naturally on mobile, using the browser's scrollbar. */}
-                <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 min-h-0 overflow-y-auto lg:overflow-visible pb-20 lg:pb-0">
+                <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 min-h-0">
                     
                     {/* LEFT SECTION (9 COLUMNS on Desktop, Full width on Mobile) */}
                     <div className="lg:col-span-9 flex flex-col gap-4 md:gap-6 min-h-0">
-                        {/* KPI Cards - Horizontal Scroll on Mobile */}
-                        <div className="flex overflow-x-auto gap-4 shrink-0 pb-2 md:pb-0 snap-x-mandatory no-scrollbar md:grid md:grid-cols-3">
+                        {/* KPI Cards - Horizontal Scroll on Mobile (No Change) */}
+                        <div className="flex overflow-x-auto gap-4 shrink-0 pb-2 md:pb-0 snap-x-mandatory no-scrollbar md:grid md:grid-cols-3 touch-scroll">
                             <div className="snap-center w-[85vw] md:w-auto flex-none">
                                 <ShimmerCard className="h-32 md:h-40 w-full">
                                     <div className="p-4 md:p-6 flex flex-col justify-between h-full">
@@ -664,48 +840,57 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
                             </div>
                         </div>
 
-                        {/* BIG THEME CONFIG - Fixed for Mobile */}
-                        {/* Removed hard 'min-h' on mobile to allow natural flow, keeping 'lg:min-h' for desktop structure */}
-                        <div className="flex-1 lg:min-h-[400px]">
-                            <ShimmerCard className="h-">
-                                <div className="p-3 md:p-5 h-full flex flex-col">
-                                    <div className="flex items-center gap-2 mb-4 border-b border-white/10 pb-3 shrink-0">
-                                        <Settings className="w-4 h-4 text-blue-400" /> 
-                                        <span className="font-bold text-[10px] md:text-xs tracking-wider uppercase text-blue-400">System Configuration // SETUP.EXE</span>
-                                    </div>
-                                    <SetupThemeInterface 
-                                        activeThemeId={activeThemeId} setActiveThemeId={setActiveThemeId}
-                                        activeCategory={activeCategory} setActiveCategory={setActiveCategory}
-                                        isMobile={isMobile} currentSound={currentSound} setCurrentSound={setCurrentSound}
-                                        isMuted={isMuted} setIsMuted={setIsMuted}
-                                    />
+                        {/* BIG THEME CONFIG REPLACED WITH A PLACEHOLDER/CHART */}
+                        <div className="flex-1 w-full">
+                            <ShimmerCard className="h-full">
+                                <div className="p-5 h-full flex flex-col w-full items-center justify-center">
+                                    <h2 className="text-xl font-bold text-blue-500 mb-2">Primary Chart/Data View</h2>
+                                    <p className="text-gray-500 text-sm">Theme configuration is now accessed via the **Modal**</p>
+                                    <ShimmerButton onClick={() => setIsConfigModalOpen(true)} icon={Settings} className="mt-6 max-w-sm">OPEN FULL CONFIGURATION</ShimmerButton>
                                 </div>
                             </ShimmerCard>
                         </div>
                     </div>
 
-                    {/* RIGHT SECTION (Sidebar on Desktop, Bottom Stack on Mobile) */}
+                    {/* RIGHT SECTION (Sidebar on Desktop) */}
                     <motion.div 
                         initial={{ opacity: 0, x: 20 }} 
                         animate={{ opacity: 1, x: 0 }} 
                         transition={{ duration: 0.5, delay: 0.4 }} 
-                        className="flex flex-col w-full lg:w-auto lg:col-span-3 h-full min-h-0 gap-4"
+                        className="hidden lg:flex flex-col w-full lg:w-auto lg:col-span-3 h-full min-h-0 gap-4"
                     >
                          <ControlPanel 
-                            activeThemeId={activeThemeId} setActiveThemeId={setActiveThemeId}
-                            activeCategory={activeCategory} setActiveCategory={setActiveCategory}
-                            isMobile={isMobile} isMuted={isMuted} setIsMuted={setIsMuted}
-                            currentSound={currentSound} setCurrentSound={setCurrentSound}
-                            onAction={() => setIsMobileMenuOpen(false)} 
-                            onSaveTheme={handleSaveTheme}
+                            activeThemeId={activeThemeId} 
+                            onAction={handleExit} 
+                            onSaveTheme={(id) => handleSaveTheme(id)} // Use simplified save function
+                            onOpenConfig={() => setIsConfigModalOpen(true)} // Modal Trigger
                          />
-                        
-                        
                     </motion.div>
 
                 </div>
             </motion.div>
+            
+            {/* --- FIXED BOTTOM BAR (MOBILE ONLY) --- */}
+            <FixedBottomSaveBar
+                activeThemeId={activeThemeId}
+                onSaveTheme={(id) => handleSaveTheme(id)}
+                onExit={handleExit}
+                isMobileMenuOpen={isMobileMenuOpen}
+            />
+            
             <SupportWidget />
+
+            {/* --- THEME CONFIG MODAL (The new core feature) --- */}
+            <ThemeConfigModal 
+                isOpen={isConfigModalOpen}
+                onClose={() => setIsConfigModalOpen(false)}
+                onSave={handleSaveTheme}
+                initialThemeId={activeThemeId}
+                initialCategory={activeCategory}
+                initialSound={currentSound}
+                initialMuted={isMuted}
+                isMobile={isMobile}
+            />
         </main>
     );
 };
