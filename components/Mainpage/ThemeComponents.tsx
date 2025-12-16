@@ -889,8 +889,8 @@ const ControlPanel = ({
                     
                     {/* Simulated Stats Section */}
                     <div className="grid grid-cols-2 gap-2 mb-4 pt-1 border-b border-white/5 pb-4">
-                        <SimulatedStatsCard label="Simulated Traders" value={simulatedTraders} icon={Activity} />
-                        <SimulatedStatsCard label="Simulated Assets" value={simulatedAssets} icon={DollarSign} />
+                        <SimulatedStatsCard label=" Traders" value={simulatedTraders} icon={Activity} />
+                        <SimulatedStatsCard label=" Assets" value={simulatedAssets} icon={DollarSign} />
                     </div>
 
                     {/* Action Buttons Section - Visible only on LG screens (Desktop Sidebar) */}
