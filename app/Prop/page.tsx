@@ -1,24 +1,44 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import dynamic from 'next/dynamic'; 
 import { gsap } from "gsap"; 
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
-import { MessageCircle, Volume2, VolumeX } from 'lucide-react'; // Added Volume icons
+import { MessageCircle, Volume2, VolumeX, Settings, X } from 'lucide-react'; 
 
 // --- STATIC IMPORTS (Core Layout/Loader) ---
 import RecruitPage from "@/app/register/pageVip"; 
 import Socials from "@/components/Mainpage/Socialsfooter"; 
+
+// --- NEW IMPORTS FOR THEME SUPPORT ---
+import { Navbar } from "@/components/Mainpage/navbar"; 
+import { ALL_THEMES as THEME_DATA, Theme } from '@/components/Mainpage/ThemeComponents';
 
 // --- DYNAMIC IMPORTS FOR MAIN CONTENT SECTIONS ---
 const Features = dynamic(() => import("@/components/Mainpage/features").then(mod => mod.Features), { ssr: false });
 const Hero = dynamic(() => import("@/app/Prop/Prophero").then(mod => mod.Hero), { ssr: false });
 const AboutContent = dynamic(() => import("../Testimonial").then(mod => mod.AboutContent), { ssr: false });
 
+// --- DYNAMIC THEME CONFIGURATOR ---
+const FixedThemeConfigurator = dynamic(
+    () => import('@/components/Mainpage/ThemeComponents').then((mod) => mod.default), 
+    { 
+        ssr: false,
+        loading: () => <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">Loading Config...</div> 
+    }
+);
+
+// --- DYNAMIC CURSOR IMPORT (Standardized) ---
+// NOTE: I am using the simplified TargertCursor path for consistency, not the complex inline component definition.
+const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor'), { 
+  ssr: false,
+  loading: () => <div className="hidden">Loading Cursor...</div> 
+});
+
 
 // =========================================
-// 0. CUSTOM HOOKS & UTILS
+// 0. CUSTOM HOOKS & UTILS (Audio & Mobile Check)
 // =========================================
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -207,168 +227,6 @@ const SupportWidget = () => {
   );
 };
 
-// =========================================
-// 2. STYLES & CURSOR LOGIC
-// =========================================
-const CursorStyles = () => (
-  <style jsx global>{`
-    .target-cursor-wrapper { position: fixed; top: 0; left: 0; z-index: 10000; pointer-events: none; will-change: transform; }
-    .target-cursor-dot { width: 8px; height: 8px; background-color: #0066ff; border-radius: 50%; position: absolute; top: 0; left: 0; transform: translate(-50%, -50%); box-shadow: 0 0 10px #0066ff; }
-    .target-cursor-corner { position: absolute; width: 16px; height: 16px; border: 2px solid #0066ff; box-shadow: 0 0 4px rgba(0, 102, 255, 0.4); will-change: transform; }
-    .corner-tl { top: -10px; left: -10px; border-right: none; border-bottom: none; }
-    .corner-tr { top: -10px; right: -10px; border-left: none; border-bottom: none; }
-    .corner-br { bottom: -10px; right: -10px; border-left: none; border-top: none; }
-    .corner-bl { bottom: -10px; left: -10px; border-right: none; border-top: none; }
-    body.custom-cursor-active { cursor: none !important; }
-    @keyframes shimmer { 0% { transform: translateX(-150%) skewX(-15deg); } 50%, 100% { transform: translateX(150%) skewX(-15deg); } }
-    .animate-shimmer { animation: shimmer 3s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
-  `}</style>
-);
-
-interface TargetCursorProps {
-  targetSelector?: string;
-  spinDuration?: number;
-  hideDefaultCursor?: boolean;
-  hoverDuration?: number;
-  parallaxOn?: boolean;
-}
-
-const TargetCursorComponent: React.FC<TargetCursorProps> = ({
-  targetSelector = 'button, a, input, [role="button"], .cursor-target', 
-  spinDuration = 2, hideDefaultCursor = true, hoverDuration = 0.2, parallaxOn = true
-}) => {
-  const isMobile = useIsMobile();
-  const cursorRef = useRef<HTMLDivElement>(null);
-  const dotRef = useRef<HTMLDivElement>(null);
-  const cornersRef = useRef<NodeListOf<HTMLDivElement> | null>(null);
-
-  const state = useRef({
-      isActive: false, targetPositions: null as { x: number; y: number }[] | null,
-      activeStrength: { val: 0 }, activeTarget: null as Element | null
-  });
-
-  useEffect(() => {
-    if (!cursorRef.current || typeof window === 'undefined') return;
-    if (hideDefaultCursor && !isMobile) document.body.classList.add('custom-cursor-active');
-    cornersRef.current = cursorRef.current.querySelectorAll('.target-cursor-corner');
-
-    const ctx = gsap.context(() => {
-        const cursor = cursorRef.current!;
-        const corners = cornersRef.current!;
-
-        if (isMobile) {
-            gsap.set(cursor, { x: window.innerWidth/2, y: window.innerHeight/2, opacity: 0, scale: 1.3 });
-            gsap.to(cursor, { opacity: 1, duration: 0.5 });
-            const tapEffect = () => {
-                gsap.to(corners, { scale: 1.6, borderColor: '#00ffff', duration: 0.15, yoyo: true, repeat: 1 });
-                gsap.to(dotRef.current, { scale: 2, backgroundColor: '#ffffff', duration: 0.15, yoyo: true, repeat: 1 });
-            };
-            const runScanner = async () => {
-                const allElements = Array.from(document.querySelectorAll(targetSelector));
-                const targets = allElements.filter(el => {
-                    const r = el.getBoundingClientRect();
-                    const style = window.getComputedStyle(el);
-                    return (style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0' && r.width > 20 && r.height > 20 && r.top >= 0 && r.left >= 0);
-                });
-                if (targets.length > 0) {
-                    for (const target of targets) {
-                        const r = target.getBoundingClientRect();
-                        if (r.top < -50 || r.bottom > window.innerHeight + 50) continue; 
-                        await new Promise<void>(resolve => {
-                            gsap.to(cursor, {
-                                x: r.left + r.width / 2, y: r.top + r.height / 2,
-                                duration: 0.8, ease: "power2.inOut",
-                                onComplete: () => { tapEffect(); setTimeout(resolve, 600); }
-                            });
-                        });
-                    }
-                    runScanner(); 
-                } else {
-                    gsap.to(cursor, {
-                        x: window.innerWidth / 2 + (Math.random() - 0.5) * 100,
-                        y: window.innerHeight / 2 + (Math.random() - 0.5) * 100,
-                        duration: 2, onComplete: () => { runScanner(); }
-                    });
-                }
-            };
-            setTimeout(runScanner, 1000);
-        } else {
-            // DESKTOP LOGIC
-            gsap.set(cursor, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
-            const spinTl = gsap.timeline({ repeat: -1 }).to(cursor, { rotation: 360, duration: spinDuration, ease: 'none' });
-
-            const moveCursor = (e: MouseEvent) => gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: 'power3.out', force3D: true });
-            window.addEventListener('mousemove', moveCursor);
-
-            const handleDown = () => { gsap.to(dotRef.current, { scale: 0.5, duration: 0.2 }); gsap.to(corners, { scale: 1.2, borderColor: '#00ffff', duration: 0.2 }); };
-            const handleUp = () => { gsap.to(dotRef.current, { scale: 1, duration: 0.2 }); gsap.to(corners, { scale: 1, borderColor: '#0066ff', duration: 0.2 }); };
-            window.addEventListener('mousedown', handleDown);
-            window.addEventListener('mouseup', handleUp);
-
-            gsap.ticker.add(() => {
-                if (!state.current.isActive || !state.current.targetPositions) return;
-                const strength = state.current.activeStrength.val;
-                if (strength <= 0) return;
-                const cx = gsap.getProperty(cursor, 'x') as number;
-                const cy = gsap.getProperty(cursor, 'y') as number;
-                corners.forEach((corner, i) => {
-                    const curX = gsap.getProperty(corner, 'x') as number;
-                    const curY = gsap.getProperty(corner, 'y') as number;
-                    const tx = state.current.targetPositions![i].x - cx;
-                    const ty = state.current.targetPositions![i].y - cy;
-                    gsap.to(corner, { x: curX + (tx - curX) * strength, y: curY + (ty - curY) * strength, duration: 0.1, overwrite: 'auto' });
-                });
-            });
-
-            const handleHover = (e: MouseEvent) => {
-                const target = (e.target as Element).closest(targetSelector);
-                if (target && target !== state.current.activeTarget) {
-                    state.current.activeTarget = target;
-                    state.current.isActive = true;
-                    spinTl.pause();
-                    gsap.to(cursor, { rotation: 0, duration: 0.3 }); 
-                    const r = target.getBoundingClientRect();
-                    const bw = 4; const cs = 16;
-                    state.current.targetPositions = [
-                        { x: r.left - bw, y: r.top - bw }, { x: r.right + bw - cs, y: r.top - bw },
-                        { x: r.right + bw - cs, y: r.bottom + bw - cs }, { x: r.left - bw, y: r.bottom + bw - cs }
-                    ];
-                    gsap.to(state.current.activeStrength, { val: 1, duration: hoverDuration, ease: 'power2.out' });
-                    const handleLeave = () => {
-                        target.removeEventListener('mouseleave', handleLeave);
-                        state.current.activeTarget = null;
-                        state.current.isActive = false;
-                        state.current.targetPositions = null;
-                        gsap.to(state.current.activeStrength, { val: 0, duration: 0.2, overwrite: true });
-                        corners.forEach((c) => gsap.to(c, { x: 0, y: 0, duration: 0.3 }));
-                        spinTl.restart();
-                    };
-                    target.addEventListener('mouseleave', handleLeave);
-                }
-            };
-            window.addEventListener('mouseover', handleHover);
-        }
-    }, cursorRef); 
-
-    return () => {
-        document.body.classList.remove('custom-cursor-active');
-        gsap.ticker.remove(() => {});
-        ctx.revert();
-        window.removeEventListener('mousemove', () => {}); window.removeEventListener('mousedown', () => {}); window.removeEventListener('mouseup', () => {});
-    };
-  }, [isMobile, hideDefaultCursor, spinDuration, targetSelector, hoverDuration, parallaxOn]);
-
-  return (
-    <div ref={cursorRef} className="target-cursor-wrapper">
-      <div ref={dotRef} className="target-cursor-dot" />
-      <div className="target-cursor-corner corner-tl" />
-      <div className="target-cursor-corner corner-tr" />
-      <div className="target-cursor-corner corner-br" />
-      <div className="target-cursor-corner corner-bl" />
-    </div>
-  );
-};
-const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { ssr: false, loading: () => <div className="hidden"></div> });
 
 // ==========================================
 // 4. MAIN PAGE COMPONENT
@@ -376,7 +234,30 @@ const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { ssr
 
 export default function Home() {
   const [isUnlocked, setIsUnlocked] = useState(false);
+  
+  // --- THEME STATE MANAGEMENT ---
+  const [showConfigurator, setShowConfigurator] = useState(false);
+  const [activeThemeId, setActiveThemeId] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+        return localStorage.getItem('user_theme_id') || 't01';
+    }
+    return 't01';
+  });
 
+  // Calculate active theme
+  const activeTheme: Theme = useMemo(() => {
+    return THEME_DATA.find(t => t.id === activeThemeId) || THEME_DATA[0];
+  }, [activeThemeId]);
+
+  // Handle Theme Change
+  const handleThemeChange = useCallback((themeId: string) => {
+    setActiveThemeId(themeId);
+    if (typeof window !== 'undefined') {
+        localStorage.setItem('user_theme_id', themeId);
+    }
+    setShowConfigurator(false); 
+  }, []);
+  
   // 1. Audio Hooks Setup
   useLoaderAudio('/modals.mp3', !isUnlocked); // Only plays while locked
   const { isPlaying, start: startBgLoop, toggle: toggleBgLoop } = useBackgroundLoop('/background.mp3');
@@ -387,22 +268,89 @@ export default function Home() {
     startBgLoop(); // <--- Critical: Starts ambient loop when content is revealed
   }, [startBgLoop]);
 
+  // --- GLOBAL STYLES (Includes Themes + Cursor) ---
+  const GlobalStyles = () => (
+    <style jsx global>{`
+      /* Core Theme Styles */
+      html, body, #__next {
+        scroll-behavior: smooth;
+        background-color: black; 
+        transition: filter 0.5s ease-in-out; 
+        filter: ${activeTheme.filter};
+      }
+      @media (max-width: 1024px) {
+        html, body, #__next {
+            filter: ${activeTheme.mobileFilter};
+        }
+      }
+      :root {
+          --theme-accent-color: ${activeTheme.accentColor || '#0066ff'};
+      }
+
+      /* Cursor Styles (Merged) */
+      .target-cursor-wrapper { pointer-events: none; position: fixed; top: 0; left: 0; z-index: 10000; mix-blend-mode: difference; }
+      .target-cursor-dot { width: 8px; height: 8px; background-color: #0066ff; border-radius: 50%; position: absolute; top: 0; left: 0; transform: translate(-50%, -50%); box-shadow: 0 0 10px #0066ff; }
+      .target-cursor-corner { position: absolute; width: 16px; height: 16px; border: 2px solid #0066ff; box-shadow: 0 0 4px rgba(0, 102, 255, 0.4); }
+      .corner-tl { top: -10px; left: -10px; border-right: none; border-bottom: none; }
+      .corner-tr { top: -10px; right: -10px; border-left: none; border-bottom: none; }
+      .corner-br { bottom: -10px; right: -10px; border-left: none; border-top: none; }
+      .corner-bl { bottom: -10px; left: -10px; border-right: none; border-top: none; }
+      body.custom-cursor-active { cursor: none !important; }
+
+      /* Animation for widget shimmer */
+      @keyframes shimmer { 0% { transform: translateX(-150%) skewX(-15deg); } 50%, 100% { transform: translateX(150%) skewX(-15deg); } }
+      .animate-shimmer { animation: shimmer 3s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+    `}</style>
+  );
+
   // 3. Render Logic
   if (!isUnlocked) {
     return (
       <main className="min-h-screen bg-slate-950 text-white">
+        <GlobalStyles />
         <RecruitPage onUnlock={handleUnlock} />
       </main>
     );
   }
 
   return (
-    <main className="animate-in fade-in duration-1000 relative">
-      <CursorStyles />
+    <main className="animate-in fade-in duration-1000 relative pt-20"> {/* Added pt-20 for Navbar spacing */}
+      <GlobalStyles />
+      <Analytics />
+      <SpeedInsights />
+      
+      {/* THEME CONFIGURATOR OVERLAY (CRITICAL: pointer-events-none when closed) */}
+      <div 
+          className={`fixed inset-0 z-[9000] transition-opacity duration-300 
+              ${showConfigurator ? 'opacity-100 pointer-events-auto backdrop-blur-sm bg-black/80' : 'opacity-0 pointer-events-none'}`}
+          style={{ filter: activeTheme.filter }} 
+      >
+        <div className="flex items-center justify-center w-full h-full p-4 md:p-8">
+            <button 
+                onClick={() => setShowConfigurator(false)}
+                className="absolute top-4 right-4 z-[9001] p-3 text-white rounded-full bg-black/50 hover:bg-black/80 transition-colors"
+            >
+                <X className="w-6 h-6" />
+            </button>
+            <div className="w-full max-w-7xl h-full max-h-[850px]">
+                <FixedThemeConfigurator 
+                    initialThemeId={activeThemeId}
+                    onThemeChange={handleThemeChange} 
+                />
+            </div>
+        </div>
+      </div>
+
+      {/* NAVBAR */}
+      <Navbar 
+          setShowConfigurator={setShowConfigurator} 
+          activeThemeId={activeThemeId}
+          onThemeChange={handleThemeChange}
+      />
+      
       <TargetCursor 
         hideDefaultCursor={true}
         spinDuration={2}
-        parallaxOn={true}
         targetSelector="button, a, input, [role='button'], .cursor-target"
       />
       
@@ -410,8 +358,6 @@ export default function Home() {
       <MusicController isPlaying={isPlaying} onToggle={toggleBgLoop} />
       
       <SupportWidget />
-      <Analytics />
-      <SpeedInsights />
       <Socials />
 
       {/* Main Content */}

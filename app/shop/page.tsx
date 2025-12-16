@@ -1,13 +1,17 @@
 "use client";
 
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import { MessageCircle, Volume2, VolumeX } from 'lucide-react';
+import { MessageCircle, Volume2, VolumeX, X } from 'lucide-react';
 
 // --- STATIC IMPORTS (Core Layout/Context) ---
 import { ShopProvider } from "@/app/VIP/ShopContext";
 import RecruitPage from "@/app/register/pageVip";
 import Socials from "@/components/Mainpage/Socialsfooter";
+
+// --- NEW IMPORTS FOR THEME SUPPORT ---
+import { Navbar } from "@/components/Mainpage/navbar"; 
+import { ALL_THEMES as THEME_DATA, Theme } from '@/components/Mainpage/ThemeComponents';
 
 // --- DYNAMIC IMPORTS (Main Content) ---
 const HeroShop = dynamic(() => import("@/app/shop/ShopHero"), { ssr: false });
@@ -15,17 +19,25 @@ const ProductsSection = dynamic(() => import("@/app/VIP/ProductsSection"), { ssr
 const ShopFunnel = dynamic(() => import("@/app/shop/ShopFunnel"), { ssr: false });
 const Shopmain = dynamic(() => import("@/components/Mainpage/ShopMainpage"), { ssr: false });
 
-// --- DYNAMIC CURSOR IMPORT (Exact Implementation) ---
+// --- DYNAMIC THEME CONFIGURATOR ---
+const FixedThemeConfigurator = dynamic(
+    () => import('@/components/Mainpage/ThemeComponents').then((mod) => mod.default), 
+    { 
+        ssr: false,
+        loading: () => <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">Loading Config...</div> 
+    }
+);
+
+// --- DYNAMIC CURSOR IMPORT ---
 const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor'), { 
   ssr: false,
   loading: () => <div className="hidden">Loading Cursor...</div> 
 });
 
 // =========================================
-// 1. AUDIO LOGIC (MODIFIED)
+// 1. AUDIO LOGIC (RETAINING FIXES)
 // =========================================
 
-// Hook 1: Loader Audio (No Change)
 const useLoaderAudio = (url: string, isVisible: boolean) => {
     useEffect(() => {
         if (!isVisible) return;
@@ -51,12 +63,10 @@ const useLoaderAudio = (url: string, isVisible: boolean) => {
     }, [url, isVisible]);
 };
 
-// Hook 2: One-Time Music Track (MODIFIED to track finish state)
 const useOneTimeTrack = (url: string) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [hasPlayedOnce, setHasPlayedOnce] = useState(false);
-  const [isFinished, setIsFinished] = useState(false); // <--- NEW STATE
+  const [isFinished, setIsFinished] = useState(false); 
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -67,7 +77,7 @@ const useOneTimeTrack = (url: string) => {
       
       const handleEnded = () => { 
           setIsPlaying(false); 
-          setIsFinished(true); // <--- SET to true when the track finishes
+          setIsFinished(true); 
       };
       tune.addEventListener('ended', handleEnded);
 
@@ -81,34 +91,29 @@ const useOneTimeTrack = (url: string) => {
 
   const toggle = useCallback(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || isFinished) return;
 
     if (isPlaying) {
       audio.pause();
       setIsPlaying(false);
-    } else if (!hasPlayedOnce) {
-      // Only play/resume if it hasn't finished yet
+    } else {
       audio.play().catch(() => {});
       setIsPlaying(true);
-      setHasPlayedOnce(true);
     }
-  }, [isPlaying, hasPlayedOnce]);
+  }, [isPlaying, isFinished]); 
 
   const play = useCallback(() => {
     const audio = audioRef.current;
-    if (audio && !isPlaying && !hasPlayedOnce) {
+    if (audio && !isPlaying && !isFinished) { 
       audio.play().then(() => {
         setIsPlaying(true);
-        setHasPlayedOnce(true);
       }).catch(() => {});
     }
-  }, [isPlaying, hasPlayedOnce]);
+  }, [isPlaying, isFinished]);
 
-  // Return the new isFinished state
   return { isPlaying, isFinished, toggle, play }; 
 };
 
-// Hook 3: Background Loop (useBackgroundLoop - No Change)
 const useBackgroundLoop = (url: string) => {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -118,20 +123,13 @@ const useBackgroundLoop = (url: string) => {
       audio.loop = true;
       audio.volume = 0.01; 
       audioRef.current = audio;
-  
-      return () => {
-        audio.pause();
-        audio.src = "";
-      };
+      return () => { audio.pause(); audio.src = ""; };
     }, [url]);
   
     const start = useCallback(() => {
       if (audioRef.current && audioRef.current.paused) {
         audioRef.current.volume = 0.01; 
-        
-        audioRef.current.play()
-          .then(() => setIsPlaying(true))
-          .catch(() => setIsPlaying(false));
+        audioRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
       }
     }, []);
   
@@ -151,10 +149,8 @@ const useBackgroundLoop = (url: string) => {
 };
 
 // =========================================
-// 2. UI COMPONENTS (No Change)
+// 2. UI COMPONENTS
 // =========================================
-
-// ... (MusicController and SupportWidget components remain the same) ...
 
 const MusicController = ({ isPlaying, onToggle }: { isPlaying: boolean; onToggle: () => void }) => (
   <button
@@ -203,60 +199,41 @@ const SupportWidget = () => {
   );
 };
 
-// ... (CursorStyles component remains the same) ...
-const CursorStyles = () => (
-  <style jsx global>{`
-    html { scroll-behavior: smooth; }
-    
-    .target-cursor-wrapper { 
-      pointer-events: none; 
-      will-change: transform; 
-      position: fixed; 
-      top: 0; 
-      left: 0; 
-      z-index: 10000;
-      mix-blend-mode: difference;
-    }
-    .target-cursor-dot {
-      width: 6px; 
-      height: 6px; 
-      background-color: #0066ff; 
-      border-radius: 50%;
-      position: absolute; 
-      top: 0; 
-      left: 0; 
-      transform: translate(-50%, -50%); 
-      box-shadow: 0 0 10px #0066ff, 0 0 20px rgba(0, 102, 255, 0.5); 
-      will-change: transform, scale;
-    }
-    .target-cursor-corner {
-      position: absolute; 
-      width: 12px; 
-      height: 12px; 
-      border: 3px solid #0066ff; 
-      opacity: 1;
-      will-change: transform, opacity, border-color;
-    }
-    
-    .corner-tl { border-right: none; border-bottom: none; }
-    .corner-tr { border-left: none; border-bottom: none; }
-    .corner-br { border-left: none; border-top: none; }
-    .corner-bl { border-right: none; border-top: none; }
-  `}</style>
-);
-
 
 // =========================================
-// 4. SHOP PAGE MAIN COMPONENT (MODIFIED INTEGRATION)
+// 4. SHOP PAGE MAIN COMPONENT
 // =========================================
 export default function ShopPage() {
   const productsRef = useRef<HTMLDivElement | null>(null);
   const [isUnlocked, setIsUnlocked] = useState(false);
+
+  // --- THEME STATE MANAGEMENT ---
+  const [showConfigurator, setShowConfigurator] = useState(false);
+  const [activeThemeId, setActiveThemeId] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+        return localStorage.getItem('user_theme_id') || 't01';
+    }
+    return 't01';
+  });
+
+  // Calculate active theme
+  const activeTheme: Theme = useMemo(() => {
+    return THEME_DATA.find(t => t.id === activeThemeId) || THEME_DATA[0];
+  }, [activeThemeId]);
+
+  // Handle Theme Change
+  const handleThemeChange = useCallback((themeId: string) => {
+    setActiveThemeId(themeId);
+    if (typeof window !== 'undefined') {
+        localStorage.setItem('user_theme_id', themeId);
+    }
+    setShowConfigurator(false); 
+  }, []);
   
-  // 1. Initialize both tracks
+  // --- AUDIO LOGIC ---
   const { 
     isPlaying: isTrackPlaying, 
-    isFinished: isTrackFinished, // Retrieve the finished state
+    isFinished: isTrackFinished, 
     toggle: toggleOneTimeTrack, 
     play: playOneTimeTrack 
   } = useOneTimeTrack('/shop.mp3'); 
@@ -267,32 +244,56 @@ export default function ShopPage() {
     toggle: toggleBgLoop 
   } = useBackgroundLoop('/background.mp3'); 
 
-  // Determine the primary playing state for the UI
   const isAnyAudioPlaying = isTrackPlaying || isLooping;
 
   useLoaderAudio('/modals.mp3', !isUnlocked);
 
   const handleUnlock = useCallback(() => {
     setIsUnlocked(true);
-    playOneTimeTrack(); // Start the high-volume one-time track
+    playOneTimeTrack();
   }, [playOneTimeTrack]);
 
-  // 2. EFFECT: Start the low-volume loop when the one-time track ends
   useEffect(() => {
     if (isTrackFinished && !isLooping) {
       startBgLoop(); 
     }
   }, [isTrackFinished, isLooping, startBgLoop]);
 
-  // 3. COMBINED TOGGLE: Decide which track to control (prioritize the main track)
   const handleMusicToggle = useCallback(() => {
-    if (isTrackPlaying) {
-        toggleOneTimeTrack(); // Toggle the main track
-    } else {
-        toggleBgLoop(); // Toggle the low-volume loop (only runs if main track is paused/finished)
-    }
-  }, [isTrackPlaying, toggleOneTimeTrack, toggleBgLoop]);
+    if (isTrackPlaying) toggleOneTimeTrack(); 
+    else if (!isTrackFinished) toggleOneTimeTrack();
+    else toggleBgLoop(); 
+  }, [isTrackPlaying, isTrackFinished, toggleOneTimeTrack, toggleBgLoop]);
 
+
+  // --- GLOBAL THEME STYLES ---
+  const GlobalStyles = () => (
+    <style jsx global>{`
+      html, body, #__next {
+        scroll-behavior: smooth;
+        background-color: black; 
+        transition: filter 0.5s ease-in-out; 
+        filter: ${activeTheme.filter};
+      }
+      @media (max-width: 1024px) {
+        html, body, #__next {
+            filter: ${activeTheme.mobileFilter};
+        }
+      }
+      :root {
+          --theme-accent-color: ${activeTheme.accentColor || '#0066ff'};
+      }
+      
+      /* Cursor Styles embedded here */
+      .target-cursor-wrapper { pointer-events: none; position: fixed; top: 0; left: 0; z-index: 10000; mix-blend-mode: difference; }
+      .target-cursor-dot { width: 6px; height: 6px; background-color: #0066ff; border-radius: 50%; position: absolute; top: 0; left: 0; transform: translate(-50%, -50%); box-shadow: 0 0 10px #0066ff, 0 0 20px rgba(0, 102, 255, 0.5); will-change: transform, scale; }
+      .target-cursor-corner { position: absolute; width: 12px; height: 12px; border: 3px solid #0066ff; opacity: 1; will-change: transform, opacity, border-color; }
+      .corner-tl { border-right: none; border-bottom: none; }
+      .corner-tr { border-left: none; border-bottom: none; }
+      .corner-br { border-left: none; border-top: none; }
+      .corner-bl { border-right: none; border-top: none; }
+    `}</style>
+  );
 
   if (!isUnlocked) {
     return (
@@ -304,21 +305,50 @@ export default function ShopPage() {
 
   return (
     <ShopProvider>
+      <GlobalStyles />
+      
+      {/* THEME CONFIGURATOR OVERLAY 
+          CRITICAL FIX: 'pointer-events-none' when hidden prevents blocking clicks 
+      */}
+      <div 
+          className={`fixed inset-0 z-[9000] transition-opacity duration-300 
+              ${showConfigurator ? 'opacity-100 pointer-events-auto backdrop-blur-sm bg-black/80' : 'opacity-0 pointer-events-none'}`}
+          style={{ filter: activeTheme.filter }} 
+      >
+        <div className="flex items-center justify-center w-full h-full p-4 md:p-8">
+            <button 
+                onClick={() => setShowConfigurator(false)}
+                className="absolute top-4 right-4 z-[9001] p-3 text-white rounded-full bg-black/50 hover:bg-black/80 transition-colors"
+            >
+                <X className="w-6 h-6" />
+            </button>
+            <div className="w-full max-w-7xl h-full max-h-[850px]">
+                <FixedThemeConfigurator 
+                    initialThemeId={activeThemeId}
+                    onThemeChange={handleThemeChange} 
+                />
+            </div>
+        </div>
+      </div>
+
+      {/* NAVBAR (Required to open theme settings) */}
+      <Navbar 
+          setShowConfigurator={setShowConfigurator} 
+          activeThemeId={activeThemeId}
+          onThemeChange={handleThemeChange}
+      />
+
       <div className="relative min-h-screen bg-slate-950 text-white animate-in fade-in duration-1000">
-        <CursorStyles />
-        
-        
-        {/* EXACT CURSOR IMPLEMENTATION */}
         <TargetCursor
           spinDuration={2}
           hideDefaultCursor={true}
           targetSelector=".cursor-target, a, button"
         />
-        {/* Use the combined state and toggle function */}
+        
         <MusicController isPlaying={isAnyAudioPlaying} onToggle={handleMusicToggle} />
         <SupportWidget />
 
-        <div className="relative z-10">
+        <div className="relative z-10 pt-20"> {/* Added pt-20 for Navbar spacing */}
           <Socials />
           
           <HeroShop />

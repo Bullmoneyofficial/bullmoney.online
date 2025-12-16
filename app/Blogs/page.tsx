@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import dynamic from 'next/dynamic';
-import { gsap } from "gsap";
-import { MessageCircle, Volume2, VolumeX } from 'lucide-react';
+import { MessageCircle, Volume2, VolumeX, X } from 'lucide-react';
 
 // --- STATIC IMPORTS ---
 import { ShopProvider } from "../VIP/ShopContext"; 
@@ -11,33 +10,35 @@ import { BlogProvider } from "@/app/Blogs/BlogContext";
 import RecruitPage from "@/app/register/pageVip";
 import Socials from "@/components/Mainpage/Socialsfooter";
 
+// --- NEW IMPORTS FOR THEME SUPPORT ---
+import { Navbar } from "@/components/Mainpage/navbar"; 
+import { ALL_THEMES as THEME_DATA, Theme } from '@/components/Mainpage/ThemeComponents';
+
 // --- DYNAMIC IMPORTS ---
 const HeroShop = dynamic(() => import("@/app/Blogs/BlogHero"), { ssr: false });
 const BlogPage = dynamic(() => import("@/app/Blogs/BlogPage"), { ssr: false });
-const Livestreams = dynamic(() => import("@/app/Blogs/Livestreams"), { ssr: false });
 const Chartnews = dynamic(() => import("@/app/Blogs/Chartnews"), { ssr: false });
 const Shopmain = dynamic(() => import("@/components/Mainpage/ShopMainpage"), { ssr: false });
+// Note: Livestreams was imported but not used in your return, kept it out to clean up warnings, add back if needed.
+
+// --- DYNAMIC THEME CONFIGURATOR ---
+const FixedThemeConfigurator = dynamic(
+    () => import('@/components/Mainpage/ThemeComponents').then((mod) => mod.default), 
+    { 
+        ssr: false,
+        loading: () => <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">Loading Config...</div> 
+    }
+);
+
+// --- DYNAMIC CURSOR IMPORT (Standardized) ---
+const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor'), { 
+  ssr: false,
+  loading: () => <div className="hidden">Loading Cursor...</div> 
+});
 
 // =========================================
-// 0. CUSTOM HOOKS
+// 0. AUDIO HOOKS
 // =========================================
-
-const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => {
-      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      const isSmall = window.innerWidth <= 768;
-      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-      const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
-      setIsMobile((hasTouch && isSmall) || mobileRegex.test(userAgent.toLowerCase()));
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  return isMobile;
-};
 
 // Hook 1: Loader Audio
 const useLoaderAudio = (url: string, isVisible: boolean) => {
@@ -83,12 +84,12 @@ const useLoaderAudio = (url: string, isVisible: boolean) => {
     }, [url, isVisible]);
 };
 
-// Hook 2: One-Time Track (Modified to track finish state)
+// Hook 2: One-Time Track (News)
 const useOneTimeTrack = (url: string) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasPlayedOnce, setHasPlayedOnce] = useState(false); 
-  const [isFinished, setIsFinished] = useState(false); // <--- NEW STATE
+  const [isFinished, setIsFinished] = useState(false); 
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -99,7 +100,7 @@ const useOneTimeTrack = (url: string) => {
 
       const handleEnded = () => {
         setIsPlaying(false);
-        setIsFinished(true); // <--- Track finished
+        setIsFinished(true); 
       };
       tune.addEventListener('ended', handleEnded);
 
@@ -253,225 +254,34 @@ const SupportWidget = () => {
 };
 
 // =========================================
-// 2. STYLES
-// =========================================
-const CursorStyles = () => (
-  <style jsx global>{`
-    .target-cursor-wrapper { position: fixed; top: 0; left: 0; z-index: 10000; pointer-events: none; will-change: transform; }
-    .target-cursor-dot { width: 8px; height: 8px; background-color: #0066ff; border-radius: 50%; position: absolute; top: 0; left: 0; transform: translate(-50%, -50%); box-shadow: 0 0 10px #0066ff; }
-    .target-cursor-corner { position: absolute; width: 16px; height: 16px; border: 2px solid #0066ff; box-shadow: 0 0 4px rgba(0, 102, 255, 0.4); will-change: transform; }
-    .corner-tl { top: -10px; left: -10px; border-right: none; border-bottom: none; }
-    .corner-tr { top: -10px; right: -10px; border-left: none; border-bottom: none; }
-    .corner-br { bottom: -10px; right: -10px; border-left: none; border-top: none; }
-    .corner-bl { bottom: -10px; left: -10px; border-right: none; border-top: none; }
-    body.custom-cursor-active { cursor: none !important; }
-    @keyframes shimmer { 0% { transform: translateX(-150%) skewX(-15deg); } 50%, 100% { transform: translateX(150%) skewX(-15deg); } }
-    .animate-shimmer { animation: shimmer 3s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
-  `}</style>
-);
-
-// =========================================
-// 3. TARGET CURSOR LOGIC
-// =========================================
-
-interface TargetCursorProps {
-  targetSelector?: string;
-  spinDuration?: number;
-  hideDefaultCursor?: boolean;
-  hoverDuration?: number;
-  parallaxOn?: boolean;
-}
-
-const TargetCursorComponent: React.FC<TargetCursorProps> = ({ 
-    targetSelector = 'button, a, input, [role="button"], .cursor-target', 
-    spinDuration = 2,
-    hideDefaultCursor = true,
-    hoverDuration = 0.2
-}) => {
-  const isMobile = useIsMobile();
-  const cursorRef = useRef<HTMLDivElement>(null);
-  const dotRef = useRef<HTMLDivElement>(null);
-  const cornersRef = useRef<NodeListOf<HTMLDivElement> | null>(null);
-  
-  const state = useRef({
-      isActive: false,
-      targetPositions: null as { x: number; y: number }[] | null,
-      activeStrength: { val: 0 },
-      activeTarget: null as Element | null
-  });
-
-  useEffect(() => {
-    if (!cursorRef.current || typeof window === 'undefined') return;
-
-    if (hideDefaultCursor && !isMobile) {
-      document.body.classList.add('custom-cursor-active');
-    }
-
-    cornersRef.current = cursorRef.current.querySelectorAll('.target-cursor-corner');
-
-    const ctx = gsap.context(() => {
-        const cursor = cursorRef.current!;
-        const corners = cornersRef.current!;
-
-        if (isMobile) {
-            gsap.set(cursor, { x: window.innerWidth/2, y: window.innerHeight/2, opacity: 0, scale: 1.3 });
-            gsap.to(cursor, { opacity: 1, duration: 0.5 });
-
-            const tapEffect = () => {
-                gsap.to(corners, { scale: 1.6, borderColor: '#00ffff', duration: 0.15, yoyo: true, repeat: 1 });
-                gsap.to(dotRef.current, { scale: 2, backgroundColor: '#ffffff', duration: 0.15, yoyo: true, repeat: 1 });
-            };
-
-            const runScanner = async () => {
-                const allElements = Array.from(document.querySelectorAll(targetSelector));
-                const targets = allElements.filter(el => {
-                    const r = el.getBoundingClientRect();
-                    const style = window.getComputedStyle(el);
-                    return (
-                        style.display !== 'none' && 
-                        style.visibility !== 'hidden' && 
-                        style.opacity !== '0' &&
-                        r.width > 20 && r.height > 20 && 
-                        r.top >= 0 && r.left >= 0 
-                    );
-                }).sort((a, b) => {
-                    const ra = a.getBoundingClientRect();
-                    const rb = b.getBoundingClientRect();
-                    return ra.top - rb.top || ra.left - rb.left;
-                });
-
-                if (targets.length > 0) {
-                    for (const target of targets) {
-                        const r = target.getBoundingClientRect();
-                        if (r.top < -50 || r.bottom > window.innerHeight + 50) continue; 
-                        await new Promise<void>(resolve => {
-                            gsap.to(cursor, {
-                                x: r.left + r.width / 2,
-                                y: r.top + r.height / 2,
-                                duration: 0.8,
-                                ease: "power2.inOut",
-                                onComplete: () => {
-                                    tapEffect(); 
-                                    setTimeout(resolve, 600); 
-                                }
-                            });
-                        });
-                    }
-                    runScanner(); 
-                } else {
-                    gsap.to(cursor, {
-                        x: window.innerWidth / 2 + (Math.random() - 0.5) * 100,
-                        y: window.innerHeight / 2 + (Math.random() - 0.5) * 100,
-                        duration: 2,
-                        onComplete: () => { runScanner(); } 
-                    });
-                }
-            };
-            setTimeout(runScanner, 1000);
-        }
-        else {
-            gsap.set(cursor, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
-            const spinTl = gsap.timeline({ repeat: -1 })
-                .to(cursor, { rotation: 360, duration: spinDuration, ease: 'none' });
-
-            const moveCursor = (e: MouseEvent) => {
-                gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: 'power3.out', force3D: true });
-            };
-            window.addEventListener('mousemove', moveCursor);
-
-            const handleDown = () => {
-                gsap.to(dotRef.current, { scale: 0.5, duration: 0.2 });
-                gsap.to(corners, { scale: 1.2, borderColor: '#00ffff', duration: 0.2 });
-            };
-            const handleUp = () => {
-                gsap.to(dotRef.current, { scale: 1, duration: 0.2 });
-                gsap.to(corners, { scale: 1, borderColor: '#0066ff', duration: 0.2 });
-            };
-            window.addEventListener('mousedown', handleDown);
-            window.addEventListener('mouseup', handleUp);
-
-            gsap.ticker.add(() => {
-                if (!state.current.isActive || !state.current.targetPositions) return;
-                const strength = state.current.activeStrength.val;
-                if (strength <= 0) return;
-
-                const cursorX = gsap.getProperty(cursor, 'x') as number;
-                const cursorY = gsap.getProperty(cursor, 'y') as number;
-
-                corners.forEach((corner, i) => {
-                    const currentX = gsap.getProperty(corner, 'x') as number;
-                    const currentY = gsap.getProperty(corner, 'y') as number;
-                    const targetX = state.current.targetPositions![i].x - cursorX;
-                    const targetY = state.current.targetPositions![i].y - cursorY;
-                    const finalX = currentX + (targetX - currentX) * strength;
-                    const finalY = currentY + (targetY - currentY) * strength;
-                    gsap.to(corner, { x: finalX, y: finalY, duration: 0.1, overwrite: 'auto', force3D: true });
-                });
-            });
-
-            const handleHover = (e: MouseEvent) => {
-                const target = (e.target as Element).closest(targetSelector);
-                if (target && target !== state.current.activeTarget) {
-                    state.current.activeTarget = target;
-                    state.current.isActive = true;
-                    spinTl.pause();
-                    gsap.to(cursor, { rotation: 0, duration: 0.3 }); 
-
-                    const rect = target.getBoundingClientRect();
-                    const borderWidth = 4; const cornerSize = 16;
-                    state.current.targetPositions = [
-                        { x: rect.left - borderWidth, y: rect.top - borderWidth },
-                        { x: rect.right + borderWidth - cornerSize, y: rect.top - borderWidth },
-                        { x: rect.right + borderWidth - cornerSize, y: rect.bottom + borderWidth - cornerSize },
-                        { x: rect.left - borderWidth, y: rect.bottom + borderWidth - cornerSize }
-                    ];
-                    gsap.to(state.current.activeStrength, { val: 1, duration: hoverDuration, ease: 'power2.out' });
-
-                    const handleLeave = () => {
-                        target.removeEventListener('mouseleave', handleLeave);
-                        state.current.activeTarget = null;
-                        state.current.isActive = false;
-                        state.current.targetPositions = null;
-                        gsap.to(state.current.activeStrength, { val: 0, duration: 0.2, overwrite: true });
-                        corners.forEach((c) => gsap.to(c, { x: 0, y: 0, duration: 0.3 }));
-                        spinTl.restart();
-                    };
-                    target.addEventListener('mouseleave', handleLeave);
-                }
-            };
-            window.addEventListener('mouseover', handleHover);
-        }
-    }, cursorRef); 
-
-    return () => {
-        document.body.classList.remove('custom-cursor-active');
-        ctx.revert();
-        window.removeEventListener('mousemove', () => {}); 
-        window.removeEventListener('mousedown', () => {});
-        window.removeEventListener('mouseup', () => {});
-    };
-  }, [isMobile, hideDefaultCursor, spinDuration, targetSelector, hoverDuration]);
-
-  return (
-    <div ref={cursorRef} className="target-cursor-wrapper">
-      <div ref={dotRef} className="target-cursor-dot" />
-      <div className="target-cursor-corner corner-tl" />
-      <div className="target-cursor-corner corner-tr" />
-      <div className="target-cursor-corner corner-br" />
-      <div className="target-cursor-corner corner-bl" />
-    </div>
-  );
-};
-const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { ssr: false });
-
-// =========================================
 // 4. MAIN PAGE COMPONENT
 // =========================================
 export default function Page({ searchParams }: { searchParams?: { src?: string }; }) {
   const productsRef = useRef<HTMLDivElement | null>(null);
   const [isUnlocked, setIsUnlocked] = useState(false);
   
-  // 1. Initialize Audio Hooks
+  // --- THEME STATE ---
+  const [showConfigurator, setShowConfigurator] = useState(false);
+  const [activeThemeId, setActiveThemeId] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+        return localStorage.getItem('user_theme_id') || 't01';
+    }
+    return 't01';
+  });
+
+  const activeTheme: Theme = useMemo(() => {
+    return THEME_DATA.find(t => t.id === activeThemeId) || THEME_DATA[0];
+  }, [activeThemeId]);
+
+  const handleThemeChange = useCallback((themeId: string) => {
+    setActiveThemeId(themeId);
+    if (typeof window !== 'undefined') {
+        localStorage.setItem('user_theme_id', themeId);
+    }
+    setShowConfigurator(false); 
+  }, []);
+
+  // --- AUDIO LOGIC ---
   useLoaderAudio('/modals.mp3', !isUnlocked);
 
   const { 
@@ -487,20 +297,20 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
     toggle: toggleLoop 
   } = useBackgroundLoop('/background.mp3');
 
-  // 2. Logic: Unlock triggers News
+  // Logic: Unlock triggers News
   const handleUnlock = useCallback(() => {
     setIsUnlocked(true);
     playNews();
   }, [playNews]);
 
-  // 3. Logic: News Finish triggers Loop
+  // Logic: News Finish triggers Loop
   useEffect(() => {
     if (isNewsFinished && !isLoopPlaying) {
         startLoop();
     }
   }, [isNewsFinished, isLoopPlaying, startLoop]);
 
-  // 4. Logic: Smart Toggle
+  // Logic: Smart Toggle
   const handleMusicToggle = useCallback(() => {
     if (isNewsPlaying) {
         toggleNews();
@@ -511,6 +321,36 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
 
   const isAnyAudioPlaying = isNewsPlaying || isLoopPlaying;
 
+  // --- GLOBAL STYLES ---
+  const GlobalStyles = () => (
+    <style jsx global>{`
+      html, body, #__next {
+        scroll-behavior: smooth;
+        background-color: black; 
+        transition: filter 0.5s ease-in-out; 
+        filter: ${activeTheme.filter};
+      }
+      @media (max-width: 1024px) {
+        html, body, #__next {
+            filter: ${activeTheme.mobileFilter};
+        }
+      }
+      :root {
+          --theme-accent-color: ${activeTheme.accentColor || '#0066ff'};
+      }
+
+      .target-cursor-wrapper { pointer-events: none; position: fixed; top: 0; left: 0; z-index: 10000; mix-blend-mode: difference; }
+      .target-cursor-dot { width: 6px; height: 6px; background-color: #0066ff; border-radius: 50%; position: absolute; top: 0; left: 0; transform: translate(-50%, -50%); box-shadow: 0 0 10px #0066ff, 0 0 20px rgba(0, 102, 255, 0.5); will-change: transform, scale; }
+      .target-cursor-corner { position: absolute; width: 12px; height: 12px; border: 3px solid #0066ff; opacity: 1; will-change: transform, opacity, border-color; }
+      .corner-tl { border-right: none; border-bottom: none; }
+      .corner-tr { border-left: none; border-bottom: none; }
+      .corner-br { border-left: none; border-top: none; }
+      .corner-bl { border-right: none; border-top: none; }
+      
+      @keyframes shimmer { 0% { transform: translateX(-150%) skewX(-15deg); } 50%, 100% { transform: translateX(150%) skewX(-15deg); } }
+      .animate-shimmer { animation: shimmer 3s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+    `}</style>
+  );
 
   // Loader State
   if (!isUnlocked) {
@@ -523,28 +363,61 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
 
   return (
     <BlogProvider>
-      <div className="relative animate-in fade-in duration-1000">
+      <GlobalStyles />
+      
+      {/* THEME CONFIGURATOR OVERLAY */}
+      <div 
+          className={`fixed inset-0 z-[9000] transition-opacity duration-300 
+              ${showConfigurator ? 'opacity-100 pointer-events-auto backdrop-blur-sm bg-black/80' : 'opacity-0 pointer-events-none'}`}
+          style={{ filter: activeTheme.filter }} 
+      >
+        <div className="flex items-center justify-center w-full h-full p-4 md:p-8">
+            <button 
+                onClick={() => setShowConfigurator(false)}
+                className="absolute top-4 right-4 z-[9001] p-3 text-white rounded-full bg-black/50 hover:bg-black/80 transition-colors"
+            >
+                <X className="w-6 h-6" />
+            </button>
+            <div className="w-full max-w-7xl h-full max-h-[850px]">
+                <FixedThemeConfigurator 
+                    initialThemeId={activeThemeId}
+                    onThemeChange={handleThemeChange} 
+                />
+            </div>
+        </div>
+      </div>
+
+      {/* NAVBAR */}
+      <Navbar 
+          setShowConfigurator={setShowConfigurator} 
+          activeThemeId={activeThemeId}
+          onThemeChange={handleThemeChange}
+      />
+
+      <div className="relative animate-in fade-in duration-1000 pt-20"> {/* Added pt-20 for Navbar */}
         
-        {/* 1. GLOBAL UI ELEMENTS */}
-        <CursorStyles />
-        <TargetCursor hideDefaultCursor={true} spinDuration={2} parallaxOn={true} />
+        <TargetCursor 
+            hideDefaultCursor={true} 
+            spinDuration={2} 
+            targetSelector="button, a, input, [role='button'], .cursor-target"
+        />
         
         {/* Unified Audio Controller */}
         <MusicController isPlaying={isAnyAudioPlaying} onToggle={handleMusicToggle} />
         <SupportWidget />
 
-        {/* 2. CONTENT */}
+        {/* CONTENT */}
         <Socials />
         
         <ShopProvider>
-          <main className="min-h-screen bg-slate-950 text-white">
+          <div className="min-h-screen bg-slate-950 text-white">
             <HeroShop />
             <BlogPage />
             <Shopmain />
             <Chartnews />
             
             <div ref={productsRef} />
-          </main>
+          </div>
         </ShopProvider>
         
       </div>
