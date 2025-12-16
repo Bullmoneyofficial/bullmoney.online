@@ -3,30 +3,54 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
   TrendingUp, DollarSign, Shield, Zap, Lock, Activity, 
-  Menu, X, Volume2, VolumeX, Settings, Monitor, RefreshCw, Wifi, WifiOff, Layers, Hash, Command, MessageCircle, ArrowRight, SkipForward, Check 
-} from 'lucide-react';
+  Menu, X, Volume2, VolumeX, Settings, Monitor, RefreshCw, Wifi, WifiOff, Layers, Hash, Command, MessageCircle, ArrowRight, SkipForward, Check, MapPin, Sun, Brain, Smile
+} from 'lucide-react'; // Added MapPin, Sun, Brain, Smile for new categories
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ============================================================================
-// 1. TYPES & THEMES (No Change)
+// 1. TYPES & THEMES (Refactored to include all 250+ themes)
 // ============================================================================
 
 export type SoundProfile = 'MECHANICAL' | 'SOROS' | 'SCI-FI' | 'SILENT'; 
-export type ThemeCategory = 'SPECIAL' | 'SENTIMENT' | 'ASSETS' | 'CRYPTO' | 'HISTORICAL' | 'OPTICS' | 'GLITCH' | 'EXOTIC';
+// EXPANDED ThemeCategory to include all new categories
+export type ThemeCategory = 
+  | 'SPECIAL' 
+  | 'SENTIMENT' 
+  | 'ASSETS' 
+  | 'CRYPTO' 
+  | 'HISTORICAL' 
+  | 'OPTICS' 
+  | 'GLITCH' 
+  | 'EXOTIC' 
+  | 'LOCATION' // New
+  | 'ELEMENTAL' // New
+  | 'CONCEPTS' // New
+  | 'MEME'; // New
 
 export type Theme = { 
   id: string; name: string; description: string; 
   filter: string; mobileFilter: string; category: ThemeCategory; 
-  isLight?: boolean; illusion?: 'SCANLINES' | 'VIGNETTE' | 'NOISE' | 'NONE'; 
+  isLight?: boolean; illusion?: 'SCANLINES' | 'VIGNETTE' | 'NOISE' | 'NONE' | 'GLITCH'; 
   accentColor?: string; status: 'AVAILABLE' | 'UNAVAILABLE';
 };
 
 export type TickerData = { symbol: string; price: string; percentChange: string; prevPrice: string; };
 
-export const THEMES: Theme[] = [
+// --- BASE THEMES (Original 20 + Fixed Bull Money) ---
+export const BASE_THEMES: Theme[] = [
   // --- SPECIAL ---
-  { id: 'bull-money-special', name: 'Bull Money Chrome', description: 'REFRESH TO REVEAL', category: 'SPECIAL', filter: 'url(#chrome-liquid) sepia(1) hue-rotate(190deg) saturate(4) contrast(1.1) brightness(1.1) drop-shadow(0 0 5px rgba(0,255,255,0.5))', mobileFilter: 'sepia(1) hue-rotate(190deg) saturate(3) contrast(1.2)', illusion: 'SCANLINES', accentColor: '#00FFFF', status: 'AVAILABLE' },
-
+  { 
+    id: 'bull-money-special', 
+    name: 'Bull Money Chrome', 
+    description: 'REFRESH TO REVEAL', 
+    category: 'SPECIAL', 
+    // Reverted to original filter but fixed it in the separate system code (assuming this array is read-only here)
+    filter: 'url(#chrome-liquid) sepia(1) hue-rotate(190deg) saturate(4) contrast(1.1) brightness(1.1) drop-shadow(0 0 5px rgba(0,255,255,0.5))', 
+    mobileFilter: 'sepia(1) hue-rotate(190deg) saturate(3) contrast(1.2)', 
+    illusion: 'SCANLINES', 
+    accentColor: '#00FFFF', 
+    status: 'AVAILABLE' 
+  },
   // --- CRYPTO ---
   { id: 'c01', name: 'Bitcoin Orange', description: 'BTC Core', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(350deg) saturate(3) contrast(1.1)', mobileFilter: 'sepia(1) hue-rotate(350deg)', illusion: 'NONE', accentColor: '#F7931A', status: 'AVAILABLE' },
   { id: 'c02', name: 'Ethereum Glow', description: 'ETH Gas', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(180deg) saturate(2) brightness(1.1) drop-shadow(0 0 5px #627EEA)', mobileFilter: 'hue-rotate(180deg)', illusion: 'VIGNETTE', accentColor: '#627EEA', status: 'AVAILABLE' },
@@ -67,11 +91,288 @@ export const THEMES: Theme[] = [
   { id: 'e05', name: 'Matrix', description: 'Source', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(50deg) saturate(5) contrast(1.5) brightness(0.8)', mobileFilter: 'sepia(1) hue-rotate(50deg) saturate(3)', illusion: 'SCANLINES', accentColor: '#22C55E', status: 'AVAILABLE' },
 ];
 
+// --- NEW THEMES DATA (Over 200 themes from previous response) ---
+export const NEW_THEMES_DATA: Theme[] = [
+  // --- CRYPTO EXPANSION (Altcoins & L1s) ---
+  { id: 'c06', name: 'XRP Ripple', description: 'The Standard', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(190deg) saturate(2) brightness(0.9)', mobileFilter: 'hue-rotate(190deg)', illusion: 'NONE', accentColor: '#00AAE4', status: 'AVAILABLE' },
+  { id: 'c07', name: 'Cardano Ada', description: 'Scientific', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(200deg) saturate(1.5) contrast(1.1)', mobileFilter: 'hue-rotate(200deg)', illusion: 'VIGNETTE', accentColor: '#0033AD', status: 'UNAVAILABLE' },
+  { id: 'c08', name: 'Polkadot', description: 'Interoperable', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(290deg) saturate(3) brightness(0.8)', mobileFilter: 'hue-rotate(290deg)', illusion: 'NONE', accentColor: '#E6007A', status: 'AVAILABLE' },
+  { id: 'c09', name: 'Chainlink', description: 'Oracle', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(210deg) saturate(2) brightness(0.6)', mobileFilter: 'hue-rotate(210deg)', illusion: 'SCANLINES', accentColor: '#2A5ADA', status: 'AVAILABLE' },
+  { id: 'c10', name: 'Avalanche', description: 'Red Subnet', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(330deg) saturate(4) contrast(1.2)', mobileFilter: 'hue-rotate(330deg)', illusion: 'NONE', accentColor: '#E84142', status: 'UNAVAILABLE' },
+  { id: 'c11', name: 'Binance', description: 'SAFU', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(45deg) saturate(4) contrast(1.1)', mobileFilter: 'sepia(1) hue-rotate(45deg)', illusion: 'NONE', accentColor: '#F0B90B', status: 'UNAVAILABLE' },
+  { id: 'c12', name: 'Polygon', description: 'L2 Scaling', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(260deg) saturate(2) contrast(1.1)', mobileFilter: 'hue-rotate(260deg)', illusion: 'NONE', accentColor: '#8247E5', status: 'AVAILABLE' },
+  { id: 'c13', name: 'Shiba Inu', description: 'Army', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(10deg) saturate(3) contrast(1.3)', mobileFilter: 'hue-rotate(10deg)', illusion: 'NOISE', accentColor: '#FFA409', status: 'UNAVAILABLE' },
+  { id: 'c14', name: 'Uniswap', description: 'Swap', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(310deg) saturate(2) brightness(1.1)', mobileFilter: 'hue-rotate(310deg)', illusion: 'NONE', accentColor: '#FF007A', status: 'AVAILABLE' },
+  { id: 'c15', name: 'Litecoin', description: 'Silver', category: 'CRYPTO', filter: 'grayscale(1) brightness(1.3) contrast(0.9)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#A6A9AA', status: 'UNAVAILABLE' },
+  { id: 'c16', name: 'Cosmos', description: 'Atom', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(240deg) saturate(3) contrast(1.2)', mobileFilter: 'hue-rotate(240deg)', illusion: 'VIGNETTE', accentColor: '#2E3148', status: 'AVAILABLE' },
+  { id: 'c17', name: 'Near', description: 'Protocol', category: 'CRYPTO', filter: 'invert(1) hue-rotate(180deg) brightness(0.9)', mobileFilter: 'invert(1)', isLight: true, illusion: 'NONE', accentColor: '#000000', status: 'UNAVAILABLE' },
+  { id: 'c18', name: 'Kaspa', description: 'Ghost DAG', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(160deg) saturate(3) drop-shadow(0 0 3px #49EACB)', mobileFilter: 'hue-rotate(160deg)', illusion: 'SCANLINES', accentColor: '#49EACB', status: 'AVAILABLE' },
+  { id: 'c19', name: 'Pepe', description: 'Rare', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(90deg) saturate(3) brightness(1.1)', mobileFilter: 'hue-rotate(90deg)', illusion: 'NONE', accentColor: '#4C9540', status: 'UNAVAILABLE' },
+  { id: 'c20', name: 'USDT', description: 'Tether', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(130deg) saturate(2) contrast(1.1)', mobileFilter: 'hue-rotate(130deg)', illusion: 'NONE', accentColor: '#26A17B', status: 'AVAILABLE' },
+  { id: 'c21', name: 'Tron Legacy', description: 'Justin Sun', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(180deg) saturate(3) contrast(1.2)', mobileFilter: 'hue-rotate(180deg)', illusion: 'SCANLINES', accentColor: '#FF0013', status: 'UNAVAILABLE' },
+  { id: 'c22', name: 'Stellar Lumens', description: 'XLM', category: 'CRYPTO', filter: 'grayscale(1) brightness(1.2) sepia(0.2)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#CFD8DC', status: 'AVAILABLE' },
+  { id: 'c23', name: 'VeChain Thor', description: 'Supply Chain', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(190deg) saturate(2) brightness(1.1)', mobileFilter: 'hue-rotate(190deg)', illusion: 'NONE', accentColor: '#00C2FF', status: 'UNAVAILABLE' },
+  { id: 'c24', name: 'Algorand', description: 'Pure PoS', category: 'CRYPTO', filter: 'invert(1) hue-rotate(180deg) brightness(0.8)', mobileFilter: 'invert(1)', isLight: true, illusion: 'NONE', accentColor: '#000000', status: 'UNAVAILABLE' },
+  { id: 'c25', name: 'Tezos', description: 'Baking', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(200deg) saturate(2) contrast(1.1)', mobileFilter: 'hue-rotate(200deg)', illusion: 'NONE', accentColor: '#2C7DF7', status: 'AVAILABLE' },
+  { id: 'c26', name: 'EOS', description: 'Dan Larimer', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(340deg) saturate(1.5)', mobileFilter: 'hue-rotate(340deg)', illusion: 'VIGNETTE', accentColor: '#D1D5DB', status: 'UNAVAILABLE' },
+  { id: 'c27', name: 'Monero Clean', description: 'XMR White', category: 'CRYPTO', filter: 'grayscale(1) brightness(1.5) contrast(1.1)', mobileFilter: 'grayscale(1)', isLight: true, illusion: 'NONE', accentColor: '#FF6600', status: 'UNAVAILABLE' },
+  { id: 'c28', name: 'Aptos', description: 'Move', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(320deg) saturate(1) brightness(0.9)', mobileFilter: 'hue-rotate(320deg)', illusion: 'NONE', accentColor: '#1F2937', status: 'AVAILABLE' },
+  { id: 'c29', name: 'Sui Water', description: 'Fluid', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(170deg) saturate(3) brightness(1.1)', mobileFilter: 'hue-rotate(170deg)', illusion: 'NONE', accentColor: '#6BA1FF', status: 'AVAILABLE' },
+  { id: 'c30', name: 'Arbitrum', description: 'Optimistic', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(200deg) saturate(2) contrast(1.2)', mobileFilter: 'hue-rotate(200deg)', illusion: 'SCANLINES', accentColor: '#2D374B', status: 'UNAVAILABLE' },
+  { id: 'c31', name: 'Optimism', description: 'OP Stack', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(320deg) saturate(4) brightness(1.1)', mobileFilter: 'hue-rotate(320deg)', illusion: 'NONE', accentColor: '#FF0420', status: 'AVAILABLE' },
+  { id: 'c32', name: 'Base', description: 'Coinbase', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(210deg) saturate(3) contrast(1.1)', mobileFilter: 'hue-rotate(210deg)', illusion: 'NONE', accentColor: '#0052FF', status: 'UNAVAILABLE' },
+  { id: 'c33', name: 'Celestia', description: 'Modular', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(260deg) saturate(3) brightness(1.2)', mobileFilter: 'hue-rotate(260deg)', illusion: 'NOISE', accentColor: '#7B2BF9', status: 'AVAILABLE' },
+  { id: 'c34', name: 'Injective', description: 'Finance', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(160deg) saturate(2) contrast(1.3)', mobileFilter: 'hue-rotate(160deg)', illusion: 'SCANLINES', accentColor: '#00F2FF', status: 'AVAILABLE' },
+  { id: 'c35', name: 'Sei', description: 'Fastest', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(340deg) saturate(2) contrast(1.1)', mobileFilter: 'hue-rotate(340deg)', illusion: 'NONE', accentColor: '#9D1F32', status: 'UNAVAILABLE' },
+  { id: 'c36', name: 'Render', description: 'GPU', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(320deg) saturate(3) contrast(1.5)', mobileFilter: 'hue-rotate(320deg)', illusion: 'SCANLINES', accentColor: '#FF4D4D', status: 'AVAILABLE' },
+  { id: 'c37', name: 'Filecoin', description: 'Storage', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(180deg) saturate(1.5) brightness(0.8)', mobileFilter: 'hue-rotate(180deg)', illusion: 'NONE', accentColor: '#0090FF', status: 'UNAVAILABLE' },
+  { id: 'c38', name: 'Arweave', description: 'Permaweb', category: 'CRYPTO', filter: 'invert(1) grayscale(1) brightness(0.8)', mobileFilter: 'invert(1)', isLight: true, illusion: 'NOISE', accentColor: '#000000', status: 'UNAVAILABLE' },
+  { id: 'c39', name: 'Hedera', description: 'Hashgraph', category: 'CRYPTO', filter: 'grayscale(1) contrast(1.5) brightness(0.6)', mobileFilter: 'grayscale(1)', illusion: 'SCANLINES', accentColor: '#4A4A4A', status: 'AVAILABLE' },
+  { id: 'c40', name: 'Thorchain', description: 'Rune', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(140deg) saturate(3) brightness(1.1)', mobileFilter: 'hue-rotate(140deg)', illusion: 'NONE', accentColor: '#33FF99', status: 'AVAILABLE' },
+  { id: 'c41', name: 'MakerDAO', description: 'DAI', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(150deg) saturate(2) brightness(0.9)', mobileFilter: 'hue-rotate(150deg)', illusion: 'NONE', accentColor: '#1AAB9B', status: 'UNAVAILABLE' },
+  { id: 'c42', name: 'Aave Ghost', description: 'Lending', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(270deg) saturate(1.5) contrast(1.1)', mobileFilter: 'hue-rotate(270deg)', illusion: 'VIGNETTE', accentColor: '#B6509E', status: 'AVAILABLE' },
+  { id: 'c43', name: 'Compound', description: 'Interest', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(120deg) saturate(2) brightness(1.2)', mobileFilter: 'hue-rotate(120deg)', illusion: 'NONE', accentColor: '#00D395', status: 'UNAVAILABLE' },
+  { id: 'c44', name: 'Curve', description: 'Stable', category: 'CRYPTO', filter: 'hue-rotate(45deg) contrast(1.5) brightness(0.6)', mobileFilter: 'hue-rotate(45deg)', illusion: 'GLITCH', accentColor: '#FF0000', status: 'AVAILABLE' },
+  { id: 'c45', name: 'Lido', description: 'Staked', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(190deg) saturate(2) brightness(1.3)', mobileFilter: 'hue-rotate(190deg)', illusion: 'NONE', accentColor: '#00A3FF', status: 'UNAVAILABLE' },
+  { id: 'c46', name: 'Bonk', description: 'Dog Coin', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(20deg) saturate(3) contrast(1.2)', mobileFilter: 'hue-rotate(20deg)', illusion: 'NOISE', accentColor: '#FF8800', status: 'AVAILABLE' },
+  { id: 'c47', name: 'WIF', description: 'Hat', category: 'CRYPTO', filter: 'sepia(0.8) hue-rotate(350deg) brightness(1.1)', mobileFilter: 'sepia(0.8)', illusion: 'NONE', accentColor: '#BCA38A', status: 'AVAILABLE' },
+  { id: 'c48', name: 'Floki', description: 'Viking', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(40deg) saturate(2) brightness(0.8)', mobileFilter: 'hue-rotate(40deg)', illusion: 'NONE', accentColor: '#FACC15', status: 'UNAVAILABLE' },
+  { id: 'c49', name: 'Ordinals', description: 'Inscription', category: 'CRYPTO', filter: 'grayscale(1) contrast(2) brightness(0.5) drop-shadow(0 0 2px orange)', mobileFilter: 'grayscale(1)', illusion: 'NOISE', accentColor: '#F7931A', status: 'AVAILABLE' },
+  { id: 'c50', name: 'Stacks', description: 'L2 BTC', category: 'CRYPTO', filter: 'sepia(1) hue-rotate(260deg) saturate(3) contrast(1.3)', mobileFilter: 'hue-rotate(260deg)', illusion: 'NONE', accentColor: '#5546FF', status: 'UNAVAILABLE' },
+
+  // --- SENTIMENT (Cont.) ---
+  { id: 't07', name: 'Sideways', description: 'Chop', category: 'SENTIMENT', filter: 'grayscale(0.8) contrast(0.8) brightness(1.1)', mobileFilter: 'grayscale(0.8)', illusion: 'NONE', accentColor: '#9CA3AF', status: 'AVAILABLE' },
+  { id: 't08', name: 'Liquidation', description: 'Margin Call', category: 'SENTIMENT', filter: 'sepia(1) hue-rotate(340deg) saturate(5) contrast(1.5) drop-shadow(0 0 5px red)', mobileFilter: 'hue-rotate(340deg)', illusion: 'VIGNETTE', accentColor: '#DC2626', status: 'UNAVAILABLE' },
+  { id: 't09', name: 'Hopium', description: 'Delusion', category: 'SENTIMENT', filter: 'sepia(1) hue-rotate(280deg) saturate(2) brightness(1.2) blur(0.5px)', mobileFilter: 'hue-rotate(280deg)', illusion: 'NONE', accentColor: '#D8B4FE', status: 'AVAILABLE' },
+  { id: 't10', name: 'Diamond Hands', description: 'HODL', category: 'SENTIMENT', filter: 'sepia(1) hue-rotate(180deg) saturate(3) brightness(1.3) contrast(1.2)', mobileFilter: 'hue-rotate(180deg)', illusion: 'NONE', accentColor: '#60A5FA', status: 'AVAILABLE' },
+  { id: 't11', name: 'Bear Trap', description: 'Fakeout', category: 'SENTIMENT', filter: 'invert(1) hue-rotate(300deg) saturate(2)', mobileFilter: 'invert(1)', isLight: true, illusion: 'NOISE', accentColor: '#166534', status: 'UNAVAILABLE' },
+  { id: 't12', name: 'Bull Trap', description: 'Rug', category: 'SENTIMENT', filter: 'sepia(1) hue-rotate(80deg) saturate(2) brightness(0.8)', mobileFilter: 'hue-rotate(80deg)', illusion: 'SCANLINES', accentColor: '#4ADE80', status: 'UNAVAILABLE' },
+  { id: 't13', name: 'Volatility', description: 'VIX Spike', category: 'SENTIMENT', filter: 'contrast(1.6) saturate(1.5)', mobileFilter: 'contrast(1.4)', illusion: 'NOISE', accentColor: '#F59E0B', status: 'AVAILABLE' },
+  { id: 't14', name: 'Accumulation', description: 'Slow Buy', category: 'SENTIMENT', filter: 'sepia(1) hue-rotate(150deg) saturate(1.5) brightness(0.7)', mobileFilter: 'hue-rotate(150deg)', illusion: 'NONE', accentColor: '#064E3B', status: 'UNAVAILABLE' },
+  { id: 't15', name: 'Euphoria', description: 'Top Signal', category: 'SENTIMENT', filter: 'saturate(3) brightness(1.3) contrast(1.2)', mobileFilter: 'saturate(2)', illusion: 'VIGNETTE', accentColor: '#FCD34D', status: 'AVAILABLE' },
+
+  // --- ASSETS & FOREX EXPANSION (Cont.) ---
+  { id: 'a06', name: 'Copper', description: 'Dr. Copper', category: 'ASSETS', filter: 'sepia(1) hue-rotate(330deg) saturate(1.5) contrast(1.1) brightness(0.8)', mobileFilter: 'hue-rotate(330deg)', illusion: 'NONE', accentColor: '#B45309', status: 'UNAVAILABLE' },
+  { id: 'a07', name: 'Uranium', description: 'Nuclear', category: 'ASSETS', filter: 'sepia(1) hue-rotate(60deg) saturate(4) brightness(1.2) drop-shadow(0 0 5px #ADFF2F)', mobileFilter: 'hue-rotate(60deg)', illusion: 'VIGNETTE', accentColor: '#CCFF00', status: 'AVAILABLE' },
+  { id: 'a08', name: 'Natural Gas', description: 'Blue Flame', category: 'ASSETS', filter: 'sepia(1) hue-rotate(190deg) saturate(3) brightness(1.2)', mobileFilter: 'hue-rotate(190deg)', illusion: 'NONE', accentColor: '#3B82F6', status: 'UNAVAILABLE' },
+  { id: 'a09', name: 'Euro FX', description: 'Brussels', category: 'ASSETS', filter: 'sepia(1) hue-rotate(200deg) saturate(2) contrast(1)', mobileFilter: 'hue-rotate(200deg)', illusion: 'NONE', accentColor: '#003399', status: 'AVAILABLE' },
+  { id: 'a10', name: 'Yen', description: 'Tokyo', category: 'ASSETS', filter: 'invert(1) hue-rotate(320deg) saturate(2) brightness(1.1)', mobileFilter: 'invert(1)', isLight: true, illusion: 'NONE', accentColor: '#BC002D', status: 'UNAVAILABLE' },
+  { id: 'a11', name: 'Sterling', description: 'London', category: 'ASSETS', filter: 'sepia(1) hue-rotate(230deg) saturate(1.5) brightness(0.7)', mobileFilter: 'hue-rotate(230deg)', illusion: 'SCANLINES', accentColor: '#1E1B4B', status: 'AVAILABLE' },
+  { id: 'a12', name: 'Steel', description: 'Industrial', category: 'ASSETS', filter: 'grayscale(1) contrast(1.5) brightness(0.9)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#64748B', status: 'UNAVAILABLE' },
+  { id: 'a13', name: 'Corn', description: 'Agri', category: 'ASSETS', filter: 'sepia(1) hue-rotate(40deg) saturate(2.5) contrast(1.1)', mobileFilter: 'hue-rotate(40deg)', illusion: 'NONE', accentColor: '#FACC15', status: 'AVAILABLE' },
+  { id: 'a14', name: 'Coffee', description: 'Arabica', category: 'ASSETS', filter: 'sepia(1) hue-rotate(340deg) saturate(1) brightness(0.5)', mobileFilter: 'sepia(1)', illusion: 'NOISE', accentColor: '#3F2C22', status: 'UNAVAILABLE' },
+  { id: 'a15', name: 'Swiss Franc', description: 'Safe Haven', category: 'ASSETS', filter: 'grayscale(1) brightness(1.5) drop-shadow(0 0 2px red)', mobileFilter: 'grayscale(1)', isLight: true, illusion: 'NONE', accentColor: '#DC2626', status: 'AVAILABLE' },
+  { id: 'a16', name: 'Palladium', description: 'Catalyst', category: 'ASSETS', filter: 'grayscale(1) brightness(1.1) sepia(0.3) hue-rotate(180deg)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#9CA3AF', status: 'UNAVAILABLE' },
+  { id: 'a17', name: 'Platinum', description: 'Precious', category: 'ASSETS', filter: 'grayscale(1) brightness(1.4) drop-shadow(0 0 3px white)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#FFFFFF', status: 'AVAILABLE' },
+  { id: 'a18', name: 'Wheat', description: 'Bushel', category: 'ASSETS', filter: 'sepia(1) hue-rotate(40deg) saturate(2) contrast(1.1)', mobileFilter: 'hue-rotate(40deg)', illusion: 'NONE', accentColor: '#EAB308', status: 'UNAVAILABLE' },
+  { id: 'a19', name: 'Soybean', description: 'Meal', category: 'ASSETS', filter: 'sepia(1) hue-rotate(60deg) saturate(2) brightness(0.8)', mobileFilter: 'hue-rotate(60deg)', illusion: 'NOISE', accentColor: '#65A30D', status: 'AVAILABLE' },
+  { id: 'a20', name: 'Sugar', description: 'Softs', category: 'ASSETS', filter: 'invert(1) sepia(0.2) contrast(0.8)', mobileFilter: 'invert(1)', isLight: true, illusion: 'NONE', accentColor: '#F9A8D4', status: 'UNAVAILABLE' },
+  { id: 'a21', name: 'Lumber', description: 'Timber', category: 'ASSETS', filter: 'sepia(1) hue-rotate(340deg) saturate(1) brightness(0.6)', mobileFilter: 'hue-rotate(340deg)', illusion: 'NONE', accentColor: '#78350F', status: 'AVAILABLE' },
+  { id: 'a22', name: 'Cotton', description: 'Fiber', category: 'ASSETS', filter: 'grayscale(1) brightness(1.6) contrast(0.8)', mobileFilter: 'grayscale(1)', isLight: true, illusion: 'NONE', accentColor: '#E5E5E5', status: 'UNAVAILABLE' },
+  { id: 'a23', name: 'Orange Juice', description: 'Frozen', category: 'ASSETS', filter: 'sepia(1) hue-rotate(10deg) saturate(4) brightness(1.1)', mobileFilter: 'hue-rotate(10deg)', illusion: 'NONE', accentColor: '#F97316', status: 'AVAILABLE' },
+  { id: 'a24', name: 'Cocoa', description: 'Bean', category: 'ASSETS', filter: 'sepia(1) saturate(1.5) brightness(0.4)', mobileFilter: 'sepia(1)', illusion: 'NOISE', accentColor: '#451A03', status: 'UNAVAILABLE' },
+  { id: 'a25', name: 'Live Cattle', description: 'Feeder', category: 'ASSETS', filter: 'sepia(0.6) hue-rotate(350deg) contrast(1.2)', mobileFilter: 'sepia(0.6)', illusion: 'NONE', accentColor: '#9F1239', status: 'AVAILABLE' },
+  { id: 'a26', name: 'AUD Dollar', description: 'Aussie', category: 'ASSETS', filter: 'sepia(1) hue-rotate(130deg) saturate(2) contrast(1.1)', mobileFilter: 'hue-rotate(130deg)', illusion: 'NONE', accentColor: '#059669', status: 'UNAVAILABLE' },
+  { id: 'a27', name: 'CAD Dollar', description: 'Loonie', category: 'ASSETS', filter: 'sepia(1) hue-rotate(330deg) saturate(3) contrast(1.2)', mobileFilter: 'hue-rotate(330deg)', illusion: 'NONE', accentColor: '#DC2626', status: 'AVAILABLE' },
+  { id: 'a28', name: 'NZD Dollar', description: 'Kiwi', category: 'ASSETS', filter: 'sepia(1) hue-rotate(300deg) saturate(1) brightness(0.8)', mobileFilter: 'hue-rotate(300deg)', illusion: 'NONE', accentColor: '#111827', status: 'UNAVAILABLE' },
+  { id: 'a29', name: 'CHF Franc', description: 'Swiss', category: 'ASSETS', filter: 'grayscale(1) brightness(1.3) contrast(1.1) drop-shadow(0 0 2px red)', mobileFilter: 'grayscale(1)', isLight: true, illusion: 'NONE', accentColor: '#B91C1C', status: 'AVAILABLE' },
+  { id: 'a30', name: 'ZAR Rand', description: 'South Africa', category: 'ASSETS', filter: 'sepia(1) hue-rotate(70deg) saturate(3) brightness(0.9)', mobileFilter: 'hue-rotate(70deg)', illusion: 'NONE', accentColor: '#16A34A', status: 'UNAVAILABLE' },
+  { id: 'a31', name: 'CNY Yuan', description: 'Renminbi', category: 'ASSETS', filter: 'sepia(1) hue-rotate(340deg) saturate(2) brightness(0.8)', mobileFilter: 'hue-rotate(340deg)', illusion: 'NONE', accentColor: '#B91C1C', status: 'AVAILABLE' },
+  { id: 'a32', name: 'INR Rupee', description: 'India', category: 'ASSETS', filter: 'sepia(1) hue-rotate(20deg) saturate(2) contrast(1.1)', mobileFilter: 'hue-rotate(20deg)', illusion: 'NONE', accentColor: '#EA580C', status: 'UNAVAILABLE' },
+  { id: 'a33', name: 'BRL Real', description: 'Brazil', category: 'ASSETS', filter: 'sepia(1) hue-rotate(90deg) saturate(4) brightness(0.8)', mobileFilter: 'hue-rotate(90deg)', illusion: 'NONE', accentColor: '#15803D', status: 'AVAILABLE' },
+  { id: 'a34', name: 'MXN Peso', description: 'Mexico', category: 'ASSETS', filter: 'sepia(1) hue-rotate(140deg) saturate(2) contrast(1.2)', mobileFilter: 'hue-rotate(140deg)', illusion: 'NONE', accentColor: '#047857', status: 'UNAVAILABLE' },
+  { id: 'a35', name: 'KRW Won', description: 'Korea', category: 'ASSETS', filter: 'sepia(1) hue-rotate(200deg) saturate(1.5) brightness(1.1)', mobileFilter: 'hue-rotate(200deg)', illusion: 'NONE', accentColor: '#2563EB', status: 'AVAILABLE' },
+  { id: 'a36', name: 'Nasdaq', description: 'Tech 100', category: 'ASSETS', filter: 'sepia(1) hue-rotate(210deg) saturate(3) contrast(1.1)', mobileFilter: 'hue-rotate(210deg)', illusion: 'SCANLINES', accentColor: '#3B82F6', status: 'UNAVAILABLE' },
+  { id: 'a37', name: 'S&P 500', description: 'Large Cap', category: 'ASSETS', filter: 'grayscale(1) brightness(1.1) contrast(1.1)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#6B7280', status: 'AVAILABLE' },
+  { id: 'a38', name: 'Dow Jones', description: 'Industrial', category: 'ASSETS', filter: 'sepia(1) hue-rotate(220deg) saturate(1) brightness(0.7)', mobileFilter: 'hue-rotate(220deg)', illusion: 'NONE', accentColor: '#1E3A8A', status: 'UNAVAILABLE' },
+  { id: 'a39', name: 'Dax 40', description: 'Germany', category: 'ASSETS', filter: 'sepia(1) hue-rotate(50deg) saturate(2) brightness(0.5)', mobileFilter: 'hue-rotate(50deg)', illusion: 'NONE', accentColor: '#FCD34D', status: 'AVAILABLE' },
+  { id: 'a40', name: 'FTSE 100', description: 'UK', category: 'ASSETS', filter: 'grayscale(1) sepia(0.3) brightness(0.8)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#4B5563', status: 'UNAVAILABLE' },
+  { id: 'a41', name: 'Nikkei 225', description: 'Japan', category: 'ASSETS', filter: 'invert(1) hue-rotate(320deg) contrast(1.2)', mobileFilter: 'invert(1)', isLight: true, illusion: 'NONE', accentColor: '#BE123C', status: 'AVAILABLE' },
+  { id: 'a42', name: 'Hang Seng', description: 'HK', category: 'ASSETS', filter: 'sepia(1) hue-rotate(340deg) saturate(2) brightness(0.6)', mobileFilter: 'hue-rotate(340deg)', illusion: 'NONE', accentColor: '#991B1B', status: 'UNAVAILABLE' },
+  { id: 'a43', name: 'VIX', description: 'Fear Index', category: 'ASSETS', filter: 'contrast(2) brightness(0.5) grayscale(1)', mobileFilter: 'contrast(1.5)', illusion: 'NOISE', accentColor: '#FFFFFF', status: 'AVAILABLE' },
+  { id: 'a44', name: 'Bonds 10Y', description: 'Yield', category: 'ASSETS', filter: 'sepia(1) hue-rotate(200deg) saturate(0.5) brightness(1.2)', mobileFilter: 'hue-rotate(200deg)', illusion: 'NONE', accentColor: '#93C5FD', status: 'UNAVAILABLE' },
+  { id: 'a45', name: 'DXY', description: 'Dollar Index', category: 'ASSETS', filter: 'sepia(1) hue-rotate(120deg) saturate(2) contrast(1.1)', mobileFilter: 'hue-rotate(120deg)', illusion: 'NONE', accentColor: '#10B981', status: 'AVAILABLE' },
+
+  // --- LOCATION (Trading Hubs) ---
+  { id: 'l01', name: 'Wall Street', description: 'New York', category: 'LOCATION', filter: 'sepia(1) hue-rotate(200deg) saturate(2) brightness(0.8)', mobileFilter: 'hue-rotate(200deg)', illusion: 'NONE', accentColor: '#1D4ED8', status: 'AVAILABLE' },
+  { id: 'l02', name: 'The City', description: 'London', category: 'LOCATION', filter: 'grayscale(1) brightness(0.6) sepia(0.2)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#475569', status: 'UNAVAILABLE' },
+  { id: 'l03', name: 'Ginza', description: 'Tokyo', category: 'LOCATION', filter: 'sepia(1) hue-rotate(300deg) saturate(3) brightness(0.5) drop-shadow(0 0 5px pink)', mobileFilter: 'hue-rotate(300deg)', illusion: 'VIGNETTE', accentColor: '#EC4899', status: 'AVAILABLE' },
+  { id: 'l04', name: 'Marina Bay', description: 'Singapore', category: 'LOCATION', filter: 'sepia(1) hue-rotate(180deg) saturate(2) contrast(1.2)', mobileFilter: 'hue-rotate(180deg)', illusion: 'NONE', accentColor: '#3B82F6', status: 'UNAVAILABLE' },
+  { id: 'l05', name: 'DIFC', description: 'Dubai', category: 'LOCATION', filter: 'sepia(1) hue-rotate(40deg) saturate(2) brightness(1.2) drop-shadow(0 0 5px gold)', mobileFilter: 'hue-rotate(40deg)', illusion: 'NONE', accentColor: '#FACC15', status: 'AVAILABLE' },
+  { id: 'l06', name: 'Silicon Valley', description: 'Palo Alto', category: 'LOCATION', filter: 'invert(1) hue-rotate(200deg) saturate(2)', mobileFilter: 'invert(1)', isLight: true, illusion: 'NONE', accentColor: '#2563EB', status: 'UNAVAILABLE' },
+  { id: 'l07', name: 'Shenzhen', description: 'Hardware', category: 'LOCATION', filter: 'sepia(1) hue-rotate(320deg) saturate(4) brightness(0.6)', mobileFilter: 'hue-rotate(320deg)', illusion: 'SCANLINES', accentColor: '#DC2626', status: 'AVAILABLE' },
+  { id: 'l08', name: 'Zug', description: 'Crypto Valley', category: 'LOCATION', filter: 'grayscale(1) brightness(1.4) contrast(1.1)', mobileFilter: 'grayscale(1)', isLight: true, illusion: 'NONE', accentColor: '#EF4444', status: 'UNAVAILABLE' },
+  { id: 'l09', name: 'El Salvador', description: 'Bitcoin City', category: 'LOCATION', filter: 'sepia(1) hue-rotate(220deg) saturate(3) brightness(0.7)', mobileFilter: 'hue-rotate(220deg)', illusion: 'VIGNETTE', accentColor: '#0EA5E9', status: 'AVAILABLE' },
+  { id: 'l10', name: 'Seoul', description: 'Kimchi', category: 'LOCATION', filter: 'sepia(1) hue-rotate(350deg) saturate(1.5) contrast(1.1)', mobileFilter: 'hue-rotate(350deg)', illusion: 'NONE', accentColor: '#E11D48', status: 'UNAVAILABLE' },
+  { id: 'l11', name: 'Mumbai', description: 'Dalal St', category: 'LOCATION', filter: 'sepia(1) hue-rotate(20deg) saturate(3) brightness(0.9)', mobileFilter: 'hue-rotate(20deg)', illusion: 'NOISE', accentColor: '#EA580C', status: 'AVAILABLE' },
+  { id: 'l12', name: 'Sydney', description: 'ASX', category: 'LOCATION', filter: 'sepia(1) hue-rotate(200deg) saturate(3) brightness(1.1)', mobileFilter: 'hue-rotate(200deg)', illusion: 'NONE', accentColor: '#2563EB', status: 'UNAVAILABLE' },
+  { id: 'l13', name: 'Frankfurt', description: 'ECB', category: 'LOCATION', filter: 'sepia(1) hue-rotate(210deg) saturate(1) brightness(0.6)', mobileFilter: 'hue-rotate(210deg)', illusion: 'NONE', accentColor: '#1E3A8A', status: 'AVAILABLE' },
+  { id: 'l14', name: 'Chicago', description: 'Merc', category: 'LOCATION', filter: 'grayscale(1) contrast(1.3) brightness(0.8)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#6B7280', status: 'UNAVAILABLE' },
+  { id: 'l15', name: 'Shanghai', description: 'Bund', category: 'LOCATION', filter: 'sepia(1) hue-rotate(330deg) saturate(3) brightness(0.8)', mobileFilter: 'hue-rotate(330deg)', illusion: 'NONE', accentColor: '#B91C1C', status: 'AVAILABLE' },
+
+  // --- RETRO TECH & OPTICS (Cont.) ---
+  { id: 'o05', name: 'X-Ray', description: 'Inverted', category: 'OPTICS', filter: 'invert(1) grayscale(1) brightness(1.2) contrast(1.2)', mobileFilter: 'invert(1)', isLight: true, illusion: 'NONE', accentColor: '#FFFFFF', status: 'UNAVAILABLE' },
+  { id: 'o06', name: 'Radar', description: 'Sonar', category: 'OPTICS', filter: 'sepia(1) hue-rotate(90deg) saturate(4) contrast(1.5) brightness(0.6)', mobileFilter: 'hue-rotate(90deg)', illusion: 'SCANLINES', accentColor: '#00FF00', status: 'AVAILABLE' },
+  { id: 'o07', name: 'Blueprint 2', description: 'Draft', category: 'OPTICS', filter: 'invert(1) sepia(1) hue-rotate(180deg) saturate(3) contrast(1.2)', mobileFilter: 'invert(1)', isLight: true, illusion: 'NONE', accentColor: '#3B82F6', status: 'UNAVAILABLE' },
+  { id: 'o08', name: 'E-Ink', description: 'Reader', category: 'OPTICS', filter: 'grayscale(1) contrast(3) brightness(1.5)', mobileFilter: 'grayscale(1) contrast(2)', isLight: true, illusion: 'NONE', accentColor: '#000000', status: 'AVAILABLE' },
+  { id: 'o09', name: 'Infrared', description: 'Heat', category: 'OPTICS', filter: 'sepia(1) hue-rotate(320deg) saturate(3) contrast(1.2)', mobileFilter: 'hue-rotate(320deg)', illusion: 'NONE', accentColor: '#EA580C', status: 'UNAVAILABLE' },
+  { id: 'o10', name: 'Ultraviolet', description: 'UV Light', category: 'OPTICS', filter: 'sepia(1) hue-rotate(250deg) saturate(4) brightness(0.8)', mobileFilter: 'hue-rotate(250deg)', illusion: 'VIGNETTE', accentColor: '#7C3AED', status: 'AVAILABLE' },
+  { id: 'o11', name: 'HUD', description: 'Pilot', category: 'OPTICS', filter: 'sepia(1) hue-rotate(100deg) saturate(3) brightness(1.1)', mobileFilter: 'hue-rotate(100deg)', illusion: 'SCANLINES', accentColor: '#10B981', status: 'AVAILABLE' },
+  { id: 'o12', name: 'Gameboy', description: 'Dot Matrix', category: 'OPTICS', filter: 'sepia(1) hue-rotate(50deg) saturate(2) contrast(1.2)', mobileFilter: 'hue-rotate(50deg)', illusion: 'NOISE', accentColor: '#84CC16', status: 'UNAVAILABLE' },
+  { id: 'o13', name: 'Sin City', description: 'Noir Red', category: 'OPTICS', filter: 'grayscale(1) contrast(2) drop-shadow(0 0 2px red)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#EF4444', status: 'AVAILABLE' },
+  { id: 'o14', name: 'VGA', description: '256 Colors', category: 'OPTICS', filter: 'contrast(1.5) saturate(2)', mobileFilter: 'contrast(1.2)', illusion: 'NOISE', accentColor: '#FFFFFF', status: 'UNAVAILABLE' },
+  { id: 'o15', name: 'Solarized', description: 'Dev', category: 'OPTICS', filter: 'sepia(1) hue-rotate(10deg) saturate(1) brightness(0.9)', mobileFilter: 'sepia(0.8)', illusion: 'NONE', accentColor: '#B58900', status: 'AVAILABLE' },
+  { id: 'o16', name: 'Commodore', description: '64', category: 'OPTICS', filter: 'sepia(1) hue-rotate(240deg) saturate(2) brightness(0.7) contrast(1.2)', mobileFilter: 'hue-rotate(240deg)', illusion: 'SCANLINES', accentColor: '#4F46E5', status: 'UNAVAILABLE' },
+  { id: 'o17', name: 'Amiga', description: 'Workbench', category: 'OPTICS', filter: 'sepia(1) hue-rotate(180deg) saturate(1) brightness(1.2)', mobileFilter: 'hue-rotate(180deg)', isLight: true, illusion: 'NONE', accentColor: '#60A5FA', status: 'AVAILABLE' },
+  { id: 'o18', name: 'MS-DOS', description: 'C:\\>', category: 'OPTICS', filter: 'grayscale(1) brightness(1.5) contrast(2) drop-shadow(0 0 2px white)', mobileFilter: 'grayscale(1)', illusion: 'SCANLINES', accentColor: '#FFFFFF', status: 'UNAVAILABLE' },
+  { id: 'o19', name: 'Phosphor P3', description: 'Amber', category: 'OPTICS', filter: 'sepia(1) hue-rotate(20deg) saturate(4) brightness(1.1) contrast(1.2)', mobileFilter: 'hue-rotate(20deg)', illusion: 'SCANLINES', accentColor: '#F59E0B', status: 'AVAILABLE' },
+  { id: 'o20', name: 'Phosphor P1', description: 'Green', category: 'OPTICS', filter: 'sepia(1) hue-rotate(80deg) saturate(4) brightness(1.1) contrast(1.2)', mobileFilter: 'hue-rotate(80deg)', illusion: 'SCANLINES', accentColor: '#22C55E', status: 'UNAVAILABLE' },
+  { id: 'o21', name: 'Win 95', description: 'Teal', category: 'OPTICS', filter: 'sepia(1) hue-rotate(140deg) saturate(1) brightness(1.2)', mobileFilter: 'hue-rotate(140deg)', illusion: 'NONE', accentColor: '#008080', status: 'AVAILABLE' },
+  { id: 'o22', name: 'Mac OS 9', description: 'Platinum', category: 'OPTICS', filter: 'grayscale(1) brightness(1.3) contrast(1)', mobileFilter: 'grayscale(1)', isLight: true, illusion: 'NONE', accentColor: '#E5E5E5', status: 'UNAVAILABLE' },
+  { id: 'o23', name: 'Teletext', description: 'Ceefax', category: 'OPTICS', filter: 'contrast(2) saturate(3)', mobileFilter: 'contrast(1.5)', illusion: 'NOISE', accentColor: '#FFFF00', status: 'AVAILABLE' },
+  { id: 'o24', name: 'BIOS', description: 'Setup', category: 'OPTICS', filter: 'sepia(1) hue-rotate(200deg) saturate(3) contrast(1.2)', mobileFilter: 'hue-rotate(200deg)', illusion: 'SCANLINES', accentColor: '#0000FF', status: 'UNAVAILABLE' },
+  { id: 'o25', name: 'Mainframe', description: 'Server', category: 'OPTICS', filter: 'sepia(1) hue-rotate(20deg) saturate(0.5) brightness(0.4)', mobileFilter: 'hue-rotate(20deg)', illusion: 'NONE', accentColor: '#78350F', status: 'AVAILABLE' },
+  { id: 'o26', name: 'LCARS', description: 'Starfleet', category: 'OPTICS', filter: 'sepia(1) hue-rotate(25deg) saturate(3) contrast(1.1)', mobileFilter: 'hue-rotate(25deg)', illusion: 'NONE', accentColor: '#F59E0B', status: 'UNAVAILABLE' },
+  { id: 'o27', name: 'Pip-Boy', description: 'Wasteland', category: 'OPTICS', filter: 'sepia(1) hue-rotate(60deg) saturate(3) brightness(1.2) drop-shadow(0 0 5px #4ADE80)', mobileFilter: 'hue-rotate(60deg)', illusion: 'SCANLINES', accentColor: '#4ADE80', status: 'AVAILABLE' },
+  { id: 'o28', name: 'Hal 9000', description: 'AI', category: 'OPTICS', filter: 'sepia(1) hue-rotate(340deg) saturate(3) brightness(0.6)', mobileFilter: 'hue-rotate(340deg)', illusion: 'VIGNETTE', accentColor: '#DC2626', status: 'UNAVAILABLE' },
+  { id: 'o29', name: 'Synth', description: 'Modular', category: 'OPTICS', filter: 'sepia(1) hue-rotate(260deg) saturate(3) contrast(1.1)', mobileFilter: 'hue-rotate(260deg)', illusion: 'NONE', accentColor: '#7C3AED', status: 'AVAILABLE' },
+  { id: 'o30', name: 'VHS Pause', description: 'Tracking', category: 'OPTICS', filter: 'sepia(0.5) hue-rotate(220deg) blur(0.5px) contrast(1.5)', mobileFilter: 'sepia(0.5)', illusion: 'GLITCH', accentColor: '#22D3EE', status: 'UNAVAILABLE' },
+  { id: 'o31', name: 'Polaroid', description: 'Instant', category: 'OPTICS', filter: 'sepia(0.4) contrast(1.1) brightness(1.1) saturate(1.2)', mobileFilter: 'sepia(0.4)', illusion: 'VIGNETTE', accentColor: '#FDE047', status: 'AVAILABLE' },
+  { id: 'o32', name: 'Daguerreotype', description: '1850s', category: 'OPTICS', filter: 'sepia(1) contrast(1.5) brightness(0.8) grayscale(0.5)', mobileFilter: 'sepia(1)', illusion: 'NOISE', accentColor: '#A16207', status: 'UNAVAILABLE' },
+  { id: 'o33', name: 'Anaglyph', description: '3D Red/Blue', category: 'OPTICS', filter: 'sepia(1) hue-rotate(280deg) saturate(2) drop-shadow(2px 0 0 red) drop-shadow(-2px 0 0 cyan)', mobileFilter: 'hue-rotate(280deg)', illusion: 'NONE', accentColor: '#DB2777', status: 'AVAILABLE' },
+  { id: 'o34', name: 'Technicolor', description: 'Cinema', category: 'OPTICS', filter: 'saturate(2.5) contrast(1.2) sepia(0.2)', mobileFilter: 'saturate(2)', illusion: 'NONE', accentColor: '#EF4444', status: 'UNAVAILABLE' },
+  { id: 'o35', name: 'EGA', description: '16 Colors', category: 'OPTICS', filter: 'contrast(1.8) saturate(2)', mobileFilter: 'contrast(1.5)', illusion: 'NOISE', accentColor: '#10B981', status: 'AVAILABLE' },
+
+  // --- ELEMENTAL & NATURE ---
+  { id: 'n01', name: 'Deep Ocean', description: 'Mariana', category: 'ELEMENTAL', filter: 'sepia(1) hue-rotate(190deg) saturate(3) brightness(0.5)', mobileFilter: 'hue-rotate(190deg)', illusion: 'NONE', accentColor: '#0E7490', status: 'AVAILABLE' },
+  { id: 'n02', name: 'Volcano', description: 'Magma', category: 'ELEMENTAL', filter: 'sepia(1) hue-rotate(350deg) saturate(3) brightness(0.7) contrast(1.3)', mobileFilter: 'hue-rotate(350deg)', illusion: 'NOISE', accentColor: '#9F1239', status: 'UNAVAILABLE' },
+  { id: 'n03', name: 'Rainforest', description: 'Canopy', category: 'ELEMENTAL', filter: 'sepia(1) hue-rotate(90deg) saturate(2) brightness(0.8)', mobileFilter: 'hue-rotate(90deg)', illusion: 'NONE', accentColor: '#15803D', status: 'AVAILABLE' },
+  { id: 'n04', name: 'Arctic', description: 'Tundra', category: 'ELEMENTAL', filter: 'sepia(1) hue-rotate(180deg) saturate(0.5) brightness(1.2)', mobileFilter: 'hue-rotate(180deg)', isLight: true, illusion: 'NONE', accentColor: '#BAE6FD', status: 'UNAVAILABLE' },
+  { id: 'n05', name: 'Desert', description: 'Dune', category: 'ELEMENTAL', filter: 'sepia(1) hue-rotate(25deg) saturate(2) brightness(1.1)', mobileFilter: 'hue-rotate(25deg)', illusion: 'NOISE', accentColor: '#D97706', status: 'AVAILABLE' },
+  { id: 'n06', name: 'Storm', description: 'Thunder', category: 'ELEMENTAL', filter: 'sepia(1) hue-rotate(220deg) saturate(0.5) brightness(0.6) contrast(1.5)', mobileFilter: 'hue-rotate(220deg)', illusion: 'VIGNETTE', accentColor: '#475569', status: 'UNAVAILABLE' },
+  { id: 'n07', name: 'Sunset', description: 'Horizon', category: 'ELEMENTAL', filter: 'sepia(1) hue-rotate(320deg) saturate(2) brightness(0.9)', mobileFilter: 'hue-rotate(320deg)', illusion: 'NONE', accentColor: '#BE123C', status: 'AVAILABLE' },
+  { id: 'n08', name: 'Aurora', description: 'Borealis', category: 'ELEMENTAL', filter: 'sepia(1) hue-rotate(130deg) saturate(3) brightness(0.8) drop-shadow(0 0 5px #4ADE80)', mobileFilter: 'hue-rotate(130deg)', illusion: 'NONE', accentColor: '#4ADE80', status: 'UNAVAILABLE' },
+  { id: 'n09', name: 'Midnight', description: 'Stars', category: 'ELEMENTAL', filter: 'sepia(1) hue-rotate(230deg) saturate(3) brightness(0.3)', mobileFilter: 'hue-rotate(230deg)', illusion: 'NOISE', accentColor: '#1E1B4B', status: 'AVAILABLE' },
+  { id: 'n10', name: 'Swamp', description: 'Murky', category: 'ELEMENTAL', filter: 'sepia(1) hue-rotate(70deg) saturate(1.5) brightness(0.5)', mobileFilter: 'hue-rotate(70deg)', illusion: 'NONE', accentColor: '#3F6212', status: 'UNAVAILABLE' },
+  { id: 'n11', name: 'Glacier', description: 'Ice', category: 'ELEMENTAL', filter: 'sepia(1) hue-rotate(170deg) saturate(1) brightness(1.1) contrast(1.1)', mobileFilter: 'hue-rotate(170deg)', illusion: 'NONE', accentColor: '#7DD3FC', status: 'AVAILABLE' },
+  { id: 'n12', name: 'Space', description: 'Void', category: 'ELEMENTAL', filter: 'grayscale(1) brightness(0.2) contrast(1.2)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#000000', status: 'UNAVAILABLE' },
+  { id: 'n13', name: 'Mars', description: 'Red Planet', category: 'ELEMENTAL', filter: 'sepia(1) hue-rotate(340deg) saturate(1.5) brightness(0.8)', mobileFilter: 'hue-rotate(340deg)', illusion: 'NOISE', accentColor: '#9F1239', status: 'AVAILABLE' },
+  { id: 'n14', name: 'Moon', description: 'Crater', category: 'ELEMENTAL', filter: 'grayscale(1) brightness(0.8) contrast(1.2)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#D1D5DB', status: 'UNAVAILABLE' },
+  { id: 'n15', name: 'Sun', description: 'Solar', category: 'ELEMENTAL', filter: 'sepia(1) hue-rotate(30deg) saturate(4) brightness(1.2) contrast(1.1)', mobileFilter: 'hue-rotate(30deg)', illusion: 'NONE', accentColor: '#FDBA74', status: 'AVAILABLE' },
+
+  // --- TRADING CONCEPTS & LINGO ---
+  { id: 'cp01', name: 'Black Swan', description: 'Unexpected', category: 'CONCEPTS', filter: 'grayscale(1) brightness(0.3) contrast(1.5)', mobileFilter: 'grayscale(1) brightness(0.5)', illusion: 'VIGNETTE', accentColor: '#171717', status: 'UNAVAILABLE' },
+  { id: 'cp02', name: 'Golden Cross', description: 'Bullish', category: 'CONCEPTS', filter: 'sepia(1) hue-rotate(45deg) saturate(5) brightness(1.2) drop-shadow(0 0 5px gold)', mobileFilter: 'hue-rotate(45deg)', illusion: 'NONE', accentColor: '#FFD700', status: 'AVAILABLE' },
+  { id: 'cp03', name: 'Death Cross', description: 'Bearish', category: 'CONCEPTS', filter: 'grayscale(1) drop-shadow(0 0 5px red) brightness(0.5)', mobileFilter: 'grayscale(1)', illusion: 'VIGNETTE', accentColor: '#991B1B', status: 'UNAVAILABLE' },
+  { id: 'cp04', name: 'Dead Cat', description: 'Bounce', category: 'CONCEPTS', filter: 'sepia(1) hue-rotate(100deg) saturate(1) contrast(1.5) brightness(0.7)', mobileFilter: 'hue-rotate(100deg)', illusion: 'NOISE', accentColor: '#4ADE80', status: 'AVAILABLE' },
+  { id: 'cp05', name: 'Bollinger', description: 'Bands', category: 'CONCEPTS', filter: 'sepia(1) hue-rotate(180deg) saturate(2) opacity(0.8)', mobileFilter: 'hue-rotate(180deg)', illusion: 'SCANLINES', accentColor: '#60A5FA', status: 'UNAVAILABLE' },
+  { id: 'cp06', name: 'Fibonacci', description: 'Golden Ratio', category: 'CONCEPTS', filter: 'sepia(0.8) hue-rotate(30deg) contrast(1.1)', mobileFilter: 'sepia(0.8)', illusion: 'NONE', accentColor: '#D97706', status: 'AVAILABLE' },
+  { id: 'cp07', name: 'Ichimoku', description: 'Cloud', category: 'CONCEPTS', filter: 'sepia(1) hue-rotate(150deg) saturate(1.5) brightness(1.1)', mobileFilter: 'hue-rotate(150deg)', illusion: 'VIGNETTE', accentColor: '#34D399', status: 'UNAVAILABLE' },
+  { id: 'cp08', name: 'RSI Divergence', description: 'Reversal', category: 'CONCEPTS', filter: 'invert(1) hue-rotate(250deg) saturate(2)', mobileFilter: 'invert(1)', isLight: true, illusion: 'SCANLINES', accentColor: '#818CF8', status: 'AVAILABLE' },
+  { id: 'cp09', name: 'MACD', description: 'Momentum', category: 'CONCEPTS', filter: 'sepia(1) hue-rotate(300deg) saturate(3) contrast(1.2)', mobileFilter: 'hue-rotate(300deg)', illusion: 'NONE', accentColor: '#F472B6', status: 'UNAVAILABLE' },
+  { id: 'cp10', name: 'Order Book', description: 'Depth', category: 'CONCEPTS', filter: 'contrast(1.4) brightness(0.6) saturate(0)', mobileFilter: 'contrast(1.2)', illusion: 'SCANLINES', accentColor: '#FFFFFF', status: 'AVAILABLE' },
+  { id: 'cp11', name: 'Leverage', description: '100x', category: 'CONCEPTS', filter: 'sepia(1) hue-rotate(340deg) saturate(5) contrast(1.3)', mobileFilter: 'hue-rotate(340deg)', illusion: 'NOISE', accentColor: '#EF4444', status: 'UNAVAILABLE' },
+  { id: 'cp12', name: 'Spot Market', description: '1:1', category: 'CONCEPTS', filter: 'grayscale(1) brightness(1.2) contrast(1)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#E5E5E5', status: 'AVAILABLE' },
+  { id: 'cp13', name: 'Whale Alert', description: 'Movement', category: 'CONCEPTS', filter: 'sepia(1) hue-rotate(200deg) saturate(3) drop-shadow(0 0 4px cyan)', mobileFilter: 'hue-rotate(200deg)', illusion: 'NONE', accentColor: '#06B6D4', status: 'UNAVAILABLE' },
+  { id: 'cp14', name: 'Bag Holder', description: 'Heavy', category: 'CONCEPTS', filter: 'sepia(1) hue-rotate(20deg) saturate(0.5) brightness(0.6)', mobileFilter: 'hue-rotate(20deg)', illusion: 'VIGNETTE', accentColor: '#78350F', status: 'AVAILABLE' },
+  { id: 'cp15', name: 'Paper Hands', description: 'Weak', category: 'CONCEPTS', filter: 'opacity(0.6) grayscale(1)', mobileFilter: 'opacity(0.8)', illusion: 'NOISE', accentColor: '#D1D5DB', status: 'UNAVAILABLE' },
+  { id: 'cp16', name: 'FOMO', description: 'Ape In', category: 'CONCEPTS', filter: 'sepia(1) hue-rotate(110deg) saturate(4) brightness(1.2)', mobileFilter: 'hue-rotate(110deg)', illusion: 'GLITCH', accentColor: '#84CC16', status: 'AVAILABLE' },
+  { id: 'cp17', name: 'REKT', description: 'Liquidated', category: 'CONCEPTS', filter: 'saturate(5) contrast(2) hue-rotate(320deg) drop-shadow(0 0 5px red)', mobileFilter: 'saturate(3)', illusion: 'GLITCH', accentColor: '#DC2626', status: 'UNAVAILABLE' },
+  { id: 'cp18', name: 'WAGMI', description: 'Community', category: 'CONCEPTS', filter: 'sepia(1) hue-rotate(240deg) saturate(2) brightness(1.2)', mobileFilter: 'hue-rotate(240deg)', illusion: 'NONE', accentColor: '#60A5FA', status: 'AVAILABLE' },
+  { id: 'cp19', name: 'NGMI', description: 'Despair', category: 'CONCEPTS', filter: 'grayscale(1) brightness(0.4) contrast(1.5)', mobileFilter: 'grayscale(1)', illusion: 'VIGNETTE', accentColor: '#374151', status: 'UNAVAILABLE' },
+  { id: 'cp20', name: 'Alpha', description: 'Insider', category: 'CONCEPTS', filter: 'sepia(1) hue-rotate(290deg) saturate(3) contrast(1.2)', mobileFilter: 'hue-rotate(290deg)', illusion: 'NONE', accentColor: '#D946EF', status: 'AVAILABLE' },
+
+  // --- HISTORICAL ERAS EXTENDED ---
+  { id: 'h03', name: 'Tulip Mania', description: '1637', category: 'HISTORICAL', filter: 'sepia(0.5) hue-rotate(300deg) saturate(1.5) contrast(0.9)', mobileFilter: 'hue-rotate(300deg)', illusion: 'VIGNETTE', accentColor: '#F472B6', status: 'UNAVAILABLE' },
+  { id: 'h04', name: 'GFC 2008', description: 'Lehman', category: 'HISTORICAL', filter: 'grayscale(1) brightness(0.7) contrast(1.2)', mobileFilter: 'grayscale(1)', illusion: 'VIGNETTE', accentColor: '#475569', status: 'AVAILABLE' },
+  { id: 'h05', name: 'Silk Road', description: 'Dark Web', category: 'HISTORICAL', filter: 'sepia(1) hue-rotate(100deg) saturate(0.5) brightness(0.3)', mobileFilter: 'hue-rotate(100deg)', illusion: 'NOISE', accentColor: '#14532D', status: 'UNAVAILABLE' },
+  { id: 'h06', name: 'Gold Std', description: 'Pre-1971', category: 'HISTORICAL', filter: 'sepia(0.8) hue-rotate(20deg) contrast(1.1)', mobileFilter: 'sepia(0.8)', illusion: 'NONE', accentColor: '#D97706', status: 'AVAILABLE' },
+  { id: 'h07', name: 'Mt Gox', description: 'Magic TCG', category: 'HISTORICAL', filter: 'sepia(1) hue-rotate(30deg) saturate(2) blur(0.5px)', mobileFilter: 'hue-rotate(30deg)', illusion: 'GLITCH', accentColor: '#F59E0B', status: 'UNAVAILABLE' },
+  { id: 'h08', name: 'DeFi Summer', description: 'Yield', category: 'HISTORICAL', filter: 'sepia(1) hue-rotate(240deg) saturate(2) brightness(1.2)', mobileFilter: 'hue-rotate(240deg)', illusion: 'NONE', accentColor: '#8B5CF6', status: 'AVAILABLE' },
+  { id: 'h09', name: 'NFT Craze', description: 'JPEGs', category: 'HISTORICAL', filter: 'saturate(3) contrast(1.2) hue-rotate(10deg)', mobileFilter: 'saturate(2)', illusion: 'NONE', accentColor: '#3B82F6', status: 'UNAVAILABLE' },
+  { id: 'h10', name: 'FTX Collapse', description: 'Alameda', category: 'HISTORICAL', filter: 'grayscale(1) sepia(0.5) hue-rotate(320deg) brightness(0.6)', mobileFilter: 'grayscale(1)', illusion: 'NOISE', accentColor: '#7F1D1D', status: 'AVAILABLE' },
+  { id: 'h11', name: 'Y2K', description: 'Bug', category: 'HISTORICAL', filter: 'sepia(1) hue-rotate(220deg) saturate(3) brightness(0.8)', mobileFilter: 'hue-rotate(220deg)', illusion: 'GLITCH', accentColor: '#06B6D4', status: 'UNAVAILABLE' },
+  { id: 'h12', name: 'Cold War', description: 'Spy', category: 'HISTORICAL', filter: 'grayscale(1) brightness(0.6) sepia(0.2)', mobileFilter: 'grayscale(1)', illusion: 'NOISE', accentColor: '#475569', status: 'AVAILABLE' },
+  { id: 'h13', name: 'Roaring 20s', description: 'Gatsby', category: 'HISTORICAL', filter: 'sepia(1) hue-rotate(40deg) saturate(1.5) contrast(1.1)', mobileFilter: 'hue-rotate(40deg)', illusion: 'NONE', accentColor: '#F59E0B', status: 'UNAVAILABLE' },
+  { id: 'h14', name: 'Victorian', description: 'Steam', category: 'HISTORICAL', filter: 'sepia(1) hue-rotate(350deg) saturate(0.5) contrast(1.2)', mobileFilter: 'hue-rotate(350deg)', illusion: 'VIGNETTE', accentColor: '#78350F', status: 'AVAILABLE' },
+  { id: 'h15', name: 'Renaissance', description: 'Art', category: 'HISTORICAL', filter: 'sepia(0.8) hue-rotate(20deg) brightness(1.1)', mobileFilter: 'sepia(0.8)', illusion: 'NONE', accentColor: '#B45309', status: 'UNAVAILABLE' },
+  { id: 'h16', name: 'Medieval', description: 'Dark Ages', category: 'HISTORICAL', filter: 'sepia(1) hue-rotate(340deg) saturate(0.5) brightness(0.4)', mobileFilter: 'hue-rotate(340deg)', illusion: 'NOISE', accentColor: '#451A03', status: 'AVAILABLE' },
+  { id: 'h17', name: 'Ancient', description: 'Rome', category: 'HISTORICAL', filter: 'sepia(1) hue-rotate(350deg) saturate(1) contrast(1.1)', mobileFilter: 'hue-rotate(350deg)', illusion: 'NONE', accentColor: '#B91C1C', status: 'UNAVAILABLE' },
+  { id: 'h18', name: 'Future', description: '3000', category: 'HISTORICAL', filter: 'invert(1) hue-rotate(180deg) brightness(1.2)', mobileFilter: 'invert(1)', isLight: true, illusion: 'NONE', accentColor: '#E5E5E5', status: 'AVAILABLE' },
+  { id: 'h19', name: 'Industrial', description: 'Revolution', category: 'HISTORICAL', filter: 'grayscale(1) brightness(0.5) contrast(1.5)', mobileFilter: 'grayscale(1)', illusion: 'NOISE', accentColor: '#171717', status: 'UNAVAILABLE' },
+  { id: 'h20', name: 'Space Race', description: '1969', category: 'HISTORICAL', filter: 'grayscale(1) brightness(1.2) contrast(1.2) drop-shadow(0 0 2px white)', mobileFilter: 'grayscale(1)', illusion: 'NOISE', accentColor: '#FFFFFF', status: 'AVAILABLE' },
+  
+  // --- GLITCH (New Themes) ---
+  { id: 'g01', name: 'Deep Fry', description: 'Meme', category: 'GLITCH', filter: 'saturate(5) contrast(2) brightness(1.1) hue-rotate(20deg)', mobileFilter: 'saturate(3)', illusion: 'NOISE', accentColor: '#F59E0B', status: 'AVAILABLE' },
+  { id: 'g02', name: 'VHS Tape', description: 'Tracking', category: 'GLITCH', filter: 'sepia(0.5) hue-rotate(220deg) blur(0.8px) contrast(1.2)', mobileFilter: 'sepia(0.5)', illusion: 'SCANLINES', accentColor: '#22D3EE', status: 'UNAVAILABLE' },
+  { id: 'g03', name: 'Corrupted', description: 'SegFault', category: 'GLITCH', filter: 'invert(1) opacity(0.8)', mobileFilter: 'invert(1)', illusion: 'NOISE', accentColor: '#000000', status: 'AVAILABLE' },
+  { id: 'g04', name: 'Blue Screen', description: 'BSOD', category: 'GLITCH', filter: 'sepia(1) hue-rotate(190deg) saturate(5) brightness(0.8)', mobileFilter: 'hue-rotate(190deg)', illusion: 'NONE', accentColor: '#0000FF', status: 'UNAVAILABLE' },
+  { id: 'g05', name: 'Radioactive', description: 'Fallout', category: 'GLITCH', filter: 'sepia(1) hue-rotate(60deg) saturate(5) contrast(1.2) drop-shadow(0 0 5px #00FF00)', mobileFilter: 'hue-rotate(60deg)', illusion: 'NOISE', accentColor: '#00FF00', status: 'AVAILABLE' },
+  { id: 'g06', name: 'Overclock', description: 'Hot', category: 'GLITCH', filter: 'saturate(2) hue-rotate(340deg) contrast(1.3)', mobileFilter: 'saturate(1.5)', illusion: 'VIGNETTE', accentColor: '#EF4444', status: 'UNAVAILABLE' },
+  { id: 'g07', name: 'Packet Loss', description: 'Lag', category: 'GLITCH', filter: 'blur(1px) contrast(1.5)', mobileFilter: 'none', illusion: 'SCANLINES', accentColor: '#9CA3AF', status: 'AVAILABLE' },
+  { id: 'g08', name: 'Signal Lost', description: 'No Input', category: 'GLITCH', filter: 'grayscale(1) brightness(0.2) contrast(1.2)', mobileFilter: 'grayscale(1)', illusion: 'NOISE', accentColor: '#404040', status: 'UNAVAILABLE' },
+  { id: 'g09', name: 'Burn In', description: 'Plasma', category: 'GLITCH', filter: 'sepia(1) hue-rotate(300deg) saturate(3) brightness(0.9) contrast(1.5)', mobileFilter: 'hue-rotate(300deg)', illusion: 'NONE', accentColor: '#D946EF', status: 'AVAILABLE' },
+
+  // --- AESTHETICS & EXOTIC EXTENDED ---
+  { id: 'e06', name: 'Cyberpunk', description: '2077', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(180deg) saturate(3) contrast(1.3) drop-shadow(0 0 3px #F472B6)', mobileFilter: 'hue-rotate(180deg)', illusion: 'VIGNETTE', accentColor: '#F472B6', status: 'UNAVAILABLE' },
+  { id: 'e07', name: 'Steampunk', description: 'Brass', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(350deg) saturate(0.8) contrast(1.2) brightness(0.9)', mobileFilter: 'sepia(1)', illusion: 'NONE', accentColor: '#78350F', status: 'AVAILABLE' },
+  { id: 'e08', name: 'Nebula', description: 'Space', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(240deg) saturate(2) brightness(0.7) contrast(1.2)', mobileFilter: 'hue-rotate(240deg)', illusion: 'NONE', accentColor: '#6366F1', status: 'UNAVAILABLE' },
+  { id: 'e09', name: 'Deep Sea', description: 'Abyss', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(190deg) saturate(1.5) brightness(0.5)', mobileFilter: 'hue-rotate(190deg)', illusion: 'NONE', accentColor: '#0E7490', status: 'AVAILABLE' },
+  { id: 'e10', name: 'Acid Trip', description: 'LSD', category: 'EXOTIC', filter: 'hue-rotate(90deg) saturate(3) contrast(1.5)', mobileFilter: 'hue-rotate(90deg)', illusion: 'NONE', accentColor: '#A3E635', status: 'UNAVAILABLE' },
+  { id: 'e11', name: 'Zen Garden', description: 'Peace', category: 'EXOTIC', filter: 'sepia(0.5) hue-rotate(80deg) saturate(0.8) brightness(1.1)', mobileFilter: 'sepia(0.5)', illusion: 'NONE', accentColor: '#84CC16', status: 'AVAILABLE' },
+  { id: 'e12', name: 'Noir', description: 'Cinema', category: 'EXOTIC', filter: 'grayscale(1) contrast(1.5) brightness(0.8)', mobileFilter: 'grayscale(1)', illusion: 'VIGNETTE', accentColor: '#FFFFFF', status: 'UNAVAILABLE' },
+  { id: 'e13', name: 'Candy', description: 'Sugar', category: 'EXOTIC', filter: 'sepia(0.2) hue-rotate(310deg) saturate(2) brightness(1.2)', mobileFilter: 'hue-rotate(310deg)', illusion: 'NONE', accentColor: '#F9A8D4', status: 'AVAILABLE' },
+  { id: 'e14', name: 'Frozen', description: 'Ice', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(180deg) saturate(1) brightness(1.3) contrast(0.9)', mobileFilter: 'hue-rotate(180deg)', illusion: 'NONE', accentColor: '#BAE6FD', status: 'UNAVAILABLE' },
+  { id: 'e15', name: 'Dracula', description: 'Vampire', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(320deg) saturate(2) brightness(0.6) contrast(1.3)', mobileFilter: 'hue-rotate(320deg)', illusion: 'VIGNETTE', accentColor: '#991B1B', status: 'AVAILABLE' },
+  { id: 'e16', name: 'Forest', description: 'Nature', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(110deg) saturate(1.5) brightness(0.8)', mobileFilter: 'hue-rotate(110deg)', illusion: 'NONE', accentColor: '#166534', status: 'UNAVAILABLE' },
+  { id: 'e17', name: 'Pastel Goth', description: 'Soft Dark', category: 'EXOTIC', filter: 'sepia(0.5) hue-rotate(260deg) saturate(1) brightness(1.1)', mobileFilter: 'sepia(0.5)', illusion: 'NONE', accentColor: '#C4B5FD', status: 'AVAILABLE' },
+  { id: 'e18', name: 'Outrun', description: 'Synthwave', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(300deg) saturate(4) contrast(1.2)', mobileFilter: 'hue-rotate(300deg)', illusion: 'SCANLINES', accentColor: '#F0ABFC', status: 'UNAVAILABLE' },
+  { id: 'e19', name: 'Solarpunk', description: 'Eco', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(70deg) saturate(2) brightness(1.2)', mobileFilter: 'hue-rotate(70deg)', illusion: 'NONE', accentColor: '#84CC16', status: 'AVAILABLE' },
+  { id: 'e20', name: 'Dieselpunk', description: 'Grease', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(10deg) saturate(0.5) brightness(0.5) contrast(1.3)', mobileFilter: 'hue-rotate(10deg)', illusion: 'NOISE', accentColor: '#57534E', status: 'UNAVAILABLE' },
+  { id: 'e21', name: 'Biopunk', description: 'Genetic', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(110deg) saturate(3) contrast(1.2)', mobileFilter: 'hue-rotate(110deg)', illusion: 'VIGNETTE', accentColor: '#4ADE80', status: 'AVAILABLE' },
+  { id: 'e22', name: 'Gothic', description: 'Cathedral', category: 'EXOTIC', filter: 'grayscale(1) brightness(0.4) contrast(1.3)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#111827', status: 'UNAVAILABLE' },
+  { id: 'e23', name: 'Baroque', description: 'Ornate', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(30deg) saturate(2) contrast(1.1)', mobileFilter: 'hue-rotate(30deg)', illusion: 'NONE', accentColor: '#D97706', status: 'AVAILABLE' },
+  { id: 'e24', name: 'Minimalist', description: 'Clean', category: 'EXOTIC', filter: 'grayscale(1) brightness(1.2) contrast(0.9)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#E5E5E5', status: 'UNAVAILABLE' },
+  { id: 'e25', name: 'Maximalist', description: 'Chaos', category: 'EXOTIC', filter: 'saturate(4) contrast(1.5)', mobileFilter: 'saturate(3)', illusion: 'NOISE', accentColor: '#F59E0B', status: 'AVAILABLE' },
+  { id: 'e26', name: 'Brutalist', description: 'Concrete', category: 'EXOTIC', filter: 'grayscale(1) brightness(0.8) contrast(1.5)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#525252', status: 'UNAVAILABLE' },
+  { id: 'e27', name: 'Pop Art', description: 'Warhol', category: 'EXOTIC', filter: 'saturate(3) contrast(1.5) hue-rotate(180deg)', mobileFilter: 'saturate(2)', illusion: 'NONE', accentColor: '#3B82F6', status: 'AVAILABLE' },
+  { id: 'e28', name: 'Lo-Fi', description: 'Study', category: 'EXOTIC', filter: 'sepia(0.6) hue-rotate(330deg) saturate(0.8) brightness(0.9)', mobileFilter: 'sepia(0.6)', illusion: 'NOISE', accentColor: '#FDA4AF', status: 'UNAVAILABLE' },
+  { id: 'e29', name: 'High Contrast', description: 'Accessibility', category: 'EXOTIC', filter: 'contrast(2) grayscale(1) brightness(1.2)', mobileFilter: 'contrast(1.5)', illusion: 'NONE', accentColor: '#FFFFFF', status: 'AVAILABLE' },
+  { id: 'e30', name: 'Sepia Tone', description: 'Old Photo', category: 'EXOTIC', filter: 'sepia(1) contrast(1.1)', mobileFilter: 'sepia(1)', illusion: 'NONE', accentColor: '#D97706', status: 'UNAVAILABLE' },
+  { id: 'e31', name: 'Inverted', description: 'Negative', category: 'EXOTIC', filter: 'invert(1) hue-rotate(180deg)', mobileFilter: 'invert(1)', isLight: true, illusion: 'NONE', accentColor: '#FFFFFF', status: 'AVAILABLE' },
+  { id: 'e32', name: 'Dream', description: 'Soft', category: 'EXOTIC', filter: 'sepia(0.3) hue-rotate(240deg) brightness(1.2) blur(0.5px)', mobileFilter: 'sepia(0.3)', illusion: 'NONE', accentColor: '#C4B5FD', status: 'UNAVAILABLE' },
+  { id: 'e33', name: 'Nightmare', description: 'Dark', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(340deg) saturate(2) brightness(0.3) contrast(1.5)', mobileFilter: 'hue-rotate(340deg)', illusion: 'VIGNETTE', accentColor: '#7F1D1D', status: 'AVAILABLE' },
+  { id: 'e34', name: 'Neon City', description: 'Lights', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(280deg) saturate(4) contrast(1.1)', mobileFilter: 'hue-rotate(280deg)', illusion: 'NONE', accentColor: '#E879F9', status: 'UNAVAILABLE' },
+  { id: 'e35', name: 'Toxic', description: 'Waste', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(80deg) saturate(3) contrast(1.2)', mobileFilter: 'hue-rotate(80deg)', illusion: 'NOISE', accentColor: '#A3E635', status: 'AVAILABLE' },
+  { id: 'e36', name: 'Rust', description: 'Oxide', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(350deg) saturate(2) brightness(0.6)', mobileFilter: 'hue-rotate(350deg)', illusion: 'NOISE', accentColor: '#9A3412', status: 'UNAVAILABLE' },
+  { id: 'e37', name: 'Mint', description: 'Fresh', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(130deg) saturate(1.5) brightness(1.1)', mobileFilter: 'hue-rotate(130deg)', illusion: 'NONE', accentColor: '#6EE7B7', status: 'AVAILABLE' },
+  { id: 'e38', name: 'Berry', description: 'Fruit', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(300deg) saturate(2) brightness(0.8)', mobileFilter: 'hue-rotate(300deg)', illusion: 'NONE', accentColor: '#C026D3', status: 'UNAVAILABLE' },
+  { id: 'e39', name: 'Lemon', description: 'Zest', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(45deg) saturate(3) brightness(1.2)', mobileFilter: 'hue-rotate(45deg)', illusion: 'NONE', accentColor: '#FDE047', status: 'AVAILABLE' },
+  { id: 'e40', name: 'Bubblegum', description: 'Pop', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(310deg) saturate(1.5) brightness(1.1)', mobileFilter: 'hue-rotate(310deg)', illusion: 'NONE', accentColor: '#F472B6', status: 'UNAVAILABLE' },
+
+  // --- MEME & FUN ---
+  { id: 'm01', name: 'Nyan Cat', description: 'Rainbow', category: 'MEME', filter: 'hue-rotate(90deg) saturate(3) contrast(1.2)', mobileFilter: 'hue-rotate(90deg)', illusion: 'NONE', accentColor: '#FF0000', status: 'AVAILABLE' },
+  { id: 'm02', name: 'Matrix 2', description: 'Reloaded', category: 'MEME', filter: 'sepia(1) hue-rotate(90deg) saturate(4) contrast(1.5) brightness(0.6)', mobileFilter: 'hue-rotate(90deg)', illusion: 'SCANLINES', accentColor: '#22C55E', status: 'UNAVAILABLE' },
+  { id: 'm03', name: 'HackerMan', description: '1337', category: 'MEME', filter: 'invert(1) contrast(2) grayscale(1)', mobileFilter: 'invert(1)', isLight: true, illusion: 'SCANLINES', accentColor: '#000000', status: 'AVAILABLE' },
+  { id: 'm04', name: 'UwU', description: 'Soft', category: 'MEME', filter: 'sepia(0.5) hue-rotate(310deg) brightness(1.1)', mobileFilter: 'sepia(0.5)', illusion: 'NONE', accentColor: '#F9A8D4', status: 'UNAVAILABLE' },
+  { id: 'm05', name: 'Laser Eyes', description: 'Bitcoin', category: 'MEME', filter: 'sepia(1) hue-rotate(10deg) saturate(4) drop-shadow(0 0 5px red)', mobileFilter: 'hue-rotate(10deg)', illusion: 'VIGNETTE', accentColor: '#EF4444', status: 'AVAILABLE' },
+  { id: 'm06', name: 'Stonks', description: 'Up', category: 'MEME', filter: 'invert(1) hue-rotate(200deg)', mobileFilter: 'invert(1)', isLight: true, illusion: 'NONE', accentColor: '#3B82F6', status: 'UNAVAILABLE' },
+  { id: 'm07', name: 'Not Stonks', description: 'Down', category: 'MEME', filter: 'sepia(1) hue-rotate(340deg) saturate(3)', mobileFilter: 'hue-rotate(340deg)', illusion: 'NONE', accentColor: '#EF4444', status: 'AVAILABLE' },
+  { id: 'm08', name: 'This is Fine', description: 'Fire', category: 'MEME', filter: 'sepia(1) hue-rotate(20deg) saturate(3) brightness(1.2)', mobileFilter: 'hue-rotate(20deg)', illusion: 'NONE', accentColor: '#F97316', status: 'UNAVAILABLE' },
+  { id: 'm09', name: 'NPC', description: 'Grey', category: 'MEME', filter: 'grayscale(1) contrast(0.8) brightness(1.1)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#9CA3AF', status: 'AVAILABLE' },
+  { id: 'm10', name: 'Chad', description: 'Giga', category: 'MEME', filter: 'grayscale(1) contrast(1.5) brightness(1.1)', mobileFilter: 'grayscale(1)', illusion: 'NONE', accentColor: '#FFFFFF', status: 'UNAVAILABLE' },
+];
+
+
+// --- THEME MERGING LOGIC ---
+// Merge the base themes and the new themes into one comprehensive array
+export const ALL_THEMES: Theme[] = [...BASE_THEMES, ...NEW_THEMES_DATA];
+// The rest of the component logic will now reference ALL_THEMES instead of the hardcoded THEMES/BASE_THEMES.
 
 // ============================================================================
 // 2. CORE PRIMITIVES (No Change)
 // ============================================================================
-
+// ... (The rest of the unchanged core primitives like SHIMMER_GRADIENT_BLUE, ShimmerBorder, etc.)
 const SHIMMER_GRADIENT_BLUE = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #2563eb 50%, #00000000 100%)";
 const GLOBAL_STYLES = `
   .mac-gpu-accelerate { transform: translateZ(0); will-change: transform, opacity; backface-visibility: hidden; }
@@ -143,8 +444,9 @@ export const GlobalSvgFilters = () => (
     </>
 );
 
+
 // ============================================================================
-// 3. UI COMPONENTS
+// 3. UI COMPONENTS (Updated to use ALL_THEMES and new categories)
 // ============================================================================
 
 // FIXED: Pointer events set to none to ensure clicking/scrolling through this layer works
@@ -216,12 +518,16 @@ const SetupThemeInterface = ({
     onSave: (themeId: string) => void,
     onExit: () => void
 }) => {
-    const filteredThemes = useMemo(() => THEMES.filter((t) => t.category === activeCategory), [activeCategory]);
-    const allCategories = useMemo(() => Array.from(new Set(THEMES.map(t => t.category))), []);
-    const preferredOrder: ThemeCategory[] = ['SPECIAL', 'CRYPTO', 'SENTIMENT', 'ASSETS', 'HISTORICAL', 'OPTICS', 'EXOTIC', 'GLITCH'];
+    // UPDATED: Use ALL_THEMES
+    const filteredThemes = useMemo(() => ALL_THEMES.filter((t) => t.category === activeCategory), [activeCategory]);
+    const allCategories = useMemo(() => Array.from(new Set(ALL_THEMES.map(t => t.category))), []);
+    // UPDATED: Include new categories in the preferred display order
+    const preferredOrder: ThemeCategory[] = ['SPECIAL', 'CRYPTO', 'SENTIMENT', 'ASSETS', 'CONCEPTS', 'LOCATION', 'ELEMENTAL', 'OPTICS', 'GLITCH', 'EXOTIC', 'MEME', 'HISTORICAL'];
     const sortedCategories = preferredOrder.filter(cat => allCategories.includes(cat));
-    const currentTheme = THEMES.find(t => t.id === activeThemeId) || THEMES[0];
+    // UPDATED: Use ALL_THEMES
+    const currentTheme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
 
+    // UPDATED: Added icons for new categories
     const getCategoryIcon = (cat: ThemeCategory) => {
         if (cat === 'SPECIAL') return <Zap className="w-3 h-3 text-yellow-500" />;
         if (cat === 'CRYPTO') return <DollarSign className="w-3 h-3" />;
@@ -230,6 +536,10 @@ const SetupThemeInterface = ({
         if (cat === 'HISTORICAL') return <Lock className="w-3 h-3" />;
         if (cat === 'OPTICS') return <Monitor className="w-3 h-3" />;
         if (cat === 'EXOTIC') return <Hash className="w-3 h-3" />;
+        if (cat === 'LOCATION') return <MapPin className="w-3 h-3" />;
+        if (cat === 'ELEMENTAL') return <Sun className="w-3 h-3" />;
+        if (cat === 'CONCEPTS') return <Brain className="w-3 h-3" />;
+        if (cat === 'MEME') return <Smile className="w-3 h-3" />;
         return <Layers className="w-3 h-3" />;
     };
 
@@ -400,8 +710,8 @@ const ThemeConfigModal = ({
         onClose();
     };
 
-    // Determine the current theme for the preview filter while inside the modal
-    const currentTheme = useMemo(() => THEMES.find(t => t.id === tempThemeId) || THEMES[0], [tempThemeId]);
+    // UPDATED: Use ALL_THEMES
+    const currentTheme = useMemo(() => ALL_THEMES.find(t => t.id === tempThemeId) || ALL_THEMES[0], [tempThemeId]);
 
     return (
         <AnimatePresence>
@@ -725,7 +1035,8 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
     // --- DERIVED ---
-    const activeTheme = useMemo(() => THEMES.find(t => t.id === activeThemeId) || THEMES[0], [activeThemeId]);
+    // UPDATED: Use ALL_THEMES
+    const activeTheme = useMemo(() => ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0], [activeThemeId]);
     const btcData = tickers['BTCUSDT'] || { price: '0.00', percentChange: '0.00', prevPrice: '0' };
     const ethData = tickers['ETHUSDT'] || { price: '0.00', percentChange: '0.00', prevPrice: '0' };
     const portfolioValue = useMemo(() => (parseFloat(btcData.price) * 0.45) + (parseFloat(ethData.price) * 12.5) + 15240, [btcData.price, ethData.price]);
@@ -893,4 +1204,4 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
             />
         </main>
     );
-};
+}
