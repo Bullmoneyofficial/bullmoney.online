@@ -568,14 +568,26 @@ export default function Home() {
             </div>
         )}
 
+        {/* ✅ FIXED: NAVBAR MOVED OUTSIDE THE ANIMATING DIV */}
+        {/* We place it here so it's not affected by the transform of 'profit-reveal'.
+            We use a condition to only show it when currentStage is 'content'. 
+            z-index is 250000 (between lens and configurator). */}
+        {currentStage === 'content' && (
+            <header className="fixed top-0 left-0 right-0 z-[250000] w-full transition-all duration-300">
+                <Navbar 
+                    setShowConfigurator={setShowConfigurator} 
+                    activeThemeId={activeThemeId}
+                    onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)}
+                />
+            </header>
+        )}
+
         {/* PAGE CONTENT WRAPPER */}
+        {/* This div has 'profit-reveal' which uses SCALE transform. */}
         <div className={currentStage === 'content' ? 'profit-reveal' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
             
-            <Navbar 
-                setShowConfigurator={setShowConfigurator} 
-                activeThemeId={activeThemeId}
-                onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)}
-            />
+            {/* ✅ SPACER: Prevents content from hiding behind the fixed navbar */}
+            <div className="h-20 w-full" />
 
             <main className="relative min-h-screen z-10">
                 <TargetCursor spinDuration={2} hideDefaultCursor={true} targetSelector=".cursor-target, a, button" />

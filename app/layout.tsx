@@ -62,14 +62,12 @@ export default function RootLayout({
         >
           {/* ✅ ADDED: ShopProvider starts here */}
           <ShopProvider>
-            
+       
             {children}
-            
-            {/* ✅ FIXED: Footer is now placed correctly inside the body/provider */}
-            <Footer />
-
+          
           </ShopProvider>
           {/* ✅ ADDED: ShopProvider ends here */}
+          
         </ThemeProvider>
       </body>
     </html>
