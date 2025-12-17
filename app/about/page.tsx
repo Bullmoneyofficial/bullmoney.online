@@ -11,7 +11,7 @@ import { Volume2, Volume1, VolumeX, X, Palette, Sparkles, MessageCircle } from '
 // --- MASTER COMPONENT IMPORTS ---
 import { Navbar } from "@/components/Mainpage/navbar"; 
 import RecruitPage from "@/app/register/pagemode"; // Stage 1
-import BullMoneyGate from "@/components/TradingHoldUnlock"; // Stage 2
+import BullMoneyGate from "@/components/Mainpage/TradingHoldUnlock"; // Stage 2
 import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2"; // Stage 3
 
 // --- THEME & MUSIC DATA ---

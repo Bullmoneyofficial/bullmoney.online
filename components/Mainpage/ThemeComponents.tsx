@@ -17,7 +17,7 @@ import {
 } from '@/constants/theme-data';
 
 import { ShimmerButton, ShimmerCard, ShimmerBorder, GlowText, IllusionLayer, GlobalSvgFilters } from '@/components/ThemeUI';
-import { ThemeConfigModal } from '@/components/ThemeConfigModal'; 
+import { ThemeConfigModal } from '@/components/Mainpage/ThemeConfigModal'; 
 
 // --- 2. EXPORTS ---
 export { ALL_THEMES };

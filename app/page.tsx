@@ -10,7 +10,7 @@ import { Volume2, Volume1, VolumeX, X, Palette, Sparkles, MessageCircle } from '
 // --- COMPONENT IMPORTS ---
 import { Navbar } from "@/components/Mainpage/navbar"; 
 import RegisterPage from "./register/pagemode"; 
-import BullMoneyGate from "@/components/TradingHoldUnlock"; 
+import BullMoneyGate from "@/components/Mainpage/TradingHoldUnlock"; 
 import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2"; 
 
 // --- THEME & MUSIC DATA ---

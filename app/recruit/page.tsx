@@ -15,7 +15,7 @@ import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components
 // --- LOADER IMPORTS ---
 import { MultiStepLoader } from "@/components/Mainpage/MultiStepLoaderAffiliate"; 
 import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2";         
-import BullMoneyGate from "@/components/TradingHoldUnlock";                      
+import BullMoneyGate from "@/components/Mainpage/TradingHoldUnlock";                      
 
 // --- PAGE CONTENT IMPORTS ---
 import RecruitPage from "@/app/register/New"; 

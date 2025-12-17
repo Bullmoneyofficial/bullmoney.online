@@ -15,7 +15,7 @@ import Socials from "@/components/Mainpage/Socialsfooter";
 
 // --- LOADING STAGES IMPORTS ---
 import RecruitPage from "@/app/register/pageVip"; 
-import BullMoneyGate from "@/components/TradingHoldUnlock"; 
+import BullMoneyGate from "@/components/Mainpage/TradingHoldUnlock"; 
 import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2"; 
 
 // --- THEME & NAV IMPORTS ---

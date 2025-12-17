@@ -14,7 +14,7 @@ import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components
 
 // --- ONBOARDING IMPORTS ---
 import RegisterPage from "@/app/register/pagemode";
-import BullMoneyGate from "@/components/TradingHoldUnlock"; 
+import BullMoneyGate from "@/components/Mainpage/TradingHoldUnlock"; 
 import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2"; 
 
 // --- DYNAMIC IMPORTS ---
