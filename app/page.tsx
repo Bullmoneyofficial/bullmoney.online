@@ -4,10 +4,13 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic';
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Volume2, VolumeX, Music, Settings, X } from 'lucide-react';
+import { Volume2, Music, X } from 'lucide-react';
 
-// --- IMPORT NAVBAR (Using named import) ---
+// --- COMPONENT IMPORTS ---
 import { Navbar } from "@/components/Mainpage/navbar"; 
+import RegisterPage from "./register/pagemode"; 
+import BullMoneyGate from "@/components/TradingHoldUnlock"; 
+import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2"; 
 
 // --- DYNAMIC IMPORTS ---
 const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor'), { 
@@ -15,9 +18,8 @@ const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor')
   loading: () => <div className="hidden">Loading Cursor...</div> 
 });
 
-// Assuming FixedThemeConfigurator and ALL_THEMES are defined and exported 
-// in the same ThemeComponents file. We need to import the data it defines.
-import { ALL_THEMES as THEME_DATA, Theme, ThemeCategory } from '@/components/Mainpage/ThemeComponents';
+// Import Theme Data & Configurator
+import { ALL_THEMES as THEME_DATA, Theme } from '@/components/Mainpage/ThemeComponents';
 
 const FixedThemeConfigurator = dynamic(
     () => import('@/components/Mainpage/ThemeComponents').then((mod) => mod.default), 
@@ -27,26 +29,16 @@ const FixedThemeConfigurator = dynamic(
     }
 );
 
-// --- OTHER COMPONENTS (No Change) ---
+// --- MAIN SITE COMPONENTS ---
 import { Features } from "@/components/Mainpage/features";
-import { Hero } from "../components/Mainpage/hero";
 import { Pricing } from "../components/Mainpage/pricing"; 
 import Shopmain from "../components/Mainpage/ShopMainpage"; 
 import Socialsfooter from "../components/Mainpage/Socialsfooter";
-import RegisterPage from "./register/pagemode"; 
 import Heromain from "../app/VIP/heromain"; 
 import ShopFunnel from "../app/shop/ShopFunnel"; 
 import Chartnews from "@/app/Blogs/Chartnews";
 
-// --- AUDIO HOOKS (No Change) ---
-const useLoaderAudio = (url: string, enabled: boolean) => {
-    useEffect(() => { /* ... */ }, [url, enabled]);
-};
-
-const useOneTimeAmbient = (url: string, trigger: boolean) => {
-    useEffect(() => { /* ... */ }, [url, trigger]);
-};
-
+// --- AUDIO SYSTEM (Spotify Style) ---
 const useBackgroundLoop = (url: string) => {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -54,15 +46,14 @@ const useBackgroundLoop = (url: string) => {
     useEffect(() => {
         const audio = new Audio(url);
         audio.loop = true;
-        audio.volume = 0.01; 
+        audio.volume = 0.05; 
         audioRef.current = audio;
         return () => { audio.pause(); audio.src = ""; };
     }, [url]);
   
     const start = useCallback(() => {
         if (audioRef.current && audioRef.current.paused) {
-            audioRef.current.volume = 0.01; 
-            audioRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+            audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
         }
     }, []);
   
@@ -72,7 +63,6 @@ const useBackgroundLoop = (url: string) => {
             audioRef.current.pause();
             setIsPlaying(false);
         } else {
-            audioRef.current.volume = 0.01; 
             audioRef.current.play().catch(() => {});
             setIsPlaying(true);
         }
@@ -85,191 +75,177 @@ const MusicController = ({ isPlaying, onToggle }: { isPlaying: boolean; onToggle
     <button
       onClick={onToggle}
       className={`fixed bottom-8 left-8 z-[9999] group flex items-center justify-center w-12 h-12 rounded-full 
-      transition-all duration-500 border border-[#66b3ff]/30 backdrop-blur-md transform-gpu
-      ${isPlaying ? 'bg-[#0066ff]/20 shadow-[0_0_15px_rgba(0,102,255,0.5)]' : 'bg-gray-900/80 grayscale'}`}
+      transition-all duration-500 border border-blue-500/30 backdrop-blur-md transform-gpu
+      ${isPlaying ? 'bg-blue-600/20 shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'bg-gray-900/80 grayscale'}`}
     >
-      {isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center gap-[3px] opacity-50">
-            {[1,2,3,4].map(i => (
-              <div key={i} className="w-[2px] bg-blue-400 rounded-full animate-pulse" 
-                  style={{ height: '50%', animationDuration: `${0.4 + i * 0.1}s` }} />
-            ))}
-        </div>
-      )}
       <div className="relative z-10">
         {isPlaying ? <Volume2 className="w-4 h-4 text-blue-50" /> : <Music className="w-4 h-4 text-gray-400" />}
       </div>
     </button>
 );
 
-
-// --- MAIN PAGE COMPONENT ---
 export default function Home() {
-  const [loading, setLoading] = useState(true);
-  const [showContent, setShowContent] = useState(false);
+  // --- STAGE MANAGEMENT ---
+  // Default to "v2" so it shows immediately on refresh/nav for existing users
+  // We check for "register" status in useEffect
+  const [currentStage, setCurrentStage] = useState<"register" | "hold" | "v2" | "content">("v2");
+  const [isClient, setIsClient] = useState(false); // To prevent hydration mismatch
   
-  // FIX 1A: Initialize state from localStorage 
+  // Theme State
   const [activeThemeId, setActiveThemeId] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-        return localStorage.getItem('user_theme_id') || 't01';
-    }
+    if (typeof window !== 'undefined') return localStorage.getItem('user_theme_id') || 't01';
     return 't01';
   }); 
-
   const [showConfigurator, setShowConfigurator] = useState(false); 
-  const [contentReady, setContentReady] = useState(false); 
-  const minTimeRef = useRef(false);
 
-  // FIX 1B: Correct theme lookup using the imported THEME_DATA
+  // Audio
+  const { isPlaying, start: startBgMusic, toggle: toggleBgMusic } = useBackgroundLoop('/background.mp3');
+
   const activeTheme: Theme = useMemo(() => {
-    // FIX: Use the imported theme data (now named THEME_DATA) for lookup.
     return THEME_DATA.find(t => t.id === activeThemeId) || THEME_DATA[0];
   }, [activeThemeId]);
 
+  // --- INITIALIZATION ---
+  useEffect(() => {
+    setIsClient(true);
+    const hasRegistered = localStorage.getItem('vip_user_registered') === 'true';
 
-  // FIX 4: Correct dependency array for useCallback (No change needed here from the previous step, but kept for clarity)
-  const { isPlaying, start: startBgMusic, toggle: toggleBgMusic } = useBackgroundLoop('/background.mp3');
-  
-  const handleManualUnlock = useCallback(() => {
-    minTimeRef.current = true;
-    setContentReady(true);
-    setLoading(false);
-    setShowContent(true); 
-    startBgMusic(); 
-  }, [startBgMusic]); 
+    // LOGIC: 
+    // 1. Not Registered? -> Go to Register Page
+    // 2. Registered? -> Stay on "v2" (which is default) to show loader every time
+    if (!hasRegistered) {
+      setCurrentStage("register");
+    } else {
+      setCurrentStage("v2");
+    }
+  }, []);
 
-  // FIX 2: Theme change handler now saves to localStorage 
+  // --- TRANSITION HANDLERS ---
+
+  // 1. Registration Done -> Go to "Hold" Gate
+  const handleRegisterComplete = useCallback(() => {
+    localStorage.setItem('vip_user_registered', 'true'); 
+    setCurrentStage("hold"); 
+  }, []);
+
+  // 2. Hold Gate Unlocked -> Go to Content
+  const handleHoldComplete = useCallback(() => {
+    startBgMusic();
+    setCurrentStage("content");
+  }, [startBgMusic]);
+
+  // 3. V2 Loader Finished (Runs on every refresh/nav for reg users) -> Go to Content
+  const handleV2Complete = useCallback(() => {
+    startBgMusic();
+    setCurrentStage("content");
+  }, [startBgMusic]);
+
+  // Theme Handler
   const handleThemeChange = useCallback((themeId: string) => {
     setActiveThemeId(themeId);
-    if (typeof window !== 'undefined') {
-        localStorage.setItem('user_theme_id', themeId);
-    }
+    if (typeof window !== 'undefined') localStorage.setItem('user_theme_id', themeId);
     setShowConfigurator(false); 
   }, []);
 
-  useLoaderAudio('/modals.mp3', loading);
-  useOneTimeAmbient('/ambient.mp3', showContent);
-
-  useEffect(() => { setContentReady(true); }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      minTimeRef.current = true;
-      if (contentReady) {
-        setLoading(false);
-        setShowContent(true);
-        startBgMusic();
-      }
-    }, 5000); 
-
-    if (contentReady && minTimeRef.current) {
-        setLoading(false);
-        setShowContent(true);
-        startBgMusic();
-    }
-    return () => clearTimeout(timer);
-  }, [contentReady, startBgMusic]); 
-
-  // FIX 3: Dynamic GlobalStyles (No change needed here, as the lookup uses the correctly imported theme object)
-  const GlobalStyles = () => (
-    <style jsx global>{`
-      html, body, #__next {
-        scroll-behavior: smooth; 
-        min-height: 100vh;
-        background-color: black; 
-        transition: filter 0.5s ease-in-out; 
-        
-        /* Apply the theme filter for desktop/global */
-        filter: ${activeTheme.filter};
-      }
-      @media (max-width: 1024px) {
-        html, body, #__next {
-            /* Apply mobile filter override */
-            filter: ${activeTheme.mobileFilter};
-        }
-      }
-
-      /* Optional: Apply accent color globally (e.g., to cursor, primary text classes) */
-      :root {
-          --theme-accent-color: ${activeTheme.accentColor || '#0066ff'};
-      }
-      
-      .target-cursor-wrapper { pointer-events: none; position: fixed; top: 0; left: 0; z-index: 10000; mix-blend-mode: difference; }
-      .fade-enter-active { animation: fadeIn 1s ease-out forwards; }
-      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    `}</style>
-  );
+  // Prevent hydration mismatch on initial render
+  if (!isClient) return null;
 
   return (
     <>
-      <GlobalStyles />
+      <style jsx global>{`
+        html, body {
+          background-color: black; 
+          transition: filter 0.5s ease;
+          filter: ${activeTheme.filter};
+          overflow-x: hidden;
+        }
+        @media (max-width: 1024px) {
+            html, body { filter: ${activeTheme.mobileFilter}; }
+        }
+        .profit-reveal {
+          animation: profitReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes profitReveal {
+          0% { transform: scale(1.05); opacity: 0; filter: blur(15px); }
+          100% { transform: scale(1); opacity: 1; filter: blur(0px); }
+        }
+      `}</style>
+
       <Analytics />
       <SpeedInsights />
 
-      {/* Loader */}
-      {loading && (
-        <div className="fixed inset-0 z-[99999] bg-black opacity-100">
-          <RegisterPage onUnlock={handleManualUnlock} />
+      {/* --- STAGE 1: REGISTER PAGE --- */}
+      {currentStage === "register" && (
+        <div className="fixed inset-0 z-[100000] bg-black">
+           <RegisterPage onUnlock={handleRegisterComplete} />
         </div>
       )}
 
-      {/* FIXED THEME CONFIGURATOR OVERLAY */}
-      <div 
-          className={`fixed inset-0 z-[9000] transition-opacity duration-300 
-              ${showConfigurator ? 'opacity-100 pointer-events-auto backdrop-blur-sm bg-black/80' : 'opacity-0 pointer-events-none'}`}
-          // Apply active filter to the modal backdrop for consistent visual state
-          style={{ filter: activeTheme.filter }} 
-      >
-        <div className="flex items-center justify-center w-full h-full p-4 md:p-8">
+      {/* --- STAGE 1.5: HOLD GATE (First time only) --- */}
+      {currentStage === "hold" && (
+        <div className="fixed inset-0 z-[100000]">
+          <BullMoneyGate onUnlock={handleHoldComplete}>
+            <></> 
+          </BullMoneyGate>
+        </div>
+      )}
+
+      {/* --- STAGE 2: V2 LOADER (Every refresh/nav) --- */}
+      {currentStage === "v2" && (
+        <MultiStepLoaderV2 onFinished={handleV2Complete} />
+      )}
+
+      {/* --- STAGE 3: MAIN CONTENT --- */}
+      {/* Hidden until 'content' stage to ensure SEO presence but visual hiding */}
+      <div className={currentStage === 'content' ? 'profit-reveal' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
+        
+        {/* Navbar inside Page to control Theme */}
+        <Navbar 
+            setShowConfigurator={setShowConfigurator} 
+            activeThemeId={activeThemeId}
+            onThemeChange={handleThemeChange}
+        />
+
+        <main onClick={startBgMusic} className="relative min-h-screen">
+          <TargetCursor spinDuration={2} hideDefaultCursor={true} targetSelector=".cursor-target, a, button" />
+          
+          {currentStage === 'content' && ( 
+            <div className="relative z-10">
+              {/* Music Floating Button */}
+              <MusicController isPlaying={isPlaying} onToggle={toggleBgMusic} />
+
+              <Socialsfooter />
+              <Heromain />
+              <ShopFunnel />
+              <Shopmain />
+              <Chartnews />
+              <Pricing />
+              <Features />
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* --- THEME CONFIGURATOR MODAL --- */}
+      {showConfigurator && (
+        <div 
+          className="fixed inset-0 z-[100001] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+          style={{ filter: activeTheme.filter }}
+        >
+          <div className="relative w-full max-w-6xl h-[80vh] bg-[#020617] rounded-3xl border border-white/10 overflow-hidden">
             <button 
                 onClick={() => setShowConfigurator(false)}
-                className="absolute top-4 right-4 z-[9001] p-3 text-white rounded-full bg-black/50 hover:bg-black/80 transition-colors"
-                aria-label="Close configuration"
+                className="absolute top-6 right-6 z-[10] p-2 text-white/50 hover:text-white transition-colors"
             >
-                <X className="w-6 h-6" />
+                <X size={28} />
             </button>
-            <div className="w-full max-w-7xl h-full max-h-[850px]">
-                <FixedThemeConfigurator 
-                    initialThemeId={activeThemeId}
-                    onThemeChange={handleThemeChange} 
-                />
-            </div>
-      </div>
-      </div>
-
-      {/* NAVBAR: Pass the control state to the Navbar component */}
-      <Navbar 
-          setShowConfigurator={setShowConfigurator} 
-          activeThemeId={activeThemeId}
-          onThemeChange={handleThemeChange}
-      />
-
-      {/* MAIN CONTENT AREA */}
-      <main 
-        onClick={startBgMusic} 
-        className={`relative min-h-screen bg-black transition-opacity duration-1000 
-          ${showContent ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-      >
-        <TargetCursor 
-          spinDuration={2} 
-          hideDefaultCursor={true} 
-          targetSelector=".cursor-target, a, button" 
-        />
-        
-        {(showContent || loading) && ( 
-          <div className="animate-in fade-in duration-1000">
-            <MusicController isPlaying={isPlaying} onToggle={toggleBgMusic} />
-
-            <Socialsfooter />
-            <Heromain />
-            <ShopFunnel />
-            <Shopmain />
-            <Chartnews />
-            <Pricing />
-            <Features />
+            <FixedThemeConfigurator 
+                initialThemeId={activeThemeId}
+                onThemeChange={handleThemeChange} 
+            />
           </div>
-        )}
-      </main>
+        </div>
+      )}
     </>
   );
 }
