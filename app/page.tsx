@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
+import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube'; // Added YouTubeEvent import
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Volume2, Music, X } from 'lucide-react';
+import { Volume2, Music, X, SkipForward } from 'lucide-react';
 
 // --- COMPONENT IMPORTS ---
 import { Navbar } from "@/components/Mainpage/navbar"; 
@@ -12,21 +13,18 @@ import RegisterPage from "./register/pagemode";
 import BullMoneyGate from "@/components/TradingHoldUnlock"; 
 import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2"; 
 
+// --- THEME & MUSIC DATA ---
+import { ALL_THEMES as THEME_DATA, Theme, THEME_SOUNDTRACKS } from '@/components/Mainpage/ThemeComponents';
+
 // --- DYNAMIC IMPORTS ---
 const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor'), { 
-  ssr: false,
-  loading: () => <div className="hidden">Loading Cursor...</div> 
+  ssr: false, 
+  loading: () => <div className="hidden">Loading...</div> 
 });
-
-// Import Theme Data & Configurator
-import { ALL_THEMES as THEME_DATA, Theme } from '@/components/Mainpage/ThemeComponents';
 
 const FixedThemeConfigurator = dynamic(
     () => import('@/components/Mainpage/ThemeComponents').then((mod) => mod.default), 
-    { 
-        ssr: false,
-        loading: () => <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">Loading Config...</div> 
-    }
+    { ssr: false }
 );
 
 // --- MAIN SITE COMPONENTS ---
@@ -38,58 +36,93 @@ import Heromain from "../app/VIP/heromain";
 import ShopFunnel from "../app/shop/ShopFunnel"; 
 import Chartnews from "@/app/Blogs/Chartnews";
 
-// --- AUDIO SYSTEM (Spotify Style) ---
-const useBackgroundLoop = (url: string) => {
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-    const [isPlaying, setIsPlaying] = useState(false);
+// ----------------------------------------------------------------------
+// --- NEW YOUTUBE MUSIC SYSTEM ---
+// ----------------------------------------------------------------------
+const BackgroundMusicSystem = ({ 
+  isPlaying, 
+  themeId, 
+  onReady 
+}: { 
+  isPlaying: boolean; 
+  themeId: string;
+  onReady: (player: any) => void;
+}) => {
+  const videoId = THEME_SOUNDTRACKS[themeId] || THEME_SOUNDTRACKS['default'];
   
-    useEffect(() => {
-        const audio = new Audio(url);
-        audio.loop = true;
-        audio.volume = 0.05; 
-        audioRef.current = audio;
-        return () => { audio.pause(); audio.src = ""; };
-    }, [url]);
-  
-    const start = useCallback(() => {
-        if (audioRef.current && audioRef.current.paused) {
-            audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
-        }
-    }, []);
-  
-    const toggle = useCallback(() => {
-        if (!audioRef.current) return;
-        if (isPlaying) {
-            audioRef.current.pause();
-            setIsPlaying(false);
-        } else {
-            audioRef.current.play().catch(() => {});
-            setIsPlaying(true);
-        }
-    }, [isPlaying]);
-  
-    return { isPlaying, start, toggle };
+  const opts: YouTubeProps['opts'] = {
+    height: '0', // Hidden
+    width: '0',  // Hidden
+    playerVars: {
+      autoplay: 1,
+      controls: 0,
+      loop: 1,
+      modestbranding: 1,
+      playsinline: 1,
+    },
+  };
+
+  return (
+    <div className="fixed bottom-0 left-0 opacity-0 pointer-events-none z-[-1]">
+      <YouTube 
+        videoId={videoId} 
+        opts={opts} 
+        onReady={(event: YouTubeEvent) => { // Fixed type here
+            event.target.setVolume(15); 
+            onReady(event.target);
+        }}
+        onStateChange={(event: YouTubeEvent) => { // Fixed type here
+            // Ensure it loops effectively if it's a playlist or video ends
+            if (event.data === 0) event.target.playVideo(); 
+        }}
+      />
+    </div>
+  );
 };
 
-const MusicController = ({ isPlaying, onToggle }: { isPlaying: boolean; onToggle: () => void }) => (
-    <button
-      onClick={onToggle}
-      className={`fixed bottom-8 left-8 z-[9999] group flex items-center justify-center w-12 h-12 rounded-full 
-      transition-all duration-500 border border-blue-500/30 backdrop-blur-md transform-gpu
-      ${isPlaying ? 'bg-blue-600/20 shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'bg-gray-900/80 grayscale'}`}
-    >
-      <div className="relative z-10">
-        {isPlaying ? <Volume2 className="w-4 h-4 text-blue-50" /> : <Music className="w-4 h-4 text-gray-400" />}
-      </div>
-    </button>
+// ----------------------------------------------------------------------
+// --- MUSIC CONTROLLER UI ---
+// ----------------------------------------------------------------------
+const MusicController = ({ isPlaying, onToggle, themeName }: { isPlaying: boolean; onToggle: () => void, themeName: string }) => (
+    <div className="fixed bottom-8 left-8 z-[9999] flex items-center gap-3">
+        <button
+        onClick={onToggle}
+        className={`group flex items-center justify-center w-12 h-12 rounded-full 
+        transition-all duration-500 border backdrop-blur-md transform-gpu
+        ${isPlaying 
+            ? 'bg-blue-600/20 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.5)]' 
+            : 'bg-gray-900/80 border-white/10 grayscale'}`}
+        >
+        <div className="relative z-10">
+            {isPlaying 
+                ? <Volume2 className="w-4 h-4 text-blue-50" /> 
+                : <Music className="w-4 h-4 text-gray-400" />
+            }
+        </div>
+        </button>
+        
+        {/* Track Info Popout */}
+        <div className={`
+            hidden md:flex flex-col overflow-hidden transition-all duration-500
+            ${isPlaying ? 'w-32 opacity-100' : 'w-0 opacity-0'}
+        `}>
+            <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Now Streaming</span>
+            <div className="flex items-center gap-1">
+                <span className="text-xs text-white truncate font-mono">{themeName} Radio</span>
+                <div className="flex gap-0.5 items-end h-3">
+                    <span className="w-0.5 h-full bg-blue-500 animate-pulse"/>
+                    <span className="w-0.5 h-2/3 bg-blue-500 animate-pulse delay-75"/>
+                    <span className="w-0.5 h-1/3 bg-blue-500 animate-pulse delay-150"/>
+                </div>
+            </div>
+        </div>
+    </div>
 );
 
 export default function Home() {
   // --- STAGE MANAGEMENT ---
-  // Default to "v2" so it shows immediately on refresh/nav for existing users
-  // We check for "register" status in useEffect
   const [currentStage, setCurrentStage] = useState<"register" | "hold" | "v2" | "content">("v2");
-  const [isClient, setIsClient] = useState(false); // To prevent hydration mismatch
+  const [isClient, setIsClient] = useState(false);
   
   // Theme State
   const [activeThemeId, setActiveThemeId] = useState<string>(() => {
@@ -98,8 +131,9 @@ export default function Home() {
   }); 
   const [showConfigurator, setShowConfigurator] = useState(false); 
 
-  // Audio
-  const { isPlaying, start: startBgMusic, toggle: toggleBgMusic } = useBackgroundLoop('/background.mp3');
+  // --- AUDIO STATE ---
+  const [isPlaying, setIsPlaying] = useState(false);
+  const playerRef = useRef<any>(null); // Reference to YouTube Player Instance
 
   const activeTheme: Theme = useMemo(() => {
     return THEME_DATA.find(t => t.id === activeThemeId) || THEME_DATA[0];
@@ -109,10 +143,6 @@ export default function Home() {
   useEffect(() => {
     setIsClient(true);
     const hasRegistered = localStorage.getItem('vip_user_registered') === 'true';
-
-    // LOGIC: 
-    // 1. Not Registered? -> Go to Register Page
-    // 2. Registered? -> Stay on "v2" (which is default) to show loader every time
     if (!hasRegistered) {
       setCurrentStage("register");
     } else {
@@ -120,34 +150,67 @@ export default function Home() {
     }
   }, []);
 
+  // --- AUDIO LOGIC ---
+  const handlePlayerReady = (player: any) => {
+      playerRef.current = player;
+      // We don't auto-play here to respect browser policies, 
+      // we wait for the user to click "Unlock" or interact with site.
+  };
+
+  const toggleMusic = () => {
+      if (!playerRef.current) return;
+      
+      if (isPlaying) {
+          playerRef.current.pauseVideo();
+          setIsPlaying(false);
+      } else {
+          playerRef.current.playVideo();
+          setIsPlaying(true);
+      }
+  };
+
+  // Ensure music switches when theme changes (if already playing)
+  useEffect(() => {
+      if(playerRef.current && isPlaying) {
+          // React-Youtube handles the prop change of 'videoId' automatically, 
+          // but we ensure status is correct here.
+          setIsPlaying(true); 
+      }
+  }, [activeThemeId, isPlaying]);
+
   // --- TRANSITION HANDLERS ---
 
-  // 1. Registration Done -> Go to "Hold" Gate
   const handleRegisterComplete = useCallback(() => {
     localStorage.setItem('vip_user_registered', 'true'); 
     setCurrentStage("hold"); 
   }, []);
 
-  // 2. Hold Gate Unlocked -> Go to Content
   const handleHoldComplete = useCallback(() => {
-    startBgMusic();
+    // Attempt to start music when gate opens
+    if(playerRef.current) {
+        playerRef.current.playVideo();
+        setIsPlaying(true);
+    }
     setCurrentStage("content");
-  }, [startBgMusic]);
+  }, []);
 
-  // 3. V2 Loader Finished (Runs on every refresh/nav for reg users) -> Go to Content
   const handleV2Complete = useCallback(() => {
-    startBgMusic();
+    // Attempt start music on load complete
+    // Note: Browsers might block this until a click happens.
+    // The "Enter" button on the loader usually counts as interaction.
+    if(playerRef.current) {
+        playerRef.current.playVideo();
+        setIsPlaying(true);
+    }
     setCurrentStage("content");
-  }, [startBgMusic]);
+  }, []);
 
-  // Theme Handler
   const handleThemeChange = useCallback((themeId: string) => {
     setActiveThemeId(themeId);
     if (typeof window !== 'undefined') localStorage.setItem('user_theme_id', themeId);
     setShowConfigurator(false); 
   }, []);
 
-  // Prevent hydration mismatch on initial render
   if (!isClient) return null;
 
   return (
@@ -174,6 +237,13 @@ export default function Home() {
       <Analytics />
       <SpeedInsights />
 
+      {/* --- BACKGROUND MUSIC ENGINE --- */}
+      <BackgroundMusicSystem 
+        isPlaying={isPlaying} 
+        themeId={activeThemeId} 
+        onReady={handlePlayerReady} 
+      />
+
       {/* --- STAGE 1: REGISTER PAGE --- */}
       {currentStage === "register" && (
         <div className="fixed inset-0 z-[100000] bg-black">
@@ -196,23 +266,26 @@ export default function Home() {
       )}
 
       {/* --- STAGE 3: MAIN CONTENT --- */}
-      {/* Hidden until 'content' stage to ensure SEO presence but visual hiding */}
       <div className={currentStage === 'content' ? 'profit-reveal' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
         
-        {/* Navbar inside Page to control Theme */}
         <Navbar 
             setShowConfigurator={setShowConfigurator} 
             activeThemeId={activeThemeId}
             onThemeChange={handleThemeChange}
         />
 
-        <main onClick={startBgMusic} className="relative min-h-screen">
+        <main className="relative min-h-screen">
+          
           <TargetCursor spinDuration={2} hideDefaultCursor={true} targetSelector=".cursor-target, a, button" />
           
           {currentStage === 'content' && ( 
             <div className="relative z-10">
-              {/* Music Floating Button */}
-              <MusicController isPlaying={isPlaying} onToggle={toggleBgMusic} />
+              {/* Updated Music Controller */}
+              <MusicController 
+                isPlaying={isPlaying} 
+                onToggle={toggleMusic} 
+                themeName={activeTheme.name}
+              />
 
               <Socialsfooter />
               <Heromain />

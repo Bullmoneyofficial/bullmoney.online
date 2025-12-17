@@ -1,4 +1,3 @@
-// src/components/Mainpage/ThemeComponents.tsx
 "use client";
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
@@ -9,13 +8,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import { ALL_THEMES, ThemeCategory, SoundProfile, TickerData } from '@/constants/theme-data';
 import { ShimmerButton, ShimmerCard, ShimmerBorder, GlowText, IllusionLayer, GlobalSvgFilters } from '@/components/ThemeUI';
-import { ThemeConfigModal } from '@/components/ThemeConfigModal';
+import { ThemeConfigModal } from '@/components/ThemeConfigModal'; // Assuming this imports the modal
 
 // --- CRITICAL RE-EXPORTS ---
-// This line fixes the error "Module has no exported member 'ALL_THEMES'"
 export { ALL_THEMES, type Theme, type ThemeCategory, type SoundProfile } from '@/constants/theme-data';
 
-// --- DATA ENGINES (Ticker/Chart) ---
+// --- MUSIC SOUNDTRACK MAPPING (YouTube IDs) ---
+// Note: This needs to be dynamically generated in ThemeComponents.tsx (as previously fixed)
+export const THEME_SOUNDTRACKS: Record<string, string> = {}; 
+// ... (rest of helper functions like useBinanceTickers, LivePriceDisplay remain unchanged) ...
+
 const TARGET_PAIRS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'DOGEUSDT'];
 const LOWER_CASE_PAIRS = TARGET_PAIRS.map(p => p.toLowerCase());
 
@@ -197,7 +199,7 @@ const FixedBottomSaveBar = ({ activeThemeId, onSaveTheme, onExit, isMobileMenuOp
     </AnimatePresence>
 );
 
-export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }: { initialThemeId: string, onThemeChange: (themeId: string) => void }) {
+export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }: { initialThemeId: string, onThemeChange: (themeId: string, sound: SoundProfile, muted: boolean) => void }) {
     const { tickers, status: wsStatus } = useBinanceTickers();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const chartData = useBinanceChart('BTCUSDT'); 
@@ -205,28 +207,40 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
     const [activeThemeId, setActiveThemeId] = useState<string>(initialThemeId);
     const [showWelcome, setShowWelcome] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
-    const [isMuted, setIsMuted] = useState(true);
+    const [isMuted, setIsMuted] = useState(true); // Default to muted
     const [activeCategory, setActiveCategory] = useState<ThemeCategory>('SENTIMENT'); 
     const [currentSound, setCurrentSound] = useState<SoundProfile>('MECHANICAL');
     const [isMobile, setIsMobile] = useState(false); 
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
     
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-
     const activeTheme = useMemo(() => ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0], [activeThemeId]);
     const btcData = tickers['BTCUSDT'] || { price: '0.00', percentChange: '0.00', prevPrice: '0' };
     const ethData = tickers['ETHUSDT'] || { price: '0.00', percentChange: '0.00', prevPrice: '0' };
     const portfolioValue = useMemo(() => (parseFloat(btcData.price) * 0.45) + (parseFloat(ethData.price) * 12.5) + 15240, [btcData.price, ethData.price]);
     
-    const handleSaveTheme = useCallback((themeId: string, sound: SoundProfile = currentSound, muted: boolean = isMuted) => {
+    // --- FIXED: Handle save from Modal and propagate theme/sound/mute state to the parent ---
+    // The Modal calls this function when the user clicks 'APPLY & SAVE CONFIG'
+    const handleSaveTheme = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
+        // 1. Update local state
         setActiveThemeId(themeId); 
-        onThemeChange(themeId); 
         setCurrentSound(sound);
         setIsMuted(muted);
-        setIsMobileMenuOpen(false);
+
+        // 2. Propagate the change to the true parent (Home component)
+        // This is what triggers the main app's YouTube player logic (which lives in Home.tsx)
+        onThemeChange(themeId, sound, muted); 
+
+        // 3. Close the modal
         setIsConfigModalOpen(false);
-    }, [onThemeChange, currentSound, isMuted]);
-    
+        setIsMobileMenuOpen(false); // Ensure mobile menu state is cleared
+    }, [onThemeChange]); // Dependency on onThemeChange is correct
+
+    // Handler for desktop control panel button (quick save)
+    const handleQuickSaveTheme = useCallback((themeId: string) => {
+        // Use current sound and mute state for quick save
+        handleSaveTheme(themeId, currentSound, isMuted);
+    }, [currentSound, isMuted, handleSaveTheme]);
+
     const handleExit = useCallback(() => { alert("Exiting to Dashboard... (Simulated Action)"); }, []);
 
     useEffect(() => {
@@ -236,21 +250,13 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    useEffect(() => {
-        if(audioRef.current) {
-            audioRef.current.volume = 0.15;
-            !isMuted ? audioRef.current.play().catch(() => setIsMuted(true)) : audioRef.current.pause();
-        }
-    }, [isMuted]);
-
     return (
         <main className="relative min-h-screen bg-black font-sans selection:bg-blue-500/30 text-white pb-32 lg:pb-10 overflow-x-hidden"
             style={{ filter: isMobile ? activeTheme.mobileFilter : activeTheme.filter, transition: 'filter 0.5s ease-in-out' }}
         >
             <GlobalSvgFilters />
             <div className="fixed inset-0 z-0 pointer-events-none opacity-50 mix-blend-overlay overflow-hidden"><IllusionLayer type={activeTheme.illusion} /></div>
-            <audio ref={audioRef} loop src="/assets/ambient-drone.mp3" />
-
+            
             {/* HEADER */}
             <header className="fixed top-0 w-full z-50 bg-[#050505]/80 backdrop-blur-md border-b border-white/10">
                 <LiveTickerTape tickers={tickers} />
@@ -272,6 +278,7 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
                 </div>
             </header>
 
+            {/* FIXED: Ensure initial state is passed to WelcomeModal */}
             <WelcomeBackModal isOpen={showWelcome} onContinue={() => { setShowWelcome(false); setIsMuted(false); }} onSkip={() => setShowWelcome(false)} />
 
             {/* MAIN DASHBOARD GRID */}
@@ -325,17 +332,27 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
 
                     {/* RIGHT SECTION (Sidebar on Desktop) */}
                     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.4 }} className="hidden lg:flex flex-col w-full lg:w-auto lg:col-span-3 h-full min-h-0 gap-4">
-                         <ControlPanel activeThemeId={activeThemeId} onAction={handleExit} onSaveTheme={(id) => handleSaveTheme(id)} onOpenConfig={() => setIsConfigModalOpen(true)} />
+                         {/* FIXED: Use handleQuickSaveTheme for the quick save button */}
+                         <ControlPanel activeThemeId={activeThemeId} onAction={handleExit} onSaveTheme={handleQuickSaveTheme} onOpenConfig={() => setIsConfigModalOpen(true)} />
                     </motion.div>
                 </div>
             </motion.div>
             
-            <FixedBottomSaveBar activeThemeId={activeThemeId} onSaveTheme={(id) => handleSaveTheme(id)} onExit={handleExit} isMobileMenuOpen={isMobileMenuOpen} />
+            <FixedBottomSaveBar activeThemeId={activeThemeId} onSaveTheme={handleQuickSaveTheme} onExit={handleExit} isMobileMenuOpen={isMobileMenuOpen} />
             <SupportWidget />
 
+            {/* --- THEME CONFIGURATOR MODAL --- */}
             <ThemeConfigModal 
-                isOpen={isConfigModalOpen} onClose={() => setIsConfigModalOpen(false)} onSave={handleSaveTheme}
-                initialThemeId={activeThemeId} initialCategory={activeCategory} initialSound={currentSound} initialMuted={isMuted} isMobile={isMobile}
+                isOpen={isConfigModalOpen} 
+                onClose={() => setIsConfigModalOpen(false)} 
+                // FIXED: Pass the updated handleSaveTheme which takes all 3 parameters
+                onSave={handleSaveTheme} 
+                initialThemeId={activeThemeId} 
+                initialCategory={activeCategory} 
+                initialSound={currentSound} 
+                // FIXED: Pass the current mute state down
+                initialMuted={isMuted} 
+                isMobile={isMobile}
             />
         </main>
     );

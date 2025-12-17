@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import { Navbar } from "@/components/Mainpage/navbar";
+
 import { Footer } from "@/components/Mainpage/footer";
 import { ThemeProvider } from "@/context/providers";
 
@@ -62,7 +62,7 @@ export default function RootLayout({
         >
           {/* ✅ ADDED: ShopProvider starts here */}
           <ShopProvider>
-            <Navbar />
+       
             {children}
           
           </ShopProvider>
