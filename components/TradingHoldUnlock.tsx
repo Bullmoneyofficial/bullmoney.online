@@ -56,6 +56,113 @@ const MovingBorder = ({
   );
 };
 
+// --- AUDIO ENGINE (Web Audio API) ---
+// Generates sound mathematically. No 404s, no latency.
+const useAudioEngine = () => {
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const oscillatorRef = useRef<OscillatorNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
+
+  const initAudio = () => {
+    if (!audioCtxRef.current) {
+      // @ts-ignore - Handle Safari/Webkit
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioCtxRef.current = new AudioContext();
+    }
+    if (audioCtxRef.current.state === "suspended") {
+      audioCtxRef.current.resume();
+    }
+  };
+
+  const startEngine = () => {
+    initAudio();
+    if (!audioCtxRef.current) return;
+    
+    // Create oscillator if it doesn't exist
+    if (!oscillatorRef.current) {
+        const osc = audioCtxRef.current.createOscillator();
+        const gain = audioCtxRef.current.createGain();
+        
+        // Low pass filter to make it sound muffled/cool
+        const filter = audioCtxRef.current.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.value = 1000;
+
+        osc.type = "sawtooth"; // "Buzzy" sound like an energy charge
+        osc.frequency.setValueAtTime(100, audioCtxRef.current.currentTime); // Start low pitch
+        
+        gain.gain.setValueAtTime(0, audioCtxRef.current.currentTime);
+        gain.gain.linearRampToValueAtTime(0.1, audioCtxRef.current.currentTime + 0.1); // Fade in
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtxRef.current.destination);
+        
+        osc.start();
+        
+        oscillatorRef.current = osc;
+        gainNodeRef.current = gain;
+    }
+  };
+
+  const updateEngine = (progress: number) => {
+    if (!audioCtxRef.current || !oscillatorRef.current || !gainNodeRef.current) return;
+    
+    // Map progress (0-100) to Frequency (Pitch)
+    const baseFreq = 80;
+    const addedFreq = (progress / 100) * 400; // Higher pitch range for BullMoney
+    const now = audioCtxRef.current.currentTime;
+    
+    oscillatorRef.current.frequency.setTargetAtTime(baseFreq + addedFreq, now, 0.1);
+    
+    // Add some jitter/wobble at high speeds to simulate volatility
+    if (progress > 80) {
+        gainNodeRef.current.gain.setTargetAtTime(0.1 + (Math.random() * 0.05), now, 0.1);
+    }
+  };
+
+  const stopEngine = () => {
+    if (gainNodeRef.current && audioCtxRef.current) {
+        const now = audioCtxRef.current.currentTime;
+        // Fade out nicely
+        gainNodeRef.current.gain.setTargetAtTime(0, now, 0.1);
+        
+        setTimeout(() => {
+            if (oscillatorRef.current) {
+                oscillatorRef.current.stop();
+                oscillatorRef.current.disconnect();
+                oscillatorRef.current = null;
+            }
+        }, 200);
+    }
+  };
+
+  const playSuccess = () => {
+    initAudio();
+    if (!audioCtxRef.current) return;
+    const now = audioCtxRef.current.currentTime;
+
+    const osc = audioCtxRef.current.createOscillator();
+    const gain = audioCtxRef.current.createGain();
+
+    // High tech "Order Filled" sound
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(1400, now + 0.1);
+
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+
+    osc.connect(gain);
+    gain.connect(audioCtxRef.current.destination);
+    
+    osc.start();
+    osc.stop(now + 0.6);
+  };
+
+  return { startEngine, updateEngine, stopEngine, playSuccess };
+};
+
 // --- HOOKS ---
 const useLivePrice = (assetKey: AssetKey) => {
   const [price, setPrice] = useState<number>(0);
@@ -196,14 +303,9 @@ export default function BullMoneyGate({ children, onUnlock }: { children?: React
   
   const requestRef = useRef<number>();
   const basePriceRef = useRef(0);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-        audioRef.current = new Audio("/sounds/order-fill.mp3");
-        audioRef.current.volume = 0.6;
-    }
-  }, []);
+  // Use the synthesized Audio Hook
+  const { startEngine, updateEngine, stopEngine, playSuccess } = useAudioEngine();
 
   useEffect(() => {
     if (!isHolding && realPrice > 0) {
@@ -211,6 +313,20 @@ export default function BullMoneyGate({ children, onUnlock }: { children?: React
       setDisplayPrice(realPrice);
     }
   }, [realPrice, isHolding]);
+
+  // Audio Control Effect
+  useEffect(() => {
+    if (isCompleted) return;
+    
+    if (isHolding) {
+        startEngine();
+    } else {
+        stopEngine();
+    }
+    
+    // Cleanup on unmount
+    return () => stopEngine();
+  }, [isHolding, isCompleted]);
 
   const animate = useCallback(() => {
     if (isCompleted) {
@@ -224,6 +340,9 @@ export default function BullMoneyGate({ children, onUnlock }: { children?: React
       if (isHolding) {
         const boost = prev > 90 ? 8.0 : prev > 80 ? 4.0 : prev > 50 ? 1.5 : 0.6; 
         next = Math.min(prev + boost, 100);
+
+        // Update synthesized pitch based on progress
+        updateEngine(next);
 
         if (typeof navigator !== "undefined" && navigator.vibrate) {
             const intensity = next / 100;
@@ -255,7 +374,9 @@ export default function BullMoneyGate({ children, onUnlock }: { children?: React
 
       if (next >= 100) {
         setIsCompleted(true);
-        if (audioRef.current) audioRef.current.play().catch(()=>{});
+        stopEngine(); // Cut the continuous engine sound
+        playSuccess(); // Play the synthesized "Success" sound
+        
         if (navigator.vibrate) navigator.vibrate([50, 50, 50, 50, 500]); 
         
         setTimeout(() => {
@@ -270,7 +391,7 @@ export default function BullMoneyGate({ children, onUnlock }: { children?: React
     });
 
     requestRef.current = requestAnimationFrame(animate);
-  }, [isHolding, isCompleted, selectedAsset, displayPrice, shakeX, shakeY, onUnlock]);
+  }, [isHolding, isCompleted, selectedAsset, displayPrice, shakeX, shakeY, onUnlock, updateEngine, stopEngine, playSuccess]);
 
   useEffect(() => {
     requestRef.current = requestAnimationFrame(animate);
