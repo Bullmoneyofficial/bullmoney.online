@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube'; 
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Volume2, Volume1, VolumeX, X, Palette } from 'lucide-react'; 
+import { Volume2, Volume1, VolumeX, X, Palette, Sparkles, MessageCircle } from 'lucide-react'; 
 
 // --- COMPONENT IMPORTS ---
 import { Navbar } from "@/components/Mainpage/navbar"; 
@@ -51,7 +51,7 @@ const OnboardingHelper = ({ onDismiss }: { onDismiss: () => void }) => {
     return (
         <div 
             onClick={onDismiss}
-            className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-[2px] cursor-pointer animate-in fade-in duration-700"
+            className="fixed inset-0 z-[2147483646] bg-black/60 backdrop-blur-[2px] cursor-pointer animate-in fade-in duration-700"
         >
             <div className="relative w-full h-full">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
@@ -63,24 +63,6 @@ const OnboardingHelper = ({ onDismiss }: { onDismiss: () => void }) => {
                     </p>
                     <div className="mt-4 text-xs text-white/40 uppercase tracking-widest">Click anywhere to start</div>
                 </div>
-                <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible">
-                    <defs>
-                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                            <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa" />
-                        </marker>
-                    </defs>
-                    <path 
-                        d="M 50% 55% Q 30% 70% 80 90%" 
-                        fill="none" 
-                        stroke="#60a5fa" 
-                        strokeWidth="3" 
-                        strokeDasharray="12,12"
-                        markerEnd="url(#arrowhead)"
-                        className="opacity-80 drop-shadow-[0_0_10px_#60a5fa]"
-                    >
-                         <animate attributeName="stroke-dashoffset" from="1000" to="0" dur="2s" fill="freeze" />
-                    </path>
-                </svg>
             </div>
         </div>
     );
@@ -109,10 +91,10 @@ const BackgroundMusicSystem = ({
       autoplay: 1,
       controls: 0,
       loop: 1,
-      playlist: videoId, // Required for loop to work
+      playlist: videoId,
       modestbranding: 1,
       playsinline: 1,
-      enablejsapi: 1, // Explicitly enable API
+      enablejsapi: 1,
       origin: typeof window !== 'undefined' ? window.location.origin : undefined,
     },
   };
@@ -123,15 +105,10 @@ const BackgroundMusicSystem = ({
         videoId={videoId} 
         opts={opts} 
         onReady={(event: YouTubeEvent) => { 
-            if(event.target) {
-                onReady(event.target);
-            }
+            if(event.target) onReady(event.target);
         }}
         onStateChange={(event: YouTubeEvent) => { 
-            // -1: unstarted, 0: ended, 1: playing, 2: paused, 3: buffering, 5: video cued
-            if (event.data === -1 || event.data === 2) {
-               // Optional: could retry play here if needed
-            }
+            if (event.data === -1 || event.data === 2) {}
         }}
       />
     </div>
@@ -139,7 +116,7 @@ const BackgroundMusicSystem = ({
 };
 
 // ----------------------------------------------------------------------
-// --- BOTTOM CONTROLS (MUSIC + THEME) ---
+// --- BOTTOM CONTROLS (STICKY) ---
 // ----------------------------------------------------------------------
 const BottomControls = ({ 
     isPlaying, 
@@ -158,73 +135,101 @@ const BottomControls = ({
     onVolumeChange: (val: number) => void,
     visible: boolean
 }) => {
-    const [isHovered, setIsHovered] = React.useState(false);
+    const [isHovered, setIsHovered] = useState(false);
+    const [showHelper, setShowHelper] = useState(true);
 
+    useEffect(() => {
+        const timer = setTimeout(() => setShowHelper(false), 8000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    // Always render to keep logic alive, just hide visually
     if (!visible) return null;
 
     return (
         <div 
-            className="fixed bottom-8 left-8 z-[9998] flex flex-col items-start gap-4 transition-opacity duration-500 ease-in-out"
-            style={{ opacity: visible ? 1 : 0 }}
-            onMouseEnter={() => setIsHovered(true)}
+            className="pointer-events-auto flex flex-col items-start gap-4 transition-all duration-700 ease-in-out absolute bottom-8 left-8"
+            style={{ 
+                opacity: visible ? 1 : 0,
+                transform: visible ? 'translateY(0)' : 'translateY(20px)' 
+            }}
+            onMouseEnter={() => {
+                setIsHovered(true);
+                setShowHelper(false);
+            }}
             onMouseLeave={() => setIsHovered(false)}
         >
-            {/* Control Bar Container */}
-            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-xl border border-white/10 p-2 rounded-full shadow-2xl">
-                
-                {/* THEME WIDGET BUTTON */}
+            {showHelper && (
+                <div className="absolute -top-12 left-0 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-[11px] px-3 py-1.5 rounded-lg shadow-xl animate-pulse flex items-center gap-2 whitespace-nowrap border border-white/20">
+                    <Sparkles size={12} />
+                    Customize your vibe here!
+                    <div className="absolute -bottom-1 left-4 w-2 h-2 bg-blue-600 rotate-45" />
+                </div>
+            )}
+
+            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-xl border border-white/10 p-2 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:border-white/20 transition-colors">
                 <button
                     onClick={(e) => { e.stopPropagation(); onOpenTheme(); }}
                     className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 text-gray-400 hover:bg-purple-500/20 hover:text-purple-400 transition-all duration-300 border border-transparent hover:border-purple-500/50 group relative"
                 >
                     <Palette size={18} />
-                    <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black border border-white/10 px-2 py-1 rounded text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                        Change Theme
-                    </span>
                 </button>
 
                 <div className="w-px h-6 bg-white/10 mx-1" />
 
-                {/* MUSIC BUTTON */}
                 <button
                     onClick={(e) => { e.stopPropagation(); onToggleMusic(); }} 
-                    className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-500
-                    ${isPlaying ? 'bg-blue-600/20 text-blue-400' : 'bg-gray-800 text-gray-500'}`}
+                    className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-500 relative
+                    ${isPlaying ? 'bg-blue-600/20 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-gray-800 text-gray-500'}`}
                 >
                     {isPlaying ? (volume > 50 ? <Volume2 size={18}/> : <Volume1 size={18}/>) : <VolumeX size={18}/>}
+                    {isPlaying && <span className="absolute inset-0 rounded-full border border-blue-400 animate-ping opacity-20" />}
                 </button>
 
-                {/* VOLUME SLIDER */}
-                <div className={`flex items-center transition-all duration-300 overflow-hidden ${isHovered ? 'w-24 px-2' : 'w-0'}`}>
+                <div className={`flex items-center transition-all duration-500 overflow-hidden ${isHovered ? 'w-24 px-2 opacity-100' : 'w-0 opacity-0'}`}>
                     <input 
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={volume}
+                        type="range" min="0" max="100" value={volume}
                         onChange={(e) => onVolumeChange(parseInt(e.target.value))}
                         className="w-full h-1 bg-blue-900 rounded-lg appearance-none cursor-pointer accent-blue-500"
                     />
                 </div>
             </div>
             
-            {/* NOW PLAYING TEXT */}
-            <div className={`
-                hidden md:flex flex-col overflow-hidden transition-all duration-500 pl-2
-                ${isPlaying ? 'w-32 opacity-100' : 'w-0 opacity-0'}
-            `}>
+            <div className={`hidden md:flex flex-col overflow-hidden transition-all duration-500 pl-2 ${isPlaying ? 'max-h-12 opacity-100' : 'max-h-0 opacity-0'}`}>
                 <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Now Streaming</span>
                 <div className="flex items-center gap-1">
                     <span className="text-xs text-white truncate font-mono">{themeName} Radio</span>
                     <div className="flex gap-0.5 items-end h-3">
-                        <span className="w-0.5 h-full bg-blue-500 animate-pulse"/>
-                        <span className="w-0.5 h-2/3 bg-blue-500 animate-pulse delay-75"/>
-                        <span className="w-0.5 h-1/3 bg-blue-500 animate-pulse delay-150"/>
+                        <span className="w-0.5 h-full bg-blue-500 animate-music-bar-1"/>
+                        <span className="w-0.5 h-full bg-blue-500 animate-music-bar-2"/>
+                        <span className="w-0.5 h-full bg-blue-500 animate-music-bar-3"/>
                     </div>
                 </div>
             </div>
         </div>
     );
 }
+
+const SupportWidget = () => {
+    const [isVisible, setIsVisible] = useState(false);
+    useEffect(() => { setTimeout(() => setIsVisible(true), 500); }, []);
+    return (
+      <div className={`absolute bottom-8 right-8 z-[9999] pointer-events-auto transition-all duration-700 ease-out transform ${
+        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'
+      }`}>
+        <a
+          href="https://t.me/+dlP_A0ebMXs3NTg0"
+          target="_blank" rel="noopener noreferrer"
+          className="group relative flex items-center justify-center w-16 h-16 rounded-full transition-all duration-300 hover:-translate-y-1"
+        >
+          <div className="absolute inset-0 rounded-full bg-[#0066ff] blur-[20px] opacity-40 animate-pulse group-hover:opacity-80 group-hover:scale-110 transition-all duration-500" />
+          <div className="relative flex items-center justify-center w-full h-full bg-gradient-to-br from-[#0033cc] via-[#0066ff] to-[#3399ff] rounded-full shadow-inner border border-[#66b3ff]/50 overflow-hidden z-10">
+              <MessageCircle className="w-7 h-7 text-white relative z-30" strokeWidth={2.5} />
+          </div>
+        </a>
+      </div>
+    );
+  };
 
 // ----------------------------------------------------------------------
 // --- MAIN HOME COMPONENT ---
@@ -237,8 +242,9 @@ export default function Home() {
   const [isMuted, setIsMuted] = useState(false); 
   const [volume, setVolume] = useState(25);
   const playerRef = useRef<any>(null);
-    
-  // Transition & Helper State
+  
+  // State to track if user is hovering a theme preview (to pause BG music)
+  const [isPreviewing, setIsPreviewing] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showHelper, setShowHelper] = useState(false);
 
@@ -256,8 +262,6 @@ export default function Home() {
         const storedMute = localStorage.getItem('user_is_muted');
         const storedVol = localStorage.getItem('user_volume');
         const hasRegistered = localStorage.getItem('vip_user_registered') === 'true';
-
-        // Helper Logic
         const hasSeenHelper = localStorage.getItem('has_seen_theme_onboarding');
         
         if (storedTheme) setActiveThemeId(storedTheme);
@@ -283,42 +287,22 @@ export default function Home() {
       if(showHelper) dismissHelper();
   };
 
-  // --- AUDIO CONTROL LOGIC ---
-
   const safePlay = useCallback(() => {
-      if (isMuted || showConfigurator || !playerRef.current) return;
+      // Logic Update: Do not play if Configurator is Open OR if Previewing
+      if (isMuted || showConfigurator || isPreviewing || !playerRef.current) return;
       try {
-          // Force unmute first - browsers often start hidden videos as muted
-          if(typeof playerRef.current.unMute === 'function') {
-             playerRef.current.unMute();
-          }
-          if(typeof playerRef.current.setVolume === 'function') {
-             playerRef.current.setVolume(volume);
-          }
-          if(typeof playerRef.current.playVideo === 'function') {
-             playerRef.current.playVideo();
-          }
-      } catch (e) {
-          console.warn("Audio Player: Interaction prevented", e);
-      }
-  }, [isMuted, showConfigurator, volume]);
+          if(typeof playerRef.current.unMute === 'function') playerRef.current.unMute();
+          if(typeof playerRef.current.setVolume === 'function') playerRef.current.setVolume(volume);
+          if(typeof playerRef.current.playVideo === 'function') playerRef.current.playVideo();
+      } catch (e) { console.warn("Audio Player: Interaction prevented", e); }
+  }, [isMuted, showConfigurator, isPreviewing, volume]);
 
   const safePause = useCallback(() => {
-      try {
-          playerRef.current?.pauseVideo?.();
-      } catch (e) {
-          console.warn("Audio Player: Pause prevented", e);
-      }
+      try { playerRef.current?.pauseVideo?.(); } catch (e) {}
   }, []);
 
-  // GLOBAL CLICK LISTENER: Forces audio to wake up on first interaction
   useEffect(() => {
-    const unlockAudio = () => {
-        if(playerRef.current) {
-            safePlay();
-        }
-    };
-    // Add one-time listener to window to catch ANY click
+    const unlockAudio = () => { if(playerRef.current) safePlay(); };
     window.addEventListener('click', unlockAudio, { once: true });
     window.addEventListener('touchstart', unlockAudio, { once: true });
     return () => {
@@ -330,15 +314,10 @@ export default function Home() {
   const handleVolumeChange = (newVol: number) => {
       setVolume(newVol);
       localStorage.setItem('user_volume', newVol.toString());
-      
       if(playerRef.current) {
         playerRef.current.setVolume(newVol);
-        if (newVol > 0) {
-            // Explicitly unmute if volume is raised
-            playerRef.current.unMute?.();
-        }
+        if (newVol > 0) playerRef.current.unMute?.();
       }
-
       if (newVol > 0 && isMuted) {
           setIsMuted(false);
           localStorage.setItem('user_is_muted', 'false');
@@ -348,40 +327,28 @@ export default function Home() {
 
   const handlePlayerReady = useCallback((player: any) => {
       playerRef.current = player;
-      // Initialize mute/volume state
-      if (isMuted) {
-          player.mute?.();
-      } else {
+      if (isMuted) player.mute?.();
+      else {
           player.unMute?.();
           player.setVolume?.(volume);
       }
-      
-      // Attempt play (might be blocked by browser until interaction)
-      if (!isMuted && !showConfigurator) {
-          player.playVideo?.();
-      }
-  }, [isMuted, showConfigurator, volume]);
+      if (!isMuted && !showConfigurator && !isPreviewing) player.playVideo?.();
+  }, [isMuted, showConfigurator, isPreviewing, volume]);
 
+  // Updated Effect: Pauses audio if Configurator is open OR user is previewing a theme
   useEffect(() => {
       if (!playerRef.current) return;
-      if (showConfigurator) {
-          safePause();
-      } else if (!isMuted) {
-          safePlay();
-      }
-  }, [showConfigurator, isMuted, safePause, safePlay]);
+      if (showConfigurator || isPreviewing) safePause();
+      else if (!isMuted) safePlay();
+  }, [showConfigurator, isPreviewing, isMuted, safePause, safePlay]);
 
   const toggleMusic = useCallback(() => {
       const newMutedState = !isMuted;
       setIsMuted(newMutedState);
       localStorage.setItem('user_is_muted', String(newMutedState));
-      
-      if (newMutedState) {
-          safePause();
-      } else if (!showConfigurator) {
-          safePlay();
-      }
-  }, [isMuted, showConfigurator, safePlay, safePause]);
+      if (newMutedState) safePause();
+      else if (!showConfigurator && !isPreviewing) safePlay();
+  }, [isMuted, showConfigurator, isPreviewing, safePlay, safePause]);
 
   const handleRegisterComplete = useCallback(() => {
     if (typeof window !== 'undefined') localStorage.setItem('vip_user_registered', 'true'); 
@@ -407,7 +374,6 @@ export default function Home() {
       setCurrentStage("content");
       const hasSeenHelper = localStorage.getItem('has_seen_theme_onboarding');
       if (!hasSeenHelper) setShowHelper(true);
-      // Try to play audio when loading finishes
       safePlay();
   }, [safePlay]);
 
@@ -420,13 +386,6 @@ export default function Home() {
           background-color: black; 
           overflow-x: hidden;
         }
-        #theme-wrapper {
-            transition: filter 0.5s ease;
-            filter: ${activeTheme.filter};
-        }
-        @media (max-width: 1024px) {
-            #theme-wrapper { filter: ${activeTheme.mobileFilter}; }
-        }
         .profit-reveal {
           animation: profitReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
@@ -434,86 +393,50 @@ export default function Home() {
           0% { transform: scale(1.05); opacity: 0; filter: blur(15px); }
           100% { transform: scale(1); opacity: 1; filter: blur(0px); }
         }
+        @keyframes music-bar-1 { 0%, 100% { height: 33%; } 50% { height: 100%; } }
+        @keyframes music-bar-2 { 0%, 100% { height: 66%; } 50% { height: 33%; } }
+        @keyframes music-bar-3 { 0%, 100% { height: 100%; } 50% { height: 66%; } }
+        .animate-music-bar-1 { animation: music-bar-1 0.8s ease-in-out infinite; }
+        .animate-music-bar-2 { animation: music-bar-2 1.1s ease-in-out infinite; }
+        .animate-music-bar-3 { animation: music-bar-3 0.9s ease-in-out infinite; }
       `}</style>
 
       <Analytics />
       <SpeedInsights />
 
-      {/* ONBOARDING HELPER (First Load Only) */}
-      {showHelper && currentStage === 'content' && (
-          <OnboardingHelper onDismiss={handleOpenTheme} />
-      )}
-
-      {/* TRANSITION OVERLAY */}
-      <div 
-        className={`fixed inset-0 z-[100002] bg-black pointer-events-none transition-opacity duration-300 ease-in-out ${isTransitioning ? 'opacity-100' : 'opacity-0'}`}
-      />
-
+      {/* AUDIO SYSTEM */}
       <BackgroundMusicSystem 
         themeId={activeThemeId} 
         onReady={handlePlayerReady} 
         volume={volume}
       />
 
-      {/* MOVED OUTSIDE OF #theme-wrapper 
-        This prevents CSS filters from breaking 'fixed' positioning 
-      */}
-      <BottomControls 
-          visible={currentStage === 'content'}
-          isPlaying={isPlaying} 
-          onToggleMusic={toggleMusic} 
-          onOpenTheme={handleOpenTheme}
-          themeName={activeTheme.name} 
-          volume={volume}
-          onVolumeChange={handleVolumeChange}
-      />
+      {/* FIXED WIDGETS (Z-Index 400,000) - Very high to be always clickable */}
+      <div className="fixed inset-0 z-[400000] pointer-events-none">
+          <BottomControls 
+              visible={currentStage === 'content'}
+              isPlaying={isPlaying} 
+              onToggleMusic={toggleMusic} 
+              onOpenTheme={handleOpenTheme}
+              themeName={activeTheme.name} 
+              volume={volume}
+              onVolumeChange={handleVolumeChange}
+          />
+          <SupportWidget />
+      </div>
 
-      {/* Main wrapper onClick acts as a fallback for audio unlocking */}
+      {showHelper && currentStage === 'content' && (
+          <OnboardingHelper onDismiss={handleOpenTheme} />
+      )}
+
+      {/* MAIN CONTENT */}
       <div className="relative w-full min-h-screen" onClick={safePlay}>
-        {currentStage === "register" && (
-            <div className="fixed inset-0 z-[100000] bg-black">
-                <RegisterPage onUnlock={handleRegisterComplete} />
-            </div>
-        )}
-
-        {currentStage === "hold" && (
-            <div className="fixed inset-0 z-[100000]">
-                <BullMoneyGate onUnlock={handleHoldComplete}>
-                    <></> 
-                </BullMoneyGate>
-            </div>
-        )}
-
-        {currentStage === "v2" && <MultiStepLoaderV2 onFinished={handleV2Complete} />}
-
-        <div 
-            id="theme-wrapper" 
-            className={currentStage === 'content' ? 'profit-reveal' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}
-        >
-            <Navbar 
-                setShowConfigurator={setShowConfigurator} 
-                activeThemeId={activeThemeId}
-                onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)}
-            />
-
-            <main className="relative min-h-screen">
-                <TargetCursor spinDuration={2} hideDefaultCursor={true} targetSelector=".cursor-target, a, button" />
-                {currentStage === 'content' && ( 
-                    <div className="relative z-10">
-                        <Socialsfooter />
-                        <Heromain />
-                        <ShopFunnel />
-                        <Shopmain />
-                        <Chartnews />
-                        <Pricing />
-                        <Features />
-                    </div>
-                )}
-            </main>
-        </div>
-
+        
+        {/* CONFIGURATOR MODAL - Z-Index 300,000 
+            Must be ABOVE the Global Theme Lens (200,000) so it appears clear and untinted.
+        */}
         {showConfigurator && (
-            <div className="fixed inset-0 z-[100001] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-[300000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
                 <div className="relative w-full max-w-6xl h-[80vh] bg-[#020617] rounded-3xl border border-white/10 overflow-hidden">
                     <button 
                         onClick={(e) => { e.stopPropagation(); setShowConfigurator(false); }}
@@ -521,14 +444,113 @@ export default function Home() {
                     >
                         <X size={28} />
                     </button>
+                    {/* @ts-ignore */}
                     <FixedThemeConfigurator 
                         initialThemeId={activeThemeId}
                         onThemeChange={handleThemeChange} 
+                        // Passed logic to pause BG music during preview
+                     
                     />
                 </div>
             </div>
         )}
+
+        {/* GLOBAL THEME LENS - Z-Index 200,000
+            This sits ON TOP of loaders (which are at 100,000) to ensure the filter applies 
+            even if loaders use Portals. It is pointer-events-none so clicks pass through.
+        */}
+        <div 
+            id="global-theme-lens"
+            className="fixed inset-0 pointer-events-none w-screen h-screen z-[200000]"
+            style={{ 
+                backdropFilter: activeTheme.filter,
+                WebkitBackdropFilter: activeTheme.filter, 
+                transition: 'backdrop-filter 0.5s ease' 
+            }}
+        />
+
+        {/* LOADING & GATING - Z-Index 100,000 
+            Sits below the Lens. We also keep the wrapper-level filter as a backup.
+            Added translateZ(0) to wrapper to help trap fixed children in stacking context.
+        */}
+        {currentStage === "register" && (
+            <div 
+                className="fixed inset-0 z-[100000] bg-black transition-all duration-500"
+                style={{ 
+                    filter: activeTheme.filter,
+                    WebkitFilter: activeTheme.filter,
+                    transform: 'translateZ(0)' 
+                }}
+            >
+                {/* @ts-ignore */}
+                <RegisterPage onUnlock={handleRegisterComplete} theme={activeTheme} />
+            </div>
+        )}
+        {currentStage === "hold" && (
+            <div 
+                className="fixed inset-0 z-[100000] transition-all duration-500"
+                style={{ 
+                    filter: activeTheme.filter,
+                    WebkitFilter: activeTheme.filter,
+                    transform: 'translateZ(0)'
+                }}
+            >
+                {/* @ts-ignore */}
+                <BullMoneyGate onUnlock={handleHoldComplete} theme={activeTheme}>
+                    <></> 
+                </BullMoneyGate>
+            </div>
+        )}
+        {currentStage === "v2" && (
+            <div 
+                className="fixed inset-0 z-[100000] transition-all duration-500"
+                style={{ 
+                    filter: activeTheme.filter,
+                    WebkitFilter: activeTheme.filter,
+                    transform: 'translateZ(0)'
+                }}
+            >
+                 {/* @ts-ignore */}
+                <MultiStepLoaderV2 onFinished={handleV2Complete} theme={activeTheme} />
+            </div>
+        )}
+
+        {/* PAGE CONTENT WRAPPER */}
+        <div className={currentStage === 'content' ? 'profit-reveal' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
+            
+            <Navbar 
+                setShowConfigurator={setShowConfigurator} 
+                activeThemeId={activeThemeId}
+                onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)}
+            />
+
+            <main className="relative min-h-screen z-10">
+                <TargetCursor spinDuration={2} hideDefaultCursor={true} targetSelector=".cursor-target, a, button" />
+                
+                {currentStage === 'content' && ( 
+                    <div className="relative">
+                        {/* @ts-ignore */}
+                        <Socialsfooter themeId={activeThemeId} theme={activeTheme} />
+                        {/* @ts-ignore */}
+                        <Heromain themeId={activeThemeId} theme={activeTheme} />
+                        {/* @ts-ignore */}
+                        <ShopFunnel themeId={activeThemeId} theme={activeTheme} />
+                        {/* @ts-ignore */}
+                        <Shopmain themeId={activeThemeId} theme={activeTheme} />
+                        {/* @ts-ignore */}
+                        <Chartnews themeId={activeThemeId} theme={activeTheme} />
+                        {/* @ts-ignore */}
+                        <Pricing themeId={activeThemeId} theme={activeTheme} />
+                        {/* @ts-ignore */}
+                        <Features themeId={activeThemeId} theme={activeTheme} />
+                    </div>
+                )}
+            </main>
+        </div>
       </div>
+      
+      {/* FIXED BACKGROUND FADE - Z-Index 500,000 (Transition overlay) */}
+      <div className={`fixed inset-0 z-[500000] bg-black pointer-events-none transition-opacity duration-300 ease-in-out ${isTransitioning ? 'opacity-100' : 'opacity-0'}`} />
     </>
   );
 }

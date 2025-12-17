@@ -19,7 +19,6 @@ const HeroShop = dynamic(() => import("@/app/Blogs/BlogHero"), { ssr: false });
 const BlogPage = dynamic(() => import("@/app/Blogs/BlogPage"), { ssr: false });
 const Chartnews = dynamic(() => import("@/app/Blogs/Chartnews"), { ssr: false });
 const Shopmain = dynamic(() => import("@/components/Mainpage/ShopMainpage"), { ssr: false });
-// Note: Livestreams was imported but not used in your return, kept it out to clean up warnings, add back if needed.
 
 // --- DYNAMIC THEME CONFIGURATOR ---
 const FixedThemeConfigurator = dynamic(
@@ -352,15 +351,25 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
     `}</style>
   );
 
-  // Loader State
+  // --- RENDER LOGIC ---
+
+  // 1. VIP Loader (Now accepts Theme)
   if (!isUnlocked) {
     return (
-      <main className="min-h-screen bg-slate-950 text-white">
-        <RecruitPage onUnlock={handleUnlock} />
+      <main 
+        className="min-h-screen bg-slate-950 text-white transition-all duration-500"
+        style={{ 
+            filter: activeTheme.filter,
+            WebkitFilter: activeTheme.filter
+        }}
+      >
+        {/* @ts-ignore - Pass theme to loader if supported */}
+        <RecruitPage onUnlock={handleUnlock} theme={activeTheme} />
       </main>
     );
   }
 
+  // 2. Main Content
   return (
     <BlogProvider>
       <GlobalStyles />
@@ -394,7 +403,7 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
           onThemeChange={handleThemeChange}
       />
 
-      <div className="relative animate-in fade-in duration-1000 pt-20"> {/* Added pt-20 for Navbar */}
+      <div className="relative animate-in fade-in duration-1000 pt-20"> 
         
         <TargetCursor 
             hideDefaultCursor={true} 

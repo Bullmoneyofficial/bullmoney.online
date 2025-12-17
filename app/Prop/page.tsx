@@ -2,229 +2,266 @@
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import dynamic from 'next/dynamic'; 
-import { gsap } from "gsap"; 
+import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube'; 
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
-import { MessageCircle, Volume2, VolumeX, Settings, X } from 'lucide-react'; 
+import { MessageCircle, Volume2, Volume1, VolumeX, X, Palette, Sparkles } from 'lucide-react'; 
 
-// --- STATIC IMPORTS (Core Layout/Loader) ---
+// --- STATIC IMPORTS ---
 import RecruitPage from "@/app/register/pageVip"; 
 import Socials from "@/components/Mainpage/Socialsfooter"; 
-
-// --- NEW IMPORTS FOR THEME SUPPORT ---
 import { Navbar } from "@/components/Mainpage/navbar"; 
-import { ALL_THEMES as THEME_DATA, Theme } from '@/components/Mainpage/ThemeComponents';
+import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
 
-// --- DYNAMIC IMPORTS FOR MAIN CONTENT SECTIONS ---
+// --- DYNAMIC IMPORTS ---
 const Features = dynamic(() => import("@/components/Mainpage/features").then(mod => mod.Features), { ssr: false });
 const Hero = dynamic(() => import("@/app/Prop/Prophero").then(mod => mod.Hero), { ssr: false });
 const AboutContent = dynamic(() => import("../Testimonial").then(mod => mod.AboutContent), { ssr: false });
 
-// --- DYNAMIC THEME CONFIGURATOR ---
 const FixedThemeConfigurator = dynamic(
     () => import('@/components/Mainpage/ThemeComponents').then((mod) => mod.default), 
-    { 
-        ssr: false,
-        loading: () => <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">Loading Config...</div> 
-    }
+    { ssr: false }
 );
 
-// --- DYNAMIC CURSOR IMPORT (Standardized) ---
-// NOTE: I am using the simplified TargertCursor path for consistency, not the complex inline component definition.
 const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor'), { 
   ssr: false,
-  loading: () => <div className="hidden">Loading Cursor...</div> 
+  loading: () => <div className="hidden"></div> 
 });
 
+// --- FALLBACK THEME ---
+const FALLBACK_THEME: Partial<Theme> = {
+    id: 'default',
+    name: 'Loading...',
+    filter: 'none',
+    mobileFilter: 'none',
+};
 
-// =========================================
-// 0. CUSTOM HOOKS & UTILS (Audio & Mobile Check)
-// =========================================
-const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => {
-      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      const isSmall = window.innerWidth <= 768;
-      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-      const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i; 
-      setIsMobile((hasTouch && isSmall) || mobileRegex.test(userAgent.toLowerCase()));
+// --- HELPER: GET THEME COLOR ---
+const getThemeColor = (theme: Partial<Theme> | any) => {
+    if (theme?.primaryColor) return theme.primaryColor;
+    
+    const colorMap: Record<string, string> = {
+        't01': '#3b82f6', // Blue (Default)
+        't02': '#22c55e', // Green (Matrix)
+        't03': '#ef4444', // Red (Sith)
+        't04': '#a855f7', // Purple (Neon)
+        't05': '#eab308', // Gold
+        't06': '#ec4899', // Pink
     };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  return isMobile;
-};
-
-// Hook 1: Loader Audio (Plays during RecruitPage)
-const useLoaderAudio = (url: string, isVisible: boolean) => {
-    useEffect(() => {
-        if (!isVisible) return;
-        const audio = new Audio(url);
-        audio.loop = false;
-        audio.volume = 1.0;
-        const AUDIO_DURATION_MS = 4800;
-        let timer: NodeJS.Timeout | null = null;
-
-        const unlock = () => { audio.play().catch(() => {}); cleanupListeners(); };
-        const cleanupListeners = () => {
-            window.removeEventListener('click', unlock);
-            window.removeEventListener('touchstart', unlock);
-            window.removeEventListener('keydown', unlock);
-        };
-
-        window.addEventListener('click', unlock);
-        window.addEventListener('touchstart', unlock);
-        window.addEventListener('keydown', unlock);
-
-        const attemptPlay = async () => {
-            try {
-                await audio.play();
-                cleanupListeners();
-            } catch (err) { /* Autoplay blocked */ }
-        };
-        attemptPlay();
-
-        timer = setTimeout(() => {
-            audio.pause();
-            audio.currentTime = 0;
-            cleanupListeners(); 
-        }, AUDIO_DURATION_MS);
-
-        return () => {
-            audio.pause();
-            audio.currentTime = 0;
-            if (timer) clearTimeout(timer);
-            cleanupListeners();
-        };
-    }, [url, isVisible]);
-};
-
-// Hook 2: Background Music Loop (Plays after Unlock)
-const useBackgroundLoop = (url: string) => {
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-    const [isPlaying, setIsPlaying] = useState(false);
-  
-    useEffect(() => {
-      const audio = new Audio(url);
-      audio.loop = true;
-      audio.volume = 0.01; 
-      audioRef.current = audio;
-  
-      return () => {
-        audio.pause();
-        audio.src = "";
-      };
-    }, [url]);
-  
-    const start = useCallback(() => {
-      if (audioRef.current && audioRef.current.paused) {
-        audioRef.current.volume = 0.01; 
-        audioRef.current.play()
-          .then(() => setIsPlaying(true))
-          .catch(() => setIsPlaying(false));
-      }
-    }, []);
-  
-    const toggle = useCallback(() => {
-      if (!audioRef.current) return;
-      if (isPlaying) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        audioRef.current.volume = 0.01; 
-        audioRef.current.play().catch(() => {});
-        setIsPlaying(true);
-      }
-    }, [isPlaying]);
-  
-    return { isPlaying, start, toggle };
+    return colorMap[theme?.id] || '#3b82f6';
 };
 
 // =========================================
-// 1. UI COMPONENTS (Widget + Controller)
+// 1. ONBOARDING HELPER
 // =========================================
-
-const MusicController = ({ isPlaying, onToggle }: { isPlaying: boolean; onToggle: () => void }) => (
-    <button
-      onClick={onToggle}
-      className={`fixed bottom-8 left-8 z-[9999] group flex items-center justify-center w-12 h-12 rounded-full 
-      transition-all duration-500 border border-[#66b3ff]/30 backdrop-blur-md
-      ${isPlaying ? 'bg-[#0066ff]/20 shadow-[0_0_15px_rgba(0,102,255,0.5)]' : 'bg-gray-900/50 grayscale'}`}
-    >
-      {isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center gap-[3px] opacity-50">
-            {[1,2,3,4].map(i => (
-              <div key={i} className="w-[3px] bg-blue-400 rounded-full animate-pulse" 
-                  style={{ height: '60%', animationDuration: `${0.5 + i * 0.1}s` }} />
-            ))}
+const OnboardingHelper = ({ onDismiss, theme }: { onDismiss: () => void, theme: any }) => {
+    const color = getThemeColor(theme);
+    return (
+        <div 
+            onClick={onDismiss}
+            className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-[2px] cursor-pointer animate-in fade-in duration-700"
+        >
+            <div className="relative w-full h-full">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+                    <h2 
+                        className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tighter animate-pulse"
+                        style={{ textShadow: `0 0 25px ${color}99` }}
+                    >
+                        Customize Your Vibe
+                    </h2>
+                    <p className="text-white/80 text-lg md:text-xl font-mono opacity-90">
+                        Choose a Theme & Soundtrack
+                    </p>
+                    <div className="mt-4 text-xs text-white/40 uppercase tracking-widest">Click anywhere to start</div>
+                </div>
+            </div>
         </div>
-      )}
-      <div className="relative z-10 transition-transform duration-300 group-hover:scale-110">
-        {isPlaying ? <Volume2 className="w-5 h-5 text-blue-100" /> : <VolumeX className="w-5 h-5 text-gray-400" />}
-      </div>
-    </button>
-);
+    );
+};
 
-const SupportWidget = () => {
-  const [isHovered, setIsHovered] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const telegramLink = "https://t.me/+dlP_A0ebMXs3NTg0";
+// =========================================
+// 2. AUDIO ARCHITECTURE (YouTube System)
+// =========================================
+const BackgroundMusicSystem = ({ 
+  themeId, 
+  onReady,
+  volume 
+}: { 
+  themeId: string;
+  onReady: (player: any) => void;
+  volume: number;
+}) => {
+  const videoId = (THEME_SOUNDTRACKS && THEME_SOUNDTRACKS[themeId]) 
+    ? THEME_SOUNDTRACKS[themeId] 
+    : 'jfKfPfyJRdk'; // Default ID
+    
+  const opts: YouTubeProps['opts'] = {
+    height: '1', 
+    width: '1', 
+    playerVars: {
+      autoplay: 1,
+      controls: 0,
+      loop: 1,
+      playlist: videoId, 
+      modestbranding: 1,
+      playsinline: 1,
+      enablejsapi: 1, 
+      origin: typeof window !== 'undefined' ? window.location.origin : undefined,
+    },
+  };
 
   return (
-    <div 
-      id="support-widget-container" 
-      className={`fixed bottom-8 right-8 z-[9999] transition-all duration-700 ease-out transform ${
-        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'
-      }`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Tooltip */}
-      <div 
-        className={`absolute bottom-full right-0 mb-4 whitespace-nowrap px-5 py-2.5 
-        bg-[#001a33]/90 backdrop-blur-xl border border-[#0066ff]/30 text-white text-sm font-medium rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.5)] 
-        transition-all duration-300 origin-bottom-right flex items-center gap-3
-        ${isHovered ? 'scale-100 opacity-100 translate-y-0' : 'scale-90 opacity-0 translate-y-4 pointer-events-none'}`}
-      >
-        <span className="relative flex h-2.5 w-2.5">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#0099ff] shadow-[0_0_10px_rgba(0,153,255,0.8)]"></span>
-        </span>
-        <span className="tracking-wide text-blue-50 font-sans">Chat Support</span>
-      </div>
-
-      {/* Button */}
-      <a
-        href={telegramLink}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Contact Support"
-        className="group relative flex items-center justify-center w-16 h-16 rounded-full transition-all duration-300 hover:-translate-y-1"
-      >
-        <div className={`absolute inset-0 rounded-full bg-[#0066ff] blur-[20px] transition-all duration-500 
-          ${isHovered ? 'opacity-80 scale-125' : 'opacity-40 scale-110 animate-pulse'}`} 
-        />
-        <div className="relative flex items-center justify-center w-full h-full bg-gradient-to-br from-[#0033cc] via-[#0066ff] to-[#3399ff] rounded-full shadow-[inset_0_2px_4px_rgba(255,255,255,0.3),inset_0_-4px_6px_rgba(0,0,0,0.3)] overflow-hidden z-10 border border-[#66b3ff]/50">
-            <div className="absolute inset-0 -translate-x-[150%] animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-15deg] z-20 pointer-events-none" />
-            <div className={`relative z-30 transition-transform duration-500 ease-spring ${isHovered ? 'rotate-12 scale-110' : 'rotate-0'}`}>
-                <MessageCircle className="w-7 h-7 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" strokeWidth={2.5} />
-            </div>
-            <span className="absolute top-3.5 right-3.5 flex h-3 w-3 z-40">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-white/20 shadow-sm"></span>
-            </span>
-        </div>
-      </a>
+    <div className="fixed bottom-0 left-0 opacity-0 pointer-events-none z-[-1] overflow-hidden w-px h-px">
+      <YouTube 
+        videoId={videoId} 
+        opts={opts} 
+        onReady={(event: YouTubeEvent) => { 
+            if(event.target) onReady(event.target);
+        }}
+        onStateChange={(event: YouTubeEvent) => {
+            if (event.data === -1 || event.data === 2) {}
+        }}
+      />
     </div>
   );
+};
+
+// =========================================
+// 3. UI CONTROLS (Sticky Widgets)
+// =========================================
+const BottomControls = ({ 
+    isPlaying, 
+    onToggleMusic, 
+    onOpenTheme,
+    theme, 
+    volume, 
+    onVolumeChange,
+    visible
+}: { 
+    isPlaying: boolean; 
+    onToggleMusic: () => void, 
+    onOpenTheme: () => void,
+    theme: any,
+    volume: number,
+    onVolumeChange: (val: number) => void,
+    visible: boolean
+}) => {
+    const [isHovered, setIsHovered] = useState(false);
+    const [showHelper, setShowHelper] = useState(true);
+    const color = getThemeColor(theme);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setShowHelper(false), 8000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    if (!visible) return null;
+
+    return (
+        <div 
+            className="pointer-events-auto flex flex-col items-start gap-4 transition-all duration-700 ease-in-out absolute bottom-8 left-8"
+            style={{ 
+                opacity: visible ? 1 : 0,
+                transform: visible ? 'translateY(0)' : 'translateY(20px)' 
+            }}
+            onMouseEnter={() => {
+                setIsHovered(true);
+                setShowHelper(false);
+            }}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            {showHelper && (
+                <div 
+                    className="absolute -top-12 left-0 text-white text-[11px] px-3 py-1.5 rounded-lg shadow-xl animate-pulse flex items-center gap-2 whitespace-nowrap border border-white/20"
+                    style={{ background: `linear-gradient(90deg, ${color}, #000000)` }}
+                >
+                    <Sparkles size={12} />
+                    Customize your vibe here!
+                    <div className="absolute -bottom-1 left-4 w-2 h-2 rotate-45" style={{ backgroundColor: color }} />
+                </div>
+            )}
+
+            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-xl border border-white/10 p-2 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:border-white/20 transition-colors">
+                <button
+                    onClick={(e) => { e.stopPropagation(); onOpenTheme(); }}
+                    className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 text-gray-400 transition-all duration-300 border border-transparent group relative hover:text-white"
+                >
+                    <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-20 transition-opacity" style={{ backgroundColor: color }} />
+                    <Palette size={18} />
+                </button>
+
+                <div className="w-px h-6 bg-white/10 mx-1" />
+
+                <button
+                    onClick={(e) => { e.stopPropagation(); onToggleMusic(); }} 
+                    className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-500 relative`}
+                    style={{
+                        backgroundColor: isPlaying ? `${color}33` : '#1f2937', 
+                        color: isPlaying ? color : '#6b7280',
+                        boxShadow: isPlaying ? `0 0 15px ${color}4d` : 'none'
+                    }}
+                >
+                    {isPlaying ? (volume > 50 ? <Volume2 size={18}/> : <Volume1 size={18}/>) : <VolumeX size={18}/>}
+                    {isPlaying && <span className="absolute inset-0 rounded-full border animate-ping opacity-20" style={{ borderColor: color }} />}
+                </button>
+
+                <div className={`flex items-center transition-all duration-500 overflow-hidden ${isHovered ? 'w-24 px-2 opacity-100' : 'w-0 opacity-0'}`}>
+                    <input 
+                        type="range" min="0" max="100" value={volume}
+                        onChange={(e) => onVolumeChange(parseInt(e.target.value))}
+                        className="w-full h-1 rounded-lg appearance-none cursor-pointer"
+                        style={{ accentColor: color, backgroundColor: `${color}33` }}
+                    />
+                </div>
+            </div>
+            
+            <div className={`hidden md:flex flex-col overflow-hidden transition-all duration-500 pl-2 ${isPlaying ? 'max-h-12 opacity-100' : 'max-h-0 opacity-0'}`}>
+                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Now Streaming</span>
+                <div className="flex items-center gap-1">
+                    <span className="text-xs text-white truncate font-mono">{theme.name} Radio</span>
+                    <div className="flex gap-0.5 items-end h-3">
+                        <span className="w-0.5 h-full animate-music-bar-1" style={{ backgroundColor: color }}/>
+                        <span className="w-0.5 h-full animate-music-bar-2" style={{ backgroundColor: color }}/>
+                        <span className="w-0.5 h-full animate-music-bar-3" style={{ backgroundColor: color }}/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+const SupportWidget = ({ theme }: { theme: any }) => {
+    const [isVisible, setIsVisible] = useState(false);
+    const color = getThemeColor(theme);
+
+    useEffect(() => { setTimeout(() => setIsVisible(true), 500); }, []);
+    
+    return (
+      <div className={`absolute bottom-8 right-8 z-[9999] pointer-events-auto transition-all duration-700 ease-out transform ${
+        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'
+      }`}>
+        <a
+          href="https://t.me/+dlP_A0ebMXs3NTg0"
+          target="_blank" rel="noopener noreferrer"
+          className="group relative flex items-center justify-center w-16 h-16 rounded-full transition-all duration-300 hover:-translate-y-1"
+        >
+            <div 
+                className="absolute inset-0 rounded-full blur-[20px] opacity-40 animate-pulse group-hover:opacity-80 group-hover:scale-110 transition-all duration-500"
+                style={{ backgroundColor: color }} 
+            />
+            <div 
+                className="relative flex items-center justify-center w-full h-full rounded-full shadow-inner border overflow-hidden z-10"
+                style={{
+                    background: `linear-gradient(135deg, ${color}dd, ${color}, ${color}aa)`,
+                    borderColor: `${color}88`
+                }}
+            >
+                <div className="absolute inset-0 bg-white/20 group-hover:bg-white/0 transition-colors" />
+                <MessageCircle className="w-7 h-7 text-white relative z-30 drop-shadow-md" strokeWidth={2.5} />
+            </div>
+        </a>
+      </div>
+    );
 };
 
 
@@ -233,137 +270,261 @@ const SupportWidget = () => {
 // ==========================================
 
 export default function Home() {
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [currentStage, setCurrentStage] = useState<"recruit" | "content">("recruit");
+  const [isClient, setIsClient] = useState(false);
+  const [activeThemeId, setActiveThemeId] = useState<string>('t01'); 
+  const [showConfigurator, setShowConfigurator] = useState(false); 
+  const [isMuted, setIsMuted] = useState(false); 
+  const [volume, setVolume] = useState(25);
+  const playerRef = useRef<any>(null);
   
-  // --- THEME STATE MANAGEMENT ---
-  const [showConfigurator, setShowConfigurator] = useState(false);
-  const [activeThemeId, setActiveThemeId] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-        return localStorage.getItem('user_theme_id') || 't01';
-    }
-    return 't01';
-  });
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showHelper, setShowHelper] = useState(false);
 
-  // Calculate active theme
-  const activeTheme: Theme = useMemo(() => {
-    return THEME_DATA.find(t => t.id === activeThemeId) || THEME_DATA[0];
+  const activeTheme = useMemo(() => {
+    if (!ALL_THEMES || ALL_THEMES.length === 0) return FALLBACK_THEME as Theme;
+    return ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   }, [activeThemeId]);
+    
+  const isPlaying = useMemo(() => !isMuted, [isMuted]);
 
-  // Handle Theme Change
-  const handleThemeChange = useCallback((themeId: string) => {
-    setActiveThemeId(themeId);
+  useEffect(() => {
+    setIsClient(true);
     if (typeof window !== 'undefined') {
-        localStorage.setItem('user_theme_id', themeId);
+        const storedTheme = localStorage.getItem('user_theme_id');
+        const storedMute = localStorage.getItem('user_is_muted');
+        const storedVol = localStorage.getItem('user_volume');
+        const hasSeenHelper = localStorage.getItem('has_seen_theme_onboarding');
+        
+        if (storedTheme) setActiveThemeId(storedTheme);
+        if (storedMute !== null) setIsMuted(storedMute === 'true');
+        if (storedVol) setVolume(parseInt(storedVol));
     }
-    setShowConfigurator(false); 
   }, []);
-  
-  // 1. Audio Hooks Setup
-  useLoaderAudio('/modals.mp3', !isUnlocked); // Only plays while locked
-  const { isPlaying, start: startBgLoop, toggle: toggleBgLoop } = useBackgroundLoop('/background.mp3');
 
-  // 2. Unlock Handler (Triggered by RecruitPage)
+  const dismissHelper = () => {
+    setShowHelper(false);
+    localStorage.setItem('has_seen_theme_onboarding', 'true');
+  };
+
+  const handleOpenTheme = () => {
+      setShowConfigurator(true);
+      if(showHelper) dismissHelper();
+  };
+
+  const safePlay = useCallback(() => {
+      if (isMuted || showConfigurator || !playerRef.current) return;
+      try {
+          if(typeof playerRef.current.unMute === 'function') playerRef.current.unMute();
+          if(typeof playerRef.current.setVolume === 'function') playerRef.current.setVolume(volume);
+          if(typeof playerRef.current.playVideo === 'function') playerRef.current.playVideo();
+      } catch (e) { console.warn("Audio Player: Interaction prevented", e); }
+  }, [isMuted, showConfigurator, volume]);
+
+  const safePause = useCallback(() => {
+      try { playerRef.current?.pauseVideo?.(); } catch (e) {}
+  }, []);
+
+  useEffect(() => {
+    const unlockAudio = () => { if(playerRef.current) safePlay(); };
+    window.addEventListener('click', unlockAudio, { once: true });
+    window.addEventListener('touchstart', unlockAudio, { once: true });
+    return () => {
+        window.removeEventListener('click', unlockAudio);
+        window.removeEventListener('touchstart', unlockAudio);
+    };
+  }, [safePlay]);
+
+  const handleVolumeChange = (newVol: number) => {
+      setVolume(newVol);
+      localStorage.setItem('user_volume', newVol.toString());
+      if(playerRef.current) {
+        playerRef.current.setVolume(newVol);
+        if (newVol > 0) playerRef.current.unMute?.();
+      }
+      if (newVol > 0 && isMuted) {
+          setIsMuted(false);
+          localStorage.setItem('user_is_muted', 'false');
+          safePlay(); 
+      }
+  };
+
+  const handlePlayerReady = useCallback((player: any) => {
+      playerRef.current = player;
+      if (isMuted) player.mute?.();
+      else {
+          player.unMute?.();
+          player.setVolume?.(volume);
+      }
+  }, [isMuted, showConfigurator, volume]);
+
+  useEffect(() => {
+      if (!playerRef.current) return;
+      if (showConfigurator) safePause();
+      else if (!isMuted) safePlay();
+  }, [showConfigurator, isMuted, safePause, safePlay]);
+
+  const toggleMusic = useCallback(() => {
+      const newMutedState = !isMuted;
+      setIsMuted(newMutedState);
+      localStorage.setItem('user_is_muted', String(newMutedState));
+      if (newMutedState) safePause();
+      else if (!showConfigurator) safePlay();
+  }, [isMuted, showConfigurator, safePlay, safePause]);
+
   const handleUnlock = useCallback(() => {
-    setIsUnlocked(true);
-    startBgLoop(); // <--- Critical: Starts ambient loop when content is revealed
-  }, [startBgLoop]);
+      setCurrentStage("content");
+      const hasSeenHelper = localStorage.getItem('has_seen_theme_onboarding');
+      if (!hasSeenHelper) setShowHelper(true);
+      // Trigger audio start on unlock
+      setTimeout(() => safePlay(), 500);
+  }, [safePlay]);
 
-  // --- GLOBAL STYLES (Includes Themes + Cursor) ---
-  const GlobalStyles = () => (
-    <style jsx global>{`
-      /* Core Theme Styles */
-      html, body, #__next {
-        scroll-behavior: smooth;
-        background-color: black; 
-        transition: filter 0.5s ease-in-out; 
-        filter: ${activeTheme.filter};
-      }
-      @media (max-width: 1024px) {
-        html, body, #__next {
-            filter: ${activeTheme.mobileFilter};
+  const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+        setActiveThemeId(themeId);
+        setIsMuted(muted); 
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('user_theme_id', themeId);
+            localStorage.setItem('user_is_muted', String(muted));
         }
-      }
-      :root {
-          --theme-accent-color: ${activeTheme.accentColor || '#0066ff'};
-      }
+        setShowConfigurator(false); 
+        setTimeout(() => setIsTransitioning(false), 100);
+    }, 300);
+  }, []);
 
-      /* Cursor Styles (Merged) */
-      .target-cursor-wrapper { pointer-events: none; position: fixed; top: 0; left: 0; z-index: 10000; mix-blend-mode: difference; }
-      .target-cursor-dot { width: 8px; height: 8px; background-color: #0066ff; border-radius: 50%; position: absolute; top: 0; left: 0; transform: translate(-50%, -50%); box-shadow: 0 0 10px #0066ff; }
-      .target-cursor-corner { position: absolute; width: 16px; height: 16px; border: 2px solid #0066ff; box-shadow: 0 0 4px rgba(0, 102, 255, 0.4); }
-      .corner-tl { top: -10px; left: -10px; border-right: none; border-bottom: none; }
-      .corner-tr { top: -10px; right: -10px; border-left: none; border-bottom: none; }
-      .corner-br { bottom: -10px; right: -10px; border-left: none; border-top: none; }
-      .corner-bl { bottom: -10px; left: -10px; border-right: none; border-top: none; }
-      body.custom-cursor-active { cursor: none !important; }
-
-      /* Animation for widget shimmer */
-      @keyframes shimmer { 0% { transform: translateX(-150%) skewX(-15deg); } 50%, 100% { transform: translateX(150%) skewX(-15deg); } }
-      .animate-shimmer { animation: shimmer 3s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
-    `}</style>
-  );
-
-  // 3. Render Logic
-  if (!isUnlocked) {
-    return (
-      <main className="min-h-screen bg-slate-950 text-white">
-        <GlobalStyles />
-        <RecruitPage onUnlock={handleUnlock} />
-      </main>
-    );
-  }
+  if (!isClient) return null;
 
   return (
-    <main className="animate-in fade-in duration-1000 relative pt-20"> {/* Added pt-20 for Navbar spacing */}
-      <GlobalStyles />
+    <>
+      <style jsx global>{`
+        html, body {
+          background-color: black; 
+          overflow-x: hidden;
+        }
+        .profit-reveal {
+          animation: profitReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes profitReveal {
+          0% { transform: scale(1.05); opacity: 0; filter: blur(15px); }
+          100% { transform: scale(1); opacity: 1; filter: blur(0px); }
+        }
+        @keyframes music-bar-1 { 0%, 100% { height: 33%; } 50% { height: 100%; } }
+        @keyframes music-bar-2 { 0%, 100% { height: 66%; } 50% { height: 33%; } }
+        @keyframes music-bar-3 { 0%, 100% { height: 100%; } 50% { height: 66%; } }
+        .animate-music-bar-1 { animation: music-bar-1 0.8s ease-in-out infinite; }
+        .animate-music-bar-2 { animation: music-bar-2 1.1s ease-in-out infinite; }
+        .animate-music-bar-3 { animation: music-bar-3 0.9s ease-in-out infinite; }
+      `}</style>
+
       <Analytics />
       <SpeedInsights />
-      
-      {/* THEME CONFIGURATOR OVERLAY (CRITICAL: pointer-events-none when closed) */}
-      <div 
-          className={`fixed inset-0 z-[9000] transition-opacity duration-300 
-              ${showConfigurator ? 'opacity-100 pointer-events-auto backdrop-blur-sm bg-black/80' : 'opacity-0 pointer-events-none'}`}
-          style={{ filter: activeTheme.filter }} 
-      >
-        <div className="flex items-center justify-center w-full h-full p-4 md:p-8">
-            <button 
-                onClick={() => setShowConfigurator(false)}
-                className="absolute top-4 right-4 z-[9001] p-3 text-white rounded-full bg-black/50 hover:bg-black/80 transition-colors"
-            >
-                <X className="w-6 h-6" />
-            </button>
-            <div className="w-full max-w-7xl h-full max-h-[850px]">
-                <FixedThemeConfigurator 
-                    initialThemeId={activeThemeId}
-                    onThemeChange={handleThemeChange} 
-                />
-            </div>
-        </div>
+
+      {/* FIXED BACKGROUND FADE OVERLAY */}
+      <div className={`fixed inset-0 z-[100002] bg-black pointer-events-none transition-opacity duration-300 ease-in-out ${isTransitioning ? 'opacity-100' : 'opacity-0'}`} />
+
+      {/* AUDIO SYSTEM */}
+      <BackgroundMusicSystem 
+        themeId={activeThemeId} 
+        onReady={handlePlayerReady} 
+        volume={volume}
+      />
+
+      {/* GLOBAL THEME LENS (THE KEY TO UNIFIED THEMES) */}
+      {currentStage === 'content' && (
+          <div 
+            id="global-theme-lens"
+            className="fixed inset-0 z-[9998] pointer-events-none w-screen h-screen"
+            style={{ 
+                backdropFilter: activeTheme.filter,
+                WebkitBackdropFilter: activeTheme.filter,
+                transition: 'backdrop-filter 0.5s ease' 
+            }}
+          />
+      )}
+
+      {/* FIXED WIDGETS (UNDER LENS, SO THEY GET TINTED) */}
+      <div className="fixed inset-0 z-[9997] pointer-events-none">
+          <BottomControls 
+              visible={currentStage === 'content'}
+              isPlaying={isPlaying} 
+              onToggleMusic={toggleMusic} 
+              onOpenTheme={handleOpenTheme}
+              theme={activeTheme} 
+              volume={volume}
+              onVolumeChange={handleVolumeChange}
+          />
+          <SupportWidget theme={activeTheme} />
       </div>
 
-      {/* NAVBAR */}
-      <Navbar 
-          setShowConfigurator={setShowConfigurator} 
-          activeThemeId={activeThemeId}
-          onThemeChange={handleThemeChange}
-      />
-      
-      <TargetCursor 
-        hideDefaultCursor={true}
-        spinDuration={2}
-        targetSelector="button, a, input, [role='button'], .cursor-target"
-      />
-      
-      {/* Audio Controller */}
-      <MusicController isPlaying={isPlaying} onToggle={toggleBgLoop} />
-      
-      <SupportWidget />
-      <Socials />
+      {showHelper && currentStage === 'content' && (
+          <OnboardingHelper onDismiss={handleOpenTheme} theme={activeTheme} />
+      )}
 
-      {/* Main Content */}
-      <Hero /> 
-      <Features /> 
-      <AboutContent /> 
-    </main>
+      {/* MAIN CONTENT WRAPPER */}
+      <div className="relative w-full min-h-screen" onClick={safePlay}>
+        
+        {/* CONFIGURATOR MODAL (ABOVE LENS) */}
+        {showConfigurator && (
+            <div className="fixed inset-0 z-[100001] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="relative w-full max-w-6xl h-[80vh] bg-[#020617] rounded-3xl border border-white/10 overflow-hidden">
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); setShowConfigurator(false); }}
+                        className="absolute top-6 right-6 z-[10] p-2 text-white/50 hover:text-white transition-colors"
+                    >
+                        <X size={28} />
+                    </button>
+                    {/* @ts-ignore */}
+                    <FixedThemeConfigurator 
+                        initialThemeId={activeThemeId}
+                        onThemeChange={handleThemeChange} 
+                    />
+                </div>
+            </div>
+        )}
+
+        {/* LOADING & GATING (Now Theme-Responsive) */}
+        {currentStage === "recruit" && (
+            <div 
+                className="fixed inset-0 z-[100000] bg-black transition-all duration-500"
+                style={{ 
+                    filter: activeTheme.filter,
+                    WebkitFilter: activeTheme.filter
+                }}
+            >
+                {/* @ts-ignore */}
+                <RecruitPage onUnlock={handleUnlock} theme={activeTheme} />
+            </div>
+        )}
+
+        {/* PAGE CONTENT (UNDER LENS VIA Z-INDEX DEFAULT) */}
+        <div className={currentStage === 'content' ? 'profit-reveal' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
+            
+            <Navbar 
+                setShowConfigurator={setShowConfigurator} 
+                activeThemeId={activeThemeId}
+                onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)}
+            />
+
+            <main className="relative min-h-screen z-10">
+                <TargetCursor spinDuration={2} hideDefaultCursor={true} targetSelector=".cursor-target, a, button" />
+                
+                {currentStage === 'content' && ( 
+                    <div className="relative pt-20">
+                        {/* @ts-ignore - Props passed for compatibility */}
+                        <Hero themeId={activeThemeId} theme={activeTheme} />
+                        {/* @ts-ignore */}
+                        <Features themeId={activeThemeId} theme={activeTheme} />
+                        {/* @ts-ignore */}
+                        <AboutContent themeId={activeThemeId} theme={activeTheme} />
+                        {/* @ts-ignore */}
+                        <Socials themeId={activeThemeId} theme={activeTheme} />
+                    </div>
+                )}
+            </main>
+        </div>
+      </div>
+    </>
   );
 }
