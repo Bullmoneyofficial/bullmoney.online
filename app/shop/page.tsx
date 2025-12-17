@@ -191,10 +191,6 @@ const BottomControls = ({
                 <button
                     onClick={(e) => { e.stopPropagation(); onOpenTheme(); }}
                     className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 text-gray-400 transition-all duration-300 border border-transparent group relative hover:text-white"
-                    style={{ 
-                        // @ts-ignore
-                        '--hover-color': accentColor, 
-                    }}
                 >
                     <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-20 transition-opacity" style={{ backgroundColor: accentColor }} />
                     <Palette size={18} />
@@ -466,7 +462,7 @@ export default function ShopPage() {
               themeName={activeTheme.name} 
               volume={volume}
               onVolumeChange={handleVolumeChange}
-              accentColor={accentColor} // Pass dynamic color
+              accentColor={accentColor} 
           />
           <SupportWidget accentColor={accentColor} />
       </div>
@@ -493,7 +489,6 @@ export default function ShopPage() {
                         initialThemeId={activeThemeId}
                         onThemeChange={handleThemeChange} 
                         // Logic to pause BG music during preview
-                 
                     />
                 </div>
             </div>
@@ -553,20 +548,30 @@ export default function ShopPage() {
             </div>
         )}
 
+        {/* ✅ FIXED HEADER - Z-Index 250,000 (Between Lens and Configurator) 
+            Moved out of the profit-reveal div so it doesn't scale with the content.
+        */}
+        {currentStage === 'content' && (
+            <header className="fixed top-0 left-0 right-0 z-[250000] w-full transition-all duration-300">
+                <Navbar 
+                    setShowConfigurator={setShowConfigurator} 
+                    activeThemeId={activeThemeId}
+                    onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)}
+                />
+            </header>
+        )}
+
         {/* PAGE CONTENT (Default Z-Index) - Sits at bottom of stack */}
         <div className={currentStage === 'content' ? 'profit-reveal' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
             
-            <Navbar 
-                setShowConfigurator={setShowConfigurator} 
-                activeThemeId={activeThemeId}
-                onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)}
-            />
+            {/* ✅ SPACER: Prevents content from hiding behind the fixed navbar */}
+            <div className="h-20 w-full" />
 
             <main className="relative min-h-screen z-10">
                 <TargetCursor spinDuration={2} hideDefaultCursor={true} targetSelector=".cursor-target, a, button" />
                 
                 {currentStage === 'content' && ( 
-                    <div className="relative pt-20">
+                    <div className="relative"> 
                         {/* @ts-ignore */}
                         <Socials themeId={activeThemeId} theme={activeTheme} />
                         {/* @ts-ignore */}
