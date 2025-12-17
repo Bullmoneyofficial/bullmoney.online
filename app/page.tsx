@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube'; 
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Volume2, Volume1, VolumeX, Music, X } from 'lucide-react'; 
+import { Volume2, Volume1, VolumeX, X } from 'lucide-react'; 
 
 // --- COMPONENT IMPORTS ---
 import { Navbar } from "@/components/Mainpage/navbar"; 
@@ -80,7 +80,6 @@ const BackgroundMusicSystem = ({
         videoId={videoId} 
         opts={opts} 
         onReady={(event: YouTubeEvent) => { 
-            // Ensure we pass the API target, not just the event
             if(event.target) {
                 try { 
                     if(typeof event.target.setVolume === 'function') {
@@ -91,8 +90,9 @@ const BackgroundMusicSystem = ({
             }
         }}
         onStateChange={(event: YouTubeEvent) => { 
-            if (event.data === 0 && event.target?.playVideo) {
-                event.target.playVideo(); 
+            // Auto-recover if it pauses unexpectedly
+            if ((event.data === -1 || event.data === 2) && event.target?.playVideo) {
+                // optional: event.target.playVideo(); 
             }
         }}
       />
@@ -206,26 +206,24 @@ export default function Home() {
   // --- SAFE AUDIO METHODS (CRASH FIX APPLIED HERE) ---
 
   const safePlay = useCallback(() => {
-      // 1. Check if player exists
-      if (!playerRef.current) return;
-      
-      // 2. Check logic conditions
+      // 🛑 FIX: Use Optional Chaining (?.) for crash safety
       if (isMuted || showConfigurator) return;
 
-      // 3. Safe execute setVolume
-      if (typeof playerRef.current.setVolume === 'function') {
-          playerRef.current.setVolume(volume);
-      }
-
-      // 4. Safe execute playVideo
-      if (typeof playerRef.current.playVideo === 'function') {
-          playerRef.current.playVideo();
+      try {
+          // Check if setVolume exists safely before calling
+          playerRef.current?.setVolume?.(volume);
+          // Check if playVideo exists safely before calling
+          playerRef.current?.playVideo?.();
+      } catch (e) {
+          console.warn("Audio Player: Interaction prevented", e);
       }
   }, [isMuted, showConfigurator, volume]);
 
   const safePause = useCallback(() => {
-      if (playerRef.current && typeof playerRef.current.pauseVideo === 'function') {
-          playerRef.current.pauseVideo();
+      try {
+          playerRef.current?.pauseVideo?.();
+      } catch (e) {
+          console.warn("Audio Player: Pause prevented", e);
       }
   }, []);
 
@@ -235,25 +233,26 @@ export default function Home() {
       setVolume(newVol);
       localStorage.setItem('user_volume', newVol.toString());
       
-      // Safe Set Volume
-      if (playerRef.current && typeof playerRef.current.setVolume === 'function') {
-          playerRef.current.setVolume(newVol);
-      }
+      // 🛑 FIX: Safe Set Volume with Optional Chaining
+      playerRef.current?.setVolume?.(newVol);
       
       // Auto-unmute if volume is dragged up
       if (newVol > 0 && isMuted) {
           setIsMuted(false);
           localStorage.setItem('user_is_muted', 'false');
+          safePlay(); // Resume if unmuted via slider
       }
   };
 
   const handlePlayerReady = useCallback((player: any) => {
       playerRef.current = player;
-      // Safe init
-      if (player && typeof player.setVolume === 'function') {
-        player.setVolume(isMuted ? 0 : volume);
+      // 🛑 FIX: Safe init with Optional Chaining
+      player?.setVolume?.(isMuted ? 0 : volume);
+      
+      if (!isMuted && !showConfigurator) {
+          // Delay play slightly to ensure player is ready
+          setTimeout(() => safePlay(), 500);
       }
-      if (!isMuted && !showConfigurator) safePlay();
   }, [isMuted, showConfigurator, safePlay, volume]);
 
   // Audio Ducking for Configurator
@@ -271,13 +270,13 @@ export default function Home() {
       setIsMuted(newMutedState);
       localStorage.setItem('user_is_muted', String(newMutedState));
       
-      if (!playerRef.current) return;
-
       if (newMutedState) {
-          if (typeof playerRef.current.setVolume === 'function') playerRef.current.setVolume(0);
+          // 🛑 FIX: Safe access
+          playerRef.current?.setVolume?.(0);
           safePause();
       } else if (!showConfigurator) {
-          if (typeof playerRef.current.setVolume === 'function') playerRef.current.setVolume(volume);
+          // 🛑 FIX: Safe access
+          playerRef.current?.setVolume?.(volume);
           safePlay();
       }
   }, [isMuted, showConfigurator, safePlay, safePause, volume]);
