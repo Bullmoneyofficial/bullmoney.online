@@ -5,9 +5,9 @@ import {
   Zap, DollarSign, Activity, Shield, Lock, Monitor, Hash, 
   MapPin, Sun, Brain, Smile, Layers, Volume2, VolumeX, Command, Check, X
 } from 'lucide-react';
-import { ALL_THEMES, ThemeCategory, SoundProfile } from '@/constants/theme-data';
+import { ALL_THEMES, ThemeCategory,SEASONAL_THEMES, SoundProfile } from '@/constants/theme-data';
 import { ShimmerButton, GlowText } from '@/components/ThemeUI';
-import { MiniDashboardPreview } from '@/components/Mainpage/LiveMiniPreview';
+import { LiveMiniPreview} from '@/components/Mainpage/LiveMiniPreview';
 
 const SoundSelector = ({ active, onSelect }: { active: SoundProfile, onSelect: (id: SoundProfile) => void }) => {
     const packs: {id: SoundProfile, label: string, icon: any}[] = [
@@ -64,6 +64,7 @@ export const ThemeSelector = ({
         if (cat === 'ELEMENTAL') return <Sun className="w-3 h-3" />;
         if (cat === 'CONCEPTS') return <Brain className="w-3 h-3" />;
         if (cat === 'MEME') return <Smile className="w-3 h-3" />;
+        
         return <Layers className="w-3 h-3" />;
     };
 
@@ -155,7 +156,7 @@ export const ThemeSelector = ({
                                                 className={`w-full h-full absolute inset-0 transition-all duration-500 ${activeThemeId === theme.id ? 'scale-105' : 'group-hover:scale-105'}`}
                                                 style={{ filter: isMobile ? theme.mobileFilter : theme.filter }}
                                             >
-                                                <MiniDashboardPreview color={theme.accentColor || '#3b82f6'} isUnavailable={isUnavailable} />
+                                                <LiveMiniPreview color={theme.accentColor || '#3b82f6'} isUnavailable={isUnavailable} />
                                             </div>
                                         </div>
                                         
