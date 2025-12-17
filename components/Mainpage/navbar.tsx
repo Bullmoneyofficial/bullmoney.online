@@ -23,8 +23,8 @@ import {
   Home,
   MessageCircle,
   Layers,
-  ScanFace,
-  X 
+  ScanFace, // <--- Added Icon for ID
+  X // <--- Added for closing modal
 } from "lucide-react";
 import { IconMenu2, IconX } from "@tabler/icons-react";
 import Link from "next/link";
@@ -38,7 +38,7 @@ import ReflectiveCard, { ReflectiveCardHandle } from '@/components/ReflectiveCar
 // --- TYPE DEFINITION ---
 type ThemeControlProps = {
   setShowConfigurator?: (show: boolean) => void; 
-  activeThemeId?: string; // This is the key we use to switch styles
+  activeThemeId?: string;
   onThemeChange?: (themeId: string) => void;
 };
 
@@ -73,22 +73,9 @@ const FOOTER_NAV_ITEMS = [
 
 const SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #3b82f6 50%, #00000000 100%)";
 
-// --- THEME MAPPING CONFIGURATION ---
-// Add your specific theme IDs and their corresponding Tailwind classes here.
-const THEME_STYLES: Record<string, string> = {
-  default: "bg-white/95 dark:bg-neutral-950/95 border-neutral-200 dark:border-white/10",
-  
-  // Examples - Replace keys with your actual activeThemeId values
-  "obsidian": "bg-black/90 border-neutral-800 text-white",
-  "glass-light": "bg-white/60 backdrop-blur-xl border-white/40",
-  "glass-dark": "bg-black/60 backdrop-blur-xl border-white/10",
-  "blue": "bg-blue-950/90 border-blue-500/30 text-white",
-};
-
 // --- MAIN NAVBAR COMPONENT ---
 export const Navbar = ({ 
-  setShowConfigurator = () => {},
-  activeThemeId = "default" // Default to standard style
+  setShowConfigurator = () => {} 
 }: ThemeControlProps) => {
   // State for the Identity Card Modal
   const [showIdModal, setShowIdModal] = useState(false);
@@ -120,8 +107,7 @@ export const Navbar = ({
             <div className="flex justify-center w-full relative pt-6">
                 <DesktopNav 
                   setShowConfigurator={setShowConfigurator} 
-                  setShowIdModal={setShowIdModal}
-                  activeThemeId={activeThemeId} // Pass theme ID down
+                  setShowIdModal={setShowIdModal} 
                 />
             </div>
         </div>
@@ -148,7 +134,6 @@ export const Navbar = ({
                <MobileNav 
                  setShowConfigurator={setShowConfigurator} 
                  setShowIdModal={setShowIdModal}
-                 activeThemeId={activeThemeId} // Pass theme ID down
                />
             </div>
         </div>
@@ -165,8 +150,12 @@ export const Navbar = ({
 
 // --- ID MODAL COMPONENT ---
 const IdModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
+  // Ref to trigger the card's verification
   const cardRef = useRef<ReflectiveCardHandle>(null);
   const [isVerified, setIsVerified] = useState(false);
+
+  // Trigger verification automatically when modal opens? 
+  // Or let user click button. Let's let them click the button on the card.
 
   return (
     <AnimatePresence>
@@ -190,6 +179,7 @@ const IdModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
             className="fixed inset-0 z-[2001] flex items-center justify-center pointer-events-none"
           >
             <div className="pointer-events-auto relative">
+              {/* Close Button */}
               <button 
                 onClick={onClose}
                 className="absolute -right-12 top-0 p-2 text-white/50 hover:text-white transition-colors"
@@ -197,25 +187,27 @@ const IdModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
                 <X size={32} />
               </button>
 
+              {/* The Reflective Card */}
               <ReflectiveCard 
                 ref={cardRef}
                 onVerificationComplete={() => setIsVerified(true)}
                 blurStrength={10}
+
                 style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)' }}
               />
-
-              {!isVerified && (
-                <motion.button
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }} 
-                  transition={{ delay: 0.2 }}    
-                  onClick={() => cardRef.current?.triggerVerify()}
-                  className="absolute -bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95 transition-transform"
-                >
-                  <ScanFace size={20} />
-                  <span>START VERIFICATION</span>
-                </motion.button>
-              )}
+{/* External Trigger Button */}
+{!isVerified && (
+  <motion.button
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }} // delay removed from here
+    transition={{ delay: 0.2 }}    // moved to transition prop
+    onClick={() => cardRef.current?.triggerVerify()}
+    className="absolute -bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95 transition-transform"
+  >
+    <ScanFace size={20} />
+    <span>START VERIFICATION</span>
+  </motion.button>
+)}
               
             </div>
           </motion.div>
@@ -226,25 +218,12 @@ const IdModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
 };
 
 // --- DESKTOP NAV ---
-const DesktopNav = memo(({ 
-  setShowConfigurator, 
-  setShowIdModal, 
-  activeThemeId 
-}: { 
-  setShowConfigurator: (show: boolean) => void, 
-  setShowIdModal: (show: boolean) => void,
-  activeThemeId: string 
-}) => {
-  
-  // Determine styles based on ID, fallback to default if ID not found
-  const themeClasses = THEME_STYLES[activeThemeId] || THEME_STYLES.default;
-
+const DesktopNav = memo(({ setShowConfigurator, setShowIdModal }: { setShowConfigurator: (show: boolean) => void, setShowIdModal: (show: boolean) => void }) => {
   return (
     <motion.div
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      // Apply the dynamic theme classes here
-      className={`flex items-center gap-4 pointer-events-auto px-6 py-2 rounded-2xl transition-colors duration-300 border shadow-xl ${themeClasses}`}
+      className="flex items-center gap-4 pointer-events-auto px-6 py-2 rounded-2xl transition-colors duration-300 bg-white/95 dark:bg-neutral-950/95 border border-neutral-200 dark:border-white/10 shadow-xl"
     >
       <Dock 
         items={NAV_ITEMS} 
@@ -265,6 +244,7 @@ DesktopNav.displayName = "DesktopNav";
 // --- DOCK COMPONENT ---
 const Dock = memo(({ items, setShowConfigurator, setShowIdModal }: any) => {
   const mouseX = useMotionValue(Infinity);
+  // Total items is NAV_ITEMS.length + 2 (Theme + ID)
   const [activeTipIndex, setActiveTipIndex] = useState(0);
 
   useEffect(() => {
@@ -292,6 +272,7 @@ const Dock = memo(({ items, setShowConfigurator, setShowIdModal }: any) => {
       onMouseLeave={() => mouseX.set(Infinity)}
       className="mx-2 flex h-[50px] items-end gap-3 px-2"
     >
+      {/* Standard Items */}
       {items.map((item: any, i: number) => (
         <DockItem 
           key={i} 
@@ -300,12 +281,16 @@ const Dock = memo(({ items, setShowConfigurator, setShowIdModal }: any) => {
           isTipActive={i === activeTipIndex} 
         />
       ))}
+
+      {/* ID Button */}
       <DockItem 
         mouseX={mouseX}
         item={idItemData}
         isTipActive={activeTipIndex === items.length}
         onClick={() => setShowIdModal(true)}
       />
+
+      {/* Theme Button */}
       <DockItem 
         mouseX={mouseX}
         item={themeItemData}
@@ -390,22 +375,11 @@ const DockItem = memo(({ mouseX, item, isTipActive, onClick }: any) => {
 DockItem.displayName = "DockItem";
 
 // --- MOBILE NAV ---
-const MobileNav = memo(({ 
-  setShowConfigurator, 
-  setShowIdModal, 
-  activeThemeId 
-}: { 
-  setShowConfigurator: (show: boolean) => void, 
-  setShowIdModal: (show: boolean) => void,
-  activeThemeId: string 
-}) => {
+const MobileNav = memo(({ setShowConfigurator, setShowIdModal }: { setShowConfigurator: (show: boolean) => void, setShowIdModal: (show: boolean) => void }) => {
   const [open, setOpen] = useState(false);
   const [activeTipIndex, setActiveTipIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<(HTMLElement | null)[]>([]);
-
-  // Determine styles based on ID
-  const themeClasses = THEME_STYLES[activeThemeId] || THEME_STYLES.default;
 
   const themeItem = { 
     name: "THEME", 
@@ -418,11 +392,14 @@ const MobileNav = memo(({
   };
 
   useEffect(() => {
+    // Length + 2 for Theme & ID
     const intervalId = setInterval(() => {
       setActiveTipIndex((prev) => (prev + 1) % (NAV_ITEMS.length + 2));
     }, 4000); 
     return () => clearInterval(intervalId);
   }, []);
+
+  // ... (Keep scrolling logic same as before, just account for extra items) ...
   
   const handleOpenConfigurator = useCallback(() => {
     setOpen(false); 
@@ -437,14 +414,14 @@ const MobileNav = memo(({
   return (
     <motion.div 
       animate={{ width: "auto" }}
-      // Apply dynamic theme classes here
-      className={`flex flex-col items-end border shadow-lg rounded-2xl relative max-w-full ${themeClasses}`}
+      className="flex flex-col items-end bg-white/95 dark:bg-neutral-950/95 border border-neutral-200 dark:border-white/10 shadow-lg rounded-2xl relative max-w-full"
     >
       <div className="flex items-center gap-1.5 p-1.5 relative z-20 max-w-full"> 
          <div 
             ref={scrollRef}
             className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth pr-1 pb-8 mb-[-32px] max-w-[50vw] sm:max-w-[60vw] md:max-w-none"
          >
+            {/* 1. Loop standard items */}
             {NAV_ITEMS.map((item, i) => (
                <Link 
                  key={i} 
@@ -453,9 +430,11 @@ const MobileNav = memo(({
                  className="relative flex-shrink-0 flex flex-col items-center group pt-1" 
                >
                   <MobileNavItemContent item={item} />
+                  {/* Tip Logic... */}
                </Link>
             ))}
 
+            {/* 2. Add ID Button */}
             <button
                 onClick={handleOpenId}
                 ref={(el) => { itemsRef.current[NAV_ITEMS.length] = el; }}
@@ -464,6 +443,7 @@ const MobileNav = memo(({
                 <MobileNavItemContent item={idItem} />
             </button>
 
+            {/* 3. Add Theme Button */}
             <button
                 onClick={handleOpenConfigurator}
                 ref={(el) => { itemsRef.current[NAV_ITEMS.length + 1] = el; }}
@@ -473,13 +453,15 @@ const MobileNav = memo(({
             </button>
          </div>
 
-         <div className={`flex-shrink-0 flex items-center pl-1 border-l border-neutral-200 dark:border-white/10 z-30 h-8 self-start mt-1`}>
+         {/* ... Menu Toggle Button ... */}
+         <div className="flex-shrink-0 flex items-center pl-1 border-l border-neutral-200 dark:border-white/10 bg-white/95 dark:bg-neutral-950/95 z-30 h-8 self-start mt-1">
             <button onClick={() => setOpen(!open)} className="p-1 ml-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
                 {open ? <IconX className="w-5 h-5 dark:text-white" /> : <IconMenu2 className="w-5 h-5 dark:text-white" />}
             </button>
          </div>
       </div>
 
+      {/* ... Expanded Menu (Keep same) ... */}
       <AnimatePresence>
         {open && (
            <motion.div
@@ -488,10 +470,12 @@ const MobileNav = memo(({
             exit={{ height: 0, opacity: 0 }}
             className="w-full min-w-[200px] overflow-hidden rounded-b-2xl relative z-40" 
           >
-            {/* Added dynamic background to expanded menu as well via inheritance or explicit class */}
-            <div className="px-4 pb-4 pt-2 flex flex-col gap-3 border-t border-neutral-100 dark:border-white/5 w-full">
+            {/* Same expanded list logic */}
+            <div className="px-4 pb-4 pt-2 flex flex-col gap-3 border-t border-neutral-100 dark:border-white/5 w-full bg-white/95 dark:bg-neutral-950/95">
+               {/* Add ID button to expanded list if desired, or keep it in the top row */}
                {[...FOOTER_NAV_ITEMS, ...NAV_ITEMS].map((item, i) => (
                   <Link key={i} href={item.link as any} onClick={() => setOpen(false)} className="relative group block rounded-xl overflow-hidden">
+                     {/* ... Item Design ... */}
                      <div className="relative m-[1px] bg-white dark:bg-neutral-900 rounded-xl flex items-center gap-4 p-2">
                         <div className="w-8 h-8 p-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-md">{item.icon}</div>
                         <span className="font-bold text-neutral-600 dark:text-neutral-300">{item.name}</span>
