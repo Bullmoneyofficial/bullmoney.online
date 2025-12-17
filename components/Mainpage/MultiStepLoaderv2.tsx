@@ -91,6 +91,113 @@ const useMouseVelocity = () => {
   return { x, y, velocity };
 };
 
+// --- AUDIO ENGINE (Web Audio API) ---
+// This generates sound mathematically so it cannot be blocked by 404s or CORS
+const useAudioEngine = () => {
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const oscillatorRef = useRef<OscillatorNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
+
+  const initAudio = () => {
+    if (!audioCtxRef.current) {
+      // @ts-ignore - Handle Safari/Webkit
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioCtxRef.current = new AudioContext();
+    }
+    if (audioCtxRef.current.state === "suspended") {
+      audioCtxRef.current.resume();
+    }
+  };
+
+  const startEngine = () => {
+    initAudio();
+    if (!audioCtxRef.current) return;
+    
+    // Create oscillator if it doesn't exist
+    if (!oscillatorRef.current) {
+        const osc = audioCtxRef.current.createOscillator();
+        const gain = audioCtxRef.current.createGain();
+        
+        // Low pass filter to make it sound muffled/cool
+        const filter = audioCtxRef.current.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.value = 1000;
+
+        osc.type = "sawtooth"; // "Buzzy" sound like an engine
+        osc.frequency.setValueAtTime(100, audioCtxRef.current.currentTime); // Start low pitch
+        
+        gain.gain.setValueAtTime(0, audioCtxRef.current.currentTime);
+        gain.gain.linearRampToValueAtTime(0.1, audioCtxRef.current.currentTime + 0.1); // Fade in
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtxRef.current.destination);
+        
+        osc.start();
+        
+        oscillatorRef.current = osc;
+        gainNodeRef.current = gain;
+    }
+  };
+
+  const updateEngine = (progress: number) => {
+    if (!audioCtxRef.current || !oscillatorRef.current || !gainNodeRef.current) return;
+    
+    // Map progress (0-100) to Frequency (Pitch)
+    // 0% = 80Hz, 100% = 400Hz
+    const baseFreq = 80;
+    const addedFreq = (progress / 100) * 320; 
+    const now = audioCtxRef.current.currentTime;
+    
+    oscillatorRef.current.frequency.setTargetAtTime(baseFreq + addedFreq, now, 0.1);
+    
+    // Add some jitter/wobble at high speeds
+    if (progress > 80) {
+        gainNodeRef.current.gain.setTargetAtTime(0.1 + (Math.random() * 0.05), now, 0.1);
+    }
+  };
+
+  const stopEngine = () => {
+    if (gainNodeRef.current && audioCtxRef.current) {
+        const now = audioCtxRef.current.currentTime;
+        // Fade out nicely
+        gainNodeRef.current.gain.setTargetAtTime(0, now, 0.1);
+        
+        setTimeout(() => {
+            if (oscillatorRef.current) {
+                oscillatorRef.current.stop();
+                oscillatorRef.current.disconnect();
+                oscillatorRef.current = null;
+            }
+        }, 200);
+    }
+  };
+
+  const playSuccess = () => {
+    initAudio();
+    if (!audioCtxRef.current) return;
+    const now = audioCtxRef.current.currentTime;
+
+    const osc = audioCtxRef.current.createOscillator();
+    const gain = audioCtxRef.current.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+    osc.connect(gain);
+    gain.connect(audioCtxRef.current.destination);
+    
+    osc.start();
+    osc.stop(now + 0.5);
+  };
+
+  return { startEngine, updateEngine, stopEngine, playSuccess };
+};
+
 // --- TRADINGVIEW WIDGET ---
 const TradingViewWidget = ({ assetKey, id, isBackground = false }: { assetKey: AssetKey; id: string; isBackground?: boolean; }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -148,17 +255,16 @@ const ReactiveLiquidLogo = ({ src }: { src: string }) => {
     <div className="relative w-16 h-16 flex items-center justify-center z-40" onMouseMove={(e) => { x.set(e.clientX); y.set(e.clientY); }}>
       <svg style={{ position: "absolute", width: 0, height: 0 }}><defs><filter id="liquid-distort-mini"><motion.feTurbulence type="fractalNoise" baseFrequency={baseFreq} numOctaves="2" result="noise" /><motion.feDisplacementMap in="SourceGraphic" in2="noise" scale="15" /></filter></defs></svg>
       <motion.div className="w-full h-full flex items-center justify-center" style={{ filter: "url(#liquid-distort-mini)" }}>
-          <img src={src} alt="Logo" className="w-full h-full object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.6)]" />
+          <img src={src} alt="Logo" className="w-full h-full object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.6)]" onError={(e) => e.currentTarget.src = "https://cryptologos.cc/logos/bitcoin-btc-logo.png"} />
       </motion.div>
     </div>
   );
 };
 
-// --- PROPS INTERFACE UPDATE ---
 interface QuickGateProps {
-  children?: React.ReactNode; // FIX: Made optional
+  children?: React.ReactNode; 
   onUnlock?: () => void;
-  onFinished?: () => void;    // FIX: Added alias to solve type error
+  onFinished?: () => void;
 }
 
 // --- MAIN COMPONENT ---
@@ -178,12 +284,28 @@ export default function QuickGate({ children, onUnlock, onFinished }: QuickGateP
   const requestRef = useRef<number>();
   const basePriceRef = useRef(0);
 
+  // Use the custom synthesized audio hook
+  const { startEngine, updateEngine, stopEngine, playSuccess } = useAudioEngine();
+
   useEffect(() => {
     if (!isHolding && realPrice > 0) {
       basePriceRef.current = realPrice;
       setDisplayPrice(realPrice);
     }
   }, [realPrice, isHolding]);
+
+  // Handle Hold Start/Stop for Audio
+  useEffect(() => {
+    if (isCompleted) return;
+    
+    if (isHolding) {
+        startEngine();
+    } else {
+        stopEngine();
+    }
+    // Cleanup on unmount
+    return () => stopEngine();
+  }, [isHolding, isCompleted]);
 
   // --- TURBO PHYSICS ENGINE ---
   const animate = useCallback(() => {
@@ -195,6 +317,9 @@ export default function QuickGate({ children, onUnlock, onFinished }: QuickGateP
       if (isHolding) {
         const boost = prev > 80 ? 25.0 : prev > 50 ? 10.0 : 3.5; 
         next = Math.min(prev + boost, 100);
+
+        // Update synthesized pitch based on progress
+        updateEngine(next);
 
         const shakeAmplitude = (next > 20) ? (next / 100) * 15 : 0; 
         if (shakeAmplitude > 0) {
@@ -217,15 +342,17 @@ export default function QuickGate({ children, onUnlock, onFinished }: QuickGateP
 
       if (next >= 100) {
         setIsCompleted(true);
-        if (navigator.vibrate) navigator.vibrate(200);
+        stopEngine(); // Cut the engine sound
+        playSuccess(); // Play the "ding"
         
+        if (navigator.vibrate) navigator.vibrate(200);
+
         setTimeout(() => {
             setGateVisible(false);
             setShowTerminal(true);
-            // FIX: Call whichever prop was passed
             if (onUnlock) onUnlock(); 
             if (onFinished) onFinished();
-        }, 200); 
+        }, 500); 
         
         return 100;
       }
@@ -242,10 +369,8 @@ export default function QuickGate({ children, onUnlock, onFinished }: QuickGateP
 
   return (
     <>
-       {/* REAL CONTENT (Rendered if children exist) */}
        {children && <div className="relative z-0 min-h-screen w-full">{children}</div>}
 
-       {/* FLASHBANG */}
        <AnimatePresence>
          {isCompleted && gateVisible && (
             <motion.div 
@@ -256,12 +381,11 @@ export default function QuickGate({ children, onUnlock, onFinished }: QuickGateP
          )}
        </AnimatePresence>
 
-       {/* THE QUICK GATE */}
        <AnimatePresence>
        {gateVisible && (
            <motion.div 
              exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
-             transition={{ duration: 0.3 }}
+             transition={{ duration: 0.5 }}
              className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-[#020617] text-white overflow-hidden"
            >
                 {/* Background Chart */}

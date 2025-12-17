@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation'; // REQUIRED for Exit functionality
+import { useRouter } from 'next/navigation'; 
 import { 
   TrendingUp, DollarSign, Zap, Activity, Settings, 
   RefreshCw, Wifi, ArrowRight, SkipForward, MessageCircle, Check, Volume2, VolumeX
@@ -15,9 +15,7 @@ import { ThemeConfigModal } from '@/components/ThemeConfigModal';
 // --- CRITICAL RE-EXPORTS ---
 export { ALL_THEMES, type Theme, type ThemeCategory, type SoundProfile } from '@/constants/theme-data';
 
-// ------------------------------------------------------------------
 // 🛡️ FIX: Safety check for ALL_THEMES to prevent crash on import
-// ------------------------------------------------------------------
 export const THEME_SOUNDTRACKS: Record<string, string> = (ALL_THEMES || []).reduce((acc, theme) => {
     acc[theme.id] = theme.youtubeId || 'jfKfPfyJRdk'; 
     return acc;
@@ -38,9 +36,7 @@ export const useBinanceTickers = () => {
         const wsUrl = `wss://stream.binance.com:9443/ws/${streams}`;
         
         if (isMounted) setStatus('CONNECTING');
-        
         wsRef.current = new WebSocket(wsUrl);
-        
         wsRef.current.onopen = () => { if (isMounted) setStatus('CONNECTED'); };
         
         wsRef.current.onmessage = (event: MessageEvent) => { 
@@ -73,7 +69,7 @@ export const useBinanceTickers = () => {
             isMounted = false; 
             if (wsRef.current) wsRef.current.close(); 
         };
-    }, []); // Empty dependency array is correct here
+    }, []); 
 
     return { tickers, status };
 };
@@ -88,16 +84,11 @@ export const useBinanceChart = (symbol: string = 'BTCUSDT') => {
                 if (!res.ok) throw new Error("Binance API fetch failed");
                 const data = await res.json();
                 if(isMounted) setChartData(data.map((d: any[]) => parseFloat(d[4])));
-            } catch (e) { 
-                if(isMounted) setChartData([]); 
-            }
+            } catch (e) { if(isMounted) setChartData([]); }
         };
         fetchHistory();
         const intervalId = setInterval(fetchHistory, 3600000); 
-        return () => {
-            isMounted = false;
-            clearInterval(intervalId);
-        }
+        return () => { isMounted = false; clearInterval(intervalId); }
     }, [symbol]);
     return chartData;
 };
@@ -163,11 +154,12 @@ export const WelcomeBackModal = ({ isOpen, onContinue, onSkip }: { isOpen: boole
     </AnimatePresence>
 );
 
+// 🛡️ FIX: Removed blocking alert() for a better UX
 export const SupportWidget = () => (
     <div className="fixed bottom-24 right-4 md:bottom-6 md:right-6 z-[45]">
         <button 
-            onClick={() => alert("Connecting to Support Agent... (Simulated)")} 
-            className="relative flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#050505] border border-blue-900/50 shadow-[0_0_30px_rgba(37,99,235,0.4)] overflow-hidden group hover:scale-110 transition-transform"
+            onClick={() => console.log("Support connection simulated")} 
+            className="relative flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#050505] border border-blue-900/50 shadow-[0_0_30px_rgba(37,99,235,0.4)] overflow-hidden group hover:scale-110 transition-transform active:scale-95"
         >
             <ShimmerBorder active={true} />
             <div className="absolute inset-[2px] rounded-full bg-black flex items-center justify-center z-10">
@@ -189,7 +181,11 @@ const SimulatedStatsCard = ({ label, value, icon: Icon }: { label: string, value
     </ShimmerCard>
 );
 
-const ControlPanel = ({ activeThemeId, onAction, onSaveTheme, onOpenConfig }: { activeThemeId: string, onAction: (action: string) => void, onSaveTheme: (themeId: string) => void, onOpenConfig: () => void }) => {
+const ControlPanel = ({ 
+    activeThemeId, onExit, onSaveTheme, onOpenConfig 
+}: { 
+    activeThemeId: string, onExit: () => void, onSaveTheme: (themeId: string) => void, onOpenConfig: () => void 
+}) => {
     const simulatedTraders = '18,451';
     const simulatedAssets = '$2.13B';
     return (
@@ -217,7 +213,9 @@ const ControlPanel = ({ activeThemeId, onAction, onSaveTheme, onOpenConfig }: { 
                     </div>
                     <div className="hidden lg:grid grid-cols-1 gap-3"> 
                         <ShimmerButton icon={Check} onClick={() => onSaveTheme(activeThemeId)} className="h-10 text-xs text-green-500">APPLY CURRENT THEME</ShimmerButton>
-                        <ShimmerButton icon={ArrowRight} onClick={() => onAction('exit')} className="h-10 text-xs">EXIT TO DASHBOARD</ShimmerButton>
+                        <div onClick={(e) => e.stopPropagation()} className="w-full">
+                            <ShimmerButton icon={ArrowRight} onClick={onExit} className="h-10 text-xs w-full">EXIT TO DASHBOARD</ShimmerButton>
+                        </div>
                     </div>
                 </div>
             </ShimmerCard>
@@ -226,14 +224,14 @@ const ControlPanel = ({ activeThemeId, onAction, onSaveTheme, onOpenConfig }: { 
 };
 
 const MobileBottomActionPanel = ({ 
-    activeThemeId, onSaveTheme, onExit, isMobileMenuOpen, onRefresh 
+    onExit, isMobileMenuOpen, onRefresh 
 }: { 
-    activeThemeId: string, onSaveTheme: (themeId: string) => void, onExit: () => void, isMobileMenuOpen: boolean, onRefresh: () => void 
+    onExit: () => void, isMobileMenuOpen: boolean, onRefresh: () => void 
 }) => (
     <AnimatePresence>
         {!isMobileMenuOpen && (
             <motion.div initial={{ y: 0, opacity: 1 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="sticky bottom-0 left-0 right-0 z-50 lg:hidden p-4 bg-black/90 backdrop-blur-md border-t border-blue-500/30 shadow-[0_-5px_30px_rgba(37,99,235,0.2)]"
+                className="sticky bottom-0 left-0 right-0 z-[60] lg:hidden p-4 bg-black/90 backdrop-blur-md border-t border-blue-500/30 shadow-[0_-5px_30px_rgba(37,99,235,0.2)]"
             >
                 <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
                     <ShimmerButton icon={RefreshCw} onClick={onRefresh} className="h-10 text-xs text-yellow-500">REFRESH DATA</ShimmerButton>
@@ -247,23 +245,17 @@ const MobileBottomActionPanel = ({
 // --- MAIN COMPONENT ---
 
 export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }: { initialThemeId: string, onThemeChange: (themeId: string, sound: SoundProfile, muted: boolean) => void }) {
-    const router = useRouter(); // 🟢 FIX: Use Next.js Router for real exit
+    const router = useRouter(); 
     const { tickers, status: wsStatus } = useBinanceTickers();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const chartData = useBinanceChart('BTCUSDT'); 
-    
-    // 🛡️ FIX: Persist state via localStorage initialization
     const [activeThemeId, setActiveThemeId] = useState<string>(initialThemeId);
     const [isMuted, setIsMuted] = useState(true); 
     const [currentSound, setCurrentSound] = useState<SoundProfile>('MECHANICAL');
-    
     const [showWelcome, setShowWelcome] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
     const [activeCategory, setActiveCategory] = useState<ThemeCategory>('SENTIMENT'); 
     const [isMobile, setIsMobile] = useState(false); 
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
     
-    // SAFE ACTIVE THEME RESOLUTION
     const activeTheme = useMemo(() => {
         if (!ALL_THEMES || ALL_THEMES.length === 0) return { id: 'default', name: 'Default', filter: '', mobileFilter: '', illusion: 'grid' } as any;
         return ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
@@ -278,50 +270,42 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
         return (btcVal * 0.45) + (ethVal * 12.5) + 15240;
     }, [btcData.price, ethData.price]);
     
-    // --- EFFECT: LOAD SAVED SETTINGS ---
     useEffect(() => {
         const savedTheme = localStorage.getItem('user_theme_id');
         const savedSound = localStorage.getItem('user_sound_profile');
         const savedMute = localStorage.getItem('user_is_muted');
-
         if (savedTheme) setActiveThemeId(savedTheme);
         if (savedSound) setCurrentSound(savedSound as SoundProfile);
         if (savedMute) setIsMuted(savedMute === 'true');
     }, []);
 
-    // --- HANDLERS ---
-
     const handleSaveTheme = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
         setActiveThemeId(themeId); 
         setCurrentSound(sound);
         setIsMuted(muted);
-        
-        // 🟢 FIX: Actually save to storage
         localStorage.setItem('user_theme_id', themeId);
         localStorage.setItem('user_sound_profile', sound);
         localStorage.setItem('user_is_muted', String(muted));
-
         onThemeChange(themeId, sound, muted); 
         setIsConfigModalOpen(false);
         setIsMobileMenuOpen(false);
     }, [onThemeChange]); 
 
-    // Quick save applies current theme with *current* audio settings
     const handleQuickSaveTheme = useCallback((themeId: string) => {
         handleSaveTheme(themeId, currentSound, isMuted);
     }, [currentSound, isMuted, handleSaveTheme]);
 
+    // 🛡️ FIX: Robust Exit Handler using hard navigation to force exit even if router is busy
     const handleExit = useCallback(() => { 
-        if(confirm("Exit to main Dashboard?")) {
-            // 🟢 FIX: Actually Navigate
-            router.push('/'); // Or '/dashboard'
+        if (typeof window !== 'undefined') {
+            if(window.confirm("Exit to main Dashboard?")) {
+                console.log("Navigating to dashboard...");
+                window.location.href = '/'; 
+            }
         }
-    }, [router]);
-
-    const handleRefresh = useCallback(() => {
-        // Force refresh logic could go here, for now just reload window or re-init socket
-        window.location.reload();
     }, []);
+
+    const handleRefresh = useCallback(() => { window.location.reload(); }, []);
 
     const toggleMute = useCallback(() => {
         setIsMuted(prev => {
@@ -333,7 +317,7 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
 
     const handleWelcomeContinue = useCallback(() => {
         setShowWelcome(false);
-        setIsMuted(false); // Auto-unmute on welcome (optional)
+        setIsMuted(false); 
         setIsConfigModalOpen(true); 
     }, []);
 
@@ -349,10 +333,8 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
             style={{ filter: isMobile ? activeTheme.mobileFilter : activeTheme.filter, transition: 'filter 0.5s ease-in-out' }}
         >
             <GlobalSvgFilters />
-            {/* BACKGROUND OVERLAY */}
             <div className="fixed inset-0 z-0 pointer-events-none opacity-50 mix-blend-overlay overflow-hidden"><IllusionLayer type={activeTheme.illusion} /></div>
             
-            {/* HEADER */}
             <header className="shrink-0 w-full z-50 bg-[#050505]/80 backdrop-blur-md border-b border-white/10">
                 <LiveTickerTape tickers={tickers} />
                 <div className="h-12 md:h-14 flex items-center px-4 md:px-6 justify-between">
@@ -376,22 +358,15 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
                 </div>
             </header>
 
-            <WelcomeBackModal 
-                isOpen={showWelcome} 
-                onContinue={handleWelcomeContinue} 
-                onSkip={() => setShowWelcome(false)} 
-            />
+            <WelcomeBackModal isOpen={showWelcome} onContinue={handleWelcomeContinue} onSkip={() => setShowWelcome(false)} />
 
-            {/* MAIN DASHBOARD GRID */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 px-4 md:px-6 py-4 flex flex-col z-10 relative max-w-[1600px] mx-auto overflow-y-auto custom-scrollbar" style={{ filter: showWelcome ? 'blur(10px)' : 'none' }}>
                 <div className="mb-4 md:mb-6 shrink-0">
                     <h1 className="text-2xl md:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-600">COMMAND DECK</h1>
                 </div>
 
                 <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 min-h-0">
-                    {/* LEFT SECTION */}
                     <div className="lg:col-span-9 flex flex-col gap-4 md:gap-6 min-h-0">
-                        {/* KPI Cards */}
                         <div className="flex overflow-x-auto gap-4 shrink-0 pb-2 md:pb-0 snap-x-mandatory no-scrollbar md:grid md:grid-cols-3 touch-scroll">
                             <div className="snap-center w-[85vw] md:w-auto flex-none">
                                 <ShimmerCard className="h-32 md:h-40 w-full">
@@ -419,7 +394,6 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
                             </div>
                         </div>
 
-                        {/* BIG THEME CONFIG PLACEHOLDER */}
                         <div className="flex-1 w-full min-h-[300px]">
                             <ShimmerCard className="h-full">
                                 <div className="p-5 h-full flex flex-col w-full items-center justify-center">
@@ -431,38 +405,18 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
                         </div>
                     </div>
 
-                    {/* RIGHT SECTION (Sidebar on Desktop) */}
                     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.4 }} className="hidden lg:flex flex-col w-full lg:w-auto lg:col-span-3 h-full min-h-0 gap-4">
-                         <ControlPanel 
-                            activeThemeId={activeThemeId} 
-                            onAction={handleExit} 
-                            onSaveTheme={handleQuickSaveTheme} 
-                            onOpenConfig={() => setIsConfigModalOpen(true)} 
-                         />
+                         <ControlPanel activeThemeId={activeThemeId} onExit={handleExit} onSaveTheme={handleQuickSaveTheme} onOpenConfig={() => setIsConfigModalOpen(true)} />
                     </motion.div>
                 </div>
             </motion.div>
             
-            {/* MOBILE SAVE/EXIT BAR */}
-            <MobileBottomActionPanel 
-                activeThemeId={activeThemeId} 
-                onSaveTheme={handleQuickSaveTheme} 
-                onExit={handleExit} 
-                isMobileMenuOpen={isMobileMenuOpen}
-                onRefresh={handleRefresh}
-            />
+            <MobileBottomActionPanel onExit={handleExit} isMobileMenuOpen={isMobileMenuOpen} onRefresh={handleRefresh} />
             <SupportWidget />
 
-            {/* --- THEME CONFIGURATOR MODAL --- */}
             <ThemeConfigModal 
-                isOpen={isConfigModalOpen} 
-                onClose={() => setIsConfigModalOpen(false)} 
-                onSave={handleSaveTheme} 
-                initialThemeId={activeThemeId} // FIX: Pass current state, not initial prop
-                initialCategory={activeCategory} 
-                initialSound={currentSound} 
-                initialMuted={isMuted} 
-                isMobile={isMobile}
+                isOpen={isConfigModalOpen} onClose={() => setIsConfigModalOpen(false)} onSave={handleSaveTheme} 
+                initialThemeId={activeThemeId} initialCategory={activeCategory} initialSound={currentSound} initialMuted={isMuted} isMobile={isMobile}
             />
         </main>
     );

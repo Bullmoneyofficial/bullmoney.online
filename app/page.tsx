@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube'; 
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Volume2, Volume1, VolumeX, X } from 'lucide-react'; 
+import { Volume2, Volume1, VolumeX, X, Palette } from 'lucide-react'; 
 
 // --- COMPONENT IMPORTS ---
 import { Navbar } from "@/components/Mainpage/navbar"; 
@@ -45,6 +45,48 @@ const FALLBACK_THEME: Partial<Theme> = {
 };
 
 // ----------------------------------------------------------------------
+// --- ONBOARDING HELPER ---
+// ----------------------------------------------------------------------
+const OnboardingHelper = ({ onDismiss }: { onDismiss: () => void }) => {
+    return (
+        <div 
+            onClick={onDismiss}
+            className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-[2px] cursor-pointer animate-in fade-in duration-700"
+        >
+            <div className="relative w-full h-full">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+                    <h2 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tighter drop-shadow-[0_0_25px_rgba(59,130,246,0.6)] animate-pulse">
+                        Customize Your Vibe
+                    </h2>
+                    <p className="text-blue-200 text-lg md:text-xl font-mono opacity-90">
+                        Choose a Theme & Soundtrack
+                    </p>
+                    <div className="mt-4 text-xs text-white/40 uppercase tracking-widest">Click anywhere to start</div>
+                </div>
+                <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible">
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa" />
+                        </marker>
+                    </defs>
+                    <path 
+                        d="M 50% 55% Q 30% 70% 80 90%" 
+                        fill="none" 
+                        stroke="#60a5fa" 
+                        strokeWidth="3" 
+                        strokeDasharray="12,12"
+                        markerEnd="url(#arrowhead)"
+                        className="opacity-80 drop-shadow-[0_0_10px_#60a5fa]"
+                    >
+                         <animate attributeName="stroke-dashoffset" from="1000" to="0" dur="2s" fill="freeze" />
+                    </path>
+                </svg>
+            </div>
+        </div>
+    );
+};
+
+// ----------------------------------------------------------------------
 // --- YOUTUBE MUSIC SYSTEM ---
 // ----------------------------------------------------------------------
 const BackgroundMusicSystem = ({ 
@@ -59,7 +101,7 @@ const BackgroundMusicSystem = ({
   const videoId = (THEME_SOUNDTRACKS && THEME_SOUNDTRACKS[themeId]) 
     ? THEME_SOUNDTRACKS[themeId] 
     : 'jfKfPfyJRdk';
-  
+    
   const opts: YouTubeProps['opts'] = {
     height: '1', 
     width: '1', 
@@ -67,9 +109,10 @@ const BackgroundMusicSystem = ({
       autoplay: 1,
       controls: 0,
       loop: 1,
-      playlist: videoId,
+      playlist: videoId, // Required for loop to work
       modestbranding: 1,
       playsinline: 1,
+      enablejsapi: 1, // Explicitly enable API
       origin: typeof window !== 'undefined' ? window.location.origin : undefined,
     },
   };
@@ -81,18 +124,13 @@ const BackgroundMusicSystem = ({
         opts={opts} 
         onReady={(event: YouTubeEvent) => { 
             if(event.target) {
-                try { 
-                    if(typeof event.target.setVolume === 'function') {
-                        event.target.setVolume(volume); 
-                    }
-                } catch(e) {}
                 onReady(event.target);
             }
         }}
         onStateChange={(event: YouTubeEvent) => { 
-            // Auto-recover if it pauses unexpectedly
-            if ((event.data === -1 || event.data === 2) && event.target?.playVideo) {
-                // optional: event.target.playVideo(); 
+            // -1: unstarted, 0: ended, 1: playing, 2: paused, 3: buffering, 5: video cued
+            if (event.data === -1 || event.data === 2) {
+               // Optional: could retry play here if needed
             }
         }}
       />
@@ -101,32 +139,55 @@ const BackgroundMusicSystem = ({
 };
 
 // ----------------------------------------------------------------------
-// --- MUSIC CONTROLLER UI ---
+// --- BOTTOM CONTROLS (MUSIC + THEME) ---
 // ----------------------------------------------------------------------
-const MusicController = ({ 
+const BottomControls = ({ 
     isPlaying, 
-    onToggle, 
+    onToggleMusic, 
+    onOpenTheme,
     themeName, 
     volume, 
-    onVolumeChange 
+    onVolumeChange,
+    visible
 }: { 
     isPlaying: boolean; 
-    onToggle: () => void, 
+    onToggleMusic: () => void, 
+    onOpenTheme: () => void,
     themeName: string,
     volume: number,
-    onVolumeChange: (val: number) => void
+    onVolumeChange: (val: number) => void,
+    visible: boolean
 }) => {
     const [isHovered, setIsHovered] = React.useState(false);
 
+    if (!visible) return null;
+
     return (
         <div 
-            className="fixed bottom-8 left-8 z-[9999] flex items-center gap-3"
+            className="fixed bottom-8 left-8 z-[9998] flex flex-col items-start gap-4 transition-opacity duration-500 ease-in-out"
+            style={{ opacity: visible ? 1 : 0 }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
+            {/* Control Bar Container */}
             <div className="flex items-center gap-2 bg-black/60 backdrop-blur-xl border border-white/10 p-2 rounded-full shadow-2xl">
+                
+                {/* THEME WIDGET BUTTON */}
                 <button
-                    onClick={(e) => { e.stopPropagation(); onToggle(); }} 
+                    onClick={(e) => { e.stopPropagation(); onOpenTheme(); }}
+                    className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 text-gray-400 hover:bg-purple-500/20 hover:text-purple-400 transition-all duration-300 border border-transparent hover:border-purple-500/50 group relative"
+                >
+                    <Palette size={18} />
+                    <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black border border-white/10 px-2 py-1 rounded text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                        Change Theme
+                    </span>
+                </button>
+
+                <div className="w-px h-6 bg-white/10 mx-1" />
+
+                {/* MUSIC BUTTON */}
+                <button
+                    onClick={(e) => { e.stopPropagation(); onToggleMusic(); }} 
                     className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-500
                     ${isPlaying ? 'bg-blue-600/20 text-blue-400' : 'bg-gray-800 text-gray-500'}`}
                 >
@@ -146,8 +207,9 @@ const MusicController = ({
                 </div>
             </div>
             
+            {/* NOW PLAYING TEXT */}
             <div className={`
-                hidden md:flex flex-col overflow-hidden transition-all duration-500
+                hidden md:flex flex-col overflow-hidden transition-all duration-500 pl-2
                 ${isPlaying ? 'w-32 opacity-100' : 'w-0 opacity-0'}
             `}>
                 <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Now Streaming</span>
@@ -175,16 +237,16 @@ export default function Home() {
   const [isMuted, setIsMuted] = useState(false); 
   const [volume, setVolume] = useState(25);
   const playerRef = useRef<any>(null);
-  
-  // Transition Effect State
+    
+  // Transition & Helper State
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showHelper, setShowHelper] = useState(false);
 
-  // Active Theme Memo
   const activeTheme = useMemo(() => {
     if (!ALL_THEMES || ALL_THEMES.length === 0) return FALLBACK_THEME as Theme;
     return ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   }, [activeThemeId]);
-  
+    
   const isPlaying = useMemo(() => !isMuted, [isMuted]);
 
   useEffect(() => {
@@ -195,25 +257,47 @@ export default function Home() {
         const storedVol = localStorage.getItem('user_volume');
         const hasRegistered = localStorage.getItem('vip_user_registered') === 'true';
 
+        // Helper Logic
+        const hasSeenHelper = localStorage.getItem('has_seen_theme_onboarding');
+        
         if (storedTheme) setActiveThemeId(storedTheme);
         if (storedMute !== null) setIsMuted(storedMute === 'true');
         if (storedVol) setVolume(parseInt(storedVol));
         if (!hasRegistered) setCurrentStage("register");
-        else setCurrentStage("v2");
+        else {
+            setCurrentStage("v2");
+            if (!hasSeenHelper) {
+                setTimeout(() => setShowHelper(true), 4000);
+            }
+        }
     }
   }, []);
 
-  // --- SAFE AUDIO METHODS (CRASH FIX APPLIED HERE) ---
+  const dismissHelper = () => {
+    setShowHelper(false);
+    localStorage.setItem('has_seen_theme_onboarding', 'true');
+  };
+
+  const handleOpenTheme = () => {
+      setShowConfigurator(true);
+      if(showHelper) dismissHelper();
+  };
+
+  // --- AUDIO CONTROL LOGIC ---
 
   const safePlay = useCallback(() => {
-      // 🛑 FIX: Use Optional Chaining (?.) for crash safety
-      if (isMuted || showConfigurator) return;
-
+      if (isMuted || showConfigurator || !playerRef.current) return;
       try {
-          // Check if setVolume exists safely before calling
-          playerRef.current?.setVolume?.(volume);
-          // Check if playVideo exists safely before calling
-          playerRef.current?.playVideo?.();
+          // Force unmute first - browsers often start hidden videos as muted
+          if(typeof playerRef.current.unMute === 'function') {
+             playerRef.current.unMute();
+          }
+          if(typeof playerRef.current.setVolume === 'function') {
+             playerRef.current.setVolume(volume);
+          }
+          if(typeof playerRef.current.playVideo === 'function') {
+             playerRef.current.playVideo();
+          }
       } catch (e) {
           console.warn("Audio Player: Interaction prevented", e);
       }
@@ -227,35 +311,57 @@ export default function Home() {
       }
   }, []);
 
-  // --- AUDIO LOGIC HANDLERS ---
+  // GLOBAL CLICK LISTENER: Forces audio to wake up on first interaction
+  useEffect(() => {
+    const unlockAudio = () => {
+        if(playerRef.current) {
+            safePlay();
+        }
+    };
+    // Add one-time listener to window to catch ANY click
+    window.addEventListener('click', unlockAudio, { once: true });
+    window.addEventListener('touchstart', unlockAudio, { once: true });
+    return () => {
+        window.removeEventListener('click', unlockAudio);
+        window.removeEventListener('touchstart', unlockAudio);
+    };
+  }, [safePlay]);
 
   const handleVolumeChange = (newVol: number) => {
       setVolume(newVol);
       localStorage.setItem('user_volume', newVol.toString());
       
-      // 🛑 FIX: Safe Set Volume with Optional Chaining
-      playerRef.current?.setVolume?.(newVol);
-      
-      // Auto-unmute if volume is dragged up
+      if(playerRef.current) {
+        playerRef.current.setVolume(newVol);
+        if (newVol > 0) {
+            // Explicitly unmute if volume is raised
+            playerRef.current.unMute?.();
+        }
+      }
+
       if (newVol > 0 && isMuted) {
           setIsMuted(false);
           localStorage.setItem('user_is_muted', 'false');
-          safePlay(); // Resume if unmuted via slider
+          safePlay(); 
       }
   };
 
   const handlePlayerReady = useCallback((player: any) => {
       playerRef.current = player;
-      // 🛑 FIX: Safe init with Optional Chaining
-      player?.setVolume?.(isMuted ? 0 : volume);
-      
-      if (!isMuted && !showConfigurator) {
-          // Delay play slightly to ensure player is ready
-          setTimeout(() => safePlay(), 500);
+      // Initialize mute/volume state
+      if (isMuted) {
+          player.mute?.();
+      } else {
+          player.unMute?.();
+          player.setVolume?.(volume);
       }
-  }, [isMuted, showConfigurator, safePlay, volume]);
+      
+      // Attempt play (might be blocked by browser until interaction)
+      if (!isMuted && !showConfigurator) {
+          player.playVideo?.();
+      }
+  }, [isMuted, showConfigurator, volume]);
 
-  // Audio Ducking for Configurator
   useEffect(() => {
       if (!playerRef.current) return;
       if (showConfigurator) {
@@ -271,46 +377,39 @@ export default function Home() {
       localStorage.setItem('user_is_muted', String(newMutedState));
       
       if (newMutedState) {
-          // 🛑 FIX: Safe access
-          playerRef.current?.setVolume?.(0);
           safePause();
       } else if (!showConfigurator) {
-          // 🛑 FIX: Safe access
-          playerRef.current?.setVolume?.(volume);
           safePlay();
       }
-  }, [isMuted, showConfigurator, safePlay, safePause, volume]);
-
-  // --- STAGE & THEME HANDLERS ---
+  }, [isMuted, showConfigurator, safePlay, safePause]);
 
   const handleRegisterComplete = useCallback(() => {
     if (typeof window !== 'undefined') localStorage.setItem('vip_user_registered', 'true'); 
     setCurrentStage("hold"); 
   }, []);
 
-  // Theme Change with Transition Effect
   const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
     setIsTransitioning(true);
-
     setTimeout(() => {
         setActiveThemeId(themeId);
         setIsMuted(muted); 
-        
         if (typeof window !== 'undefined') {
             localStorage.setItem('user_theme_id', themeId);
             localStorage.setItem('user_is_muted', String(muted));
         }
-
         setShowConfigurator(false); 
-
-        setTimeout(() => {
-            setIsTransitioning(false);
-        }, 100);
+        setTimeout(() => setIsTransitioning(false), 100);
     }, 300);
   }, []);
 
   const handleHoldComplete = useCallback(() => setCurrentStage("content"), []);
-  const handleV2Complete = useCallback(() => setCurrentStage("content"), []);
+  const handleV2Complete = useCallback(() => {
+      setCurrentStage("content");
+      const hasSeenHelper = localStorage.getItem('has_seen_theme_onboarding');
+      if (!hasSeenHelper) setShowHelper(true);
+      // Try to play audio when loading finishes
+      safePlay();
+  }, [safePlay]);
 
   if (!isClient) return null;
 
@@ -340,6 +439,11 @@ export default function Home() {
       <Analytics />
       <SpeedInsights />
 
+      {/* ONBOARDING HELPER (First Load Only) */}
+      {showHelper && currentStage === 'content' && (
+          <OnboardingHelper onDismiss={handleOpenTheme} />
+      )}
+
       {/* TRANSITION OVERLAY */}
       <div 
         className={`fixed inset-0 z-[100002] bg-black pointer-events-none transition-opacity duration-300 ease-in-out ${isTransitioning ? 'opacity-100' : 'opacity-0'}`}
@@ -351,6 +455,20 @@ export default function Home() {
         volume={volume}
       />
 
+      {/* MOVED OUTSIDE OF #theme-wrapper 
+        This prevents CSS filters from breaking 'fixed' positioning 
+      */}
+      <BottomControls 
+          visible={currentStage === 'content'}
+          isPlaying={isPlaying} 
+          onToggleMusic={toggleMusic} 
+          onOpenTheme={handleOpenTheme}
+          themeName={activeTheme.name} 
+          volume={volume}
+          onVolumeChange={handleVolumeChange}
+      />
+
+      {/* Main wrapper onClick acts as a fallback for audio unlocking */}
       <div className="relative w-full min-h-screen" onClick={safePlay}>
         {currentStage === "register" && (
             <div className="fixed inset-0 z-[100000] bg-black">
@@ -382,14 +500,6 @@ export default function Home() {
                 <TargetCursor spinDuration={2} hideDefaultCursor={true} targetSelector=".cursor-target, a, button" />
                 {currentStage === 'content' && ( 
                     <div className="relative z-10">
-                        <MusicController 
-                            isPlaying={isPlaying} 
-                            onToggle={toggleMusic} 
-                            themeName={activeTheme.name} 
-                            volume={volume}
-                            onVolumeChange={handleVolumeChange}
-                        />
-
                         <Socialsfooter />
                         <Heromain />
                         <ShopFunnel />
