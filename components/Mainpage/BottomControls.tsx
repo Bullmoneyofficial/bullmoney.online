@@ -1,125 +1,254 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Volume2, Volume1, VolumeX, Palette, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Volume2, Volume1, VolumeX, Palette, Sparkles, Music } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
-interface BottomControlsProps {
-    isPlaying: boolean;
-    onToggleMusic: () => void;
-    onOpenTheme: () => void;
-    themeName: string;
-    volume: number;
-    onVolumeChange: (val: number) => void;
-    visible: boolean;
+// --- Utils ---
+// Standard utility for cleaner tailwind class merging
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
 }
 
+// --- Types ---
+interface BottomControlsProps {
+  isPlaying: boolean;
+  onToggleMusic: () => void;
+  onOpenTheme: () => void;
+  themeName: string;
+  volume: number;
+  onVolumeChange: (val: number) => void;
+  visible: boolean;
+}
+
+// --- Sub-Components ---
+
+// 1. Reusable Icon Button with Tooltip capability
+const ControlButton = ({ 
+  onClick, 
+  active, 
+  icon: Icon, 
+  label, 
+  className,
+  children 
+}: { 
+  onClick: (e: React.MouseEvent) => void; 
+  active?: boolean; 
+  icon: React.ElementType; 
+  label: string;
+  className?: string;
+  children?: React.ReactNode;
+}) => (
+  <motion.button
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+    onClick={(e) => { e.stopPropagation(); onClick(e); }}
+    aria-label={label}
+    className={cn(
+      "relative flex items-center justify-center w-10 h-10 rounded-full transition-colors duration-300 group",
+      active 
+        ? "bg-blue-500/20 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)] border-blue-500/30" 
+        : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border-white/5 hover:border-white/10",
+      "border backdrop-blur-sm",
+      className
+    )}
+  >
+    <Icon size={18} />
+    {children}
+    {/* Tooltip */}
+    <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black/90 border border-white/10 rounded text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+      {label}
+    </span>
+  </motion.button>
+);
+
+// 2. Animated Music Bars
+const MusicBars = ({ isPlaying }: { isPlaying: boolean }) => {
+  const barVariants = {
+    playing: (i: number) => ({
+      height: [4, 12, 4],
+      transition: {
+        repeat: Infinity,
+        duration: 0.8,
+        ease: "easeInOut",
+        delay: i * 0.1, // Stagger effect
+      },
+    }),
+    paused: {
+      height: 4,
+      transition: { duration: 0.3 }
+    }
+  };
+
+  return (
+    <div className="flex items-end gap-[2px] h-3">
+      {[0, 1, 2].map((i) => (
+        <motion.span
+          key={i}
+          custom={i}
+          variants={barVariants}
+          animate={isPlaying ? "playing" : "paused"}
+          className="w-0.5 bg-blue-500 rounded-full"
+        />
+      ))}
+    </div>
+  );
+};
+
+// --- Main Component ---
 export const BottomControls = ({ 
-    isPlaying, 
-    onToggleMusic, 
-    onOpenTheme,
-    themeName, 
-    volume, 
-    onVolumeChange,
-    visible
+  isPlaying, 
+  onToggleMusic, 
+  onOpenTheme,
+  themeName, 
+  volume, 
+  onVolumeChange,
+  visible
 }: BottomControlsProps) => {
-    const [isHovered, setIsHovered] = useState(false);
-    const [showHelper, setShowHelper] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+  const [showHelper, setShowHelper] = useState(true);
+  // Track if user is interacting with volume to prevent auto-hide on touch
+  const [isInteractingVolume, setIsInteractingVolume] = useState(false);
 
-    // Hide helper after 8 seconds
-    useEffect(() => {
-        const timer = setTimeout(() => setShowHelper(false), 8000);
-        return () => clearTimeout(timer);
-    }, []);
+  // Auto-hide helper, but cancel if user hovers immediately
+  useEffect(() => {
+    const timer = setTimeout(() => setShowHelper(false), 8000);
+    return () => clearTimeout(timer);
+  }, []);
 
-    if (!visible) return null;
+  // Determine Volume Icon
+  const VolumeIcon = volume === 0 ? VolumeX : volume > 50 ? Volume2 : Volume1;
 
-    return (
-        <div 
-            // FIX: 'fixed' ensures it stays on screen while scrolling
-            // 'z-[9998]' ensures it sits on top of other content
-            className="fixed bottom-8 left-8 z-[9998] flex flex-col items-start gap-4 transition-all duration-700 ease-in-out animate-bounce-subtle"
-            style={{ 
-                opacity: visible ? 1 : 0,
-                transform: visible ? 'translateY(0)' : 'translateY(20px)' 
-            }}
-            onMouseEnter={() => {
-                setIsHovered(true);
-                setShowHelper(false);
-            }}
-            onMouseLeave={() => setIsHovered(false)}
+  // Animation variants for container entrance/exit
+  const containerVariants = {
+    hidden: { opacity: 0, y: 40, scale: 0.95 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      scale: 1,
+      transition: { type: "spring", damping: 20, stiffness: 300 }
+    },
+    exit: { opacity: 0, y: 40, transition: { duration: 0.2 } }
+  };
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          className="fixed bottom-6 left-6 z-[9998] flex flex-col items-start gap-3"
+          onMouseEnter={() => {
+            setIsHovered(true);
+            setShowHelper(false);
+          }}
+          onMouseLeave={() => {
+            setIsHovered(false);
+            setIsInteractingVolume(false);
+          }}
         >
-            {/* HELPER TOOLTIP */}
+          {/* Helper Tooltip */}
+          <AnimatePresence>
             {showHelper && (
-                <div className="absolute -top-12 left-0 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-[11px] px-3 py-1.5 rounded-lg shadow-xl animate-pulse flex items-center gap-2 whitespace-nowrap border border-white/20">
-                    <Sparkles size={12} />
-                    Customize your vibe here!
-                    <div className="absolute -bottom-1 left-4 w-2 h-2 bg-blue-600 rotate-45" />
-                </div>
+              <motion.div 
+                initial={{ opacity: 0, y: 10, x: -10 }}
+                animate={{ opacity: 1, y: 0, x: 0 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="absolute -top-12 left-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2 whitespace-nowrap border border-white/20 select-none pointer-events-none"
+              >
+                <Sparkles size={12} className="animate-pulse" />
+                <span>Customize your vibe!</span>
+                <div className="absolute -bottom-1 left-4 w-2.5 h-2.5 bg-purple-500 rotate-45" />
+              </motion.div>
             )}
+          </AnimatePresence>
 
-            {/* MUSIC BEAM ANIMATION */}
-            {isPlaying && (
-                <div className="fixed inset-0 pointer-events-none z-[-1]">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-1 bg-blue-400 rounded-full animate-ping-to-bottom" />
-                </div>
-            )}
-
-            {/* Control Bar Container */}
-            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-xl border border-white/10 p-2 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:border-white/20 transition-colors">
-                
-                {/* THEME WIDGET BUTTON */}
-                <button
-                    onClick={(e) => { e.stopPropagation(); onOpenTheme(); }}
-                    className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 text-gray-400 hover:bg-purple-500/20 hover:text-purple-400 transition-all duration-300 border border-transparent hover:border-purple-500/50 group relative"
-                >
-                    <Palette size={18} />
-                    <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black border border-white/10 px-2 py-1 rounded text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                        Change Theme
-                    </span>
-                </button>
-
-                <div className="w-px h-6 bg-white/10 mx-1" />
-
-                {/* MUSIC BUTTON */}
-                <button
-                    onClick={(e) => { e.stopPropagation(); onToggleMusic(); }} 
-                    className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-500 relative
-                    ${isPlaying ? 'bg-blue-600/20 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-gray-800 text-gray-500'}`}
-                >
-                    {isPlaying ? (volume > 50 ? <Volume2 size={18}/> : <Volume1 size={18}/>) : <VolumeX size={18}/>}
-                    
-                    {/* Pulsing ring when playing */}
-                    {isPlaying && <span className="absolute inset-0 rounded-full border border-blue-400 animate-ping opacity-20" />}
-                </button>
-
-                {/* VOLUME SLIDER */}
-                <div className={`flex items-center transition-all duration-500 overflow-hidden ${isHovered ? 'w-24 px-2 opacity-100' : 'w-0 opacity-0'}`}>
-                    <input 
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={volume}
-                        onChange={(e) => onVolumeChange(parseInt(e.target.value))}
-                        className="w-full h-1 bg-blue-900 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                    />
-                </div>
-            </div>
+          {/* Main Control Bar */}
+          <div className="flex items-center p-1.5 gap-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl hover:border-white/20 transition-colors">
             
-            {/* NOW PLAYING TEXT */}
-            <div className={`
-                hidden md:flex flex-col overflow-hidden transition-all duration-500 pl-2
-                ${isPlaying ? 'max-h-12 opacity-100 translate-y-0' : 'max-h-0 opacity-0 -translate-y-2'}
-            `}>
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Now Streaming</span>
-                <div className="flex items-center gap-1">
-                    <span className="text-xs text-white truncate font-mono">{themeName} Radio</span>
-                    <div className="flex gap-0.5 items-end h-3">
-                        <span className="w-0.5 h-full bg-blue-500 animate-music-bar-1"/>
-                        <span className="w-0.5 h-full bg-blue-500 animate-music-bar-2"/>
-                        <span className="w-0.5 h-full bg-blue-500 animate-music-bar-3"/>
-                    </div>
+            {/* Theme Button */}
+            <ControlButton 
+              onClick={onOpenTheme} 
+              icon={Palette} 
+              label="Change Theme" 
+              className="hover:border-purple-500/50 hover:text-purple-400"
+            />
+
+            <div className="w-px h-6 bg-white/10" />
+
+            {/* Volume Section */}
+            <div 
+              className="flex items-center"
+              // Keep volume open if dragging slider
+              onMouseEnter={() => setIsInteractingVolume(true)}
+            >
+              <ControlButton 
+                onClick={onToggleMusic} 
+                active={isPlaying} 
+                icon={isPlaying ? VolumeIcon : VolumeX} 
+                label={isPlaying ? "Pause Music" : "Play Music"}
+              >
+                 {/* Subtle ripple effect when playing */}
+                {isPlaying && (
+                  <span className="absolute inset-0 rounded-full border border-blue-400 animate-ping opacity-20" />
+                )}
+              </ControlButton>
+
+              {/* Animated Volume Slider */}
+              <motion.div 
+                initial={false}
+                animate={{ 
+                  width: (isHovered || isInteractingVolume) ? 100 : 0,
+                  opacity: (isHovered || isInteractingVolume) ? 1 : 0,
+                  paddingLeft: (isHovered || isInteractingVolume) ? 8 : 0,
+                  paddingRight: (isHovered || isInteractingVolume) ? 8 : 0,
+                }}
+                transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                className="overflow-hidden h-10 flex items-center"
+              >
+                <div className="w-full relative h-6 flex items-center">
+                  <input 
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={volume}
+                    onChange={(e) => onVolumeChange(parseInt(e.target.value))}
+                    aria-label="Volume"
+                    className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  />
                 </div>
+              </motion.div>
             </div>
-        </div>
-    );
+          </div>
+          
+          {/* Track Info (Desktop only usually, but responsive here) */}
+          <AnimatePresence>
+            {isPlaying && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, y: -5 }}
+                animate={{ opacity: 1, height: 'auto', y: 0 }}
+                exit={{ opacity: 0, height: 0, y: -5 }}
+                className="pl-3 overflow-hidden"
+              >
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-0.5">Now Streaming</span>
+                  <div className="flex items-center gap-2">
+                    <Music size={12} className="text-blue-400" />
+                    <span className="text-xs text-gray-200 font-medium tracking-tight shadow-black drop-shadow-md">
+                      {themeName} Radio
+                    </span>
+                    <MusicBars isPlaying={isPlaying} />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 };

@@ -7,16 +7,20 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import { MessageCircle, Volume2, Volume1, VolumeX, X, Palette, Sparkles } from 'lucide-react'; 
 
-// --- STATIC IMPORTS ---
-import RecruitPage from "@/app/register/pageVip"; 
-import Socials from "@/components/Mainpage/Socialsfooter"; 
+// --- MASTER COMPONENT IMPORTS ---
 import { Navbar } from "@/components/Mainpage/navbar"; 
+import RecruitPage from "@/app/register/pagemode"; // Stage 1
+import BullMoneyGate from "@/components/TradingHoldUnlock"; // Stage 2
+import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2"; // Stage 3
+
+// --- THEME & MUSIC DATA ---
 import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
 
-// --- DYNAMIC IMPORTS ---
+// --- DYNAMIC IMPORTS (Page Content) ---
 const Features = dynamic(() => import("@/components/Mainpage/features").then(mod => mod.Features), { ssr: false });
 const Hero = dynamic(() => import("@/app/Prop/Prophero").then(mod => mod.Hero), { ssr: false });
 const AboutContent = dynamic(() => import("../Testimonial").then(mod => mod.AboutContent), { ssr: false });
+import Socials from "@/components/Mainpage/Socialsfooter"; 
 
 const FixedThemeConfigurator = dynamic(
     () => import('@/components/Mainpage/ThemeComponents').then((mod) => mod.default), 
@@ -30,46 +34,27 @@ const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor')
 
 // --- FALLBACK THEME ---
 const FALLBACK_THEME: Partial<Theme> = {
-    id: 'default',
-    name: 'Loading...',
+    id: 't01',
+    name: 'Default',
     filter: 'none',
     mobileFilter: 'none',
-};
-
-// --- HELPER: GET THEME COLOR ---
-const getThemeColor = (theme: Partial<Theme> | any) => {
-    if (theme?.primaryColor) return theme.primaryColor;
-    
-    const colorMap: Record<string, string> = {
-        't01': '#3b82f6', // Blue (Default)
-        't02': '#22c55e', // Green (Matrix)
-        't03': '#ef4444', // Red (Sith)
-        't04': '#a855f7', // Purple (Neon)
-        't05': '#eab308', // Gold
-        't06': '#ec4899', // Pink
-    };
-    return colorMap[theme?.id] || '#3b82f6';
 };
 
 // =========================================
 // 1. ONBOARDING HELPER
 // =========================================
-const OnboardingHelper = ({ onDismiss, theme }: { onDismiss: () => void, theme: any }) => {
-    const color = getThemeColor(theme);
+const OnboardingHelper = ({ onDismiss }: { onDismiss: () => void }) => {
     return (
         <div 
             onClick={onDismiss}
-            className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-[2px] cursor-pointer animate-in fade-in duration-700"
+            className="fixed inset-0 z-[2147483646] bg-black/60 backdrop-blur-[2px] cursor-pointer animate-in fade-in duration-700"
         >
             <div className="relative w-full h-full">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-                    <h2 
-                        className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tighter animate-pulse"
-                        style={{ textShadow: `0 0 25px ${color}99` }}
-                    >
+                    <h2 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tighter drop-shadow-[0_0_25px_rgba(59,130,246,0.6)] animate-pulse">
                         Customize Your Vibe
                     </h2>
-                    <p className="text-white/80 text-lg md:text-xl font-mono opacity-90">
+                    <p className="text-blue-200 text-lg md:text-xl font-mono opacity-90">
                         Choose a Theme & Soundtrack
                     </p>
                     <div className="mt-4 text-xs text-white/40 uppercase tracking-widest">Click anywhere to start</div>
@@ -80,7 +65,7 @@ const OnboardingHelper = ({ onDismiss, theme }: { onDismiss: () => void, theme: 
 };
 
 // =========================================
-// 2. AUDIO ARCHITECTURE (YouTube System)
+// 2. AUDIO ARCHITECTURE
 // =========================================
 const BackgroundMusicSystem = ({ 
   themeId, 
@@ -93,7 +78,7 @@ const BackgroundMusicSystem = ({
 }) => {
   const videoId = (THEME_SOUNDTRACKS && THEME_SOUNDTRACKS[themeId]) 
     ? THEME_SOUNDTRACKS[themeId] 
-    : 'jfKfPfyJRdk'; // Default ID
+    : 'jfKfPfyJRdk';
     
   const opts: YouTubeProps['opts'] = {
     height: '1', 
@@ -127,28 +112,29 @@ const BackgroundMusicSystem = ({
 };
 
 // =========================================
-// 3. UI CONTROLS (Sticky Widgets)
+// 3. UI CONTROLS (THEME AWARE)
 // =========================================
 const BottomControls = ({ 
     isPlaying, 
     onToggleMusic, 
     onOpenTheme,
-    theme, 
+    themeName, 
     volume, 
     onVolumeChange,
-    visible
+    visible,
+    theme // NEW: Receives Theme Object
 }: { 
     isPlaying: boolean; 
     onToggleMusic: () => void, 
     onOpenTheme: () => void,
-    theme: any,
+    themeName: string,
     volume: number,
     onVolumeChange: (val: number) => void,
-    visible: boolean
+    visible: boolean,
+    theme: Theme
 }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [showHelper, setShowHelper] = useState(true);
-    const color = getThemeColor(theme);
 
     useEffect(() => {
         const timer = setTimeout(() => setShowHelper(false), 8000);
@@ -171,22 +157,22 @@ const BottomControls = ({
             onMouseLeave={() => setIsHovered(false)}
         >
             {showHelper && (
-                <div 
-                    className="absolute -top-12 left-0 text-white text-[11px] px-3 py-1.5 rounded-lg shadow-xl animate-pulse flex items-center gap-2 whitespace-nowrap border border-white/20"
-                    style={{ background: `linear-gradient(90deg, ${color}, #000000)` }}
-                >
+                <div className="absolute -top-12 left-0 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-[11px] px-3 py-1.5 rounded-lg shadow-xl animate-pulse flex items-center gap-2 whitespace-nowrap border border-white/20">
                     <Sparkles size={12} />
                     Customize your vibe here!
-                    <div className="absolute -bottom-1 left-4 w-2 h-2 rotate-45" style={{ backgroundColor: color }} />
+                    <div className="absolute -bottom-1 left-4 w-2 h-2 bg-blue-600 rotate-45" />
                 </div>
             )}
 
-            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-xl border border-white/10 p-2 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:border-white/20 transition-colors">
+            {/* WIDGET CONTAINER - APPLY THEME FILTER HERE */}
+            <div 
+                className="flex items-center gap-2 bg-black/60 backdrop-blur-xl border border-white/10 p-2 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:border-white/20 transition-all duration-300"
+                style={{ filter: theme.filter, WebkitFilter: theme.filter }} 
+            >
                 <button
                     onClick={(e) => { e.stopPropagation(); onOpenTheme(); }}
-                    className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 text-gray-400 transition-all duration-300 border border-transparent group relative hover:text-white"
+                    className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 text-gray-400 hover:bg-purple-500/20 hover:text-purple-400 transition-all duration-300 border border-transparent hover:border-purple-500/50 group relative"
                 >
-                    <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-20 transition-opacity" style={{ backgroundColor: color }} />
                     <Palette size={18} />
                 </button>
 
@@ -194,35 +180,33 @@ const BottomControls = ({
 
                 <button
                     onClick={(e) => { e.stopPropagation(); onToggleMusic(); }} 
-                    className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-500 relative`}
-                    style={{
-                        backgroundColor: isPlaying ? `${color}33` : '#1f2937', 
-                        color: isPlaying ? color : '#6b7280',
-                        boxShadow: isPlaying ? `0 0 15px ${color}4d` : 'none'
-                    }}
+                    className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-500 relative
+                    ${isPlaying ? 'bg-blue-600/20 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-gray-800 text-gray-500'}`}
                 >
                     {isPlaying ? (volume > 50 ? <Volume2 size={18}/> : <Volume1 size={18}/>) : <VolumeX size={18}/>}
-                    {isPlaying && <span className="absolute inset-0 rounded-full border animate-ping opacity-20" style={{ borderColor: color }} />}
+                    {isPlaying && <span className="absolute inset-0 rounded-full border border-blue-400 animate-ping opacity-20" />}
                 </button>
 
                 <div className={`flex items-center transition-all duration-500 overflow-hidden ${isHovered ? 'w-24 px-2 opacity-100' : 'w-0 opacity-0'}`}>
                     <input 
                         type="range" min="0" max="100" value={volume}
                         onChange={(e) => onVolumeChange(parseInt(e.target.value))}
-                        className="w-full h-1 rounded-lg appearance-none cursor-pointer"
-                        style={{ accentColor: color, backgroundColor: `${color}33` }}
+                        className="w-full h-1 bg-blue-900 rounded-lg appearance-none cursor-pointer accent-blue-500"
                     />
                 </div>
             </div>
             
-            <div className={`hidden md:flex flex-col overflow-hidden transition-all duration-500 pl-2 ${isPlaying ? 'max-h-12 opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div 
+                className={`hidden md:flex flex-col overflow-hidden transition-all duration-500 pl-2 ${isPlaying ? 'max-h-12 opacity-100' : 'max-h-0 opacity-0'}`}
+                style={{ filter: theme.filter, WebkitFilter: theme.filter }} 
+            >
                 <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Now Streaming</span>
                 <div className="flex items-center gap-1">
-                    <span className="text-xs text-white truncate font-mono">{theme.name} Radio</span>
+                    <span className="text-xs text-white truncate font-mono">{themeName} Radio</span>
                     <div className="flex gap-0.5 items-end h-3">
-                        <span className="w-0.5 h-full animate-music-bar-1" style={{ backgroundColor: color }}/>
-                        <span className="w-0.5 h-full animate-music-bar-2" style={{ backgroundColor: color }}/>
-                        <span className="w-0.5 h-full animate-music-bar-3" style={{ backgroundColor: color }}/>
+                        <span className="w-0.5 h-full bg-blue-500 animate-music-bar-1"/>
+                        <span className="w-0.5 h-full bg-blue-500 animate-music-bar-2"/>
+                        <span className="w-0.5 h-full bg-blue-500 animate-music-bar-3"/>
                     </div>
                 </div>
             </div>
@@ -230,47 +214,37 @@ const BottomControls = ({
     );
 }
 
-const SupportWidget = ({ theme }: { theme: any }) => {
+const SupportWidget = ({ theme }: { theme: Theme }) => {
     const [isVisible, setIsVisible] = useState(false);
-    const color = getThemeColor(theme);
-
     useEffect(() => { setTimeout(() => setIsVisible(true), 500); }, []);
-    
     return (
-      <div className={`absolute bottom-8 right-8 z-[9999] pointer-events-auto transition-all duration-700 ease-out transform ${
-        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'
-      }`}>
+      <div 
+        className={`absolute bottom-8 right-8 z-[9999] pointer-events-auto transition-all duration-700 ease-out transform ${
+            isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'
+        }`}
+        style={{ filter: theme.filter, WebkitFilter: theme.filter }} 
+      >
         <a
           href="https://t.me/+dlP_A0ebMXs3NTg0"
           target="_blank" rel="noopener noreferrer"
           className="group relative flex items-center justify-center w-16 h-16 rounded-full transition-all duration-300 hover:-translate-y-1"
         >
-            <div 
-                className="absolute inset-0 rounded-full blur-[20px] opacity-40 animate-pulse group-hover:opacity-80 group-hover:scale-110 transition-all duration-500"
-                style={{ backgroundColor: color }} 
-            />
-            <div 
-                className="relative flex items-center justify-center w-full h-full rounded-full shadow-inner border overflow-hidden z-10"
-                style={{
-                    background: `linear-gradient(135deg, ${color}dd, ${color}, ${color}aa)`,
-                    borderColor: `${color}88`
-                }}
-            >
-                <div className="absolute inset-0 bg-white/20 group-hover:bg-white/0 transition-colors" />
-                <MessageCircle className="w-7 h-7 text-white relative z-30 drop-shadow-md" strokeWidth={2.5} />
-            </div>
+          <div className="absolute inset-0 rounded-full bg-[#0066ff] blur-[20px] opacity-40 animate-pulse group-hover:opacity-80 group-hover:scale-110 transition-all duration-500" />
+          <div className="relative flex items-center justify-center w-full h-full bg-gradient-to-br from-[#0033cc] via-[#0066ff] to-[#3399ff] rounded-full shadow-inner border border-[#66b3ff]/50 overflow-hidden z-10">
+              <MessageCircle className="w-7 h-7 text-white relative z-30" strokeWidth={2.5} />
+          </div>
         </a>
       </div>
     );
 };
-
 
 // ==========================================
 // 4. MAIN PAGE COMPONENT
 // ==========================================
 
 export default function Home() {
-  const [currentStage, setCurrentStage] = useState<"recruit" | "content">("recruit");
+  // Multi-Stage State
+  const [currentStage, setCurrentStage] = useState<"register" | "hold" | "v2" | "content">("v2");
   const [isClient, setIsClient] = useState(false);
   const [activeThemeId, setActiveThemeId] = useState<string>('t01'); 
   const [showConfigurator, setShowConfigurator] = useState(false); 
@@ -282,8 +256,7 @@ export default function Home() {
   const [showHelper, setShowHelper] = useState(false);
 
   const activeTheme = useMemo(() => {
-    if (!ALL_THEMES || ALL_THEMES.length === 0) return FALLBACK_THEME as Theme;
-    return ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
+    return ALL_THEMES.find(t => t.id === activeThemeId) || (FALLBACK_THEME as Theme);
   }, [activeThemeId]);
     
   const isPlaying = useMemo(() => !isMuted, [isMuted]);
@@ -294,11 +267,21 @@ export default function Home() {
         const storedTheme = localStorage.getItem('user_theme_id');
         const storedMute = localStorage.getItem('user_is_muted');
         const storedVol = localStorage.getItem('user_volume');
+        const hasRegistered = localStorage.getItem('vip_user_registered') === 'true';
         const hasSeenHelper = localStorage.getItem('has_seen_theme_onboarding');
         
         if (storedTheme) setActiveThemeId(storedTheme);
         if (storedMute !== null) setIsMuted(storedMute === 'true');
         if (storedVol) setVolume(parseInt(storedVol));
+
+        // Logic: if not registered -> register. Else -> v2 loader.
+        if (!hasRegistered) setCurrentStage("register");
+        else {
+            setCurrentStage("v2");
+            if (!hasSeenHelper) {
+                setTimeout(() => setShowHelper(true), 4000);
+            }
+        }
     }
   }, []);
 
@@ -356,6 +339,7 @@ export default function Home() {
           player.unMute?.();
           player.setVolume?.(volume);
       }
+      if (!isMuted && !showConfigurator) player.playVideo?.();
   }, [isMuted, showConfigurator, volume]);
 
   useEffect(() => {
@@ -372,14 +356,6 @@ export default function Home() {
       else if (!showConfigurator) safePlay();
   }, [isMuted, showConfigurator, safePlay, safePause]);
 
-  const handleUnlock = useCallback(() => {
-      setCurrentStage("content");
-      const hasSeenHelper = localStorage.getItem('has_seen_theme_onboarding');
-      if (!hasSeenHelper) setShowHelper(true);
-      // Trigger audio start on unlock
-      setTimeout(() => safePlay(), 500);
-  }, [safePlay]);
-
   const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
     setIsTransitioning(true);
     setTimeout(() => {
@@ -394,18 +370,28 @@ export default function Home() {
     }, 300);
   }, []);
 
+  // --- STAGE LOGIC ---
+  const handleRegisterComplete = useCallback(() => {
+    localStorage.setItem('vip_user_registered', 'true');
+    setCurrentStage("hold"); 
+  }, []);
+
+  const handleHoldComplete = useCallback(() => {
+    setCurrentStage("v2");
+  }, []);
+
+  const handleV2Complete = useCallback(() => {
+    setCurrentStage("content");
+    setTimeout(() => safePlay(), 500);
+  }, [safePlay]);
+
   if (!isClient) return null;
 
   return (
     <>
       <style jsx global>{`
-        html, body {
-          background-color: black; 
-          overflow-x: hidden;
-        }
-        .profit-reveal {
-          animation: profitReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
+        html, body { background-color: black; overflow-x: hidden; }
+        .profit-reveal { animation: profitReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes profitReveal {
           0% { transform: scale(1.05); opacity: 0; filter: blur(15px); }
           100% { transform: scale(1); opacity: 1; filter: blur(0px); }
@@ -421,9 +407,6 @@ export default function Home() {
       <Analytics />
       <SpeedInsights />
 
-      {/* FIXED BACKGROUND FADE OVERLAY */}
-      <div className={`fixed inset-0 z-[100002] bg-black pointer-events-none transition-opacity duration-300 ease-in-out ${isTransitioning ? 'opacity-100' : 'opacity-0'}`} />
-
       {/* AUDIO SYSTEM */}
       <BackgroundMusicSystem 
         themeId={activeThemeId} 
@@ -431,43 +414,31 @@ export default function Home() {
         volume={volume}
       />
 
-      {/* GLOBAL THEME LENS (THE KEY TO UNIFIED THEMES) */}
-      {currentStage === 'content' && (
-          <div 
-            id="global-theme-lens"
-            className="fixed inset-0 z-[9998] pointer-events-none w-screen h-screen"
-            style={{ 
-                backdropFilter: activeTheme.filter,
-                WebkitBackdropFilter: activeTheme.filter,
-                transition: 'backdrop-filter 0.5s ease' 
-            }}
-          />
-      )}
-
-      {/* FIXED WIDGETS (UNDER LENS, SO THEY GET TINTED) */}
-      <div className="fixed inset-0 z-[9997] pointer-events-none">
+      {/* FIXED WIDGETS (Z-Index 400,000) - With Theme Prop */}
+      <div className="fixed inset-0 z-[400000] pointer-events-none">
           <BottomControls 
               visible={currentStage === 'content'}
               isPlaying={isPlaying} 
               onToggleMusic={toggleMusic} 
               onOpenTheme={handleOpenTheme}
-              theme={activeTheme} 
+              themeName={activeTheme.name} 
               volume={volume}
               onVolumeChange={handleVolumeChange}
+              theme={activeTheme}
           />
           <SupportWidget theme={activeTheme} />
       </div>
 
       {showHelper && currentStage === 'content' && (
-          <OnboardingHelper onDismiss={handleOpenTheme} theme={activeTheme} />
+          <OnboardingHelper onDismiss={handleOpenTheme} />
       )}
 
       {/* MAIN CONTENT WRAPPER */}
       <div className="relative w-full min-h-screen" onClick={safePlay}>
         
-        {/* CONFIGURATOR MODAL (ABOVE LENS) */}
+        {/* CONFIGURATOR MODAL (Z-Index 300,000) */}
         {showConfigurator && (
-            <div className="fixed inset-0 z-[100001] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-[300000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
                 <div className="relative w-full max-w-6xl h-[80vh] bg-[#020617] rounded-3xl border border-white/10 overflow-hidden">
                     <button 
                         onClick={(e) => { e.stopPropagation(); setShowConfigurator(false); }}
@@ -484,21 +455,63 @@ export default function Home() {
             </div>
         )}
 
-        {/* LOADING & GATING (Now Theme-Responsive) */}
-        {currentStage === "recruit" && (
+        {/* GLOBAL THEME LENS (Z-Index 200,000) */}
+        <div 
+            id="global-theme-lens"
+            className="fixed inset-0 pointer-events-none w-screen h-screen z-[200000]"
+            style={{ 
+                backdropFilter: activeTheme.filter,
+                WebkitBackdropFilter: activeTheme.filter, 
+                transition: 'backdrop-filter 0.5s ease' 
+            }}
+        />
+
+        {/* LOADING STAGES (Z-Index 100,000) */}
+        {currentStage === "register" && (
             <div 
                 className="fixed inset-0 z-[100000] bg-black transition-all duration-500"
                 style={{ 
                     filter: activeTheme.filter,
-                    WebkitFilter: activeTheme.filter
+                    WebkitFilter: activeTheme.filter,
+                    transform: 'translateZ(0)' 
                 }}
             >
                 {/* @ts-ignore */}
-                <RecruitPage onUnlock={handleUnlock} theme={activeTheme} />
+                <RecruitPage onUnlock={handleRegisterComplete} theme={activeTheme} />
             </div>
         )}
 
-        {/* PAGE CONTENT (UNDER LENS VIA Z-INDEX DEFAULT) */}
+        {currentStage === "hold" && (
+            <div 
+                className="fixed inset-0 z-[100000] transition-all duration-500"
+                style={{ 
+                    filter: activeTheme.filter,
+                    WebkitFilter: activeTheme.filter,
+                    transform: 'translateZ(0)' 
+                }}
+            >
+                {/* @ts-ignore */}
+                <BullMoneyGate onUnlock={handleHoldComplete} theme={activeTheme}>
+                    <div className="hidden" /> 
+                </BullMoneyGate>
+            </div>
+        )}
+
+        {currentStage === "v2" && (
+            <div 
+                className="fixed inset-0 z-[100000] transition-all duration-500"
+                style={{ 
+                    filter: activeTheme.filter,
+                    WebkitFilter: activeTheme.filter,
+                    transform: 'translateZ(0)' 
+                }}
+            >
+                 {/* @ts-ignore */}
+                <MultiStepLoaderV2 onFinished={handleV2Complete} theme={activeTheme} />
+            </div>
+        )}
+
+        {/* PAGE CONTENT (Under lens) */}
         <div className={currentStage === 'content' ? 'profit-reveal' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
             
             <Navbar 
@@ -507,24 +520,23 @@ export default function Home() {
                 onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)}
             />
 
-            <main className="relative min-h-screen z-10">
-                <TargetCursor spinDuration={2} hideDefaultCursor={true} targetSelector=".cursor-target, a, button" />
+            <main className="relative min-h-screen pt-20 z-10">
+                <TargetCursor spinDuration={2} hideDefaultCursor={true} targetSelector="a, button" />
                 
-                {currentStage === 'content' && ( 
-                    <div className="relative pt-20">
-                        {/* @ts-ignore - Props passed for compatibility */}
-                        <Hero themeId={activeThemeId} theme={activeTheme} />
-                        {/* @ts-ignore */}
-                        <Features themeId={activeThemeId} theme={activeTheme} />
-                        {/* @ts-ignore */}
-                        <AboutContent themeId={activeThemeId} theme={activeTheme} />
-                        {/* @ts-ignore */}
-                        <Socials themeId={activeThemeId} theme={activeTheme} />
-                    </div>
-                )}
+                {/* @ts-ignore */}
+                <Hero themeId={activeThemeId} theme={activeTheme} />
+                {/* @ts-ignore */}
+                <Features themeId={activeThemeId} theme={activeTheme} />
+                {/* @ts-ignore */}
+                <AboutContent themeId={activeThemeId} theme={activeTheme} />
+                {/* @ts-ignore */}
+                <Socials themeId={activeThemeId} theme={activeTheme} />
             </main>
         </div>
       </div>
+      
+      {/* FIXED BACKGROUND FADE (Z-Index 500,000) */}
+      <div className={`fixed inset-0 z-[500000] bg-black pointer-events-none transition-opacity duration-300 ease-in-out ${isTransitioning ? 'opacity-100' : 'opacity-0'}`} />
     </>
   );
 }

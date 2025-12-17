@@ -44,6 +44,21 @@ const FALLBACK_THEME: Partial<Theme> = {
     mobileFilter: 'none',
 };
 
+// --- THEME COLOR MAPPING ---
+// Maps Theme IDs to their primary accent colors for the UI widgets
+const THEME_ACCENTS: Record<string, string> = {
+    't01': '#3b82f6', // Blue (Default)
+    't02': '#a855f7', // Purple
+    't03': '#22c55e', // Green
+    't04': '#ef4444', // Red
+    't05': '#f59e0b', // Amber
+    't06': '#ec4899', // Pink
+    't07': '#06b6d4', // Cyan
+    'default': '#3b82f6'
+};
+
+const getThemeColor = (id: string) => THEME_ACCENTS[id] || THEME_ACCENTS['default'];
+
 // ----------------------------------------------------------------------
 // --- ONBOARDING HELPER ---
 // ----------------------------------------------------------------------
@@ -116,7 +131,7 @@ const BackgroundMusicSystem = ({
 };
 
 // ----------------------------------------------------------------------
-// --- BOTTOM CONTROLS (STICKY) ---
+// --- BOTTOM CONTROLS (STICKY & DYNAMIC COLOR) ---
 // ----------------------------------------------------------------------
 const BottomControls = ({ 
     isPlaying, 
@@ -125,7 +140,8 @@ const BottomControls = ({
     themeName, 
     volume, 
     onVolumeChange,
-    visible
+    visible,
+    accentColor
 }: { 
     isPlaying: boolean; 
     onToggleMusic: () => void, 
@@ -133,7 +149,8 @@ const BottomControls = ({
     themeName: string,
     volume: number,
     onVolumeChange: (val: number) => void,
-    visible: boolean
+    visible: boolean,
+    accentColor: string
 }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [showHelper, setShowHelper] = useState(true);
@@ -143,7 +160,6 @@ const BottomControls = ({
         return () => clearTimeout(timer);
     }, []);
 
-    // Always render to keep logic alive, just hide visually
     if (!visible) return null;
 
     return (
@@ -160,18 +176,29 @@ const BottomControls = ({
             onMouseLeave={() => setIsHovered(false)}
         >
             {showHelper && (
-                <div className="absolute -top-12 left-0 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-[11px] px-3 py-1.5 rounded-lg shadow-xl animate-pulse flex items-center gap-2 whitespace-nowrap border border-white/20">
+                <div 
+                    className="absolute -top-12 left-0 text-white text-[11px] px-3 py-1.5 rounded-lg shadow-xl animate-pulse flex items-center gap-2 whitespace-nowrap border border-white/20"
+                    style={{ background: `linear-gradient(90deg, ${accentColor}dd, ${accentColor}88)` }}
+                >
                     <Sparkles size={12} />
                     Customize your vibe here!
-                    <div className="absolute -bottom-1 left-4 w-2 h-2 bg-blue-600 rotate-45" />
+                    <div 
+                        className="absolute -bottom-1 left-4 w-2 h-2 rotate-45" 
+                        style={{ backgroundColor: accentColor }}
+                    />
                 </div>
             )}
 
             <div className="flex items-center gap-2 bg-black/60 backdrop-blur-xl border border-white/10 p-2 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:border-white/20 transition-colors">
                 <button
                     onClick={(e) => { e.stopPropagation(); onOpenTheme(); }}
-                    className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 text-gray-400 hover:bg-purple-500/20 hover:text-purple-400 transition-all duration-300 border border-transparent hover:border-purple-500/50 group relative"
+                    className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 text-gray-400 transition-all duration-300 border border-transparent group relative hover:text-white"
                 >
+                    {/* Hover Glow Effect */}
+                    <div 
+                        className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-20 transition-opacity" 
+                        style={{ backgroundColor: accentColor }} 
+                    />
                     <Palette size={18} />
                 </button>
 
@@ -179,18 +206,26 @@ const BottomControls = ({
 
                 <button
                     onClick={(e) => { e.stopPropagation(); onToggleMusic(); }} 
-                    className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-500 relative
-                    ${isPlaying ? 'bg-blue-600/20 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-gray-800 text-gray-500'}`}
+                    className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-500 relative`}
+                    style={{
+                        backgroundColor: isPlaying ? `${accentColor}33` : '#1f2937', 
+                        color: isPlaying ? accentColor : '#6b7280',
+                        boxShadow: isPlaying ? `0 0 15px ${accentColor}4d` : 'none'
+                    }}
                 >
                     {isPlaying ? (volume > 50 ? <Volume2 size={18}/> : <Volume1 size={18}/>) : <VolumeX size={18}/>}
-                    {isPlaying && <span className="absolute inset-0 rounded-full border border-blue-400 animate-ping opacity-20" />}
+                    {isPlaying && <span className="absolute inset-0 rounded-full border animate-ping opacity-20" style={{ borderColor: accentColor }} />}
                 </button>
 
                 <div className={`flex items-center transition-all duration-500 overflow-hidden ${isHovered ? 'w-24 px-2 opacity-100' : 'w-0 opacity-0'}`}>
                     <input 
                         type="range" min="0" max="100" value={volume}
                         onChange={(e) => onVolumeChange(parseInt(e.target.value))}
-                        className="w-full h-1 bg-blue-900 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                        className="w-full h-1 rounded-lg appearance-none cursor-pointer"
+                        style={{ 
+                            accentColor: accentColor,
+                            backgroundColor: `${accentColor}44`
+                        }}
                     />
                 </div>
             </div>
@@ -200,9 +235,9 @@ const BottomControls = ({
                 <div className="flex items-center gap-1">
                     <span className="text-xs text-white truncate font-mono">{themeName} Radio</span>
                     <div className="flex gap-0.5 items-end h-3">
-                        <span className="w-0.5 h-full bg-blue-500 animate-music-bar-1"/>
-                        <span className="w-0.5 h-full bg-blue-500 animate-music-bar-2"/>
-                        <span className="w-0.5 h-full bg-blue-500 animate-music-bar-3"/>
+                        <span className="w-0.5 h-full animate-music-bar-1" style={{ backgroundColor: accentColor }}/>
+                        <span className="w-0.5 h-full animate-music-bar-2" style={{ backgroundColor: accentColor }}/>
+                        <span className="w-0.5 h-full animate-music-bar-3" style={{ backgroundColor: accentColor }}/>
                     </div>
                 </div>
             </div>
@@ -210,7 +245,10 @@ const BottomControls = ({
     );
 }
 
-const SupportWidget = () => {
+// ----------------------------------------------------------------------
+// --- SUPPORT WIDGET (DYNAMIC COLOR) ---
+// ----------------------------------------------------------------------
+const SupportWidget = ({ accentColor }: { accentColor: string }) => {
     const [isVisible, setIsVisible] = useState(false);
     useEffect(() => { setTimeout(() => setIsVisible(true), 500); }, []);
     return (
@@ -222,8 +260,19 @@ const SupportWidget = () => {
           target="_blank" rel="noopener noreferrer"
           className="group relative flex items-center justify-center w-16 h-16 rounded-full transition-all duration-300 hover:-translate-y-1"
         >
-          <div className="absolute inset-0 rounded-full bg-[#0066ff] blur-[20px] opacity-40 animate-pulse group-hover:opacity-80 group-hover:scale-110 transition-all duration-500" />
-          <div className="relative flex items-center justify-center w-full h-full bg-gradient-to-br from-[#0033cc] via-[#0066ff] to-[#3399ff] rounded-full shadow-inner border border-[#66b3ff]/50 overflow-hidden z-10">
+          {/* Outer Glow */}
+          <div 
+              className="absolute inset-0 rounded-full blur-[20px] opacity-40 animate-pulse group-hover:opacity-80 group-hover:scale-110 transition-all duration-500" 
+              style={{ backgroundColor: accentColor }}
+          />
+          {/* Inner Button */}
+          <div 
+              className="relative flex items-center justify-center w-full h-full rounded-full shadow-inner border overflow-hidden z-10"
+              style={{ 
+                  background: `linear-gradient(135deg, ${accentColor}cc, ${accentColor}, ${accentColor}99)`,
+                  borderColor: `${accentColor}88`
+              }}
+          >
               <MessageCircle className="w-7 h-7 text-white relative z-30" strokeWidth={2.5} />
           </div>
         </a>
@@ -253,6 +302,9 @@ export default function Home() {
     return ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   }, [activeThemeId]);
     
+  // Get dynamic accent color
+  const accentColor = useMemo(() => getThemeColor(activeThemeId), [activeThemeId]);
+
   const isPlaying = useMemo(() => !isMuted, [isMuted]);
 
   useEffect(() => {
@@ -421,8 +473,9 @@ export default function Home() {
               themeName={activeTheme.name} 
               volume={volume}
               onVolumeChange={handleVolumeChange}
+              accentColor={accentColor}
           />
-          <SupportWidget />
+          <SupportWidget accentColor={accentColor} />
       </div>
 
       {showHelper && currentStage === 'content' && (
@@ -448,8 +501,8 @@ export default function Home() {
                     <FixedThemeConfigurator 
                         initialThemeId={activeThemeId}
                         onThemeChange={handleThemeChange} 
-                        // Passed logic to pause BG music during preview
-                     
+                        // Logic to pause BG music during preview
+                   
                     />
                 </div>
             </div>
