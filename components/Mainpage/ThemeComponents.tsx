@@ -2,24 +2,31 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
   TrendingUp, DollarSign, Zap, Activity, Settings, 
-  RefreshCw, Wifi, ArrowRight, SkipForward, MessageCircle, Check, Volume2, Music, X
+  RefreshCw, Wifi, ArrowRight, SkipForward, MessageCircle, Check, Volume2, Music, X, VolumeX
 } from 'lucide-react'; 
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { ALL_THEMES, ThemeCategory, SoundProfile, TickerData } from '@/constants/theme-data';
 import { ShimmerButton, ShimmerCard, ShimmerBorder, GlowText, IllusionLayer, GlobalSvgFilters } from '@/components/ThemeUI';
-import { ThemeConfigModal } from '@/components/ThemeConfigModal'; // Assuming this imports the modal
+import { ThemeConfigModal } from '@/components/ThemeConfigModal'; 
 
 // --- CRITICAL RE-EXPORTS ---
 export { ALL_THEMES, type Theme, type ThemeCategory, type SoundProfile } from '@/constants/theme-data';
 
-// --- MUSIC SOUNDTRACK MAPPING (Dynamic Generation assumed) ---
-// Assuming this is handled in a separate file/logic outside this component definition.
-export const THEME_SOUNDTRACKS: Record<string, string> = {}; 
+// ------------------------------------------------------------------
+// 🛑 FIX APPLIED HERE: Populating the empty object
+// ------------------------------------------------------------------
+export const THEME_SOUNDTRACKS: Record<string, string> = ALL_THEMES.reduce((acc, theme) => {
+    // Maps theme.id -> theme.youtubeId (with a default Lofi fallback)
+    acc[theme.id] = theme.youtubeId || 'jfKfPfyJRdk'; 
+    return acc;
+}, {} as Record<string, string>);
+// ------------------------------------------------------------------
 
 const TARGET_PAIRS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'DOGEUSDT'];
 const LOWER_CASE_PAIRS = TARGET_PAIRS.map(p => p.toLowerCase());
 
+// --- HOOKS ---
 export const useBinanceTickers = () => {
     const [tickers, setTickers] = useState<Record<string, TickerData>>({});
     const [status, setStatus] = useState<'CONNECTING' | 'CONNECTED' | 'DISCONNECTED'>('DISCONNECTED');
@@ -66,6 +73,8 @@ export const useBinanceChart = (symbol: string = 'BTCUSDT') => {
     }, [symbol]);
     return chartData;
 };
+
+// --- SUB-COMPONENTS ---
 
 const LivePriceDisplay = ({ price, prevPrice }: { price: string, prevPrice: string }) => {
     const direction = parseFloat(price) > parseFloat(prevPrice) ? 'up' : parseFloat(price) < parseFloat(prevPrice) ? 'down' : 'neutral';
@@ -123,9 +132,13 @@ export const WelcomeBackModal = ({ isOpen, onContinue, onSkip }: { isOpen: boole
     </AnimatePresence>
 );
 
+// Added functionality to Support Widget
 export const SupportWidget = () => (
     <div className="fixed bottom-24 right-4 md:bottom-6 md:right-6 z-[45]">
-        <button className="relative flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#050505] border border-blue-900/50 shadow-[0_0_30px_rgba(37,99,235,0.4)] overflow-hidden group hover:scale-110 transition-transform">
+        <button 
+            onClick={() => alert("Connecting to Support Agent... (Simulated)")} 
+            className="relative flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#050505] border border-blue-900/50 shadow-[0_0_30px_rgba(37,99,235,0.4)] overflow-hidden group hover:scale-110 transition-transform"
+        >
             <ShimmerBorder active={true} />
             <div className="absolute inset-[2px] rounded-full bg-black flex items-center justify-center z-10">
                 <MessageCircle className="w-5 h-5 md:w-6 md:h-6 text-blue-500 text-glow" />
@@ -146,6 +159,7 @@ const SimulatedStatsCard = ({ label, value, icon: Icon }: { label: string, value
     </ShimmerCard>
 );
 
+// Updated Control Panel to accept handlers
 const ControlPanel = ({ activeThemeId, onAction, onSaveTheme, onOpenConfig }: { activeThemeId: string, onAction: (action: string) => void, onSaveTheme: (themeId: string) => void, onOpenConfig: () => void }) => {
     const simulatedTraders = '18,451';
     const simulatedAssets = '$2.13B';
@@ -182,22 +196,27 @@ const ControlPanel = ({ activeThemeId, onAction, onSaveTheme, onOpenConfig }: { 
     );
 };
 
-// FIXED: Now uses sticky positioning on mobile
-const MobileBottomActionPanel = ({ activeThemeId, onSaveTheme, onExit, isMobileMenuOpen }: { activeThemeId: string, onSaveTheme: (themeId: string) => void, onExit: () => void, isMobileMenuOpen: boolean }) => (
+// Updated Mobile Panel to include Refresh handler
+const MobileBottomActionPanel = ({ 
+    activeThemeId, onSaveTheme, onExit, isMobileMenuOpen, onRefresh 
+}: { 
+    activeThemeId: string, onSaveTheme: (themeId: string) => void, onExit: () => void, isMobileMenuOpen: boolean, onRefresh: () => void 
+}) => (
     <AnimatePresence>
         {!isMobileMenuOpen && (
             <motion.div initial={{ y: 0, opacity: 1 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                // Use sticky positioning at the bottom of the scrollable container
                 className="sticky bottom-0 left-0 right-0 z-50 lg:hidden p-4 bg-black/90 backdrop-blur-md border-t border-blue-500/30 shadow-[0_-5px_30px_rgba(37,99,235,0.2)]"
             >
                 <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
-                    <ShimmerButton icon={RefreshCw} onClick={() => alert("Simulated Refresh...")} className="h-10 text-xs text-yellow-500">REFRESH DATA</ShimmerButton>
+                    <ShimmerButton icon={RefreshCw} onClick={onRefresh} className="h-10 text-xs text-yellow-500">REFRESH DATA</ShimmerButton>
                     <ShimmerButton icon={ArrowRight} onClick={onExit} className="h-10 text-xs">EXIT</ShimmerButton>
                 </div>
             </motion.div>
         )}
     </AnimatePresence>
 );
+
+// --- MAIN COMPONENT ---
 
 export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }: { initialThemeId: string, onThemeChange: (themeId: string, sound: SoundProfile, muted: boolean) => void }) {
     const { tickers, status: wsStatus } = useBinanceTickers();
@@ -219,30 +238,43 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
     const ethData = tickers['ETHUSDT'] || { price: '0.00', percentChange: '0.00', prevPrice: '0' };
     const portfolioValue = useMemo(() => (parseFloat(btcData.price) * 0.45) + (parseFloat(ethData.price) * 12.5) + 15240, [btcData.price, ethData.price]);
     
-    
+    // --- HANDLERS ---
+
     const handleSaveTheme = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
         setActiveThemeId(themeId); 
         setCurrentSound(sound);
         setIsMuted(muted);
-
         onThemeChange(themeId, sound, muted); 
-
         setIsConfigModalOpen(false);
         setIsMobileMenuOpen(false);
     }, [onThemeChange]); 
 
+    // Quick save applies current theme with *current* audio settings
     const handleQuickSaveTheme = useCallback((themeId: string) => {
-        // We assume QuickSave means we want the music to be UNMUTED by default unless a sound profile is 'SILENT'
-        // Since we don't have sound profile state here, we rely on the parent component's mute status
-        
-        // This is a QUICK SAVE button (Desktop Sidebar/Fixed Bottom Mobile bar) 
-        // which currently only saves the theme, not the sound profile. 
-        // We call the main theme handler with the current sound/mute state.
-        
         handleSaveTheme(themeId, currentSound, isMuted);
     }, [currentSound, isMuted, handleSaveTheme]);
 
-    const handleExit = useCallback(() => { alert("Exiting to Dashboard... (Simulated Action)"); }, []);
+    const handleExit = useCallback(() => { 
+        // Simulated navigation exit
+        if(confirm("Exit to main Dashboard?")) {
+            console.log("Navigating to dashboard...");
+        }
+    }, []);
+
+    const handleRefresh = useCallback(() => {
+        // Visual feedback for refresh action
+        alert("Refetching market data...");
+    }, []);
+
+    const toggleMute = useCallback(() => {
+        setIsMuted(prev => !prev);
+    }, []);
+
+    const handleWelcomeContinue = useCallback(() => {
+        setShowWelcome(false);
+        setIsMuted(false);
+        setIsConfigModalOpen(true); // Open config after welcome
+    }, []);
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 1024); 
@@ -252,7 +284,6 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
     }, []);
 
     return (
-        // FIXED: The main container must allow vertical flow and take full height to enable sticky/scroll behavior
         <main className="relative w-full h-full bg-black font-sans selection:bg-blue-500/30 text-white flex flex-col overflow-y-auto overflow-x-hidden"
             style={{ filter: isMobile ? activeTheme.mobileFilter : activeTheme.filter, transition: 'filter 0.5s ease-in-out' }}
         >
@@ -260,7 +291,7 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
             {/* BACKGROUND OVERLAY */}
             <div className="fixed inset-0 z-0 pointer-events-none opacity-50 mix-blend-overlay overflow-hidden"><IllusionLayer type={activeTheme.illusion} /></div>
             
-            {/* HEADER - Shrink-0 keeps it at the top of this container */}
+            {/* HEADER */}
             <header className="shrink-0 w-full z-50 bg-[#050505]/80 backdrop-blur-md border-b border-white/10">
                 <LiveTickerTape tickers={tickers} />
                 <div className="h-12 md:h-14 flex items-center px-4 md:px-6 justify-between">
@@ -274,6 +305,10 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
                             <Wifi className={`w-3 h-3 ${wsStatus === 'CONNECTED' ? 'text-green-500' : 'text-red-500'}`} />
                             <span className="text-[10px] font-mono text-gray-400">UPLINK: {wsStatus}</span>
                         </div>
+                        {/* Added Mute Toggle to Desktop Header */}
+                        <button onClick={toggleMute} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                            {isMuted ? <VolumeX className="w-4 h-4 text-red-400"/> : <Volume2 className="w-4 h-4 text-blue-400"/>}
+                        </button>
                     </div>
                     <button onClick={() => setIsConfigModalOpen(true)} className="lg:hidden p-1 text-white">
                         <Settings className="w-5 h-5" />
@@ -281,10 +316,13 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
                 </div>
             </header>
 
-            <WelcomeBackModal isOpen={showWelcome} onContinue={() => { setShowWelcome(false); setIsMuted(false); }} onSkip={() => setShowWelcome(false)} />
+            <WelcomeBackModal 
+                isOpen={showWelcome} 
+                onContinue={handleWelcomeContinue} 
+                onSkip={() => setShowWelcome(false)} 
+            />
 
-            {/* MAIN DASHBOARD GRID - This section handles the remaining scrollable content */}
-            {/* flex-1 ensures it fills space, overflow-y-auto enables scrolling within this container */}
+            {/* MAIN DASHBOARD GRID */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 px-4 md:px-6 py-4 flex flex-col z-10 relative max-w-[1600px] mx-auto overflow-y-auto custom-scrollbar" style={{ filter: showWelcome ? 'blur(10px)' : 'none' }}>
                 <div className="mb-4 md:mb-6 shrink-0">
                     <h1 className="text-2xl md:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-600">COMMAND DECK</h1>
@@ -295,6 +333,7 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
                     <div className="lg:col-span-9 flex flex-col gap-4 md:gap-6 min-h-0">
                         {/* KPI Cards */}
                         <div className="flex overflow-x-auto gap-4 shrink-0 pb-2 md:pb-0 snap-x-mandatory no-scrollbar md:grid md:grid-cols-3 touch-scroll">
+                            {/* ... (KPI Cards content remains the same) ... */}
                             <div className="snap-center w-[85vw] md:w-auto flex-none">
                                 <ShimmerCard className="h-32 md:h-40 w-full">
                                     <div className="p-4 md:p-6 flex flex-col justify-between h-full">
@@ -335,13 +374,24 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
 
                     {/* RIGHT SECTION (Sidebar on Desktop) */}
                     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.4 }} className="hidden lg:flex flex-col w-full lg:w-auto lg:col-span-3 h-full min-h-0 gap-4">
-                         <ControlPanel activeThemeId={activeThemeId} onAction={handleExit} onSaveTheme={handleQuickSaveTheme} onOpenConfig={() => setIsConfigModalOpen(true)} />
+                         <ControlPanel 
+                            activeThemeId={activeThemeId} 
+                            onAction={handleExit} 
+                            onSaveTheme={handleQuickSaveTheme} 
+                            onOpenConfig={() => setIsConfigModalOpen(true)} 
+                         />
                     </motion.div>
                 </div>
             </motion.div>
             
-            {/* MOBILE SAVE/EXIT BAR - Sticky bottom-0 inside the main container */}
-            <MobileBottomActionPanel activeThemeId={activeThemeId} onSaveTheme={handleQuickSaveTheme} onExit={handleExit} isMobileMenuOpen={isMobileMenuOpen} />
+            {/* MOBILE SAVE/EXIT BAR */}
+            <MobileBottomActionPanel 
+                activeThemeId={activeThemeId} 
+                onSaveTheme={handleQuickSaveTheme} 
+                onExit={handleExit} 
+                isMobileMenuOpen={isMobileMenuOpen}
+                onRefresh={handleRefresh}
+            />
             <SupportWidget />
 
             {/* --- THEME CONFIGURATOR MODAL --- */}

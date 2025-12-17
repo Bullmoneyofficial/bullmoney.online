@@ -1,15 +1,15 @@
 "use client";
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'; // Added useRef and useCallback
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X } from 'lucide-react';
-import YouTube, { YouTubeEvent } from 'react-youtube'; 
+import YouTube, { YouTubeEvent, YouTubeProps } from 'react-youtube'; 
 
 // Imports
 import { ThemeSelector } from '@/components/Mainpage/ThemeSelector';
 import { ALL_THEMES, ThemeCategory, SoundProfile } from '@/constants/theme-data';
-import { THEME_SOUNDTRACKS } from '@/components/Mainpage/ThemeComponents'; 
 
-const PREVIEW_VOLUME = 20; // Volume level for theme preview
+// Higher volume for preview to ensure it's heard over any ambient noise
+const PREVIEW_VOLUME = 40; 
 
 export const ThemeConfigModal = ({ 
     isOpen, onClose, onSave, initialThemeId, 
@@ -25,16 +25,12 @@ export const ThemeConfigModal = ({
     initialMuted: boolean,
     isMobile: boolean
 }) => {
-    // State is managed locally while the modal is open
     const [tempThemeId, setTempThemeId] = useState(initialThemeId);
     const [tempCategory, setTempCategory] = useState(initialCategory);
     const [tempSound, setTempSound] = useState(initialSound);
     const [tempMuted, setTempMuted] = useState(initialMuted);
     
-    // Hover state for "Preview on Hover" logic
     const [hoveredThemeId, setHoveredThemeId] = useState<string | null>(null);
-
-    // REF: Reference for the hidden YouTube player instance
     const youtubePlayerRef = useRef<any>(null);
 
     // Reset state when opening
@@ -45,62 +41,78 @@ export const ThemeConfigModal = ({
             setTempSound(initialSound);
             setTempMuted(initialMuted);
             setHoveredThemeId(null);
-        }
-    }, [isOpen, initialThemeId, initialCategory, initialSound, initialMuted]);
-
-// --- EFFECT TO CONTROL HIDDEN PLAYER VOLUME/PLAYBACK ---
-    useEffect(() => {
-        const player = youtubePlayerRef.current;
-        
-        // Ensure player exists and has methods before calling them
-        if (player && typeof player.setVolume === 'function') {
-            
-            if (tempMuted) {
-                player.setVolume(0);
-                if (typeof player.pauseVideo === 'function') {
-                    player.pauseVideo();
-                }
-            } else {
-                player.setVolume(PREVIEW_VOLUME);
-                
-                // Attempt to play only if the modal is open
-                if (isOpen && typeof player.playVideo === 'function') {
-                     // FIX: playVideo() returns void (undefined), so we removed .catch()
-                     player.playVideo();
+        } else {
+            // 🛑 CRITICAL FIX: Safe check before calling stopVideo
+            const player = youtubePlayerRef.current;
+            if (player && typeof player.stopVideo === 'function') {
+                try {
+                    player.stopVideo();
+                } catch (e) {
+                    console.warn("Could not stop video:", e);
                 }
             }
         }
-        // Dependencies: tempMuted (user toggles mute inside the modal), 
-        // tempThemeId (changes video source), isOpen (ensures we only play when visible)
-    }, [tempMuted, tempThemeId, isOpen]);
+    }, [isOpen, initialThemeId, initialCategory, initialSound, initialMuted]);
+
+    const activeVideoId = useMemo(() => {
+        const targetId = hoveredThemeId || tempThemeId;
+        const theme = ALL_THEMES.find(t => t.id === targetId);
+        return theme?.youtubeId || 'jfKfPfyJRdk';
+    }, [hoveredThemeId, tempThemeId]);
+
+    const currentTheme = useMemo(() => ALL_THEMES.find(t => t.id === tempThemeId) || ALL_THEMES[0], [tempThemeId]);
+
+    // --- PLAYER CONTROL EFFECT ---
+    useEffect(() => {
+        const player = youtubePlayerRef.current;
+        
+        // Defensive check: Ensure player exists and has methods
+        if (!player || typeof player.setVolume !== 'function') return;
+
+        try {
+            if (tempMuted || !isOpen) {
+                player.setVolume(0);
+                if (typeof player.pauseVideo === 'function') player.pauseVideo();
+            } else {
+                player.setVolume(PREVIEW_VOLUME);
+                if (typeof player.playVideo === 'function') {
+                     player.playVideo();
+                }
+            }
+        } catch (error) {
+            console.warn("YouTube Preview Player error:", error);
+        }
+    }, [tempMuted, activeVideoId, isOpen]);
 
     const handleApply = () => {
-        // Ensure the main player is updated with the final theme/mute status
         onSave(tempThemeId, tempSound, tempMuted);
         onClose();
     };
 
-    const handleCancel = () => {
-        onClose();
-    };
-
-    // Use ALL_THEMES for current filter
-    const currentTheme = useMemo(() => ALL_THEMES.find(t => t.id === tempThemeId) || ALL_THEMES[0], [tempThemeId]);
-
-    // DETERMINE ACTIVE VIDEO ID
-    // Priority: Hovered Theme -> Selected Theme -> Default
-    const activeVideoId = useMemo(() => {
-        const targetId = hoveredThemeId || tempThemeId;
-        return THEME_SOUNDTRACKS[targetId] || THEME_SOUNDTRACKS['default'];
-    }, [hoveredThemeId, tempThemeId]);
-
-    // Pass the player reference to the handler that gets the player instance
     const handlePlayerReady = useCallback((e: YouTubeEvent) => {
         youtubePlayerRef.current = e.target;
-        // Initial volume set here, but primarily managed by the useEffect above
-        e.target.setVolume(tempMuted ? 0 : PREVIEW_VOLUME);
-    }, [tempMuted]);
+        
+        // Defensive check inside ready handler
+        if (e.target && typeof e.target.setVolume === 'function') {
+            e.target.setVolume(tempMuted ? 0 : PREVIEW_VOLUME);
+            if (!tempMuted && isOpen && typeof e.target.playVideo === 'function') {
+                e.target.playVideo();
+            }
+        }
+    }, [tempMuted, isOpen]);
 
+    const playerOpts: YouTubeProps['opts'] = {
+        height: '0',
+        width: '0',
+        playerVars: {
+            autoplay: 1,
+            controls: 0,
+            loop: 1,
+            playlist: activeVideoId, 
+            modestbranding: 1,
+            playsinline: 1,
+        },
+    };
 
     return (
         <AnimatePresence>
@@ -111,31 +123,20 @@ export const ThemeConfigModal = ({
                     exit={{ opacity: 0 }} 
                     transition={{ duration: 0.3 }}
                     className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md font-sans overflow-hidden flex justify-center items-center"
-                    onClick={handleCancel}
+                    onClick={onClose}
                 >
                     {/* HIDDEN PREVIEW PLAYER */}
-                    <div className="hidden pointer-events-none opacity-0">
+                    <div className="absolute top-0 left-0 w-0 h-0 opacity-0 pointer-events-none overflow-hidden">
                         <YouTube 
                             videoId={activeVideoId}
-                            opts={{
-                                height: '0',
-                                width: '0',
-                                playerVars: {
-                                    autoplay: 1,
-                                    controls: 0,
-                                    loop: 1,
-                                    modestbranding: 1,
-                                },
-                            }}
-                            onReady={handlePlayerReady} // Use the ref handler
+                            opts={playerOpts}
+                            onReady={handlePlayerReady} 
                             onStateChange={(e: YouTubeEvent) => {
-                                // Ensure it loops if playlist ends
-                                if (e.data === 0) e.target.playVideo();
+                                if (e.data === 0 && e.target?.playVideo) e.target.playVideo();
                             }}
                         />
                     </div>
 
-                    {/* Modal Content */}
                     <motion.div 
                         initial={{ scale: isMobile ? 1 : 0.95, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
@@ -154,12 +155,12 @@ export const ThemeConfigModal = ({
                                 <Settings className="w-5 h-5 text-blue-500" /> 
                                 SYNTHESIS_OS CONFIGURATION
                             </h2>
-                            <button onClick={handleCancel} className="p-2 rounded-full hover:bg-white/10 transition-colors text-white">
+                            <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 transition-colors text-white">
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
 
-                        {/* Modal Body - Main scrolling container */}
+                        {/* Modal Body */}
                         <div className="flex-1 overflow-hidden relative flex flex-col min-h-0"> 
                             <ThemeSelector 
                                 activeThemeId={tempThemeId} setActiveThemeId={setTempThemeId}
@@ -167,7 +168,7 @@ export const ThemeConfigModal = ({
                                 isMobile={isMobile} currentSound={tempSound} setCurrentSound={setTempSound}
                                 isMuted={tempMuted} setIsMuted={setTempMuted}
                                 onSave={handleApply} 
-                                onExit={handleCancel}
+                                onExit={onClose}
                                 onHover={setHoveredThemeId} 
                             />
                         </div>

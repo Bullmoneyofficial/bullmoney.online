@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube'; 
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Volume2, Music, X } from 'lucide-react'; 
+import { Volume2, Volume1, VolumeX, Music, X } from 'lucide-react'; 
 
 // --- COMPONENT IMPORTS ---
 import { Navbar } from "@/components/Mainpage/navbar"; 
@@ -14,7 +14,7 @@ import BullMoneyGate from "@/components/TradingHoldUnlock";
 import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2"; 
 
 // --- THEME & MUSIC DATA ---
-import { ALL_THEMES as THEME_DATA, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
+import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
 
 // --- DYNAMIC IMPORTS ---
 const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor'), { 
@@ -34,10 +34,7 @@ import Shopmain from "../components/Mainpage/ShopMainpage";
 import Socialsfooter from "../components/Mainpage/Socialsfooter";
 import Heromain from "../app/VIP/heromain"; 
 import ShopFunnel from "../app/shop/ShopFunnel"; 
-import Chartnews from "@/app/Blogs/Chartnews"; // This is the TradingView component
-
-// --- CONSTANTS ---
-const BASE_VOLUME = 20; 
+import Chartnews from "@/app/Blogs/Chartnews"; 
 
 // --- FALLBACK THEME ---
 const FALLBACK_THEME: Partial<Theme> = {
@@ -52,10 +49,12 @@ const FALLBACK_THEME: Partial<Theme> = {
 // ----------------------------------------------------------------------
 const BackgroundMusicSystem = ({ 
   themeId, 
-  onReady 
+  onReady,
+  volume 
 }: { 
   themeId: string;
   onReady: (player: any) => void;
+  volume: number;
 }) => {
   const videoId = (THEME_SOUNDTRACKS && THEME_SOUNDTRACKS[themeId]) 
     ? THEME_SOUNDTRACKS[themeId] 
@@ -68,6 +67,7 @@ const BackgroundMusicSystem = ({
       autoplay: 1,
       controls: 0,
       loop: 1,
+      playlist: videoId,
       modestbranding: 1,
       playsinline: 1,
       origin: typeof window !== 'undefined' ? window.location.origin : undefined,
@@ -80,8 +80,13 @@ const BackgroundMusicSystem = ({
         videoId={videoId} 
         opts={opts} 
         onReady={(event: YouTubeEvent) => { 
+            // Ensure we pass the API target, not just the event
             if(event.target) {
-                try { event.target.setVolume(BASE_VOLUME); } catch(e) {}
+                try { 
+                    if(typeof event.target.setVolume === 'function') {
+                        event.target.setVolume(volume); 
+                    }
+                } catch(e) {}
                 onReady(event.target);
             }
         }}
@@ -98,89 +103,125 @@ const BackgroundMusicSystem = ({
 // ----------------------------------------------------------------------
 // --- MUSIC CONTROLLER UI ---
 // ----------------------------------------------------------------------
-const MusicController = ({ isPlaying, onToggle, themeName }: { isPlaying: boolean; onToggle: () => void, themeName: string }) => (
-    <div className="fixed bottom-8 left-8 z-[9999] flex items-center gap-3">
-        <button
-        onClick={(e) => { e.stopPropagation(); onToggle(); }} 
-        className={`group flex items-center justify-center w-12 h-12 rounded-full 
-        transition-all duration-500 border backdrop-blur-md transform-gpu
-        ${isPlaying 
-            ? 'bg-blue-600/20 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.5)]' 
-            : 'bg-gray-900/80 border-white/10 grayscale'}`}
+const MusicController = ({ 
+    isPlaying, 
+    onToggle, 
+    themeName, 
+    volume, 
+    onVolumeChange 
+}: { 
+    isPlaying: boolean; 
+    onToggle: () => void, 
+    themeName: string,
+    volume: number,
+    onVolumeChange: (val: number) => void
+}) => {
+    const [isHovered, setIsHovered] = React.useState(false);
+
+    return (
+        <div 
+            className="fixed bottom-8 left-8 z-[9999] flex items-center gap-3"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
         >
-        <div className="relative z-10">
-            {isPlaying 
-                ? <Volume2 className="w-4 h-4 text-blue-50" /> 
-                : <Music className="w-4 h-4 text-gray-400" />
-            }
-        </div>
-        </button>
-        
-        {/* Track Info Popout */}
-        <div className={`
-            hidden md:flex flex-col overflow-hidden transition-all duration-500
-            ${isPlaying ? 'w-32 opacity-100' : 'w-0 opacity-0'}
-        `}>
-            <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Now Streaming</span>
-            <div className="flex items-center gap-1">
-                <span className="text-xs text-white truncate font-mono">{themeName} Radio</span>
-                <div className="flex gap-0.5 items-end h-3">
-                    <span className="w-0.5 h-full bg-blue-500 animate-pulse"/>
-                    <span className="w-0.5 h-2/3 bg-blue-500 animate-pulse delay-75"/>
-                    <span className="w-0.5 h-1/3 bg-blue-500 animate-pulse delay-150"/>
+            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-xl border border-white/10 p-2 rounded-full shadow-2xl">
+                <button
+                    onClick={(e) => { e.stopPropagation(); onToggle(); }} 
+                    className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-500
+                    ${isPlaying ? 'bg-blue-600/20 text-blue-400' : 'bg-gray-800 text-gray-500'}`}
+                >
+                    {isPlaying ? (volume > 50 ? <Volume2 size={18}/> : <Volume1 size={18}/>) : <VolumeX size={18}/>}
+                </button>
+
+                {/* VOLUME SLIDER */}
+                <div className={`flex items-center transition-all duration-300 overflow-hidden ${isHovered ? 'w-24 px-2' : 'w-0'}`}>
+                    <input 
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={volume}
+                        onChange={(e) => onVolumeChange(parseInt(e.target.value))}
+                        className="w-full h-1 bg-blue-900 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    />
+                </div>
+            </div>
+            
+            <div className={`
+                hidden md:flex flex-col overflow-hidden transition-all duration-500
+                ${isPlaying ? 'w-32 opacity-100' : 'w-0 opacity-0'}
+            `}>
+                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Now Streaming</span>
+                <div className="flex items-center gap-1">
+                    <span className="text-xs text-white truncate font-mono">{themeName} Radio</span>
+                    <div className="flex gap-0.5 items-end h-3">
+                        <span className="w-0.5 h-full bg-blue-500 animate-pulse"/>
+                        <span className="w-0.5 h-2/3 bg-blue-500 animate-pulse delay-75"/>
+                        <span className="w-0.5 h-1/3 bg-blue-500 animate-pulse delay-150"/>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-);
+    );
+}
 
+// ----------------------------------------------------------------------
+// --- MAIN HOME COMPONENT ---
+// ----------------------------------------------------------------------
 export default function Home() {
-  // --- STAGE MANAGEMENT ---
   const [currentStage, setCurrentStage] = useState<"register" | "hold" | "v2" | "content">("v2");
   const [isClient, setIsClient] = useState(false);
-  
-  // Theme State
   const [activeThemeId, setActiveThemeId] = useState<string>('t01'); 
   const [showConfigurator, setShowConfigurator] = useState(false); 
-
-  // --- AUDIO STATE ---
   const [isMuted, setIsMuted] = useState(false); 
+  const [volume, setVolume] = useState(25);
   const playerRef = useRef<any>(null);
+  
+  // Transition Effect State
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const activeTheme: Theme = useMemo(() => {
-    if (!THEME_DATA || THEME_DATA.length === 0) return FALLBACK_THEME as Theme;
-    return THEME_DATA.find(t => t.id === activeThemeId) || THEME_DATA[0];
+  // Active Theme Memo
+  const activeTheme = useMemo(() => {
+    if (!ALL_THEMES || ALL_THEMES.length === 0) return FALLBACK_THEME as Theme;
+    return ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   }, [activeThemeId]);
   
   const isPlaying = useMemo(() => !isMuted, [isMuted]);
 
-  // --- INITIALIZATION ---
   useEffect(() => {
     setIsClient(true);
-    
     if (typeof window !== 'undefined') {
         const storedTheme = localStorage.getItem('user_theme_id');
         const storedMute = localStorage.getItem('user_is_muted');
+        const storedVol = localStorage.getItem('user_volume');
         const hasRegistered = localStorage.getItem('vip_user_registered') === 'true';
 
         if (storedTheme) setActiveThemeId(storedTheme);
         if (storedMute !== null) setIsMuted(storedMute === 'true');
-
-        if (!hasRegistered) {
-          setCurrentStage("register");
-        } else {
-          setCurrentStage("v2");
-        }
+        if (storedVol) setVolume(parseInt(storedVol));
+        if (!hasRegistered) setCurrentStage("register");
+        else setCurrentStage("v2");
     }
   }, []);
 
-  // --- SAFE AUDIO METHODS ---
+  // --- SAFE AUDIO METHODS (CRASH FIX APPLIED HERE) ---
+
   const safePlay = useCallback(() => {
-      if (playerRef.current && typeof playerRef.current.playVideo === 'function' && !isMuted) {
-          playerRef.current.setVolume(BASE_VOLUME);
+      // 1. Check if player exists
+      if (!playerRef.current) return;
+      
+      // 2. Check logic conditions
+      if (isMuted || showConfigurator) return;
+
+      // 3. Safe execute setVolume
+      if (typeof playerRef.current.setVolume === 'function') {
+          playerRef.current.setVolume(volume);
+      }
+
+      // 4. Safe execute playVideo
+      if (typeof playerRef.current.playVideo === 'function') {
           playerRef.current.playVideo();
       }
-  }, [isMuted]);
+  }, [isMuted, showConfigurator, volume]);
 
   const safePause = useCallback(() => {
       if (playerRef.current && typeof playerRef.current.pauseVideo === 'function') {
@@ -188,80 +229,89 @@ export default function Home() {
       }
   }, []);
 
-  const safeSetVolume = useCallback((vol: number) => {
-      if (playerRef.current && typeof playerRef.current.setVolume === 'function') {
-          playerRef.current.setVolume(vol);
-      }
-  }, []);
+  // --- AUDIO LOGIC HANDLERS ---
 
-  // --- AUDIO LOGIC ---
+  const handleVolumeChange = (newVol: number) => {
+      setVolume(newVol);
+      localStorage.setItem('user_volume', newVol.toString());
+      
+      // Safe Set Volume
+      if (playerRef.current && typeof playerRef.current.setVolume === 'function') {
+          playerRef.current.setVolume(newVol);
+      }
+      
+      // Auto-unmute if volume is dragged up
+      if (newVol > 0 && isMuted) {
+          setIsMuted(false);
+          localStorage.setItem('user_is_muted', 'false');
+      }
+  };
+
   const handlePlayerReady = useCallback((player: any) => {
       playerRef.current = player;
-      safeSetVolume(isMuted ? 0 : BASE_VOLUME);
-      
-      if (!isMuted) {
+      // Safe init
+      if (player && typeof player.setVolume === 'function') {
+        player.setVolume(isMuted ? 0 : volume);
+      }
+      if (!isMuted && !showConfigurator) safePlay();
+  }, [isMuted, showConfigurator, safePlay, volume]);
+
+  // Audio Ducking for Configurator
+  useEffect(() => {
+      if (!playerRef.current) return;
+      if (showConfigurator) {
+          safePause();
+      } else if (!isMuted) {
           safePlay();
       }
-  }, [isMuted, safePlay, safeSetVolume]);
+  }, [showConfigurator, isMuted, safePause, safePlay]);
 
   const toggleMusic = useCallback(() => {
       const newMutedState = !isMuted;
       setIsMuted(newMutedState);
       localStorage.setItem('user_is_muted', String(newMutedState));
+      
+      if (!playerRef.current) return;
 
       if (newMutedState) {
-          safeSetVolume(0);
+          if (typeof playerRef.current.setVolume === 'function') playerRef.current.setVolume(0);
           safePause();
-      } else {
-          safeSetVolume(BASE_VOLUME);
+      } else if (!showConfigurator) {
+          if (typeof playerRef.current.setVolume === 'function') playerRef.current.setVolume(volume);
           safePlay();
       }
-  }, [isMuted, safePlay, safePause, safeSetVolume]);
+  }, [isMuted, showConfigurator, safePlay, safePause, volume]);
 
-  // Sync Player with React State
-  useEffect(() => {
-      if (!playerRef.current) return;
-      
-      if (isMuted) {
-          safeSetVolume(0);
-          safePause();
-      } else {
-          safeSetVolume(BASE_VOLUME);
-          if (playerRef.current.getPlayerState && playerRef.current.getPlayerState() !== 1) { 
-              safePlay();
-          }
-      }
-  }, [activeThemeId, isMuted, safePlay, safePause, safeSetVolume]);
-
-  // --- TRANSITION HANDLERS ---
+  // --- STAGE & THEME HANDLERS ---
 
   const handleRegisterComplete = useCallback(() => {
-    // FIX: Ensure storage is set before changing stage
     if (typeof window !== 'undefined') localStorage.setItem('vip_user_registered', 'true'); 
     setCurrentStage("hold"); 
-    // safePlay will run because of the global click handler
   }, []);
 
-  const handleHoldComplete = useCallback(() => {
-    setCurrentStage("content");
-    // safePlay will run because of the global click handler
-  }, []);
-
-  const handleV2Complete = useCallback(() => {
-    setCurrentStage("content");
-    // safePlay will run because of the global click handler
-  }, []);
-
+  // Theme Change with Transition Effect
   const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
-    setActiveThemeId(themeId);
-    setIsMuted(muted); 
-    
-    if (typeof window !== 'undefined') {
-        localStorage.setItem('user_theme_id', themeId);
-        localStorage.setItem('user_is_muted', String(muted));
-    }
-    setShowConfigurator(false); 
+    setIsTransitioning(true);
+
+    setTimeout(() => {
+        setActiveThemeId(themeId);
+        setIsMuted(muted); 
+        
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('user_theme_id', themeId);
+            localStorage.setItem('user_is_muted', String(muted));
+        }
+
+        setShowConfigurator(false); 
+
+        setTimeout(() => {
+            setIsTransitioning(false);
+        }, 100);
+    }, 300);
   }, []);
+
+  const handleHoldComplete = useCallback(() => setCurrentStage("content"), []);
+  const handleV2Complete = useCallback(() => setCurrentStage("content"), []);
 
   if (!isClient) return null;
 
@@ -270,12 +320,14 @@ export default function Home() {
       <style jsx global>{`
         html, body {
           background-color: black; 
-          transition: filter 0.5s ease;
-          filter: ${activeTheme.filter};
           overflow-x: hidden;
         }
+        #theme-wrapper {
+            transition: filter 0.5s ease;
+            filter: ${activeTheme.filter};
+        }
         @media (max-width: 1024px) {
-            html, body { filter: ${activeTheme.mobileFilter}; }
+            #theme-wrapper { filter: ${activeTheme.mobileFilter}; }
         }
         .profit-reveal {
           animation: profitReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -289,24 +341,24 @@ export default function Home() {
       <Analytics />
       <SpeedInsights />
 
-      {/* --- BACKGROUND MUSIC ENGINE (Always Rendered) --- */}
+      {/* TRANSITION OVERLAY */}
+      <div 
+        className={`fixed inset-0 z-[100002] bg-black pointer-events-none transition-opacity duration-300 ease-in-out ${isTransitioning ? 'opacity-100' : 'opacity-0'}`}
+      />
+
       <BackgroundMusicSystem 
         themeId={activeThemeId} 
         onReady={handlePlayerReady} 
+        volume={volume}
       />
 
-      {/* GLOBAL CLICK WRAPPER (Handles Audio Unlock and prevents Register page block) */}
       <div className="relative w-full min-h-screen" onClick={safePlay}>
-
-        {/* --- STAGE 1: REGISTER PAGE --- */}
         {currentStage === "register" && (
-            // FIX: Ensure register page is visible and handles its own unlock button correctly
             <div className="fixed inset-0 z-[100000] bg-black">
                 <RegisterPage onUnlock={handleRegisterComplete} />
             </div>
         )}
 
-        {/* --- STAGE 1.5: HOLD GATE --- */}
         {currentStage === "hold" && (
             <div className="fixed inset-0 z-[100000]">
                 <BullMoneyGate onUnlock={handleHoldComplete}>
@@ -315,14 +367,12 @@ export default function Home() {
             </div>
         )}
 
-        {/* --- STAGE 2: V2 LOADER --- */}
-        {currentStage === "v2" && (
-            <MultiStepLoaderV2 onFinished={handleV2Complete} />
-        )}
+        {currentStage === "v2" && <MultiStepLoaderV2 onFinished={handleV2Complete} />}
 
-        {/* --- STAGE 3: MAIN CONTENT --- */}
-        <div className={currentStage === 'content' ? 'profit-reveal' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
-            
+        <div 
+            id="theme-wrapper" 
+            className={currentStage === 'content' ? 'profit-reveal' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}
+        >
             <Navbar 
                 setShowConfigurator={setShowConfigurator} 
                 activeThemeId={activeThemeId}
@@ -331,46 +381,42 @@ export default function Home() {
 
             <main className="relative min-h-screen">
                 <TargetCursor spinDuration={2} hideDefaultCursor={true} targetSelector=".cursor-target, a, button" />
-                
                 {currentStage === 'content' && ( 
                     <div className="relative z-10">
-                    <MusicController 
-                        isPlaying={isPlaying} 
-                        onToggle={toggleMusic} 
-                        themeName={activeTheme.name}
-                    />
+                        <MusicController 
+                            isPlaying={isPlaying} 
+                            onToggle={toggleMusic} 
+                            themeName={activeTheme.name} 
+                            volume={volume}
+                            onVolumeChange={handleVolumeChange}
+                        />
 
-                    <Socialsfooter />
-                    <Heromain />
-                    <ShopFunnel />
-                    <Shopmain />
-                    {/* FIX: Trading View component is here */}
-                    <Chartnews />
-                    <Pricing />
-                    <Features />
+                        <Socialsfooter />
+                        <Heromain />
+                        <ShopFunnel />
+                        <Shopmain />
+                        <Chartnews />
+                        <Pricing />
+                        <Features />
                     </div>
                 )}
             </main>
         </div>
 
-        {/* --- THEME CONFIGURATOR MODAL --- */}
         {showConfigurator && (
-            <div 
-            className="fixed inset-0 z-[100001] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
-            style={{ filter: activeTheme.filter }}
-            >
-            <div className="relative w-full max-w-6xl h-[80vh] bg-[#020617] rounded-3xl border border-white/10 overflow-hidden">
-                <button 
-                    onClick={(e) => { e.stopPropagation(); setShowConfigurator(false); }}
-                    className="absolute top-6 right-6 z-[10] p-2 text-white/50 hover:text-white transition-colors"
-                >
-                    <X size={28} />
-                </button>
-                <FixedThemeConfigurator 
-                    initialThemeId={activeThemeId}
-                    onThemeChange={handleThemeChange} 
-                />
-            </div>
+            <div className="fixed inset-0 z-[100001] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="relative w-full max-w-6xl h-[80vh] bg-[#020617] rounded-3xl border border-white/10 overflow-hidden">
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); setShowConfigurator(false); }}
+                        className="absolute top-6 right-6 z-[10] p-2 text-white/50 hover:text-white transition-colors"
+                    >
+                        <X size={28} />
+                    </button>
+                    <FixedThemeConfigurator 
+                        initialThemeId={activeThemeId}
+                        onThemeChange={handleThemeChange} 
+                    />
+                </div>
             </div>
         )}
       </div>

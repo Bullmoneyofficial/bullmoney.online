@@ -9,9 +9,10 @@ import {
 import { ALL_THEMES, ThemeCategory, SoundProfile } from '@/constants/theme-data';
 import { THEME_SOUNDTRACKS } from '@/components/Mainpage/ThemeComponents'; 
 import { ShimmerButton, GlowText } from '@/components/ThemeUI';
+// Ensure this path is correct for your project structure
 import { LiveMiniPreview } from '@/components/Mainpage/LiveMiniPreview';
 
-// --- COMPONENTS ---
+// --- SUB-COMPONENTS ---
 
 const SoundSelector = ({ active, onSelect }: { active: SoundProfile, onSelect: (id: SoundProfile) => void }) => {
     const packs: {id: SoundProfile, label: string, icon: any}[] = [
@@ -53,10 +54,13 @@ const AudioVisualizer = () => (
     </div>
 );
 
+// --- MAIN COMPONENT ---
+
 export const ThemeSelector = ({ 
     activeThemeId, setActiveThemeId, activeCategory, setActiveCategory, 
     isMobile, currentSound, setCurrentSound, isMuted, setIsMuted,
-    onSave, onExit, onHover // <-- ADDED onHover PROP
+    onSave, onExit, 
+    onHover // <--- CRITICAL: This prop enables the hover preview
 }: { 
     activeThemeId: string, setActiveThemeId: (id: string) => void,
     activeCategory: ThemeCategory, setActiveCategory: (cat: ThemeCategory) => void,
@@ -65,14 +69,17 @@ export const ThemeSelector = ({
     isMuted: boolean, setIsMuted: (m: boolean) => void,
     onSave: (themeId: string) => void,
     onExit: () => void,
-    onHover: (id: string | null) => void // <-- ADDED onHover DEFINITION
+    onHover: (id: string | null) => void // <--- Defined here
 }) => {
+    
+    // Logic to sort and filter themes
     const filteredThemes = useMemo(() => ALL_THEMES.filter((t) => t.category === activeCategory), [activeCategory]);
     const allCategories = useMemo(() => Array.from(new Set(ALL_THEMES.map(t => t.category))), []);
     const preferredOrder: ThemeCategory[] = ['SPECIAL', 'CRYPTO', 'SENTIMENT', 'ASSETS', 'CONCEPTS', 'LOCATION', 'ELEMENTAL', 'OPTICS', 'GLITCH', 'EXOTIC', 'MEME', 'HISTORICAL'];
     const sortedCategories = preferredOrder.filter(cat => allCategories.includes(cat));
     const currentTheme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
 
+    // Helper for icons
     const getCategoryIcon = (cat: ThemeCategory) => {
         if (cat === 'SPECIAL') return <Zap className="w-3 h-3 text-yellow-500" />;
         if (cat === 'CRYPTO') return <DollarSign className="w-3 h-3" />;
@@ -89,7 +96,6 @@ export const ThemeSelector = ({
     };
 
     return (
-        // FIXED: Ensured the outer container is flex-col h-full (inherited from parent modal)
         <div className="flex flex-col lg:flex-row w-full h-full border border-white/10 rounded-lg bg-black/40 overflow-hidden"> 
             
             {/* LEFT RAIL (Desktop) / TOP SCROLL (Mobile) - CATEGORY SELECTION */}
@@ -126,7 +132,6 @@ export const ThemeSelector = ({
             </div>
 
             {/* RIGHT PANEL: CONTENT */}
-            {/* flex-1 overflow-hidden ensures inner div handles scrolling correctly */}
             <div className="flex-1 flex flex-col h-full overflow-hidden"> 
                 
                 {/* Scrollable Area */}
@@ -152,14 +157,15 @@ export const ThemeSelector = ({
                         <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
                             <Monitor className="w-3 h-3 text-blue-500"/> 
                             VISUAL_INTERFACE: <GlowText text={currentTheme.name.toUpperCase()} className="text-blue-300 ml-1"/>
-                            {/* Show current track info based on selection */}
+                            
+                            {/* Track Info */}
                             <span className="ml-auto flex items-center gap-2 text-[9px] text-gray-500 normal-case tracking-normal">
                                 <Music className="w-3 h-3" />
                                 {THEME_SOUNDTRACKS[activeThemeId] ? "Background Music Active" : "Default Ambience"}
                             </span>
                         </h3>
                         
-                        {/* Grid adapts to screen size */}
+                        {/* THEME GRID */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
                             {filteredThemes.map((theme) => {
                                 const isUnavailable = theme.status === 'UNAVAILABLE';
@@ -169,8 +175,10 @@ export const ThemeSelector = ({
                                     <button
                                         key={theme.id}
                                         onClick={() => !isUnavailable && setActiveThemeId(theme.id)}
-                                        onMouseEnter={() => !isUnavailable && onHover(theme.id)} // <-- FIX: Enable Preview on Hover
-                                        onMouseLeave={() => !isUnavailable && onHover(null)}      // <-- FIX: Clear Preview on Leave
+                                        // --- PREVIEW ON HOVER LOGIC ---
+                                        onMouseEnter={() => !isUnavailable && onHover(theme.id)} 
+                                        onMouseLeave={() => !isUnavailable && onHover(null)}      
+                                        // ------------------------------
                                         disabled={isUnavailable}
                                         className={`
                                             relative group text-left rounded-xl overflow-hidden border transition-all duration-300 w-full aspect-video shrink-0
@@ -192,6 +200,7 @@ export const ThemeSelector = ({
                                                 className={`w-full h-full absolute inset-0 transition-all duration-700 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`}
                                                 style={{ filter: isMobile ? theme.mobileFilter : theme.filter }}
                                             >
+                                                {/* Mini Preview Component */}
                                                 <LiveMiniPreview color={theme.accentColor || '#3b82f6'} isUnavailable={isUnavailable} />
                                             </div>
                                             
@@ -206,7 +215,7 @@ export const ThemeSelector = ({
                                                     <span className={`block text-[10px] font-bold uppercase tracking-wider ${isActive ? 'text-white text-glow' : 'text-gray-400 group-hover:text-gray-200'}`}>
                                                         {theme.name}
                                                     </span>
-                                                    {/* Playing Indicator */}
+                                                    {/* Visualizer if active */}
                                                     {isActive && !isMuted && <AudioVisualizer />}
                                                 </div>
                                                 <span className="text-[8px] text-gray-600 font-mono line-clamp-1">{theme.description}</span>
@@ -231,8 +240,8 @@ export const ThemeSelector = ({
                         </div>
                     </div>
                 </div>
+                
                 {/* Modal Footer/Save Bar */}
-                {/* FIXED: This footer is now correctly positioned below the scrollable area */}
                 <div className="shrink-0 p-4 md:p-6 border-t border-white/10 bg-black/50 backdrop-blur-md">
                     <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
                         <ShimmerButton icon={Check} onClick={() => onSave(activeThemeId)} className="h-10 text-xs text-green-500">
