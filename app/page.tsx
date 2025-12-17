@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube'; // Added YouTubeEvent import
+import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube'; 
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Volume2, Music, X, SkipForward } from 'lucide-react';
+import { Volume2, Music, X } from 'lucide-react'; 
 
 // --- COMPONENT IMPORTS ---
 import { Navbar } from "@/components/Mainpage/navbar"; 
@@ -14,7 +14,7 @@ import BullMoneyGate from "@/components/TradingHoldUnlock";
 import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2"; 
 
 // --- THEME & MUSIC DATA ---
-import { ALL_THEMES as THEME_DATA, Theme, THEME_SOUNDTRACKS } from '@/components/Mainpage/ThemeComponents';
+import { ALL_THEMES as THEME_DATA, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
 
 // --- DYNAMIC IMPORTS ---
 const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor'), { 
@@ -34,46 +34,61 @@ import Shopmain from "../components/Mainpage/ShopMainpage";
 import Socialsfooter from "../components/Mainpage/Socialsfooter";
 import Heromain from "../app/VIP/heromain"; 
 import ShopFunnel from "../app/shop/ShopFunnel"; 
-import Chartnews from "@/app/Blogs/Chartnews";
+import Chartnews from "@/app/Blogs/Chartnews"; // This is the TradingView component
+
+// --- CONSTANTS ---
+const BASE_VOLUME = 20; 
+
+// --- FALLBACK THEME ---
+const FALLBACK_THEME: Partial<Theme> = {
+    id: 'default',
+    name: 'Loading...',
+    filter: 'none',
+    mobileFilter: 'none',
+};
 
 // ----------------------------------------------------------------------
-// --- NEW YOUTUBE MUSIC SYSTEM ---
+// --- YOUTUBE MUSIC SYSTEM ---
 // ----------------------------------------------------------------------
 const BackgroundMusicSystem = ({ 
-  isPlaying, 
   themeId, 
   onReady 
 }: { 
-  isPlaying: boolean; 
   themeId: string;
   onReady: (player: any) => void;
 }) => {
-  const videoId = THEME_SOUNDTRACKS[themeId] || THEME_SOUNDTRACKS['default'];
+  const videoId = (THEME_SOUNDTRACKS && THEME_SOUNDTRACKS[themeId]) 
+    ? THEME_SOUNDTRACKS[themeId] 
+    : 'jfKfPfyJRdk';
   
   const opts: YouTubeProps['opts'] = {
-    height: '0', // Hidden
-    width: '0',  // Hidden
+    height: '1', 
+    width: '1', 
     playerVars: {
       autoplay: 1,
       controls: 0,
       loop: 1,
       modestbranding: 1,
       playsinline: 1,
+      origin: typeof window !== 'undefined' ? window.location.origin : undefined,
     },
   };
 
   return (
-    <div className="fixed bottom-0 left-0 opacity-0 pointer-events-none z-[-1]">
+    <div className="fixed bottom-0 left-0 opacity-0 pointer-events-none z-[-1] overflow-hidden w-px h-px">
       <YouTube 
         videoId={videoId} 
         opts={opts} 
-        onReady={(event: YouTubeEvent) => { // Fixed type here
-            event.target.setVolume(15); 
-            onReady(event.target);
+        onReady={(event: YouTubeEvent) => { 
+            if(event.target) {
+                try { event.target.setVolume(BASE_VOLUME); } catch(e) {}
+                onReady(event.target);
+            }
         }}
-        onStateChange={(event: YouTubeEvent) => { // Fixed type here
-            // Ensure it loops effectively if it's a playlist or video ends
-            if (event.data === 0) event.target.playVideo(); 
+        onStateChange={(event: YouTubeEvent) => { 
+            if (event.data === 0 && event.target?.playVideo) {
+                event.target.playVideo(); 
+            }
         }}
       />
     </div>
@@ -86,7 +101,7 @@ const BackgroundMusicSystem = ({
 const MusicController = ({ isPlaying, onToggle, themeName }: { isPlaying: boolean; onToggle: () => void, themeName: string }) => (
     <div className="fixed bottom-8 left-8 z-[9999] flex items-center gap-3">
         <button
-        onClick={onToggle}
+        onClick={(e) => { e.stopPropagation(); onToggle(); }} 
         className={`group flex items-center justify-center w-12 h-12 rounded-full 
         transition-all duration-500 border backdrop-blur-md transform-gpu
         ${isPlaying 
@@ -125,89 +140,126 @@ export default function Home() {
   const [isClient, setIsClient] = useState(false);
   
   // Theme State
-  const [activeThemeId, setActiveThemeId] = useState<string>(() => {
-    if (typeof window !== 'undefined') return localStorage.getItem('user_theme_id') || 't01';
-    return 't01';
-  }); 
+  const [activeThemeId, setActiveThemeId] = useState<string>('t01'); 
   const [showConfigurator, setShowConfigurator] = useState(false); 
 
   // --- AUDIO STATE ---
-  const [isPlaying, setIsPlaying] = useState(false);
-  const playerRef = useRef<any>(null); // Reference to YouTube Player Instance
+  const [isMuted, setIsMuted] = useState(false); 
+  const playerRef = useRef<any>(null);
 
   const activeTheme: Theme = useMemo(() => {
+    if (!THEME_DATA || THEME_DATA.length === 0) return FALLBACK_THEME as Theme;
     return THEME_DATA.find(t => t.id === activeThemeId) || THEME_DATA[0];
   }, [activeThemeId]);
+  
+  const isPlaying = useMemo(() => !isMuted, [isMuted]);
 
   // --- INITIALIZATION ---
   useEffect(() => {
     setIsClient(true);
-    const hasRegistered = localStorage.getItem('vip_user_registered') === 'true';
-    if (!hasRegistered) {
-      setCurrentStage("register");
-    } else {
-      setCurrentStage("v2");
+    
+    if (typeof window !== 'undefined') {
+        const storedTheme = localStorage.getItem('user_theme_id');
+        const storedMute = localStorage.getItem('user_is_muted');
+        const hasRegistered = localStorage.getItem('vip_user_registered') === 'true';
+
+        if (storedTheme) setActiveThemeId(storedTheme);
+        if (storedMute !== null) setIsMuted(storedMute === 'true');
+
+        if (!hasRegistered) {
+          setCurrentStage("register");
+        } else {
+          setCurrentStage("v2");
+        }
     }
   }, []);
 
-  // --- AUDIO LOGIC ---
-  const handlePlayerReady = (player: any) => {
-      playerRef.current = player;
-      // We don't auto-play here to respect browser policies, 
-      // we wait for the user to click "Unlock" or interact with site.
-  };
+  // --- SAFE AUDIO METHODS ---
+  const safePlay = useCallback(() => {
+      if (playerRef.current && typeof playerRef.current.playVideo === 'function' && !isMuted) {
+          playerRef.current.setVolume(BASE_VOLUME);
+          playerRef.current.playVideo();
+      }
+  }, [isMuted]);
 
-  const toggleMusic = () => {
+  const safePause = useCallback(() => {
+      if (playerRef.current && typeof playerRef.current.pauseVideo === 'function') {
+          playerRef.current.pauseVideo();
+      }
+  }, []);
+
+  const safeSetVolume = useCallback((vol: number) => {
+      if (playerRef.current && typeof playerRef.current.setVolume === 'function') {
+          playerRef.current.setVolume(vol);
+      }
+  }, []);
+
+  // --- AUDIO LOGIC ---
+  const handlePlayerReady = useCallback((player: any) => {
+      playerRef.current = player;
+      safeSetVolume(isMuted ? 0 : BASE_VOLUME);
+      
+      if (!isMuted) {
+          safePlay();
+      }
+  }, [isMuted, safePlay, safeSetVolume]);
+
+  const toggleMusic = useCallback(() => {
+      const newMutedState = !isMuted;
+      setIsMuted(newMutedState);
+      localStorage.setItem('user_is_muted', String(newMutedState));
+
+      if (newMutedState) {
+          safeSetVolume(0);
+          safePause();
+      } else {
+          safeSetVolume(BASE_VOLUME);
+          safePlay();
+      }
+  }, [isMuted, safePlay, safePause, safeSetVolume]);
+
+  // Sync Player with React State
+  useEffect(() => {
       if (!playerRef.current) return;
       
-      if (isPlaying) {
-          playerRef.current.pauseVideo();
-          setIsPlaying(false);
+      if (isMuted) {
+          safeSetVolume(0);
+          safePause();
       } else {
-          playerRef.current.playVideo();
-          setIsPlaying(true);
+          safeSetVolume(BASE_VOLUME);
+          if (playerRef.current.getPlayerState && playerRef.current.getPlayerState() !== 1) { 
+              safePlay();
+          }
       }
-  };
-
-  // Ensure music switches when theme changes (if already playing)
-  useEffect(() => {
-      if(playerRef.current && isPlaying) {
-          // React-Youtube handles the prop change of 'videoId' automatically, 
-          // but we ensure status is correct here.
-          setIsPlaying(true); 
-      }
-  }, [activeThemeId, isPlaying]);
+  }, [activeThemeId, isMuted, safePlay, safePause, safeSetVolume]);
 
   // --- TRANSITION HANDLERS ---
 
   const handleRegisterComplete = useCallback(() => {
-    localStorage.setItem('vip_user_registered', 'true'); 
+    // FIX: Ensure storage is set before changing stage
+    if (typeof window !== 'undefined') localStorage.setItem('vip_user_registered', 'true'); 
     setCurrentStage("hold"); 
+    // safePlay will run because of the global click handler
   }, []);
 
   const handleHoldComplete = useCallback(() => {
-    // Attempt to start music when gate opens
-    if(playerRef.current) {
-        playerRef.current.playVideo();
-        setIsPlaying(true);
-    }
     setCurrentStage("content");
+    // safePlay will run because of the global click handler
   }, []);
 
   const handleV2Complete = useCallback(() => {
-    // Attempt start music on load complete
-    // Note: Browsers might block this until a click happens.
-    // The "Enter" button on the loader usually counts as interaction.
-    if(playerRef.current) {
-        playerRef.current.playVideo();
-        setIsPlaying(true);
-    }
     setCurrentStage("content");
+    // safePlay will run because of the global click handler
   }, []);
 
-  const handleThemeChange = useCallback((themeId: string) => {
+  const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
     setActiveThemeId(themeId);
-    if (typeof window !== 'undefined') localStorage.setItem('user_theme_id', themeId);
+    setIsMuted(muted); 
+    
+    if (typeof window !== 'undefined') {
+        localStorage.setItem('user_theme_id', themeId);
+        localStorage.setItem('user_is_muted', String(muted));
+    }
     setShowConfigurator(false); 
   }, []);
 
@@ -237,88 +289,91 @@ export default function Home() {
       <Analytics />
       <SpeedInsights />
 
-      {/* --- BACKGROUND MUSIC ENGINE --- */}
+      {/* --- BACKGROUND MUSIC ENGINE (Always Rendered) --- */}
       <BackgroundMusicSystem 
-        isPlaying={isPlaying} 
         themeId={activeThemeId} 
         onReady={handlePlayerReady} 
       />
 
-      {/* --- STAGE 1: REGISTER PAGE --- */}
-      {currentStage === "register" && (
-        <div className="fixed inset-0 z-[100000] bg-black">
-           <RegisterPage onUnlock={handleRegisterComplete} />
-        </div>
-      )}
+      {/* GLOBAL CLICK WRAPPER (Handles Audio Unlock and prevents Register page block) */}
+      <div className="relative w-full min-h-screen" onClick={safePlay}>
 
-      {/* --- STAGE 1.5: HOLD GATE (First time only) --- */}
-      {currentStage === "hold" && (
-        <div className="fixed inset-0 z-[100000]">
-          <BullMoneyGate onUnlock={handleHoldComplete}>
-            <></> 
-          </BullMoneyGate>
-        </div>
-      )}
-
-      {/* --- STAGE 2: V2 LOADER (Every refresh/nav) --- */}
-      {currentStage === "v2" && (
-        <MultiStepLoaderV2 onFinished={handleV2Complete} />
-      )}
-
-      {/* --- STAGE 3: MAIN CONTENT --- */}
-      <div className={currentStage === 'content' ? 'profit-reveal' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
-        
-        <Navbar 
-            setShowConfigurator={setShowConfigurator} 
-            activeThemeId={activeThemeId}
-            onThemeChange={handleThemeChange}
-        />
-
-        <main className="relative min-h-screen">
-          
-          <TargetCursor spinDuration={2} hideDefaultCursor={true} targetSelector=".cursor-target, a, button" />
-          
-          {currentStage === 'content' && ( 
-            <div className="relative z-10">
-              {/* Updated Music Controller */}
-              <MusicController 
-                isPlaying={isPlaying} 
-                onToggle={toggleMusic} 
-                themeName={activeTheme.name}
-              />
-
-              <Socialsfooter />
-              <Heromain />
-              <ShopFunnel />
-              <Shopmain />
-              <Chartnews />
-              <Pricing />
-              <Features />
+        {/* --- STAGE 1: REGISTER PAGE --- */}
+        {currentStage === "register" && (
+            // FIX: Ensure register page is visible and handles its own unlock button correctly
+            <div className="fixed inset-0 z-[100000] bg-black">
+                <RegisterPage onUnlock={handleRegisterComplete} />
             </div>
-          )}
-        </main>
-      </div>
+        )}
 
-      {/* --- THEME CONFIGURATOR MODAL --- */}
-      {showConfigurator && (
-        <div 
-          className="fixed inset-0 z-[100001] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
-          style={{ filter: activeTheme.filter }}
-        >
-          <div className="relative w-full max-w-6xl h-[80vh] bg-[#020617] rounded-3xl border border-white/10 overflow-hidden">
-            <button 
-                onClick={() => setShowConfigurator(false)}
-                className="absolute top-6 right-6 z-[10] p-2 text-white/50 hover:text-white transition-colors"
-            >
-                <X size={28} />
-            </button>
-            <FixedThemeConfigurator 
-                initialThemeId={activeThemeId}
-                onThemeChange={handleThemeChange} 
+        {/* --- STAGE 1.5: HOLD GATE --- */}
+        {currentStage === "hold" && (
+            <div className="fixed inset-0 z-[100000]">
+                <BullMoneyGate onUnlock={handleHoldComplete}>
+                    <></> 
+                </BullMoneyGate>
+            </div>
+        )}
+
+        {/* --- STAGE 2: V2 LOADER --- */}
+        {currentStage === "v2" && (
+            <MultiStepLoaderV2 onFinished={handleV2Complete} />
+        )}
+
+        {/* --- STAGE 3: MAIN CONTENT --- */}
+        <div className={currentStage === 'content' ? 'profit-reveal' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
+            
+            <Navbar 
+                setShowConfigurator={setShowConfigurator} 
+                activeThemeId={activeThemeId}
+                onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)}
             />
-          </div>
+
+            <main className="relative min-h-screen">
+                <TargetCursor spinDuration={2} hideDefaultCursor={true} targetSelector=".cursor-target, a, button" />
+                
+                {currentStage === 'content' && ( 
+                    <div className="relative z-10">
+                    <MusicController 
+                        isPlaying={isPlaying} 
+                        onToggle={toggleMusic} 
+                        themeName={activeTheme.name}
+                    />
+
+                    <Socialsfooter />
+                    <Heromain />
+                    <ShopFunnel />
+                    <Shopmain />
+                    {/* FIX: Trading View component is here */}
+                    <Chartnews />
+                    <Pricing />
+                    <Features />
+                    </div>
+                )}
+            </main>
         </div>
-      )}
+
+        {/* --- THEME CONFIGURATOR MODAL --- */}
+        {showConfigurator && (
+            <div 
+            className="fixed inset-0 z-[100001] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+            style={{ filter: activeTheme.filter }}
+            >
+            <div className="relative w-full max-w-6xl h-[80vh] bg-[#020617] rounded-3xl border border-white/10 overflow-hidden">
+                <button 
+                    onClick={(e) => { e.stopPropagation(); setShowConfigurator(false); }}
+                    className="absolute top-6 right-6 z-[10] p-2 text-white/50 hover:text-white transition-colors"
+                >
+                    <X size={28} />
+                </button>
+                <FixedThemeConfigurator 
+                    initialThemeId={activeThemeId}
+                    onThemeChange={handleThemeChange} 
+                />
+            </div>
+            </div>
+        )}
+      </div>
     </>
   );
 }

@@ -1,14 +1,15 @@
 "use client";
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'; // Added useRef and useCallback
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X } from 'lucide-react';
-// Import the necessary types: YouTubeProps for options and YouTubeEvent for event handlers
 import YouTube, { YouTubeEvent } from 'react-youtube'; 
 
 // Imports
 import { ThemeSelector } from '@/components/Mainpage/ThemeSelector';
 import { ALL_THEMES, ThemeCategory, SoundProfile } from '@/constants/theme-data';
 import { THEME_SOUNDTRACKS } from '@/components/Mainpage/ThemeComponents'; 
+
+const PREVIEW_VOLUME = 20; // Volume level for theme preview
 
 export const ThemeConfigModal = ({ 
     isOpen, onClose, onSave, initialThemeId, 
@@ -33,6 +34,9 @@ export const ThemeConfigModal = ({
     // Hover state for "Preview on Hover" logic
     const [hoveredThemeId, setHoveredThemeId] = useState<string | null>(null);
 
+    // REF: Reference for the hidden YouTube player instance
+    const youtubePlayerRef = useRef<any>(null);
+
     // Reset state when opening
     useEffect(() => {
         if (isOpen) {
@@ -44,7 +48,34 @@ export const ThemeConfigModal = ({
         }
     }, [isOpen, initialThemeId, initialCategory, initialSound, initialMuted]);
 
+// --- EFFECT TO CONTROL HIDDEN PLAYER VOLUME/PLAYBACK ---
+    useEffect(() => {
+        const player = youtubePlayerRef.current;
+        
+        // Ensure player exists and has methods before calling them
+        if (player && typeof player.setVolume === 'function') {
+            
+            if (tempMuted) {
+                player.setVolume(0);
+                if (typeof player.pauseVideo === 'function') {
+                    player.pauseVideo();
+                }
+            } else {
+                player.setVolume(PREVIEW_VOLUME);
+                
+                // Attempt to play only if the modal is open
+                if (isOpen && typeof player.playVideo === 'function') {
+                     // FIX: playVideo() returns void (undefined), so we removed .catch()
+                     player.playVideo();
+                }
+            }
+        }
+        // Dependencies: tempMuted (user toggles mute inside the modal), 
+        // tempThemeId (changes video source), isOpen (ensures we only play when visible)
+    }, [tempMuted, tempThemeId, isOpen]);
+
     const handleApply = () => {
+        // Ensure the main player is updated with the final theme/mute status
         onSave(tempThemeId, tempSound, tempMuted);
         onClose();
     };
@@ -63,6 +94,14 @@ export const ThemeConfigModal = ({
         return THEME_SOUNDTRACKS[targetId] || THEME_SOUNDTRACKS['default'];
     }, [hoveredThemeId, tempThemeId]);
 
+    // Pass the player reference to the handler that gets the player instance
+    const handlePlayerReady = useCallback((e: YouTubeEvent) => {
+        youtubePlayerRef.current = e.target;
+        // Initial volume set here, but primarily managed by the useEffect above
+        e.target.setVolume(tempMuted ? 0 : PREVIEW_VOLUME);
+    }, [tempMuted]);
+
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -75,7 +114,6 @@ export const ThemeConfigModal = ({
                     onClick={handleCancel}
                 >
                     {/* HIDDEN PREVIEW PLAYER */}
-                    {/* This player is active only while modal is open to preview tracks */}
                     <div className="hidden pointer-events-none opacity-0">
                         <YouTube 
                             videoId={activeVideoId}
@@ -89,9 +127,10 @@ export const ThemeConfigModal = ({
                                     modestbranding: 1,
                                 },
                             }}
-                            onReady={(e: YouTubeEvent) => { // FIX: Explicitly type 'e' as YouTubeEvent
-                                // Lower volume for preview so it doesn't blast the user
-                                e.target.setVolume(tempMuted ? 0 : 20); 
+                            onReady={handlePlayerReady} // Use the ref handler
+                            onStateChange={(e: YouTubeEvent) => {
+                                // Ensure it loops if playlist ends
+                                if (e.data === 0) e.target.playVideo();
                             }}
                         />
                     </div>
@@ -102,11 +141,9 @@ export const ThemeConfigModal = ({
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: isMobile ? 1 : 0.95, opacity: 0 }}
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        // Added min-h-0 to ensure flex child scrolling works correctly
                         className="w-full h-full lg:max-w-7xl lg:max-h-[90vh] bg-[#050505] lg:rounded-xl overflow-hidden border border-blue-500/50 shadow-[0_0_50px_rgba(37,99,235,0.5)] flex flex-col min-h-0"
                         onClick={(e) => e.stopPropagation()}
                         style={{ 
-                            // Apply theme filter to the whole modal content for live preview
                             filter: isMobile ? currentTheme.mobileFilter : currentTheme.filter, 
                             transition: 'filter 0.5s ease-in-out'
                         }}
@@ -131,7 +168,7 @@ export const ThemeConfigModal = ({
                                 isMuted={tempMuted} setIsMuted={setTempMuted}
                                 onSave={handleApply} 
                                 onExit={handleCancel}
-                                onHover={setHoveredThemeId} // Using the fixed setter here
+                                onHover={setHoveredThemeId} 
                             />
                         </div>
                     </motion.div>

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
   TrendingUp, DollarSign, Zap, Activity, Settings, 
-  RefreshCw, Wifi, ArrowRight, SkipForward, MessageCircle, Check
+  RefreshCw, Wifi, ArrowRight, SkipForward, MessageCircle, Check, Volume2, Music, X
 } from 'lucide-react'; 
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -13,10 +13,9 @@ import { ThemeConfigModal } from '@/components/ThemeConfigModal'; // Assuming th
 // --- CRITICAL RE-EXPORTS ---
 export { ALL_THEMES, type Theme, type ThemeCategory, type SoundProfile } from '@/constants/theme-data';
 
-// --- MUSIC SOUNDTRACK MAPPING (YouTube IDs) ---
-// Note: This needs to be dynamically generated in ThemeComponents.tsx (as previously fixed)
+// --- MUSIC SOUNDTRACK MAPPING (Dynamic Generation assumed) ---
+// Assuming this is handled in a separate file/logic outside this component definition.
 export const THEME_SOUNDTRACKS: Record<string, string> = {}; 
-// ... (rest of helper functions like useBinanceTickers, LivePriceDisplay remain unchanged) ...
 
 const TARGET_PAIRS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'DOGEUSDT'];
 const LOWER_CASE_PAIRS = TARGET_PAIRS.map(p => p.toLowerCase());
@@ -183,17 +182,18 @@ const ControlPanel = ({ activeThemeId, onAction, onSaveTheme, onOpenConfig }: { 
     );
 };
 
-const FixedBottomSaveBar = ({ activeThemeId, onSaveTheme, onExit, isMobileMenuOpen }: { activeThemeId: string, onSaveTheme: (themeId: string) => void, onExit: () => void, isMobileMenuOpen: boolean }) => (
+// FIXED: Now uses sticky positioning on mobile
+const MobileBottomActionPanel = ({ activeThemeId, onSaveTheme, onExit, isMobileMenuOpen }: { activeThemeId: string, onSaveTheme: (themeId: string) => void, onExit: () => void, isMobileMenuOpen: boolean }) => (
     <AnimatePresence>
         {!isMobileMenuOpen && (
-            <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="fixed bottom-0 left-0 right-0 z-50 lg:hidden p-4 bg-black/90 backdrop-blur-md border-t border-blue-500/30 shadow-[0_-5px_30px_rgba(37,99,235,0.2)]"
+            <motion.div initial={{ y: 0, opacity: 1 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                // Use sticky positioning at the bottom of the scrollable container
+                className="sticky bottom-0 left-0 right-0 z-50 lg:hidden p-4 bg-black/90 backdrop-blur-md border-t border-blue-500/30 shadow-[0_-5px_30px_rgba(37,99,235,0.2)]"
             >
                 <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
                     <ShimmerButton icon={RefreshCw} onClick={() => alert("Simulated Refresh...")} className="h-10 text-xs text-yellow-500">REFRESH DATA</ShimmerButton>
                     <ShimmerButton icon={ArrowRight} onClick={onExit} className="h-10 text-xs">EXIT</ShimmerButton>
                 </div>
-                <div className="h-2 w-full" /> 
             </motion.div>
         )}
     </AnimatePresence>
@@ -207,37 +207,38 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
     const [activeThemeId, setActiveThemeId] = useState<string>(initialThemeId);
     const [showWelcome, setShowWelcome] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
-    const [isMuted, setIsMuted] = useState(true); // Default to muted
+    const [isMuted, setIsMuted] = useState(true); 
     const [activeCategory, setActiveCategory] = useState<ThemeCategory>('SENTIMENT'); 
     const [currentSound, setCurrentSound] = useState<SoundProfile>('MECHANICAL');
     const [isMobile, setIsMobile] = useState(false); 
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
     
+    // SAFE ACTIVE THEME RESOLUTION
     const activeTheme = useMemo(() => ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0], [activeThemeId]);
     const btcData = tickers['BTCUSDT'] || { price: '0.00', percentChange: '0.00', prevPrice: '0' };
     const ethData = tickers['ETHUSDT'] || { price: '0.00', percentChange: '0.00', prevPrice: '0' };
     const portfolioValue = useMemo(() => (parseFloat(btcData.price) * 0.45) + (parseFloat(ethData.price) * 12.5) + 15240, [btcData.price, ethData.price]);
     
-    // --- FIXED: Handle save from Modal and propagate theme/sound/mute state to the parent ---
-    // The Modal calls this function when the user clicks 'APPLY & SAVE CONFIG'
+    
     const handleSaveTheme = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
-        // 1. Update local state
         setActiveThemeId(themeId); 
         setCurrentSound(sound);
         setIsMuted(muted);
 
-        // 2. Propagate the change to the true parent (Home component)
-        // This is what triggers the main app's YouTube player logic (which lives in Home.tsx)
         onThemeChange(themeId, sound, muted); 
 
-        // 3. Close the modal
         setIsConfigModalOpen(false);
-        setIsMobileMenuOpen(false); // Ensure mobile menu state is cleared
-    }, [onThemeChange]); // Dependency on onThemeChange is correct
+        setIsMobileMenuOpen(false);
+    }, [onThemeChange]); 
 
-    // Handler for desktop control panel button (quick save)
     const handleQuickSaveTheme = useCallback((themeId: string) => {
-        // Use current sound and mute state for quick save
+        // We assume QuickSave means we want the music to be UNMUTED by default unless a sound profile is 'SILENT'
+        // Since we don't have sound profile state here, we rely on the parent component's mute status
+        
+        // This is a QUICK SAVE button (Desktop Sidebar/Fixed Bottom Mobile bar) 
+        // which currently only saves the theme, not the sound profile. 
+        // We call the main theme handler with the current sound/mute state.
+        
         handleSaveTheme(themeId, currentSound, isMuted);
     }, [currentSound, isMuted, handleSaveTheme]);
 
@@ -251,14 +252,16 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
     }, []);
 
     return (
-        <main className="relative min-h-screen bg-black font-sans selection:bg-blue-500/30 text-white pb-32 lg:pb-10 overflow-x-hidden"
+        // FIXED: The main container must allow vertical flow and take full height to enable sticky/scroll behavior
+        <main className="relative w-full h-full bg-black font-sans selection:bg-blue-500/30 text-white flex flex-col overflow-y-auto overflow-x-hidden"
             style={{ filter: isMobile ? activeTheme.mobileFilter : activeTheme.filter, transition: 'filter 0.5s ease-in-out' }}
         >
             <GlobalSvgFilters />
+            {/* BACKGROUND OVERLAY */}
             <div className="fixed inset-0 z-0 pointer-events-none opacity-50 mix-blend-overlay overflow-hidden"><IllusionLayer type={activeTheme.illusion} /></div>
             
-            {/* HEADER */}
-            <header className="fixed top-0 w-full z-50 bg-[#050505]/80 backdrop-blur-md border-b border-white/10">
+            {/* HEADER - Shrink-0 keeps it at the top of this container */}
+            <header className="shrink-0 w-full z-50 bg-[#050505]/80 backdrop-blur-md border-b border-white/10">
                 <LiveTickerTape tickers={tickers} />
                 <div className="h-12 md:h-14 flex items-center px-4 md:px-6 justify-between">
                     <div className="flex items-center gap-2 md:gap-3">
@@ -278,11 +281,11 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
                 </div>
             </header>
 
-            {/* FIXED: Ensure initial state is passed to WelcomeModal */}
             <WelcomeBackModal isOpen={showWelcome} onContinue={() => { setShowWelcome(false); setIsMuted(false); }} onSkip={() => setShowWelcome(false)} />
 
-            {/* MAIN DASHBOARD GRID */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-28 md:pt-32 px-4 md:px-6 min-h-[calc(100vh-8rem)] flex flex-col z-10 relative max-w-[1600px] mx-auto" style={{ filter: showWelcome ? 'blur(10px)' : 'none' }}>
+            {/* MAIN DASHBOARD GRID - This section handles the remaining scrollable content */}
+            {/* flex-1 ensures it fills space, overflow-y-auto enables scrolling within this container */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 px-4 md:px-6 py-4 flex flex-col z-10 relative max-w-[1600px] mx-auto overflow-y-auto custom-scrollbar" style={{ filter: showWelcome ? 'blur(10px)' : 'none' }}>
                 <div className="mb-4 md:mb-6 shrink-0">
                     <h1 className="text-2xl md:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-600">COMMAND DECK</h1>
                 </div>
@@ -319,7 +322,7 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
                         </div>
 
                         {/* BIG THEME CONFIG PLACEHOLDER */}
-                        <div className="flex-1 w-full">
+                        <div className="flex-1 w-full min-h-[300px]">
                             <ShimmerCard className="h-full">
                                 <div className="p-5 h-full flex flex-col w-full items-center justify-center">
                                     <h2 className="text-xl font-bold text-blue-500 mb-2">PICKTHEME</h2>
@@ -332,25 +335,23 @@ export default function FixedThemeConfigurator({ initialThemeId, onThemeChange }
 
                     {/* RIGHT SECTION (Sidebar on Desktop) */}
                     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.4 }} className="hidden lg:flex flex-col w-full lg:w-auto lg:col-span-3 h-full min-h-0 gap-4">
-                         {/* FIXED: Use handleQuickSaveTheme for the quick save button */}
                          <ControlPanel activeThemeId={activeThemeId} onAction={handleExit} onSaveTheme={handleQuickSaveTheme} onOpenConfig={() => setIsConfigModalOpen(true)} />
                     </motion.div>
                 </div>
             </motion.div>
             
-            <FixedBottomSaveBar activeThemeId={activeThemeId} onSaveTheme={handleQuickSaveTheme} onExit={handleExit} isMobileMenuOpen={isMobileMenuOpen} />
+            {/* MOBILE SAVE/EXIT BAR - Sticky bottom-0 inside the main container */}
+            <MobileBottomActionPanel activeThemeId={activeThemeId} onSaveTheme={handleQuickSaveTheme} onExit={handleExit} isMobileMenuOpen={isMobileMenuOpen} />
             <SupportWidget />
 
             {/* --- THEME CONFIGURATOR MODAL --- */}
             <ThemeConfigModal 
                 isOpen={isConfigModalOpen} 
                 onClose={() => setIsConfigModalOpen(false)} 
-                // FIXED: Pass the updated handleSaveTheme which takes all 3 parameters
                 onSave={handleSaveTheme} 
-                initialThemeId={activeThemeId} 
+                initialThemeId={initialThemeId} 
                 initialCategory={activeCategory} 
                 initialSound={currentSound} 
-                // FIXED: Pass the current mute state down
                 initialMuted={isMuted} 
                 isMobile={isMobile}
             />
