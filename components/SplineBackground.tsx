@@ -1,39 +1,53 @@
 "use client";
+
+import React, { useState, useEffect, useRef } from 'react';
 import Spline from '@splinetool/react-spline';
-import { useRef } from 'react';
 
 interface Props {
-  onUnlock: () => void;
+  scene: string;          // The URL to your .splinecode file
+  className?: string;     // Extra styling if needed
+  children?: React.ReactNode; // Your website content (Hero, Shop, etc.)
 }
 
-export default function SplineBackground({ onUnlock }: Props) {
-  const splineRef = useRef<any>(null);
+export default function LazySplineSection({ scene, className = "", children }: Props) {
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  function onLoad(spline: any) {
-    splineRef.current = spline;
-  }
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Only load the heavy 3D scene when the user scrolls near it (10% visible)
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect(); 
+        }
+      },
+      { threshold: 0.1 }
+    );
 
-  function onSplineMouseDown(e: any) {
-    // 1. Log the name of the object you clicked (check your browser console)
-    console.log('Clicked object name:', e.target.name);
-
-    // 2. CHECK: If the object name is "Start", unlock the site.
-    // You can change "Start" to whatever your 3D button is named in Spline.
-    if (e.target.name === 'Start') {
-      onUnlock();
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
     }
-    
-    // Optional: Unlock on ANY object click (Uncomment below if you prefer this)
-    // onUnlock(); 
-  }
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <div className="w-full h-full">
-      <Spline 
-        scene="/scene.splinecode"
-        onLoad={onLoad}
-        onMouseDown={onSplineMouseDown}
-      />
+    <div ref={containerRef} className={`relative w-full ${className}`}>
+      {/* 1. BACKGROUND: The 3D Scene */}
+      <div className="absolute inset-0 w-full h-full -z-10 overflow-hidden">
+        {isVisible ? (
+          <Spline className="w-full h-full object-cover" scene={scene} />
+        ) : (
+          // Lightweight placeholder while loading
+          <div className="w-full h-full bg-black/20" />
+        )}
+      </div>
+
+      {/* 2. FOREGROUND: Your Page Content */}
+      <div className="relative z-10">
+        {children}
+      </div>
     </div>
   );
 }

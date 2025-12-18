@@ -21,25 +21,32 @@ import {
   Users,
   TrendingUp,
   Home,
-  MessageCircle,
   Layers,
-  ScanFace, // <--- Added Icon for ID
-  X // <--- Added for closing modal
+  ScanFace,
+  X
 } from "lucide-react";
 import { IconMenu2, IconX } from "@tabler/icons-react";
 import Link from "next/link";
 import Image from "next/image";
+// Ensure these paths exist in your project
 import BullLogo from "@/public/BULL.svg"; 
 import Faq from "@/app/shop/Faq";
 
 // --- IMPORT YOUR CARD ---
 import ReflectiveCard, { ReflectiveCardHandle } from '@/components/ReflectiveCard';
 
-// --- TYPE DEFINITION ---
+// --- TYPE DEFINITIONS ---
 type ThemeControlProps = {
   setShowConfigurator?: (show: boolean) => void; 
   activeThemeId?: string;
   onThemeChange?: (themeId: string) => void;
+  accentColor?: string; // Added accentColor
+};
+
+type NavItem = {
+  name: string;
+  link: { pathname: string; query?: { src: string } } | string | null;
+  icon: React.ReactNode;
 };
 
 // --- GLOBAL STYLES ---
@@ -59,7 +66,7 @@ const GLOBAL_STYLES = `
 `;
 
 // --- DATA ---
-const NAV_ITEMS = [
+const NAV_ITEMS: NavItem[] = [
   { name: "FREE", link: { pathname: "/about", query: { src: "nav" } }, icon: <Gift className="h-full w-full text-neutral-500 dark:text-neutral-300" /> },
   { name: "VIP SHOP", link: { pathname: "/shop", query: { src: "nav" } }, icon: <ShoppingCart className="h-full w-full text-neutral-500 dark:text-neutral-300" /> },
   { name: "NEWS & LIVES", link: { pathname: "/Blogs", query: { src: "nav" } }, icon: <Radio className="h-full w-full text-neutral-500 dark:text-neutral-300" /> },
@@ -67,15 +74,18 @@ const NAV_ITEMS = [
   { name: "PROP", link: { pathname: "/Prop", query: { src: "nav" } }, icon: <TrendingUp className="h-full w-full text-neutral-500 dark:text-neutral-300" /> },
 ];
 
-const FOOTER_NAV_ITEMS = [
+const FOOTER_NAV_ITEMS: NavItem[] = [
   { name: "Home", link: "/", icon: <Home className="h-full w-full text-neutral-500 dark:text-neutral-300" /> },
 ];
 
-const SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #3b82f6 50%, #00000000 100%)";
+// Helper to generate gradient based on current theme color
+const getShimmerGradient = (color: string) => 
+  `conic-gradient(from 90deg at 50% 50%, #00000000 0%, ${color} 50%, #00000000 100%)`;
 
 // --- MAIN NAVBAR COMPONENT ---
 export const Navbar = ({ 
-  setShowConfigurator = () => {} 
+  setShowConfigurator = () => {},
+  accentColor = "#3b82f6" // Default Blue if not provided
 }: ThemeControlProps) => {
   // State for the Identity Card Modal
   const [showIdModal, setShowIdModal] = useState(false);
@@ -90,13 +100,13 @@ export const Navbar = ({
         {/* --- DESKTOP LAYOUT --- */}
         <div className="hidden lg:block">
             <div className="absolute left-10 top-6 z-[1010] pointer-events-auto">
-                <AnimatedLogoWrapper>
+                <AnimatedLogoWrapper accentColor={accentColor}>
                     <Image 
                       src={BullLogo} 
                       alt="Bull Logo" 
                       width={55}
                       height={55}
-                      className="object-contain drop-shadow-sm"
+                      className="object-contain"
                       priority
                     />
                     <span className="font-black text-2xl tracking-tighter text-neutral-900 dark:text-white">
@@ -108,6 +118,7 @@ export const Navbar = ({
                 <DesktopNav 
                   setShowConfigurator={setShowConfigurator} 
                   setShowIdModal={setShowIdModal} 
+                  accentColor={accentColor}
                 />
             </div>
         </div>
@@ -115,13 +126,13 @@ export const Navbar = ({
         {/* --- MOBILE/TAB LAYOUT --- */}
         <div className="lg:hidden flex justify-between items-start w-full px-4 pt-4 z-[1010]">
             <div className="pointer-events-auto pt-2 shrink-0 relative z-50">
-               <AnimatedLogoWrapper>
+               <AnimatedLogoWrapper accentColor={accentColor}>
                    <Image 
                       src={BullLogo} 
                       alt="Bull Logo" 
                       width={45} 
                       height={45} 
-                      className="object-contain drop-shadow-sm"
+                      className="object-contain"
                       priority
                    />
                    <span className="font-black text-xl tracking-tighter text-neutral-900 dark:text-white">
@@ -134,28 +145,24 @@ export const Navbar = ({
                <MobileNav 
                  setShowConfigurator={setShowConfigurator} 
                  setShowIdModal={setShowIdModal}
+                 accentColor={accentColor}
                />
             </div>
         </div>
       </div>
 
       <div className="w-full h-32 lg:h-24" aria-hidden="true" />
-      <SupportWidget />
 
       {/* --- ID CARD MODAL --- */}
-      <IdModal isOpen={showIdModal} onClose={() => setShowIdModal(false)} />
+      <IdModal isOpen={showIdModal} onClose={() => setShowIdModal(false)} accentColor={accentColor} />
     </>
   );
 };
 
 // --- ID MODAL COMPONENT ---
-const IdModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
-  // Ref to trigger the card's verification
+const IdModal = ({ isOpen, onClose, accentColor }: { isOpen: boolean, onClose: () => void, accentColor: string }) => {
   const cardRef = useRef<ReflectiveCardHandle>(null);
   const [isVerified, setIsVerified] = useState(false);
-
-  // Trigger verification automatically when modal opens? 
-  // Or let user click button. Let's let them click the button on the card.
 
   return (
     <AnimatePresence>
@@ -182,7 +189,7 @@ const IdModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
               {/* Close Button */}
               <button 
                 onClick={onClose}
-                className="absolute -right-12 top-0 p-2 text-white/50 hover:text-white transition-colors"
+                className="absolute -right-12 top-0 p-2 text-white/50 hover:text-white transition-colors z-50"
               >
                 <X size={32} />
               </button>
@@ -192,23 +199,26 @@ const IdModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
                 ref={cardRef}
                 onVerificationComplete={() => setIsVerified(true)}
                 blurStrength={10}
-
                 style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)' }}
               />
-{/* External Trigger Button */}
-{!isVerified && (
-  <motion.button
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }} // delay removed from here
-    transition={{ delay: 0.2 }}    // moved to transition prop
-    onClick={() => cardRef.current?.triggerVerify()}
-    className="absolute -bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95 transition-transform"
-  >
-    <ScanFace size={20} />
-    <span>START VERIFICATION</span>
-  </motion.button>
-)}
-              
+
+              {/* External Trigger Button (Colored) */}
+              {!isVerified && (
+                <motion.button
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  onClick={() => cardRef.current?.triggerVerify()}
+                  style={{ 
+                    backgroundColor: accentColor, 
+                    boxShadow: `0 0 20px ${accentColor}60`
+                  }}
+                  className="absolute -bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 text-white rounded-full font-bold hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+                >
+                  <ScanFace size={20} />
+                  <span>START VERIFICATION</span>
+                </motion.button>
+              )}
             </div>
           </motion.div>
         </>
@@ -218,7 +228,7 @@ const IdModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
 };
 
 // --- DESKTOP NAV ---
-const DesktopNav = memo(({ setShowConfigurator, setShowIdModal }: { setShowConfigurator: (show: boolean) => void, setShowIdModal: (show: boolean) => void }) => {
+const DesktopNav = memo(({ setShowConfigurator, setShowIdModal, accentColor }: { setShowConfigurator: (show: boolean) => void, setShowIdModal: (show: boolean) => void, accentColor: string }) => {
   return (
     <motion.div
       initial={{ y: -20, opacity: 0 }}
@@ -229,6 +239,7 @@ const DesktopNav = memo(({ setShowConfigurator, setShowIdModal }: { setShowConfi
         items={NAV_ITEMS} 
         setShowConfigurator={setShowConfigurator} 
         setShowIdModal={setShowIdModal}
+        accentColor={accentColor}
       />
       
       <div className="flex justify-end ml-2 gap-2 items-center border-l border-neutral-200 dark:border-white/10 pl-4">
@@ -242,9 +253,9 @@ const DesktopNav = memo(({ setShowConfigurator, setShowIdModal }: { setShowConfi
 DesktopNav.displayName = "DesktopNav";
 
 // --- DOCK COMPONENT ---
-const Dock = memo(({ items, setShowConfigurator, setShowIdModal }: any) => {
+const Dock = memo(({ items, setShowConfigurator, setShowIdModal, accentColor }: { items: NavItem[], setShowConfigurator: (s: boolean) => void, setShowIdModal: (s: boolean) => void, accentColor: string }) => {
   const mouseX = useMotionValue(Infinity);
-  // Total items is NAV_ITEMS.length + 2 (Theme + ID)
+  // Total items = NAV_ITEMS + ID + Theme
   const [activeTipIndex, setActiveTipIndex] = useState(0);
 
   useEffect(() => {
@@ -254,13 +265,13 @@ const Dock = memo(({ items, setShowConfigurator, setShowIdModal }: any) => {
     return () => clearInterval(intervalId);
   }, [items.length]);
 
-  const themeItemData = {
+  const themeItemData: NavItem = {
     name: "THEME",
     icon: <Layers className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
     link: null
   };
 
-  const idItemData = {
+  const idItemData: NavItem = {
     name: "DIGITAL ID",
     icon: <ScanFace className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
     link: null
@@ -273,12 +284,13 @@ const Dock = memo(({ items, setShowConfigurator, setShowIdModal }: any) => {
       className="mx-2 flex h-[50px] items-end gap-3 px-2"
     >
       {/* Standard Items */}
-      {items.map((item: any, i: number) => (
+      {items.map((item, i) => (
         <DockItem 
           key={i} 
           mouseX={mouseX} 
           item={item} 
           isTipActive={i === activeTipIndex} 
+          accentColor={accentColor}
         />
       ))}
 
@@ -288,6 +300,7 @@ const Dock = memo(({ items, setShowConfigurator, setShowIdModal }: any) => {
         item={idItemData}
         isTipActive={activeTipIndex === items.length}
         onClick={() => setShowIdModal(true)}
+        accentColor={accentColor}
       />
 
       {/* Theme Button */}
@@ -296,6 +309,7 @@ const Dock = memo(({ items, setShowConfigurator, setShowIdModal }: any) => {
         item={themeItemData}
         isTipActive={activeTipIndex === items.length + 1}
         onClick={() => setShowConfigurator(true)}
+        accentColor={accentColor}
       />
     </div>
   );
@@ -303,7 +317,15 @@ const Dock = memo(({ items, setShowConfigurator, setShowIdModal }: any) => {
 Dock.displayName = "Dock";
 
 // --- DOCK ITEM ---
-const DockItem = memo(({ mouseX, item, isTipActive, onClick }: any) => {
+interface DockItemProps {
+    mouseX: any;
+    item: NavItem;
+    isTipActive: boolean;
+    onClick?: () => void;
+    accentColor: string;
+}
+
+const DockItem = memo(({ mouseX, item, isTipActive, onClick, accentColor }: DockItemProps) => {
   const ref = useRef<HTMLDivElement>(null);
   
   const distance = useTransform(mouseX, (val: number) => {
@@ -324,11 +346,12 @@ const DockItem = memo(({ mouseX, item, isTipActive, onClick }: any) => {
         onHoverEnd={() => setHovered(false)}
         className="mac-gpu-accelerate relative flex items-center justify-center rounded-full shadow-sm overflow-hidden z-20"
       >
+        {/* THEMED SHIMMER GRADIENT */}
         <motion.div
             className="absolute inset-[-100%]" 
             animate={{ rotate: 360 }}
             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            style={{ background: SHIMMER_GRADIENT }}
+            style={{ background: getShimmerGradient(accentColor) }}
         />
         <div className="absolute inset-[1.5px] rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center z-10">
             <div className="w-5 h-5 relative flex items-center justify-center">
@@ -352,7 +375,7 @@ const DockItem = memo(({ mouseX, item, isTipActive, onClick }: any) => {
 
       <AnimatePresence mode="wait">
         {!hovered && isTipActive && (
-          <HelperTip item={item} />
+          <HelperTip item={item} accentColor={accentColor} />
         )}
       </AnimatePresence>
     </>
@@ -366,8 +389,11 @@ const DockItem = memo(({ mouseX, item, isTipActive, onClick }: any) => {
     );
   }
 
+  // Handle link correctly if link is null (fallback)
+  if (!item.link) return <button className="relative group flex flex-col items-center justify-end">{content}</button>;
+
   return (
-    <Link href={item.link} className="no-underline relative group flex flex-col items-center justify-end">
+    <Link href={item.link as any} className="no-underline relative group flex flex-col items-center justify-end">
       {content}
     </Link>
   );
@@ -375,19 +401,21 @@ const DockItem = memo(({ mouseX, item, isTipActive, onClick }: any) => {
 DockItem.displayName = "DockItem";
 
 // --- MOBILE NAV ---
-const MobileNav = memo(({ setShowConfigurator, setShowIdModal }: { setShowConfigurator: (show: boolean) => void, setShowIdModal: (show: boolean) => void }) => {
+const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor }: { setShowConfigurator: (show: boolean) => void, setShowIdModal: (show: boolean) => void, accentColor: string }) => {
   const [open, setOpen] = useState(false);
   const [activeTipIndex, setActiveTipIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<(HTMLElement | null)[]>([]);
 
-  const themeItem = { 
+  const themeItem: NavItem = { 
     name: "THEME", 
+    link: null,
     icon: <Layers className="h-full w-full text-neutral-500 dark:text-neutral-300" /> 
   };
   
-  const idItem = { 
+  const idItem: NavItem = { 
     name: "ID", 
+    link: null,
     icon: <ScanFace className="h-full w-full text-neutral-500 dark:text-neutral-300" /> 
   };
 
@@ -399,8 +427,6 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal }: { setShowConfig
     return () => clearInterval(intervalId);
   }, []);
 
-  // ... (Keep scrolling logic same as before, just account for extra items) ...
-  
   const handleOpenConfigurator = useCallback(() => {
     setOpen(false); 
     setShowConfigurator(true); 
@@ -429,8 +455,10 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal }: { setShowConfig
                  ref={(el) => { itemsRef.current[i] = el; }}
                  className="relative flex-shrink-0 flex flex-col items-center group pt-1" 
                >
-                  <MobileNavItemContent item={item} />
-                  {/* Tip Logic... */}
+                  <MobileNavItemContent item={item} accentColor={accentColor} />
+                  <AnimatePresence>
+                     {activeTipIndex === i && <HelperTip item={item} isMobile accentColor={accentColor} />}
+                  </AnimatePresence>
                </Link>
             ))}
 
@@ -440,7 +468,10 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal }: { setShowConfig
                 ref={(el) => { itemsRef.current[NAV_ITEMS.length] = el; }}
                 className="relative flex-shrink-0 flex flex-col items-center group pt-1"
             >
-                <MobileNavItemContent item={idItem} />
+                <MobileNavItemContent item={idItem} accentColor={accentColor} />
+                <AnimatePresence>
+                     {activeTipIndex === NAV_ITEMS.length && <HelperTip item={idItem} isMobile accentColor={accentColor} />}
+                </AnimatePresence>
             </button>
 
             {/* 3. Add Theme Button */}
@@ -449,7 +480,10 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal }: { setShowConfig
                 ref={(el) => { itemsRef.current[NAV_ITEMS.length + 1] = el; }}
                 className="relative flex-shrink-0 flex flex-col items-center group pt-1"
             >
-                <MobileNavItemContent item={themeItem} />
+                <MobileNavItemContent item={themeItem} accentColor={accentColor} />
+                <AnimatePresence>
+                     {activeTipIndex === NAV_ITEMS.length + 1 && <HelperTip item={themeItem} isMobile accentColor={accentColor} />}
+                </AnimatePresence>
             </button>
          </div>
 
@@ -461,7 +495,7 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal }: { setShowConfig
          </div>
       </div>
 
-      {/* ... Expanded Menu (Keep same) ... */}
+      {/* ... Expanded Menu ... */}
       <AnimatePresence>
         {open && (
            <motion.div
@@ -470,12 +504,9 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal }: { setShowConfig
             exit={{ height: 0, opacity: 0 }}
             className="w-full min-w-[200px] overflow-hidden rounded-b-2xl relative z-40" 
           >
-            {/* Same expanded list logic */}
             <div className="px-4 pb-4 pt-2 flex flex-col gap-3 border-t border-neutral-100 dark:border-white/5 w-full bg-white/95 dark:bg-neutral-950/95">
-               {/* Add ID button to expanded list if desired, or keep it in the top row */}
                {[...FOOTER_NAV_ITEMS, ...NAV_ITEMS].map((item, i) => (
                   <Link key={i} href={item.link as any} onClick={() => setOpen(false)} className="relative group block rounded-xl overflow-hidden">
-                     {/* ... Item Design ... */}
                      <div className="relative m-[1px] bg-white dark:bg-neutral-900 rounded-xl flex items-center gap-4 p-2">
                         <div className="w-8 h-8 p-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-md">{item.icon}</div>
                         <span className="font-bold text-neutral-600 dark:text-neutral-300">{item.name}</span>
@@ -493,13 +524,13 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal }: { setShowConfig
 MobileNav.displayName = "MobileNav";
 
 // --- SUB COMPONENTS (Helpers) ---
-const MobileNavItemContent = ({ item }: { item: any }) => (
+const MobileNavItemContent = ({ item, accentColor }: { item: NavItem, accentColor: string }) => (
     <div className="w-8 h-8 relative flex items-center justify-center rounded-full overflow-hidden shadow-sm z-20">
         <motion.div
         className="absolute inset-[-100%]" 
         animate={{ rotate: 360 }}
         transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-        style={{ background: SHIMMER_GRADIENT }}
+        style={{ background: getShimmerGradient(accentColor) }}
         />
         <div className="absolute inset-[1.5px] rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center z-10">
             <div className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-300">
@@ -509,7 +540,7 @@ const MobileNavItemContent = ({ item }: { item: any }) => (
     </div>
 );
 
-const HelperTip = ({ item, isMobile = false }: { item: any, isMobile?: boolean }) => (
+const HelperTip = ({ item, isMobile = false, accentColor }: { item: NavItem, isMobile?: boolean, accentColor: string }) => (
   <motion.div
     initial={{ opacity: 0, y: -5, scale: 0.8 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -517,16 +548,16 @@ const HelperTip = ({ item, isMobile = false }: { item: any, isMobile?: boolean }
     transition={{ type: "spring", stiffness: 400, damping: 25 }}
     className={`absolute ${isMobile ? 'top-[36px]' : 'top-full mt-2'} left-1/2 -translate-x-1/2 z-[60] flex flex-col items-center pointer-events-none`}
   >
-    <div className="w-2 h-2 bg-neutral-900 rotate-45 translate-y-[4px] relative z-10 border-t border-l border-transparent" />
+    <div className="w-2 h-2 bg-neutral-900 dark:bg-white rotate-45 translate-y-[4px] relative z-10 border-t border-l border-transparent" />
     <div className="relative p-[1.5px] overflow-hidden rounded-full shadow-lg">
         <motion.div 
             className="absolute inset-[-100%]"
             animate={{ rotate: 360 }}
             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            style={{ background: SHIMMER_GRADIENT }}
+            style={{ background: getShimmerGradient(accentColor) }}
         />
-        <div className="relative z-10 px-2.5 py-0.5 bg-neutral-900 rounded-full flex items-center justify-center">
-            <span className="text-white text-[9px] font-bold whitespace-nowrap">
+        <div className="relative z-10 px-2.5 py-0.5 bg-neutral-900 dark:bg-white rounded-full flex items-center justify-center">
+            <span className="text-white dark:text-neutral-900 text-[9px] font-bold whitespace-nowrap">
                 Click {item.name}
             </span>
         </div>
@@ -534,36 +565,12 @@ const HelperTip = ({ item, isMobile = false }: { item: any, isMobile?: boolean }
   </motion.div>
 );
 
-const SupportWidget = memo(() => {
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 2500);
-    return () => clearTimeout(t);
-  }, []);
-
-  if (!visible) return null;
-
-  return (
-    <div className="fixed bottom-6 right-6 z-[9999] pointer-events-auto group">
-      <a
-        href="https://t.me/+dlP_A0ebMXs3NTg0"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="relative flex items-center justify-center w-14 h-14 rounded-full bg-blue-600 hover:scale-105 transition-transform duration-200 shadow-xl"
-      >
-        <MessageCircle className="w-6 h-6 text-white" />
-        <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-black" />
-      </a>
-    </div>
-  );
-});
-SupportWidget.displayName = "SupportWidget";
-
-const AnimatedLogoWrapper = ({ children }: { children: React.ReactNode }) => (
+const AnimatedLogoWrapper = ({ children, accentColor }: { children: React.ReactNode, accentColor: string }) => (
   <motion.div 
     initial={{ opacity: 0, x: -20 }}
     animate={{ opacity: 1, x: 0 }}
     transition={{ duration: 0.5, ease: "easeOut" }}
+    style={{ filter: `drop-shadow(0 0 10px ${accentColor}40)` }}
     className="hover:scale-105 transition-transform duration-200 active:scale-95 cursor-pointer flex items-center gap-2 lg:gap-3"
   >
     {children}
