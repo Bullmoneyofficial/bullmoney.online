@@ -32,170 +32,6 @@ const FixedThemeConfigurator = dynamic(
 );
 
 // ----------------------------------------------------------------------
-// HUMOR SYSTEM (SUBTLE, CONTROLLED)
-// ----------------------------------------------------------------------
-const HUMOR_COPY = {
-  errorBoundary: [
-    "Well, that was unexpected.",
-    "Houston, we have a situation.",
-    "One of the pixels got confused.",
-  ],
-  sceneLoading: [
-    "Teaching pixels to behave...",
-    "Calculating aesthetics...",
-    "Loading vibes...",
-    "Assembling art...",
-  ],
-  sceneFailed: [
-    "This scene is camera shy.",
-    "Asset took a coffee break.",
-    "Render gods said no.",
-  ],
-  orientationWarning: [
-    "Landscape mode unlocks the good stuff.",
-    "Rotate for the full experience. Trust us.",
-    "We spent a lot of time on the horizontal version.",
-  ],
-  splitPerfect: [
-    "Perfectly balanced, as all things should be.",
-    "You found the sweet spot.",
-    "Chef's kiss. 👌",
-  ],
-  splitExtreme: [
-    "Easy there, cowboy.",
-    "Leaving room for both sides?",
-    "One panel feeling lonely.",
-  ],
-  muteToggle: [
-    "Silence is golden.",
-    "Sound: activated.",
-    "Vibe check.",
-  ],
-  muteSpam: [
-    "We get it, you like buttons.",
-    "The mute button is very clickable.",
-    "DJ mode: engaged.",
-  ],
-  themeSpam: [
-    "Okay, pick one already.",
-    "We have commitment issues too.",
-    "Theme roulette.",
-  ],
-  idleHint: [
-    "Psst... everything is interactive.",
-    "You can drag, scroll, and explore.",
-    "Don't be shy, touch something.",
-  ],
-  doubleTapReset: [
-    "Reset to center.",
-    "Back to balance.",
-    "Centered.",
-  ],
-  longPressLock: [
-    "Locked 🔒",
-    "Split frozen.",
-    "Handle secured.",
-  ],
-};
-
-const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
-
-// Toast message system
-const ToastManager = {
-  current: null as any,
-  show: (message: string, duration = 2000) => {
-    if (ToastManager.current) {
-      ToastManager.current(message, duration);
-    }
-  }
-};
-
-// Easter egg tracking
-const EasterEggs = {
-  muteCount: 0,
-  themeChangeCount: 0,
-  lastThemeChange: 0,
-  lastMuteToggle: 0,
-  splitPerfectCount: 0,
-  idleTimer: null as any,
-  
-  reset: () => {
-    EasterEggs.muteCount = 0;
-    EasterEggs.themeChangeCount = 0;
-    EasterEggs.splitPerfectCount = 0;
-  },
-  
-  trackMute: () => {
-    const now = Date.now();
-    if (now - EasterEggs.lastMuteToggle < 1000) {
-      EasterEggs.muteCount++;
-      if (EasterEggs.muteCount >= 3) {
-        ToastManager.show(pickRandom(HUMOR_COPY.muteSpam), 2000);
-        EasterEggs.muteCount = 0;
-      }
-    } else {
-      EasterEggs.muteCount = 1;
-    }
-    EasterEggs.lastMuteToggle = now;
-  },
-  
-  trackThemeChange: () => {
-    const now = Date.now();
-    if (now - EasterEggs.lastThemeChange < 2000) {
-      EasterEggs.themeChangeCount++;
-      if (EasterEggs.themeChangeCount >= 4) {
-        ToastManager.show(pickRandom(HUMOR_COPY.themeSpam), 2000);
-        EasterEggs.themeChangeCount = 0;
-      }
-    } else {
-      EasterEggs.themeChangeCount = 1;
-    }
-    EasterEggs.lastThemeChange = now;
-  },
-  
-  trackSplitPosition: (pos: number) => {
-    if (Math.abs(pos - 50) < 0.5) {
-      EasterEggs.splitPerfectCount++;
-      if (EasterEggs.splitPerfectCount === 1) {
-        ToastManager.show(pickRandom(HUMOR_COPY.splitPerfect), 2000);
-      }
-    } else if (pos < 15 || pos > 85) {
-      ToastManager.show(pickRandom(HUMOR_COPY.splitExtreme), 1500);
-    }
-  },
-  
-  startIdleTimer: (callback: () => void) => {
-    if (EasterEggs.idleTimer) clearTimeout(EasterEggs.idleTimer);
-    EasterEggs.idleTimer = setTimeout(() => {
-      callback();
-    }, 20000);
-  },
-  
-  resetIdleTimer: () => {
-    if (EasterEggs.idleTimer) {
-      clearTimeout(EasterEggs.idleTimer);
-      EasterEggs.idleTimer = null;
-    }
-  }
-};
-
-// Toast Component
-const Toast = memo(({ message, onClose }: { message: string; onClose: () => void }) => {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 2000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  return (
-    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[500000] pointer-events-none animate-in fade-in slide-in-from-top-2 duration-300">
-      <div className="bg-black/90 backdrop-blur-xl border border-white/20 rounded-full px-6 py-3 shadow-2xl">
-        <p className="text-white text-sm font-medium whitespace-nowrap">{message}</p>
-      </div>
-    </div>
-  );
-});
-
-// ----------------------------------------------------------------------
 // ERROR BOUNDARY
 // ----------------------------------------------------------------------
 class MobileErrorBoundary extends React.Component<
@@ -221,16 +57,16 @@ class MobileErrorBoundary extends React.Component<
       return (
         <div className="fixed inset-0 bg-black flex items-center justify-center p-8 z-[999999]">
           <div className="max-w-md text-center">
-            <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4 animate-pulse" />
-            <h2 className="text-xl font-bold text-white mb-2">{pickRandom(HUMOR_COPY.errorBoundary)}</h2>
-            <p className="text-white/60 mb-6 text-sm leading-relaxed">
-              Reloading with fewer fireworks. This happens sometimes.
+            <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-white mb-2">Safe Mode Active</h2>
+            <p className="text-white/60 mb-4 text-sm">
+              The experience encountered an issue. Reloading with reduced features.
             </p>
             <button 
               onClick={() => window.location.reload()} 
               className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-bold transition-colors"
             >
-              Try Again
+              Reload Page
             </button>
           </div>
         </div>
@@ -252,7 +88,7 @@ const CacheManager = {
       const item = {
         value,
         timestamp: Date.now(),
-        ttl: ttl || (24 * 60 * 60 * 1000)
+        ttl: ttl || (24 * 60 * 60 * 1000) // 24h default
       };
       localStorage.setItem(CacheManager.prefix + key, JSON.stringify(item));
     } catch (e) {
@@ -299,7 +135,7 @@ const CacheManager = {
 };
 
 // ----------------------------------------------------------------------
-// INPUT ABSTRACTION LAYER
+// INPUT ABSTRACTION LAYER (Enhanced)
 // ----------------------------------------------------------------------
 type InputMode = 'MOUSE' | 'TOUCH' | 'HYBRID';
 type InteractionIntent = 'NAVIGATE' | 'MANIPULATE' | 'SCROLL' | 'IDLE';
@@ -319,6 +155,7 @@ const useInputMode = () => {
   useEffect(() => {
     setMode(getInputMode());
     
+    // Detect mode changes on hybrid devices
     const onTouchStart = () => setMode('TOUCH');
     const onMouseMove = () => {
       if (mode === 'TOUCH') setMode('HYBRID');
@@ -354,7 +191,7 @@ const PAGE_CONFIG = [
     scene: "/scene1.splinecode", 
     label: "HERO",
     infoTitle: "The Hero Moment",
-    infoDesc: "This scene establishes the visual language. High-fidelity PBR textures meet dramatic lighting. We may have overdone the bloom.",
+    infoDesc: "This scene establishes the visual language. We use high-fidelity PBR textures and dramatic lighting.",
     heavyAsset: true
   },
   { 
@@ -363,7 +200,7 @@ const PAGE_CONFIG = [
     scene: "/scene.splinecode", 
     label: "SHOWCASE",
     infoTitle: "Product Showcase",
-    infoDesc: "A 360-degree interactive view. Drag to rotate. We promise it won't bite.",
+    infoDesc: "A 360-degree interactive view. Users can drag to rotate.",
     heavyAsset: true
   },
   { 
@@ -372,7 +209,7 @@ const PAGE_CONFIG = [
     scene: "/scene3.splinecode", 
     label: "CONCEPT",
     infoTitle: "Conceptual Abstraction",
-    infoDesc: "Pure form. Physics are optional here. Gravity? Never heard of her.",
+    infoDesc: "Pure form. Physics are ignored in favor of aesthetic balance.",
     disableInteraction: true,
     heavyAsset: false
   },
@@ -384,7 +221,7 @@ const PAGE_CONFIG = [
     labelA: "WIREFRAME", 
     labelB: "PROTOTYPE",
     infoTitle: "The Split Process",
-    infoDesc: "Drag the slider to compare wireframe vs high-fidelity. Try finding the perfect center for a surprise.",
+    infoDesc: "Drag the slider to compare low-fidelity wireframe vs high-fidelity prototype.",
     heavyAsset: true
   },
   { 
@@ -393,7 +230,7 @@ const PAGE_CONFIG = [
     scene: "/scene2.splinecode", 
     label: "FINAL",
     infoTitle: "Production Ready",
-    infoDesc: "Baked lighting and optimized geometry. Runs at 60fps. Probably.",
+    infoDesc: "Baked lighting and optimized geometry. Runs at 60fps.",
     heavyAsset: false
   },
   { 
@@ -402,7 +239,7 @@ const PAGE_CONFIG = [
     scene: "/scene6.splinecode", 
     label: "INTERACTIVE",
     infoTitle: "User Agency",
-    infoDesc: "The final playground. Physics enabled. Click everything. We dare you.",
+    infoDesc: "The final playground. Physics are enabled.",
     heavyAsset: true
   },
 ];
@@ -444,6 +281,7 @@ const useDeviceCapabilities = () => {
     const isMobile = window.innerWidth < 768;
     const isLowPower = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
+    // Test backdrop-filter support
     const supportsBackdropFilter = CSS.supports('backdrop-filter', 'blur(10px)') || 
                                    CSS.supports('-webkit-backdrop-filter', 'blur(10px)');
 
@@ -521,6 +359,7 @@ const GLOBAL_STYLES = `
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   html, body { background-color: black; overflow-x: hidden; }
   
+  /* Mobile optimizations */
   @media (max-width: 768px) {
     * {
       -webkit-tap-highlight-color: transparent;
@@ -554,21 +393,18 @@ const OrientationOverlay = memo(({ onDismiss }: { onDismiss: () => void }) => (
         <div className="text-blue-500 text-2xl">↻</div>
       </div>
     </div>
-    <h2 className="text-2xl font-bold text-white mb-4">{pickRandom(HUMOR_COPY.orientationWarning)}</h2>
-    <p className="text-white/60 max-w-xs mb-8 leading-relaxed text-sm">
-      We spent a lot of time on the widescreen version. Just saying.
+    <h2 className="text-2xl font-bold text-white mb-4">Best Experience in Landscape</h2>
+    <p className="text-white/60 max-w-xs mb-8 leading-relaxed">
+      Please rotate your device for the full immersive experience.
     </p>
-    <button 
-      onClick={onDismiss} 
-      className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-sm font-bold text-white transition-colors"
-    >
-      I LIKE LIVING DANGEROUSLY
+    <button onClick={onDismiss} className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-sm font-bold text-white transition-colors">
+      CONTINUE ANYWAY
     </button>
   </div>
 ));
 
 // ----------------------------------------------------------------------
-// AUDIO ENGINE
+// AUDIO ENGINE (Isolated)
 // ----------------------------------------------------------------------
 const useAudioEngine = (themeId: string, isConfiguratorOpen: boolean) => {
   const [isMuted, setIsMuted] = useState(true);
@@ -623,9 +459,6 @@ const useAudioEngine = (themeId: string, isConfiguratorOpen: boolean) => {
     if (newMuted) safePause();
     else safePlay();
     hapticFeedback(10);
-    
-    EasterEggs.trackMute();
-    ToastManager.show(pickRandom(HUMOR_COPY.muteToggle), 1500);
   }, [isMuted, volume, persistState, safePlay, safePause]);
 
   const changeVolume = useCallback((newVol: number) => {
@@ -686,7 +519,7 @@ const BackgroundMusicSystem = memo(({ themeId, onReady, volume }: { themeId: str
 });
 
 // ----------------------------------------------------------------------
-// 3D SCENE WRAPPERS
+// 3D SCENE WRAPPERS (Optimized)
 // ----------------------------------------------------------------------
 const SceneWrapper = memo(({ 
   isVisible, 
@@ -697,7 +530,6 @@ const SceneWrapper = memo(({
 }: any) => {
   const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const [loadingText] = useState(pickRandom(HUMOR_COPY.sceneLoading));
 
   useEffect(() => {
     if (isVisible && !hasLoaded) {
@@ -710,7 +542,7 @@ const SceneWrapper = memo(({
 
   const handleLoad = useCallback(() => {
     setHasLoaded(true);
-    CacheManager.set(`scene_${sceneUrl}`, true, 7 * 24 * 60 * 60 * 1000);
+    CacheManager.set(`scene_${sceneUrl}`, true, 7 * 24 * 60 * 60 * 1000); // 7 days
   }, [sceneUrl]);
 
   const handleError = useCallback(() => {
@@ -720,9 +552,8 @@ const SceneWrapper = memo(({
 
   if (error) {
     return (
-      <div className="absolute inset-0 bg-gray-900/20 flex flex-col items-center justify-center gap-2">
-        <div className="text-white/40 text-xs font-mono">{pickRandom(HUMOR_COPY.sceneFailed)}</div>
-        <div className="text-white/20 text-[10px]">¯\_(ツ)_/¯</div>
+      <div className="absolute inset-0 bg-gray-900/20 flex items-center justify-center">
+        <div className="text-white/40 text-xs font-mono">Failed to load scene</div>
       </div>
     );
   }
@@ -736,7 +567,7 @@ const SceneWrapper = memo(({
       {isVisible && (
         <Suspense fallback={
           <div className="absolute inset-0 bg-gray-900/20 flex items-center justify-center">
-            <div className="text-blue-500/40 font-mono text-[10px] animate-pulse">{loadingText}</div>
+            <div className="text-blue-500/40 font-mono text-[10px] animate-pulse">LOADING...</div>
           </div>
         }>
           <Spline 
@@ -798,7 +629,6 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, intent, set
   
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const lastTapTime = useRef<number>(0);
-  const lastSplitCheck = useRef<number>(0);
 
   const handleDragStart = useCallback(() => {
     setIsDragging(true);
@@ -810,21 +640,13 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, intent, set
     setIsDragging(false);
     setIntent('IDLE');
     if (longPressTimer.current) clearTimeout(longPressTimer.current);
-    
-    // Check for perfect split
-    const now = Date.now();
-    if (now - lastSplitCheck.current > 3000) {
-      EasterEggs.trackSplitPosition(splitPos);
-      lastSplitCheck.current = now;
-    }
-  }, [setIntent, splitPos]);
+  }, [setIntent]);
 
   const handleDoubleTap = useCallback(() => {
     const now = Date.now();
     if (now - lastTapTime.current < 300) {
       setSplitPos(50);
       hapticFeedback(15);
-      ToastManager.show(pickRandom(HUMOR_COPY.doubleTapReset), 1500);
     }
     lastTapTime.current = now;
   }, []);
@@ -833,7 +655,6 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, intent, set
     longPressTimer.current = setTimeout(() => {
       setIsLocked(!isLocked);
       hapticFeedback(20);
-      ToastManager.show(pickRandom(HUMOR_COPY.longPressLock), 1500);
     }, 500);
   }, [isLocked]);
 
@@ -1055,7 +876,7 @@ const SupportWidget = memo(({ accentColor }: { accentColor: string }) => {
 });
 
 // ----------------------------------------------------------------------
-// GESTURE NAVIGATION
+// GESTURE NAVIGATION (Mobile Optimized)
 // ----------------------------------------------------------------------
 const GestureNavigation = memo(({ activePage, onNavigate, intent, setIntent }: any) => {
   const [startY, setStartY] = useState(0);
@@ -1129,7 +950,7 @@ const usePageNavigation = (capabilities: any) => {
             if (index !== -1) {
               startTransition(() => {
                 setActivePage(index + 1);
-                CacheManager.set('last_page', index + 1, 60 * 60 * 1000);
+                CacheManager.set('last_page', index + 1, 60 * 60 * 1000); // 1 hour
               });
             }
           }
@@ -1154,7 +975,6 @@ const usePageNavigation = (capabilities: any) => {
     if(index < 0 || index >= PAGE_CONFIG.length) return;
     hapticFeedback(10);
     pageRefs.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    EasterEggs.resetIdleTimer();
   }, []);
 
   return { activePage, setActivePage, handleRef, scrollToPage };
@@ -1183,7 +1003,6 @@ const useThemeEngine = () => {
   const changeTheme = useCallback((themeId: string) => {
     setActiveThemeId(themeId);
     CacheManager.set('theme', themeId);
-    EasterEggs.trackThemeChange();
   }, []);
 
   return { activeThemeId, activeTheme, accentColor, changeTheme };
@@ -1199,7 +1018,6 @@ export default function Home() {
   const [modalData, setModalData] = useState<any>(null);
   const [showOrientationWarning, setShowOrientationWarning] = useState(false);
   const [orientationDismissed, setOrientationDismissed] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const capabilities = useDeviceCapabilities();
   const { mode: inputMode, intent, setIntent } = useInputMode();
@@ -1208,44 +1026,15 @@ export default function Home() {
   
   const audioEngine = useAudioEngine(activeThemeId, showConfigurator);
 
-  // Connect toast system
-  useEffect(() => {
-    ToastManager.current = (msg: string, duration: number) => {
-      setToastMessage(msg);
-    };
-  }, []);
-
-  // Idle detection easter egg
-  useEffect(() => {
-    if (currentStage !== 'content') return;
-
-    const showIdleHint = () => {
-      ToastManager.show(pickRandom(HUMOR_COPY.idleHint), 3000);
-    };
-
-    EasterEggs.startIdleTimer(showIdleHint);
-
-    const resetIdle = () => EasterEggs.resetIdleTimer();
-    
-    window.addEventListener('mousemove', resetIdle);
-    window.addEventListener('touchstart', resetIdle);
-    window.addEventListener('scroll', resetIdle);
-
-    return () => {
-      window.removeEventListener('mousemove', resetIdle);
-      window.removeEventListener('touchstart', resetIdle);
-      window.removeEventListener('scroll', resetIdle);
-      EasterEggs.resetIdleTimer();
-    };
-  }, [currentStage]);
-
   useEffect(() => {
     setIsClient(true);
     
+    // Inject global styles
     const styleSheet = document.createElement("style");
     styleSheet.innerText = GLOBAL_STYLES;
     document.head.appendChild(styleSheet);
 
+    // Check orientation
     const checkOrientation = () => {
       const dismissed = CacheManager.get('orientation_dismissed');
       if (dismissed) {
@@ -1262,6 +1051,7 @@ export default function Home() {
 
     checkOrientation();
 
+    // Check registration
     const hasRegistered = CacheManager.get('vip_registered');
     if (!hasRegistered) {
       setCurrentStage("register");
@@ -1269,11 +1059,13 @@ export default function Home() {
       setCurrentStage("v2");
     }
 
+    // Cleanup
     return () => { 
       document.head.removeChild(styleSheet); 
     };
   }, [orientationDismissed]);
 
+  // Handle orientation changes
   useEffect(() => {
     if (!capabilities.isMobile) return;
 
@@ -1324,7 +1116,7 @@ export default function Home() {
   const handleOrientationDismiss = useCallback(() => {
     setShowOrientationWarning(false);
     setOrientationDismissed(true);
-    CacheManager.set('orientation_dismissed', true, 7 * 24 * 60 * 60 * 1000);
+    CacheManager.set('orientation_dismissed', true, 7 * 24 * 60 * 60 * 1000); // 7 days
   }, []);
 
   const effectiveFilter = useMemo(() => {
@@ -1344,14 +1136,6 @@ export default function Home() {
         onReady={audioEngine.handlePlayerReady} 
         volume={audioEngine.volume} 
       />
-
-      {/* TOAST SYSTEM */}
-      {toastMessage && (
-        <Toast 
-          message={toastMessage} 
-          onClose={() => setToastMessage(null)} 
-        />
-      )}
 
       {/* LAYER 1: FIXED CONTROLS */}
       <div className="fixed inset-0 z-[400000] pointer-events-none">
