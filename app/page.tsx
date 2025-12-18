@@ -1,11 +1,16 @@
 "use client";
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube'; 
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Volume2, Volume1, VolumeX, X, Palette, Sparkles, MessageCircle } from 'lucide-react'; 
+import { Volume2, Volume1, VolumeX, X, Palette, Sparkles, MessageCircle, Lock } from 'lucide-react'; 
+
+// --- DYNAMICALLY IMPORT SPLINE ---
+const SplineBackground = dynamic(() => import('@/components/SplineBackground'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 bg-black z-0" />, 
+});
 
 // --- COMPONENT IMPORTS ---
 import { Navbar } from "@/components/Mainpage/navbar"; 
@@ -36,7 +41,6 @@ import Heromain from "../app/VIP/heromain";
 import ShopFunnel from "../app/shop/ShopFunnel"; 
 import Chartnews from "@/app/Blogs/Chartnews"; 
 
-// --- FALLBACK THEME ---
 const FALLBACK_THEME: Partial<Theme> = {
     id: 'default',
     name: 'Loading...',
@@ -44,8 +48,6 @@ const FALLBACK_THEME: Partial<Theme> = {
     mobileFilter: 'none',
 };
 
-// --- THEME COLOR MAPPING ---
-// Maps Theme IDs to their primary accent colors for the UI widgets
 const THEME_ACCENTS: Record<string, string> = {
     't01': '#3b82f6', // Blue (Default)
     't02': '#a855f7', // Purple
@@ -131,7 +133,7 @@ const BackgroundMusicSystem = ({
 };
 
 // ----------------------------------------------------------------------
-// --- BOTTOM CONTROLS (STICKY & DYNAMIC COLOR) ---
+// --- BOTTOM CONTROLS ---
 // ----------------------------------------------------------------------
 const BottomControls = ({ 
     isPlaying, 
@@ -194,7 +196,6 @@ const BottomControls = ({
                     onClick={(e) => { e.stopPropagation(); onOpenTheme(); }}
                     className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 text-gray-400 transition-all duration-300 border border-transparent group relative hover:text-white"
                 >
-                    {/* Hover Glow Effect */}
                     <div 
                         className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-20 transition-opacity" 
                         style={{ backgroundColor: accentColor }} 
@@ -246,7 +247,7 @@ const BottomControls = ({
 }
 
 // ----------------------------------------------------------------------
-// --- SUPPORT WIDGET (DYNAMIC COLOR) ---
+// --- SUPPORT WIDGET ---
 // ----------------------------------------------------------------------
 const SupportWidget = ({ accentColor }: { accentColor: string }) => {
     const [isVisible, setIsVisible] = useState(false);
@@ -260,12 +261,10 @@ const SupportWidget = ({ accentColor }: { accentColor: string }) => {
           target="_blank" rel="noopener noreferrer"
           className="group relative flex items-center justify-center w-16 h-16 rounded-full transition-all duration-300 hover:-translate-y-1"
         >
-          {/* Outer Glow */}
           <div 
               className="absolute inset-0 rounded-full blur-[20px] opacity-40 animate-pulse group-hover:opacity-80 group-hover:scale-110 transition-all duration-500" 
               style={{ backgroundColor: accentColor }}
           />
-          {/* Inner Button */}
           <div 
               className="relative flex items-center justify-center w-full h-full rounded-full shadow-inner border overflow-hidden z-10"
               style={{ 
@@ -292,7 +291,9 @@ export default function Home() {
   const [volume, setVolume] = useState(25);
   const playerRef = useRef<any>(null);
   
-  // State to track if user is hovering a theme preview (to pause BG music)
+  // --- ROBOT OVERLAY STATE ---
+  const [isRobotLocked, setIsRobotLocked] = useState(true);
+
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showHelper, setShowHelper] = useState(false);
@@ -302,9 +303,7 @@ export default function Home() {
     return ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   }, [activeThemeId]);
     
-  // Get dynamic accent color
   const accentColor = useMemo(() => getThemeColor(activeThemeId), [activeThemeId]);
-
   const isPlaying = useMemo(() => !isMuted, [isMuted]);
 
   useEffect(() => {
@@ -340,7 +339,6 @@ export default function Home() {
   };
 
   const safePlay = useCallback(() => {
-      // Logic Update: Do not play if Configurator is Open OR if Previewing
       if (isMuted || showConfigurator || isPreviewing || !playerRef.current) return;
       try {
           if(typeof playerRef.current.unMute === 'function') playerRef.current.unMute();
@@ -387,7 +385,6 @@ export default function Home() {
       if (!isMuted && !showConfigurator && !isPreviewing) player.playVideo?.();
   }, [isMuted, showConfigurator, isPreviewing, volume]);
 
-  // Updated Effect: Pauses audio if Configurator is open OR user is previewing a theme
   useEffect(() => {
       if (!playerRef.current) return;
       if (showConfigurator || isPreviewing) safePause();
@@ -429,6 +426,10 @@ export default function Home() {
       safePlay();
   }, [safePlay]);
 
+  const handleRobotUnlock = useCallback(() => {
+      setIsRobotLocked(false);
+  }, []);
+
   if (!isClient) return null;
 
   return (
@@ -456,6 +457,29 @@ export default function Home() {
       <Analytics />
       <SpeedInsights />
 
+      {/* --- SPLINE ROBOT OVERLAY --- 
+        Logic: 
+        1. If Locked: z-[60] (Top), pointer-events-auto (You can click the robot).
+        2. If Unlocked: z-0 (Bottom), pointer-events-none (You click THROUGH it to the website).
+      */}
+      <div 
+        className={`fixed inset-0 w-full h-full transition-all duration-1000 ease-in-out ${
+            isRobotLocked 
+            ? 'z-[60] pointer-events-auto' 
+            : 'z-0 pointer-events-none'
+        }`}
+      >
+         {/* @ts-ignore - The updated SplineBackground now accepts props */}
+         <SplineBackground onUnlock={handleRobotUnlock} />
+         
+         {/* Optional: A hint for the user if locked */}
+         {isRobotLocked && currentStage === 'content' && (
+             <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/50 text-xs uppercase tracking-widest animate-pulse pointer-events-none">
+                 Interact with the Robot to Enter
+             </div>
+         )}
+      </div>
+
       {/* AUDIO SYSTEM */}
       <BackgroundMusicSystem 
         themeId={activeThemeId} 
@@ -463,10 +487,10 @@ export default function Home() {
         volume={volume}
       />
 
-      {/* FIXED WIDGETS (Z-Index 400,000) - Very high to be always clickable */}
+      {/* FIXED WIDGETS */}
       <div className="fixed inset-0 z-[400000] pointer-events-none">
           <BottomControls 
-              visible={currentStage === 'content'}
+              visible={currentStage === 'content' && !isRobotLocked} 
               isPlaying={isPlaying} 
               onToggleMusic={toggleMusic} 
               onOpenTheme={handleOpenTheme}
@@ -478,16 +502,14 @@ export default function Home() {
           <SupportWidget accentColor={accentColor} />
       </div>
 
-      {showHelper && currentStage === 'content' && (
+      {showHelper && currentStage === 'content' && !isRobotLocked && (
           <OnboardingHelper onDismiss={handleOpenTheme} />
       )}
 
       {/* MAIN CONTENT */}
       <div className="relative w-full min-h-screen" onClick={safePlay}>
         
-        {/* CONFIGURATOR MODAL - Z-Index 300,000 
-            Must be ABOVE the Global Theme Lens (200,000) so it appears clear and untinted.
-        */}
+        {/* CONFIGURATOR MODAL */}
         {showConfigurator && (
             <div className="fixed inset-0 z-[300000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
                 <div className="relative w-full max-w-6xl h-[80vh] bg-[#020617] rounded-3xl border border-white/10 overflow-hidden">
@@ -501,17 +523,12 @@ export default function Home() {
                     <FixedThemeConfigurator 
                         initialThemeId={activeThemeId}
                         onThemeChange={handleThemeChange} 
-                        // Logic to pause BG music during preview
-                   
                     />
                 </div>
             </div>
         )}
 
-        {/* GLOBAL THEME LENS - Z-Index 200,000
-            This sits ON TOP of loaders (which are at 100,000) to ensure the filter applies 
-            even if loaders use Portals. It is pointer-events-none so clicks pass through.
-        */}
+        {/* GLOBAL THEME LENS */}
         <div 
             id="global-theme-lens"
             className="fixed inset-0 pointer-events-none w-screen h-screen z-[200000]"
@@ -522,10 +539,7 @@ export default function Home() {
             }}
         />
 
-        {/* LOADING & GATING - Z-Index 100,000 
-            Sits below the Lens. We also keep the wrapper-level filter as a backup.
-            Added translateZ(0) to wrapper to help trap fixed children in stacking context.
-        */}
+        {/* LOADING & GATING */}
         {currentStage === "register" && (
             <div 
                 className="fixed inset-0 z-[100000] bg-black transition-all duration-500"
@@ -568,12 +582,8 @@ export default function Home() {
             </div>
         )}
 
-        {/* ✅ FIXED: NAVBAR MOVED OUTSIDE THE ANIMATING DIV */}
-        {/* We place it here so it's not affected by the transform of 'profit-reveal'.
-            We use a condition to only show it when currentStage is 'content'. 
-            z-index is 250000 (between lens and configurator). */}
         {currentStage === 'content' && (
-            <header className="fixed top-0 left-0 right-0 z-[250000] w-full transition-all duration-300">
+            <header className={`fixed top-0 left-0 right-0 w-full transition-all duration-300 ${isRobotLocked ? 'z-[40] opacity-50' : 'z-[250000] opacity-100'}`}>
                 <Navbar 
                     setShowConfigurator={setShowConfigurator} 
                     activeThemeId={activeThemeId}
@@ -583,10 +593,9 @@ export default function Home() {
         )}
 
         {/* PAGE CONTENT WRAPPER */}
-        {/* This div has 'profit-reveal' which uses SCALE transform. */}
+        {/* We keep this visible (z-10) but when Robot is locked (z-60), the robot is on top */}
         <div className={currentStage === 'content' ? 'profit-reveal' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
             
-            {/* ✅ SPACER: Prevents content from hiding behind the fixed navbar */}
             <div className="h-20 w-full" />
 
             <main className="relative min-h-screen z-10">
@@ -614,7 +623,7 @@ export default function Home() {
         </div>
       </div>
       
-      {/* FIXED BACKGROUND FADE - Z-Index 500,000 (Transition overlay) */}
+      {/* FIXED BACKGROUND FADE */}
       <div className={`fixed inset-0 z-[500000] bg-black pointer-events-none transition-opacity duration-300 ease-in-out ${isTransitioning ? 'opacity-100' : 'opacity-0'}`} />
     </>
   );
