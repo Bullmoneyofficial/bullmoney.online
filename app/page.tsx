@@ -1286,6 +1286,12 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
 // ----------------------------------------------------------------------
 const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volume, onVolumeChange, visible, accentColor, disableSpline, onTogglePerformance }: any) => {
     const [isHovered, setIsHovered] = useState(false);
+    const safeAreaStyle = {
+      bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
+      left: 'calc(env(safe-area-inset-left, 0px) + 12px)',
+      right: 'calc(env(safe-area-inset-right, 0px) + 12px)',
+      maxWidth: 'calc(100% - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) - 24px)',
+    };
     
     const containerStyle = {
         borderColor: `${accentColor}40`,
@@ -1298,16 +1304,15 @@ const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volu
         <div
           className="pointer-events-auto flex flex-col items-start gap-4 transition-all duration-700 ease-in-out absolute bottom-4 left-4 md:bottom-8 md:left-8 z-[100]"
           style={{ 
-            opacity: visible ? 1 : 0, 
+            ...safeAreaStyle,
+            opacity: visible ? 1 : 0,
             transform: visible ? 'translateY(0)' : 'translateY(20px)',
-            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
-            left: 'calc(env(safe-area-inset-left, 0px) + 12px)',
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
             <div 
-              className="flex items-center gap-2 bg-black/60 backdrop-blur-xl border p-2 rounded-full transition-colors duration-500 hover-lift"
+              className="flex flex-wrap items-center gap-2 bg-black/60 backdrop-blur-xl border p-2 rounded-full transition-colors duration-500 hover-lift"
               style={containerStyle}
             >
                 <div className="relative group">
