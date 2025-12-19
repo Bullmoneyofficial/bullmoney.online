@@ -233,8 +233,12 @@ const MobileBottomActionPanel = ({
 }) => (
     <AnimatePresence>
         {!isMobileMenuOpen && (
-            <motion.div initial={{ y: 0, opacity: 1 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="sticky bottom-0 left-0 right-0 z-[60] lg:hidden p-4 bg-black/90 backdrop-blur-md border-t border-blue-500/30 shadow-[0_-5px_30px_rgba(37,99,235,0.2)]"
+            <motion.div 
+                initial={{ y: 80, opacity: 0 }} 
+                animate={{ y: 0, opacity: 1 }} 
+                exit={{ y: 120, opacity: 0 }} 
+                transition={{ type: "spring", stiffness: 260, damping: 30 }}
+                className="fixed bottom-0 left-0 right-0 z-[2000000] lg:hidden p-4 bg-black/95 backdrop-blur-xl border-t border-blue-500/40 shadow-[0_-10px_40px_rgba(37,99,235,0.25)]"
             >
                 <div className="grid grid-cols-1 gap-2 max-w-xl mx-auto">
                     <ShimmerButton icon={Check} onClick={() => onSaveTheme(activeThemeId)} className="h-12 text-sm text-green-500 w-full">Save Theme</ShimmerButton>

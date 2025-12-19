@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import GlassSurface from './GlassSurface'; 
 import './ShopScrollFunnel.css';
@@ -15,22 +15,33 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
   const containerRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
   const [magnetOffset, setMagnetOffset] = useState({ x: 0, y: 0 });
-  const [pacmanPos, setPacmanPos] = useState({ x: 2, y: 2 });
-  const [pacmanPellets, setPacmanPellets] = useState<Array<{ x: number; y: number }>>([]);
+  const [pacmanPos, setPacmanPos] = useState<{ x: number; y: number }>({ x: 1, y: 1 });
+  const [ghosts, setGhosts] = useState<Array<{ id: string; x: number; y: number }>>([]);
+  const [pellets, setPellets] = useState<Set<string>>(new Set());
+  const [powerPellets, setPowerPellets] = useState<Set<string>>(new Set());
+  const [powerModeUntil, setPowerModeUntil] = useState<number>(0);
   const [pacmanScore, setPacmanScore] = useState(0);
   const [direction, setDirection] = useState<{ dx: number; dy: number }>({ dx: 1, dy: 0 });
+  const [lives, setLives] = useState(3);
   const pacmanSoundRef = useRef<HTMLAudioElement | null>(null);
+  const ghostSoundRef = useRef<HTMLAudioElement | null>(null);
 
-  const GRID_SIZE = 5;
-  const clampGrid = (v: number) => Math.max(0, Math.min(GRID_SIZE - 1, v));
-  const makePellets = useCallback(() => {
-    const seeds: Array<{ x: number; y: number }> = [];
-    while (seeds.length < 6) {
-      const spot = { x: Math.floor(Math.random() * GRID_SIZE), y: Math.floor(Math.random() * GRID_SIZE) };
-      if (!seeds.some((s) => s.x === spot.x && s.y === spot.y)) seeds.push(spot);
-    }
-    return seeds;
-  }, [GRID_SIZE]);
+  const PAC_MAP = useMemo(() => ([
+    "###########",
+    "#P.o#....G#",
+    "#.#.#.##..#",
+    "#.#..o...##",
+    "#...##.#..#",
+    "#.##.#.#G.#",
+    "#....#o...#",
+    "#G#..#..#.#",
+    "###########",
+  ]), []);
+
+  const width = PAC_MAP[0].length;
+  const height = PAC_MAP.length;
+
+  const coordKey = (x: number, y: number) => `${x},${y}`;
   const isUnlocked = progress > 0.75;
 
   useEffect(() => {
@@ -64,21 +75,46 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
     };
   }, []);
 
+  // Initialize sounds
   useEffect(() => {
-    const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/pop.ogg');
-    audio.volume = 0.25;
-    pacmanSoundRef.current = audio;
-    setPacmanPellets(makePellets());
-  }, [makePellets]);
+    const eat = new Audio('https://actions.google.com/sounds/v1/cartoon/pop.ogg');
+    const power = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
+    eat.volume = 0.25;
+    power.volume = 0.25;
+    pacmanSoundRef.current = eat;
+    ghostSoundRef.current = power;
+  }, []);
 
+  const resetBoard = useCallback(() => {
+    const pelletsSet = new Set<string>();
+    const powerSet = new Set<string>();
+    const ghostList: Array<{ id: string; x: number; y: number }> = [];
+    let start = { x: 1, y: 1 };
+
+    PAC_MAP.forEach((row, y) => {
+      row.split("").forEach((cell, x) => {
+        if (cell === ".") pelletsSet.add(coordKey(x, y));
+        if (cell === "o") powerSet.add(coordKey(x, y));
+        if (cell === "P") start = { x, y };
+        if (cell === "G") ghostList.push({ id: `g-${x}-${y}`, x, y });
+      });
+    });
+
+    setPellets(pelletsSet);
+    setPowerPellets(powerSet);
+    setGhosts(ghostList.length ? ghostList : [{ id: "g-1", x: width - 2, y: 1 }]);
+    setPacmanPos(start);
+    setPacmanScore(0);
+    setDirection({ dx: 1, dy: 0 });
+    setLives(3);
+    setPowerModeUntil(0);
+  }, [PAC_MAP, coordKey, width]);
+
+  // Build map on unlock
   useEffect(() => {
-    if (isUnlocked) {
-      setPacmanPellets(makePellets());
-      setPacmanPos({ x: 2, y: 2 });
-      setPacmanScore(0);
-      setDirection({ dx: 1, dy: 0 });
-    }
-  }, [isUnlocked, makePellets]);
+    if (!isUnlocked) return;
+    resetBoard();
+  }, [isUnlocked, resetBoard]);
 
   const distortion = -150 + (progress * 150); 
   const colorOffset = 30 - (progress * 30);   
@@ -99,26 +135,45 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
 
   const resetMagnet = () => setMagnetOffset({ x: 0, y: 0 });
 
+  const isWall = useCallback((x: number, y: number) => {
+    const row = PAC_MAP[y];
+    if (!row) return true;
+    return row[x] === "#";
+  }, [PAC_MAP]);
+
   const movePacman = useCallback((dx: number, dy: number) => {
     setPacmanPos((prev) => {
-      const next = { x: clampGrid(prev.x + dx), y: clampGrid(prev.y + dy) };
-      setPacmanPellets((prevPellets) => {
-        const remaining = prevPellets.filter((p) => !(p.x === next.x && p.y === next.y));
-        if (remaining.length !== prevPellets.length) {
-          setPacmanScore((s) => s + 1);
-          if (navigator.vibrate) navigator.vibrate(10);
-          try {
-            if (pacmanSoundRef.current) {
-              pacmanSoundRef.current.currentTime = 0;
-              pacmanSoundRef.current.play().catch(() => {});
-            }
-          } catch (e) {}
+      const nx = prev.x + dx;
+      const ny = prev.y + dy;
+      if (isWall(nx, ny)) return prev;
+      const next = { x: nx, y: ny };
+      const key = coordKey(nx, ny);
+
+      setPellets((prevPellets) => {
+        const newPellets = new Set(prevPellets);
+        if (newPellets.has(key)) {
+          newPellets.delete(key);
+          setPacmanScore((s) => s + 10);
+          pacmanSoundRef.current?.play().catch(() => {});
         }
-        return remaining.length ? remaining : makePellets();
+        return newPellets;
       });
+
+      setPowerPellets((prevPowers) => {
+        if (prevPowers.has(key)) {
+          const updated = new Set(prevPowers);
+          updated.delete(key);
+          setPacmanScore((s) => s + 50);
+          setPowerModeUntil(Date.now() + 6000);
+          ghostSoundRef.current?.play().catch(() => {});
+          return updated;
+        }
+        return prevPowers;
+      });
+
       return next;
     });
-  }, [clampGrid, makePellets]);
+  }, [coordKey, isWall]);
 
   const handlePacmanKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (['ArrowUp', 'w', 'W'].includes(e.key)) { e.preventDefault(); setDirection({ dx: 0, dy: -1 }); movePacman(0, -1); }
@@ -131,9 +186,54 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
     if (!isUnlocked) return;
     const id = setInterval(() => {
       movePacman(direction.dx, direction.dy);
-    }, 450);
+    }, 280);
     return () => clearInterval(id);
   }, [direction, isUnlocked, movePacman]);
+
+  // Ghost movement + collision
+  const ghostStep = useCallback(() => {
+    setGhosts((prevGhosts) => prevGhosts.map((g) => {
+      const dirs = [
+        { dx: 1, dy: 0 },
+        { dx: -1, dy: 0 },
+        { dx: 0, dy: 1 },
+        { dx: 0, dy: -1 },
+      ].filter(({ dx, dy }) => !isWall(g.x + dx, g.y + dy));
+      const choice = dirs[Math.floor(Math.random() * dirs.length)] || { dx: 0, dy: 0 };
+      return { ...g, x: g.x + choice.dx, y: g.y + choice.dy };
+    }));
+  }, [isWall]);
+
+  useEffect(() => {
+    if (!isUnlocked) return;
+    const id = setInterval(() => {
+      ghostStep();
+    }, 420);
+    return () => clearInterval(id);
+  }, [ghostStep, isUnlocked]);
+
+  // Resolve collisions
+  useEffect(() => {
+    const powerActive = powerModeUntil > Date.now();
+    ghosts.forEach((g) => {
+      if (g.x === pacmanPos.x && g.y === pacmanPos.y) {
+        if (powerActive) {
+          setPacmanScore((s) => s + 200);
+          setGhosts((prev) => prev.map((ghost) => ghost.id === g.id ? { ...ghost, x: width - 2, y: 1 } : ghost));
+        } else {
+          setLives((l) => Math.max(0, l - 1));
+          setPacmanPos({ x: 1, y: 1 });
+          setDirection({ dx: 1, dy: 0 });
+        }
+      }
+    });
+  }, [ghosts, pacmanPos, powerModeUntil, width]);
+
+  useEffect(() => {
+    if (lives <= 0 && isUnlocked) {
+      resetBoard();
+    }
+  }, [isUnlocked, lives, resetBoard]);
 
   return (
     <div className="funnel-scroll-container" ref={containerRef}>
@@ -228,41 +328,62 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
               <EvervaultCard text={isUnlocked ? "ACCESS" : "VAULT"} className="w-full h-full" />
             </div>
 
-            <div className="p-4 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-lg text-white shadow-[0_0_30px_rgba(0,0,0,0.35)]">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-1 rounded-md bg-yellow-500/10 text-yellow-300 text-[10px] font-mono uppercase border border-yellow-500/30">Pac-Guard</span>
-                  <span className="text-xs text-white/60">Tap dots or use arrows</span>
+              <div className="p-4 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-lg text-white shadow-[0_0_30px_rgba(0,0,0,0.35)]">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-1 rounded-md bg-yellow-500/10 text-yellow-300 text-[10px] font-mono uppercase border border-yellow-500/30">Pac-Guard</span>
+                    <span className="text-xs text-white/60">Tap dots or use arrows</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs font-mono">
+                    <span className="text-blue-300">Score {pacmanScore}</span>
+                    <span className="text-red-300">Lives {lives}</span>
+                    <span className={powerModeUntil > Date.now() ? 'text-emerald-300' : 'text-neutral-400'}>
+                      {powerModeUntil > Date.now() ? 'POWER' : 'NORMAL'}
+                    </span>
+                  </div>
                 </div>
-                <span className="text-xs font-mono text-blue-300">Score {pacmanScore}</span>
-              </div>
               <div 
-                className="grid grid-cols-5 gap-1 p-2 rounded-xl bg-gradient-to-br from-slate-900/80 to-black border border-white/5 focus:outline-none"
+                className="grid grid-cols-11 gap-1 p-2 rounded-xl bg-gradient-to-br from-slate-900/80 to-black border border-white/5 focus:outline-none"
                 tabIndex={0}
                 onKeyDown={handlePacmanKeyDown}
                 aria-label="Pacman mini grid"
               >
-                {Array.from({ length: GRID_SIZE }).map((_, y) => (
-                  Array.from({ length: GRID_SIZE }).map((_, x) => {
-                    const isPacman = pacmanPos.x === x && pacmanPos.y === y;
-                    const hasPellet = pacmanPellets.some((p) => p.x === x && p.y === y);
-                    return (
-                      <div 
-                        key={`${x}-${y}`} 
-                        className="relative aspect-square rounded-md bg-white/5 border border-white/5 flex items-center justify-center"
-                        onClick={() => movePacman(x - pacmanPos.x, y - pacmanPos.y)}
-                      >
-                        {hasPellet && <span className="w-2 h-2 rounded-full bg-yellow-300 shadow-[0_0_12px_rgba(234,179,8,0.8)]" />}
-                        {isPacman && (
-                          <div className="relative w-6 h-6 rounded-full bg-yellow-400 border-2 border-black shadow-[0_0_12px_rgba(234,179,8,0.5)]">
-                            <div className="absolute inset-0 bg-black/60" style={{ clipPath: 'polygon(50% 50%, 110% 10%, 110% 90%)' }} />
-                            <span className="absolute top-1 left-1 w-1 h-1 rounded-full bg-black" />
+                {PAC_MAP.map((row, y) => row.split("").map((cell, x) => {
+                  const isPacman = pacmanPos.x === x && pacmanPos.y === y;
+                  const isGhost = ghosts.some((g) => g.x === x && g.y === y);
+                  const pelletKey = `${x},${y}`;
+                  const hasPellet = pellets.has(pelletKey);
+                  const hasPower = powerPellets.has(pelletKey);
+                  const wall = cell === "#";
+                  return (
+                    <div 
+                      key={`${x}-${y}`} 
+                      className={`relative aspect-square rounded-md border flex items-center justify-center transition-colors ${
+                        wall ? 'bg-neutral-800 border-neutral-700' : 'bg-white/5 border-white/5 hover:bg-white/10'
+                      }`}
+                      onClick={() => {
+                        if (!wall) movePacman(x - pacmanPos.x, y - pacmanPos.y);
+                      }}
+                    >
+                      {hasPellet && <span className="w-2 h-2 rounded-full bg-yellow-300 shadow-[0_0_12px_rgba(234,179,8,0.8)]" />}
+                      {hasPower && <span className="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)]" />}
+                      {isGhost && (
+                        <div className="relative w-6 h-6 rounded-b-md rounded-t-full bg-pink-500 border-2 border-pink-200">
+                          <div className="absolute inset-0 flex justify-around px-1 pt-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-white" />
                           </div>
-                        )}
-                      </div>
-                    );
-                  })
-                ))}
+                        </div>
+                      )}
+                      {isPacman && (
+                        <div className="relative w-6 h-6 rounded-full bg-yellow-400 border-2 border-black shadow-[0_0_12px_rgba(234,179,8,0.5)]">
+                          <div className="absolute inset-0 bg-black/60" style={{ clipPath: `polygon(50% 50%, 110% ${40 + direction.dy * 20}%, 110% ${60 + direction.dy * 20}%)` }} />
+                          <span className="absolute top-1 left-1 w-1 h-1 rounded-full bg-black" />
+                        </div>
+                      )}
+                    </div>
+                  );
+                }))}
               </div>
               <div className="mt-3 grid grid-cols-3 gap-2">
                 <button onClick={() => movePacman(0, -1)} className="rounded-lg border border-white/10 bg-white/5 py-2 text-xs hover:bg-white/10">Up</button>

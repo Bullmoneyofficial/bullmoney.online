@@ -645,7 +645,7 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
 
             <AnimatePresence>
                 {isOpen && (
-                    <div className="fixed inset-0 z-[900000] flex items-center justify-center p-3 md:p-6 pointer-events-auto">
+                    <div className="fixed inset-0 z-[999999] flex items-center justify-center p-3 md:p-6 pointer-events-auto">
                         <motion.div
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             onClick={() => setIsOpen(false)}

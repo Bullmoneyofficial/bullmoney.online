@@ -621,7 +621,7 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset 
 
   // TSX components get natural height with breathing room; Spline scenes stay fixed-height for snap scrolling
   const sectionClass = isTSX
-    ? 'relative w-full min-h-[120dvh] h-auto flex-none snap-start bg-black mobile-optimize overflow-visible py-10 md:py-16'
+    ? 'relative w-full min-h-[125dvh] h-auto flex-none snap-start bg-black mobile-optimize overflow-visible py-12 md:py-16'
     : 'relative w-full h-[100dvh] flex-none snap-start snap-always overflow-hidden bg-black flex flex-col items-center justify-center mobile-optimize';
 
   return (
@@ -631,16 +631,16 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset 
     >
       <div className={`w-full ${isTSX && isMobile ? 'h-auto min-h-full' : 'h-full'} relative`}>
         {config.type === 'tsx' ? (
-          <div className="pb-16 md:pb-24">
+          <div className="pb-20 md:pb-28">
             <TSXWrapper componentName={config.component} isVisible={shouldRender} />
           </div>
         ) : (
-          <SceneWrapper
-            isVisible={shouldRender}
-            sceneUrl={config.scene}
-            allowInput={!config.disableInteraction}
-            parallaxOffset={isHeavyScene ? parallaxOffset * 0.25 : parallaxOffset}
-          />
+            <SceneWrapper
+              isVisible={shouldRender}
+              sceneUrl={config.scene}
+              allowInput={!config.disableInteraction}
+              parallaxOffset={isHeavyScene ? parallaxOffset * 0.15 : parallaxOffset}
+            />
         )}
         {/* Only show label for Spline scenes, not TSX components */}
         {!isTSX && (
