@@ -831,7 +831,7 @@ const HeroParallax = () => {
     {/* --- HERO SCROLL SECTION --- */}
     <div
         ref={ref}
-        className="h-[180vh] md:h-[240vh] pt-10 pb-0 overflow-hidden bg-black antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d]"
+        className="min-h-screen h-auto md:h-[240vh] pt-10 pb-20 md:pb-0 overflow-visible md:overflow-hidden bg-black antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d]"
     >
         {/* HEADER SECTION */}
         <div className="max-w-7xl relative mx-auto py-12 md:py-32 px-4 w-full z-20 mb-10 md:mb-32">

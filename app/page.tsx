@@ -3,21 +3,21 @@
 import React, { Suspense, useState, useEffect, useRef, useTransition, useCallback, memo, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import Spline from '@splinetool/react-spline';
-import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube'; 
+import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube';
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { 
+import {
   Volume2, Volume1, VolumeX, X, Palette, Sparkles, MessageCircle,
-  ChevronUp, ChevronDown, Info, MousePointer2, 
-  GripVertical, GripHorizontal, Smartphone, Monitor, 
+  ChevronUp, ChevronDown, Info, MousePointer2,
+  GripVertical, GripHorizontal, Smartphone, Monitor,
   Layers, Map as MapIcon, Lock, Unlock, Zap
-} from 'lucide-react'; 
+} from 'lucide-react';
 
 // --- COMPONENT IMPORTS ---
-import { Navbar } from "@/components/Mainpage/navbar"; 
-import RegisterPage from "./register/pagemode"; 
-import BullMoneyGate from "@/components/Mainpage/TradingHoldUnlock"; 
-import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2"; 
+import { Navbar } from "@/components/Mainpage/navbar";
+import RegisterPage from "./register/pagemode";
+import BullMoneyGate from "@/components/Mainpage/TradingHoldUnlock";
+import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2";
 
 // --- THEME & MUSIC DATA ---
 import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
@@ -526,21 +526,20 @@ const BackgroundMusicSystem = ({ themeId, onReady, volume }: { themeId: string; 
 // ----------------------------------------------------------------------
 const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPointer = false, parallaxOffset = 0 }: any) => {
   const [isLoaded, setIsLoaded] = useState(false);
-  
+
   useEffect(() => {
     if (isVisible && !isLoaded) {
-      // Simulate lazy loading delay
       const timer = setTimeout(() => setIsLoaded(true), 100);
       return () => clearTimeout(timer);
     }
   }, [isVisible, isLoaded]);
-  
+
   return (
-    <div 
+    <div
       className={`
         w-full h-full relative transition-opacity duration-700 parallax-layer
         ${isVisible ? 'opacity-100' : 'opacity-0'}
-        ${forceNoPointer ? 'pointer-events-none' : (allowInput ? 'pointer-events-auto' : 'pointer-events-none')} 
+        ${forceNoPointer ? 'pointer-events-none' : (allowInput ? 'pointer-events-auto' : 'pointer-events-none')}
       `}
       style={{ transform: `translateY(${parallaxOffset * 0.5}px)` }}
     >
@@ -562,7 +561,7 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
   );
 });
 
-// TSX Component Wrapper
+// TSX Component Wrapper - Production Ready
 const TSXWrapper = memo(({ componentName, isVisible }: { componentName: string; isVisible: boolean }) => {
   const components: Record<string, React.ComponentType> = {
     ChartNews,
@@ -570,9 +569,16 @@ const TSXWrapper = memo(({ componentName, isVisible }: { componentName: string; 
     HeroMain,
     ProductsSection
   };
-  
+
   const Component = components[componentName];
-  
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    if (isVisible) {
+      setIsMounted(true);
+    }
+  }, [isVisible]);
+
   if (!Component) {
     return (
       <div className="w-full h-full flex items-center justify-center text-white/50">
@@ -580,10 +586,10 @@ const TSXWrapper = memo(({ componentName, isVisible }: { componentName: string; 
       </div>
     );
   }
-  
+
   return (
-    <div className={`w-full h-full transition-opacity duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-      {isVisible && <Component />}
+    <div className={`w-full h-auto min-h-screen transition-opacity duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+      {isMounted && <Component />}
     </div>
   );
 });
@@ -592,36 +598,56 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset 
   const shouldRender = (config.id >= activePage - 1) && (config.id <= activePage + 1);
   const isActive = config.id === activePage;
   const sectionRef = useRef<HTMLElement | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     if(sectionRef.current) onVisible(sectionRef.current, config.id - 1);
   }, [onVisible, config.id]);
 
+  // For TSX components, allow natural height with scroll
+  const isTSX = config.type === 'tsx';
+
+  // Mobile: TSX components get natural height, Spline gets fixed height
+  // Desktop: All get fixed height for snap scrolling
+  const sectionClass = isTSX && isMobile
+    ? 'relative w-full min-h-[100dvh] h-auto flex-none snap-start bg-black mobile-optimize'
+    : 'relative w-full h-[100dvh] flex-none snap-start snap-always overflow-hidden bg-black flex flex-col items-center justify-center mobile-optimize';
+
   return (
-    <section 
-      ref={sectionRef} 
-      className={`relative w-full h-[100dvh] flex-none snap-start snap-always overflow-hidden bg-black flex flex-col items-center justify-center mobile-optimize ${
-        isActive ? 'page-flip-active' : ''
-      }`}
+    <section
+      ref={sectionRef}
+      className={`${sectionClass} ${isActive ? 'page-flip-active' : ''}`}
     >
-      <div className="w-full h-full relative">
+      <div className={`w-full ${isTSX && isMobile ? 'h-auto min-h-full' : 'h-full'} relative`}>
         {config.type === 'tsx' ? (
           <TSXWrapper componentName={config.component} isVisible={shouldRender} />
         ) : (
-          <SceneWrapper 
-            isVisible={shouldRender} 
-            sceneUrl={config.scene} 
+          <SceneWrapper
+            isVisible={shouldRender}
+            sceneUrl={config.scene}
             allowInput={!config.disableInteraction}
             parallaxOffset={parallaxOffset}
           />
         )}
-        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black to-transparent pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black to-transparent pointer-events-none" />
-        <div className={`absolute bottom-24 left-6 md:bottom-20 md:left-10 z-20 pointer-events-none transition-all duration-1000 ease-out max-w-[85%] ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <h2 className="text-4xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10 tracking-tighter select-none drop-shadow-2xl hover-lift">
-            {config.label}
-          </h2>
-        </div>
+        {/* Only show label for Spline scenes, not TSX components */}
+        {!isTSX && (
+          <>
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black to-transparent pointer-events-none" />
+            <div className={`absolute bottom-24 left-6 md:bottom-20 md:left-10 z-20 pointer-events-none transition-all duration-1000 ease-out max-w-[85%] ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+              <h2 className="text-4xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10 tracking-tighter select-none drop-shadow-2xl hover-lift">
+                {config.label}
+              </h2>
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
@@ -1227,6 +1253,7 @@ export default function Home() {
              />
          </header>
       )}
+
 
       {/* --- LAYER 6: MAIN CONTENT (3D SCROLL LAYOUT) --- */}
       <div className={currentStage === 'content' ? 'profit-reveal w-full h-[100dvh] relative' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>

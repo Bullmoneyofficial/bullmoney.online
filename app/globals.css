@@ -152,18 +152,23 @@
 @layer base {
   html, body {
     overflow-x: hidden;
-    overflow-y: auto; /* Force vertical scroll */
+    overflow-y: auto;
     height: auto;
     min-height: 100vh;
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
-  
+
   * {
     @apply border-border outline-ring/50;
   }
-  
+
   body {
     @apply bg-background text-foreground;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
