@@ -491,6 +491,7 @@ const OrientationOverlay = ({ onDismiss }: { onDismiss: () => void }) => {
           playClickSound();
           onDismiss();
         }}
+        onDoubleClick={onDismiss}
         className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-sm font-bold text-white transition-colors hover-lift active:scale-95"
       >
           CONTINUE ANYWAY
@@ -501,80 +502,107 @@ const OrientationOverlay = ({ onDismiss }: { onDismiss: () => void }) => {
 
 
 // Info Panel Component
-const InfoPanel = ({ config, isOpen, onClose, accentColor }: any) => (
-  <div 
-    className={`fixed left-0 top-0 h-full w-80 bg-black/95 backdrop-blur-xl border-r z-[600000] transition-transform duration-500 ease-out ${
-      isOpen ? 'translate-x-0' : '-translate-x-full'
-    }`}
-    style={{ borderColor: `${accentColor}40` }}
-  >
-    <button
-      onClick={onClose}
-      className="absolute top-6 right-6 text-white/50 hover:text-white p-2 transition-colors"
+const InfoPanel = ({ config, isOpen, onClose, accentColor }: any) => {
+  const touchStartX = useRef<number | null>(null);
+  const touchDeltaX = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchDeltaX.current = 0;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchDeltaX.current < -60) onClose();
+    touchStartX.current = null;
+    touchDeltaX.current = 0;
+  };
+
+  return (
+    <div 
+      className={`fixed left-0 top-0 h-full w-80 bg-black/95 backdrop-blur-xl border-r z-[600000] transition-transform duration-500 ease-out ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}
+      style={{ borderColor: `${accentColor}40` }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
-      <X size={24} />
-    </button>
+      <button
+        type="button"
+        onClick={onClose}
+        onDoubleClick={onClose}
+        onTouchStart={(e) => { e.stopPropagation(); onClose(); }}
+        className="absolute top-6 right-6 text-white/50 hover:text-white p-2 transition-colors"
+      >
+        <X size={24} />
+      </button>
     
-    <div className="p-8 h-full overflow-y-auto no-scrollbar flex flex-col gap-6">
-      {/* Encrypted Title */}
-      <div className="relative">
-        <div className="flex items-center gap-2 mb-2">
-          <Lock className="w-4 h-4" style={{ color: accentColor }} />
-          <span className="text-xs font-mono tracking-wider" style={{ color: accentColor }}>
-            ENCRYPTED
-          </span>
-        </div>
-        <h3 className="font-mono text-lg text-white/90 break-all">
-          {config?.encryptedTitle || 'X39yRz1'}
-        </h3>
-      </div>
-      
-      {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-      
-      {/* Main Title */}
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-2">
-          {config?.infoTitle || 'Information'}
-        </h2>
-        <p className="text-white/70 text-sm leading-relaxed">
-          {config?.infoDesc || 'Description not available'}
-        </p>
-      </div>
-      
-      {/* Fun Fact Section */}
-      {config?.funFact && (
-        <>
-          <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-          <div className="p-4 rounded-lg border" style={{ 
-            backgroundColor: `${accentColor}15`,
-            borderColor: `${accentColor}40`
-          }}>
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4" style={{ color: accentColor }} />
-              <span className="text-xs font-bold tracking-wider" style={{ color: accentColor }}>
-                FUN FACT
-              </span>
-            </div>
-            <p className="text-white/80 text-sm leading-relaxed">
-              {config.funFact}
-            </p>
+      <div className="p-8 h-full overflow-y-auto no-scrollbar flex flex-col gap-6">
+        {/* Encrypted Title */}
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-2">
+            <Lock className="w-4 h-4" style={{ color: accentColor }} />
+            <span className="text-xs font-mono tracking-wider" style={{ color: accentColor }}>
+              ENCRYPTED
+            </span>
           </div>
-        </>
-      )}
-      
-      {/* Page Number Badge */}
-      <div className="mt-auto">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10">
-          <span className="text-xs text-white/50">PAGE</span>
-          <span className="text-xl font-bold" style={{ color: accentColor }}>
-            {String(config?.id || 1).padStart(2, '0')}
-          </span>
+          <h3 className="font-mono text-lg text-white/90 break-all">
+            {config?.encryptedTitle || 'X39yRz1'}
+          </h3>
+        </div>
+        
+        {/* Divider */}
+        <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        
+        {/* Main Title */}
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-2">
+            {config?.infoTitle || 'Information'}
+          </h2>
+          <p className="text-white/70 text-sm leading-relaxed">
+            {config?.infoDesc || 'Description not available'}
+          </p>
+        </div>
+        
+        {/* Fun Fact Section */}
+        {config?.funFact && (
+          <>
+            <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            <div className="p-4 rounded-lg border" style={{ 
+              backgroundColor: `${accentColor}15`,
+              borderColor: `${accentColor}40`
+            }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-4 h-4" style={{ color: accentColor }} />
+                <span className="text-xs font-bold tracking-wider" style={{ color: accentColor }}>
+                  FUN FACT
+                </span>
+              </div>
+              <p className="text-white/80 text-sm leading-relaxed">
+                {config.funFact}
+              </p>
+            </div>
+          </>
+        )}
+        
+        {/* Page Number Badge */}
+        <div className="mt-auto">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10">
+            <span className="text-xs text-white/50">PAGE</span>
+            <span className="text-xl font-bold" style={{ color: accentColor }}>
+              {String(config?.id || 1).padStart(2, '0')}
+            </span>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Sound effect helper
 const playClickSound = () => {
@@ -1128,7 +1156,7 @@ const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volu
                       e.stopPropagation(); 
                       playClickSound();
                       if (navigator.vibrate) navigator.vibrate(10);
-                      onOpenTheme(); 
+                      onOpenTheme(e); 
                     }} 
                     className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 text-gray-400 transition-all duration-300 border border-transparent group relative hover:text-white hover:bg-white/10"
                   >
@@ -1324,12 +1352,17 @@ export default function Home() {
   const parallaxRafRef = useRef<number>(0);
   const prefersReducedMotionRef = useRef(false);
   const orientationDismissedRef = useRef(false);
+  const touchStartRef = useRef(0);
   const [isTouch, setIsTouch] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
   const [musicKey, setMusicKey] = useState(0);
   const [disableSpline, setDisableSpline] = useState(false);
   const [showThemeQuickPick, setShowThemeQuickPick] = useState(false);
   const [hasRegistered, setHasRegistered] = useState(false);
+  const handleOrientationDismiss = useCallback(() => {
+    setShowOrientationWarning(false);
+    orientationDismissedRef.current = true;
+  }, []);
 
   const activeTheme = useMemo(() => {
     if (!ALL_THEMES || ALL_THEMES.length === 0) return FALLBACK_THEME as Theme;
@@ -1354,14 +1387,13 @@ export default function Home() {
 
     setIsTouch(matchMedia && matchMedia('(pointer: coarse)').matches);
 
-    // Auto-disable Spline on mobile for performance and show prompt
-    const mobileDevice = window.innerWidth < 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    // Auto-disable Spline by default; preserve user preference when available
     const savedSplinePref = localStorage.getItem('spline_enabled');
-    if (savedSplinePref === null && mobileDevice) {
-      setDisableSpline(true); // Auto-disable on first mobile visit
+    if (savedSplinePref !== null) {
+      setDisableSpline(savedSplinePref === 'true');
+    } else {
+      setDisableSpline(false);
       localStorage.setItem('spline_enabled', 'false');
-    } else if (savedSplinePref !== null) {
-      setDisableSpline(savedSplinePref === 'false');
     }
 
     // Check for reduced motion preference
@@ -1385,18 +1417,26 @@ export default function Home() {
     // ========================================
     // CRITICAL: Prevent page reloads on mobile browsers
     // ========================================
-    const preventMobileReload = (e: TouchEvent) => {
-      // Prevent pull-to-refresh on mobile browsers
-      if ((e.target as HTMLElement)?.closest('.mobile-scroll')) {
-        const scrollable = (e.target as HTMLElement).closest('.mobile-scroll');
-        if (scrollable && scrollable.scrollTop === 0) {
-          e.preventDefault();
-        }
+    const handleTouchStart = (e: TouchEvent) => {
+      const scrollable = (e.target as HTMLElement)?.closest('.mobile-scroll');
+      if (scrollable && e.touches.length > 0) {
+        touchStartRef.current = e.touches[0].clientY;
       }
     };
 
-    // Prevent accidental refresh gestures
-    document.addEventListener('touchstart', preventMobileReload, { passive: false });
+    const handleTouchMove = (e: TouchEvent) => {
+      const scrollable = (e.target as HTMLElement)?.closest('.mobile-scroll');
+      if (!scrollable || e.touches.length === 0) return;
+
+      const currentY = e.touches[0].clientY;
+      const isPullingDown = currentY - touchStartRef.current > 0;
+      if (scrollable.scrollTop <= 0 && isPullingDown) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
 
     // Disable pull-to-refresh on the body
     document.body.style.overscrollBehavior = 'contain';
@@ -1467,6 +1507,8 @@ export default function Home() {
       window.removeEventListener('resize', checkLayout);
       scrollElement.removeEventListener('scroll', handleScroll);
       if (scrollElement !== window) window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
       if (parallaxRafRef.current) cancelAnimationFrame(parallaxRafRef.current);
       
       if (mediaQuery.removeEventListener) {
@@ -1596,7 +1638,7 @@ export default function Home() {
       if (navigator.vibrate) navigator.vibrate(12);
       const newState = !disableSpline;
       setDisableSpline(newState);
-      localStorage.setItem('spline_enabled', String(!newState));
+      localStorage.setItem('spline_enabled', String(newState));
   }, [disableSpline]);
 
   // --- GATING HANDLERS ---
@@ -1652,11 +1694,19 @@ export default function Home() {
 
       {/* Quick Theme Picker */}
       {showThemeQuickPick && (
-        <div className="fixed inset-0 z-[800000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4" onClick={() => setShowThemeQuickPick(false)}>
+        <div 
+          className="fixed inset-0 z-[800000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4" 
+          onClick={() => setShowThemeQuickPick(false)}
+          onDoubleClick={() => setShowThemeQuickPick(false)}
+        >
           <div className="max-w-4xl w-full max-h-[80vh] overflow-y-auto bg-black/80 rounded-3xl border border-white/10 p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white">Quick Theme Switch</h2>
-              <button onClick={() => setShowThemeQuickPick(false)} className="text-white/50 hover:text-white p-2">
+              <button 
+                onClick={() => setShowThemeQuickPick(false)} 
+                onDoubleClick={() => setShowThemeQuickPick(false)} 
+                className="text-white/50 hover:text-white p-2"
+              >
                 <X size={24} />
               </button>
             </div>
@@ -1701,6 +1751,7 @@ export default function Home() {
           <div className="relative w-full max-w-5xl">
             <button 
               onClick={() => setFaqOpen(false)} 
+              onDoubleClick={() => setFaqOpen(false)} 
               className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
               aria-label="Close FAQ"
             >
@@ -1719,7 +1770,12 @@ export default function Home() {
             visible={currentStage === 'content'} 
             isPlaying={isPlaying} 
             onToggleMusic={toggleMusic} 
-            onOpenTheme={() => {
+            onOpenTheme={(e?: any) => {
+              const isDouble = (e?.detail ?? 1) >= 2;
+              if (showConfigurator || isDouble) {
+                setShowConfigurator(false);
+                return;
+              }
               setShowConfigurator(true);
               setParticleTrigger(prev => prev + 1);
             }} 
@@ -1741,6 +1797,10 @@ export default function Home() {
                   onClick={(e) => { 
                     e.stopPropagation(); 
                     playClickSound();
+                    setShowConfigurator(false); 
+                  }} 
+                  onDoubleClick={(e) => { 
+                    e.stopPropagation(); 
                     setShowConfigurator(false); 
                   }} 
                   className="absolute top-6 right-6 z-[10] p-2 text-white/50 hover:text-white transition-colors hover-lift"
@@ -1809,10 +1869,7 @@ export default function Home() {
             
             {showOrientationWarning && (
               <OrientationOverlay 
-                onDismiss={() => {
-                  setShowOrientationWarning(false);
-                  orientationDismissedRef.current = true;
-                }} 
+                onDismiss={handleOrientationDismiss} 
               />
             )}
 
@@ -1821,9 +1878,13 @@ export default function Home() {
                 {/* Theme Quick Switcher */}
                 <div className="relative group">
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
                         playClickSound();
                         if (navigator.vibrate) navigator.vibrate(10);
+                        if (e.detail >= 2 || showThemeQuickPick) {
+                          setShowThemeQuickPick(false);
+                          return;
+                        }
                         setShowThemeQuickPick(true);
                       }}
                       className="w-10 h-10 bg-black/40 backdrop-blur rounded-full border border-white/20 flex items-center justify-center text-purple-400 hover:text-white transition-colors mb-4 hover-lift"
@@ -1891,9 +1952,12 @@ export default function Home() {
             <div className="md:hidden fixed right-4 bottom-24 z-50 flex flex-col gap-4 items-end pointer-events-auto">
                 <ShineButton 
                   className="w-14 h-14 rounded-full shadow-2xl bg-black/80" 
-                  onClick={() => {
-                    playClickSound();
+                  onClick={(e: any) => {
                     if (navigator.vibrate) navigator.vibrate(20);
+                    if (e?.detail >= 2) {
+                      setIsMobileNavOpen(false);
+                      return;
+                    }
                     setIsMobileNavOpen(true);
                   }}
                 >
@@ -1908,6 +1972,7 @@ export default function Home() {
                     playClickSound();
                     setIsMobileNavOpen(false);
                   }} 
+                  onDoubleClick={() => setIsMobileNavOpen(false)}
                   className="absolute top-6 right-6 text-white/50 hover:text-white p-2 hover-lift"
                 >
                   <X size={32} />
@@ -1965,24 +2030,40 @@ export default function Home() {
 
             {/* INFO BUTTON */}
             <div className="fixed top-24 left-4 z-50 md:bottom-8 md:top-auto md:left-8 pointer-events-auto">
-                 <button 
-                   onClick={() => {
-                     playClickSound();
-                     if (navigator.vibrate) navigator.vibrate(10);
-                     setInfoPanelOpen(!infoPanelOpen);
-                   }} 
-                   className="md:hidden text-white/50 hover:text-white p-2 bg-black/20 backdrop-blur rounded-full mb-2 hover-lift"
-                 >
-                   {infoPanelOpen ? <Unlock size={24} /> : <Lock size={24} />}
-                 </button>
+                 <div className="md:hidden flex flex-col gap-3">
+                   <button 
+                     onClick={(e) => {
+                       playClickSound();
+                       if (navigator.vibrate) navigator.vibrate(10);
+                       if (e.detail >= 2 || infoPanelOpen) {
+                         setInfoPanelOpen(false);
+                         return;
+                       }
+                       setInfoPanelOpen(true);
+                     }} 
+                     className="flex items-center gap-3 bg-black/50 backdrop-blur border border-white/10 px-4 py-3 rounded-2xl text-left shadow-lg active:scale-95"
+                   >
+                     <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                       {infoPanelOpen ? <Unlock size={20} /> : <Lock size={20} />}
+                     </div>
+                     <div className="flex flex-col">
+                       <span className="text-xs text-white/60 tracking-widest">INFO PANEL</span>
+                       <span className="text-sm font-bold text-white">{infoPanelOpen ? "Tap to close" : "Tap to open"}</span>
+                     </div>
+                   </button>
+                 </div>
                  
                  <div className="hidden md:block">
                    <ShineButton 
                      className="w-12 h-12 rounded-full" 
-                     onClick={() => {
+                     onClick={(e: any) => {
                        playClickSound();
                        if (navigator.vibrate) navigator.vibrate(10);
-                       setInfoPanelOpen(!infoPanelOpen);
+                       if (e?.detail >= 2 || infoPanelOpen) {
+                         setInfoPanelOpen(false);
+                         return;
+                       }
+                       setInfoPanelOpen(true);
                      }}
                    >
                      {infoPanelOpen ? <Unlock size={20} /> : <Lock size={20} />}
@@ -1992,9 +2073,13 @@ export default function Home() {
                  <div className="mt-3">
                    <ShineButton
                      className="w-12 h-12 rounded-full"
-                     onClick={() => {
+                     onClick={(e: any) => {
                        playClickSound();
                        if (navigator.vibrate) navigator.vibrate(10);
+                       if (e?.detail >= 2 || faqOpen) {
+                         setFaqOpen(false);
+                         return;
+                       }
                        setFaqOpen(true);
                      }}
                    >
