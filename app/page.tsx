@@ -195,6 +195,7 @@ const PAGE_CONFIG = [
 ];
 
 const CRITICAL_SPLINE_SCENES = ["/scene1.splinecode", "/scene5.splinecode", "/scene4.splinecode"];
+const CRITICAL_SCENE_BLOB_MAP: Record<string, string> = {};
 
 // --- FALLBACK THEME ---
 const FALLBACK_THEME: Partial<Theme> = {
@@ -991,6 +992,8 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
     );
   }
 
+  const resolvedSceneUrl = CRITICAL_SCENE_BLOB_MAP[sceneUrl] || sceneUrl;
+
   return (
     <div
       className={`
@@ -1006,7 +1009,7 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
       {isVisible && isLoaded && (
         useCrashSafe ? (
           <CrashSafeSplineLoader
-            sceneUrl={sceneUrl}
+            sceneUrl={resolvedSceneUrl}
             isVisible={isVisible && isLoaded}
             allowInput={allowInput}
             className="w-full h-full"
@@ -1023,7 +1026,7 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
                </div>
              }>
                <Spline
-                 scene={sceneUrl}
+                 scene={resolvedSceneUrl}
                  className="w-full h-full block object-cover"
                  style={{
                    transform: 'translateZ(0)',
@@ -1407,13 +1410,13 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
 // ----------------------------------------------------------------------
 // 7. BOTTOM CONTROLS & WIDGETS
 // ----------------------------------------------------------------------
-const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volume, onVolumeChange, visible, accentColor, disableSpline, onTogglePerformance }: any) => {
+const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volume, onVolumeChange, visible, accentColor, disableSpline, onTogglePerformance, open, onClose }: any) => {
     const containerStyle = {
         borderColor: `${accentColor}40`,
         boxShadow: `0 0 20px ${accentColor}15`
     };
 
-    if (!visible) return null;
+    if (!visible || !open) return null;
     
     return (
         <div
@@ -1431,6 +1434,26 @@ const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volu
               className="apple-surface rounded-[28px] px-5 py-4 w-full max-w-[520px] transition-all duration-500 hover:-translate-y-0.5"
               style={containerStyle}
             >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${accentColor}12`, border: `1px solid ${accentColor}35` }}>
+                      <Layers size={16} style={{ color: accentColor }} />
+                    </div>
+                    <div className="flex flex-col leading-tight">
+                      <span className="text-[10px] font-mono tracking-[0.28em] text-white/60 uppercase">Control Center</span>
+                      <span className="text-sm font-semibold text-white/90">Adaptive performance</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={onClose}
+                    className="w-10 h-10 rounded-full border border-white/10 bg-white/5 text-white/70 hover:bg-white/10 transition-all touch-manipulation active:scale-95"
+                    style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+                    aria-label="Close control center"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${accentColor}15`, border: `1px solid ${accentColor}30` }}>
@@ -1686,6 +1709,7 @@ export default function Home() {
   const edgeHintsShownRef = useRef(false);
   const [isSafeMode, setIsSafeMode] = useState(false);
   const [isSafari, setIsSafari] = useState(false);
+  const [controlCenterOpen, setControlCenterOpen] = useState(false);
   const handleOrientationDismiss = useCallback(() => {
     setShowOrientationWarning(false);
     orientationDismissedRef.current = true;
@@ -1929,16 +1953,27 @@ export default function Home() {
     let cancelled = false;
 
     const prefetchWithRetry = async (url: string) => {
+      // Already cached as blob
+      if (CRITICAL_SCENE_BLOB_MAP[url]) return;
+
       for (let attempt = 0; attempt < 2; attempt++) {
         if (cancelled) return;
         try {
           const req = new Request(url, { cache: 'force-cache', mode: 'cors' });
           const res = await fetch(req);
           if (cancelled) return;
-          if (res.ok && typeof window !== 'undefined' && 'caches' in window) {
+          if (!res.ok) throw new Error(`Bad status ${res.status}`);
+
+          // Cache to browser cache for next visits
+          if (typeof window !== 'undefined' && 'caches' in window) {
             const cache = await caches.open('bullmoney-critical-splines');
             await cache.put(req, res.clone());
           }
+
+          // Create local blob URL so Spline can load without another network hop (in-app browsers often block)
+          const blob = await res.clone().blob();
+          const objectUrl = URL.createObjectURL(blob);
+          CRITICAL_SCENE_BLOB_MAP[url] = objectUrl;
           return;
         } catch (err) {
           await new Promise((resolve) => setTimeout(resolve, 180));
@@ -2344,6 +2379,8 @@ export default function Home() {
       <div className="fixed inset-0 z-[400000] pointer-events-none">
           <BottomControls
             visible={currentStage === 'content'}
+            open={controlCenterOpen}
+            onClose={() => setControlCenterOpen(false)}
             isPlaying={isPlaying}
             onToggleMusic={toggleMusic}
             onOpenTheme={(e?: any) => {
@@ -2443,6 +2480,31 @@ export default function Home() {
              {/* @ts-ignore */}
              <MultiStepLoaderV2 onFinished={handleV2Complete} theme={activeTheme} />
          </div>
+      )}
+
+      {/* Control Center Launcher */}
+      {currentStage === 'content' && (
+        <div className="fixed bottom-5 left-4 md:bottom-7 md:left-8 z-[400100] pointer-events-auto">
+          <button
+            onClick={() => {
+              setControlCenterOpen((prev) => !prev);
+              if (navigator.vibrate) navigator.vibrate(8);
+              playClickSound();
+            }}
+            className={`apple-surface border border-white/10 text-white/80 rounded-full px-4 py-2 flex items-center gap-2 shadow-lg transition-all duration-300 hover:-translate-y-0.5 touch-manipulation active:scale-95 ${controlCenterOpen ? 'bg-white/10' : ''}`}
+            style={{
+              WebkitTapHighlightColor: 'transparent',
+              touchAction: 'manipulation',
+              boxShadow: controlCenterOpen ? `0 15px 40px ${accentColor}30` : undefined,
+              borderColor: controlCenterOpen ? `${accentColor}55` : 'rgba(255,255,255,0.1)'
+            }}
+            aria-label="Open control center"
+          >
+            <Layers size={16} style={{ color: accentColor }} />
+            <span className="text-sm font-semibold">Control Center</span>
+            <span className="text-[11px] text-white/60 uppercase tracking-wide">{controlCenterOpen ? 'Hide' : 'Show'}</span>
+          </button>
+        </div>
       )}
 
       {/* --- LAYER 5: NAVBAR --- */}
