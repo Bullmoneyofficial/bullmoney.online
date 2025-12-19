@@ -462,7 +462,13 @@ const ShineButton = ({ children, onClick, active, className = "" }: any) => (
   </button>
 );
 
-const OrientationOverlay = ({ onDismiss }: { onDismiss: () => void }) => (
+const OrientationOverlay = ({ onDismiss }: { onDismiss: () => void }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => onDismiss(), 4800);
+    return () => clearTimeout(timer);
+  }, [onDismiss]);
+
+  return (
     <div className="fixed inset-0 z-[2000000] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500">
       <div className="mb-6 relative">
          <Smartphone className="w-16 h-16 text-blue-500 animate-pulse" />
@@ -475,15 +481,23 @@ const OrientationOverlay = ({ onDismiss }: { onDismiss: () => void }) => (
         Please rotate your device for the full immersive experience.
       </p>
       <button 
+        type="button"
         onClick={() => {
           playClickSound();
           onDismiss();
         }} 
-        className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-sm font-bold text-white transition-colors hover-lift">
+        onTouchStart={(e) => {
+          e.stopPropagation();
+          playClickSound();
+          onDismiss();
+        }}
+        className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-sm font-bold text-white transition-colors hover-lift active:scale-95"
+      >
           CONTINUE ANYWAY
       </button>
     </div>
-);
+  );
+};
 
 
 // Info Panel Component
