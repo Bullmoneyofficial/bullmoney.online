@@ -8,6 +8,21 @@ const RUNTIME_CACHE = 'runtime-cache-v1';
 const PRECACHE_ASSETS = [
   '/',
   '/offline.html',
+  '/scene1.splinecode',
+  '/scene.splinecode',
+  '/scene2.splinecode',
+  '/scene3.splinecode',
+  '/scene4.splinecode',
+  '/scene5.splinecode',
+  '/scene6.splinecode',
+  '/bullmoney-logo.png',
+  '/bullmoneyvantage.png',
+  '/BULL.svg',
+  '/favicon.svg',
+  '/manifest.json',
+  '/draco_wasm_wrapper.js',
+  '/draco_decoder.wasm',
+  '/process.js',
 ];
 
 // Install event - cache critical assets
@@ -40,6 +55,44 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   // Skip cross-origin requests
   if (!event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+
+  const request = event.request;
+  const isAssetRequest =
+    request.destination === 'image' ||
+    request.destination === 'font' ||
+    request.destination === 'script' ||
+    request.destination === 'style' ||
+    request.url.endsWith('.splinecode') ||
+    request.url.endsWith('.wasm') ||
+    /\.mp3$/.test(request.url);
+
+  if (isAssetRequest) {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        return fetch(request)
+          .then((response) => {
+            if (!response || response.status !== 200) {
+              return response;
+            }
+
+            const responseToCache = response.clone();
+            caches.open(RUNTIME_CACHE).then((cache) => {
+              if (request.method === 'GET') {
+                cache.put(request, responseToCache);
+              }
+            });
+
+            return response;
+          })
+          .catch(() => caches.match(request));
+      })
+    );
     return;
   }
 

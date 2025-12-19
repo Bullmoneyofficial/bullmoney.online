@@ -28,12 +28,9 @@ import { CrashSafeSplineLoader } from "@/components/Mainpage/CrashSafeSplineLoad
 // --- THEME & MUSIC DATA ---
 import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
 import { safeGetItem, safeSetItem } from '@/lib/localStorage';
+import { useDeviceProfile, DeviceProfile, DEFAULT_DEVICE_PROFILE } from '@/lib/deviceProfile';
 
 // --- TSX PAGE IMPORTS ---
-import ChartNews from "@/app/Blogs/Chartnews";
-import ShopScrollFunnel from "@/app/shop/ShopScrollFunnel";
-import HeroMain from "@/app/VIP/heromain";
-import ProductsSection from "@/app/VIP/ProductsSection";
 
 // --- DYNAMIC IMPORTS ---
 const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor'), { 
@@ -857,13 +854,14 @@ class ErrorBoundary extends React.Component<
 // ----------------------------------------------------------------------
 // 6. 3D SCENE WRAPPERS WITH LAZY LOADING
 // ----------------------------------------------------------------------
-const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPointer = false, parallaxOffset = 0, isHeavy = false, disabled = false, skeletonLabel = '', useCrashSafe = false, forceLiteSpline = false, forceLoadOverride = false }: any) => {
+const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPointer = false, parallaxOffset = 0, isHeavy = false, disabled = false, skeletonLabel = '', useCrashSafe = false, forceLiteSpline = false, forceLoadOverride = false, onSceneReady }: any) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [shouldUnload, setShouldUnload] = useState(false);
   const [mobileOptIn, setMobileOptIn] = useState(false);
   const isCritical = useMemo(() => CRITICAL_SPLINE_SCENES.includes(sceneUrl), [sceneUrl]);
   const resolvedSceneUrl = CRITICAL_SCENE_BLOB_MAP[sceneUrl] || sceneUrl;
+  const hasSignaledReady = useRef(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -920,6 +918,17 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
       return () => clearTimeout(unloadTimer);
     }
   }, [isVisible, isLoaded, isMobile, isHeavy, disabled, mobileOptIn, forceLiteSpline, forceLoadOverride, isCritical]);
+
+  useEffect(() => {
+    hasSignaledReady.current = false;
+  }, [sceneUrl]);
+
+  useEffect(() => {
+    if (isLoaded && onSceneReady && !hasSignaledReady.current) {
+      hasSignaledReady.current = true;
+      onSceneReady();
+    }
+  }, [isLoaded, onSceneReady]);
 
   if (isMobile && !mobileOptIn && !forceLiteSpline && !disabled && !forceLoadOverride && !isCritical) {
     return (
@@ -1050,15 +1059,38 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
 });
 
 // TSX Component Wrapper - Production Ready
-const TSXWrapper = memo(({ componentName, isVisible }: { componentName: string; isVisible: boolean }) => {
-  const components: Record<string, React.ComponentType> = {
-    ChartNews,
-    ShopScrollFunnel,
-    HeroMain,
-    ProductsSection
-  };
+const TSXLoadingFallback = ({ label }: { label: string }) => (
+  <div className="flex h-full min-h-[240px] w-full items-center justify-center">
+    <div className="flex flex-col items-center gap-2">
+      <div className="relative h-12 w-12 rounded-full border-2 border-white/10 border-t-blue-400 animate-spin" />
+      <span className="text-[10px] font-semibold tracking-[0.4em] uppercase text-white/50">
+        {label}
+      </span>
+    </div>
+  </div>
+);
 
-  const Component = components[componentName];
+const dynamicTSXComponents: Record<string, React.ComponentType<any>> = {
+  ChartNews: dynamic(() => import('@/app/Blogs/Chartnews').then((mod) => mod.default || mod), {
+    ssr: false,
+    loading: () => <TSXLoadingFallback label="Chart news" />,
+  }),
+  ShopScrollFunnel: dynamic(() => import('@/app/shop/ShopScrollFunnel').then((mod) => mod.default || mod), {
+    ssr: false,
+    loading: () => <TSXLoadingFallback label="Shop funnel" />,
+  }),
+  HeroMain: dynamic(() => import('@/app/VIP/heromain').then((mod) => mod.default || mod), {
+    ssr: false,
+    loading: () => <TSXLoadingFallback label="Hero" />,
+  }),
+  ProductsSection: dynamic(() => import('@/app/VIP/ProductsSection').then((mod) => mod.default || mod), {
+    ssr: false,
+    loading: () => <TSXLoadingFallback label="Products" />,
+  }),
+};
+
+const TSXWrapper = memo(({ componentName, isVisible }: { componentName: string; isVisible: boolean }) => {
+  const Component = dynamicTSXComponents[componentName];
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -1082,7 +1114,7 @@ const TSXWrapper = memo(({ componentName, isVisible }: { componentName: string; 
   );
 });
 
-const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false, sensitiveMode = false }: any) => {
+const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false, sensitiveMode = false, onSceneReady }: any) => {
   const isHeavyScene = config.id === 5 || config.id === 6 || config.id === 10;
   const isMobileSensitive = config.id === 3 || config.id === 4;
   const isLastPage = config.id === 10;
@@ -1124,18 +1156,19 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
             <TSXWrapper componentName={config.component} isVisible={shouldRender} />
           </div>
         ) : (
-            <SceneWrapper
-              isVisible={shouldRender}
-              sceneUrl={config.scene}
-              allowInput={!config.disableInteraction}
-              parallaxOffset={isHeavyScene ? parallaxOffset * 0.15 : (isMobileSensitive || isLastPage) ? parallaxOffset * 0.3 : parallaxOffset}
-              isHeavy={isHeavyScene || isMobileSensitive || isLastPage}
-              disabled={forceAlwaysSpline ? false : (disableSpline || suppressSpline)}
-              forceLiteSpline={forceLiteSpline}
-              forceLoadOverride={forceAlwaysSpline}
-              skeletonLabel={config.label}
-              useCrashSafe={useCrashSafeSpline || config.id === 1}
-            />
+          <SceneWrapper
+            isVisible={shouldRender}
+            sceneUrl={config.scene}
+            allowInput={!config.disableInteraction}
+            parallaxOffset={isHeavyScene ? parallaxOffset * 0.15 : (isMobileSensitive || isLastPage) ? parallaxOffset * 0.3 : parallaxOffset}
+            isHeavy={isHeavyScene || isMobileSensitive || isLastPage}
+            disabled={forceAlwaysSpline ? false : (disableSpline || suppressSpline)}
+            forceLiteSpline={forceLiteSpline}
+            forceLoadOverride={forceAlwaysSpline}
+            skeletonLabel={config.label}
+            useCrashSafe={useCrashSafeSpline || config.id === 1}
+            onSceneReady={config.id === 1 ? onSceneReady : undefined}
+          />
         )}
         {!isTSX && (
           <>
@@ -1412,29 +1445,53 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
 // ----------------------------------------------------------------------
 // 7. BOTTOM CONTROLS & WIDGETS
 // ----------------------------------------------------------------------
-const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volume, onVolumeChange, visible, accentColor, disableSpline, onTogglePerformance, open, onClose }: any) => {
+const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volume, onVolumeChange, visible, accentColor, disableSpline, onTogglePerformance, open, onClose, deviceProfile, onRequestOpen }: any) => {
+    if (!visible) return null;
+    const safeDeviceProfile = deviceProfile ?? DEFAULT_DEVICE_PROFILE;
+
     const containerStyle = {
         borderColor: `${accentColor}40`,
-        boxShadow: `0 0 20px ${accentColor}15`
+        boxShadow: `0 0 25px ${accentColor}25`
     };
 
-    if (!visible || !open) return null;
-    
+    const openPanel = useCallback(() => {
+        if (onRequestOpen) onRequestOpen();
+    }, [onRequestOpen]);
+
+    const swipeHandlers = useMemo(
+      () =>
+        createSwipeHandlers({
+          onSwipeDown: () => onClose(),
+          onSwipeUp: openPanel,
+          threshold: 70,
+          velocityThreshold: 0.35,
+          preventScroll: false,
+        }),
+      [onClose, openPanel]
+    );
+
     return (
-        <div
-          className="pointer-events-auto flex flex-col items-start gap-4 transition-all duration-700 ease-in-out absolute bottom-4 left-4 md:bottom-8 md:left-8 z-[100]"
-          style={{ 
-            opacity: visible ? 1 : 0, 
-            transform: visible ? 'translateY(0)' : 'translateY(20px)',
-            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
-            left: 'calc(env(safe-area-inset-left, 0px) + 12px)',
-            right: 'calc(env(safe-area-inset-right, 0px) + 12px)',
-            maxWidth: 'calc(100% - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) - 24px)',
-          }}
-        >
-            <div 
-              className="apple-surface rounded-[28px] px-5 py-4 w-full max-w-[520px] transition-all duration-500 hover:-translate-y-0.5"
-              style={containerStyle}
+        <div className="fixed inset-x-0 bottom-0 z-[100000] pointer-events-none">
+          <div className="mx-auto flex w-full max-w-[560px] flex-col gap-2 px-4 pb-4" style={{ pointerEvents: 'none' }}>
+            <div
+              className="pointer-events-auto flex items-center justify-center flex-col gap-1"
+              onClick={openPanel}
+              aria-label="Swipe or tap to open control center"
+            >
+              <div className="h-1.5 w-16 rounded-full bg-white/20 shadow-[0_0_12px_rgba(0,0,0,0.4)]" />
+              <div className="text-[10px] uppercase tracking-[0.4em] text-white/40">
+  {deviceProfile.isMobile ? 'Mobile Balanced' as React.ReactNode : 'Desktop Fidelity' as React.ReactNode}
+</div>
+            </div>
+
+            <div
+              className={`pointer-events-auto rounded-[28px] border border-white/10 bg-black/70 apple-surface shadow-[0_30px_90px_rgba(0,0,0,0.65)] backdrop-blur-3xl transition-[transform,opacity] duration-500 ease-out ${open ? 'opacity-100' : 'opacity-60'}`}
+              style={{
+                ...containerStyle,
+                transform: open ? 'translateY(0)' : 'translateY(120%)',
+                WebkitTransform: open ? 'translateY(0)' : 'translateY(120%)',
+              }}
+              {...swipeHandlers}
             >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
@@ -1560,13 +1617,18 @@ const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volu
                 </div>
             </div>
         </div>
+    </div>
     );
 };
 
-const SupportWidget = ({ accentColor }: { accentColor: string }) => {
+const SupportWidget = ({ accentColor, deviceProfile }: { accentColor: string; deviceProfile: DeviceProfile }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isPulsing, setIsPulsing] = useState(true);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const safeDeviceProfile = deviceProfile ?? DEFAULT_DEVICE_PROFILE;
+
+  const openPanel = useCallback(() => setIsPanelOpen(true), []);
+  const closePanel = useCallback(() => setIsPanelOpen(false), []);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 500);
@@ -1576,6 +1638,33 @@ const SupportWidget = ({ accentColor }: { accentColor: string }) => {
       clearTimeout(pulseTimer);
     };
   }, []);
+
+  const openSwipeHandlers = useMemo(
+    () =>
+      createSwipeHandlers({
+        onSwipeLeft: openPanel,
+        threshold: 65,
+        velocityThreshold: 0.35,
+        preventScroll: false,
+      }),
+    [openPanel]
+  );
+
+  const panelSwipeHandlers = useMemo(
+    () =>
+      createSwipeHandlers({
+        onSwipeRight: closePanel,
+        onSwipeDown: safeDeviceProfile.isMobile ? closePanel : undefined,
+        threshold: 60,
+        velocityThreshold: 0.3,
+        preventScroll: false,
+      }),
+    [closePanel, safeDeviceProfile.isMobile]
+  );
+
+  const panelPlacementClass = safeDeviceProfile.isMobile
+    ? 'left-0 right-0 bottom-0 h-[55vh]'
+    : 'top-0 right-0 h-full w-[360px]';
 
   return (
     <>
@@ -1588,73 +1677,84 @@ const SupportWidget = ({ accentColor }: { accentColor: string }) => {
           right: 'calc(env(safe-area-inset-right, 0px) + 16px)',
         }}
       >
-        <button
-          onClick={() => {
-            setIsOpen(true);
-            playClickSound();
-            if (navigator.vibrate) navigator.vibrate([12, 8]);
-          }}
-          onMouseEnter={() => playHover()}
-          onTouchStart={(e) => { playHover(); e.currentTarget.style.transform = 'scale(0.95)'; }}
-          onTouchEnd={(e) => { e.currentTarget.style.transform = ''; }}
-          className="group relative flex items-center justify-center w-14 h-14 rounded-full apple-surface border border-white/10 text-white/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl active:scale-95 touch-manipulation"
-          style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation', borderColor: `${accentColor}33` }}
-          aria-label="Open support"
-        >
-          <div className={`absolute inset-0 rounded-full blur-3xl opacity-30 transition-all duration-500 ${isPulsing ? 'animate-pulse' : ''}`} style={{ backgroundColor: accentColor }} />
-          <div className="relative flex items-center justify-center w-10 h-10 rounded-full border border-white/20 bg-white/5 shadow-inner overflow-hidden">
-              <MessageCircle className="w-5 h-5 text-white relative z-10 drop-shadow-md group-hover:scale-110 transition-transform" strokeWidth={2.4} />
-              <span className="absolute inset-0 opacity-0 group-hover:opacity-20 group-hover:animate-ping" style={{ backgroundColor: accentColor }} />
-          </div>
-          {isPulsing && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: accentColor }} />}
-          <span className="absolute left-1/2 -bottom-8 -translate-x-1/2 px-2 py-1 rounded-full bg-black/70 border border-white/10 text-[10px] text-white/70 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            Support
-          </span>
-        </button>
+        <div {...openSwipeHandlers} className="pointer-events-auto">
+          <button
+            onClick={() => {
+              openPanel();
+              playClickSound();
+              if (navigator.vibrate) navigator.vibrate([12, 8]);
+            }}
+            onMouseEnter={() => playHover()}
+            onTouchStart={(e) => { playHover(); e.currentTarget.style.transform = 'scale(0.95)'; }}
+            onTouchEnd={(e) => { e.currentTarget.style.transform = ''; }}
+            className="group relative flex items-center justify-center w-14 h-14 rounded-full apple-surface border border-white/10 text-white/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl active:scale-95 touch-manipulation"
+            style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation', borderColor: `${accentColor}33` }}
+            aria-label="Open support"
+          >
+            <div className={`absolute inset-0 rounded-full blur-3xl opacity-30 transition-all duration-500 ${isPulsing ? 'animate-pulse' : ''}`} style={{ backgroundColor: accentColor }} />
+            <div className="relative flex items-center justify-center w-10 h-10 rounded-full border border-white/20 bg-white/5 shadow-inner overflow-hidden">
+                <MessageCircle className="w-5 h-5 text-white relative z-10 drop-shadow-md group-hover:scale-110 transition-transform" strokeWidth={2.4} />
+                <span className="absolute inset-0 opacity-0 group-hover:opacity-20 group-hover:animate-ping" style={{ backgroundColor: accentColor }} />
+            </div>
+            {isPulsing && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: accentColor }} />}
+            <span className="absolute left-1/2 -bottom-8 -translate-x-1/2 px-2 py-1 rounded-full bg-black/70 border border-white/10 text-[10px] text-white/70 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+              Support
+            </span>
+          </button>
+        </div>
       </div>
 
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-[500000] bg-black/80 backdrop-blur-xl flex items-center justify-center p-3"
-          onClick={() => setIsOpen(false)}
-        >
+      {isPanelOpen && (
+        <>
+          <div className="fixed inset-0 z-[500000] bg-black/70 backdrop-blur-xl" onClick={closePanel} />
           <div
-          className="relative w-full max-w-sm apple-surface rounded-3xl border border-white/10 p-5 text-white shadow-2xl"
-          onClick={(e) => e.stopPropagation()}
-        >
-            <button
-              onClick={() => setIsOpen(false)}
-              className="absolute top-4 right-4 w-10 h-10 rounded-full border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 transition-all active:scale-95"
-              style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
-              aria-label="Close support"
+            className={`fixed z-[500001] flex items-center justify-center ${panelPlacementClass}`}
+            style={{
+              transition: 'transform 0.35s ease',
+            }}
+            {...panelSwipeHandlers}
+          >
+            <div
+            className={`relative w-full max-w-sm rounded-3xl apple-surface border border-white/10 p-5 text-white shadow-2xl ${safeDeviceProfile.isMobile ? 'rounded-t-[30px]' : ''}`}
+              style={{
+                backgroundColor: 'rgba(5,5,5,0.9)',
+              }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <X size={18} />
-            </button>
-            <div className="flex flex-col items-center gap-4 text-center">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${accentColor}18`, border: `1px solid ${accentColor}55` }}>
-                <MessageCircle className="w-6 h-6" style={{ color: accentColor }} />
-              </div>
-              <div className="flex flex-col leading-tight">
-                <span className="text-[11px] text-white/60 tracking-[0.2em] uppercase">Support</span>
-                <span className="text-sm font-semibold text-white">Tap icon to chat</span>
-              </div>
-              <a
-                href="https://t.me/+dlP_A0ebMXs3NTg0"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => {
-                  playClickSound();
-                  if (navigator.vibrate) navigator.vibrate([15, 5, 15]);
-                }}
-                className="w-14 h-14 rounded-full flex items-center justify-center apple-cta text-[#0b1224] font-bold"
-                style={{ backgroundColor: accentColor }}
-                aria-label="Open Telegram"
+              <button
+                onClick={closePanel}
+                className="absolute top-4 right-4 w-10 h-10 rounded-full border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 transition-all active:scale-95"
+                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+                aria-label="Close support"
               >
-                <ChevronRight size={18} />
-              </a>
+                <X size={18} />
+              </button>
+              <div className="flex flex-col items-center gap-4 text-center">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${accentColor}18`, border: `1px solid ${accentColor}55` }}>
+                  <MessageCircle className="w-6 h-6" style={{ color: accentColor }} />
+                </div>
+                <div className="flex flex-col leading-tight">
+                  <span className="text-[11px] text-white/60 tracking-[0.2em] uppercase">Support</span>
+                  <span className="text-sm font-semibold text-white">Tap icon to chat</span>
+                </div>
+                <a
+                  href="https://t.me/+dlP_A0ebMXs3NTg0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    playClickSound();
+                    if (navigator.vibrate) navigator.vibrate([15, 5, 15]);
+                  }}
+                  className="w-14 h-14 rounded-full flex items-center justify-center apple-cta text-[#0b1224] font-bold"
+                  style={{ backgroundColor: accentColor }}
+                  aria-label="Open Telegram"
+                >
+                  <ChevronRight size={18} />
+                </a>
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </>
   );
@@ -1709,6 +1809,82 @@ const CustomCursor = ({ accentColor }: { accentColor: string }) => {
   );
 };
 
+const SwipeScrollBar = memo(({ containerRef, accentColor, isMobile }: { containerRef: React.RefObject<HTMLElement | null>; accentColor: string; isMobile: boolean }) => {
+  const [thumb, setThumb] = useState({ top: 0, height: 20 });
+  const [isActive, setIsActive] = useState(false);
+  const rafRef = useRef<number>();
+
+  const updateThumb = useCallback(() => {
+    const element = containerRef.current;
+    if (!element) return;
+    const scrollHeight = Math.max(element.scrollHeight - element.clientHeight, 1);
+    const viewRatio = Math.min(1, Math.max(0.08, element.clientHeight / Math.max(element.scrollHeight, 1)));
+    const height = Math.max(12, Math.min(60, viewRatio * 100));
+    const top = Math.min(100 - height, (element.scrollTop / scrollHeight) * (100 - height));
+    setThumb({ top: Number.isFinite(top) ? top : 0, height });
+  }, [containerRef]);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    const element = containerRef.current;
+    if (!element) return;
+    updateThumb();
+    const handleScroll = () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(updateThumb);
+    };
+    element.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      element.removeEventListener('scroll', handleScroll);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [isMobile, containerRef, updateThumb]);
+
+  if (!isMobile) return null;
+  const element = containerRef.current;
+  if (!element || element.scrollHeight <= element.clientHeight) return null;
+
+  return (
+    <div className="fixed right-3 top-14 bottom-14 z-[450000] pointer-events-none md:hidden">
+      <div className="relative h-full w-2 rounded-full bg-white/5">
+        <div
+          className="absolute right-0 w-full rounded-full bg-gradient-to-b from-blue-500 to-cyan-400 transition-all duration-150"
+          style={{
+            top: `${thumb.top}%`,
+            height: `${thumb.height}%`,
+            boxShadow: isActive ? `0 0 15px 4px ${accentColor}` : 'none',
+            pointerEvents: 'auto',
+          }}
+          onTouchStart={() => setIsActive(true)}
+          onTouchEnd={() => setIsActive(false)}
+          onMouseDown={() => setIsActive(true)}
+          onMouseUp={() => setIsActive(false)}
+          onMouseLeave={() => setIsActive(false)}
+        />
+      </div>
+    </div>
+  );
+});
+
+const HeroLoaderOverlay = memo(({ visible, message, accentColor }: { visible: boolean; message: string; accentColor: string }) => (
+  <div
+    className={`fixed inset-0 z-[550000] flex items-center justify-center transition-opacity duration-400 ${
+      visible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+    }`}
+    style={{ backgroundColor: 'rgba(0,0,0,0.92)' }}
+  >
+    <div className="flex flex-col items-center gap-4 rounded-3xl border border-white/10 bg-black/80 px-8 py-12 text-center shadow-[0_30px_120px_rgba(0,0,0,0.8)]">
+      <div
+        className="relative h-16 w-16 rounded-full border-4 border-white/10 animate-spin"
+        style={{ borderTopColor: accentColor }}
+      />
+      <p className="text-[10px] font-semibold uppercase tracking-[0.5em] text-white/40">Loading hero</p>
+      <h3 className="text-lg font-semibold text-white">{message}</h3>
+      <p className="text-xs text-white/60 tracking-[0.3em]">Adaptive spline warm-up in progress</p>
+    </div>
+  </div>
+));
+
 // ----------------------------------------------------------------------
 // 7. MAIN COMPONENT
 // ----------------------------------------------------------------------
@@ -1723,8 +1899,9 @@ export default function Home() {
   const [particleTrigger, setParticleTrigger] = useState(0);
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
   const [parallaxOffset, setParallaxOffset] = useState(0);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-   
+  const [heroSceneReady, setHeroSceneReady] = useState(false);
+  const [heroLoaderHidden, setHeroLoaderHidden] = useState(false);
+  
   // File 1 States
   const [activePage, setActivePage] = useState<number>(1);
   const [modalData, setModalData] = useState<any>(null);
@@ -1752,10 +1929,44 @@ export default function Home() {
   const [isSafeMode, setIsSafeMode] = useState(false);
   const [isSafari, setIsSafari] = useState(false);
   const [controlCenterOpen, setControlCenterOpen] = useState(false);
+  const heroLoaderFallbackRef = useRef<number | null>(null);
+  const deviceProfile = useDeviceProfile();
   const handleOrientationDismiss = useCallback(() => {
     setShowOrientationWarning(false);
     orientationDismissedRef.current = true;
   }, []);
+
+  useEffect(() => {
+    prefersReducedMotionRef.current = deviceProfile.prefersReducedMotion;
+  }, [deviceProfile.prefersReducedMotion]);
+
+  useEffect(() => {
+    if (heroSceneReady) {
+      if (heroLoaderFallbackRef.current) {
+        window.clearTimeout(heroLoaderFallbackRef.current);
+        heroLoaderFallbackRef.current = null;
+      }
+      setHeroLoaderHidden(true);
+      return;
+    }
+
+    if (currentStage !== 'content') return;
+
+    if (heroLoaderFallbackRef.current) {
+      window.clearTimeout(heroLoaderFallbackRef.current);
+    }
+
+    heroLoaderFallbackRef.current = window.setTimeout(() => {
+      setHeroLoaderHidden(true);
+    }, 7500);
+
+    return () => {
+      if (heroLoaderFallbackRef.current) {
+        window.clearTimeout(heroLoaderFallbackRef.current);
+        heroLoaderFallbackRef.current = null;
+      }
+    };
+  }, [heroSceneReady, currentStage]);
 
   const activeTheme = useMemo(() => {
     if (!ALL_THEMES || ALL_THEMES.length === 0) return FALLBACK_THEME as Theme;
@@ -1764,10 +1975,6 @@ export default function Home() {
     
   const accentColor = useMemo(() => getThemeColor(activeThemeId), [activeThemeId]);
   const isPlaying = useMemo(() => !isMuted, [isMuted]);
-
-  useEffect(() => {
-    prefersReducedMotionRef.current = prefersReducedMotion;
-  }, [prefersReducedMotion]);
 
   // --- INIT ---
   useEffect(() => {
@@ -1790,7 +1997,13 @@ export default function Home() {
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isInApp =
       /Instagram|FBAN|FBAV|FB_IAB|FBIOS|FB4A|Line|TikTok|Twitter|Snapchat|LinkedInApp/i.test(ua);
-    const shouldSafeMode = isIOS || isInApp;
+    const connection =
+      (navigator as any).connection ||
+      (navigator as any).mozConnection ||
+      (navigator as any).webkitConnection;
+    const effectiveType = connection?.effectiveType || connection?.type || '4g';
+    const prefersReducedData = connection?.saveData === true || ['slow-2g', '2g', '3g'].includes(effectiveType);
+    const shouldSafeMode = isIOS || isInApp || prefersReducedData;
     setIsSafeMode(shouldSafeMode);
     if (shouldSafeMode && savedSplinePref === null) {
       // On iOS/in-app browsers default to performance mode to avoid WebGL crashes
@@ -1819,22 +2032,19 @@ export default function Home() {
       });
     }
 
-    // Check for reduced motion preference
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mediaQuery.matches);
-    prefersReducedMotionRef.current = mediaQuery.matches;
-    
+    // Check for reduced motion preference via native API
+    const mediaQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
     const handleMotionChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches);
       prefersReducedMotionRef.current = e.matches;
     };
-    
-    // Handle both modern and legacy APIs
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', handleMotionChange);
-    } else {
-      // Fallback for older browsers
-      (mediaQuery as any).addListener(handleMotionChange);
+
+    if (mediaQuery) {
+      prefersReducedMotionRef.current = mediaQuery.matches;
+      if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener('change', handleMotionChange);
+      } else {
+        (mediaQuery as any).addListener(handleMotionChange);
+      }
     }
 
     // ========================================
@@ -1942,17 +2152,19 @@ export default function Home() {
       document.removeEventListener('touchmove', handleTouchMove);
       if (parallaxRafRef.current) cancelAnimationFrame(parallaxRafRef.current);
       
-      if (mediaQuery.removeEventListener) {
-        mediaQuery.removeEventListener('change', handleMotionChange);
-      } else {
-        (mediaQuery as any).removeListener(handleMotionChange);
+      if (mediaQuery) {
+        if (mediaQuery.removeEventListener) {
+          mediaQuery.removeEventListener('change', handleMotionChange);
+        } else {
+          (mediaQuery as any).removeListener(handleMotionChange);
+        }
       }
     };
   }, []);
 
   // Warm key assets once to keep subsequent visits snappy
   useEffect(() => {
-    if (!isClient || assetsWarmedRef.current || isSafeMode) return;
+    if (!isClient || assetsWarmedRef.current || isSafeMode || deviceProfile.prefersReducedData) return;
     assetsWarmedRef.current = true;
 
     const warmAssets = async () => {
@@ -1987,7 +2199,7 @@ export default function Home() {
     } else {
       setTimeout(scheduleWarm, 800);
     }
-  }, [isClient, isSafeMode]);
+  }, [isClient, isSafeMode, deviceProfile.prefersReducedData]);
 
   // Force-warm critical spline scenes even in safe/in-app browsers to avoid first-load failures
   useEffect(() => {
@@ -2038,6 +2250,54 @@ export default function Home() {
 
     return () => { cancelled = true; };
   }, [isClient]);
+
+  useEffect(() => {
+    if (!isClient) return;
+
+    const restoreSession = () => {
+      const scrollContainer = scrollContainerRef.current;
+      const storedScroll = safeGetItem('scroll_position');
+      if (scrollContainer && storedScroll) {
+        scrollContainer.scrollTo({ top: parseInt(storedScroll, 10), behavior: 'auto' });
+      }
+      const storedPage = safeGetItem('scroll_page');
+      if (storedPage) {
+        const pageIndex = Number(storedPage);
+        if (!Number.isNaN(pageIndex) && pageIndex >= 1 && pageIndex <= PAGE_CONFIG.length) {
+          setActivePage(pageIndex);
+          pageRefs.current[pageIndex - 1]?.scrollIntoView({ behavior: 'auto', block: 'start' });
+        }
+      }
+    };
+
+    const timer = window.setTimeout(restoreSession, 60);
+    return () => window.clearTimeout(timer);
+  }, [isClient]);
+
+  useEffect(() => {
+    if (!isClient) return;
+
+    const persistState = () => {
+      const scrollContainer = scrollContainerRef.current;
+      safeSetItem('scroll_position', String(scrollContainer?.scrollTop ?? 0));
+      safeSetItem('scroll_page', String(activePage));
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        persistState();
+      }
+    };
+
+    window.addEventListener('beforeunload', persistState);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.removeEventListener('beforeunload', persistState);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      persistState();
+    };
+  }, [isClient, activePage]);
 
   useEffect(() => {
     if (currentStage !== 'content' || !isTouch || edgeHintsShownRef.current) return;
@@ -2202,6 +2462,10 @@ export default function Home() {
       safeSetItem('spline_enabled', String(newState));
   }, [disableSpline]);
 
+  const requestControlCenterOpen = useCallback(() => {
+    setControlCenterOpen(true);
+  }, []);
+
   // --- GATING HANDLERS ---
   const handleRegisterComplete = useCallback(() => {
     safeSetItem('vip_user_registered', 'true');
@@ -2239,8 +2503,15 @@ export default function Home() {
     playClickSound();
   }, []);
 
-  const useCrashSafeSpline = isSafeMode || isTouch || isSafari;
-  const forceLiteSpline = isSafari;
+  const heroLoaderMessage = deviceProfile.isMobile ? 'Mobile-friendly hero warming' : 'Cinematic hero loading';
+  const showHeroLoaderOverlay = currentStage === 'content' && !heroSceneReady && !heroLoaderHidden;
+  const handleHeroReady = useCallback(() => {
+    setHeroSceneReady(true);
+    setHeroLoaderHidden(true);
+  }, []);
+
+  const useCrashSafeSpline = isSafeMode || isTouch || isSafari || deviceProfile.prefersReducedData;
+  const forceLiteSpline = isSafari || deviceProfile.prefersReducedData;
 
   if (!isClient) return null;
 
@@ -2249,8 +2520,8 @@ export default function Home() {
       <Analytics />
       <SpeedInsights />
       <BackgroundMusicSystem themeId={activeThemeId} onReady={handlePlayerReady} volume={volume} trackKey={musicKey} />
-      {!isSafeMode && <ParticleEffect trigger={particleTrigger} />}
-      {!isTouch && <CustomCursor accentColor={accentColor} />}
+      {!isSafeMode && !deviceProfile.prefersReducedMotion && deviceProfile.isHighEndDevice && <ParticleEffect trigger={particleTrigger} />}
+      {!deviceProfile.isMobile && !deviceProfile.prefersReducedMotion && !isTouch && <CustomCursor accentColor={accentColor} />}
 
       {/* Quick Theme Picker */}
       {/* FIX #3: Add swipe-to-close to Quick Theme Picker */}
@@ -2440,8 +2711,10 @@ export default function Home() {
             accentColor={accentColor} 
             disableSpline={disableSpline}
             onTogglePerformance={handlePerformanceToggle}
+            deviceProfile={deviceProfile}
+            onRequestOpen={requestControlCenterOpen}
           />
-          {currentStage === 'content' && !showConfigurator && <SupportWidget accentColor={accentColor} />}
+          {currentStage === 'content' && !showConfigurator && <SupportWidget accentColor={accentColor} deviceProfile={deviceProfile} />}
       </div>
 
       {/* --- LAYER 2: CONFIGURATOR --- */}
@@ -2498,8 +2771,8 @@ export default function Home() {
       <div 
         className="fixed inset-0 pointer-events-none w-screen h-screen z-[200000]" 
         style={{ 
-          backdropFilter: prefersReducedMotion ? 'none' : activeTheme.filter, 
-          WebkitBackdropFilter: prefersReducedMotion ? 'none' : activeTheme.filter, 
+      backdropFilter: deviceProfile.prefersReducedMotion ? 'none' : activeTheme.filter, 
+      WebkitBackdropFilter: deviceProfile.prefersReducedMotion ? 'none' : activeTheme.filter, 
           transition: 'backdrop-filter 0.5s ease' 
         }} 
       />
@@ -2522,6 +2795,14 @@ export default function Home() {
              {/* @ts-ignore */}
              <MultiStepLoaderV2 onFinished={handleV2Complete} theme={activeTheme} />
          </div>
+      )}
+
+      {showHeroLoaderOverlay && (
+        <HeroLoaderOverlay
+          visible={showHeroLoaderOverlay}
+          message={heroLoaderMessage}
+          accentColor={accentColor}
+        />
       )}
 
       {/* Control Center Launcher */}
@@ -2928,6 +3209,7 @@ export default function Home() {
                       useCrashSafeSpline={useCrashSafeSpline}
                       forceLiteSpline={forceLiteSpline}
                       sensitiveMode={isMobileView || isSafari}
+                      onSceneReady={page.id === 1 ? handleHeroReady : undefined}
                     />
                 )}
                 </React.Fragment>
@@ -2937,6 +3219,14 @@ export default function Home() {
               <Footer />
             </div>
         </main>
+
+        {deviceProfile.isMobile && (
+          <SwipeScrollBar
+            containerRef={scrollContainerRef}
+            accentColor={accentColor}
+            isMobile={deviceProfile.isMobile}
+          />
+        )}
 
         {/* SWIPE NAVIGATION INDICATORS */}
         {showEdgeSwipeHints && (
