@@ -216,11 +216,49 @@ const getThemeColor = (id: string) => THEME_ACCENTS[id] || THEME_ACCENTS['defaul
 // 2. GLOBAL STYLES (Enhanced with new animations)
 // ----------------------------------------------------------------------
 const GLOBAL_STYLES = `
+  /* --- MOBILE SCROLL FIXES START --- */
+  html, body { 
+    background-color: black; 
+    overflow: hidden; /* Prevent native window scroll */
+    overscroll-behavior: none; /* Kill rubber-banding */
+    width: 100%;
+    height: 100%;
+    position: fixed; /* Locks the frame in place */
+  }
+
+  .mobile-scroll {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100dvh; /* Dynamic viewport height */
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    
+    /* ENFORCE SNAP ON ALL DEVICES */
+    scroll-snap-type: y mandatory; 
+    scroll-snap-stop: always; /* Force stop at every page */
+  }
+
+  /* Remove scrollbars but keep functionality */
+  .mobile-scroll::-webkit-scrollbar { display: none; }
+  .mobile-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+  section {
+    scroll-snap-align: start;
+    scroll-snap-stop: always; /* Crucial for "Hold" feel */
+    width: 100%;
+    height: 100dvh; /* Force full height on mobile */
+    position: relative;
+    overflow: hidden;
+    will-change: transform;
+    /* Ensure rigid structure */
+    min-height: 100dvh; 
+  }
+  /* --- MOBILE SCROLL FIXES END --- */
+
   @keyframes spin-border {
     0% { --bg-angle: 0deg; }
     100% { --bg-angle: 360deg; }
   }
-  
   @keyframes particleFloat {
     0% { transform: translateY(0) scale(1); opacity: 1; }
     100% { transform: translateY(-100vh) scale(0); opacity: 0; }
@@ -809,9 +847,9 @@ const TSXWrapper = memo(({ componentName, isVisible }: { componentName: string; 
 });
 
 const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false }: any) => {
-  const isHeavyScene = config.id === 5 || config.id === 6 || config.id === 10; // Heavy scenes
-  const isMobileSensitive = config.id === 3 || config.id === 4; // Showcase & VIP pages
-  const isLastPage = config.id === 10; // Last interactive page
+  const isHeavyScene = config.id === 5 || config.id === 6 || config.id === 10;
+  const isMobileSensitive = config.id === 3 || config.id === 4;
+  const isLastPage = config.id === 10;
   const isTSX = config.type === 'tsx';
   const sectionRef = useRef<HTMLElement | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -823,12 +861,8 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Mobile optimization: Only render current page for heavy scenes
   const shouldRender = useMemo(() => {
-    if (isMobile && isHeavyScene) {
-      return config.id === activePage; // Only current page on mobile
-    }
-    // Desktop or light scenes: current + adjacent
+    if (isMobile && isHeavyScene) return config.id === activePage;
     return (config.id >= activePage - 1) && (config.id <= activePage + 1) || (isLastPage && activePage >= 9);
   }, [config.id, activePage, isMobile, isHeavyScene, isLastPage]);
 
@@ -838,19 +872,14 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
     if(sectionRef.current) onVisible(sectionRef.current, config.id - 1);
   }, [onVisible, config.id]);
 
-  // TSX components get natural height with breathing room; Spline scenes stay fixed-height for snap scrolling
-  const sectionClass = isTSX
-    ? 'relative w-full min-h-[125dvh] h-auto flex-none snap-start bg-black mobile-optimize overflow-visible py-12 md:py-16'
-    : 'relative w-full h-[100dvh] flex-none snap-start snap-always overflow-hidden bg-black flex flex-col items-center justify-center mobile-optimize';
-
   return (
     <section
       ref={sectionRef}
-      className={`${sectionClass} ${isActive ? 'page-flip-active' : ''}`}
+      className={`relative w-full h-[100dvh] flex-none snap-start snap-always bg-black flex flex-col items-center justify-center ${isActive ? 'page-flip-active' : ''}`}
     >
-      <div className={`w-full ${isTSX && isMobile ? 'h-auto min-h-full' : 'h-full'} relative`}>
+      <div className={`w-full h-full relative ${isTSX ? 'overflow-y-auto no-scrollbar' : 'overflow-hidden'}`}>
         {config.type === 'tsx' ? (
-          <div className="pb-20 md:pb-28">
+          <div className="min-h-full py-20 md:py-0"> 
             <TSXWrapper componentName={config.component} isVisible={shouldRender} />
           </div>
         ) : (
@@ -863,7 +892,6 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
               disabled={disableSpline}
             />
         )}
-        {/* Only show label for Spline scenes, not TSX components */}
         {!isTSX && (
           <>
             <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black to-transparent pointer-events-none" />
