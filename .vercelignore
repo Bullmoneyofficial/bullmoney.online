@@ -1,0 +1,35 @@
+# Vercel Ignore - Reduce deployment size
+
+# Documentation
+*.md
+MOBILE_FIXES_SUMMARY.md
+README.md
+CHANGELOG.md
+
+# Development files
+app/page-mobile-fixes.tsx
+*.map
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Cache directories
+.next/cache
+.turbo
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db

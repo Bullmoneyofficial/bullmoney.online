@@ -18,6 +18,13 @@ export const metadata: Metadata = {
   icons: {
     icon: "/BULL.svg",
   },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+    viewportFit: "cover",
+  },
   openGraph: {
     title: "BullMoney | Trading Community",
     description:

@@ -68,7 +68,7 @@ const detectPerformanceLevel = (): PerformanceLevel => {
 const usePerformanceGovernor = () => {
   const [level, setLevel] = useState<PerformanceLevel>('high');
   const [userOverride, setUserOverride] = useState<PerformanceLevel | null>(null);
-  
+
   useEffect(() => {
     const detected = detectPerformanceLevel();
     const stored = smartStorage.get('performance_level');
@@ -79,14 +79,14 @@ const usePerformanceGovernor = () => {
       setLevel(detected);
     }
   }, []);
-  
+
   const setPerformance = useCallback((newLevel: PerformanceLevel) => {
     setUserOverride(newLevel);
     setLevel(newLevel);
     smartStorage.set('performance_level', newLevel);
     triggerHaptic(20);
   }, []);
-  
+
   return {
     level: userOverride || level,
     isLow: (userOverride || level) === 'low',
@@ -96,6 +96,25 @@ const usePerformanceGovernor = () => {
     autoDetected: level,
     isOverridden: !!userOverride
   };
+};
+
+// Mobile Detection Hook
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                     window.innerWidth < 768;
+      setIsMobile(mobile);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile, { passive: true });
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
 };
 
 // Session Replay Lite - Local analytics only
@@ -656,8 +675,8 @@ const DebugDashboard = memo(({ isOpen, onClose, recorder, performance, accentCol
             </h3>
             <div className="space-y-2">
               {stats?.pageDwellTimes && Object.entries(stats.pageDwellTimes).map(([page, time]: any) => {
-                const totalTime = Object.values(stats.pageDwellTimes).reduce((a: any, b: any) => a + b, 0);
-              
+                const totalTime = Object.values(stats.pageDwellTimes).reduce((a: any, b: any) => a + b, 0) as number;
+                const percentage = (time / totalTime) * 100;
                 return (
                   <div key={page} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
@@ -668,7 +687,7 @@ const DebugDashboard = memo(({ isOpen, onClose, recorder, performance, accentCol
                       <div 
                         className="h-full rounded-full transition-all duration-500"
                         style={{ 
-                         
+                          width: `${percentage}%`,
                           backgroundColor: accentColor
                         }}
                       />
@@ -733,19 +752,24 @@ const DebugDashboard = memo(({ isOpen, onClose, recorder, performance, accentCol
 });
 
 /**
- * Magnetic Button - pulls toward cursor on proximity (respects performance)
+ * Magnetic Button - pulls toward cursor on proximity (respects performance, disabled on mobile)
  */
 const MagneticButton = memo(({ children, onClick, className = "", accentColor, disabled = false, performanceLevel = 'high' }: any) => {
   const btnRef = useRef<HTMLButtonElement>(null);
   const [isNear, setIsNear] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+  }, []);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!btnRef.current || performanceLevel === 'low' || disabled) return;
+    if (!btnRef.current || performanceLevel === 'low' || disabled || isMobile) return;
     const rect = btnRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
     const distance = Math.sqrt(Math.pow(e.clientX - centerX, 2) + Math.pow(e.clientY - centerY, 2));
-    
+
     if (distance < 150) {
       setIsNear(true);
       if (performanceLevel === 'high') {
@@ -759,22 +783,24 @@ const MagneticButton = memo(({ children, onClick, className = "", accentColor, d
       setIsNear(false);
       btnRef.current.style.transform = '';
     }
-  }, [performanceLevel, disabled]);
+  }, [performanceLevel, disabled, isMobile]);
 
   useEffect(() => {
-    if (performanceLevel === 'low' || disabled) return;
-    window.addEventListener('mousemove', handleMouseMove);
+    if (performanceLevel === 'low' || disabled || isMobile) return;
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [handleMouseMove, performanceLevel, disabled]);
+  }, [handleMouseMove, performanceLevel, disabled, isMobile]);
 
   return (
     <button
       ref={btnRef}
       onClick={onClick}
       disabled={disabled}
-      className={`transition-all duration-200 ease-out ${className}`}
-      style={{ 
-        boxShadow: (isNear && performanceLevel !== 'low') ? `0 0 20px ${accentColor}40` : 'none',
+      className={`transition-all duration-200 ease-out touch-manipulation ${className}`}
+      style={{
+        touchAction: 'manipulation',
+        WebkitTapHighlightColor: 'transparent',
+        boxShadow: (isNear && performanceLevel !== 'low' && !isMobile) ? `0 0 20px ${accentColor}40` : 'none',
         borderColor: isNear ? accentColor : undefined
       }}
     >
@@ -987,44 +1013,63 @@ const InactivityNudge = ({ accentColor }: { accentColor: string }) => {
 };
 
 /**
- * Scene Wrapper - Enhanced with better interaction lock + pressure sensitivity
+ * Scene Wrapper - Enhanced with better interaction lock + pressure sensitivity + mobile optimization
  */
 const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPointer = false, accentColor }: any) => {
   const [shouldLoad, setShouldLoad] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [pressIntensity, setPressIntensity] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+  }, []);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (isVisible) timer = setTimeout(() => setShouldLoad(true), 150);
-    else {
-        setShouldLoad(false);
-        setIsFocused(false);
+    if (isVisible) {
+      // Delay load slightly on mobile to prevent jank
+      const delay = isMobile ? 300 : 150;
+      timer = setTimeout(() => setShouldLoad(true), delay);
+    } else {
+      setShouldLoad(false);
+      setIsFocused(false);
     }
     return () => clearTimeout(timer);
-  }, [isVisible]);
+  }, [isVisible, isMobile]);
 
-  const handlePressStart = (e: any) => {
+  const handlePressStart = useCallback((e: any) => {
     if (!allowInput) return;
-    e.stopPropagation();
-    
+
     const startTime = Date.now();
-    const pressTimer = setInterval(() => {
+
+    if (pressIntervalRef.current) clearInterval(pressIntervalRef.current);
+    pressIntervalRef.current = setInterval(() => {
       const duration = Date.now() - startTime;
       setPressIntensity(Math.min(duration / 1000, 1));
     }, 50);
 
     const cleanup = () => {
-      clearInterval(pressTimer);
+      if (pressIntervalRef.current) {
+        clearInterval(pressIntervalRef.current);
+        pressIntervalRef.current = null;
+      }
+      if (pressTimerRef.current) {
+        clearTimeout(pressTimerRef.current);
+        pressTimerRef.current = null;
+      }
+
       const finalDuration = Date.now() - startTime;
-      
-      if (finalDuration > 500) {
-        // Long press - unlock with fanfare
+
+      if (finalDuration > 600) {
+        // Long press
         setIsFocused(true);
         triggerHaptic([50, 50, 100]);
         playTick('sharp');
-      } else {
-        // Quick tap - just unlock
+      } else if (finalDuration > 100) {
+        // Quick tap
         setIsFocused(!isFocused);
         triggerHaptic(isFocused ? 10 : 20);
         playTick(isFocused ? 'soft' : 'medium');
@@ -1032,68 +1077,79 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
       setPressIntensity(0);
     };
 
-    if ('ontouchstart' in window) {
-      const touchEnd = () => {
-        cleanup();
-        window.removeEventListener('touchend', touchEnd);
-      };
-      window.addEventListener('touchend', touchEnd);
-    } else {
-      const mouseUp = () => {
-        cleanup();
-        window.removeEventListener('mouseup', mouseUp);
-      };
-      window.addEventListener('mouseup', mouseUp);
-    }
-  };
+    const handleEnd = () => {
+      cleanup();
+      window.removeEventListener('touchend', handleEnd);
+      window.removeEventListener('touchcancel', handleEnd);
+      window.removeEventListener('mouseup', handleEnd);
+    };
+
+    window.addEventListener('touchend', handleEnd, { passive: true });
+    window.addEventListener('touchcancel', handleEnd, { passive: true });
+    window.addEventListener('mouseup', handleEnd);
+  }, [allowInput, isFocused]);
 
   return (
     <div className={`w-full h-full relative transition-opacity duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-      
-      <div className={`w-full h-full ${isFocused ? 'pointer-events-auto touch-none' : 'pointer-events-none'}`}>
-        {shouldLoad && <Suspense fallback={null}><Spline scene={sceneUrl} className="w-full h-full block object-cover" /></Suspense>}
+      <div
+        className={`w-full h-full ${isFocused ? 'pointer-events-auto' : 'pointer-events-none'}`}
+        style={{ touchAction: isFocused ? 'auto' : 'pan-y' }}
+      >
+        {shouldLoad && (
+          <Suspense fallback={null}>
+            <Spline scene={sceneUrl} className="w-full h-full block object-cover" />
+          </Suspense>
+        )}
       </div>
 
       {allowInput && !forceNoPointer && (
-          <div 
-            className={`fixed md:absolute bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 z-30 transition-all duration-300 ${isFocused ? 'opacity-40 hover:opacity-100' : 'opacity-100'}`}
+        <div
+          className={`fixed md:absolute bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 z-30 transition-all duration-300 ${isFocused ? 'opacity-40 hover:opacity-100' : 'opacity-100'}`}
+        >
+          <button
+            onTouchStart={handlePressStart}
+            onClick={handlePressStart}
+            className="flex items-center gap-2 px-5 py-3 md:px-4 md:py-2 rounded-full bg-black/70 backdrop-blur-xl border border-white/20 text-white text-sm md:text-xs font-bold tracking-wider active:scale-95 transition-all shadow-lg touch-manipulation"
+            style={{
+              touchAction: 'manipulation',
+              WebkitTapHighlightColor: 'transparent',
+              borderColor: isFocused
+                ? accentColor
+                : pressIntensity > 0
+                ? `${accentColor}${Math.floor(pressIntensity * 255).toString(16).padStart(2, '0')}`
+                : 'rgba(255,255,255,0.2)',
+              boxShadow: pressIntensity > 0 ? `0 0 ${pressIntensity * 30}px ${accentColor}` : undefined
+            }}
           >
-              <MagneticButton 
-                onClick={handlePressStart}
-                onTouchStart={handlePressStart}
-                className="flex items-center gap-2 px-5 py-3 md:px-4 md:py-2 rounded-full bg-black/70 backdrop-blur-xl border border-white/20 text-white text-sm md:text-xs font-bold tracking-wider active:scale-95 transition-all shadow-lg"
-                accentColor={accentColor}
-                style={{ 
-                  borderColor: isFocused ? accentColor : pressIntensity > 0 ? `${accentColor}${Math.floor(pressIntensity * 255).toString(16)}` : 'rgba(255,255,255,0.2)',
-                  boxShadow: pressIntensity > 0 ? `0 0 ${pressIntensity * 30}px ${accentColor}` : undefined
+            {isFocused ? (
+              <>
+                <Unlock size={16} className="animate-pulse" /> SCROLL MODE
+              </>
+            ) : (
+              <>
+                <Lock size={16} /> {isMobile ? 'TAP' : 'HOLD'} TO ENABLE 3D
+              </>
+            )}
+            {pressIntensity > 0 && (
+              <div
+                className="absolute inset-0 rounded-full border-2 transition-all pointer-events-none"
+                style={{
+                  borderColor: accentColor,
+                  transform: `scale(${1 + pressIntensity * 0.2})`,
+                  opacity: 1 - pressIntensity
                 }}
-              >
-                  {isFocused ? (
-                      <><Unlock size={16} className="animate-pulse" /> SCROLL MODE</>
-                  ) : (
-                      <><Lock size={16} /> HOLD TO ENABLE 3D</>
-                  )}
-                  {/* Press indicator */}
-                  {pressIntensity > 0 && (
-                    <div 
-                      className="absolute inset-0 rounded-full border-2 transition-all"
-                      style={{ 
-                        borderColor: accentColor,
-                        transform: `scale(${1 + pressIntensity * 0.2})`,
-                        opacity: 1 - pressIntensity
-                      }}
-                    />
-                  )}
-              </MagneticButton>
-          </div>
+              />
+            )}
+          </button>
+        </div>
       )}
-      
-      {!isFocused && allowInput && isVisible && (
-         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 hover:opacity-100 transition-opacity duration-300">
-             <div className="bg-black/80 backdrop-blur-xl px-4 py-2 rounded-full text-white/70 text-xs font-mono border border-white/10">
-                 👆 HOLD TO INTERACT WITH 3D
-             </div>
-         </div>
+
+      {!isFocused && allowInput && isVisible && !isMobile && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 hover:opacity-100 transition-opacity duration-300">
+          <div className="bg-black/80 backdrop-blur-xl px-4 py-2 rounded-full text-white/70 text-xs font-mono border border-white/10">
+            👆 HOLD TO INTERACT WITH 3D
+          </div>
+        </div>
       )}
     </div>
   );
@@ -1204,115 +1260,70 @@ const LeftInfoPanel = memo(({ activePage, accentColor, onAction }: any) => {
 });
 
 /**
- * Enhanced Mobile Card - Swipeable, glassmorphic
+ * Enhanced Mobile Card - Per-page fade (not fixed, renders inside each page section)
  */
-const MobileInfoCard = memo(({ activePage, accentColor, onAction }: any) => {
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState(0);
-  const startXRef = useRef(0);
-  
-  const content = PAGE_CONTENT_MAP[activePage - 1] || PAGE_CONTENT_MAP[0];
+const MobileInfoCard = memo(({ pageId, activePage, accentColor, onAction }: any) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const isCurrentPage = pageId === activePage;
+
+  const content = PAGE_CONTENT_MAP[pageId - 1] || PAGE_CONTENT_MAP[0];
   const Icon = content.icon;
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setIsDragging(true);
-    startXRef.current = e.touches[0].clientX;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
-    const diff = e.touches[0].clientX - startXRef.current;
-    setDragOffset(diff);
-  };
-
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-    if (Math.abs(dragOffset) > 100) {
-      // Swipe action detected
-      triggerHaptic([10, 20, 10]);
-      playTick('sharp');
+  useEffect(() => {
+    if (isCurrentPage) {
+      const timer = setTimeout(() => setIsVisible(true), 400);
+      return () => clearTimeout(timer);
+    } else {
+      setIsVisible(false);
     }
-    setDragOffset(0);
-  };
+  }, [isCurrentPage]);
+
+  // Don't render if not current page
+  if (!isCurrentPage) return null;
 
   return (
-    <div 
-      className="fixed bottom-20 left-4 right-4 z-40 lg:hidden pointer-events-auto"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      style={{
-        transform: `translateX(${dragOffset}px)`,
-        transition: isDragging ? 'none' : 'transform 0.3s ease-out'
-      }}
+    <div
+      className={`absolute bottom-24 left-4 right-4 z-30 lg:hidden pointer-events-auto transition-all duration-700 ease-out ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12 pointer-events-none'
+      }`}
     >
-      <div className="bg-gradient-to-br from-black/90 to-black/70 backdrop-blur-2xl border border-white/10 rounded-2xl p-5 shadow-2xl relative overflow-hidden group active:scale-[0.98] transition-transform">
-        {/* Animated gradient overlay */}
-        <div 
-          className="absolute inset-0 opacity-10 transition-opacity group-active:opacity-20"
-          style={{
-            background: `radial-gradient(circle at 50% 50%, ${accentColor}, transparent 70%)`
-          }}
-        />
-        
-        {/* Top accent line with shimmer */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/50 to-transparent overflow-hidden">
-          <div 
-            className="h-full w-1/3 absolute animate-shimmer"
-            style={{ 
-              background: `linear-gradient(90deg, transparent, ${accentColor}, transparent)`,
-              animation: 'shimmer 3s infinite'
-            }}
-          />
-        </div>
-        
-        <div className="relative flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-3">
-                    <div 
-                      className="w-8 h-8 rounded-lg flex items-center justify-center transition-all group-active:scale-110"
-                      style={{ backgroundColor: `${accentColor}20`, border: `1px solid ${accentColor}40` }}
-                    >
-                      <Icon size={16} style={{ color: accentColor }} />
-                    </div>
-                    <span className="text-[10px] font-mono tracking-widest text-white/50 uppercase">{content.label}</span>
-                </div>
-                <h3 className="text-2xl font-black text-white leading-none mb-3 tracking-tight">{content.title}</h3>
-                <p className="text-sm text-white/70 leading-snug mb-4">{content.desc}</p>
-                
-                <button 
-                  onClick={() => {
-                    onAction(content.id);
-                    triggerHaptic(15);
-                    playTick('medium');
-                  }}
-                  className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider transition-all active:scale-95"
-                  style={{ color: accentColor }}
-                >
-                  <span className="w-8 h-[2px]" style={{ backgroundColor: accentColor }} />
-                  {content.action}
-                  <ChevronRight size={14} />
-                </button>
-            </div>
-            
-            {/* Side action button */}
-            <button 
-                className="flex-none mt-2 w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center active:scale-90 transition-all shadow-lg hover:bg-white/10"
-                onClick={() => {
-                  onAction(content.id);
-                  triggerHaptic(20);
-                }}
-                style={{ 
-                  borderColor: `${accentColor}40`,
-                  boxShadow: `0 0 20px ${accentColor}20`
-                }}
-            >
-                <ChevronRight size={24} style={{ color: accentColor }} />
-            </button>
-        </div>
+      <div className="bg-gradient-to-br from-black/95 to-black/80 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl relative overflow-hidden touch-manipulation">
+        {/* Top accent */}
+        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ backgroundColor: `${accentColor}40` }} />
 
-        {/* Drag indicator */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-white/20 rounded-full" />
+        <div className="relative flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-3">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: `${accentColor}20`, border: `1px solid ${accentColor}40` }}
+              >
+                <Icon size={16} style={{ color: accentColor }} />
+              </div>
+              <span className="text-[10px] font-mono tracking-widest text-white/50 uppercase">{content.label}</span>
+            </div>
+            <h3 className="text-2xl font-black text-white leading-none mb-3 tracking-tight">{content.title}</h3>
+            <p className="text-sm text-white/70 leading-snug mb-4">{content.desc}</p>
+
+            <button
+              onClick={() => {
+                onAction(content.id);
+                triggerHaptic(15);
+                playTick('medium');
+              }}
+              className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider active:scale-95 transition-transform touch-manipulation"
+              style={{
+                color: accentColor,
+                touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'transparent'
+              }}
+            >
+              <span className="w-8 h-[2px]" style={{ backgroundColor: accentColor }} />
+              {content.action}
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -2072,18 +2083,12 @@ export default function Home() {
             </div>
             
             {/* Info Panels */}
-            <LeftInfoPanel 
-              activePage={activePage} 
-              accentColor={accentColor} 
+            <LeftInfoPanel
+              activePage={activePage}
+              accentColor={accentColor}
               onAction={handlePageAction}
             />
-            
-            <MobileInfoCard 
-              activePage={activePage} 
-              accentColor={accentColor} 
-              onAction={handlePageAction}
-            />
-            
+
             {/* Navigation Rail */}
             <NavigationRail 
               activePage={activePage} 
@@ -2228,22 +2233,30 @@ export default function Home() {
             {/* Page Sections */}
             {PAGE_CONFIG.map((page) => (
               <React.Fragment key={page.id}>
-                {page.type === 'split' ? 
-                  <DraggableSplitSection 
-                    config={page} 
-                    activePage={activePage} 
-                    onVisible={handleRef} 
-                    accentColor={accentColor} 
-                  /> : 
-                  <section 
-                    ref={(el) => handleRef(el, page.id - 1)} 
+                {page.type === 'split' ?
+                  <DraggableSplitSection
+                    config={page}
+                    activePage={activePage}
+                    onVisible={handleRef}
+                    accentColor={accentColor}
+                  /> :
+                  <section
+                    ref={(el) => handleRef(el, page.id - 1)}
                     className="relative w-full h-[100dvh] flex-none snap-start snap-always overflow-hidden bg-black flex flex-col items-center justify-center"
                   >
-                    <SceneWrapper 
-                      isVisible={Math.abs(page.id - activePage) <= 1} 
-                      sceneUrl={page.scene} 
-                      allowInput={!page.disableInteraction} 
-                      accentColor={accentColor} 
+                    <SceneWrapper
+                      isVisible={Math.abs(page.id - activePage) <= 1}
+                      sceneUrl={page.scene}
+                      allowInput={!page.disableInteraction}
+                      accentColor={accentColor}
+                    />
+
+                    {/* Mobile Info Card - Rendered per page */}
+                    <MobileInfoCard
+                      pageId={page.id}
+                      activePage={activePage}
+                      accentColor={accentColor}
+                      onAction={handlePageAction}
                     />
                   </section>
                 }
@@ -2259,7 +2272,7 @@ export default function Home() {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(300%); }
         }
-        
+
         .no-scrollbar::-webkit-scrollbar {
           display: none;
         }
@@ -2271,23 +2284,67 @@ export default function Home() {
         /* Smooth scroll behavior */
         html {
           scroll-behavior: smooth;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Touch optimizations */
+        /* Touch optimizations - CRITICAL for mobile */
         button, a {
           -webkit-tap-highlight-color: transparent;
           touch-action: manipulation;
+          user-select: none;
+          -webkit-user-select: none;
         }
 
         /* Prevent overscroll bounce on mobile */
         body {
           overscroll-behavior-y: none;
+          overscroll-behavior-x: none;
+          -webkit-overflow-scrolling: touch;
         }
 
         /* Enhanced focus rings */
         *:focus-visible {
           outline: 2px solid ${accentColor};
           outline-offset: 2px;
+        }
+
+        /* Mobile performance - reduce complexity */
+        @media (max-width: 768px) {
+          * {
+            will-change: auto !important;
+          }
+
+          .backdrop-blur-xl,
+          .backdrop-blur-2xl {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+          }
+
+          /* Disable animations for reduced motion */
+          @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0.01ms !important;
+            }
+          }
+        }
+
+        /* Improve text rendering on mobile */
+        @media (max-width: 768px) {
+          body {
+            text-rendering: optimizeSpeed;
+          }
+        }
+
+        /* Fix iOS Safari viewport issues */
+        @supports (-webkit-touch-callout: none) {
+          .h-\[100dvh\] {
+            height: -webkit-fill-available;
+          }
         }
       `}</style>
     </div>
