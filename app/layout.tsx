@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import "../styles/performance-optimizations.css";
@@ -18,13 +18,6 @@ export const metadata: Metadata = {
     "Join BullMoney  the all-in-one trading community for Crypto, Stocks, Forex, and Metals. Trade, learn, and track live markets together in real time. Money made easy.",
   icons: {
     icon: "/BULL.svg",
-  },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
-    viewportFit: "cover",
   },
   openGraph: {
     title: "BullMoney | Trading Community",
@@ -50,6 +43,14 @@ export const metadata: Metadata = {
       "Join BullMoney  the all-in-one trading community for Crypto, Stocks, Forex, and Metals. Trade, learn, and track live markets together in real time. Money made easy.",
     images: ["/BULL.svg"],
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
