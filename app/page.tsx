@@ -485,6 +485,7 @@ const OrientationOverlay = ({ onDismiss }: { onDismiss: () => void }) => (
     </div>
 );
 
+
 // Info Panel Component
 const InfoPanel = ({ config, isOpen, onClose, accentColor }: any) => (
   <div 
@@ -1086,7 +1087,7 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
 // ----------------------------------------------------------------------
 // 7. BOTTOM CONTROLS & WIDGETS
 // ----------------------------------------------------------------------
-const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volume, onVolumeChange, visible, accentColor }: any) => {
+const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volume, onVolumeChange, visible, accentColor, disableSpline, onTogglePerformance }: any) => {
     const [isHovered, setIsHovered] = useState(false);
     
     const containerStyle = {
@@ -1107,18 +1108,42 @@ const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volu
               className="flex items-center gap-2 bg-black/60 backdrop-blur-xl border p-2 rounded-full transition-colors duration-500 hover-lift"
               style={containerStyle}
             >
-                <button 
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
-                    playClickSound();
-                    if (navigator.vibrate) navigator.vibrate(10);
-                    onOpenTheme(); 
-                  }} 
-                  className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 text-gray-400 transition-all duration-300 border border-transparent group relative hover:text-white hover:bg-white/10"
-                >
-                    <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-20 transition-opacity shimmer-effect" style={{ backgroundColor: accentColor }} />
-                    <Palette size={18} style={{ color: isHovered ? accentColor : undefined }} />
-                </button>
+                <div className="relative group">
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      playClickSound();
+                      if (navigator.vibrate) navigator.vibrate(10);
+                      onOpenTheme(); 
+                    }} 
+                    className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 text-gray-400 transition-all duration-300 border border-transparent group relative hover:text-white hover:bg-white/10"
+                  >
+                      <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-20 transition-opacity shimmer-effect" style={{ backgroundColor: accentColor }} />
+                      <Palette size={18} style={{ color: isHovered ? accentColor : undefined }} />
+                  </button>
+                  <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[10px] font-mono text-white/60 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    Theme
+                  </span>
+                </div>
+
+                <div className="relative group">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTogglePerformance();
+                    }}
+                    className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 border border-transparent group relative hover-lift ${
+                      disableSpline
+                        ? 'bg-blue-500 text-black shadow-[0_0_15px_rgba(59,130,246,0.35)]'
+                        : 'bg-white/5 text-green-400 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <Zap size={18} />
+                  </button>
+                  <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[10px] font-mono text-white/60 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    {disableSpline ? 'Performance' : 'Full Visuals'}
+                  </span>
+                </div>
                 
                 <div className="w-px h-6 bg-white/10 mx-1" />
                 
@@ -1284,11 +1309,13 @@ export default function Home() {
   const assetsWarmedRef = useRef(false);
   const parallaxRafRef = useRef<number>(0);
   const prefersReducedMotionRef = useRef(false);
+  const orientationDismissedRef = useRef(false);
   const [isTouch, setIsTouch] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
   const [musicKey, setMusicKey] = useState(0);
   const [disableSpline, setDisableSpline] = useState(false);
   const [showThemeQuickPick, setShowThemeQuickPick] = useState(false);
+  const [hasRegistered, setHasRegistered] = useState(false);
 
   const activeTheme = useMemo(() => {
     if (!ALL_THEMES || ALL_THEMES.length === 0) return FALLBACK_THEME as Theme;
@@ -1313,10 +1340,10 @@ export default function Home() {
 
     setIsTouch(matchMedia && matchMedia('(pointer: coarse)').matches);
 
-    // Auto-disable Spline on mobile for performance
-    const isMobileDevice = window.innerWidth < 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    // Auto-disable Spline on mobile for performance and show prompt
+    const mobileDevice = window.innerWidth < 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const savedSplinePref = localStorage.getItem('spline_enabled');
-    if (savedSplinePref === null && isMobileDevice) {
+    if (savedSplinePref === null && mobileDevice) {
       setDisableSpline(true); // Auto-disable on first mobile visit
       localStorage.setItem('spline_enabled', 'false');
     } else if (savedSplinePref !== null) {
@@ -1395,9 +1422,12 @@ export default function Home() {
         const isPortrait = window.innerHeight > window.innerWidth;
         if (isNarrow && isPortrait) {
             setIsMobileView(true);
-            setShowOrientationWarning(true);
+            if (!orientationDismissedRef.current) {
+              setShowOrientationWarning(true);
+            }
         } else {
             setIsMobileView(false);
+            setShowOrientationWarning(false);
         }
     };
     
@@ -1409,13 +1439,13 @@ export default function Home() {
     const storedTheme = localStorage.getItem('user_theme_id');
     const storedMute = localStorage.getItem('user_is_muted');
     const storedVol = localStorage.getItem('user_volume');
-    const hasRegistered = localStorage.getItem('vip_user_registered') === 'true';
+    const hasRegisteredUser = localStorage.getItem('vip_user_registered') === 'true';
     
     if (storedTheme) setActiveThemeId(storedTheme);
     if (storedMute !== null) setIsMuted(storedMute === 'true');
     if (storedVol) setVolume(parseInt(storedVol));
-    if (!hasRegistered) setCurrentStage("register");
-    else setCurrentStage("v2");
+    setHasRegistered(hasRegisteredUser);
+    setCurrentStage("v2");
     
     // Cleanup
     return () => {
@@ -1547,19 +1577,32 @@ export default function Home() {
       if (newVol > 0 && isMuted) { setIsMuted(false); safePlay(); }
   };
 
+  const handlePerformanceToggle = useCallback(() => {
+      playClickSound();
+      if (navigator.vibrate) navigator.vibrate(12);
+      const newState = !disableSpline;
+      setDisableSpline(newState);
+      localStorage.setItem('spline_enabled', String(!newState));
+  }, [disableSpline]);
+
   // --- GATING HANDLERS ---
   const handleRegisterComplete = useCallback(() => {
     if (typeof window !== 'undefined') localStorage.setItem('vip_user_registered', 'true'); 
+    setHasRegistered(true);
     setCurrentStage("hold"); 
   }, []);
   
   const handleHoldComplete = useCallback(() => setCurrentStage("content"), []);
   
   const handleV2Complete = useCallback(() => { 
-    setCurrentStage("content"); 
     safePlay(); 
     setParticleTrigger(prev => prev + 1);
-  }, [safePlay]);
+    if (hasRegistered) {
+      setCurrentStage("content"); 
+    } else {
+      setCurrentStage("register");
+    }
+  }, [hasRegistered, safePlay]);
    
   const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
     setActiveThemeId(themeId);
@@ -1670,6 +1713,8 @@ export default function Home() {
             volume={volume} 
             onVolumeChange={handleVolumeChange} 
             accentColor={accentColor} 
+            disableSpline={disableSpline}
+            onTogglePerformance={handlePerformanceToggle}
           />
           <SupportWidget accentColor={accentColor} />
       </div>
@@ -1748,7 +1793,14 @@ export default function Home() {
           className={`w-full h-full flex flex-col overflow-y-scroll overflow-x-hidden ${isTouch ? '' : 'snap-y snap-mandatory'} scroll-smooth bg-black no-scrollbar text-white relative mobile-scroll`}
         >
             
-            {showOrientationWarning && (<OrientationOverlay onDismiss={() => setShowOrientationWarning(false)} />)}
+            {showOrientationWarning && (
+              <OrientationOverlay 
+                onDismiss={() => {
+                  setShowOrientationWarning(false);
+                  orientationDismissedRef.current = true;
+                }} 
+              />
+            )}
 
             {/* DESKTOP NAV */}
             <div className="hidden md:flex fixed right-8 top-1/2 -translate-y-1/2 z-50 flex-col gap-6 items-center pointer-events-auto">
@@ -1769,27 +1821,7 @@ export default function Home() {
                     </span>
                 </div>
 
-                {/* Spline Toggle */}
-                <div className="relative group">
-                    <button
-                      onClick={() => {
-                        playClickSound();
-                        if (navigator.vibrate) navigator.vibrate(10);
-                        const newState = !disableSpline;
-                        setDisableSpline(newState);
-                        localStorage.setItem('spline_enabled', String(!newState));
-                      }}
-                      className={`w-10 h-10 bg-black/40 backdrop-blur rounded-full border border-white/20 flex items-center justify-center transition-colors mb-4 hover-lift ${
-                        disableSpline ? 'text-red-400 hover:text-red-300' : 'text-green-400 hover:text-white'
-                      }`}
-                    >
-                        <Zap size={18} />
-                    </button>
-                    <span className="absolute right-12 top-2 text-[10px] font-mono bg-black/80 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                        {disableSpline ? "SPLINE OFF (PERF)" : "SPLINE ON"}
-                    </span>
-                </div>
-
+                
                 {/* Desktop/Mobile View Toggle */}
                 <div className="relative group">
                     <button
@@ -1888,17 +1920,31 @@ export default function Home() {
                     ))}
                 </div>
                 
-                <div className="mt-10 flex gap-4">
+                <div className="mt-10 flex flex-col gap-3 w-full max-w-sm">
                     <button 
                       onClick={() => { 
                         playClickSound();
                         setIsMobileView(!isMobileView); 
                         setIsMobileNavOpen(false); 
                       }} 
-                      className="flex items-center gap-2 px-6 py-3 bg-white/5 rounded-full border border-white/10 text-xs font-bold text-white hover:bg-white/10 hover-lift"
+                      className="flex items-center justify-center gap-2 px-6 py-3 bg-white/5 rounded-full border border-white/10 text-xs font-bold text-white hover:bg-white/10 hover-lift"
                     >
                         {isMobileView ? <Smartphone size={16} /> : <Monitor size={16} />}
                         {isMobileView ? "MOBILE LAYOUT" : "DESKTOP LAYOUT"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        handlePerformanceToggle();
+                        setIsMobileNavOpen(false);
+                      }}
+                      className={`flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-bold border transition-all hover-lift ${
+                        disableSpline
+                          ? 'bg-blue-500 text-black border-blue-400 shadow-[0_10px_40px_rgba(59,130,246,0.3)]'
+                          : 'bg-white/5 text-white border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                        <Zap size={16} />
+                        {disableSpline ? "ENABLE FULL 3D" : "GO PERFORMANCE MODE"}
                     </button>
                 </div>
             </div>
