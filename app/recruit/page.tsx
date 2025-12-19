@@ -11,6 +11,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 // --- CORE STATIC IMPORTS ---
 import { Navbar } from "@/components/Mainpage/navbar"; 
 import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
+import { safeGetItem, safeSetItem } from '@/lib/localStorage';
 
 // --- LOADER IMPORTS ---
 import { MultiStepLoader } from "@/components/Mainpage/MultiStepLoaderAffiliate"; 
@@ -314,23 +315,21 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
 
   useEffect(() => {
     setIsClient(true);
-    if (typeof window !== 'undefined') {
-        const storedTheme = localStorage.getItem('user_theme_id');
-        const storedMute = localStorage.getItem('user_is_muted');
-        const storedVol = localStorage.getItem('user_volume');
-        const hasSeenHelper = localStorage.getItem('has_seen_theme_onboarding');
-        
-        if (storedTheme) setActiveThemeId(storedTheme);
-        if (storedMute !== null) setIsMuted(storedMute === 'true');
-        if (storedVol) setVolume(parseInt(storedVol));
-        
-        if (searchParams?.src !== "nav") {
-             router.push("/");
-        } else {
-            setCurrentStage("affiliate");
-            if (!hasSeenHelper) {
-                setTimeout(() => setShowHelper(true), 4000);
-            }
+    const storedTheme = safeGetItem('user_theme_id');
+    const storedMute = safeGetItem('user_is_muted');
+    const storedVol = safeGetItem('user_volume');
+    const hasSeenHelper = safeGetItem('has_seen_theme_onboarding');
+    
+    if (storedTheme) setActiveThemeId(storedTheme);
+    if (storedMute !== null) setIsMuted(storedMute === 'true');
+    if (storedVol) setVolume(parseInt(storedVol));
+    
+    if (searchParams?.src !== "nav") {
+         router.push("/");
+    } else {
+        setCurrentStage("affiliate");
+        if (!hasSeenHelper) {
+            setTimeout(() => setShowHelper(true), 4000);
         }
     }
   }, [searchParams, router]);
@@ -368,7 +367,7 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
 
   const dismissHelper = () => {
     setShowHelper(false);
-    localStorage.setItem('has_seen_theme_onboarding', 'true');
+    safeSetItem('has_seen_theme_onboarding', 'true');
   };
 
   const handleOpenTheme = () => {
@@ -401,14 +400,14 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
 
   const handleVolumeChange = (newVol: number) => {
       setVolume(newVol);
-      localStorage.setItem('user_volume', newVol.toString());
+      safeSetItem('user_volume', newVol.toString());
       if(playerRef.current) {
         playerRef.current.setVolume(newVol);
         if (newVol > 0) playerRef.current.unMute?.();
       }
       if (newVol > 0 && isMuted) {
           setIsMuted(false);
-          localStorage.setItem('user_is_muted', 'false');
+          safeSetItem('user_is_muted', 'false');
           safePlay(); 
       }
   };
@@ -432,7 +431,7 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
   const toggleMusic = useCallback(() => {
       const newMutedState = !isMuted;
       setIsMuted(newMutedState);
-      localStorage.setItem('user_is_muted', String(newMutedState));
+      safeSetItem('user_is_muted', String(newMutedState));
       if (newMutedState) safePause();
       else if (!showConfigurator && !isPreviewing) safePlay();
   }, [isMuted, showConfigurator, isPreviewing, safePlay, safePause]);
@@ -442,10 +441,8 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
     setTimeout(() => {
         setActiveThemeId(themeId);
         setIsMuted(muted); 
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('user_theme_id', themeId);
-            localStorage.setItem('user_is_muted', String(muted));
-        }
+        safeSetItem('user_theme_id', themeId);
+        safeSetItem('user_is_muted', String(muted));
         setShowConfigurator(false); 
         setTimeout(() => setIsTransitioning(false), 100);
     }, 300);

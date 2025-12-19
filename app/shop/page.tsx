@@ -11,6 +11,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ShopProvider } from "@/app/VIP/ShopContext";
 import { Navbar } from "@/components/Mainpage/navbar"; 
 import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
+import { safeGetItem, safeSetItem } from '@/lib/localStorage';
 
 // --- ONBOARDING IMPORTS ---
 import RegisterPage from "@/app/register/pagemode";
@@ -298,29 +299,27 @@ export default function ShopPage() {
 
   useEffect(() => {
     setIsClient(true);
-    if (typeof window !== 'undefined') {
-        const storedTheme = localStorage.getItem('user_theme_id');
-        const storedMute = localStorage.getItem('user_is_muted');
-        const storedVol = localStorage.getItem('user_volume');
-        const hasRegistered = localStorage.getItem('vip_user_registered') === 'true';
-        const hasSeenHelper = localStorage.getItem('has_seen_theme_onboarding');
-        
-        if (storedTheme) setActiveThemeId(storedTheme);
-        if (storedMute !== null) setIsMuted(storedMute === 'true');
-        if (storedVol) setVolume(parseInt(storedVol));
-        if (!hasRegistered) setCurrentStage("register");
-        else {
-            setCurrentStage("v2");
-            if (!hasSeenHelper) {
-                setTimeout(() => setShowHelper(true), 4000);
-            }
+    const storedTheme = safeGetItem('user_theme_id');
+    const storedMute = safeGetItem('user_is_muted');
+    const storedVol = safeGetItem('user_volume');
+    const hasRegistered = safeGetItem('vip_user_registered') === 'true';
+    const hasSeenHelper = safeGetItem('has_seen_theme_onboarding');
+    
+    if (storedTheme) setActiveThemeId(storedTheme);
+    if (storedMute !== null) setIsMuted(storedMute === 'true');
+    if (storedVol) setVolume(parseInt(storedVol));
+    if (!hasRegistered) setCurrentStage("register");
+    else {
+        setCurrentStage("v2");
+        if (!hasSeenHelper) {
+            setTimeout(() => setShowHelper(true), 4000);
         }
     }
   }, []);
 
   const dismissHelper = () => {
     setShowHelper(false);
-    localStorage.setItem('has_seen_theme_onboarding', 'true');
+    safeSetItem('has_seen_theme_onboarding', 'true');
   };
 
   const handleOpenTheme = () => {
@@ -354,14 +353,14 @@ export default function ShopPage() {
 
   const handleVolumeChange = (newVol: number) => {
       setVolume(newVol);
-      localStorage.setItem('user_volume', newVol.toString());
+      safeSetItem('user_volume', newVol.toString());
       if(playerRef.current) {
         playerRef.current.setVolume(newVol);
         if (newVol > 0) playerRef.current.unMute?.();
       }
       if (newVol > 0 && isMuted) {
           setIsMuted(false);
-          localStorage.setItem('user_is_muted', 'false');
+          safeSetItem('user_is_muted', 'false');
           safePlay(); 
       }
   };
@@ -386,13 +385,13 @@ export default function ShopPage() {
   const toggleMusic = useCallback(() => {
       const newMutedState = !isMuted;
       setIsMuted(newMutedState);
-      localStorage.setItem('user_is_muted', String(newMutedState));
+      safeSetItem('user_is_muted', String(newMutedState));
       if (newMutedState) safePause();
       else if (!showConfigurator && !isPreviewing) safePlay();
   }, [isMuted, showConfigurator, isPreviewing, safePlay, safePause]);
 
   const handleRegisterComplete = useCallback(() => {
-    if (typeof window !== 'undefined') localStorage.setItem('vip_user_registered', 'true'); 
+    safeSetItem('vip_user_registered', 'true');
     setCurrentStage("hold"); 
   }, []);
 
@@ -401,10 +400,8 @@ export default function ShopPage() {
     setTimeout(() => {
         setActiveThemeId(themeId);
         setIsMuted(muted); 
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('user_theme_id', themeId);
-            localStorage.setItem('user_is_muted', String(muted));
-        }
+        safeSetItem('user_theme_id', themeId);
+        safeSetItem('user_is_muted', String(muted));
         setShowConfigurator(false); 
         setTimeout(() => setIsTransitioning(false), 100);
     }, 300);
@@ -413,7 +410,7 @@ export default function ShopPage() {
   const handleHoldComplete = useCallback(() => setCurrentStage("content"), []);
   const handleV2Complete = useCallback(() => {
       setCurrentStage("content");
-      const hasSeenHelper = localStorage.getItem('has_seen_theme_onboarding');
+      const hasSeenHelper = safeGetItem('has_seen_theme_onboarding');
       if (!hasSeenHelper) setShowHelper(true);
       safePlay();
   }, [safePlay]);

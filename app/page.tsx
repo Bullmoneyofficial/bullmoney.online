@@ -23,6 +23,7 @@ import { Footer } from "@/components/Mainpage/footer";
 
 // --- THEME & MUSIC DATA ---
 import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
+import { safeGetItem, safeSetItem } from '@/lib/localStorage';
 
 // --- TSX PAGE IMPORTS ---
 import ChartNews from "@/app/Blogs/Chartnews";
@@ -1388,12 +1389,12 @@ export default function Home() {
     setIsTouch(matchMedia && matchMedia('(pointer: coarse)').matches);
 
     // Auto-disable Spline by default; preserve user preference when available
-    const savedSplinePref = localStorage.getItem('spline_enabled');
+    const savedSplinePref = safeGetItem('spline_enabled');
     if (savedSplinePref !== null) {
       setDisableSpline(savedSplinePref === 'true');
     } else {
       setDisableSpline(false);
-      localStorage.setItem('spline_enabled', 'false');
+      safeSetItem('spline_enabled', 'false');
     }
 
     // Check for reduced motion preference
@@ -1490,10 +1491,10 @@ export default function Home() {
     window.addEventListener('resize', checkLayout);
     
     // Load User Prefs
-    const storedTheme = localStorage.getItem('user_theme_id');
-    const storedMute = localStorage.getItem('user_is_muted');
-    const storedVol = localStorage.getItem('user_volume');
-    const hasRegisteredUser = localStorage.getItem('vip_user_registered') === 'true';
+    const storedTheme = safeGetItem('user_theme_id');
+    const storedMute = safeGetItem('user_is_muted');
+    const storedVol = safeGetItem('user_volume');
+    const hasRegisteredUser = safeGetItem('vip_user_registered') === 'true';
     
     if (storedTheme) setActiveThemeId(storedTheme);
     if (storedMute !== null) setIsMuted(storedMute === 'true');
@@ -1622,13 +1623,13 @@ export default function Home() {
   const toggleMusic = useCallback(() => {
       const newMutedState = !isMuted;
       setIsMuted(newMutedState);
-      localStorage.setItem('user_is_muted', String(newMutedState));
+      safeSetItem('user_is_muted', String(newMutedState));
       if (newMutedState) safePause(); else safePlay();
   }, [isMuted, safePlay, safePause]);
 
   const handleVolumeChange = (newVol: number) => {
       setVolume(newVol);
-      localStorage.setItem('user_volume', newVol.toString());
+      safeSetItem('user_volume', newVol.toString());
       if(playerRef.current) playerRef.current.setVolume(newVol);
       if (newVol > 0 && isMuted) { setIsMuted(false); safePlay(); }
   };
@@ -1638,12 +1639,12 @@ export default function Home() {
       if (navigator.vibrate) navigator.vibrate(12);
       const newState = !disableSpline;
       setDisableSpline(newState);
-      localStorage.setItem('spline_enabled', String(newState));
+      safeSetItem('spline_enabled', String(newState));
   }, [disableSpline]);
 
   // --- GATING HANDLERS ---
   const handleRegisterComplete = useCallback(() => {
-    if (typeof window !== 'undefined') localStorage.setItem('vip_user_registered', 'true'); 
+    safeSetItem('vip_user_registered', 'true');
     setHasRegistered(true);
     setCurrentStage("hold"); 
   }, []);
@@ -1663,10 +1664,8 @@ export default function Home() {
   const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
     setActiveThemeId(themeId);
     setIsMuted(muted);
-    if (typeof window !== 'undefined') {
-        localStorage.setItem('user_theme_id', themeId);
-        localStorage.setItem('user_is_muted', String(muted));
-    }
+    safeSetItem('user_theme_id', themeId);
+    safeSetItem('user_is_muted', String(muted));
     setShowConfigurator(false);
     setParticleTrigger(prev => prev + 1);
     setMusicKey(prev => prev + 1); // Force music player reload
@@ -1674,9 +1673,7 @@ export default function Home() {
 
   const handleQuickThemeChange = useCallback((themeId: string) => {
     setActiveThemeId(themeId);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('user_theme_id', themeId);
-    }
+    safeSetItem('user_theme_id', themeId);
     setParticleTrigger(prev => prev + 1);
     setMusicKey(prev => prev + 1);
     playClickSound();

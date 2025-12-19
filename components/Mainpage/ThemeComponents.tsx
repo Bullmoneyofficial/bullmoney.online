@@ -8,16 +8,17 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 // --- 1. IMPORTS ---
-import { 
-    ALL_THEMES, 
-    type Theme, 
-    type ThemeCategory, 
-    type SoundProfile, 
-    type TickerData 
+import {
+    ALL_THEMES,
+    type Theme,
+    type ThemeCategory,
+    type SoundProfile,
+    type TickerData
 } from '@/constants/theme-data';
 
 import { ShimmerButton, ShimmerCard, ShimmerBorder, GlowText, IllusionLayer, GlobalSvgFilters } from '@/components/ThemeUI';
 import { ThemeConfigModal } from '@/components/Mainpage/ThemeConfigModal'; 
+import { safeGetItem, safeSetItem } from '@/lib/localStorage';
 
 // --- 2. EXPORTS ---
 export { ALL_THEMES };
@@ -295,20 +296,18 @@ export default function FixedThemeConfigurator({
     
     // 3. PERSISTENCE LOGIC
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const savedTheme = localStorage.getItem('user_theme_id');
-            const savedSound = localStorage.getItem('user_sound_profile');
-            const savedMute = localStorage.getItem('user_is_muted');
-            
-            if (savedTheme && ALL_THEMES && ALL_THEMES.some(t => t.id === savedTheme)) {
-                setActiveThemeId(savedTheme);
-            } else if (initialThemeId) {
-                setActiveThemeId(initialThemeId);
-            }
-
-            if (savedSound) setCurrentSound(savedSound as SoundProfile);
-            if (savedMute) setIsMuted(savedMute === 'true');
+        const savedTheme = safeGetItem('user_theme_id');
+        const savedSound = safeGetItem('user_sound_profile');
+        const savedMute = safeGetItem('user_is_muted');
+        
+        if (savedTheme && ALL_THEMES && ALL_THEMES.some(t => t.id === savedTheme)) {
+            setActiveThemeId(savedTheme);
+        } else if (initialThemeId) {
+            setActiveThemeId(initialThemeId);
         }
+
+        if (savedSound) setCurrentSound(savedSound as SoundProfile);
+        if (savedMute) setIsMuted(savedMute === 'true');
     }, [initialThemeId]);
 
     // 4. SAVE HANDLER
@@ -321,9 +320,9 @@ export default function FixedThemeConfigurator({
         setIsMuted(muted);
         
         // Update Storage
-        localStorage.setItem('user_theme_id', themeId);
-        localStorage.setItem('user_sound_profile', sound);
-        localStorage.setItem('user_is_muted', String(muted));
+        safeSetItem('user_theme_id', themeId);
+        safeSetItem('user_sound_profile', sound);
+        safeSetItem('user_is_muted', String(muted));
         
         // Notify Parent (if applicable)
         if (onThemeChange) {
@@ -351,7 +350,7 @@ export default function FixedThemeConfigurator({
     const toggleMute = useCallback(() => {
         setIsMuted(prev => {
             const newState = !prev;
-            localStorage.setItem('user_is_muted', String(newState));
+            safeSetItem('user_is_muted', String(newState));
             return newState;
         });
     }, []);
