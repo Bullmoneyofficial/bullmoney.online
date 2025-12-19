@@ -1,8 +1,7 @@
 "use client";
 
-import React, { Suspense, useState, useEffect, useRef, useTransition, useCallback, memo, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useTransition, useCallback, memo, useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import Spline from '@splinetool/react-spline';
 import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube';
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -20,6 +19,7 @@ import BullMoneyGate from "@/components/Mainpage/TradingHoldUnlock";
 import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2";
 import InlineFaq from "@/components/Mainpage/InlineFaq";
 import { Footer } from "@/components/Mainpage/footer";
+import { CrashSafeSplineLoader } from "@/components/Mainpage/CrashSafeSplineLoader";
 
 // --- THEME & MUSIC DATA ---
 import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
@@ -536,15 +536,48 @@ const BackgroundMusicSystem = ({ themeId, onReady, volume }: { themeId: string; 
 // ----------------------------------------------------------------------
 // 5. 3D SCENE WRAPPERS WITH LAZY LOADING
 // ----------------------------------------------------------------------
-const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPointer = false, parallaxOffset = 0 }: any) => {
+const MobileSplinePlaceholder = ({ message }: { message?: string }) => (
+  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-neutral-950 via-black to-neutral-900 text-white/70 text-center px-6">
+    <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 shadow-[0_0_24px_rgba(0,0,0,0.45)]">
+      <div className="text-[10px] font-mono tracking-[0.2em] text-blue-300 uppercase mb-1">Performance mode</div>
+      <p className="text-sm leading-relaxed text-white/80">{message || 'Expand this panel to render the 3D scene.'}</p>
+    </div>
+  </div>
+);
+
+const SceneWrapper = memo(({ 
+  isVisible, 
+  sceneUrl, 
+  allowInput = true, 
+  forceNoPointer = false, 
+  parallaxOffset = 0,
+  isMobile = false,
+  preferFallback = false,
+}: any) => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    if (isVisible && !isLoaded) {
-      const timer = setTimeout(() => setIsLoaded(true), 100);
+    if (isVisible && !isLoaded && !preferFallback) {
+      const timer = setTimeout(() => setIsLoaded(true), isMobile ? 550 : 120);
       return () => clearTimeout(timer);
     }
-  }, [isVisible, isLoaded]);
+  }, [isVisible, isLoaded, isMobile, preferFallback]);
+
+  const content = preferFallback ? (
+    <MobileSplinePlaceholder />
+  ) : isVisible && isLoaded ? (
+    <CrashSafeSplineLoader 
+      sceneUrl={sceneUrl} 
+      isVisible={isVisible && isLoaded} 
+      allowInput={!forceNoPointer && allowInput} 
+      className="w-full h-full block object-cover" 
+      onError={(error) => console.error('[Page] Spline error:', error)} 
+    />
+  ) : isVisible ? (
+    <div className="absolute inset-0 bg-gradient-to-br from-gray-900/40 to-black/60 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    </div>
+  ) : null;
 
   return (
     <div
@@ -553,22 +586,9 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
         ${isVisible ? 'opacity-100' : 'opacity-0'}
         ${forceNoPointer ? 'pointer-events-none' : (allowInput ? 'pointer-events-auto' : 'pointer-events-none')}
       `}
-      style={{ transform: `translateY(${parallaxOffset * 0.5}px)` }}
+      style={{ transform: `translateY(${isMobile ? 0 : parallaxOffset * 0.5}px)` }}
     >
-      {isVisible && isLoaded && (
-        <Suspense fallback={
-          <div className="absolute inset-0 bg-gray-900/20 flex items-center justify-center text-blue-500/20 font-mono text-[10px]">
-            LOADING ASSET...
-          </div>
-        }>
-           <Spline scene={sceneUrl} className="w-full h-full block object-cover" />
-        </Suspense>
-      )}
-      {isVisible && !isLoaded && (
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900/40 to-black/60 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      )}
+      {content}
     </div>
   );
 });
@@ -647,7 +667,8 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset 
               isVisible={shouldRender}
               sceneUrl={config.scene}
               allowInput={!config.disableInteraction}
-              parallaxOffset={isHeavyScene ? parallaxOffset * 0.15 : parallaxOffset}
+              parallaxOffset={isMobile ? 0 : (isHeavyScene ? parallaxOffset * 0.15 : parallaxOffset)}
+              isMobile={isMobile}
             />
         )}
         {/* Only show label for Spline scenes, not TSX components */}
@@ -771,7 +792,13 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
     if (containerRef.current) onVisible(containerRef.current, config.id - 1);
   }, [onVisible, config.id]);
 
-  const shouldRender = (config.id >= activePage - 1) && (config.id <= activePage + 1);
+  const shouldRender = isMobileView ? config.id === activePage : (config.id >= activePage - 1) && (config.id <= activePage + 1);
+  const mobilePrimary = isMobileView ? (splitPos >= 50 ? 'A' : 'B') : 'both';
+  const renderPanelA = shouldRender && (mobilePrimary === 'both' || mobilePrimary === 'A');
+  const renderPanelB = shouldRender && (mobilePrimary === 'both' || mobilePrimary === 'B');
+  const fallbackA = isMobileView && mobilePrimary !== 'A';
+  const fallbackB = isMobileView && mobilePrimary !== 'B';
+  const parallaxValue = isMobileView ? 0 : parallaxOffset;
 
   return (
     <section 
@@ -846,10 +873,12 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
       >
         <div className="absolute inset-0 w-full h-full"> 
           <SceneWrapper 
-            isVisible={shouldRender} 
+            isVisible={renderPanelA} 
             sceneUrl={config.sceneA} 
             forceNoPointer={isDragging}
-            parallaxOffset={parallaxOffset * 0.3}
+            parallaxOffset={parallaxValue * 0.3}
+            isMobile={isMobileView}
+            preferFallback={fallbackA}
           />
         </div>
         <div className="absolute top-8 left-8 z-20 pointer-events-none">
@@ -879,10 +908,12 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
       >
         <div className="absolute inset-0 w-full h-full">
              <SceneWrapper 
-               isVisible={shouldRender} 
+               isVisible={renderPanelB} 
                sceneUrl={config.sceneB} 
                forceNoPointer={isDragging}
-               parallaxOffset={parallaxOffset * 0.7}
+               parallaxOffset={parallaxValue * 0.7}
+               isMobile={isMobileView}
+               preferFallback={fallbackB}
              />
         </div>
         <div className="absolute bottom-8 right-8 z-20 text-right pointer-events-none">
@@ -1211,21 +1242,36 @@ export default function Home() {
       }).filter(Boolean) as string[];
 
       const uniqueScenes = Array.from(new Set(sceneUrls));
+      const isMobileDevice = typeof window !== 'undefined' && (
+        window.innerWidth < 768 ||
+        (typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches)
+      );
+      const warmList = isMobileDevice ? uniqueScenes.slice(0, 3) : uniqueScenes;
+
+      const fetchScene = async (url: string, cache: any) => {
+        try {
+          const req = new Request(url, { cache: 'force-cache' });
+          if (cache) {
+            const match = await cache.match(req);
+            if (match) return;
+            const res = await fetch(req);
+            if (res.ok) await cache.put(req, res.clone());
+          } else {
+            await fetch(req);
+          }
+        } catch (e) {}
+      };
+
       try {
         const cache = typeof window !== 'undefined' && 'caches' in window ? await caches.open('bullmoney-prewarm-v1') : null;
-        await Promise.all(uniqueScenes.map(async (url) => {
-          try {
-            const req = new Request(url, { cache: 'force-cache' });
-            if (cache) {
-              const match = await cache.match(req);
-              if (match) return;
-              const res = await fetch(req);
-              if (res.ok) await cache.put(req, res.clone());
-            } else {
-              await fetch(req);
-            }
-          } catch (e) {}
-        }));
+        if (isMobileDevice) {
+          for (const url of warmList) {
+            await fetchScene(url, cache);
+            await new Promise((res) => setTimeout(res, 300));
+          }
+        } else {
+          await Promise.all(warmList.map((url) => fetchScene(url, cache)));
+        }
       } catch (e) {}
     };
 
