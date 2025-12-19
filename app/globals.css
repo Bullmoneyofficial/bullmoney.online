@@ -242,3 +242,279 @@
   animation: grain 8s steps(10) infinite;
 }
 
+/* ==========================================
+   BUTTER-SMOOTH SCROLLING ENHANCEMENTS
+   ========================================== */
+
+/* GPU Acceleration for everything */
+.gpu-accelerated,
+.parallax-layer,
+.mobile-optimize,
+.hover-lift,
+section,
+.page-flip-active {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+}
+
+/* Enhanced snap scrolling */
+.snap-y {
+  scroll-snap-type: y mandatory;
+  scroll-padding: 0;
+  scroll-behavior: smooth;
+}
+
+.snap-start {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* iOS momentum scrolling */
+@supports (-webkit-touch-callout: none) {
+  .scroll-smooth,
+  main {
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: y mandatory;
+  }
+}
+
+/* Hide scrollbar */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Butter-smooth transitions */
+.transition-butter {
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Page flip animation */
+.page-flip-active {
+  animation: pageFlipIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pageFlipIn {
+  from {
+    opacity: 0.7;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Profit reveal */
+.profit-reveal {
+  animation: profitReveal 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes profitReveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Hover lift effect */
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+}
+
+.hover-lift:active {
+  transform: translateY(-2px);
+}
+
+/* Touch optimization */
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  /* Faster transitions */
+  .transition-butter {
+    transition-duration: 0.3s;
+  }
+
+  /* Disable parallax */
+  .parallax-layer {
+    transform: none !important;
+  }
+
+  /* Reduce will-change usage */
+  .mobile-optimize {
+    will-change: auto;
+  }
+
+  .mobile-optimize:active {
+    will-change: transform;
+  }
+
+  /* Larger touch targets */
+  button:not(.no-touch-enlarge),
+  a:not(.no-touch-enlarge) {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Disable hover on touch */
+@media (hover: none) and (pointer: coarse) {
+  .hover-lift:hover {
+    transform: none;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .parallax-layer,
+  .page-flip-active,
+  .profit-reveal {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* Performance containment */
+.layout-contained {
+  contain: layout style paint;
+}
+
+/* Content visibility for offscreen content */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1000px;
+}
+
+/* Safe area insets */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Text selection */
+::selection {
+  background-color: rgba(59, 130, 246, 0.3);
+  color: white;
+}
+
+/* Focus visible */
+*:focus-visible {
+  outline: 2px solid rgb(59, 130, 246);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Prevent images from causing layout shift */
+img,
+video,
+iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 60fps animations */
+@keyframes spin60 {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin60 1s linear infinite;
+}
+
+@keyframes pulse60 {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+  animation: pulse60 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Loading shimmer */
+.loading-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Glass morphism (disabled on mobile) */
+.glass-effect {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+@media (max-width: 768px) {
+  .glass-effect {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* Custom scrollbar (desktop only) */
+@media (min-width: 769px) {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.5);
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.8);
+  }
+}
+
