@@ -1092,6 +1092,10 @@ export default function Home() {
   const [_, startTransition] = useTransition();
   const pageRefs = useRef<(HTMLElement | null)[]>([]);
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const assetsWarmedRef = useRef(false);
+  const parallaxRafRef = useRef<number>(0);
+  const prefersReducedMotionRef = useRef(false);
   const [isTouch, setIsTouch] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
 
@@ -1102,6 +1106,10 @@ export default function Home() {
     
   const accentColor = useMemo(() => getThemeColor(activeThemeId), [activeThemeId]);
   const isPlaying = useMemo(() => !isMuted, [isMuted]);
+
+  useEffect(() => {
+    prefersReducedMotionRef.current = prefersReducedMotion;
+  }, [prefersReducedMotion]);
 
   // --- INIT ---
   useEffect(() => {
@@ -1117,8 +1125,12 @@ export default function Home() {
     // Check for reduced motion preference
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mediaQuery.matches);
+    prefersReducedMotionRef.current = mediaQuery.matches;
     
-    const handleMotionChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    const handleMotionChange = (e: MediaQueryListEvent) => {
+      setPrefersReducedMotion(e.matches);
+      prefersReducedMotionRef.current = e.matches;
+    };
     
     // Handle both modern and legacy APIs
     if (mediaQuery.addEventListener) {
@@ -1130,14 +1142,17 @@ export default function Home() {
 
     // Parallax scroll effect
     const handleScroll = () => {
-      if (!prefersReducedMotion) {
-        requestAnimationFrame(() => {
-          setParallaxOffset(window.scrollY);
-        });
-      }
+      if (prefersReducedMotionRef.current) return;
+      if (parallaxRafRef.current) cancelAnimationFrame(parallaxRafRef.current);
+      const scrollTop = scrollContainerRef.current ? scrollContainerRef.current.scrollTop : window.scrollY;
+      parallaxRafRef.current = requestAnimationFrame(() => {
+        setParallaxOffset(scrollTop);
+      });
     };
     
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    const scrollElement = scrollContainerRef.current || window;
+    scrollElement.addEventListener('scroll', handleScroll, { passive: true });
+    if (scrollElement !== window) window.addEventListener('scroll', handleScroll, { passive: true });
 
     // Initial Layout Check
     const checkLayout = () => {
@@ -1152,6 +1167,7 @@ export default function Home() {
     };
     
     checkLayout();
+    handleScroll();
     window.addEventListener('resize', checkLayout);
     
     // Load User Prefs
@@ -1170,7 +1186,9 @@ export default function Home() {
     return () => {
       document.head.removeChild(styleSheet);
       window.removeEventListener('resize', checkLayout);
-      window.removeEventListener('scroll', handleScroll);
+      scrollElement.removeEventListener('scroll', handleScroll);
+      if (scrollElement !== window) window.removeEventListener('scroll', handleScroll);
+      if (parallaxRafRef.current) cancelAnimationFrame(parallaxRafRef.current);
       
       if (mediaQuery.removeEventListener) {
         mediaQuery.removeEventListener('change', handleMotionChange);
@@ -1178,7 +1196,46 @@ export default function Home() {
         (mediaQuery as any).removeListener(handleMotionChange);
       }
     };
-  }, [prefersReducedMotion]);
+  }, []);
+
+  // Warm key assets once to keep subsequent visits snappy
+  useEffect(() => {
+    if (!isClient || assetsWarmedRef.current) return;
+    assetsWarmedRef.current = true;
+
+    const warmAssets = async () => {
+      const sceneUrls = PAGE_CONFIG.flatMap((page) => {
+        if (page.type === 'full') return [page.scene];
+        if (page.type === 'split') return [page.sceneA, page.sceneB];
+        return [];
+      }).filter(Boolean) as string[];
+
+      const uniqueScenes = Array.from(new Set(sceneUrls));
+      try {
+        const cache = typeof window !== 'undefined' && 'caches' in window ? await caches.open('bullmoney-prewarm-v1') : null;
+        await Promise.all(uniqueScenes.map(async (url) => {
+          try {
+            const req = new Request(url, { cache: 'force-cache' });
+            if (cache) {
+              const match = await cache.match(req);
+              if (match) return;
+              const res = await fetch(req);
+              if (res.ok) await cache.put(req, res.clone());
+            } else {
+              await fetch(req);
+            }
+          } catch (e) {}
+        }));
+      } catch (e) {}
+    };
+
+    const scheduleWarm = () => { warmAssets().catch(() => {}); };
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(scheduleWarm, { timeout: 2000 });
+    } else {
+      setTimeout(scheduleWarm, 800);
+    }
+  }, [isClient]);
 
   // --- SCROLL OBSERVER ---
   useEffect(() => {
@@ -1198,7 +1255,7 @@ export default function Home() {
           }
         });
       },
-      { threshold: 0.4 } 
+      { threshold: 0.4, root: scrollContainerRef.current || null } 
     );
     
     pageRefs.current.forEach((ref) => { if (ref) observerRef.current?.observe(ref); });
@@ -1402,7 +1459,11 @@ export default function Home() {
         {!isTouch && <TargetCursor spinDuration={2} hideDefaultCursor={false} targetSelector=".cursor-target, a, button" />}
         
         {/* --- SCROLL CONTAINER --- */}
-        <main className={`w-full h-full flex flex-col overflow-y-scroll overflow-x-hidden ${isTouch ? '' : 'snap-y snap-mandatory'} scroll-smooth bg-black no-scrollbar text-white relative mobile-scroll`}>
+        <main 
+          ref={scrollContainerRef} 
+          data-scroll-container 
+          className={`w-full h-full flex flex-col overflow-y-scroll overflow-x-hidden ${isTouch ? '' : 'snap-y snap-mandatory'} scroll-smooth bg-black no-scrollbar text-white relative mobile-scroll`}
+        >
             
             {showOrientationWarning && (<OrientationOverlay onDismiss={() => setShowOrientationWarning(false)} />)}
 

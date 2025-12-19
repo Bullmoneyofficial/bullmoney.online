@@ -13,6 +13,7 @@ interface ShopScrollFunnelProps {
 
 const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
   const [magnetOffset, setMagnetOffset] = useState({ x: 0, y: 0 });
   const [pacmanPos, setPacmanPos] = useState<{ x: number; y: number }>({ x: 1, y: 1 });
@@ -50,7 +51,6 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
 
     const handleScroll = () => {
       if (!containerRef.current) return;
-      
       const rect = containerRef.current.getBoundingClientRect();
       const windowHeight = window.innerHeight;
       const totalDistance = rect.height - windowHeight;
@@ -58,19 +58,22 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
 
       let scrollProgress = scrolled / totalDistance;
       scrollProgress = Math.max(0, Math.min(1, scrollProgress));
-      
+
       cancelAnimationFrame(animationFrameId);
       animationFrameId = requestAnimationFrame(() => {
         setProgress(scrollProgress);
       });
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    const target = (containerRef.current?.closest('[data-scroll-container]') as HTMLElement | null) || window;
+    target.addEventListener('scroll', handleScroll, { passive: true });
+    if (target !== window) window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleScroll);
     handleScroll();
     
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      target.removeEventListener('scroll', handleScroll);
+      if (target !== window) window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
       cancelAnimationFrame(animationFrameId);
     };
@@ -184,6 +187,21 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
     if (['ArrowRight', 'd', 'D'].includes(e.key)) { e.preventDefault(); setDirection({ dx: 1, dy: 0 }); movePacman(1, 0); }
   };
 
+  // Allow arrow/WASD control without needing focus
+  useEffect(() => {
+    if (!isUnlocked) return;
+    const handleKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el && (el.closest('.pacman-grid') || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) return;
+      if (['ArrowUp', 'w', 'W'].includes(e.key)) { e.preventDefault(); setDirection({ dx: 0, dy: -1 }); movePacman(0, -1); }
+      if (['ArrowDown', 's', 'S'].includes(e.key)) { e.preventDefault(); setDirection({ dx: 0, dy: 1 }); movePacman(0, 1); }
+      if (['ArrowLeft', 'a', 'A'].includes(e.key)) { e.preventDefault(); setDirection({ dx: -1, dy: 0 }); movePacman(-1, 0); }
+      if (['ArrowRight', 'd', 'D'].includes(e.key)) { e.preventDefault(); setDirection({ dx: 1, dy: 0 }); movePacman(1, 0); }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isUnlocked, movePacman]);
+
   useEffect(() => {
     if (!isUnlocked) return;
     const id = setInterval(() => {
@@ -247,6 +265,12 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
       resetBoard();
     }
   }, [isUnlocked, lives, resetBoard]);
+
+  useEffect(() => {
+    if (isUnlocked && gridRef.current) {
+      gridRef.current.focus({ preventScroll: true });
+    }
+  }, [isUnlocked]);
 
   return (
     <div className="funnel-scroll-container" ref={containerRef}>
@@ -337,8 +361,10 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
           </div>
 
           <div className="w-full flex flex-col gap-4 md:gap-6">
-            <div className="w-full h-full min-h-[180px] md:min-h-[220px] rounded-3xl overflow-hidden border border-white/10 bg-black/60 shadow-xl backdrop-blur-lg">
-              <EvervaultCard text={isUnlocked ? "ACCESS" : "VAULT"} className="w-full h-full scale-90 md:scale-95" />
+            <div className="w-full flex items-center justify-center">
+              <div className="evervault-float relative w-full max-w-md min-h-[150px] md:min-h-[190px] rounded-3xl overflow-hidden border border-white/10 bg-black/60 shadow-xl backdrop-blur-lg">
+                <EvervaultCard text={isUnlocked ? "ACCESS" : "VAULT"} className="w-full h-full scale-90 md:scale-95" />
+              </div>
             </div>
 
               <div className="p-4 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-lg text-white shadow-[0_0_30px_rgba(0,0,0,0.35)]">
@@ -356,9 +382,10 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
                   </div>
                 </div>
               <div 
-                className="grid grid-cols-11 gap-1 p-2 rounded-xl bg-gradient-to-br from-slate-900/80 to-black border border-white/5 focus:outline-none"
+                className="pacman-grid grid grid-cols-11 gap-[3px] p-2 rounded-xl bg-gradient-to-br from-slate-900/80 to-black border border-white/5 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 max-w-[360px] mx-auto"
                 tabIndex={0}
                 onKeyDown={handlePacmanKeyDown}
+                ref={gridRef}
                 aria-label="Pacman mini grid"
               >
                 {PAC_MAP.map((row, y) => row.split("").map((cell, x) => {

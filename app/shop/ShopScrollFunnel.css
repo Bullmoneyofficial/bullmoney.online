@@ -119,6 +119,20 @@
   display: block;
 }
 
+.evervault-float {
+  animation: float-vertical 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+.pacman-grid {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pacman-grid:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(16, 185, 129, 0.18);
+}
+
 /* =========================================
    MOBILE OPTIMIZATIONS
    ========================================= */
