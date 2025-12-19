@@ -210,7 +210,7 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
     return () => clearInterval(id);
   }, [direction, isUnlocked, movePacman]);
 
-  // Ghost movement + collision
+  // Ghost movement + collision - FIXED AI
   const ghostStep = useCallback(() => {
     setGhosts((prevGhosts) => prevGhosts.map((g) => {
       const dirs = [
@@ -219,9 +219,13 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
         { dx: 0, dy: 1 },
         { dx: 0, dy: -1 },
       ].filter(({ dx, dy }) => !isWall(g.x + dx, g.y + dy));
+
+      // Get current pacman position from state
       const targetX = pacmanPos.x;
       const targetY = pacmanPos.y;
       const powerActive = powerModeUntil > Date.now();
+
+      // Score each direction based on distance to pacman
       const scored = dirs
         .map(({ dx, dy }) => {
           const nx = g.x + dx;
@@ -230,10 +234,11 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
           return { dx, dy, dist };
         })
         .sort((a, b) => powerActive ? b.dist - a.dist : a.dist - b.dist);
+
       const choice = scored[0] || { dx: 0, dy: 0 };
       return { ...g, x: g.x + choice.dx, y: g.y + choice.dy };
     }));
-  }, [isWall]);
+  }, [isWall, pacmanPos.x, pacmanPos.y, powerModeUntil]);
 
   useEffect(() => {
     if (!isUnlocked) return;
@@ -416,9 +421,30 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
                         </div>
                       )}
                       {isPacman && (
-                        <div className="relative w-7 h-7 rounded-full bg-yellow-400 border-2 border-black shadow-[0_0_12px_rgba(234,179,8,0.5)] transition-transform duration-150" style={{ transform: mouthOpen ? 'scale(1.02)' : 'scale(0.98)' }}>
-                          <div className="absolute inset-0 bg-black/60" style={{ clipPath: `polygon(50% 50%, 110% ${mouthOpen ? 35 : 48}%, 110% ${mouthOpen ? 65 : 52}%) rotate(${direction.dx === 0 && direction.dy === -1 ? '-90deg' : direction.dx === 0 && direction.dy === 1 ? '90deg' : direction.dx === -1 ? '180deg' : '0deg'})` }} />
-                          <span className="absolute top-1 left-1 w-1 h-1 rounded-full bg-black" />
+                        <div
+                          className="relative w-7 h-7 transition-transform duration-150"
+                          style={{
+                            transform: `scale(${mouthOpen ? 1.02 : 0.98}) rotate(${
+                              direction.dx === 1 ? '0deg' :
+                              direction.dx === -1 ? '180deg' :
+                              direction.dy === -1 ? '-90deg' :
+                              direction.dy === 1 ? '90deg' : '0deg'
+                            })`
+                          }}
+                        >
+                          <div className="w-full h-full rounded-full bg-yellow-400 border-2 border-yellow-600 shadow-[0_0_12px_rgba(234,179,8,0.8)] relative overflow-hidden">
+                            {/* Mouth */}
+                            <div
+                              className="absolute inset-0 bg-black origin-center"
+                              style={{
+                                clipPath: mouthOpen
+                                  ? 'polygon(50% 50%, 100% 30%, 100% 70%)'
+                                  : 'polygon(50% 50%, 100% 45%, 100% 55%)'
+                              }}
+                            />
+                            {/* Eye */}
+                            <div className="absolute top-1 right-2 w-1.5 h-1.5 rounded-full bg-black" />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -426,11 +452,48 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
                 }))}
               </div>
               <div className="mt-3 grid grid-cols-3 gap-2">
-                <button onClick={() => movePacman(0, -1)} className="rounded-lg border border-white/10 bg-white/5 py-2 text-xs hover:bg-white/10">Up</button>
-                <button onClick={() => movePacman(0, 1)} className="rounded-lg border border-white/10 bg-white/5 py-2 text-xs hover:bg-white/10">Down</button>
-                <button onClick={() => movePacman(0, 0)} className="rounded-lg border border-white/10 bg-white/5 py-2 text-xs hover:bg-white/10">Stay</button>
-                <button onClick={() => movePacman(-1, 0)} className="rounded-lg border border-white/10 bg-white/5 py-2 text-xs hover:bg-white/10 col-span-1">Left</button>
-                <button onClick={() => movePacman(1, 0)} className="rounded-lg border border-white/10 bg-white/5 py-2 text-xs hover:bg-white/10 col-span-2">Right</button>
+                <button
+                  onClick={() => {
+                    setDirection({ dx: 0, dy: -1 });
+                    movePacman(0, -1);
+                  }}
+                  className="rounded-lg border border-white/10 bg-white/5 py-2 text-xs hover:bg-white/10 active:bg-blue-500/20"
+                >
+                  ↑ Up
+                </button>
+                <button
+                  onClick={() => {
+                    setDirection({ dx: 0, dy: 1 });
+                    movePacman(0, 1);
+                  }}
+                  className="rounded-lg border border-white/10 bg-white/5 py-2 text-xs hover:bg-white/10 active:bg-blue-500/20"
+                >
+                  ↓ Down
+                </button>
+                <button
+                  onClick={() => resetBoard()}
+                  className="rounded-lg border border-white/10 bg-red-500/10 py-2 text-xs hover:bg-red-500/20 active:bg-red-500/30"
+                >
+                  ↻ Reset
+                </button>
+                <button
+                  onClick={() => {
+                    setDirection({ dx: -1, dy: 0 });
+                    movePacman(-1, 0);
+                  }}
+                  className="rounded-lg border border-white/10 bg-white/5 py-2 text-xs hover:bg-white/10 active:bg-blue-500/20 col-span-1"
+                >
+                  ← Left
+                </button>
+                <button
+                  onClick={() => {
+                    setDirection({ dx: 1, dy: 0 });
+                    movePacman(1, 0);
+                  }}
+                  className="rounded-lg border border-white/10 bg-white/5 py-2 text-xs hover:bg-white/10 active:bg-blue-500/20 col-span-2"
+                >
+                  → Right
+                </button>
               </div>
             </div>
           </div>

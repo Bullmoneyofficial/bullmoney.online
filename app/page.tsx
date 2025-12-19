@@ -359,19 +359,83 @@ const GLOBAL_STYLES = `
   /* Mobile optimizations */
   @media (max-width: 768px) {
     .mobile-optimize {
-      will-change: auto;
+      will-change: transform;
       transform: translateZ(0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    /* Reduce animations on mobile */
+    .shining-border::before {
+      animation-duration: 5s !important;
+    }
+
+    /* Optimize scroll */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Slow down pages 3-4 on mobile */
+    section:nth-child(3) *,
+    section:nth-child(4) * {
+      animation-duration: 1.5s !important;
+      transition-duration: 600ms !important;
     }
   }
-  
+
   .mobile-scroll {
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y pinch-zoom;
     overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    /* Critical for TikTok/Instagram browsers */
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
-  
+
   section {
     touch-action: pan-y pinch-zoom;
+    contain: layout style paint;
+    /* Ensure smooth rendering in all browsers */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  /* Performance hints */
+  .spline-container {
+    will-change: transform;
+    transform: translateZ(0);
+    contain: strict;
+    /* Force GPU acceleration on iOS */
+    -webkit-transform: translate3d(0,0,0);
+    transform: translate3d(0,0,0);
+  }
+
+  /* Prevent layout shifts */
+  img, video, iframe {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Fix for Instagram/TikTok in-app browsers */
+  html, body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+
+  /* Ensure scrolling works like desktop on mobile */
+  html {
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+  }
+
+  @media (max-width: 768px) {
+    html {
+      scroll-snap-type: y proximity; /* Less strict on mobile */
+    }
   }
 `;
 
@@ -520,40 +584,120 @@ const playClickSound = () => {
 // ----------------------------------------------------------------------
 // 4. MUSIC SYSTEM
 // ----------------------------------------------------------------------
-const BackgroundMusicSystem = ({ themeId, onReady, volume }: { themeId: string; onReady: (player: any) => void; volume: number; }) => {
+const BackgroundMusicSystem = ({ themeId, onReady, volume, trackKey }: { themeId: string; onReady: (player: any) => void; volume: number; trackKey?: number; }) => {
   const videoId = (THEME_SOUNDTRACKS && THEME_SOUNDTRACKS[themeId]) ? THEME_SOUNDTRACKS[themeId] : 'jfKfPfyJRdk';
   const opts: YouTubeProps['opts'] = {
     height: '1', width: '1',
     playerVars: { autoplay: 1, controls: 0, loop: 1, playlist: videoId, modestbranding: 1, playsinline: 1, enablejsapi: 1, origin: typeof window !== 'undefined' ? window.location.origin : undefined },
   };
   return (
-    <div className="fixed bottom-0 left-0 opacity-0 pointer-events-none z-[-1] overflow-hidden w-px h-px">
+    <div key={`music-${themeId}-${trackKey}`} className="fixed bottom-0 left-0 opacity-0 pointer-events-none z-[-1] overflow-hidden w-px h-px">
       <YouTube videoId={videoId} opts={opts} onReady={(e: YouTubeEvent) => { if(e.target) onReady(e.target); }} />
     </div>
   );
 };
 
 // ----------------------------------------------------------------------
-// 5. 3D SCENE WRAPPERS WITH LAZY LOADING
+// 5. ERROR BOUNDARY FOR SPLINE SCENES
 // ----------------------------------------------------------------------
-const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPointer = false, parallaxOffset = 0 }: any) => {
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Spline scene error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
+
+// ----------------------------------------------------------------------
+// 6. 3D SCENE WRAPPERS WITH LAZY LOADING
+// ----------------------------------------------------------------------
+const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPointer = false, parallaxOffset = 0, isHeavy = false, disabled = false }: any) => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [shouldUnload, setShouldUnload] = useState(false);
 
   useEffect(() => {
-    if (isVisible && !isLoaded) {
-      const timer = setTimeout(() => setIsLoaded(true), 100);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+    };
+    checkMobile();
+
+    // Debounce resize for better performance
+    let resizeTimer: NodeJS.Timeout;
+    const debouncedResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(checkMobile, 150);
+    };
+
+    window.addEventListener('resize', debouncedResize, { passive: true });
+    return () => {
+      window.removeEventListener('resize', debouncedResize);
+      clearTimeout(resizeTimer);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isVisible && !isLoaded && !disabled) {
+      // Aggressive delay on mobile for heavy scenes
+      const delay = isMobile ? (isHeavy ? 800 : 300) : 100;
+      const timer = setTimeout(() => setIsLoaded(true), delay);
       return () => clearTimeout(timer);
     }
-  }, [isVisible, isLoaded]);
+
+    // Unload scenes that are far away on mobile
+    if (!isVisible && isMobile && isLoaded) {
+      const unloadTimer = setTimeout(() => {
+        setShouldUnload(true);
+        setIsLoaded(false);
+      }, 1000);
+      return () => clearTimeout(unloadTimer);
+    }
+  }, [isVisible, isLoaded, isMobile, isHeavy, disabled]);
+
+  if (disabled) {
+    return (
+      <div
+        className="w-full h-full relative transition-opacity duration-700 parallax-layer flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
+        style={{
+          transform: `translateY(${parallaxOffset * 0.5}px) translateZ(0)`,
+        }}
+      >
+        <div className="text-center">
+          <div className="text-blue-400/40 font-mono text-xs mb-2">SPLINE DISABLED</div>
+          <div className="text-white/20 font-mono text-[10px]">Performance Mode Active</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
       className={`
-        w-full h-full relative transition-opacity duration-700 parallax-layer
+        w-full h-full relative transition-opacity duration-700 parallax-layer spline-container
         ${isVisible ? 'opacity-100' : 'opacity-0'}
         ${forceNoPointer ? 'pointer-events-none' : (allowInput ? 'pointer-events-auto' : 'pointer-events-none')}
       `}
-      style={{ transform: `translateY(${parallaxOffset * 0.5}px)` }}
+      style={{
+        transform: `translateY(${parallaxOffset * 0.5}px) translateZ(0)`,
+        willChange: isVisible ? 'transform' : 'auto'
+      }}
     >
       {isVisible && isLoaded && (
         <Suspense fallback={
@@ -561,7 +705,21 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
             LOADING ASSET...
           </div>
         }>
-           <Spline scene={sceneUrl} className="w-full h-full block object-cover" />
+           <ErrorBoundary fallback={
+             <div className="absolute inset-0 bg-gray-900/40 flex items-center justify-center">
+               <div className="text-white/60 text-sm font-mono">Scene unavailable</div>
+             </div>
+           }>
+             <Spline
+               scene={sceneUrl}
+               className="w-full h-full block object-cover"
+               style={{
+                 transform: 'translateZ(0)',
+                 backfaceVisibility: 'hidden',
+                 WebkitBackfaceVisibility: 'hidden'
+               }}
+             />
+           </ErrorBoundary>
         </Suspense>
       )}
       {isVisible && !isLoaded && (
@@ -606,13 +764,11 @@ const TSXWrapper = memo(({ componentName, isVisible }: { componentName: string; 
   );
 });
 
-const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset }: any) => {
-  const isHeavyScene = config.id === 5;
+const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false }: any) => {
+  const isHeavyScene = config.id === 5 || config.id === 6 || config.id === 10; // Heavy scenes
+  const isMobileSensitive = config.id === 3 || config.id === 4; // Showcase & VIP pages
+  const isLastPage = config.id === 10; // Last interactive page
   const isTSX = config.type === 'tsx';
-  const shouldRender = isTSX
-    ? (config.id >= activePage - 1) && (config.id <= activePage + 1)
-    : config.id === activePage;
-  const isActive = config.id === activePage;
   const sectionRef = useRef<HTMLElement | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -622,6 +778,17 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset 
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Mobile optimization: Only render current page for heavy scenes
+  const shouldRender = useMemo(() => {
+    if (isMobile && isHeavyScene) {
+      return config.id === activePage; // Only current page on mobile
+    }
+    // Desktop or light scenes: current + adjacent
+    return (config.id >= activePage - 1) && (config.id <= activePage + 1) || (isLastPage && activePage >= 9);
+  }, [config.id, activePage, isMobile, isHeavyScene, isLastPage]);
+
+  const isActive = config.id === activePage;
 
   useEffect(() => {
     if(sectionRef.current) onVisible(sectionRef.current, config.id - 1);
@@ -647,7 +814,9 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset 
               isVisible={shouldRender}
               sceneUrl={config.scene}
               allowInput={!config.disableInteraction}
-              parallaxOffset={isHeavyScene ? parallaxOffset * 0.15 : parallaxOffset}
+              parallaxOffset={isHeavyScene ? parallaxOffset * 0.15 : (isMobileSensitive || isLastPage) ? parallaxOffset * 0.3 : parallaxOffset}
+              isHeavy={isHeavyScene || isMobileSensitive || isLastPage}
+              disabled={disableSpline}
             />
         )}
         {/* Only show label for Spline scenes, not TSX components */}
@@ -667,7 +836,7 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset 
   );
 });
 
-const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileView, parallaxOffset }: any) => {
+const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileView, parallaxOffset, disableSpline = false }: any) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [splitPos, setSplitPos] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
@@ -675,6 +844,14 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
   const [targetPos, setTargetPos] = useState({ x: 72, y: 35 });
   const hitSoundRef = useRef<HTMLAudioElement | null>(null);
   const isActive = config.id === activePage;
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
@@ -719,10 +896,17 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
     setIsDragging(false);
   };
 
+  const rafRef = useRef<number>();
+
   const handleDragMove = useCallback((e: any) => {
     if (!containerRef.current) return;
-    requestAnimationFrame(() => {
-        const rect = containerRef.current!.getBoundingClientRect();
+
+    // Cancel previous RAF to prevent queue buildup
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+
+    rafRef.current = requestAnimationFrame(() => {
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         let newPos;
@@ -739,8 +923,8 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
 
   useEffect(() => {
     if (isDragging) {
-      window.addEventListener('mousemove', handleDragMove);
-      window.addEventListener('touchmove', handleDragMove);
+      window.addEventListener('mousemove', handleDragMove, { passive: true });
+      window.addEventListener('touchmove', handleDragMove, { passive: true });
       window.addEventListener('mouseup', handleDragEnd);
       window.addEventListener('touchend', handleDragEnd);
     }
@@ -749,6 +933,8 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
       window.removeEventListener('touchmove', handleDragMove);
       window.removeEventListener('mouseup', handleDragEnd);
       window.removeEventListener('touchend', handleDragEnd);
+      // Cleanup RAF
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [isDragging, handleDragMove]);
 
@@ -845,11 +1031,12 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
         className={`relative overflow-hidden bg-[#050505] border-blue-500/50 ${isMobileView ? 'border-b' : 'border-r'} ${isDragging ? 'transition-none' : 'transition-all duration-300 ease-out'}`}
       >
         <div className="absolute inset-0 w-full h-full"> 
-          <SceneWrapper 
-            isVisible={shouldRender} 
-            sceneUrl={config.sceneA} 
+          <SceneWrapper
+            isVisible={shouldRender}
+            sceneUrl={config.sceneA}
             forceNoPointer={isDragging}
             parallaxOffset={parallaxOffset * 0.3}
+            disabled={disableSpline}
           />
         </div>
         <div className="absolute top-8 left-8 z-20 pointer-events-none">
@@ -878,11 +1065,12 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
         className={`relative overflow-hidden bg-black ${isDragging ? 'transition-none' : 'transition-all duration-300 ease-out'}`}
       >
         <div className="absolute inset-0 w-full h-full">
-             <SceneWrapper 
-               isVisible={shouldRender} 
-               sceneUrl={config.sceneB} 
+             <SceneWrapper
+               isVisible={shouldRender}
+               sceneUrl={config.sceneB}
                forceNoPointer={isDragging}
                parallaxOffset={parallaxOffset * 0.7}
+               disabled={disableSpline}
              />
         </div>
         <div className="absolute bottom-8 right-8 z-20 text-right pointer-events-none">
@@ -896,7 +1084,7 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
 });
 
 // ----------------------------------------------------------------------
-// 6. BOTTOM CONTROLS & WIDGETS
+// 7. BOTTOM CONTROLS & WIDGETS
 // ----------------------------------------------------------------------
 const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volume, onVolumeChange, visible, accentColor }: any) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -909,10 +1097,10 @@ const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volu
     if (!visible) return null;
     
     return (
-        <div 
-          className="pointer-events-auto flex flex-col items-start gap-4 transition-all duration-700 ease-in-out absolute bottom-8 left-8" 
-          style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(20px)' }} 
-          onMouseEnter={() => setIsHovered(true)} 
+        <div
+          className="pointer-events-auto flex flex-col items-start gap-4 transition-all duration-700 ease-in-out absolute bottom-4 left-4 md:bottom-8 md:left-8 z-[100]"
+          style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(20px)' }}
+          onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
             <div 
@@ -987,7 +1175,7 @@ const SupportWidget = ({ accentColor }: { accentColor: string }) => {
     useEffect(() => { setTimeout(() => setIsVisible(true), 500); }, []);
     
     return (
-      <div className={`absolute bottom-8 right-8 z-[9999] pointer-events-auto transition-all duration-700 ease-out transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'}`}>
+      <div className={`absolute bottom-4 right-4 md:bottom-8 md:right-8 z-[100] pointer-events-auto transition-all duration-700 ease-out transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'}`}>
         <a 
           href="https://t.me/+dlP_A0ebMXs3NTg0" 
           target="_blank" 
@@ -1098,6 +1286,9 @@ export default function Home() {
   const prefersReducedMotionRef = useRef(false);
   const [isTouch, setIsTouch] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
+  const [musicKey, setMusicKey] = useState(0);
+  const [disableSpline, setDisableSpline] = useState(false);
+  const [showThemeQuickPick, setShowThemeQuickPick] = useState(false);
 
   const activeTheme = useMemo(() => {
     if (!ALL_THEMES || ALL_THEMES.length === 0) return FALLBACK_THEME as Theme;
@@ -1114,14 +1305,24 @@ export default function Home() {
   // --- INIT ---
   useEffect(() => {
     setIsClient(true);
-    
+
     // Inject Styles
     const styleSheet = document.createElement("style");
     styleSheet.innerText = GLOBAL_STYLES;
     document.head.appendChild(styleSheet);
-    
+
     setIsTouch(matchMedia && matchMedia('(pointer: coarse)').matches);
-    
+
+    // Auto-disable Spline on mobile for performance
+    const isMobileDevice = window.innerWidth < 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const savedSplinePref = localStorage.getItem('spline_enabled');
+    if (savedSplinePref === null && isMobileDevice) {
+      setDisableSpline(true); // Auto-disable on first mobile visit
+      localStorage.setItem('spline_enabled', 'false');
+    } else if (savedSplinePref !== null) {
+      setDisableSpline(savedSplinePref === 'false');
+    }
+
     // Check for reduced motion preference
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mediaQuery.matches);
@@ -1140,16 +1341,50 @@ export default function Home() {
       (mediaQuery as any).addListener(handleMotionChange);
     }
 
-    // Parallax scroll effect
+    // ========================================
+    // CRITICAL: Prevent page reloads on mobile browsers
+    // ========================================
+    const preventMobileReload = (e: TouchEvent) => {
+      // Prevent pull-to-refresh on mobile browsers
+      if ((e.target as HTMLElement)?.closest('.mobile-scroll')) {
+        const scrollable = (e.target as HTMLElement).closest('.mobile-scroll');
+        if (scrollable && scrollable.scrollTop === 0) {
+          e.preventDefault();
+        }
+      }
+    };
+
+    // Prevent accidental refresh gestures
+    document.addEventListener('touchstart', preventMobileReload, { passive: false });
+
+    // Disable pull-to-refresh on the body
+    document.body.style.overscrollBehavior = 'contain';
+
+    // Parallax scroll effect (with throttling for mobile)
+    let scrollTimeout: NodeJS.Timeout;
     const handleScroll = () => {
       if (prefersReducedMotionRef.current) return;
-      if (parallaxRafRef.current) cancelAnimationFrame(parallaxRafRef.current);
-      const scrollTop = scrollContainerRef.current ? scrollContainerRef.current.scrollTop : window.scrollY;
-      parallaxRafRef.current = requestAnimationFrame(() => {
-        setParallaxOffset(scrollTop);
-      });
+
+      // Throttle scroll updates on mobile
+      const isMobile = window.innerWidth < 768;
+      if (isMobile) {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          if (parallaxRafRef.current) cancelAnimationFrame(parallaxRafRef.current);
+          const scrollTop = scrollContainerRef.current ? scrollContainerRef.current.scrollTop : window.scrollY;
+          parallaxRafRef.current = requestAnimationFrame(() => {
+            setParallaxOffset(scrollTop);
+          });
+        }, 50);
+      } else {
+        if (parallaxRafRef.current) cancelAnimationFrame(parallaxRafRef.current);
+        const scrollTop = scrollContainerRef.current ? scrollContainerRef.current.scrollTop : window.scrollY;
+        parallaxRafRef.current = requestAnimationFrame(() => {
+          setParallaxOffset(scrollTop);
+        });
+      }
     };
-    
+
     const scrollElement = scrollContainerRef.current || window;
     scrollElement.addEventListener('scroll', handleScroll, { passive: true });
     if (scrollElement !== window) window.addEventListener('scroll', handleScroll, { passive: true });
@@ -1328,13 +1563,24 @@ export default function Home() {
    
   const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
     setActiveThemeId(themeId);
-    setIsMuted(muted); 
+    setIsMuted(muted);
     if (typeof window !== 'undefined') {
         localStorage.setItem('user_theme_id', themeId);
         localStorage.setItem('user_is_muted', String(muted));
     }
-    setShowConfigurator(false); 
+    setShowConfigurator(false);
     setParticleTrigger(prev => prev + 1);
+    setMusicKey(prev => prev + 1); // Force music player reload
+  }, []);
+
+  const handleQuickThemeChange = useCallback((themeId: string) => {
+    setActiveThemeId(themeId);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user_theme_id', themeId);
+    }
+    setParticleTrigger(prev => prev + 1);
+    setMusicKey(prev => prev + 1);
+    playClickSound();
   }, []);
 
   if (!isClient) return null;
@@ -1343,9 +1589,46 @@ export default function Home() {
     <>
       <Analytics />
       <SpeedInsights />
-      <BackgroundMusicSystem themeId={activeThemeId} onReady={handlePlayerReady} volume={volume} />
+      <BackgroundMusicSystem themeId={activeThemeId} onReady={handlePlayerReady} volume={volume} trackKey={musicKey} />
       <ParticleEffect trigger={particleTrigger} />
       {!isTouch && <CustomCursor accentColor={accentColor} />}
+
+      {/* Quick Theme Picker */}
+      {showThemeQuickPick && (
+        <div className="fixed inset-0 z-[800000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4" onClick={() => setShowThemeQuickPick(false)}>
+          <div className="max-w-4xl w-full max-h-[80vh] overflow-y-auto bg-black/80 rounded-3xl border border-white/10 p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white">Quick Theme Switch</h2>
+              <button onClick={() => setShowThemeQuickPick(false)} className="text-white/50 hover:text-white p-2">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {ALL_THEMES.filter(t => t.status === 'AVAILABLE').slice(0, 16).map(theme => (
+                <button
+                  key={theme.id}
+                  onClick={() => {
+                    handleQuickThemeChange(theme.id);
+                    setShowThemeQuickPick(false);
+                  }}
+                  className={`p-4 rounded-xl border transition-all hover:scale-105 ${
+                    theme.id === activeThemeId
+                      ? 'bg-blue-500/20 border-blue-500'
+                      : 'bg-white/5 border-white/10 hover:bg-white/10'
+                  }`}
+                  style={{
+                    filter: theme.filter,
+                    WebkitFilter: theme.filter
+                  }}
+                >
+                  <div className="text-sm font-bold text-white mb-1">{theme.name}</div>
+                  <div className="text-[10px] text-white/60">{theme.category}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* --- INFO PANEL --- */}
       <InfoPanel 
@@ -1469,13 +1752,52 @@ export default function Home() {
 
             {/* DESKTOP NAV */}
             <div className="hidden md:flex fixed right-8 top-1/2 -translate-y-1/2 z-50 flex-col gap-6 items-center pointer-events-auto">
+                {/* Theme Quick Switcher */}
                 <div className="relative group">
-                    <button 
+                    <button
+                      onClick={() => {
+                        playClickSound();
+                        if (navigator.vibrate) navigator.vibrate(10);
+                        setShowThemeQuickPick(true);
+                      }}
+                      className="w-10 h-10 bg-black/40 backdrop-blur rounded-full border border-white/20 flex items-center justify-center text-purple-400 hover:text-white transition-colors mb-4 hover-lift"
+                    >
+                        <Palette size={18} />
+                    </button>
+                    <span className="absolute right-12 top-2 text-[10px] font-mono bg-black/80 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                        QUICK THEME
+                    </span>
+                </div>
+
+                {/* Spline Toggle */}
+                <div className="relative group">
+                    <button
+                      onClick={() => {
+                        playClickSound();
+                        if (navigator.vibrate) navigator.vibrate(10);
+                        const newState = !disableSpline;
+                        setDisableSpline(newState);
+                        localStorage.setItem('spline_enabled', String(!newState));
+                      }}
+                      className={`w-10 h-10 bg-black/40 backdrop-blur rounded-full border border-white/20 flex items-center justify-center transition-colors mb-4 hover-lift ${
+                        disableSpline ? 'text-red-400 hover:text-red-300' : 'text-green-400 hover:text-white'
+                      }`}
+                    >
+                        <Zap size={18} />
+                    </button>
+                    <span className="absolute right-12 top-2 text-[10px] font-mono bg-black/80 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                        {disableSpline ? "SPLINE OFF (PERF)" : "SPLINE ON"}
+                    </span>
+                </div>
+
+                {/* Desktop/Mobile View Toggle */}
+                <div className="relative group">
+                    <button
                       onClick={() => {
                         playClickSound();
                         if (navigator.vibrate) navigator.vibrate(10);
                         setIsMobileView(!isMobileView);
-                      }} 
+                      }}
                       className="w-10 h-10 bg-black/40 backdrop-blur rounded-full border border-white/20 flex items-center justify-center text-blue-400 hover:text-white transition-colors mb-4 hover-lift"
                     >
                         {isMobileView ? <Smartphone size={18} /> : <Monitor size={18} />}
@@ -1652,19 +1974,21 @@ export default function Home() {
             {PAGE_CONFIG.map((page) => (
                 <React.Fragment key={page.id}>
                 {page.type === 'split' ? (
-                    <DraggableSplitSection 
-                      config={page} 
-                      activePage={activePage} 
-                      onVisible={handleRef} 
+                    <DraggableSplitSection
+                      config={page}
+                      activePage={activePage}
+                      onVisible={handleRef}
                       isMobileView={isMobileView}
                       parallaxOffset={parallaxOffset}
+                      disableSpline={disableSpline}
                     />
                 ) : (
-                    <FullScreenSection 
-                      config={page} 
-                      activePage={activePage} 
+                    <FullScreenSection
+                      config={page}
+                      activePage={activePage}
                       onVisible={handleRef}
                       parallaxOffset={parallaxOffset}
+                      disableSpline={disableSpline}
                     />
                 )}
                 </React.Fragment>

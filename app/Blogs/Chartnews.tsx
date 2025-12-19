@@ -452,7 +452,19 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
     const [count, setCount] = useState<number>(10);
     const [refreshKey, setRefreshKey] = useState(0);
 
-    const NEWS_REFRESH_RATE = 20000; 
+    const NEWS_REFRESH_RATE = 20000;
+
+    // ESC key support
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                onClose();
+            }
+        };
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [onClose]); 
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -506,10 +518,11 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                     >
                         <IconRefresh className={cn("h-4 w-4 text-neutral-500 group-hover:text-white", loading && "animate-spin")} />
                     </button>
-                    <button 
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClose(); }} 
-                      className="relative rounded-full p-2 text-neutral-500 transition hover:bg-red-500/10 hover:text-red-500"
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClose(); }}
+                      className="relative rounded-full p-2.5 text-white bg-red-500/20 transition-all hover:bg-red-500 hover:text-white hover:scale-110 border border-red-500/30 z-50"
                       aria-label="Close news feed"
+                      title="Close (ESC)"
                     >
                         <X className="h-5 w-5" />
                     </button>
@@ -645,14 +658,19 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
 
             <AnimatePresence>
                 {isOpen && (
-                    <div className="fixed inset-0 z-[999999] flex items-center justify-center p-3 md:p-6 pointer-events-auto">
+                    <div className="fixed inset-0 z-[999999] flex items-center justify-center p-3 md:p-6 pointer-events-auto overflow-hidden">
                         <motion.div
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             onClick={() => setIsOpen(false)}
-                            className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+                            className="absolute inset-0 bg-black/95 backdrop-blur-md cursor-pointer"
                         />
                         {/* Modal Body with Shimmer Border */}
-                        <ShimmerBorder borderRadius="rounded-3xl" borderWidth="inset-[2px]" speed={5} className="w-full max-w-6xl h-[92vh] md:h-[85vh] pointer-events-auto">
+                        <ShimmerBorder
+                            borderRadius="rounded-3xl"
+                            borderWidth="inset-[2px]"
+                            speed={5}
+                            className="relative z-10 w-full max-w-6xl h-[90vh] md:h-[85vh] pointer-events-auto"
+                        >
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -660,7 +678,8 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                                 transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                                 role="dialog"
                                 aria-modal="true"
-                                className="relative w-full h-full max-w-6xl overflow-hidden rounded-3xl border border-transparent bg-black shadow-2xl pointer-events-auto"
+                                onClick={(e) => e.stopPropagation()}
+                                className="relative w-full h-full overflow-hidden rounded-3xl border border-transparent bg-black shadow-2xl pointer-events-auto"
                             >
                                 <NewsFeedContent activeMarket={activeMarket as MarketFilter} onClose={() => setIsOpen(false)} />
                             </motion.div>
