@@ -1,0 +1,139 @@
+/* ============================================================================
+   PERFORMANCE-ONLY OPTIMIZATIONS
+   NO UI/COLOR CHANGES - Identical appearance on mobile and desktop
+   ============================================================================ */
+
+/* ============================================================================
+   CSS CUSTOM PROPERTIES (for mobile browser fixes only)
+   ============================================================================ */
+:root {
+  /* Viewport height fix for mobile browsers (Safari, Chrome mobile) */
+  --vh: 1vh;
+
+  /* Safe area insets for notched devices (iPhone X+) */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+}
+
+/* ============================================================================
+   MOBILE BROWSER FIXES (NO VISUAL CHANGES)
+   ============================================================================ */
+
+/* Prevent text size adjustment on mobile (maintains desktop sizing) */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Remove tap highlight (keeps colors identical) */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Font smoothing for better rendering */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Prevent pull-to-refresh on mobile */
+html {
+  overscroll-behavior-y: none;
+}
+
+/* ============================================================================
+   TOUCH OPTIMIZATIONS (NO VISUAL CHANGES)
+   ============================================================================ */
+
+/* Prevent callout on long press (iOS) - no visual change */
+button,
+a,
+[role="button"] {
+  -webkit-touch-callout: none;
+  /* Ensure proper touch handling */
+  touch-action: manipulation;
+}
+
+/* ============================================================================
+   PERFORMANCE OPTIMIZATIONS (GPU ACCELERATION)
+   ============================================================================ */
+
+/* GPU-accelerated transforms for smooth animations */
+.gpu-accelerated,
+section,
+.spline-container,
+.parallax-layer {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Prevent layout shifts during load */
+img,
+video,
+iframe {
+  /* GPU acceleration */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Optimize scroll performance */
+.mobile-scroll,
+.smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* ============================================================================
+   CROSS-BROWSER COMPATIBILITY (NO VISUAL CHANGES)
+   ============================================================================ */
+
+/* Safari-specific performance fixes */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari viewport units fix */
+  body {
+    min-height: -webkit-fill-available;
+  }
+
+  /* Prevent zoom on input focus (keeps UI identical) */
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* ============================================================================
+   REDUCED MOTION SUPPORT (ACCESSIBILITY)
+   ============================================================================ */
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================================
+   FOCUS VISIBLE (ACCESSIBILITY - MINIMAL VISUAL IMPACT)
+   ============================================================================ */
+
+/* Focus visible for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Remove focus outline for mouse users */
+*:focus:not(:focus-visible) {
+  outline: none;
+}

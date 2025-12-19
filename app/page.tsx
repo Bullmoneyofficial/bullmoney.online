@@ -10,8 +10,11 @@ import {
   Volume2, Volume1, VolumeX, X, Palette, Sparkles, MessageCircle,
   ChevronUp, ChevronDown, Info, MousePointer2,
   GripVertical, GripHorizontal, Smartphone, Monitor,
-  Layers, Map as MapIcon, Lock, Unlock, Zap
+  Layers, Map as MapIcon, Lock, Unlock, Zap, ChevronLeft, ChevronRight
 } from 'lucide-react';
+
+// --- INTERACTION UTILITIES ---
+import { playClick, playHover, playSwipe, createSwipeHandlers } from '@/lib/interactionUtils';
 
 // --- COMPONENT IMPORTS ---
 import { Navbar } from "@/components/Mainpage/navbar";
@@ -217,41 +220,48 @@ const getThemeColor = (id: string) => THEME_ACCENTS[id] || THEME_ACCENTS['defaul
 // ----------------------------------------------------------------------
 const GLOBAL_STYLES = `
   /* --- MOBILE SCROLL FIXES START --- */
-  html, body { 
-    background-color: black; 
+  // FIX #1: Remove fixed positioning that causes scroll issues
+  html, body {
+    background-color: black;
     overflow: hidden; /* Prevent native window scroll */
-    overscroll-behavior: none; /* Kill rubber-banding */
+    overscroll-behavior-y: none; /* Kill rubber-banding vertically */
     width: 100%;
     height: 100%;
-    position: fixed; /* Locks the frame in place */
   }
 
+  // FIX #1: Remove snap-scroll on mobile for smooth Instagram/TikTok-like scrolling
   .mobile-scroll {
     overflow-y: auto;
     overflow-x: hidden;
     height: 100dvh; /* Dynamic viewport height */
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
-    
-    /* ENFORCE SNAP ON ALL DEVICES */
-    scroll-snap-type: y mandatory; 
-    scroll-snap-stop: always; /* Force stop at every page */
+    overscroll-behavior-y: none; /* Changed from 'contain' */
   }
 
   /* Remove scrollbars but keep functionality */
   .mobile-scroll::-webkit-scrollbar { display: none; }
   .mobile-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 
+  // FIX #5: Use min-height for flexibility instead of fixed height
   section {
-    scroll-snap-align: start;
-    scroll-snap-stop: always; /* Crucial for "Hold" feel */
     width: 100%;
-    height: 100dvh; /* Force full height on mobile */
+    min-height: 100dvh; /* Changed from fixed height */
     position: relative;
     overflow: hidden;
     will-change: transform;
-    /* Ensure rigid structure */
-    min-height: 100dvh; 
+  }
+
+  /* Desktop only: Enable snap scrolling */
+  @media (min-width: 769px) {
+    .mobile-scroll {
+      scroll-snap-type: y mandatory;
+    }
+    section {
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      height: 100dvh;
+    }
   }
   /* --- MOBILE SCROLL FIXES END --- */
 
@@ -273,10 +283,23 @@ const GLOBAL_STYLES = `
     from { transform: translateX(-100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
   }
-  
+
   @keyframes slideOutLeft {
-    from { transform: translateX(0); opacity: 1; }
-    to { transform: translateX(-100%); opacity: 0; }
+    from { transform: translateX(0) scale(1); opacity: 1; }
+    to { transform: translateX(-200px) scale(0.5); opacity: 0; }
+  }
+
+  @keyframes slideOutRight {
+    from { transform: translateX(0) scale(1); opacity: 1; }
+    to { transform: translateX(200px) scale(0.5); opacity: 0; }
+  }
+
+  .animate-slideOutLeft {
+    animation: slideOutLeft 0.5s ease-out forwards;
+  }
+
+  .animate-slideOutRight {
+    animation: slideOutRight 0.5s ease-out forwards;
   }
   
   @keyframes bounce {
@@ -395,47 +418,72 @@ const GLOBAL_STYLES = `
     }
   }
   
-  /* Mobile optimizations */
+  /* ULTRA-OPTIMIZED Mobile performance - Locked 60fps target */
   @media (max-width: 768px) {
     .mobile-optimize {
       will-change: transform;
-      transform: translateZ(0);
+      transform: translate3d(0, 0, 0);
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
+      -webkit-perspective: 1000;
+      perspective: 1000;
     }
 
-    /* Reduce animations on mobile */
-    .shining-border::before {
-      animation-duration: 5s !important;
-    }
-
-    /* Optimize scroll */
+    /* GPU-accelerated everything for mobile */
     * {
       -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
     }
 
-    /* Slow down pages 3-4 on mobile */
-    section:nth-child(3) *,
-    section:nth-child(4) * {
-      animation-duration: 1.5s !important;
-      transition-duration: 600ms !important;
+    /* Optimize heavy animations for mobile - slower = smoother */
+    .shining-border::before {
+      animation-duration: 6s !important;
+      will-change: auto;  /* Remove will-change after animation starts */
+    }
+
+    /* Smooth transitions optimized for 60fps with hardware acceleration */
+    section {
+      transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      will-change: auto;
+      transform: translate3d(0, 0, 0);
+    }
+
+    /* Reduce layout shifts - force GPU layer */
+    button, a, .hover-lift {
+      transform: translate3d(0, 0, 0);
+      will-change: transform;
+      transition: transform 0.15s cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+
+    /* Optimize input elements */
+    input, select, textarea {
+      font-size: 16px !important;  /* Prevent zoom on iOS */
+      transform: translateZ(0);
+    }
+
+    /* Reduce animation complexity on mobile */
+    @keyframes particleFloat {
+      0% { opacity: 1; transform: translateY(0) scale(1) translateZ(0); }
+      100% { opacity: 0; transform: translateY(-50vh) scale(0.5) translateZ(0); }
     }
   }
 
+  // FIX #1: Remove restrictive touch-action that blocks swipe gestures
   .mobile-scroll {
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-y pinch-zoom;
-    overscroll-behavior: contain;
+    touch-action: pan-y; /* Removed pinch-zoom restriction */
+    overscroll-behavior-y: none; /* Changed from contain */
     scroll-behavior: smooth;
-    /* Critical for TikTok/Instagram browsers */
-    -webkit-overflow-scrolling: touch;
     position: relative;
     overflow-y: auto;
     overflow-x: hidden;
   }
 
   section {
-    touch-action: pan-y pinch-zoom;
+    touch-action: pan-y; /* Removed pinch-zoom restriction */
     contain: layout style paint;
     /* Ensure smooth rendering in all browsers */
     -webkit-transform: translateZ(0);
@@ -482,18 +530,33 @@ const GLOBAL_STYLES = `
 // 3. UI COMPONENTS
 // ----------------------------------------------------------------------
 
-const ShineButton = ({ children, onClick, active, className = "" }: any) => (
+const ShineButton = ({ children, onClick, active, className = "", disabled = false }: any) => (
   <button
     onClick={(e) => {
+      if (disabled) return;
       playClickSound();
       if (navigator.vibrate) navigator.vibrate(10);
       onClick(e);
     }}
+    onTouchStart={(e) => {
+      if (disabled) return;
+      e.currentTarget.style.transform = 'scale(0.95)';
+    }}
+    onTouchEnd={(e) => {
+      e.currentTarget.style.transform = '';
+    }}
+    disabled={disabled}
     className={`
       shining-border transition-all duration-300 group hover-lift
+      min-w-[44px] min-h-[44px] touch-manipulation select-none
       ${active ? 'scale-110 shadow-[0_0_20px_rgba(0,100,255,0.6)]' : 'opacity-70 hover:opacity-100'}
+      ${disabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer active:scale-95'}
       ${className}
     `}
+    style={{
+      WebkitTapHighlightColor: 'transparent',
+      touchAction: 'manipulation',
+    }}
   >
     <div className="relative z-10 w-full h-full flex items-center justify-center text-blue-100">
       {children}
@@ -501,14 +564,35 @@ const ShineButton = ({ children, onClick, active, className = "" }: any) => (
   </button>
 );
 
+// FIX #3: Add swipe-to-close functionality to OrientationOverlay
 const OrientationOverlay = ({ onDismiss }: { onDismiss: () => void }) => {
+  const touchStartY = useRef<number | null>(null);
+
   useEffect(() => {
     const timer = setTimeout(() => onDismiss(), 4800);
     return () => clearTimeout(timer);
   }, [onDismiss]);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartY.current === null) return;
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+    // Swipe down to close
+    if (deltaY > 100) {
+      onDismiss();
+    }
+    touchStartY.current = null;
+  };
+
   return (
-    <div className="fixed inset-0 z-[2000000] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500">
+    <div
+      className="fixed inset-0 z-[2000000] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <div className="mb-6 relative">
          <Smartphone className="w-16 h-16 text-blue-500 animate-pulse" />
          <div className="absolute top-0 right-0 -mr-4 -mt-2">
@@ -643,25 +727,8 @@ const InfoPanel = ({ config, isOpen, onClose, accentColor }: any) => {
   );
 };
 
-// Sound effect helper
-const playClickSound = () => {
-  if (typeof window === 'undefined') return;
-  try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.value = 800;
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.1);
-  } catch (e) {}
-};
+// Legacy sound effect helper (deprecated - use playClick from interactionUtils instead)
+const playClickSound = playClick;
 
 // ----------------------------------------------------------------------
 // 4. MUSIC SYSTEM
@@ -735,20 +802,30 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
     };
   }, []);
 
+  // OPTIMIZED: Reduce aggressive loading delays for better mobile performance
   useEffect(() => {
     if (isVisible && !isLoaded && !disabled) {
-      // Aggressive delay on mobile for heavy scenes
-      const delay = isMobile ? (isHeavy ? 800 : 300) : 100;
-      const timer = setTimeout(() => setIsLoaded(true), delay);
-      return () => clearTimeout(timer);
+      // Ultra-fast loading on all devices for smooth experience
+      const delay = isMobile ? (isHeavy ? 150 : 0) : 50;
+
+      // Use requestIdleCallback for non-critical scenes
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window && !isHeavy) {
+        const handle = (window as any).requestIdleCallback(() => {
+          setIsLoaded(true);
+        }, { timeout: delay });
+        return () => (window as any).cancelIdleCallback(handle);
+      } else {
+        const timer = setTimeout(() => setIsLoaded(true), delay);
+        return () => clearTimeout(timer);
+      }
     }
 
-    // Unload scenes that are far away on mobile
+    // Aggressive memory management: Unload scenes that are far away
     if (!isVisible && isMobile && isLoaded) {
       const unloadTimer = setTimeout(() => {
         setShouldUnload(true);
         setIsLoaded(false);
-      }, 1000);
+      }, 800);  // Reduced from 1000ms for faster cleanup
       return () => clearTimeout(unloadTimer);
     }
   }, [isVisible, isLoaded, isMobile, isHeavy, disabled]);
@@ -861,10 +938,13 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // OPTIMIZED: Render current + 2 adjacent pages for ultra-smooth transitions
   const shouldRender = useMemo(() => {
-    if (isMobile && isHeavyScene) return config.id === activePage;
-    return (config.id >= activePage - 1) && (config.id <= activePage + 1) || (isLastPage && activePage >= 9);
-  }, [config.id, activePage, isMobile, isHeavyScene, isLastPage]);
+    // Render current page and 2 adjacent pages in each direction (prevents blank screens)
+    // This ensures smooth scrolling without lag on fast swipes
+    const distance = Math.abs(config.id - activePage);
+    return distance <= 2 || (isLastPage && activePage >= 8);
+  }, [config.id, activePage, isLastPage]);
 
   const isActive = config.id === activePage;
 
@@ -872,10 +952,11 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
     if(sectionRef.current) onVisible(sectionRef.current, config.id - 1);
   }, [onVisible, config.id]);
 
+  // FIX #7: Remove snap classes on mobile, use dynamic heights
   return (
     <section
       ref={sectionRef}
-      className={`relative w-full h-[100dvh] flex-none snap-start snap-always bg-black flex flex-col items-center justify-center ${isActive ? 'page-flip-active' : ''}`}
+      className={`relative w-full ${isMobile ? 'min-h-[100dvh]' : 'h-[100dvh]'} flex-none bg-black flex flex-col items-center justify-center ${isActive ? 'page-flip-active' : ''}`}
     >
       <div className={`w-full h-full relative ${isTSX ? 'overflow-y-auto no-scrollbar' : 'overflow-hidden'}`}>
         {config.type === 'tsx' ? (
@@ -1031,10 +1112,11 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
 
   const shouldRender = (config.id >= activePage - 1) && (config.id <= activePage + 1);
 
+  // FIX #7: Remove snap classes on split section for mobile
   return (
-    <section 
-      ref={containerRef} 
-      className={`relative w-full h-[100dvh] flex-none snap-start snap-always overflow-hidden bg-black flex ${layoutClass} ${isDragging ? 'select-none cursor-grabbing' : ''} mobile-optimize`}
+    <section
+      ref={containerRef}
+      className={`relative w-full ${isMobile ? 'min-h-[100dvh]' : 'h-[100dvh]'} flex-none overflow-hidden bg-black flex ${layoutClass} ${isDragging ? 'select-none cursor-grabbing' : ''} mobile-optimize`}
     >
       {isDragging && <div className="absolute inset-0 z-[60] bg-transparent" />}
 
@@ -1180,14 +1262,24 @@ const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volu
               style={containerStyle}
             >
                 <div className="relative group">
-                  <button 
-                    onClick={(e) => { 
-                      e.stopPropagation(); 
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
                       playClickSound();
                       if (navigator.vibrate) navigator.vibrate(10);
-                      onOpenTheme(e); 
-                    }} 
-                    className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 text-gray-400 transition-all duration-300 border border-transparent group relative hover:text-white hover:bg-white/10"
+                      onOpenTheme(e);
+                    }}
+                    onTouchStart={(e) => {
+                      e.currentTarget.style.transform = 'scale(0.9)';
+                    }}
+                    onTouchEnd={(e) => {
+                      e.currentTarget.style.transform = '';
+                    }}
+                    className="flex items-center justify-center min-w-[44px] min-h-[44px] w-10 h-10 rounded-full bg-white/5 text-gray-400 transition-all duration-300 border border-transparent group relative hover:text-white hover:bg-white/10 touch-manipulation active:scale-90"
+                    style={{
+                      WebkitTapHighlightColor: 'transparent',
+                      touchAction: 'manipulation',
+                    }}
                   >
                       <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-20 transition-opacity shimmer-effect" style={{ backgroundColor: accentColor }} />
                       <Palette size={18} style={{ color: isHovered ? accentColor : undefined }} />
@@ -1201,13 +1293,25 @@ const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volu
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      playClickSound();
+                      if (navigator.vibrate) navigator.vibrate(12);
                       onTogglePerformance();
                     }}
-                    className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 border border-transparent group relative hover-lift ${
+                    onTouchStart={(e) => {
+                      e.currentTarget.style.transform = 'scale(0.9)';
+                    }}
+                    onTouchEnd={(e) => {
+                      e.currentTarget.style.transform = '';
+                    }}
+                    className={`flex items-center justify-center min-w-[44px] min-h-[44px] w-10 h-10 rounded-full transition-all duration-300 border border-transparent group relative hover-lift touch-manipulation active:scale-90 ${
                       disableSpline
                         ? 'bg-blue-500 text-black shadow-[0_0_15px_rgba(59,130,246,0.35)]'
                         : 'bg-white/5 text-green-400 hover:text-white hover:bg-white/10'
                     }`}
+                    style={{
+                      WebkitTapHighlightColor: 'transparent',
+                      touchAction: 'manipulation',
+                    }}
                   >
                     <Zap size={18} />
                   </button>
@@ -1218,18 +1322,26 @@ const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volu
                 
                 <div className="w-px h-6 bg-white/10 mx-1" />
                 
-                <button 
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
                     playClickSound();
                     if (navigator.vibrate) navigator.vibrate(10);
-                    onToggleMusic(); 
-                  }} 
-                  className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-500 relative`} 
-                  style={{ 
-                      backgroundColor: isPlaying ? `${accentColor}33` : '#1f2937', 
-                      color: isPlaying ? accentColor : '#6b7280', 
-                      boxShadow: isPlaying ? `0 0 15px ${accentColor}4d` : 'none' 
+                    onToggleMusic();
+                  }}
+                  onTouchStart={(e) => {
+                    e.currentTarget.style.transform = 'scale(0.9)';
+                  }}
+                  onTouchEnd={(e) => {
+                    e.currentTarget.style.transform = '';
+                  }}
+                  className={`flex items-center justify-center min-w-[44px] min-h-[44px] w-10 h-10 rounded-full transition-all duration-500 relative touch-manipulation active:scale-90`}
+                  style={{
+                      backgroundColor: isPlaying ? `${accentColor}33` : '#1f2937',
+                      color: isPlaying ? accentColor : '#6b7280',
+                      boxShadow: isPlaying ? `0 0 15px ${accentColor}4d` : 'none',
+                      WebkitTapHighlightColor: 'transparent',
+                      touchAction: 'manipulation',
                   }}
                 >
                     {isPlaying ? (volume > 50 ? <Volume2 size={18}/> : <Volume1 size={18}/>) : <VolumeX size={18}/>}
@@ -1268,34 +1380,57 @@ const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volu
 
 const SupportWidget = ({ accentColor }: { accentColor: string }) => {
     const [isVisible, setIsVisible] = useState(false);
-    useEffect(() => { setTimeout(() => setIsVisible(true), 500); }, []);
-    
+    const [isPulsing, setIsPulsing] = useState(true);
+
+    useEffect(() => {
+      setTimeout(() => setIsVisible(true), 500);
+      const timer = setTimeout(() => setIsPulsing(false), 5000);
+      return () => clearTimeout(timer);
+    }, []);
+
     return (
       <div className={`absolute bottom-4 right-4 md:bottom-8 md:right-8 z-[100] pointer-events-auto transition-all duration-700 ease-out transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'}`}>
-        <a 
-          href="https://t.me/+dlP_A0ebMXs3NTg0" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="group relative flex items-center justify-center w-16 h-16 rounded-full transition-all duration-300 hover:-translate-y-1 hover-lift"
+        <a
+          href="https://t.me/+dlP_A0ebMXs3NTg0"
+          target="_blank"
+          rel="noopener noreferrer"
           onClick={() => {
             playClickSound();
-            if (navigator.vibrate) navigator.vibrate(20);
+            if (navigator.vibrate) navigator.vibrate([15, 5, 15]);
           }}
+          onMouseEnter={() => playHover()}
+          onTouchStart={(e) => {
+            playHover();
+            e.currentTarget.style.transform = 'scale(0.9)';
+          }}
+          onTouchEnd={(e) => {
+            e.currentTarget.style.transform = '';
+          }}
+          className="group relative flex items-center justify-center min-w-[56px] min-h-[56px] w-16 h-16 rounded-full transition-all duration-300 hover:-translate-y-1 hover:scale-110 active:scale-95 touch-manipulation"
+          style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
         >
-          <div 
-            className="absolute inset-0 rounded-full blur-[20px] opacity-40 animate-pulse group-hover:opacity-80 group-hover:scale-110 transition-all duration-500" 
-            style={{ backgroundColor: accentColor }} 
+          <div
+            className={`absolute inset-0 rounded-full blur-[20px] opacity-40 transition-all duration-500 group-hover:opacity-80 group-hover:scale-110 ${isPulsing ? 'animate-pulse' : ''}`}
+            style={{ backgroundColor: accentColor }}
           />
-          
-          <div 
-            className="relative flex items-center justify-center w-full h-full rounded-full shadow-inner border overflow-hidden z-10" 
-            style={{ 
-                background: `linear-gradient(135deg, ${accentColor}cc, ${accentColor}, ${accentColor}99)`, 
-                borderColor: `${accentColor}88` 
+          <div className="absolute -top-10 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+            <div className="px-3 py-1.5 rounded-lg text-xs font-bold text-white whitespace-nowrap shadow-lg" style={{ backgroundColor: accentColor }}>
+              Get Help!
+            </div>
+          </div>
+          <div
+            className="relative flex items-center justify-center w-full h-full rounded-full shadow-inner border overflow-hidden z-10 group-hover:shadow-2xl transition-shadow"
+            style={{
+                background: `linear-gradient(135deg, ${accentColor}cc, ${accentColor}, ${accentColor}99)`,
+                borderColor: `${accentColor}88`
             }}
           >
-              <MessageCircle className="w-7 h-7 text-white relative z-30 drop-shadow-md" strokeWidth={2.5} />
+              <MessageCircle className="w-7 h-7 text-white relative z-30 drop-shadow-md group-hover:scale-110 transition-transform" strokeWidth={2.5} />
+              <span className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-20 group-hover:animate-ping" style={{ backgroundColor: 'white' }} />
           </div>
+          {isPulsing && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-black animate-pulse" style={{ backgroundColor: '#ef4444' }} />
+          )}
         </a>
       </div>
     );
@@ -1414,6 +1549,20 @@ export default function Home() {
     styleSheet.innerText = GLOBAL_STYLES;
     document.head.appendChild(styleSheet);
 
+    // PERFORMANCE: Preload critical Spline scenes
+    const preloadScenes = [
+      "/scene1.splinecode", // Hero scene
+      "/scene.splinecode",  // Showcase
+    ];
+
+    preloadScenes.forEach((scene) => {
+      const link = document.createElement("link");
+      link.rel = "prefetch";
+      link.href = scene;
+      link.as = "fetch";
+      document.head.appendChild(link);
+    });
+
     setIsTouch(matchMedia && matchMedia('(pointer: coarse)').matches);
 
     // Auto-disable Spline by default; preserve user preference when available
@@ -1470,28 +1619,36 @@ export default function Home() {
     // Disable pull-to-refresh on the body
     document.body.style.overscrollBehavior = 'contain';
 
-    // Parallax scroll effect (with throttling for mobile)
-    let scrollTimeout: NodeJS.Timeout;
+    // ULTRA-OPTIMIZED: 60fps scroll with advanced RAF throttling
+    let rafId: number | null = null;
+    let lastScrollTime = 0;
+    let ticking = false;
+
     const handleScroll = () => {
       if (prefersReducedMotionRef.current) return;
 
-      // Throttle scroll updates on mobile
-      const isMobile = window.innerWidth < 768;
-      if (isMobile) {
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-          if (parallaxRafRef.current) cancelAnimationFrame(parallaxRafRef.current);
+      const now = performance.now();
+
+      // Advanced throttling: Only update on actual frame boundaries
+      if (now - lastScrollTime < 16.67) return;
+
+      lastScrollTime = now;
+
+      // Use RAF ticking pattern for guaranteed 60fps
+      if (!ticking) {
+        if (rafId !== null) cancelAnimationFrame(rafId);
+
+        rafId = requestAnimationFrame(() => {
           const scrollTop = scrollContainerRef.current ? scrollContainerRef.current.scrollTop : window.scrollY;
-          parallaxRafRef.current = requestAnimationFrame(() => {
-            setParallaxOffset(scrollTop);
-          });
-        }, 50);
-      } else {
-        if (parallaxRafRef.current) cancelAnimationFrame(parallaxRafRef.current);
-        const scrollTop = scrollContainerRef.current ? scrollContainerRef.current.scrollTop : window.scrollY;
-        parallaxRafRef.current = requestAnimationFrame(() => {
+
+          // Batch state update to reduce re-renders
           setParallaxOffset(scrollTop);
+
+          ticking = false;
+          rafId = null;
         });
+
+        ticking = true;
       }
     };
 
@@ -1588,41 +1745,113 @@ export default function Home() {
   }, [isClient]);
 
   // --- SCROLL OBSERVER ---
+  // ULTRA-OPTIMIZED: Intersection observer with multiple thresholds for smooth detection
   useEffect(() => {
     if(currentStage !== 'content') return;
-     
+
+    const isMobile = window.innerWidth < 768;
+
+    // Multiple thresholds for more accurate detection
+    const thresholds = isMobile
+      ? [0.25, 0.5, 0.75]  // Lower thresholds on mobile for faster response
+      : [0.3, 0.5, 0.7];    // Standard thresholds on desktop
+
     observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
+          // Only trigger on primary threshold crossing (50%)
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
             const index = pageRefs.current.indexOf(entry.target as HTMLElement);
-            if (index !== -1) {
+            if (index !== -1 && index + 1 !== activePage) {
+              // Use transition for smooth state updates
               startTransition(() => {
                 setActivePage(index + 1);
                 setParticleTrigger(prev => prev + 1);
+                // Subtle haptic feedback on page change
+                if (navigator.vibrate) navigator.vibrate(8);
               });
             }
           }
         });
       },
-      { threshold: 0.4, root: scrollContainerRef.current || null } 
+      {
+        threshold: thresholds,
+        root: scrollContainerRef.current || null,
+        rootMargin: isMobile ? '0px' : '-10% 0px'  // Trigger slightly before on desktop
+      }
     );
-    
+
     pageRefs.current.forEach((ref) => { if (ref) observerRef.current?.observe(ref); });
     return () => observerRef.current?.disconnect();
-  }, [currentStage]);
+  }, [currentStage, activePage]);
 
   const handleRef = useCallback((el: HTMLElement | null, index: number) => {
     pageRefs.current[index] = el;
     if (el && observerRef.current) observerRef.current.observe(el);
   }, []);
 
+  // FIX #4: Improved page navigation with haptic feedback
   const scrollToPage = (index: number) => {
     if(index < 0 || index >= PAGE_CONFIG.length) return;
     setIsMobileNavOpen(false);
     playClickSound();
     if (navigator.vibrate) navigator.vibrate(10);
     pageRefs.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  // OPTIMIZED: Swipe navigation between pages
+  const [swipeIndicator, setSwipeIndicator] = useState<'left' | 'right' | null>(null);
+
+  const navigateToNextPage = useCallback(() => {
+    if (activePage < PAGE_CONFIG.length) {
+      playSwipe();
+      scrollToPage(activePage); // activePage is 1-indexed, scrollToPage expects 0-indexed
+      setSwipeIndicator('left');
+      setTimeout(() => setSwipeIndicator(null), 500);
+    }
+  }, [activePage]);
+
+  const navigateToPrevPage = useCallback(() => {
+    if (activePage > 1) {
+      playSwipe();
+      scrollToPage(activePage - 2); // activePage is 1-indexed, scrollToPage expects 0-indexed
+      setSwipeIndicator('right');
+      setTimeout(() => setSwipeIndicator(null), 500);
+    }
+  }, [activePage]);
+
+  // Create swipe handlers for page navigation
+  const swipeHandlers = useMemo(() =>
+    createSwipeHandlers({
+      onSwipeLeft: navigateToNextPage,
+      onSwipeRight: navigateToPrevPage,
+      threshold: 80,
+      velocityThreshold: 0.4,
+      preventScroll: false,
+    }),
+    [navigateToNextPage, navigateToPrevPage]
+  );
+
+  // FIX #4: Add hold-to-switch functionality for page buttons
+  const [holdTimer, setHoldTimer] = useState<NodeJS.Timeout | null>(null);
+  const [isHolding, setIsHolding] = useState(false);
+
+  const handlePageButtonHoldStart = (index: number) => {
+    setIsHolding(true);
+    const timer = setTimeout(() => {
+      scrollToPage(index);
+      if (navigator.vibrate) navigator.vibrate([10, 50, 10]); // Double vibration for hold action
+      setIsHolding(false);
+    }, 500); // 500ms hold time
+    setHoldTimer(timer);
+  };
+
+  const handlePageButtonHoldEnd = () => {
+    if (holdTimer) {
+      clearTimeout(holdTimer);
+      setHoldTimer(null);
+    }
+    setIsHolding(false);
   };
 
   // --- MUSIC HANDLERS ---
@@ -1718,11 +1947,26 @@ export default function Home() {
       {!isTouch && <CustomCursor accentColor={accentColor} />}
 
       {/* Quick Theme Picker */}
+      {/* FIX #3: Add swipe-to-close to Quick Theme Picker */}
       {showThemeQuickPick && (
-        <div 
-          className="fixed inset-0 z-[800000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4" 
+        <div
+          className="fixed inset-0 z-[800000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4"
           onClick={() => setShowThemeQuickPick(false)}
           onDoubleClick={() => setShowThemeQuickPick(false)}
+          onTouchStart={(e) => {
+            const touch = e.touches[0];
+            (e.currentTarget as any)._swipeStartY = touch.clientY;
+          }}
+          onTouchEnd={(e) => {
+            const startY = (e.currentTarget as any)._swipeStartY;
+            if (startY) {
+              const endY = e.changedTouches[0].clientY;
+              if (Math.abs(endY - startY) > 120) {
+                setShowThemeQuickPick(false);
+                if (navigator.vibrate) navigator.vibrate(15);
+              }
+            }
+          }}
         >
           <div className="max-w-4xl w-full max-h-[80vh] overflow-y-auto bg-black/80 rounded-3xl border border-white/10 p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
@@ -1763,21 +2007,77 @@ export default function Home() {
       )}
 
       {/* --- INFO PANEL --- */}
-      <InfoPanel 
-        config={PAGE_CONFIG[activePage - 1]} 
-        isOpen={infoPanelOpen} 
+      <InfoPanel
+        config={PAGE_CONFIG[activePage - 1]}
+        isOpen={infoPanelOpen}
         onClose={() => setInfoPanelOpen(false)}
         accentColor={accentColor}
       />
+
+      {/* FIX #10: Add edge peeker for Info Panel (left edge) */}
+      {!infoPanelOpen && currentStage === 'content' && (
+        <div
+          className="fixed left-0 top-1/2 -translate-y-1/2 z-[500000] w-1 h-32 bg-gradient-to-r from-blue-500/50 to-transparent cursor-pointer hover:w-2 transition-all"
+          style={{ background: `linear-gradient(to right, ${accentColor}80, transparent)` }}
+          onTouchStart={(e) => {
+            const touch = e.touches[0];
+            (e.currentTarget as any)._swipeStartX = touch.clientX;
+          }}
+          onTouchEnd={(e) => {
+            const startX = (e.currentTarget as any)._swipeStartX;
+            if (startX !== undefined && startX < 50) {
+              const endX = e.changedTouches[0].clientX;
+              if (endX - startX > 50) {
+                setInfoPanelOpen(true);
+                if (navigator.vibrate) navigator.vibrate(15);
+              }
+            }
+          }}
+          onClick={() => setInfoPanelOpen(true)}
+        >
+          <div className="absolute left-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
+            <Info size={12} className="text-white" />
+          </div>
+        </div>
+      )}
       
       {/* --- FAQ OVERLAY --- */}
+      {/* FIX #3: Add swipe-to-close to FAQ overlay */}
       {faqOpen && (
-        <div className="fixed inset-0 z-[950000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div
+          className="fixed inset-0 z-[950000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+          onTouchStart={(e) => {
+            const touch = e.touches[0];
+            (e.currentTarget as any)._swipeStartY = touch.clientY;
+          }}
+          onTouchEnd={(e) => {
+            const startY = (e.currentTarget as any)._swipeStartY;
+            if (startY) {
+              const endY = e.changedTouches[0].clientY;
+              if (Math.abs(endY - startY) > 100) {
+                setFaqOpen(false);
+                if (navigator.vibrate) navigator.vibrate(15);
+              }
+            }
+          }}
+        >
           <div className="relative w-full max-w-5xl">
-            <button 
-              onClick={() => setFaqOpen(false)} 
-              onDoubleClick={() => setFaqOpen(false)} 
-              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+            <button
+              onClick={() => {
+                playClick();
+                if (navigator.vibrate) navigator.vibrate(10);
+                setFaqOpen(false);
+              }}
+              onDoubleClick={() => setFaqOpen(false)}
+              onTouchStart={(e) => {
+                playHover();
+                e.currentTarget.style.transform = 'scale(0.9)';
+              }}
+              onTouchEnd={(e) => {
+                e.currentTarget.style.transform = '';
+              }}
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-90"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
               aria-label="Close FAQ"
             >
               <X size={22} />
@@ -1789,12 +2089,22 @@ export default function Home() {
         </div>
       )}
 
+      {/* FIX #4: Add progress bar showing scroll position through all pages */}
+      {currentStage === 'content' && (
+        <div className="fixed top-0 left-0 right-0 z-[450000] h-1 bg-black/50 pointer-events-none">
+          <div
+            className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
+            style={{ width: `${((activePage - 1) / (PAGE_CONFIG.length - 1)) * 100}%` }}
+          />
+        </div>
+      )}
+
       {/* --- LAYER 1: FIXED CONTROLS --- */}
       <div className="fixed inset-0 z-[400000] pointer-events-none">
-          <BottomControls 
-            visible={currentStage === 'content'} 
-            isPlaying={isPlaying} 
-            onToggleMusic={toggleMusic} 
+          <BottomControls
+            visible={currentStage === 'content'}
+            isPlaying={isPlaying}
+            onToggleMusic={toggleMusic}
             onOpenTheme={(e?: any) => {
               const isDouble = (e?.detail ?? 1) >= 2;
               if (showConfigurator || isDouble) {
@@ -1815,20 +2125,46 @@ export default function Home() {
       </div>
 
       {/* --- LAYER 2: CONFIGURATOR --- */}
+      {/* FIX #3: Add swipe-to-close to Theme Configurator */}
       {showConfigurator && (
-        <div className="fixed inset-0 z-[300000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+        <div
+          className="fixed inset-0 z-[300000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300"
+          onTouchStart={(e) => {
+            const touch = e.touches[0];
+            (e.currentTarget as any)._swipeStartY = touch.clientY;
+          }}
+          onTouchEnd={(e) => {
+            const startY = (e.currentTarget as any)._swipeStartY;
+            if (startY) {
+              const endY = e.changedTouches[0].clientY;
+              if (Math.abs(endY - startY) > 100) {
+                setShowConfigurator(false);
+                if (navigator.vibrate) navigator.vibrate(15);
+              }
+            }
+          }}
+        >
             <div className="relative w-full max-w-6xl h-[80vh] bg-[#020617] rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
-                <button 
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
                     playClickSound();
-                    setShowConfigurator(false); 
-                  }} 
-                  onDoubleClick={(e) => { 
-                    e.stopPropagation(); 
-                    setShowConfigurator(false); 
-                  }} 
-                  className="absolute top-6 right-6 z-[10] p-2 text-white/50 hover:text-white transition-colors hover-lift"
+                    if (navigator.vibrate) navigator.vibrate(10);
+                    setShowConfigurator(false);
+                  }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    setShowConfigurator(false);
+                  }}
+                  onTouchStart={(e) => {
+                    playHover();
+                    e.currentTarget.style.transform = 'scale(0.9)';
+                  }}
+                  onTouchEnd={(e) => {
+                    e.currentTarget.style.transform = '';
+                  }}
+                  className="absolute top-6 right-6 z-[10] p-2 text-white/50 hover:text-white transition-all hover-lift min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-90"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
                     <X size={28} />
                 </button>
@@ -1886,10 +2222,23 @@ export default function Home() {
         {!isTouch && <TargetCursor spinDuration={2} hideDefaultCursor={false} targetSelector=".cursor-target, a, button" />}
         
         {/* --- SCROLL CONTAINER --- */}
-        <main 
-          ref={scrollContainerRef} 
-          data-scroll-container 
+        <main
+          ref={scrollContainerRef}
+          data-scroll-container
           className={`w-full h-full flex flex-col overflow-y-scroll overflow-x-hidden ${isTouch ? '' : 'snap-y snap-mandatory'} scroll-smooth bg-black no-scrollbar text-white relative mobile-scroll`}
+          onTouchStart={swipeHandlers.onTouchStart}
+          onTouchMove={swipeHandlers.onTouchMove}
+          onTouchEnd={swipeHandlers.onTouchEnd}
+          onMouseDown={swipeHandlers.onMouseDown}
+          onMouseMove={swipeHandlers.onMouseMove}
+          onMouseUp={swipeHandlers.onMouseUp}
+          style={{
+            WebkitOverflowScrolling: 'touch',
+            WebkitTapHighlightColor: 'transparent',
+            touchAction: 'pan-y',
+            willChange: 'scroll-position',
+            transform: 'translateZ(0)',
+          }}
         >
             
             {showOrientationWarning && (
@@ -1991,61 +2340,122 @@ export default function Home() {
             </div>
 
             {/* MOBILE NAV HUD */}
-            <div className={`fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl transition-all duration-500 flex flex-col items-center justify-center p-6 ${isMobileNavOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none translate-y-10'}`}>
-                <button 
+            {/* FIX #3: Add swipe-to-close to Mobile Navigation */}
+            <div
+              className={`fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl transition-all duration-500 flex flex-col items-center justify-center p-6 ${isMobileNavOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none translate-y-10'}`}
+              onTouchStart={(e) => {
+                const touch = e.touches[0];
+                (e.currentTarget as any)._swipeStartY = touch.clientY;
+              }}
+              onTouchEnd={(e) => {
+                const startY = (e.currentTarget as any)._swipeStartY;
+                if (startY) {
+                  const endY = e.changedTouches[0].clientY;
+                  if (Math.abs(endY - startY) > 100) {
+                    setIsMobileNavOpen(false);
+                    if (navigator.vibrate) navigator.vibrate(15);
+                  }
+                }
+              }}
+            >
+                <button
                   onClick={() => {
                     playClickSound();
+                    if (navigator.vibrate) navigator.vibrate(10);
                     setIsMobileNavOpen(false);
-                  }} 
+                  }}
                   onDoubleClick={() => setIsMobileNavOpen(false)}
-                  className="absolute top-6 right-6 text-white/50 hover:text-white p-2 hover-lift"
+                  onTouchStart={(e) => {
+                    playHover();
+                    e.currentTarget.style.transform = 'scale(0.9)';
+                  }}
+                  onTouchEnd={(e) => {
+                    e.currentTarget.style.transform = '';
+                  }}
+                  className="absolute top-6 right-6 text-white/50 hover:text-white p-2 hover-lift min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-90 transition-all"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
                   <X size={32} />
                 </button>
                 
                 <h2 className="text-white/40 font-mono text-sm tracking-[0.3em] mb-8">MISSION CONTROL</h2>
                 
+                {/* FIX #4: Add hold-to-switch and haptic feedback to mobile nav buttons */}
                 <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
                     {PAGE_CONFIG.map((page, index) => (
-                        <button 
-                          key={page.id} 
-                          onClick={() => scrollToPage(index)} 
-                          className={`relative h-24 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-200 hover-lift ${
-                            activePage === page.id 
-                              ? 'bg-blue-600/20 border-blue-500 shadow-[0_0_30px_rgba(0,100,255,0.3)]' 
+                        <button
+                          key={page.id}
+                          onClick={() => {
+                            playClick();
+                            if (navigator.vibrate) navigator.vibrate(12);
+                            scrollToPage(index);
+                          }}
+                          onTouchStart={() => {
+                            playHover();
+                            handlePageButtonHoldStart(index);
+                          }}
+                          onTouchEnd={handlePageButtonHoldEnd}
+                          onMouseDown={() => handlePageButtonHoldStart(index)}
+                          onMouseUp={handlePageButtonHoldEnd}
+                          onMouseLeave={handlePageButtonHoldEnd}
+                          className={`relative h-24 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-200 hover-lift touch-manipulation active:scale-95 ${
+                            activePage === page.id
+                              ? 'bg-blue-600/20 border-blue-500 shadow-[0_0_30px_rgba(0,100,255,0.3)]'
                               : 'bg-white/5 border-white/10 hover:bg-white/10'
-                          }`}
+                          } ${isHolding ? 'scale-95' : ''}`}
+                          style={{ WebkitTapHighlightColor: 'transparent' }}
                         >
                             <span className="text-2xl font-bold text-white">{index + 1}</span>
                             <span className="text-[10px] font-mono text-blue-300 tracking-wider uppercase">
                               {page.label}
                             </span>
+                            {/* Hold indicator */}
+                            <div className="absolute inset-0 rounded-xl bg-blue-500/20 opacity-0 transition-opacity" style={{ opacity: isHolding ? 1 : 0 }} />
                         </button>
                     ))}
                 </div>
                 
                 <div className="mt-10 flex flex-col gap-3 w-full max-w-sm">
-                    <button 
-                      onClick={() => { 
+                    <button
+                      onClick={() => {
                         playClickSound();
-                        setIsMobileView(!isMobileView); 
-                        setIsMobileNavOpen(false); 
-                      }} 
-                      className="flex items-center justify-center gap-2 px-6 py-3 bg-white/5 rounded-full border border-white/10 text-xs font-bold text-white hover:bg-white/10 hover-lift"
+                        if (navigator.vibrate) navigator.vibrate(10);
+                        setIsMobileView(!isMobileView);
+                        setIsMobileNavOpen(false);
+                      }}
+                      onTouchStart={(e) => {
+                        playHover();
+                        e.currentTarget.style.transform = 'scale(0.95)';
+                      }}
+                      onTouchEnd={(e) => {
+                        e.currentTarget.style.transform = '';
+                      }}
+                      className="flex items-center justify-center gap-2 px-6 py-3 bg-white/5 rounded-full border border-white/10 text-xs font-bold text-white hover:bg-white/10 hover-lift min-h-[44px] touch-manipulation active:scale-95 transition-all"
+                      style={{ WebkitTapHighlightColor: 'transparent' }}
                     >
                         {isMobileView ? <Smartphone size={16} /> : <Monitor size={16} />}
                         {isMobileView ? "MOBILE LAYOUT" : "DESKTOP LAYOUT"}
                     </button>
                     <button
                       onClick={() => {
+                        playClickSound();
+                        if (navigator.vibrate) navigator.vibrate(15);
                         handlePerformanceToggle();
                         setIsMobileNavOpen(false);
                       }}
-                      className={`flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-bold border transition-all hover-lift ${
+                      onTouchStart={(e) => {
+                        playHover();
+                        e.currentTarget.style.transform = 'scale(0.95)';
+                      }}
+                      onTouchEnd={(e) => {
+                        e.currentTarget.style.transform = '';
+                      }}
+                      className={`flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-bold border transition-all hover-lift min-h-[44px] touch-manipulation active:scale-95 ${
                         disableSpline
                           ? 'bg-blue-500 text-black border-blue-400 shadow-[0_10px_40px_rgba(59,130,246,0.3)]'
                           : 'bg-white/5 text-white border-white/10 hover:bg-white/10'
                       }`}
+                      style={{ WebkitTapHighlightColor: 'transparent' }}
                     >
                         <Zap size={16} />
                         {disableSpline ? "ENABLE FULL 3D" : "GO PERFORMANCE MODE"}
@@ -2053,62 +2463,68 @@ export default function Home() {
                 </div>
             </div>
 
-            {/* INFO BUTTON */}
+            {/* INFO PANEL & FAQ CONTROLS - Unified for Mobile/Desktop */}
             <div className="fixed top-24 left-4 z-50 md:bottom-8 md:top-auto md:left-8 pointer-events-auto">
-                 <div className="md:hidden flex flex-col gap-3">
-                   <button 
+                 <div className="flex flex-col gap-3">
+                   {/* Info Panel Toggle - Mobile Optimized Card */}
+                   <button
                      onClick={(e) => {
-                       playClickSound();
+                       playClick();
                        if (navigator.vibrate) navigator.vibrate(10);
                        if (e.detail >= 2 || infoPanelOpen) {
                          setInfoPanelOpen(false);
                          return;
                        }
                        setInfoPanelOpen(true);
-                     }} 
-                     className="flex items-center gap-3 bg-black/50 backdrop-blur border border-white/10 px-4 py-3 rounded-2xl text-left shadow-lg active:scale-95"
+                     }}
+                     onMouseEnter={() => playHover()}
+                     onTouchStart={(e) => {
+                       playHover();
+                       e.currentTarget.style.transform = 'scale(0.95)';
+                     }}
+                     onTouchEnd={(e) => {
+                       e.currentTarget.style.transform = '';
+                     }}
+                     className="md:hidden flex items-center gap-3 bg-black/50 backdrop-blur border border-white/10 px-4 py-3 rounded-2xl text-left shadow-lg active:scale-95 transition-all hover:bg-black/60 min-h-[44px] touch-manipulation"
+                     style={{ WebkitTapHighlightColor: 'transparent' }}
                    >
                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                       {infoPanelOpen ? <Unlock size={20} /> : <Lock size={20} />}
+                       {infoPanelOpen ? <Unlock size={20} className="text-green-400" /> : <Lock size={20} className="text-blue-400" />}
                      </div>
                      <div className="flex flex-col">
                        <span className="text-xs text-white/60 tracking-widest">INFO PANEL</span>
-                       <span className="text-sm font-bold text-white">{infoPanelOpen ? "Tap to close" : "Tap to open"}</span>
+                       <span className="text-sm font-bold text-white">{infoPanelOpen ? "Tap to close" : "Swipe or tap"}</span>
                      </div>
                    </button>
-                 </div>
-                 
-                 <div className="hidden md:block">
-                   <ShineButton 
-                     className="w-12 h-12 rounded-full" 
+
+                   {/* Info Panel Toggle - Desktop Compact */}
+                   <ShineButton
+                     className="hidden md:flex w-12 h-12 rounded-full"
                      onClick={(e: any) => {
-                       playClickSound();
-                       if (navigator.vibrate) navigator.vibrate(10);
                        if (e?.detail >= 2 || infoPanelOpen) {
                          setInfoPanelOpen(false);
                          return;
                        }
                        setInfoPanelOpen(true);
                      }}
+                     onMouseEnter={() => playHover()}
                    >
-                     {infoPanelOpen ? <Unlock size={20} /> : <Lock size={20} />}
+                     {infoPanelOpen ? <Unlock size={20} className="text-green-400" /> : <Lock size={20} className="text-blue-400" />}
                    </ShineButton>
-                 </div>
-                 
-                 <div className="mt-3">
+
+                   {/* FAQ Toggle */}
                    <ShineButton
                      className="w-12 h-12 rounded-full"
                      onClick={(e: any) => {
-                       playClickSound();
-                       if (navigator.vibrate) navigator.vibrate(10);
                        if (e?.detail >= 2 || faqOpen) {
                          setFaqOpen(false);
                          return;
                        }
                        setFaqOpen(true);
                      }}
+                     onMouseEnter={() => playHover()}
                    >
-                     <Info size={20} />
+                     <Info size={20} className={faqOpen ? "text-green-400" : "text-white"} />
                    </ShineButton>
                  </div>
             </div>
@@ -2168,6 +2584,31 @@ export default function Home() {
               <Footer />
             </div>
         </main>
+
+        {/* SWIPE NAVIGATION INDICATORS */}
+        {swipeIndicator && (
+          <div className="fixed inset-0 pointer-events-none z-[100000] flex items-center justify-center">
+            <div
+              className={`text-white/40 text-6xl font-bold animate-pulse transition-all duration-300 ${
+                swipeIndicator === 'left' ? 'animate-slideOutLeft' : 'animate-slideOutRight'
+              }`}
+              style={{ textShadow: `0 0 20px ${accentColor}` }}
+            >
+              {swipeIndicator === 'left' ? <ChevronLeft size={80} /> : <ChevronRight size={80} />}
+            </div>
+          </div>
+        )}
+
+        {/* SWIPE HELPER - Shows on first load */}
+        {currentStage === 'content' && activePage === 1 && (
+          <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[50] pointer-events-none animate-bounce">
+            <div className="flex items-center gap-2 bg-black/70 backdrop-blur-xl px-4 py-2 rounded-full border border-white/20">
+              <ChevronLeft size={16} className="text-white/60" />
+              <span className="text-xs text-white/60 font-medium">Swipe to navigate</span>
+              <ChevronRight size={16} className="text-white/60" />
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

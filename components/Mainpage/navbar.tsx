@@ -29,11 +29,14 @@ import { IconMenu2, IconX } from "@tabler/icons-react";
 import Link from "next/link";
 import Image from "next/image";
 // Ensure these paths exist in your project
-import BullLogo from "@/public/BULL.svg"; 
+import BullLogo from "@/public/BULL.svg";
 import Faq from "@/app/shop/Faq";
 
 // --- IMPORT YOUR CARD ---
 import ReflectiveCard, { ReflectiveCardHandle } from '@/components/ReflectiveCard';
+
+// --- IMPORT SOUND & HAPTIC UTILITIES ---
+import { playClick, playHover, playSuccess } from '@/lib/interactionUtils';
 
 // --- TYPE DEFINITIONS ---
 type ThemeControlProps = {
@@ -187,9 +190,21 @@ const IdModal = ({ isOpen, onClose, accentColor }: { isOpen: boolean, onClose: (
           >
             <div className="pointer-events-auto relative">
               {/* Close Button */}
-              <button 
-                onClick={onClose}
-                className="absolute -right-12 top-0 p-2 text-white/50 hover:text-white transition-colors z-50"
+              <button
+                onClick={() => {
+                  playClick();
+                  if (navigator.vibrate) navigator.vibrate(10);
+                  onClose();
+                }}
+                onTouchStart={(e) => {
+                  playHover();
+                  e.currentTarget.style.transform = 'scale(0.9)';
+                }}
+                onTouchEnd={(e) => {
+                  e.currentTarget.style.transform = '';
+                }}
+                className="absolute -right-12 top-0 p-2 text-white/50 hover:text-white transition-all z-50 min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-90"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 <X size={32} />
               </button>
@@ -208,12 +223,24 @@ const IdModal = ({ isOpen, onClose, accentColor }: { isOpen: boolean, onClose: (
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  onClick={() => cardRef.current?.triggerVerify()}
-                  style={{ 
-                    backgroundColor: accentColor, 
-                    boxShadow: `0 0 20px ${accentColor}60`
+                  onClick={() => {
+                    playSuccess();
+                    if (navigator.vibrate) navigator.vibrate([20, 10, 20]);
+                    cardRef.current?.triggerVerify();
                   }}
-                  className="absolute -bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 text-white rounded-full font-bold hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+                  onTouchStart={(e) => {
+                    playHover();
+                    e.currentTarget.style.transform = 'translateX(-50%) scale(0.95)';
+                  }}
+                  onTouchEnd={(e) => {
+                    e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
+                  }}
+                  style={{
+                    backgroundColor: accentColor,
+                    boxShadow: `0 0 20px ${accentColor}60`,
+                    WebkitTapHighlightColor: 'transparent'
+                  }}
+                  className="absolute -bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 text-white rounded-full font-bold hover:scale-105 active:scale-95 transition-transform cursor-pointer touch-manipulation min-h-[44px]"
                 >
                   <ScanFace size={20} />
                   <span>START VERIFICATION</span>
@@ -327,7 +354,7 @@ interface DockItemProps {
 
 const DockItem = memo(({ mouseX, item, isTipActive, onClick, accentColor }: DockItemProps) => {
   const ref = useRef<HTMLDivElement>(null);
-  
+
   const distance = useTransform(mouseX, (val: number) => {
     const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
     return val - bounds.x - bounds.width / 2;
@@ -337,14 +364,29 @@ const DockItem = memo(({ mouseX, item, isTipActive, onClick, accentColor }: Dock
   const width = useSpring(widthSync, { mass: 0.1, stiffness: 180, damping: 12 });
   const [hovered, setHovered] = useState(false);
 
+  const handleHoverStart = () => {
+    setHovered(true);
+    playHover();
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    playClick();
+    if (navigator.vibrate) navigator.vibrate(10);
+    if (onClick) {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   const content = (
     <>
       <motion.div
         ref={ref}
         style={{ width, height: width }}
-        onHoverStart={() => setHovered(true)}
+        onHoverStart={handleHoverStart}
         onHoverEnd={() => setHovered(false)}
-        className="mac-gpu-accelerate relative flex items-center justify-center rounded-full shadow-sm overflow-hidden z-20"
+        onTouchStart={handleHoverStart}
+        className="mac-gpu-accelerate relative flex items-center justify-center rounded-full shadow-sm overflow-hidden z-20 cursor-pointer active:scale-90 transition-transform touch-manipulation"
       >
         {/* THEMED SHIMMER GRADIENT */}
         <motion.div
@@ -383,17 +425,41 @@ const DockItem = memo(({ mouseX, item, isTipActive, onClick, accentColor }: Dock
 
   if (onClick) {
     return (
-        <button onClick={onClick} className="relative group flex flex-col items-center justify-end outline-none">
+        <button
+          onClick={handleClick}
+          onTouchStart={(e) => {
+            e.currentTarget.style.transform = 'scale(0.9)';
+          }}
+          onTouchEnd={(e) => {
+            e.currentTarget.style.transform = '';
+          }}
+          className="relative group flex flex-col items-center justify-end outline-none min-w-[44px] min-h-[44px] touch-manipulation"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
+        >
             {content}
         </button>
     );
   }
 
   // Handle link correctly if link is null (fallback)
-  if (!item.link) return <button className="relative group flex flex-col items-center justify-end">{content}</button>;
+  if (!item.link) return <button className="relative group flex flex-col items-center justify-end min-w-[44px] min-h-[44px]">{content}</button>;
 
   return (
-    <Link href={item.link as any} className="no-underline relative group flex flex-col items-center justify-end">
+    <Link
+      href={item.link as any}
+      onClick={(e) => {
+        playClick();
+        if (navigator.vibrate) navigator.vibrate(10);
+      }}
+      onTouchStart={(e) => {
+        e.currentTarget.style.transform = 'scale(0.95)';
+      }}
+      onTouchEnd={(e) => {
+        e.currentTarget.style.transform = '';
+      }}
+      className="no-underline relative group flex flex-col items-center justify-end min-w-[44px] min-h-[44px] touch-manipulation active:scale-90 transition-transform"
+      style={{ WebkitTapHighlightColor: 'transparent' }}
+    >
       {content}
     </Link>
   );
@@ -449,11 +515,23 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor }: { 
          >
             {/* 1. Loop standard items */}
             {NAV_ITEMS.map((item, i) => (
-               <Link 
-                 key={i} 
-                 href={item.link as any} 
+               <Link
+                 key={i}
+                 href={item.link as any}
                  ref={(el) => { itemsRef.current[i] = el; }}
-                 className="relative flex-shrink-0 flex flex-col items-center group pt-1" 
+                 onClick={() => {
+                   playClick();
+                   if (navigator.vibrate) navigator.vibrate(10);
+                 }}
+                 onTouchStart={(e) => {
+                   playHover();
+                   e.currentTarget.style.transform = 'scale(0.9)';
+                 }}
+                 onTouchEnd={(e) => {
+                   e.currentTarget.style.transform = '';
+                 }}
+                 className="relative flex-shrink-0 flex flex-col items-center group pt-1 min-w-[44px] touch-manipulation active:scale-90 transition-transform"
+                 style={{ WebkitTapHighlightColor: 'transparent' }}
                >
                   <MobileNavItemContent item={item} accentColor={accentColor} />
                   <AnimatePresence>
@@ -464,9 +542,21 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor }: { 
 
             {/* 2. Add ID Button */}
             <button
-                onClick={handleOpenId}
+                onClick={() => {
+                  playClick();
+                  if (navigator.vibrate) navigator.vibrate(15);
+                  handleOpenId();
+                }}
+                onTouchStart={(e) => {
+                  playHover();
+                  e.currentTarget.style.transform = 'scale(0.9)';
+                }}
+                onTouchEnd={(e) => {
+                  e.currentTarget.style.transform = '';
+                }}
                 ref={(el) => { itemsRef.current[NAV_ITEMS.length] = el; }}
-                className="relative flex-shrink-0 flex flex-col items-center group pt-1"
+                className="relative flex-shrink-0 flex flex-col items-center group pt-1 min-w-[44px] touch-manipulation active:scale-90 transition-transform"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
             >
                 <MobileNavItemContent item={idItem} accentColor={accentColor} />
                 <AnimatePresence>
@@ -476,9 +566,21 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor }: { 
 
             {/* 3. Add Theme Button */}
             <button
-                onClick={handleOpenConfigurator}
+                onClick={() => {
+                  playClick();
+                  if (navigator.vibrate) navigator.vibrate(15);
+                  handleOpenConfigurator();
+                }}
+                onTouchStart={(e) => {
+                  playHover();
+                  e.currentTarget.style.transform = 'scale(0.9)';
+                }}
+                onTouchEnd={(e) => {
+                  e.currentTarget.style.transform = '';
+                }}
                 ref={(el) => { itemsRef.current[NAV_ITEMS.length + 1] = el; }}
-                className="relative flex-shrink-0 flex flex-col items-center group pt-1"
+                className="relative flex-shrink-0 flex flex-col items-center group pt-1 min-w-[44px] touch-manipulation active:scale-90 transition-transform"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
             >
                 <MobileNavItemContent item={themeItem} accentColor={accentColor} />
                 <AnimatePresence>
@@ -489,7 +591,22 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor }: { 
 
          {/* ... Menu Toggle Button ... */}
          <div className="flex-shrink-0 flex items-center pl-1 border-l border-neutral-200 dark:border-white/10 bg-white/95 dark:bg-neutral-950/95 z-30 h-8 self-start mt-1">
-            <button onClick={() => setOpen(!open)} className="p-1 ml-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+            <button
+              onClick={() => {
+                playClick();
+                if (navigator.vibrate) navigator.vibrate(15);
+                setOpen(!open);
+              }}
+              onTouchStart={(e) => {
+                e.currentTarget.style.transform = 'scale(0.9)';
+                playHover();
+              }}
+              onTouchEnd={(e) => {
+                e.currentTarget.style.transform = '';
+              }}
+              className="p-1 ml-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all active:scale-90 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
+            >
                 {open ? <IconX className="w-5 h-5 dark:text-white" /> : <IconMenu2 className="w-5 h-5 dark:text-white" />}
             </button>
          </div>
@@ -506,9 +623,26 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor }: { 
           >
             <div className="px-4 pb-4 pt-2 flex flex-col gap-3 border-t border-neutral-100 dark:border-white/5 w-full bg-white/95 dark:bg-neutral-950/95">
                {[...FOOTER_NAV_ITEMS, ...NAV_ITEMS].map((item, i) => (
-                  <Link key={i} href={item.link as any} onClick={() => setOpen(false)} className="relative group block rounded-xl overflow-hidden">
-                     <div className="relative m-[1px] bg-white dark:bg-neutral-900 rounded-xl flex items-center gap-4 p-2">
-                        <div className="w-8 h-8 p-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-md">{item.icon}</div>
+                  <Link
+                    key={i}
+                    href={item.link as any}
+                    onClick={() => {
+                      playClick();
+                      if (navigator.vibrate) navigator.vibrate(12);
+                      setOpen(false);
+                    }}
+                    onTouchStart={(e) => {
+                      playHover();
+                      e.currentTarget.style.transform = 'scale(0.97)';
+                    }}
+                    onTouchEnd={(e) => {
+                      e.currentTarget.style.transform = '';
+                    }}
+                    className="relative group block rounded-xl overflow-hidden touch-manipulation active:scale-95 transition-transform"
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
+                  >
+                     <div className="relative m-[1px] bg-white dark:bg-neutral-900 rounded-xl flex items-center gap-4 p-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+                        <div className="w-8 h-8 p-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-md group-hover:scale-110 transition-transform">{item.icon}</div>
                         <span className="font-bold text-neutral-600 dark:text-neutral-300">{item.name}</span>
                      </div>
                   </Link>
