@@ -363,6 +363,16 @@ const GLOBAL_STYLES = `
       transform: translateZ(0);
     }
   }
+  
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y pinch-zoom;
+    overscroll-behavior: contain;
+  }
+  
+  section {
+    touch-action: pan-y pinch-zoom;
+  }
 `;
 
 // ----------------------------------------------------------------------
@@ -598,9 +608,10 @@ const TSXWrapper = memo(({ componentName, isVisible }: { componentName: string; 
 
 const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset }: any) => {
   const isHeavyScene = config.id === 5;
-  const shouldRender = isHeavyScene
-    ? config.id === activePage
-    : (config.id >= activePage - 1) && (config.id <= activePage + 1);
+  const isTSX = config.type === 'tsx';
+  const shouldRender = isTSX
+    ? (config.id >= activePage - 1) && (config.id <= activePage + 1)
+    : config.id === activePage;
   const isActive = config.id === activePage;
   const sectionRef = useRef<HTMLElement | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -615,9 +626,6 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset 
   useEffect(() => {
     if(sectionRef.current) onVisible(sectionRef.current, config.id - 1);
   }, [onVisible, config.id]);
-
-  // For TSX components, allow natural height with scroll
-  const isTSX = config.type === 'tsx';
 
   // TSX components get natural height with breathing room; Spline scenes stay fixed-height for snap scrolling
   const sectionClass = isTSX
@@ -1089,6 +1097,7 @@ export default function Home() {
   const [_, startTransition] = useTransition();
   const pageRefs = useRef<(HTMLElement | null)[]>([]);
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const [isTouch, setIsTouch] = useState(false);
 
   const activeTheme = useMemo(() => {
     if (!ALL_THEMES || ALL_THEMES.length === 0) return FALLBACK_THEME as Theme;
@@ -1106,6 +1115,8 @@ export default function Home() {
     const styleSheet = document.createElement("style");
     styleSheet.innerText = GLOBAL_STYLES;
     document.head.appendChild(styleSheet);
+    
+    setIsTouch(matchMedia && matchMedia('(pointer: coarse)').matches);
     
     // Check for reduced motion preference
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -1281,7 +1292,7 @@ export default function Home() {
       <SpeedInsights />
       <BackgroundMusicSystem themeId={activeThemeId} onReady={handlePlayerReady} volume={volume} />
       <ParticleEffect trigger={particleTrigger} />
-      <CustomCursor accentColor={accentColor} />
+      {!isTouch && <CustomCursor accentColor={accentColor} />}
 
       {/* --- INFO PANEL --- */}
       <InfoPanel 
@@ -1374,10 +1385,10 @@ export default function Home() {
 
       {/* --- LAYER 6: MAIN CONTENT (3D SCROLL LAYOUT) --- */}
       <div className={currentStage === 'content' ? 'profit-reveal w-full h-[100dvh] relative' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
-        <TargetCursor spinDuration={2} hideDefaultCursor={false} targetSelector=".cursor-target, a, button" />
+        {!isTouch && <TargetCursor spinDuration={2} hideDefaultCursor={false} targetSelector=".cursor-target, a, button" />}
         
         {/* --- SCROLL CONTAINER --- */}
-        <main className="w-full h-full flex flex-col overflow-y-scroll overflow-x-hidden snap-y snap-mandatory scroll-smooth bg-black no-scrollbar text-white relative">
+        <main className={`w-full h-full flex flex-col overflow-y-scroll overflow-x-hidden ${isTouch ? '' : 'snap-y snap-mandatory'} scroll-smooth bg-black no-scrollbar text-white relative mobile-scroll`}>
             
             {showOrientationWarning && (<OrientationOverlay onDismiss={() => setShowOrientationWarning(false)} />)}
 

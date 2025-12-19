@@ -23,6 +23,7 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
   const [pacmanScore, setPacmanScore] = useState(0);
   const [direction, setDirection] = useState<{ dx: number; dy: number }>({ dx: 1, dy: 0 });
   const [lives, setLives] = useState(3);
+  const [mouthOpen, setMouthOpen] = useState(true);
   const pacmanSoundRef = useRef<HTMLAudioElement | null>(null);
   const ghostSoundRef = useRef<HTMLAudioElement | null>(null);
 
@@ -148,6 +149,7 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
       if (isWall(nx, ny)) return prev;
       const next = { x: nx, y: ny };
       const key = coordKey(nx, ny);
+      setMouthOpen((m) => !m);
 
       setPellets((prevPellets) => {
         const newPellets = new Set(prevPellets);
@@ -186,7 +188,7 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
     if (!isUnlocked) return;
     const id = setInterval(() => {
       movePacman(direction.dx, direction.dy);
-    }, 280);
+    }, 240);
     return () => clearInterval(id);
   }, [direction, isUnlocked, movePacman]);
 
@@ -199,7 +201,18 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
         { dx: 0, dy: 1 },
         { dx: 0, dy: -1 },
       ].filter(({ dx, dy }) => !isWall(g.x + dx, g.y + dy));
-      const choice = dirs[Math.floor(Math.random() * dirs.length)] || { dx: 0, dy: 0 };
+      const targetX = pacmanPos.x;
+      const targetY = pacmanPos.y;
+      const powerActive = powerModeUntil > Date.now();
+      const scored = dirs
+        .map(({ dx, dy }) => {
+          const nx = g.x + dx;
+          const ny = g.y + dy;
+          const dist = Math.abs(nx - targetX) + Math.abs(ny - targetY);
+          return { dx, dy, dist };
+        })
+        .sort((a, b) => powerActive ? b.dist - a.dist : a.dist - b.dist);
+      const choice = scored[0] || { dx: 0, dy: 0 };
       return { ...g, x: g.x + choice.dx, y: g.y + choice.dy };
     }));
   }, [isWall]);
@@ -324,8 +337,8 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
           </div>
 
           <div className="w-full flex flex-col gap-4 md:gap-6">
-            <div className="w-full h-full min-h-[260px] rounded-3xl overflow-hidden border border-white/10 bg-black/50 shadow-xl backdrop-blur-lg">
-              <EvervaultCard text={isUnlocked ? "ACCESS" : "VAULT"} className="w-full h-full" />
+            <div className="w-full h-full min-h-[180px] md:min-h-[220px] rounded-3xl overflow-hidden border border-white/10 bg-black/60 shadow-xl backdrop-blur-lg">
+              <EvervaultCard text={isUnlocked ? "ACCESS" : "VAULT"} className="w-full h-full scale-90 md:scale-95" />
             </div>
 
               <div className="p-4 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-lg text-white shadow-[0_0_30px_rgba(0,0,0,0.35)]">
@@ -368,7 +381,7 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
                       {hasPellet && <span className="w-2 h-2 rounded-full bg-yellow-300 shadow-[0_0_12px_rgba(234,179,8,0.8)]" />}
                       {hasPower && <span className="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)]" />}
                       {isGhost && (
-                        <div className="relative w-6 h-6 rounded-b-md rounded-t-full bg-pink-500 border-2 border-pink-200">
+                        <div className="relative w-6 h-6 rounded-b-md rounded-t-full bg-pink-500 border-2 border-pink-200 animate-pulse">
                           <div className="absolute inset-0 flex justify-around px-1 pt-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-white" />
                             <span className="w-1.5 h-1.5 rounded-full bg-white" />
@@ -376,8 +389,8 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
                         </div>
                       )}
                       {isPacman && (
-                        <div className="relative w-6 h-6 rounded-full bg-yellow-400 border-2 border-black shadow-[0_0_12px_rgba(234,179,8,0.5)]">
-                          <div className="absolute inset-0 bg-black/60" style={{ clipPath: `polygon(50% 50%, 110% ${40 + direction.dy * 20}%, 110% ${60 + direction.dy * 20}%)` }} />
+                        <div className="relative w-7 h-7 rounded-full bg-yellow-400 border-2 border-black shadow-[0_0_12px_rgba(234,179,8,0.5)] transition-transform duration-150" style={{ transform: mouthOpen ? 'scale(1.02)' : 'scale(0.98)' }}>
+                          <div className="absolute inset-0 bg-black/60" style={{ clipPath: `polygon(50% 50%, 110% ${mouthOpen ? 35 : 48}%, 110% ${mouthOpen ? 65 : 52}%) rotate(${direction.dx === 0 && direction.dy === -1 ? '-90deg' : direction.dx === 0 && direction.dy === 1 ? '90deg' : direction.dx === -1 ? '180deg' : '0deg'})` }} />
                           <span className="absolute top-1 left-1 w-1 h-1 rounded-full bg-black" />
                         </div>
                       )}
