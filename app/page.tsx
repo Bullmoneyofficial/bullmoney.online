@@ -194,6 +194,8 @@ const PAGE_CONFIG = [
   },
 ];
 
+const CRITICAL_SPLINE_SCENES = ["/scene1.splinecode", "/scene5.splinecode", "/scene4.splinecode"];
+
 // --- FALLBACK THEME ---
 const FALLBACK_THEME: Partial<Theme> = {
     id: 'default',
@@ -1920,6 +1922,45 @@ export default function Home() {
       setTimeout(scheduleWarm, 800);
     }
   }, [isClient, isSafeMode]);
+
+  // Force-warm critical spline scenes even in safe/in-app browsers to avoid first-load failures
+  useEffect(() => {
+    if (!isClient) return;
+    let cancelled = false;
+
+    const prefetchWithRetry = async (url: string) => {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        if (cancelled) return;
+        try {
+          const req = new Request(url, { cache: 'force-cache', mode: 'cors' });
+          const res = await fetch(req);
+          if (cancelled) return;
+          if (res.ok && typeof window !== 'undefined' && 'caches' in window) {
+            const cache = await caches.open('bullmoney-critical-splines');
+            await cache.put(req, res.clone());
+          }
+          return;
+        } catch (err) {
+          await new Promise((resolve) => setTimeout(resolve, 180));
+        }
+      }
+    };
+
+    const prefetchAll = async () => {
+      for (const scene of CRITICAL_SPLINE_SCENES) {
+        await prefetchWithRetry(scene);
+      }
+    };
+
+    const schedule = () => { prefetchAll().catch(() => {}); };
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(schedule, { timeout: 800 });
+    } else {
+      setTimeout(schedule, 400);
+    }
+
+    return () => { cancelled = true; };
+  }, [isClient]);
 
   useEffect(() => {
     if (currentStage !== 'content' || !isTouch || edgeHintsShownRef.current) return;
