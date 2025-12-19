@@ -216,6 +216,10 @@ const ControlPanel = ({
                             <ShimmerButton icon={ArrowRight} onClick={onExit} className="h-10 text-xs w-full">EXIT TO DASHBOARD</ShimmerButton>
                         </div>
                     </div>
+                    <div className="grid grid-cols-1 gap-2 lg:hidden">
+                        <ShimmerButton icon={Check} onClick={() => onSaveTheme(activeThemeId)} className="h-11 text-sm text-green-500">APPLY THEME</ShimmerButton>
+                        <ShimmerButton icon={ArrowRight} onClick={onExit} className="h-11 text-sm">EXIT</ShimmerButton>
+                    </div>
                 </div>
             </ShimmerCard>
         </div>
@@ -223,18 +227,21 @@ const ControlPanel = ({
 };
 
 const MobileBottomActionPanel = ({ 
-    onExit, isMobileMenuOpen, onRefresh 
+    onExit, isMobileMenuOpen, onRefresh, onSaveTheme, activeThemeId 
 }: { 
-    onExit: () => void, isMobileMenuOpen: boolean, onRefresh: () => void 
+    onExit: () => void, isMobileMenuOpen: boolean, onRefresh: () => void, onSaveTheme: (themeId: string) => void, activeThemeId: string 
 }) => (
     <AnimatePresence>
         {!isMobileMenuOpen && (
             <motion.div initial={{ y: 0, opacity: 1 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="sticky bottom-0 left-0 right-0 z-[60] lg:hidden p-4 bg-black/90 backdrop-blur-md border-t border-blue-500/30 shadow-[0_-5px_30px_rgba(37,99,235,0.2)]"
             >
-                <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
-                    <ShimmerButton icon={RefreshCw} onClick={onRefresh} className="h-10 text-xs text-yellow-500">REFRESH DATA</ShimmerButton>
-                    <ShimmerButton icon={ArrowRight} onClick={onExit} className="h-10 text-xs">EXIT</ShimmerButton>
+                <div className="grid grid-cols-1 gap-2 max-w-xl mx-auto">
+                    <ShimmerButton icon={Check} onClick={() => onSaveTheme(activeThemeId)} className="h-12 text-sm text-green-500 w-full">Save Theme</ShimmerButton>
+                    <div className="grid grid-cols-2 gap-2">
+                      <ShimmerButton icon={RefreshCw} onClick={onRefresh} className="h-10 text-xs text-yellow-500">Refresh</ShimmerButton>
+                      <ShimmerButton icon={ArrowRight} onClick={onExit} className="h-10 text-xs">Exit</ShimmerButton>
+                    </div>
                 </div>
             </motion.div>
         )}
@@ -458,7 +465,13 @@ export default function FixedThemeConfigurator({
 
             {/* --- UNFILTERED OVERLAYS --- */}
             <WelcomeBackModal isOpen={showWelcome} onContinue={handleWelcomeContinue} onSkip={() => setShowWelcome(false)} />
-            <MobileBottomActionPanel onExit={handleExit} isMobileMenuOpen={isMobileMenuOpen} onRefresh={handleRefresh} />
+            <MobileBottomActionPanel 
+                onExit={handleExit} 
+                isMobileMenuOpen={isMobileMenuOpen} 
+                onRefresh={handleRefresh} 
+                onSaveTheme={handleQuickSaveTheme}
+                activeThemeId={activeThemeId}
+            />
             <SupportWidget />
 
             {/* This modal sits OUTSIDE the filtered div, ensuring it stays sharp and clean */}

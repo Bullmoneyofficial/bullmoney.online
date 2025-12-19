@@ -428,6 +428,7 @@ const VideoCard = React.memo(({
   isMobile: boolean;
 }) => {
   const videoId = getYoutubeId(product.buyUrl);
+  const posterSrc = product.imageUrl || LogoImage;
   const ref = useRef(null);
   const isInView = useInView(ref, { margin: "200px 0px 200px 0px", once: false });
   const [showTip, setShowTip] = useState(false);
@@ -470,7 +471,15 @@ const VideoCard = React.memo(({
         >
             {videoId ? (
                 <div className="absolute inset-0 w-full h-full bg-black pointer-events-none">
-                      {shouldLoadPreview ? (
+                    <Image
+                        src={posterSrc}
+                        fill
+                        sizes="(max-width: 768px) 320px, 640px"
+                        className="object-cover opacity-70"
+                        alt={product.name}
+                        priority={false}
+                    />
+                    {shouldLoadPreview && (
                         <iframe
                             src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&playsinline=1&showinfo=0&rel=0&iv_load_policy=3&disablekb=1&modestbranding=1&vq=hd1080`}
                             className="w-[300%] h-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[1.5] object-cover pointer-events-none"
@@ -478,23 +487,16 @@ const VideoCard = React.memo(({
                             title={product.name}
                             loading="lazy"
                         />
-                      ) : (
-                        <Image
-                            src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
-                            fill
-                            sizes="(max-width: 768px) 300px, 500px"
-                            className="object-cover opacity-80"
-                            alt={product.name}
-                        />
-                      )}
+                    )}
                 </div>
             ) : (
                 <Image
-                    src={product.imageUrl || "https://via.placeholder.com/500"}
+                    src={posterSrc}
                     fill
-                    sizes="(max-width: 768px) 300px, 500px"
-                    className="object-cover opacity-60 group-hover/product:opacity-100 transition-opacity duration-500"
+                    sizes="(max-width: 768px) 320px, 640px"
+                    className="object-cover opacity-70 group-hover/product:opacity-100 transition-opacity duration-500"
                     alt={product.name}
+                    priority={false}
                 />
             )}
 
@@ -548,6 +550,17 @@ const HeroParallax = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const fallbackVideo: Product = useMemo(() => ({
+    id: "fallback-video",
+    name: "BullMoney Vault Trailer",
+    description: "Preview while your uploads sync. Replace with your own video to remove this placeholder.",
+    price: 0,
+    category: "VIDEO",
+    imageUrl: "/bullmoney-logo.png",
+    buyUrl: "https://www.youtube.com/watch?v=jfKfPfyJRdk",
+    visible: true
+  }), []);
+
   // Handle Logo Click (Triggers animation and full screen takeover)
   const handleLogoClick = (e: React.MouseEvent) => {
     // 1. Re-trigger the decoder animation in the tooltip
@@ -559,9 +572,10 @@ const HeroParallax = () => {
   };
 
   const videoProducts = useMemo(() => {
-    if (!products) return [];
-    return products.filter((p: Product) => p.category === "VIDEO");
-  }, [products]);
+    if (!products || products.length === 0) return [fallbackVideo];
+    const vids = products.filter((p: Product) => p.category === "VIDEO");
+    return vids.length ? vids : [fallbackVideo];
+  }, [fallbackVideo, products]);
 
   const displayProducts = useMemo(() => {
     if (videoProducts.length === 0) return [];

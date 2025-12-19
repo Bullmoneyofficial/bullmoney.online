@@ -18,6 +18,8 @@ import { Navbar } from "@/components/Mainpage/navbar";
 import RegisterPage from "./register/pagemode";
 import BullMoneyGate from "@/components/Mainpage/TradingHoldUnlock";
 import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2";
+import InlineFaq from "@/components/Mainpage/InlineFaq";
+import { Footer } from "@/components/Mainpage/footer";
 
 // --- THEME & MUSIC DATA ---
 import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
@@ -595,7 +597,10 @@ const TSXWrapper = memo(({ componentName, isVisible }: { componentName: string; 
 });
 
 const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset }: any) => {
-  const shouldRender = (config.id >= activePage - 1) && (config.id <= activePage + 1);
+  const isHeavyScene = config.id === 5;
+  const shouldRender = isHeavyScene
+    ? config.id === activePage
+    : (config.id >= activePage - 1) && (config.id <= activePage + 1);
   const isActive = config.id === activePage;
   const sectionRef = useRef<HTMLElement | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -614,10 +619,9 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset 
   // For TSX components, allow natural height with scroll
   const isTSX = config.type === 'tsx';
 
-  // Mobile: TSX components get natural height, Spline gets fixed height
-  // Desktop: All get fixed height for snap scrolling
-  const sectionClass = isTSX && isMobile
-    ? 'relative w-full min-h-[100dvh] h-auto flex-none snap-start bg-black mobile-optimize'
+  // TSX components get natural height with breathing room; Spline scenes stay fixed-height for snap scrolling
+  const sectionClass = isTSX
+    ? 'relative w-full min-h-[120dvh] h-auto flex-none snap-start bg-black mobile-optimize overflow-visible py-10 md:py-16'
     : 'relative w-full h-[100dvh] flex-none snap-start snap-always overflow-hidden bg-black flex flex-col items-center justify-center mobile-optimize';
 
   return (
@@ -627,13 +631,15 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset 
     >
       <div className={`w-full ${isTSX && isMobile ? 'h-auto min-h-full' : 'h-full'} relative`}>
         {config.type === 'tsx' ? (
-          <TSXWrapper componentName={config.component} isVisible={shouldRender} />
+          <div className="pb-16 md:pb-24">
+            <TSXWrapper componentName={config.component} isVisible={shouldRender} />
+          </div>
         ) : (
           <SceneWrapper
             isVisible={shouldRender}
             sceneUrl={config.scene}
             allowInput={!config.disableInteraction}
-            parallaxOffset={parallaxOffset}
+            parallaxOffset={isHeavyScene ? parallaxOffset * 0.25 : parallaxOffset}
           />
         )}
         {/* Only show label for Spline scenes, not TSX components */}
@@ -648,6 +654,11 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset 
             </div>
           </>
         )}
+        {!isTSX && config.id === PAGE_CONFIG.length && (
+          <div className="absolute inset-x-0 bottom-6 px-4 md:px-10 z-30 pointer-events-auto">
+            <InlineFaq />
+          </div>
+        )}
       </div>
     </section>
   );
@@ -657,10 +668,46 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [splitPos, setSplitPos] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
+  const [score, setScore] = useState(0);
+  const [targetPos, setTargetPos] = useState({ x: 72, y: 35 });
+  const hitSoundRef = useRef<HTMLAudioElement | null>(null);
   const isActive = config.id === activePage;
+
+  useEffect(() => {
+    const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
+    audio.volume = 0.25;
+    hitSoundRef.current = audio;
+  }, []);
+
+  const clampSplit = useCallback((value: number) => Math.min(95, Math.max(5, value)), []);
+
+  const nudgeSplit = useCallback((delta: number) => {
+    setSplitPos(prev => clampSplit(prev + delta));
+  }, [clampSplit]);
+
+  const handleTargetHit = useCallback(() => {
+    setScore(prev => prev + 1);
+    if (navigator.vibrate) navigator.vibrate(15);
+    try {
+      if (hitSoundRef.current) {
+        hitSoundRef.current.currentTime = 0;
+        hitSoundRef.current.play().catch(() => {});
+      }
+    } catch (e) {}
+    setTargetPos({
+      x: clampSplit(10 + Math.random() * 80),
+      y: clampSplit(10 + Math.random() * 70)
+    });
+  }, [clampSplit]);
 
   const handleDragStart = () => {
     playClickSound();
+    try {
+      if (hitSoundRef.current) {
+        hitSoundRef.current.currentTime = 0;
+        hitSoundRef.current.play().catch(() => {});
+      }
+    } catch (e) {}
     setIsDragging(true);
   };
   
@@ -683,9 +730,9 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
             const relativeX = clientX - rect.left;
             newPos = (relativeX / rect.width) * 100;
         }
-        if (newPos > 5 && newPos < 95) setSplitPos(newPos);
+        setSplitPos(clampSplit(newPos));
     });
-  }, [isMobileView]);
+  }, [clampSplit, isMobileView]);
 
   useEffect(() => {
     if (isDragging) {
@@ -701,6 +748,17 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
       window.removeEventListener('touchend', handleDragEnd);
     };
   }, [isDragging, handleDragMove]);
+
+  useEffect(() => {
+    if (!isActive) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (['ArrowUp', 'w', 'W'].includes(e.key)) { e.preventDefault(); nudgeSplit(isMobileView ? -4 : -3); }
+      if (['ArrowDown', 's', 'S'].includes(e.key)) { e.preventDefault(); nudgeSplit(isMobileView ? 4 : 3); }
+      if ([' ', 'Enter'].includes(e.key)) { e.preventDefault(); handleTargetHit(); }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isActive, isMobileView, handleTargetHit, nudgeSplit]);
 
   const layoutClass = isMobileView ? 'flex-col' : 'flex-row';
   const sizeProp = isMobileView ? 'height' : 'width';
@@ -718,6 +776,65 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
       className={`relative w-full h-[100dvh] flex-none snap-start snap-always overflow-hidden bg-black flex ${layoutClass} ${isDragging ? 'select-none cursor-grabbing' : ''} mobile-optimize`}
     >
       {isDragging && <div className="absolute inset-0 z-[60] bg-transparent" />}
+
+      {/* Arcade HUD */}
+      <div className="absolute top-4 left-4 z-[70] flex flex-col gap-2 pointer-events-auto">
+        <div className="px-4 py-2 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-md text-white shadow-[0_0_20px_rgba(0,0,0,0.35)]">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-blue-300 font-bold flex items-center gap-2">
+            <Zap size={12} className="text-blue-500" /> Split Arcade
+          </div>
+          <div className="mt-1 flex items-center gap-3 text-xs">
+            <span className="font-mono text-blue-400">Score {score}</span>
+            <span className="text-white/50">•</span>
+            <span className="font-mono text-white/60">Use arrows / WASD</span>
+          </div>
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={() => { playClickSound(); nudgeSplit(isMobileView ? -4 : -3); }}
+              className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:-translate-y-0.5 transition-all"
+              aria-label="Move split up"
+            >
+              <ChevronUp size={16} className="text-blue-400" />
+            </button>
+            <button
+              onClick={() => { playClickSound(); nudgeSplit(isMobileView ? 4 : 3); }}
+              className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:translate-y-0.5 transition-all"
+              aria-label="Move split down"
+            >
+              <ChevronDown size={16} className="text-blue-400" />
+            </button>
+            <button
+              onClick={() => { playClickSound(); handleTargetHit(); }}
+              className="flex-1 px-3 rounded-lg bg-blue-500/20 border border-blue-500/40 text-xs font-bold text-blue-100 hover:bg-blue-500/30 transition-colors"
+              aria-label="Fire at target"
+            >
+              Fire
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Target Mini-Game */}
+      {shouldRender && (
+        <div
+          className="absolute z-[65] pointer-events-auto transition-transform duration-300"
+          style={{ top: `${targetPos.y}%`, left: `${targetPos.x}%`, transform: 'translate(-50%, -50%)' }}
+        >
+          <button
+            onClick={(e) => { e.stopPropagation(); handleTargetHit(); }}
+            className="relative w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/40 shadow-[0_0_20px_rgba(0,100,255,0.3)] hover:scale-105 transition-transform"
+            aria-label="Hit target"
+          >
+            <div className="absolute inset-1 rounded-full border border-white/10" />
+            <div className="absolute inset-3 rounded-full border border-blue-400/60" />
+            <div className="absolute inset-6 rounded-full bg-blue-500/70 blur-[10px] opacity-60" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-0.5 h-full bg-white/60" />
+              <div className="h-0.5 w-full bg-white/60" />
+            </div>
+          </button>
+        </div>
+      )}
       
       {/* PANEL A */}
       <div 
@@ -1453,6 +1570,10 @@ export default function Home() {
                 )}
                 </React.Fragment>
             ))}
+            
+            <div className="w-full mt-10">
+              <Footer />
+            </div>
         </main>
       </div>
     </>

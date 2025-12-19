@@ -56,7 +56,7 @@ interface FAQCategoryData {
   notes?: string[];
 }
 
-const FAQ_CONTENT: FAQCategoryData[] = [
+export const FAQ_CONTENT: FAQCategoryData[] = [
   {
     category: "General Info",
     items: [
