@@ -1286,12 +1286,6 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
 // ----------------------------------------------------------------------
 const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volume, onVolumeChange, visible, accentColor, disableSpline, onTogglePerformance }: any) => {
     const [isHovered, setIsHovered] = useState(false);
-    const safeAreaStyle = {
-      bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
-      left: 'calc(env(safe-area-inset-left, 0px) + 12px)',
-      right: 'calc(env(safe-area-inset-right, 0px) + 12px)',
-      maxWidth: 'calc(100% - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) - 24px)',
-    };
     
     const containerStyle = {
         borderColor: `${accentColor}40`,
@@ -1303,16 +1297,12 @@ const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volu
     return (
         <div
           className="pointer-events-auto flex flex-col items-start gap-4 transition-all duration-700 ease-in-out absolute bottom-4 left-4 md:bottom-8 md:left-8 z-[100]"
-          style={{ 
-            ...safeAreaStyle,
-            opacity: visible ? 1 : 0,
-            transform: visible ? 'translateY(0)' : 'translateY(20px)',
-          }}
+          style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(20px)' }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
             <div 
-              className="flex flex-wrap items-center gap-2 bg-black/60 backdrop-blur-xl border p-2 rounded-full transition-colors duration-500 hover-lift"
+              className="flex items-center gap-2 bg-black/60 backdrop-blur-xl border p-2 rounded-full transition-colors duration-500 hover-lift"
               style={containerStyle}
             >
                 <div className="relative group">
@@ -1580,8 +1570,6 @@ export default function Home() {
   const [showEdgeSwipeHints, setShowEdgeSwipeHints] = useState(false);
   const edgeHintsShownRef = useRef(false);
   const [isSafeMode, setIsSafeMode] = useState(false);
-  const [isSafari, setIsSafari] = useState(false);
-  const [forceLightweightSpline, setForceLightweightSpline] = useState(false);
   const handleOrientationDismiss = useCallback(() => {
     setShowOrientationWarning(false);
     orientationDismissedRef.current = true;
@@ -1613,9 +1601,6 @@ export default function Home() {
     // Auto-disable Spline by default; preserve user preference when available
     const savedSplinePref = safeGetItem('spline_enabled');
     const ua = navigator.userAgent || '';
-    const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(ua);
-    const isChromeBrowser = /Chrome/i.test(ua) && /Google Inc/i.test(navigator.vendor);
-    setIsSafari(isSafariBrowser);
     const isIOS =
       /iPad|iPhone|iPod/.test(ua) ||
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -1762,15 +1747,6 @@ export default function Home() {
     if (storedVol) setVolume(parseInt(storedVol));
     setHasRegistered(hasRegisteredUser);
     setCurrentStage("v2");
-
-    // Chrome-specific lightweight path (reduces Spline cost on mid/low devices)
-    if (isChromeBrowser) {
-      const memory = (navigator as any).deviceMemory || 4;
-      const cores = (navigator as any).hardwareConcurrency || 4;
-      if (memory <= 4 || cores <= 6) {
-        setForceLightweightSpline(true);
-      }
-    }
     
     // Cleanup
     return () => {
@@ -2029,7 +2005,7 @@ export default function Home() {
     playClickSound();
   }, []);
 
-  const useCrashSafeSpline = isSafeMode || isTouch || isSafari || forceLightweightSpline;
+  const useCrashSafeSpline = isSafeMode || isTouch;
 
   if (!isClient) return null;
 
