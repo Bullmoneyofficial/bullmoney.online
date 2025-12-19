@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useTransition, useCallback, memo, useMemo } from 'react';
+import React, { Suspense, useState, useEffect, useRef, useTransition, useCallback, memo, useMemo } from 'react';
 import dynamic from 'next/dynamic';
+import Spline from '@splinetool/react-spline';
 import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube';
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -19,7 +20,6 @@ import BullMoneyGate from "@/components/Mainpage/TradingHoldUnlock";
 import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2";
 import InlineFaq from "@/components/Mainpage/InlineFaq";
 import { Footer } from "@/components/Mainpage/footer";
-import { CrashSafeSplineLoader } from "@/components/Mainpage/CrashSafeSplineLoader";
 
 // --- THEME & MUSIC DATA ---
 import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
@@ -536,50 +536,15 @@ const BackgroundMusicSystem = ({ themeId, onReady, volume }: { themeId: string; 
 // ----------------------------------------------------------------------
 // 5. 3D SCENE WRAPPERS WITH LAZY LOADING
 // ----------------------------------------------------------------------
-const MobileSplinePlaceholder = ({ message }: { message?: string }) => (
-  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-neutral-950 via-black to-neutral-900 text-white/70 text-center px-6">
-    <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 shadow-[0_0_24px_rgba(0,0,0,0.45)]">
-      <div className="text-[10px] font-mono tracking-[0.2em] text-blue-300 uppercase mb-1">Performance mode</div>
-      <p className="text-sm leading-relaxed text-white/80">{message || 'Expand this panel to render the 3D scene.'}</p>
-    </div>
-  </div>
-);
-
-const SceneWrapper = memo(({ 
-  isVisible, 
-  sceneUrl, 
-  allowInput = true, 
-  forceNoPointer = false, 
-  parallaxOffset = 0,
-  isMobile = false,
-  preferFallback = false,
-  mobilePerformanceMode = false,
-}: any) => {
+const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPointer = false, parallaxOffset = 0 }: any) => {
   const [isLoaded, setIsLoaded] = useState(false);
-  const shouldUseFallback = preferFallback || mobilePerformanceMode;
 
   useEffect(() => {
-    if (isVisible && !isLoaded && !shouldUseFallback) {
-      const timer = setTimeout(() => setIsLoaded(true), isMobile ? 550 : 120);
+    if (isVisible && !isLoaded) {
+      const timer = setTimeout(() => setIsLoaded(true), 100);
       return () => clearTimeout(timer);
     }
-  }, [isVisible, isLoaded, isMobile, preferFallback, shouldUseFallback]);
-
-  const content = shouldUseFallback ? (
-    <MobileSplinePlaceholder message={mobilePerformanceMode ? 'Performance mode active on mobile. Expand to view 3D on desktop.' : undefined} />
-  ) : isVisible && isLoaded ? (
-    <CrashSafeSplineLoader 
-      sceneUrl={sceneUrl} 
-      isVisible={isVisible && isLoaded} 
-      allowInput={!forceNoPointer && allowInput} 
-      className="w-full h-full block object-cover" 
-      onError={(error) => console.error('[Page] Spline error:', error)} 
-    />
-  ) : isVisible ? (
-    <div className="absolute inset-0 bg-gradient-to-br from-gray-900/40 to-black/60 flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-    </div>
-  ) : null;
+  }, [isVisible, isLoaded]);
 
   return (
     <div
@@ -588,9 +553,22 @@ const SceneWrapper = memo(({
         ${isVisible ? 'opacity-100' : 'opacity-0'}
         ${forceNoPointer ? 'pointer-events-none' : (allowInput ? 'pointer-events-auto' : 'pointer-events-none')}
       `}
-      style={{ transform: `translateY(${isMobile ? 0 : parallaxOffset * 0.5}px)` }}
+      style={{ transform: `translateY(${parallaxOffset * 0.5}px)` }}
     >
-      {content}
+      {isVisible && isLoaded && (
+        <Suspense fallback={
+          <div className="absolute inset-0 bg-gray-900/20 flex items-center justify-center text-blue-500/20 font-mono text-[10px]">
+            LOADING ASSET...
+          </div>
+        }>
+           <Spline scene={sceneUrl} className="w-full h-full block object-cover" />
+        </Suspense>
+      )}
+      {isVisible && !isLoaded && (
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900/40 to-black/60 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )}
     </div>
   );
 });
@@ -628,7 +606,7 @@ const TSXWrapper = memo(({ componentName, isVisible }: { componentName: string; 
   );
 });
 
-const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset, mobilePerformanceMode }: any) => {
+const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset }: any) => {
   const isHeavyScene = config.id === 5;
   const isTSX = config.type === 'tsx';
   const shouldRender = isTSX
@@ -669,9 +647,7 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
               isVisible={shouldRender}
               sceneUrl={config.scene}
               allowInput={!config.disableInteraction}
-              parallaxOffset={isMobile ? 0 : (isHeavyScene ? parallaxOffset * 0.15 : parallaxOffset)}
-              isMobile={isMobile}
-              mobilePerformanceMode={mobilePerformanceMode}
+              parallaxOffset={isHeavyScene ? parallaxOffset * 0.15 : parallaxOffset}
             />
         )}
         {/* Only show label for Spline scenes, not TSX components */}
@@ -691,7 +667,7 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
   );
 });
 
-const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileView, parallaxOffset, mobilePerformanceMode }: any) => {
+const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileView, parallaxOffset }: any) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [splitPos, setSplitPos] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
@@ -795,15 +771,7 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
     if (containerRef.current) onVisible(containerRef.current, config.id - 1);
   }, [onVisible, config.id]);
 
-  const shouldRender = isMobileView ? config.id === activePage : (config.id >= activePage - 1) && (config.id <= activePage + 1);
-  const mobilePrimary = isMobileView ? (splitPos >= 50 ? 'A' : 'B') : 'both';
-  const renderPanelA = shouldRender && (mobilePrimary === 'both' || mobilePrimary === 'A');
-  const renderPanelB = shouldRender && (mobilePrimary === 'both' || mobilePrimary === 'B');
-  const fallbackA = isMobileView && mobilePrimary !== 'A';
-  const fallbackB = isMobileView && mobilePrimary !== 'B';
-  const shouldUseFallbackA = fallbackA || mobilePerformanceMode;
-  const shouldUseFallbackB = fallbackB || mobilePerformanceMode;
-  const parallaxValue = isMobileView ? 0 : parallaxOffset;
+  const shouldRender = (config.id >= activePage - 1) && (config.id <= activePage + 1);
 
   return (
     <section 
@@ -878,13 +846,10 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
       >
         <div className="absolute inset-0 w-full h-full"> 
           <SceneWrapper 
-            isVisible={renderPanelA} 
+            isVisible={shouldRender} 
             sceneUrl={config.sceneA} 
             forceNoPointer={isDragging}
-            parallaxOffset={parallaxValue * 0.3}
-            isMobile={isMobileView}
-            preferFallback={shouldUseFallbackA}
-            mobilePerformanceMode={mobilePerformanceMode}
+            parallaxOffset={parallaxOffset * 0.3}
           />
         </div>
         <div className="absolute top-8 left-8 z-20 pointer-events-none">
@@ -914,13 +879,10 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
       >
         <div className="absolute inset-0 w-full h-full">
              <SceneWrapper 
-               isVisible={renderPanelB} 
+               isVisible={shouldRender} 
                sceneUrl={config.sceneB} 
                forceNoPointer={isDragging}
-               parallaxOffset={parallaxValue * 0.7}
-               isMobile={isMobileView}
-               preferFallback={shouldUseFallbackB}
-               mobilePerformanceMode={mobilePerformanceMode}
+               parallaxOffset={parallaxOffset * 0.7}
              />
         </div>
         <div className="absolute bottom-8 right-8 z-20 text-right pointer-events-none">
@@ -1136,13 +1098,6 @@ export default function Home() {
   const prefersReducedMotionRef = useRef(false);
   const [isTouch, setIsTouch] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
-  const mobilePerfRef = useRef(false);
-
-  const mobilePerformanceMode = useMemo(() => isMobileView || isTouch, [isMobileView, isTouch]);
-
-  useEffect(() => {
-    mobilePerfRef.current = mobilePerformanceMode;
-  }, [mobilePerformanceMode]);
 
   const activeTheme = useMemo(() => {
     if (!ALL_THEMES || ALL_THEMES.length === 0) return FALLBACK_THEME as Theme;
@@ -1187,7 +1142,7 @@ export default function Home() {
 
     // Parallax scroll effect
     const handleScroll = () => {
-      if (prefersReducedMotionRef.current || mobilePerfRef.current) return;
+      if (prefersReducedMotionRef.current) return;
       if (parallaxRafRef.current) cancelAnimationFrame(parallaxRafRef.current);
       const scrollTop = scrollContainerRef.current ? scrollContainerRef.current.scrollTop : window.scrollY;
       parallaxRafRef.current = requestAnimationFrame(() => {
@@ -1245,7 +1200,7 @@ export default function Home() {
 
   // Warm key assets once to keep subsequent visits snappy
   useEffect(() => {
-    if (!isClient || assetsWarmedRef.current || mobilePerformanceMode) return;
+    if (!isClient || assetsWarmedRef.current) return;
     assetsWarmedRef.current = true;
 
     const warmAssets = async () => {
@@ -1256,36 +1211,21 @@ export default function Home() {
       }).filter(Boolean) as string[];
 
       const uniqueScenes = Array.from(new Set(sceneUrls));
-      const isMobileDevice = typeof window !== 'undefined' && (
-        window.innerWidth < 768 ||
-        (typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches)
-      );
-      const warmList = isMobileDevice ? uniqueScenes.slice(0, 3) : uniqueScenes;
-
-      const fetchScene = async (url: string, cache: any) => {
-        try {
-          const req = new Request(url, { cache: 'force-cache' });
-          if (cache) {
-            const match = await cache.match(req);
-            if (match) return;
-            const res = await fetch(req);
-            if (res.ok) await cache.put(req, res.clone());
-          } else {
-            await fetch(req);
-          }
-        } catch (e) {}
-      };
-
       try {
         const cache = typeof window !== 'undefined' && 'caches' in window ? await caches.open('bullmoney-prewarm-v1') : null;
-        if (isMobileDevice) {
-          for (const url of warmList) {
-            await fetchScene(url, cache);
-            await new Promise((res) => setTimeout(res, 300));
-          }
-        } else {
-          await Promise.all(warmList.map((url) => fetchScene(url, cache)));
-        }
+        await Promise.all(uniqueScenes.map(async (url) => {
+          try {
+            const req = new Request(url, { cache: 'force-cache' });
+            if (cache) {
+              const match = await cache.match(req);
+              if (match) return;
+              const res = await fetch(req);
+              if (res.ok) await cache.put(req, res.clone());
+            } else {
+              await fetch(req);
+            }
+          } catch (e) {}
+        }));
       } catch (e) {}
     };
 
@@ -1295,7 +1235,7 @@ export default function Home() {
     } else {
       setTimeout(scheduleWarm, 800);
     }
-  }, [isClient, mobilePerformanceMode]);
+  }, [isClient]);
 
   // --- SCROLL OBSERVER ---
   useEffect(() => {
@@ -1309,7 +1249,7 @@ export default function Home() {
             if (index !== -1) {
               startTransition(() => {
                 setActivePage(index + 1);
-                if (!mobilePerfRef.current) setParticleTrigger(prev => prev + 1);
+                setParticleTrigger(prev => prev + 1);
               });
             }
           }
@@ -1403,10 +1343,8 @@ export default function Home() {
     <>
       <Analytics />
       <SpeedInsights />
-      {!mobilePerformanceMode && (
-        <BackgroundMusicSystem themeId={activeThemeId} onReady={handlePlayerReady} volume={volume} />
-      )}
-      {!mobilePerformanceMode && <ParticleEffect trigger={particleTrigger} />}
+      <BackgroundMusicSystem themeId={activeThemeId} onReady={handlePlayerReady} volume={volume} />
+      <ParticleEffect trigger={particleTrigger} />
       {!isTouch && <CustomCursor accentColor={accentColor} />}
 
       {/* --- INFO PANEL --- */}
@@ -1720,7 +1658,6 @@ export default function Home() {
                       onVisible={handleRef} 
                       isMobileView={isMobileView}
                       parallaxOffset={parallaxOffset}
-                      mobilePerformanceMode={mobilePerformanceMode}
                     />
                 ) : (
                     <FullScreenSection 
@@ -1728,7 +1665,6 @@ export default function Home() {
                       activePage={activePage} 
                       onVisible={handleRef}
                       parallaxOffset={parallaxOffset}
-                      mobilePerformanceMode={mobilePerformanceMode}
                     />
                 )}
                 </React.Fragment>
