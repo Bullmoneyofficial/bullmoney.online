@@ -862,6 +862,8 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
   const [isMobile, setIsMobile] = useState(false);
   const [shouldUnload, setShouldUnload] = useState(false);
   const [mobileOptIn, setMobileOptIn] = useState(false);
+  const isCritical = useMemo(() => CRITICAL_SPLINE_SCENES.includes(sceneUrl), [sceneUrl]);
+  const resolvedSceneUrl = CRITICAL_SCENE_BLOB_MAP[sceneUrl] || sceneUrl;
 
   useEffect(() => {
     const checkMobile = () => {
@@ -891,7 +893,9 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
 
   // OPTIMIZED: Reduce aggressive loading delays for better mobile performance
   useEffect(() => {
-    if (isVisible && !isLoaded && !disabled && (mobileOptIn || !isMobile || forceLiteSpline || forceLoadOverride)) {
+    const allowLoad = mobileOptIn || !isMobile || forceLiteSpline || forceLoadOverride || isCritical;
+
+    if (isVisible && !isLoaded && !disabled && allowLoad) {
       // Ultra-fast loading on all devices for smooth experience
       const delay = isMobile ? (isHeavy ? 150 : 0) : 50;
 
@@ -908,16 +912,16 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
     }
 
     // Aggressive memory management: Unload scenes that are far away
-    if (!isVisible && isMobile && isLoaded) {
+    if (!isVisible && isMobile && isLoaded && !isCritical) {
       const unloadTimer = setTimeout(() => {
         setShouldUnload(true);
         setIsLoaded(false);
       }, 800);  // Reduced from 1000ms for faster cleanup
       return () => clearTimeout(unloadTimer);
     }
-  }, [isVisible, isLoaded, isMobile, isHeavy, disabled, mobileOptIn, forceLiteSpline, forceLoadOverride]);
+  }, [isVisible, isLoaded, isMobile, isHeavy, disabled, mobileOptIn, forceLiteSpline, forceLoadOverride, isCritical]);
 
-  if (isMobile && !mobileOptIn && !forceLiteSpline && !disabled && !forceLoadOverride) {
+  if (isMobile && !mobileOptIn && !forceLiteSpline && !disabled && !forceLoadOverride && !isCritical) {
     return (
       <div
         className="w-full h-full relative transition-opacity duration-700 parallax-layer flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
@@ -992,8 +996,6 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
     );
   }
 
-  const resolvedSceneUrl = CRITICAL_SCENE_BLOB_MAP[sceneUrl] || sceneUrl;
-
   return (
     <div
       className={`
@@ -1007,7 +1009,7 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
       }}
     >
       {isVisible && isLoaded && (
-        useCrashSafe ? (
+        useCrashSafe || isCritical ? (
           <CrashSafeSplineLoader
             sceneUrl={resolvedSceneUrl}
             isVisible={isVisible && isLoaded}
@@ -1595,35 +1597,31 @@ const SupportWidget = ({ accentColor }: { accentColor: string }) => {
           onMouseEnter={() => playHover()}
           onTouchStart={(e) => { playHover(); e.currentTarget.style.transform = 'scale(0.95)'; }}
           onTouchEnd={(e) => { e.currentTarget.style.transform = ''; }}
-          className="group relative flex items-center gap-3 px-4 py-3 rounded-[18px] apple-surface border border-white/10 text-white/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl active:scale-95 touch-manipulation"
+          className="group relative flex items-center justify-center w-14 h-14 rounded-full apple-surface border border-white/10 text-white/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl active:scale-95 touch-manipulation"
           style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation', borderColor: `${accentColor}33` }}
           aria-label="Open support"
         >
-          <div className={`absolute inset-0 rounded-[18px] blur-3xl opacity-30 transition-all duration-500 ${isPulsing ? 'animate-pulse' : ''}`} style={{ backgroundColor: accentColor }} />
-          <div className="relative flex items-center justify-center w-12 h-12 rounded-full border border-white/20 bg-white/5 shadow-inner overflow-hidden">
-              <MessageCircle className="w-6 h-6 text-white relative z-10 drop-shadow-md group-hover:scale-110 transition-transform" strokeWidth={2.4} />
+          <div className={`absolute inset-0 rounded-full blur-3xl opacity-30 transition-all duration-500 ${isPulsing ? 'animate-pulse' : ''}`} style={{ backgroundColor: accentColor }} />
+          <div className="relative flex items-center justify-center w-10 h-10 rounded-full border border-white/20 bg-white/5 shadow-inner overflow-hidden">
+              <MessageCircle className="w-5 h-5 text-white relative z-10 drop-shadow-md group-hover:scale-110 transition-transform" strokeWidth={2.4} />
               <span className="absolute inset-0 opacity-0 group-hover:opacity-20 group-hover:animate-ping" style={{ backgroundColor: accentColor }} />
           </div>
-          <div className="flex flex-col leading-tight text-left">
-            <span className="text-[11px] text-white/60 tracking-[0.12em] uppercase">Human Concierge</span>
-            <span className="text-sm font-semibold text-white">Need a hand?</span>
-          </div>
-          <div className="ml-auto px-3 py-1 rounded-full bg-white/10 border border-white/10 text-[11px] text-white/70">
-            Live
-          </div>
-          {isPulsing && <span className="absolute -top-2 -right-2 w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: accentColor }} />}
+          {isPulsing && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: accentColor }} />}
+          <span className="absolute left-1/2 -bottom-8 -translate-x-1/2 px-2 py-1 rounded-full bg-black/70 border border-white/10 text-[10px] text-white/70 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            Support
+          </span>
         </button>
       </div>
 
       {isOpen && (
         <div
-          className="fixed inset-0 z-[500000] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4"
+          className="fixed inset-0 z-[500000] bg-black/80 backdrop-blur-xl flex items-center justify-center p-3"
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="relative w-full max-w-md apple-surface rounded-3xl border border-white/10 p-6 text-white shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
+          className="relative w-full max-w-sm apple-surface rounded-3xl border border-white/10 p-5 text-white shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
             <button
               onClick={() => setIsOpen(false)}
               className="absolute top-4 right-4 w-10 h-10 rounded-full border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 transition-all active:scale-95"
@@ -1632,32 +1630,29 @@ const SupportWidget = ({ accentColor }: { accentColor: string }) => {
             >
               <X size={18} />
             </button>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${accentColor}18`, border: `1px solid ${accentColor}55` }}>
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${accentColor}18`, border: `1px solid ${accentColor}55` }}>
                 <MessageCircle className="w-6 h-6" style={{ color: accentColor }} />
               </div>
               <div className="flex flex-col leading-tight">
-                <span className="text-xs text-white/60 tracking-[0.2em] uppercase">Support</span>
-                <span className="text-lg font-semibold text-white">Live help desk</span>
+                <span className="text-[11px] text-white/60 tracking-[0.2em] uppercase">Support</span>
+                <span className="text-sm font-semibold text-white">Tap icon to chat</span>
               </div>
+              <a
+                href="https://t.me/+dlP_A0ebMXs3NTg0"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  playClickSound();
+                  if (navigator.vibrate) navigator.vibrate([15, 5, 15]);
+                }}
+                className="w-14 h-14 rounded-full flex items-center justify-center apple-cta text-[#0b1224] font-bold"
+                style={{ backgroundColor: accentColor }}
+                aria-label="Open Telegram"
+              >
+                <ChevronRight size={18} />
+              </a>
             </div>
-            <p className="text-white/70 text-sm leading-relaxed mb-4">
-              Chat with our human concierge for fast answers on trading, access, and onboarding.
-            </p>
-            <a
-              href="https://t.me/+dlP_A0ebMXs3NTg0"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => {
-                playClickSound();
-                if (navigator.vibrate) navigator.vibrate([15, 5, 15]);
-              }}
-              className="apple-cta w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold"
-              style={{ backgroundColor: accentColor, color: '#0b1224' }}
-            >
-              Open Telegram
-              <ChevronRight size={16} />
-            </a>
           </div>
         </div>
       )}
