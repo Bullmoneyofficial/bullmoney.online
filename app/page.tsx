@@ -1353,12 +1353,19 @@ const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volu
     return (
         <div
           className="pointer-events-auto flex flex-col items-start gap-4 transition-all duration-700 ease-in-out absolute bottom-4 left-4 md:bottom-8 md:left-8 z-[100]"
-          style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(20px)' }}
+          style={{ 
+            opacity: visible ? 1 : 0, 
+            transform: visible ? 'translateY(0)' : 'translateY(20px)',
+            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
+            left: 'calc(env(safe-area-inset-left, 0px) + 12px)',
+            right: 'calc(env(safe-area-inset-right, 0px) + 12px)',
+            maxWidth: 'calc(100% - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) - 24px)',
+          }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
             <div 
-              className="flex items-center gap-2 bg-black/60 backdrop-blur-xl border p-2 rounded-full transition-colors duration-500 hover-lift"
+              className="flex flex-wrap items-center gap-2 bg-black/60 backdrop-blur-xl border p-2 rounded-full transition-colors duration-500 hover-lift"
               style={containerStyle}
             >
                 <div className="relative group">
@@ -1489,7 +1496,15 @@ const SupportWidget = ({ accentColor }: { accentColor: string }) => {
     }, []);
 
     return (
-      <div className={`absolute bottom-4 right-4 md:bottom-8 md:right-8 z-[100] pointer-events-auto transition-all duration-700 ease-out transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'}`}>
+      <div
+        className={`absolute z-[100] pointer-events-auto transition-all duration-700 ease-out transform ${
+          isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'
+        }`}
+        style={{
+          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
+          right: 'calc(env(safe-area-inset-right, 0px) + 16px)',
+        }}
+      >
         <a
           href="https://t.me/+dlP_A0ebMXs3NTg0"
           target="_blank"
