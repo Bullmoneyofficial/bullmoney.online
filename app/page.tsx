@@ -789,10 +789,11 @@ class ErrorBoundary extends React.Component<
 // ----------------------------------------------------------------------
 // 6. 3D SCENE WRAPPERS WITH LAZY LOADING
 // ----------------------------------------------------------------------
-const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPointer = false, parallaxOffset = 0, isHeavy = false, disabled = false, skeletonLabel = '', useCrashSafe = false }: any) => {
+const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPointer = false, parallaxOffset = 0, isHeavy = false, disabled = false, skeletonLabel = '', useCrashSafe = false, forceLiteSpline = false, forceLoadOverride = false }: any) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [shouldUnload, setShouldUnload] = useState(false);
+  const [mobileOptIn, setMobileOptIn] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -814,9 +815,15 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
     };
   }, []);
 
+  // Load saved opt-in for mobile Spline
+  useEffect(() => {
+    const savedOptIn = safeGetItem('mobile_spline_opt_in');
+    if (savedOptIn === 'true') setMobileOptIn(true);
+  }, []);
+
   // OPTIMIZED: Reduce aggressive loading delays for better mobile performance
   useEffect(() => {
-    if (isVisible && !isLoaded && !disabled) {
+    if (isVisible && !isLoaded && !disabled && (mobileOptIn || !isMobile || forceLiteSpline || forceLoadOverride)) {
       // Ultra-fast loading on all devices for smooth experience
       const delay = isMobile ? (isHeavy ? 150 : 0) : 50;
 
@@ -840,9 +847,50 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
       }, 800);  // Reduced from 1000ms for faster cleanup
       return () => clearTimeout(unloadTimer);
     }
-  }, [isVisible, isLoaded, isMobile, isHeavy, disabled]);
+  }, [isVisible, isLoaded, isMobile, isHeavy, disabled, mobileOptIn, forceLiteSpline, forceLoadOverride]);
 
-  if (disabled) {
+  if (isMobile && !mobileOptIn && !forceLiteSpline && !disabled && !forceLoadOverride) {
+    return (
+      <div
+        className="w-full h-full relative transition-opacity duration-700 parallax-layer flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
+        style={{ transform: `translateY(${parallaxOffset * 0.4}px) translateZ(0)` }}
+      >
+        <div
+          className="absolute inset-0 opacity-30"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 30% 30%, rgba(59,130,246,0.12), transparent 45%), radial-gradient(circle at 70% 70%, rgba(236,72,153,0.1), transparent 45%)',
+          }}
+        />
+        <div className="relative z-10 text-center space-y-3 px-6 py-6 max-w-md mx-auto rounded-2xl border border-white/10 bg-black/60 backdrop-blur">
+          <div className="text-[10px] font-mono text-blue-300/80 tracking-[0.25em]">MOBILE SAFE VIEW</div>
+          <div className="text-lg font-semibold text-white">Load 3D Preview?</div>
+          <p className="text-white/60 text-sm">
+            To avoid Safari/mobile crashes, 3D stays paused. Enable once to load a lightweight version.
+          </p>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={() => {
+                setMobileOptIn(true);
+                safeSetItem('mobile_spline_opt_in', 'true');
+              }}
+              className="px-4 py-2 rounded-full bg-blue-500/80 text-white font-semibold text-sm shadow-[0_0_20px_rgba(59,130,246,0.35)] hover:bg-blue-500 active:scale-95 transition-all"
+            >
+              Enable 3D
+            </button>
+            <button
+              onClick={() => safeSetItem('mobile_spline_opt_in', 'false')}
+              className="px-3 py-2 rounded-full border border-white/10 text-white/70 text-xs hover:bg-white/5 active:scale-95 transition-all"
+            >
+              Keep Safe Mode
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (disabled && !forceLiteSpline && !forceLoadOverride) {
     return (
       <div
         className="w-full h-full relative transition-opacity duration-700 parallax-layer flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
@@ -962,7 +1010,7 @@ const TSXWrapper = memo(({ componentName, isVisible }: { componentName: string; 
   );
 });
 
-const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false, useCrashSafeSpline = false }: any) => {
+const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false }: any) => {
   const isHeavyScene = config.id === 5 || config.id === 6 || config.id === 10;
   const isMobileSensitive = config.id === 3 || config.id === 4;
   const isLastPage = config.id === 10;
@@ -985,6 +1033,7 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
   }, [config.id, activePage, isLastPage, isMobile]);
 
   const isActive = config.id === activePage;
+  const forceAlwaysSpline = config.id === 1 || config.id === 3;
 
   useEffect(() => {
     if(sectionRef.current) onVisible(sectionRef.current, config.id - 1);
@@ -1008,7 +1057,9 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
               allowInput={!config.disableInteraction}
               parallaxOffset={isHeavyScene ? parallaxOffset * 0.15 : (isMobileSensitive || isLastPage) ? parallaxOffset * 0.3 : parallaxOffset}
               isHeavy={isHeavyScene || isMobileSensitive || isLastPage}
-              disabled={disableSpline}
+              disabled={forceAlwaysSpline ? false : disableSpline}
+              forceLiteSpline={forceLiteSpline}
+              forceLoadOverride={forceAlwaysSpline}
               skeletonLabel={config.label}
               useCrashSafe={useCrashSafeSpline}
             />
@@ -1029,7 +1080,7 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
   );
 });
 
-const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileView, parallaxOffset, disableSpline = false, useCrashSafeSpline = false }: any) => {
+const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileView, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false }: any) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [splitPos, setSplitPos] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
@@ -1230,7 +1281,9 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
             sceneUrl={config.sceneA}
             forceNoPointer={isDragging}
             parallaxOffset={parallaxOffset * 0.3}
-            disabled={disableSpline}
+            disabled={false}
+            forceLiteSpline={forceLiteSpline}
+            forceLoadOverride
             skeletonLabel={config.labelA}
             useCrashSafe={useCrashSafeSpline}
           />
@@ -1266,7 +1319,9 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
                sceneUrl={config.sceneB}
                forceNoPointer={isDragging}
                parallaxOffset={parallaxOffset * 0.7}
-               disabled={disableSpline}
+               disabled={false}
+               forceLiteSpline={forceLiteSpline}
+               forceLoadOverride
                skeletonLabel={config.labelB}
                useCrashSafe={useCrashSafeSpline}
              />
@@ -1570,6 +1625,7 @@ export default function Home() {
   const [showEdgeSwipeHints, setShowEdgeSwipeHints] = useState(false);
   const edgeHintsShownRef = useRef(false);
   const [isSafeMode, setIsSafeMode] = useState(false);
+  const [isSafari, setIsSafari] = useState(false);
   const handleOrientationDismiss = useCallback(() => {
     setShowOrientationWarning(false);
     orientationDismissedRef.current = true;
@@ -1601,6 +1657,8 @@ export default function Home() {
     // Auto-disable Spline by default; preserve user preference when available
     const savedSplinePref = safeGetItem('spline_enabled');
     const ua = navigator.userAgent || '';
+    const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(ua);
+    setIsSafari(isSafariBrowser);
     const isIOS =
       /iPad|iPhone|iPod/.test(ua) ||
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -2005,7 +2063,8 @@ export default function Home() {
     playClickSound();
   }, []);
 
-  const useCrashSafeSpline = isSafeMode || isTouch;
+  const useCrashSafeSpline = isSafeMode || isTouch || isSafari;
+  const forceLiteSpline = isSafari;
 
   if (!isClient) return null;
 
@@ -2653,6 +2712,7 @@ export default function Home() {
                       parallaxOffset={parallaxOffset}
                       disableSpline={disableSpline}
                       useCrashSafeSpline={useCrashSafeSpline}
+                      forceLiteSpline={forceLiteSpline}
                     />
                 ) : (
                     <FullScreenSection
@@ -2662,6 +2722,7 @@ export default function Home() {
                       parallaxOffset={parallaxOffset}
                       disableSpline={disableSpline}
                       useCrashSafeSpline={useCrashSafeSpline}
+                      forceLiteSpline={forceLiteSpline}
                     />
                 )}
                 </React.Fragment>
