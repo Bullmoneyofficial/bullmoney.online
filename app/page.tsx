@@ -1010,7 +1010,7 @@ const TSXWrapper = memo(({ componentName, isVisible }: { componentName: string; 
   );
 });
 
-const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false }: any) => {
+const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false, sensitiveMode = false }: any) => {
   const isHeavyScene = config.id === 5 || config.id === 6 || config.id === 10;
   const isMobileSensitive = config.id === 3 || config.id === 4;
   const isLastPage = config.id === 10;
@@ -1034,6 +1034,7 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
 
   const isActive = config.id === activePage;
   const forceAlwaysSpline = config.id === 1 || config.id === 3;
+  const suppressSpline = sensitiveMode && !forceAlwaysSpline;
 
   useEffect(() => {
     if(sectionRef.current) onVisible(sectionRef.current, config.id - 1);
@@ -1057,7 +1058,7 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
               allowInput={!config.disableInteraction}
               parallaxOffset={isHeavyScene ? parallaxOffset * 0.15 : (isMobileSensitive || isLastPage) ? parallaxOffset * 0.3 : parallaxOffset}
               isHeavy={isHeavyScene || isMobileSensitive || isLastPage}
-              disabled={forceAlwaysSpline ? false : disableSpline}
+              disabled={forceAlwaysSpline ? false : (disableSpline || suppressSpline)}
               forceLiteSpline={forceLiteSpline}
               forceLoadOverride={forceAlwaysSpline}
               skeletonLabel={config.label}
@@ -1080,7 +1081,7 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
   );
 });
 
-const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileView, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false }: any) => {
+const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileView, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false, sensitiveMode = false }: any) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [splitPos, setSplitPos] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
@@ -2713,6 +2714,7 @@ export default function Home() {
                       disableSpline={disableSpline}
                       useCrashSafeSpline={useCrashSafeSpline}
                       forceLiteSpline={forceLiteSpline}
+                      sensitiveMode={isMobileView || isSafari}
                     />
                 ) : (
                     <FullScreenSection
@@ -2723,6 +2725,7 @@ export default function Home() {
                       disableSpline={disableSpline}
                       useCrashSafeSpline={useCrashSafeSpline}
                       forceLiteSpline={forceLiteSpline}
+                      sensitiveMode={isMobileView || isSafari}
                     />
                 )}
                 </React.Fragment>
