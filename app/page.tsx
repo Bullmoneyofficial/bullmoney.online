@@ -553,18 +553,20 @@ const SceneWrapper = memo(({
   parallaxOffset = 0,
   isMobile = false,
   preferFallback = false,
+  mobilePerformanceMode = false,
 }: any) => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const shouldUseFallback = preferFallback || mobilePerformanceMode;
 
   useEffect(() => {
-    if (isVisible && !isLoaded && !preferFallback) {
+    if (isVisible && !isLoaded && !shouldUseFallback) {
       const timer = setTimeout(() => setIsLoaded(true), isMobile ? 550 : 120);
       return () => clearTimeout(timer);
     }
-  }, [isVisible, isLoaded, isMobile, preferFallback]);
+  }, [isVisible, isLoaded, isMobile, preferFallback, shouldUseFallback]);
 
-  const content = preferFallback ? (
-    <MobileSplinePlaceholder />
+  const content = shouldUseFallback ? (
+    <MobileSplinePlaceholder message={mobilePerformanceMode ? 'Performance mode active on mobile. Expand to view 3D on desktop.' : undefined} />
   ) : isVisible && isLoaded ? (
     <CrashSafeSplineLoader 
       sceneUrl={sceneUrl} 
@@ -626,7 +628,7 @@ const TSXWrapper = memo(({ componentName, isVisible }: { componentName: string; 
   );
 });
 
-const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset }: any) => {
+const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset, mobilePerformanceMode }: any) => {
   const isHeavyScene = config.id === 5;
   const isTSX = config.type === 'tsx';
   const shouldRender = isTSX
@@ -669,6 +671,7 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset 
               allowInput={!config.disableInteraction}
               parallaxOffset={isMobile ? 0 : (isHeavyScene ? parallaxOffset * 0.15 : parallaxOffset)}
               isMobile={isMobile}
+              mobilePerformanceMode={mobilePerformanceMode}
             />
         )}
         {/* Only show label for Spline scenes, not TSX components */}
@@ -688,7 +691,7 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset 
   );
 });
 
-const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileView, parallaxOffset }: any) => {
+const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileView, parallaxOffset, mobilePerformanceMode }: any) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [splitPos, setSplitPos] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
@@ -798,6 +801,8 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
   const renderPanelB = shouldRender && (mobilePrimary === 'both' || mobilePrimary === 'B');
   const fallbackA = isMobileView && mobilePrimary !== 'A';
   const fallbackB = isMobileView && mobilePrimary !== 'B';
+  const shouldUseFallbackA = fallbackA || mobilePerformanceMode;
+  const shouldUseFallbackB = fallbackB || mobilePerformanceMode;
   const parallaxValue = isMobileView ? 0 : parallaxOffset;
 
   return (
@@ -878,7 +883,8 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
             forceNoPointer={isDragging}
             parallaxOffset={parallaxValue * 0.3}
             isMobile={isMobileView}
-            preferFallback={fallbackA}
+            preferFallback={shouldUseFallbackA}
+            mobilePerformanceMode={mobilePerformanceMode}
           />
         </div>
         <div className="absolute top-8 left-8 z-20 pointer-events-none">
@@ -913,7 +919,8 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
                forceNoPointer={isDragging}
                parallaxOffset={parallaxValue * 0.7}
                isMobile={isMobileView}
-               preferFallback={fallbackB}
+               preferFallback={shouldUseFallbackB}
+               mobilePerformanceMode={mobilePerformanceMode}
              />
         </div>
         <div className="absolute bottom-8 right-8 z-20 text-right pointer-events-none">
@@ -1129,6 +1136,13 @@ export default function Home() {
   const prefersReducedMotionRef = useRef(false);
   const [isTouch, setIsTouch] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
+  const mobilePerfRef = useRef(false);
+
+  const mobilePerformanceMode = useMemo(() => isMobileView || isTouch, [isMobileView, isTouch]);
+
+  useEffect(() => {
+    mobilePerfRef.current = mobilePerformanceMode;
+  }, [mobilePerformanceMode]);
 
   const activeTheme = useMemo(() => {
     if (!ALL_THEMES || ALL_THEMES.length === 0) return FALLBACK_THEME as Theme;
@@ -1173,7 +1187,7 @@ export default function Home() {
 
     // Parallax scroll effect
     const handleScroll = () => {
-      if (prefersReducedMotionRef.current) return;
+      if (prefersReducedMotionRef.current || mobilePerfRef.current) return;
       if (parallaxRafRef.current) cancelAnimationFrame(parallaxRafRef.current);
       const scrollTop = scrollContainerRef.current ? scrollContainerRef.current.scrollTop : window.scrollY;
       parallaxRafRef.current = requestAnimationFrame(() => {
@@ -1231,7 +1245,7 @@ export default function Home() {
 
   // Warm key assets once to keep subsequent visits snappy
   useEffect(() => {
-    if (!isClient || assetsWarmedRef.current) return;
+    if (!isClient || assetsWarmedRef.current || mobilePerformanceMode) return;
     assetsWarmedRef.current = true;
 
     const warmAssets = async () => {
@@ -1281,7 +1295,7 @@ export default function Home() {
     } else {
       setTimeout(scheduleWarm, 800);
     }
-  }, [isClient]);
+  }, [isClient, mobilePerformanceMode]);
 
   // --- SCROLL OBSERVER ---
   useEffect(() => {
@@ -1295,7 +1309,7 @@ export default function Home() {
             if (index !== -1) {
               startTransition(() => {
                 setActivePage(index + 1);
-                setParticleTrigger(prev => prev + 1);
+                if (!mobilePerfRef.current) setParticleTrigger(prev => prev + 1);
               });
             }
           }
@@ -1389,8 +1403,10 @@ export default function Home() {
     <>
       <Analytics />
       <SpeedInsights />
-      <BackgroundMusicSystem themeId={activeThemeId} onReady={handlePlayerReady} volume={volume} />
-      <ParticleEffect trigger={particleTrigger} />
+      {!mobilePerformanceMode && (
+        <BackgroundMusicSystem themeId={activeThemeId} onReady={handlePlayerReady} volume={volume} />
+      )}
+      {!mobilePerformanceMode && <ParticleEffect trigger={particleTrigger} />}
       {!isTouch && <CustomCursor accentColor={accentColor} />}
 
       {/* --- INFO PANEL --- */}
@@ -1704,6 +1720,7 @@ export default function Home() {
                       onVisible={handleRef} 
                       isMobileView={isMobileView}
                       parallaxOffset={parallaxOffset}
+                      mobilePerformanceMode={mobilePerformanceMode}
                     />
                 ) : (
                     <FullScreenSection 
@@ -1711,6 +1728,7 @@ export default function Home() {
                       activePage={activePage} 
                       onVisible={handleRef}
                       parallaxOffset={parallaxOffset}
+                      mobilePerformanceMode={mobilePerformanceMode}
                     />
                 )}
                 </React.Fragment>
