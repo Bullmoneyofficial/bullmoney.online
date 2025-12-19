@@ -413,16 +413,24 @@ function generatePreviewUrl(sceneUrl: string): string | null {
   return null;
 }
 
-// CSS for animation delays
-const style = document.createElement('style');
-style.textContent = `
-  .animation-delay-200 {
-    animation-delay: 200ms;
-  }
-  .animation-delay-400 {
-    animation-delay: 400ms;
-  }
-`;
-if (typeof document !== 'undefined') {
+// CSS for animation delays (injected lazily on client)
+let animationStyleInjected = false;
+const ensureAnimationStyle = () => {
+  if (animationStyleInjected || typeof document === 'undefined') return;
+  const style = document.createElement('style');
+  style.textContent = `
+    .animation-delay-200 {
+      animation-delay: 200ms;
+    }
+    .animation-delay-400 {
+      animation-delay: 400ms;
+    }
+  `;
   document.head.appendChild(style);
+  animationStyleInjected = true;
+};
+
+// Ensure the animation helper styles are available when the component mounts
+if (typeof window !== 'undefined') {
+  ensureAnimationStyle();
 }
