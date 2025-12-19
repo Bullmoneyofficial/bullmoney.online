@@ -220,6 +220,60 @@ const getThemeColor = (id: string) => THEME_ACCENTS[id] || THEME_ACCENTS['defaul
 // 2. GLOBAL STYLES (Enhanced with new animations)
 // ----------------------------------------------------------------------
 const GLOBAL_STYLES = `
+  :root {
+    --apple-font: "SF Pro Display","SF Pro Text",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --apple-surface: rgba(255,255,255,0.04);
+    --apple-border: rgba(255,255,255,0.12);
+    --apple-highlight: rgba(255,255,255,0.75);
+    --apple-shadow: 0 30px 80px rgba(0,0,0,0.45);
+    --apple-gradient: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.06), transparent 40%), radial-gradient(circle at 80% 0%, rgba(59,130,246,0.08), transparent 35%), radial-gradient(circle at 50% 100%, rgba(255,255,255,0.05), transparent 40%);
+  }
+
+  body, button, input, textarea {
+    font-family: var(--apple-font);
+    letter-spacing: -0.01em;
+  }
+
+  body {
+    background-image: var(--apple-gradient);
+    background-color: black;
+  }
+
+  .apple-surface {
+    background-color: var(--apple-surface);
+    border: 1px solid var(--apple-border);
+    box-shadow: var(--apple-shadow);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+  }
+
+  .apple-divider {
+    height: 1px;
+    width: 100%;
+    background: linear-gradient(90deg, transparent, var(--apple-border), transparent);
+  }
+
+  .apple-cta {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.75));
+    color: #0f172a;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.35);
+  }
+
+  .apple-cta::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(255,255,255,0.4), transparent 55%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  .apple-cta:hover::after {
+    opacity: 1;
+  }
+
   /* --- MOBILE SCROLL FIXES START --- */
   // FIX #1: Remove fixed positioning that causes scroll issues
   html, body {
@@ -645,10 +699,15 @@ const InfoPanel = ({ config, isOpen, onClose, accentColor }: any) => {
 
   return (
     <div 
-      className={`fixed left-0 top-0 h-full w-80 bg-black/95 backdrop-blur-xl border-r z-[600000] transition-transform duration-500 ease-out ${
+      className={`fixed left-0 top-0 h-full w-[22rem] md:w-[26rem] apple-surface bg-black/70 backdrop-blur-2xl border-r z-[600000] transition-transform duration-500 ease-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
-      style={{ borderColor: `${accentColor}40`, touchAction: 'pan-y' }}
+      style={{ 
+        borderColor: `${accentColor}35`, 
+        boxShadow: '0 40px 120px rgba(0,0,0,0.5)',
+        backgroundImage: `linear-gradient(160deg, ${accentColor}12, rgba(255,255,255,0.02))`,
+        touchAction: 'pan-y' 
+      }}
       onTouchStart={swipeHandlers.onTouchStart}
       onTouchMove={swipeHandlers.onTouchMove}
       onTouchEnd={swipeHandlers.onTouchEnd}
@@ -678,55 +737,61 @@ const InfoPanel = ({ config, isOpen, onClose, accentColor }: any) => {
       </button>
     
       <div className="p-8 h-full overflow-y-auto no-scrollbar flex flex-col gap-6">
-        {/* Encrypted Title */}
-        <div className="relative">
-          <div className="flex items-center gap-2 mb-2">
-            <Lock className="w-4 h-4" style={{ color: accentColor }} />
-            <span className="text-xs font-mono tracking-wider" style={{ color: accentColor }}>
-              ENCRYPTED
-            </span>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: `${accentColor}15`, border: `1px solid ${accentColor}30` }}>
+              <MousePointer2 size={16} style={{ color: accentColor }} />
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-[10px] font-mono tracking-[0.28em] text-white/60">NOW VIEWING</span>
+              <span className="text-sm text-white/80">Scene dossier</span>
+            </div>
           </div>
-          <h3 className="font-mono text-lg text-white/90 break-all">
-            {config?.encryptedTitle || 'X39yRz1'}
-          </h3>
+          <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] font-semibold text-white/80">
+            {config?.label || 'PAGE'}
+          </div>
         </div>
-        
-        {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-        
+
+        <div className="apple-divider" />
+
         {/* Main Title */}
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-2">
+        <div className="space-y-3">
+          <h2 className="text-2xl font-bold text-white tracking-tight">
             {config?.infoTitle || 'Information'}
           </h2>
           <p className="text-white/70 text-sm leading-relaxed">
             {config?.infoDesc || 'Description not available'}
           </p>
+          <div className="flex items-center gap-2 text-[11px] text-white/60 font-mono">
+            <Lock className="w-4 h-4" style={{ color: accentColor }} />
+            <span className="truncate">{config?.encryptedTitle || 'X39yRz1'}</span>
+          </div>
         </div>
         
         {/* Fun Fact Section */}
         {config?.funFact && (
-          <>
-            <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-            <div className="p-4 rounded-lg border" style={{ 
-              backgroundColor: `${accentColor}15`,
-              borderColor: `${accentColor}40`
-            }}>
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="w-4 h-4" style={{ color: accentColor }} />
-                <span className="text-xs font-bold tracking-wider" style={{ color: accentColor }}>
-                  FUN FACT
-                </span>
-              </div>
-              <p className="text-white/80 text-sm leading-relaxed">
-                {config.funFact}
-              </p>
+          <div className="rounded-2xl border apple-surface p-4 space-y-2" style={{ 
+            backgroundColor: `${accentColor}10`,
+            borderColor: `${accentColor}30`
+          }}>
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" style={{ color: accentColor }} />
+              <span className="text-xs font-bold tracking-[0.2em]" style={{ color: accentColor }}>
+                INSIGHT
+              </span>
             </div>
-          </>
+            <p className="text-white/80 text-sm leading-relaxed">
+              {config.funFact}
+            </p>
+          </div>
         )}
         
         {/* Page Number Badge */}
-        <div className="mt-auto">
+        <div className="mt-auto flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs text-white/60">
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: accentColor }} />
+            <span className="font-mono tracking-widest">Precision tuned</span>
+          </div>
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10">
             <span className="text-xs text-white/50">PAGE</span>
             <span className="text-xl font-bold" style={{ color: accentColor }}>
@@ -1341,8 +1406,6 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
 // 7. BOTTOM CONTROLS & WIDGETS
 // ----------------------------------------------------------------------
 const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volume, onVolumeChange, visible, accentColor, disableSpline, onTogglePerformance }: any) => {
-    const [isHovered, setIsHovered] = useState(false);
-    
     const containerStyle = {
         borderColor: `${accentColor}40`,
         boxShadow: `0 0 20px ${accentColor}15`
@@ -1361,123 +1424,111 @@ const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volu
             right: 'calc(env(safe-area-inset-right, 0px) + 12px)',
             maxWidth: 'calc(100% - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) - 24px)',
           }}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
         >
             <div 
-              className="flex flex-wrap items-center gap-2 bg-black/60 backdrop-blur-xl border p-2 rounded-full transition-colors duration-500 hover-lift"
+              className="apple-surface rounded-[28px] px-5 py-4 w-full max-w-[520px] transition-all duration-500 hover:-translate-y-0.5"
               style={containerStyle}
             >
-                <div className="relative group">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      playClickSound();
-                      if (navigator.vibrate) navigator.vibrate(10);
-                      onOpenTheme(e);
-                    }}
-                    onTouchStart={(e) => {
-                      e.currentTarget.style.transform = 'scale(0.9)';
-                    }}
-                    onTouchEnd={(e) => {
-                      e.currentTarget.style.transform = '';
-                    }}
-                    className="flex items-center justify-center min-w-[44px] min-h-[44px] w-10 h-10 rounded-full bg-white/5 text-gray-400 transition-all duration-300 border border-transparent group relative hover:text-white hover:bg-white/10 touch-manipulation active:scale-90"
-                    style={{
-                      WebkitTapHighlightColor: 'transparent',
-                      touchAction: 'manipulation',
-                    }}
-                  >
-                      <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-20 transition-opacity shimmer-effect" style={{ backgroundColor: accentColor }} />
-                      <Palette size={18} style={{ color: isHovered ? accentColor : undefined }} />
-                  </button>
-                  <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[10px] font-mono text-white/60 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    Theme
-                  </span>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${accentColor}15`, border: `1px solid ${accentColor}30` }}>
+                      <Sparkles size={18} style={{ color: accentColor }} />
+                    </div>
+                    <div className="flex flex-col leading-tight">
+                      <span className="text-[10px] font-mono tracking-[0.28em] text-white/60 uppercase">Control Center</span>
+                      <span className="text-base font-semibold text-white">Precision mode engaged</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          playClickSound();
+                          if (navigator.vibrate) navigator.vibrate(10);
+                          onOpenTheme(e);
+                        }}
+                        onTouchStart={(e) => { e.currentTarget.style.transform = 'scale(0.95)'; }}
+                        onTouchEnd={(e) => { e.currentTarget.style.transform = ''; }}
+                        className="w-11 h-11 rounded-2xl border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:-translate-y-0.5 transition-all shadow-lg touch-manipulation active:scale-95"
+                        style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+                        aria-label="Open theme settings"
+                      >
+                        <Palette size={18} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          playClickSound();
+                          if (navigator.vibrate) navigator.vibrate(12);
+                          onTogglePerformance();
+                        }}
+                        onTouchStart={(e) => { e.currentTarget.style.transform = 'scale(0.95)'; }}
+                        onTouchEnd={(e) => { e.currentTarget.style.transform = ''; }}
+                        className={`w-11 h-11 rounded-2xl border transition-all hover:-translate-y-0.5 shadow-lg touch-manipulation active:scale-95 ${
+                          disableSpline
+                            ? 'bg-white text-black border-white/70'
+                            : 'bg-white/5 text-white/80 border-white/10 hover:bg-white/10'
+                        }`}
+                        style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+                        aria-label="Toggle performance mode"
+                      >
+                        <Zap size={18} style={{ color: disableSpline ? accentColor : 'inherit' }} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          playClickSound();
+                          if (navigator.vibrate) navigator.vibrate(10);
+                          onToggleMusic();
+                        }}
+                        onTouchStart={(e) => { e.currentTarget.style.transform = 'scale(0.95)'; }}
+                        onTouchEnd={(e) => { e.currentTarget.style.transform = ''; }}
+                        className="relative w-12 h-12 rounded-[14px] border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:-translate-y-0.5 transition-all shadow-lg touch-manipulation active:scale-95"
+                        style={{
+                            WebkitTapHighlightColor: 'transparent',
+                            touchAction: 'manipulation',
+                            boxShadow: isPlaying ? `0 12px 30px ${accentColor}40` : undefined,
+                            borderColor: isPlaying ? `${accentColor}55` : 'rgba(255,255,255,0.1)',
+                        }}
+                        aria-label="Toggle music"
+                      >
+                          {isPlaying ? (volume > 50 ? <Volume2 size={18}/> : <Volume1 size={18}/>) : <VolumeX size={18}/>}
+                          {isPlaying && <span className="absolute inset-0 rounded-[14px] border animate-ping opacity-20" style={{ borderColor: accentColor }} />}
+                      </button>
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-white/5 border border-white/10">
+                        <span className="text-[10px] font-semibold text-white/60">Volume</span>
+                        <input 
+                          type="range" 
+                          min="0" 
+                          max="100" 
+                          value={volume} 
+                          onChange={(e) => onVolumeChange(parseInt(e.target.value))} 
+                          className="w-24 h-1 rounded-lg appearance-none cursor-pointer" 
+                          style={{ accentColor: accentColor, backgroundColor: `${accentColor}25` }} 
+                        />
+                      </div>
+                  </div>
                 </div>
 
-                <div className="relative group">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      playClickSound();
-                      if (navigator.vibrate) navigator.vibrate(12);
-                      onTogglePerformance();
-                    }}
-                    onTouchStart={(e) => {
-                      e.currentTarget.style.transform = 'scale(0.9)';
-                    }}
-                    onTouchEnd={(e) => {
-                      e.currentTarget.style.transform = '';
-                    }}
-                    className={`flex items-center justify-center min-w-[44px] min-h-[44px] w-10 h-10 rounded-full transition-all duration-300 border border-transparent group relative hover-lift touch-manipulation active:scale-90 ${
-                      disableSpline
-                        ? 'bg-blue-500 text-black shadow-[0_0_15px_rgba(59,130,246,0.35)]'
-                        : 'bg-white/5 text-green-400 hover:text-white hover:bg-white/10'
-                    }`}
-                    style={{
-                      WebkitTapHighlightColor: 'transparent',
-                      touchAction: 'manipulation',
-                    }}
-                  >
-                    <Zap size={18} />
-                  </button>
-                  <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[10px] font-mono text-white/60 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    {disableSpline ? 'Performance' : 'Full Visuals'}
-                  </span>
-                </div>
+                <div className="apple-divider my-3" />
                 
-                <div className="w-px h-6 bg-white/10 mx-1" />
-                
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    playClickSound();
-                    if (navigator.vibrate) navigator.vibrate(10);
-                    onToggleMusic();
-                  }}
-                  onTouchStart={(e) => {
-                    e.currentTarget.style.transform = 'scale(0.9)';
-                  }}
-                  onTouchEnd={(e) => {
-                    e.currentTarget.style.transform = '';
-                  }}
-                  className={`flex items-center justify-center min-w-[44px] min-h-[44px] w-10 h-10 rounded-full transition-all duration-500 relative touch-manipulation active:scale-90`}
-                  style={{
-                      backgroundColor: isPlaying ? `${accentColor}33` : '#1f2937',
-                      color: isPlaying ? accentColor : '#6b7280',
-                      boxShadow: isPlaying ? `0 0 15px ${accentColor}4d` : 'none',
-                      WebkitTapHighlightColor: 'transparent',
-                      touchAction: 'manipulation',
-                  }}
-                >
-                    {isPlaying ? (volume > 50 ? <Volume2 size={18}/> : <Volume1 size={18}/>) : <VolumeX size={18}/>}
-                    {isPlaying && <span className="absolute inset-0 rounded-full border animate-ping opacity-20" style={{ borderColor: accentColor }} />}
-                </button>
-                
-                <div className={`flex items-center transition-all duration-500 overflow-hidden ${isHovered ? 'w-24 px-2 opacity-100' : 'w-0 opacity-0'}`}>
-                    <input 
-                      type="range" 
-                      min="0" 
-                      max="100" 
-                      value={volume} 
-                      onChange={(e) => onVolumeChange(parseInt(e.target.value))} 
-                      className="w-full h-1 rounded-lg appearance-none cursor-pointer" 
-                      style={{ accentColor: accentColor, backgroundColor: `${accentColor}44` }} 
-                    />
-                </div>
-            </div>
-            
-            <div className={`hidden md:flex flex-col overflow-hidden transition-all duration-500 pl-2 ${isPlaying ? 'max-h-12 opacity-100' : 'max-h-0 opacity-0'}`}>
-                <span className="text-[10px] uppercase tracking-wider font-bold transition-colors duration-500" style={{ color: accentColor }}>
-                  Now Streaming
-                </span>
-                <div className="flex items-center gap-1">
-                    <span className="text-xs text-white truncate font-mono">{themeName} Radio</span>
-                    <div className="flex gap-0.5 items-end h-3">
-                        <span className="w-0.5 h-full animate-music-bar-1" style={{ backgroundColor: accentColor }}/>
-                        <span className="w-0.5 h-full animate-music-bar-2" style={{ backgroundColor: accentColor }}/>
-                        <span className="w-0.5 h-full animate-music-bar-3" style={{ backgroundColor: accentColor }}/>
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-2 text-xs text-white/60">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: accentColor }} />
+                      <span className="font-mono tracking-widest uppercase">Immersive audio</span>
+                    </div>
+                    <div className={`flex flex-col md:flex-row md:items-center overflow-hidden transition-all duration-500 gap-1 md:gap-3 ${isPlaying ? 'opacity-100' : 'opacity-60'}`}>
+                        <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: accentColor }}>
+                          Now Streaming
+                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-white truncate">{themeName} Radio</span>
+                            <div className="flex gap-1 items-end h-3">
+                                <span className="w-0.5 h-full animate-music-bar-1" style={{ backgroundColor: accentColor }}/>
+                                <span className="w-0.5 h-full animate-music-bar-2" style={{ backgroundColor: accentColor }}/>
+                                <span className="w-0.5 h-full animate-music-bar-3" style={{ backgroundColor: accentColor }}/>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1521,31 +1572,22 @@ const SupportWidget = ({ accentColor }: { accentColor: string }) => {
           onTouchEnd={(e) => {
             e.currentTarget.style.transform = '';
           }}
-          className="group relative flex items-center justify-center min-w-[56px] min-h-[56px] w-16 h-16 rounded-full transition-all duration-300 hover:-translate-y-1 hover:scale-110 active:scale-95 touch-manipulation"
-          style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+          className="group relative flex items-center gap-3 px-4 py-3 rounded-[18px] apple-surface border border-white/10 text-white/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl active:scale-95 touch-manipulation"
+          style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation', borderColor: `${accentColor}33` }}
         >
-          <div
-            className={`absolute inset-0 rounded-full blur-[20px] opacity-40 transition-all duration-500 group-hover:opacity-80 group-hover:scale-110 ${isPulsing ? 'animate-pulse' : ''}`}
-            style={{ backgroundColor: accentColor }}
-          />
-          <div className="absolute -top-10 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-            <div className="px-3 py-1.5 rounded-lg text-xs font-bold text-white whitespace-nowrap shadow-lg" style={{ backgroundColor: accentColor }}>
-              Get Help!
-            </div>
+          <div className={`absolute inset-0 rounded-[18px] blur-3xl opacity-30 transition-all duration-500 ${isPulsing ? 'animate-pulse' : ''}`} style={{ backgroundColor: accentColor }} />
+          <div className="relative flex items-center justify-center w-12 h-12 rounded-full border border-white/20 bg-white/5 shadow-inner overflow-hidden">
+              <MessageCircle className="w-6 h-6 text-white relative z-10 drop-shadow-md group-hover:scale-110 transition-transform" strokeWidth={2.4} />
+              <span className="absolute inset-0 opacity-0 group-hover:opacity-20 group-hover:animate-ping" style={{ backgroundColor: accentColor }} />
           </div>
-          <div
-            className="relative flex items-center justify-center w-full h-full rounded-full shadow-inner border overflow-hidden z-10 group-hover:shadow-2xl transition-shadow"
-            style={{
-                background: `linear-gradient(135deg, ${accentColor}cc, ${accentColor}, ${accentColor}99)`,
-                borderColor: `${accentColor}88`
-            }}
-          >
-              <MessageCircle className="w-7 h-7 text-white relative z-30 drop-shadow-md group-hover:scale-110 transition-transform" strokeWidth={2.5} />
-              <span className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-20 group-hover:animate-ping" style={{ backgroundColor: 'white' }} />
+          <div className="flex flex-col leading-tight">
+            <span className="text-[11px] text-white/60 tracking-[0.12em] uppercase">Human Concierge</span>
+            <span className="text-sm font-semibold text-white">Need a hand?</span>
           </div>
-          {isPulsing && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-black animate-pulse" style={{ backgroundColor: '#ef4444' }} />
-          )}
+          <div className="ml-auto px-3 py-1 rounded-full bg-white/10 border border-white/10 text-[11px] text-white/70">
+            Live
+          </div>
+          {isPulsing && <span className="absolute -top-2 -right-2 w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: accentColor }} />}
         </a>
       </div>
     );
