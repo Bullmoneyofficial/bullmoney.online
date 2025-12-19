@@ -80,8 +80,8 @@ const PAGE_CONFIG = [
   { 
     id: 4, 
     type: 'split', 
-    sceneA: "/scene5.splinecode", 
-    sceneB: "/scene4.splinecode", 
+    sceneA: "/scene4.splinecode", 
+    sceneB: "/scene5.splinecode", 
     labelA: "WIREFRAME", 
     labelB: "PROTOTYPE",
     infoTitle: "The Split Process",
