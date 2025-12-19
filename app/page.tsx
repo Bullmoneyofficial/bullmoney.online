@@ -23,6 +23,7 @@ import BullMoneyGate from "@/components/Mainpage/TradingHoldUnlock";
 import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2";
 import InlineFaq from "@/components/Mainpage/InlineFaq";
 import { Footer } from "@/components/Mainpage/footer";
+import { CrashSafeSplineLoader } from "@/components/Mainpage/CrashSafeSplineLoader";
 
 // --- THEME & MUSIC DATA ---
 import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
@@ -626,41 +627,52 @@ const OrientationOverlay = ({ onDismiss }: { onDismiss: () => void }) => {
 
 // Info Panel Component
 const InfoPanel = ({ config, isOpen, onClose, accentColor }: any) => {
-  const touchStartX = useRef<number | null>(null);
-  const touchDeltaX = useRef(0);
+  const handleClose = useCallback(() => {
+    playClick();
+    onClose();
+  }, [onClose]);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchDeltaX.current = 0;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartX.current === null) return;
-    touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
-  };
-
-  const handleTouchEnd = () => {
-    if (touchDeltaX.current < -60) onClose();
-    touchStartX.current = null;
-    touchDeltaX.current = 0;
-  };
+  const swipeHandlers = useMemo(
+    () =>
+      createSwipeHandlers({
+        onSwipeLeft: () => onClose(),
+        threshold: 70,
+        velocityThreshold: 0.25,
+        preventScroll: false,
+      }),
+    [onClose]
+  );
 
   return (
     <div 
       className={`fixed left-0 top-0 h-full w-80 bg-black/95 backdrop-blur-xl border-r z-[600000] transition-transform duration-500 ease-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
-      style={{ borderColor: `${accentColor}40` }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      style={{ borderColor: `${accentColor}40`, touchAction: 'pan-y' }}
+      onTouchStart={swipeHandlers.onTouchStart}
+      onTouchMove={swipeHandlers.onTouchMove}
+      onTouchEnd={swipeHandlers.onTouchEnd}
+      onMouseDown={swipeHandlers.onMouseDown}
+      onMouseMove={swipeHandlers.onMouseMove}
+      onMouseUp={swipeHandlers.onMouseUp}
     >
       <button
         type="button"
-        onClick={onClose}
-        onDoubleClick={onClose}
-        onTouchStart={(e) => { e.stopPropagation(); onClose(); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleClose();
+        }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        onTouchStart={(e) => { 
+          e.stopPropagation(); 
+          handleClose(); 
+        }}
+        onMouseEnter={() => playHover()}
         className="absolute top-6 right-6 text-white/50 hover:text-white p-2 transition-colors"
+        aria-label="Close info panel"
       >
         <X size={24} />
       </button>
@@ -777,7 +789,7 @@ class ErrorBoundary extends React.Component<
 // ----------------------------------------------------------------------
 // 6. 3D SCENE WRAPPERS WITH LAZY LOADING
 // ----------------------------------------------------------------------
-const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPointer = false, parallaxOffset = 0, isHeavy = false, disabled = false }: any) => {
+const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPointer = false, parallaxOffset = 0, isHeavy = false, disabled = false, skeletonLabel = '', useCrashSafe = false }: any) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [shouldUnload, setShouldUnload] = useState(false);
@@ -838,9 +850,27 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
           transform: `translateY(${parallaxOffset * 0.5}px) translateZ(0)`,
         }}
       >
-        <div className="text-center">
-          <div className="text-blue-400/40 font-mono text-xs mb-2">SPLINE DISABLED</div>
-          <div className="text-white/20 font-mono text-[10px]">Performance Mode Active</div>
+        <div
+          className="absolute inset-0 opacity-40"
+          style={{
+            backgroundImage:
+              'linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+          }}
+        />
+        <div
+          className="absolute inset-0 opacity-50"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 30% 20%, rgba(59,130,246,0.25), transparent 45%), radial-gradient(circle at 70% 80%, rgba(59,130,246,0.18), transparent 50%)',
+          }}
+        />
+        <div className="relative z-10 text-center px-6 py-5 rounded-2xl border border-white/10 bg-black/50 backdrop-blur">
+          <div className="text-blue-400/70 font-mono text-[10px] tracking-[0.3em] mb-2">SAFE MODE PREVIEW</div>
+          <div className="text-white/90 font-bold text-xl md:text-2xl">
+            {skeletonLabel || 'SPLINE SCENE'}
+          </div>
+          <div className="text-white/40 font-mono text-[10px] mt-2">Skeleton render for mobile stability</div>
         </div>
       </div>
     );
@@ -859,27 +889,36 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
       }}
     >
       {isVisible && isLoaded && (
-        <Suspense fallback={
-          <div className="absolute inset-0 bg-gray-900/20 flex items-center justify-center text-blue-500/20 font-mono text-[10px]">
-            LOADING ASSET...
-          </div>
-        }>
-           <ErrorBoundary fallback={
-             <div className="absolute inset-0 bg-gray-900/40 flex items-center justify-center">
-               <div className="text-white/60 text-sm font-mono">Scene unavailable</div>
-             </div>
-           }>
-             <Spline
-               scene={sceneUrl}
-               className="w-full h-full block object-cover"
-               style={{
-                 transform: 'translateZ(0)',
-                 backfaceVisibility: 'hidden',
-                 WebkitBackfaceVisibility: 'hidden'
-               }}
-             />
-           </ErrorBoundary>
-        </Suspense>
+        useCrashSafe ? (
+          <CrashSafeSplineLoader
+            sceneUrl={sceneUrl}
+            isVisible={isVisible && isLoaded}
+            allowInput={allowInput}
+            className="w-full h-full"
+          />
+        ) : (
+          <Suspense fallback={
+            <div className="absolute inset-0 bg-gray-900/20 flex items-center justify-center text-blue-500/20 font-mono text-[10px]">
+              LOADING ASSET...
+            </div>
+          }>
+             <ErrorBoundary fallback={
+               <div className="absolute inset-0 bg-gray-900/40 flex items-center justify-center">
+                 <div className="text-white/60 text-sm font-mono">Scene unavailable</div>
+               </div>
+             }>
+               <Spline
+                 scene={sceneUrl}
+                 className="w-full h-full block object-cover"
+                 style={{
+                   transform: 'translateZ(0)',
+                   backfaceVisibility: 'hidden',
+                   WebkitBackfaceVisibility: 'hidden'
+                 }}
+               />
+             </ErrorBoundary>
+          </Suspense>
+        )
       )}
       {isVisible && !isLoaded && (
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900/40 to-black/60 flex items-center justify-center">
@@ -923,7 +962,7 @@ const TSXWrapper = memo(({ componentName, isVisible }: { componentName: string; 
   );
 });
 
-const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false }: any) => {
+const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false, useCrashSafeSpline = false }: any) => {
   const isHeavyScene = config.id === 5 || config.id === 6 || config.id === 10;
   const isMobileSensitive = config.id === 3 || config.id === 4;
   const isLastPage = config.id === 10;
@@ -938,13 +977,12 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // OPTIMIZED: Render current + 2 adjacent pages for ultra-smooth transitions
+  // OPTIMIZED: Render fewer adjacent pages on mobile for lightweight rendering
   const shouldRender = useMemo(() => {
-    // Render current page and 2 adjacent pages in each direction (prevents blank screens)
-    // This ensures smooth scrolling without lag on fast swipes
     const distance = Math.abs(config.id - activePage);
-    return distance <= 2 || (isLastPage && activePage >= 8);
-  }, [config.id, activePage, isLastPage]);
+    const threshold = isMobile ? 1 : 2;
+    return distance <= threshold || (isLastPage && activePage >= 8);
+  }, [config.id, activePage, isLastPage, isMobile]);
 
   const isActive = config.id === activePage;
 
@@ -971,6 +1009,8 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
               parallaxOffset={isHeavyScene ? parallaxOffset * 0.15 : (isMobileSensitive || isLastPage) ? parallaxOffset * 0.3 : parallaxOffset}
               isHeavy={isHeavyScene || isMobileSensitive || isLastPage}
               disabled={disableSpline}
+              skeletonLabel={config.label}
+              useCrashSafe={useCrashSafeSpline}
             />
         )}
         {!isTSX && (
@@ -989,7 +1029,7 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
   );
 });
 
-const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileView, parallaxOffset, disableSpline = false }: any) => {
+const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileView, parallaxOffset, disableSpline = false, useCrashSafeSpline = false }: any) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [splitPos, setSplitPos] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
@@ -1191,6 +1231,8 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
             forceNoPointer={isDragging}
             parallaxOffset={parallaxOffset * 0.3}
             disabled={disableSpline}
+            skeletonLabel={config.labelA}
+            useCrashSafe={useCrashSafeSpline}
           />
         </div>
         <div className="absolute top-8 left-8 z-20 pointer-events-none">
@@ -1225,6 +1267,8 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
                forceNoPointer={isDragging}
                parallaxOffset={parallaxOffset * 0.7}
                disabled={disableSpline}
+               skeletonLabel={config.labelB}
+               useCrashSafe={useCrashSafeSpline}
              />
         </div>
         <div className="absolute bottom-8 right-8 z-20 text-right pointer-events-none">
@@ -1523,6 +1567,9 @@ export default function Home() {
   const [disableSpline, setDisableSpline] = useState(false);
   const [showThemeQuickPick, setShowThemeQuickPick] = useState(false);
   const [hasRegistered, setHasRegistered] = useState(false);
+  const [showEdgeSwipeHints, setShowEdgeSwipeHints] = useState(false);
+  const edgeHintsShownRef = useRef(false);
+  const [isSafeMode, setIsSafeMode] = useState(false);
   const handleOrientationDismiss = useCallback(() => {
     setShowOrientationWarning(false);
     orientationDismissedRef.current = true;
@@ -1549,29 +1596,43 @@ export default function Home() {
     styleSheet.innerText = GLOBAL_STYLES;
     document.head.appendChild(styleSheet);
 
-    // PERFORMANCE: Preload critical Spline scenes
-    const preloadScenes = [
-      "/scene1.splinecode", // Hero scene
-      "/scene.splinecode",  // Showcase
-    ];
-
-    preloadScenes.forEach((scene) => {
-      const link = document.createElement("link");
-      link.rel = "prefetch";
-      link.href = scene;
-      link.as = "fetch";
-      document.head.appendChild(link);
-    });
-
     setIsTouch(matchMedia && matchMedia('(pointer: coarse)').matches);
 
     // Auto-disable Spline by default; preserve user preference when available
     const savedSplinePref = safeGetItem('spline_enabled');
-    if (savedSplinePref !== null) {
+    const ua = navigator.userAgent || '';
+    const isIOS =
+      /iPad|iPhone|iPod/.test(ua) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isInApp =
+      /Instagram|FBAN|FBAV|FB_IAB|FBIOS|FB4A|Line|TikTok|Twitter|Snapchat|LinkedInApp/i.test(ua);
+    const shouldSafeMode = isIOS || isInApp;
+    setIsSafeMode(shouldSafeMode);
+    if (shouldSafeMode && savedSplinePref === null) {
+      // On iOS/in-app browsers default to performance mode to avoid WebGL crashes
+      setDisableSpline(true);
+      safeSetItem('spline_enabled', 'true');
+    } else if (savedSplinePref !== null) {
       setDisableSpline(savedSplinePref === 'true');
     } else {
       setDisableSpline(false);
       safeSetItem('spline_enabled', 'false');
+    }
+
+    if (!shouldSafeMode) {
+      // PERFORMANCE: Preload critical Spline scenes
+      const preloadScenes = [
+        "/scene1.splinecode", // Hero scene
+        "/scene.splinecode",  // Showcase
+      ];
+
+      preloadScenes.forEach((scene) => {
+        const link = document.createElement("link");
+        link.rel = "prefetch";
+        link.href = scene;
+        link.as = "fetch";
+        document.head.appendChild(link);
+      });
     }
 
     // Check for reduced motion preference
@@ -1707,7 +1768,7 @@ export default function Home() {
 
   // Warm key assets once to keep subsequent visits snappy
   useEffect(() => {
-    if (!isClient || assetsWarmedRef.current) return;
+    if (!isClient || assetsWarmedRef.current || isSafeMode) return;
     assetsWarmedRef.current = true;
 
     const warmAssets = async () => {
@@ -1742,7 +1803,15 @@ export default function Home() {
     } else {
       setTimeout(scheduleWarm, 800);
     }
-  }, [isClient]);
+  }, [isClient, isSafeMode]);
+
+  useEffect(() => {
+    if (currentStage !== 'content' || !isTouch || edgeHintsShownRef.current) return;
+    edgeHintsShownRef.current = true;
+    setShowEdgeSwipeHints(true);
+    const timer = setTimeout(() => setShowEdgeSwipeHints(false), 4500);
+    return () => clearTimeout(timer);
+  }, [currentStage, isTouch]);
 
   // --- SCROLL OBSERVER ---
   // ULTRA-OPTIMIZED: Intersection observer with multiple thresholds for smooth detection
@@ -1936,6 +2005,8 @@ export default function Home() {
     playClickSound();
   }, []);
 
+  const useCrashSafeSpline = isSafeMode || isTouch;
+
   if (!isClient) return null;
 
   return (
@@ -1943,7 +2014,7 @@ export default function Home() {
       <Analytics />
       <SpeedInsights />
       <BackgroundMusicSystem themeId={activeThemeId} onReady={handlePlayerReady} volume={volume} trackKey={musicKey} />
-      <ParticleEffect trigger={particleTrigger} />
+      {!isSafeMode && <ParticleEffect trigger={particleTrigger} />}
       {!isTouch && <CustomCursor accentColor={accentColor} />}
 
       {/* Quick Theme Picker */}
@@ -1951,7 +2022,10 @@ export default function Home() {
       {showThemeQuickPick && (
         <div
           className="fixed inset-0 z-[800000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4"
-          onClick={() => setShowThemeQuickPick(false)}
+          onClick={() => {
+            playClick();
+            setShowThemeQuickPick(false);
+          }}
           onDoubleClick={() => setShowThemeQuickPick(false)}
           onTouchStart={(e) => {
             const touch = e.touches[0];
@@ -1962,8 +2036,8 @@ export default function Home() {
             if (startY) {
               const endY = e.changedTouches[0].clientY;
               if (Math.abs(endY - startY) > 120) {
+                playSwipe();
                 setShowThemeQuickPick(false);
-                if (navigator.vibrate) navigator.vibrate(15);
               }
             }
           }}
@@ -1972,9 +2046,14 @@ export default function Home() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white">Quick Theme Switch</h2>
               <button 
-                onClick={() => setShowThemeQuickPick(false)} 
+                onClick={() => {
+                  playClick();
+                  setShowThemeQuickPick(false);
+                }} 
                 onDoubleClick={() => setShowThemeQuickPick(false)} 
+                onMouseEnter={() => playHover()}
                 className="text-white/50 hover:text-white p-2"
+                aria-label="Close quick theme picker"
               >
                 <X size={24} />
               </button>
@@ -2028,12 +2107,16 @@ export default function Home() {
             if (startX !== undefined && startX < 50) {
               const endX = e.changedTouches[0].clientX;
               if (endX - startX > 50) {
+                playSwipe();
                 setInfoPanelOpen(true);
-                if (navigator.vibrate) navigator.vibrate(15);
               }
             }
           }}
-          onClick={() => setInfoPanelOpen(true)}
+          onClick={() => {
+            playClick();
+            setInfoPanelOpen(true);
+          }}
+          onMouseEnter={() => playHover()}
         >
           <div className="absolute left-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
             <Info size={12} className="text-white" />
@@ -2121,7 +2204,7 @@ export default function Home() {
             disableSpline={disableSpline}
             onTogglePerformance={handlePerformanceToggle}
           />
-          <SupportWidget accentColor={accentColor} />
+          {currentStage === 'content' && !showConfigurator && <SupportWidget accentColor={accentColor} />}
       </div>
 
       {/* --- LAYER 2: CONFIGURATOR --- */}
@@ -2501,6 +2584,7 @@ export default function Home() {
                    <ShineButton
                      className="hidden md:flex w-12 h-12 rounded-full"
                      onClick={(e: any) => {
+                       playClick();
                        if (e?.detail >= 2 || infoPanelOpen) {
                          setInfoPanelOpen(false);
                          return;
@@ -2516,6 +2600,7 @@ export default function Home() {
                    <ShineButton
                      className="w-12 h-12 rounded-full"
                      onClick={(e: any) => {
+                       playClick();
                        if (e?.detail >= 2 || faqOpen) {
                          setFaqOpen(false);
                          return;
@@ -2567,6 +2652,7 @@ export default function Home() {
                       isMobileView={isMobileView}
                       parallaxOffset={parallaxOffset}
                       disableSpline={disableSpline}
+                      useCrashSafeSpline={useCrashSafeSpline}
                     />
                 ) : (
                     <FullScreenSection
@@ -2575,6 +2661,7 @@ export default function Home() {
                       onVisible={handleRef}
                       parallaxOffset={parallaxOffset}
                       disableSpline={disableSpline}
+                      useCrashSafeSpline={useCrashSafeSpline}
                     />
                 )}
                 </React.Fragment>
@@ -2586,6 +2673,28 @@ export default function Home() {
         </main>
 
         {/* SWIPE NAVIGATION INDICATORS */}
+        {showEdgeSwipeHints && (
+          <>
+            <div
+              className="fixed left-0 top-1/2 -translate-y-1/2 z-[100000] pointer-events-none"
+              style={{ color: accentColor }}
+            >
+              <div className="flex items-center gap-2 px-3 py-2 rounded-r-full bg-black/60 border border-white/10 backdrop-blur animate-pulse">
+                <ChevronRight size={18} />
+                <span className="text-[10px] font-mono tracking-widest text-white/70">SWIPE</span>
+              </div>
+            </div>
+            <div
+              className="fixed right-0 top-1/2 -translate-y-1/2 z-[100000] pointer-events-none"
+              style={{ color: accentColor }}
+            >
+              <div className="flex items-center gap-2 px-3 py-2 rounded-l-full bg-black/60 border border-white/10 backdrop-blur animate-pulse">
+                <span className="text-[10px] font-mono tracking-widest text-white/70">SWIPE</span>
+                <ChevronLeft size={18} />
+              </div>
+            </div>
+          </>
+        )}
         {swipeIndicator && (
           <div className="fixed inset-0 pointer-events-none z-[100000] flex items-center justify-center">
             <div

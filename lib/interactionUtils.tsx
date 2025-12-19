@@ -12,9 +12,12 @@ class SoundEffectPlayer {
   private audioContext: AudioContext | null = null;
   private enabled: boolean = true;
 
-  constructor() {
-    if (typeof window !== 'undefined') {
+  private ensureAudioContext() {
+    if (this.audioContext || typeof window === 'undefined') return;
+    try {
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    } catch (e) {
+      this.audioContext = null;
     }
   }
 
@@ -23,9 +26,14 @@ class SoundEffectPlayer {
   }
 
   play(type: SoundType, volume: number = 0.1) {
-    if (!this.enabled || !this.audioContext) return;
+    if (!this.enabled) return;
+    this.ensureAudioContext();
+    if (!this.audioContext) return;
 
     try {
+      if (this.audioContext.state === 'suspended' && typeof this.audioContext.resume === 'function') {
+        this.audioContext.resume();
+      }
       const oscillator = this.audioContext.createOscillator();
       const gainNode = this.audioContext.createGain();
 
