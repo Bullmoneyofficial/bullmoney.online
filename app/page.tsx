@@ -662,11 +662,6 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset 
             </div>
           </>
         )}
-        {!isTSX && config.id === PAGE_CONFIG.length && (
-          <div className="absolute inset-x-0 bottom-6 px-4 md:px-10 z-30 pointer-events-auto">
-            <InlineFaq />
-          </div>
-        )}
       </div>
     </section>
   );
@@ -1098,6 +1093,7 @@ export default function Home() {
   const pageRefs = useRef<(HTMLElement | null)[]>([]);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const [isTouch, setIsTouch] = useState(false);
+  const [faqOpen, setFaqOpen] = useState(false);
 
   const activeTheme = useMemo(() => {
     if (!ALL_THEMES || ALL_THEMES.length === 0) return FALLBACK_THEME as Theme;
@@ -1301,6 +1297,24 @@ export default function Home() {
         onClose={() => setInfoPanelOpen(false)}
         accentColor={accentColor}
       />
+      
+      {/* --- FAQ OVERLAY --- */}
+      {faqOpen && (
+        <div className="fixed inset-0 z-[950000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="relative w-full max-w-5xl">
+            <button 
+              onClick={() => setFaqOpen(false)} 
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+              aria-label="Close FAQ"
+            >
+              <X size={22} />
+            </button>
+            <div className="rounded-3xl border border-white/10 bg-black/80 shadow-[0_10px_60px_rgba(0,0,0,0.5)] overflow-hidden">
+              <InlineFaq />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* --- LAYER 1: FIXED CONTROLS --- */}
       <div className="fixed inset-0 z-[400000] pointer-events-none">
@@ -1529,6 +1543,19 @@ export default function Home() {
                      }}
                    >
                      {infoPanelOpen ? <Unlock size={20} /> : <Lock size={20} />}
+                   </ShineButton>
+                 </div>
+                 
+                 <div className="mt-3">
+                   <ShineButton
+                     className="w-12 h-12 rounded-full"
+                     onClick={() => {
+                       playClickSound();
+                       if (navigator.vibrate) navigator.vibrate(10);
+                       setFaqOpen(true);
+                     }}
+                   >
+                     <Info size={20} />
                    </ShineButton>
                  </div>
             </div>

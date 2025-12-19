@@ -698,13 +698,17 @@ function FAQCategoryItem({ data }: { data: FAQCategoryData }) {
 
 export default function BullMoneyModal() {
   return (
-    <ModalProvider> {/* <-- FIX: Wrap the children in ModalProvider directly */}
-      {/* 1. The Trigger Button */}
-      <ModalTrigger>
-         <span className="flex items-center gap-2">
-            FAQ & Support <Zap className="w-4 h-4 text-blue-500 animate-pulse" />
-         </span>
-      </ModalTrigger>
+    <ModalProvider>
+      {/* Floating trigger overlay for use above splines */}
+      <div className="fixed bottom-6 right-6 z-[980000] pointer-events-none">
+        <div className="pointer-events-auto">
+          <ModalTrigger>
+            <span className="flex items-center gap-2">
+              FAQ &amp; Support <Zap className="w-4 h-4 text-blue-500 animate-pulse" />
+            </span>
+          </ModalTrigger>
+        </div>
+      </div>
 
       {/* 2. The Modal Body */}
       <ModalBody>
