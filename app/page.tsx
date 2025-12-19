@@ -1132,7 +1132,7 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
               forceLiteSpline={forceLiteSpline}
               forceLoadOverride={forceAlwaysSpline}
               skeletonLabel={config.label}
-              useCrashSafe={useCrashSafeSpline}
+              useCrashSafe={useCrashSafeSpline || config.id === 1}
             />
         )}
         {!isTSX && (
@@ -1356,7 +1356,7 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
             forceLiteSpline={forceLiteSpline}
             forceLoadOverride
             skeletonLabel={config.labelA}
-            useCrashSafe={useCrashSafeSpline}
+            useCrashSafe={useCrashSafeSpline || config.id === 6}
           />
         </div>
         <div className="absolute top-8 left-8 z-20 pointer-events-none">
@@ -1394,7 +1394,7 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
                forceLiteSpline={forceLiteSpline}
                forceLoadOverride
                skeletonLabel={config.labelB}
-               useCrashSafe={useCrashSafeSpline}
+               useCrashSafe={useCrashSafeSpline || config.id === 6}
              />
         </div>
         <div className="absolute bottom-8 right-8 z-20 text-right pointer-events-none">
@@ -1454,7 +1454,7 @@ const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volu
                   </button>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center justify-center gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${accentColor}15`, border: `1px solid ${accentColor}30` }}>
                       <Sparkles size={18} style={{ color: accentColor }} />
@@ -1464,7 +1464,7 @@ const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volu
                       <span className="text-base font-semibold text-white">Precision mode engaged</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap justify-center">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -1562,16 +1562,21 @@ const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volu
 };
 
 const SupportWidget = ({ accentColor }: { accentColor: string }) => {
-    const [isVisible, setIsVisible] = useState(false);
-    const [isPulsing, setIsPulsing] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isPulsing, setIsPulsing] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
-    useEffect(() => {
-      setTimeout(() => setIsVisible(true), 500);
-      const timer = setTimeout(() => setIsPulsing(false), 5000);
-      return () => clearTimeout(timer);
-    }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 500);
+    const pulseTimer = setTimeout(() => setIsPulsing(false), 5000);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(pulseTimer);
+    };
+  }, []);
 
-    return (
+  return (
+    <>
       <div
         className={`absolute z-[100] pointer-events-auto transition-all duration-700 ease-out transform ${
           isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'
@@ -1581,31 +1586,25 @@ const SupportWidget = ({ accentColor }: { accentColor: string }) => {
           right: 'calc(env(safe-area-inset-right, 0px) + 16px)',
         }}
       >
-        <a
-          href="https://t.me/+dlP_A0ebMXs3NTg0"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
           onClick={() => {
+            setIsOpen(true);
             playClickSound();
-            if (navigator.vibrate) navigator.vibrate([15, 5, 15]);
+            if (navigator.vibrate) navigator.vibrate([12, 8]);
           }}
           onMouseEnter={() => playHover()}
-          onTouchStart={(e) => {
-            playHover();
-            e.currentTarget.style.transform = 'scale(0.9)';
-          }}
-          onTouchEnd={(e) => {
-            e.currentTarget.style.transform = '';
-          }}
+          onTouchStart={(e) => { playHover(); e.currentTarget.style.transform = 'scale(0.95)'; }}
+          onTouchEnd={(e) => { e.currentTarget.style.transform = ''; }}
           className="group relative flex items-center gap-3 px-4 py-3 rounded-[18px] apple-surface border border-white/10 text-white/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl active:scale-95 touch-manipulation"
           style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation', borderColor: `${accentColor}33` }}
+          aria-label="Open support"
         >
           <div className={`absolute inset-0 rounded-[18px] blur-3xl opacity-30 transition-all duration-500 ${isPulsing ? 'animate-pulse' : ''}`} style={{ backgroundColor: accentColor }} />
           <div className="relative flex items-center justify-center w-12 h-12 rounded-full border border-white/20 bg-white/5 shadow-inner overflow-hidden">
               <MessageCircle className="w-6 h-6 text-white relative z-10 drop-shadow-md group-hover:scale-110 transition-transform" strokeWidth={2.4} />
               <span className="absolute inset-0 opacity-0 group-hover:opacity-20 group-hover:animate-ping" style={{ backgroundColor: accentColor }} />
           </div>
-          <div className="flex flex-col leading-tight">
+          <div className="flex flex-col leading-tight text-left">
             <span className="text-[11px] text-white/60 tracking-[0.12em] uppercase">Human Concierge</span>
             <span className="text-sm font-semibold text-white">Need a hand?</span>
           </div>
@@ -1613,9 +1612,57 @@ const SupportWidget = ({ accentColor }: { accentColor: string }) => {
             Live
           </div>
           {isPulsing && <span className="absolute -top-2 -right-2 w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: accentColor }} />}
-        </a>
+        </button>
       </div>
-    );
+
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-[500000] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4"
+          onClick={() => setIsOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-md apple-surface rounded-3xl border border-white/10 p-6 text-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setIsOpen(false)}
+              className="absolute top-4 right-4 w-10 h-10 rounded-full border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 transition-all active:scale-95"
+              style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+              aria-label="Close support"
+            >
+              <X size={18} />
+            </button>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${accentColor}18`, border: `1px solid ${accentColor}55` }}>
+                <MessageCircle className="w-6 h-6" style={{ color: accentColor }} />
+              </div>
+              <div className="flex flex-col leading-tight">
+                <span className="text-xs text-white/60 tracking-[0.2em] uppercase">Support</span>
+                <span className="text-lg font-semibold text-white">Live help desk</span>
+              </div>
+            </div>
+            <p className="text-white/70 text-sm leading-relaxed mb-4">
+              Chat with our human concierge for fast answers on trading, access, and onboarding.
+            </p>
+            <a
+              href="https://t.me/+dlP_A0ebMXs3NTg0"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                playClickSound();
+                if (navigator.vibrate) navigator.vibrate([15, 5, 15]);
+              }}
+              className="apple-cta w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold"
+              style={{ backgroundColor: accentColor, color: '#0b1224' }}
+            >
+              Open Telegram
+              <ChevronRight size={16} />
+            </a>
+          </div>
+        </div>
+      )}
+    </>
+  );
 };
 
 // Custom Cursor Component
