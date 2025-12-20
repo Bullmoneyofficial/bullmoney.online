@@ -27,8 +27,20 @@ import { CrashSafeSplineLoader } from "@/components/Mainpage/CrashSafeSplineLoad
 
 // --- THEME & MUSIC DATA ---
 import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
-import { safeGetItem, safeSetItem } from '@/lib/localStorage';
 import { useDeviceProfile, DeviceProfile, DEFAULT_DEVICE_PROFILE } from '@/lib/deviceProfile';
+
+// --- OPTIMIZATION IMPORTS ---
+import { useOptimizations } from '@/lib/useOptimizations';
+import { userStorage, devicePrefs } from '@/lib/smartStorage';
+import { SmartSplineLoader } from '@/components/Mainpage/SmartSplineLoader';
+import { SwipeablePanel } from '@/components/Mainpage/SwipeablePanel';
+import { MobileScrollIndicator } from '@/components/Mainpage/MobileScrollIndicator';
+
+// --- UNIFIED UI IMPORTS ---
+import { UnifiedNavigation } from '@/components/Mainpage/UnifiedNavigation';
+import { UnifiedControls } from '@/components/Mainpage/UnifiedControls';
+import { UI_LAYERS } from '@/lib/uiLayers';
+import '@/styles/unified-ui.css';
 
 // --- TSX PAGE IMPORTS ---
 
@@ -65,7 +77,7 @@ const ParticleEffect = memo(({ trigger }: { trigger: number }) => {
   }, [trigger]);
   
   return (
-    <div className="fixed inset-0 pointer-events-none z-[500000]">
+    <div className={`fixed inset-0 pointer-events-none z-[${UI_LAYERS.PARTICLES}]`}>
       {particles.map(particle => (
         <div
           key={particle.id}
@@ -644,7 +656,7 @@ const OrientationOverlay = ({ onDismiss }: { onDismiss: () => void }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[2000000] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500"
+      className={`fixed inset-0 z-[${UI_LAYERS.ORIENTATION_WARNING}] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500`}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -699,7 +711,7 @@ const InfoPanel = ({ config, isOpen, onClose, accentColor }: any) => {
 
   return (
     <div 
-      className={`fixed left-0 top-0 h-full w-[22rem] md:w-[26rem] apple-surface bg-black/70 backdrop-blur-2xl border-r z-[600000] transition-transform duration-500 ease-out ${
+      className={`fixed left-0 top-0 h-full w-[22rem] md:w-[26rem] apple-surface bg-black/70 backdrop-blur-2xl border-r z-[${UI_LAYERS.INFO_PANEL}] transition-transform duration-500 ease-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
       style={{ 
@@ -854,7 +866,7 @@ class ErrorBoundary extends React.Component<
 // ----------------------------------------------------------------------
 // 6. 3D SCENE WRAPPERS WITH LAZY LOADING
 // ----------------------------------------------------------------------
-const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPointer = false, parallaxOffset = 0, isHeavy = false, disabled = false, skeletonLabel = '', useCrashSafe = false, forceLiteSpline = false, forceLoadOverride = false, onSceneReady }: any) => {
+const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPointer = false, parallaxOffset = 0, isHeavy = false, disabled = false, skeletonLabel = '', useCrashSafe = false, forceLiteSpline = false, forceLoadOverride = false, onSceneReady, deviceProfile }: any) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [shouldUnload, setShouldUnload] = useState(false);
@@ -885,7 +897,7 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
 
   // Load saved opt-in for mobile Spline
   useEffect(() => {
-    const savedOptIn = safeGetItem('mobile_spline_opt_in');
+    const savedOptIn = devicePrefs.get('mobile_spline_opt_in');
     if (savedOptIn === 'true') setMobileOptIn(true);
   }, []);
 
@@ -953,14 +965,14 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
             <button
               onClick={() => {
                 setMobileOptIn(true);
-                safeSetItem('mobile_spline_opt_in', 'true');
+                devicePrefs.set('mobile_spline_opt_in', 'true');
               }}
               className="px-4 py-2 rounded-full bg-blue-500/80 text-white font-semibold text-sm shadow-[0_0_20px_rgba(59,130,246,0.35)] hover:bg-blue-500 active:scale-95 transition-all"
             >
               Enable 3D
             </button>
             <button
-              onClick={() => safeSetItem('mobile_spline_opt_in', 'false')}
+              onClick={() => devicePrefs.set('mobile_spline_opt_in', 'false')}
               className="px-3 py-2 rounded-full border border-white/10 text-white/70 text-xs hover:bg-white/5 active:scale-95 transition-all"
             >
               Keep Safe Mode
@@ -1018,7 +1030,16 @@ const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPoin
       }}
     >
       {isVisible && isLoaded && (
-        useCrashSafe || isCritical ? (
+        isCritical ? (
+          <SmartSplineLoader
+            scene={resolvedSceneUrl}
+            priority="critical"
+            enableInteraction={allowInput}
+            deviceProfile={deviceProfile}
+            onLoad={() => onSceneReady?.()}
+            className="w-full h-full"
+          />
+        ) : useCrashSafe ? (
           <CrashSafeSplineLoader
             sceneUrl={resolvedSceneUrl}
             isVisible={isVisible && isLoaded}
@@ -1114,7 +1135,7 @@ const TSXWrapper = memo(({ componentName, isVisible }: { componentName: string; 
   );
 });
 
-const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false, sensitiveMode = false, onSceneReady }: any) => {
+const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false, sensitiveMode = false, onSceneReady, deviceProfile }: any) => {
   const isHeavyScene = config.id === 5 || config.id === 6 || config.id === 10;
   const isMobileSensitive = config.id === 3 || config.id === 4;
   const isLastPage = config.id === 10;
@@ -1168,6 +1189,7 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
             skeletonLabel={config.label}
             useCrashSafe={useCrashSafeSpline || config.id === 1}
             onSceneReady={config.id === 1 ? onSceneReady : undefined}
+            deviceProfile={deviceProfile}
           />
         )}
         {!isTSX && (
@@ -1186,7 +1208,7 @@ const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset,
   );
 });
 
-const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileView, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false, sensitiveMode = false }: any) => {
+const DraggableSplitSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false, sensitiveMode = false, deviceProfile }: any) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [splitPos, setSplitPos] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
@@ -1260,7 +1282,7 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         let newPos;
-        if (isMobileView) {
+        if (isMobile) {
             const relativeY = clientY - rect.top;
             newPos = (relativeY / rect.height) * 100;
         } else {
@@ -1269,7 +1291,7 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
         }
         setSplitPos(clampSplit(newPos));
     });
-  }, [clampSplit, isMobileView]);
+  }, [clampSplit, isMobile]);
 
   useEffect(() => {
     if (isDragging) {
@@ -1291,17 +1313,17 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
   useEffect(() => {
     if (!isActive) return;
     const handleKey = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'w', 'W'].includes(e.key)) { e.preventDefault(); nudgeSplit(isMobileView ? -4 : -3); }
-      if (['ArrowDown', 's', 'S'].includes(e.key)) { e.preventDefault(); nudgeSplit(isMobileView ? 4 : 3); }
+      if (['ArrowUp', 'w', 'W'].includes(e.key)) { e.preventDefault(); nudgeSplit(isMobile ? -4 : -3); }
+      if (['ArrowDown', 's', 'S'].includes(e.key)) { e.preventDefault(); nudgeSplit(isMobile ? 4 : 3); }
       if ([' ', 'Enter'].includes(e.key)) { e.preventDefault(); handleTargetHit(); }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [isActive, isMobileView, handleTargetHit, nudgeSplit]);
+  }, [isActive, isMobile, handleTargetHit, nudgeSplit]);
 
-  const layoutClass = isMobileView ? 'flex-col' : 'flex-row';
-  const sizeProp = isMobileView ? 'height' : 'width';
-  const otherSizeProp = isMobileView ? 'width' : 'height';
+  const layoutClass = isMobile ? 'flex-col' : 'flex-row';
+  const sizeProp = isMobile ? 'height' : 'width';
+  const otherSizeProp = isMobile ? 'width' : 'height';
    
   useEffect(() => {
     if (containerRef.current) onVisible(containerRef.current, config.id - 1);
@@ -1330,14 +1352,14 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
           </div>
           <div className="mt-2 flex gap-2">
             <button
-              onClick={() => { playClickSound(); nudgeSplit(isMobileView ? -4 : -3); }}
+              onClick={() => { playClickSound(); nudgeSplit(isMobile ? -4 : -3); }}
               className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:-translate-y-0.5 transition-all"
               aria-label="Move split up"
             >
               <ChevronUp size={16} className="text-blue-400" />
             </button>
             <button
-              onClick={() => { playClickSound(); nudgeSplit(isMobileView ? 4 : 3); }}
+              onClick={() => { playClickSound(); nudgeSplit(isMobile ? 4 : 3); }}
               className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:translate-y-0.5 transition-all"
               aria-label="Move split down"
             >
@@ -1377,9 +1399,9 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
       )}
       
       {/* PANEL A */}
-      <div 
-        style={{ [sizeProp]: `${splitPos}%`, [otherSizeProp]: '100%' }} 
-        className={`relative overflow-hidden bg-[#050505] border-blue-500/50 ${isMobileView ? 'border-b' : 'border-r'} ${isDragging ? 'transition-none' : 'transition-all duration-300 ease-out'}`}
+      <div
+        style={{ [sizeProp]: `${splitPos}%`, [otherSizeProp]: '100%' }}
+        className={`relative overflow-hidden bg-[#050505] border-blue-500/50 ${isMobile ? 'border-b' : 'border-r'} ${isDragging ? 'transition-none' : 'transition-all duration-300 ease-out'}`}
       >
         <div className="absolute inset-0 w-full h-full"> 
           <SceneWrapper
@@ -1392,6 +1414,7 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
             forceLoadOverride
             skeletonLabel={config.labelA}
             useCrashSafe={useCrashSafeSpline || config.id === 6}
+            deviceProfile={deviceProfile}
           />
         </div>
         <div className="absolute top-8 left-8 z-20 pointer-events-none">
@@ -1402,15 +1425,15 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
       </div>
       
       {/* DRAG HANDLE */}
-      <div 
-        onMouseDown={handleDragStart} 
-        onTouchStart={handleDragStart} 
-        className={`absolute z-50 flex items-center justify-center group outline-none touch-none cursor-pointer ${isMobileView ? 'w-full h-12 left-0 -mt-6 cursor-row-resize' : 'w-12 h-full top-0 -ml-6 cursor-col-resize'}`} 
-        style={isMobileView ? { top: `${splitPos}%` } : { left: `${splitPos}%` }}
+      <div
+        onMouseDown={handleDragStart}
+        onTouchStart={handleDragStart}
+        className={`absolute z-50 flex items-center justify-center group outline-none touch-none cursor-pointer ${isMobile ? 'w-full h-12 left-0 -mt-6 cursor-row-resize' : 'w-12 h-full top-0 -ml-6 cursor-col-resize'}`}
+        style={isMobile ? { top: `${splitPos}%` } : { left: `${splitPos}%` }}
       >
-        <div className={`${isMobileView ? 'w-full h-[1px]' : 'w-[1px] h-full'} bg-blue-500/50 shadow-[0_0_15px_rgba(0,100,255,0.5)]`} />
+        <div className={`${isMobile ? 'w-full h-[1px]' : 'w-[1px] h-full'} bg-blue-500/50 shadow-[0_0_15px_rgba(0,100,255,0.5)]`} />
         <div className="absolute w-12 h-12 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform hover-lift">
-           {isMobileView ? <GripHorizontal size={16} className="text-white"/> : <GripVertical size={16} className="text-white"/> }
+           {isMobile ? <GripHorizontal size={16} className="text-white"/> : <GripVertical size={16} className="text-white"/> }
         </div>
       </div>
       
@@ -1430,6 +1453,7 @@ const DraggableSplitSection = memo(({ config, activePage, onVisible, isMobileVie
                forceLoadOverride
                skeletonLabel={config.labelB}
                useCrashSafe={useCrashSafeSpline || config.id === 6}
+               deviceProfile={deviceProfile}
              />
         </div>
         <div className="absolute bottom-8 right-8 z-20 text-right pointer-events-none">
@@ -1471,7 +1495,7 @@ const BottomControls = ({ isPlaying, onToggleMusic, onOpenTheme, themeName, volu
     );
 
     return (
-        <div className="fixed inset-x-0 bottom-0 z-[100000] pointer-events-none">
+        <div className={`fixed inset-x-0 bottom-0 z-[${UI_LAYERS.SCROLL_INDICATOR}] pointer-events-none`}>
           <div className="mx-auto flex w-full max-w-[560px] flex-col gap-2 px-4 pb-4" style={{ pointerEvents: 'none' }}>
             <div
               className="pointer-events-auto flex items-center justify-center flex-col gap-1"
@@ -1706,9 +1730,9 @@ const SupportWidget = ({ accentColor, deviceProfile }: { accentColor: string; de
 
       {isPanelOpen && (
         <>
-          <div className="fixed inset-0 z-[500000] bg-black/70 backdrop-blur-xl" onClick={closePanel} />
+          <div className={`fixed inset-0 z-[${UI_LAYERS.MODAL_BACKDROP}] bg-black/70 backdrop-blur-xl`} onClick={closePanel} />
           <div
-            className={`fixed z-[500001] flex items-center justify-center ${panelPlacementClass}`}
+            className={`fixed z-[${UI_LAYERS.MODAL_CONTENT}] flex items-center justify-center ${panelPlacementClass}`}
             style={{
               transition: 'transform 0.35s ease',
             }}
@@ -1796,7 +1820,7 @@ const CustomCursor = ({ accentColor }: { accentColor: string }) => {
         />
       ))}
       <div
-        className="fixed w-6 h-6 rounded-full border-2 pointer-events-none z-[9999999] mix-blend-difference"
+        className={`fixed w-6 h-6 rounded-full border-2 pointer-events-none z-[${UI_LAYERS.CURSOR}] mix-blend-difference`}
         style={{
           left: position.x,
           top: position.y,
@@ -1845,7 +1869,7 @@ const SwipeScrollBar = memo(({ containerRef, accentColor, isMobile }: { containe
   if (!element || element.scrollHeight <= element.clientHeight) return null;
 
   return (
-    <div className="fixed right-3 top-14 bottom-14 z-[450000] pointer-events-none md:hidden">
+    <div className={`fixed right-3 top-14 bottom-14 z-[${UI_LAYERS.SCROLL_INDICATOR}] pointer-events-none md:hidden`}>
       <div className="relative h-full w-2 rounded-full bg-white/5">
         <div
           className="absolute right-0 w-full rounded-full bg-gradient-to-b from-blue-500 to-cyan-400 transition-all duration-150"
@@ -1868,7 +1892,7 @@ const SwipeScrollBar = memo(({ containerRef, accentColor, isMobile }: { containe
 
 const HeroLoaderOverlay = memo(({ visible, message, accentColor }: { visible: boolean; message: string; accentColor: string }) => (
   <div
-    className={`fixed inset-0 z-[550000] flex items-center justify-center transition-opacity duration-400 ${
+    className={`fixed inset-0 z-[${UI_LAYERS.THEME_CONFIGURATOR}] flex items-center justify-center transition-opacity duration-400 ${
       visible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
     }`}
     style={{ backgroundColor: 'rgba(0,0,0,0.92)' }}
@@ -1906,7 +1930,7 @@ export default function Home() {
   const [activePage, setActivePage] = useState<number>(1);
   const [modalData, setModalData] = useState<any>(null);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const [isMobileView, setIsMobileView] = useState(false);
+  // isMobileView removed - unified UI for both mobile and desktop
   const [showOrientationWarning, setShowOrientationWarning] = useState(false);
    
   const [_, startTransition] = useTransition();
@@ -1931,6 +1955,14 @@ export default function Home() {
   const [controlCenterOpen, setControlCenterOpen] = useState(false);
   const heroLoaderFallbackRef = useRef<number | null>(null);
   const deviceProfile = useDeviceProfile();
+
+  // Initialize optimization system
+  const { isReady: optimizationsReady, serviceWorkerReady, storage } = useOptimizations({
+    enableServiceWorker: true,
+    criticalScenes: ['/scene1.splinecode'], // Hero scene
+    preloadScenes: ['/scene.splinecode', '/scene2.splinecode'] // Other scenes
+  });
+
   const handleOrientationDismiss = useCallback(() => {
     setShowOrientationWarning(false);
     orientationDismissedRef.current = true;
@@ -1988,7 +2020,7 @@ export default function Home() {
     setIsTouch(matchMedia && matchMedia('(pointer: coarse)').matches);
 
     // Auto-disable Spline by default; preserve user preference when available
-    const savedSplinePref = safeGetItem('spline_enabled');
+    const savedSplinePref = devicePrefs.get('spline_enabled');
     const ua = navigator.userAgent || '';
     const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(ua);
     setIsSafari(isSafariBrowser);
@@ -2008,12 +2040,12 @@ export default function Home() {
     if (shouldSafeMode && savedSplinePref === null) {
       // On iOS/in-app browsers default to performance mode to avoid WebGL crashes
       setDisableSpline(true);
-      safeSetItem('spline_enabled', 'true');
+      devicePrefs.set('spline_enabled', 'true');
     } else if (savedSplinePref !== null) {
       setDisableSpline(savedSplinePref === 'true');
     } else {
       setDisableSpline(false);
-      safeSetItem('spline_enabled', 'false');
+      devicePrefs.set('spline_enabled', 'false');
     }
 
     if (!shouldSafeMode) {
@@ -2116,12 +2148,12 @@ export default function Home() {
         const isNarrow = window.innerWidth < 768;
         const isPortrait = window.innerHeight > window.innerWidth;
         if (isNarrow && isPortrait) {
-            setIsMobileView(true);
+            // isMobileView removed - unified UI handles mobile/desktop automatically
             if (!orientationDismissedRef.current) {
               setShowOrientationWarning(true);
             }
         } else {
-            setIsMobileView(false);
+            // isMobileView removed - unified UI handles mobile/desktop automatically
             setShowOrientationWarning(false);
         }
     };
@@ -2130,12 +2162,12 @@ export default function Home() {
     handleScroll();
     window.addEventListener('resize', checkLayout);
     
-    // Load User Prefs
-    const storedTheme = safeGetItem('user_theme_id');
-    const storedMute = safeGetItem('user_is_muted');
-    const storedVol = safeGetItem('user_volume');
-    const hasRegisteredUser = safeGetItem('vip_user_registered') === 'true';
-    
+    // Load User Prefs from smart storage (WebView compatible)
+    const storedTheme = userStorage.get('user_theme_id');
+    const storedMute = userStorage.get('user_is_muted');
+    const storedVol = userStorage.get('user_volume');
+    const hasRegisteredUser = userStorage.get('vip_user_registered') === 'true';
+
     if (storedTheme) setActiveThemeId(storedTheme);
     if (storedMute !== null) setIsMuted(storedMute === 'true');
     if (storedVol) setVolume(parseInt(storedVol));
@@ -2256,11 +2288,11 @@ export default function Home() {
 
     const restoreSession = () => {
       const scrollContainer = scrollContainerRef.current;
-      const storedScroll = safeGetItem('scroll_position');
+      const storedScroll = userStorage.get('scroll_position');
       if (scrollContainer && storedScroll) {
         scrollContainer.scrollTo({ top: parseInt(storedScroll, 10), behavior: 'auto' });
       }
-      const storedPage = safeGetItem('scroll_page');
+      const storedPage = userStorage.get('scroll_page');
       if (storedPage) {
         const pageIndex = Number(storedPage);
         if (!Number.isNaN(pageIndex) && pageIndex >= 1 && pageIndex <= PAGE_CONFIG.length) {
@@ -2279,8 +2311,8 @@ export default function Home() {
 
     const persistState = () => {
       const scrollContainer = scrollContainerRef.current;
-      safeSetItem('scroll_position', String(scrollContainer?.scrollTop ?? 0));
-      safeSetItem('scroll_page', String(activePage));
+      userStorage.set('scroll_position', String(scrollContainer?.scrollTop ?? 0));
+      userStorage.set('scroll_page', String(activePage));
     };
 
     const handleVisibility = () => {
@@ -2443,13 +2475,13 @@ export default function Home() {
   const toggleMusic = useCallback(() => {
       const newMutedState = !isMuted;
       setIsMuted(newMutedState);
-      safeSetItem('user_is_muted', String(newMutedState));
+      userStorage.set('user_is_muted', String(newMutedState));
       if (newMutedState) safePause(); else safePlay();
   }, [isMuted, safePlay, safePause]);
 
   const handleVolumeChange = (newVol: number) => {
       setVolume(newVol);
-      safeSetItem('user_volume', newVol.toString());
+      userStorage.set('user_volume', newVol.toString());
       if(playerRef.current) playerRef.current.setVolume(newVol);
       if (newVol > 0 && isMuted) { setIsMuted(false); safePlay(); }
   };
@@ -2459,7 +2491,7 @@ export default function Home() {
       if (navigator.vibrate) navigator.vibrate(12);
       const newState = !disableSpline;
       setDisableSpline(newState);
-      safeSetItem('spline_enabled', String(newState));
+      devicePrefs.set('spline_enabled', String(newState));
   }, [disableSpline]);
 
   const requestControlCenterOpen = useCallback(() => {
@@ -2468,9 +2500,9 @@ export default function Home() {
 
   // --- GATING HANDLERS ---
   const handleRegisterComplete = useCallback(() => {
-    safeSetItem('vip_user_registered', 'true');
+    userStorage.set('vip_user_registered', 'true');
     setHasRegistered(true);
-    setCurrentStage("hold"); 
+    setCurrentStage("hold");
   }, []);
   
   const handleHoldComplete = useCallback(() => setCurrentStage("content"), []);
@@ -2488,8 +2520,9 @@ export default function Home() {
   const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
     setActiveThemeId(themeId);
     setIsMuted(muted);
-    safeSetItem('user_theme_id', themeId);
-    safeSetItem('user_is_muted', String(muted));
+    // Use smart storage for better WebView compatibility
+    userStorage.set('user_theme_id', themeId);
+    userStorage.set('user_is_muted', String(muted));
     setShowConfigurator(false);
     setParticleTrigger(prev => prev + 1);
     setMusicKey(prev => prev + 1); // Force music player reload
@@ -2497,7 +2530,8 @@ export default function Home() {
 
   const handleQuickThemeChange = useCallback((themeId: string) => {
     setActiveThemeId(themeId);
-    safeSetItem('user_theme_id', themeId);
+    // Use smart storage for better WebView compatibility
+    userStorage.set('user_theme_id', themeId);
     setParticleTrigger(prev => prev + 1);
     setMusicKey(prev => prev + 1);
     playClickSound();
@@ -2527,7 +2561,7 @@ export default function Home() {
       {/* FIX #3: Add swipe-to-close to Quick Theme Picker */}
       {showThemeQuickPick && (
         <div
-          className="fixed inset-0 z-[800000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4"
+          className={`fixed inset-0 z-[${UI_LAYERS.THEME_PICKER}] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4`}
           onClick={() => {
             playClick();
             setShowThemeQuickPick(false);
@@ -2602,7 +2636,7 @@ export default function Home() {
       {/* FIX #10: Add edge peeker for Info Panel (left edge) */}
       {!infoPanelOpen && currentStage === 'content' && (
         <div
-          className="fixed left-0 top-1/2 -translate-y-1/2 z-[500000] w-1 h-32 bg-gradient-to-r from-blue-500/50 to-transparent cursor-pointer hover:w-2 transition-all"
+          className={`fixed left-0 top-1/2 -translate-y-1/2 z-[${UI_LAYERS.INFO_PEEKER}] w-1 h-32 bg-gradient-to-r from-blue-500/50 to-transparent cursor-pointer hover:w-2 transition-all`}
           style={{ background: `linear-gradient(to right, ${accentColor}80, transparent)` }}
           onTouchStart={(e) => {
             const touch = e.touches[0];
@@ -2634,7 +2668,7 @@ export default function Home() {
       {/* FIX #3: Add swipe-to-close to FAQ overlay */}
       {faqOpen && (
         <div
-          className="fixed inset-0 z-[950000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+          className={`fixed inset-0 z-[${UI_LAYERS.FAQ_OVERLAY}] bg-black/80 backdrop-blur-md flex items-center justify-center p-4`}
           onTouchStart={(e) => {
             const touch = e.touches[0];
             (e.currentTarget as any)._swipeStartY = touch.clientY;
@@ -2680,7 +2714,7 @@ export default function Home() {
 
       {/* FIX #4: Add progress bar showing scroll position through all pages */}
       {currentStage === 'content' && (
-        <div className="fixed top-0 left-0 right-0 z-[450000] h-1 bg-black/50 pointer-events-none">
+        <div className={`fixed top-0 left-0 right-0 z-[${UI_LAYERS.PROGRESS_BAR}] h-1 bg-black/50 pointer-events-none`}>
           <div
             className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
             style={{ width: `${((activePage - 1) / (PAGE_CONFIG.length - 1)) * 100}%` }}
@@ -2688,40 +2722,191 @@ export default function Home() {
         </div>
       )}
 
-      {/* --- LAYER 1: FIXED CONTROLS --- */}
-      <div className="fixed inset-0 z-[400000] pointer-events-none">
-          <BottomControls
-            visible={currentStage === 'content'}
-            open={controlCenterOpen}
-            onClose={() => setControlCenterOpen(false)}
-            isPlaying={isPlaying}
-            onToggleMusic={toggleMusic}
-            onOpenTheme={(e?: any) => {
-              const isDouble = (e?.detail ?? 1) >= 2;
-              if (showConfigurator || isDouble) {
-                setShowConfigurator(false);
-                return;
-              }
-              setShowConfigurator(true);
-              setParticleTrigger(prev => prev + 1);
-            }} 
-            themeName={activeTheme.name} 
-            volume={volume} 
-            onVolumeChange={handleVolumeChange} 
-            accentColor={accentColor} 
-            disableSpline={disableSpline}
-            onTogglePerformance={handlePerformanceToggle}
-            deviceProfile={deviceProfile}
-            onRequestOpen={requestControlCenterOpen}
-          />
-          {currentStage === 'content' && !showConfigurator && <SupportWidget accentColor={accentColor} deviceProfile={deviceProfile} />}
-      </div>
+      {/* --- SWIPEABLE CONTROL CENTER --- */}
+      {currentStage === 'content' && (
+        <SwipeablePanel
+          title="Control Center"
+          icon={<Layers size={20} />}
+          position="bottom"
+          defaultOpen={false}
+          accentColor={accentColor}
+          maxHeight="70vh"
+          minHeight="60px"
+          className={`z-[${UI_LAYERS.PANELS_BOTTOM}]`}
+          onOpenChange={(isOpen) => setControlCenterOpen(isOpen)}
+        >
+          <div className="space-y-4">
+            {/* Device Status */}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${accentColor}15` }}>
+                {deviceProfile.isMobile ? <Smartphone size={18} style={{ color: accentColor }} /> : <Monitor size={18} style={{ color: accentColor }} />}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-white/60">Device Mode</span>
+                <span className="text-sm font-semibold text-white">{deviceProfile.isMobile ? 'Mobile Balanced' : 'Desktop Fidelity'}</span>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-3 gap-3">
+              <button
+                onClick={(e) => {
+                  playClick();
+                  if (navigator.vibrate) navigator.vibrate(10);
+                  const isDouble = (e?.detail ?? 1) >= 2;
+                  if (showConfigurator || isDouble) {
+                    setShowConfigurator(false);
+                    return;
+                  }
+                  setShowConfigurator(true);
+                  setParticleTrigger(prev => prev + 1);
+                }}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-95"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
+                <Palette size={24} style={{ color: accentColor }} />
+                <span className="text-xs text-white/80">Themes</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  playClick();
+                  if (navigator.vibrate) navigator.vibrate(12);
+                  handlePerformanceToggle();
+                }}
+                className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all active:scale-95 ${
+                  disableSpline
+                    ? 'bg-white text-black border-white'
+                    : 'bg-white/5 border-white/10 hover:bg-white/10'
+                }`}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
+                <Zap size={24} style={{ color: disableSpline ? accentColor : '#fff' }} />
+                <span className={`text-xs ${disableSpline ? 'text-black' : 'text-white/80'}`}>
+                  {disableSpline ? 'Full 3D' : 'Performance'}
+                </span>
+              </button>
+
+              <button
+                onClick={() => {
+                  playClick();
+                  if (navigator.vibrate) navigator.vibrate(10);
+                  toggleMusic();
+                }}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl border transition-all active:scale-95"
+                style={{
+                  WebkitTapHighlightColor: 'transparent',
+                  backgroundColor: isPlaying ? `${accentColor}20` : 'rgba(255,255,255,0.05)',
+                  borderColor: isPlaying ? `${accentColor}55` : 'rgba(255,255,255,0.1)',
+                }}
+              >
+                {isPlaying ? (volume > 50 ? <Volume2 size={24} style={{ color: accentColor }} /> : <Volume1 size={24} style={{ color: accentColor }} />) : <VolumeX size={24} className="text-white/80" />}
+                <span className="text-xs text-white/80">Audio</span>
+              </button>
+            </div>
+
+            {/* Volume Control */}
+            {isPlaying && (
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-white/60">Volume</span>
+                  <span className="text-xs font-semibold text-white">{volume}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={volume}
+                  onChange={(e) => handleVolumeChange(parseInt(e.target.value))}
+                  className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, ${accentColor} 0%, ${accentColor} ${volume}%, rgba(255,255,255,0.1) ${volume}%, rgba(255,255,255,0.1) 100%)`
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Theme Info */}
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-white/60">Active Theme</span>
+                  <p className="text-sm font-semibold text-white">{activeTheme.name}</p>
+                </div>
+                <div
+                  className="w-10 h-10 rounded-lg border-2"
+                  style={{
+                    borderColor: accentColor,
+                    backgroundColor: `${accentColor}20`
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </SwipeablePanel>
+      )}
+
+      {/* --- SWIPEABLE SUPPORT WIDGET --- */}
+      {currentStage === 'content' && !showConfigurator && (
+        <SwipeablePanel
+          title="Support"
+          icon={<MessageCircle size={20} />}
+          position="bottom"
+          defaultOpen={false}
+          accentColor={accentColor}
+          maxHeight="50vh"
+          minHeight="60px"
+          className={`z-[${UI_LAYERS.PANELS_SUPPORT}]`}
+        >
+          <div className="space-y-4 text-center">
+            <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${accentColor}18`, border: `2px solid ${accentColor}55` }}>
+              <MessageCircle className="w-8 h-8" style={{ color: accentColor }} />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-1">Need Help?</h3>
+              <p className="text-sm text-white/60">Our support team is ready to assist you</p>
+            </div>
+
+            <a
+              href="https://t.me/+dlP_A0ebMXs3NTg0"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                playClick();
+                if (navigator.vibrate) navigator.vibrate([15, 5, 15]);
+              }}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95"
+              style={{
+                backgroundColor: accentColor,
+                color: '#000',
+                boxShadow: `0 8px 24px ${accentColor}40`
+              }}
+            >
+              <MessageCircle size={20} />
+              <span>Open Telegram Support</span>
+              <ChevronRight size={20} />
+            </a>
+
+            <div className="grid grid-cols-2 gap-3 text-left">
+              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                <div className="text-xs text-white/60 mb-1">Response Time</div>
+                <div className="text-sm font-semibold text-white">~5 minutes</div>
+              </div>
+              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                <div className="text-xs text-white/60 mb-1">Availability</div>
+                <div className="text-sm font-semibold text-white">24/7</div>
+              </div>
+            </div>
+          </div>
+        </SwipeablePanel>
+      )}
 
       {/* --- LAYER 2: CONFIGURATOR --- */}
       {/* FIX #3: Add swipe-to-close to Theme Configurator */}
       {showConfigurator && (
         <div
-          className="fixed inset-0 z-[300000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300"
+          className={`fixed inset-0 z-[${UI_LAYERS.MODAL_BACKDROP}] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300`}
           onTouchStart={(e) => {
             const touch = e.touches[0];
             (e.currentTarget as any)._swipeStartY = touch.clientY;
@@ -2769,7 +2954,7 @@ export default function Home() {
 
       {/* --- LAYER 3: GLOBAL THEME LENS --- */}
       <div 
-        className="fixed inset-0 pointer-events-none w-screen h-screen z-[200000]" 
+        className={`fixed inset-0 pointer-events-none w-screen h-screen z-[${UI_LAYERS.SCROLL_INDICATOR}]`} 
         style={{ 
       backdropFilter: deviceProfile.prefersReducedMotion ? 'none' : activeTheme.filter, 
       WebkitBackdropFilter: deviceProfile.prefersReducedMotion ? 'none' : activeTheme.filter, 
@@ -2779,19 +2964,19 @@ export default function Home() {
 
       {/* --- LAYER 4: LOADING / GATING SCREENS --- */}
       {currentStage === "register" && (
-         <div className="fixed inset-0 z-[100000] bg-black" style={{ filter: activeTheme.filter, WebkitFilter: activeTheme.filter, transform: 'translateZ(0)' }}>
+         <div className={`fixed inset-0 z-[${UI_LAYERS.THEME_LENS}] bg-black`} style={{ filter: activeTheme.filter, WebkitFilter: activeTheme.filter, transform: 'translateZ(0)' }}>
              {/* @ts-ignore */}
              <RegisterPage onUnlock={handleRegisterComplete} theme={activeTheme} />
          </div>
       )}
       {currentStage === "hold" && (
-         <div className="fixed inset-0 z-[100000]" style={{ filter: activeTheme.filter, WebkitFilter: activeTheme.filter, transform: 'translateZ(0)' }}>
+         <div className={`fixed inset-0 z-[${UI_LAYERS.THEME_LENS}]`} style={{ filter: activeTheme.filter, WebkitFilter: activeTheme.filter, transform: 'translateZ(0)' }}>
              {/* @ts-ignore */}
              <BullMoneyGate onUnlock={handleHoldComplete} theme={activeTheme}><></></BullMoneyGate>
          </div>
       )}
       {currentStage === "v2" && (
-         <div className="fixed inset-0 z-[100000]" style={{ filter: activeTheme.filter, WebkitFilter: activeTheme.filter, transform: 'translateZ(0)' }}>
+         <div className={`fixed inset-0 z-[${UI_LAYERS.THEME_LENS}]`} style={{ filter: activeTheme.filter, WebkitFilter: activeTheme.filter, transform: 'translateZ(0)' }}>
              {/* @ts-ignore */}
              <MultiStepLoaderV2 onFinished={handleV2Complete} theme={activeTheme} />
          </div>
@@ -2807,7 +2992,7 @@ export default function Home() {
 
       {/* Control Center Launcher */}
       {currentStage === 'content' && (
-        <div className="fixed bottom-5 left-4 md:bottom-7 md:left-8 z-[400100] pointer-events-auto">
+        <div className={`fixed bottom-5 left-4 md:bottom-7 md:left-8 z-[${UI_LAYERS.CONTROL_CENTER_BTN}] pointer-events-auto`}>
           <button
             onClick={() => {
               setControlCenterOpen((prev) => !prev);
@@ -2832,7 +3017,7 @@ export default function Home() {
 
       {/* --- LAYER 5: NAVBAR --- */}
       {currentStage === 'content' && (
-         <header className="fixed top-0 left-0 right-0 z-[250000] w-full transition-all duration-300">
+         <header className={`fixed top-0 left-0 right-0 z-[${UI_LAYERS.NAVBAR}] w-full transition-all duration-300`}>
              <Navbar 
                 setShowConfigurator={setShowConfigurator} 
                 activeThemeId={activeThemeId} 
@@ -2851,7 +3036,7 @@ export default function Home() {
         <main
           ref={scrollContainerRef}
           data-scroll-container
-          className={`w-full h-full flex flex-col overflow-y-scroll overflow-x-hidden ${isTouch ? '' : 'snap-y snap-mandatory'} scroll-smooth bg-black no-scrollbar text-white relative mobile-scroll`}
+          className={`w-full h-full flex flex-col overflow-y-scroll overflow-x-hidden unified-scroll ${isTouch ? 'touch-device' : 'non-touch-device snap-y snap-mandatory'} scroll-smooth bg-black no-scrollbar text-white relative`}
           onTouchStart={swipeHandlers.onTouchStart}
           onTouchMove={swipeHandlers.onTouchMove}
           onTouchEnd={swipeHandlers.onTouchEnd}
@@ -2873,221 +3058,25 @@ export default function Home() {
               />
             )}
 
-            {/* DESKTOP NAV */}
-            <div className="hidden md:flex fixed right-8 top-1/2 -translate-y-1/2 z-50 flex-col gap-6 items-center pointer-events-auto">
-                {/* Theme Quick Switcher */}
-                <div className="relative group">
-                    <button
-                      onClick={(e) => {
-                        playClickSound();
-                        if (navigator.vibrate) navigator.vibrate(10);
-                        if (e.detail >= 2 || showThemeQuickPick) {
-                          setShowThemeQuickPick(false);
-                          return;
-                        }
-                        setShowThemeQuickPick(true);
-                      }}
-                      className="w-10 h-10 bg-black/40 backdrop-blur rounded-full border border-white/20 flex items-center justify-center text-purple-400 hover:text-white transition-colors mb-4 hover-lift"
-                    >
-                        <Palette size={18} />
-                    </button>
-                    <span className="absolute right-12 top-2 text-[10px] font-mono bg-black/80 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                        QUICK THEME
-                    </span>
-                </div>
+            {/* UNIFIED NAVIGATION - Same on Mobile & Desktop */}
+            <UnifiedNavigation
+              currentPage={activePage}
+              totalPages={PAGE_CONFIG.length}
+              pages={PAGE_CONFIG}
+              onPageChange={scrollToPage}
+              accentColor={accentColor}
+              disabled={currentStage !== 'content'}
+            />
 
-                
-                {/* Desktop/Mobile View Toggle */}
-                <div className="relative group">
-                    <button
-                      onClick={() => {
-                        playClickSound();
-                        if (navigator.vibrate) navigator.vibrate(10);
-                        setIsMobileView(!isMobileView);
-                      }}
-                      className="w-10 h-10 bg-black/40 backdrop-blur rounded-full border border-white/20 flex items-center justify-center text-blue-400 hover:text-white transition-colors mb-4 hover-lift"
-                    >
-                        {isMobileView ? <Smartphone size={18} /> : <Monitor size={18} />}
-                    </button>
-                    <span className="absolute right-12 top-2 text-[10px] font-mono bg-black/80 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                        {isMobileView ? "MOBILE VIEW" : "DESKTOP VIEW"}
-                    </span>
-                </div>
-                
-                <button 
-                  onClick={() => scrollToPage(activePage - 2)} 
-                  disabled={activePage === 1} 
-                  className="text-blue-500 hover:text-white disabled:opacity-20 transition-colors hover-lift"
-                >
-                  <ChevronUp size={24} />
-                </button>
-                
-                <div className="flex flex-col gap-4 bg-black/40 backdrop-blur-xl p-3 rounded-2xl border border-white/5 shadow-2xl max-h-[50vh] overflow-y-auto no-scrollbar">
-                    {PAGE_CONFIG.map((page, index) => (
-                        <div key={page.id} className="relative group flex items-center justify-end gap-3">
-                            <span className={`text-[10px] font-mono tracking-widest text-blue-300 bg-black/80 px-2 py-1 rounded transition-all duration-300 absolute right-14 whitespace-nowrap pointer-events-none ${activePage === page.id ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0'}`}>
-                              {page.label}
-                            </span>
-                            <ShineButton 
-                              onClick={() => scrollToPage(index)} 
-                              active={activePage === page.id} 
-                              className="w-12 h-12 text-sm"
-                            >
-                              <span className="font-bold z-10">{index + 1}</span>
-                            </ShineButton>
-                        </div>
-                    ))}
-                </div>
-                
-                <button 
-                  onClick={() => scrollToPage(activePage)} 
-                  disabled={activePage === PAGE_CONFIG.length} 
-                  className="text-blue-500 hover:text-white disabled:opacity-20 transition-colors hover-lift"
-                >
-                  <ChevronDown size={24} />
-                </button>
-            </div>
-
-            {/* MOBILE NAV FAB */}
-            <div className="md:hidden fixed right-4 bottom-24 z-50 flex flex-col gap-4 items-end pointer-events-auto">
-                <ShineButton 
-                  className="w-14 h-14 rounded-full shadow-2xl bg-black/80" 
-                  onClick={(e: any) => {
-                    if (navigator.vibrate) navigator.vibrate(20);
-                    if (e?.detail >= 2) {
-                      setIsMobileNavOpen(false);
-                      return;
-                    }
-                    setIsMobileNavOpen(true);
-                  }}
-                >
-                  <Layers size={24} />
-                </ShineButton>
-            </div>
-
-            {/* MOBILE NAV HUD */}
-            {/* FIX #3: Add swipe-to-close to Mobile Navigation */}
-            <div
-              className={`fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl transition-all duration-500 flex flex-col items-center justify-center p-6 ${isMobileNavOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none translate-y-10'}`}
-              onTouchStart={(e) => {
-                const touch = e.touches[0];
-                (e.currentTarget as any)._swipeStartY = touch.clientY;
-              }}
-              onTouchEnd={(e) => {
-                const startY = (e.currentTarget as any)._swipeStartY;
-                if (startY) {
-                  const endY = e.changedTouches[0].clientY;
-                  if (Math.abs(endY - startY) > 100) {
-                    setIsMobileNavOpen(false);
-                    if (navigator.vibrate) navigator.vibrate(15);
-                  }
-                }
-              }}
-            >
-                <button
-                  onClick={() => {
-                    playClickSound();
-                    if (navigator.vibrate) navigator.vibrate(10);
-                    setIsMobileNavOpen(false);
-                  }}
-                  onDoubleClick={() => setIsMobileNavOpen(false)}
-                  onTouchStart={(e) => {
-                    playHover();
-                    e.currentTarget.style.transform = 'scale(0.9)';
-                  }}
-                  onTouchEnd={(e) => {
-                    e.currentTarget.style.transform = '';
-                  }}
-                  className="absolute top-6 right-6 text-white/50 hover:text-white p-2 hover-lift min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-90 transition-all"
-                  style={{ WebkitTapHighlightColor: 'transparent' }}
-                >
-                  <X size={32} />
-                </button>
-                
-                <h2 className="text-white/40 font-mono text-sm tracking-[0.3em] mb-8">MISSION CONTROL</h2>
-                
-                {/* FIX #4: Add hold-to-switch and haptic feedback to mobile nav buttons */}
-                <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
-                    {PAGE_CONFIG.map((page, index) => (
-                        <button
-                          key={page.id}
-                          onClick={() => {
-                            playClick();
-                            if (navigator.vibrate) navigator.vibrate(12);
-                            scrollToPage(index);
-                          }}
-                          onTouchStart={() => {
-                            playHover();
-                            handlePageButtonHoldStart(index);
-                          }}
-                          onTouchEnd={handlePageButtonHoldEnd}
-                          onMouseDown={() => handlePageButtonHoldStart(index)}
-                          onMouseUp={handlePageButtonHoldEnd}
-                          onMouseLeave={handlePageButtonHoldEnd}
-                          className={`relative h-24 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-200 hover-lift touch-manipulation active:scale-95 ${
-                            activePage === page.id
-                              ? 'bg-blue-600/20 border-blue-500 shadow-[0_0_30px_rgba(0,100,255,0.3)]'
-                              : 'bg-white/5 border-white/10 hover:bg-white/10'
-                          } ${isHolding ? 'scale-95' : ''}`}
-                          style={{ WebkitTapHighlightColor: 'transparent' }}
-                        >
-                            <span className="text-2xl font-bold text-white">{index + 1}</span>
-                            <span className="text-[10px] font-mono text-blue-300 tracking-wider uppercase">
-                              {page.label}
-                            </span>
-                            {/* Hold indicator */}
-                            <div className="absolute inset-0 rounded-xl bg-blue-500/20 opacity-0 transition-opacity" style={{ opacity: isHolding ? 1 : 0 }} />
-                        </button>
-                    ))}
-                </div>
-                
-                <div className="mt-10 flex flex-col gap-3 w-full max-w-sm">
-                    <button
-                      onClick={() => {
-                        playClickSound();
-                        if (navigator.vibrate) navigator.vibrate(10);
-                        setIsMobileView(!isMobileView);
-                        setIsMobileNavOpen(false);
-                      }}
-                      onTouchStart={(e) => {
-                        playHover();
-                        e.currentTarget.style.transform = 'scale(0.95)';
-                      }}
-                      onTouchEnd={(e) => {
-                        e.currentTarget.style.transform = '';
-                      }}
-                      className="flex items-center justify-center gap-2 px-6 py-3 bg-white/5 rounded-full border border-white/10 text-xs font-bold text-white hover:bg-white/10 hover-lift min-h-[44px] touch-manipulation active:scale-95 transition-all"
-                      style={{ WebkitTapHighlightColor: 'transparent' }}
-                    >
-                        {isMobileView ? <Smartphone size={16} /> : <Monitor size={16} />}
-                        {isMobileView ? "MOBILE LAYOUT" : "DESKTOP LAYOUT"}
-                    </button>
-                    <button
-                      onClick={() => {
-                        playClickSound();
-                        if (navigator.vibrate) navigator.vibrate(15);
-                        handlePerformanceToggle();
-                        setIsMobileNavOpen(false);
-                      }}
-                      onTouchStart={(e) => {
-                        playHover();
-                        e.currentTarget.style.transform = 'scale(0.95)';
-                      }}
-                      onTouchEnd={(e) => {
-                        e.currentTarget.style.transform = '';
-                      }}
-                      className={`flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-bold border transition-all hover-lift min-h-[44px] touch-manipulation active:scale-95 ${
-                        disableSpline
-                          ? 'bg-blue-500 text-black border-blue-400 shadow-[0_10px_40px_rgba(59,130,246,0.3)]'
-                          : 'bg-white/5 text-white border-white/10 hover:bg-white/10'
-                      }`}
-                      style={{ WebkitTapHighlightColor: 'transparent' }}
-                    >
-                        <Zap size={16} />
-                        {disableSpline ? "ENABLE FULL 3D" : "GO PERFORMANCE MODE"}
-                    </button>
-                </div>
-            </div>
+            {/* UNIFIED CONTROLS - Same on Mobile & Desktop */}
+            <UnifiedControls
+              isMuted={isMuted}
+              onMuteToggle={() => setIsMuted(!isMuted)}
+              onThemeClick={() => setShowConfigurator(true)}
+              onFaqClick={() => setFaqOpen(true)}
+              accentColor={accentColor}
+              disabled={currentStage !== 'content'}
+            />
 
             {/* INFO PANEL & FAQ CONTROLS - Unified for Mobile/Desktop */}
             <div className="fixed top-24 left-4 z-50 md:bottom-8 md:top-auto md:left-8 pointer-events-auto">
@@ -3158,7 +3147,7 @@ export default function Home() {
             </div>
 
             {/* INFO MODAL (Legacy - kept for compatibility) */}
-            <div className={`fixed inset-0 z-[110] flex items-center justify-center px-4 transition-all duration-300 ${!!modalData ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`fixed inset-0 z-[${UI_LAYERS.MODAL_CONTENT}] flex items-center justify-center px-4 transition-all duration-300 ${!!modalData ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                 <div 
                   className="absolute inset-0 bg-black/80 backdrop-blur-md" 
                   onClick={() => setModalData(null)} 
@@ -3192,12 +3181,12 @@ export default function Home() {
                       config={page}
                       activePage={activePage}
                       onVisible={handleRef}
-                      isMobileView={isMobileView}
                       parallaxOffset={parallaxOffset}
                       disableSpline={disableSpline}
                       useCrashSafeSpline={useCrashSafeSpline}
                       forceLiteSpline={forceLiteSpline}
-                      sensitiveMode={isMobileView || isSafari}
+                      sensitiveMode={isSafari}
+                      deviceProfile={deviceProfile}
                     />
                 ) : (
                     <FullScreenSection
@@ -3208,8 +3197,9 @@ export default function Home() {
                       disableSpline={disableSpline}
                       useCrashSafeSpline={useCrashSafeSpline}
                       forceLiteSpline={forceLiteSpline}
-                      sensitiveMode={isMobileView || isSafari}
+                      sensitiveMode={isSafari}
                       onSceneReady={page.id === 1 ? handleHeroReady : undefined}
+                      deviceProfile={deviceProfile}
                     />
                 )}
                 </React.Fragment>
@@ -3220,19 +3210,19 @@ export default function Home() {
             </div>
         </main>
 
-        {deviceProfile.isMobile && (
-          <SwipeScrollBar
-            containerRef={scrollContainerRef}
-            accentColor={accentColor}
-            isMobile={deviceProfile.isMobile}
-          />
-        )}
+        {/* Mobile Scroll Indicator - New optimized version */}
+        <MobileScrollIndicator
+          scrollContainerRef={scrollContainerRef}
+          accentColor={accentColor}
+          position="right"
+          showOnDesktop={false}
+        />
 
         {/* SWIPE NAVIGATION INDICATORS */}
         {showEdgeSwipeHints && (
           <>
             <div
-              className="fixed left-0 top-1/2 -translate-y-1/2 z-[100000] pointer-events-none"
+              className={`fixed left-0 top-1/2 -translate-y-1/2 z-[${UI_LAYERS.NAV_ARROWS}] pointer-events-none`}
               style={{ color: accentColor }}
             >
               <div className="flex items-center gap-2 px-3 py-2 rounded-r-full bg-black/60 border border-white/10 backdrop-blur animate-pulse">
@@ -3241,7 +3231,7 @@ export default function Home() {
               </div>
             </div>
             <div
-              className="fixed right-0 top-1/2 -translate-y-1/2 z-[100000] pointer-events-none"
+              className={`fixed right-0 top-1/2 -translate-y-1/2 z-[${UI_LAYERS.NAV_ARROWS}] pointer-events-none`}
               style={{ color: accentColor }}
             >
               <div className="flex items-center gap-2 px-3 py-2 rounded-l-full bg-black/60 border border-white/10 backdrop-blur animate-pulse">
@@ -3252,7 +3242,7 @@ export default function Home() {
           </>
         )}
         {swipeIndicator && (
-          <div className="fixed inset-0 pointer-events-none z-[100000] flex items-center justify-center">
+          <div className={`fixed inset-0 pointer-events-none z-[${UI_LAYERS.MODAL_BACKDROP}] flex items-center justify-center`}>
             <div
               className={`text-white/40 text-6xl font-bold animate-pulse transition-all duration-300 ${
                 swipeIndicator === 'left' ? 'animate-slideOutLeft' : 'animate-slideOutRight'
@@ -3266,7 +3256,7 @@ export default function Home() {
 
         {/* SWIPE HELPER - Shows on first load */}
         {currentStage === 'content' && activePage === 1 && (
-          <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[50] pointer-events-none animate-bounce">
+          <div className={`fixed bottom-32 left-1/2 -translate-x-1/2 z-[${UI_LAYERS.CONTENT}] pointer-events-none animate-bounce`}>
             <div className="flex items-center gap-2 bg-black/70 backdrop-blur-xl px-4 py-2 rounded-full border border-white/20">
               <ChevronLeft size={16} className="text-white/60" />
               <span className="text-xs text-white/60 font-medium">Swipe to navigate</span>

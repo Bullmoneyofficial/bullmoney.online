@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "../styles/unified-ui.css";
 
 /* --- 1. CONFIGURATION & VARIANTS --- */
 @custom-variant dark (&:where(.dark, .dark *));

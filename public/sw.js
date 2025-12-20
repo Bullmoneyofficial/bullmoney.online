@@ -1,8 +1,12 @@
 // Service Worker for Offline Support and Performance
-// Version 1.0.0
+// Version 2.1.0 - Smart Device-Aware Caching with Browser Detection
 
-const CACHE_NAME = 'bullmoney-v1';
-const RUNTIME_CACHE = 'runtime-cache-v1';
+const CACHE_NAME = 'bullmoney-v2';
+const RUNTIME_CACHE = 'runtime-cache-v2';
+const SPLINE_CACHE = 'bullmoney-spline-v2';
+const WEBVIEW_CACHE = 'bullmoney-webview-v1';
+const SAFARI_CACHE = 'bullmoney-safari-v1';
+const CHROME_CACHE = 'bullmoney-chrome-v1';
 
 // Assets to cache immediately on install
 const PRECACHE_ASSETS = [
@@ -25,11 +29,39 @@ const PRECACHE_ASSETS = [
   '/process.js',
 ];
 
+// Detect browser type and environment
+function getBrowserType(request) {
+  const ua = request.headers.get('user-agent') || '';
+
+  const isWebView = /Instagram|FBAN|FBAV|FB_IAB|FBIOS|FB4A|Line|TikTok|Twitter|Snapchat|LinkedInApp/i.test(ua);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+  const isChrome = /chrome|crios/i.test(ua) && !isWebView;
+  const isMobile = /mobile|android|iphone|ipad|ipod/i.test(ua);
+
+  return {
+    isWebView,
+    isSafari,
+    isChrome,
+    isMobile,
+    cacheName: isWebView ? WEBVIEW_CACHE : (isSafari ? SAFARI_CACHE : CHROME_CACHE)
+  };
+}
+
+// Legacy compatibility
+function isWebViewRequest(request) {
+  return getBrowserType(request).isWebView;
+}
+
 // Install event - cache critical assets
 self.addEventListener('install', (event) => {
+  console.log('[SW v2] Installing with smart device caching...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS);
+      // Cache non-spline assets first (faster)
+      const criticalAssets = PRECACHE_ASSETS.filter(url => !url.endsWith('.splinecode'));
+      return cache.addAll(criticalAssets).catch(err => {
+        console.warn('[SW v2] Some critical assets failed to cache:', err);
+      });
     }).then(() => {
       return self.skipWaiting();
     })
@@ -38,12 +70,22 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
+  console.log('[SW v2] Activating and cleaning old caches...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME && name !== RUNTIME_CACHE)
-          .map((name) => caches.delete(name))
+          .filter((name) => {
+            return name.startsWith('bullmoney-') &&
+                   name !== CACHE_NAME &&
+                   name !== RUNTIME_CACHE &&
+                   name !== SPLINE_CACHE &&
+                   name !== WEBVIEW_CACHE;
+          })
+          .map((name) => {
+            console.log('[SW v2] Deleting old cache:', name);
+            return caches.delete(name);
+          })
       );
     }).then(() => {
       return self.clients.claim();
@@ -51,7 +93,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - Smart caching based on device and content type
 self.addEventListener('fetch', (event) => {
   // Skip cross-origin requests
   if (!event.request.url.startsWith(self.location.origin)) {
@@ -59,12 +101,21 @@ self.addEventListener('fetch', (event) => {
   }
 
   const request = event.request;
+  const isWebView = isWebViewRequest(request);
+
+  // Spline scenes get special treatment with browser-specific caching
+  if (request.url.endsWith('.splinecode')) {
+    const browserInfo = getBrowserType(request);
+    const cacheName = browserInfo.cacheName;
+    event.respondWith(handleSplineRequest(request, cacheName, browserInfo));
+    return;
+  }
+
   const isAssetRequest =
     request.destination === 'image' ||
     request.destination === 'font' ||
     request.destination === 'script' ||
     request.destination === 'style' ||
-    request.url.endsWith('.splinecode') ||
     request.url.endsWith('.wasm') ||
     /\.mp3$/.test(request.url);
 
@@ -148,6 +199,101 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
+// Smart Spline request handler with browser-specific optimization
+async function handleSplineRequest(request, cacheName, browserInfo) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+
+  const browserType = browserInfo.isWebView ? 'WebView' : (browserInfo.isSafari ? 'Safari' : (browserInfo.isChrome ? 'Chrome' : 'Standard'));
+
+  if (cached) {
+    console.log(`[SW v2.1] Spline cache hit (${browserType}):`, request.url);
+
+    // Update in background for WebView and mobile Safari (slower/unreliable networks)
+    if (browserInfo.isWebView || (browserInfo.isSafari && browserInfo.isMobile)) {
+      fetch(request).then(response => {
+        if (response.ok) {
+          cache.put(request, response.clone());
+          console.log(`[SW v2.1] Background updated cache for ${browserType}`);
+        }
+      }).catch(() => {});
+    }
+    return cached;
+  }
+
+  try {
+    console.log(`[SW v2.1] Fetching Spline scene (${browserType}):`, request.url);
+
+    // Use appropriate fetch strategy based on browser
+    const fetchOptions = {};
+
+    // Safari benefits from explicit cache control
+    if (browserInfo.isSafari) {
+      fetchOptions.cache = 'force-cache';
+    }
+
+    const response = await fetch(request, fetchOptions);
+
+    if (response.ok) {
+      // Cache for future use
+      cache.put(request, response.clone());
+      console.log(`[SW v2.1] Cached Spline scene (${browserType}):`, request.url);
+
+      // Also cache in SPLINE_CACHE for fallback
+      if (cacheName !== SPLINE_CACHE) {
+        caches.open(SPLINE_CACHE).then(fallbackCache => {
+          fallbackCache.put(request, response.clone());
+        }).catch(() => {});
+      }
+    }
+    return response;
+  } catch (error) {
+    console.error(`[SW v2.1] Spline fetch failed (${browserType}):`, error);
+
+    // Try fallback from SPLINE_CACHE
+    if (cacheName !== SPLINE_CACHE) {
+      const fallbackCache = await caches.open(SPLINE_CACHE);
+      const fallbackCached = await fallbackCache.match(request);
+      if (fallbackCached) {
+        console.log(`[SW v2.1] Using fallback cache for ${browserType}`);
+        return fallbackCached;
+      }
+    }
+
+    throw error;
+  }
+}
+
+// Message handler for cache control from main thread
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'CACHE_SPLINE') {
+    const { url, priority } = event.data;
+    console.log(`[SW v2] Cache request for Spline (priority: ${priority}):`, url);
+
+    caches.open(SPLINE_CACHE).then((cache) => {
+      return fetch(url).then((response) => {
+        if (response.ok) {
+          cache.put(url, response.clone());
+          console.log('[SW v2] Preloaded Spline scene:', url);
+          event.ports[0]?.postMessage({ success: true, url });
+        }
+        return response;
+      }).catch(err => {
+        console.warn('[SW v2] Failed to preload Spline:', err);
+        event.ports[0]?.postMessage({ success: false, url, error: err.message });
+      });
+    });
+  } else if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  } else if (event.data && event.data.type === 'CLEAR_CACHE') {
+    const { cacheName } = event.data;
+    caches.delete(cacheName || SPLINE_CACHE).then(() => {
+      console.log(`[SW v2] Cleared cache:`, cacheName || SPLINE_CACHE);
+      event.ports[0]?.postMessage({ success: true });
+    });
+  }
+});
+
 // Background sync for failed requests (Progressive Web App feature)
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-data') {
@@ -156,6 +302,5 @@ self.addEventListener('sync', (event) => {
 });
 
 async function syncData() {
-  // Implement data sync logic here
-  console.log('Syncing data in background...');
+  console.log('[SW v2] Syncing data in background...');
 }
