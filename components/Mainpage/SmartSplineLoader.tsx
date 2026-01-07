@@ -229,6 +229,16 @@ export const SmartSplineLoader = memo(({
     splineRef.current = spline;
     setLoadState('loaded');
     setHasSplineLoaded(true);
+
+    // BUG FIX #14: Register scene with memoryManager
+    if ((window as any).memoryManager && !isMobile) {
+      // Desktop: register normally
+      (window as any).memoryManager.registerScene(scene);
+    } else if ((window as any).memoryManager && isMobile) {
+      // Mobile: Already registered by PageScenes, don't double-register
+      console.log('[SmartSplineLoader] Scene load complete (mobile - managed by PageScenes)');
+    }
+
     onLoad?.();
 
     try {
@@ -243,6 +253,23 @@ export const SmartSplineLoader = memo(({
     // Save preference
     devicePrefs.set(`spline_consent_${scene}`, true);
     devicePrefs.set(`spline_autoload_${scene}`, true);
+
+    // OPTIMIZATION: Reduce Spline quality on mobile for better performance
+    if (isMobile && spline) {
+      try {
+        // Lower rendering quality on mobile
+        if (spline.setQuality) {
+          spline.setQuality(isHighEnd ? 'medium' : 'low');
+        }
+        // Reduce shadow quality
+        if (spline.setShadowQuality) {
+          spline.setShadowQuality(isHighEnd ? 'low' : 'none');
+        }
+        console.log('[SmartSplineLoader] Applied mobile optimizations:', isHighEnd ? 'medium' : 'low');
+      } catch (e) {
+        console.warn('[SmartSplineLoader] Could not apply mobile optimizations:', e);
+      }
+    }
   };
 
   const handleSplineError = (error: any) => {
@@ -255,7 +282,14 @@ export const SmartSplineLoader = memo(({
     setHasSplineLoaded(false);
     setLoadState('idle');
     hasLoadedRef.current = false;
-  }, [scene]);
+
+    // BUG FIX #14: Unregister old scene when scene changes
+    return () => {
+      if (splineRef.current && (window as any).memoryManager && !isMobile) {
+        (window as any).memoryManager.unregisterScene(scene);
+      }
+    };
+  }, [scene, isMobile]);
 
   // Show error state
   if (loadState === 'error') {
@@ -300,6 +334,11 @@ export const SmartSplineLoader = memo(({
                 In-app browser detected — warming assets…
               </p>
             )}
+            {isMobile && !isHighEnd && (
+              <p className="text-[11px] text-white/50">
+                Loading optimized version…
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -317,7 +356,13 @@ export const SmartSplineLoader = memo(({
           style={{
             width: '100%',
             height: '100%',
-            pointerEvents: enableInteraction ? 'auto' : 'none'
+            pointerEvents: enableInteraction ? 'auto' : 'none',
+            // OPTIMIZATION: Reduce rendering complexity on mobile
+            ...(isMobile && !isHighEnd ? {
+              imageRendering: 'auto',
+              transform: 'translateZ(0)', // Force GPU acceleration
+              willChange: 'auto' // Prevent excessive layer creation
+            } : {})
           }}
         />
       </Suspense>

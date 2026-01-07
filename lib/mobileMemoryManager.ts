@@ -28,6 +28,8 @@ class MobileMemoryManager {
   private memoryPressure: 'normal' | 'high' | 'critical' = 'normal';
   private lastCleanup: number = 0;
   private cleanupThrottle: number = 1000; // ms
+  // BUG FIX #15: Track memory monitoring interval for cleanup
+  private memoryMonitorInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     this.isMobile = false;
@@ -38,6 +40,9 @@ class MobileMemoryManager {
     if (typeof window !== 'undefined') {
       this.detectDevice();
       this.setupMemoryMonitoring();
+
+      // BUG FIX #15: Clean up on page unload
+      window.addEventListener('beforeunload', () => this.cleanup());
     }
   }
 
@@ -85,10 +90,11 @@ class MobileMemoryManager {
     });
   }
 
+  // BUG FIX #15: Store interval reference for cleanup
   private setupMemoryMonitoring() {
     // Monitor performance.memory if available (Chrome)
     if (typeof window !== 'undefined' && (performance as any).memory) {
-      setInterval(() => {
+      this.memoryMonitorInterval = setInterval(() => {
         const mem = (performance as any).memory;
         const usedRatio = mem.usedJSHeapSize / mem.jsHeapSizeLimit;
 
@@ -265,19 +271,40 @@ class MobileMemoryManager {
     const criticalScenes = ['/scene1.splinecode']; // Hero only
     this.makeRoom(criticalScenes);
 
-    // Force WebGL context cleanup
+    // BUG FIX #18: Only cleanup Spline canvases, not all canvases
     if (typeof document !== 'undefined') {
-      const canvases = document.querySelectorAll('canvas');
-      canvases.forEach(canvas => {
-        const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+      // Target Spline canvases specifically (they're inside .spline-container)
+      const splineContainers = document.querySelectorAll('.spline-container canvas');
+      const nonCriticalCanvases = Array.from(splineContainers).filter(canvas => {
+        const container = (canvas as HTMLCanvasElement).closest('.spline-container');
+        // Check if this canvas is NOT from scene1 (hero)
+        return container && !container.innerHTML.includes('scene1');
+      });
+
+      nonCriticalCanvases.forEach(canvas => {
+        const gl = (canvas as HTMLCanvasElement).getContext('webgl') ||
+                   (canvas as HTMLCanvasElement).getContext('webgl2');
         if (gl) {
           const loseContext = gl.getExtension('WEBGL_lose_context');
           if (loseContext) {
             loseContext.loseContext();
+            console.log('[MemoryManager] Force-lost WebGL context for non-critical scene');
           }
         }
       });
     }
+  }
+
+  /**
+   * BUG FIX #15: Cleanup method to stop monitoring and free resources
+   */
+  cleanup(): void {
+    if (this.memoryMonitorInterval) {
+      clearInterval(this.memoryMonitorInterval);
+      this.memoryMonitorInterval = null;
+      console.log('[MemoryManager] Stopped memory monitoring');
+    }
+    this.reset();
   }
 
   /**
@@ -319,3 +346,8 @@ class MobileMemoryManager {
 
 // Singleton instance
 export const memoryManager = new MobileMemoryManager();
+
+// BUG FIX #14 & #16: Expose globally so all loaders use the same instance
+if (typeof window !== 'undefined') {
+  (window as any).memoryManager = memoryManager;
+}

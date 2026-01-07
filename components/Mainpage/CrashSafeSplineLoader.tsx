@@ -29,8 +29,10 @@ const DEVICE_THRESHOLDS = {
   SAFE_CONCURRENT_SCENES: 1,
 };
 
-let loadedScenesCount = 0;
+// BUG FIX #14: Remove global counter - use memoryManager instead (single source of truth)
+// BUG FIX #17: Add mutex for Spline module loading
 let globalSplineModule: any = null;
+let splineModuleLoading = false;
 
 export const CrashSafeSplineLoader = memo<CrashSafeSplineLoaderProps>(({
   sceneUrl,
@@ -76,8 +78,9 @@ export const CrashSafeSplineLoader = memo<CrashSafeSplineLoaderProps>(({
           !isSlowConnection &&
           window.innerWidth >= DEVICE_THRESHOLDS.MIN_WIDTH;
 
-        // Check concurrent scene limit
-        const canLoadMore = loadedScenesCount < DEVICE_THRESHOLDS.SAFE_CONCURRENT_SCENES;
+        // BUG FIX #14: Use memoryManager for scene counting (single source of truth)
+        const memStatus = (window as any).memoryManager?.canLoadScene(sceneUrl, 'normal');
+        const canLoadMore = memStatus?.canLoadMore ?? true;
 
         if (isMobile && !isCapable) {
           console.log('[Spline] Using fallback: Device below threshold', {
@@ -91,7 +94,7 @@ export const CrashSafeSplineLoader = memo<CrashSafeSplineLoaderProps>(({
         }
 
         if (!canLoadMore && isMobile) {
-          console.log('[Spline] Using fallback: Too many concurrent scenes');
+          console.log('[Spline] Using fallback: Memory manager blocked -', memStatus?.reason);
           if (isMounted.current) setLoadState('fallback');
           return;
         }
@@ -123,21 +126,41 @@ export const CrashSafeSplineLoader = memo<CrashSafeSplineLoaderProps>(({
 
     const loadSplineModule = async () => {
       try {
-        // Load Spline only once globally
-        if (!globalSplineModule) {
-          const module = await import('@splinetool/react-spline');
-          globalSplineModule = module.default;
+        // BUG FIX #17: Load Spline module with mutex to prevent race conditions
+        if (!globalSplineModule && !splineModuleLoading) {
+          splineModuleLoading = true;
+          try {
+            const module = await import('@splinetool/react-spline');
+            globalSplineModule = module.default;
+            console.log('[Spline] Module loaded globally');
+          } finally {
+            splineModuleLoading = false;
+          }
+        } else if (splineModuleLoading) {
+          // Wait for module to finish loading
+          await new Promise(resolve => {
+            const checkInterval = setInterval(() => {
+              if (!splineModuleLoading) {
+                clearInterval(checkInterval);
+                resolve(true);
+              }
+            }, 50);
+          });
         }
 
         if (!mounted) return;
 
-        // Increment loaded scenes counter
-        loadedScenesCount++;
+        // BUG FIX #14: Register with memoryManager instead of global counter
+        if ((window as any).memoryManager) {
+          (window as any).memoryManager.registerScene(sceneUrl);
+        }
 
         // Cleanup function
         cleanupRef.current = () => {
-          loadedScenesCount = Math.max(0, loadedScenesCount - 1);
-          console.log('[Spline] Scene unloaded, active count:', loadedScenesCount);
+          if ((window as any).memoryManager) {
+            (window as any).memoryManager.unregisterScene(sceneUrl);
+          }
+          console.log('[Spline] Scene cleanup:', sceneUrl);
         };
 
       } catch (error: any) {
