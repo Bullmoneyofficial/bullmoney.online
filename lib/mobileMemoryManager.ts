@@ -1,28 +1,43 @@
 /**
- * Mobile Memory Manager
- * Prevents WebGL crashes on mobile by managing scene loading intelligently
+ * Advanced Mobile Memory Manager v2.0
+ * Prevents WebGL crashes with intelligent scene grouping and memory pressure detection
  */
 
 interface MemoryStatus {
   canLoadMore: boolean;
   activeScenes: number;
   maxScenes: number;
+  memoryPressure: 'normal' | 'high' | 'critical';
   reason?: string;
+}
+
+interface SceneGroup {
+  id: string;
+  scenes: string[];
+  priority: 'critical' | 'high' | 'normal';
 }
 
 class MobileMemoryManager {
   private activeScenes = new Set<string>();
+  private sceneGroups = new Map<string, string[]>(); // Group ID -> scene URLs
+  private sceneToGroup = new Map<string, string>(); // Scene URL -> group ID
   private maxConcurrentScenes: number;
+  private maxConcurrentGroups: number;
   private isMobile: boolean;
   private isLowMemory: boolean;
+  private memoryPressure: 'normal' | 'high' | 'critical' = 'normal';
+  private lastCleanup: number = 0;
+  private cleanupThrottle: number = 1000; // ms
 
   constructor() {
     this.isMobile = false;
     this.isLowMemory = false;
-    this.maxConcurrentScenes = 3; // Default safe limit
+    this.maxConcurrentScenes = 3;
+    this.maxConcurrentGroups = 2;
 
     if (typeof window !== 'undefined') {
       this.detectDevice();
+      this.setupMemoryMonitoring();
     }
   }
 
@@ -37,45 +52,97 @@ class MobileMemoryManager {
 
     this.isLowMemory = memory < 4 || isSlowConnection;
 
-    // Set max concurrent scenes based on device capability
-    // CRITICAL FIX: Aggressive limits for mobile stability
+    // SMART LIMITS: Allow split scenes but limit total
     if (this.isMobile) {
-      // Ultra-aggressive: Only 1 scene on mobile for stability
-      this.maxConcurrentScenes = 1;
+      // Mobile: Allow 2 scenes (for split views) but only 1 group at a time
+      this.maxConcurrentScenes = 2; // Increased from 1 to handle split views
+      this.maxConcurrentGroups = 1;  // Only 1 page/group active
 
-      // Even stricter for low memory devices
       if (memory < 4 || this.isLowMemory) {
-        this.maxConcurrentScenes = 1; // Force single scene
+        this.maxConcurrentScenes = 2; // Still allow split views on low memory
+        this.maxConcurrentGroups = 1;
       }
     } else {
-      // Desktop - more permissive
+      // Desktop
       if (memory >= 8 && !this.isLowMemory) {
-        this.maxConcurrentScenes = 4; // High-end desktop
+        this.maxConcurrentScenes = 6; // High-end desktop
+        this.maxConcurrentGroups = 3;
       } else if (memory >= 4) {
-        this.maxConcurrentScenes = 3; // Standard desktop
+        this.maxConcurrentScenes = 4; // Standard desktop
+        this.maxConcurrentGroups = 2;
       } else {
-        this.maxConcurrentScenes = 2; // Low-end desktop
+        this.maxConcurrentScenes = 3; // Low-end desktop
+        this.maxConcurrentGroups = 2;
       }
     }
 
-    console.log('[MobileMemoryManager] Initialized', {
+    console.log('[MemoryManager v2] Initialized', {
       isMobile: this.isMobile,
       isLowMemory: this.isLowMemory,
-      maxConcurrentScenes: this.maxConcurrentScenes,
+      maxScenes: this.maxConcurrentScenes,
+      maxGroups: this.maxConcurrentGroups,
       deviceMemory: memory
     });
   }
 
+  private setupMemoryMonitoring() {
+    // Monitor performance.memory if available (Chrome)
+    if (typeof window !== 'undefined' && (performance as any).memory) {
+      setInterval(() => {
+        const mem = (performance as any).memory;
+        const usedRatio = mem.usedJSHeapSize / mem.jsHeapSizeLimit;
+
+        if (usedRatio > 0.9) {
+          this.memoryPressure = 'critical';
+          this.emergencyCleanup();
+        } else if (usedRatio > 0.75) {
+          this.memoryPressure = 'high';
+        } else {
+          this.memoryPressure = 'normal';
+        }
+      }, 2000);
+    }
+  }
+
   /**
-   * Check if we can load a new scene
+   * Register a scene group (e.g., split view with 2 scenes)
+   */
+  registerSceneGroup(groupId: string, sceneUrls: string[], priority: 'critical' | 'high' | 'normal' = 'normal'): void {
+    this.sceneGroups.set(groupId, sceneUrls);
+    sceneUrls.forEach(url => {
+      this.sceneToGroup.set(url, groupId);
+      this.activeScenes.add(url);
+    });
+
+    console.log(`[MemoryManager] Registered group "${groupId}" with ${sceneUrls.length} scenes (${this.activeScenes.size}/${this.maxConcurrentScenes})`);
+  }
+
+  /**
+   * Unregister a scene group
+   */
+  unregisterSceneGroup(groupId: string): void {
+    const scenes = this.sceneGroups.get(groupId);
+    if (scenes) {
+      scenes.forEach(url => {
+        this.activeScenes.delete(url);
+        this.sceneToGroup.delete(url);
+      });
+      this.sceneGroups.delete(groupId);
+      console.log(`[MemoryManager] Unregistered group "${groupId}"`);
+    }
+  }
+
+  /**
+   * Check if we can load a new scene/group
    */
   canLoadScene(sceneUrl: string, priority: 'critical' | 'high' | 'normal' = 'normal'): MemoryStatus {
-    // Critical scenes always load (e.g., hero scene)
+    // Critical scenes always load
     if (priority === 'critical') {
       return {
         canLoadMore: true,
         activeScenes: this.activeScenes.size,
         maxScenes: this.maxConcurrentScenes,
+        memoryPressure: this.memoryPressure,
         reason: 'Critical scene - always load'
       };
     }
@@ -86,59 +153,131 @@ class MobileMemoryManager {
         canLoadMore: true,
         activeScenes: this.activeScenes.size,
         maxScenes: this.maxConcurrentScenes,
+        memoryPressure: this.memoryPressure,
         reason: 'Scene already active'
       };
     }
 
-    // Check if we're at limit
+    // Critical memory pressure - deny new loads
+    if (this.memoryPressure === 'critical') {
+      return {
+        canLoadMore: false,
+        activeScenes: this.activeScenes.size,
+        maxScenes: this.maxConcurrentScenes,
+        memoryPressure: this.memoryPressure,
+        reason: 'Critical memory pressure - load blocked'
+      };
+    }
+
+    // Check scene limit
     if (this.activeScenes.size >= this.maxConcurrentScenes) {
       return {
         canLoadMore: false,
         activeScenes: this.activeScenes.size,
         maxScenes: this.maxConcurrentScenes,
+        memoryPressure: this.memoryPressure,
         reason: `At max concurrent scenes (${this.maxConcurrentScenes})`
+      };
+    }
+
+    // Check group limit (only on mobile)
+    if (this.isMobile && this.sceneGroups.size >= this.maxConcurrentGroups) {
+      return {
+        canLoadMore: false,
+        activeScenes: this.activeScenes.size,
+        maxScenes: this.maxConcurrentScenes,
+        memoryPressure: this.memoryPressure,
+        reason: `At max concurrent groups (${this.maxConcurrentGroups})`
       };
     }
 
     return {
       canLoadMore: true,
       activeScenes: this.activeScenes.size,
-      maxScenes: this.maxConcurrentScenes
+      maxScenes: this.maxConcurrentScenes,
+      memoryPressure: this.memoryPressure
     };
   }
 
   /**
-   * Register a scene as active
+   * Register a single scene
    */
   registerScene(sceneUrl: string): void {
     this.activeScenes.add(sceneUrl);
-    console.log(`[MobileMemoryManager] Registered scene: ${sceneUrl} (${this.activeScenes.size}/${this.maxConcurrentScenes})`);
+    console.log(`[MemoryManager] Registered scene: ${sceneUrl} (${this.activeScenes.size}/${this.maxConcurrentScenes})`);
   }
 
   /**
-   * Unregister a scene
+   * Unregister a single scene
    */
   unregisterScene(sceneUrl: string): void {
     this.activeScenes.delete(sceneUrl);
-    console.log(`[MobileMemoryManager] Unregistered scene: ${sceneUrl} (${this.activeScenes.size}/${this.maxConcurrentScenes})`);
+    const groupId = this.sceneToGroup.get(sceneUrl);
+    if (groupId) {
+      this.unregisterSceneGroup(groupId);
+    }
+    console.log(`[MemoryManager] Unregistered scene: ${sceneUrl} (${this.activeScenes.size}/${this.maxConcurrentScenes})`);
   }
 
   /**
-   * Force unload oldest non-critical scene to make room
+   * Force unload oldest non-critical scenes to make room
    */
   makeRoom(criticalScenes: string[] = []): boolean {
+    // First, try to unload entire groups
+    const nonCriticalGroups = Array.from(this.sceneGroups.keys()).filter(groupId => {
+      const scenes = this.sceneGroups.get(groupId) || [];
+      return !scenes.some(scene => criticalScenes.includes(scene));
+    });
+
+    if (nonCriticalGroups.length > 0) {
+      const oldestGroup = nonCriticalGroups[0];
+      this.unregisterSceneGroup(oldestGroup);
+      console.log(`[MemoryManager] Made room by unloading group: ${oldestGroup}`);
+      return true;
+    }
+
+    // Fallback: unload individual scenes
     const nonCriticalScenes = Array.from(this.activeScenes).filter(
-      scene => !criticalScenes.includes(scene)
+      scene => !criticalScenes.includes(scene) && !this.sceneToGroup.has(scene)
     );
 
     if (nonCriticalScenes.length > 0) {
       const oldestScene = nonCriticalScenes[0];
       this.unregisterScene(oldestScene);
-      console.log(`[MobileMemoryManager] Made room by unloading: ${oldestScene}`);
+      console.log(`[MemoryManager] Made room by unloading scene: ${oldestScene}`);
       return true;
     }
 
     return false;
+  }
+
+  /**
+   * Emergency cleanup during critical memory pressure
+   */
+  private emergencyCleanup(): void {
+    const now = Date.now();
+    if (now - this.lastCleanup < this.cleanupThrottle) return;
+
+    this.lastCleanup = now;
+    console.warn('[MemoryManager] EMERGENCY CLEANUP - Critical memory pressure');
+
+    // Force cleanup of all non-critical scenes
+    const criticalScenes = ['/scene1.splinecode']; // Hero only
+    this.makeRoom(criticalScenes);
+
+    // Force WebGL context cleanup
+    if (typeof document !== 'undefined') {
+      const canvases = document.querySelectorAll('canvas');
+      canvases.forEach(canvas => {
+        const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+        if (gl) {
+          const loseContext = gl.getExtension('WEBGL_lose_context');
+          if (loseContext) {
+            loseContext.loseContext();
+          }
+        }
+      });
+    }
   }
 
   /**
@@ -148,8 +287,23 @@ class MobileMemoryManager {
     return {
       canLoadMore: this.activeScenes.size < this.maxConcurrentScenes,
       activeScenes: this.activeScenes.size,
-      maxScenes: this.maxConcurrentScenes
+      maxScenes: this.maxConcurrentScenes,
+      memoryPressure: this.memoryPressure
     };
+  }
+
+  /**
+   * Get active scene count
+   */
+  getActiveSceneCount(): number {
+    return this.activeScenes.size;
+  }
+
+  /**
+   * Get active group count
+   */
+  getActiveGroupCount(): number {
+    return this.sceneGroups.size;
   }
 
   /**
@@ -157,7 +311,9 @@ class MobileMemoryManager {
    */
   reset(): void {
     this.activeScenes.clear();
-    console.log('[MobileMemoryManager] Reset - all scenes cleared');
+    this.sceneGroups.clear();
+    this.sceneToGroup.clear();
+    console.log('[MemoryManager] Reset - all scenes cleared');
   }
 }
 

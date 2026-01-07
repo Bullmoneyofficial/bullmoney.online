@@ -679,34 +679,40 @@ export default function Home() {
   }, [currentStage, isTouch]);
 
   // --- SCROLL OBSERVER ---
-  // ULTRA-OPTIMIZED: Intersection observer with multiple thresholds for smooth detection
+  // ULTRA-OPTIMIZED: Debounced intersection observer to prevent excessive updates
   useEffect(() => {
     if(currentStage !== 'content') return;
 
     const isMobile = window.innerWidth < 768;
+    let debounceTimer: NodeJS.Timeout | null = null;
 
     // Multiple thresholds for more accurate detection
     const thresholds = isMobile
-      ? [0.25, 0.5, 0.75]  // Lower thresholds on mobile for faster response
-      : [0.3, 0.5, 0.7];    // Standard thresholds on desktop
+      ? [0.5, 0.75]  // Fewer thresholds on mobile for better performance
+      : [0.5, 0.7];    // Optimized thresholds on desktop
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          // Only trigger on primary threshold crossing (50%)
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-            const index = pageRefs.current.indexOf(entry.target as HTMLElement);
-            if (index !== -1 && index + 1 !== activePage) {
-              // Use transition for smooth state updates
-              startTransition(() => {
-                setActivePage(index + 1);
-                setParticleTrigger(prev => prev + 1);
-                // Subtle haptic feedback on page change
-                if (navigator.vibrate) navigator.vibrate(8);
-              });
+        // PERFORMANCE: Debounce rapid intersection changes
+        if (debounceTimer) clearTimeout(debounceTimer);
+
+        debounceTimer = setTimeout(() => {
+          entries.forEach((entry) => {
+            // Only trigger on primary threshold crossing (50%)
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+              const index = pageRefs.current.indexOf(entry.target as HTMLElement);
+              if (index !== -1 && index + 1 !== activePage) {
+                // Use transition for smooth state updates
+                startTransition(() => {
+                  setActivePage(index + 1);
+                  setParticleTrigger(prev => prev + 1);
+                  // Subtle haptic feedback on page change
+                  if (navigator.vibrate) navigator.vibrate(8);
+                });
+              }
             }
-          }
-        });
+          });
+        }, isMobile ? 50 : 16); // 50ms on mobile, 16ms on desktop
       },
       {
         threshold: thresholds,
@@ -716,7 +722,11 @@ export default function Home() {
     );
 
     pageRefs.current.forEach((ref) => { if (ref) observerRef.current?.observe(ref); });
-    return () => observerRef.current?.disconnect();
+
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      observerRef.current?.disconnect();
+    };
   }, [currentStage, activePage]);
 
   const handleRef = useCallback((el: HTMLElement | null, index: number) => {

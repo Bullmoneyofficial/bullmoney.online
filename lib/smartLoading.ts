@@ -132,13 +132,13 @@ class SmartLoadingManager {
       if (!reader) throw new Error('No reader');
 
       let received = 0;
-      const chunks: Uint8Array[] = [];
+      const chunks: BlobPart[] = [];
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        chunks.push(value);
+        chunks.push(value as BlobPart);
         received += value.length;
 
         if (onProgress && total) {

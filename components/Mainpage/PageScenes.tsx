@@ -586,7 +586,24 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
     if (containerRef.current) onVisible(containerRef.current, config.id - 1);
   }, [onVisible, config.id]);
 
-  const shouldRender = useMemo(() => {
+  // CRITICAL: Register split view as a scene group for proper memory management
+  useEffect(() => {
+    if (!config.sceneA || !config.sceneB) return;
+    if (!shouldRenderBasic) return;
+
+    const groupId = `split-page-${config.id}`;
+    const scenes = [config.sceneA, config.sceneB];
+
+    // Register the group when visible
+    memoryManager.registerSceneGroup(groupId, scenes, 'high');
+
+    return () => {
+      // Unregister when unmounting or not visible
+      memoryManager.unregisterSceneGroup(groupId);
+    };
+  }, [config.id, config.sceneA, config.sceneB]);
+
+  const shouldRenderBasic = useMemo(() => {
     // If splines are disabled via performance mode, don't render
     if (disableSpline) return false;
 
@@ -596,6 +613,8 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
     const threshold = isMobile ? 0 : 1;
     return distance <= threshold;
   }, [config.id, activePage, isMobile, disableSpline]);
+
+  const shouldRender = shouldRenderBasic;
 
   // FIX #7: Remove snap classes on split section for mobile
   return (
