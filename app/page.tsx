@@ -103,6 +103,14 @@ const UnifiedControls = dynamic(() => import('@/components/Mainpage/UnifiedContr
   ssr: false,
   loading: () => null
 });
+const VerticalPageScroll = dynamic(() => import('@/components/Mainpage/VerticalPageScroll'), {
+  ssr: false,
+  loading: () => null
+});
+const ThreeDHintIcon = dynamic(() => import('@/components/Mainpage/ThreeDHintIcon'), {
+  ssr: false,
+  loading: () => null
+});
 const SwipeablePanel = dynamic(() => import('@/components/Mainpage/SwipeablePanel'), {
   ssr: false,
   loading: () => null

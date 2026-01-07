@@ -160,7 +160,6 @@ export const Navbar = ({
                 <DesktopNav
                   setShowConfigurator={setShowConfigurator}
                   setShowIdModal={setShowIdModal}
-                  accentColor={accentColor}
                   {...controlsProps}
                 />
             </div>
@@ -188,7 +187,6 @@ export const Navbar = ({
                <MobileNav
                  setShowConfigurator={setShowConfigurator}
                  setShowIdModal={setShowIdModal}
-                 accentColor={accentColor}
                  {...controlsProps}
                />
             </div>
