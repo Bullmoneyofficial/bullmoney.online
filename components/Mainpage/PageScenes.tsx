@@ -469,6 +469,7 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
   const hitSoundRef = useRef<HTMLAudioElement | null>(null);
   const isActive = config.id === activePage;
   const [isMobile, setIsMobile] = useState(false);
+  const [activeScene, setActiveScene] = useState<'left' | 'right'>('left'); // Mobile: only load one scene at a time
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -476,6 +477,15 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Mobile optimization: Switch active scene based on split position (CRITICAL FOR PREVENTING CRASHES)
+  // Only render ONE 3D scene at a time on mobile to prevent WebGL memory crashes
+  useEffect(() => {
+    if (isMobile) {
+      const newPanel = splitPos < 50 ? 'A' : 'B';
+      setActiveScene(newPanel === 'A' ? 'left' : 'right');
+    }
+  }, [splitPos, isMobile]);
 
   // PERFORMANCE MODE: Hide split sections when splines are disabled
   if (disableSpline) {
@@ -617,9 +627,9 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
   }, [config.id, config.sceneA, config.sceneB, shouldRender]);
 
   // MOBILE CRASH FIX: On mobile, only render one scene at a time in split view to prevent memory crashes
-  const [activeSplitPanel, setActiveSplitPanel] = useState<'A' | 'B'>('A');
-  const shouldRenderSceneA = isMobile ? (shouldRender && activeSplitPanel === 'A') : shouldRender;
-  const shouldRenderSceneB = isMobile ? (shouldRender && activeSplitPanel === 'B') : shouldRender;
+  // activeScene is managed above with split position: 'left' = A, 'right' = B
+  const shouldRenderSceneA = isMobile ? (shouldRender && activeScene === 'left') : shouldRender;
+  const shouldRenderSceneB = isMobile ? (shouldRender && activeScene === 'right') : shouldRender;
 
   // FIX #7: Remove snap classes on split section for mobile
   return (
@@ -649,14 +659,14 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
               <button
                 onClick={() => {
                   playClick();
-                  setActiveSplitPanel(prev => prev === 'A' ? 'B' : 'A');
+                  setActiveScene(prev => prev === 'left' ? 'right' : 'left');
                   if (navigator.vibrate) navigator.vibrate(15);
                 }}
                 className="flex-1 min-w-[44px] min-h-[44px] px-3 rounded-lg bg-blue-500/20 border border-blue-500/40 text-xs font-bold text-blue-100 hover:bg-blue-500/30 transition-colors touch-manipulation"
                 aria-label="Switch scene"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
-                Switch: {activeSplitPanel === 'A' ? config.labelA : config.labelB}
+                Switch: {activeScene === 'left' ? config.labelA : config.labelB}
               </button>
             )}
             <button

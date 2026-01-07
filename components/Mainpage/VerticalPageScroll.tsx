@@ -144,9 +144,25 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
     }
   }, [isHolding, handleHoldMove, handleHoldEnd]);
 
-  const dotSize = (index: number) => {
-    if (index === currentPage - 1) return 'w-2.5 h-2.5';
-    return 'w-1.5 h-1.5';
+  // Adaptive sizing based on number of pages
+  const getScrollbarHeight = () => {
+    if (totalPages <= 5) return 'min(55vh, 320px)';
+    if (totalPages <= 7) return 'min(50vh, 280px)';
+    if (totalPages <= 10) return 'min(45vh, 250px)';
+    return 'min(40vh, 220px)';
+  };
+
+  const getDotSize = (index: number) => {
+    const baseSize = totalPages > 8 ? 1.5 : 2;
+    const activeSize = totalPages > 8 ? 2 : 2.5;
+    if (index === currentPage - 1) return `w-${activeSize} h-${activeSize}`;
+    return `w-${baseSize} h-${baseSize}`;
+  };
+
+  const getGapSize = () => {
+    if (totalPages > 10) return 'gap-1';
+    if (totalPages > 7) return 'gap-1.5';
+    return 'gap-2';
   };
 
   return (
@@ -175,13 +191,14 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
           className={`
             relative rounded-full border
             backdrop-blur-xl shadow-2xl
-            flex flex-col items-center gap-2 py-3 px-1.5
+            flex flex-col items-center py-3 px-1.5
             transition-all duration-200
             ${isHolding ? 'bg-black/95 scale-105' : 'bg-black/75'}
             ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+            ${getGapSize()}
           `}
           style={{
-            height: 'min(55vh, 320px)',
+            height: getScrollbarHeight(),
             width: '36px',
             borderColor: isHolding ? accentColor : `${accentColor}30`,
             boxShadow: isHolding
@@ -236,7 +253,7 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
         </AnimatePresence>
 
         {/* Page Dots */}
-        <div className="flex-1 flex flex-col justify-center items-center gap-1.5 relative">
+        <div className={`flex-1 flex flex-col justify-center items-center relative ${getGapSize()}`}>
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page, index) => (
             <button
               key={page}
@@ -256,14 +273,14 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
               }}
               className={`
                 rounded-full transition-all duration-200
-                ${dotSize(index)}
+                ${getDotSize(index)}
                 ${disabled ? 'cursor-not-allowed' : 'hover:scale-150 active:scale-75'}
               `}
               style={{
-                backgroundColor: page === currentPage ? accentColor : 'rgba(255,255,255,0.25)',
-                boxShadow: page === currentPage ? `0 0 10px ${accentColor}, 0 0 5px ${accentColor}` : 'none',
+                backgroundColor: page === currentPage ? accentColor : `${accentColor}40`,
+                boxShadow: page === currentPage ? `0 0 10px ${accentColor}, 0 0 5px ${accentColor}` : `0 0 3px ${accentColor}30`,
                 WebkitTapHighlightColor: 'transparent',
-                border: page === currentPage ? `1px solid ${accentColor}` : '1px solid rgba(255,255,255,0.1)',
+                border: page === currentPage ? `1px solid ${accentColor}` : `1px solid ${accentColor}20`,
               }}
               aria-label={`Go to page ${page}`}
             />
