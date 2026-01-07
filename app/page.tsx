@@ -28,7 +28,7 @@ const DraggableSplitSection = dynamic(
 
 // --- THEME & MUSIC DATA ---
 import { ALL_THEMES, Theme, SoundProfile } from '@/components/Mainpage/ThemeComponents';
-import { useDeviceProfile, DeviceProfile, DEFAULT_DEVICE_PROFILE } from '@/lib/deviceProfile';
+import { useDeviceProfile } from '@/lib/deviceProfile';
 import { PAGE_CONFIG, CRITICAL_SPLINE_SCENES, CRITICAL_SCENE_BLOB_MAP, FALLBACK_THEME, getThemeColor } from '@/lib/pageConfig';
 
 // --- OPTIMIZATION IMPORTS ---
@@ -95,10 +95,7 @@ const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor')
   ssr: false, 
   loading: () => <div className="hidden">Loading...</div> 
 });
-const UnifiedNavigation = dynamic(() => import('@/components/Mainpage/UnifiedNavigation'), {
-  ssr: false,
-  loading: () => null
-});
+// Removed unused component imports
 const UnifiedControls = dynamic(() => import('@/components/Mainpage/UnifiedControls'), {
   ssr: false,
   loading: () => null
@@ -112,10 +109,6 @@ const ThreeDHintIcon = dynamic(() => import('@/components/Mainpage/ThreeDHintIco
   loading: () => null
 });
 const SwipeablePanel = dynamic(() => import('@/components/Mainpage/SwipeablePanel'), {
-  ssr: false,
-  loading: () => null
-});
-const MobileScrollIndicator = dynamic(() => import('@/components/Mainpage/MobileScrollIndicator'), {
   ssr: false,
   loading: () => null
 });
@@ -153,7 +146,6 @@ export default function Home() {
   // File 1 States
   const [activePage, setActivePage] = useState<number>(1);
   const [modalData, setModalData] = useState<any>(null);
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   // isMobileView removed - unified UI for both mobile and desktop
   const [showOrientationWarning, setShowOrientationWarning] = useState(false);
    
@@ -187,7 +179,7 @@ export default function Home() {
   const perfPromptTimeoutRef = useRef<number | null>(null);
 
   // Initialize optimization system
-  const { isReady: optimizationsReady, serviceWorkerReady, storage } = useOptimizations({
+  const { isReady: optimizationsReady } = useOptimizations({
     enableServiceWorker: true,
     criticalScenes: ['/scene1.splinecode'], // Hero scene
     preloadScenes: ['/scene.splinecode', '/scene2.splinecode'] // Other scenes
@@ -284,7 +276,7 @@ export default function Home() {
     return ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   }, [activeThemeId]);
     
-  const accentColor = useMemo(() => getThemeColor(activeThemeId), [activeThemeId]);
+  const accentColor = useMemo(() => getThemeColor(activeThemeId) || '#3b82f6', [activeThemeId]);
   const isPlaying = useMemo(() => !isMuted, [isMuted]);
   const defaultPerfMode = useMemo(
     () =>
@@ -391,7 +383,10 @@ export default function Home() {
       const scrollable = (e.target as HTMLElement)?.closest('.mobile-scroll');
       if (!scrollable || e.touches.length === 0) return;
 
-      const currentY = e.touches[0].clientY;
+      const touch = e.touches[0];
+      if (!touch) return;
+
+      const currentY = touch.clientY;
       const isPullingDown = currentY - touchStartRef.current > 0;
       if (scrollable.scrollTop <= 0 && isPullingDown) {
         e.preventDefault();
@@ -792,7 +787,6 @@ export default function Home() {
   const scrollToPage = (index: number) => {
     const maxPages = disableSpline ? visiblePages.length : PAGE_CONFIG.length;
     if(index < 0 || index >= maxPages) return;
-    setIsMobileNavOpen(false);
     playClickSound();
     if (navigator.vibrate) navigator.vibrate(10);
     pageRefs.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -833,26 +827,27 @@ export default function Home() {
   );
 
   // FIX #4: Add hold-to-switch functionality for page buttons
-  const [holdTimer, setHoldTimer] = useState<NodeJS.Timeout | null>(null);
-  const [isHolding, setIsHolding] = useState(false);
+  // Commented out unused hold functionality (keep for future use)
+  // const [holdTimer, setHoldTimer] = useState<NodeJS.Timeout | null>(null);
+  // const [isHolding, setIsHolding] = useState(false);
 
-  const handlePageButtonHoldStart = (index: number) => {
-    setIsHolding(true);
-    const timer = setTimeout(() => {
-      scrollToPage(index);
-      if (navigator.vibrate) navigator.vibrate([10, 50, 10]); // Double vibration for hold action
-      setIsHolding(false);
-    }, 500); // 500ms hold time
-    setHoldTimer(timer);
-  };
+  // const handlePageButtonHoldStart = (index: number) => {
+  //   setIsHolding(true);
+  //   const timer = setTimeout(() => {
+  //     scrollToPage(index);
+  //     if (navigator.vibrate) navigator.vibrate([10, 50, 10]); // Double vibration for hold action
+  //     setIsHolding(false);
+  //   }, 500); // 500ms hold time
+  //   setHoldTimer(timer);
+  // };
 
-  const handlePageButtonHoldEnd = () => {
-    if (holdTimer) {
-      clearTimeout(holdTimer);
-      setHoldTimer(null);
-    }
-    setIsHolding(false);
-  };
+  // const handlePageButtonHoldEnd = () => {
+  //   if (holdTimer) {
+  //     clearTimeout(holdTimer);
+  //     setHoldTimer(null);
+  //   }
+  //   setIsHolding(false);
+  // };
 
   // --- MUSIC HANDLERS ---
   const safePlay = useCallback(() => {
@@ -946,9 +941,10 @@ export default function Home() {
     setShowPerfPrompt(false);
   }, []);
 
-  const requestControlCenterOpen = useCallback(() => {
-    setControlCenterOpen(true);
-  }, []);
+  // Commented out unused function (keep for future use)
+  // const requestControlCenterOpen = useCallback(() => {
+  //   setControlCenterOpen(true);
+  // }, []);
 
   // --- GATING HANDLERS ---
   const handleRegisterComplete = useCallback(() => {
@@ -1027,7 +1023,7 @@ export default function Home() {
   // BUG FIX #20: Ref to track theme change debounce timer
   const themeChangeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
+  const handleThemeChange = useCallback((themeId: string, _sound: SoundProfile, muted: boolean) => {
     console.log('[Theme] Changing theme to:', themeId, 'muted:', muted);
 
     // BUG FIX #20: Clear pending theme change to prevent rapid switching
@@ -1145,12 +1141,15 @@ export default function Home() {
           onDoubleClick={() => setShowThemeQuickPick(false)}
           onTouchStart={(e) => {
             const touch = e.touches[0];
-            (e.currentTarget as any)._swipeStartY = touch.clientY;
+            if (touch) {
+              (e.currentTarget as any)._swipeStartY = touch.clientY;
+            }
           }}
           onTouchEnd={(e) => {
             const startY = (e.currentTarget as any)._swipeStartY;
-            if (startY) {
-              const endY = e.changedTouches[0].clientY;
+            const touch = e.changedTouches[0];
+            if (startY && touch) {
+              const endY = touch.clientY;
               if (Math.abs(endY - startY) > 120) {
                 playSwipe();
                 setShowThemeQuickPick(false);
@@ -1255,12 +1254,15 @@ export default function Home() {
           }}
           onTouchStart={(e) => {
             const touch = e.touches[0];
-            (e.currentTarget as any)._swipeStartY = touch.clientY;
+            if (touch) {
+              (e.currentTarget as any)._swipeStartY = touch.clientY;
+            }
           }}
           onTouchEnd={(e) => {
             const startY = (e.currentTarget as any)._swipeStartY;
-            if (startY) {
-              const endY = e.changedTouches[0].clientY;
+            const touch = e.changedTouches[0];
+            if (startY && touch) {
+              const endY = touch.clientY;
               if (Math.abs(endY - startY) > 100) {
                 setFaqOpen(false);
                 if (navigator.vibrate) navigator.vibrate(15);
@@ -1476,7 +1478,7 @@ export default function Home() {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs text-white/60">Active Theme</span>
-                  <p className="text-sm font-semibold text-white">{activeTheme.name}</p>
+                  <p className="text-sm font-semibold text-white">{activeTheme?.name || 'Default'}</p>
                 </div>
                 <div
                   className="w-10 h-10 rounded-lg border-2"
@@ -1544,12 +1546,15 @@ export default function Home() {
           style={{ zIndex: UI_LAYERS.MODAL_BACKDROP }}
           onTouchStart={(e) => {
             const touch = e.touches[0];
-            (e.currentTarget as any)._swipeStartY = touch.clientY;
+            if (touch) {
+              (e.currentTarget as any)._swipeStartY = touch.clientY;
+            }
           }}
           onTouchEnd={(e) => {
             const startY = (e.currentTarget as any)._swipeStartY;
-            if (startY) {
-              const endY = e.changedTouches[0].clientY;
+            const touch = e.changedTouches[0];
+            if (startY && touch) {
+              const endY = touch.clientY;
               if (Math.abs(endY - startY) > 100) {
                 setShowConfigurator(false);
                 if (navigator.vibrate) navigator.vibrate(15);
@@ -1601,19 +1606,19 @@ export default function Home() {
 
       {/* --- LAYER 4: LOADING / GATING SCREENS --- */}
       {currentStage === "register" && (
-         <div className="fixed inset-0 bg-black" style={{ zIndex: UI_LAYERS.THEME_LENS, filter: activeTheme.filter, WebkitFilter: activeTheme.filter, transform: 'translateZ(0)' }}>
+         <div className="fixed inset-0 bg-black" style={{ zIndex: UI_LAYERS.THEME_LENS, filter: activeTheme?.filter || 'none', WebkitFilter: activeTheme?.filter || 'none', transform: 'translateZ(0)' }}>
              {/* @ts-ignore */}
              <RegisterPage onUnlock={handleRegisterComplete} theme={activeTheme} />
          </div>
       )}
       {currentStage === "hold" && (
-         <div className="fixed inset-0" style={{ zIndex: UI_LAYERS.THEME_LENS, filter: activeTheme.filter, WebkitFilter: activeTheme.filter, transform: 'translateZ(0)' }}>
+         <div className="fixed inset-0" style={{ zIndex: UI_LAYERS.THEME_LENS, filter: activeTheme?.filter || 'none', WebkitFilter: activeTheme?.filter || 'none', transform: 'translateZ(0)' }}>
              {/* @ts-ignore */}
              <BullMoneyGate onUnlock={handleHoldComplete} theme={activeTheme}><></></BullMoneyGate>
          </div>
       )}
       {currentStage === "v2" && (
-         <div className="fixed inset-0" style={{ zIndex: UI_LAYERS.THEME_LENS, filter: activeTheme.filter, WebkitFilter: activeTheme.filter, transform: 'translateZ(0)' }}>
+         <div className="fixed inset-0" style={{ zIndex: UI_LAYERS.THEME_LENS, filter: activeTheme?.filter || 'none', WebkitFilter: activeTheme?.filter || 'none', transform: 'translateZ(0)' }}>
              {/* @ts-ignore */}
              <MultiStepLoaderV2 onFinished={handleV2Complete} theme={activeTheme} />
          </div>
