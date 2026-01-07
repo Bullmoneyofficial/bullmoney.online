@@ -46,6 +46,8 @@ export const SmartSplineLoader = memo(({
   const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const hasLoadedRef = useRef(false);
+  // BUG FIX #2: Track all blob URLs created so we can revoke them on unmount
+  const blobUrlsRef = useRef<Set<string>>(new Set());
 
   const isMobile = deviceProfile?.isMobile ?? false;
   const isWebView = deviceProfile?.isWebView ?? false;
@@ -99,6 +101,8 @@ export const SmartSplineLoader = memo(({
           if (cachedResponse) {
             const blob = await cachedResponse.blob();
             const blobUrl = URL.createObjectURL(blob);
+            // BUG FIX #2: Track the blob URL for cleanup
+            blobUrlsRef.current.add(blobUrl);
             setCachedBlob(blobUrl);
             console.log(`[SmartSplineLoader] Loaded ${scene} from ${cacheName} cache`);
           } else {
@@ -125,6 +129,7 @@ export const SmartSplineLoader = memo(({
       // Clear timeout on success
       if (loadTimeoutRef.current) {
         clearTimeout(loadTimeoutRef.current);
+        loadTimeoutRef.current = null;
       }
     } catch (error) {
       console.error('[SmartSplineLoader] Load failed:', error);
@@ -135,7 +140,7 @@ export const SmartSplineLoader = memo(({
   };
 
   useEffect(() => {
-    // Always warm caches / telemetry; never gate loading on “consent”.
+    // Always warm caches / telemetry; never gate loading on "consent".
     const delay = priority === 'critical' ? 0 : (isWebView ? 200 : 0);
     const t = window.setTimeout(() => {
       loadSpline();
@@ -144,22 +149,32 @@ export const SmartSplineLoader = memo(({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene, priority, isWebView]);
 
-  // Cleanup
+  // BUG FIX #2: Cleanup - revoke ALL blob URLs created during the component's lifetime
   useEffect(() => {
     return () => {
+      // Clear any pending timeouts
       if (loadTimeoutRef.current) {
         clearTimeout(loadTimeoutRef.current);
+        loadTimeoutRef.current = null;
       }
-      if (cachedBlob) {
-        URL.revokeObjectURL(cachedBlob);
-      }
-    };
-  }, [cachedBlob]);
 
-  // WebGL context loss guard (common in mobile + in-app browsers)
+      // Revoke all blob URLs created by this component
+      blobUrlsRef.current.forEach(blobUrl => {
+        try {
+          URL.revokeObjectURL(blobUrl);
+          console.log('[SmartSplineLoader] Revoked blob URL:', blobUrl);
+        } catch (e) {
+          console.warn('[SmartSplineLoader] Failed to revoke blob URL:', e);
+        }
+      });
+      blobUrlsRef.current.clear();
+    };
+  }, []); // Empty deps = only on unmount
+
+  // BUG FIX #5: WebGL context loss guard with proper cleanup
   useEffect(() => {
-    const canvas = containerRef.current?.querySelector('canvas');
-    if (!canvas) return;
+    // Use a ref to track if we've attached listeners
+    let canvas: HTMLCanvasElement | null = null;
 
     const handleLost = (e: Event) => {
       // @ts-ignore
@@ -173,13 +188,42 @@ export const SmartSplineLoader = memo(({
       console.log('[SmartSplineLoader] WebGL context restored:', scene);
     };
 
-    canvas.addEventListener('webglcontextlost', handleLost as any, { passive: false } as any);
-    canvas.addEventListener('webglcontextrestored', handleRestored as any);
-    return () => {
-      canvas.removeEventListener('webglcontextlost', handleLost as any);
-      canvas.removeEventListener('webglcontextrestored', handleRestored as any);
+    // Try to attach listeners after a short delay to ensure canvas exists
+    const attachListeners = () => {
+      canvas = containerRef.current?.querySelector('canvas') || null;
+      if (canvas) {
+        canvas.addEventListener('webglcontextlost', handleLost as any, { passive: false } as any);
+        canvas.addEventListener('webglcontextrestored', handleRestored as any);
+        console.log('[SmartSplineLoader] WebGL context listeners attached');
+      }
     };
-  }, [onError, scene]);
+
+    // Attach immediately and also after a delay (in case canvas renders late)
+    attachListeners();
+    const timer = setTimeout(attachListeners, 100);
+
+    return () => {
+      clearTimeout(timer);
+      if (canvas) {
+        canvas.removeEventListener('webglcontextlost', handleLost as any);
+        canvas.removeEventListener('webglcontextrestored', handleRestored as any);
+        console.log('[SmartSplineLoader] WebGL context listeners removed');
+      }
+      // BUG FIX #5: Properly dispose of Spline instance
+      if (splineRef.current) {
+        try {
+          // Try to dispose/cleanup the Spline instance if it has cleanup methods
+          if (typeof splineRef.current.dispose === 'function') {
+            splineRef.current.dispose();
+          }
+          splineRef.current = null;
+          console.log('[SmartSplineLoader] Spline instance disposed');
+        } catch (e) {
+          console.warn('[SmartSplineLoader] Error disposing Spline instance:', e);
+        }
+      }
+    };
+  }, [onError, scene, hasSplineLoaded]); // Re-run when scene loads
 
   const handleSplineLoad = (spline: any) => {
     splineRef.current = spline;

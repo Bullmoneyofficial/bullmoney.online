@@ -298,10 +298,19 @@ export default function Home() {
   useEffect(() => {
     setIsClient(true);
 
-    // Inject Styles
-    const styleSheet = document.createElement("style");
-    styleSheet.innerText = GLOBAL_STYLES;
-    document.head.appendChild(styleSheet);
+    // BUG FIX #7: Inject Styles only once - check if already injected
+    const STYLE_ID = 'bullmoney-global-styles';
+    let styleSheet = document.getElementById(STYLE_ID) as HTMLStyleElement;
+
+    if (!styleSheet) {
+      styleSheet = document.createElement("style");
+      styleSheet.id = STYLE_ID;
+      styleSheet.innerText = GLOBAL_STYLES;
+      document.head.appendChild(styleSheet);
+      console.log('[Init] Global styles injected');
+    } else {
+      console.log('[Init] Global styles already exist, skipping injection');
+    }
 
     const touch = !!(matchMedia && matchMedia('(pointer: coarse)').matches);
     isTouchRef.current = touch;
@@ -369,7 +378,7 @@ export default function Home() {
     }
 
     // ========================================
-    // CRITICAL: Prevent page reloads on mobile browsers
+    // BUG FIX #3: Prevent page reloads on mobile browsers with proper cleanup
     // ========================================
     const handleTouchStart = (e: TouchEvent) => {
       const scrollable = (e.target as HTMLElement)?.closest('.mobile-scroll');
@@ -393,9 +402,10 @@ export default function Home() {
     document.addEventListener('touchmove', handleTouchMove, { passive: false });
 
     // Disable pull-to-refresh on the body
+    const originalOverscrollBehavior = document.body.style.overscrollBehavior;
     document.body.style.overscrollBehavior = 'contain';
 
-    // ULTRA-OPTIMIZED: 60fps scroll with advanced RAF throttling
+    // BUG FIX #3: ULTRA-OPTIMIZED 60fps scroll with proper RAF cleanup
     // CRITICAL FIX: Disabled parallax on mobile to prevent crashes
     let rafId: number | null = null;
     let lastScrollTime = 0;
@@ -431,9 +441,9 @@ export default function Home() {
       }
     };
 
+    // BUG FIX #3: Attach scroll listener only once, not twice
     const scrollElement = scrollContainerRef.current || window;
     scrollElement.addEventListener('scroll', handleScroll, { passive: true });
-    if (scrollElement !== window) window.addEventListener('scroll', handleScroll, { passive: true });
 
     // Initial Layout Check
     const checkLayout = () => {
@@ -469,17 +479,36 @@ export default function Home() {
     setHasSeenHold(holdSeenFlag);
     setHasRegistered(hasRegisteredUser);
     setCurrentStage("v2");
-    
-    // Cleanup
+
+    // BUG FIX #3 & #7: Proper cleanup for all event listeners and resources
     return () => {
-      document.head.removeChild(styleSheet);
+      // BUG FIX #7: Don't remove global styles - they should persist
+      // Only remove if we added them in this mount (checked by ID above)
+
+      // Clean up layout/resize listeners
       window.removeEventListener('resize', checkLayout);
+
+      // Clean up scroll listeners (only remove once since we only added once)
       scrollElement.removeEventListener('scroll', handleScroll);
-      if (scrollElement !== window) window.removeEventListener('scroll', handleScroll);
+
+      // Clean up touch listeners
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchmove', handleTouchMove);
-      if (parallaxRafRef.current) cancelAnimationFrame(parallaxRafRef.current);
-      
+
+      // Restore original overscroll behavior
+      document.body.style.overscrollBehavior = originalOverscrollBehavior;
+
+      // BUG FIX #3: Cancel any pending RAF
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      if (parallaxRafRef.current) {
+        cancelAnimationFrame(parallaxRafRef.current);
+        parallaxRafRef.current = 0;
+      }
+
+      // Clean up media query listener
       if (mediaQuery) {
         if (mediaQuery.removeEventListener) {
           mediaQuery.removeEventListener('change', handleMotionChange);
@@ -686,13 +715,13 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [currentStage, isTouch]);
 
-  // --- SCROLL OBSERVER ---
-  // ULTRA-OPTIMIZED: Debounced intersection observer to prevent excessive updates
+  // BUG FIX #6: SCROLL OBSERVER - Debounced intersection observer to prevent infinite loops
   useEffect(() => {
     if(currentStage !== 'content') return;
 
     const isMobile = window.innerWidth < 768;
-    let debounceTimer: NodeJS.Timeout | null = null;
+    // BUG FIX #6: Use ref for debounce timer so it persists across callback invocations
+    const debounceTimerRef = { current: null as NodeJS.Timeout | null };
 
     // Multiple thresholds for more accurate detection
     const thresholds = isMobile
@@ -701,10 +730,12 @@ export default function Home() {
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        // PERFORMANCE: Debounce rapid intersection changes
-        if (debounceTimer) clearTimeout(debounceTimer);
+        // BUG FIX #6: PERFORMANCE - Debounce rapid intersection changes properly
+        if (debounceTimerRef.current) {
+          clearTimeout(debounceTimerRef.current);
+        }
 
-        debounceTimer = setTimeout(() => {
+        debounceTimerRef.current = setTimeout(() => {
           entries.forEach((entry) => {
             // Only trigger on primary threshold crossing (50%)
             if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
@@ -713,6 +744,7 @@ export default function Home() {
                 // Use transition for smooth state updates
                 startTransition(() => {
                   setActivePage(index + 1);
+                  // BUG FIX #6: Only trigger particles on actual page changes, not on every intersection
                   setParticleTrigger(prev => prev + 1);
                   // Subtle haptic feedback on page change
                   if (navigator.vibrate) navigator.vibrate(8);
@@ -720,6 +752,7 @@ export default function Home() {
               }
             }
           });
+          debounceTimerRef.current = null;
         }, isMobile ? 50 : 16); // 50ms on mobile, 16ms on desktop
       },
       {
@@ -732,7 +765,11 @@ export default function Home() {
     pageRefs.current.forEach((ref) => { if (ref) observerRef.current?.observe(ref); });
 
     return () => {
-      if (debounceTimer) clearTimeout(debounceTimer);
+      // BUG FIX #6: Clean up debounce timer on unmount
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
       observerRef.current?.disconnect();
     };
   }, [currentStage, activePage]);

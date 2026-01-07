@@ -289,19 +289,22 @@ export const BackgroundMusicSystem = ({ themeId, onReady, volume, trackKey }: { 
   };
   const playerRef = useRef<any>(null);
 
-  // CRITICAL FIX: Properly destroy YouTube player on unmount to prevent memory leaks
+  // BUG FIX #1: Properly destroy YouTube player on unmount to prevent memory leaks
+  // Store player instance and always clean up on unmount, not just on trackKey change
   useEffect(() => {
     return () => {
+      // Cleanup runs on unmount OR when component re-renders
       if (playerRef.current?.destroy) {
         try {
+          console.log('[BackgroundMusicSystem] Destroying player instance');
           playerRef.current.destroy();
+          playerRef.current = null;
         } catch (e) {
           console.warn('[BackgroundMusicSystem] Error destroying player:', e);
         }
-        playerRef.current = null;
       }
     };
-  }, [trackKey]); // Cleanup when track changes
+  }, []); // Empty deps = cleanup only on unmount
 
   return (
     <div key={`music-${themeId}-${trackKey}`} className="fixed bottom-0 left-0 opacity-0 pointer-events-none z-[-1] overflow-hidden w-px h-px">

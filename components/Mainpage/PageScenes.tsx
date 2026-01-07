@@ -560,6 +560,17 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
     });
   }, [clampSplit, isMobile]);
 
+  // BUG FIX #4: Ensure RAF is always canceled on unmount
+  useEffect(() => {
+    // Cleanup function runs on unmount
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = undefined;
+      }
+    };
+  }, []); // Empty deps = only on mount/unmount
+
   useEffect(() => {
     if (isDragging) {
       window.addEventListener('mousemove', handleDragMove, { passive: true });
@@ -572,8 +583,11 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
       window.removeEventListener('touchmove', handleDragMove);
       window.removeEventListener('mouseup', handleDragEnd);
       window.removeEventListener('touchend', handleDragEnd);
-      // Cleanup RAF
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      // BUG FIX #4: Also cleanup RAF when dragging state changes
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = undefined;
+      }
     };
   }, [isDragging, handleDragMove]);
 
