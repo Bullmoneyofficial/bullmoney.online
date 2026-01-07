@@ -23,7 +23,7 @@ interface CrashSafeSplineLoaderProps {
 
 // Device capability thresholds
 const DEVICE_THRESHOLDS = {
-  MIN_MEMORY: 2, // GB
+  MIN_MEMORY: 1, // GB (looser; we already limit to one active scene on mobile)
   MIN_CORES: 2,
   MIN_WIDTH: 320,
   SAFE_CONCURRENT_SCENES: 1,

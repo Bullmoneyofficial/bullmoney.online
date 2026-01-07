@@ -63,9 +63,7 @@ a,
 
 /* GPU-accelerated transforms for smooth animations */
 .gpu-accelerated,
-section,
-.spline-container,
-.parallax-layer {
+.spline-container {
   transform: translateZ(0);
   will-change: transform;
   backface-visibility: hidden;

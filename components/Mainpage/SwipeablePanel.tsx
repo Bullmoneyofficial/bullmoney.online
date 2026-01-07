@@ -189,7 +189,7 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
   return (
     <div
       ref={panelRef}
-      className={`fixed ${position === 'bottom' ? 'bottom-0' : 'top-0'} left-0 right-0 ${isCollapsed ? 'pointer-events-none' : 'pointer-events-auto'} ${className}`}
+      className={`fixed ${position === 'bottom' ? 'bottom-0' : 'top-0'} left-0 right-0 ${className}`}
       style={{
         height: currentHeight,
         transition: isDragging ? 'none' : 'height 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -198,7 +198,10 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
       {/* Apple Glass Effect Background */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-2xl border-t border-white/10 transition-opacity duration-300"
-        style={{ opacity: isCollapsed ? 0.15 : 1 }}
+        style={{
+          opacity: isCollapsed ? 0.12 : 1,
+          pointerEvents: isCollapsed ? 'none' : 'auto',
+        }}
       />
 
       {/* Drag Handle */}

@@ -137,7 +137,7 @@
 
 /* Unified scroll behavior - same on all devices */
 .unified-scroll {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
@@ -145,10 +145,12 @@
 /* Remove snap scrolling on touch devices for better swipe feel */
 .unified-scroll.touch-device {
   scroll-snap-type: none;
+  scroll-behavior: auto;
 }
 
 .unified-scroll.non-touch-device {
   scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
 }
 
 .unified-scroll-section {

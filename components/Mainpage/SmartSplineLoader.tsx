@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, Suspense, memo, lazy } from 'react';
-import { Loader2, Play } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { devicePrefs } from '@/lib/smartStorage';
 
 // Lazy load Spline only when needed
@@ -39,8 +39,8 @@ export const SmartSplineLoader = memo(({
   enableInteraction = true,
   deviceProfile
 }: SmartSplineLoaderProps) => {
-  const [loadState, setLoadState] = useState<'idle' | 'loading' | 'loaded' | 'error'>('idle');
-  const [userConsent, setUserConsent] = useState<boolean | null>(null);
+  const [loadState, setLoadState] = useState<'idle' | 'loaded' | 'error'>('idle');
+  const [hasSplineLoaded, setHasSplineLoaded] = useState(false);
   const [cachedBlob, setCachedBlob] = useState<string | null>(null);
   const splineRef = useRef<any>(null);
   const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -52,36 +52,9 @@ export const SmartSplineLoader = memo(({
   const prefersReducedData = deviceProfile?.prefersReducedData ?? false;
   const connectionType = deviceProfile?.connectionType ?? '4g';
 
-  // Determine loading strategy
-  const shouldAutoLoad = React.useMemo(() => {
-    // Critical scenes always load
-    if (priority === 'critical') return true;
-
-    // Desktop high-end devices: auto-load everything
-    if (!isMobile && isHighEnd && !prefersReducedData) return true;
-
-    // Mobile or WebView: require consent for non-critical scenes
-    if (isMobile || isWebView) {
-      // Check saved preference
-      const savedPref = devicePrefs.get(`spline_autoload_${scene}`);
-      if (savedPref !== null) return savedPref;
-
-      // Auto-load only on good connections for high priority
-      if (priority === 'high' && ['4g', '5g'].includes(connectionType)) {
-        return true;
-      }
-
-      return false;
-    }
-
-    return true;
-  }, [priority, isMobile, isWebView, isHighEnd, prefersReducedData, connectionType, scene]);
-
   // Load from cache or network with smart detection for Safari, Chrome, WebView
   const loadSpline = async () => {
-    if (loadState === 'loading' || loadState === 'loaded') return;
-
-    setLoadState('loading');
+    if (loadState === 'loaded') return;
 
     try {
       try {
@@ -159,38 +132,14 @@ export const SmartSplineLoader = memo(({
   };
 
   useEffect(() => {
-    // Check user consent on mount
-    const savedConsent = devicePrefs.get(`spline_consent_${scene}`);
-    if (savedConsent !== null) {
-      setUserConsent(savedConsent);
-    } else if (shouldAutoLoad) {
-      setUserConsent(true);
-    }
-  }, [scene, shouldAutoLoad]);
-
-  useEffect(() => {
-    if (userConsent !== null || shouldAutoLoad) return;
-    const timer = window.setTimeout(() => {
-      setUserConsent(true);
-      devicePrefs.set(`spline_consent_${scene}`, true);
-      devicePrefs.set(`spline_autoload_${scene}`, true);
-    }, 1200);
-    return () => window.clearTimeout(timer);
-  }, [scene, shouldAutoLoad, userConsent]);
-
-  useEffect(() => {
-    if (userConsent && loadState === 'idle') {
-      // CRITICAL: No delays for critical priority scenes (hero/first loader)
-      // Ensure first loader shows up on ALL devices with no delays
-      const delay = priority === 'critical' ? 0 : (isWebView ? 300 : 0);
-
-      if (delay === 0) {
-        loadSpline();
-      } else {
-        setTimeout(() => loadSpline(), delay);
-      }
-    }
-  }, [userConsent, loadState, isWebView, priority]);
+    // Always warm caches / telemetry; never gate loading on “consent”.
+    const delay = priority === 'critical' ? 0 : (isWebView ? 200 : 0);
+    const t = window.setTimeout(() => {
+      loadSpline();
+    }, delay);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scene, priority, isWebView]);
 
   // Cleanup
   useEffect(() => {
@@ -232,6 +181,7 @@ export const SmartSplineLoader = memo(({
   const handleSplineLoad = (spline: any) => {
     splineRef.current = spline;
     setLoadState('loaded');
+    setHasSplineLoaded(true);
     onLoad?.();
 
     try {
@@ -254,61 +204,10 @@ export const SmartSplineLoader = memo(({
     onError?.(error);
   };
 
-  const handleUserOptIn = () => {
-    setUserConsent(true);
-    devicePrefs.set(`spline_consent_${scene}`, true);
-  };
-
-  // Show opt-in prompt for mobile/WebView non-critical scenes
-  if (userConsent === false || (userConsent === null && !shouldAutoLoad)) {
-    return (
-      <div className={`flex items-center justify-center w-full h-full bg-black/50 backdrop-blur-sm ${className}`}>
-        <div className="text-center space-y-4 p-6 rounded-2xl bg-white/5 border border-white/10 max-w-md">
-          <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-            <Play className="w-8 h-8 text-white" />
-          </div>
-          <h3 className="text-lg font-semibold text-white">Load 3D Scene?</h3>
-          <p className="text-sm text-white/70">
-            {isMobile
-              ? 'This will load a 3D interactive scene. May use extra data on mobile.'
-              : 'Enable 3D scene for an enhanced experience.'
-            }
-          </p>
-          <button
-            onClick={handleUserOptIn}
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium hover:scale-105 active:scale-95 transition-transform"
-          >
-            Load 3D Scene
-          </button>
-          {fallback && (
-            <button
-              onClick={() => setUserConsent(false)}
-              className="block w-full text-sm text-white/50 hover:text-white/70 transition-colors"
-            >
-              Skip for now
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Show loading state
-  if (loadState === 'loading') {
-    return (
-      <div className={`flex items-center justify-center w-full h-full ${className}`}>
-        <div className="text-center space-y-4">
-          <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto" />
-          <p className="text-sm text-white/60">Loading 3D scene...</p>
-          {isWebView && (
-            <p className="text-xs text-white/40">
-              In-app browser detected. This may take a moment.
-            </p>
-          )}
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    setHasSplineLoaded(false);
+    setLoadState('idle');
+  }, [scene]);
 
   // Show error state
   if (loadState === 'error') {
@@ -343,7 +242,19 @@ export const SmartSplineLoader = memo(({
 
   // Render Spline
   return (
-    <div ref={containerRef} className={`w-full h-full ${className}`}>
+    <div ref={containerRef} className={`relative w-full h-full ${className}`}>
+      {!hasSplineLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center space-y-3">
+            <Loader2 className="w-10 h-10 text-blue-500 animate-spin mx-auto" />
+            {isWebView && (
+              <p className="text-[11px] text-white/50">
+                In-app browser detected — warming assets…
+              </p>
+            )}
+          </div>
+        </div>
+      )}
       <Suspense
         fallback={
           <div className="flex items-center justify-center w-full h-full">

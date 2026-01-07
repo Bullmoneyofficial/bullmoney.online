@@ -11,6 +11,7 @@ import {
   Layers, Lock, Unlock, Zap, ChevronLeft, ChevronRight, SunMoon
 } from 'lucide-react';
 import { installCrashTelemetry, safeMark } from '@/lib/telemetry';
+import { Hint } from '@/components/ui/Hint';
 
 // --- INTERACTION UTILITIES ---
 import { playClick, playHover, playSwipe, createSwipeHandlers } from '@/lib/interactionUtils';
@@ -1279,7 +1280,7 @@ export default function Home() {
 
 
       {/* --- LAYER 6: MAIN CONTENT (3D SCROLL LAYOUT) --- */}
-      <div className={currentStage === 'content' ? 'profit-reveal w-full h-[100dvh] relative' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
+        <div className={currentStage === 'content' ? 'w-full h-[100dvh] relative' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
         {!isTouch && <TargetCursor spinDuration={2} hideDefaultCursor={false} targetSelector=".cursor-target, a, button" />}
 
         {/* FIX: Fixed UI must NOT live inside a transformed/scrolling container on iOS (breaks taps + fixed positioning) */}
@@ -1305,71 +1306,81 @@ export default function Home() {
         />
 
         {/* INFO PANEL & FAQ CONTROLS - Unified for Mobile/Desktop */}
-        <div className="fixed top-24 left-4 md:bottom-8 md:top-auto md:left-8 pointer-events-auto" style={{ zIndex: UI_LAYERS.INFO_PEEKER }}>
+        <div
+          className="fixed left-4 md:bottom-8 md:top-auto md:left-8 pointer-events-auto"
+          style={{ zIndex: UI_LAYERS.INFO_PEEKER, top: 'calc(6rem + env(safe-area-inset-top))' }}
+        >
           <div className="flex flex-col gap-3">
             {/* Info Panel Toggle - Mobile Optimized Card */}
-            <button
-              onClick={(e) => {
-                playClick();
-                if (navigator.vibrate) navigator.vibrate(10);
-                if (e.detail >= 2 || infoPanelOpen) {
-                  setInfoPanelOpen(false);
-                  return;
-                }
-                setInfoPanelOpen(true);
-              }}
-              onMouseEnter={() => playHover()}
-              onTouchStart={(e) => {
-                playHover();
-                e.currentTarget.style.transform = 'scale(0.95)';
-              }}
-              onTouchEnd={(e) => {
-                e.currentTarget.style.transform = '';
-              }}
-              className="md:hidden flex items-center gap-3 bg-black/50 backdrop-blur border border-white/10 px-4 py-3 rounded-2xl text-left shadow-lg active:scale-95 transition-all hover:bg-black/60 min-h-[44px] touch-manipulation"
-              style={{ WebkitTapHighlightColor: 'transparent' }}
-              aria-label="Open info panel"
-            >
-              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                {infoPanelOpen ? <Unlock size={20} className="text-green-400" /> : <Lock size={20} className="text-blue-400" />}
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs text-white/60 tracking-widest">INFO PANEL</span>
-                <span className="text-sm font-bold text-white">{infoPanelOpen ? "Tap to close" : "Swipe or tap"}</span>
-              </div>
-            </button>
+            <Hint label={infoPanelOpen ? 'Close page info' : 'Open page info'}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  playClick();
+                  if (navigator.vibrate) navigator.vibrate(10);
+                  if (e.detail >= 2 || infoPanelOpen) {
+                    setInfoPanelOpen(false);
+                    return;
+                  }
+                  setInfoPanelOpen(true);
+                }}
+                onMouseEnter={() => playHover()}
+                onTouchStart={(e) => {
+                  playHover();
+                  e.currentTarget.style.transform = 'scale(0.95)';
+                }}
+                onTouchEnd={(e) => {
+                  e.currentTarget.style.transform = '';
+                }}
+                className="md:hidden flex items-center gap-3 bg-black/50 backdrop-blur border border-white/10 px-4 py-3 rounded-2xl text-left shadow-lg active:scale-95 transition-all hover:bg-black/60 min-h-[44px] touch-manipulation"
+                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+                aria-label="Open page info"
+              >
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                  {infoPanelOpen ? <Unlock size={20} className="text-green-400" /> : <Lock size={20} className="text-blue-400" />}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-white/60 tracking-widest">INFO PANEL</span>
+                  <span className="text-sm font-bold text-white">{infoPanelOpen ? "Tap to close" : "Swipe or tap"}</span>
+                </div>
+              </button>
+            </Hint>
 
             {/* Info Panel Toggle - Desktop Compact */}
-            <ShineButton
-              className="hidden md:flex w-12 h-12 rounded-full"
-              onClick={(e: any) => {
-                playClick();
-                if (e?.detail >= 2 || infoPanelOpen) {
-                  setInfoPanelOpen(false);
-                  return;
-                }
-                setInfoPanelOpen(true);
-              }}
-              onMouseEnter={() => playHover()}
-            >
-              {infoPanelOpen ? <Unlock size={20} className="text-green-400" /> : <Lock size={20} className="text-blue-400" />}
-            </ShineButton>
+            <Hint label={infoPanelOpen ? 'Close page info' : 'Open page info'}>
+              <ShineButton
+                className="hidden md:flex w-12 h-12 rounded-full"
+                onClick={(e: any) => {
+                  playClick();
+                  if (e?.detail >= 2 || infoPanelOpen) {
+                    setInfoPanelOpen(false);
+                    return;
+                  }
+                  setInfoPanelOpen(true);
+                }}
+                onMouseEnter={() => playHover()}
+              >
+                {infoPanelOpen ? <Unlock size={20} className="text-green-400" /> : <Lock size={20} className="text-blue-400" />}
+              </ShineButton>
+            </Hint>
 
             {/* FAQ Toggle */}
-            <ShineButton
-              className="w-12 h-12 rounded-full"
-              onClick={(e: any) => {
-                playClick();
-                if (e?.detail >= 2 || faqOpen) {
-                  setFaqOpen(false);
-                  return;
-                }
-                setFaqOpen(true);
-              }}
-              onMouseEnter={() => playHover()}
-            >
-              <Info size={20} className={faqOpen ? "text-green-400" : "text-white"} />
-            </ShineButton>
+            <Hint label={faqOpen ? 'Close help' : 'Open help'}>
+              <ShineButton
+                className="w-12 h-12 rounded-full"
+                onClick={(e: any) => {
+                  playClick();
+                  if (e?.detail >= 2 || faqOpen) {
+                    setFaqOpen(false);
+                    return;
+                  }
+                  setFaqOpen(true);
+                }}
+                onMouseEnter={() => playHover()}
+              >
+                <Info size={20} className={faqOpen ? "text-green-400" : "text-white"} />
+              </ShineButton>
+            </Hint>
           </div>
         </div>
 
@@ -1377,7 +1388,7 @@ export default function Home() {
         <main
           ref={scrollContainerRef}
           data-scroll-container
-          className={`w-full h-full flex flex-col overflow-y-scroll overflow-x-hidden unified-scroll ${isTouch ? 'touch-device' : 'non-touch-device snap-y snap-mandatory scroll-smooth'} bg-black no-scrollbar text-white relative`}
+          className={`profit-reveal w-full h-full flex flex-col overflow-y-scroll overflow-x-hidden unified-scroll ${isTouch ? 'touch-device' : 'non-touch-device snap-y snap-mandatory scroll-smooth'} bg-black no-scrollbar text-white relative`}
           onTouchStart={swipeHandlers.onTouchStart}
           onTouchMove={swipeHandlers.onTouchMove}
           onTouchEnd={swipeHandlers.onTouchEnd}

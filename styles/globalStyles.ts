@@ -192,8 +192,8 @@ export const GLOBAL_STYLES = `
   }
   
   @keyframes profitReveal {
-    0% { transform: scale(1.05); opacity: 0; filter: blur(15px); }
-    100% { transform: scale(1); opacity: 1; filter: blur(0px); }
+    0% { opacity: 0; }
+    100% { opacity: 1; }
   }
   
   @keyframes music-bar-1 { 0%, 100% { height: 33%; } 50% { height: 100%; } }
