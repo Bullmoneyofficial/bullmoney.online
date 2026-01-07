@@ -135,7 +135,9 @@ export const Navbar = ({
       <div
         className="fixed top-0 inset-x-0 z-[1000] pointer-events-none select-none h-32 lg:h-24"
         style={{
-          paddingTop: 'env(safe-area-inset-top, 0px)'
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          // Ensure navbar is always visible above content
+          isolation: 'isolate'
         }}
       >
 
@@ -166,8 +168,8 @@ export const Navbar = ({
         </div>
 
         {/* --- MOBILE/TAB LAYOUT --- */}
-        <div className="lg:hidden flex justify-between items-start w-full px-2 sm:px-4 pt-2 sm:pt-4 z-[1010]">
-            <div className="pointer-events-auto pt-2 shrink-0 relative z-50">
+        <div className="lg:hidden flex justify-between items-start w-full px-2 sm:px-4 pt-2 sm:pt-4 z-[1010] relative">
+            <div className="pointer-events-auto pt-2 shrink-0 relative z-[60]">
                <AnimatedLogoWrapper accentColor={accentColor}>
                    <Image
                       src={BullLogo}
@@ -183,7 +185,7 @@ export const Navbar = ({
                </AnimatedLogoWrapper>
             </div>
 
-            <div className="pointer-events-auto ml-2 flex justify-end min-w-0 flex-1 relative z-50">
+            <div className="pointer-events-auto ml-2 flex justify-end min-w-0 flex-1 relative z-[60]">
                <MobileNav
                  setShowConfigurator={setShowConfigurator}
                  setShowIdModal={setShowIdModal}

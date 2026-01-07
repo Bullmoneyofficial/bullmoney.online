@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronUp, ChevronDown, Hand } from 'lucide-react';
 
 interface VerticalPageScrollProps {
   currentPage: number;
@@ -21,13 +22,21 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
   const [isHolding, setIsHolding] = useState(false);
   const [holdPosition, setHoldPosition] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [showHint, setShowHint] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const holdStartTimeRef = useRef<number>(0);
 
+  // Hide hint after first interaction or 8 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => setShowHint(false), 8000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleHoldStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     if (disabled) return;
 
+    setShowHint(false); // Hide hint on first interaction
     setIsHolding(true);
     holdStartTimeRef.current = Date.now();
 
@@ -143,38 +152,75 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
   return (
     <div
       ref={containerRef}
-      className="fixed right-0 top-1/2 -translate-y-1/2 z-[250] pointer-events-auto"
+      className="fixed right-0 top-1/2 -translate-y-1/2 z-[250] pointer-events-auto group"
       style={{
         right: 'max(1rem, env(safe-area-inset-right, 0.5rem))',
       }}
       onTouchStart={handleHoldStart}
       onMouseDown={handleHoldStart}
     >
-      <motion.div
-        className={`
-          relative rounded-full border border-white/20
-          backdrop-blur-xl shadow-2xl
-          flex flex-col items-center gap-2 py-4 px-2
-          transition-all duration-300
-          ${isHolding ? 'bg-black/90 scale-110' : 'bg-black/60'}
-          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-        `}
-        style={{
-          height: 'min(60vh, 400px)',
-          width: '40px',
-          boxShadow: isHolding ? `0 0 30px ${accentColor}60` : '0 10px 30px rgba(0,0,0,0.3)',
-        }}
-      >
+      {/* Shimmer Border Effect */}
+      <div className="relative">
+        <motion.div
+          className="absolute inset-[-2px] rounded-full opacity-75"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          style={{
+            background: `conic-gradient(from 90deg at 50% 50%, transparent 0%, ${accentColor} 50%, transparent 100%)`,
+            filter: 'blur(4px)',
+          }}
+        />
+
+        <motion.div
+          className={`
+            relative rounded-full border-2
+            backdrop-blur-xl shadow-2xl
+            flex flex-col items-center gap-3 py-5 px-2.5
+            transition-all duration-300
+            ${isHolding ? 'bg-black/95 scale-110' : 'bg-black/70'}
+            ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+          `}
+          style={{
+            height: 'min(65vh, 450px)',
+            width: '48px',
+            borderColor: isHolding ? accentColor : `${accentColor}40`,
+            boxShadow: isHolding
+              ? `0 0 40px ${accentColor}80, 0 0 80px ${accentColor}40, inset 0 0 20px ${accentColor}20`
+              : `0 10px 40px rgba(0,0,0,0.5), inset 0 0 10px ${accentColor}10`,
+          }}
+        >
+        {/* Scroll Up Arrow */}
+        <motion.div
+          className="w-6 h-6 flex items-center justify-center rounded-full mb-1"
+          style={{
+            backgroundColor: currentPage === 1 ? `${accentColor}20` : `${accentColor}40`,
+            opacity: currentPage === 1 ? 0.3 : 1,
+          }}
+          whileHover={currentPage > 1 ? { scale: 1.2 } : {}}
+          whileTap={currentPage > 1 ? { scale: 0.9 } : {}}
+        >
+          <ChevronUp
+            size={14}
+            style={{ color: currentPage === 1 ? '#666' : accentColor }}
+          />
+        </motion.div>
+
         {/* Hold Indicator */}
         <AnimatePresence>
           {isScrolling && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="absolute -left-16 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-full bg-black/80 border border-white/20 backdrop-blur-xl"
+              initial={{ opacity: 0, x: -20, scale: 0.8 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: -20, scale: 0.8 }}
+              className="absolute -left-20 top-1/2 -translate-y-1/2 px-3 py-2 rounded-full border-2 backdrop-blur-xl"
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.9)',
+                borderColor: accentColor,
+                boxShadow: `0 0 20px ${accentColor}60`,
+              }}
             >
-              <div className="text-[10px] font-bold text-white whitespace-nowrap">
+              <div className="text-xs font-bold text-white whitespace-nowrap flex items-center gap-2">
+                <Hand size={14} style={{ color: accentColor }} />
                 Scrolling
               </div>
             </motion.div>
@@ -218,29 +264,88 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
           <AnimatePresence>
             {isHolding && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute left-0 right-0 h-1 rounded-full"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="absolute left-0 right-0 h-1.5 rounded-full"
                 style={{
                   backgroundColor: accentColor,
                   top: `${holdPosition * 100}%`,
-                  boxShadow: `0 0 10px ${accentColor}`,
+                  boxShadow: `0 0 15px ${accentColor}, 0 0 30px ${accentColor}60`,
                 }}
               />
             )}
           </AnimatePresence>
         </div>
 
-        {/* Instructions */}
-        {!isHolding && (
-          <div className="absolute -left-24 top-1/2 -translate-y-1/2 px-2 py-1 rounded-md bg-black/60 border border-white/10 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            <div className="text-[9px] font-semibold text-white/80 whitespace-nowrap">
-              Tap or Hold to Scroll
-            </div>
+        {/* Scroll Down Arrow */}
+        <motion.div
+          className="w-6 h-6 flex items-center justify-center rounded-full mt-1"
+          style={{
+            backgroundColor: currentPage === totalPages ? `${accentColor}20` : `${accentColor}40`,
+            opacity: currentPage === totalPages ? 0.3 : 1,
+          }}
+          whileHover={currentPage < totalPages ? { scale: 1.2 } : {}}
+          whileTap={currentPage < totalPages ? { scale: 0.9 } : {}}
+        >
+          <ChevronDown
+            size={14}
+            style={{ color: currentPage === totalPages ? '#666' : accentColor }}
+          />
+        </motion.div>
+
+        {/* Hint - Shows on first load */}
+        <AnimatePresence>
+          {showHint && !isHolding && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ delay: 1, duration: 0.5 }}
+              className="absolute -left-32 top-1/2 -translate-y-1/2 px-4 py-3 rounded-xl border-2 backdrop-blur-xl pointer-events-none"
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.95)',
+                borderColor: accentColor,
+                boxShadow: `0 0 30px ${accentColor}40`,
+                maxWidth: '200px',
+              }}
+            >
+              <div className="flex items-start gap-2 mb-2">
+                <Hand size={16} style={{ color: accentColor, flexShrink: 0 }} />
+                <div className="text-xs font-bold text-white">Scroll Navigation</div>
+              </div>
+              <div className="text-[10px] text-white/70 leading-relaxed space-y-1">
+                <div>• <span style={{ color: accentColor }}>Tap</span> dots to jump</div>
+                <div>• <span style={{ color: accentColor }}>Hold</span> to scroll</div>
+                <div>• <span style={{ color: accentColor }}>Drag</span> for control</div>
+              </div>
+              <motion.div
+                className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full"
+                style={{ backgroundColor: accentColor }}
+                animate={{
+                  scale: [1, 1.5, 1],
+                  opacity: [1, 0.5, 1],
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Page Counter */}
+        <div
+          className="absolute -left-14 top-4 px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+          style={{
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            border: `1px solid ${accentColor}40`,
+          }}
+        >
+          <div className="text-[10px] font-bold whitespace-nowrap" style={{ color: accentColor }}>
+            {currentPage}/{totalPages}
           </div>
-        )}
+        </div>
       </motion.div>
+      </div>
     </div>
   );
 };

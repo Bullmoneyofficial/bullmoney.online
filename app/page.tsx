@@ -1627,15 +1627,16 @@ export default function Home() {
         {!isTouch && <TargetCursor spinDuration={2} hideDefaultCursor={false} targetSelector=".cursor-target, a, button" />}
 
         {/* FIX: Fixed UI must NOT live inside a transformed/scrolling container on iOS (breaks taps + fixed positioning) */}
-        {/* UNIFIED NAVIGATION - Same on Mobile & Desktop */}
-        <UnifiedNavigation
+        {/* UNIFIED NAVIGATION - PERMANENTLY DISABLED - Using VerticalPageScroll instead */}
+        {/* Bottom page navigation removed to prevent duplicate scroll viewers */}
+        {/* <UnifiedNavigation
           currentPage={activePage}
           totalPages={visiblePages.length}
           pages={visiblePages}
           onPageChange={scrollToPage}
           accentColor={accentColor}
           disabled={currentStage !== 'content'}
-        />
+        /> */}
 
         {/* UNIFIED CONTROLS - HIDDEN (Controls moved to Navbar) */}
         {/* Keeping this component but hidden for backward compatibility */}
