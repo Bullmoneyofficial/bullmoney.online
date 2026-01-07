@@ -597,10 +597,11 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMu
          </div>
          <div
             ref={scrollRef}
-            className="flex items-center gap-1.5 overflow-x-auto scroll-smooth pr-1 pb-2 max-w-[45vw] sm:max-w-[55vw] md:max-w-none no-scrollbar"
+            className="flex items-center gap-1.5 overflow-x-auto scroll-smooth pr-1 pb-2 no-scrollbar"
             style={{
               scrollbarWidth: 'none',
-              msOverflowStyle: 'none'
+              msOverflowStyle: 'none',
+              maxWidth: 'calc(100vw - 180px)', // Account for logo and menu button
             }}
          >
             {/* 1. Loop standard items */}
