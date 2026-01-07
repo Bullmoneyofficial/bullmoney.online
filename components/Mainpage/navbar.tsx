@@ -168,24 +168,25 @@ export const Navbar = ({
         </div>
 
         {/* --- MOBILE/TAB LAYOUT --- */}
-        <div className="lg:hidden flex justify-between items-start w-full px-2 sm:px-4 pt-2 sm:pt-4 z-[1010] relative">
-            <div className="pointer-events-auto pt-2 shrink-0 relative z-[60]">
+        {/* BUG FIX #10: Fixed mobile layout to prevent navbar cutoff */}
+        <div className="lg:hidden flex justify-between items-start w-full px-2 sm:px-4 pt-2 sm:pt-4 z-[1010] relative gap-2">
+            <div className="pointer-events-auto pt-2 shrink-0 relative z-[60] max-w-[40%]">
                <AnimatedLogoWrapper accentColor={accentColor}>
                    <Image
                       src={BullLogo}
                       alt="Bull Logo"
                       width={40}
                       height={40}
-                      className="object-contain"
+                      className="object-contain shrink-0"
                       priority
                    />
-                   <span className="font-black text-base sm:text-xl tracking-tighter text-neutral-900 dark:text-white whitespace-nowrap">
+                   <span className="font-black text-base sm:text-xl tracking-tighter text-neutral-900 dark:text-white whitespace-nowrap overflow-hidden text-ellipsis">
                       BULLMONEY
                    </span>
                </AnimatedLogoWrapper>
             </div>
 
-            <div className="pointer-events-auto ml-2 flex justify-end min-w-0 flex-1 relative z-[60]">
+            <div className="pointer-events-auto flex justify-end min-w-0 flex-1 relative z-[60] overflow-visible">
                <MobileNav
                  setShowConfigurator={setShowConfigurator}
                  setShowIdModal={setShowIdModal}
@@ -338,11 +339,17 @@ const Dock = memo(({ items, setShowConfigurator, setShowIdModal, accentColor }: 
   // Total items = NAV_ITEMS + ID + Theme
   const [activeTipIndex, setActiveTipIndex] = useState(0);
 
+  // BUG FIX #9: Properly clean up interval on unmount
   useEffect(() => {
     const intervalId = setInterval(() => {
       setActiveTipIndex((prev) => (prev + 1) % (items.length + 2));
-    }, 4000); 
-    return () => clearInterval(intervalId);
+    }, 4000);
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
   }, [items.length]);
 
   const themeItemData: NavItem = {
@@ -566,13 +573,19 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMu
     }
   ];
 
+  // BUG FIX #9: Properly clean up interval on unmount
   useEffect(() => {
     // Total items: NAV_ITEMS + controlItems + Theme + ID
     const totalItems = NAV_ITEMS.length + controlItems.length + 2;
     const intervalId = setInterval(() => {
       setActiveTipIndex((prev) => (prev + 1) % totalItems);
     }, 4000);
-    return () => clearInterval(intervalId);
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
   }, [controlItems.length]);
 
   const handleOpenConfigurator = useCallback(() => {
@@ -595,13 +608,15 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMu
          <div className="absolute left-0 right-0 bottom-0 h-0.5 bg-white/10 md:hidden">
            <div className="h-full w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
          </div>
+         {/* BUG FIX #10: Fixed scrollable area width calculation */}
          <div
             ref={scrollRef}
-            className="flex items-center gap-1.5 overflow-x-auto scroll-smooth pr-1 pb-2 no-scrollbar"
+            className="flex items-center gap-1.5 overflow-x-auto scroll-smooth pr-1 pb-2 no-scrollbar max-w-full"
             style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
-              maxWidth: 'calc(100vw - 180px)', // Account for logo and menu button
+              // Adaptive max width based on viewport
+              maxWidth: 'min(calc(100vw - 140px), calc(100vw - 40% - 80px))',
             }}
          >
             {/* 1. Loop standard items */}
@@ -743,15 +758,20 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMu
       </div>
 
       {/* ... Expanded Menu ... */}
+      {/* BUG FIX #10: Fixed expanded menu to be fully visible on mobile */}
       <AnimatePresence>
         {open && (
            <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="w-full min-w-[200px] overflow-hidden rounded-b-2xl relative z-40" 
+            className="absolute top-full left-0 right-0 mt-1 min-w-[200px] max-w-full overflow-hidden rounded-2xl z-[70] shadow-2xl"
+            style={{
+              // Ensure it doesn't overflow viewport
+              maxHeight: 'calc(100vh - 120px)',
+            }}
           >
-            <div className="px-4 pb-4 pt-2 flex flex-col gap-3 border-t border-neutral-100 dark:border-white/5 w-full bg-white/95 dark:bg-neutral-950/95">
+            <div className="px-4 pb-4 pt-2 flex flex-col gap-3 border-t border-neutral-100 dark:border-white/5 w-full bg-white/95 dark:bg-neutral-950/95 overflow-y-auto max-h-[70vh]">
                {[...FOOTER_NAV_ITEMS, ...NAV_ITEMS].map((item, i) => (
                   <Link
                     key={i}

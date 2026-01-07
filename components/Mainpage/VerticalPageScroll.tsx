@@ -23,15 +23,76 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
   const [holdPosition, setHoldPosition] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
   const [showHint, setShowHint] = useState(true);
+  // BUG FIX #13: Detect if desktop for keyboard hints
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [showKeyboardHint, setShowKeyboardHint] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const holdStartTimeRef = useRef<number>(0);
 
+  // BUG FIX #13: Detect desktop vs mobile
+  useEffect(() => {
+    const checkDevice = () => {
+      const isDesktopDevice = window.innerWidth >= 1024 && !('ontouchstart' in window);
+      setIsDesktop(isDesktopDevice);
+    };
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
+  }, []);
+
   // Hide hint after first interaction or 8 seconds
   useEffect(() => {
-    const timer = setTimeout(() => setShowHint(false), 8000);
+    const timer = setTimeout(() => {
+      setShowHint(false);
+      // BUG FIX #13: Show keyboard hint on desktop after main hint fades
+      if (isDesktop) {
+        setTimeout(() => setShowKeyboardHint(true), 500);
+      }
+    }, 8000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [isDesktop]);
+
+  // BUG FIX #13: Add keyboard navigation for desktop (Arrow keys, Page Up/Down)
+  useEffect(() => {
+    if (!isDesktop || disabled) return;
+
+    const handleKeyboard = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowUp':
+        case 'PageUp':
+          e.preventDefault();
+          if (currentPage > 1) {
+            onPageChange(currentPage - 1);
+            if (navigator.vibrate) navigator.vibrate(10);
+            setShowKeyboardHint(false); // Hide hint after first use
+          }
+          break;
+        case 'ArrowDown':
+        case 'PageDown':
+          e.preventDefault();
+          if (currentPage < totalPages) {
+            onPageChange(currentPage + 1);
+            if (navigator.vibrate) navigator.vibrate(10);
+            setShowKeyboardHint(false); // Hide hint after first use
+          }
+          break;
+        case 'Home':
+          e.preventDefault();
+          onPageChange(1);
+          setShowKeyboardHint(false);
+          break;
+        case 'End':
+          e.preventDefault();
+          onPageChange(totalPages);
+          setShowKeyboardHint(false);
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyboard);
+    return () => window.removeEventListener('keydown', handleKeyboard);
+  }, [isDesktop, disabled, currentPage, totalPages, onPageChange]);
 
   const handleHoldStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     if (disabled) return;
@@ -84,8 +145,14 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
     }
   }, [holdPosition, totalPages, onPageChange]);
 
-  // Auto-scroll when holding
+  // BUG FIX #8: Auto-scroll when holding - properly clean up interval
   useEffect(() => {
+    // Always clean up any existing interval first
+    if (scrollIntervalRef.current) {
+      clearInterval(scrollIntervalRef.current);
+      scrollIntervalRef.current = null;
+    }
+
     if (isHolding && !disabled) {
       const holdDuration = Date.now() - holdStartTimeRef.current;
 
@@ -101,21 +168,23 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
           }
         }, 150);
       }
-
-      return () => {
-        if (scrollIntervalRef.current) {
-          clearInterval(scrollIntervalRef.current);
-          scrollIntervalRef.current = null;
-        }
-      };
     }
+
+    // BUG FIX #8: Always clean up interval on effect cleanup
+    return () => {
+      if (scrollIntervalRef.current) {
+        clearInterval(scrollIntervalRef.current);
+        scrollIntervalRef.current = null;
+      }
+    };
   }, [isHolding, holdPosition, currentPage, totalPages, onPageChange, disabled]);
 
-  // Clean up on unmount
+  // BUG FIX #8: Additional cleanup on unmount as safety net
   useEffect(() => {
     return () => {
       if (scrollIntervalRef.current) {
         clearInterval(scrollIntervalRef.current);
+        scrollIntervalRef.current = null;
       }
     };
   }, []);
@@ -144,8 +213,16 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
     }
   }, [isHolding, handleHoldMove, handleHoldEnd]);
 
-  // Adaptive sizing based on number of pages
+  // BUG FIX #13: Adaptive sizing based on number of pages AND device
   const getScrollbarHeight = () => {
+    // Mobile-first: smaller, more compact
+    if (!isDesktop) {
+      if (totalPages <= 5) return 'min(45vh, 240px)';
+      if (totalPages <= 7) return 'min(40vh, 220px)';
+      if (totalPages <= 10) return 'min(35vh, 200px)';
+      return 'min(32vh, 180px)';
+    }
+    // Desktop: larger, more comfortable
     if (totalPages <= 5) return 'min(55vh, 320px)';
     if (totalPages <= 7) return 'min(50vh, 280px)';
     if (totalPages <= 10) return 'min(45vh, 250px)';
@@ -207,10 +284,11 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
           }}
         >
         {/* Scroll Up Arrow */}
+        {/* BUG FIX #11: Fixed page navigation - should go to previous page, not -2 */}
         <motion.button
           onClick={() => {
             if (currentPage > 1) {
-              onPageChange(currentPage - 2);
+              onPageChange(currentPage - 1);
               if (navigator.vibrate) navigator.vibrate(10);
             }
           }}
@@ -305,10 +383,11 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
         </div>
 
         {/* Scroll Down Arrow */}
+        {/* BUG FIX #11: Fixed page navigation - should go to next page, not current */}
         <motion.button
           onClick={() => {
             if (currentPage < totalPages) {
-              onPageChange(currentPage);
+              onPageChange(currentPage + 1);
               if (navigator.vibrate) navigator.vibrate(10);
             }
           }}
@@ -328,9 +407,9 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
           />
         </motion.button>
 
-        {/* Hint - Shows on first load */}
+        {/* Touch Hint - Shows on first load (mobile/touch devices) */}
         <AnimatePresence>
-          {showHint && !isHolding && (
+          {showHint && !isHolding && !isDesktop && (
             <motion.div
               initial={{ opacity: 0, x: -15 }}
               animate={{ opacity: 1, x: 0 }}
@@ -351,6 +430,43 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
               <div className="text-[9px] text-white/60 leading-snug space-y-0.5">
                 <div>• <span style={{ color: accentColor }}>Tap</span> dots</div>
                 <div>• <span style={{ color: accentColor }}>Hold</span> & drag</div>
+              </div>
+              <motion.div
+                className="absolute -right-0.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full"
+                style={{ backgroundColor: accentColor }}
+                animate={{
+                  scale: [1, 1.5, 1],
+                  opacity: [1, 0.5, 1],
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* BUG FIX #13: Keyboard Hint - Desktop only */}
+        <AnimatePresence>
+          {showKeyboardHint && !isHolding && isDesktop && (
+            <motion.div
+              initial={{ opacity: 0, x: -15 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -15 }}
+              transition={{ duration: 0.5 }}
+              className="absolute -left-32 top-1/2 -translate-y-1/2 px-3 py-2 rounded-lg border backdrop-blur-xl pointer-events-none"
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.95)',
+                borderColor: accentColor,
+                boxShadow: `0 0 20px ${accentColor}30`,
+                maxWidth: '160px',
+              }}
+            >
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <div className="text-[10px] font-bold text-white">⌨️ Keyboard</div>
+              </div>
+              <div className="text-[9px] text-white/60 leading-snug space-y-0.5">
+                <div>• <span style={{ color: accentColor }}>↑/↓</span> arrows</div>
+                <div>• <span style={{ color: accentColor }}>PgUp/PgDn</span></div>
+                <div>• <span style={{ color: accentColor }}>Home/End</span></div>
               </div>
               <motion.div
                 className="absolute -right-0.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full"
