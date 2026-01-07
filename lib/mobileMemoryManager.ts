@@ -38,14 +38,9 @@ class MobileMemoryManager {
     this.isLowMemory = memory < 4 || isSlowConnection;
 
     // Set max concurrent scenes based on device capability
+    // CRITICAL FIX: Reduced to 1 scene for ALL mobile devices to prevent crashes
     if (this.isMobile) {
-      if (this.isLowMemory) {
-        this.maxConcurrentScenes = 1; // Very conservative for low-end mobile
-      } else if (memory >= 6) {
-        this.maxConcurrentScenes = 2; // High-end mobile can handle 2
-      } else {
-        this.maxConcurrentScenes = 1; // Mid-range mobile: 1 at a time
-      }
+      this.maxConcurrentScenes = 1; // ALWAYS 1 on mobile to prevent WebGL crashes
     } else {
       // Desktop
       if (memory >= 8) {

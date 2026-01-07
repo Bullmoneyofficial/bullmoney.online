@@ -281,9 +281,30 @@ export const BackgroundMusicSystem = ({ themeId, onReady, volume, trackKey }: { 
     height: '1', width: '1',
     playerVars: { autoplay: 1, controls: 0, loop: 1, playlist: videoId, modestbranding: 1, playsinline: 1, enablejsapi: 1, origin: typeof window !== 'undefined' ? window.location.origin : undefined },
   };
+  const playerRef = useRef<any>(null);
+
+  // CRITICAL FIX: Properly destroy YouTube player on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (playerRef.current?.destroy) {
+        try {
+          playerRef.current.destroy();
+        } catch (e) {
+          console.warn('[BackgroundMusicSystem] Error destroying player:', e);
+        }
+        playerRef.current = null;
+      }
+    };
+  }, [trackKey]); // Cleanup when track changes
+
   return (
     <div key={`music-${themeId}-${trackKey}`} className="fixed bottom-0 left-0 opacity-0 pointer-events-none z-[-1] overflow-hidden w-px h-px">
-      <YouTube videoId={videoId} opts={opts} onReady={(e: YouTubeEvent) => { if(e.target) onReady(e.target); }} />
+      <YouTube videoId={videoId} opts={opts} onReady={(e: YouTubeEvent) => {
+        if(e.target) {
+          playerRef.current = e.target;
+          onReady(e.target);
+        }
+      }} />
     </div>
   );
 };

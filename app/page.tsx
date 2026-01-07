@@ -388,14 +388,15 @@ export default function Home() {
     document.body.style.overscrollBehavior = 'contain';
 
     // ULTRA-OPTIMIZED: 60fps scroll with advanced RAF throttling
+    // CRITICAL FIX: Disabled parallax on mobile to prevent crashes
     let rafId: number | null = null;
     let lastScrollTime = 0;
     let ticking = false;
 
     const handleScroll = () => {
       if (prefersReducedMotionRef.current) return;
-      // Avoid re-rendering every frame on touch devices (major scroll jank source on iOS/Android)
-      if (isTouchRef.current) return;
+      // CRITICAL FIX: Disable parallax completely on touch devices to prevent crashes
+      if (isTouchRef.current || touch) return;
 
       const now = performance.now();
 
@@ -1398,15 +1399,16 @@ export default function Home() {
         </div>
       )}
 
-      {/* --- LAYER 3: GLOBAL THEME LENS --- */}
-      <div 
+      {/* --- LAYER 3: GLOBAL THEME LENS (DISABLED FOR MOBILE STABILITY) --- */}
+      {/* CRITICAL FIX: Backdrop filters cause crashes on iOS Safari - disabled on mobile */}
+      <div
         className="fixed inset-0 pointer-events-none w-screen h-screen"
-        style={{ 
+        style={{
           zIndex: UI_LAYERS.SCROLL_INDICATOR,
-      backdropFilter: deviceProfile.prefersReducedMotion ? 'none' : activeTheme.filter, 
-      WebkitBackdropFilter: deviceProfile.prefersReducedMotion ? 'none' : activeTheme.filter, 
-          transition: 'backdrop-filter 0.5s ease' 
-        }} 
+          backdropFilter: (deviceProfile.prefersReducedMotion || deviceProfile.isMobile || isTouch) ? 'none' : activeTheme.filter,
+          WebkitBackdropFilter: (deviceProfile.prefersReducedMotion || deviceProfile.isMobile || isTouch) ? 'none' : activeTheme.filter,
+          transition: 'backdrop-filter 0.5s ease'
+        }}
       />
 
       {/* --- LAYER 4: LOADING / GATING SCREENS --- */}

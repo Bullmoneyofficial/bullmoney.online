@@ -491,14 +491,15 @@ export default function ShopPage() {
             </div>
         )}
 
-        {/* GLOBAL THEME LENS (Z-Index 200,000) - Sits on top of Loaders to tint them */}
-        <div 
+        {/* GLOBAL THEME LENS (Z-Index 200,000) - DISABLED ON MOBILE FOR STABILITY */}
+        {/* CRITICAL FIX: Backdrop filters cause Safari crashes on iPhone - disabled on mobile */}
+        <div
             id="global-theme-lens"
             className="fixed inset-0 pointer-events-none w-screen h-screen z-[200000]"
-            style={{ 
-                backdropFilter: activeTheme.filter,
-                WebkitBackdropFilter: activeTheme.filter, 
-                transition: 'backdrop-filter 0.5s ease' 
+            style={{
+                backdropFilter: (typeof window !== 'undefined' && (window.innerWidth < 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) ? 'none' : activeTheme.filter,
+                WebkitBackdropFilter: (typeof window !== 'undefined' && (window.innerWidth < 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) ? 'none' : activeTheme.filter,
+                transition: 'backdrop-filter 0.5s ease'
             }}
         />
 
