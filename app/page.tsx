@@ -138,6 +138,8 @@ export default function Home() {
   const [heroSceneReady, setHeroSceneReady] = useState(false);
   const [heroLoaderHidden, setHeroLoaderHidden] = useState(false);
   const [contentMounted, setContentMounted] = useState(false);
+  const [hasSeenIntro, setHasSeenIntro] = useState(false);
+  const [hasSeenHold, setHasSeenHold] = useState(false);
   
   // File 1 States
   const [activePage, setActivePage] = useState<number>(1);
@@ -439,10 +441,14 @@ export default function Home() {
     const storedMute = userStorage.get('user_is_muted');
     const storedVol = userStorage.get('user_volume');
     const hasRegisteredUser = userStorage.get('vip_user_registered') === 'true';
+    const introSeenFlag = userStorage.get('bm_intro_seen') === 'true';
+    const holdSeenFlag = userStorage.get('bm_hold_seen') === 'true';
 
     if (storedTheme) setActiveThemeId(storedTheme);
     if (storedMute !== null) setIsMuted(storedMute === 'true');
     if (storedVol) setVolume(parseInt(storedVol));
+    setHasSeenIntro(introSeenFlag);
+    setHasSeenHold(holdSeenFlag);
     setHasRegistered(hasRegisteredUser);
     setCurrentStage("v2");
     
@@ -793,20 +799,31 @@ export default function Home() {
   const handleRegisterComplete = useCallback(() => {
     userStorage.set('vip_user_registered', 'true');
     setHasRegistered(true);
-    setCurrentStage("hold");
-  }, []);
+    const holdShown = hasSeenHold || userStorage.get('bm_hold_seen') === 'true';
+    if (holdShown) {
+      setCurrentStage("content");
+    } else {
+      userStorage.set('bm_hold_seen', 'true');
+      setHasSeenHold(true);
+      setCurrentStage("hold");
+    }
+  }, [hasSeenHold]);
   
   const handleHoldComplete = useCallback(() => setCurrentStage("content"), []);
   
   const handleV2Complete = useCallback(() => { 
     safePlay(); 
+    if (!hasSeenIntro) {
+      userStorage.set('bm_intro_seen', 'true');
+      setHasSeenIntro(true);
+    }
     setParticleTrigger(prev => prev + 1);
     if (hasRegistered) {
       setCurrentStage("content"); 
     } else {
       setCurrentStage("register");
     }
-  }, [hasRegistered, safePlay]);
+  }, [hasRegistered, safePlay, hasSeenIntro]);
 
   // Safety net: auto-advance the intro loader so users never get stuck
   useEffect(() => {

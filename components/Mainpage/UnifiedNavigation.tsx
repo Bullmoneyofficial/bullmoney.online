@@ -77,7 +77,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
         className="fixed bottom-8 left-1/2 -translate-x-1/2 pointer-events-none"
         style={{
           zIndex: UI_LAYERS.PROGRESS_BAR,
-          bottom: 'calc(2rem + env(safe-area-inset-bottom))',
+          bottom: 'calc(4.75rem + env(safe-area-inset-bottom))',
         }}
       >
         <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 backdrop-blur-xl border border-white/20">
@@ -179,7 +179,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
             zIndex: UI_LAYERS.NAV_MOBILE_FAB,
             borderColor: accentColor,
             boxShadow: `0 0 30px ${accentColor}60, 0 4px 20px rgba(0,0,0,0.5)`,
-            bottom: 'calc(1.5rem + env(safe-area-inset-bottom))',
+            bottom: 'calc(4.25rem + env(safe-area-inset-bottom))',
             right: 'calc(1.5rem + env(safe-area-inset-right))',
           }}
           aria-label={isGridOpen ? 'Close navigation' : 'Open navigation'}

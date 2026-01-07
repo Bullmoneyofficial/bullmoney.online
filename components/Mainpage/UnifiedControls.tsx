@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { HelpCircle, Lock, Palette, SunMoon, Unlock, Volume2, VolumeX, Zap } from 'lucide-react';
 import { UI_LAYERS, GAME_UI_CONFIG } from '@/lib/uiLayers';
 import { playClick, playHover } from '@/lib/interactionUtils';
@@ -23,10 +23,6 @@ interface UnifiedControlsProps {
   disabled?: boolean;
 }
 
-/**
- * UnifiedControls - Game-like control panel
- * Same on mobile and desktop, always visible in bottom-left
- */
 export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
   isMuted,
   onMuteToggle,
@@ -43,7 +39,12 @@ export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
   accentColor = '#3b82f6',
   disabled = false
 }) => {
-  const [expanded, setExpanded] = useState(false);
+  const [showHint, setShowHint] = React.useState(true);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setShowHint(false), 12000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleMuteToggle = () => {
     playClick();
@@ -82,13 +83,27 @@ export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
     onSettingsClick();
   };
 
-  const toggleExpanded = () => {
+  const handleControlCenterToggle = () => {
     playClick();
     if (navigator.vibrate) navigator.vibrate(GAME_UI_CONFIG.HAPTICS.LIGHT);
-    setExpanded(!expanded);
+    setShowHint(false);
+    if (onControlCenterToggle) {
+      onControlCenterToggle();
+    } else {
+      onThemePanelOpen();
+    }
+  };
+
+  const controlCenterButton = {
+    icon: Zap,
+    onClick: handleControlCenterToggle,
+    label: controlCenterOpen ? 'Close Control Center' : 'Open Control Center',
+    color: accentColor,
+    active: controlCenterOpen,
   };
 
   const controlButtons = [
+    controlCenterButton,
     {
       icon: infoPanelOpen ? Unlock : Lock,
       onClick: handleInfoClick,
@@ -130,115 +145,70 @@ export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
     });
   }
 
-  // Mobile: keep it clean (avoid huge stacks covering content).
-  if (isMobile) {
-    return (
-      <div
-        className="fixed left-4 flex flex-col-reverse gap-3"
-        style={{
-          zIndex: UI_LAYERS.CONTROL_CENTER_BTN,
-          bottom: 'calc(1.25rem + env(safe-area-inset-bottom))',
-        }}
-      >
-        <Hint label={controlCenterOpen ? 'Close Control Center' : 'Open Control Center'}>
-          <button
-            onClick={onControlCenterToggle || handleThemeClick}
-            onMouseEnter={() => playHover()}
-            disabled={disabled}
-            className={`
-              w-16 h-16 rounded-full
-              bg-black/90 backdrop-blur-2xl border-2
-              flex items-center justify-center
-              transition-all duration-300
-              hover:scale-110 active:scale-95
-              ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-            `}
-            style={{
-              borderColor: accentColor,
-              boxShadow: `0 0 30px ${accentColor}60, 0 4px 20px rgba(0,0,0,0.5)`,
-            }}
-            aria-label={controlCenterOpen ? 'Close Control Center' : 'Open Control Center'}
-          >
-            <Zap
-              size={28}
-              style={{ color: accentColor }}
-              className="transition-transform duration-300"
-            />
-          </button>
-        </Hint>
-      </div>
-    );
-  }
-
   return (
     <div
-      className="fixed left-4 flex flex-col-reverse gap-3"
+      className="fixed inset-x-3 pointer-events-none"
       style={{
         zIndex: UI_LAYERS.CONTROL_CENTER_BTN,
-        bottom: 'calc(1.25rem + env(safe-area-inset-bottom))',
+        bottom: 'calc(1rem + env(safe-area-inset-bottom))',
       }}
     >
-      {/* Control Buttons - Show when expanded */}
-      <div
-        className={`
-          flex flex-col-reverse gap-3 transition-all duration-300
-          ${expanded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
-        `}
-      >
-        {controlButtons.map((button, index) => (
-          <Hint key={index} label={button.label}>
-            <button
-              onClick={button.onClick}
-              onMouseEnter={() => playHover()}
-              disabled={disabled}
-              className={`
-                w-12 h-12 rounded-full
-                bg-black/80 backdrop-blur-xl border-2
-                flex items-center justify-center
-                transition-all duration-300
-                hover:scale-110 active:scale-95
-                ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-              `}
-              style={{
-                borderColor: button.color,
-                boxShadow: `0 0 20px ${button.color}40, 0 4px 15px rgba(0,0,0,0.5)`,
-              }}
-              aria-label={button.label}
-            >
-              <button.icon size={20} style={{ color: button.color }} />
-            </button>
-          </Hint>
-        ))}
-      </div>
-
-      {/* Main Control Button */}
-      <Hint label={expanded ? 'Close controls' : 'Open controls'}>
-        <button
-          onClick={toggleExpanded}
-          onMouseEnter={() => playHover()}
-          disabled={disabled}
+      <div className="pointer-events-auto mx-auto w-full max-w-3xl">
+        <div
           className={`
-            w-16 h-16 rounded-full
-            bg-black/90 backdrop-blur-2xl border-2
-            flex items-center justify-center
-            transition-all duration-300
-            hover:scale-110 active:scale-95
-            ${expanded ? 'rotate-90' : 'rotate-0'}
-            ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+            flex items-center
+            rounded-2xl border border-white/10
+            bg-black/80 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.45)]
+            ${isMobile ? 'justify-between gap-2 px-2 py-2 overflow-x-auto no-scrollbar' : 'justify-center gap-3 px-3 py-3'}
           `}
           style={{
-            borderColor: accentColor,
-            boxShadow: `0 0 30px ${accentColor}60, 0 4px 20px rgba(0,0,0,0.5)`,
+            boxShadow: `0 20px 60px ${accentColor}25`,
           }}
-          aria-label={expanded ? 'Close controls' : 'Open controls'}
         >
-          <Zap
-            size={28}
-            style={{ color: accentColor }}
-            className={`transition-transform duration-300 ${expanded ? 'scale-125' : 'scale-100'}`}
-          />
+          {controlButtons.map((button, index) => (
+            <Hint key={index} label={button.label}>
+              <button
+                onClick={button.onClick}
+                onMouseEnter={() => playHover()}
+                disabled={disabled}
+                className={`
+                  flex items-center justify-center rounded-full border-2
+                  transition-all duration-300 active:scale-95
+                  ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}
+                  ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}
+                  ${button.active ? 'bg-white/10' : 'bg-black/70'}
+                `}
+                style={{
+                  borderColor: button.color,
+                  boxShadow: `0 0 18px ${button.color}40, 0 4px 12px rgba(0,0,0,0.5)`,
+                }}
+                aria-label={button.label}
+              >
+                <button.icon size={isMobile ? 18 : 20} style={{ color: button.color }} />
+              </button>
+            </Hint>
+          ))}
+        </div>
+      </div>
+
+      {/* Mobile hint & quick toggle */}
+      {isMobile && showHint && (
+        <button
+          onClick={handleControlCenterToggle}
+          className="pointer-events-auto fixed right-3 flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] shadow-[0_10px_50px_rgba(59,130,246,0.35)] animate-pulse"
+          style={{
+            zIndex: UI_LAYERS.CONTROL_CENTER_BTN + 1,
+            bottom: 'calc(4.5rem + env(safe-area-inset-bottom))',
+            backgroundColor: 'rgba(59,130,246,0.85)',
+            color: '#0b1224',
+            boxShadow: `0 0 30px ${accentColor}70`,
+            border: `1px solid ${accentColor}`,
+          }}
+        >
+          <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+          Tap me for 3D controls + more
         </button>
-      </Hint>
+      )}
     </div>
   );
 };
