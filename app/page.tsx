@@ -1569,14 +1569,22 @@ export default function Home() {
         </div>
       )}
 
-      {/* --- LAYER 5: NAVBAR --- */}
+      {/* --- LAYER 5: NAVBAR WITH CONTROLS --- */}
       {currentStage === 'content' && (
         <div style={{ zIndex: UI_LAYERS.NAVBAR }}>
-          <Navbar 
-            setShowConfigurator={setShowConfigurator} 
-            activeThemeId={activeThemeId} 
+          <Navbar
+            setShowConfigurator={setShowConfigurator}
+            activeThemeId={activeThemeId}
             accentColor={accentColor}
-            onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)} 
+            onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)}
+            isMuted={isMuted}
+            onMuteToggle={toggleMusic}
+            disableSpline={disableSpline}
+            onPerformanceToggle={handlePerformanceToggle}
+            infoPanelOpen={infoPanelOpen}
+            onInfoToggle={() => setInfoPanelOpen((prev) => !prev)}
+            onFaqClick={() => setFaqOpen(true)}
+            onControlCenterToggle={() => setControlCenterOpen((prev) => !prev)}
           />
         </div>
       )}
@@ -1598,25 +1606,45 @@ export default function Home() {
           disabled={currentStage !== 'content'}
         />
 
-        {/* UNIFIED CONTROLS - Same on Mobile & Desktop */}
-        <UnifiedControls
-          isMuted={isMuted}
-          onMuteToggle={toggleMusic}
-          disableSpline={disableSpline}
-          onPerformanceToggle={handlePerformanceToggle}
-          infoPanelOpen={infoPanelOpen}
-          onInfoToggle={() => setInfoPanelOpen((prev) => !prev)}
-          onFaqClick={() => setFaqOpen((prev) => !prev)}
-          onThemePanelOpen={() => {
-            setControlCenterOpen(true);
-            window.setTimeout(() => controlCenterThemeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-          }}
-          onControlCenterToggle={() => setControlCenterOpen((prev) => !prev)}
-          onSettingsClick={toggleColorMode}
-          isMobile={deviceProfile.isMobile || isTouch}
-          controlCenterOpen={controlCenterOpen}
+        {/* UNIFIED CONTROLS - HIDDEN (Controls moved to Navbar) */}
+        {/* Keeping this component but hidden for backward compatibility */}
+        <div className="hidden">
+          <UnifiedControls
+            isMuted={isMuted}
+            onMuteToggle={toggleMusic}
+            disableSpline={disableSpline}
+            onPerformanceToggle={handlePerformanceToggle}
+            infoPanelOpen={infoPanelOpen}
+            onInfoToggle={() => setInfoPanelOpen((prev) => !prev)}
+            onFaqClick={() => setFaqOpen((prev) => !prev)}
+            onThemePanelOpen={() => {
+              setControlCenterOpen(true);
+              window.setTimeout(() => controlCenterThemeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+            }}
+            onControlCenterToggle={() => setControlCenterOpen((prev) => !prev)}
+            onSettingsClick={toggleColorMode}
+            isMobile={deviceProfile.isMobile || isTouch}
+            controlCenterOpen={controlCenterOpen}
+            accentColor={accentColor}
+            disabled={currentStage !== 'content'}
+          />
+        </div>
+
+        {/* VERTICAL PAGE SCROLL - Right side scroll UI */}
+        <VerticalPageScroll
+          currentPage={activePage}
+          totalPages={visiblePages.length}
+          onPageChange={scrollToPage}
           accentColor={accentColor}
           disabled={currentStage !== 'content'}
+        />
+
+        {/* 3D HINT ICON - Glowing hint for 3D controls */}
+        <ThreeDHintIcon
+          onClick={() => setControlCenterOpen(true)}
+          accentColor={accentColor}
+          disableSpline={disableSpline}
+          showHint={!hasSeenIntro}
         />
 
         {/* --- SCROLL CONTAINER --- */}

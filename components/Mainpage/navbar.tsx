@@ -23,7 +23,13 @@ import {
   Home,
   Layers,
   ScanFace,
-  X
+  X,
+  Volume2,
+  VolumeX,
+  Zap,
+  Lock,
+  Unlock,
+  HelpCircle
 } from "lucide-react";
 import { IconMenu2, IconX } from "@tabler/icons-react";
 import Link from "next/link";
@@ -40,10 +46,18 @@ import { playClick, playHover, playSuccess } from '@/lib/interactionUtils';
 
 // --- TYPE DEFINITIONS ---
 type ThemeControlProps = {
-  setShowConfigurator?: (show: boolean) => void; 
+  setShowConfigurator?: (show: boolean) => void;
   activeThemeId?: string;
   onThemeChange?: (themeId: string) => void;
-  accentColor?: string; // Added accentColor
+  accentColor?: string;
+  isMuted?: boolean;
+  onMuteToggle?: () => void;
+  disableSpline?: boolean;
+  onPerformanceToggle?: () => void;
+  infoPanelOpen?: boolean;
+  onInfoToggle?: () => void;
+  onFaqClick?: () => void;
+  onControlCenterToggle?: () => void;
 };
 
 type NavItem = {
@@ -86,12 +100,32 @@ const getShimmerGradient = (color: string) =>
   `conic-gradient(from 90deg at 50% 50%, #00000000 0%, ${color} 50%, #00000000 100%)`;
 
 // --- MAIN NAVBAR COMPONENT ---
-export const Navbar = ({ 
+export const Navbar = ({
   setShowConfigurator = () => {},
-  accentColor = "#3b82f6" // Default Blue if not provided
+  accentColor = "#3b82f6",
+  isMuted = false,
+  onMuteToggle = () => {},
+  disableSpline = false,
+  onPerformanceToggle = () => {},
+  infoPanelOpen = false,
+  onInfoToggle = () => {},
+  onFaqClick = () => {},
+  onControlCenterToggle = () => {}
 }: ThemeControlProps) => {
   // State for the Identity Card Modal
   const [showIdModal, setShowIdModal] = useState(false);
+
+  const controlsProps = {
+    isMuted,
+    onMuteToggle,
+    disableSpline,
+    onPerformanceToggle,
+    infoPanelOpen,
+    onInfoToggle,
+    onFaqClick,
+    onControlCenterToggle,
+    accentColor
+  };
 
   return (
     <>
@@ -104,14 +138,14 @@ export const Navbar = ({
           paddingTop: 'env(safe-area-inset-top, 0px)'
         }}
       >
-        
+
         {/* --- DESKTOP LAYOUT --- */}
         <div className="hidden lg:block">
             <div className="absolute left-10 top-6 z-[1010] pointer-events-auto">
                 <AnimatedLogoWrapper accentColor={accentColor}>
-                    <Image 
-                      src={BullLogo} 
-                      alt="Bull Logo" 
+                    <Image
+                      src={BullLogo}
+                      alt="Bull Logo"
                       width={55}
                       height={55}
                       className="object-contain"
@@ -123,37 +157,39 @@ export const Navbar = ({
                 </AnimatedLogoWrapper>
             </div>
             <div className="flex justify-center w-full relative pt-6">
-                <DesktopNav 
-                  setShowConfigurator={setShowConfigurator} 
-                  setShowIdModal={setShowIdModal} 
+                <DesktopNav
+                  setShowConfigurator={setShowConfigurator}
+                  setShowIdModal={setShowIdModal}
                   accentColor={accentColor}
+                  {...controlsProps}
                 />
             </div>
         </div>
 
         {/* --- MOBILE/TAB LAYOUT --- */}
-        <div className="lg:hidden flex justify-between items-start w-full px-4 pt-2 sm:pt-4 z-[1010]">
+        <div className="lg:hidden flex justify-between items-start w-full px-2 sm:px-4 pt-2 sm:pt-4 z-[1010]">
             <div className="pointer-events-auto pt-2 shrink-0 relative z-50">
                <AnimatedLogoWrapper accentColor={accentColor}>
-                   <Image 
-                      src={BullLogo} 
-                      alt="Bull Logo" 
-                      width={45} 
-                      height={45} 
+                   <Image
+                      src={BullLogo}
+                      alt="Bull Logo"
+                      width={40}
+                      height={40}
                       className="object-contain"
                       priority
                    />
-                   <span className="font-black text-xl tracking-tighter text-neutral-900 dark:text-white">
+                   <span className="font-black text-base sm:text-xl tracking-tighter text-neutral-900 dark:text-white whitespace-nowrap">
                       BULLMONEY
                    </span>
                </AnimatedLogoWrapper>
             </div>
 
             <div className="pointer-events-auto ml-2 flex justify-end min-w-0 flex-1 relative z-50">
-               <MobileNav 
-                 setShowConfigurator={setShowConfigurator} 
+               <MobileNav
+                 setShowConfigurator={setShowConfigurator}
                  setShowIdModal={setShowIdModal}
                  accentColor={accentColor}
+                 {...controlsProps}
                />
             </div>
         </div>
@@ -260,22 +296,34 @@ const IdModal = ({ isOpen, onClose, accentColor }: { isOpen: boolean, onClose: (
 };
 
 // --- DESKTOP NAV ---
-const DesktopNav = memo(({ setShowConfigurator, setShowIdModal, accentColor }: { setShowConfigurator: (show: boolean) => void, setShowIdModal: (show: boolean) => void, accentColor: string }) => {
+const DesktopNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMuted, onMuteToggle, disableSpline, onPerformanceToggle, infoPanelOpen, onInfoToggle, onFaqClick, onControlCenterToggle }: any) => {
   return (
     <motion.div
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       className="flex items-center gap-4 pointer-events-auto px-6 py-2 rounded-2xl transition-colors duration-300 bg-white/95 dark:bg-neutral-950/95 border border-neutral-200 dark:border-white/10 shadow-xl"
     >
-      <Dock 
-        items={NAV_ITEMS} 
-        setShowConfigurator={setShowConfigurator} 
+      <Dock
+        items={NAV_ITEMS}
+        setShowConfigurator={setShowConfigurator}
         setShowIdModal={setShowIdModal}
         accentColor={accentColor}
       />
-      
+
       <div className="flex justify-end ml-2 gap-2 items-center border-l border-neutral-200 dark:border-white/10 pl-4">
-        <div className="hidden md:block">
+        {/* Control Buttons */}
+        <ControlButtons
+          isMuted={isMuted}
+          onMuteToggle={onMuteToggle}
+          disableSpline={disableSpline}
+          onPerformanceToggle={onPerformanceToggle}
+          infoPanelOpen={infoPanelOpen}
+          onInfoToggle={onInfoToggle}
+          onFaqClick={onFaqClick}
+          onControlCenterToggle={onControlCenterToggle}
+          accentColor={accentColor}
+        />
+        <div className="hidden md:block ml-2 pl-2 border-l border-neutral-200 dark:border-white/10">
             <Faq />
         </div>
       </div>
@@ -472,35 +520,64 @@ const DockItem = memo(({ mouseX, item, isTipActive, onClick, accentColor }: Dock
 DockItem.displayName = "DockItem";
 
 // --- MOBILE NAV ---
-const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor }: { setShowConfigurator: (show: boolean) => void, setShowIdModal: (show: boolean) => void, accentColor: string }) => {
+const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMuted, onMuteToggle, disableSpline, onPerformanceToggle, infoPanelOpen, onInfoToggle, onFaqClick, onControlCenterToggle }: any) => {
   const [open, setOpen] = useState(false);
   const [activeTipIndex, setActiveTipIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<(HTMLElement | null)[]>([]);
 
-  const themeItem: NavItem = { 
-    name: "THEME", 
+  const themeItem: NavItem = {
+    name: "THEME",
     link: null,
-    icon: <Layers className="h-full w-full text-neutral-500 dark:text-neutral-300" /> 
+    icon: <Layers className="h-full w-full text-neutral-500 dark:text-neutral-300" />
   };
-  
-  const idItem: NavItem = { 
-    name: "ID", 
+
+  const idItem: NavItem = {
+    name: "ID",
     link: null,
-    icon: <ScanFace className="h-full w-full text-neutral-500 dark:text-neutral-300" /> 
+    icon: <ScanFace className="h-full w-full text-neutral-500 dark:text-neutral-300" />
   };
+
+  // Control items for mobile nav
+  const controlItems = [
+    {
+      name: "INFO",
+      icon: infoPanelOpen ? <Unlock className="h-full w-full" /> : <Lock className="h-full w-full" />,
+      onClick: onInfoToggle,
+      color: accentColor
+    },
+    {
+      name: isMuted ? "UNMUTE" : "MUTE",
+      icon: isMuted ? <VolumeX className="h-full w-full" /> : <Volume2 className="h-full w-full" />,
+      onClick: onMuteToggle,
+      color: isMuted ? 'rgba(239, 68, 68, 1)' : accentColor
+    },
+    {
+      name: "3D",
+      icon: <Zap className="h-full w-full" />,
+      onClick: onPerformanceToggle,
+      color: disableSpline ? accentColor : 'rgba(255,255,255,0.9)'
+    },
+    {
+      name: "HELP",
+      icon: <HelpCircle className="h-full w-full" />,
+      onClick: onFaqClick,
+      color: accentColor
+    }
+  ];
 
   useEffect(() => {
-    // Length + 2 for Theme & ID
+    // Total items: NAV_ITEMS + controlItems + Theme + ID
+    const totalItems = NAV_ITEMS.length + controlItems.length + 2;
     const intervalId = setInterval(() => {
-      setActiveTipIndex((prev) => (prev + 1) % (NAV_ITEMS.length + 2));
-    }, 4000); 
+      setActiveTipIndex((prev) => (prev + 1) % totalItems);
+    }, 4000);
     return () => clearInterval(intervalId);
-  }, []);
+  }, [controlItems.length]);
 
   const handleOpenConfigurator = useCallback(() => {
-    setOpen(false); 
-    setShowConfigurator(true); 
+    setOpen(false);
+    setShowConfigurator(true);
   }, [setShowConfigurator]);
 
   const handleOpenId = useCallback(() => {
@@ -520,10 +597,10 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor }: { 
          </div>
          <div
             ref={scrollRef}
-            className="flex items-center gap-1.5 overflow-x-auto scroll-smooth pr-1 pb-2 max-w-[50vw] sm:max-w-[60vw] md:max-w-none"
+            className="flex items-center gap-1.5 overflow-x-auto scroll-smooth pr-1 pb-2 max-w-[45vw] sm:max-w-[55vw] md:max-w-none no-scrollbar"
             style={{
-              scrollbarWidth: 'thin',
-              scrollbarColor: `${accentColor}40 transparent`
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none'
             }}
          >
             {/* 1. Loop standard items */}
@@ -553,7 +630,46 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor }: { 
                </Link>
             ))}
 
-            {/* 2. Add ID Button */}
+            {/* 2. Add Control Buttons */}
+            {controlItems.map((item, i) => {
+              const currentIndex = NAV_ITEMS.length + i;
+              return (
+                <button
+                  key={`control-${i}`}
+                  onClick={() => {
+                    playClick();
+                    if (navigator.vibrate) navigator.vibrate(15);
+                    item.onClick();
+                  }}
+                  onTouchStart={(e) => {
+                    playHover();
+                    e.currentTarget.style.transform = 'scale(0.9)';
+                  }}
+                  onTouchEnd={(e) => {
+                    e.currentTarget.style.transform = '';
+                  }}
+                  ref={(el) => { itemsRef.current[currentIndex] = el; }}
+                  className="relative flex-shrink-0 flex flex-col items-center group pt-1 min-w-[44px] touch-manipulation active:scale-90 transition-transform"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                >
+                  <MobileNavItemContent
+                    item={{ name: item.name, icon: item.icon, link: null }}
+                    accentColor={item.color}
+                  />
+                  <AnimatePresence>
+                    {activeTipIndex === currentIndex && (
+                      <HelperTip
+                        item={{ name: item.name, icon: item.icon, link: null }}
+                        isMobile
+                        accentColor={item.color}
+                      />
+                    )}
+                  </AnimatePresence>
+                </button>
+              );
+            })}
+
+            {/* 3. Add ID Button */}
             <button
                 onClick={() => {
                   playClick();
@@ -567,17 +683,17 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor }: { 
                 onTouchEnd={(e) => {
                   e.currentTarget.style.transform = '';
                 }}
-                ref={(el) => { itemsRef.current[NAV_ITEMS.length] = el; }}
+                ref={(el) => { itemsRef.current[NAV_ITEMS.length + controlItems.length] = el; }}
                 className="relative flex-shrink-0 flex flex-col items-center group pt-1 min-w-[44px] touch-manipulation active:scale-90 transition-transform"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
             >
                 <MobileNavItemContent item={idItem} accentColor={accentColor} />
                 <AnimatePresence>
-                     {activeTipIndex === NAV_ITEMS.length && <HelperTip item={idItem} isMobile accentColor={accentColor} />}
+                     {activeTipIndex === NAV_ITEMS.length + controlItems.length && <HelperTip item={idItem} isMobile accentColor={accentColor} />}
                 </AnimatePresence>
             </button>
 
-            {/* 3. Add Theme Button */}
+            {/* 4. Add Theme Button */}
             <button
                 onClick={() => {
                   playClick();
@@ -591,13 +707,13 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor }: { 
                 onTouchEnd={(e) => {
                   e.currentTarget.style.transform = '';
                 }}
-                ref={(el) => { itemsRef.current[NAV_ITEMS.length + 1] = el; }}
+                ref={(el) => { itemsRef.current[NAV_ITEMS.length + controlItems.length + 1] = el; }}
                 className="relative flex-shrink-0 flex flex-col items-center group pt-1 min-w-[44px] touch-manipulation active:scale-90 transition-transform"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
             >
                 <MobileNavItemContent item={themeItem} accentColor={accentColor} />
                 <AnimatePresence>
-                     {activeTipIndex === NAV_ITEMS.length + 1 && <HelperTip item={themeItem} isMobile accentColor={accentColor} />}
+                     {activeTipIndex === NAV_ITEMS.length + controlItems.length + 1 && <HelperTip item={themeItem} isMobile accentColor={accentColor} />}
                 </AnimatePresence>
             </button>
          </div>
@@ -713,7 +829,7 @@ const HelperTip = ({ item, isMobile = false, accentColor }: { item: NavItem, isM
 );
 
 const AnimatedLogoWrapper = ({ children, accentColor }: { children: React.ReactNode, accentColor: string }) => (
-  <motion.div 
+  <motion.div
     initial={{ opacity: 0, x: -20 }}
     animate={{ opacity: 1, x: 0 }}
     transition={{ duration: 0.5, ease: "easeOut" }}
@@ -723,3 +839,87 @@ const AnimatedLogoWrapper = ({ children, accentColor }: { children: React.ReactN
     {children}
   </motion.div>
 );
+
+// --- CONTROL BUTTONS COMPONENT ---
+const ControlButtons = memo(({ isMuted, onMuteToggle, disableSpline, onPerformanceToggle, infoPanelOpen, onInfoToggle, onFaqClick, onControlCenterToggle, accentColor }: any) => {
+  const controlButtons = [
+    {
+      icon: infoPanelOpen ? Unlock : Lock,
+      onClick: () => {
+        playClick();
+        if (navigator.vibrate) navigator.vibrate(15);
+        onInfoToggle();
+      },
+      label: infoPanelOpen ? 'Close page info' : 'Open page info',
+      color: accentColor,
+    },
+    {
+      icon: isMuted ? VolumeX : Volume2,
+      onClick: () => {
+        playClick();
+        if (navigator.vibrate) navigator.vibrate(10);
+        onMuteToggle();
+      },
+      label: isMuted ? 'Unmute' : 'Mute',
+      color: isMuted ? 'rgba(239, 68, 68, 1)' : accentColor,
+    },
+    {
+      icon: Zap,
+      onClick: () => {
+        playClick();
+        if (navigator.vibrate) navigator.vibrate(15);
+        onPerformanceToggle();
+      },
+      label: disableSpline ? 'Enable Full 3D' : 'Performance Mode',
+      color: disableSpline ? accentColor : 'rgba(255,255,255,0.9)',
+    },
+    {
+      icon: HelpCircle,
+      onClick: () => {
+        playClick();
+        if (navigator.vibrate) navigator.vibrate(15);
+        onFaqClick();
+      },
+      label: 'Help & FAQ',
+      color: accentColor,
+    },
+  ];
+
+  return (
+    <div className="flex items-center gap-2">
+      {controlButtons.map((button, index) => (
+        <button
+          key={index}
+          onClick={button.onClick}
+          onMouseEnter={() => playHover()}
+          onTouchStart={(e) => {
+            playHover();
+            e.currentTarget.style.transform = 'scale(0.9)';
+          }}
+          onTouchEnd={(e) => {
+            e.currentTarget.style.transform = '';
+          }}
+          className="relative w-9 h-9 rounded-full overflow-hidden shadow-sm hover:scale-110 active:scale-95 transition-all touch-manipulation group"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
+          aria-label={button.label}
+          title={button.label}
+        >
+          <motion.div
+            className="absolute inset-[-100%]"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            style={{ background: getShimmerGradient(button.color) }}
+          />
+          <div className="absolute inset-[1.5px] rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center z-10">
+            <button.icon size={16} style={{ color: button.color }} />
+          </div>
+          {/* Tooltip */}
+          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-[9px] font-bold rounded shadow-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+            {button.label}
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+});
+ControlButtons.displayName = "ControlButtons";
