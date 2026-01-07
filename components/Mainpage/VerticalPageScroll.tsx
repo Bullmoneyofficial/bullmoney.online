@@ -145,8 +145,8 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
   }, [isHolding, handleHoldMove, handleHoldEnd]);
 
   const dotSize = (index: number) => {
-    if (index === currentPage - 1) return 'w-3 h-3';
-    return 'w-2 h-2';
+    if (index === currentPage - 1) return 'w-2.5 h-2.5';
+    return 'w-1.5 h-1.5';
   };
 
   return (
@@ -162,73 +162,81 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
       {/* Shimmer Border Effect */}
       <div className="relative">
         <motion.div
-          className="absolute inset-[-2px] rounded-full opacity-75"
+          className="absolute inset-[-1.5px] rounded-full opacity-60"
           animate={{ rotate: 360 }}
           transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
           style={{
             background: `conic-gradient(from 90deg at 50% 50%, transparent 0%, ${accentColor} 50%, transparent 100%)`,
-            filter: 'blur(4px)',
+            filter: 'blur(3px)',
           }}
         />
 
         <motion.div
           className={`
-            relative rounded-full border-2
+            relative rounded-full border
             backdrop-blur-xl shadow-2xl
-            flex flex-col items-center gap-3 py-5 px-2.5
-            transition-all duration-300
-            ${isHolding ? 'bg-black/95 scale-110' : 'bg-black/70'}
+            flex flex-col items-center gap-2 py-3 px-1.5
+            transition-all duration-200
+            ${isHolding ? 'bg-black/95 scale-105' : 'bg-black/75'}
             ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
           `}
           style={{
-            height: 'min(65vh, 450px)',
-            width: '48px',
-            borderColor: isHolding ? accentColor : `${accentColor}40`,
+            height: 'min(55vh, 320px)',
+            width: '36px',
+            borderColor: isHolding ? accentColor : `${accentColor}30`,
             boxShadow: isHolding
-              ? `0 0 40px ${accentColor}80, 0 0 80px ${accentColor}40, inset 0 0 20px ${accentColor}20`
-              : `0 10px 40px rgba(0,0,0,0.5), inset 0 0 10px ${accentColor}10`,
+              ? `0 0 30px ${accentColor}70, 0 0 60px ${accentColor}30, inset 0 0 15px ${accentColor}15`
+              : `0 8px 30px rgba(0,0,0,0.6), inset 0 0 8px ${accentColor}08`,
           }}
         >
         {/* Scroll Up Arrow */}
-        <motion.div
-          className="w-6 h-6 flex items-center justify-center rounded-full mb-1"
-          style={{
-            backgroundColor: currentPage === 1 ? `${accentColor}20` : `${accentColor}40`,
-            opacity: currentPage === 1 ? 0.3 : 1,
+        <motion.button
+          onClick={() => {
+            if (currentPage > 1) {
+              onPageChange(currentPage - 2);
+              if (navigator.vibrate) navigator.vibrate(10);
+            }
           }}
-          whileHover={currentPage > 1 ? { scale: 1.2 } : {}}
-          whileTap={currentPage > 1 ? { scale: 0.9 } : {}}
+          className="w-5 h-5 flex items-center justify-center rounded-full"
+          style={{
+            backgroundColor: currentPage === 1 ? `${accentColor}10` : `${accentColor}35`,
+            opacity: currentPage === 1 ? 0.3 : 1,
+            cursor: currentPage === 1 ? 'default' : 'pointer',
+          }}
+          whileHover={currentPage > 1 ? { scale: 1.3, backgroundColor: `${accentColor}50` } : {}}
+          whileTap={currentPage > 1 ? { scale: 0.85 } : {}}
+          disabled={currentPage === 1}
         >
           <ChevronUp
-            size={14}
-            style={{ color: currentPage === 1 ? '#666' : accentColor }}
+            size={12}
+            style={{ color: currentPage === 1 ? '#444' : accentColor }}
           />
-        </motion.div>
+        </motion.button>
 
         {/* Hold Indicator */}
         <AnimatePresence>
           {isScrolling && (
             <motion.div
-              initial={{ opacity: 0, x: -20, scale: 0.8 }}
+              initial={{ opacity: 0, x: -15, scale: 0.8 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: -20, scale: 0.8 }}
-              className="absolute -left-20 top-1/2 -translate-y-1/2 px-3 py-2 rounded-full border-2 backdrop-blur-xl"
+              exit={{ opacity: 0, x: -15, scale: 0.8 }}
+              className="absolute -left-16 top-1/2 -translate-y-1/2 px-2 py-1.5 rounded-lg border backdrop-blur-xl"
               style={{
-                backgroundColor: 'rgba(0,0,0,0.9)',
+                backgroundColor: 'rgba(0,0,0,0.95)',
                 borderColor: accentColor,
-                boxShadow: `0 0 20px ${accentColor}60`,
+                boxShadow: `0 0 15px ${accentColor}50`,
               }}
             >
-              <div className="text-xs font-bold text-white whitespace-nowrap flex items-center gap-2">
-                <Hand size={14} style={{ color: accentColor }} />
-                Scrolling
+              <div className="text-[10px] font-bold text-white whitespace-nowrap flex items-center gap-1.5">
+                <Hand size={12} style={{ color: accentColor }} />
+                Scroll
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Page Dots */}
-        <div className="flex-1 flex flex-col justify-center items-center gap-2 relative">
+        <div className="flex-1 flex flex-col justify-center items-center gap-1.5 relative">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page, index) => (
             <button
               key={page}
@@ -247,14 +255,15 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
                 e.currentTarget.style.transform = '';
               }}
               className={`
-                rounded-full transition-all duration-300
+                rounded-full transition-all duration-200
                 ${dotSize(index)}
-                ${disabled ? 'cursor-not-allowed' : 'hover:scale-125 active:scale-90'}
+                ${disabled ? 'cursor-not-allowed' : 'hover:scale-150 active:scale-75'}
               `}
               style={{
-                backgroundColor: page === currentPage ? accentColor : 'rgba(255,255,255,0.3)',
-                boxShadow: page === currentPage ? `0 0 12px ${accentColor}` : 'none',
+                backgroundColor: page === currentPage ? accentColor : 'rgba(255,255,255,0.25)',
+                boxShadow: page === currentPage ? `0 0 10px ${accentColor}, 0 0 5px ${accentColor}` : 'none',
                 WebkitTapHighlightColor: 'transparent',
+                border: page === currentPage ? `1px solid ${accentColor}` : '1px solid rgba(255,255,255,0.1)',
               }}
               aria-label={`Go to page ${page}`}
             />
@@ -267,11 +276,11 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                className="absolute left-0 right-0 h-1.5 rounded-full"
+                className="absolute left-0 right-0 h-1 rounded-full"
                 style={{
                   backgroundColor: accentColor,
                   top: `${holdPosition * 100}%`,
-                  boxShadow: `0 0 15px ${accentColor}, 0 0 30px ${accentColor}60`,
+                  boxShadow: `0 0 12px ${accentColor}, 0 0 24px ${accentColor}50`,
                 }}
               />
             )}
@@ -279,48 +288,55 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
         </div>
 
         {/* Scroll Down Arrow */}
-        <motion.div
-          className="w-6 h-6 flex items-center justify-center rounded-full mt-1"
-          style={{
-            backgroundColor: currentPage === totalPages ? `${accentColor}20` : `${accentColor}40`,
-            opacity: currentPage === totalPages ? 0.3 : 1,
+        <motion.button
+          onClick={() => {
+            if (currentPage < totalPages) {
+              onPageChange(currentPage);
+              if (navigator.vibrate) navigator.vibrate(10);
+            }
           }}
-          whileHover={currentPage < totalPages ? { scale: 1.2 } : {}}
-          whileTap={currentPage < totalPages ? { scale: 0.9 } : {}}
+          className="w-5 h-5 flex items-center justify-center rounded-full"
+          style={{
+            backgroundColor: currentPage === totalPages ? `${accentColor}10` : `${accentColor}35`,
+            opacity: currentPage === totalPages ? 0.3 : 1,
+            cursor: currentPage === totalPages ? 'default' : 'pointer',
+          }}
+          whileHover={currentPage < totalPages ? { scale: 1.3, backgroundColor: `${accentColor}50` } : {}}
+          whileTap={currentPage < totalPages ? { scale: 0.85 } : {}}
+          disabled={currentPage === totalPages}
         >
           <ChevronDown
-            size={14}
-            style={{ color: currentPage === totalPages ? '#666' : accentColor }}
+            size={12}
+            style={{ color: currentPage === totalPages ? '#444' : accentColor }}
           />
-        </motion.div>
+        </motion.button>
 
         {/* Hint - Shows on first load */}
         <AnimatePresence>
           {showHint && !isHolding && (
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -15 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              exit={{ opacity: 0, x: -15 }}
               transition={{ delay: 1, duration: 0.5 }}
-              className="absolute -left-32 top-1/2 -translate-y-1/2 px-4 py-3 rounded-xl border-2 backdrop-blur-xl pointer-events-none"
+              className="absolute -left-28 top-1/2 -translate-y-1/2 px-3 py-2 rounded-lg border backdrop-blur-xl pointer-events-none"
               style={{
                 backgroundColor: 'rgba(0,0,0,0.95)',
                 borderColor: accentColor,
-                boxShadow: `0 0 30px ${accentColor}40`,
-                maxWidth: '200px',
+                boxShadow: `0 0 20px ${accentColor}30`,
+                maxWidth: '140px',
               }}
             >
-              <div className="flex items-start gap-2 mb-2">
-                <Hand size={16} style={{ color: accentColor, flexShrink: 0 }} />
-                <div className="text-xs font-bold text-white">Scroll Navigation</div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Hand size={12} style={{ color: accentColor, flexShrink: 0 }} />
+                <div className="text-[10px] font-bold text-white">Navigate</div>
               </div>
-              <div className="text-[10px] text-white/70 leading-relaxed space-y-1">
-                <div>• <span style={{ color: accentColor }}>Tap</span> dots to jump</div>
-                <div>• <span style={{ color: accentColor }}>Hold</span> to scroll</div>
-                <div>• <span style={{ color: accentColor }}>Drag</span> for control</div>
+              <div className="text-[9px] text-white/60 leading-snug space-y-0.5">
+                <div>• <span style={{ color: accentColor }}>Tap</span> dots</div>
+                <div>• <span style={{ color: accentColor }}>Hold</span> & drag</div>
               </div>
               <motion.div
-                className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full"
+                className="absolute -right-0.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full"
                 style={{ backgroundColor: accentColor }}
                 animate={{
                   scale: [1, 1.5, 1],
@@ -334,13 +350,13 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
 
         {/* Page Counter */}
         <div
-          className="absolute -left-14 top-4 px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+          className="absolute -left-12 top-2 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
           style={{
-            backgroundColor: 'rgba(0,0,0,0.8)',
-            border: `1px solid ${accentColor}40`,
+            backgroundColor: 'rgba(0,0,0,0.9)',
+            border: `1px solid ${accentColor}30`,
           }}
         >
-          <div className="text-[10px] font-bold whitespace-nowrap" style={{ color: accentColor }}>
+          <div className="text-[9px] font-bold whitespace-nowrap" style={{ color: accentColor }}>
             {currentPage}/{totalPages}
           </div>
         </div>

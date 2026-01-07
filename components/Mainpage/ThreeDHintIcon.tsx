@@ -49,10 +49,10 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
 
   return (
     <div
-      className="fixed top-20 lg:top-24 right-4 z-[999] pointer-events-auto"
+      className="fixed right-4 z-[999] pointer-events-auto"
       style={{
         right: 'max(1rem, calc(1rem + env(safe-area-inset-right, 0px)))',
-        top: 'calc(5rem + env(safe-area-inset-top, 0px))',
+        top: 'calc(50vh - 220px + env(safe-area-inset-top, 0px))', // Positioned above the scrollbar
       }}
     >
       <motion.button
@@ -69,7 +69,7 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
         onTouchEnd={(e) => {
           e.currentTarget.style.transform = '';
         }}
-        className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden shadow-2xl hover:scale-110 active:scale-95 transition-all touch-manipulation group"
+        className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden shadow-2xl hover:scale-110 active:scale-95 transition-all touch-manipulation group"
         style={{
           WebkitTapHighlightColor: 'transparent',
         }}
@@ -95,8 +95,8 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
         {/* Inner Circle */}
         <div className="absolute inset-[2px] rounded-full bg-black/90 backdrop-blur-xl flex items-center justify-center">
           <Sparkles
-            size={24}
-            className="sm:w-7 sm:h-7"
+            size={20}
+            className="sm:w-6 sm:h-6"
             style={{ color: accentColor }}
           />
 
