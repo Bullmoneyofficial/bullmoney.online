@@ -470,6 +470,8 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
   const isActive = config.id === activePage;
   const [isMobile, setIsMobile] = useState(false);
   const [activeScene, setActiveScene] = useState<'left' | 'right'>('left'); // Mobile: only load one scene at a time
+  const sceneSwitchTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false); // BUG FIX #19: Prevent double-loading
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -478,14 +480,46 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // BUG FIX #19: Debounced scene switching with transition guard to prevent race conditions
   // Mobile optimization: Switch active scene based on split position (CRITICAL FOR PREVENTING CRASHES)
   // Only render ONE 3D scene at a time on mobile to prevent WebGL memory crashes
   useEffect(() => {
     if (isMobile) {
-      const newPanel = splitPos < 50 ? 'A' : 'B';
-      setActiveScene(newPanel === 'A' ? 'left' : 'right');
+      // Clear pending timer
+      if (sceneSwitchTimerRef.current) {
+        clearTimeout(sceneSwitchTimerRef.current);
+      }
+
+      // Debounce: Only switch after 150ms of no changes
+      sceneSwitchTimerRef.current = setTimeout(() => {
+        const newPanel = splitPos < 50 ? 'A' : 'B';
+        const targetScene = newPanel === 'A' ? 'left' : 'right';
+
+        // Only switch if different AND not already transitioning
+        if (targetScene !== activeScene && !isTransitioning) {
+          setIsTransitioning(true);
+
+          // Wait for old scene to unmount before loading new one
+          setTimeout(() => {
+            setActiveScene(targetScene);
+            // Give new scene time to mount before allowing another switch
+            setTimeout(() => {
+              setIsTransitioning(false);
+            }, 300);
+          }, 150);
+        }
+
+        sceneSwitchTimerRef.current = null;
+      }, 150);
     }
-  }, [splitPos, isMobile]);
+
+    return () => {
+      if (sceneSwitchTimerRef.current) {
+        clearTimeout(sceneSwitchTimerRef.current);
+        sceneSwitchTimerRef.current = null;
+      }
+    };
+  }, [splitPos, isMobile, activeScene, isTransitioning]);
 
   // PERFORMANCE MODE: Hide split sections when splines are disabled
   if (disableSpline) {
@@ -640,10 +674,11 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
     };
   }, [config.id, config.sceneA, config.sceneB, shouldRender]);
 
-  // MOBILE CRASH FIX: On mobile, only render one scene at a time in split view to prevent memory crashes
+  // BUG FIX #19: MOBILE CRASH FIX - On mobile, only render one scene at a time in split view to prevent memory crashes
   // activeScene is managed above with split position: 'left' = A, 'right' = B
-  const shouldRenderSceneA = isMobile ? (shouldRender && activeScene === 'left') : shouldRender;
-  const shouldRenderSceneB = isMobile ? (shouldRender && activeScene === 'right') : shouldRender;
+  // During transition, render neither to prevent overlap
+  const shouldRenderSceneA = isMobile ? (shouldRender && activeScene === 'left' && !isTransitioning) : shouldRender;
+  const shouldRenderSceneB = isMobile ? (shouldRender && activeScene === 'right' && !isTransitioning) : shouldRender;
 
   // FIX #7: Remove snap classes on split section for mobile
   return (

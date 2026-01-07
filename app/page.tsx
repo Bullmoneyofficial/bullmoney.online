@@ -1024,8 +1024,17 @@ export default function Home() {
     };
   }, [isClient, currentStage, applyPerformanceChoice, defaultPerfMode]);
    
+  // BUG FIX #20: Ref to track theme change debounce timer
+  const themeChangeTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
     console.log('[Theme] Changing theme to:', themeId, 'muted:', muted);
+
+    // BUG FIX #20: Clear pending theme change to prevent rapid switching
+    if (themeChangeTimerRef.current) {
+      clearTimeout(themeChangeTimerRef.current);
+    }
+
     setActiveThemeId(themeId);
     setIsMuted(muted);
     // Use smart storage for better WebView compatibility
@@ -1033,34 +1042,59 @@ export default function Home() {
     userStorage.set('user_is_muted', String(muted));
     setShowConfigurator(false);
     setParticleTrigger(prev => prev + 1);
-    // Force music player reload with new theme
-    setMusicKey(prev => prev + 1);
 
-    // If not muted, play the new theme's music
-    if (!muted) {
-      setTimeout(() => {
-        safePlay();
-      }, 100);
-    }
+    // BUG FIX #20: Debounce music player reload to prevent multiple YouTube iframe loads
+    themeChangeTimerRef.current = setTimeout(() => {
+      setMusicKey(prev => prev + 1);
+
+      // If not muted, play the new theme's music
+      if (!muted) {
+        setTimeout(() => {
+          safePlay();
+        }, 100);
+      }
+      themeChangeTimerRef.current = null;
+    }, 200); // Wait 200ms before reloading music player
   }, [safePlay]);
 
   const handleQuickThemeChange = useCallback((themeId: string) => {
     console.log('[Theme] Quick changing theme to:', themeId);
+
+    // BUG FIX #20: Clear pending theme change to prevent rapid switching
+    if (themeChangeTimerRef.current) {
+      clearTimeout(themeChangeTimerRef.current);
+    }
+
     setActiveThemeId(themeId);
     // Use smart storage for better WebView compatibility
     userStorage.set('user_theme_id', themeId);
     setParticleTrigger(prev => prev + 1);
-    // Force music player reload with new theme
-    setMusicKey(prev => prev + 1);
 
-    // If not muted, play the new theme's music
-    if (!isMuted) {
-      setTimeout(() => {
-        safePlay();
-      }, 100);
-    }
+    // BUG FIX #20: Debounce music player reload to prevent multiple YouTube iframe loads
+    themeChangeTimerRef.current = setTimeout(() => {
+      setMusicKey(prev => prev + 1);
+
+      // If not muted, play the new theme's music
+      if (!isMuted) {
+        setTimeout(() => {
+          safePlay();
+        }, 100);
+      }
+      themeChangeTimerRef.current = null;
+    }, 200); // Wait 200ms before reloading music player
+
     playClickSound();
   }, [isMuted, safePlay]);
+
+  // BUG FIX #20: Cleanup theme change timer on unmount
+  useEffect(() => {
+    return () => {
+      if (themeChangeTimerRef.current) {
+        clearTimeout(themeChangeTimerRef.current);
+        themeChangeTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const heroLoaderMessage = deviceProfile.isMobile ? 'Mobile-friendly hero warming' : 'Cinematic hero loading';
   const showHeroLoaderOverlay = currentStage === 'content' && !heroSceneReady && !heroLoaderHidden;

@@ -230,13 +230,18 @@ export const SmartSplineLoader = memo(({
     setLoadState('loaded');
     setHasSplineLoaded(true);
 
-    // BUG FIX #14: Register scene with memoryManager
-    if ((window as any).memoryManager && !isMobile) {
-      // Desktop: register normally
-      (window as any).memoryManager.registerScene(scene);
-    } else if ((window as any).memoryManager && isMobile) {
-      // Mobile: Already registered by PageScenes, don't double-register
-      console.log('[SmartSplineLoader] Scene load complete (mobile - managed by PageScenes)');
+    // BUG FIX #14 & #21: Register scene with memoryManager
+    if ((window as any).memoryManager) {
+      // Check if already registered (e.g., by PageScenes for split views)
+      const status = (window as any).memoryManager.canLoadScene(scene, priority);
+      const alreadyRegistered = status.reason === 'Scene already active';
+
+      if (!alreadyRegistered) {
+        (window as any).memoryManager.registerScene(scene);
+        console.log('[SmartSplineLoader] Registered scene with memoryManager:', scene);
+      } else {
+        console.log('[SmartSplineLoader] Scene already registered (managed by PageScenes)');
+      }
     }
 
     onLoad?.();
@@ -283,10 +288,11 @@ export const SmartSplineLoader = memo(({
     setLoadState('idle');
     hasLoadedRef.current = false;
 
-    // BUG FIX #14: Unregister old scene when scene changes
+    // BUG FIX #14 & #21: Unregister old scene when scene changes (works on both mobile and desktop now)
     return () => {
-      if (splineRef.current && (window as any).memoryManager && !isMobile) {
+      if (splineRef.current && (window as any).memoryManager) {
         (window as any).memoryManager.unregisterScene(scene);
+        console.log('[SmartSplineLoader] Unregistered scene:', scene);
       }
     };
   }, [scene, isMobile]);
