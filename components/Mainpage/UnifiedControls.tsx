@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Volume2, VolumeX, Palette, HelpCircle, SunMoon, Zap } from 'lucide-react';
+import { HelpCircle, Lock, Palette, SunMoon, Unlock, Volume2, VolumeX, Zap } from 'lucide-react';
 import { UI_LAYERS, GAME_UI_CONFIG } from '@/lib/uiLayers';
 import { playClick, playHover } from '@/lib/interactionUtils';
 import { Hint } from '@/components/ui/Hint';
@@ -9,9 +9,16 @@ import { Hint } from '@/components/ui/Hint';
 interface UnifiedControlsProps {
   isMuted: boolean;
   onMuteToggle: () => void;
-  onThemeClick: () => void;
+  disableSpline: boolean;
+  onPerformanceToggle: () => void;
+  infoPanelOpen: boolean;
+  onInfoToggle: () => void;
   onFaqClick: () => void;
-  onSettingsClick?: () => void;
+  onThemePanelOpen: () => void;
+  onControlCenterToggle?: () => void;
+  onSettingsClick?: () => void; // Light/Night
+  isMobile?: boolean;
+  controlCenterOpen?: boolean;
   accentColor?: string;
   disabled?: boolean;
 }
@@ -23,9 +30,16 @@ interface UnifiedControlsProps {
 export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
   isMuted,
   onMuteToggle,
-  onThemeClick,
+  disableSpline,
+  onPerformanceToggle,
+  infoPanelOpen,
+  onInfoToggle,
   onFaqClick,
+  onThemePanelOpen,
+  onControlCenterToggle,
   onSettingsClick,
+  isMobile = false,
+  controlCenterOpen = false,
   accentColor = '#3b82f6',
   disabled = false
 }) => {
@@ -40,7 +54,19 @@ export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
   const handleThemeClick = () => {
     playClick();
     if (navigator.vibrate) navigator.vibrate(GAME_UI_CONFIG.HAPTICS.MEDIUM);
-    onThemeClick();
+    onThemePanelOpen();
+  };
+
+  const handleInfoClick = () => {
+    playClick();
+    if (navigator.vibrate) navigator.vibrate(GAME_UI_CONFIG.HAPTICS.MEDIUM);
+    onInfoToggle();
+  };
+
+  const handlePerformanceClick = () => {
+    playClick();
+    if (navigator.vibrate) navigator.vibrate(GAME_UI_CONFIG.HAPTICS.MEDIUM);
+    onPerformanceToggle();
   };
 
   const handleFaqClick = () => {
@@ -64,6 +90,12 @@ export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
 
   const controlButtons = [
     {
+      icon: infoPanelOpen ? Unlock : Lock,
+      onClick: handleInfoClick,
+      label: infoPanelOpen ? 'Close page info' : 'Open page info',
+      color: accentColor,
+    },
+    {
       icon: isMuted ? VolumeX : Volume2,
       onClick: handleMuteToggle,
       label: isMuted ? 'Unmute' : 'Mute',
@@ -72,8 +104,14 @@ export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
     {
       icon: Palette,
       onClick: handleThemeClick,
-      label: 'Theme',
+      label: controlCenterOpen ? 'Control Center' : 'Themes',
       color: accentColor,
+    },
+    {
+      icon: Zap,
+      onClick: handlePerformanceClick,
+      label: disableSpline ? 'Full 3D' : 'Performance',
+      color: disableSpline ? accentColor : 'rgba(255,255,255,0.9)',
     },
     {
       icon: HelpCircle,
@@ -90,6 +128,46 @@ export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
       label: 'Light/Night',
       color: accentColor,
     });
+  }
+
+  // Mobile: keep it clean (avoid huge stacks covering content).
+  if (isMobile) {
+    return (
+      <div
+        className="fixed left-4 flex flex-col-reverse gap-3"
+        style={{
+          zIndex: UI_LAYERS.CONTROL_CENTER_BTN,
+          bottom: 'calc(1.25rem + env(safe-area-inset-bottom))',
+        }}
+      >
+        <Hint label={controlCenterOpen ? 'Close Control Center' : 'Open Control Center'}>
+          <button
+            onClick={onControlCenterToggle || handleThemeClick}
+            onMouseEnter={() => playHover()}
+            disabled={disabled}
+            className={`
+              w-16 h-16 rounded-full
+              bg-black/90 backdrop-blur-2xl border-2
+              flex items-center justify-center
+              transition-all duration-300
+              hover:scale-110 active:scale-95
+              ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+            `}
+            style={{
+              borderColor: accentColor,
+              boxShadow: `0 0 30px ${accentColor}60, 0 4px 20px rgba(0,0,0,0.5)`,
+            }}
+            aria-label={controlCenterOpen ? 'Close Control Center' : 'Open Control Center'}
+          >
+            <Zap
+              size={28}
+              style={{ color: accentColor }}
+              className="transition-transform duration-300"
+            />
+          </button>
+        </Hint>
+      </div>
+    );
   }
 
   return (
@@ -114,7 +192,7 @@ export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
               onMouseEnter={() => playHover()}
               disabled={disabled}
               className={`
-                w-14 h-14 rounded-full
+                w-12 h-12 rounded-full
                 bg-black/80 backdrop-blur-xl border-2
                 flex items-center justify-center
                 transition-all duration-300
@@ -127,7 +205,7 @@ export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
               }}
               aria-label={button.label}
             >
-              <button.icon size={24} style={{ color: button.color }} />
+              <button.icon size={20} style={{ color: button.color }} />
             </button>
           </Hint>
         ))}

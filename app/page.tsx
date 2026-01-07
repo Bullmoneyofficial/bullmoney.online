@@ -11,7 +11,6 @@ import {
   Layers, Lock, Unlock, Zap, ChevronLeft, ChevronRight, SunMoon
 } from 'lucide-react';
 import { installCrashTelemetry, safeMark } from '@/lib/telemetry';
-import { Hint } from '@/components/ui/Hint';
 
 // --- INTERACTION UTILITIES ---
 import { playClick, playHover, playSwipe, createSwipeHandlers } from '@/lib/interactionUtils';
@@ -121,6 +120,7 @@ export default function Home() {
   const [isSafeMode, setIsSafeMode] = useState(false);
   const [isSafari, setIsSafari] = useState(false);
   const [controlCenterOpen, setControlCenterOpen] = useState(false);
+  const controlCenterThemeRef = useRef<HTMLDivElement | null>(null);
   const heroLoaderFallbackRef = useRef<number | null>(null);
   const deviceProfile = useDeviceProfile();
   const colorMode = (resolvedTheme === 'light' || resolvedTheme === 'dark') ? resolvedTheme : 'dark';
@@ -165,6 +165,10 @@ export default function Home() {
   useEffect(() => {
     safeMark(`bm_stage:${currentStage}`);
   }, [currentStage]);
+
+  useEffect(() => {
+    if (showConfigurator) setControlCenterOpen(false);
+  }, [showConfigurator]);
 
   const handleOrientationDismiss = useCallback(() => {
     setShowOrientationWarning(false);
@@ -800,7 +804,8 @@ export default function Home() {
       {/* FIX #3: Add swipe-to-close to Quick Theme Picker */}
       {showThemeQuickPick && (
         <div
-          className={`fixed inset-0 z-[${UI_LAYERS.THEME_PICKER}] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4`}
+          className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4"
+          style={{ zIndex: UI_LAYERS.THEME_PICKER }}
           onClick={() => {
             playClick();
             setShowThemeQuickPick(false);
@@ -875,8 +880,8 @@ export default function Home() {
       {/* FIX #10: Add edge peeker for Info Panel (left edge) */}
       {!infoPanelOpen && currentStage === 'content' && (
         <div
-          className={`fixed left-0 top-1/2 -translate-y-1/2 z-[${UI_LAYERS.INFO_PEEKER}] w-1 h-32 bg-gradient-to-r from-blue-500/50 to-transparent cursor-pointer hover:w-2 transition-all`}
-          style={{ background: `linear-gradient(to right, ${accentColor}80, transparent)` }}
+          className="fixed left-0 top-1/2 -translate-y-1/2 w-1 h-32 bg-gradient-to-r from-blue-500/50 to-transparent cursor-pointer hover:w-2 transition-all"
+          style={{ zIndex: UI_LAYERS.INFO_PEEKER, background: `linear-gradient(to right, ${accentColor}80, transparent)` }}
           onTouchStart={(e) => {
             const touch = e.touches[0];
             (e.currentTarget as any)._swipeStartX = touch.clientX;
@@ -907,7 +912,8 @@ export default function Home() {
       {/* FIX #3: Add swipe-to-close to FAQ overlay */}
       {faqOpen && (
         <div
-          className={`fixed inset-0 z-[${UI_LAYERS.FAQ_OVERLAY}] bg-black/80 backdrop-blur-md flex items-center justify-center p-4`}
+          className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+          style={{ zIndex: UI_LAYERS.FAQ_OVERLAY }}
           onTouchStart={(e) => {
             const touch = e.touches[0];
             (e.currentTarget as any)._swipeStartY = touch.clientY;
@@ -953,7 +959,10 @@ export default function Home() {
 
       {/* FIX #4: Add progress bar showing scroll position through all pages */}
       {currentStage === 'content' && (
-        <div className={`fixed top-0 left-0 right-0 z-[${UI_LAYERS.PROGRESS_BAR}] h-1 bg-black/50 pointer-events-none`}>
+        <div
+          className="fixed top-0 left-0 right-0 h-1 bg-black/50 pointer-events-none"
+          style={{ zIndex: UI_LAYERS.PROGRESS_BAR }}
+        >
           <div
             className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
             style={{ width: `${((activePage - 1) / (PAGE_CONFIG.length - 1)) * 100}%` }}
@@ -968,15 +977,16 @@ export default function Home() {
           icon={<Layers size={20} />}
           position="bottom"
           defaultOpen={false}
+          open={controlCenterOpen}
           accentColor={accentColor}
           maxHeight="70vh"
           minHeight="28px"
-          className={`z-[${UI_LAYERS.PANELS_BOTTOM}]`}
+          zIndex={UI_LAYERS.PANELS_BOTTOM}
           onOpenChange={(isOpen) => setControlCenterOpen(isOpen)}
         >
           <div className="space-y-6">
             {/* Theme */}
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+            <div ref={controlCenterThemeRef} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <SunMoon size={18} style={{ color: accentColor }} />
@@ -1020,6 +1030,7 @@ export default function Home() {
                     setShowConfigurator(false);
                     return;
                   }
+                  setControlCenterOpen(false);
                   setShowConfigurator(true);
                   setParticleTrigger(prev => prev + 1);
                 }}
@@ -1064,6 +1075,35 @@ export default function Home() {
               >
                 {isPlaying ? (volume > 50 ? <Volume2 size={24} style={{ color: accentColor }} /> : <Volume1 size={24} style={{ color: accentColor }} />) : <VolumeX size={24} className="text-white/80" />}
                 <span className="text-xs text-white/80">Audio</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  if (navigator.vibrate) navigator.vibrate(10);
+                  setInfoPanelOpen((prev) => !prev);
+                }}
+                className="flex items-center justify-center gap-2 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-95"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
+                {infoPanelOpen ? <Unlock size={18} className="text-green-400" /> : <Lock size={18} className="text-blue-400" />}
+                <span className="text-xs text-white/80">{infoPanelOpen ? 'Close Info' : 'Page Info'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  if (navigator.vibrate) navigator.vibrate(10);
+                  setFaqOpen((prev) => !prev);
+                }}
+                className="flex items-center justify-center gap-2 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-95"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
+                <Info size={18} style={{ color: accentColor }} />
+                <span className="text-xs text-white/80">{faqOpen ? 'Close Help' : 'Help'}</span>
               </button>
             </div>
 
@@ -1157,7 +1197,8 @@ export default function Home() {
       {/* FIX #3: Add swipe-to-close to Theme Configurator */}
       {showConfigurator && (
         <div
-          className={`fixed inset-0 z-[${UI_LAYERS.MODAL_BACKDROP}] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300`}
+          className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300"
+          style={{ zIndex: UI_LAYERS.MODAL_BACKDROP }}
           onTouchStart={(e) => {
             const touch = e.touches[0];
             (e.currentTarget as any)._swipeStartY = touch.clientY;
@@ -1205,8 +1246,9 @@ export default function Home() {
 
       {/* --- LAYER 3: GLOBAL THEME LENS --- */}
       <div 
-        className={`fixed inset-0 pointer-events-none w-screen h-screen z-[${UI_LAYERS.SCROLL_INDICATOR}]`} 
+        className="fixed inset-0 pointer-events-none w-screen h-screen"
         style={{ 
+          zIndex: UI_LAYERS.SCROLL_INDICATOR,
       backdropFilter: deviceProfile.prefersReducedMotion ? 'none' : activeTheme.filter, 
       WebkitBackdropFilter: deviceProfile.prefersReducedMotion ? 'none' : activeTheme.filter, 
           transition: 'backdrop-filter 0.5s ease' 
@@ -1215,19 +1257,19 @@ export default function Home() {
 
       {/* --- LAYER 4: LOADING / GATING SCREENS --- */}
       {currentStage === "register" && (
-         <div className={`fixed inset-0 z-[${UI_LAYERS.THEME_LENS}] bg-black`} style={{ filter: activeTheme.filter, WebkitFilter: activeTheme.filter, transform: 'translateZ(0)' }}>
+         <div className="fixed inset-0 bg-black" style={{ zIndex: UI_LAYERS.THEME_LENS, filter: activeTheme.filter, WebkitFilter: activeTheme.filter, transform: 'translateZ(0)' }}>
              {/* @ts-ignore */}
              <RegisterPage onUnlock={handleRegisterComplete} theme={activeTheme} />
          </div>
       )}
       {currentStage === "hold" && (
-         <div className={`fixed inset-0 z-[${UI_LAYERS.THEME_LENS}]`} style={{ filter: activeTheme.filter, WebkitFilter: activeTheme.filter, transform: 'translateZ(0)' }}>
+         <div className="fixed inset-0" style={{ zIndex: UI_LAYERS.THEME_LENS, filter: activeTheme.filter, WebkitFilter: activeTheme.filter, transform: 'translateZ(0)' }}>
              {/* @ts-ignore */}
              <BullMoneyGate onUnlock={handleHoldComplete} theme={activeTheme}><></></BullMoneyGate>
          </div>
       )}
       {currentStage === "v2" && (
-         <div className={`fixed inset-0 z-[${UI_LAYERS.THEME_LENS}]`} style={{ filter: activeTheme.filter, WebkitFilter: activeTheme.filter, transform: 'translateZ(0)' }}>
+         <div className="fixed inset-0" style={{ zIndex: UI_LAYERS.THEME_LENS, filter: activeTheme.filter, WebkitFilter: activeTheme.filter, transform: 'translateZ(0)' }}>
              {/* @ts-ignore */}
              <MultiStepLoaderV2 onFinished={handleV2Complete} theme={activeTheme} />
          </div>
@@ -1241,41 +1283,16 @@ export default function Home() {
         />
       )}
 
-      {/* Control Center Launcher */}
-      {currentStage === 'content' && (
-        <div className={`fixed bottom-5 left-4 md:bottom-7 md:left-8 z-[${UI_LAYERS.CONTROL_CENTER_BTN}] pointer-events-auto`}>
-          <button
-            onClick={() => {
-              setControlCenterOpen((prev) => !prev);
-              if (navigator.vibrate) navigator.vibrate(8);
-              playClickSound();
-            }}
-            className={`apple-surface border border-white/10 text-white/80 rounded-full px-4 py-2 flex items-center gap-2 shadow-lg transition-all duration-300 hover:-translate-y-0.5 touch-manipulation active:scale-95 ${controlCenterOpen ? 'bg-white/10' : ''}`}
-            style={{
-              WebkitTapHighlightColor: 'transparent',
-              touchAction: 'manipulation',
-              boxShadow: controlCenterOpen ? `0 15px 40px ${accentColor}30` : undefined,
-              borderColor: controlCenterOpen ? `${accentColor}55` : 'rgba(255,255,255,0.1)'
-            }}
-            aria-label="Open control center"
-          >
-            <Layers size={16} style={{ color: accentColor }} />
-            <span className="text-sm font-semibold">Control Center</span>
-            <span className="text-[11px] text-white/60 uppercase tracking-wide">{controlCenterOpen ? 'Hide' : 'Show'}</span>
-          </button>
-        </div>
-      )}
-
       {/* --- LAYER 5: NAVBAR --- */}
       {currentStage === 'content' && (
-         <header className={`fixed top-0 left-0 right-0 z-[${UI_LAYERS.NAVBAR}] w-full transition-all duration-300`}>
-             <Navbar 
-                setShowConfigurator={setShowConfigurator} 
-                activeThemeId={activeThemeId} 
-                accentColor={accentColor}
-                onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)} 
-             />
-         </header>
+        <div style={{ zIndex: UI_LAYERS.NAVBAR }}>
+          <Navbar 
+            setShowConfigurator={setShowConfigurator} 
+            activeThemeId={activeThemeId} 
+            accentColor={accentColor}
+            onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)} 
+          />
+        </div>
       )}
 
 
@@ -1297,92 +1314,23 @@ export default function Home() {
         {/* UNIFIED CONTROLS - Same on Mobile & Desktop */}
         <UnifiedControls
           isMuted={isMuted}
-          onMuteToggle={() => setIsMuted(!isMuted)}
-          onThemeClick={() => setShowConfigurator(true)}
-          onFaqClick={() => setFaqOpen(true)}
+          onMuteToggle={toggleMusic}
+          disableSpline={disableSpline}
+          onPerformanceToggle={handlePerformanceToggle}
+          infoPanelOpen={infoPanelOpen}
+          onInfoToggle={() => setInfoPanelOpen((prev) => !prev)}
+          onFaqClick={() => setFaqOpen((prev) => !prev)}
+          onThemePanelOpen={() => {
+            setControlCenterOpen(true);
+            window.setTimeout(() => controlCenterThemeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+          }}
+          onControlCenterToggle={() => setControlCenterOpen((prev) => !prev)}
           onSettingsClick={toggleColorMode}
+          isMobile={deviceProfile.isMobile || isTouch}
+          controlCenterOpen={controlCenterOpen}
           accentColor={accentColor}
           disabled={currentStage !== 'content'}
         />
-
-        {/* INFO PANEL & FAQ CONTROLS - Unified for Mobile/Desktop */}
-        <div
-          className="fixed left-4 md:bottom-8 md:top-auto md:left-8 pointer-events-auto"
-          style={{ zIndex: UI_LAYERS.INFO_PEEKER, top: 'calc(6rem + env(safe-area-inset-top))' }}
-        >
-          <div className="flex flex-col gap-3">
-            {/* Info Panel Toggle - Mobile Optimized Card */}
-            <Hint label={infoPanelOpen ? 'Close page info' : 'Open page info'}>
-              <button
-                type="button"
-                onClick={(e) => {
-                  playClick();
-                  if (navigator.vibrate) navigator.vibrate(10);
-                  if (e.detail >= 2 || infoPanelOpen) {
-                    setInfoPanelOpen(false);
-                    return;
-                  }
-                  setInfoPanelOpen(true);
-                }}
-                onMouseEnter={() => playHover()}
-                onTouchStart={(e) => {
-                  playHover();
-                  e.currentTarget.style.transform = 'scale(0.95)';
-                }}
-                onTouchEnd={(e) => {
-                  e.currentTarget.style.transform = '';
-                }}
-                className="md:hidden flex items-center gap-3 bg-black/50 backdrop-blur border border-white/10 px-4 py-3 rounded-2xl text-left shadow-lg active:scale-95 transition-all hover:bg-black/60 min-h-[44px] touch-manipulation"
-                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
-                aria-label="Open page info"
-              >
-                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                  {infoPanelOpen ? <Unlock size={20} className="text-green-400" /> : <Lock size={20} className="text-blue-400" />}
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-white/60 tracking-widest">INFO PANEL</span>
-                  <span className="text-sm font-bold text-white">{infoPanelOpen ? "Tap to close" : "Swipe or tap"}</span>
-                </div>
-              </button>
-            </Hint>
-
-            {/* Info Panel Toggle - Desktop Compact */}
-            <Hint label={infoPanelOpen ? 'Close page info' : 'Open page info'}>
-              <ShineButton
-                className="hidden md:flex w-12 h-12 rounded-full"
-                onClick={(e: any) => {
-                  playClick();
-                  if (e?.detail >= 2 || infoPanelOpen) {
-                    setInfoPanelOpen(false);
-                    return;
-                  }
-                  setInfoPanelOpen(true);
-                }}
-                onMouseEnter={() => playHover()}
-              >
-                {infoPanelOpen ? <Unlock size={20} className="text-green-400" /> : <Lock size={20} className="text-blue-400" />}
-              </ShineButton>
-            </Hint>
-
-            {/* FAQ Toggle */}
-            <Hint label={faqOpen ? 'Close help' : 'Open help'}>
-              <ShineButton
-                className="w-12 h-12 rounded-full"
-                onClick={(e: any) => {
-                  playClick();
-                  if (e?.detail >= 2 || faqOpen) {
-                    setFaqOpen(false);
-                    return;
-                  }
-                  setFaqOpen(true);
-                }}
-                onMouseEnter={() => playHover()}
-              >
-                <Info size={20} className={faqOpen ? "text-green-400" : "text-white"} />
-              </ShineButton>
-            </Hint>
-          </div>
-        </div>
 
         {/* --- SCROLL CONTAINER --- */}
         <main
@@ -1409,7 +1357,10 @@ export default function Home() {
             )}
 
             {/* INFO MODAL (Legacy - kept for compatibility) */}
-            <div className={`fixed inset-0 z-[${UI_LAYERS.MODAL_CONTENT}] flex items-center justify-center px-4 transition-all duration-300 ${!!modalData ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+            <div
+              className={`fixed inset-0 flex items-center justify-center px-4 transition-all duration-300 ${!!modalData ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+              style={{ zIndex: UI_LAYERS.MODAL_CONTENT }}
+            >
                 <div 
                   className="absolute inset-0 bg-black/80 backdrop-blur-md" 
                   onClick={() => setModalData(null)} 
@@ -1484,8 +1435,8 @@ export default function Home() {
         {showEdgeSwipeHints && (
           <>
             <div
-              className={`fixed left-0 top-1/2 -translate-y-1/2 z-[${UI_LAYERS.NAV_ARROWS}] pointer-events-none`}
-              style={{ color: accentColor }}
+              className="fixed left-0 top-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ zIndex: UI_LAYERS.NAV_ARROWS, color: accentColor }}
             >
               <div className="flex items-center gap-2 px-3 py-2 rounded-r-full bg-black/60 border border-white/10 backdrop-blur animate-pulse">
                 <ChevronRight size={18} />
@@ -1493,8 +1444,8 @@ export default function Home() {
               </div>
             </div>
             <div
-              className={`fixed right-0 top-1/2 -translate-y-1/2 z-[${UI_LAYERS.NAV_ARROWS}] pointer-events-none`}
-              style={{ color: accentColor }}
+              className="fixed right-0 top-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ zIndex: UI_LAYERS.NAV_ARROWS, color: accentColor }}
             >
               <div className="flex items-center gap-2 px-3 py-2 rounded-l-full bg-black/60 border border-white/10 backdrop-blur animate-pulse">
                 <span className="text-[10px] font-mono tracking-widest text-white/70">SWIPE</span>
@@ -1504,7 +1455,7 @@ export default function Home() {
           </>
         )}
         {swipeIndicator && (
-          <div className={`fixed inset-0 pointer-events-none z-[${UI_LAYERS.MODAL_BACKDROP}] flex items-center justify-center`}>
+          <div className="fixed inset-0 pointer-events-none flex items-center justify-center" style={{ zIndex: UI_LAYERS.MODAL_BACKDROP }}>
             <div
               className={`text-white/40 text-6xl font-bold animate-pulse transition-all duration-300 ${
                 swipeIndicator === 'left' ? 'animate-slideOutLeft' : 'animate-slideOutRight'
@@ -1518,7 +1469,7 @@ export default function Home() {
 
         {/* SWIPE HELPER - Shows on first load */}
         {currentStage === 'content' && activePage === 1 && (
-          <div className={`fixed bottom-32 left-1/2 -translate-x-1/2 z-[${UI_LAYERS.CONTENT}] pointer-events-none animate-bounce`}>
+          <div className="hidden md:block fixed bottom-32 left-1/2 -translate-x-1/2 pointer-events-none animate-bounce" style={{ zIndex: UI_LAYERS.CONTENT }}>
             <div className="flex items-center gap-2 bg-black/70 backdrop-blur-xl px-4 py-2 rounded-full border border-white/20">
               <ChevronLeft size={16} className="text-white/60" />
               <span className="text-xs text-white/60 font-medium">Swipe to navigate</span>

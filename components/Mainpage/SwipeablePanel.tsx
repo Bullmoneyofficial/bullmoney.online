@@ -8,12 +8,14 @@ interface SwipeablePanelProps {
   title?: string;
   icon?: ReactNode;
   defaultOpen?: boolean;
+  open?: boolean;
   position?: 'bottom' | 'top';
   maxHeight?: string;
   minHeight?: string;
   className?: string;
   accentColor?: string;
   onOpenChange?: (isOpen: boolean) => void;
+  zIndex?: number;
 }
 
 /**
@@ -25,17 +27,20 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
   title,
   icon,
   defaultOpen = false,
+  open,
   position = 'bottom',
   maxHeight = '80vh',
   minHeight = '28px',
   className = '',
   accentColor = '#3b82f6',
-  onOpenChange
+  onOpenChange,
+  zIndex
 }) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const isControlled = typeof open === 'boolean';
+  const [isOpen, setIsOpen] = useState(isControlled ? open : defaultOpen);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartY, setDragStartY] = useState(0);
-  const [currentHeight, setCurrentHeight] = useState(defaultOpen ? maxHeight : minHeight);
+  const [currentHeight, setCurrentHeight] = useState((isControlled ? open : defaultOpen) ? maxHeight : minHeight);
   const panelRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [peek, setPeek] = useState(false);
@@ -50,9 +55,15 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
 
   const isCollapsed = !isOpen && !isDragging;
 
+  useEffect(() => {
+    if (!isControlled) return;
+    setIsOpen(open);
+    setCurrentHeight(open ? maxHeight : minHeight);
+  }, [isControlled, maxHeight, minHeight, open]);
+
   const toggleOpen = () => {
     const newState = !isOpen;
-    setIsOpen(newState);
+    if (!isControlled) setIsOpen(newState);
     setCurrentHeight(newState ? maxHeight : minHeight);
     onOpenChange?.(newState);
   };
@@ -100,11 +111,11 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
 
     // Determine if we should snap open or closed
     if (currentHeightPx > minHeightPx + threshold) {
-      setIsOpen(true);
+      if (!isControlled) setIsOpen(true);
       setCurrentHeight(maxHeight);
       onOpenChange?.(true);
     } else {
-      setIsOpen(false);
+      if (!isControlled) setIsOpen(false);
       setCurrentHeight(minHeight);
       onOpenChange?.(false);
     }
@@ -149,11 +160,11 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
     const threshold = (maxHeightPx - minHeightPx) / 2;
 
     if (currentHeightPx > minHeightPx + threshold) {
-      setIsOpen(true);
+      if (!isControlled) setIsOpen(true);
       setCurrentHeight(maxHeight);
       onOpenChange?.(true);
     } else {
-      setIsOpen(false);
+      if (!isControlled) setIsOpen(false);
       setCurrentHeight(minHeight);
       onOpenChange?.(false);
     }
@@ -193,6 +204,7 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
       style={{
         height: currentHeight,
         transition: isDragging ? 'none' : 'height 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        zIndex,
       }}
     >
       {/* Apple Glass Effect Background */}

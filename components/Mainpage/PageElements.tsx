@@ -31,7 +31,7 @@ export const ParticleEffect = memo(({ trigger }: { trigger: number }) => {
   }, [trigger]);
   
   return (
-    <div className={`fixed inset-0 pointer-events-none z-[${UI_LAYERS.PARTICLES}]`}>
+    <div className="fixed inset-0 pointer-events-none" style={{ zIndex: UI_LAYERS.PARTICLES }}>
       {particles.map(particle => (
         <div
           key={particle.id}
@@ -111,7 +111,8 @@ export const OrientationOverlay = ({ onDismiss }: { onDismiss: () => void }) => 
 
   return (
     <div
-      className={`fixed inset-0 z-[${UI_LAYERS.ORIENTATION_WARNING}] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500`}
+      className="fixed inset-0 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500"
+      style={{ zIndex: UI_LAYERS.ORIENTATION_WARNING }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -165,10 +166,11 @@ export const InfoPanel = ({ config, isOpen, onClose, accentColor }: any) => {
 
   return (
     <div 
-      className={`fixed left-0 top-0 h-full w-[22rem] md:w-[26rem] apple-surface bg-black/70 backdrop-blur-2xl border-r z-[${UI_LAYERS.INFO_PANEL}] transition-transform duration-500 ease-out ${
+      className={`fixed left-0 top-0 h-full w-[22rem] md:w-[26rem] apple-surface bg-black/70 backdrop-blur-2xl border-r transition-transform duration-500 ease-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
       style={{ 
+        zIndex: UI_LAYERS.INFO_PANEL,
         borderColor: `${accentColor}35`, 
         boxShadow: '0 40px 120px rgba(0,0,0,0.5)',
         backgroundImage: `linear-gradient(160deg, ${accentColor}12, rgba(255,255,255,0.02))`,
@@ -406,11 +408,12 @@ export const CustomCursor = ({ accentColor }: { accentColor: string }) => {
         />
       ))}
       <div
-        className={`fixed w-6 h-6 rounded-full border-2 pointer-events-none z-[${UI_LAYERS.CURSOR}] mix-blend-difference`}
+        className="fixed w-6 h-6 rounded-full border-2 pointer-events-none mix-blend-difference"
         style={{
           left: position.x,
           top: position.y,
           borderColor: accentColor,
+          zIndex: UI_LAYERS.CURSOR,
           transform: 'translate(-50%, -50%)',
           transition: 'transform 0.1s ease-out'
         }}
@@ -421,10 +424,10 @@ export const CustomCursor = ({ accentColor }: { accentColor: string }) => {
 
 export const HeroLoaderOverlay = memo(({ visible, message, accentColor }: { visible: boolean; message: string; accentColor: string }) => (
   <div
-    className={`fixed inset-0 z-[${UI_LAYERS.THEME_CONFIGURATOR}] flex items-center justify-center transition-opacity duration-400 ${
+    className={`fixed inset-0 flex items-center justify-center transition-opacity duration-400 ${
       visible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
     }`}
-    style={{ backgroundColor: 'rgba(0,0,0,0.92)' }}
+    style={{ zIndex: UI_LAYERS.THEME_CONFIGURATOR, backgroundColor: 'rgba(0,0,0,0.92)' }}
   >
     <div className="flex flex-col items-center gap-4 rounded-3xl border border-white/10 bg-black/80 px-8 py-12 text-center shadow-[0_30px_120px_rgba(0,0,0,0.8)]">
       <div

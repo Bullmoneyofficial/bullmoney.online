@@ -104,10 +104,10 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
           onClick={handlePrevPage}
           disabled={disabled || currentPage <= 1}
           className={`
-            fixed left-4 top-1/2 -translate-y-1/2
+            hidden md:flex fixed left-4 top-1/2 -translate-y-1/2
             w-14 h-14 rounded-full
             bg-black/60 backdrop-blur-xl border border-white/20
-            flex items-center justify-center
+            items-center justify-center
             transition-all duration-300
             ${disabled || currentPage <= 1 ? 'opacity-30 cursor-not-allowed' : 'hover:scale-110 active:scale-95'}
           `}
@@ -133,10 +133,10 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
           onClick={handleNextPage}
           disabled={disabled || currentPage >= totalPages}
           className={`
-            fixed right-4 top-1/2 -translate-y-1/2
+            hidden md:flex fixed right-4 top-1/2 -translate-y-1/2
             w-14 h-14 rounded-full
             bg-black/60 backdrop-blur-xl border border-white/20
-            flex items-center justify-center
+            items-center justify-center
             transition-all duration-300
             ${disabled || currentPage >= totalPages ? 'opacity-30 cursor-not-allowed' : 'hover:scale-110 active:scale-95'}
           `}
