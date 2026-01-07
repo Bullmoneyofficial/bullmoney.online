@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { audioLogger } from '@/lib/logger';
 
 // =========================================
 // 1. TYPES (Exported)
@@ -28,29 +29,31 @@ export const useLoaderAudio = (url: string, enabled: boolean) => {
     useEffect(() => {
         if (!enabled) return;
         const audio = new Audio(url);
-        audio.volume = 1.0; 
-        
+        audio.volume = 1.0;
+
         const unlock = () => { audio.play().catch(() => {}); removeListeners(); };
         const removeListeners = () => {
           window.removeEventListener('click', unlock);
           window.removeEventListener('touchstart', unlock);
         };
-    
+
         window.addEventListener('click', unlock);
         window.addEventListener('touchstart', unlock);
-        
+
         // Attempt to play immediately (will fail if no interaction)
         audio.play().catch(() => {});
-    
+
         const timer = setTimeout(() => {
             audio.pause();
             audio.currentTime = 0;
             removeListeners();
         }, 4800);
-    
+
+        // BUG FIX #24: Proper audio cleanup
         return () => {
           audio.pause();
           audio.currentTime = 0;
+          audio.src = ''; // BUG FIX #24: Release audio resource
           clearTimeout(timer);
           removeListeners();
         };
@@ -63,14 +66,18 @@ export const useOneTimeAmbient = (url: string, trigger: boolean) => {
         if (!trigger) return;
         // Check local storage only on the client side
         const hasPlayed = typeof window !== 'undefined' ? localStorage.getItem('ambient_played_v1') : 'true';
-        if (hasPlayed === 'true') return; 
-    
+        if (hasPlayed === 'true') return;
+
         const audio = new Audio(url);
-        audio.volume = 1.0; 
+        audio.volume = 1.0;
         audio.loop = false;
-        
+
+        // BUG FIX #25: Track if audio started to ensure cleanup
+        let hasStarted = false;
+
         // Must be triggered by a user action to avoid browser blocking
         const unlock = () => {
+            hasStarted = true;
             audio.play()
                 .then(() => localStorage.setItem('ambient_played_v1', 'true'))
                 .catch(() => {});
@@ -81,13 +88,21 @@ export const useOneTimeAmbient = (url: string, trigger: boolean) => {
             window.removeEventListener('click', unlock);
             window.removeEventListener('touchstart', unlock);
         };
-    
+
         window.addEventListener('click', unlock);
         window.addEventListener('touchstart', unlock);
-        
+
+        // BUG FIX #25: Cleanup with audio ended listener
+        const handleEnded = () => {
+          audio.src = '';
+        };
+        audio.addEventListener('ended', handleEnded);
+
         return () => {
             removeListeners();
+            audio.removeEventListener('ended', handleEnded);
             audio.pause();
+            audio.currentTime = 0;
             audio.src = "";
         };
       }, [url, trigger]);
@@ -97,16 +112,19 @@ export const useOneTimeAmbient = (url: string, trigger: boolean) => {
 export const useBackgroundMusic = (url: string) => {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
-  
+
     useEffect(() => {
       const audio = new Audio(url);
       audio.loop = true;
-      audio.volume = 0.01; 
+      audio.volume = 0.01;
       audioRef.current = audio;
-  
+
+      // BUG FIX #26: Proper cleanup
       return () => {
         audio.pause();
+        audio.currentTime = 0;
         audio.src = "";
+        audioRef.current = null;
       };
     }, [url]);
   
@@ -142,28 +160,46 @@ export const useAudioEngine = (enabled: boolean, profile: SoundProfile): SFXPlay
   const AudioContextRef = useRef<AudioContext | null>(null);
   const MasterGainRef = useRef<GainNode | null>(null);
 
-  // Initialize or Resume Audio Context (same logic)
+  // Initialize or Resume Audio Context with error handling
   const ensureContext = useCallback(async () => {
     if (typeof window === 'undefined') return null;
 
-    if (!AudioContextRef.current) {
-      const Ctx = window.AudioContext || (window as any).webkitAudioContext;
-      if (Ctx) {
-        AudioContextRef.current = new Ctx();
-        MasterGainRef.current = AudioContextRef.current.createGain();
-        MasterGainRef.current.gain.value = 0.5; 
-        MasterGainRef.current.connect(AudioContextRef.current.destination);
-      }
-    }
+    try {
+      if (!AudioContextRef.current) {
+        const Ctx = window.AudioContext || (window as any).webkitAudioContext;
 
-    if (AudioContextRef.current?.state === 'suspended') {
-      try {
-        await AudioContextRef.current.resume();
-      } catch (e) {
-        // Ignored: expected if called without user interaction
+        if (!Ctx) {
+          audioLogger.warn('Web Audio API not supported in this browser');
+          return null;
+        }
+
+        try {
+          AudioContextRef.current = new Ctx();
+          MasterGainRef.current = AudioContextRef.current.createGain();
+          MasterGainRef.current.gain.value = 0.5;
+          MasterGainRef.current.connect(AudioContextRef.current.destination);
+          audioLogger.log('AudioContext initialized successfully');
+        } catch (error) {
+          audioLogger.error('Failed to create AudioContext:', error);
+          return null;
+        }
       }
+
+      if (AudioContextRef.current?.state === 'suspended') {
+        try {
+          await AudioContextRef.current.resume();
+          audioLogger.log('AudioContext resumed');
+        } catch (e) {
+          // Ignored: expected if called without user interaction
+          audioLogger.warn('AudioContext resume failed (may need user interaction)');
+        }
+      }
+
+      return AudioContextRef.current;
+    } catch (error) {
+      audioLogger.error('Unexpected error in ensureContext:', error);
+      return null;
     }
-    return AudioContextRef.current;
   }, []);
 
   // Control Master Gain Node based on 'enabled' prop (same logic)
@@ -172,15 +208,38 @@ export const useAudioEngine = (enabled: boolean, profile: SoundProfile): SFXPlay
       if (MasterGainRef.current) {
         const ctx = AudioContextRef.current;
         if (!ctx) return;
-        
+
         // Target gain smooth transition
         const targetGain = enabled && profile !== 'SILENT' ? 0.5 : 0;
-        
+
         MasterGainRef.current.gain.cancelScheduledValues(ctx.currentTime);
         MasterGainRef.current.gain.linearRampToValueAtTime(targetGain, ctx.currentTime + 0.05);
       }
     });
-  }, [enabled, profile, ensureContext]); 
+  }, [enabled, profile, ensureContext]);
+
+  // BUG FIX #23: Cleanup AudioContext on unmount with enhanced error handling
+  useEffect(() => {
+    return () => {
+      if (AudioContextRef.current) {
+        try {
+          // Disconnect gain node first
+          if (MasterGainRef.current) {
+            MasterGainRef.current.disconnect();
+            MasterGainRef.current = null;
+          }
+          // Close audio context
+          if (AudioContextRef.current.state !== 'closed') {
+            AudioContextRef.current.close();
+          }
+          AudioContextRef.current = null;
+          audioLogger.log('AudioContext cleaned up successfully');
+        } catch (e) {
+          audioLogger.warn('Error cleaning up AudioContext:', e);
+        }
+      }
+    };
+  }, []);
 
   const playTone = useCallback(async (
     freq: number, 

@@ -288,47 +288,85 @@ export function usePerformanceMonitoring() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Monitor First Contentful Paint (FCP)
-    const observer = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        if (entry.entryType === 'paint') {
-          console.log(`${entry.name}: ${entry.startTime}ms`);
-        }
-      }
-    });
+    // BUG FIX #28: Feature detection for PerformanceObserver
+    if (typeof PerformanceObserver === 'undefined') {
+      console.warn('[PerformanceMonitoring] PerformanceObserver API not supported');
+      return;
+    }
 
-    observer.observe({ entryTypes: ['paint', 'largest-contentful-paint'] });
+    // BUG FIX #27: Track all resources for proper cleanup
+    let loadHandler: (() => void) | null = null;
+    let observer: PerformanceObserver | null = null;
+    let clsObserver: PerformanceObserver | null = null;
+
+    try {
+      // Monitor First Contentful Paint (FCP)
+      observer = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          if (entry.entryType === 'paint') {
+            console.log(`${entry.name}: ${entry.startTime}ms`);
+          }
+        }
+      });
+
+      observer.observe({ entryTypes: ['paint', 'largest-contentful-paint'] });
+    } catch (error) {
+      console.warn('[PerformanceMonitoring] Failed to create paint observer:', error);
+    }
 
     // Monitor Cumulative Layout Shift (CLS)
     let clsScore = 0;
-    const clsObserver = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        if (!(entry as any).hadRecentInput) {
-          clsScore += (entry as any).value;
+    try {
+      clsObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          if (!(entry as any).hadRecentInput) {
+            clsScore += (entry as any).value;
+          }
         }
-      }
-    });
+      });
 
-    clsObserver.observe({ entryTypes: ['layout-shift'] });
+      clsObserver.observe({ entryTypes: ['layout-shift'] });
+    } catch (error) {
+      console.warn('[PerformanceMonitoring] Failed to create layout-shift observer:', error);
+    }
 
     // Log performance metrics after page load
-    window.addEventListener('load', () => {
+    loadHandler = () => {
       setTimeout(() => {
-        const perfData = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-        console.log('Performance Metrics:', {
-          'DNS Lookup': perfData.domainLookupEnd - perfData.domainLookupStart,
-          'TCP Connection': perfData.connectEnd - perfData.connectStart,
-          'TTFB': perfData.responseStart - perfData.requestStart,
-          'DOM Load': perfData.domContentLoadedEventEnd - perfData.domContentLoadedEventStart,
-          'Page Load': perfData.loadEventEnd - perfData.loadEventStart,
-          'CLS Score': clsScore.toFixed(4),
-        });
+        try {
+          const perfData = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+          if (perfData) {
+            console.log('Performance Metrics:', {
+              'DNS Lookup': perfData.domainLookupEnd - perfData.domainLookupStart,
+              'TCP Connection': perfData.connectEnd - perfData.connectStart,
+              'TTFB': perfData.responseStart - perfData.requestStart,
+              'DOM Load': perfData.domContentLoadedEventEnd - perfData.domContentLoadedEventStart,
+              'Page Load': perfData.loadEventEnd - perfData.loadEventStart,
+              'CLS Score': clsScore.toFixed(4),
+            });
+          }
+        } catch (e) {
+          console.warn('[PerformanceMonitoring] Error logging metrics:', e);
+        }
       }, 0);
-    });
+    };
 
+    window.addEventListener('load', loadHandler);
+
+    // BUG FIX #27 ENHANCED: Comprehensive cleanup with null checks
     return () => {
-      observer.disconnect();
-      clsObserver.disconnect();
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      if (clsObserver) {
+        clsObserver.disconnect();
+        clsObserver = null;
+      }
+      if (loadHandler) {
+        window.removeEventListener('load', loadHandler);
+        loadHandler = null;
+      }
     };
   }, []);
 }

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 import { Footer } from "@/components/Mainpage/footer";
 import { ThemeProvider } from "@/context/providers";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // ✅ ADDED: Import the ShopProvider
 import { ShopProvider } from "@/app/VIP/ShopContext";
@@ -114,21 +115,23 @@ export default function RootLayout({
         className={cn("antialiased dark:bg-black bg-white", inter.className)}
         suppressHydrationWarning
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {/* ✅ ADDED: ShopProvider starts here */}
-          <ShopProvider>
+        <ErrorBoundary>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {/* ✅ ADDED: ShopProvider starts here */}
+            <ShopProvider>
 
-            {children}
+              {children}
 
-          </ShopProvider>
-          {/* ✅ ADDED: ShopProvider ends here */}
+            </ShopProvider>
+            {/* ✅ ADDED: ShopProvider ends here */}
 
-        </ThemeProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

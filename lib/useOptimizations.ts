@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useDeviceProfile } from './deviceProfile';
 import { initServiceWorker, swManager } from './serviceWorker';
 import { userStorage, devicePrefs } from './smartStorage';
+import { optimizationLogger } from './logger';
 
 /**
  * All-in-one hook for smart optimizations
@@ -19,32 +20,39 @@ export function useOptimizations(config?: {
   const [serviceWorkerReady, setServiceWorkerReady] = useState(false);
   const initRef = useRef(false);
 
+  // Memoize config to prevent unnecessary re-initialization
+  const stableConfig = useMemo(() => config, [
+    config?.enableServiceWorker,
+    JSON.stringify(config?.criticalScenes || []),
+    JSON.stringify(config?.preloadScenes || [])
+  ]);
+
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
 
     const init = async () => {
-      console.log('[Optimizations] Initializing...');
+      optimizationLogger.log('Initializing...');
 
       // 1. Initialize service worker
-      if (config?.enableServiceWorker !== false) {
+      if (stableConfig?.enableServiceWorker !== false) {
         const swSuccess = await initServiceWorker(deviceProfile);
         setServiceWorkerReady(swSuccess);
 
         if (swSuccess) {
-          console.log('[Optimizations] Service worker ready');
+          optimizationLogger.log('Service worker ready');
 
           // 2. Preload critical scenes
-          if (config?.criticalScenes?.length) {
-            config.criticalScenes.forEach(scene => {
+          if (stableConfig?.criticalScenes?.length) {
+            stableConfig.criticalScenes.forEach(scene => {
               swManager.preloadSpline(scene, 'critical');
             });
           }
 
           // 3. Preload other scenes (lower priority)
-          if (config?.preloadScenes?.length) {
+          if (stableConfig?.preloadScenes?.length) {
             setTimeout(() => {
-              config.preloadScenes?.forEach(scene => {
+              stableConfig.preloadScenes?.forEach(scene => {
                 swManager.preloadSpline(scene, 'normal');
               });
             }, 2000); // Wait 2s before preloading non-critical
@@ -57,11 +65,11 @@ export function useOptimizations(config?: {
       devicePrefs.set('last_visit', new Date().toISOString());
 
       setIsReady(true);
-      console.log('[Optimizations] Ready!', { deviceProfile, serviceWorkerReady });
+      optimizationLogger.log('Ready!', { deviceProfile, serviceWorkerReady });
     };
 
     init();
-  }, [deviceProfile, config?.enableServiceWorker]);
+  }, [deviceProfile, stableConfig]);
 
   return {
     deviceProfile,
@@ -239,28 +247,58 @@ export function usePerformanceMonitor() {
       firstContentfulPaint: firstContentfulPaint?.startTime || 0
     });
 
-    // Optional: FPS monitoring
+    // BUG FIX #22 ENHANCED: FPS monitoring with bulletproof RAF cleanup
     let frameCount = 0;
     let lastTime = performance.now();
+    let rafId: number | null = null;
+    let isRunning = true;
 
     const measureFPS = () => {
+      // CRITICAL: Check isRunning FIRST before any operations
+      if (!isRunning) {
+        // Double-check RAF cleanup
+        if (rafId !== null) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        return;
+      }
+
       const currentTime = performance.now();
       frameCount++;
 
       if (currentTime >= lastTime + 1000) {
         const currentFPS = Math.round((frameCount * 1000) / (currentTime - lastTime));
-        setMetrics(prev => ({ ...prev, fps: currentFPS }));
+
+        // Only update state if still running
+        if (isRunning) {
+          setMetrics(prev => ({ ...prev, fps: currentFPS }));
+        }
+
         frameCount = 0;
         lastTime = currentTime;
       }
 
-      requestAnimationFrame(measureFPS);
+      // Only schedule next frame if still running
+      if (isRunning) {
+        rafId = requestAnimationFrame(measureFPS);
+      }
     };
 
-    const rafId = requestAnimationFrame(measureFPS);
+    rafId = requestAnimationFrame(measureFPS);
 
     return () => {
-      cancelAnimationFrame(rafId);
+      // Set flag first to prevent any new RAF scheduling
+      isRunning = false;
+
+      // Cancel any pending RAF
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+
+      // Reset counters
+      frameCount = 0;
     };
   }, []);
 
