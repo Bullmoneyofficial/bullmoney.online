@@ -145,7 +145,7 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
       ref={containerRef}
       className="fixed right-0 top-1/2 -translate-y-1/2 z-[250] pointer-events-auto"
       style={{
-        right: 'max(0.5rem, env(safe-area-inset-right, 0px))',
+        right: 'max(1rem, env(safe-area-inset-right, 0.5rem))',
       }}
       onTouchStart={handleHoldStart}
       onMouseDown={handleHoldStart}

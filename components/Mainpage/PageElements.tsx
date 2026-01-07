@@ -277,6 +277,12 @@ export const InfoPanel = ({ config, isOpen, onClose, accentColor }: any) => {
 // ----------------------------------------------------------------------
 export const BackgroundMusicSystem = ({ themeId, onReady, volume, trackKey }: { themeId: string; onReady: (player: any) => void; volume: number; trackKey?: number; }) => {
   const videoId = (THEME_SOUNDTRACKS && THEME_SOUNDTRACKS[themeId]) ? THEME_SOUNDTRACKS[themeId] : 'jfKfPfyJRdk';
+
+  // Log theme and video changes for debugging
+  useEffect(() => {
+    console.log('[BackgroundMusicSystem] Theme changed to:', themeId, 'Video ID:', videoId, 'Track Key:', trackKey);
+  }, [themeId, videoId, trackKey]);
+
   const opts: YouTubeProps['opts'] = {
     height: '1', width: '1',
     playerVars: { autoplay: 1, controls: 0, loop: 1, playlist: videoId, modestbranding: 1, playsinline: 1, enablejsapi: 1, origin: typeof window !== 'undefined' ? window.location.origin : undefined },

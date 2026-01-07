@@ -988,6 +988,7 @@ export default function Home() {
   }, [isClient, currentStage, applyPerformanceChoice, defaultPerfMode]);
    
   const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
+    console.log('[Theme] Changing theme to:', themeId, 'muted:', muted);
     setActiveThemeId(themeId);
     setIsMuted(muted);
     // Use smart storage for better WebView compatibility
@@ -995,17 +996,34 @@ export default function Home() {
     userStorage.set('user_is_muted', String(muted));
     setShowConfigurator(false);
     setParticleTrigger(prev => prev + 1);
-    setMusicKey(prev => prev + 1); // Force music player reload
-  }, []);
+    // Force music player reload with new theme
+    setMusicKey(prev => prev + 1);
+
+    // If not muted, play the new theme's music
+    if (!muted) {
+      setTimeout(() => {
+        safePlay();
+      }, 100);
+    }
+  }, [safePlay]);
 
   const handleQuickThemeChange = useCallback((themeId: string) => {
+    console.log('[Theme] Quick changing theme to:', themeId);
     setActiveThemeId(themeId);
     // Use smart storage for better WebView compatibility
     userStorage.set('user_theme_id', themeId);
     setParticleTrigger(prev => prev + 1);
+    // Force music player reload with new theme
     setMusicKey(prev => prev + 1);
+
+    // If not muted, play the new theme's music
+    if (!isMuted) {
+      setTimeout(() => {
+        safePlay();
+      }, 100);
+    }
     playClickSound();
-  }, []);
+  }, [isMuted, safePlay]);
 
   const heroLoaderMessage = deviceProfile.isMobile ? 'Mobile-friendly hero warming' : 'Cinematic hero loading';
   const showHeroLoaderOverlay = currentStage === 'content' && !heroSceneReady && !heroLoaderHidden;
@@ -1027,7 +1045,12 @@ export default function Home() {
       <Analytics />
       <SpeedInsights />
       {shouldRenderContent && (
-        <BackgroundMusicSystem themeId={activeThemeId} onReady={handlePlayerReady} volume={volume} trackKey={musicKey} />
+        <BackgroundMusicSystem
+          themeId={activeThemeId}
+          onReady={handlePlayerReady}
+          volume={volume}
+          trackKey={musicKey}
+        />
       )}
       {shouldRenderContent && !isSafeMode && !deviceProfile.prefersReducedMotion && deviceProfile.isHighEndDevice && <ParticleEffect trigger={particleTrigger} />}
       {shouldRenderContent && !deviceProfile.isMobile && !deviceProfile.prefersReducedMotion && !isTouch && !isSafari && (
@@ -1584,7 +1607,7 @@ export default function Home() {
             setShowConfigurator={setShowConfigurator}
             activeThemeId={activeThemeId}
             accentColor={accentColor}
-            onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)}
+            onThemeChange={handleQuickThemeChange}
             isMuted={isMuted}
             onMuteToggle={toggleMusic}
             disableSpline={disableSpline}
@@ -1748,13 +1771,14 @@ export default function Home() {
             </div>
         </main>
 
-        {/* Mobile Scroll Indicator - New optimized version */}
-        <MobileScrollIndicator
+        {/* Mobile Scroll Indicator - DISABLED to prevent duplicate scrollbars */}
+        {/* The VerticalPageScroll component handles all scrolling UI */}
+        {/* <MobileScrollIndicator
           scrollContainerRef={scrollContainerRef}
           accentColor={accentColor}
           position="right"
           showOnDesktop={false}
-        />
+        /> */}
 
         {/* SWIPE NAVIGATION INDICATORS */}
         {showEdgeSwipeHints && (
