@@ -98,7 +98,12 @@ export const Navbar = ({
       <style jsx global>{GLOBAL_STYLES}</style>
 
       {/* Navbar Container */}
-      <div className="fixed top-0 inset-x-0 z-[1000] pointer-events-none select-none h-32 lg:h-24">
+      <div
+        className="fixed top-0 inset-x-0 z-[1000] pointer-events-none select-none h-32 lg:h-24"
+        style={{
+          paddingTop: 'env(safe-area-inset-top, 0px)'
+        }}
+      >
         
         {/* --- DESKTOP LAYOUT --- */}
         <div className="hidden lg:block">
@@ -127,7 +132,7 @@ export const Navbar = ({
         </div>
 
         {/* --- MOBILE/TAB LAYOUT --- */}
-        <div className="lg:hidden flex justify-between items-start w-full px-4 pt-4 z-[1010]">
+        <div className="lg:hidden flex justify-between items-start w-full px-4 pt-2 sm:pt-4 z-[1010]">
             <div className="pointer-events-auto pt-2 shrink-0 relative z-50">
                <AnimatedLogoWrapper accentColor={accentColor}>
                    <Image 
@@ -508,10 +513,18 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor }: { 
       animate={{ width: "auto" }}
       className="flex flex-col items-end bg-white/95 dark:bg-neutral-950/95 border border-neutral-200 dark:border-white/10 shadow-lg rounded-2xl relative max-w-full"
     >
-      <div className="flex items-center gap-1.5 p-1.5 relative z-20 max-w-full"> 
-         <div 
+      <div className="flex items-center gap-1.5 p-1.5 relative z-20 max-w-full">
+         {/* Scroll indicator for mobile nav */}
+         <div className="absolute left-0 right-0 bottom-0 h-0.5 bg-white/10 md:hidden">
+           <div className="h-full w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
+         </div>
+         <div
             ref={scrollRef}
-            className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth pr-1 pb-8 mb-[-32px] max-w-[50vw] sm:max-w-[60vw] md:max-w-none"
+            className="flex items-center gap-1.5 overflow-x-auto scroll-smooth pr-1 pb-2 max-w-[50vw] sm:max-w-[60vw] md:max-w-none"
+            style={{
+              scrollbarWidth: 'thin',
+              scrollbarColor: `${accentColor}40 transparent`
+            }}
          >
             {/* 1. Loop standard items */}
             {NAV_ITEMS.map((item, i) => (

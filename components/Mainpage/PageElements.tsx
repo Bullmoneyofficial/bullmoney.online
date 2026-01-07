@@ -165,16 +165,16 @@ export const InfoPanel = ({ config, isOpen, onClose, accentColor }: any) => {
   );
 
   return (
-    <div 
-      className={`fixed left-0 top-0 h-full w-[22rem] md:w-[26rem] apple-surface bg-black/70 backdrop-blur-2xl border-r transition-transform duration-500 ease-out ${
+    <div
+      className={`fixed left-0 top-0 h-full w-[85vw] sm:w-[22rem] md:w-[26rem] max-w-md apple-surface bg-black/70 backdrop-blur-2xl border-r transition-transform duration-500 ease-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
-      style={{ 
+      style={{
         zIndex: UI_LAYERS.INFO_PANEL,
-        borderColor: `${accentColor}35`, 
+        borderColor: `${accentColor}35`,
         boxShadow: '0 40px 120px rgba(0,0,0,0.5)',
         backgroundImage: `linear-gradient(160deg, ${accentColor}12, rgba(255,255,255,0.02))`,
-        touchAction: 'pan-y' 
+        touchAction: 'pan-y'
       }}
       onTouchStart={swipeHandlers.onTouchStart}
       onTouchMove={swipeHandlers.onTouchMove}

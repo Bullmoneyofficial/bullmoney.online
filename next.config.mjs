@@ -83,21 +83,17 @@ const nextConfig = {
   // Webpack optimizations
   webpack: (config, { isServer }) => {
     if (!isServer) {
+      // Let Next.js handle chunking for dynamic imports
+      // Remove custom spline chunking that conflicts with React.lazy()
       config.optimization = {
         ...config.optimization,
         splitChunks: {
-          chunks: 'all',
+          ...config.optimization.splitChunks,
           cacheGroups: {
-            default: false,
-            vendors: false,
-            spline: {
-              name: 'spline',
-              chunks: 'all',
-              test: /[\\/]node_modules[\\/](@splinetool)[\\/]/,
-              priority: 40,
-            },
+            ...config.optimization.splitChunks?.cacheGroups,
+            // Group other heavy libraries together but don't force spline into a static chunk
             lib: {
-              test: /[\\/]node_modules[\\/]/,
+              test: /[\\/]node_modules[\\/](?!@splinetool)/,
               name(module) {
                 const packageName = module.context.match(
                   /[\\/]node_modules[\\/](.*?)([\\/]|$)/

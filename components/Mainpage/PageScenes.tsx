@@ -19,6 +19,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
   const [isMobile, setIsMobile] = useState(false);
   const [mobileOptIn, setMobileOptIn] = useState(true);
   const [memoryBlocked, setMemoryBlocked] = useState(false);
+  const [shouldRenderContent, setShouldRenderContent] = useState(false);
   const isCritical = useMemo(() => CRITICAL_SPLINE_SCENES.includes(sceneUrl), [sceneUrl]);
   const resolvedSceneUrl = CRITICAL_SCENE_BLOB_MAP[sceneUrl] || sceneUrl;
   const hasSignaledReady = useRef(false);
@@ -54,6 +55,28 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
       devicePrefs.set('mobile_spline_opt_in', 'true');
     }
   }, []);
+
+  // Determine what to render based on all conditions
+  useEffect(() => {
+    const allowLoad = mobileOptIn || !isMobile || forceLiteSpline || forceLoadOverride || isCritical;
+
+    if (disabled && !forceLiteSpline && !forceLoadOverride) {
+      setShouldRenderContent(false);
+      return;
+    }
+
+    if (isMobile && memoryBlocked && !disabled && !forceLiteSpline) {
+      setShouldRenderContent(false);
+      return;
+    }
+
+    if (isMobile && !mobileOptIn && !forceLiteSpline && !disabled && !forceLoadOverride && !isCritical) {
+      setShouldRenderContent(false);
+      return;
+    }
+
+    setShouldRenderContent(true);
+  }, [disabled, forceLiteSpline, forceLoadOverride, isMobile, memoryBlocked, mobileOptIn, isCritical]);
 
   // OPTIMIZED: Always load splines when enabled, with smart mobile memory management
   useEffect(() => {
@@ -152,126 +175,136 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
     }
   }, [isLoaded, onSceneReady]);
 
-  // Show memory-blocked state for mobile users when memory manager prevents loading
-  if (isMobile && memoryBlocked && !disabled && !forceLiteSpline) {
-    return (
-      <div
-        className="w-full h-full relative transition-opacity duration-700 parallax-layer flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
-        style={{ transform: `translateY(${parallaxOffset * 0.4}px) translateZ(0)` }}
-      >
+  // Render different states based on shouldRenderContent flag
+  // This ensures hooks are always called in the same order
+  if (!shouldRenderContent) {
+    // Show memory-blocked state for mobile users when memory manager prevents loading
+    if (isMobile && memoryBlocked && !disabled && !forceLiteSpline) {
+      return (
         <div
-          className="absolute inset-0 opacity-30"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 30% 30%, rgba(255,165,0,0.12), transparent 45%), radial-gradient(circle at 70% 70%, rgba(255,140,0,0.1), transparent 45%)',
-          }}
-        />
-        <div className="relative z-10 text-center space-y-3 px-6 py-6 max-w-md mx-auto rounded-2xl border border-orange-500/20 bg-black/60 backdrop-blur">
-          <div className="text-[10px] font-mono text-orange-300/80 tracking-[0.25em]">MEMORY OPTIMIZED</div>
-          <div className="text-lg font-semibold text-white">Scene Queued</div>
-          <p className="text-white/60 text-sm">
-            To prevent crashes, only {memoryManager.getStatus().maxScenes} scene{memoryManager.getStatus().maxScenes > 1 ? 's' : ''} can load at once on mobile. This will load when you scroll closer.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isMobile && !mobileOptIn && !forceLiteSpline && !disabled && !forceLoadOverride && !isCritical) {
-    return (
-      <div
-        className="w-full h-full relative transition-opacity duration-700 parallax-layer flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
-        style={{ transform: `translateY(${parallaxOffset * 0.4}px) translateZ(0)` }}
-      >
-        <div
-          className="absolute inset-0 opacity-30"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 30% 30%, rgba(59,130,246,0.12), transparent 45%), radial-gradient(circle at 70% 70%, rgba(236,72,153,0.1), transparent 45%)',
-          }}
-        />
-        <div className="relative z-10 text-center space-y-3 px-6 py-6 max-w-md mx-auto rounded-2xl border border-white/10 bg-black/60 backdrop-blur">
-          <div className="text-[10px] font-mono text-blue-300/80 tracking-[0.25em]">MOBILE SAFE VIEW</div>
-          <div className="text-lg font-semibold text-white">Load 3D Preview?</div>
-          <p className="text-white/60 text-sm">
-            To avoid Safari/mobile crashes, 3D stays paused. Enable once to load a lightweight version.
-          </p>
-          <div className="flex items-center justify-center gap-3">
-            <button
-              onClick={() => {
-                setMobileOptIn(true);
-                devicePrefs.set('mobile_spline_opt_in', 'true');
-              }}
-              className="px-4 py-2 rounded-full bg-blue-500/80 text-white font-semibold text-sm shadow-[0_0_20px_rgba(59,130,246,0.35)] hover:bg-blue-500 active:scale-95 transition-all"
-            >
-              Enable 3D
-            </button>
-            <button
-              onClick={() => devicePrefs.set('mobile_spline_opt_in', 'false')}
-              className="px-3 py-2 rounded-full border border-white/10 text-white/70 text-xs hover:bg-white/5 active:scale-95 transition-all"
-            >
-              Keep Safe Mode
-            </button>
+          className="w-full h-full relative transition-opacity duration-700 parallax-layer flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
+          style={{ transform: `translateY(${parallaxOffset * 0.4}px) translateZ(0)` }}
+        >
+          <div
+            className="absolute inset-0 opacity-30"
+            style={{
+              backgroundImage:
+                'radial-gradient(circle at 30% 30%, rgba(255,165,0,0.12), transparent 45%), radial-gradient(circle at 70% 70%, rgba(255,140,0,0.1), transparent 45%)',
+            }}
+          />
+          <div className="relative z-10 text-center space-y-3 px-6 py-6 max-w-md mx-auto rounded-2xl border border-orange-500/20 bg-black/60 backdrop-blur">
+            <div className="text-[10px] font-mono text-orange-300/80 tracking-[0.25em]">MEMORY OPTIMIZED</div>
+            <div className="text-lg font-semibold text-white">Scene Queued</div>
+            <p className="text-white/60 text-sm">
+              To prevent crashes, only {memoryManager.getStatus().maxScenes} scene{memoryManager.getStatus().maxScenes > 1 ? 's' : ''} can load at once on mobile. This will load when you scroll closer.
+            </p>
           </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  if (disabled && !forceLiteSpline && !forceLoadOverride) {
-    return (
-      <div
-        className="w-full h-full relative transition-opacity duration-700 parallax-layer flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
-        style={{
-          transform: `translateY(${parallaxOffset * 0.5}px) translateZ(0)`,
-        }}
-      >
+    if (isMobile && !mobileOptIn && !forceLiteSpline && !disabled && !forceLoadOverride && !isCritical) {
+      return (
         <div
-          className="absolute inset-0 opacity-40"
-          style={{
-            backgroundImage:
-              'linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)',
-            backgroundSize: '40px 40px',
-          }}
-        />
-        <div
-          className="absolute inset-0 opacity-50"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 30% 20%, rgba(59,130,246,0.25), transparent 45%), radial-gradient(circle at 70% 80%, rgba(59,130,246,0.18), transparent 50%)',
-          }}
-        />
-        <div className="relative z-10 text-center px-6 py-5 rounded-2xl border border-white/10 bg-black/50 backdrop-blur">
-          <div className="text-blue-400/70 font-mono text-[10px] tracking-[0.3em] mb-2">SAFE MODE PREVIEW</div>
-          <div className="text-white/90 font-bold text-xl md:text-2xl">
-            {skeletonLabel || 'SPLINE SCENE'}
+          className="w-full h-full relative transition-opacity duration-700 parallax-layer flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
+          style={{ transform: `translateY(${parallaxOffset * 0.4}px) translateZ(0)` }}
+        >
+          <div
+            className="absolute inset-0 opacity-30"
+            style={{
+              backgroundImage:
+                'radial-gradient(circle at 30% 30%, rgba(59,130,246,0.12), transparent 45%), radial-gradient(circle at 70% 70%, rgba(236,72,153,0.1), transparent 45%)',
+            }}
+          />
+          <div className="relative z-10 text-center space-y-3 px-6 py-6 max-w-md mx-auto rounded-2xl border border-white/10 bg-black/60 backdrop-blur">
+            <div className="text-[10px] font-mono text-blue-300/80 tracking-[0.25em]">MOBILE SAFE VIEW</div>
+            <div className="text-lg font-semibold text-white">Load 3D Preview?</div>
+            <p className="text-white/60 text-sm">
+              To avoid Safari/mobile crashes, 3D stays paused. Enable once to load a lightweight version.
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={() => {
+                  setMobileOptIn(true);
+                  devicePrefs.set('mobile_spline_opt_in', 'true');
+                }}
+                className="px-4 py-2 rounded-full bg-blue-500/80 text-white font-semibold text-sm shadow-[0_0_20px_rgba(59,130,246,0.35)] hover:bg-blue-500 active:scale-95 transition-all min-h-[44px] touch-manipulation"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
+                Enable 3D
+              </button>
+              <button
+                onClick={() => {
+                  devicePrefs.set('mobile_spline_opt_in', 'false');
+                  setMobileOptIn(false);
+                  if (navigator.vibrate) navigator.vibrate([10, 5, 10]);
+                }}
+                className="px-3 py-2 rounded-full border border-white/10 text-white/70 text-xs hover:bg-white/5 active:scale-95 transition-all min-h-[44px] touch-manipulation"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
+                Keep Safe Mode
+              </button>
+            </div>
           </div>
-          <div className="text-white/40 font-mono text-[10px] mt-2">Skeleton render for mobile stability</div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  if (disabled) {
-    return (
-      <div
-        className="w-full h-full relative flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
-        style={{ transform: `translateY(${parallaxOffset * 0.35}px) translateZ(0)` }}
-      >
+    if (disabled && !forceLiteSpline && !forceLoadOverride) {
+      return (
         <div
-          className="absolute inset-0 opacity-30"
+          className="w-full h-full relative transition-opacity duration-700 parallax-layer flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
           style={{
-            backgroundImage:
-              'radial-gradient(circle at 30% 30%, rgba(59,130,246,0.12), transparent 45%), radial-gradient(circle at 70% 70%, rgba(236,72,153,0.1), transparent 45%)',
+            transform: `translateY(${parallaxOffset * 0.5}px) translateZ(0)`,
           }}
-        />
-        <div className="relative z-10 text-center px-6 py-5 rounded-2xl border border-white/10 bg-black/50 backdrop-blur">
-          <div className="text-white/60 font-mono text-[10px] tracking-[0.3em] mb-2">PERFORMANCE MODE</div>
-          <div className="text-white/90 font-bold text-xl md:text-2xl">{skeletonLabel || '3D DISABLED'}</div>
-          <div className="text-white/40 font-mono text-[10px] mt-2">Tap “Full 3D” to re-enable</div>
+        >
+          <div
+            className="absolute inset-0 opacity-40"
+            style={{
+              backgroundImage:
+                'linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)',
+              backgroundSize: '40px 40px',
+            }}
+          />
+          <div
+            className="absolute inset-0 opacity-50"
+            style={{
+              backgroundImage:
+                'radial-gradient(circle at 30% 20%, rgba(59,130,246,0.25), transparent 45%), radial-gradient(circle at 70% 80%, rgba(59,130,246,0.18), transparent 50%)',
+            }}
+          />
+          <div className="relative z-10 text-center px-6 py-5 rounded-2xl border border-white/10 bg-black/50 backdrop-blur">
+            <div className="text-blue-400/70 font-mono text-[10px] tracking-[0.3em] mb-2">SAFE MODE PREVIEW</div>
+            <div className="text-white/90 font-bold text-xl md:text-2xl">
+              {skeletonLabel || 'SPLINE SCENE'}
+            </div>
+            <div className="text-white/40 font-mono text-[10px] mt-2">Skeleton render for mobile stability</div>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
+
+    if (disabled) {
+      return (
+        <div
+          className="w-full h-full relative flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
+          style={{ transform: `translateY(${parallaxOffset * 0.35}px) translateZ(0)` }}
+        >
+          <div
+            className="absolute inset-0 opacity-30"
+            style={{
+              backgroundImage:
+                'radial-gradient(circle at 30% 30%, rgba(59,130,246,0.12), transparent 45%), radial-gradient(circle at 70% 70%, rgba(236,72,153,0.1), transparent 45%)',
+            }}
+          />
+          <div className="relative z-10 text-center px-6 py-5 rounded-2xl border border-white/10 bg-black/50 backdrop-blur">
+            <div className="text-white/60 font-mono text-[10px] tracking-[0.3em] mb-2">PERFORMANCE MODE</div>
+            <div className="text-white/90 font-bold text-xl md:text-2xl">{skeletonLabel || '3D DISABLED'}</div>
+            <div className="text-white/40 font-mono text-[10px] mt-2">Tap "Full 3D" to re-enable</div>
+          </div>
+        </div>
+      );
+    }
   }
 
   return (
@@ -345,6 +378,13 @@ export const FullScreenSection = memo(({ config, activePage, onVisible, parallax
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // PERFORMANCE MODE: Hide non-TSX pages completely when splines are disabled
+  const shouldShowSection = useMemo(() => {
+    // Only show TSX pages when splines are disabled
+    if (disableSpline && config.type !== 'tsx') return false;
+    return true;
+  }, [disableSpline, config.type]);
+
   // OPTIMIZED: Always render when splines are enabled, with mobile memory limits
   const shouldRender = useMemo(() => {
     // If splines are disabled via performance mode, don't render
@@ -369,6 +409,11 @@ export const FullScreenSection = memo(({ config, activePage, onVisible, parallax
   useEffect(() => {
     if(sectionRef.current) onVisible(sectionRef.current, config.id - 1);
   }, [onVisible, config.id]);
+
+  // PERFORMANCE MODE: Don't render section at all if it should be hidden
+  if (!shouldShowSection) {
+    return null;
+  }
 
   // FIX #7: Remove snap classes on mobile, use dynamic heights
   return (
@@ -402,8 +447,8 @@ export const FullScreenSection = memo(({ config, activePage, onVisible, parallax
           <>
             <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black to-transparent pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black to-transparent pointer-events-none" />
-            <div className={`absolute bottom-24 left-6 md:bottom-20 md:left-10 z-20 pointer-events-none transition-all duration-1000 ease-out max-w-[85%] ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-              <h2 className="text-4xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10 tracking-tighter select-none drop-shadow-2xl hover-lift">
+            <div className={`absolute bottom-24 left-6 sm:bottom-20 sm:left-8 md:bottom-20 md:left-10 z-20 pointer-events-none transition-all duration-1000 ease-out max-w-[85%] ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+              <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10 tracking-tighter select-none drop-shadow-2xl hover-lift">
                 {config.label}
               </h2>
             </div>
@@ -430,6 +475,11 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // PERFORMANCE MODE: Hide split sections when splines are disabled
+  if (disableSpline) {
+    return null;
+  }
 
   useEffect(() => {
     const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
@@ -568,22 +618,25 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
           <div className="mt-2 flex gap-2">
             <button
               onClick={() => { playClick(); nudgeSplit(isMobile ? -4 : -3); }}
-              className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:-translate-y-0.5 transition-all"
+              className="min-w-[44px] min-h-[44px] w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:-translate-y-0.5 transition-all touch-manipulation"
               aria-label="Move split up"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <ChevronUp size={16} className="text-blue-400" />
+              <ChevronUp size={20} className="text-blue-400" />
             </button>
             <button
               onClick={() => { playClick(); nudgeSplit(isMobile ? 4 : 3); }}
-              className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:translate-y-0.5 transition-all"
+              className="min-w-[44px] min-h-[44px] w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:translate-y-0.5 transition-all touch-manipulation"
               aria-label="Move split down"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <ChevronDown size={16} className="text-blue-400" />
+              <ChevronDown size={20} className="text-blue-400" />
             </button>
             <button
               onClick={() => { playClick(); handleTargetHit(); }}
-              className="flex-1 px-3 rounded-lg bg-blue-500/20 border border-blue-500/40 text-xs font-bold text-blue-100 hover:bg-blue-500/30 transition-colors"
+              className="flex-1 min-h-[44px] px-4 rounded-lg bg-blue-500/20 border border-blue-500/40 text-xs sm:text-sm font-bold text-blue-100 hover:bg-blue-500/30 transition-colors touch-manipulation"
               aria-label="Fire at target"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               Fire
             </button>
@@ -634,7 +687,7 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
           />
         </div>
         <div className="absolute top-8 left-8 z-20 pointer-events-none">
-           <div className={`text-2xl md:text-4xl font-bold text-white/90 transition-all duration-700 ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
+           <div className={`text-2xl sm:text-3xl md:text-4xl font-bold text-white/90 transition-all duration-700 ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
              {config.labelA}
            </div>
         </div>
@@ -654,27 +707,27 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
       </div>
       
       {/* PANEL B */}
-      <div 
-        style={{ [sizeProp]: `${100 - splitPos}%`, [otherSizeProp]: '100%' }} 
+      <div
+        style={{ [sizeProp]: `${100 - splitPos}%`, [otherSizeProp]: '100%' }}
         className={`relative overflow-hidden bg-black ${isDragging ? 'transition-none' : 'transition-all duration-300 ease-out'}`}
       >
         <div className="absolute inset-0 w-full h-full">
              <SceneWrapper
-               isVisible={shouldRender && !isMobile}
+               isVisible={shouldRender}
                sceneUrl={config.sceneB}
                forceNoPointer={isDragging}
                parallaxOffset={parallaxOffset * 0.7}
-               disabled={disableSpline || isMobile}
-               forceLiteSpline={forceLiteSpline}
+               disabled={disableSpline}
+               forceLiteSpline={forceLiteSpline || isMobile}
                forceLoadOverride={false}
-               eagerLoad={eagerRenderSplines && !disableSpline && shouldRender && !isMobile}
+               eagerLoad={eagerRenderSplines && !disableSpline && shouldRender}
                skeletonLabel={config.labelB}
                useCrashSafe={useCrashSafeSpline || !!deviceProfile?.isMobile || config.id === 6}
                deviceProfile={deviceProfile}
              />
         </div>
         <div className="absolute bottom-8 right-8 z-20 text-right pointer-events-none">
-             <div className={`text-2xl md:text-4xl font-bold text-white/90 transition-all duration-700 ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
+             <div className={`text-2xl sm:text-3xl md:text-4xl font-bold text-white/90 transition-all duration-700 ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
                {config.labelB}
              </div>
         </div>

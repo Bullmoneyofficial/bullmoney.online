@@ -690,9 +690,19 @@ export default function Home() {
     if (el && observerRef.current) observerRef.current.observe(el);
   }, []);
 
+  // Filter pages based on performance mode (must be before navigation functions)
+  const visiblePages = useMemo(() => {
+    if (disableSpline) {
+      // Only show TSX pages when splines are disabled
+      return PAGE_CONFIG.filter(page => page.type === 'tsx');
+    }
+    return PAGE_CONFIG;
+  }, [disableSpline]);
+
   // FIX #4: Improved page navigation with haptic feedback
   const scrollToPage = (index: number) => {
-    if(index < 0 || index >= PAGE_CONFIG.length) return;
+    const maxPages = disableSpline ? visiblePages.length : PAGE_CONFIG.length;
+    if(index < 0 || index >= maxPages) return;
     setIsMobileNavOpen(false);
     playClickSound();
     if (navigator.vibrate) navigator.vibrate(10);
@@ -703,13 +713,14 @@ export default function Home() {
   const [swipeIndicator, setSwipeIndicator] = useState<'left' | 'right' | null>(null);
 
   const navigateToNextPage = useCallback(() => {
-    if (activePage < PAGE_CONFIG.length) {
+    const maxPages = disableSpline ? visiblePages.length : PAGE_CONFIG.length;
+    if (activePage < maxPages) {
       playSwipe();
       scrollToPage(activePage); // activePage is 1-indexed, scrollToPage expects 0-indexed
       setSwipeIndicator('left');
       setTimeout(() => setSwipeIndicator(null), 500);
     }
-  }, [activePage]);
+  }, [activePage, disableSpline, visiblePages.length]);
 
   const navigateToPrevPage = useCallback(() => {
     if (activePage > 1) {
@@ -980,7 +991,7 @@ export default function Home() {
                 <X size={24} />
               </button>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {ALL_THEMES.filter(t => t.status === 'AVAILABLE').slice(0, 16).map(theme => (
                 <button
                   key={theme.id}
@@ -1100,12 +1111,15 @@ export default function Home() {
       {/* FIX #4: Add progress bar showing scroll position through all pages */}
       {currentStage === 'content' && (
         <div
-          className="fixed top-0 left-0 right-0 h-1 bg-black/50 pointer-events-none"
-          style={{ zIndex: UI_LAYERS.PROGRESS_BAR }}
+          className="fixed top-0 left-0 right-0 h-1 sm:h-1.5 md:h-2 bg-black/50 pointer-events-none"
+          style={{
+            zIndex: UI_LAYERS.PROGRESS_BAR,
+            top: 'env(safe-area-inset-top, 0px)'
+          }}
         >
           <div
             className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
-            style={{ width: `${((activePage - 1) / (PAGE_CONFIG.length - 1)) * 100}%` }}
+            style={{ width: `${visiblePages.length > 1 ? ((activePage - 1) / (visiblePages.length - 1)) * 100 : 0}%` }}
           />
         </div>
       )}
@@ -1489,8 +1503,8 @@ export default function Home() {
         {/* UNIFIED NAVIGATION - Same on Mobile & Desktop */}
         <UnifiedNavigation
           currentPage={activePage}
-          totalPages={PAGE_CONFIG.length}
-          pages={PAGE_CONFIG}
+          totalPages={visiblePages.length}
+          pages={visiblePages}
           onPageChange={scrollToPage}
           accentColor={accentColor}
           disabled={currentStage !== 'content'}
@@ -1572,7 +1586,7 @@ export default function Home() {
             </div>
 
             {/* SCROLL PAGES */}
-            {PAGE_CONFIG.map((page) => (
+            {visiblePages.map((page) => (
                 <React.Fragment key={page.id}>
                 {page.type === 'split' ? (
                     <DraggableSplitSection
@@ -1653,11 +1667,13 @@ export default function Home() {
         )}
 
         {/* SWIPE HELPER - Shows on first load */}
-        {currentStage === 'content' && activePage === 1 && (
+        {currentStage === 'content' && activePage === 1 && visiblePages.length > 1 && (
           <div className="hidden md:block fixed bottom-32 left-1/2 -translate-x-1/2 pointer-events-none animate-bounce" style={{ zIndex: UI_LAYERS.CONTENT }}>
           <div className="flex items-center gap-2 bg-black/70 backdrop-blur-xl px-4 py-2 rounded-full border border-white/20">
             <ChevronLeft size={16} className="text-white/60" />
-            <span className="text-xs text-white/60 font-medium">Swipe to navigate</span>
+            <span className="text-xs text-white/60 font-medium">
+              {disableSpline ? 'Navigate static pages' : 'Swipe to navigate'}
+            </span>
             <ChevronRight size={16} className="text-white/60" />
           </div>
         </div>
