@@ -140,6 +140,7 @@ export default function Home() {
   const [contentMounted, setContentMounted] = useState(false);
   const [hasSeenIntro, setHasSeenIntro] = useState(false);
   const [hasSeenHold, setHasSeenHold] = useState(false);
+  const [showPerfPrompt, setShowPerfPrompt] = useState(false);
   
   // File 1 States
   const [activePage, setActivePage] = useState<number>(1);
@@ -175,6 +176,7 @@ export default function Home() {
   const deviceProfile = useDeviceProfile();
   const colorMode = (resolvedTheme === 'light' || resolvedTheme === 'dark') ? resolvedTheme : 'dark';
   const telemetryContextRef = useRef<Record<string, unknown>>({});
+  const perfPromptTimeoutRef = useRef<number | null>(null);
 
   // Initialize optimization system
   const { isReady: optimizationsReady, serviceWorkerReady, storage } = useOptimizations({
@@ -276,6 +278,13 @@ export default function Home() {
     
   const accentColor = useMemo(() => getThemeColor(activeThemeId), [activeThemeId]);
   const isPlaying = useMemo(() => !isMuted, [isMuted]);
+  const defaultPerfMode = useMemo(
+    () =>
+      deviceProfile.isHighEndDevice && !deviceProfile.prefersReducedData && !isSafari && !isSafeMode
+        ? 'high'
+        : 'balanced',
+    [deviceProfile.isHighEndDevice, deviceProfile.prefersReducedData, isSafari, isSafeMode]
+  );
 
   // --- INIT ---
   useEffect(() => {
@@ -790,6 +799,19 @@ export default function Home() {
       devicePrefs.set('spline_enabled', String(!nextDisabled));
       devicePrefs.set('spline_pref_v2', 'true');
   }, [disableSpline]);
+  
+  const applyPerformanceChoice = useCallback((mode: 'high' | 'balanced') => {
+    if (perfPromptTimeoutRef.current) {
+      window.clearTimeout(perfPromptTimeoutRef.current);
+      perfPromptTimeoutRef.current = null;
+    }
+    const enable3D = mode === 'high';
+    setDisableSpline(!enable3D);
+    devicePrefs.set('spline_enabled', enable3D ? 'true' : 'false');
+    devicePrefs.set('spline_pref_v2', 'true');
+    devicePrefs.set('perf_choice', mode);
+    setShowPerfPrompt(false);
+  }, []);
 
   const requestControlCenterOpen = useCallback(() => {
     setControlCenterOpen(true);
@@ -836,6 +858,38 @@ export default function Home() {
     if (!isClient || !optimizationsReady || currentStage !== 'v2') return;
     handleV2Complete();
   }, [isClient, optimizationsReady, currentStage, handleV2Complete]);
+
+  // Ask user for device capability to adapt 3D loading (auto-select after timeout/skip)
+  useEffect(() => {
+    if (!isClient) return;
+
+    const savedChoice = devicePrefs.get('perf_choice');
+    if (currentStage !== 'content') {
+      setShowPerfPrompt(false);
+      if (perfPromptTimeoutRef.current) {
+        window.clearTimeout(perfPromptTimeoutRef.current);
+        perfPromptTimeoutRef.current = null;
+      }
+      return;
+    }
+
+    if (savedChoice) return;
+
+    setShowPerfPrompt(true);
+    if (perfPromptTimeoutRef.current) {
+      window.clearTimeout(perfPromptTimeoutRef.current);
+    }
+    perfPromptTimeoutRef.current = window.setTimeout(() => {
+      applyPerformanceChoice(defaultPerfMode);
+    }, 8000);
+
+    return () => {
+      if (perfPromptTimeoutRef.current) {
+        window.clearTimeout(perfPromptTimeoutRef.current);
+        perfPromptTimeoutRef.current = null;
+      }
+    };
+  }, [isClient, currentStage, applyPerformanceChoice, defaultPerfMode]);
    
   const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
     setActiveThemeId(themeId);
@@ -1367,6 +1421,50 @@ export default function Home() {
           message={heroLoaderMessage}
           accentColor={accentColor}
         />
+      )}
+
+      {/* Device capability prompt for adaptable spline */}
+      {showPerfPrompt && currentStage === 'content' && (
+        <div
+          className="fixed inset-0 flex items-center justify-center px-4"
+          style={{ zIndex: UI_LAYERS.MODAL_BACKDROP + 5, backdropFilter: 'blur(10px)', backgroundColor: 'rgba(0,0,0,0.65)' }}
+          onClick={() => applyPerformanceChoice(defaultPerfMode)}
+        >
+          <div
+            className="relative w-full max-w-lg rounded-3xl border border-white/10 bg-black/85 p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/60">Adaptive 3D</div>
+              <span className="text-[11px] text-white/50">Auto picks if you skip</span>
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-2">Is your device high-end?</h3>
+            <p className="text-white/70 text-sm leading-relaxed mb-6">
+              Choose full 3D for cinematic visuals or stay in performance mode. If you do nothing, we’ll auto-select based on your device.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button
+                onClick={() => applyPerformanceChoice('high')}
+                className="w-full rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-white font-semibold hover:border-blue-400 hover:bg-white/15 transition-all"
+                style={{ boxShadow: `0 10px 40px ${accentColor}30` }}
+              >
+                High-end (Full 3D)
+              </button>
+              <button
+                onClick={() => applyPerformanceChoice('balanced')}
+                className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white font-semibold hover:border-blue-300 hover:bg-white/10 transition-all"
+              >
+                Balanced (Performance)
+              </button>
+              <button
+                onClick={() => applyPerformanceChoice(defaultPerfMode)}
+                className="w-full rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-white/80 font-semibold hover:text-white hover:border-white/20 transition-all"
+              >
+                Skip (Auto pick)
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* --- LAYER 5: NAVBAR --- */}

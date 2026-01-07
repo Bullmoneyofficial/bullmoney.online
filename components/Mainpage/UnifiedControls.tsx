@@ -6,6 +6,14 @@ import { UI_LAYERS, GAME_UI_CONFIG } from '@/lib/uiLayers';
 import { playClick, playHover } from '@/lib/interactionUtils';
 import { Hint } from '@/components/ui/Hint';
 
+type ControlButton = {
+  icon: React.ComponentType<any>;
+  onClick: () => void;
+  label: string;
+  color: string;
+  active?: boolean;
+};
+
 interface UnifiedControlsProps {
   isMuted: boolean;
   onMuteToggle: () => void;
@@ -40,11 +48,50 @@ export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
   disabled = false
 }) => {
   const [showHint, setShowHint] = React.useState(true);
+  const [nudgeVisible, setNudgeVisible] = React.useState(false);
+  const nudgeTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const nudgeCycleRef = React.useRef<NodeJS.Timeout | null>(null);
 
   React.useEffect(() => {
     const timer = setTimeout(() => setShowHint(false), 12000);
     return () => clearTimeout(timer);
   }, []);
+
+  // Periodic hint when 3D is off
+  React.useEffect(() => {
+    if (nudgeTimerRef.current) {
+      clearTimeout(nudgeTimerRef.current);
+      nudgeTimerRef.current = null;
+    }
+    if (nudgeCycleRef.current) {
+      clearInterval(nudgeCycleRef.current);
+      nudgeCycleRef.current = null;
+    }
+
+    if (!disableSpline) {
+      setNudgeVisible(false);
+      return;
+    }
+
+    const showNudge = () => {
+      setNudgeVisible(true);
+      nudgeTimerRef.current = setTimeout(() => setNudgeVisible(false), 1500);
+    };
+
+    showNudge();
+    nudgeCycleRef.current = setInterval(showNudge, 5000);
+
+    return () => {
+      if (nudgeTimerRef.current) {
+        clearTimeout(nudgeTimerRef.current);
+        nudgeTimerRef.current = null;
+      }
+      if (nudgeCycleRef.current) {
+        clearInterval(nudgeCycleRef.current);
+        nudgeCycleRef.current = null;
+      }
+    };
+  }, [disableSpline]);
 
   const handleMuteToggle = () => {
     playClick();
@@ -94,7 +141,7 @@ export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
     }
   };
 
-  const controlCenterButton = {
+  const controlCenterButton: ControlButton = {
     icon: Zap,
     onClick: handleControlCenterToggle,
     label: controlCenterOpen ? 'Close Control Center' : 'Open Control Center',
@@ -102,7 +149,7 @@ export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
     active: controlCenterOpen,
   };
 
-  const controlButtons = [
+  const controlButtons: ControlButton[] = [
     controlCenterButton,
     {
       icon: infoPanelOpen ? Unlock : Lock,
@@ -165,6 +212,14 @@ export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
             boxShadow: `0 20px 60px ${accentColor}25`,
           }}
         >
+          {nudgeVisible && disableSpline && (
+            <div
+              className="pointer-events-none absolute -top-8 right-4 rounded-full px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white bg-blue-500/80 shadow-[0_10px_30px_rgba(59,130,246,0.45)] animate-pulse"
+              style={{ boxShadow: `0 0 30px ${accentColor}80` }}
+            >
+              Click me
+            </div>
+          )}
           {controlButtons.map((button, index) => (
             <Hint key={index} label={button.label}>
               <button
