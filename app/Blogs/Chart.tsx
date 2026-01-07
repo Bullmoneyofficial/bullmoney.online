@@ -2,8 +2,7 @@
 "use client";
 
 import React from "react";
-import { motion, AnimatePresence, useSpring, useMotionValue } from "framer-motion"; // Added hooks
-import { IconExternalLink, IconRefresh } from "@tabler/icons-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChartBar } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -121,7 +120,6 @@ const TradingViewMarketOverview: React.FC<{ height?: number; tabs: any }> = ({
 /* ---------------------- MINIMAL FUTURE-RUSTIC HERO ---------------------- */
 function FuturisticHero({ onShow }: { onShow: () => void }) {
   const heroRef = React.useRef<HTMLDivElement>(null);
-  const [isHovering, setIsHovering] = React.useState(false);
 
   return (
     <motion.div
@@ -129,8 +127,6 @@ function FuturisticHero({ onShow }: { onShow: () => void }) {
       className="relative flex cursor-none flex-col items-center justify-center overflow-hidden rounded-3xl py-28 md:py-32"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
     >
      
 
@@ -225,7 +221,7 @@ export const TradingViewDropdown = ({
 }: {
   onMarketChange?: (v: "all" | "crypto" | "stocks" | "forex" | "metals") => void;
 }) => {
-  const [selected, setSelected] = React.useState(charts[0]);
+  const [selected, setSelected] = React.useState(charts[0]!);
   const [open, setOpen] = React.useState(false);
   const [showChart, setShowChart] = React.useState(false);
 
@@ -234,6 +230,8 @@ export const TradingViewDropdown = ({
     setOpen(false);
     onMarketChange?.(chart.category);
   };
+
+  if (!selected) return null;
 
   return (
     <motion.div
@@ -327,7 +325,7 @@ export const TradingViewDropdown = ({
 /* --------------------------- PAGE WRAPPER --------------------------- */
 
 export function CTA() {
-  const [activeMarket, setActiveMarket] = React.useState<
+  const [, setActiveMarket] = React.useState<
     "all" | "crypto" | "stocks" | "forex" | "metals"
   >("all");
 

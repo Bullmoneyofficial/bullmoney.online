@@ -20,7 +20,7 @@ import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2";
 
 // --- THEME & NAV IMPORTS ---
 import { Navbar } from "@/components/Mainpage/navbar"; 
-import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
+import { ALL_THEMES, Theme, THEME_SOUNDTRACKS } from '@/components/Mainpage/ThemeComponents';
 import { safeGetItem, safeSetItem } from '@/lib/localStorage';
 
 // --- DYNAMIC IMPORTS ---
@@ -75,14 +75,12 @@ const OnboardingHelper = ({ onDismiss }: { onDismiss: () => void }) => {
     );
 };
 
-const BackgroundMusicSystem = ({ 
-  themeId, 
-  onReady,
-  volume 
-}: { 
+const BackgroundMusicSystem = ({
+  themeId,
+  onReady
+}: {
   themeId: string;
   onReady: (player: any) => void;
-  volume: number;
 }) => {
   const videoId = (THEME_SOUNDTRACKS && THEME_SOUNDTRACKS[themeId]) 
     ? THEME_SOUNDTRACKS[themeId] 
@@ -270,7 +268,6 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
   const [volume, setVolume] = useState(25);
   const playerRef = useRef<any>(null);
   
-  const [isPreviewing, setIsPreviewing] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showHelper, setShowHelper] = useState(false);
 
@@ -315,13 +312,13 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
   };
 
   const safePlay = useCallback(() => {
-      if (isMuted || showConfigurator || isPreviewing || !playerRef.current) return;
+      if (isMuted || showConfigurator || !playerRef.current) return;
       try {
           if(typeof playerRef.current.unMute === 'function') playerRef.current.unMute();
           if(typeof playerRef.current.setVolume === 'function') playerRef.current.setVolume(volume);
           if(typeof playerRef.current.playVideo === 'function') playerRef.current.playVideo();
       } catch (e) { console.warn("Audio Player: Interaction prevented", e); }
-  }, [isMuted, showConfigurator, isPreviewing, volume]);
+  }, [isMuted, showConfigurator, volume]);
 
   const safePause = useCallback(() => {
       try { playerRef.current?.pauseVideo?.(); } catch (e) {}
@@ -358,31 +355,31 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
           player.unMute?.();
           player.setVolume?.(volume);
       }
-      if (!isMuted && !showConfigurator && !isPreviewing) player.playVideo?.();
-  }, [isMuted, showConfigurator, isPreviewing, volume]);
+      if (!isMuted && !showConfigurator) player.playVideo?.();
+  }, [isMuted, showConfigurator, volume]);
 
   useEffect(() => {
       if (!playerRef.current) return;
-      if (showConfigurator || isPreviewing) safePause();
+      if (showConfigurator) safePause();
       else if (!isMuted) safePlay();
-  }, [showConfigurator, isPreviewing, isMuted, safePause, safePlay]);
+  }, [showConfigurator, isMuted, safePause, safePlay]);
 
   const toggleMusic = useCallback(() => {
       const newMutedState = !isMuted;
       setIsMuted(newMutedState);
       safeSetItem('user_is_muted', String(newMutedState));
       if (newMutedState) safePause();
-      else if (!showConfigurator && !isPreviewing) safePlay();
-  }, [isMuted, showConfigurator, isPreviewing, safePlay, safePause]);
+      else if (!showConfigurator) safePlay();
+  }, [isMuted, showConfigurator, safePlay, safePause]);
 
-  const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
+  const handleThemeChange = useCallback((themeId: string, _sound: string, muted: boolean) => {
     setIsTransitioning(true);
     setTimeout(() => {
         setActiveThemeId(themeId);
-        setIsMuted(muted); 
+        setIsMuted(muted);
         safeSetItem('user_theme_id', themeId);
         safeSetItem('user_is_muted', String(muted));
-        setShowConfigurator(false); 
+        setShowConfigurator(false);
         setTimeout(() => setIsTransitioning(false), 100);
     }, 300);
   }, []);
@@ -423,10 +420,9 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
         .animate-music-bar-3 { animation: music-bar-3 0.9s ease-in-out infinite; }
       `}</style>
       
-      <BackgroundMusicSystem 
-        themeId={activeThemeId} 
-        onReady={handlePlayerReady} 
-        volume={volume}
+      <BackgroundMusicSystem
+        themeId={activeThemeId}
+        onReady={handlePlayerReady}
       />
 
       {/* FIXED WIDGETS - Now receiving THEME prop */}
@@ -516,10 +512,10 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
         {/* MAIN CONTENT */}
         <div className={currentStage === 'content' ? 'profit-reveal' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
             
-            <Navbar 
-                setShowConfigurator={setShowConfigurator} 
+            <Navbar
+                setShowConfigurator={setShowConfigurator}
                 activeThemeId={activeThemeId}
-                onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)}
+                onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL', isMuted)}
             />
 
             <main className="relative pt-20 z-10">

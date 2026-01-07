@@ -1,19 +1,18 @@
 "use client";
 import React, { useEffect, useState, useCallback, useMemo, useRef, ReactNode, RefObject } from "react";
-import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger"; 
-import { useBlog, BlogPost } from "./BlogContext"; 
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useBlog, BlogPost } from "./BlogContext";
 import AdminLoginModal from "./AdminLoginModal";
 import AdminPanel from "./AdminPanel";
-import { cn } from "@/lib/utils";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 // --- PARTICLE IMPORTS ---
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
-import type { Container, Engine } from "@tsparticles/engine";
+import type { Engine } from "@tsparticles/engine";
 
 // Register ScrollTrigger once
 if (typeof window !== "undefined") {
@@ -329,8 +328,8 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
       corners.forEach((corner, i) => {
         const currentX = gsap.getProperty(corner, 'x') as number;
         const currentY = gsap.getProperty(corner, 'y') as number;
-        const targetX = targetCornerPositionsRef.current![i].x - cursorX;
-        const targetY = targetCornerPositionsRef.current![i].y - cursorY;
+        const targetX = (targetCornerPositionsRef.current?.[i]?.x ?? 0) - cursorX;
+        const targetY = (targetCornerPositionsRef.current?.[i]?.y ?? 0) - cursorY;
         const finalX = currentX + (targetX - currentX) * strength;
         const finalY = currentY + (targetY - currentY) * strength;
         
@@ -423,8 +422,8 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
 
       corners.forEach((corner, i) => {
         gsap.to(corner, {
-          x: targetCornerPositionsRef.current![i].x - cursorX,
-          y: targetCornerPositionsRef.current![i].y - cursorY,
+          x: (targetCornerPositionsRef.current?.[i]?.x ?? 0) - cursorX,
+          y: (targetCornerPositionsRef.current?.[i]?.y ?? 0) - cursorY,
           duration: 0.2,
           ease: 'power2.out'
         });
@@ -449,7 +448,7 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
           ];
           const tl = gsap.timeline();
           corners.forEach((corner, index) => {
-            tl.to(corner, { x: positions[index].x, y: positions[index].y, duration: 0.3, ease: 'power3.out' }, 0);
+            tl.to(corner, { x: positions[index]?.x ?? 0, y: positions[index]?.y ?? 0, duration: 0.3, ease: 'power3.out' }, 0);
           });
         }
         
@@ -873,7 +872,7 @@ type BlogCardProps = {
   post: BlogPost; isAdmin: boolean; isExpanded: boolean; onClick: () => void; onEdit: () => void; onDelete: () => void; onToggleVisibility: () => void;
 };
 
-function BlogCard({ post, isAdmin, isExpanded, onClick, onEdit, onDelete, onToggleVisibility }: BlogCardProps) {
+function BlogCard({ post, isAdmin, onClick, onEdit, onDelete, onToggleVisibility }: BlogCardProps) {
   const formattedDate = new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
   return (

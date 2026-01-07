@@ -8,7 +8,6 @@ import { SparklesCore } from "@/components/Mainpage/sparkles"; // Added missing 
 
 export default function RecruitPage() {
   const [open, setOpen] = useState(false);
-  const [activePartner, setActivePartner] = useState("Vantage broker");
   const [isLive, setIsLive] = useState(false); // Track if live or not
   const router = useRouter(); // Hook for navigation
 

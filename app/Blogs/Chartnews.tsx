@@ -306,7 +306,7 @@ TradingViewMarketOverview.displayName = "TradingViewMarketOverview";
 
 /* --------------------------- CHART SECTION --------------------------- */
 export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarketChange?: (v: string) => void, showTip?: boolean }) => {
-  const [selected, setSelected] = useState(CHARTS[0]);
+  const [selected, setSelected] = useState(CHARTS[0]!);
   const [open, setOpen] = useState(false);
   const [showChart, setShowChart] = useState(false);
   const isMobile = useIsMobile();
@@ -317,6 +317,8 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
     setOpen(false);
     onMarketChange?.(chart.category);
   }, [onMarketChange]);
+
+  if (!selected) return null;
 
   return (
     <div className="relative mx-auto w-full max-w-screen-xl rounded-3xl border border-white/5 bg-black/40 p-4 md:p-6 shadow-2xl backdrop-blur-sm">

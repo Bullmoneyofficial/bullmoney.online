@@ -72,12 +72,8 @@ export const useOneTimeAmbient = (url: string, trigger: boolean) => {
         audio.volume = 1.0;
         audio.loop = false;
 
-        // BUG FIX #25: Track if audio started to ensure cleanup
-        let hasStarted = false;
-
         // Must be triggered by a user action to avoid browser blocking
         const unlock = () => {
-            hasStarted = true;
             audio.play()
                 .then(() => localStorage.setItem('ambient_played_v1', 'true'))
                 .catch(() => {});
@@ -242,12 +238,12 @@ export const useAudioEngine = (enabled: boolean, profile: SoundProfile): SFXPlay
   }, []);
 
   const playTone = useCallback(async (
-    freq: number, 
-    type: OscillatorType, 
-    duration: number, 
-    vol: number, 
-    attack = 0.005, 
-    decay = 0.1
+    freq: number,
+    type: OscillatorType,
+    duration: number,
+    vol: number,
+    attack = 0.005,
+    _decay = 0.1
   ) => {
     if (!enabled || profile === 'SILENT') return;
     

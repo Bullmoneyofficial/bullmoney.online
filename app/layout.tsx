@@ -4,7 +4,6 @@ import "./globals.css";
 import "../styles/performance-optimizations.css";
 import { cn } from "@/lib/utils";
 
-import { Footer } from "@/components/Mainpage/footer";
 import { ThemeProvider } from "@/context/providers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
