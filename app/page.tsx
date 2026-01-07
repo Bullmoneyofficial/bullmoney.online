@@ -6,7 +6,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { useTheme as useNextTheme } from 'next-themes';
 import {
-  Volume2, Volume1, VolumeX, X, Palette, Sparkles, MessageCircle,
+  Volume2, Volume1, VolumeX, X, Palette, MessageCircle,
   Info, Smartphone, Monitor,
   Layers, Lock, Unlock, Zap, ChevronLeft, ChevronRight, SunMoon
 } from 'lucide-react';
@@ -16,21 +16,7 @@ import { installCrashTelemetry, safeMark } from '@/lib/telemetry';
 import { playClick, playHover, playSwipe, createSwipeHandlers } from '@/lib/interactionUtils';
 
 // --- COMPONENT IMPORTS ---
-import { Navbar } from "@/components/Mainpage/navbar";
-import RegisterPage from "./register/pagemode";
-import BullMoneyGate from "@/components/Mainpage/TradingHoldUnlock";
-import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2";
-import InlineFaq from "@/components/Mainpage/InlineFaq";
-import { Footer } from "@/components/Mainpage/footer";
-import {
-  ParticleEffect,
-  ShineButton,
-  OrientationOverlay,
-  InfoPanel,
-  BackgroundMusicSystem,
-  CustomCursor,
-  HeroLoaderOverlay
-} from "@/components/Mainpage/PageElements";
+// Component imports are dynamically loaded below to keep the main bundle lean.
 const FullScreenSection = dynamic(
   () => import('@/components/Mainpage/PageScenes').then((mod) => mod.FullScreenSection),
   { ssr: false, loading: () => <section className="h-[100dvh] w-full bg-black" /> }
@@ -48,12 +34,8 @@ import { PAGE_CONFIG, CRITICAL_SPLINE_SCENES, CRITICAL_SCENE_BLOB_MAP, FALLBACK_
 // --- OPTIMIZATION IMPORTS ---
 import { useOptimizations } from '@/lib/useOptimizations';
 import { userStorage, devicePrefs } from '@/lib/smartStorage';
-import { SwipeablePanel } from '@/components/Mainpage/SwipeablePanel';
-import { MobileScrollIndicator } from '@/components/Mainpage/MobileScrollIndicator';
 
 // --- UNIFIED UI IMPORTS ---
-import { UnifiedNavigation } from '@/components/Mainpage/UnifiedNavigation';
-import { UnifiedControls } from '@/components/Mainpage/UnifiedControls';
 import { UI_LAYERS } from '@/lib/uiLayers';
 import '@/styles/unified-ui.css';
 import { GLOBAL_STYLES } from '@/styles/globalStyles';
@@ -61,9 +43,73 @@ import { GLOBAL_STYLES } from '@/styles/globalStyles';
 // --- TSX PAGE IMPORTS ---
 
 // --- DYNAMIC IMPORTS ---
+const Navbar = dynamic(
+  () => import('@/components/Mainpage/navbar').then((mod) => mod.Navbar),
+  { ssr: false, loading: () => null }
+);
+const RegisterPage = dynamic(() => import('./register/pagemode'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 bg-black" />
+});
+const BullMoneyGate = dynamic(() => import('@/components/Mainpage/TradingHoldUnlock'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 bg-black" />
+});
+const MultiStepLoaderV2 = dynamic(() => import('@/components/Mainpage/MultiStepLoaderv2'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 bg-black" />
+});
+const InlineFaq = dynamic(() => import('@/components/Mainpage/InlineFaq'), {
+  ssr: false,
+  loading: () => <div className="p-6 text-white/60 text-center">Loading help...</div>
+});
+const Footer = dynamic(() => import('@/components/Mainpage/footer').then((mod) => mod.Footer), {
+  ssr: false,
+  loading: () => <div className="h-24" />
+});
+const ParticleEffect = dynamic(
+  () => import('@/components/Mainpage/PageElements').then((mod) => mod.ParticleEffect),
+  { ssr: false, loading: () => null }
+);
+const OrientationOverlay = dynamic(
+  () => import('@/components/Mainpage/PageElements').then((mod) => mod.OrientationOverlay),
+  { ssr: false, loading: () => null }
+);
+const InfoPanel = dynamic(
+  () => import('@/components/Mainpage/PageElements').then((mod) => mod.InfoPanel),
+  { ssr: false, loading: () => null }
+);
+const BackgroundMusicSystem = dynamic(
+  () => import('@/components/Mainpage/PageElements').then((mod) => mod.BackgroundMusicSystem),
+  { ssr: false, loading: () => null }
+);
+const CustomCursor = dynamic(
+  () => import('@/components/Mainpage/PageElements').then((mod) => mod.CustomCursor),
+  { ssr: false, loading: () => null }
+);
+const HeroLoaderOverlay = dynamic(
+  () => import('@/components/Mainpage/PageElements').then((mod) => mod.HeroLoaderOverlay),
+  { ssr: false, loading: () => null }
+);
 const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor'), { 
   ssr: false, 
   loading: () => <div className="hidden">Loading...</div> 
+});
+const UnifiedNavigation = dynamic(() => import('@/components/Mainpage/UnifiedNavigation'), {
+  ssr: false,
+  loading: () => null
+});
+const UnifiedControls = dynamic(() => import('@/components/Mainpage/UnifiedControls'), {
+  ssr: false,
+  loading: () => null
+});
+const SwipeablePanel = dynamic(() => import('@/components/Mainpage/SwipeablePanel'), {
+  ssr: false,
+  loading: () => null
+});
+const MobileScrollIndicator = dynamic(() => import('@/components/Mainpage/MobileScrollIndicator'), {
+  ssr: false,
+  loading: () => null
 });
 
 const FixedThemeConfigurator = dynamic(
@@ -91,6 +137,7 @@ export default function Home() {
   const [parallaxOffset, setParallaxOffset] = useState(0);
   const [heroSceneReady, setHeroSceneReady] = useState(false);
   const [heroLoaderHidden, setHeroLoaderHidden] = useState(false);
+  const [contentMounted, setContentMounted] = useState(false);
   
   // File 1 States
   const [activePage, setActivePage] = useState<number>(1);
@@ -104,6 +151,7 @@ export default function Home() {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const assetsWarmedRef = useRef(false);
+  const sessionRestoredRef = useRef(false);
   const parallaxRafRef = useRef<number>(0);
   const prefersReducedMotionRef = useRef(false);
   const orientationDismissedRef = useRef(false);
@@ -169,6 +217,12 @@ export default function Home() {
   useEffect(() => {
     if (showConfigurator) setControlCenterOpen(false);
   }, [showConfigurator]);
+
+  useEffect(() => {
+    if (currentStage === 'content') {
+      setContentMounted(true);
+    }
+  }, [currentStage]);
 
   const handleOrientationDismiss = useCallback(() => {
     setShowOrientationWarning(false);
@@ -254,20 +308,29 @@ export default function Home() {
     const prefersReducedData = connection?.saveData === true || ['slow-2g', '2g', '3g'].includes(effectiveType);
     const shouldSafeMode = isIOS || isInApp || prefersReducedData;
     setIsSafeMode(shouldSafeMode);
+    const prefersPerformanceMode =
+      shouldSafeMode ||
+      deviceProfile.prefersReducedData ||
+      !deviceProfile.isHighEndDevice ||
+      deviceProfile.isMobile;
     if (splinePrefV2 === 'true') {
       if (savedSplinePref === 'false' && splinePrefFix !== 'true') {
         // Recover from legacy inverted preference.
         setDisableSpline(false);
         devicePrefs.set('spline_enabled', 'true');
         devicePrefs.set('spline_pref_v2_fix', 'true');
+      } else if (savedSplinePref === null && prefersPerformanceMode) {
+        setDisableSpline(true);
+        devicePrefs.set('spline_enabled', 'false');
       } else {
-        const splineEnabled = savedSplinePref !== null ? savedSplinePref === 'true' : true;
+        const splineEnabled = savedSplinePref !== null ? savedSplinePref === 'true' : !prefersPerformanceMode;
         setDisableSpline(!splineEnabled);
       }
     } else {
-      // Migrate legacy pref and default to full 3D so splines show.
-      setDisableSpline(false);
-      devicePrefs.set('spline_enabled', 'true');
+      // Migrate legacy pref and default to performance-first on constrained devices.
+      const defaultSplineEnabled = !prefersPerformanceMode;
+      setDisableSpline(!defaultSplineEnabled);
+      devicePrefs.set('spline_enabled', defaultSplineEnabled ? 'true' : 'false');
       devicePrefs.set('spline_pref_v2', 'true');
     }
 
@@ -405,7 +468,7 @@ export default function Home() {
 
   // Preload critical Spline scenes when 3D is enabled so they render everywhere
   useEffect(() => {
-    if (!isClient || disableSpline) return;
+    if (!isClient || disableSpline || currentStage !== 'content') return;
     const preloadScenes = [
       "/scene1.splinecode", // Hero scene
       "/scene.splinecode",  // Showcase
@@ -418,11 +481,11 @@ export default function Home() {
       link.as = "fetch";
       document.head.appendChild(link);
     });
-  }, [isClient, disableSpline]);
+  }, [isClient, disableSpline, currentStage]);
 
   // Warm key assets once to keep subsequent visits snappy
   useEffect(() => {
-    if (!isClient || assetsWarmedRef.current || isSafari) return;
+    if (!isClient || assetsWarmedRef.current || isSafari || disableSpline || currentStage !== 'content') return;
     assetsWarmedRef.current = true;
 
     const warmAssets = async () => {
@@ -457,11 +520,11 @@ export default function Home() {
     } else {
       setTimeout(scheduleWarm, 800);
     }
-  }, [isClient, isSafari]);
+  }, [isClient, isSafari, disableSpline, currentStage]);
 
   // Force-warm critical spline scenes even in safe/in-app browsers to avoid first-load failures
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient || currentStage !== 'content' || disableSpline) return;
     let cancelled = false;
 
     const prefetchWithRetry = async (url: string) => {
@@ -507,10 +570,10 @@ export default function Home() {
     }
 
     return () => { cancelled = true; };
-  }, [isClient, isSafari]);
+  }, [isClient, isSafari, currentStage, disableSpline]);
 
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient || currentStage !== 'content' || !contentMounted || sessionRestoredRef.current) return;
 
     const restoreSession = () => {
       const scrollContainer = scrollContainerRef.current;
@@ -526,14 +589,15 @@ export default function Home() {
           pageRefs.current[pageIndex - 1]?.scrollIntoView({ behavior: 'auto', block: 'start' });
         }
       }
+      sessionRestoredRef.current = true;
     };
 
     const timer = window.setTimeout(restoreSession, 60);
     return () => window.clearTimeout(timer);
-  }, [isClient]);
+  }, [isClient, currentStage, contentMounted]);
 
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient || !contentMounted) return;
 
     const persistState = () => {
       const scrollContainer = scrollContainerRef.current;
@@ -555,7 +619,7 @@ export default function Home() {
       document.removeEventListener('visibilitychange', handleVisibility);
       persistState();
     };
-  }, [isClient, activePage]);
+  }, [isClient, activePage, contentMounted]);
 
   useEffect(() => {
     if (currentStage !== 'content' || !isTouch || edgeHintsShownRef.current) return;
@@ -787,6 +851,7 @@ export default function Home() {
   const useCrashSafeSpline = isSafeMode || isTouch || isSafari || deviceProfile.prefersReducedData;
   const forceLiteSpline = isSafari || deviceProfile.prefersReducedData;
   const eagerRenderSplines = splinesEnabled && deviceProfile.isHighEndDevice && !deviceProfile.prefersReducedData && !isSafeMode;
+  const shouldRenderContent = currentStage === 'content' || contentMounted;
 
   if (!isClient) return null;
 
@@ -794,9 +859,11 @@ export default function Home() {
     <>
       <Analytics />
       <SpeedInsights />
-      <BackgroundMusicSystem themeId={activeThemeId} onReady={handlePlayerReady} volume={volume} trackKey={musicKey} />
-      {!isSafeMode && !deviceProfile.prefersReducedMotion && deviceProfile.isHighEndDevice && <ParticleEffect trigger={particleTrigger} />}
-      {!deviceProfile.isMobile && !deviceProfile.prefersReducedMotion && !isTouch && !isSafari && (
+      {shouldRenderContent && (
+        <BackgroundMusicSystem themeId={activeThemeId} onReady={handlePlayerReady} volume={volume} trackKey={musicKey} />
+      )}
+      {shouldRenderContent && !isSafeMode && !deviceProfile.prefersReducedMotion && deviceProfile.isHighEndDevice && <ParticleEffect trigger={particleTrigger} />}
+      {shouldRenderContent && !deviceProfile.isMobile && !deviceProfile.prefersReducedMotion && !isTouch && !isSafari && (
         <CustomCursor accentColor={accentColor} />
       )}
 
@@ -870,12 +937,14 @@ export default function Home() {
       )}
 
       {/* --- INFO PANEL --- */}
-      <InfoPanel
-        config={PAGE_CONFIG[activePage - 1]}
-        isOpen={infoPanelOpen}
-        onClose={() => setInfoPanelOpen(false)}
-        accentColor={accentColor}
-      />
+      {shouldRenderContent && (
+        <InfoPanel
+          config={PAGE_CONFIG[activePage - 1]}
+          isOpen={infoPanelOpen}
+          onClose={() => setInfoPanelOpen(false)}
+          accentColor={accentColor}
+        />
+      )}
 
       {/* FIX #10: Add edge peeker for Info Panel (left edge) */}
       {!infoPanelOpen && currentStage === 'content' && (
@@ -1297,6 +1366,7 @@ export default function Home() {
 
 
       {/* --- LAYER 6: MAIN CONTENT (3D SCROLL LAYOUT) --- */}
+      {shouldRenderContent && (
         <div className={currentStage === 'content' ? 'w-full h-[100dvh] relative' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
         {!isTouch && <TargetCursor spinDuration={2} hideDefaultCursor={false} targetSelector=".cursor-target, a, button" />}
 
@@ -1470,14 +1540,15 @@ export default function Home() {
         {/* SWIPE HELPER - Shows on first load */}
         {currentStage === 'content' && activePage === 1 && (
           <div className="hidden md:block fixed bottom-32 left-1/2 -translate-x-1/2 pointer-events-none animate-bounce" style={{ zIndex: UI_LAYERS.CONTENT }}>
-            <div className="flex items-center gap-2 bg-black/70 backdrop-blur-xl px-4 py-2 rounded-full border border-white/20">
-              <ChevronLeft size={16} className="text-white/60" />
-              <span className="text-xs text-white/60 font-medium">Swipe to navigate</span>
-              <ChevronRight size={16} className="text-white/60" />
-            </div>
+          <div className="flex items-center gap-2 bg-black/70 backdrop-blur-xl px-4 py-2 rounded-full border border-white/20">
+            <ChevronLeft size={16} className="text-white/60" />
+            <span className="text-xs text-white/60 font-medium">Swipe to navigate</span>
+            <ChevronRight size={16} className="text-white/60" />
           </div>
+        </div>
         )}
       </div>
+      )}
     </>
   );
 }
