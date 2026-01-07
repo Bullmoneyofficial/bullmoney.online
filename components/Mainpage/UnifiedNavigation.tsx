@@ -74,21 +74,21 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
     <>
       {/* Page Indicator - Bottom Center */}
       <div
-        className="fixed bottom-8 left-1/2 -translate-x-1/2 pointer-events-none"
+        className="fixed left-1/2 -translate-x-1/2 pointer-events-none"
         style={{
           zIndex: UI_LAYERS.PROGRESS_BAR,
-          bottom: 'calc(4.75rem + env(safe-area-inset-bottom))',
+          bottom: 'calc(4.75rem + env(safe-area-inset-bottom, 0px))',
         }}
       >
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 backdrop-blur-xl border border-white/20">
+        <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-black/60 backdrop-blur-xl border border-white/20">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <div
               key={page}
               className="transition-all duration-300"
               style={{
-                width: page === currentPage ? '24px' : '8px',
-                height: '8px',
-                borderRadius: '4px',
+                width: page === currentPage ? '20px' : '6px',
+                height: '6px',
+                borderRadius: '3px',
                 backgroundColor: page === currentPage ? accentColor : 'rgba(255,255,255,0.3)',
                 boxShadow: page === currentPage ? `0 0 12px ${accentColor}` : 'none',
               }}
@@ -97,60 +97,76 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
         </div>
       </div>
 
-      {/* Navigation Arrows - Game-like */}
-      {/* Left Arrow */}
+      {/* Navigation Arrows - MOBILE OPTIMIZED */}
+      {/* Left Arrow - NOW VISIBLE ON ALL DEVICES */}
       <Hint label="Previous page">
         <button
           onClick={handlePrevPage}
           disabled={disabled || currentPage <= 1}
           className={`
-            hidden md:flex fixed left-4 top-1/2 -translate-y-1/2
-            w-14 h-14 rounded-full
-            bg-black/60 backdrop-blur-xl border border-white/20
-            items-center justify-center
-            transition-all duration-300
-            ${disabled || currentPage <= 1 ? 'opacity-30 cursor-not-allowed' : 'hover:scale-110 active:scale-95'}
+            fixed left-2 md:left-4 top-1/2 -translate-y-1/2
+            w-11 h-11 md:w-14 md:h-14 rounded-full
+            bg-black/70 backdrop-blur-xl border border-white/20
+            flex items-center justify-center
+            transition-all duration-300 touch-manipulation
+            ${disabled || currentPage <= 1 ? 'opacity-20 cursor-not-allowed pointer-events-none' : 'hover:scale-110 active:scale-95 opacity-75 hover:opacity-100'}
           `}
           style={{
             zIndex: UI_LAYERS.NAV_ARROWS,
             boxShadow: currentPage > 1 ? `0 0 20px ${accentColor}40` : 'none',
+            WebkitTapHighlightColor: 'transparent',
           }}
           onMouseEnter={() => {
             if (currentPage > 1) playHover();
           }}
+          onTouchStart={(e) => {
+            e.currentTarget.style.transform = 'translate(-50%, -50%) scale(0.9)';
+          }}
+          onTouchEnd={(e) => {
+            e.currentTarget.style.transform = '';
+          }}
           aria-label="Previous page"
         >
           <ChevronLeft
-            size={28}
+            size={22}
+            className="md:w-7 md:h-7"
             style={{ color: currentPage > 1 ? accentColor : 'rgba(255,255,255,0.3)' }}
           />
         </button>
       </Hint>
 
-      {/* Right Arrow */}
+      {/* Right Arrow - NOW VISIBLE ON ALL DEVICES */}
       <Hint label="Next page">
         <button
           onClick={handleNextPage}
           disabled={disabled || currentPage >= totalPages}
           className={`
-            hidden md:flex fixed right-4 top-1/2 -translate-y-1/2
-            w-14 h-14 rounded-full
-            bg-black/60 backdrop-blur-xl border border-white/20
-            items-center justify-center
-            transition-all duration-300
-            ${disabled || currentPage >= totalPages ? 'opacity-30 cursor-not-allowed' : 'hover:scale-110 active:scale-95'}
+            fixed right-2 md:right-4 top-1/2 -translate-y-1/2
+            w-11 h-11 md:w-14 md:h-14 rounded-full
+            bg-black/70 backdrop-blur-xl border border-white/20
+            flex items-center justify-center
+            transition-all duration-300 touch-manipulation
+            ${disabled || currentPage >= totalPages ? 'opacity-20 cursor-not-allowed pointer-events-none' : 'hover:scale-110 active:scale-95 opacity-75 hover:opacity-100'}
           `}
           style={{
             zIndex: UI_LAYERS.NAV_ARROWS,
             boxShadow: currentPage < totalPages ? `0 0 20px ${accentColor}40` : 'none',
+            WebkitTapHighlightColor: 'transparent',
           }}
           onMouseEnter={() => {
             if (currentPage < totalPages) playHover();
           }}
+          onTouchStart={(e) => {
+            e.currentTarget.style.transform = 'translate(50%, -50%) scale(0.9)';
+          }}
+          onTouchEnd={(e) => {
+            e.currentTarget.style.transform = '';
+          }}
           aria-label="Next page"
         >
           <ChevronRight
-            size={28}
+            size={22}
+            className="md:w-7 md:h-7"
             style={{ color: currentPage < totalPages ? accentColor : 'rgba(255,255,255,0.3)' }}
           />
         </button>
@@ -167,8 +183,8 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
           onMouseLeave={() => setIsHovering(false)}
           disabled={disabled}
           className={`
-            fixed right-6
-            w-16 h-16 rounded-full
+            fixed
+            w-14 h-14 sm:w-16 sm:h-16 rounded-full
             bg-black/80 backdrop-blur-2xl border-2
             flex items-center justify-center
             transition-all duration-300
@@ -179,13 +195,13 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
             zIndex: UI_LAYERS.NAV_MOBILE_FAB,
             borderColor: accentColor,
             boxShadow: `0 0 30px ${accentColor}60, 0 4px 20px rgba(0,0,0,0.5)`,
-            bottom: 'calc(4.25rem + env(safe-area-inset-bottom))',
-            right: 'calc(1.5rem + env(safe-area-inset-right))',
+            bottom: 'calc(4.25rem + env(safe-area-inset-bottom, 0px))',
+            right: 'calc(0.75rem + env(safe-area-inset-right, 0px))',
           }}
           aria-label={isGridOpen ? 'Close navigation' : 'Open navigation'}
         >
           <div className="relative">
-            <Grid3x3 size={28} style={{ color: accentColor }} />
+            <Grid3x3 size={24} className="sm:w-7 sm:h-7" style={{ color: accentColor }} />
             {/* Page number badge */}
             <div
               className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"

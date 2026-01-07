@@ -601,7 +601,7 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
       // Unregister when unmounting or not visible
       memoryManager.unregisterSceneGroup(groupId);
     };
-  }, [config.id, config.sceneA, config.sceneB]);
+  }, [config.id, config.sceneA, config.sceneB, shouldRenderBasic]);
 
   const shouldRenderBasic = useMemo(() => {
     // If splines are disabled via performance mode, don't render
@@ -616,6 +616,11 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
 
   const shouldRender = shouldRenderBasic;
 
+  // MOBILE CRASH FIX: On mobile, only render one scene at a time in split view to prevent memory crashes
+  const [activeSplitPanel, setActiveSplitPanel] = useState<'A' | 'B'>('A');
+  const shouldRenderSceneA = isMobile ? (shouldRender && activeSplitPanel === 'A') : shouldRender;
+  const shouldRenderSceneB = isMobile ? (shouldRender && activeSplitPanel === 'B') : shouldRender;
+
   // FIX #7: Remove snap classes on split section for mobile
   return (
     <section
@@ -625,36 +630,54 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
       {isDragging && <div className="absolute inset-0 z-[60] bg-transparent" />}
 
       {/* Arcade HUD */}
-      <div className="absolute top-4 left-4 z-[70] flex flex-col gap-2 pointer-events-auto">
-        <div className="px-4 py-2 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-md text-white shadow-[0_0_20px_rgba(0,0,0,0.35)]">
+      <div className="absolute top-4 left-4 z-[70] flex flex-col gap-2 pointer-events-auto max-w-[calc(100vw-2rem)]">
+        <div className="px-3 sm:px-4 py-2 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-md text-white shadow-[0_0_20px_rgba(0,0,0,0.35)]">
           <div className="text-[10px] uppercase tracking-[0.2em] text-blue-300 font-bold flex items-center gap-2">
             <Zap size={12} className="text-blue-500" /> Split Arcade
           </div>
-          <div className="mt-1 flex items-center gap-3 text-xs">
+          <div className="mt-1 flex items-center gap-2 sm:gap-3 text-xs flex-wrap">
             <span className="font-mono text-blue-400">Score {score}</span>
-            <span className="text-white/50">•</span>
-            <span className="font-mono text-white/60">Use arrows / WASD</span>
+            {!isMobile && (
+              <>
+                <span className="text-white/50">•</span>
+                <span className="font-mono text-white/60">Use arrows / WASD</span>
+              </>
+            )}
           </div>
-          <div className="mt-2 flex gap-2">
+          <div className="mt-2 flex gap-2 flex-wrap">
+            {isMobile && (
+              <button
+                onClick={() => {
+                  playClick();
+                  setActiveSplitPanel(prev => prev === 'A' ? 'B' : 'A');
+                  if (navigator.vibrate) navigator.vibrate(15);
+                }}
+                className="flex-1 min-w-[44px] min-h-[44px] px-3 rounded-lg bg-blue-500/20 border border-blue-500/40 text-xs font-bold text-blue-100 hover:bg-blue-500/30 transition-colors touch-manipulation"
+                aria-label="Switch scene"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
+                Switch: {activeSplitPanel === 'A' ? config.labelA : config.labelB}
+              </button>
+            )}
             <button
               onClick={() => { playClick(); nudgeSplit(isMobile ? -4 : -3); }}
-              className="min-w-[44px] min-h-[44px] w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:-translate-y-0.5 transition-all touch-manipulation"
+              className="min-w-[44px] min-h-[44px] w-10 sm:w-12 h-10 sm:h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:-translate-y-0.5 transition-all touch-manipulation"
               aria-label="Move split up"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <ChevronUp size={20} className="text-blue-400" />
+              <ChevronUp size={18} className="text-blue-400" />
             </button>
             <button
               onClick={() => { playClick(); nudgeSplit(isMobile ? 4 : 3); }}
-              className="min-w-[44px] min-h-[44px] w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:translate-y-0.5 transition-all touch-manipulation"
+              className="min-w-[44px] min-h-[44px] w-10 sm:w-12 h-10 sm:h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:translate-y-0.5 transition-all touch-manipulation"
               aria-label="Move split down"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <ChevronDown size={20} className="text-blue-400" />
+              <ChevronDown size={18} className="text-blue-400" />
             </button>
             <button
               onClick={() => { playClick(); handleTargetHit(); }}
-              className="flex-1 min-h-[44px] px-4 rounded-lg bg-blue-500/20 border border-blue-500/40 text-xs sm:text-sm font-bold text-blue-100 hover:bg-blue-500/30 transition-colors touch-manipulation"
+              className="flex-1 min-h-[44px] px-3 sm:px-4 rounded-lg bg-blue-500/20 border border-blue-500/40 text-xs sm:text-sm font-bold text-blue-100 hover:bg-blue-500/30 transition-colors touch-manipulation"
               aria-label="Fire at target"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
@@ -691,23 +714,23 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
         style={{ [sizeProp]: `${splitPos}%`, [otherSizeProp]: '100%' }}
         className={`relative overflow-hidden bg-[#050505] border-blue-500/50 ${isMobile ? 'border-b' : 'border-r'} ${isDragging ? 'transition-none' : 'transition-all duration-300 ease-out'}`}
       >
-        <div className="absolute inset-0 w-full h-full"> 
+        <div className="absolute inset-0 w-full h-full">
           <SceneWrapper
-            isVisible={shouldRender}
+            isVisible={shouldRenderSceneA}
             sceneUrl={config.sceneA}
             forceNoPointer={isDragging}
             parallaxOffset={parallaxOffset * 0.3}
             disabled={disableSpline}
-            forceLiteSpline={forceLiteSpline}
+            forceLiteSpline={forceLiteSpline || isMobile}
             forceLoadOverride={false}
-            eagerLoad={eagerRenderSplines && !disableSpline && shouldRender}
+            eagerLoad={eagerRenderSplines && !disableSpline && shouldRenderSceneA}
             skeletonLabel={config.labelA}
             useCrashSafe={useCrashSafeSpline || !!deviceProfile?.isMobile || config.id === 6}
             deviceProfile={deviceProfile}
           />
         </div>
-        <div className="absolute top-8 left-8 z-20 pointer-events-none">
-           <div className={`text-2xl sm:text-3xl md:text-4xl font-bold text-white/90 transition-all duration-700 ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
+        <div className="absolute top-4 sm:top-8 left-4 sm:left-8 z-20 pointer-events-none max-w-[80%]">
+           <div className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white/90 transition-all duration-700 break-words ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
              {config.labelA}
            </div>
         </div>
@@ -733,21 +756,21 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
       >
         <div className="absolute inset-0 w-full h-full">
              <SceneWrapper
-               isVisible={shouldRender}
+               isVisible={shouldRenderSceneB}
                sceneUrl={config.sceneB}
                forceNoPointer={isDragging}
                parallaxOffset={parallaxOffset * 0.7}
                disabled={disableSpline}
                forceLiteSpline={forceLiteSpline || isMobile}
                forceLoadOverride={false}
-               eagerLoad={eagerRenderSplines && !disableSpline && shouldRender}
+               eagerLoad={eagerRenderSplines && !disableSpline && shouldRenderSceneB}
                skeletonLabel={config.labelB}
                useCrashSafe={useCrashSafeSpline || !!deviceProfile?.isMobile || config.id === 6}
                deviceProfile={deviceProfile}
              />
         </div>
-        <div className="absolute bottom-8 right-8 z-20 text-right pointer-events-none">
-             <div className={`text-2xl sm:text-3xl md:text-4xl font-bold text-white/90 transition-all duration-700 ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
+        <div className="absolute bottom-4 sm:bottom-8 right-4 sm:right-8 z-20 text-right pointer-events-none max-w-[80%]">
+             <div className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white/90 transition-all duration-700 break-words ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
                {config.labelB}
              </div>
         </div>

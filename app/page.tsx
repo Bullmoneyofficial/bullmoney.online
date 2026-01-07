@@ -33,7 +33,7 @@ import { PAGE_CONFIG, CRITICAL_SPLINE_SCENES, CRITICAL_SCENE_BLOB_MAP, FALLBACK_
 
 // --- OPTIMIZATION IMPORTS ---
 import { useOptimizations } from '@/lib/useOptimizations';
-import { userStorage, devicePrefs } from '@/lib/smartStorage';
+import { userStorage, devicePrefs, sessionPrefs } from '@/lib/smartStorage';
 
 // --- UNIFIED UI IMPORTS ---
 import { UI_LAYERS } from '@/lib/uiLayers';
@@ -839,6 +839,39 @@ export default function Home() {
       if (newMutedState) safePause(); else safePlay();
   }, [isMuted, safePlay, safePause]);
 
+  // FEATURE: Auto-play music on first user interaction
+  useEffect(() => {
+    if (!isClient || currentStage !== 'content') return;
+
+    const hasInteracted = sessionPrefs.get('user_has_interacted');
+    if (hasInteracted) return;
+
+    const handleFirstInteraction = () => {
+      sessionPrefs.set('user_has_interacted', 'true');
+
+      // Auto-start music if not explicitly muted
+      const savedMuted = userStorage.get('user_is_muted');
+      if (savedMuted !== 'true' && isMuted) {
+        setTimeout(() => {
+          setIsMuted(false);
+          safePlay();
+        }, 150);
+      }
+    };
+
+    // Listen for any user interaction
+    const events = ['click', 'touchstart', 'scroll', 'keydown'];
+    events.forEach(event => {
+      window.addEventListener(event, handleFirstInteraction, { once: true, passive: true });
+    });
+
+    return () => {
+      events.forEach(event => {
+        window.removeEventListener(event, handleFirstInteraction);
+      });
+    };
+  }, [isClient, currentStage, isMuted, safePlay]);
+
   const handleVolumeChange = (newVol: number) => {
       setVolume(newVol);
       userStorage.set('user_volume', newVol.toString());
@@ -997,8 +1030,12 @@ export default function Home() {
       {/* FIX #3: Add swipe-to-close to Quick Theme Picker */}
       {showThemeQuickPick && (
         <div
-          className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4"
-          style={{ zIndex: UI_LAYERS.THEME_PICKER }}
+          className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 overflow-hidden"
+          style={{
+            zIndex: UI_LAYERS.THEME_PICKER,
+            maxWidth: '100vw',
+            maxHeight: '100dvh'
+          }}
           onClick={() => {
             playClick();
             setShowThemeQuickPick(false);
@@ -1019,7 +1056,7 @@ export default function Home() {
             }
           }}
         >
-          <div className="max-w-4xl w-full max-h-[80vh] overflow-y-auto bg-black/80 rounded-3xl border border-white/10 p-6" onClick={(e) => e.stopPropagation()}>
+          <div className="max-w-4xl w-full max-h-[min(80vh,calc(100dvh-2rem))] overflow-y-auto bg-black/80 rounded-2xl sm:rounded-3xl border border-white/10 p-4 sm:p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white">Quick Theme Switch</h2>
               <button 
@@ -1035,7 +1072,7 @@ export default function Home() {
                 <X size={24} />
               </button>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
               {ALL_THEMES.filter(t => t.status === 'AVAILABLE').slice(0, 16).map(theme => (
                 <button
                   key={theme.id}
@@ -1043,18 +1080,19 @@ export default function Home() {
                     handleQuickThemeChange(theme.id);
                     setShowThemeQuickPick(false);
                   }}
-                  className={`p-4 rounded-xl border transition-all hover:scale-105 ${
+                  className={`p-3 sm:p-4 rounded-xl border transition-all hover:scale-105 active:scale-95 min-h-[60px] ${
                     theme.id === activeThemeId
                       ? 'bg-blue-500/20 border-blue-500'
                       : 'bg-white/5 border-white/10 hover:bg-white/10'
                   }`}
                   style={{
                     filter: theme.filter,
-                    WebkitFilter: theme.filter
+                    WebkitFilter: theme.filter,
+                    WebkitTapHighlightColor: 'transparent'
                   }}
                 >
-                  <div className="text-sm font-bold text-white mb-1">{theme.name}</div>
-                  <div className="text-[10px] text-white/60">{theme.category}</div>
+                  <div className="text-xs sm:text-sm font-bold text-white mb-1 break-words">{theme.name}</div>
+                  <div className="text-[9px] sm:text-[10px] text-white/60 break-words">{theme.category}</div>
                 </button>
               ))}
             </div>
@@ -1107,8 +1145,12 @@ export default function Home() {
       {/* FIX #3: Add swipe-to-close to FAQ overlay */}
       {faqOpen && (
         <div
-          className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
-          style={{ zIndex: UI_LAYERS.FAQ_OVERLAY }}
+          className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-hidden"
+          style={{
+            zIndex: UI_LAYERS.FAQ_OVERLAY,
+            maxWidth: '100vw',
+            maxHeight: '100dvh'
+          }}
           onTouchStart={(e) => {
             const touch = e.touches[0];
             (e.currentTarget as any)._swipeStartY = touch.clientY;
@@ -1124,7 +1166,7 @@ export default function Home() {
             }
           }}
         >
-          <div className="relative w-full max-w-5xl">
+          <div className="relative w-full max-w-5xl max-h-[min(90vh,calc(100dvh-2rem))] overflow-hidden">
             <button
               onClick={() => {
                 playClick();
@@ -1145,20 +1187,21 @@ export default function Home() {
             >
               <X size={22} />
             </button>
-            <div className="rounded-3xl border border-white/10 bg-black/80 shadow-[0_10px_60px_rgba(0,0,0,0.5)] overflow-hidden">
+            <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-black/80 shadow-[0_10px_60px_rgba(0,0,0,0.5)] overflow-y-auto max-h-full">
               <InlineFaq />
             </div>
           </div>
         </div>
       )}
 
-      {/* FIX #4: Add progress bar showing scroll position through all pages */}
+      {/* Progress bar showing scroll position through all pages */}
       {currentStage === 'content' && (
         <div
-          className="fixed top-0 left-0 right-0 h-1 sm:h-1.5 md:h-2 bg-black/50 pointer-events-none"
+          className="fixed top-0 left-0 right-0 h-1 sm:h-1.5 md:h-2 bg-black/50 pointer-events-none overflow-hidden"
           style={{
             zIndex: UI_LAYERS.PROGRESS_BAR,
-            top: 'env(safe-area-inset-top, 0px)'
+            top: 'env(safe-area-inset-top, 0px)',
+            maxWidth: '100vw'
           }}
         >
           <div
@@ -1177,7 +1220,7 @@ export default function Home() {
           defaultOpen={false}
           open={controlCenterOpen}
           accentColor={accentColor}
-          maxHeight="70vh"
+          maxHeight="min(70vh, calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)))"
           minHeight="28px"
           zIndex={UI_LAYERS.PANELS_BOTTOM}
           onOpenChange={(isOpen) => setControlCenterOpen(isOpen)}
@@ -1591,6 +1634,8 @@ export default function Home() {
             WebkitOverflowScrolling: 'touch',
             WebkitTapHighlightColor: 'transparent',
             touchAction: 'pan-y',
+            maxWidth: '100vw',
+            maxHeight: '100dvh',
           }}
         >
             
