@@ -430,6 +430,13 @@ export default function QuickGate({ children, onUnlock, onFinished }: QuickGateP
   // Use the custom synthesized audio hook
   const { startEngine, updateEngine, stopEngine, playSuccess } = useAudioEngine();
 
+  const finalizeGate = useCallback(() => {
+    setGateVisible(false);
+    setShowTerminal(true);
+    if (onUnlock) onUnlock();
+    if (onFinished) onFinished();
+  }, [onFinished, onUnlock]);
+
   const handleGameScore = useCallback((score: number) => {
     setGameScore(score);
     if (score > bestScore) setBestScore(score);
@@ -497,14 +504,6 @@ export default function QuickGate({ children, onUnlock, onFinished }: QuickGateP
         playSuccess();
 
         if (navigator.vibrate) navigator.vibrate(150);
-
-        setTimeout(() => {
-            setGateVisible(false);
-            setShowTerminal(true);
-            if (onUnlock) onUnlock();
-            if (onFinished) onFinished();
-        }, 300);
-
         return 100;
       }
       return next;
@@ -517,6 +516,21 @@ export default function QuickGate({ children, onUnlock, onFinished }: QuickGateP
     requestRef.current = requestAnimationFrame(animate);
     return () => { if (requestRef.current) cancelAnimationFrame(requestRef.current); };
   }, [animate]);
+
+  useEffect(() => {
+    if (!isCompleted) return;
+    const timer = window.setTimeout(() => finalizeGate(), 300);
+    return () => window.clearTimeout(timer);
+  }, [isCompleted, finalizeGate]);
+
+  useEffect(() => {
+    if (isCompleted) return;
+    const fallback = window.setTimeout(() => {
+      setIsHolding(false);
+      setIsCompleted(true);
+    }, 12000);
+    return () => window.clearTimeout(fallback);
+  }, [isCompleted]);
 
   return (
     <>

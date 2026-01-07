@@ -164,6 +164,16 @@ export const SmartSplineLoader = memo(({
   }, [scene, shouldAutoLoad]);
 
   useEffect(() => {
+    if (userConsent !== null || shouldAutoLoad) return;
+    const timer = window.setTimeout(() => {
+      setUserConsent(true);
+      devicePrefs.set(`spline_consent_${scene}`, true);
+      devicePrefs.set(`spline_autoload_${scene}`, true);
+    }, 1200);
+    return () => window.clearTimeout(timer);
+  }, [scene, shouldAutoLoad, userConsent]);
+
+  useEffect(() => {
     if (userConsent && loadState === 'idle') {
       // CRITICAL: No delays for critical priority scenes (hero/first loader)
       // Ensure first loader shows up on ALL devices with no delays

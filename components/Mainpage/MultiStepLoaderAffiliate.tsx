@@ -47,9 +47,14 @@ const useLivePrice = (assetKey: AssetKey) => {
   const [price, setPrice] = useState<number>(0);
   const [prevPrice, setPrevPrice] = useState<number>(0);
   const lastUpdateRef = useRef<number>(0);
+  const lastPriceRef = useRef<number>(0);
 
   useEffect(() => {
     let ws: WebSocket | null = null;
+    lastPriceRef.current = 0;
+    lastUpdateRef.current = 0;
+    setPrice(0);
+    setPrevPrice(0);
     const symbol = ASSETS[assetKey].symbol.split(":")[1].toLowerCase();
 
     ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@trade`);
@@ -59,8 +64,9 @@ const useLivePrice = (assetKey: AssetKey) => {
       if (now - lastUpdateRef.current > 500) {
         const data = JSON.parse(event.data);
         const currentPrice = parseFloat(data.p);
-        setPrevPrice((prev) => (prev === 0 ? currentPrice : price)); 
+        setPrevPrice(lastPriceRef.current);
         setPrice(currentPrice);
+        lastPriceRef.current = currentPrice;
         lastUpdateRef.current = now;
       }
     };
@@ -68,7 +74,7 @@ const useLivePrice = (assetKey: AssetKey) => {
     return () => {
       if (ws) ws.close();
     };
-  }, [assetKey, price]); 
+  }, [assetKey]); 
 
   return { price, prevPrice };
 };
