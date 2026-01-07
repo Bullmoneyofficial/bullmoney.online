@@ -62,9 +62,24 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Mobile Optimization: DNS Prefetch */}
+        {/* PERFORMANCE: Preconnect to critical origins */}
+        <link rel="preconnect" href="https://www.youtube.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://i.ytimg.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+
+        {/* DNS Prefetch for secondary resources */}
         <link rel="dns-prefetch" href="https://www.youtube.com" />
         <link rel="dns-prefetch" href="https://i.ytimg.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+
+        {/* PERFORMANCE: Preload critical assets */}
+        <link rel="preload" href="/scene1.splinecode" as="fetch" crossOrigin="anonymous" />
+        <link rel="preload" href="/BULL.svg" as="image" />
+
+        {/* Prefetch next likely scenes */}
+        <link rel="prefetch" href="/scene.splinecode" as="fetch" />
+        <link rel="prefetch" href="/scene2.splinecode" as="fetch" />
 
         {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" />

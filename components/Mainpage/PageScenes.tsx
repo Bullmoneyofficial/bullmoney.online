@@ -143,8 +143,8 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
       }
     }
 
-    // Aggressive memory management: Unload scenes that are far away (mobile only, non-critical)
-    // CRITICAL FIX: Faster unload to prevent memory accumulation and crashes
+    // ULTRA-AGGRESSIVE memory management: Instant unload on mobile for stability
+    // PERFORMANCE: Immediate cleanup to prevent WebGL memory crashes
     if (!isVisible && isMobile && isLoaded && !isCritical && !forceLoadOverride) {
       const unloadTimer = setTimeout(() => {
         setIsLoaded(false);
@@ -152,7 +152,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
           memoryManager.unregisterScene(sceneUrl);
           isRegistered.current = false;
         }
-      }, 300);  // Reduced to 300ms for faster memory cleanup on mobile
+      }, 150);  // Ultra-fast 150ms cleanup for instant memory recovery
       return () => clearTimeout(unloadTimer);
     }
   }, [isVisible, isLoaded, isMobile, isHeavy, disabled, mobileOptIn, forceLiteSpline, forceLoadOverride, isCritical, eagerLoad, sceneUrl]);

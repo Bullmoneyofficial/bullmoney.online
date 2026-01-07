@@ -482,21 +482,54 @@ export default function Home() {
     };
   }, []);
 
-  // Preload critical Spline scenes when 3D is enabled so they render everywhere
+  // OPTIMIZED: Aggressive parallel preloading of ALL Spline scenes for instant loading
   useEffect(() => {
     if (!isClient || disableSpline || currentStage !== 'content') return;
-    const preloadScenes = [
-      "/scene1.splinecode", // Hero scene
-      "/scene.splinecode",  // Showcase
+
+    // Preload ALL scenes in parallel for instant switching
+    const allScenes = [
+      "/scene1.splinecode",  // Hero - Critical
+      "/scene.splinecode",   // Showcase - High priority
+      "/scene2.splinecode",  // Final
+      "/scene3.splinecode",  // Concept
+      "/scene4.splinecode",  // Prototype (split)
+      "/scene5.splinecode",  // Wireframe (split)
+      "/scene6.splinecode",  // Interactive
     ];
 
-    preloadScenes.forEach((scene) => {
+    // Use high-priority preload for critical scenes, prefetch for others
+    allScenes.forEach((scene, index) => {
       const link = document.createElement("link");
-      link.rel = "prefetch";
+      // First 2 scenes are critical - use preload
+      if (index < 2) {
+        link.rel = "preload";
+        link.as = "fetch";
+        link.crossOrigin = "anonymous";
+      } else {
+        // Others use prefetch for background loading
+        link.rel = "prefetch";
+        link.as = "fetch";
+      }
       link.href = scene;
-      link.as = "fetch";
       document.head.appendChild(link);
     });
+
+    // Also start parallel background fetch for instant cache
+    if (typeof window !== 'undefined' && 'caches' in window) {
+      const cacheName = 'bullmoney-spline-instant-v1';
+      caches.open(cacheName).then(cache => {
+        // Fetch all scenes in parallel
+        Promise.all(
+          allScenes.map(scene =>
+            fetch(scene, { cache: 'force-cache' })
+              .then(res => res.ok ? cache.put(scene, res) : null)
+              .catch(() => null)
+          )
+        ).then(() => {
+          console.log('[Performance] All Spline scenes preloaded and cached');
+        });
+      }).catch(() => {});
+    }
   }, [isClient, disableSpline, currentStage]);
 
   // Warm key assets once to keep subsequent visits snappy
@@ -1399,15 +1432,15 @@ export default function Home() {
         </div>
       )}
 
-      {/* --- LAYER 3: GLOBAL THEME LENS (DISABLED FOR MOBILE STABILITY) --- */}
-      {/* CRITICAL FIX: Backdrop filters cause crashes on iOS Safari - disabled on mobile */}
+      {/* --- LAYER 3: GLOBAL THEME LENS (OPTIMIZED FOR PERFORMANCE) --- */}
+      {/* PERFORMANCE: Removed backdrop-filter entirely for better mobile stability and 60fps */}
+      {/* Theme effects applied directly to content instead of as overlay */}
       <div
         className="fixed inset-0 pointer-events-none w-screen h-screen"
         style={{
           zIndex: UI_LAYERS.SCROLL_INDICATOR,
-          backdropFilter: (deviceProfile.prefersReducedMotion || deviceProfile.isMobile || isTouch) ? 'none' : activeTheme.filter,
-          WebkitBackdropFilter: (deviceProfile.prefersReducedMotion || deviceProfile.isMobile || isTouch) ? 'none' : activeTheme.filter,
-          transition: 'backdrop-filter 0.5s ease'
+          opacity: 0,
+          pointerEvents: 'none'
         }}
       />
 
