@@ -426,63 +426,170 @@ export const SmartSplineLoader = memo(({
   return (
     <div ref={containerRef} className={`relative w-full h-full ${className}`}>
       {!hasSplineLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-black via-gray-900/50 to-black">
-          <div className="text-center space-y-4 max-w-sm px-6">
-            {/* Trading-themed loader */}
-            <div className="relative w-16 h-16 mx-auto">
-              <Loader2 className="w-16 h-16 text-blue-500 animate-spin" />
-              {priority === 'critical' && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-2xl">📈</div>
-                </div>
-              )}
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-black via-gray-900/50 to-black overflow-hidden">
+          {/* Animated trading chart background */}
+          <div className="absolute inset-0 opacity-10">
+            <svg className="w-full h-full" viewBox="0 0 400 200">
+              <polyline
+                points="0,100 50,80 100,120 150,60 200,90 250,50 300,70 350,40 400,60"
+                fill="none"
+                stroke="url(#gradient1)"
+                strokeWidth="3"
+                className="animate-pulse"
+              />
+              <polyline
+                points="0,150 50,130 100,170 150,110 200,140 250,100 300,120 350,90 400,110"
+                fill="none"
+                stroke="url(#gradient2)"
+                strokeWidth="2"
+                opacity="0.5"
+              />
+              <defs>
+                <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#3b82f6" />
+                  <stop offset="50%" stopColor="#22c55e" />
+                  <stop offset="100%" stopColor="#3b82f6" />
+                </linearGradient>
+                <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#ef4444" />
+                  <stop offset="100%" stopColor="#f59e0b" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+
+          {/* Floating trading symbols */}
+          <div className="absolute inset-0 pointer-events-none">
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute text-xs font-mono text-white/20 animate-float"
+                style={{
+                  left: `${(i * 12.5) + 5}%`,
+                  top: `${20 + Math.sin(i) * 30}%`,
+                  animationDelay: `${i * 0.3}s`,
+                  animationDuration: `${3 + i * 0.5}s`
+                }}
+              >
+                {['BTC', 'ETH', 'SOL', 'XRP', 'ADA', 'DOGE', 'LINK', 'DOT'][i]}
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center space-y-4 max-w-sm px-6 relative z-10">
+            {/* Advanced Trading-themed loader */}
+            <div className="relative w-24 h-24 mx-auto">
+              {/* Outer rotating ring */}
+              <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 border-r-green-500 animate-spin" style={{ animationDuration: '1.5s' }} />
+
+              {/* Middle ring */}
+              <div className="absolute inset-2 rounded-full border-4 border-transparent border-b-purple-500 border-l-orange-500 animate-spin" style={{ animationDuration: '2s', animationDirection: 'reverse' }} />
+
+              {/* Inner pulsing circle */}
+              <div className="absolute inset-4 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 animate-pulse flex items-center justify-center">
+                {priority === 'critical' ? (
+                  <div className="text-3xl animate-bounce">📊</div>
+                ) : (
+                  <div className="text-2xl">💹</div>
+                )}
+              </div>
+
+              {/* Corner indicators */}
+              <div className="absolute -top-1 -left-1 w-3 h-3 rounded-full bg-green-500 animate-ping" />
+              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-blue-500 animate-ping" style={{ animationDelay: '0.5s' }} />
+              <div className="absolute -bottom-1 -left-1 w-3 h-3 rounded-full bg-orange-500 animate-ping" style={{ animationDelay: '1s' }} />
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-purple-500 animate-ping" style={{ animationDelay: '1.5s' }} />
             </div>
 
-            {/* Priority-specific messages */}
+            {/* Priority-specific messages with FOMO and urgency */}
             {priority === 'critical' ? (
               <>
-                <h3 className="text-lg font-bold text-white">
-                  Initializing Trading View
-                </h3>
-                <p className="text-xs text-white/60 leading-relaxed">
-                  Preparing your premium trading environment with real-time market visualization...
-                </p>
+                <div className="space-y-2">
+                  <div className="inline-block px-3 py-1 rounded-full bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/40">
+                    <span className="text-xs font-bold text-green-400 uppercase tracking-wider">● LIVE MARKET ACCESS</span>
+                  </div>
+                  <h3 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
+                    Connecting to Trading Terminal
+                  </h3>
+                  <p className="text-sm text-white/80 leading-relaxed font-medium">
+                    Loading real-time market data, advanced charts, and institutional-grade analytics...
+                  </p>
+                </div>
+
+                {/* Live stats simulation */}
+                <div className="grid grid-cols-3 gap-2 mt-4">
+                  <div className="p-2 rounded-lg bg-green-500/10 border border-green-500/20">
+                    <div className="text-green-400 text-xs font-mono">+24.3%</div>
+                    <div className="text-[10px] text-white/50">BTC</div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                    <div className="text-blue-400 text-xs font-mono">+18.7%</div>
+                    <div className="text-[10px] text-white/50">ETH</div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                    <div className="text-purple-400 text-xs font-mono">+31.2%</div>
+                    <div className="text-[10px] text-white/50">SOL</div>
+                  </div>
+                </div>
+
                 {retryCount > 0 && (
-                  <div className="mt-2 px-3 py-1.5 rounded-lg bg-orange-500/20 border border-orange-500/30">
-                    <p className="text-[10px] text-orange-300 font-semibold">
-                      Retry attempt {retryCount}/{MAX_RETRIES} - Optimizing connection...
+                  <div className="mt-2 px-4 py-2 rounded-xl bg-orange-500/20 border border-orange-500/40 animate-pulse">
+                    <p className="text-xs text-orange-300 font-bold">
+                      🔄 Reconnecting to market feed... ({MAX_RETRIES - retryCount} attempts left)
                     </p>
                   </div>
                 )}
               </>
             ) : (
               <>
-                <h3 className="text-base font-semibold text-white">
-                  Loading Experience
-                </h3>
-                {isWebView && (
-                  <p className="text-[11px] text-white/50">
-                    In-app browser detected — optimizing for your device…
+                <div className="space-y-2">
+                  <div className="inline-block px-3 py-1 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30">
+                    <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">PREMIUM CONTENT</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white">
+                    {isMobile ? 'Mobile Trading Terminal' : 'Advanced Market View'}
+                  </h3>
+                  <p className="text-xs text-white/70 leading-relaxed">
+                    {isWebView
+                      ? 'Optimizing for in-app browser — Your competitive edge is loading...'
+                      : isMobile && !isHighEnd
+                      ? 'Lightning-fast mobile experience — No lag, pure profits!'
+                      : 'Loading institutional-grade trading tools and analytics...'}
                   </p>
-                )}
-                {isMobile && !isHighEnd && (
-                  <p className="text-[11px] text-white/50">
-                    Loading performance-optimized version for smooth trading…
-                  </p>
-                )}
+                </div>
+
                 {retryCount > 0 && (
-                  <p className="text-[10px] text-orange-400 mt-2">
-                    Reconnecting... ({retryCount}/{MAX_RETRIES})
+                  <p className="text-xs text-orange-400 mt-2 font-semibold">
+                    ⚡ Reconnecting... ({retryCount}/{MAX_RETRIES})
                   </p>
                 )}
               </>
             )}
 
-            {/* Trading-style progress indicators */}
-            <div className="flex items-center justify-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+            {/* Trading candlestick progress indicators */}
+            <div className="flex items-center justify-center gap-2 mt-4">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex flex-col items-center gap-1">
+                  <div
+                    className={`w-1 rounded-sm ${i % 2 === 0 ? 'bg-green-500' : 'bg-red-500'} animate-pulse`}
+                    style={{
+                      height: `${12 + i * 4}px`,
+                      animationDelay: `${i * 0.15}s`
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Loading percentage simulation */}
+            <div className="mt-4 space-y-2">
+              <div className="flex justify-between text-[10px] font-mono text-white/60">
+                <span>Market Data</span>
+                <span className="text-green-400">SYNCING</span>
+              </div>
+              <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-pulse rounded-full" style={{ width: '75%' }} />
+              </div>
             </div>
           </div>
         </div>

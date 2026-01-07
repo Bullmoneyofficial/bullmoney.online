@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 // 1. Connect to MongoDB
 const MONGODB_URI = process.env.MONGODB_URI || "YOUR_MONGODB_CONNECTION_STRING";
 
-if (!mongoose.connections[0].readyState) {
+if (!mongoose.connections[0]?.readyState) {
   mongoose.connect(MONGODB_URI);
 }
 
@@ -20,7 +20,7 @@ const affiliateSchema = new mongoose.Schema({
 }, { collection: 'AffiliatesData' }); // IMPORTANT: Matches your collection name
 
 // Prevent model recompilation error in Next.js
-const Affiliate = mongoose.models.AffiliatesData || mongoose.model('AffiliatesData', affiliateSchema);
+const Affiliate = (mongoose.models.AffiliatesData as any) || mongoose.model('AffiliatesData', affiliateSchema);
 
 // --- GET: Fetch Data for a User ---
 export async function GET(request: Request) {

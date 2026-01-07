@@ -10,7 +10,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Palette, Settings, Zap } from 'lucide-react';
+import { Palette, Zap } from 'lucide-react';
 
 // Import optimization hooks and components
 import { useOptimizations, usePersistedTheme, useUserPreferences } from '@/lib/useOptimizations';

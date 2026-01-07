@@ -1,7 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useRef, Suspense, memo } from 'react';
+import React, { useState, useEffect, useRef, Suspense, memo, lazy } from 'react';
 import { motion } from 'framer-motion';
+
+// Lazy load Spline only when needed
+const Spline = lazy(() => import('@splinetool/react-spline').then((mod) => ({ default: mod.default || mod })));
 
 /**
  * Crash-Safe Spline Loader
@@ -30,9 +33,6 @@ const DEVICE_THRESHOLDS = {
 };
 
 // BUG FIX #14: Remove global counter - use memoryManager instead (single source of truth)
-// BUG FIX #17: Add mutex for Spline module loading
-let globalSplineModule: any = null;
-let splineModuleLoading = false;
 
 export const CrashSafeSplineLoader = memo<CrashSafeSplineLoaderProps>(({
   sceneUrl,
@@ -118,71 +118,30 @@ export const CrashSafeSplineLoader = memo<CrashSafeSplineLoaderProps>(({
     };
   }, []);
 
-  // Step 2: Load Spline module only when safe and visible
+  // Step 2: Register scene with memoryManager when ready
   useEffect(() => {
     if (!canLoadSpline || !isVisible || loadState !== 'safe') return;
 
-    let mounted = true;
+    // BUG FIX #14: Register with memoryManager instead of global counter
+    if ((window as any).memoryManager) {
+      (window as any).memoryManager.registerScene(sceneUrl);
+    }
 
-    const loadSplineModule = async () => {
-      try {
-        // BUG FIX #17: Load Spline module with mutex to prevent race conditions
-        if (!globalSplineModule && !splineModuleLoading) {
-          splineModuleLoading = true;
-          try {
-            const module = await import('@splinetool/react-spline');
-            globalSplineModule = module.default;
-            console.log('[Spline] Module loaded globally');
-          } finally {
-            splineModuleLoading = false;
-          }
-        } else if (splineModuleLoading) {
-          // Wait for module to finish loading
-          await new Promise(resolve => {
-            const checkInterval = setInterval(() => {
-              if (!splineModuleLoading) {
-                clearInterval(checkInterval);
-                resolve(true);
-              }
-            }, 50);
-          });
-        }
-
-        if (!mounted) return;
-
-        // BUG FIX #14: Register with memoryManager instead of global counter
-        if ((window as any).memoryManager) {
-          (window as any).memoryManager.registerScene(sceneUrl);
-        }
-
-        // Cleanup function
-        cleanupRef.current = () => {
-          if ((window as any).memoryManager) {
-            (window as any).memoryManager.unregisterScene(sceneUrl);
-          }
-          console.log('[Spline] Scene cleanup:', sceneUrl);
-        };
-
-      } catch (error: any) {
-        console.error('[Spline] Load error:', error);
-        if (mounted && isMounted.current) {
-          setLoadState('error');
-          setErrorMessage(error.message || 'Failed to load 3D scene');
-          if (onError) onError(error);
-        }
+    // Cleanup function
+    cleanupRef.current = () => {
+      if ((window as any).memoryManager) {
+        (window as any).memoryManager.unregisterScene(sceneUrl);
       }
+      console.log('[Spline] Scene cleanup:', sceneUrl);
     };
 
-    loadSplineModule();
-
     return () => {
-      mounted = false;
       if (cleanupRef.current) {
         cleanupRef.current();
         cleanupRef.current = null;
       }
     };
-  }, [canLoadSpline, isVisible, loadState, sceneUrl, onError]);
+  }, [canLoadSpline, isVisible, loadState, sceneUrl]);
 
   // Step 3: Render based on state
   if (loadState === 'checking') {
@@ -224,9 +183,8 @@ export const CrashSafeSplineLoader = memo<CrashSafeSplineLoaderProps>(({
             </div>
           }
         >
-          {globalSplineModule && isVisible && (
+          {isVisible && (
             <SplineSceneWrapper
-              Spline={globalSplineModule}
               sceneUrl={sceneUrl}
               allowInput={allowInput}
             />
@@ -239,8 +197,8 @@ export const CrashSafeSplineLoader = memo<CrashSafeSplineLoaderProps>(({
 CrashSafeSplineLoader.displayName = 'CrashSafeSplineLoader';
 
 // Spline Scene Wrapper with error handling
-const SplineSceneWrapper = memo<{ Spline: any; sceneUrl: string; allowInput: boolean }>(
-  ({ Spline, sceneUrl, allowInput }) => {
+const SplineSceneWrapper = memo<{ sceneUrl: string; allowInput: boolean }>(
+  ({ sceneUrl, allowInput }) => {
     const [hasError, setHasError] = useState(false);
     const wrapperRef = useRef<HTMLDivElement | null>(null);
 
@@ -357,7 +315,7 @@ const FallbackView = memo<{
         </div>
       )}
 
-      {/* Overlay Content */}
+      {/* Overlay Content - Trading Optimized */}
       <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
@@ -365,28 +323,102 @@ const FallbackView = memo<{
           transition={{ delay: 0.2 }}
           className="max-w-md"
         >
-          <div className="mb-4">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/30">
-              <svg className="w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+          {/* Trading icon with pulse */}
+          <div className="mb-6">
+            <motion.div
+              className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-orange-500/20 to-red-500/20 flex items-center justify-center border-2 border-orange-500/40 relative"
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <motion.div
+                className="absolute inset-0 rounded-full border-2 border-orange-500/30"
+                animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              <div className="text-4xl">⚡</div>
+            </motion.div>
+          </div>
+
+          <h3 className="text-2xl font-bold text-white mb-3 bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
+            {errorMessage ? '🛡️ Performance Mode Active' : '⚡ SPEED OPTIMIZED'}
+          </h3>
+
+          <p className="text-sm text-white/70 leading-relaxed mb-4">
+            {errorMessage
+              ? 'Your trading experience is optimized for maximum stability and speed. Focus on what matters - making money.'
+              : 'Lightweight mode activated for blazing-fast trading. Every millisecond counts when markets move.'}
+          </p>
+
+          {/* Performance benefits */}
+          <div className="space-y-2 mb-6">
+            <div className="flex items-center justify-center gap-2 text-xs text-green-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+              <span className="font-mono">3x Faster Load Times</span>
+            </div>
+            <div className="flex items-center justify-center gap-2 text-xs text-blue-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+              <span className="font-mono">50% Less Data Usage</span>
+            </div>
+            <div className="flex items-center justify-center gap-2 text-xs text-purple-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+              <span className="font-mono">Battery Saver Active</span>
             </div>
           </div>
 
-          <h3 className="text-xl font-bold text-white mb-2">
-            {errorMessage || 'Optimized for Your Device'}
-          </h3>
-          <p className="text-sm text-white/60 leading-relaxed">
-            {errorMessage
-              ? 'Using static preview for stability'
-              : 'Using lightweight preview to ensure smooth performance on your device'}
-          </p>
+          {/* Live market ticker */}
+          <div className="bg-black/40 rounded-lg p-3 border border-white/10">
+            <div className="text-[10px] text-white/40 font-mono mb-2">LIVE MARKET FEED</div>
+            <div className="flex justify-around">
+              <div className="text-center">
+                <div className="text-[10px] text-white/50 font-mono">BTC</div>
+                <motion.div
+                  className="text-xs font-bold text-green-400 font-mono"
+                  animate={{ opacity: [1, 0.6, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  +4.2%
+                </motion.div>
+              </div>
+              <div className="text-center">
+                <div className="text-[10px] text-white/50 font-mono">ETH</div>
+                <motion.div
+                  className="text-xs font-bold text-green-400 font-mono"
+                  animate={{ opacity: [1, 0.6, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
+                >
+                  +2.8%
+                </motion.div>
+              </div>
+              <div className="text-center">
+                <div className="text-[10px] text-white/50 font-mono">SOL</div>
+                <motion.div
+                  className="text-xs font-bold text-green-400 font-mono"
+                  animate={{ opacity: [1, 0.6, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: 0.6 }}
+                >
+                  +6.1%
+                </motion.div>
+              </div>
+            </div>
+          </div>
 
-          {/* Decorative Elements */}
+          {/* Status indicators */}
           <div className="mt-6 flex items-center justify-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-            <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse animation-delay-200" />
-            <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse animation-delay-400" />
+            <motion.div
+              className="w-2 h-2 rounded-full bg-green-500"
+              animate={{ opacity: [1, 0.3, 1] }}
+              transition={{ duration: 1, repeat: Infinity }}
+            />
+            <motion.div
+              className="w-2 h-2 rounded-full bg-blue-500"
+              animate={{ opacity: [1, 0.3, 1] }}
+              transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+            />
+            <motion.div
+              className="w-2 h-2 rounded-full bg-purple-500"
+              animate={{ opacity: [1, 0.3, 1] }}
+              transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+            />
           </div>
         </motion.div>
       </div>
@@ -395,50 +427,228 @@ const FallbackView = memo<{
 });
 FallbackView.displayName = 'FallbackView';
 
-// Checking Animation Component
-const CheckingAnimation = memo(() => (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    className="flex flex-col items-center gap-4"
-  >
-    <div className="relative w-16 h-16">
-      <motion.div
-        className="absolute inset-0 border-4 border-blue-500/20 border-t-blue-500 rounded-full"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-      />
-    </div>
-    <div className="text-sm text-white/40 font-mono">Checking device...</div>
-  </motion.div>
-));
+// Checking Animation Component - Trading Terminal Style
+const CheckingAnimation = memo(() => {
+  const [scanProgress, setScanProgress] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setScanProgress(prev => (prev >= 100 ? 0 : prev + 5));
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex flex-col items-center gap-6 relative"
+    >
+      {/* Animated radar scanning effect */}
+      <div className="relative w-32 h-32">
+        {/* Outer rings */}
+        <motion.div
+          className="absolute inset-0 border-2 border-green-500/20 rounded-full"
+          animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
+        <motion.div
+          className="absolute inset-0 border-2 border-green-500/30 rounded-full"
+          animate={{ scale: [1, 1.15, 1], opacity: [0.7, 0, 0.7] }}
+          transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
+        />
+
+        {/* Central scanner */}
+        <div className="absolute inset-4 border-2 border-green-500/50 rounded-full flex items-center justify-center">
+          <motion.div
+            className="absolute inset-0 border-t-4 border-green-500 rounded-full"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+          />
+          <div className="text-3xl">📊</div>
+        </div>
+
+        {/* Corner indicators */}
+        {[0, 90, 180, 270].map((rotation, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-2 h-2 bg-green-500 rounded-full"
+            style={{
+              top: '50%',
+              left: '50%',
+              transform: `rotate(${rotation}deg) translateX(60px) translateY(-50%)`,
+            }}
+            animate={{ opacity: [1, 0.3, 1] }}
+            transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+          />
+        ))}
+      </div>
+
+      {/* Status text with typing effect */}
+      <div className="flex flex-col items-center gap-2">
+        <div className="text-sm text-green-400 font-mono font-semibold">
+          ● MARKET ANALYSIS INITIATED
+        </div>
+        <div className="text-xs text-white/50 font-mono">
+          Scanning device capabilities... {scanProgress}%
+        </div>
+
+        {/* Progress bar */}
+        <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-green-500 to-blue-500"
+            style={{ width: `${scanProgress}%` }}
+            transition={{ duration: 0.1 }}
+          />
+        </div>
+
+        {/* Live ticker simulation */}
+        <div className="flex gap-3 mt-2">
+          <div className="text-[10px] font-mono text-green-400">BTC: +2.4%</div>
+          <div className="text-[10px] font-mono text-green-400">ETH: +1.8%</div>
+          <div className="text-[10px] font-mono text-red-400">SOL: -0.3%</div>
+        </div>
+      </div>
+    </motion.div>
+  );
+});
 CheckingAnimation.displayName = 'CheckingAnimation';
 
-// Loading Animation Component
-const LoadingAnimation = memo(() => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.9 }}
-    animate={{ opacity: 1, scale: 1 }}
-    className="flex flex-col items-center gap-6"
-  >
-    <div className="relative w-20 h-20">
-      <motion.div
-        className="absolute inset-0 border-4 border-blue-500/20 rounded-full"
-        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      />
-      <motion.div
-        className="absolute inset-0 border-4 border-blue-500/40 border-t-blue-500 rounded-full"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-      />
-    </div>
-    <div className="text-center">
-      <div className="text-white/80 font-medium mb-1">Loading 3D Scene</div>
-      <div className="text-xs text-white/40 font-mono">Please wait...</div>
-    </div>
-  </motion.div>
-));
+// Loading Animation Component - Trading Terminal Style
+const LoadingAnimation = memo(() => {
+  const [loadPercent, setLoadPercent] = useState(0);
+  const [dataPoints, setDataPoints] = useState<number[]>([]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLoadPercent(prev => Math.min(prev + Math.random() * 15, 95));
+      setDataPoints(prev => {
+        const newPoints = [...prev, Math.random() * 100];
+        return newPoints.slice(-10);
+      });
+    }, 300);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex flex-col items-center gap-6 relative"
+    >
+      {/* Trading chart background */}
+      <div className="absolute inset-0 opacity-5">
+        <svg className="w-full h-full" viewBox="0 0 200 100">
+          <polyline
+            points={dataPoints.map((p, i) => `${i * 20},${100 - p}`).join(' ')}
+            fill="none"
+            stroke="url(#loadGradient)"
+            strokeWidth="2"
+          />
+          <defs>
+            <linearGradient id="loadGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      {/* Multi-ring loader with trading icons */}
+      <div className="relative w-28 h-28">
+        {/* Outer pulse ring */}
+        <motion.div
+          className="absolute inset-0 border-4 border-blue-500/20 rounded-full"
+          animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
+
+        {/* Middle spinning ring */}
+        <motion.div
+          className="absolute inset-2 border-4 border-green-500/30 rounded-full"
+          animate={{ rotate: 360, scale: [1, 1.1, 1] }}
+          transition={{ rotate: { duration: 3, repeat: Infinity, ease: 'linear' }, scale: { duration: 1.5, repeat: Infinity } }}
+        />
+
+        {/* Inner core with icon */}
+        <div className="absolute inset-6 border-4 border-blue-500/50 rounded-full flex items-center justify-center bg-black/30">
+          <motion.div
+            animate={{ rotate: [0, 360] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+          >
+            <div className="text-4xl">💹</div>
+          </motion.div>
+        </div>
+
+        {/* Orbiting data nodes */}
+        {[0, 120, 240].map((angle, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-3 h-3 bg-gradient-to-br from-green-400 to-blue-500 rounded-full shadow-lg shadow-green-500/50"
+            style={{
+              top: '50%',
+              left: '50%',
+            }}
+            animate={{
+              rotate: angle,
+              x: Math.cos((angle * Math.PI) / 180) * 50,
+              y: Math.sin((angle * Math.PI) / 180) * 50,
+            }}
+            transition={{
+              rotate: { duration: 4, repeat: Infinity, ease: 'linear' },
+              delay: i * 0.3,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Status display */}
+      <div className="text-center space-y-3">
+        <div className="text-green-400 font-mono font-bold text-sm">
+          🔥 LOADING TRADING TERMINAL
+        </div>
+        <div className="text-xs text-white/60 font-mono">
+          Initializing market data streams...
+        </div>
+
+        {/* Progress bar with percentage */}
+        <div className="w-64 space-y-1">
+          <div className="flex justify-between text-[10px] font-mono text-white/40">
+            <span>Loading Assets</span>
+            <span>{Math.round(loadPercent)}%</span>
+          </div>
+          <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden border border-white/20">
+            <motion.div
+              className="h-full bg-gradient-to-r from-green-500 via-blue-500 to-green-500 bg-[length:200%_100%]"
+              style={{ width: `${loadPercent}%` }}
+              animate={{ backgroundPosition: ['0% 0%', '100% 0%'] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+            />
+          </div>
+        </div>
+
+        {/* Live market preview */}
+        <div className="grid grid-cols-3 gap-2 mt-4">
+          {[
+            { sym: 'BTC', change: '+3.2%', color: 'text-green-400' },
+            { sym: 'ETH', change: '+1.9%', color: 'text-green-400' },
+            { sym: 'SOL', change: '-0.5%', color: 'text-red-400' },
+          ].map((coin, i) => (
+            <motion.div
+              key={i}
+              className="p-2 rounded-lg bg-white/5 border border-white/10"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+            >
+              <div className="text-[10px] text-white/50 font-mono">{coin.sym}</div>
+              <div className={`text-xs font-mono font-bold ${coin.color}`}>{coin.change}</div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+});
 LoadingAnimation.displayName = 'LoadingAnimation';
 
 // Helper: Generate preview URL from scene URL

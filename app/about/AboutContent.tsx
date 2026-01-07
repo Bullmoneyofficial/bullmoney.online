@@ -291,32 +291,33 @@ export function TestimonialsCarousel() {
 
       <div className="relative h-[320px] overflow-hidden rounded-3xl ring-1 ring-white/10 bg-neutral-900/60 backdrop-blur-md shadow-lg">
         <AnimatePresence mode="wait">
-          <motion.div
-            key={index}
-            className="absolute inset-0 flex items-center justify-center"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            onDragEnd={(e, { offset, velocity }) => {
-              if (offset.x < -50 || velocity.x < -200) nextSlide();
-              if (offset.x > 50 || velocity.x > 200) prevSlide();
-            }}
-          >
-            <Image
-              src={testimonials[index].image}
-              alt={testimonials[index].name}
-              fill
-              className="object-cover opacity-60"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
-            <div className="absolute bottom-10 left-8 text-white max-w-sm space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="relative w-10 h-10 rounded-full overflow-hidden ring-1 ring-white/10 bg-neutral-800">
-                  <Image
-                    src={testimonials[index].icon}
+          {testimonials[index] && (
+            <motion.div
+              key={index}
+              className="absolute inset-0 flex items-center justify-center"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              onDragEnd={(_, { offset, velocity }) => {
+                if (offset.x < -50 || velocity.x < -200) nextSlide();
+                if (offset.x > 50 || velocity.x > 200) prevSlide();
+              }}
+            >
+              <Image
+                src={testimonials[index].image}
+                alt={testimonials[index].name}
+                fill
+                className="object-cover opacity-60"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
+              <div className="absolute bottom-10 left-8 text-white max-w-sm space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="relative w-10 h-10 rounded-full overflow-hidden ring-1 ring-white/10 bg-neutral-800">
+                    <Image
+                      src={testimonials[index].icon}
                     alt={`${testimonials[index].name} icon`}
                     fill
                     className="object-contain p-1.5"
@@ -325,10 +326,11 @@ export function TestimonialsCarousel() {
                 <p className="text-lg font-semibold">{testimonials[index].name}</p>
               </div>
               <p className="text-sm text-neutral-200 italic leading-relaxed">
-                “{testimonials[index].text}”
+                "{testimonials[index].text}"
               </p>
             </div>
           </motion.div>
+          )}
         </AnimatePresence>
 
         {/* Navigation Arrows */}

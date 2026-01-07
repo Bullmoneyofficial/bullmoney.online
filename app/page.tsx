@@ -92,9 +92,13 @@ const HeroLoaderOverlay = dynamic(
   () => import('@/components/Mainpage/PageElements').then((mod) => mod.HeroLoaderOverlay),
   { ssr: false, loading: () => null }
 );
-const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor'), { 
-  ssr: false, 
-  loading: () => <div className="hidden">Loading...</div> 
+const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor'), {
+  ssr: false,
+  loading: () => <div className="hidden">Loading...</div>
+});
+const LiveMarketTicker = dynamic(() => import('@/components/Mainpage/LiveMarketTicker').then(mod => mod.LiveMarketTicker), {
+  ssr: false,
+  loading: () => <div className="h-10 bg-black border-b border-white/10" />
 });
 // Removed unused component imports
 const UnifiedControls = dynamic(() => import('@/components/Mainpage/UnifiedControls'), {
@@ -392,7 +396,7 @@ export default function Home() {
     // ========================================
     const handleTouchStart = (e: TouchEvent) => {
       const scrollable = (e.target as HTMLElement)?.closest('.mobile-scroll');
-      if (scrollable && e.touches.length > 0) {
+      if (scrollable && e.touches.length > 0 && e.touches[0]) {
         touchStartRef.current = e.touches[0].clientY;
       }
     };
@@ -961,7 +965,7 @@ export default function Home() {
           console.log('  → 3D scenes disabled');
           console.log('  → Load time: < 100ms average');
           setPerfToast({
-            message: '⚡ Performance Mode activated - Lightning fast loads enabled',
+            message: '⚡ SPEED MODE ACTIVE - Trade 3x faster with instant page loads',
             type: 'success'
           });
         } else {
@@ -969,7 +973,7 @@ export default function Home() {
           console.log('  → All 3D scenes enabled');
           console.log('  → Load time: ~300ms average');
           setPerfToast({
-            message: '✨ Full 3D Mode activated - Premium experience enabled',
+            message: '✨ PREMIUM 3D MODE - Immersive trading terminal experience unlocked',
             type: 'success'
           });
         }
@@ -1274,12 +1278,15 @@ export default function Home() {
           style={{ zIndex: UI_LAYERS.INFO_PEEKER, background: `linear-gradient(to right, ${accentColor}80, transparent)` }}
           onTouchStart={(e) => {
             const touch = e.touches[0];
-            (e.currentTarget as any)._swipeStartX = touch.clientX;
+            if (touch) {
+              (e.currentTarget as any)._swipeStartX = touch.clientX;
+            }
           }}
           onTouchEnd={(e) => {
             const startX = (e.currentTarget as any)._swipeStartX;
-            if (startX !== undefined && startX < 50) {
-              const endX = e.changedTouches[0].clientX;
+            const touch = e.changedTouches[0];
+            if (startX !== undefined && startX < 50 && touch) {
+              const endX = touch.clientX;
               if (endX - startX > 50) {
                 playSwipe();
                 setInfoPanelOpen(true);
@@ -1787,14 +1794,23 @@ export default function Home() {
                     <Zap size={28} className="text-blue-400 drop-shadow-[0_0_8px_currentColor]" />
                     <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 px-2 py-1 rounded">Premium</span>
                   </div>
-                  <h4 className="text-lg font-bold text-white mb-2">Full 3D Experience</h4>
+                  <h4 className="text-lg font-bold text-white mb-2">✨ Premium Terminal</h4>
                   <p className="text-xs text-white/60 leading-relaxed mb-3">
-                    Immersive 3D scenes, cinematic visuals, and interactive elements. Best for desktop trading stations.
+                    Full 3D command center with real-time market visualizations. The ultimate trading experience for power users.
                   </p>
-                  <div className="flex items-center gap-4 text-[10px] text-white/50">
-                    <span>✨ All Features</span>
-                    <span>📊 10 Pages</span>
-                    <span>~300ms Load</span>
+                  <div className="grid grid-cols-3 gap-2 text-[10px] mt-3">
+                    <div className="flex flex-col items-center p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                      <span className="text-blue-400 font-bold">10</span>
+                      <span className="text-white/50">Pages</span>
+                    </div>
+                    <div className="flex flex-col items-center p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                      <span className="text-purple-400 font-bold">3D</span>
+                      <span className="text-white/50">Visuals</span>
+                    </div>
+                    <div className="flex flex-col items-center p-2 rounded-lg bg-pink-500/10 border border-pink-500/20">
+                      <span className="text-pink-400 font-bold">MAX</span>
+                      <span className="text-white/50">Features</span>
+                    </div>
                   </div>
                 </div>
               </button>
@@ -1810,14 +1826,23 @@ export default function Home() {
                     <Zap size={28} className="text-orange-400 drop-shadow-[0_0_8px_currentColor]" />
                     <span className="text-[10px] font-bold uppercase tracking-wider bg-orange-500/20 text-orange-300 px-2 py-1 rounded">Fastest</span>
                   </div>
-                  <h4 className="text-lg font-bold text-white mb-2">Performance Mode</h4>
+                  <h4 className="text-lg font-bold text-white mb-2">⚡ Speed Mode</h4>
                   <p className="text-xs text-white/60 leading-relaxed mb-3">
-                    Lightning-fast loads with hero 3D + static pages. Perfect for mobile trading and slower connections.
+                    Lightning-fast execution. Zero lag. Optimized for mobile traders who need instant access to opportunities.
                   </p>
-                  <div className="flex items-center gap-4 text-[10px] text-white/50">
-                    <span>⚡ Speed First</span>
-                    <span>📱 {visiblePages.length} Pages</span>
-                    <span>&lt;100ms Load</span>
+                  <div className="grid grid-cols-3 gap-2 text-[10px] mt-3">
+                    <div className="flex flex-col items-center p-2 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                      <span className="text-orange-400 font-bold">3x</span>
+                      <span className="text-white/50">Faster</span>
+                    </div>
+                    <div className="flex flex-col items-center p-2 rounded-lg bg-green-500/10 border border-green-500/20">
+                      <span className="text-green-400 font-bold">50%</span>
+                      <span className="text-white/50">Less Data</span>
+                    </div>
+                    <div className="flex flex-col items-center p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                      <span className="text-blue-400 font-bold">&lt;100ms</span>
+                      <span className="text-white/50">Load</span>
+                    </div>
                   </div>
                 </div>
               </button>
@@ -1867,6 +1892,8 @@ export default function Home() {
             onFaqClick={() => setFaqOpen(true)}
             onControlCenterToggle={() => setControlCenterOpen((prev) => !prev)}
           />
+          {/* Live Market Ticker - Trading immersion */}
+          <LiveMarketTicker />
         </div>
       )}
 

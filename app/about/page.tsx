@@ -71,11 +71,11 @@ const OnboardingHelper = ({ onDismiss }: { onDismiss: () => void }) => {
 // ----------------------------------------------------------------------
 // --- YOUTUBE MUSIC SYSTEM ---
 // ----------------------------------------------------------------------
-const BackgroundMusicSystem = ({ 
-  themeId, 
+const BackgroundMusicSystem = ({
+  themeId,
   onReady,
-  volume 
-}: { 
+  volume: _
+}: {
   themeId: string;
   onReady: (player: any) => void;
   volume: number;
@@ -265,7 +265,7 @@ export default function Page({
   const playerRef = useRef<any>(null);
   
   // State to track if user is hovering a theme preview (to pause BG music)
-  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [isPreviewing] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showHelper, setShowHelper] = useState(false);
 
@@ -371,7 +371,7 @@ export default function Page({
     setCurrentStage("hold"); 
   }, []);
 
-  const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
+  const handleThemeChange = useCallback((themeId: string, _sound: SoundProfile, muted: boolean) => {
     setIsTransitioning(true);
     setTimeout(() => {
         setActiveThemeId(themeId);
