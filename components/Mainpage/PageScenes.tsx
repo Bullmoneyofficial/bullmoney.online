@@ -1,7 +1,6 @@
 "use client";
 
-import React, { memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Spline from '@splinetool/react-spline';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp, GripHorizontal, GripVertical, Zap } from 'lucide-react';
 
 import { playClick } from '@/lib/interactionUtils';
@@ -172,6 +171,28 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
     );
   }
 
+  if (disabled) {
+    return (
+      <div
+        className="w-full h-full relative flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
+        style={{ transform: `translateY(${parallaxOffset * 0.35}px) translateZ(0)` }}
+      >
+        <div
+          className="absolute inset-0 opacity-30"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 30% 30%, rgba(59,130,246,0.12), transparent 45%), radial-gradient(circle at 70% 70%, rgba(236,72,153,0.1), transparent 45%)',
+          }}
+        />
+        <div className="relative z-10 text-center px-6 py-5 rounded-2xl border border-white/10 bg-black/50 backdrop-blur">
+          <div className="text-white/60 font-mono text-[10px] tracking-[0.3em] mb-2">PERFORMANCE MODE</div>
+          <div className="text-white/90 font-bold text-xl md:text-2xl">{skeletonLabel || '3D DISABLED'}</div>
+          <div className="text-white/40 font-mono text-[10px] mt-2">Tap “Full 3D” to re-enable</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`
@@ -202,27 +223,21 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
             className="w-full h-full"
           />
         ) : (
-          <Suspense fallback={
-            <div className="absolute inset-0 bg-gray-900/20 flex items-center justify-center text-blue-500/20 font-mono text-[10px]">
-              LOADING ASSET...
-            </div>
-          }>
-             <ErrorBoundary fallback={
-               <div className="absolute inset-0 bg-gray-900/40 flex items-center justify-center">
-                 <div className="text-white/60 text-sm font-mono">Scene unavailable</div>
-               </div>
-             }>
-               <Spline
-                 scene={resolvedSceneUrl}
-                 className="w-full h-full block object-cover"
-                 style={{
-                   transform: 'translateZ(0)',
-                   backfaceVisibility: 'hidden',
-                   WebkitBackfaceVisibility: 'hidden'
-                 }}
-               />
-             </ErrorBoundary>
-          </Suspense>
+          <ErrorBoundary
+            fallback={
+              <div className="absolute inset-0 bg-gray-900/40 flex items-center justify-center">
+                <div className="text-white/60 text-sm font-mono">Scene unavailable</div>
+              </div>
+            }
+          >
+            <SmartSplineLoader
+              scene={resolvedSceneUrl}
+              priority={isHeavy ? 'high' : 'normal'}
+              enableInteraction={allowInput}
+              deviceProfile={deviceProfile}
+              className="w-full h-full"
+            />
+          </ErrorBoundary>
         )
       )}
       {isVisible && !isLoaded && (
@@ -252,15 +267,16 @@ export const FullScreenSection = memo(({ config, activePage, onVisible, parallax
   // OPTIMIZED: Render fewer adjacent pages on mobile for lightweight rendering
   const shouldRender = useMemo(() => {
     const distance = Math.abs(config.id - activePage);
-    const threshold = isMobile ? 1 : 2;
-    const withinRange = distance <= threshold || (isLastPage && activePage >= 8);
-    if (config.type === 'tsx') return withinRange;
-    if (!eagerRenderSplines) return withinRange;
-    return disableSpline ? withinRange : true;
-  }, [config.id, config.type, activePage, isLastPage, isMobile, disableSpline, eagerRenderSplines]);
+    const tsxThreshold = isMobile ? 1 : 2;
+    const splineThreshold = isMobile ? 0 : 1;
+    const withinTSXRange = distance <= tsxThreshold || (isLastPage && activePage >= 8);
+    const withinSplineRange = distance <= splineThreshold || (isLastPage && activePage >= 8);
+    if (config.type === 'tsx') return withinTSXRange;
+    // Spline: keep only 1 active scene on mobile to prevent WebGL crashes.
+    return withinSplineRange;
+  }, [config.id, config.type, activePage, isLastPage, isMobile]);
 
   const isActive = config.id === activePage;
-  const allowForceLoad = !disableSpline;
 
   useEffect(() => {
     if(sectionRef.current) onVisible(sectionRef.current, config.id - 1);
@@ -286,10 +302,10 @@ export const FullScreenSection = memo(({ config, activePage, onVisible, parallax
             isHeavy={isHeavyScene || isMobileSensitive || isLastPage}
             disabled={disableSpline}
             forceLiteSpline={forceLiteSpline}
-            forceLoadOverride={allowForceLoad}
-            eagerLoad={eagerRenderSplines && !disableSpline}
+            forceLoadOverride={config.id === 1}
+            eagerLoad={eagerRenderSplines && !disableSpline && Math.abs(config.id - activePage) <= 1}
             skeletonLabel={config.label}
-            useCrashSafe={useCrashSafeSpline || config.id === 1}
+            useCrashSafe={useCrashSafeSpline || !!deviceProfile?.isMobile || isHeavyScene || isMobileSensitive || isLastPage || config.id === 1}
             onSceneReady={config.id === 1 ? onSceneReady : undefined}
             deviceProfile={deviceProfile}
           />
@@ -431,9 +447,11 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
     if (containerRef.current) onVisible(containerRef.current, config.id - 1);
   }, [onVisible, config.id]);
 
-  const shouldRender = disableSpline || !eagerRenderSplines
-    ? (config.id >= activePage - 1) && (config.id <= activePage + 1)
-    : true;
+  const shouldRender = (() => {
+    const distance = Math.abs(config.id - activePage);
+    const threshold = isMobile ? 0 : 1;
+    return distance <= threshold;
+  })();
 
   // FIX #7: Remove snap classes on split section for mobile
   return (
@@ -513,12 +531,12 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
             sceneUrl={config.sceneA}
             forceNoPointer={isDragging}
             parallaxOffset={parallaxOffset * 0.3}
-            disabled={false}
+            disabled={disableSpline}
             forceLiteSpline={forceLiteSpline}
-            forceLoadOverride={!disableSpline}
-            eagerLoad={eagerRenderSplines && !disableSpline}
+            forceLoadOverride={false}
+            eagerLoad={eagerRenderSplines && !disableSpline && shouldRender}
             skeletonLabel={config.labelA}
-            useCrashSafe={useCrashSafeSpline || config.id === 6}
+            useCrashSafe={useCrashSafeSpline || !!deviceProfile?.isMobile || config.id === 6}
             deviceProfile={deviceProfile}
           />
         </div>
@@ -549,16 +567,16 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
       >
         <div className="absolute inset-0 w-full h-full">
              <SceneWrapper
-               isVisible={shouldRender}
+               isVisible={shouldRender && !isMobile}
                sceneUrl={config.sceneB}
                forceNoPointer={isDragging}
                parallaxOffset={parallaxOffset * 0.7}
-               disabled={false}
+               disabled={disableSpline || isMobile}
                forceLiteSpline={forceLiteSpline}
-               forceLoadOverride={!disableSpline}
-               eagerLoad={eagerRenderSplines && !disableSpline}
+               forceLoadOverride={false}
+               eagerLoad={eagerRenderSplines && !disableSpline && shouldRender && !isMobile}
                skeletonLabel={config.labelB}
-               useCrashSafe={useCrashSafeSpline || config.id === 6}
+               useCrashSafe={useCrashSafeSpline || !!deviceProfile?.isMobile || config.id === 6}
                deviceProfile={deviceProfile}
              />
         </div>

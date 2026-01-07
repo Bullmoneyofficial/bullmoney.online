@@ -2,44 +2,24 @@
 
 import { MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export function ModeToggle() {
-  const { theme, setTheme } = useTheme();
-  const [systemTheme, setSystemTheme] = useState<"dark" | "dark">("dark");
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    setSystemTheme(mediaQuery.matches ? "dark" : "dark");
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      setSystemTheme(e.matches ? "dark" : "dark");
-    };
-
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
+    setMounted(true);
   }, []);
 
-  const SWITCH = () => {
-    console.log(theme);
-    switch (theme) {
-      case "dark":
-        setTheme("dark");
-        break;
-      case "dark":
-        setTheme("dark");
-        break;
-      case "system":
-        setTheme(systemTheme === "dark" ? "dark" : "dark");
-        break;
-      default:
-        break;
-    }
+  const toggle = () => {
+    if (!mounted) return;
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
 
   return (
     <button
-      onClick={SWITCH}
+      onClick={toggle}
       className="relative flex cursor-pointer items-center justify-center rounded-xl p-2 text-neutral-500 hover:shadow-input dark:text-neutral-500"
     >
       <SunIcon

@@ -101,6 +101,14 @@ self.addEventListener('fetch', (event) => {
   }
 
   const request = event.request;
+  const url = new URL(request.url);
+
+  // Never cache Next.js build assets (prevents ChunkLoadError after updates/HMR)
+  if (url.pathname.startsWith('/_next/')) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
   const isWebView = isWebViewRequest(request);
 
   // Spline scenes get special treatment with browser-specific caching

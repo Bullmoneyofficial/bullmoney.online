@@ -4,11 +4,13 @@ import React, { useState, useEffect, useRef, useTransition, useCallback, useMemo
 import dynamic from 'next/dynamic';
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { useTheme as useNextTheme } from 'next-themes';
 import {
   Volume2, Volume1, VolumeX, X, Palette, Sparkles, MessageCircle,
   Info, Smartphone, Monitor,
-  Layers, Lock, Unlock, Zap, ChevronLeft, ChevronRight
+  Layers, Lock, Unlock, Zap, ChevronLeft, ChevronRight, SunMoon
 } from 'lucide-react';
+import { installCrashTelemetry, safeMark } from '@/lib/telemetry';
 
 // --- INTERACTION UTILITIES ---
 import { playClick, playHover, playSwipe, createSwipeHandlers } from '@/lib/interactionUtils';
@@ -76,6 +78,7 @@ const playClickSound = playClick;
 // 7. MAIN COMPONENT
 // ----------------------------------------------------------------------
 export default function Home() {
+  const { resolvedTheme, setTheme: setNextTheme } = useNextTheme();
   const [currentStage, setCurrentStage] = useState<"register" | "hold" | "v2" | "content">("v2");
   const [isClient, setIsClient] = useState(false);
   const [activeThemeId, setActiveThemeId] = useState<string>('t01'); 
@@ -106,6 +109,7 @@ export default function Home() {
   const orientationDismissedRef = useRef(false);
   const touchStartRef = useRef(0);
   const [isTouch, setIsTouch] = useState(false);
+  const isTouchRef = useRef(false);
   const [faqOpen, setFaqOpen] = useState(false);
   const [musicKey, setMusicKey] = useState(0);
   const [disableSpline, setDisableSpline] = useState(false);
@@ -118,6 +122,8 @@ export default function Home() {
   const [controlCenterOpen, setControlCenterOpen] = useState(false);
   const heroLoaderFallbackRef = useRef<number | null>(null);
   const deviceProfile = useDeviceProfile();
+  const colorMode = (resolvedTheme === 'light' || resolvedTheme === 'dark') ? resolvedTheme : 'dark';
+  const telemetryContextRef = useRef<Record<string, unknown>>({});
 
   // Initialize optimization system
   const { isReady: optimizationsReady, serviceWorkerReady, storage } = useOptimizations({
@@ -125,6 +131,39 @@ export default function Home() {
     criticalScenes: ['/scene1.splinecode'], // Hero scene
     preloadScenes: ['/scene.splinecode', '/scene2.splinecode'] // Other scenes
   });
+
+  useEffect(() => {
+    telemetryContextRef.current = {
+      stage: currentStage,
+      activePage,
+      isTouch,
+      disableSpline,
+      isSafeMode,
+      isSafari,
+      deviceProfile: {
+        isMobile: deviceProfile.isMobile,
+        isWebView: deviceProfile.isWebView,
+        isHighEndDevice: deviceProfile.isHighEndDevice,
+        prefersReducedData: deviceProfile.prefersReducedData,
+        connectionType: deviceProfile.connectionType,
+      },
+      ua: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+    };
+  }, [activePage, currentStage, deviceProfile, disableSpline, isSafeMode, isSafari, isTouch]);
+
+  useEffect(() => {
+    const uninstall = installCrashTelemetry(() => telemetryContextRef.current);
+    return () => uninstall();
+  }, []);
+
+  useEffect(() => {
+    console.log('[nav] activePage', activePage);
+    safeMark(`bm_active_page:${activePage}`);
+  }, [activePage]);
+
+  useEffect(() => {
+    safeMark(`bm_stage:${currentStage}`);
+  }, [currentStage]);
 
   const handleOrientationDismiss = useCallback(() => {
     setShowOrientationWarning(false);
@@ -134,6 +173,12 @@ export default function Home() {
   useEffect(() => {
     prefersReducedMotionRef.current = deviceProfile.prefersReducedMotion;
   }, [deviceProfile.prefersReducedMotion]);
+
+  const toggleColorMode = useCallback(() => {
+    playClick();
+    if (navigator.vibrate) navigator.vibrate(10);
+    setNextTheme(colorMode === 'dark' ? 'light' : 'dark');
+  }, [colorMode, setNextTheme]);
 
   useEffect(() => {
     if (heroSceneReady) {
@@ -180,7 +225,9 @@ export default function Home() {
     styleSheet.innerText = GLOBAL_STYLES;
     document.head.appendChild(styleSheet);
 
-    setIsTouch(matchMedia && matchMedia('(pointer: coarse)').matches);
+    const touch = !!(matchMedia && matchMedia('(pointer: coarse)').matches);
+    isTouchRef.current = touch;
+    setIsTouch(touch);
 
     // Auto-disable Spline by default; preserve user preference when available
     const savedSplinePref = devicePrefs.get('spline_enabled');
@@ -268,6 +315,8 @@ export default function Home() {
 
     const handleScroll = () => {
       if (prefersReducedMotionRef.current) return;
+      // Avoid re-rendering every frame on touch devices (major scroll jank source on iOS/Android)
+      if (isTouchRef.current) return;
 
       const now = performance.now();
 
@@ -696,6 +745,11 @@ export default function Home() {
     const timer = window.setTimeout(() => handleV2Complete(), 12000);
     return () => window.clearTimeout(timer);
   }, [isClient, currentStage, handleV2Complete]);
+
+  useEffect(() => {
+    if (!isClient || !optimizationsReady || currentStage !== 'v2') return;
+    handleV2Complete();
+  }, [isClient, optimizationsReady, currentStage, handleV2Complete]);
    
   const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
     setActiveThemeId(themeId);
@@ -915,11 +969,34 @@ export default function Home() {
           defaultOpen={false}
           accentColor={accentColor}
           maxHeight="70vh"
-          minHeight="60px"
+          minHeight="28px"
           className={`z-[${UI_LAYERS.PANELS_BOTTOM}]`}
           onOpenChange={(isOpen) => setControlCenterOpen(isOpen)}
         >
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Theme */}
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <SunMoon size={18} style={{ color: accentColor }} />
+                  <div className="flex flex-col leading-tight">
+                    <span className="text-[10px] uppercase tracking-[0.35em] text-white/60">Theme</span>
+                    <span className="text-sm font-semibold text-white">Light / Night</span>
+                  </div>
+                </div>
+                <button
+                  onClick={toggleColorMode}
+                  className="px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs font-semibold text-white/80 hover:bg-black/50 transition-colors active:scale-95"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                >
+                  {colorMode === 'dark' ? 'Night' : 'Light'}
+                </button>
+              </div>
+              <p className="text-xs text-white/60 leading-relaxed">
+                Switch the UI shell (persists). Use Themes below for scene styling.
+              </p>
+            </div>
+
             {/* Device Status */}
             <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${accentColor}15` }}>
@@ -1026,60 +1103,49 @@ export default function Home() {
                 />
               </div>
             </div>
-          </div>
-        </SwipeablePanel>
-      )}
 
-      {/* --- SWIPEABLE SUPPORT WIDGET --- */}
-      {currentStage === 'content' && !showConfigurator && (
-        <SwipeablePanel
-          title="Support"
-          icon={<MessageCircle size={20} />}
-          position="bottom"
-          defaultOpen={false}
-          accentColor={accentColor}
-          maxHeight="50vh"
-          minHeight="60px"
-          className={`z-[${UI_LAYERS.PANELS_SUPPORT}]`}
-        >
-          <div className="space-y-4 text-center">
-            <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${accentColor}18`, border: `2px solid ${accentColor}55` }}>
-              <MessageCircle className="w-8 h-8" style={{ color: accentColor }} />
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-1">Need Help?</h3>
-              <p className="text-sm text-white/60">Our support team is ready to assist you</p>
-            </div>
-
-            <a
-              href="https://t.me/+dlP_A0ebMXs3NTg0"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => {
-                playClick();
-                if (navigator.vibrate) navigator.vibrate([15, 5, 15]);
-              }}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95"
-              style={{
-                backgroundColor: accentColor,
-                color: '#000',
-                boxShadow: `0 8px 24px ${accentColor}40`
-              }}
-            >
-              <MessageCircle size={20} />
-              <span>Open Telegram Support</span>
-              <ChevronRight size={20} />
-            </a>
-
-            <div className="grid grid-cols-2 gap-3 text-left">
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                <div className="text-xs text-white/60 mb-1">Response Time</div>
-                <div className="text-sm font-semibold text-white">~5 minutes</div>
+            {/* Support Section */}
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${accentColor}18`, border: `1px solid ${accentColor}55` }}>
+                  <MessageCircle className="w-7 h-7" style={{ color: accentColor }} />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.35em] text-white/60">Support</p>
+                  <p className="text-lg font-semibold text-white">Need Help?</p>
+                </div>
               </div>
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                <div className="text-xs text-white/60 mb-1">Availability</div>
-                <div className="text-sm font-semibold text-white">24/7</div>
+              <p className="text-sm text-white/70 leading-relaxed">
+                Our support team is standing by so you can stay focused on the markets.
+              </p>
+              <a
+                href="https://t.me/+dlP_A0ebMXs3NTg0"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  playClick();
+                  if (navigator.vibrate) navigator.vibrate([15, 5, 15]);
+                }}
+                className="inline-flex items-center justify-center gap-2 w-full px-6 py-3 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95"
+                style={{
+                  backgroundColor: accentColor,
+                  color: '#000',
+                  boxShadow: `0 8px 24px ${accentColor}40`
+                }}
+              >
+                <MessageCircle size={20} />
+                <span>Open Telegram Support</span>
+                <ChevronRight size={20} />
+              </a>
+              <div className="grid grid-cols-2 gap-3 text-left">
+                <div className="p-3 rounded-lg bg-black/40 border border-white/10">
+                  <div className="text-[10px] text-white/60 mb-1">Response Time</div>
+                  <div className="text-sm font-semibold text-white">~5 minutes</div>
+                </div>
+                <div className="p-3 rounded-lg bg-black/40 border border-white/10">
+                  <div className="text-[10px] text-white/60 mb-1">Availability</div>
+                  <div className="text-sm font-semibold text-white">24/7</div>
+                </div>
               </div>
             </div>
           </div>
@@ -1215,12 +1281,103 @@ export default function Home() {
       {/* --- LAYER 6: MAIN CONTENT (3D SCROLL LAYOUT) --- */}
       <div className={currentStage === 'content' ? 'profit-reveal w-full h-[100dvh] relative' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
         {!isTouch && <TargetCursor spinDuration={2} hideDefaultCursor={false} targetSelector=".cursor-target, a, button" />}
-        
+
+        {/* FIX: Fixed UI must NOT live inside a transformed/scrolling container on iOS (breaks taps + fixed positioning) */}
+        {/* UNIFIED NAVIGATION - Same on Mobile & Desktop */}
+        <UnifiedNavigation
+          currentPage={activePage}
+          totalPages={PAGE_CONFIG.length}
+          pages={PAGE_CONFIG}
+          onPageChange={scrollToPage}
+          accentColor={accentColor}
+          disabled={currentStage !== 'content'}
+        />
+
+        {/* UNIFIED CONTROLS - Same on Mobile & Desktop */}
+        <UnifiedControls
+          isMuted={isMuted}
+          onMuteToggle={() => setIsMuted(!isMuted)}
+          onThemeClick={() => setShowConfigurator(true)}
+          onFaqClick={() => setFaqOpen(true)}
+          onSettingsClick={toggleColorMode}
+          accentColor={accentColor}
+          disabled={currentStage !== 'content'}
+        />
+
+        {/* INFO PANEL & FAQ CONTROLS - Unified for Mobile/Desktop */}
+        <div className="fixed top-24 left-4 md:bottom-8 md:top-auto md:left-8 pointer-events-auto" style={{ zIndex: UI_LAYERS.INFO_PEEKER }}>
+          <div className="flex flex-col gap-3">
+            {/* Info Panel Toggle - Mobile Optimized Card */}
+            <button
+              onClick={(e) => {
+                playClick();
+                if (navigator.vibrate) navigator.vibrate(10);
+                if (e.detail >= 2 || infoPanelOpen) {
+                  setInfoPanelOpen(false);
+                  return;
+                }
+                setInfoPanelOpen(true);
+              }}
+              onMouseEnter={() => playHover()}
+              onTouchStart={(e) => {
+                playHover();
+                e.currentTarget.style.transform = 'scale(0.95)';
+              }}
+              onTouchEnd={(e) => {
+                e.currentTarget.style.transform = '';
+              }}
+              className="md:hidden flex items-center gap-3 bg-black/50 backdrop-blur border border-white/10 px-4 py-3 rounded-2xl text-left shadow-lg active:scale-95 transition-all hover:bg-black/60 min-h-[44px] touch-manipulation"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
+              aria-label="Open info panel"
+            >
+              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                {infoPanelOpen ? <Unlock size={20} className="text-green-400" /> : <Lock size={20} className="text-blue-400" />}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-white/60 tracking-widest">INFO PANEL</span>
+                <span className="text-sm font-bold text-white">{infoPanelOpen ? "Tap to close" : "Swipe or tap"}</span>
+              </div>
+            </button>
+
+            {/* Info Panel Toggle - Desktop Compact */}
+            <ShineButton
+              className="hidden md:flex w-12 h-12 rounded-full"
+              onClick={(e: any) => {
+                playClick();
+                if (e?.detail >= 2 || infoPanelOpen) {
+                  setInfoPanelOpen(false);
+                  return;
+                }
+                setInfoPanelOpen(true);
+              }}
+              onMouseEnter={() => playHover()}
+            >
+              {infoPanelOpen ? <Unlock size={20} className="text-green-400" /> : <Lock size={20} className="text-blue-400" />}
+            </ShineButton>
+
+            {/* FAQ Toggle */}
+            <ShineButton
+              className="w-12 h-12 rounded-full"
+              onClick={(e: any) => {
+                playClick();
+                if (e?.detail >= 2 || faqOpen) {
+                  setFaqOpen(false);
+                  return;
+                }
+                setFaqOpen(true);
+              }}
+              onMouseEnter={() => playHover()}
+            >
+              <Info size={20} className={faqOpen ? "text-green-400" : "text-white"} />
+            </ShineButton>
+          </div>
+        </div>
+
         {/* --- SCROLL CONTAINER --- */}
         <main
           ref={scrollContainerRef}
           data-scroll-container
-          className={`w-full h-full flex flex-col overflow-y-scroll overflow-x-hidden unified-scroll ${isTouch ? 'touch-device' : 'non-touch-device snap-y snap-mandatory'} scroll-smooth bg-black no-scrollbar text-white relative`}
+          className={`w-full h-full flex flex-col overflow-y-scroll overflow-x-hidden unified-scroll ${isTouch ? 'touch-device' : 'non-touch-device snap-y snap-mandatory scroll-smooth'} bg-black no-scrollbar text-white relative`}
           onTouchStart={swipeHandlers.onTouchStart}
           onTouchMove={swipeHandlers.onTouchMove}
           onTouchEnd={swipeHandlers.onTouchEnd}
@@ -1231,8 +1388,6 @@ export default function Home() {
             WebkitOverflowScrolling: 'touch',
             WebkitTapHighlightColor: 'transparent',
             touchAction: 'pan-y',
-            willChange: 'scroll-position',
-            transform: 'translateZ(0)',
           }}
         >
             
@@ -1241,94 +1396,6 @@ export default function Home() {
                 onDismiss={handleOrientationDismiss} 
               />
             )}
-
-            {/* UNIFIED NAVIGATION - Same on Mobile & Desktop */}
-            <UnifiedNavigation
-              currentPage={activePage}
-              totalPages={PAGE_CONFIG.length}
-              pages={PAGE_CONFIG}
-              onPageChange={scrollToPage}
-              accentColor={accentColor}
-              disabled={currentStage !== 'content'}
-            />
-
-            {/* UNIFIED CONTROLS - Same on Mobile & Desktop */}
-            <UnifiedControls
-              isMuted={isMuted}
-              onMuteToggle={() => setIsMuted(!isMuted)}
-              onThemeClick={() => setShowConfigurator(true)}
-              onFaqClick={() => setFaqOpen(true)}
-              accentColor={accentColor}
-              disabled={currentStage !== 'content'}
-            />
-
-            {/* INFO PANEL & FAQ CONTROLS - Unified for Mobile/Desktop */}
-            <div className="fixed top-24 left-4 z-50 md:bottom-8 md:top-auto md:left-8 pointer-events-auto">
-                 <div className="flex flex-col gap-3">
-                   {/* Info Panel Toggle - Mobile Optimized Card */}
-                   <button
-                     onClick={(e) => {
-                       playClick();
-                       if (navigator.vibrate) navigator.vibrate(10);
-                       if (e.detail >= 2 || infoPanelOpen) {
-                         setInfoPanelOpen(false);
-                         return;
-                       }
-                       setInfoPanelOpen(true);
-                     }}
-                     onMouseEnter={() => playHover()}
-                     onTouchStart={(e) => {
-                       playHover();
-                       e.currentTarget.style.transform = 'scale(0.95)';
-                     }}
-                     onTouchEnd={(e) => {
-                       e.currentTarget.style.transform = '';
-                     }}
-                     className="md:hidden flex items-center gap-3 bg-black/50 backdrop-blur border border-white/10 px-4 py-3 rounded-2xl text-left shadow-lg active:scale-95 transition-all hover:bg-black/60 min-h-[44px] touch-manipulation"
-                     style={{ WebkitTapHighlightColor: 'transparent' }}
-                   >
-                     <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                       {infoPanelOpen ? <Unlock size={20} className="text-green-400" /> : <Lock size={20} className="text-blue-400" />}
-                     </div>
-                     <div className="flex flex-col">
-                       <span className="text-xs text-white/60 tracking-widest">INFO PANEL</span>
-                       <span className="text-sm font-bold text-white">{infoPanelOpen ? "Tap to close" : "Swipe or tap"}</span>
-                     </div>
-                   </button>
-
-                   {/* Info Panel Toggle - Desktop Compact */}
-                   <ShineButton
-                     className="hidden md:flex w-12 h-12 rounded-full"
-                     onClick={(e: any) => {
-                       playClick();
-                       if (e?.detail >= 2 || infoPanelOpen) {
-                         setInfoPanelOpen(false);
-                         return;
-                       }
-                       setInfoPanelOpen(true);
-                     }}
-                     onMouseEnter={() => playHover()}
-                   >
-                     {infoPanelOpen ? <Unlock size={20} className="text-green-400" /> : <Lock size={20} className="text-blue-400" />}
-                   </ShineButton>
-
-                   {/* FAQ Toggle */}
-                   <ShineButton
-                     className="w-12 h-12 rounded-full"
-                     onClick={(e: any) => {
-                       playClick();
-                       if (e?.detail >= 2 || faqOpen) {
-                         setFaqOpen(false);
-                         return;
-                       }
-                       setFaqOpen(true);
-                     }}
-                     onMouseEnter={() => playHover()}
-                   >
-                     <Info size={20} className={faqOpen ? "text-green-400" : "text-white"} />
-                   </ShineButton>
-                 </div>
-            </div>
 
             {/* INFO MODAL (Legacy - kept for compatibility) */}
             <div className={`fixed inset-0 z-[${UI_LAYERS.MODAL_CONTENT}] flex items-center justify-center px-4 transition-all duration-300 ${!!modalData ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>

@@ -44,6 +44,7 @@ export const SmartSplineLoader = memo(({
   const [cachedBlob, setCachedBlob] = useState<string | null>(null);
   const splineRef = useRef<any>(null);
   const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const isMobile = deviceProfile?.isMobile ?? false;
   const isWebView = deviceProfile?.isWebView ?? false;
@@ -83,6 +84,10 @@ export const SmartSplineLoader = memo(({
     setLoadState('loading');
 
     try {
+      try {
+        performance.mark(`bm_spline_load_start:${scene}`);
+      } catch {}
+
       // Detect browser type for optimized loading
       const ua = typeof window !== 'undefined' ? navigator.userAgent : '';
       const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
@@ -199,10 +204,44 @@ export const SmartSplineLoader = memo(({
     };
   }, [cachedBlob]);
 
+  // WebGL context loss guard (common in mobile + in-app browsers)
+  useEffect(() => {
+    const canvas = containerRef.current?.querySelector('canvas');
+    if (!canvas) return;
+
+    const handleLost = (e: Event) => {
+      // @ts-ignore
+      if (e?.preventDefault) e.preventDefault();
+      console.warn('[SmartSplineLoader] WebGL context lost:', scene);
+      setLoadState('error');
+      onError?.(new Error('WebGL context lost'));
+    };
+
+    const handleRestored = () => {
+      console.log('[SmartSplineLoader] WebGL context restored:', scene);
+    };
+
+    canvas.addEventListener('webglcontextlost', handleLost as any, { passive: false } as any);
+    canvas.addEventListener('webglcontextrestored', handleRestored as any);
+    return () => {
+      canvas.removeEventListener('webglcontextlost', handleLost as any);
+      canvas.removeEventListener('webglcontextrestored', handleRestored as any);
+    };
+  }, [onError, scene]);
+
   const handleSplineLoad = (spline: any) => {
     splineRef.current = spline;
     setLoadState('loaded');
     onLoad?.();
+
+    try {
+      performance.mark(`bm_spline_load_end:${scene}`);
+      performance.measure(
+        `bm_spline_load:${scene}`,
+        `bm_spline_load_start:${scene}`,
+        `bm_spline_load_end:${scene}`
+      );
+    } catch {}
 
     // Save preference
     devicePrefs.set(`spline_consent_${scene}`, true);
@@ -304,7 +343,7 @@ export const SmartSplineLoader = memo(({
 
   // Render Spline
   return (
-    <div className={`w-full h-full ${className}`}>
+    <div ref={containerRef} className={`w-full h-full ${className}`}>
       <Suspense
         fallback={
           <div className="flex items-center justify-center w-full h-full">

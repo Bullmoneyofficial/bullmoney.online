@@ -27,7 +27,7 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
   defaultOpen = false,
   position = 'bottom',
   maxHeight = '80vh',
-  minHeight = '60px',
+  minHeight = '28px',
   className = '',
   accentColor = '#3b82f6',
   onOpenChange
@@ -38,6 +38,17 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
   const [currentHeight, setCurrentHeight] = useState(defaultOpen ? maxHeight : minHeight);
   const panelRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [peek, setPeek] = useState(false);
+
+  const toPx = (value: string) => {
+    if (typeof window === 'undefined') return parseFloat(value) || 0;
+    const v = value.trim();
+    if (v.endsWith('vh')) return (window.innerHeight * parseFloat(v)) / 100;
+    if (v.endsWith('vw')) return (window.innerWidth * parseFloat(v)) / 100;
+    return parseFloat(v) || 0;
+  };
+
+  const isCollapsed = !isOpen && !isDragging;
 
   const toggleOpen = () => {
     const newState = !isOpen;
@@ -62,15 +73,15 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
       if (deltaY > 0 && !isOpen) {
         // Opening
         const newHeight = Math.min(
-          parseInt(minHeight) + deltaY,
-          parseInt(maxHeight)
+          toPx(minHeight) + deltaY,
+          toPx(maxHeight)
         );
         setCurrentHeight(`${newHeight}px`);
       } else if (deltaY < 0 && isOpen) {
         // Closing
         const newHeight = Math.max(
-          parseInt(maxHeight) + deltaY,
-          parseInt(minHeight)
+          toPx(maxHeight) + deltaY,
+          toPx(minHeight)
         );
         setCurrentHeight(`${newHeight}px`);
       }
@@ -82,9 +93,9 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
 
     setIsDragging(false);
 
-    const currentHeightPx = parseInt(currentHeight);
-    const maxHeightPx = parseInt(maxHeight);
-    const minHeightPx = parseInt(minHeight);
+    const currentHeightPx = toPx(currentHeight);
+    const maxHeightPx = toPx(maxHeight);
+    const minHeightPx = toPx(minHeight);
     const threshold = (maxHeightPx - minHeightPx) / 2;
 
     // Determine if we should snap open or closed
@@ -113,14 +124,14 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
     if (position === 'bottom') {
       if (deltaY > 0 && !isOpen) {
         const newHeight = Math.min(
-          parseInt(minHeight) + deltaY,
-          parseInt(maxHeight)
+          toPx(minHeight) + deltaY,
+          toPx(maxHeight)
         );
         setCurrentHeight(`${newHeight}px`);
       } else if (deltaY < 0 && isOpen) {
         const newHeight = Math.max(
-          parseInt(maxHeight) + deltaY,
-          parseInt(minHeight)
+          toPx(maxHeight) + deltaY,
+          toPx(minHeight)
         );
         setCurrentHeight(`${newHeight}px`);
       }
@@ -132,9 +143,9 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
 
     setIsDragging(false);
 
-    const currentHeightPx = parseInt(currentHeight);
-    const maxHeightPx = parseInt(maxHeight);
-    const minHeightPx = parseInt(minHeight);
+    const currentHeightPx = toPx(currentHeight);
+    const maxHeightPx = toPx(maxHeight);
+    const minHeightPx = toPx(minHeight);
     const threshold = (maxHeightPx - minHeightPx) / 2;
 
     if (currentHeightPx > minHeightPx + threshold) {
@@ -160,22 +171,40 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
     }
   }, [isDragging, dragStartY]);
 
+  // Discreet “peek” affordance on first visit
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const key = 'bm_control_center_peeked_v1';
+    if (window.localStorage.getItem(key) === 'true') return;
+    const t = window.setTimeout(() => {
+      setPeek(true);
+      window.setTimeout(() => {
+        setPeek(false);
+        window.localStorage.setItem(key, 'true');
+      }, 1400);
+    }, 1100);
+    return () => window.clearTimeout(t);
+  }, []);
+
   return (
     <div
       ref={panelRef}
-      className={`fixed ${position === 'bottom' ? 'bottom-0' : 'top-0'} left-0 right-0 z-[100000] ${className}`}
+      className={`fixed ${position === 'bottom' ? 'bottom-0' : 'top-0'} left-0 right-0 ${isCollapsed ? 'pointer-events-none' : 'pointer-events-auto'} ${className}`}
       style={{
         height: currentHeight,
         transition: isDragging ? 'none' : 'height 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
     >
       {/* Apple Glass Effect Background */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-2xl border-t border-white/10" />
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-2xl border-t border-white/10 transition-opacity duration-300"
+        style={{ opacity: isCollapsed ? 0.15 : 1 }}
+      />
 
       {/* Drag Handle */}
       <div
         className={`
-          relative z-10 flex items-center justify-center py-3 cursor-grab active:cursor-grabbing
+          relative z-10 flex flex-col items-center justify-center py-2 cursor-grab active:cursor-grabbing pointer-events-auto
           ${isDragging ? 'bg-white/10' : 'hover:bg-white/5'}
           transition-colors
         `}
@@ -183,20 +212,27 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleMouseDown}
+        onClick={toggleOpen}
       >
         {/* Drag Indicator */}
         <div
           className="w-12 h-1.5 rounded-full transition-all duration-300"
           style={{
             backgroundColor: isDragging ? accentColor : 'rgba(255,255,255,0.3)',
-            boxShadow: isDragging ? `0 0 20px ${accentColor}` : 'none'
+            boxShadow: isDragging ? `0 0 20px ${accentColor}` : 'none',
+            animation: isCollapsed && peek ? 'bmPeek 700ms ease-in-out 2' : undefined,
           }}
         />
+        {isCollapsed && (
+          <div className="mt-1 text-[10px] tracking-[0.28em] uppercase text-white/55">
+            {title || 'Control Center'}
+          </div>
+        )}
       </div>
 
       {/* Header */}
       <div
-        className="relative z-10 px-6 pb-4 flex items-center justify-between cursor-pointer"
+        className={`relative z-10 px-6 pb-4 items-center justify-between cursor-pointer ${isOpen ? 'flex' : 'hidden'}`}
         onClick={toggleOpen}
       >
         <div className="flex items-center gap-3">
@@ -256,6 +292,11 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
         }
         div::-webkit-scrollbar-thumb:hover {
           background: ${accentColor}dd;
+        }
+        @keyframes bmPeek {
+          0% { transform: translateY(0); }
+          45% { transform: translateY(-6px); }
+          100% { transform: translateY(0); }
         }
       `}</style>
     </div>

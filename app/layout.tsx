@@ -58,6 +58,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const swEnabled = process.env.NODE_ENV === "production";
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -77,7 +78,8 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              if ('serviceWorker' in navigator) {
+              const __BM_SW_ENABLED__ = ${swEnabled ? "true" : "false"};
+              if (__BM_SW_ENABLED__ && 'serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
                   navigator.serviceWorker.register('/sw.js').catch(e => console.log(e));
                 });

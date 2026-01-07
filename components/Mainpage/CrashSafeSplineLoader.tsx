@@ -219,11 +219,29 @@ CrashSafeSplineLoader.displayName = 'CrashSafeSplineLoader';
 const SplineSceneWrapper = memo<{ Spline: any; sceneUrl: string; allowInput: boolean }>(
   ({ Spline, sceneUrl, allowInput }) => {
     const [hasError, setHasError] = useState(false);
+    const wrapperRef = useRef<HTMLDivElement | null>(null);
 
     const handleError = (error: any) => {
       console.error('[Spline] Runtime error:', error);
       setHasError(true);
     };
+
+    useEffect(() => {
+      const canvas = wrapperRef.current?.querySelector('canvas');
+      if (!canvas) return;
+
+      const handleLost = (e: Event) => {
+        // @ts-ignore
+        if (e?.preventDefault) e.preventDefault();
+        console.warn('[Spline] WebGL context lost:', sceneUrl);
+        setHasError(true);
+      };
+
+      canvas.addEventListener('webglcontextlost', handleLost as any, { passive: false } as any);
+      return () => {
+        canvas.removeEventListener('webglcontextlost', handleLost as any);
+      };
+    }, [sceneUrl]);
 
     if (hasError) {
       return (
@@ -237,11 +255,13 @@ const SplineSceneWrapper = memo<{ Spline: any; sceneUrl: string; allowInput: boo
     }
 
     return (
-      <Spline
-        scene={sceneUrl}
-        className={`w-full h-full block ${allowInput ? '' : 'pointer-events-none'}`}
-        onError={handleError}
-      />
+      <div ref={wrapperRef} className="w-full h-full">
+        <Spline
+          scene={sceneUrl}
+          className={`w-full h-full block ${allowInput ? '' : 'pointer-events-none'}`}
+          onError={handleError}
+        />
+      </div>
     );
   }
 );

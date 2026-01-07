@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Grid3x3, X } from 'lucide-react';
 import { UI_LAYERS, GAME_UI_CONFIG } from '@/lib/uiLayers';
 import { playClick, playHover, playSwipe } from '@/lib/interactionUtils';
+import { Hint } from '@/components/ui/Hint';
 
 interface PageConfig {
   id: number;
@@ -74,7 +75,10 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
       {/* Page Indicator - Bottom Center */}
       <div
         className="fixed bottom-8 left-1/2 -translate-x-1/2 pointer-events-none"
-        style={{ zIndex: UI_LAYERS.PROGRESS_BAR }}
+        style={{
+          zIndex: UI_LAYERS.PROGRESS_BAR,
+          bottom: 'calc(2rem + env(safe-area-inset-bottom))',
+        }}
       >
         <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 backdrop-blur-xl border border-white/20">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -95,96 +99,107 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
 
       {/* Navigation Arrows - Game-like */}
       {/* Left Arrow */}
-      <button
-        onClick={handlePrevPage}
-        disabled={disabled || currentPage <= 1}
-        className={`
-          fixed left-4 top-1/2 -translate-y-1/2
-          w-14 h-14 rounded-full
-          bg-black/60 backdrop-blur-xl border border-white/20
-          flex items-center justify-center
-          transition-all duration-300
-          ${disabled || currentPage <= 1 ? 'opacity-30 cursor-not-allowed' : 'hover:scale-110 active:scale-95'}
-        `}
-        style={{
-          zIndex: UI_LAYERS.NAV_ARROWS,
-          boxShadow: currentPage > 1 ? `0 0 20px ${accentColor}40` : 'none',
-        }}
-        onMouseEnter={() => {
-          if (currentPage > 1) playHover();
-        }}
-      >
-        <ChevronLeft
-          size={28}
-          style={{ color: currentPage > 1 ? accentColor : 'rgba(255,255,255,0.3)' }}
-        />
-      </button>
+      <Hint label="Previous page">
+        <button
+          onClick={handlePrevPage}
+          disabled={disabled || currentPage <= 1}
+          className={`
+            fixed left-4 top-1/2 -translate-y-1/2
+            w-14 h-14 rounded-full
+            bg-black/60 backdrop-blur-xl border border-white/20
+            flex items-center justify-center
+            transition-all duration-300
+            ${disabled || currentPage <= 1 ? 'opacity-30 cursor-not-allowed' : 'hover:scale-110 active:scale-95'}
+          `}
+          style={{
+            zIndex: UI_LAYERS.NAV_ARROWS,
+            boxShadow: currentPage > 1 ? `0 0 20px ${accentColor}40` : 'none',
+          }}
+          onMouseEnter={() => {
+            if (currentPage > 1) playHover();
+          }}
+          aria-label="Previous page"
+        >
+          <ChevronLeft
+            size={28}
+            style={{ color: currentPage > 1 ? accentColor : 'rgba(255,255,255,0.3)' }}
+          />
+        </button>
+      </Hint>
 
       {/* Right Arrow */}
-      <button
-        onClick={handleNextPage}
-        disabled={disabled || currentPage >= totalPages}
-        className={`
-          fixed right-4 top-1/2 -translate-y-1/2
-          w-14 h-14 rounded-full
-          bg-black/60 backdrop-blur-xl border border-white/20
-          flex items-center justify-center
-          transition-all duration-300
-          ${disabled || currentPage >= totalPages ? 'opacity-30 cursor-not-allowed' : 'hover:scale-110 active:scale-95'}
-        `}
-        style={{
-          zIndex: UI_LAYERS.NAV_ARROWS,
-          boxShadow: currentPage < totalPages ? `0 0 20px ${accentColor}40` : 'none',
-        }}
-        onMouseEnter={() => {
-          if (currentPage < totalPages) playHover();
-        }}
-      >
-        <ChevronRight
-          size={28}
-          style={{ color: currentPage < totalPages ? accentColor : 'rgba(255,255,255,0.3)' }}
-        />
-      </button>
+      <Hint label="Next page">
+        <button
+          onClick={handleNextPage}
+          disabled={disabled || currentPage >= totalPages}
+          className={`
+            fixed right-4 top-1/2 -translate-y-1/2
+            w-14 h-14 rounded-full
+            bg-black/60 backdrop-blur-xl border border-white/20
+            flex items-center justify-center
+            transition-all duration-300
+            ${disabled || currentPage >= totalPages ? 'opacity-30 cursor-not-allowed' : 'hover:scale-110 active:scale-95'}
+          `}
+          style={{
+            zIndex: UI_LAYERS.NAV_ARROWS,
+            boxShadow: currentPage < totalPages ? `0 0 20px ${accentColor}40` : 'none',
+          }}
+          onMouseEnter={() => {
+            if (currentPage < totalPages) playHover();
+          }}
+          aria-label="Next page"
+        >
+          <ChevronRight
+            size={28}
+            style={{ color: currentPage < totalPages ? accentColor : 'rgba(255,255,255,0.3)' }}
+          />
+        </button>
+      </Hint>
 
       {/* Floating Navigation Orb - Bottom Right */}
-      <button
-        onClick={toggleGrid}
-        onMouseEnter={() => {
-          setIsHovering(true);
-          playHover();
-        }}
-        onMouseLeave={() => setIsHovering(false)}
-        disabled={disabled}
-        className={`
-          fixed bottom-6 right-6
-          w-16 h-16 rounded-full
-          bg-black/80 backdrop-blur-2xl border-2
-          flex items-center justify-center
-          transition-all duration-300
-          hover:scale-110 active:scale-95
-          ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-        `}
-        style={{
-          zIndex: UI_LAYERS.NAV_MOBILE_FAB,
-          borderColor: accentColor,
-          boxShadow: `0 0 30px ${accentColor}60, 0 4px 20px rgba(0,0,0,0.5)`,
-        }}
-      >
-        <div className="relative">
-          <Grid3x3 size={28} style={{ color: accentColor }} />
-          {/* Page number badge */}
-          <div
-            className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
-            style={{
-              backgroundColor: accentColor,
-              color: 'white',
-              boxShadow: `0 0 10px ${accentColor}`,
-            }}
-          >
-            {currentPage}
+      <Hint label={isGridOpen ? 'Close navigation' : 'Open navigation'}>
+        <button
+          onClick={toggleGrid}
+          onMouseEnter={() => {
+            setIsHovering(true);
+            playHover();
+          }}
+          onMouseLeave={() => setIsHovering(false)}
+          disabled={disabled}
+          className={`
+            fixed right-6
+            w-16 h-16 rounded-full
+            bg-black/80 backdrop-blur-2xl border-2
+            flex items-center justify-center
+            transition-all duration-300
+            hover:scale-110 active:scale-95
+            ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+          `}
+          style={{
+            zIndex: UI_LAYERS.NAV_MOBILE_FAB,
+            borderColor: accentColor,
+            boxShadow: `0 0 30px ${accentColor}60, 0 4px 20px rgba(0,0,0,0.5)`,
+            bottom: 'calc(1.5rem + env(safe-area-inset-bottom))',
+            right: 'calc(1.5rem + env(safe-area-inset-right))',
+          }}
+          aria-label={isGridOpen ? 'Close navigation' : 'Open navigation'}
+        >
+          <div className="relative">
+            <Grid3x3 size={28} style={{ color: accentColor }} />
+            {/* Page number badge */}
+            <div
+              className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+              style={{
+                backgroundColor: accentColor,
+                color: 'white',
+                boxShadow: `0 0 10px ${accentColor}`,
+              }}
+            >
+              {currentPage}
+            </div>
           </div>
-        </div>
-      </button>
+        </button>
+      </Hint>
 
       {/* Grid Overlay - Full Screen Navigation */}
       {isGridOpen && (
@@ -197,13 +212,16 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
           }}
         >
           {/* Close button */}
-          <button
-            onClick={toggleGrid}
-            className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-            onMouseEnter={() => playHover()}
-          >
-            <X size={24} style={{ color: accentColor }} />
-          </button>
+          <Hint label="Close">
+            <button
+              onClick={toggleGrid}
+              className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+              onMouseEnter={() => playHover()}
+              aria-label="Close navigation"
+            >
+              <X size={24} style={{ color: accentColor }} />
+            </button>
+          </Hint>
 
           {/* Title */}
           <h2 className="text-3xl font-bold text-white mb-8 text-center">
