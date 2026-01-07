@@ -45,6 +45,7 @@ export const SmartSplineLoader = memo(({
   const splineRef = useRef<any>(null);
   const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const hasLoadedRef = useRef(false);
 
   const isMobile = deviceProfile?.isMobile ?? false;
   const isWebView = deviceProfile?.isWebView ?? false;
@@ -54,7 +55,8 @@ export const SmartSplineLoader = memo(({
 
   // Load from cache or network with smart detection for Safari, Chrome, WebView
   const loadSpline = async () => {
-    if (loadState === 'loaded') return;
+    if (loadState === 'loaded' || hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
 
     try {
       try {
@@ -81,8 +83,8 @@ export const SmartSplineLoader = memo(({
         console.log('[SmartSplineLoader] CRITICAL scene - loading immediately');
       }
 
-      // Set timeout for slow loads (longer for WebView)
-      const timeoutDuration = isWebViewBrowser ? 10000 : 5000;
+      // Set timeout for slow loads (longer for WebView and mobile)
+      const timeoutDuration = isWebViewBrowser ? 15000 : isMobile ? 10000 : 7000;
       loadTimeoutRef.current = setTimeout(() => {
         console.warn(`[SmartSplineLoader] Slow load detected for ${scene} (${timeoutDuration}ms)`);
       }, timeoutDuration);
@@ -126,6 +128,7 @@ export const SmartSplineLoader = memo(({
       }
     } catch (error) {
       console.error('[SmartSplineLoader] Load failed:', error);
+      hasLoadedRef.current = false;
       setLoadState('error');
       onError?.(error as Error);
     }
@@ -207,6 +210,7 @@ export const SmartSplineLoader = memo(({
   useEffect(() => {
     setHasSplineLoaded(false);
     setLoadState('idle');
+    hasLoadedRef.current = false;
   }, [scene]);
 
   // Show error state

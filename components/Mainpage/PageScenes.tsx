@@ -9,6 +9,7 @@ import { CRITICAL_SCENE_BLOB_MAP, CRITICAL_SPLINE_SCENES } from '@/lib/pageConfi
 import { CrashSafeSplineLoader } from '@/components/Mainpage/CrashSafeSplineLoader';
 import { SmartSplineLoader } from '@/components/Mainpage/SmartSplineLoader';
 import { TSXWrapper, ErrorBoundary } from '@/components/Mainpage/PageElements';
+import { memoryManager } from '@/lib/mobileMemoryManager';
 
 // ----------------------------------------------------------------------
 // 3D SCENE WRAPPERS WITH LAZY LOADING
@@ -17,9 +18,11 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
   const [isLoaded, setIsLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileOptIn, setMobileOptIn] = useState(true);
+  const [memoryBlocked, setMemoryBlocked] = useState(false);
   const isCritical = useMemo(() => CRITICAL_SPLINE_SCENES.includes(sceneUrl), [sceneUrl]);
   const resolvedSceneUrl = CRITICAL_SCENE_BLOB_MAP[sceneUrl] || sceneUrl;
   const hasSignaledReady = useRef(false);
+  const isRegistered = useRef(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -52,41 +55,94 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
     }
   }, []);
 
-  // OPTIMIZED: Reduce aggressive loading delays for better mobile performance
+  // OPTIMIZED: Always load splines when enabled, with smart mobile memory management
   useEffect(() => {
     const allowLoad = mobileOptIn || !isMobile || forceLiteSpline || forceLoadOverride || isCritical;
 
     if (isVisible && !isLoaded && !disabled && allowLoad) {
+      // Check memory manager before loading (mobile only)
+      if (isMobile && !isCritical) {
+        const priority = isHeavy ? 'high' : 'normal';
+        const memStatus = memoryManager.canLoadScene(sceneUrl, priority);
+
+        if (!memStatus.canLoadMore) {
+          console.log(`[SceneWrapper] Memory blocked for ${sceneUrl}:`, memStatus.reason);
+          setMemoryBlocked(true);
+
+          // Try to make room for high priority scenes
+          if (priority === 'high') {
+            const madeRoom = memoryManager.makeRoom(CRITICAL_SPLINE_SCENES);
+            if (madeRoom) {
+              setMemoryBlocked(false);
+            } else {
+              return; // Can't load yet
+            }
+          } else {
+            return; // Can't load yet
+          }
+        } else {
+          setMemoryBlocked(false);
+        }
+      }
+
       if (eagerLoad) {
         setIsLoaded(true);
+        if (isMobile && !isRegistered.current) {
+          memoryManager.registerScene(sceneUrl);
+          isRegistered.current = true;
+        }
         return;
       }
-      // Ultra-fast loading on all devices for smooth experience
-      const delay = isMobile ? (isHeavy ? 150 : 0) : 50;
 
-      // Use requestIdleCallback for non-critical scenes
-      if (typeof window !== 'undefined' && 'requestIdleCallback' in window && !isHeavy) {
+      // Ultra-fast loading on all devices for smooth experience
+      // Reduced delay for critical scenes to ensure they always show
+      const delay = isMobile ? (isHeavy ? 100 : 0) : 0;
+
+      // Use requestIdleCallback for non-critical, non-heavy scenes only
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window && !isHeavy && !isCritical) {
         const handle = (window as any).requestIdleCallback(() => {
           setIsLoaded(true);
-        }, { timeout: delay });
+          if (isMobile && !isRegistered.current) {
+            memoryManager.registerScene(sceneUrl);
+            isRegistered.current = true;
+          }
+        }, { timeout: delay || 50 });
         return () => (window as any).cancelIdleCallback(handle);
       } else {
-        const timer = setTimeout(() => setIsLoaded(true), delay);
+        const timer = setTimeout(() => {
+          setIsLoaded(true);
+          if (isMobile && !isRegistered.current) {
+            memoryManager.registerScene(sceneUrl);
+            isRegistered.current = true;
+          }
+        }, delay);
         return () => clearTimeout(timer);
       }
     }
 
-    // Aggressive memory management: Unload scenes that are far away
-    if (!isVisible && isMobile && isLoaded && !isCritical) {
+    // Aggressive memory management: Unload scenes that are far away (mobile only, non-critical)
+    if (!isVisible && isMobile && isLoaded && !isCritical && !forceLoadOverride) {
       const unloadTimer = setTimeout(() => {
         setIsLoaded(false);
-      }, 800);  // Reduced from 1000ms for faster cleanup
+        if (isRegistered.current) {
+          memoryManager.unregisterScene(sceneUrl);
+          isRegistered.current = false;
+        }
+      }, 1500);  // Increased from 800ms to prevent premature unloading
       return () => clearTimeout(unloadTimer);
     }
-  }, [isVisible, isLoaded, isMobile, isHeavy, disabled, mobileOptIn, forceLiteSpline, forceLoadOverride, isCritical, eagerLoad]);
+  }, [isVisible, isLoaded, isMobile, isHeavy, disabled, mobileOptIn, forceLiteSpline, forceLoadOverride, isCritical, eagerLoad, sceneUrl]);
 
   useEffect(() => {
     hasSignaledReady.current = false;
+
+    // Cleanup on unmount
+    return () => {
+      if (isRegistered.current) {
+        memoryManager.unregisterScene(sceneUrl);
+        isRegistered.current = false;
+      }
+    };
   }, [sceneUrl]);
 
   useEffect(() => {
@@ -95,6 +151,31 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
       onSceneReady();
     }
   }, [isLoaded, onSceneReady]);
+
+  // Show memory-blocked state for mobile users when memory manager prevents loading
+  if (isMobile && memoryBlocked && !disabled && !forceLiteSpline) {
+    return (
+      <div
+        className="w-full h-full relative transition-opacity duration-700 parallax-layer flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
+        style={{ transform: `translateY(${parallaxOffset * 0.4}px) translateZ(0)` }}
+      >
+        <div
+          className="absolute inset-0 opacity-30"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 30% 30%, rgba(255,165,0,0.12), transparent 45%), radial-gradient(circle at 70% 70%, rgba(255,140,0,0.1), transparent 45%)',
+          }}
+        />
+        <div className="relative z-10 text-center space-y-3 px-6 py-6 max-w-md mx-auto rounded-2xl border border-orange-500/20 bg-black/60 backdrop-blur">
+          <div className="text-[10px] font-mono text-orange-300/80 tracking-[0.25em]">MEMORY OPTIMIZED</div>
+          <div className="text-lg font-semibold text-white">Scene Queued</div>
+          <p className="text-white/60 text-sm">
+            To prevent crashes, only {memoryManager.getStatus().maxScenes} scene{memoryManager.getStatus().maxScenes > 1 ? 's' : ''} can load at once on mobile. This will load when you scroll closer.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (isMobile && !mobileOptIn && !forceLiteSpline && !disabled && !forceLoadOverride && !isCritical) {
     return (
@@ -264,17 +345,24 @@ export const FullScreenSection = memo(({ config, activePage, onVisible, parallax
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // OPTIMIZED: Render fewer adjacent pages on mobile for lightweight rendering
+  // OPTIMIZED: Always render when splines are enabled, with mobile memory limits
   const shouldRender = useMemo(() => {
+    // If splines are disabled via performance mode, don't render
+    if (disableSpline && config.type !== 'tsx') return false;
+
     const distance = Math.abs(config.id - activePage);
     const tsxThreshold = isMobile ? 1 : 2;
-    const splineThreshold = isMobile ? 0 : 1;
+    // Mobile: render current page + 1 adjacent to prevent crashes while ensuring visibility
+    // Desktop: render current + 2 adjacent for smooth scrolling
+    const splineThreshold = isMobile ? 1 : 2;
     const withinTSXRange = distance <= tsxThreshold || (isLastPage && activePage >= 8);
     const withinSplineRange = distance <= splineThreshold || (isLastPage && activePage >= 8);
+
     if (config.type === 'tsx') return withinTSXRange;
-    // Spline: keep only 1 active scene on mobile to prevent WebGL crashes.
+
+    // Spline: Always render when within threshold and performance mode is not active
     return withinSplineRange;
-  }, [config.id, config.type, activePage, isLastPage, isMobile]);
+  }, [config.id, config.type, activePage, isLastPage, isMobile, disableSpline]);
 
   const isActive = config.id === activePage;
 
@@ -447,11 +535,16 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
     if (containerRef.current) onVisible(containerRef.current, config.id - 1);
   }, [onVisible, config.id]);
 
-  const shouldRender = (() => {
+  const shouldRender = useMemo(() => {
+    // If splines are disabled via performance mode, don't render
+    if (disableSpline) return false;
+
     const distance = Math.abs(config.id - activePage);
+    // Mobile: render current page only to prevent memory issues on split views
+    // Desktop: render current + 1 adjacent
     const threshold = isMobile ? 0 : 1;
     return distance <= threshold;
-  })();
+  }, [config.id, activePage, isMobile, disableSpline]);
 
   // FIX #7: Remove snap classes on split section for mobile
   return (
