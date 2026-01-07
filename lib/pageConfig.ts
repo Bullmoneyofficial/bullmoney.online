@@ -4,15 +4,15 @@ import type { Theme } from '@/components/Mainpage/ThemeComponents';
 // 1. DATA CONFIGURATION
 // ----------------------------------------------------------------------
 export const PAGE_CONFIG = [
-  { 
-    id: 1, 
-    type: 'full', 
-    scene: "/scene1.splinecode", 
-    label: "HERO",
+  {
+    id: 1,
+    type: 'full',
+    scene: "/scene1.splinecode",
+    label: "TRADING COMMAND CENTER",
     encryptedTitle: "X39yRz1_HERO",
-    infoTitle: "The Hero Moment",
-    infoDesc: "This scene establishes the visual language. We use high-fidelity PBR textures and dramatic lighting to create an unforgettable first impression.",
-    funFact: "Did you know? This scene renders at 60fps using advanced GPU optimization techniques!"
+    infoTitle: "Your Trading Command Center",
+    infoDesc: "This premium 3D environment sets the stage for your trading journey. High-fidelity graphics render market dynamics in real-time, giving you the edge you need to dominate.",
+    funFact: "Our hero scene loads instantly on repeat visits with intelligent caching - optimized for traders who need speed!"
   },
   { 
     id: 2, 
@@ -24,15 +24,15 @@ export const PAGE_CONFIG = [
     infoDesc: "Real-time chart analysis and breaking news from the financial frontier.",
     funFact: "Our AI scans 10,000+ sources per second to bring you the most relevant updates!"
   },
-  { 
-    id: 3, 
-    type: 'full', 
-    scene: "/scene.splinecode", 
-    label: "SHOWCASE",
+  {
+    id: 3,
+    type: 'full',
+    scene: "/scene.splinecode",
+    label: "MARKET INSIGHTS",
     encryptedTitle: "Pr0duct_360_V1ew",
-    infoTitle: "Product Showcase",
-    infoDesc: "A 360-degree interactive view. Users can drag to rotate and explore every angle of our premium offerings.",
-    funFact: "Each model contains over 2 million polygons for photorealistic detail!"
+    infoTitle: "360° Market Intelligence",
+    infoDesc: "Interactive 3D visualization of market trends and trading opportunities. Drag to explore every angle of our premium analytics tools and see how they transform your trading strategy.",
+    funFact: "Our 3D models use over 2 million polygons to render market data with photorealistic precision!"
   },
   { 
     id: 4, 

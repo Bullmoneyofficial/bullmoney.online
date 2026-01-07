@@ -446,20 +446,33 @@ const DockItem = memo(({ mouseX, item, isTipActive, onClick, accentColor }: Dock
         onHoverStart={handleHoverStart}
         onHoverEnd={() => setHovered(false)}
         onTouchStart={handleHoverStart}
-        className="mac-gpu-accelerate relative flex items-center justify-center rounded-full shadow-sm overflow-hidden z-20 cursor-pointer active:scale-90 transition-transform touch-manipulation"
+        className={`mac-gpu-accelerate relative flex items-center justify-center rounded-full shadow-sm overflow-hidden z-20 cursor-pointer active:scale-90 transition-transform touch-manipulation ${
+          (item as any).glow ? 'shadow-[0_0_12px_currentColor]' : ''
+        }`}
+        style={{
+          ...(( item as any).glow && { filter: `drop-shadow(0 0 6px ${(item as any).color || accentColor})` })
+        }}
       >
         {/* THEMED SHIMMER GRADIENT */}
         <motion.div
-            className="absolute inset-[-100%]" 
+            className="absolute inset-[-100%]"
             animate={{ rotate: 360 }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            style={{ background: getShimmerGradient(accentColor) }}
+            transition={{ duration: (item as any).glow ? 2 : 3, repeat: Infinity, ease: "linear" }}
+            style={{ background: getShimmerGradient((item as any).color || accentColor) }}
         />
         <div className="absolute inset-[1.5px] rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center z-10">
-            <div className="w-5 h-5 relative flex items-center justify-center">
+            <div className="w-5 h-5 relative flex items-center justify-center" style={{ color: (item as any).color || 'inherit' }}>
                 {item.icon}
             </div>
         </div>
+
+        {/* Badge for performance indicators */}
+        {(item as any).badge && (
+          <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center z-30 animate-pulse"
+               style={{ backgroundColor: (item as any).color || accentColor }}>
+            <span className="text-[10px]">{(item as any).badge}</span>
+          </div>
+        )}
       </motion.div>
 
       <AnimatePresence>
@@ -560,10 +573,16 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMu
       color: isMuted ? 'rgba(239, 68, 68, 1)' : accentColor
     },
     {
-      name: "3D",
+      name: disableSpline ? "PERF" : "3D",
       icon: <Zap className="h-full w-full" />,
-      onClick: onPerformanceToggle,
-      color: disableSpline ? accentColor : 'rgba(255,255,255,0.9)'
+      onClick: () => {
+        playSuccess();
+        if (navigator.vibrate) navigator.vibrate([10, 50, 10]);
+        onPerformanceToggle();
+      },
+      color: disableSpline ? '#f97316' : '#3b82f6',
+      badge: disableSpline ? '⚡' : '✨',
+      glow: true
     },
     {
       name: "HELP",
@@ -888,11 +907,14 @@ const ControlButtons = memo(({ isMuted, onMuteToggle, disableSpline, onPerforman
       icon: Zap,
       onClick: () => {
         playClick();
-        if (navigator.vibrate) navigator.vibrate(15);
+        playSuccess(); // Added success sound for mode toggle
+        if (navigator.vibrate) navigator.vibrate([10, 50, 10]); // Double pulse for mode change
         onPerformanceToggle();
       },
-      label: disableSpline ? 'Enable Full 3D' : 'Performance Mode',
-      color: disableSpline ? accentColor : 'rgba(255,255,255,0.9)',
+      label: disableSpline ? '⚡ Performance Mode (Click for Full 3D)' : '✨ Full 3D Mode (Click for Performance)',
+      color: disableSpline ? '#f97316' : '#3b82f6', // Orange for performance, Blue for 3D
+      badge: disableSpline ? 'FASTEST' : 'PREMIUM',
+      glowEffect: true,
     },
     {
       icon: HelpCircle,
@@ -920,23 +942,40 @@ const ControlButtons = memo(({ isMuted, onMuteToggle, disableSpline, onPerforman
           onTouchEnd={(e) => {
             e.currentTarget.style.transform = '';
           }}
-          className="relative w-9 h-9 rounded-full overflow-hidden shadow-sm hover:scale-110 active:scale-95 transition-all touch-manipulation group"
-          style={{ WebkitTapHighlightColor: 'transparent' }}
+          className={`relative w-9 h-9 rounded-full overflow-hidden shadow-sm hover:scale-110 active:scale-95 transition-all touch-manipulation group ${
+            button.glowEffect ? 'shadow-[0_0_15px_currentColor]' : ''
+          }`}
+          style={{
+            WebkitTapHighlightColor: 'transparent',
+            color: button.color,
+            ...(button.glowEffect && { filter: `drop-shadow(0 0 8px ${button.color})` })
+          }}
           aria-label={button.label}
           title={button.label}
         >
           <motion.div
             className="absolute inset-[-100%]"
             animate={{ rotate: 360 }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: button.glowEffect ? 2 : 3, repeat: Infinity, ease: "linear" }}
             style={{ background: getShimmerGradient(button.color) }}
           />
           <div className="absolute inset-[1.5px] rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center z-10">
-            <button.icon size={16} style={{ color: button.color }} />
+            <button.icon size={16} style={{ color: button.color }} className={button.glowEffect ? 'drop-shadow-[0_0_4px_currentColor]' : ''} />
           </div>
-          {/* Tooltip */}
-          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-[9px] font-bold rounded shadow-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+
+          {/* Badge for performance modes */}
+          {button.badge && (
+            <div className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-current rounded-full z-20 animate-pulse">
+              <span className="text-[7px] font-black text-white" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+                {button.badge}
+              </span>
+            </div>
+          )}
+
+          {/* Enhanced Tooltip */}
+          <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-[9px] font-bold rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 border border-white/10">
             {button.label}
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-neutral-900 dark:bg-white"></div>
           </div>
         </button>
       ))}

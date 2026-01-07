@@ -57,10 +57,15 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
   }, []);
 
   // Determine what to render based on all conditions
+  // CRITICAL: First Spline (Hero) ALWAYS loads no matter what
   useEffect(() => {
-    const allowLoad = mobileOptIn || !isMobile || forceLiteSpline || forceLoadOverride || isCritical;
+    // CRITICAL FIX: First scene always renders (forceLoadOverride is set for scene1.splinecode)
+    if (forceLoadOverride || isCritical) {
+      setShouldRenderContent(true);
+      return;
+    }
 
-    if (disabled && !forceLiteSpline && !forceLoadOverride) {
+    if (disabled && !forceLiteSpline) {
       setShouldRenderContent(false);
       return;
     }
@@ -70,7 +75,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
       return;
     }
 
-    if (isMobile && !mobileOptIn && !forceLiteSpline && !disabled && !forceLoadOverride && !isCritical) {
+    if (isMobile && !mobileOptIn && !forceLiteSpline && !disabled) {
       setShouldRenderContent(false);
       return;
     }
@@ -386,22 +391,30 @@ export const FullScreenSection = memo(({ config, activePage, onVisible, parallax
     return true;
   }, [disableSpline, config.type]);
 
-  // OPTIMIZED: Always render when splines are enabled, with mobile memory limits
+  // OPTIMIZED: Aggressive rendering optimization with performance mode awareness
   const shouldRender = useMemo(() => {
     // If splines are disabled via performance mode, don't render
     if (disableSpline && config.type !== 'tsx') return false;
 
     const distance = Math.abs(config.id - activePage);
+
+    // CRITICAL: Hero scene (id=1) always renders when within 2 pages
+    if (config.id === 1 && distance <= 2) return true;
+
+    // TSX pages are lightweight - render more liberally
     const tsxThreshold = isMobile ? 1 : 2;
-    // Mobile: render current page + 1 adjacent to prevent crashes while ensuring visibility
-    // Desktop: render current + 2 adjacent for smooth scrolling
-    const splineThreshold = isMobile ? 1 : 2;
+
+    // Spline: More aggressive culling for better performance
+    // Mobile: Only render active page (distance 0)
+    // Desktop: Render current + 1 adjacent
+    const splineThreshold = isMobile ? 0 : 1;
+
     const withinTSXRange = distance <= tsxThreshold || (isLastPage && activePage >= 8);
     const withinSplineRange = distance <= splineThreshold || (isLastPage && activePage >= 8);
 
     if (config.type === 'tsx') return withinTSXRange;
 
-    // Spline: Always render when within threshold and performance mode is not active
+    // Spline: Only render when within very close range for best performance
     return withinSplineRange;
   }, [config.id, config.type, activePage, isLastPage, isMobile, disableSpline]);
 

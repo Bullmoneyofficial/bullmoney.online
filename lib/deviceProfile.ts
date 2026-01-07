@@ -50,8 +50,18 @@ const buildProfile = (): DeviceProfile => {
     ('standalone' in navigator && !!(navigator as any).standalone);
   const isWebView = IN_APP_BROWSER_REGEX.test(ua) || ('standalone' in navigator && !!(navigator as any).standalone);
 
+  // Enhanced high-end detection: Consider GPU, screen resolution, and device capabilities
+  const hasHighResScreen = window.innerWidth >= 1920 || window.devicePixelRatio >= 2;
+  const hasModernBrowser = 'IntersectionObserver' in window && 'requestIdleCallback' in window;
+
   const isHighEndDevice =
-    !isMobile && !supportsReducedData && memory >= 4 && cores >= 4;
+    !isMobile &&
+    !supportsReducedData &&
+    memory >= 4 &&
+    cores >= 4 &&
+    hasHighResScreen &&
+    hasModernBrowser &&
+    effectiveType !== '3g'; // Exclude 3G connections even on desktop
 
   return {
     isMobile,

@@ -457,16 +457,54 @@ export const HeroLoaderOverlay = memo(({ visible, message, accentColor }: { visi
     className={`fixed inset-0 flex items-center justify-center transition-opacity duration-400 ${
       visible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
     }`}
-    style={{ zIndex: UI_LAYERS.THEME_CONFIGURATOR, backgroundColor: 'rgba(0,0,0,0.92)' }}
+    style={{ zIndex: UI_LAYERS.THEME_CONFIGURATOR, backgroundColor: 'rgba(0,0,0,0.95)' }}
   >
-    <div className="flex flex-col items-center gap-4 rounded-3xl border border-white/10 bg-black/80 px-8 py-12 text-center shadow-[0_30px_120px_rgba(0,0,0,0.8)]">
-      <div
-        className="relative h-16 w-16 rounded-full border-4 border-white/10 animate-spin"
-        style={{ borderTopColor: accentColor }}
-      />
-      <p className="text-[10px] font-semibold uppercase tracking-[0.5em] text-white/40">Loading hero</p>
-      <h3 className="text-lg font-semibold text-white">{message}</h3>
-      <p className="text-xs text-white/60 tracking-[0.3em]">Adaptive spline warm-up in progress</p>
+    <div className="flex flex-col items-center gap-6 rounded-3xl border border-white/10 bg-gradient-to-br from-black via-gray-900/50 to-black px-8 py-12 text-center shadow-[0_30px_120px_rgba(0,0,0,0.8)] max-w-md mx-4">
+      {/* Trading-themed animated loader */}
+      <div className="relative h-20 w-20">
+        {/* Outer ring */}
+        <div
+          className="absolute inset-0 rounded-full border-4 border-white/10 animate-spin"
+          style={{ borderTopColor: accentColor, animationDuration: '1.5s' }}
+        />
+        {/* Inner ring */}
+        <div
+          className="absolute inset-2 rounded-full border-4 border-white/5 animate-spin"
+          style={{ borderBottomColor: accentColor, animationDuration: '2s', animationDirection: 'reverse' }}
+        />
+        {/* Trading icon */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-3xl">📊</div>
+        </div>
+        {/* Pulse effect */}
+        <div
+          className="absolute inset-0 rounded-full animate-ping opacity-20"
+          style={{ backgroundColor: accentColor }}
+        />
+      </div>
+
+      {/* Trading-themed text */}
+      <div className="space-y-2">
+        <p className="text-[10px] font-bold uppercase tracking-[0.5em]" style={{ color: accentColor }}>
+          Initializing Platform
+        </p>
+        <h3 className="text-xl font-bold text-white">{message}</h3>
+        <p className="text-xs text-white/60 leading-relaxed max-w-xs">
+          Preparing your premium trading environment with real-time market data and advanced analytics...
+        </p>
+      </div>
+
+      {/* Progress indicators */}
+      <div className="flex items-center justify-center gap-2">
+        <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: accentColor }}></div>
+        <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: accentColor, animationDelay: '0.2s' }}></div>
+        <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: accentColor, animationDelay: '0.4s' }}></div>
+      </div>
+
+      {/* Loading status */}
+      <div className="text-[10px] font-mono text-white/40 tracking-wider">
+        Optimizing 3D graphics • Warming cache • Establishing connections
+      </div>
     </div>
   </div>
 ));
