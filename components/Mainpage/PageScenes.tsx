@@ -17,7 +17,6 @@ import { memoryManager } from '@/lib/mobileMemoryManager';
 export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forceNoPointer = false, parallaxOffset = 0, isHeavy = false, disabled = false, skeletonLabel = '', useCrashSafe = false, forceLiteSpline = false, forceLoadOverride = false, onSceneReady, deviceProfile, eagerLoad = false }: any) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [mobileOptIn, setMobileOptIn] = useState(true);
   const [memoryBlocked, setMemoryBlocked] = useState(false);
   const [shouldRenderContent, setShouldRenderContent] = useState(false);
   const isCritical = useMemo(() => CRITICAL_SPLINE_SCENES.includes(sceneUrl), [sceneUrl]);
@@ -49,9 +48,6 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
   // Quality degradation and memory manager handle mobile safety
   // Mobile should work exactly like desktop - one toggle for all devices
   useEffect(() => {
-    // Always enable - the performance toggle (disabled prop) is the only gate needed
-    setMobileOptIn(true);
-
     // Clean up old preference (no longer used)
     if (devicePrefs.get('mobile_spline_opt_in') !== null) {
       devicePrefs.remove('mobile_spline_opt_in');
