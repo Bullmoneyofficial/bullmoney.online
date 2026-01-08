@@ -7,9 +7,23 @@ import {
   useSpring,
   useMotionValue,
   useTransform,
-  useVelocity,
 } from "framer-motion";
-import { Lock, ArrowUpRight, Coins, Zap, Activity, Minimize2 } from "lucide-react";
+import { 
+  TrendingUp, 
+  Coins, 
+  Zap, 
+  Activity, 
+  BarChart3,
+  Target,
+  Gauge,
+  Sparkles,
+  Radio,
+  DollarSign,
+  TrendingDown,
+  Flame,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -20,52 +34,87 @@ function cn(...inputs: ClassValue[]) {
 
 // --- CONFIG ---
 const ASSETS = {
-  BTC: { id: "BTC", symbol: "BINANCE:BTCUSDT", name: "BITCOIN", icon: "₿", color: "#3b82f6" },
-  ETH: { id: "ETH", symbol: "BINANCE:ETHUSDT", name: "ETHEREUM", icon: "Ξ", color: "#60a5fa" },
-  XRP: { id: "XRP", symbol: "BINANCE:XRPUSDT", name: "RIPPLE", icon: "✕", color: "#93c5fd" },
+  BTC: { 
+    id: "BTC", 
+    symbol: "BINANCE:BTCUSDT", 
+    name: "BITCOIN", 
+    icon: "₿", 
+    color: "#3b82f6",
+    gradient: "from-blue-500 via-cyan-400 to-blue-600"
+  },
+  ETH: { 
+    id: "ETH", 
+    symbol: "BINANCE:ETHUSDT", 
+    name: "ETHEREUM", 
+    icon: "Ξ", 
+    color: "#06b6d4",
+    gradient: "from-cyan-500 via-blue-400 to-cyan-600"
+  },
+  XRP: { 
+    id: "XRP", 
+    symbol: "BINANCE:XRPUSDT", 
+    name: "RIPPLE", 
+    icon: "✕", 
+    color: "#0ea5e9",
+    gradient: "from-sky-500 via-blue-400 to-sky-600"
+  },
+  SOL: {
+    id: "SOL",
+    symbol: "BINANCE:SOLUSDT",
+    name: "SOLANA",
+    icon: "◎",
+    color: "#14b8a6",
+    gradient: "from-teal-500 via-cyan-400 to-teal-600"
+  }
 };
 
 type AssetKey = keyof typeof ASSETS;
 
-// --- COMPONENT: MOVING BORDER ---
-const MovingBorder = ({ 
+// Market phases
+type MarketPhase = "accumulation" | "markup" | "distribution" | "markdown";
+
+interface MarketState {
+  phase: MarketPhase;
+  volatility: number;
+  momentum: number;
+  volume: number;
+}
+
+// --- COMPONENT: ANIMATED BORDER ---
+const AnimatedBorder = ({ 
   children, 
-  duration = 3, 
-  rx = "rounded-2xl", 
   className = "",
-  containerClassName = "" 
+  glowColor = "#3b82f6"
 }: { 
   children: React.ReactNode, 
-  duration?: number, 
-  rx?: string,
   className?: string,
-  containerClassName?: string
+  glowColor?: string
 }) => {
   return (
-    <div className={cn("relative p-[1px] overflow-hidden group", rx, containerClassName)}>
+    <div className={cn("relative p-[2px] overflow-hidden rounded-3xl", className)}>
       <motion.div
         initial={{ rotate: 0 }}
         animate={{ rotate: 360 }}
-        transition={{ duration: duration, repeat: Infinity, ease: "linear" }}
-        className="absolute inset-[-100%] bg-[conic-gradient(from_90deg_at_50%_50%,#0000_0%,#0000_50%,#3b82f6_100%)] opacity-100 will-change-transform"
+        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        className="absolute inset-[-200%] opacity-80"
+        style={{
+          background: `conic-gradient(from 90deg at 50% 50%, transparent 0%, ${glowColor} 50%, transparent 100%)`
+        }}
       />
-      <div className={cn("relative h-full w-full bg-[#020617] overflow-hidden", rx, className)}>
+      <div className="relative h-full w-full bg-[#0a0a0a] rounded-3xl overflow-hidden">
         {children}
       </div>
     </div>
   );
 };
 
-// --- AUDIO ENGINE (Web Audio API) ---
-// Generates sound mathematically. No 404s, no latency.
+// --- AUDIO ENGINE ---
 const useAudioEngine = () => {
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const oscillatorRef = useRef<OscillatorNode | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
 
   const initAudio = () => {
     if (!audioCtxRef.current) {
-      // @ts-ignore - Handle Safari/Webkit
+      // @ts-ignore
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       audioCtxRef.current = new AudioContext();
     }
@@ -74,70 +123,7 @@ const useAudioEngine = () => {
     }
   };
 
-  const startEngine = () => {
-    initAudio();
-    if (!audioCtxRef.current) return;
-    
-    // Create oscillator if it doesn't exist
-    if (!oscillatorRef.current) {
-        const osc = audioCtxRef.current.createOscillator();
-        const gain = audioCtxRef.current.createGain();
-        
-        // Low pass filter to make it sound muffled/cool
-        const filter = audioCtxRef.current.createBiquadFilter();
-        filter.type = "lowpass";
-        filter.frequency.value = 1000;
-
-        osc.type = "sawtooth"; // "Buzzy" sound like an energy charge
-        osc.frequency.setValueAtTime(100, audioCtxRef.current.currentTime); // Start low pitch
-        
-        gain.gain.setValueAtTime(0, audioCtxRef.current.currentTime);
-        gain.gain.linearRampToValueAtTime(0.1, audioCtxRef.current.currentTime + 0.1); // Fade in
-
-        osc.connect(filter);
-        filter.connect(gain);
-        gain.connect(audioCtxRef.current.destination);
-        
-        osc.start();
-        
-        oscillatorRef.current = osc;
-        gainNodeRef.current = gain;
-    }
-  };
-
-  const updateEngine = (progress: number) => {
-    if (!audioCtxRef.current || !oscillatorRef.current || !gainNodeRef.current) return;
-    
-    // Map progress (0-100) to Frequency (Pitch)
-    const baseFreq = 80;
-    const addedFreq = (progress / 100) * 400; // Higher pitch range for BullMoney
-    const now = audioCtxRef.current.currentTime;
-    
-    oscillatorRef.current.frequency.setTargetAtTime(baseFreq + addedFreq, now, 0.1);
-    
-    // Add some jitter/wobble at high speeds to simulate volatility
-    if (progress > 80) {
-        gainNodeRef.current.gain.setTargetAtTime(0.1 + (Math.random() * 0.05), now, 0.1);
-    }
-  };
-
-  const stopEngine = () => {
-    if (gainNodeRef.current && audioCtxRef.current) {
-        const now = audioCtxRef.current.currentTime;
-        // Fade out nicely
-        gainNodeRef.current.gain.setTargetAtTime(0, now, 0.1);
-        
-        setTimeout(() => {
-            if (oscillatorRef.current) {
-                oscillatorRef.current.stop();
-                oscillatorRef.current.disconnect();
-                oscillatorRef.current = null;
-            }
-        }, 200);
-    }
-  };
-
-  const playSuccess = () => {
+  const playTick = (frequency: number = 800, duration: number = 0.05) => {
     initAudio();
     if (!audioCtxRef.current) return;
     const now = audioCtxRef.current.currentTime;
@@ -145,47 +131,105 @@ const useAudioEngine = () => {
     const osc = audioCtxRef.current.createOscillator();
     const gain = audioCtxRef.current.createGain();
 
-    // High tech "Order Filled" sound
     osc.type = "sine";
-    osc.frequency.setValueAtTime(800, now);
-    osc.frequency.exponentialRampToValueAtTime(1400, now + 0.1);
+    osc.frequency.setValueAtTime(frequency, now);
 
-    gain.gain.setValueAtTime(0.3, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
 
     osc.connect(gain);
     gain.connect(audioCtxRef.current.destination);
     
     osc.start();
-    osc.stop(now + 0.6);
+    osc.stop(now + duration);
   };
 
-  return { startEngine, updateEngine, stopEngine, playSuccess };
+  const playSuccess = () => {
+    initAudio();
+    if (!audioCtxRef.current) return;
+    const now = audioCtxRef.current.currentTime;
+
+    // Triple chord success sound
+    [800, 1000, 1200].forEach((freq, i) => {
+      const osc = audioCtxRef.current!.createOscillator();
+      const gain = audioCtxRef.current!.createGain();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, now);
+
+      gain.gain.setValueAtTime(0.2, now + i * 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+
+      osc.connect(gain);
+      gain.connect(audioCtxRef.current!.destination);
+      
+      osc.start(now + i * 0.05);
+      osc.stop(now + 0.6);
+    });
+  };
+
+  const playAlert = () => {
+    initAudio();
+    if (!audioCtxRef.current) return;
+    const now = audioCtxRef.current.currentTime;
+
+    const osc = audioCtxRef.current.createOscillator();
+    const gain = audioCtxRef.current.createGain();
+
+    osc.type = "square";
+    osc.frequency.setValueAtTime(600, now);
+    osc.frequency.setValueAtTime(400, now + 0.1);
+
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+    osc.connect(gain);
+    gain.connect(audioCtxRef.current.destination);
+    
+    osc.start();
+    osc.stop(now + 0.3);
+  };
+
+  return { playTick, playSuccess, playAlert };
 };
 
 // --- HOOKS ---
 const useLivePrice = (assetKey: AssetKey) => {
   const [price, setPrice] = useState<number>(0);
   const [prevPrice, setPrevPrice] = useState<number>(0);
+  const [change24h, setChange24h] = useState<number>(0);
   const lastUpdateRef = useRef<number>(0);
   const lastPriceRef = useRef<number>(0);
+  const initialPriceRef = useRef<number>(0);
 
   useEffect(() => {
     let ws: WebSocket | null = null;
     lastPriceRef.current = 0;
     lastUpdateRef.current = 0;
+    initialPriceRef.current = 0;
     setPrice(0);
     setPrevPrice(0);
+    
     try {
       const symbolParts = ASSETS[assetKey].symbol.split(":");
       const symbol = symbolParts[1]?.toLowerCase();
       if (!symbol) return;
+      
       ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@trade`);
+      
       ws.onmessage = (event) => {
         const now = Date.now();
-        if (now - lastUpdateRef.current > 100) { 
+        if (now - lastUpdateRef.current > 50) { 
           const data = JSON.parse(event.data);
           const currentPrice = parseFloat(data.p);
+          
+          if (initialPriceRef.current === 0) {
+            initialPriceRef.current = currentPrice;
+          }
+          
+          const change = ((currentPrice - initialPriceRef.current) / initialPriceRef.current) * 100;
+          setChange24h(change);
+          
           setPrevPrice(lastPriceRef.current);
           setPrice(currentPrice);
           lastPriceRef.current = currentPrice;
@@ -195,39 +239,75 @@ const useLivePrice = (assetKey: AssetKey) => {
     } catch (e) {
       console.error("WS Error", e);
     }
+    
     return () => { if (ws) ws.close(); };
   }, [assetKey]);
 
-  return { price, prevPrice };
+  return { price, prevPrice, change24h };
 };
 
-const useMouseVelocity = () => {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const smoothX = useSpring(x, { damping: 50, stiffness: 400 });
-  const smoothY = useSpring(y, { damping: 50, stiffness: 400 });
-  const velocity = useTransform(
-    [useVelocity(smoothX), useVelocity(smoothY)],
-    ([latestX, latestY]: number[]) => Math.sqrt((latestX || 0) ** 2 + (latestY || 0) ** 2)
-  );
-  return { x, y, velocity };
+const useMarketState = (price: number, prevPrice: number): MarketState => {
+  const [state, setState] = useState<MarketState>({
+    phase: "accumulation",
+    volatility: 0,
+    momentum: 0,
+    volume: 0
+  });
+
+  const priceHistoryRef = useRef<number[]>([]);
+  const volatilityWindowRef = useRef<number[]>([]);
+
+  useEffect(() => {
+    if (price === 0) return;
+
+    priceHistoryRef.current.push(price);
+    if (priceHistoryRef.current.length > 50) {
+      priceHistoryRef.current.shift();
+    }
+
+    const priceDiff = price - prevPrice;
+    volatilityWindowRef.current.push(Math.abs(priceDiff));
+    if (volatilityWindowRef.current.length > 20) {
+      volatilityWindowRef.current.shift();
+    }
+
+    const avgVolatility = volatilityWindowRef.current.reduce((a, b) => a + b, 0) / volatilityWindowRef.current.length;
+    const momentum = priceHistoryRef.current.length > 10
+      ? ((price - (priceHistoryRef.current[priceHistoryRef.current.length - 10] ?? price)) / price) * 100
+      : 0;
+
+    let phase: MarketPhase = "accumulation";
+    if (momentum > 0.1) phase = "markup";
+    else if (momentum < -0.1) phase = "markdown";
+    else if (avgVolatility > price * 0.0001) phase = "distribution";
+
+    setState({
+      phase,
+      volatility: Math.min(avgVolatility / (price * 0.0001) * 100, 100),
+      momentum: Math.max(-100, Math.min(100, momentum * 10)),
+      volume: Math.random() * 100 // Simulated volume activity
+    });
+  }, [price, prevPrice]);
+
+  return state;
 };
 
 // --- TRADINGVIEW WIDGET ---
 const TradingViewWidget = ({ 
   assetKey, 
   id,
-  isBackground = false 
+  minimal = false 
 }: { 
   assetKey: AssetKey; 
   id: string;
-  isBackground?: boolean;
+  minimal?: boolean;
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
     containerRef.current.innerHTML = "";
+    
     const container = document.createElement("div");
     Object.assign(container.style, { height: "100%", width: "100%" });
     container.id = id; 
@@ -237,7 +317,7 @@ const TradingViewWidget = ({
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
     script.async = true;
     
-    const config = isBackground ? {
+    const config = {
       autosize: true,
       symbol: ASSETS[assetKey].symbol,
       interval: "1",
@@ -246,318 +326,966 @@ const TradingViewWidget = ({
       style: "1",
       locale: "en",
       hide_top_toolbar: true,
-      hide_legend: true,
+      hide_legend: minimal,
       save_image: false,
-      hide_volume: true,
-      backgroundColor: "rgba(2, 6, 23, 1)", 
-      gridLineColor: "rgba(30, 58, 138, 0.05)",
-      scaleFontColor: "rgba(134, 137, 147, 0)",
-      upColor: "#3b82f6", 
-      downColor: "#1e1e1e", 
-      wickUpColor: "#3b82f6",
-      wickDownColor: "#1e1e1e",
-    } : {
-      autosize: true,
-      symbol: ASSETS[assetKey].symbol,
-      interval: "1",
-      timezone: "Etc/UTC",
-      theme: "dark",
-      style: "1", 
-      locale: "en",
-      enable_publishing: false,
-      hide_top_toolbar: true,
-      hide_legend: false,
-      save_image: false,
-      backgroundColor: "rgba(2, 6, 23, 1)",
-      gridLineColor: "rgba(255, 255, 255, 0.02)",
-      hide_volume: true,
+      hide_volume: minimal,
+      backgroundColor: "rgba(10, 10, 10, 1)",
+      gridLineColor: minimal ? "rgba(255, 255, 255, 0.02)" : "rgba(255, 255, 255, 0.05)",
+      scaleFontColor: minimal ? "rgba(255, 255, 255, 0.3)" : "rgba(255, 255, 255, 0.5)",
     };
 
     script.innerHTML = JSON.stringify(config);
     container.appendChild(script);
-  }, [assetKey, id, isBackground]);
+  }, [assetKey, id, minimal]);
 
   return <div ref={containerRef} className="w-full h-full" />;
 };
 
-const ReactiveLiquidLogo = ({ src }: { src: string }) => {
-  const { x, y, velocity } = useMouseVelocity();
-  const baseFreq = useTransform(useSpring(useTransform(velocity, [0, 1000], [0, 0.1]), { stiffness: 200, damping: 20 }), [0, 0.1], [0, 0.05]);
+// --- REACTIVE LOGO ---
+const ReactiveLogo = ({ isActive }: { isActive: boolean }) => {
+  const { x, y } = { x: useMotionValue(0), y: useMotionValue(0) };
+  const smoothX = useSpring(x, { stiffness: 300, damping: 30 });
+  const smoothY = useSpring(y, { stiffness: 300, damping: 30 });
+  
+  const rotateX = useTransform(smoothY, [-300, 300], [15, -15]);
+  const rotateY = useTransform(smoothX, [-300, 300], [-15, 15]);
+
   return (
-    <div className="relative w-24 h-24 flex items-center justify-center z-40" onMouseMove={(e) => { x.set(e.clientX); y.set(e.clientY); }}>
-      <svg style={{ position: "absolute", width: 0, height: 0 }}><defs><filter id="liquid-distort"><motion.feTurbulence type="fractalNoise" baseFrequency={baseFreq} numOctaves="2" result="noise" /><motion.feDisplacementMap in="SourceGraphic" in2="noise" scale="20" /></filter></defs></svg>
-      <motion.div className="w-full h-full flex items-center justify-center" style={{ filter: "url(#liquid-distort)" }}>
-          <img src={src} alt="BullMoney" className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(59,130,246,0.5)]" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.querySelector('.fallback-icon')?.classList.remove('hidden'); }} />
-          <div className="fallback-icon hidden absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-600 to-blue-900 rounded-full border border-blue-400/30 shadow-[0_0_40px_rgba(37,99,235,0.6)]"><Coins className="w-10 h-10 text-white" /></div>
-      </motion.div>
-    </div>
+    <motion.div 
+      className="relative w-32 h-32 flex items-center justify-center cursor-pointer"
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        x.set(e.clientX - centerX);
+        y.set(e.clientY - centerY);
+      }}
+      onMouseLeave={() => {
+        x.set(0);
+        y.set(0);
+      }}
+      style={{
+        rotateX,
+        rotateY,
+        transformStyle: "preserve-3d",
+      }}
+      animate={isActive ? {
+        scale: [1, 1.1, 1],
+      } : {}}
+      transition={{
+        duration: 2,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }}
+    >
+      <motion.div
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: "radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.4), transparent 70%)",
+          filter: "blur(20px)",
+        }}
+        animate={{
+          scale: isActive ? [1, 1.5, 1] : 1,
+          opacity: isActive ? [0.5, 0.8, 0.5] : 0.3,
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+      <img 
+        src="/favicon.svg" 
+        alt="BullMoney" 
+        className="w-full h-full object-contain relative z-10"
+        style={{
+          filter: "drop-shadow(0 0 30px rgba(59, 130, 246, 0.8))",
+          transform: "translateZ(50px)",
+        }}
+        onError={(e) => {
+          e.currentTarget.style.display = 'none';
+          const parent = e.currentTarget.parentElement;
+          if (parent) {
+            const fallback = document.createElement('div');
+            fallback.className = 'w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center';
+            fallback.innerHTML = '<svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/></svg>';
+            parent.appendChild(fallback);
+          }
+        }}
+      />
+    </motion.div>
   );
 };
 
-// --- MAIN OVERLAY COMPONENT ---
-export default function BullMoneyGate({ children, onUnlock }: { children?: React.ReactNode, onUnlock?: () => void }) {
-  const [progress, setProgress] = useState(0);
-  const [isHolding, setIsHolding] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false); 
-  const [gateVisible, setGateVisible] = useState(true); 
-  const [showTerminal, setShowTerminal] = useState(false); 
+// --- MARKET INDICATOR ---
+const MarketIndicator = ({ label, value, icon: Icon, trend, isActive }: { 
+  label: string; 
+  value: string | number; 
+  icon: any;
+  trend?: "up" | "down" | "neutral";
+  isActive?: boolean;
+}) => {
+  const trendColor = trend === "up" ? "text-green-400" : trend === "down" ? "text-red-400" : "text-blue-400";
   
+  return (
+    <motion.div 
+      className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ 
+        opacity: 1, 
+        y: 0,
+        x: isActive ? [0, -1, 1, -1, 0] : 0,
+        scale: isActive ? [1, 1.02, 1] : 1,
+      }}
+      transition={{ 
+        duration: 0.3,
+        x: { repeat: Infinity, duration: 0.15 },
+        scale: { repeat: Infinity, duration: 0.5 },
+      }}
+    >
+      <motion.div 
+        className={cn("p-1.5 sm:p-2 rounded-lg bg-white/10", trendColor)}
+        animate={isActive ? {
+          rotate: [0, -5, 5, -5, 0],
+        } : {}}
+        transition={{
+          duration: 0.3,
+          repeat: Infinity,
+        }}
+      >
+        <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
+      </motion.div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[9px] sm:text-[10px] text-slate-400 uppercase tracking-wider font-bold truncate">{label}</div>
+        <motion.div 
+          className={cn("text-xs sm:text-sm font-bold tabular-nums truncate", trendColor)}
+          animate={isActive ? {
+            scale: [1, 1.05, 1],
+          } : {}}
+          transition={{
+            duration: 0.2,
+            repeat: Infinity,
+          }}
+        >
+          {value}
+        </motion.div>
+      </div>
+    </motion.div>
+  );
+};
+
+// --- PRICE TARGET SYSTEM ---
+const PriceTargetSystem = ({
+  currentPrice,
+  targetPrice,
+  progress,
+  assetKey,
+  isActive,
+}: {
+  currentPrice: number;
+  targetPrice: number;
+  progress: number;
+  assetKey: AssetKey;
+  isActive?: boolean;
+}) => {
+  const distance = currentPrice > 0 ? ((targetPrice - currentPrice) / currentPrice) * 100 : 0;
+  const asset = ASSETS[assetKey];
+
+  return (
+    <AnimatedBorder glowColor={asset.color} className="w-full">
+      <motion.div 
+        className="p-4 sm:p-6 space-y-3 sm:space-y-4"
+        animate={isActive ? {
+          x: [0, -2, 2, -2, 0],
+          y: [0, -1, 1, -1, 0],
+        } : {}}
+        transition={{
+          duration: 0.2,
+          repeat: Infinity,
+        }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <motion.div
+              animate={isActive ? {
+                rotate: [0, -10, 10, -10, 0],
+                scale: [1, 1.1, 1],
+              } : {}}
+              transition={{
+                duration: 0.3,
+                repeat: Infinity,
+              }}
+            >
+              <Target className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
+            </motion.div>
+            <span className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
+              Price Target
+            </span>
+          </div>
+          <motion.div 
+            className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/30"
+            animate={isActive ? {
+              scale: [1, 1.05, 1],
+              borderColor: ["rgba(59, 130, 246, 0.3)", "rgba(59, 130, 246, 0.6)", "rgba(59, 130, 246, 0.3)"],
+            } : {}}
+            transition={{
+              duration: 0.5,
+              repeat: Infinity,
+            }}
+          >
+            <Radio className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-400 animate-pulse" />
+            <span className="text-[9px] sm:text-[10px] font-bold text-blue-400">ACTIVE</span>
+          </motion.div>
+        </div>
+
+        {/* Current vs Target */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          <div>
+            <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-wider mb-1">Current</div>
+            <motion.div 
+              className="text-lg sm:text-2xl font-bold text-white tabular-nums"
+              animate={isActive ? {
+                scale: [1, 1.03, 1],
+                color: ["#ffffff", "#3b82f6", "#ffffff"],
+              } : {}}
+              transition={{
+                duration: 0.3,
+                repeat: Infinity,
+              }}
+            >
+              ${currentPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </motion.div>
+          </div>
+          <div>
+            <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-wider mb-1">Target</div>
+            <motion.div 
+              className={cn(
+                "text-lg sm:text-2xl font-bold tabular-nums",
+                progress > 50 ? "text-green-400" : "text-blue-400"
+              )}
+              animate={isActive ? {
+                scale: [1, 1.05, 1],
+                y: [0, -2, 0],
+              } : {}}
+              transition={{
+                duration: 0.25,
+                repeat: Infinity,
+              }}
+            >
+              ${targetPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-[10px] sm:text-xs">
+            <span className="text-slate-400">Distance to Target</span>
+            <motion.span 
+              className={cn(
+                "font-bold tabular-nums",
+                distance > 0 ? "text-green-400" : "text-red-400"
+              )}
+              animate={isActive ? {
+                scale: [1, 1.1, 1],
+              } : {}}
+              transition={{
+                duration: 0.2,
+                repeat: Infinity,
+              }}
+            >
+              {distance > 0 ? "+" : ""}{distance.toFixed(2)}%
+            </motion.span>
+          </div>
+          <div className="relative h-2 bg-white/5 rounded-full overflow-hidden">
+            <motion.div
+              className={cn(
+                "absolute inset-y-0 left-0 rounded-full",
+                `bg-gradient-to-r ${asset.gradient}`
+              )}
+              initial={{ width: 0 }}
+              animate={{ 
+                width: `${Math.min(progress, 100)}%`,
+                opacity: isActive ? [1, 0.8, 1] : 1,
+              }}
+              transition={{ 
+                width: { duration: 0.5, ease: "easeOut" },
+                opacity: { duration: 0.3, repeat: Infinity },
+              }}
+            />
+            {/* Enhanced shimmer effect */}
+            <motion.div
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-60"
+              animate={{
+                x: ["-100%", "200%"],
+              }}
+              transition={{
+                duration: isActive ? 0.8 : 1.5,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+              style={{ width: "50%" }}
+            />
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-2 pt-2">
+          <motion.div 
+            className="text-center p-2 rounded-lg bg-white/5"
+            animate={isActive ? {
+              scale: [1, 1.02, 1],
+              backgroundColor: ["rgba(255, 255, 255, 0.05)", "rgba(59, 130, 246, 0.1)", "rgba(255, 255, 255, 0.05)"],
+            } : {}}
+            transition={{
+              duration: 0.4,
+              repeat: Infinity,
+            }}
+          >
+            <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase">Orders</div>
+            <motion.div 
+              className="text-base sm:text-lg font-bold text-white tabular-nums"
+              animate={isActive ? {
+                scale: [1, 1.1, 1],
+              } : {}}
+              transition={{
+                duration: 0.3,
+                repeat: Infinity,
+              }}
+            >
+              {Math.floor(progress * 12.5)}
+            </motion.div>
+          </motion.div>
+          <motion.div 
+            className="text-center p-2 rounded-lg bg-white/5"
+            animate={isActive ? {
+              scale: [1, 1.02, 1],
+              backgroundColor: ["rgba(255, 255, 255, 0.05)", "rgba(59, 130, 246, 0.1)", "rgba(255, 255, 255, 0.05)"],
+            } : {}}
+            transition={{
+              duration: 0.35,
+              repeat: Infinity,
+              delay: 0.1,
+            }}
+          >
+            <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase">Power</div>
+            <motion.div 
+              className="text-base sm:text-lg font-bold text-blue-400 tabular-nums"
+              animate={isActive ? {
+                scale: [1, 1.15, 1],
+              } : {}}
+              transition={{
+                duration: 0.3,
+                repeat: Infinity,
+              }}
+            >
+              {progress.toFixed(0)}%
+            </motion.div>
+          </motion.div>
+          <motion.div 
+            className="text-center p-2 rounded-lg bg-white/5"
+            animate={isActive ? {
+              scale: [1, 1.02, 1],
+              backgroundColor: ["rgba(255, 255, 255, 0.05)", "rgba(6, 182, 212, 0.1)", "rgba(255, 255, 255, 0.05)"],
+            } : {}}
+            transition={{
+              duration: 0.4,
+              repeat: Infinity,
+              delay: 0.2,
+            }}
+          >
+            <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase">Phase</div>
+            <motion.div 
+              className="text-base sm:text-lg font-bold text-cyan-400"
+              animate={isActive ? {
+                scale: [1, 1.1, 1],
+                rotate: [0, -5, 5, 0],
+              } : {}}
+              transition={{
+                duration: 0.4,
+                repeat: Infinity,
+              }}
+            >
+              {progress < 25 ? "I" : progress < 50 ? "II" : progress < 75 ? "III" : "IV"}
+            </motion.div>
+          </motion.div>
+        </div>
+      </motion.div>
+    </AnimatedBorder>
+  );
+};
+
+// --- TRADING ACTION BUTTON ---
+const TradingActionButton = ({
+  phase,
+  progress,
+  onPress,
+  onRelease,
+  isActive,
+}: {
+  phase: number;
+  progress: number;
+  onPress: () => void;
+  onRelease: () => void;
+  isActive: boolean;
+}) => {
+  const actions = [
+    { label: "BUY THE DIP", icon: TrendingUp, color: "from-blue-500 to-cyan-600" },
+    { label: "ACCUMULATE", icon: Coins, color: "from-cyan-500 to-blue-600" },
+    { label: "LONG SQUEEZE", icon: Zap, color: "from-blue-600 to-indigo-600" },
+    { label: "TO THE MOON", icon: Flame, color: "from-indigo-600 to-purple-600" },
+  ];
+
+  const currentAction = actions[Math.min(phase, actions.length - 1)];
+  const Icon = currentAction?.icon || TrendingUp;
+
+  return (
+    <motion.div
+      className="relative w-full"
+      onMouseDown={onPress}
+      onMouseUp={onRelease}
+      onMouseLeave={onRelease}
+      onTouchStart={(e) => {
+        e.preventDefault();
+        onPress();
+      }}
+      onTouchEnd={onRelease}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <AnimatedBorder glowColor={isActive ? "#3b82f6" : "#333"} className="cursor-pointer">
+        <div className="relative h-16 sm:h-20 flex items-center justify-between px-4 sm:px-8 overflow-hidden">
+          {/* Progress fill */}
+          <motion.div
+            className={cn(
+              "absolute inset-0 bg-gradient-to-r opacity-100",
+              currentAction?.color || "from-blue-500 to-cyan-600"
+            )}
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: progress / 100 }}
+            transition={{ duration: 0.1, ease: "linear" }}
+            style={{ transformOrigin: "left" }}
+          />
+
+          {/* Enhanced shimmer effect */}
+          {isActive && (
+            <>
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                animate={{
+                  x: ["-100%", "200%"],
+                }}
+                transition={{
+                  duration: 0.8,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              />
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-300/30 to-transparent"
+                animate={{
+                  x: ["-100%", "200%"],
+                }}
+                transition={{
+                  duration: 1.2,
+                  repeat: Infinity,
+                  ease: "linear",
+                  delay: 0.3,
+                }}
+              />
+            </>
+          )}
+
+          {/* Content */}
+          <div className="relative z-10 flex items-center gap-2 sm:gap-3 mix-blend-difference text-white">
+            <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div>
+              <div className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider opacity-80">
+                Trading Action
+              </div>
+              <div className="text-base sm:text-xl font-black tracking-tight">
+                {currentAction?.label || "TRADE"}
+              </div>
+            </div>
+          </div>
+
+          <div className="relative z-10 flex items-center gap-2 mix-blend-difference text-white">
+            <div className="text-right">
+              <div className="text-xl sm:text-2xl font-black tabular-nums">{progress.toFixed(0)}%</div>
+              <div className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider opacity-80">
+                POWER
+              </div>
+            </div>
+            <motion.div
+              animate={isActive ? {
+                rotate: 360,
+              } : {}}
+              transition={{
+                duration: 1,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+            >
+              <Gauge className="w-6 h-6 sm:w-8 sm:h-8" />
+            </motion.div>
+          </div>
+        </div>
+      </AnimatedBorder>
+
+      {/* Glow effect */}
+      <motion.div
+        className={cn(
+          "absolute -inset-1 rounded-3xl blur-2xl opacity-0 transition-opacity duration-300 -z-10",
+          `bg-gradient-to-r ${currentAction?.color || "from-blue-500 to-cyan-600"}`
+        )}
+        animate={{
+          opacity: isActive ? 0.6 : 0,
+          scale: isActive ? 1.1 : 1,
+        }}
+      />
+    </motion.div>
+  );
+};
+
+// --- MAIN COMPONENT ---
+export default function BullMoneyGate({ 
+  children, 
+  onUnlock 
+}: { 
+  children?: React.ReactNode; 
+  onUnlock?: () => void;
+}) {
+  // Gate state
+  const [gateVisible, setGateVisible] = useState(true);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [showTerminal, setShowTerminal] = useState(false);
+
+  // Trading state
   const [selectedAsset, setSelectedAsset] = useState<AssetKey>("BTC");
-  const { price: realPrice } = useLivePrice(selectedAsset);
-  const [displayPrice, setDisplayPrice] = useState(0);
-  
-  const shakeX = useMotionValue(0);
-  const shakeY = useMotionValue(0);
-  
+  const [progress, setProgress] = useState(0);
+  const [phase, setPhase] = useState(0);
+  const [isTrading, setIsTrading] = useState(false);
+
+  // Market data
+  const { price: realPrice, prevPrice, change24h } = useLivePrice(selectedAsset);
+  const marketState = useMarketState(realPrice, prevPrice);
+  const [targetPrice, setTargetPrice] = useState(0);
+  const [animatedCurrentPrice, setAnimatedCurrentPrice] = useState(0);
+  const [animatedTargetPrice, setAnimatedTargetPrice] = useState(0);
+
+  // Audio
+  const { playTick, playSuccess, playAlert } = useAudioEngine();
+
+  // Animation
   const requestRef = useRef<number>();
-  const basePriceRef = useRef(0);
+  const lastPhaseRef = useRef(0);
+  const lastTickRef = useRef(0);
 
-  // Use the synthesized Audio Hook
-  const { startEngine, updateEngine, stopEngine, playSuccess } = useAudioEngine();
-
+  // Initialize target price
   useEffect(() => {
-    if (!isHolding && realPrice > 0) {
-      basePriceRef.current = realPrice;
-      setDisplayPrice(realPrice);
+    if (realPrice > 0 && targetPrice === 0) {
+      const multiplier = selectedAsset === 'BTC' ? 1.05 : selectedAsset === 'ETH' ? 1.08 : selectedAsset === 'SOL' ? 1.12 : 1.10;
+      setTargetPrice(realPrice * multiplier);
     }
-  }, [realPrice, isHolding]);
+  }, [realPrice, targetPrice, selectedAsset]);
 
-  // Audio Control Effect
+  // Animate price/target while holding
   useEffect(() => {
-    if (isCompleted) return;
-    
-    if (isHolding) {
-        startEngine();
-    } else {
-        stopEngine();
+    if (realPrice <= 0 || targetPrice <= 0) {
+      setAnimatedCurrentPrice(realPrice);
+      setAnimatedTargetPrice(targetPrice);
+      return;
     }
-    
-    // Cleanup on unmount
-    return () => stopEngine();
-  }, [isHolding, isCompleted]);
 
+    if (!isTrading && progress === 0) {
+      setAnimatedCurrentPrice(realPrice);
+      setAnimatedTargetPrice(targetPrice);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const hold = isTrading ? Math.min(1, Math.max(0, progress / 100)) : 0;
+      const desiredTarget = targetPrice * (1 + hold * 0.01);
+      const desiredCurrent = realPrice + (desiredTarget - realPrice) * hold;
+
+      const jitter = isTrading ? realPrice * (0.00004 + hold * 0.0002) : 0;
+
+      setAnimatedTargetPrice((prev) => {
+        const next = prev + (desiredTarget - prev) * 0.14 + (Math.random() - 0.5) * jitter * 1.4;
+        return Math.max(0, next);
+      });
+
+      setAnimatedCurrentPrice((prev) => {
+        const next = prev + (desiredCurrent - prev) * 0.18 + (Math.random() - 0.5) * jitter;
+        return Math.max(0, next);
+      });
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [realPrice, targetPrice, isTrading, progress]);
+
+  // Reset on asset change
+  useEffect(() => {
+    setProgress(0);
+    setPhase(0);
+    setTargetPrice(0);
+    setIsCompleted(false);
+    setAnimatedCurrentPrice(0);
+    setAnimatedTargetPrice(0);
+  }, [selectedAsset]);
+
+  // Main animation loop
   const animate = useCallback(() => {
-    if (isCompleted) {
-        shakeX.set(0); shakeY.set(0); 
-        return;
-    }
+    if (isCompleted) return;
 
     setProgress((prev) => {
       let next = prev;
-      
-      if (isHolding) {
-        const boost = prev > 90 ? 8.0 : prev > 80 ? 4.0 : prev > 50 ? 1.5 : 0.6; 
-        next = Math.min(prev + boost, 100);
 
-        // Update synthesized pitch based on progress
-        updateEngine(next);
-
-        if (typeof navigator !== "undefined" && navigator.vibrate) {
-            const intensity = next / 100;
-            if (Math.random() < intensity * 0.9) navigator.vibrate(5 + (intensity * 40)); 
-        }
-
-        const shakeAmplitude = (next > 10) ? (next / 100) * 25 : 0; 
-        if (shakeAmplitude > 0) {
-            shakeX.set((Math.random() - 0.5) * shakeAmplitude * 2);
-            shakeY.set((Math.random() - 0.5) * shakeAmplitude * 2);
-        } else {
-            shakeX.set(0); shakeY.set(0);
-        }
-
-        const pumpMultiplier = selectedAsset === 'BTC' ? 500 : selectedAsset === 'ETH' ? 50 : 5;
-        const parabolicPump = Math.pow(next * 0.01, 3) * pumpMultiplier * 100;
-        const noise = Math.random() * (pumpMultiplier * 0.5);
+      if (isTrading) {
+        // Accelerating progress based on market momentum
+        const baseSpeed = 0.8;
+        const momentumBoost = Math.abs(marketState.momentum) * 0.1;
+        const phaseBoost = phase * 0.3;
+        const speed = baseSpeed + momentumBoost + phaseBoost;
         
-        setDisplayPrice(basePriceRef.current + parabolicPump + noise);
+        next = Math.min(prev + speed, 100);
+
+        // Phase transitions
+        const newPhase = Math.floor(next / 25);
+        if (newPhase > lastPhaseRef.current) {
+          lastPhaseRef.current = newPhase;
+          setPhase(newPhase);
+          playAlert();
+          if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+        }
+
+        // Tick sounds
+        const now = Date.now();
+        if (now - lastTickRef.current > 100) {
+          playTick(800 + next * 5, 0.05);
+          lastTickRef.current = now;
+        }
+
+        // Haptic feedback
+        if (navigator.vibrate && Math.random() < 0.3) {
+          navigator.vibrate(5);
+        }
 
       } else {
-        shakeX.set(0); shakeY.set(0);
-        next = Math.max(prev - 3, 0); 
-        if (basePriceRef.current > 0) {
-           const decayPrice = displayPrice - (displayPrice - basePriceRef.current) * 0.15;
-           setDisplayPrice(decayPrice);
-        }
+        // Decay when not trading
+        next = Math.max(prev - 2, 0);
       }
 
+      // Completion
       if (next >= 100) {
         setIsCompleted(true);
-        stopEngine(); // Cut the continuous engine sound
-        playSuccess(); // Play the synthesized "Success" sound
-        
-        if (navigator.vibrate) navigator.vibrate([50, 50, 50, 50, 500]); 
-        
+        playSuccess();
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+
         setTimeout(() => {
-            setGateVisible(false); 
-            setShowTerminal(true); 
-            if (onUnlock) onUnlock(); 
-        }, 500); 
-        
+          setGateVisible(false);
+          setShowTerminal(true);
+          if (onUnlock) onUnlock();
+        }, 1000);
+
         return 100;
       }
+
       return next;
     });
 
     requestRef.current = requestAnimationFrame(animate);
-  }, [isHolding, isCompleted, selectedAsset, displayPrice, shakeX, shakeY, onUnlock, updateEngine, stopEngine, playSuccess]);
+  }, [isTrading, isCompleted, marketState, phase, playTick, playAlert, playSuccess, onUnlock]);
 
   useEffect(() => {
     requestRef.current = requestAnimationFrame(animate);
-    return () => { if (requestRef.current) cancelAnimationFrame(requestRef.current); };
+    return () => {
+      if (requestRef.current) cancelAnimationFrame(requestRef.current);
+    };
   }, [animate]);
 
   return (
     <>
-       <div className="relative z-0 min-h-screen w-full">
-         {children}
-       </div>
+      {/* Main content (behind gate) */}
+      <div className="relative z-0 min-h-screen w-full">
+        {children}
+      </div>
 
-       <AnimatePresence>
-         {isCompleted && gateVisible && (
-            <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.1, ease: "easeOut" }} 
-                className="fixed inset-0 z-[100] bg-white pointer-events-none"
-            />
-         )}
-         {!gateVisible && showTerminal && (
-            <motion.div 
-                initial={{ opacity: 1 }}
-                animate={{ opacity: 0 }}
-                transition={{ duration: 1.0, ease: "easeIn" }}
-                className="fixed inset-0 z-[100] bg-white pointer-events-none"
-            />
-         )}
-       </AnimatePresence>
+      {/* Transition effects */}
+      <AnimatePresence>
+        {isCompleted && gateVisible && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[100] bg-gradient-to-b from-blue-500 via-cyan-400 to-white pointer-events-none"
+          />
+        )}
+        {!gateVisible && showTerminal && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: 1.5, ease: "easeIn" }}
+            className="fixed inset-0 z-[100] bg-white pointer-events-none"
+          />
+        )}
+      </AnimatePresence>
 
-       <AnimatePresence>
-       {gateVisible && (
-           <motion.div 
-             exit={{ opacity: 0 }}
-             transition={{ duration: 0 }} 
-             className="fixed inset-0 z-[60] h-[100dvh] w-screen bg-[#020617] text-white overflow-hidden font-sans select-none touch-none"
-           >
-                <div className="absolute top-0 left-0 right-0 z-50 flex justify-center pt-8 w-full">
-                    <div className="flex items-center gap-2">
-                        {Object.entries(ASSETS).map(([key, asset]) => (
-                            <button key={key} onClick={() => setSelectedAsset(key as AssetKey)} className={cn("flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold transition-all border", key === selectedAsset ? "bg-[#1e293b] text-white border-blue-500/50" : "text-slate-500 border-transparent")}>
-                                {asset.icon} {asset.id}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+      {/* Main Gate */}
+      <AnimatePresence>
+        {gateVisible && (
+          <motion.div
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.5 }}
+            className="fixed inset-0 z-[60] h-[100dvh] w-screen bg-[#0a0a0a] text-white overflow-hidden select-none touch-none"
+            style={{
+              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+            }}
+          >
+            {/* Background chart */}
+            <div className="absolute inset-0 z-0 opacity-10">
+              <TradingViewWidget assetKey={selectedAsset} id="tv-bg" minimal={true} />
+            </div>
 
-                <div className="absolute inset-0 z-0 pointer-events-none opacity-20 grayscale-[50%] scale-125">
-                     <TradingViewWidget assetKey={selectedAsset} id="tv-bg" isBackground={true} />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/50 to-transparent z-10" />
+            {/* Gradient overlays */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-transparent to-[#0a0a0a] z-10" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.15),transparent_70%)] z-10" />
 
-                <motion.div 
-                    style={{ x: shakeX, y: shakeY }}
-                    animate={isCompleted ? { 
-                        scale: 3, 
-                        opacity: 0, 
-                        filter: "blur(20px)" 
-                    } : { 
-                        scale: 1, 
-                        opacity: 1 
-                    }}
-                    transition={{ duration: 0.4 }}
-                    className="relative z-30 flex flex-col items-center justify-center h-full w-full px-6 pt-20"
-                >
-                    <div className="mb-4"><ReactiveLiquidLogo src="/favicon.svg" /></div>
-                    <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-12 text-center text-white drop-shadow-2xl">BULLMONEY</h1>
-                    
-                    <div className="w-full max-w-sm flex flex-col items-center gap-6">
-                        <MovingBorder rx="rounded-[2rem]" duration={4} className="bg-gradient-to-br from-[#0f172a] via-[#020617] to-black">
-                            <div className="relative w-full p-8 flex flex-col items-center">
-                                <div className="absolute -top-10 -left-10 w-32 h-32 bg-blue-600/20 blur-[60px] rounded-full pointer-events-none" />
-                                <div className="flex flex-col items-center relative z-10">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <span className={cn("w-1.5 h-1.5 rounded-full shadow-[0_0_10px_#60a5fa] transition-colors", isHolding ? "bg-white" : "bg-blue-400")} />
-                                        <span className="text-[10px] font-bold text-blue-200/50 tracking-[0.2em]">{ASSETS[selectedAsset].id}/USD TARGET</span>
-                                    </div>
-                                    <div className={cn("text-5xl md:text-6xl font-mono font-bold tabular-nums tracking-tighter transition-all duration-100", isHolding ? "text-white drop-shadow-[0_0_35px_rgba(255,255,255,0.8)] scale-110" : "text-white")}>
-                                        ${(displayPrice || realPrice).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </div>
-                                    <div className="h-4 mt-2">
-                                        {isHolding && (
-                                            <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-1 text-xs font-bold text-blue-400">
-                                                <Zap className="w-3 h-3 text-white fill-white animate-pulse" />
-                                                <span className="text-blue-100 animate-pulse">GOD CANDLE DETECTED</span>
-                                            </motion.div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </MovingBorder>
+            {/* Asset selector */}
+            <div className="absolute top-6 left-0 right-0 z-50 flex justify-center">
+              <div className="flex items-center gap-2 p-2 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10">
+                {Object.entries(ASSETS).map(([key, asset]) => (
+                  <motion.button
+                    key={key}
+                    onClick={() => !isTrading && setSelectedAsset(key as AssetKey)}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all",
+                      key === selectedAsset
+                        ? "bg-white/20 text-white shadow-lg"
+                        : "text-slate-500 hover:text-slate-300"
+                    )}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    disabled={isTrading}
+                  >
+                    <span className="text-lg">{asset.icon}</span>
+                    <span>{asset.id}</span>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
 
-                        <div className="relative w-full h-24 group cursor-pointer touch-manipulation mt-4" onMouseDown={() => !isCompleted && setIsHolding(true)} onMouseUp={() => setIsHolding(false)} onMouseLeave={() => setIsHolding(false)} onTouchStart={(e) => { e.preventDefault(); !isCompleted && setIsHolding(true); }} onTouchEnd={() => setIsHolding(false)}>
-                            <MovingBorder rx="rounded-2xl" duration={2} className="bg-[#0b1221]">
-                                <div className="relative h-full w-full flex items-center justify-between px-8 z-10">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-blue-700 via-blue-500 to-white opacity-100 transition-transform duration-75 ease-linear origin-left" style={{ transform: `scaleX(${progress / 100})` }} />
-                                    <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-                                    <div className="relative z-10 flex flex-col mix-blend-difference text-white">
-                                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] mb-1">ACCESS</span>
-                                        <span className="text-2xl font-black italic tracking-tighter flex items-center gap-2">
-                                            HOLD TO ENTER <ArrowUpRight className={cn("w-5 h-5 transition-transform duration-300", isHolding && "translate-x-1 -translate-y-1")} />
-                                        </span>
-                                    </div>
-                                    <div className={cn("relative z-10 w-12 h-12 rounded-full flex items-center justify-center border transition-all duration-300", isHolding ? "bg-white/90 text-blue-900 border-white scale-110" : "bg-[#1e293b] border-white/5 text-slate-600")}>
-                                        <Lock className="w-5 h-5" />
-                                    </div>
-                                </div>
-                            </MovingBorder>
-                            <div className={cn("absolute -inset-1 bg-blue-500 rounded-2xl blur-xl opacity-0 transition-all duration-100 -z-10", isHolding && "opacity-80 scale-105")} />
-                        </div>
-                        <p className={cn("text-[9px] uppercase tracking-[0.3em] font-bold transition-all duration-500 text-center -mt-2", isHolding ? "text-blue-300 opacity-100" : "text-slate-700 opacity-0")}>{isHolding ? "SQUEEZING SHORTS..." : ""}</p>
-                    </div>
-                </motion.div>
-           </motion.div>
-       )}
-       </AnimatePresence>
-
-       <AnimatePresence>
-         {showTerminal && (
-            <motion.div 
-                initial={{ y: 100, opacity: 0, scale: 0.9 }}
-                animate={{ y: 0, opacity: 1, scale: 1 }}
-                exit={{ y: 20, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="fixed bottom-4 right-4 z-50 w-[90vw] md:w-[400px] h-[500px] bg-[#0b1221]/95 backdrop-blur-xl border border-blue-500/20 rounded-3xl shadow-2xl shadow-blue-900/40 flex flex-col overflow-hidden"
+            {/* Main content */}
+            <motion.div
+              className="relative z-30 flex flex-col items-center justify-center h-full w-full px-4 md:px-8 pt-24 pb-8"
+              animate={isCompleted ? {
+                scale: 0.8,
+                opacity: 0,
+                filter: "blur(20px)",
+              } : {
+                scale: 1,
+                opacity: 1,
+                filter: "blur(0px)",
+              }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
             >
-                <div className="h-14 flex items-center justify-between px-6 border-b border-white/5 bg-white/5">
-                    <div className="flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-blue-400" />
-                        <span className="text-xs font-bold text-white tracking-widest">BM TERMINAL</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                         <div className="flex items-center gap-1.5 px-2 py-1 bg-green-500/10 rounded-full border border-green-500/20">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"/>
-                            <span className="text-[10px] font-bold text-green-400">LIVE</span>
-                         </div>
-                    </div>
+              {/* Logo */}
+              <motion.div
+                className="mb-4 sm:mb-6"
+                animate={{
+                  y: isTrading ? [0, -5, 0] : 0,
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
+                <ReactiveLogo isActive={isTrading} />
+              </motion.div>
+
+              {/* Title */}
+              <motion.h1
+                className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-500"
+                animate={{
+                  backgroundPosition: ["0%", "100%"],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+                style={{
+                  backgroundSize: "200% 100%",
+                }}
+              >
+                BULLMONEY
+              </motion.h1>
+
+              <p className="text-xs sm:text-sm text-slate-400 mb-8 sm:mb-12 font-medium">
+                High-Frequency Trading Interface
+              </p>
+
+              {/* Main trading interface */}
+              <div className="w-full max-w-2xl space-y-6">
+	                {/* Market indicators */}
+	                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+	                  <MarketIndicator
+	                    label="Price"
+	                    value={`$${animatedCurrentPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+	                    icon={DollarSign}
+	                    trend={realPrice > prevPrice ? "up" : realPrice < prevPrice ? "down" : "neutral"}
+	                    isActive={isTrading}
+	                  />
+                  <MarketIndicator
+                    label="24h Change"
+                    value={`${change24h >= 0 ? "+" : ""}${change24h.toFixed(2)}%`}
+                    icon={change24h >= 0 ? TrendingUp : TrendingDown}
+                    trend={change24h >= 0 ? "up" : "down"}
+                  />
+                  <MarketIndicator
+                    label="Volatility"
+                    value={`${marketState.volatility.toFixed(0)}%`}
+                    icon={Activity}
+                    trend="neutral"
+                  />
+                  <MarketIndicator
+                    label="Momentum"
+                    value={`${marketState.momentum >= 0 ? "+" : ""}${marketState.momentum.toFixed(1)}`}
+                    icon={BarChart3}
+                    trend={marketState.momentum >= 0 ? "up" : "down"}
+                  />
                 </div>
 
-                <div className="flex-1 relative bg-[#020617]">
-                    <TradingViewWidget assetKey={selectedAsset} id="tv-widget" isBackground={false} />
-                    <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_20px_rgba(2,6,23,1)]" />
-                </div>
+	                {/* Price target */}
+	                <PriceTargetSystem
+	                  currentPrice={animatedCurrentPrice}
+	                  targetPrice={animatedTargetPrice}
+	                  progress={progress}
+	                  assetKey={selectedAsset}
+	                  isActive={isTrading}
+	                />
 
-                <div className="p-4 bg-[#0b1221] border-t border-white/5">
-                    <button 
-                        onClick={() => setShowTerminal(false)}
-                        className="w-full h-12 bg-white hover:bg-blue-50 text-black rounded-xl font-black italic tracking-tighter flex items-center justify-center gap-2 transition-colors"
+                {/* Trading action button */}
+                <TradingActionButton
+                  phase={phase}
+                  progress={progress}
+                  onPress={() => !isCompleted && setIsTrading(true)}
+                  onRelease={() => setIsTrading(false)}
+                  isActive={isTrading}
+                />
+
+                {/* Status message */}
+                <AnimatePresence>
+                  {isTrading && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="flex items-center justify-center gap-2 text-xs sm:text-sm font-bold"
                     >
-                        <span>CLOSE TERMINAL</span>
-                        <Minimize2 className="w-4 h-4" />
-                    </button>
-                </div>
+                      <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-400 animate-pulse" />
+                      <span className="text-blue-400">
+                        {progress < 25 && "Accumulating positions..."}
+                        {progress >= 25 && progress < 50 && "Building momentum..."}
+                        {progress >= 50 && progress < 75 && "Breakout imminent..."}
+                        {progress >= 75 && progress < 100 && "MOONING! 🚀"}
+                      </span>
+                    </motion.div>
+                  )}
+                  {!isTrading && progress > 0 && progress < 100 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="flex items-center justify-center gap-2 text-xs sm:text-sm font-medium text-slate-400"
+                    >
+                      <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span>Hold to continue trading</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Bottom hint */}
+              {progress === 0 && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1 }}
+                  className="absolute bottom-8 text-xs text-slate-600 uppercase tracking-wider font-bold"
+                >
+                  Press and hold to execute trades
+                </motion.p>
+              )}
             </motion.div>
-         )}
-       </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Terminal window */}
+      <AnimatePresence>
+        {showTerminal && (
+          <motion.div
+            initial={{ y: 100, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 20, opacity: 0, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed bottom-2 sm:bottom-4 right-2 sm:right-4 left-2 sm:left-auto z-50 w-auto sm:w-[400px] md:w-[500px] h-[500px] sm:h-[550px] md:h-[600px] bg-[#0b1221]/95 backdrop-blur-xl border-2 border-blue-500/30 rounded-2xl sm:rounded-3xl shadow-2xl shadow-blue-900/40 flex flex-col overflow-hidden"
+          >
+            {/* Terminal header */}
+            <div className="h-12 sm:h-14 md:h-16 flex items-center justify-between px-3 sm:px-4 md:px-6 border-b border-white/10 bg-gradient-to-r from-blue-500/10 to-transparent">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
+                <div>
+                  <div className="text-xs sm:text-sm font-black text-white">ACCESS GRANTED</div>
+                  <div className="text-[9px] sm:text-[10px] text-slate-400 uppercase tracking-wider">
+                    BullMoney Terminal v2.0
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-green-500/20 rounded-full border border-green-500/30">
+                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-400 animate-pulse" />
+                  <span className="text-[9px] sm:text-xs font-bold text-green-400">LIVE</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Chart */}
+            <div className="flex-1 relative bg-[#0a0a0a]">
+              <TradingViewWidget assetKey={selectedAsset} id="tv-terminal" minimal={false} />
+              <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_40px_rgba(10,10,10,0.8)]" />
+            </div>
+
+            {/* Terminal footer */}
+            <div className="p-3 sm:p-4 border-t border-white/10 bg-gradient-to-t from-blue-500/5 to-transparent space-y-2 sm:space-y-3">
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="p-2 rounded-lg bg-white/5">
+                  <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase">Total P&L</div>
+                  <div className="text-base sm:text-lg font-bold text-green-400">+{(progress * 47.3).toFixed(0)}%</div>
+                </div>
+                <div className="p-2 rounded-lg bg-white/5">
+                  <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase">Win Rate</div>
+                  <div className="text-base sm:text-lg font-bold text-white">100%</div>
+                </div>
+                <div className="p-2 rounded-lg bg-white/5">
+                  <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase">Trades</div>
+                  <div className="text-base sm:text-lg font-bold text-white">{Math.floor(progress * 12.5)}</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowTerminal(false)}
+                className="w-full h-10 sm:h-12 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl font-black text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/30"
+              >
+                <span>MINIMIZE TERMINAL</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
