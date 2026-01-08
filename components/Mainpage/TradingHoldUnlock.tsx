@@ -19,7 +19,6 @@ import {
   Sparkles,
   Radio,
   DollarSign,
-  TrendingDown,
   Flame,
   AlertCircle,
   CheckCircle2,
@@ -266,37 +265,16 @@ const useLivePrice = (assetKey: AssetKey) => {
 
   useEffect(() => {
     let ws: WebSocket | null = null;
-    const controller = new AbortController();
     lastPriceRef.current = 0;
     lastUpdateRef.current = 0;
     initialPriceRef.current = 0;
+    setPrice(0);
+    setPrevPrice(0);
     
     try {
       const symbolParts = ASSETS[assetKey].symbol.split(":");
       const symbol = symbolParts[1]?.toLowerCase();
-      const symbolUpper = symbolParts[1]?.toUpperCase();
-      if (!symbol || !symbolUpper) return;
-
-      const fetchInitial = async () => {
-        try {
-          const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbolUpper}`, { signal: controller.signal });
-          if (!res.ok) return;
-          const data = await res.json();
-          const currentPrice = parseFloat(data.lastPrice ?? data.price);
-          const changePct = parseFloat(data.priceChangePercent ?? data.priceChange24h ?? data.priceChange ?? "0");
-          if (!Number.isNaN(currentPrice)) {
-            lastPriceRef.current = currentPrice;
-            initialPriceRef.current = currentPrice;
-            setPrice(currentPrice);
-            setPrevPrice(currentPrice);
-            if (!Number.isNaN(changePct)) setChange24h(changePct);
-          }
-        } catch (err) {
-          if (!controller.signal.aborted) console.error("Initial price fetch failed", err);
-        }
-      };
-
-      fetchInitial();
+      if (!symbol) return;
       
       ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@trade`);
       
@@ -323,10 +301,7 @@ const useLivePrice = (assetKey: AssetKey) => {
       console.error("WS Error", e);
     }
     
-    return () => { 
-      controller.abort();
-      if (ws) ws.close(); 
-    };
+    return () => { if (ws) ws.close(); };
   }, [assetKey]);
 
   return { price, prevPrice, change24h };
