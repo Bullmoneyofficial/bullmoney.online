@@ -16,7 +16,7 @@ const pendingSceneStores = new Set<string>();
 const lowEndSceneCooldowns = new Map<string, number>();
 
 type SceneStorageSaveOptions = {
-  deviceProfile?: DeviceProfile;
+  deviceProfile?: Partial<DeviceProfile>;
   priority?: 'hero' | 'standard' | 'prefetch';
   blobSize?: number;
 };
