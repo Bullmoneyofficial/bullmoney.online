@@ -102,7 +102,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
             {/* Error Description */}
             <p className="text-white/70 text-center mb-6 leading-relaxed">
-              We encountered an unexpected error. Don't worry, your data is safe.
+              We encountered an unexpected error. Don&apos;t worry, your data is safe.
               You can try reloading the page or contact support if the problem persists.
             </p>
 

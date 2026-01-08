@@ -296,7 +296,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
           <div className="relative z-10 text-center px-6 py-5 rounded-2xl border border-white/10 bg-black/50 backdrop-blur">
             <div className="text-white/60 font-mono text-[10px] tracking-[0.3em] mb-2">PERFORMANCE MODE</div>
             <div className="text-white/90 font-bold text-xl md:text-2xl">{skeletonLabel || '3D DISABLED'}</div>
-            <div className="text-white/40 font-mono text-[10px] mt-2">Tap "Full 3D" to re-enable</div>
+            <div className="text-white/40 font-mono text-[10px] mt-2">Tap &quot;Full 3D&quot; to re-enable</div>
           </div>
         </div>
       );
@@ -358,6 +358,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
     </div>
   );
 });
+SceneWrapper.displayName = "SceneWrapper";
 
 export const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false, onSceneReady, deviceProfile, eagerRenderSplines = true }: any) => {
   const isHeavyScene = config.id === 5 || config.id === 6 || config.id === 10;
@@ -462,6 +463,7 @@ export const FullScreenSection = memo(({ config, activePage, onVisible, parallax
     </section>
   );
 });
+FullScreenSection.displayName = "FullScreenSection";
 
 export const DraggableSplitSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false, deviceProfile, eagerRenderSplines = true }: any) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -523,11 +525,6 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
       }
     };
   }, [splitPos, isMobile, activeScene, isTransitioning]);
-
-  // PERFORMANCE MODE: Hide split sections when splines are disabled
-  if (disableSpline) {
-    return null;
-  }
 
   useEffect(() => {
     const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
@@ -684,6 +681,10 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
   const shouldRenderSceneB = isMobile ? (shouldRender && activeScene === 'right' && !isTransitioning) : shouldRender;
 
   // FIX #7: Remove snap classes on split section for mobile
+  if (disableSpline) {
+    return null;
+  }
+
   return (
     <section
       ref={containerRef}
@@ -840,3 +841,4 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
     </section>
   );
 });
+DraggableSplitSection.displayName = "DraggableSplitSection";

@@ -326,7 +326,7 @@ export function TestimonialsCarousel() {
                 <p className="text-lg font-semibold">{testimonials[index].name}</p>
               </div>
               <p className="text-sm text-neutral-200 italic leading-relaxed">
-                "{testimonials[index].text}"
+                &ldquo;{testimonials[index].text}&rdquo;
               </p>
             </div>
           </motion.div>

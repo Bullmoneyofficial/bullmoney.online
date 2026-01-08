@@ -48,6 +48,7 @@ export const ParticleEffect = memo(({ trigger }: { trigger: number }) => {
     </div>
   );
 });
+ParticleEffect.displayName = "ParticleEffect";
 
 // ----------------------------------------------------------------------
 // 3. UI COMPONENTS
@@ -396,7 +397,7 @@ export const TSXWrapper = memo(({ componentName, isVisible }: { componentName: s
   if (!Component) {
     return (
       <div className="w-full h-full flex items-center justify-center text-white/50">
-        Component "{componentName}" not found
+        Component &quot;{componentName}&quot; not found
       </div>
     );
   }
@@ -407,6 +408,7 @@ export const TSXWrapper = memo(({ componentName, isVisible }: { componentName: s
     </div>
   );
 });
+TSXWrapper.displayName = "TSXWrapper";
 
 // Custom Cursor Component
 export const CustomCursor = ({ accentColor }: { accentColor: string }) => {
@@ -514,3 +516,4 @@ export const HeroLoaderOverlay = memo(({ visible, message, accentColor }: { visi
     </div>
   </div>
 ));
+HeroLoaderOverlay.displayName = "HeroLoaderOverlay";

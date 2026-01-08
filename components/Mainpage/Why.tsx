@@ -65,7 +65,7 @@ export function Why() {
                <p className="text-bmPurple text-sm md:text-base text-center mt-3 max-w-2xl mx-auto">
        Welcome to BullMoney the VIP trading community designed for traders who want to learn, grow, and thrive in the financial markets.
         Unlike other trading communities/platforms,BullMoney is not your typical trading group. We combine live streams, mentorship, and a 
-       supportive community to create a learning environment where you can develop as a trader. Here's what makes us stand out from the crowd
+       supportive community to create a learning environment where you can develop as a trader. Here&apos;s what makes us stand out from the crowd
      </p>
      <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-purple-500 dark:text-neutral-400">
                  Exclusive Trading Community on Telegram & Discord

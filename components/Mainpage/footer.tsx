@@ -694,7 +694,7 @@ export function Footer() {
             </div>
 
             <p className="italic text-neutral-500 text-xs text-center px-4">
-              By clicking "I Agree & Understand" below, you legally confirm that you have read, understood, and accepted full responsibility for your actions on this platform.
+              By clicking &quot;I Agree &amp; Understand&quot; below, you legally confirm that you have read, understood, and accepted full responsibility for your actions on this platform.
             </p>
           </div>
 

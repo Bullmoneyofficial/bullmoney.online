@@ -79,6 +79,7 @@ const CardSpotlight = memo<CardSpotlightProps>(({ className, children }) => {
     </motion.div>
   );
 });
+CardSpotlight.displayName = "CardSpotlight";
 
 const Step = ({ title }: { title: string | React.ReactNode }) => {
   return (
@@ -199,6 +200,7 @@ const RankEvervaultCard = memo(({ totalReferrals }: { totalReferrals: number }) 
     </div>
   );
 });
+RankEvervaultCard.displayName = "RankEvervaultCard";
 
 // --- TASK EVERVAULT CARD ---
 const TaskEvervaultCard = memo(({ title, completed }: { title: string, completed: boolean }) => {
@@ -270,6 +272,7 @@ const TaskEvervaultCard = memo(({ title, completed }: { title: string, completed
     </div>
   );
 });
+TaskEvervaultCard.displayName = "TaskEvervaultCard";
 
 const IncentiveTaskGrid = memo(({ tasks }: { tasks: AffiliateData['tasks'] }) => {
   const taskList = [
@@ -291,6 +294,7 @@ const IncentiveTaskGrid = memo(({ tasks }: { tasks: AffiliateData['tasks'] }) =>
     </div>
   );
 });
+IncentiveTaskGrid.displayName = "IncentiveTaskGrid";
 
 // --- MAIN DASHBOARD VIEW ---
 const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => void }> = ({ onClose, onUnlock: _onUnlock }) => {

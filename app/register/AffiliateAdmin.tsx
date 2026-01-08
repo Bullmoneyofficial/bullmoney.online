@@ -507,7 +507,7 @@ function AdminDashboard() {
         ) : filteredAffiliates.length === 0 ? (
           <div className="text-center py-20 text-slate-600">
             <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>No affiliates found matching "{searchTerm}"</p>
+            <p>No affiliates found matching &quot;{searchTerm}&quot;</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -274,7 +274,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                    <button type="submit" disabled={!loginEmail || !loginPassword} className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-lg disabled:opacity-50">LOGIN</button>
                 </form>
                 <div className="mt-6 text-center border-t border-white/5 pt-4">
-                  <button onClick={() => { setViewMode('register'); setStep(1); }} className="text-sm text-slate-500 hover:text-white">Don't have an account? <span className="underline">Register</span></button>
+                  <button onClick={() => { setViewMode('register'); setStep(1); }} className="text-sm text-slate-500 hover:text-white">Don&apos;t have an account? <span className="underline">Register</span></button>
                 </div>
              </div>
           </motion.div>
@@ -366,6 +366,7 @@ const StepCard = memo(({ number, title, children, className }: any) => (
     <div className="flex-1">{children}</div>
   </div>
 ));
+StepCard.displayName = "StepCard";
 
 function IconPlusCorners() {
   return <><Plus className="absolute h-4 w-4 -top-2 -left-2 text-white/70" /><Plus className="absolute h-4 w-4 -bottom-2 -left-2 text-white/70" /><Plus className="absolute h-4 w-4 -top-2 -right-2 text-white/70" /><Plus className="absolute h-4 w-4 -bottom-2 -right-2 text-white/70" /></>;
@@ -384,6 +385,7 @@ export const EvervaultCard = memo(({ text }: { text?: string }) => {
   }
   return <div className="w-full h-full flex items-center justify-center" onMouseMove={onMouseMove}><div className="group/card w-full h-full relative overflow-hidden flex items-center justify-center"><Pattern mouseX={mouseX} mouseY={mouseY} str={str} color="bg-gradient-to-r from-green-500 to-blue-700" /><span className="relative z-20 font-extrabold text-3xl text-white">{text}</span></div></div>;
 });
+EvervaultCard.displayName = "EvervaultCard";
 
 export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
   const mouseX = useMotionValue(0);
@@ -397,6 +399,7 @@ export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
   }
   return <div className="w-full h-full flex items-center justify-center" onMouseMove={onMouseMove}><div className="group/card w-full h-full relative overflow-hidden flex items-center justify-center"><Pattern mouseX={mouseX} mouseY={mouseY} str={str} color="bg-gradient-to-r from-purple-500 to-violet-600" /><span className="relative z-20 font-extrabold text-3xl text-white">{text}</span></div></div>;
 });
+EvervaultCardRed.displayName = "EvervaultCardRed";
 
 function Pattern({ mouseX, mouseY, str, color }: any) {
   const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;

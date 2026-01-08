@@ -25,7 +25,7 @@ export function PerformancePrompt({
   onChoose,
 }: PerformancePromptProps) {
   const [countdown, setCountdown] = useState(8);
-  const primaryBlue = '#3b82f6';
+  const primaryBlue = accentColor || '#3b82f6';
 
   useEffect(() => {
     if (!isVisible) {

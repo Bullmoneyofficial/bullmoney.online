@@ -144,7 +144,7 @@ export function TestimonialsCarousel() {
                 <p className="text-lg font-semibold">{currentTestimonial.name}</p>
               </div>
               <p className="text-sm text-neutral-200 italic leading-relaxed">
-                "{currentTestimonial.text}"
+                &ldquo;{currentTestimonial.text}&rdquo;
               </p>
             </div>
           </motion.div>

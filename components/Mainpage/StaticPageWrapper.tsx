@@ -90,6 +90,16 @@ export const StaticPageWrapper = memo<StaticPageWrapperProps>(({
     shouldAnimate ? [0.95, 1, 1, 0.95] : [1, 1, 1, 1]
   );
 
+  const scrollGradient = useTransform(
+    smoothProgress,
+    [0, 0.5, 1],
+    [
+      'radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
+      'radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
+      'radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
+    ]
+  );
+
   // Get animation variants based on type
   const getAnimationVariants = () => {
     if (prefersReducedMotion || animationType === 'none') {
@@ -146,15 +156,7 @@ export const StaticPageWrapper = memo<StaticPageWrapperProps>(({
         <motion.div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: useTransform(
-              smoothProgress,
-              [0, 0.5, 1],
-              [
-                'radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
-                'radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
-                'radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
-              ]
-            ) as any,
+            background: scrollGradient as any,
           }}
         />
       )}

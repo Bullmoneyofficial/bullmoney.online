@@ -138,7 +138,7 @@ export default function App() {
                 </span>
               </h1>
               <p className="mt-3 text-base text-slate-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                Experience the new aesthetic support button in the bottom right. It features a continuous "shimmer" animation, a neon glow effect, and a premium glassmorphic tooltip.
+                Experience the new aesthetic support button in the bottom right. It features a continuous &quot;shimmer&quot; animation, a neon glow effect, and a premium glassmorphic tooltip.
               </p>
               <div className="mt-8 sm:flex sm:justify-start">
                 <div className="rounded-full shadow-lg shadow-blue-500/30">

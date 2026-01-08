@@ -272,6 +272,19 @@ export const GLOBAL_STYLES = `
       transform: translateZ(0);
     }
 
+    /* Keep fixed elements pinned to the viewport on mobile Safari */
+    html, body, #__next {
+      -webkit-transform: none !important;
+      transform: none !important;
+      will-change: auto;
+    }
+
+    .fixed, .sticky {
+      -webkit-transform: none !important;
+      transform: none !important;
+      will-change: auto;
+    }
+
     /* Optimize heavy animations for mobile - slower = smoother */
     .shining-border::before {
       animation-duration: 6s !important;

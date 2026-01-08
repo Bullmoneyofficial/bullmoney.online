@@ -292,6 +292,7 @@ const TargetCursorComponent = memo(({
     </div>
   );
 });
+TargetCursorComponent.displayName = "TargetCursorComponent";
 
 const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { 
   ssr: false 
@@ -636,7 +637,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             </div>
           </div>
           
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">You're In 🚀</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">You&apos;re In 🚀</h2>
           <p className="text-slate-400 mb-8 text-sm md:text-base">
             Your VIP BullMoney access is now active.<br/>
           </p>
@@ -790,7 +791,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
                 <div className="mt-6 text-center border-t border-white/5 pt-4">
                   <button onClick={toggleViewMode} className="text-sm text-slate-500 hover:text-white transition-colors cursor-target">
-                    Don't have a password? <span className="underline">Register Now</span>
+                    Don&apos;t have a password? <span className="underline">Register Now</span>
                   </button>
                 </div>
              </div>
@@ -1068,7 +1069,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target text-base"
                           />
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-1 ml-1">We'll send your login details here.</p>
+                        <p className="text-[10px] text-slate-500 mt-1 ml-1">We&apos;ll send your login details here.</p>
                       </div>
 
                       <div>
@@ -1106,7 +1107,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target text-base"
                           />
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-1 ml-1">Leave blank if you don't have one.</p>
+                        <p className="text-[10px] text-slate-500 mt-1 ml-1">Leave blank if you don&apos;t have one.</p>
                       </div>
 
                         <div 
@@ -1181,6 +1182,7 @@ const StepCard = memo(({ number, number2, title, children, actions, className }:
     </div>
   );
 });
+StepCard.displayName = "StepCard";
 
 function IconPlusCorners() {
   return (
@@ -1228,6 +1230,7 @@ export const EvervaultCard = memo(({ text }: { text?: string }) => {
     </div>
   );
 });
+EvervaultCard.displayName = "EvervaultCard";
 
 function CardPattern({ mouseX, mouseY, randomString }: any) {
   const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
@@ -1268,6 +1271,7 @@ export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
     </div>
   );
 });
+EvervaultCardRed.displayName = "EvervaultCardRed";
 
 function CardPatternRed({ mouseX, mouseY, randomString }: any) {
   const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
