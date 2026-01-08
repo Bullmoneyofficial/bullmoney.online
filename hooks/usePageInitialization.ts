@@ -82,43 +82,48 @@ export function usePageInitialization({
     const shouldSafeMode = isIOS || isInApp || prefersReducedData;
     setIsSafeMode(shouldSafeMode);
 
-    // Determine Spline preference with cleaner logic
+    // FIXED: Unified spline preference for mobile and desktop
+    // Only disable if user explicitly wants reduced motion (accessibility)
+    // Network quality affects rendering quality, not availability
     const savedSplinePref = devicePrefs.get('spline_enabled');
     const hasSavedPreference = savedSplinePref !== null && savedSplinePref !== undefined;
+
+    console.log('[Init] 🔍 Spline initialization check', {
+      savedSplinePref,
+      hasSavedPreference,
+      deviceProfile: {
+        isMobile: deviceProfile.isMobile,
+        isHighEndDevice: deviceProfile.isHighEndDevice,
+        prefersReducedMotion: deviceProfile.prefersReducedMotion,
+        prefersReducedData: deviceProfile.prefersReducedData,
+        connectionType: effectiveType
+      }
+    });
 
     if (hasSavedPreference) {
       // User has made a choice - respect it
       const splineEnabled = savedSplinePref === true || savedSplinePref === 'true';
       setDisableSpline(!splineEnabled);
+      console.log('[Init] ✅ Loaded saved Spline preference:', splineEnabled ? 'ENABLED' : 'DISABLED');
     } else {
-      // First time - use intelligent defaults based on device profile
-      const shouldEnableSpline =
-        deviceProfile.isHighEndDevice &&
-        !deviceProfile.prefersReducedMotion &&
-        !deviceProfile.prefersReducedData &&
-        !shouldSafeMode;
+      // FIXED: Default to ENABLED for ALL devices with WebGL support
+      // Only disable for accessibility (reduced motion preference)
+      // Quality degradation and memory manager handle device limitations
+      const shouldDisableByDefault = deviceProfile.prefersReducedMotion;
 
-      setDisableSpline(!shouldEnableSpline);
-      devicePrefs.set('spline_enabled', shouldEnableSpline ? 'true' : 'false');
+      setDisableSpline(shouldDisableByDefault);
+      devicePrefs.set('spline_enabled', shouldDisableByDefault ? 'false' : 'true');
 
-      console.log('[Init] First visit - Spline preference set to:', shouldEnableSpline ? 'enabled' : 'disabled', {
+      console.log('[Init] 🚀 First visit - Splines', shouldDisableByDefault ? '❌ DISABLED (reduced motion)' : '✅ ENABLED (default)', {
+        device: deviceProfile.isMobile ? 'mobile' : 'desktop',
         isHighEnd: deviceProfile.isHighEndDevice,
-        isMobile: deviceProfile.isMobile,
         reducedMotion: deviceProfile.prefersReducedMotion,
-        reducedData: deviceProfile.prefersReducedData,
-        safeMode: shouldSafeMode
+        connectionType: effectiveType,
+        note: shouldDisableByDefault ? 'Respecting accessibility preference' : 'Quality will auto-adjust for device'
       });
 
-      // Show performance prompt for first-time users after intro completes
-      // Only show if device is capable of 3D but user might prefer speed mode
-      if (setShowPerfPrompt && deviceProfile.isHighEndDevice) {
-        setTimeout(() => {
-          const currentStage = userStorage.get('bm_intro_seen');
-          if (currentStage === 'true') {
-            setShowPerfPrompt(true);
-          }
-        }, 2000); // Show 2 seconds after content loads
-      }
+      // REMOVED: Performance prompt - no longer needed with auto-quality
+      // Users can toggle via performance button if they have issues
     }
 
     // Check for reduced motion preference

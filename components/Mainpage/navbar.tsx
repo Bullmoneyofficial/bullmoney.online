@@ -933,17 +933,31 @@ const HelperTip = ({ item, isMobile = false, accentColor }: { item: NavItem, isM
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, y: -5, scale: 0.8 }}
     transition={{ type: "spring", stiffness: 400, damping: 25 }}
-    className={`absolute ${isMobile ? 'top-[36px]' : 'top-full mt-2'} left-1/2 -translate-x-1/2 z-[60] flex flex-col items-center pointer-events-none`}
+    className={`${isMobile ? 'fixed' : 'absolute'} ${
+      isMobile
+        ? 'top-[calc(env(safe-area-inset-top,0px)+9rem)]'
+        : 'top-full mt-2'
+    } ${
+      isMobile
+        ? 'left-1/2 -translate-x-1/2'
+        : 'left-1/2 -translate-x-1/2'
+    } ${
+      isMobile ? 'z-[999999]' : 'z-[60]'
+    } flex flex-col items-center pointer-events-none`}
+    style={isMobile ? {
+      position: 'fixed',
+      maxWidth: 'calc(100vw - 32px)',
+    } : undefined}
   >
     <div className="w-2 h-2 bg-neutral-900 dark:bg-white rotate-45 translate-y-[4px] relative z-10 border-t border-l border-transparent" />
-    <div className="relative p-[1.5px] overflow-hidden rounded-full shadow-lg">
-        <motion.div 
+    <div className="relative p-[1.5px] overflow-hidden rounded-full shadow-2xl">
+        <motion.div
             className="absolute inset-[-100%]"
             animate={{ rotate: 360 }}
             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
             style={{ background: getShimmerGradient(accentColor) }}
         />
-        <div className="relative z-10 px-2.5 py-0.5 bg-neutral-900 dark:bg-white rounded-full flex items-center justify-center">
+        <div className="relative z-10 px-2.5 py-0.5 bg-neutral-900 dark:bg-white rounded-full flex items-center justify-center shadow-2xl">
             <span className="text-white dark:text-neutral-900 text-[9px] font-bold whitespace-nowrap">
                 Click {item.name}
             </span>

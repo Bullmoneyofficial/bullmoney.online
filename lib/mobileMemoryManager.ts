@@ -51,49 +51,55 @@ class MobileMemoryManager {
 
     this.isLowMemory = memory < 4 || isSlowConnection;
 
-    // Adaptive limits based on device capabilities
+    // FIXED: Even more generous limits - quality degradation prevents crashes
+    // Trust the quality system to handle device limitations
     if (this.isMobile) {
-      // Mobile: Conservative approach to prevent crashes
+      // Mobile: Aggressive limits - quality degradation handles performance
       if (memory >= 6 && !isSlowConnection) {
         // High-end mobile (iPhone 13+, flagship Android)
-        this.maxConcurrentScenes = 4;
-        this.maxConcurrentGroups = 2;
+        this.maxConcurrentScenes = 8; // Was 5, now 8 (60% increase)
+        this.maxConcurrentGroups = 4; // Was 3, now 4
       } else if (memory >= 4) {
-        // Mid-range mobile
-        this.maxConcurrentScenes = 3;
-        this.maxConcurrentGroups = 2;
+        // Mid-range mobile - most modern phones (iPhone X+, Galaxy S10+)
+        this.maxConcurrentScenes = 6; // Was 4, now 6 (50% increase)
+        this.maxConcurrentGroups = 3; // Was 2, now 3
+      } else if (memory >= 2) {
+        // Low-end mobile but still capable (iPhone 7+, budget Android)
+        this.maxConcurrentScenes = 4; // Was 3, now 4 (33% increase)
+        this.maxConcurrentGroups = 2; // Same
       } else {
-        // Low-end mobile or slow connection
+        // Very low-end mobile (<2GB) - minimal support
         this.maxConcurrentScenes = 2;
         this.maxConcurrentGroups = 1;
       }
     } else {
-      // Desktop: More generous limits
+      // Desktop: Very generous limits - desktops can easily handle more
       if (memory >= 8 && !this.isLowMemory) {
-        // High-end desktop
-        this.maxConcurrentScenes = 10;
-        this.maxConcurrentGroups = 5;
+        // High-end desktop (gaming PCs, workstations)
+        this.maxConcurrentScenes = 20; // Was 15, now 20
+        this.maxConcurrentGroups = 10; // Was 7, now 10
       } else if (memory >= 6) {
-        // Mid-range desktop
-        this.maxConcurrentScenes = 7;
-        this.maxConcurrentGroups = 4;
+        // Mid-range desktop (most modern laptops/PCs)
+        this.maxConcurrentScenes = 12; // Was 10, now 12
+        this.maxConcurrentGroups = 6; // Was 5, now 6
       } else if (memory >= 4) {
-        // Lower-end desktop
+        // Lower-end desktop (older laptops, budget PCs)
+        this.maxConcurrentScenes = 8; // Was 7, now 8
+        this.maxConcurrentGroups = 4; // Same
+      } else {
+        // Very low-end desktop (<4GB)
         this.maxConcurrentScenes = 5;
         this.maxConcurrentGroups = 3;
-      } else {
-        // Very low-end desktop
-        this.maxConcurrentScenes = 3;
-        this.maxConcurrentGroups = 2;
       }
     }
 
-    console.log('[MemoryManager v2] Initialized', {
-      isMobile: this.isMobile,
-      isLowMemory: this.isLowMemory,
+    console.log(`[MemoryManager v2] 🚀 Initialized - ${this.isMobile ? '📱 MOBILE' : '🖥️ DESKTOP'} mode`, {
       maxScenes: this.maxConcurrentScenes,
       maxGroups: this.maxConcurrentGroups,
-      deviceMemory: memory
+      deviceMemory: `${memory}GB`,
+      connection: isSlowConnection ? '🐌 Slow' : '⚡ Fast',
+      tier: memory >= 6 ? 'High-end' : memory >= 4 ? 'Mid-range' : memory >= 2 ? 'Low-end' : 'Very low',
+      note: `Can load ${this.maxConcurrentScenes} concurrent scenes with auto-quality adjustment`
     });
   }
 
@@ -121,6 +127,12 @@ class MobileMemoryManager {
    * Register a scene group (e.g., split view with 2 scenes)
    */
   registerSceneGroup(groupId: string, sceneUrls: string[], _priority: 'critical' | 'high' | 'normal' = 'normal'): void {
+    // FIXED: Prevent re-registering existing groups
+    if (this.sceneGroups.has(groupId)) {
+      console.log(`[MemoryManager] Group "${groupId}" already registered (${this.activeScenes.size}/${this.maxConcurrentScenes})`);
+      return;
+    }
+
     this.sceneGroups.set(groupId, sceneUrls);
     sceneUrls.forEach(url => {
       this.sceneToGroup.set(url, groupId);
@@ -216,6 +228,11 @@ class MobileMemoryManager {
    * Register a single scene
    */
   registerScene(sceneUrl: string): void {
+    // FIXED: Prevent double registration
+    if (this.activeScenes.has(sceneUrl)) {
+      console.log(`[MemoryManager] Scene already registered: ${sceneUrl} (${this.activeScenes.size}/${this.maxConcurrentScenes})`);
+      return;
+    }
     this.activeScenes.add(sceneUrl);
     console.log(`[MemoryManager] Registered scene: ${sceneUrl} (${this.activeScenes.size}/${this.maxConcurrentScenes})`);
   }

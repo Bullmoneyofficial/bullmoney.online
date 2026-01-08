@@ -25,6 +25,11 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
   const [showInitialHint, setShowInitialHint] = useState(showHint);
   const [pulse, setPulse] = useState(true);
   const tooltipOffsetX = dockSide === 'left' ? -10 : 10;
+  const horizontalInset = 'calc(env(safe-area-inset-left, 0px) + 22px)';
+  const horizontalInsetRight = 'calc(env(safe-area-inset-right, 0px) + 22px)';
+  const topOffset = dockSide === 'left'
+    ? 'calc(50vh - 120px + env(safe-area-inset-top, 0px))'
+    : 'calc(50vh - 120px + env(safe-area-inset-top, 0px))';
 
   useEffect(() => {
     if (showHint) {
@@ -59,107 +64,70 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
       className="fixed z-[10000] pointer-events-auto"
       style={{
         ...(dockSide === 'left'
-          ? { left: 'calc(env(safe-area-inset-left, 0px) + 22px)' }
-          : { right: 'max(1rem, calc(1rem + env(safe-area-inset-right, 0px)))' }),
-        top: dockSide === 'left'
-          ? 'calc(50vh - 120px + env(safe-area-inset-top, 0px))'
-          : 'calc(50vh - 220px + env(safe-area-inset-top, 0px))',
+          ? { left: horizontalInset }
+          : { right: horizontalInsetRight }),
+        top: topOffset,
       }}
     >
-      <motion.button
-        onClick={handleClick}
-        onMouseEnter={() => {
-          setIsHovering(true);
-          setShowInitialHint(false);
-        }}
-        onMouseLeave={() => setIsHovering(false)}
-        onTouchStart={(e) => {
-          setShowInitialHint(false);
-          e.currentTarget.style.transform = 'scale(0.9)';
-        }}
-        onTouchEnd={(e) => {
-          e.currentTarget.style.transform = '';
-        }}
-        className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden shadow-2xl hover:scale-110 active:scale-95 transition-all touch-manipulation group"
-        style={{
-          WebkitTapHighlightColor: 'transparent',
-        }}
+      <motion.div
         animate={{
-          scale: pulse ? [1, 1.1, 1] : (isOpen ? 1.05 : 1),
+          boxShadow: pulse || isOpen
+            ? `0 0 25px ${accentColor}60, 0 0 40px ${accentColor}30`
+            : `0 0 15px ${accentColor}50`
         }}
-        transition={{
-          duration: 0.8,
-          repeat: pulse ? Infinity : 0,
-          ease: "easeInOut"
-        }}
+        transition={{ duration: 1.5, repeat: pulse || isOpen ? Infinity : 0, ease: "easeInOut" }}
+        className="relative flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full border border-white/20 bg-black/80 shadow-2xl overflow-hidden"
       >
-        {/* Rotating Gradient Background */}
-        <motion.div
-          className="absolute inset-0"
-          animate={{ rotate: 360 }}
-          transition={{ duration: isOpen ? 2 : 4, repeat: Infinity, ease: "linear" }}
-          style={{
-            background: `conic-gradient(from 0deg, ${accentColor}, ${isOpen ? accentColor : '#ffffff'}, ${accentColor})`,
+        <motion.button
+          onTap={handleClick}
+          onMouseEnter={() => {
+            setIsHovering(true);
+            setShowInitialHint(false);
           }}
-        />
-
-        {/* Inner Circle */}
-        <div className="absolute inset-[2px] rounded-full bg-black/90 backdrop-blur-xl flex items-center justify-center">
+          onMouseLeave={() => setIsHovering(false)}
+          onTouchStart={(e) => {
+            setShowInitialHint(false);
+            e.currentTarget.style.transform = 'scale(0.9)';
+          }}
+          onTouchEnd={(e) => {
+            e.currentTarget.style.transform = '';
+          }}
+          className="relative w-full h-full flex items-center justify-center outline-none z-10 rounded-full overflow-hidden"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
+        >
           <motion.div
-            animate={{
-              rotate: isOpen ? 180 : 0,
+            className="absolute inset-0"
+            animate={{ rotate: isOpen ? 0 : 360 }}
+            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            style={{
+              background: `conic-gradient(from 0deg, ${accentColor}, ${accentColor}, ${accentColor})`
             }}
-            transition={{
-              duration: 0.3,
-              ease: "easeInOut"
-            }}
-          >
-            <Sparkles
-              size={20}
-              className="sm:w-6 sm:h-6"
-              style={{ color: accentColor }}
-            />
-          </motion.div>
-
-          {/* Pulsing Ring when 3D is off or menu is open */}
-          {(disableSpline || isOpen) && (
+          />
+          <div className="absolute inset-[3px] rounded-full bg-black/90 flex items-center justify-center">
             <motion.div
-              className="absolute inset-0 rounded-full border-2"
-              style={{ borderColor: accentColor }}
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.5, 0, 0.5],
-              }}
-              transition={{
-                duration: isOpen ? 1.5 : 2,
-                repeat: Infinity,
-                ease: "easeOut"
-              }}
-            />
-          )}
-        </div>
+              animate={{ rotate: isOpen ? 180 : 0 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            >
+              <Sparkles
+                size={20}
+                className="sm:w-6 sm:h-6"
+                style={{ color: accentColor }}
+              />
+            </motion.div>
+          </div>
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            animate={{
+              boxShadow: isOpen
+                ? `0 0 18px ${accentColor}60, 0 0 40px ${accentColor}40`
+                : `0 0 25px ${accentColor}40`
+            }}
+            transition={{ duration: 1.5, repeat: pulse || isOpen ? Infinity : 0, ease: "easeInOut" }}
+          />
+        </motion.button>
+      </motion.div>
 
-        {/* Glow Effect */}
-        <motion.div
-          className="absolute inset-0 rounded-full"
-          animate={{
-            boxShadow: pulse || isOpen
-              ? [
-                  `0 0 20px ${accentColor}60`,
-                  `0 0 ${isOpen ? '50px' : '35px'} ${accentColor}${isOpen ? '90' : '80'}`,
-                  `0 0 20px ${accentColor}60`,
-                ]
-              : `0 0 ${isHovering ? '40px' : '20px'} ${accentColor}${isHovering ? '80' : '60'}`,
-          }}
-          transition={{
-            duration: isOpen ? 1.5 : 2,
-            repeat: (pulse || isOpen) ? Infinity : 0,
-            ease: "easeInOut"
-          }}
-        />
-      </motion.button>
-
-      {/* Tooltip / Hint */}
+      {/* Tooltip / Hint - FIXED: Now overlays as fixed element */}
       <AnimatePresence>
         {(isHovering || showInitialHint) && !isOpen && (
           <motion.div
@@ -167,9 +135,14 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: tooltipOffsetX, scale: 0.9 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className={`absolute top-1/2 -translate-y-1/2 pointer-events-none whitespace-nowrap ${
-              dockSide === 'left' ? 'left-full ml-3' : 'right-full mr-3'
-            }`}
+            className="fixed pointer-events-none whitespace-nowrap z-[10001]"
+            style={{
+              left: dockSide === 'left' ? `calc(env(safe-area-inset-left, 0px) + 92px)` : 'auto',
+              right: dockSide === 'right' ? `calc(env(safe-area-inset-right, 0px) + 92px)` : 'auto',
+              top: topOffset,
+              transform: 'translateY(-50%)',
+              maxWidth: 'calc(100vw - 150px)',
+            }}
           >
             <div className="relative">
               {/* Arrow */}

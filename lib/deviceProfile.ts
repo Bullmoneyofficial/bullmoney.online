@@ -50,9 +50,6 @@ const buildProfile = (): DeviceProfile => {
     ('standalone' in navigator && !!(navigator as any).standalone);
   const isWebView = IN_APP_BROWSER_REGEX.test(ua) || ('standalone' in navigator && !!(navigator as any).standalone);
 
-  // Enhanced high-end detection: Consider GPU, screen resolution, and device capabilities
-  const hasModernBrowser = 'IntersectionObserver' in window && 'requestIdleCallback' in window;
-
   // Check for WebGL support (critical for 3D)
   const hasWebGL = (() => {
     try {
@@ -63,19 +60,41 @@ const buildProfile = (): DeviceProfile => {
     }
   })();
 
-  // More intelligent high-end device detection
-  // Desktop: reasonable specs + WebGL
-  // Mobile: high memory + modern features + good connection
+  // FIXED: Ultra-inclusive device detection - quality degradation handles limitations
+  // Philosophy: If device has WebGL, it can render 3D (quality will auto-adjust)
   const isHighEndDevice = (() => {
-    if (!hasWebGL || !hasModernBrowser) return false;
+    // Must have WebGL - without it, can't render 3D at all
+    if (!hasWebGL) {
+      console.log('[DeviceProfile] ❌ No WebGL support - 3D disabled');
+      return false;
+    }
 
     if (!isMobile) {
-      // Desktop: require at least 4GB RAM and 2+ cores
-      return memory >= 4 && cores >= 2;
+      // Desktop: Very low bar - virtually all desktops can handle it
+      // Even 2GB RAM is enough with quality reduction
+      const canHandle = memory >= 2 && cores >= 2;
+      console.log('[DeviceProfile] 🖥️ Desktop:', canHandle ? '✅ Supported' : '⚠️ Low-spec', {
+        memory: `${memory}GB`,
+        cores
+      });
+      return canHandle;
     } else {
-      // Mobile: require 4GB+ RAM, 4+ cores, and not on slow connection
-      const isFastConnection = !['slow-2g', '2g'].includes(effectiveType);
-      return memory >= 4 && cores >= 4 && isFastConnection && !supportsReducedData;
+      // Mobile: VERY inclusive - support 3G and up
+      // Only exclude 2G/slow-2G (too slow for any quality level)
+      const isFastEnough = !['slow-2g', '2g'].includes(effectiveType);
+      const hasMinimumRAM = memory >= 2; // Support down to 2GB (iPhone 7+, budget Android)
+
+      // FIXED: Don't require hasModernBrowser on mobile - it's too strict for older iOS
+      // Quality degradation will handle older browsers
+      const canHandle = hasMinimumRAM && isFastEnough;
+
+      console.log('[DeviceProfile] 📱 Mobile:', canHandle ? '✅ Supported' : '❌ Too low', {
+        memory: `${memory}GB`,
+        connection: effectiveType,
+        note: canHandle ? 'Quality will auto-adjust' : 'Need 2GB+ RAM and 3G+ connection'
+      });
+
+      return canHandle;
     }
   })();
 

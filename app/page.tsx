@@ -142,11 +142,15 @@ export default function Home() {
   // Computed values
   // FIXED: Ensure all devices can load 3D splines - no restrictions based on device type
   const prioritizedSplineScenes = useMemo(() => {
-    if (performanceState.disableSpline) return [];
+    if (performanceState.disableSpline) {
+      console.log('[App] Splines disabled via performance toggle');
+      return [];
+    }
     const baseScenes = ["/scene1.splinecode", "/scene.splinecode", "/scene2.splinecode", "/scene3.splinecode", "/scene4.splinecode", "/scene5.splinecode", "/scene6.splinecode"];
     // Mobile: Load all scenes but with memory management
     // Desktop: Load all scenes
     // Low-end devices: Still load all scenes with crash-safe loaders
+    console.log('[App] Splines enabled - will load all scenes with device-optimized quality');
     return baseScenes;
   }, [performanceState.disableSpline]);
 
@@ -240,9 +244,11 @@ export default function Home() {
   // FIXED: Default to high performance (3D enabled) for all devices
   // Users can switch to balanced mode if needed via performance toggle
   const defaultPerfMode = useMemo(() => {
-    // Only use balanced mode if user explicitly prefers reduced data or motion
-    if (deviceProfile.prefersReducedData || deviceProfile.prefersReducedMotion) return 'balanced';
+    // Only use balanced mode if user explicitly prefers reduced data AND is on slow connection
+    if (deviceProfile.prefersReducedMotion) return 'balanced';
+    if (deviceProfile.prefersReducedData && deviceProfile.connectionType === 'slow-2g') return 'balanced';
     // Default to high performance (3D enabled) for all other devices
+    console.log('[App] Default performance mode: high (3D enabled)');
     return 'high';
   }, [deviceProfile]);
 
@@ -305,6 +311,7 @@ export default function Home() {
         volume={musicState.volume}
         safeAreaInlinePadding={safeAreaInlinePadding}
         safeAreaBottom={safeAreaBottom}
+        accentColor={themeState.accentColor}
         onPerformanceToggle={() => performanceState.handlePerformanceToggle(uiState.setPerfToast, themeState.setParticleTrigger)}
         onMusicToggle={musicState.toggleMusic}
         onThemeClick={() => {
@@ -445,10 +452,11 @@ export default function Home() {
 
           {/* FIXED: 3D Hint Icon now serves as the main control center access point */}
           <ThreeDHintIcon
-            onClick={() => uiState.setControlCenterOpen(true)}
+            onClick={() => uiState.setControlCenterOpen((prev) => !prev)}
             accentColor={themeState.accentColor}
             disableSpline={performanceState.disableSpline}
             showHint={!pageState.hasSeenIntro}
+            isOpen={uiState.controlCenterOpen}
             dockSide={isMobileLike ? 'left' : 'right'}
           />
 

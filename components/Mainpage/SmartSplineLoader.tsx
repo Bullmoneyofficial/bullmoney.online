@@ -39,7 +39,7 @@ export const SmartSplineLoader = memo(({
   enableInteraction = true,
   deviceProfile
 }: SmartSplineLoaderProps) => {
-  const [loadState, setLoadState] = useState<'idle' | 'loaded' | 'error'>('idle');
+  const [loadState, setLoadState] = useState<'idle' | 'loading' | 'loaded' | 'error'>('idle');
   const [hasSplineLoaded, setHasSplineLoaded] = useState(false);
   const [cachedBlob, setCachedBlob] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -48,6 +48,7 @@ export const SmartSplineLoader = memo(({
   const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const hasLoadedRef = useRef(false);
+  const isLoadingRef = useRef(false); // FIXED: Prevent concurrent load attempts
   // BUG FIX #2: Track all blob URLs created so we can revoke them on unmount
   const blobUrlsRef = useRef<Set<string>>(new Set());
   const MAX_RETRIES = 3;
@@ -58,8 +59,20 @@ export const SmartSplineLoader = memo(({
 
   // Load from cache or network with smart detection for Safari, Chrome, WebView
   const loadSpline = async () => {
-    if (loadState === 'loaded' || hasLoadedRef.current) return;
+    // FIXED: Prevent concurrent load attempts, but allow retries on error
+    if ((loadState === 'loaded' || hasLoadedRef.current) && loadState !== 'error') {
+      console.log(`[SmartSplineLoader] Skipping duplicate load for ${scene}`);
+      return;
+    }
+
+    if (isLoadingRef.current) {
+      console.log(`[SmartSplineLoader] Load already in progress for ${scene}`);
+      return;
+    }
+
     hasLoadedRef.current = true;
+    isLoadingRef.current = true;
+    setLoadState('loading');
 
     try {
       try {
@@ -72,12 +85,11 @@ export const SmartSplineLoader = memo(({
       const isChrome = /chrome|crios/i.test(ua);
       const isWebViewBrowser = isWebView || /Instagram|FBAN|FBAV|Line|TikTok|Twitter/i.test(ua);
 
-      console.log(`[SmartSplineLoader] Loading ${scene}`, {
-        isSafari,
-        isChrome,
-        isWebViewBrowser,
+      console.log(`[SmartSplineLoader] ${priority === 'critical' ? '⚡ CRITICAL' : '📦'} Loading: ${scene.split('/').pop()}`, {
+        browser: isSafari ? 'Safari' : isChrome ? 'Chrome' : isWebViewBrowser ? 'WebView' : 'Other',
         priority,
-        isMobile
+        device: isMobile ? '📱 Mobile' : '🖥️ Desktop',
+        cached: cachedBlob ? '✅ Yes' : '⏳ Fetching'
       });
 
       // CRITICAL: For first loader (priority=critical), ensure immediate visibility
@@ -139,6 +151,11 @@ export const SmartSplineLoader = memo(({
             } as any);
 
             if (response.ok) {
+              const blob = await response.clone().blob();
+              const blobUrl = URL.createObjectURL(blob);
+              blobUrlsRef.current.add(blobUrl);
+              setCachedBlob(blobUrl);
+
               // For critical scenes, cache immediately (blocking)
               // For others, cache in background
               if (priority === 'critical') {
@@ -149,11 +166,15 @@ export const SmartSplineLoader = memo(({
                   console.warn('[SmartSplineLoader] Failed to cache:', err);
                 });
               }
+            } else {
+              console.error(`[SmartSplineLoader] Failed to fetch scene: ${response.status} ${response.statusText}`);
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
           }
         } catch (cacheError) {
-          console.warn('[SmartSplineLoader] Cache access failed, loading directly:', cacheError);
-          // Fallback: load directly without cache
+          console.warn('[SmartSplineLoader] Cache access failed, will try loading directly from URL:', cacheError);
+          // Don't set error state - let Spline try to load directly from URL
+          // setCachedBlob will remain null and Spline will use the original scene URL
         }
       }
 
@@ -164,6 +185,9 @@ export const SmartSplineLoader = memo(({
       }
     } catch (error) {
       console.error(`[SmartSplineLoader] Load failed (attempt ${retryCount + 1}/${MAX_RETRIES}):`, error);
+
+      // FIXED: Reset loading flag on error
+      isLoadingRef.current = false;
 
       // Retry logic for critical scenes
       if (retryCount < MAX_RETRIES && priority === 'critical') {
@@ -185,14 +209,22 @@ export const SmartSplineLoader = memo(({
   };
 
   useEffect(() => {
-    // Always warm caches / telemetry; never gate loading on "consent".
-    const delay = priority === 'critical' ? 0 : (isWebView ? 200 : 0);
-    const t = window.setTimeout(() => {
-      loadSpline();
-    }, delay);
-    return () => window.clearTimeout(t);
+    // CRITICAL FIX: Remove ALL delays - load immediately on all devices
+    // The memory manager and device profile handle safety, not delays
+    console.log('[SmartSplineLoader] 🔍 useEffect triggered - starting load', {
+      scene: scene.split('/').pop(),
+      priority,
+      isMobile,
+      isWebView,
+      loadState,
+      deviceProfile: deviceProfile ? {
+        isMobile: deviceProfile.isMobile,
+        isHighEndDevice: deviceProfile.isHighEndDevice
+      } : 'undefined'
+    });
+    loadSpline();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene, priority, isWebView]);
+  }, [scene, priority, isWebView, isMobile]);
 
   // BUG FIX #2: Cleanup - revoke ALL blob URLs created during the component's lifetime
   useEffect(() => {
@@ -304,20 +336,94 @@ export const SmartSplineLoader = memo(({
     devicePrefs.set(`spline_consent_${scene}`, true);
     devicePrefs.set(`spline_autoload_${scene}`, true);
 
-    // OPTIMIZATION: Reduce Spline quality on mobile for better performance
-    if (isMobile && spline) {
+    // ENHANCED: Optimize Spline quality based on device capabilities
+    if (spline) {
       try {
-        // Lower rendering quality on mobile
-        if (spline.setQuality) {
-          spline.setQuality(isHighEnd ? 'medium' : 'low');
+        // Detect device performance level
+        const isLowEnd = !isHighEnd && isMobile;
+        const isMidRange = isHighEnd && isMobile;
+        const isDesktop = !isMobile;
+
+        // ENHANCED: Gradual quality degradation based on device tier
+        // Goal: Make it work everywhere, just with different quality levels
+
+        if (isLowEnd) {
+          // Low-end mobile: Ultra-conservative settings
+          console.log('[SmartSplineLoader] ⚡ Low-end device detected - applying performance mode', {
+            deviceMemory: (navigator as any).deviceMemory || 'unknown',
+            tier: 'low-end',
+            quality: 'low',
+            pixelRatio: '1.0x'
+          });
+
+          if (spline.setQuality) spline.setQuality('low');
+          if (spline.setShadowQuality) spline.setShadowQuality('none');
+          if (spline.setPixelRatio) {
+            // Very low pixel ratio for smooth performance
+            spline.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.0));
+          }
+
+          // Disable expensive effects if possible
+          if (spline.setAntialias) spline.setAntialias(false);
+          if (spline.setPostProcessing) spline.setPostProcessing(false);
+          if (spline.setReflections) spline.setReflections(false);
+
+          console.log('[SmartSplineLoader] Applied ultra-performance optimizations');
+
+        } else if (isMidRange) {
+          // Mid-range mobile: Balanced quality
+          console.log('[SmartSplineLoader] 📱 Mid-range device detected - applying balanced mode', {
+            deviceMemory: (navigator as any).deviceMemory || 'unknown',
+            tier: 'mid-range',
+            quality: 'medium',
+            pixelRatio: '1.5x'
+          });
+
+          if (spline.setQuality) spline.setQuality('medium');
+          if (spline.setShadowQuality) spline.setShadowQuality('low');
+          if (spline.setPixelRatio) {
+            // Moderate pixel ratio
+            spline.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+          }
+
+          // Some effects enabled with reduced quality
+          if (spline.setAntialias) spline.setAntialias(true);
+          if (spline.setPostProcessing) spline.setPostProcessing(false);
+
+          console.log('[SmartSplineLoader] Applied balanced optimizations');
+
+        } else if (isDesktop) {
+          // Desktop: High quality
+          console.log('[SmartSplineLoader] 🖥️ Desktop device detected - applying high quality mode', {
+            deviceMemory: (navigator as any).deviceMemory || 'unknown',
+            tier: 'desktop',
+            quality: 'high',
+            pixelRatio: '2.0x'
+          });
+
+          if (spline.setQuality) spline.setQuality('high');
+          if (spline.setShadowQuality) spline.setShadowQuality('high');
+          if (spline.setPixelRatio) {
+            // Full pixel ratio on desktop
+            spline.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.0));
+          }
+
+          // All effects enabled
+          if (spline.setAntialias) spline.setAntialias(true);
+          if (spline.setPostProcessing) spline.setPostProcessing(true);
+
+          console.log('[SmartSplineLoader] Applied high-quality settings');
         }
-        // Reduce shadow quality
-        if (spline.setShadowQuality) {
-          spline.setShadowQuality(isHighEnd ? 'low' : 'none');
-        }
-        console.log('[SmartSplineLoader] Applied mobile optimizations:', isHighEnd ? 'medium' : 'low');
+
+        // Universal optimizations for ALL devices
+        // These are safe and improve performance everywhere
+        if (spline.setFrustumCulling) spline.setFrustumCulling(true);
+        if (spline.setOcclusionCulling) spline.setOcclusionCulling(true);
+
+        console.log('[SmartSplineLoader] ✅ Device-specific optimizations complete');
+
       } catch (e) {
-        console.warn('[SmartSplineLoader] Could not apply mobile optimizations:', e);
+        console.warn('[SmartSplineLoader] Could not apply device optimizations:', e);
       }
     }
   };
@@ -332,6 +438,7 @@ export const SmartSplineLoader = memo(({
     setHasSplineLoaded(false);
     setLoadState('idle');
     hasLoadedRef.current = false;
+    isLoadingRef.current = false; // FIXED: Reset loading flag when scene changes
 
     // BUG FIX #14 & #21: Unregister old scene when scene changes (works on both mobile and desktop now)
     return () => {
@@ -422,9 +529,9 @@ export const SmartSplineLoader = memo(({
 
   // Render Spline with trading-themed loading
   return (
-    <div ref={containerRef} className={`relative w-full h-full ${className}`}>
+    <div ref={containerRef} className={`relative w-full h-full ${className}`} style={{ minHeight: '100%', minWidth: '100%' }}>
       {!hasSplineLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#050814] via-[#0b1226]/80 to-[#04060f] overflow-hidden">
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#050814] via-[#0b1226]/80 to-[#04060f] overflow-hidden z-10">
           {/* Subtle market chart background */}
           <div className="absolute inset-0 opacity-[0.08]">
             <svg className="w-full h-full" viewBox="0 0 400 200">
@@ -582,30 +689,36 @@ export const SmartSplineLoader = memo(({
           </div>
         </div>
       )}
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center w-full h-full">
-            <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
-          </div>
-        }
-      >
-        <Spline
-          scene={cachedBlob || scene}
-          onLoad={handleSplineLoad}
-          onError={handleSplineError}
-          style={{
-            width: '100%',
-            height: '100%',
-            pointerEvents: enableInteraction ? 'auto' : 'none',
-            // OPTIMIZATION: Reduce rendering complexity on mobile
-            ...(isMobile && !isHighEnd ? {
-              imageRendering: 'auto',
-              transform: 'translateZ(0)', // Force GPU acceleration
-              willChange: 'auto' // Prevent excessive layer creation
-            } : {})
-          }}
-        />
-      </Suspense>
+      <div className={`absolute inset-0 w-full h-full ${hasSplineLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center w-full h-full">
+              <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+            </div>
+          }
+        >
+          <Spline
+            scene={cachedBlob || scene}
+            onLoad={handleSplineLoad}
+            onError={handleSplineError}
+            style={{
+              width: '100%',
+              height: '100%',
+              display: 'block',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              pointerEvents: enableInteraction ? 'auto' : 'none',
+              // OPTIMIZATION: Reduce rendering complexity on mobile
+              ...(isMobile && !isHighEnd ? {
+                imageRendering: 'auto',
+                transform: 'translateZ(0)', // Force GPU acceleration
+                willChange: 'auto' // Prevent excessive layer creation
+              } : {})
+            }}
+          />
+        </Suspense>
+      </div>
     </div>
   );
 });

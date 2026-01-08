@@ -18,6 +18,7 @@ interface MobileQuickActionsProps {
   onHelpClick?: () => void;
   safeAreaInlinePadding?: React.CSSProperties;
   safeAreaBottom?: React.CSSProperties['bottom'];
+  accentColor?: string;
 }
 
 export function MobileQuickActions({
@@ -31,16 +32,21 @@ export function MobileQuickActions({
   onHelpClick,
   safeAreaInlinePadding,
   safeAreaBottom,
+  accentColor = '#3b82f6',
 }: MobileQuickActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false); // Track if user has seen it
+  const [isButtonHovering, setIsButtonHovering] = useState(false);
   const constraintsRef = useRef(null);
 
   const showPerformance = typeof onPerformanceToggle === 'function';
   const showMusic = typeof onMusicToggle === 'function';
   const showTheme = typeof onThemeClick === 'function';
   const showHelp = typeof onHelpClick === 'function';
+  // FIXED: Position above the 3D hint button (which is at 50vh - 120px)
+  const stackLeft = 'calc(env(safe-area-inset-left, 0px) + 22px)';
+  const stackTop = 'calc(50vh - 200px + env(safe-area-inset-top, 0px))';
 
   // Keybind listener
   useEffect(() => {
@@ -108,62 +114,83 @@ export function MobileQuickActions({
         onDragStart={() => setIsDragging(true)}
         onDragEnd={() => setTimeout(() => setIsDragging(false), 100)} // Small debounce to prevent accidental clicks
         initial={{ x: 12, y: 0 }}
-        className="fixed left-0 top-1/2 -translate-y-1/2 z-[9999]"
-        style={safeAreaInlinePadding}
+        className="fixed z-[9999]"
+        style={{
+          ...(safeAreaInlinePadding || {}),
+          left: stackLeft,
+          top: stackTop,
+        }}
       >
         <div className="relative flex flex-col items-start gap-2">
           
           {/* Main Toggle Button */}
-          <motion.div 
-            // Blue Glow & Shimmer Animation when closed
-            animate={!isOpen ? {
-              boxShadow: [
-                "0px 0px 0px rgba(59, 130, 246, 0)",
-                "0px 0px 20px rgba(59, 130, 246, 0.5)",
-                "0px 0px 0px rgba(59, 130, 246, 0)"
-              ],
-              transition: { duration: 3, repeat: Infinity }
-            } : {
-              boxShadow: "0px 8px 32px rgba(0,0,0,0.4)"
-            }}
-            className={`
-              relative flex flex-col items-center justify-center p-1 rounded-2xl
-              backdrop-blur-xl border transition-all duration-300 overflow-hidden
-              ${isOpen 
-                ? 'bg-black/90 border-white/20 w-16' 
-                : 'bg-white/10 border-blue-400/30 w-14 h-14'
+          <motion.div
+            animate={!isOpen
+              ? {
+                boxShadow: [
+                  `0 0 0 rgba(59, 130, 246, 0)`,
+                  `0 0 25px ${accentColor}60`,
+                  `0 0 0 rgba(59, 130, 246, 0)`
+                ]
               }
-            `}
+              : {
+                boxShadow: "0px 12px 40px rgba(0,0,0,0.45)"
+              }
+            }
+            transition={{ duration: 1.5, repeat: !isOpen ? Infinity : 0, ease: "easeInOut" }}
+            className={`relative flex flex-col items-center justify-center p-1 rounded-full border transition-all duration-300 overflow-hidden bg-black/80 border-white/20 w-12 h-12 sm:w-14 sm:h-14 shadow-2xl`}
           >
-            {/* Shimmer Effect Overlay (Only when closed) */}
-            {!isOpen && (
-              <motion.div
-                className="absolute inset-0 z-0 bg-gradient-to-tr from-transparent via-blue-400/20 to-transparent"
-                animate={{ x: ['-100%', '100%'] }}
-                transition={{ repeat: Infinity, duration: 2.5, ease: "linear", repeatDelay: 1 }}
-              />
-            )}
-
             {/* Drag Handle */}
             <div className="absolute top-0 inset-x-0 h-4 flex items-center justify-center cursor-grab active:cursor-grabbing opacity-50 z-10">
-               <GripHorizontal size={12} className={isOpen ? "text-white/40" : "text-blue-200"} />
+              <GripHorizontal size={12} className="text-white/40" />
             </div>
 
             {/* Button Icon */}
-            <motion.button 
-              onTap={handleTap} // Use onTap instead of onClick for better touch handling
-              className="mt-2 w-full h-full flex items-center justify-center outline-none z-10 relative"
-            >
-               <motion.div
-                animate={{ rotate: isOpen ? 180 : 0 }}
-                transition={{ type: "spring", stiffness: 200, damping: 15 }}
-               >
-                 {isOpen ? (
-                   <X size={20} className="text-red-400"/>
-                 ) : (
-                   <Settings2 size={22} className="text-white drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]"/>
-                 )}
-               </motion.div>
+              <motion.button
+                onTap={handleTap}
+                onMouseEnter={() => {
+                  setIsButtonHovering(true);
+                  setHasInteracted(true);
+                }}
+                onMouseLeave={() => setIsButtonHovering(false)}
+                onTouchStart={() => {
+                  setIsButtonHovering(true);
+                  setHasInteracted(true);
+                }}
+                onTouchEnd={() => setIsButtonHovering(false)}
+                className="relative w-full h-full flex items-center justify-center outline-none z-10 rounded-full overflow-hidden"
+                type="button"
+                aria-label="Open quick actions"
+              >
+              <motion.div
+                className="absolute inset-0"
+                animate={{ rotate: isOpen ? 0 : 360 }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                style={{
+                  background: `conic-gradient(from 0deg, ${accentColor}, ${accentColor}, ${accentColor})`
+                }}
+              />
+              <div className="absolute inset-[3px] rounded-full bg-black/90 flex items-center justify-center">
+                <motion.div
+                  animate={{ rotate: isOpen ? 180 : 0 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                >
+                  {isOpen ? (
+                    <X size={20} className="text-red-400" />
+                  ) : (
+                    <Settings2 size={22} className="text-white drop-shadow-[0_0_12px_rgba(0,0,0,0.5)]" />
+                  )}
+                </motion.div>
+              </div>
+              <motion.div
+                className="absolute inset-0 rounded-full"
+                animate={{
+                  boxShadow: isOpen
+                    ? `0 0 15px ${accentColor}60, 0 0 35px ${accentColor}40`
+                    : `0 0 20px ${accentColor}60`
+                }}
+                transition={{ duration: 1.5, repeat: isOpen ? Infinity : 0, ease: "easeInOut" }}
+              />
             </motion.button>
 
             {/* Desktop Shortcut Hint */}
@@ -183,17 +210,22 @@ export function MobileQuickActions({
             </AnimatePresence>
           </motion.div>
 
-          {/* Helper / Tip Tooltip */}
+          {/* Helper / Tip Tooltip - FIXED: Now overlays as a fixed element */}
           <AnimatePresence>
-            {!isOpen && !hasInteracted && (
+            {(!isOpen && (isButtonHovering || !hasInteracted)) && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
-                className="absolute left-[4.5rem] top-2 pointer-events-none"
+                className="fixed pointer-events-none z-[10001]"
+                style={{
+                  left: `calc(env(safe-area-inset-left, 0px) + 92px)`,
+                  top: stackTop,
+                  transform: 'translateY(8px)',
+                }}
               >
-                <div className="bg-blue-600/90 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-lg backdrop-blur-md border border-blue-400/50 whitespace-nowrap flex items-center gap-2">
-                  <span>3D / Volume Settings</span>
+                <div className="bg-blue-600/90 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-2xl backdrop-blur-md border border-blue-400/50 whitespace-nowrap flex items-center gap-2">
+                  <span>Quick Settings</span>
                   <div className="w-2 h-2 bg-blue-600/90 absolute -left-1 top-1/2 -translate-y-1/2 rotate-45 border-l border-b border-blue-400/50" />
                 </div>
               </motion.div>
