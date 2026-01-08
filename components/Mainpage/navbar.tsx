@@ -622,6 +622,10 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMu
     <motion.div 
       animate={{ width: "auto" }}
       className="flex flex-col items-end bg-white/95 dark:bg-neutral-950/95 border border-neutral-200 dark:border-white/10 shadow-lg rounded-2xl relative max-w-full"
+      style={{
+        maxWidth: 'min(100vw - 12px, 680px)',
+        marginRight: 'env(safe-area-inset-right, 0px)',
+      }}
     >
       <div className="flex items-center gap-1.5 p-1.5 relative z-20 max-w-full">
          {/* Scroll indicator for mobile nav */}
@@ -636,7 +640,7 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMu
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
               // Adaptive max width based on viewport
-              maxWidth: 'min(calc(100vw - 140px), calc(100vw - 40% - 80px))',
+              maxWidth: 'min(calc(100vw - 32px), 620px)',
             }}
          >
             {/* 1. Loop standard items */}

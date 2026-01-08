@@ -183,6 +183,17 @@ export default function Home() {
   const colorMode = (resolvedTheme === 'light' || resolvedTheme === 'dark') ? resolvedTheme : 'dark';
   const telemetryContextRef = useRef<Record<string, unknown>>({});
   const perfPromptTimeoutRef = useRef<number | null>(null);
+  const [isCompactViewport, setIsCompactViewport] = useState(false);
+
+  const safeAreaInlinePadding = useMemo(
+    () => ({
+      paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 10px)',
+      paddingRight: 'calc(env(safe-area-inset-right, 0px) + 10px)',
+    }),
+    []
+  );
+  const safeAreaRight = 'calc(env(safe-area-inset-right, 0px) + 12px)';
+  const safeAreaBottom = 'calc(env(safe-area-inset-bottom, 0px) + 10px)';
 
   const prioritizedSplineScenes = useMemo(() => {
     if (disableSpline) return [];
@@ -527,6 +538,12 @@ export default function Home() {
     setHasRegistered(hasRegisteredUser);
     setCurrentStage("v2");
 
+    const handleViewportResize = () => {
+      setIsCompactViewport(window.innerWidth < 1100);
+    };
+    handleViewportResize();
+    window.addEventListener('resize', handleViewportResize);
+
     // BUG FIX #3 & #7: Proper cleanup for all event listeners and resources
     return () => {
       // BUG FIX #7: Don't remove global styles - they should persist
@@ -534,6 +551,7 @@ export default function Home() {
 
       // Clean up layout/resize listeners
       window.removeEventListener('resize', checkLayout);
+      window.removeEventListener('resize', handleViewportResize);
 
       // Clean up scroll listeners (only remove once since we only added once)
       scrollElement.removeEventListener('scroll', handleScroll);
@@ -1180,7 +1198,7 @@ export default function Home() {
     };
   }, []);
 
-  const isMobileLike = deviceProfile.isMobile || isTouch;
+  const isMobileLike = deviceProfile.isMobile || isTouch || isCompactViewport;
   const showMobileQuickActions = useMemo(
     () => currentStage === 'content' && isMobileLike && !showConfigurator && !faqOpen && !controlCenterOpen && !showPerfPrompt && !showThemeQuickPick,
     [controlCenterOpen, currentStage, faqOpen, isMobileLike, showConfigurator, showPerfPrompt, showThemeQuickPick]
@@ -1223,7 +1241,13 @@ export default function Home() {
       {showMobileQuickActions && (
         <div
           className="fixed inset-x-0 bottom-0 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+10px)]"
-          style={{ zIndex: UI_LAYERS.NAVBAR + 2, maxWidth: '100vw' }}
+          style={{
+            zIndex: UI_LAYERS.NAVBAR + 2,
+            maxWidth: '100vw',
+            boxSizing: 'border-box',
+            ...safeAreaInlinePadding,
+            paddingBottom: safeAreaBottom,
+          }}
         >
           <div className="max-w-4xl mx-auto rounded-2xl border border-white/10 bg-black/80 backdrop-blur-xl shadow-[0_12px_60px_rgba(0,0,0,0.55)] px-3 py-2 flex items-center gap-2">
             <button
@@ -1979,7 +2003,14 @@ export default function Home() {
 
       {/* --- LAYER 5: NAVBAR WITH CONTROLS --- */}
       {currentStage === 'content' && (
-        <div style={{ zIndex: UI_LAYERS.NAVBAR }}>
+        <div
+          style={{
+            zIndex: UI_LAYERS.NAVBAR,
+            maxWidth: '100vw',
+            boxSizing: 'border-box',
+            ...safeAreaInlinePadding,
+          }}
+        >
           <Navbar
             setShowConfigurator={setShowConfigurator}
             activeThemeId={activeThemeId}
@@ -2042,6 +2073,7 @@ export default function Home() {
         </div>
 
         {/* VERTICAL PAGE SCROLL - Right side scroll UI */}
+        {/* Hide the right rail on compact widths/touch to avoid clipping; keep desktop-only */}
         {!isMobileLike && (
           <VerticalPageScroll
             currentPage={activePage}
@@ -2077,6 +2109,9 @@ export default function Home() {
             touchAction: 'pan-y',
             maxWidth: '100vw',
             maxHeight: '100dvh',
+            paddingLeft: 'env(safe-area-inset-left, 0px)',
+            paddingRight: 'env(safe-area-inset-right, 0px)',
+            scrollbarGutter: 'stable both-edges',
           }}
         >
             

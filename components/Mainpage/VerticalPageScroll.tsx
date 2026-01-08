@@ -250,7 +250,7 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
       ref={containerRef}
       className="fixed right-0 top-1/2 -translate-y-1/2 z-[250] pointer-events-auto group"
       style={{
-        right: 'max(1rem, env(safe-area-inset-right, 0.5rem))',
+        right: 'calc(env(safe-area-inset-right, 0px) + clamp(12px, 3vw, 28px))',
       }}
       onTouchStart={handleHoldStart}
       onMouseDown={handleHoldStart}
