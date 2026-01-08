@@ -421,7 +421,11 @@ function Home() {
           throw new Error('Invalid scene blob received during prefetch');
         }
 
-        scheduleSceneStorageSave(scene, blobForValidation);
+        scheduleSceneStorageSave(scene, blobForValidation, {
+          deviceProfile,
+          priority: 'prefetch',
+          blobSize: blobForValidation.size,
+        });
 
         await cache.put(scene, response);
 

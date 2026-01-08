@@ -135,6 +135,7 @@ export const SmartSplineLoader = memo(({
       }, timeoutDuration);
 
       // OPTIMIZED: Multi-tiered caching strategy for instant hero scene loading
+      const streamSavePriority = priority === 'critical' ? 'hero' : 'standard';
       if ('caches' in window) {
         try {
           // Use priority-specific cache names for better organization
@@ -153,7 +154,11 @@ export const SmartSplineLoader = memo(({
                 blobUrlsRef.current.add(blobUrl);
                 setCachedBlob(blobUrl);
               }
-              scheduleSceneStorageSave(scene, cachedSceneBlob);
+              scheduleSceneStorageSave(scene, cachedSceneBlob, {
+                deviceProfile,
+                priority: streamSavePriority,
+                blobSize: cachedSceneBlob.size,
+              });
 
               if (priority === 'critical') {
                 console.log(`[SmartSplineLoader] ✅ Hero scene loaded from instant cache (${(cachedSceneBlob.size / 1024).toFixed(2)}KB)`);
@@ -187,7 +192,11 @@ export const SmartSplineLoader = memo(({
                 blobUrlsRef.current.add(blobUrl);
                 setCachedBlob(blobUrl);
               }
-              scheduleSceneStorageSave(scene, networkBlob);
+              scheduleSceneStorageSave(scene, networkBlob, {
+                deviceProfile,
+                priority: streamSavePriority,
+                blobSize: networkBlob.size,
+              });
 
               // For critical scenes, cache immediately (blocking)
               // For others, cache in background

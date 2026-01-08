@@ -1,3 +1,5 @@
+import type { DeviceProfile } from '@/lib/deviceProfile';
+
 const DB_NAME = 'bullmoney-spline-scene-store';
 const STORE_NAME = 'sceneBlobs';
 const DB_VERSION = 1;
@@ -11,6 +13,15 @@ type StoredSceneRecord = {
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 const pendingSceneStores = new Set<string>();
+const lowEndSceneCooldowns = new Map<string, number>();
+
+type SceneStorageSaveOptions = {
+  deviceProfile?: DeviceProfile;
+  priority?: 'hero' | 'standard' | 'prefetch';
+  blobSize?: number;
+};
+
+const LOW_END_COOLDOWN_MS = 45_00;
 
 const isSceneStorageSupported = () =>
   typeof window !== 'undefined' && typeof window.indexedDB !== 'undefined';
@@ -96,15 +107,23 @@ const storeSceneBlobInternal = async (scene: string, blob: Blob) => {
   }
 };
 
-const scheduleIdleTask = (task: () => Promise<void> | void) => {
+const scheduleIdleTask = (task: () => Promise<void> | void, delayMs = 1200) => {
   const runner = () => Promise.resolve(task()).catch((error) => {
     console.warn('[SceneStorage] idle task failed', error);
   });
 
+  const scheduleRun = () => {
+    if (delayMs > 0) {
+      setTimeout(runner, delayMs);
+    } else {
+      runner();
+    }
+  };
+
   if (typeof window !== 'undefined' && typeof (window as any).requestIdleCallback === 'function') {
-    (window as any).requestIdleCallback(runner, { timeout: 3000 });
+    (window as any).requestIdleCallback(scheduleRun, { timeout: delayMs });
   } else {
-    setTimeout(runner, 1200);
+    scheduleRun();
   }
 };
 
@@ -129,8 +148,10 @@ export const getStoredSceneBlob = async (scene: string): Promise<Blob | null> =>
   }
 };
 
-export const scheduleSceneStorageSave = (scene: string, blob: Blob) => {
+export const scheduleSceneStorageSave = (scene: string, blob: Blob, options?: SceneStorageSaveOptions) => {
   if (!isSceneStorageSupported()) return;
+  if (!shouldPersistSceneBlob(options)) return;
+  if (shouldThrottleLowEndSave(scene, options)) return;
   if (pendingSceneStores.has(scene)) return;
   pendingSceneStores.add(scene);
 
@@ -145,5 +166,34 @@ export const scheduleSceneStorageSave = (scene: string, blob: Blob) => {
     }
   };
 
-  scheduleIdleTask(run);
+  const isLowEndMobile = options?.deviceProfile?.isMobile && !options?.deviceProfile?.isHighEndDevice;
+  const delayMs = isLowEndMobile ? 2800 : 1200;
+  scheduleIdleTask(run, delayMs);
+};
+
+function shouldPersistSceneBlob(options?: SceneStorageSaveOptions) {
+  if (typeof navigator === 'undefined') return false;
+  const connection = (navigator as any)?.connection;
+  if (connection?.saveData) {
+    console.log('[SceneStorage] Skipping save because Save-Data is enabled');
+    return false;
+  }
+  if (options?.deviceProfile?.prefersReducedData) {
+    console.log('[SceneStorage] Skipping save because user requested reduced data');
+    return false;
+  }
+  return true;
+}
+
+function shouldThrottleLowEndSave(scene: string, options?: SceneStorageSaveOptions) {
+  const isLowEndMobile = options?.deviceProfile?.isMobile && !options?.deviceProfile?.isHighEndDevice;
+  if (!isLowEndMobile) return false;
+  if (options?.priority === 'hero') return false;
+  const lastAttempt = lowEndSceneCooldowns.get(scene) || 0;
+  if (Date.now() - lastAttempt < LOW_END_COOLDOWN_MS) {
+    console.log('[SceneStorage] Low-end device - throttled extra saves for', scene);
+    return true;
+  }
+  lowEndSceneCooldowns.set(scene, Date.now());
+  return false;
 };
