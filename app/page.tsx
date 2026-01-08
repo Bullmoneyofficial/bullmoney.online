@@ -290,9 +290,18 @@ function Home() {
     [deviceProfile.connectionType, isMobileLike]
   );
 
+  const canUseMobileSplines = useMemo(
+    () =>
+      deviceProfile.isMobile &&
+      deviceProfile.isHighEndDevice &&
+      !deviceProfile.prefersReducedData &&
+      networkOptimizations.maxScenes > 0,
+    [deviceProfile, networkOptimizations.maxScenes]
+  );
+
   const useMobileStaticContent = useMemo(
-    () => isMobileLike || deviceProfile.prefersReducedData || networkOptimizations.maxScenes === 0,
-    [isMobileLike, deviceProfile.prefersReducedData, networkOptimizations.maxScenes]
+    () => (isMobileLike && !canUseMobileSplines) || deviceProfile.prefersReducedData || networkOptimizations.maxScenes === 0,
+    [isMobileLike, canUseMobileSplines, deviceProfile.prefersReducedData, networkOptimizations.maxScenes]
   );
 
   const effectiveDisableSpline = useMemo(
