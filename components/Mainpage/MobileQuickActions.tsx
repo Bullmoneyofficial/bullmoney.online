@@ -1,118 +1,115 @@
 "use client";
 
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Palette, Volume1, Volume2, VolumeX, Zap } from 'lucide-react';
 import { playClick } from '@/lib/interactionUtils';
+import { UI_LAYERS } from '@/lib/uiLayers';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface MobileQuickActionsProps {
   isVisible: boolean;
-  safeAreaBottom: string;
-  onHelpClick: () => void;
+  disableSpline?: boolean;
+  isPlaying?: boolean;
+  volume?: number;
+  safeAreaInlinePadding?: { paddingLeft: string; paddingRight: string };
+  safeAreaBottom?: string;
+  onPerformanceToggle?: () => void;
+  onMusicToggle?: () => void;
+  onThemeClick?: () => void;
+  onHelpClick?: () => void;
 }
-
-// Helper to generate BULLMONEY-style shimmer gradient
-const getShimmerGradient = (color: string) =>
-  `conic-gradient(from 90deg at 50% 50%, #00000000 0%, ${color} 50%, #00000000 100%)`;
 
 export function MobileQuickActions({
   isVisible,
+  disableSpline = false,
+  isPlaying = false,
+  volume = 0,
+  safeAreaInlinePadding,
   safeAreaBottom,
+  onPerformanceToggle,
+  onMusicToggle,
+  onThemeClick,
   onHelpClick,
 }: MobileQuickActionsProps) {
-  // BULLMONEY blue color scheme
-  const primaryBlue = '#3b82f6';
+  const inlinePadding = safeAreaInlinePadding ?? { paddingLeft: '0px', paddingRight: '0px' };
+  const bottomPadding = safeAreaBottom ?? '0px';
+  const showPerformance = typeof onPerformanceToggle === 'function';
+  const showMusic = typeof onMusicToggle === 'function';
+  const showTheme = typeof onThemeClick === 'function';
+  const showHelp = typeof onHelpClick === 'function';
+
+  const handleAction = (action?: () => void, vibration = 8) => {
+    if (!action) return;
+    playClick();
+    if (navigator.vibrate) navigator.vibrate(vibration);
+    action();
+  };
 
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ y: 100, opacity: 0 }}
+          initial={{ y: 80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="fixed bottom-0 right-0 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pr-3"
+          exit={{ y: 80, opacity: 0 }}
+          transition={{ type: 'spring', damping: 24, stiffness: 280 }}
+          className="fixed inset-x-0 bottom-0 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+10px)]"
           style={{
-            zIndex: 9998,
-            paddingBottom: safeAreaBottom,
+            zIndex: UI_LAYERS.NAVBAR + 2,
+            maxWidth: '100vw',
+            boxSizing: 'border-box',
+            ...inlinePadding,
+            paddingBottom: bottomPadding,
           }}
         >
-          {/* Support Button - Single Glowing Icon */}
-          <motion.button
-            whileTap={{ scale: 0.92 }}
-            whileHover={{ scale: 1.05 }}
-            onClick={() => {
-              playClick();
-              if (navigator.vibrate) navigator.vibrate(12);
-              onHelpClick();
-            }}
-            className="relative flex items-center justify-center rounded-full w-10 h-10 transition-all overflow-hidden group"
-            style={{
-              background: `linear-gradient(135deg, ${primaryBlue}20, ${primaryBlue}08)`,
-              WebkitTapHighlightColor: 'transparent'
-            }}
-            aria-label="Support"
-          >
-            {/* Rotating shimmer effect - BULLMONEY style */}
-            <motion.div
-              className="absolute inset-[-100%]"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
-              style={{ background: getShimmerGradient(primaryBlue) }}
-            />
+          <div className="max-w-4xl mx-auto rounded-2xl border border-white/10 bg-black/80 backdrop-blur-xl shadow-[0_12px_60px_rgba(0,0,0,0.55)] px-3 py-2 flex items-center gap-2">
+            {showPerformance && (
+              <button
+                onClick={() => handleAction(onPerformanceToggle, 10)}
+                className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide active:scale-95 transition-all ${
+                  disableSpline
+                    ? 'bg-gradient-to-r from-orange-500/20 to-amber-500/10 border border-orange-500/30 text-orange-100'
+                    : 'bg-gradient-to-r from-blue-500/20 to-purple-500/10 border border-blue-500/30 text-blue-100'
+                }`}
+                aria-label="Toggle performance mode"
+              >
+                <Zap size={18} className="drop-shadow-[0_0_8px_currentColor]" />
+                <span>{disableSpline ? 'Speed' : '3D'}</span>
+              </button>
+            )}
 
-            {/* Pulsing glow rings */}
-            <motion.div
-              className="absolute inset-0 rounded-full"
-              style={{
-                border: `1.5px solid ${primaryBlue}`,
-                boxShadow: `0 0 15px ${primaryBlue}80`
-              }}
-              animate={{
-                scale: [1, 1.3, 1],
-                opacity: [0.8, 0, 0.8]
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
+            {showMusic && (
+              <button
+                onClick={() => handleAction(onMusicToggle, 8)}
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide active:scale-95 transition-all bg-white/5 border border-white/10 text-white/80"
+                aria-label="Toggle audio"
+              >
+                {isPlaying ? (volume > 50 ? <Volume2 size={18} /> : <Volume1 size={18} />) : <VolumeX size={18} />}
+                <span>{isPlaying ? 'Audio On' : 'Muted'}</span>
+              </button>
+            )}
 
-            <motion.div
-              className="absolute inset-0 rounded-full"
-              style={{
-                border: `1.5px solid ${primaryBlue}`,
-                boxShadow: `0 0 15px ${primaryBlue}80`
-              }}
-              animate={{
-                scale: [1, 1.3, 1],
-                opacity: [0.8, 0, 0.8]
-              }}
-              transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-            />
+            {showTheme && (
+              <button
+                onClick={() => handleAction(onThemeClick, 8)}
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide active:scale-95 transition-all bg-white/5 border border-white/10 text-white/80"
+                aria-label="Open theme switcher"
+              >
+                <Palette size={18} />
+                <span>Theme</span>
+              </button>
+            )}
 
-            <div className="absolute inset-[1.5px] rounded-full bg-black/90 flex items-center justify-center z-10">
-              <MessageCircle
-                size={20}
-                strokeWidth={2.5}
-                className="drop-shadow-[0_0_8px_currentColor]"
-                style={{ color: primaryBlue }}
-              />
-            </div>
-          </motion.button>
-
-          <style jsx>{`
-            @keyframes premium-shimmer {
-              0% { background-position: -200% center; }
-              100% { background-position: 200% center; }
-            }
-
-            @keyframes glow-pulse {
-              0%, 100% { opacity: 0.5; }
-              50% { opacity: 1; }
-            }
-
-            @keyframes pulse {
-              0%, 100% { opacity: 0.2; }
-              50% { opacity: 0.3; }
-            }
-          `}</style>
+            {showHelp && (
+              <button
+                onClick={() => handleAction(onHelpClick, 10)}
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide active:scale-95 transition-all bg-white/5 border border-white/10 text-white/80"
+                aria-label="Open help"
+              >
+                <MessageCircle size={18} />
+                <span>Help</span>
+              </button>
+            )}
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

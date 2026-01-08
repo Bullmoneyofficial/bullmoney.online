@@ -84,11 +84,12 @@ export function usePageInitialization({
 
     // Determine Spline preference with cleaner logic
     const savedSplinePref = devicePrefs.get('spline_enabled');
-    const hasSavedPreference = savedSplinePref !== null;
+    const hasSavedPreference = savedSplinePref !== null && savedSplinePref !== undefined;
 
     if (hasSavedPreference) {
       // User has made a choice - respect it
-      setDisableSpline(savedSplinePref !== 'true');
+      const splineEnabled = savedSplinePref === true || savedSplinePref === 'true';
+      setDisableSpline(!splineEnabled);
     } else {
       // First time - use intelligent defaults based on device profile
       const shouldEnableSpline =

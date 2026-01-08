@@ -68,6 +68,8 @@ export default function Home() {
   const prefersReducedMotionRef = React.useRef(false);
   const isTouchRef = React.useRef(false);
   const telemetryContextRef = React.useRef<Record<string, unknown>>({});
+  const heroLoaderFallbackRef = React.useRef<number | null>(null);
+  const [isTickerHiddenByScroll, setIsTickerHiddenByScroll] = React.useState(false);
 
   // Initialize page
   usePageInitialization({
@@ -176,15 +178,20 @@ export default function Home() {
     [uiState, pageState.currentStage, isMobileLike]
   );
 
-  const safeAreaInlinePadding = useMemo(() => ({
-    paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 10px)',
-    paddingRight: 'calc(env(safe-area-inset-right, 0px) + 10px)',
-  }), []);
   const safeAreaBottom = 'calc(env(safe-area-inset-bottom, 0px) + 10px)';
 
   const shouldRenderContent = pageState.currentStage === 'content' || pageState.contentMounted;
   const showHeroLoaderOverlay = pageState.currentStage === 'content' && !performanceState.heroSceneReady && !performanceState.heroLoaderHidden;
   const heroLoaderMessage = deviceProfile.isMobile ? 'Optimizing for Mobile Trading' : 'Loading Premium Trading Experience';
+  const isTickerObscured =
+    uiState.showConfigurator ||
+    uiState.faqOpen ||
+    uiState.infoPanelOpen ||
+    uiState.controlCenterOpen ||
+    uiState.showThemeQuickPick ||
+    uiState.showPerfPrompt ||
+    pageState.showOrientationWarning;
+  const isLiveTickerHidden = isTickerObscured || isTickerHiddenByScroll;
 
   // Handlers
   const handleOrientationDismiss = useCallback(() => {
@@ -225,6 +232,88 @@ export default function Home() {
     performanceState.setHeroSceneReady(true);
     performanceState.setHeroLoaderHidden(true);
   }, [performanceState]);
+
+  React.useEffect(() => {
+    if (pageState.currentStage !== 'content') {
+      setIsTickerHiddenByScroll(false);
+      return;
+    }
+
+    const scrollElement = pageState.scrollContainerRef.current;
+    if (!scrollElement) return;
+
+    let rafId: number | null = null;
+
+    const updateVisibility = () => {
+      const scrollTop = scrollElement.scrollTop;
+      setIsTickerHiddenByScroll(scrollTop > 40);
+    };
+
+    const handleScroll = () => {
+      if (rafId !== null) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        updateVisibility();
+      });
+    };
+
+    updateVisibility();
+    scrollElement.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      scrollElement.removeEventListener('scroll', handleScroll);
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+    };
+  }, [pageState.currentStage, pageState.scrollContainerRef, pageState.contentMounted]);
+
+  React.useEffect(() => {
+    if (performanceState.heroSceneReady) {
+      if (heroLoaderFallbackRef.current) {
+        window.clearTimeout(heroLoaderFallbackRef.current);
+        heroLoaderFallbackRef.current = null;
+      }
+      if (!performanceState.heroLoaderHidden) {
+        performanceState.setHeroLoaderHidden(true);
+      }
+      return;
+    }
+
+    if (pageState.currentStage !== 'content') return;
+
+    if (performanceState.disableSpline) {
+      if (!performanceState.heroLoaderHidden) {
+        performanceState.setHeroLoaderHidden(true);
+      }
+      return;
+    }
+
+    if (heroLoaderFallbackRef.current) {
+      window.clearTimeout(heroLoaderFallbackRef.current);
+    }
+
+    const fallbackDelay = (deviceProfile.isMobile || performanceState.isSafeMode) ? 4500 : 7500;
+    heroLoaderFallbackRef.current = window.setTimeout(() => {
+      performanceState.setHeroLoaderHidden(true);
+      heroLoaderFallbackRef.current = null;
+    }, fallbackDelay);
+
+    return () => {
+      if (heroLoaderFallbackRef.current) {
+        window.clearTimeout(heroLoaderFallbackRef.current);
+        heroLoaderFallbackRef.current = null;
+      }
+    };
+  }, [
+    deviceProfile.isMobile,
+    pageState.currentStage,
+    performanceState.disableSpline,
+    performanceState.heroLoaderHidden,
+    performanceState.heroSceneReady,
+    performanceState.isSafeMode,
+    performanceState.setHeroLoaderHidden,
+  ]);
 
   const applyPerformanceChoice = useCallback((mode: 'high' | 'balanced') => {
     if (uiState.perfPromptTimeoutRef.current) {
@@ -302,6 +391,8 @@ export default function Home() {
       {/* Mobile Quick Actions */}
       <MobileQuickActions
         isVisible={showMobileQuickActions}
+        disableSpline={performanceState.disableSpline}
+        isPlaying={!musicState.isMuted}
         volume={musicState.volume}
         safeAreaInlinePadding={safeAreaInlinePadding}
         safeAreaBottom={safeAreaBottom}
@@ -414,10 +505,13 @@ export default function Home() {
           </header>
           {/* LiveMarketTicker positioned below navbar */}
           <div
-            className="fixed left-0 right-0 z-[249000] w-full transition-all duration-300"
+            className={`fixed left-0 right-0 z-[249000] w-full transition-all duration-300 ${
+              isLiveTickerHidden ? 'opacity-0 -translate-y-2 pointer-events-none' : 'opacity-100 translate-y-0'
+            }`}
             style={{
               top: 'calc(env(safe-area-inset-top, 0px) + var(--navbar-height, 128px))',
             }}
+            aria-hidden={isLiveTickerHidden}
           >
             <style jsx>{`
               @media (min-width: 1024px) {
