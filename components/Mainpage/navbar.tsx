@@ -57,6 +57,7 @@ type ThemeControlProps = {
   onInfoToggle?: () => void;
   onFaqClick?: () => void;
   onControlCenterToggle?: () => void;
+  showLayoutSpacer?: boolean;
 };
 
 type NavItem = {
@@ -150,6 +151,7 @@ export const Navbar = ({
   onInfoToggle = () => {},
   onFaqClick = () => {},
   onControlCenterToggle = () => {}
+  , showLayoutSpacer = true
 }: ThemeControlProps) => {
   // State for the Identity Card Modal
   const [showIdModal, setShowIdModal] = useState(false);
@@ -240,7 +242,7 @@ export const Navbar = ({
         </div>
       </div>
 
-      <div className="w-full h-32 lg:h-24" aria-hidden="true" />
+      {showLayoutSpacer && <div className="w-full h-32 lg:h-24" aria-hidden="true" />}
 
       {/* --- ID CARD MODAL --- */}
       <IdModal isOpen={showIdModal} onClose={() => setShowIdModal(false)} accentColor={accentColor} />

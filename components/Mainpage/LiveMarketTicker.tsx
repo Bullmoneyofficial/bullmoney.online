@@ -57,7 +57,7 @@ const formatUsdPrice = (value: number) =>
 export const LiveMarketTicker: React.FC = () => {
   const [marketData, setMarketData] = useState<MarketData[]>(baseTickerData);
   const [flashingSymbols, setFlashingSymbols] = useState<Set<string>>(new Set());
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [, setErrorMessage] = useState<string | null>(null);
 
   const marketDataRef = useRef<MarketData[]>(baseTickerData);
   const flashTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -170,13 +170,17 @@ export const LiveMarketTicker: React.FC = () => {
     };
   }, [triggerFlash]);
 
-  // Duplicate the data for seamless loop
+  // Duplicate data for the loop
   const duplicatedData = [...marketData, ...marketData];
 
   return (
-    <div className="w-full overflow-hidden bg-gradient-to-r from-black via-gray-900 to-black border-b border-white/10 relative">
+    // FIX APPLIED HERE:
+    // Changed 'relative' to 'fixed bottom-0 left-0 z-50'
+    // This pins it to the bottom of the viewport
+    <div className="fixed bottom-0 left-0 right-0 z-50 w-full overflow-hidden bg-gradient-to-r from-black via-gray-900 to-black border-t border-white/10 shadow-2xl backdrop-blur-sm">
+      
       {/* Background pattern */}
-      <div className="absolute inset-0 opacity-5">
+      <div className="absolute inset-0 opacity-5 pointer-events-none">
         <div
           className="w-full h-full"
           style={{
@@ -192,26 +196,27 @@ export const LiveMarketTicker: React.FC = () => {
       {/* Ticker content */}
       <div className="relative flex items-center h-10 px-4">
         {/* Live indicator */}
-        <div className="flex items-center gap-2 mr-4 shrink-0">
+        <div className="flex items-center gap-2 mr-4 shrink-0 hidden sm:flex">
           <motion.div
             className="w-2 h-2 rounded-full bg-green-500"
             animate={{ opacity: [1, 0.3, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           />
           <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider">
-            LIVE MARKETS
+            LIVE
           </span>
         </div>
 
         {/* Scrolling ticker */}
-        <div className="flex-1 overflow-hidden relative">
+        <div className="flex-1 overflow-hidden relative mask-linear-fade">
           <motion.div
-            className="flex gap-6"
+            className="flex gap-8" // Increased gap for better readability
             animate={{
-              x: [0, -50 * marketData.length],
+              // Adjusted calculation to be roughly 200px per item to prevent visual jumping
+              x: [0, -200 * marketData.length], 
             }}
             transition={{
-              duration: 30,
+              duration: 40, // Slowed down slightly for readability
               repeat: Infinity,
               ease: 'linear',
             }}
@@ -221,15 +226,13 @@ export const LiveMarketTicker: React.FC = () => {
               return (
                 <motion.div
                   key={`${coin.symbol}-${index}`}
-                  className={`flex items-center gap-2 shrink-0 px-2 py-1 rounded-lg transition-all ${
+                  className={`flex items-center gap-2 shrink-0 px-2 py-1 rounded-lg transition-all min-w-[140px] ${
                     isFlashing
                       ? coin.isUp
                         ? 'bg-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.4)]'
                         : 'bg-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.4)]'
                       : ''
                   }`}
-                  animate={isFlashing ? { scale: [1, 1.05, 1] } : {}}
-                  transition={{ duration: 0.3 }}
                 >
                   <span className="text-xs font-bold text-white/80 font-mono">
                     {coin.symbol}
@@ -241,50 +244,24 @@ export const LiveMarketTicker: React.FC = () => {
                     className={`text-xs font-bold font-mono ${
                       coin.isUp ? 'text-green-400' : 'text-red-400'
                     }`}
-                    animate={{ opacity: [1, 0.6, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
                   >
                     {coin.isUp ? '▲' : '▼'} {Math.abs(coin.change)}%
                   </motion.span>
-                  {coin.isUp && Math.abs(coin.change) > 5 && (
-                    <motion.span
-                      className="text-[10px] bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded font-bold border border-orange-500/30"
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 1, repeat: Infinity }}
-                    >
-                      🔥 HOT
-                    </motion.span>
-                  )}
-                  {!coin.isUp && Math.abs(coin.change) > 5 && (
-                    <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-bold border border-red-500/30">
-                      📉 DUMP
-                    </span>
-                  )}
                 </motion.div>
               );
             })}
           </motion.div>
         </div>
 
-        {/* Trade now CTA */}
-        <div className="ml-4 shrink-0 flex flex-col items-end gap-1">
-          <motion.button
-            className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/40 text-xs font-bold text-green-400 hover:from-green-500/30 hover:to-blue-500/30 transition-all"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+        {/* Trade now CTA - Hidden on very small screens to save space */}
+        <div className="ml-4 shrink-0 hidden md:flex flex-col items-end gap-1">
+          <button
+            className="px-3 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] font-bold text-white hover:bg-white/10 transition-all"
           >
-            TRADE NOW →
-          </motion.button>
-          {errorMessage && (
-            <span className="text-[10px] uppercase tracking-wider text-red-400">
-              {errorMessage}
-            </span>
-          )}
+            TRADE
+          </button>
         </div>
       </div>
-
-      {/* Bottom accent line */}
-      <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
     </div>
   );
 };
