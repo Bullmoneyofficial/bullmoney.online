@@ -96,6 +96,9 @@ export function TestimonialsCarousel() {
   const nextSlide = () => setIndex((index + 1) % testimonials.length);
   const prevSlide = () => setIndex((index - 1 + testimonials.length) % testimonials.length);
 
+  const currentTestimonial = testimonials[index];
+  if (!currentTestimonial) return null;
+
   return (
     <motion.section
       {...fade}
@@ -116,14 +119,14 @@ export function TestimonialsCarousel() {
             transition={{ duration: 0.6, ease: "easeInOut" }}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
-            onDragEnd={(e, { offset, velocity }) => {
+            onDragEnd={(_e, { offset, velocity }) => {
               if (offset.x < -50 || velocity.x < -200) nextSlide();
               if (offset.x > 50 || velocity.x > 200) prevSlide();
             }}
           >
             <Image
-              src={testimonials[index].image}
-              alt={testimonials[index].name}
+              src={currentTestimonial.image}
+              alt={currentTestimonial.name}
               fill
               className="object-cover opacity-60"
             />
@@ -132,16 +135,16 @@ export function TestimonialsCarousel() {
               <div className="flex items-center gap-3">
                 <div className="relative w-10 h-10 rounded-full overflow-hidden ring-1 ring-white/10 bg-neutral-800">
                   <Image
-                    src={testimonials[index].icon}
-                    alt={`${testimonials[index].name} icon`}
+                    src={currentTestimonial.icon}
+                    alt={`${currentTestimonial.name} icon`}
                     fill
                     className="object-contain p-1.5"
                   />
                 </div>
-                <p className="text-lg font-semibold">{testimonials[index].name}</p>
+                <p className="text-lg font-semibold">{currentTestimonial.name}</p>
               </div>
               <p className="text-sm text-neutral-200 italic leading-relaxed">
-                “{testimonials[index].text}”
+                "{currentTestimonial.text}"
               </p>
             </div>
           </motion.div>

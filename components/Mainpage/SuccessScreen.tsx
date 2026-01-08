@@ -2,11 +2,8 @@
 
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { createClient } from '@supabase/supabase-js'; 
-import { 
-  Loader2, Check, Mail, Hash, Lock, 
-  ArrowRight, ChevronLeft, ExternalLink, AlertCircle,
-  Copy, Plus, LogIn, Eye, EyeOff, HelpCircle, Send, FolderPlus, DollarSign, BarChart3, X, RefreshCw,
-  Award, Medal, Crown, Trophy, Users, History, TrendingUp, ChevronRight, Activity, Info, ShieldCheck
+import {
+  Loader2, Check, Lock, Award, Medal, Crown, Trophy, RefreshCw, DollarSign, TrendingUp, ChevronRight, Users, X, Activity, Info, History, ShieldCheck, Send, FolderPlus, ArrowRight, BarChart3
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "framer-motion";
 import { cn } from "@/lib/utils"; 
@@ -296,7 +293,7 @@ const IncentiveTaskGrid = memo(({ tasks }: { tasks: AffiliateData['tasks'] }) =>
 });
 
 // --- MAIN DASHBOARD VIEW ---
-const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => void }> = ({ onClose, onUnlock }) => {
+const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => void }> = ({ onClose, onUnlock: _onUnlock }) => {
   const [data, setData] = useState<AffiliateData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false); 
@@ -319,7 +316,7 @@ const AffiliateDashboardView: React.FC<{ onClose: () => void, onUnlock: () => vo
       if (!savedSession) return;
       const session = JSON.parse(savedSession);
 
-      let { data: viewData, error: viewError } = await supabase
+      let { data: viewData, error: _viewError } = await supabase
         .from('affiliate_dashboard_view')
         .select('*')
         .eq('id', session.id)

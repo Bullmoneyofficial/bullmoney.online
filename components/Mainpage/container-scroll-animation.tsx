@@ -28,7 +28,7 @@ export const ContainerScroll = ({
     target: containerRef,
   });
 
-  const [isClient, setIsClient] = useState(false);
+  const [_isClient, setIsClient] = useState(false);
   useEffect(() => {
     setIsClient(true);
   }, []);

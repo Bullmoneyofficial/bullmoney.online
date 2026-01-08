@@ -2,10 +2,10 @@
 
 import React, { useEffect, useRef, useState, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Fingerprint, Activity, ScanFace, Lock, AlertTriangle, 
-  CheckCircle2, ShieldAlert, Terminal, Database, Server, 
-  Users, Key, Unlock, Eye, EyeOff
+import {
+  Activity, Lock, AlertTriangle,
+  CheckCircle2, ShieldAlert, Terminal, Database, Server,
+  Users, Key, Eye, EyeOff
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
@@ -28,7 +28,6 @@ const AdminReflectiveCard = forwardRef<HTMLDivElement, AdminPanelProps>(({
   className = '',
   style = {},
 }, ref) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const turbulenceRef = useRef<SVGFETurbulenceElement>(null);
   const requestRef = useRef<number>();
   

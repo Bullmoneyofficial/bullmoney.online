@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
-import type { Container, Engine } from "@tsparticles/engine";
+import type { Engine } from "@tsparticles/engine";
 
 // --- Sparkles Core Component ---
 export const SparklesCore = (props: {

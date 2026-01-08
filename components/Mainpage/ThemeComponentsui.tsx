@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useMemo, useCallback } from 'react';
-import { 
-  Command, DollarSign, Zap, VolumeX, MessageCircle, ArrowRight, SkipForward, Check, Info, Lock, Volume2, Music, Wifi, WifiOff 
+import React, { useCallback } from 'react';
+import {
+  Command, DollarSign, Zap, VolumeX, MessageCircle, ArrowRight, SkipForward, Check, Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -210,7 +210,7 @@ export const IllusionLayer = ({ type = 'SCANLINES' }: { type?: string }) => (
     </div>
 );
 
-export const TickerTape = ({ liveData = [] }: { liveData?: LiveCryptoItem[] }) => {
+export const TickerTape = ({ liveData: _liveData = [] }: { liveData?: LiveCryptoItem[] }) => {
     // FIX: Added A11y attributes for marquee
     return (
         <div 

@@ -279,8 +279,8 @@ const PixelCard = ({ variant = 'default', gap, speed, colors, noFocus, className
     const pxs = []; const effGap = parseInt(finalGap.toString(), 10); 
     for (let x = 0; x < width; x += effGap) {
       for (let y = 0; y < height; y += effGap) {
-        const color = colorsArray[Math.floor(Math.random() * colorsArray.length)];
-        const dx = x - width / 2; const dy = y - height / 2; const distance = Math.sqrt(dx * dx + dy * dy); 
+        const color = colorsArray[Math.floor(Math.random() * colorsArray.length)] || '#3b82f6';
+        const dx = x - width / 2; const dy = y - height / 2; const distance = Math.sqrt(dx * dx + dy * dy);
         pxs.push(new Pixel(canvasRef.current, ctx, x, y, color, finalSpeed * 0.0005, distance)); 
       }
     }
@@ -298,6 +298,7 @@ const PixelCard = ({ variant = 'default', gap, speed, colors, noFocus, className
     let allIdle = true;
     for (let i = 0; i < pixelsRef.current.length; i++) {
       const pixel = pixelsRef.current[i];
+      if (!pixel) continue;
       // @ts-ignore
       pixel[fnName]();
       if (!pixel.isIdle) allIdle = false;
@@ -674,7 +675,7 @@ const MiniTradingChart = ({ width = 60, height = 24 }: { width?: number; height?
   useEffect(() => {
     const initialPaths = generatePaths(dataPointsRef.current); setPath(initialPaths.line); setAreaPath(initialPaths.area);
     const updateChart = () => {
-      const currentData = dataPointsRef.current; const last = currentData[currentData.length - 1]; const change = (Math.random() - 0.45) * 8; let newValue = Math.max(10, Math.min(65, last + change));
+      const currentData = dataPointsRef.current; const last = currentData[currentData.length - 1] ?? 30; const change = (Math.random() - 0.45) * 8; let newValue = Math.max(10, Math.min(65, last + change));
       const newData = [...currentData.slice(1), newValue]; dataPointsRef.current = newData; const paths = generatePaths(newData); setPath(paths.line); setAreaPath(paths.area);
     };
     const interval = setInterval(updateChart, 1000); return () => clearInterval(interval);

@@ -26,6 +26,7 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
       const timer = setTimeout(() => setShowInitialHint(false), 15000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [showHint]);
 
   // Pulse when 3D is disabled
@@ -39,6 +40,7 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
     } else {
       setPulse(false);
     }
+    return undefined;
   }, [disableSpline]);
 
   const handleClick = () => {

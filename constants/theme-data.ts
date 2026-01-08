@@ -1,8 +1,3 @@
-import { 
-  Zap, DollarSign, Activity, Shield, Lock, Monitor, Hash, 
-  MapPin, Sun, Brain, Smile, Layers 
-} from 'lucide-react';
-
 // --- 1. UPDATED TYPES (Kept as is) ---
 export type SoundProfile = 'MECHANICAL' | 'SOROS' | 'SCI-FI' | 'SILENT' | 'ORGANIC' | 'DISTORTED' | 'RETRO'; 
 

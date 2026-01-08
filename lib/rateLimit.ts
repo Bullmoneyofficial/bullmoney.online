@@ -71,7 +71,10 @@ function getClientId(req: NextRequest): string {
 
   if (forwardedFor) {
     // x-forwarded-for can contain multiple IPs, take the first one
-    return forwardedFor.split(',')[0].trim();
+    const firstIp = forwardedFor.split(',')[0];
+    if (firstIp) {
+      return firstIp.trim();
+    }
   }
 
   if (cfConnectingIp) {

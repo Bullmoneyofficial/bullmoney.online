@@ -374,8 +374,10 @@ const GhostCursor: React.FC<GhostCursorProps> = ({
 
       const wpx = Math.max(1, Math.floor(cssW * pixelRatio));
       const hpx = Math.max(1, Math.floor(cssH * pixelRatio));
-      material.uniforms.iResolution.value.set(wpx, hpx, 1);
-      material.uniforms.iScale.value = calculateScale(host);
+      material.uniforms.iResolution?.value.set(wpx, hpx, 1);
+      if (material.uniforms.iScale) {
+        material.uniforms.iScale.value = calculateScale(host);
+      }
       bloomPass.setSize(wpx, hpx);
     };
 
@@ -396,14 +398,14 @@ const GhostCursor: React.FC<GhostCursorProps> = ({
       const comp = composerRef.current!;
 
       // 1. Mouse Inertia and Fade
-      if (pointerActiveRef.current) {
+      if (pointerActiveRef.current && mat.uniforms.iMouse) {
         velocityRef.current.set(
           currentMouseRef.current.x - mat.uniforms.iMouse.value.x,
           currentMouseRef.current.y - mat.uniforms.iMouse.value.y
         );
         mat.uniforms.iMouse.value.copy(currentMouseRef.current);
         fadeOpacityRef.current = 1.0;
-      } else {
+      } else if (mat.uniforms.iMouse) {
         velocityRef.current.multiplyScalar(inertia);
         if (velocityRef.current.lengthSq() > 1e-6) {
           mat.uniforms.iMouse.value.add(velocityRef.current);
@@ -416,20 +418,29 @@ const GhostCursor: React.FC<GhostCursorProps> = ({
       }
 
       // 2. Trail Buffer Update (Circular Array)
-      const N = trailBufRef.current.length;
-      headRef.current = (headRef.current + 1) % N;
-      trailBufRef.current[headRef.current].copy(mat.uniforms.iMouse.value);
-      
-      // The GPU uniform array must be filled in reverse order (closest point first)
-      const arr = mat.uniforms.iPrevMouse.value as THREE.Vector2[];
-      for (let i = 0; i < N; i++) {
-        const srcIdx = (headRef.current - i + N) % N;
-        arr[i].copy(trailBufRef.current[srcIdx]);
+      if (mat.uniforms.iMouse && mat.uniforms.iPrevMouse) {
+        const N = trailBufRef.current.length;
+        headRef.current = (headRef.current + 1) % N;
+        const currentTrail = trailBufRef.current[headRef.current];
+        if (currentTrail) {
+          currentTrail.copy(mat.uniforms.iMouse.value);
+        }
+
+        // The GPU uniform array must be filled in reverse order (closest point first)
+        const arr = mat.uniforms.iPrevMouse.value as THREE.Vector2[];
+        for (let i = 0; i < N; i++) {
+          const srcIdx = (headRef.current - i + N) % N;
+          const src = trailBufRef.current[srcIdx];
+          const dest = arr[i];
+          if (src && dest) {
+            dest.copy(src);
+          }
+        }
       }
 
       // 3. Uniform Updates
-      mat.uniforms.iOpacity.value = fadeOpacityRef.current;
-      mat.uniforms.iTime.value = t;
+      if (mat.uniforms.iOpacity) mat.uniforms.iOpacity.value = fadeOpacityRef.current;
+      if (mat.uniforms.iTime) mat.uniforms.iTime.value = t;
 
       if (filmPassRef.current?.uniforms?.iTime) {
         filmPassRef.current.uniforms.iTime.value = t;
@@ -534,7 +545,7 @@ const GhostCursor: React.FC<GhostCursorProps> = ({
   // --- Individual UseEffects for Hot-Reloadable Props ---
 
   useEffect(() => {
-    if (materialRef.current) {
+    if (materialRef.current && materialRef.current.uniforms.iBaseColor) {
       const c = new THREE.Color(color);
       (materialRef.current.uniforms.iBaseColor.value as THREE.Vector3).set(
         c.r,
@@ -545,13 +556,13 @@ const GhostCursor: React.FC<GhostCursorProps> = ({
   }, [color]);
 
   useEffect(() => {
-    if (materialRef.current) {
+    if (materialRef.current && materialRef.current.uniforms.iBrightness) {
       materialRef.current.uniforms.iBrightness.value = brightness;
     }
   }, [brightness]);
 
   useEffect(() => {
-    if (materialRef.current) {
+    if (materialRef.current && materialRef.current.uniforms.iEdgeIntensity) {
       materialRef.current.uniforms.iEdgeIntensity.value = edgeIntensity;
     }
   }, [edgeIntensity]);

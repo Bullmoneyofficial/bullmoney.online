@@ -191,7 +191,9 @@ const useIntersectionObserver = (
     if (!shouldObserve || !ref.current) return;
 
     const observer = new IntersectionObserver(
-      ([entry]) => setIsVisible(entry.isIntersecting),
+      ([entry]) => {
+        if (entry) setIsVisible(entry.isIntersecting);
+      },
       { threshold: 0.1 }
     );
 
@@ -210,8 +212,8 @@ const GradualBlur: React.FC<PropsWithChildren<GradualBlurProps>> = (props) => {
 
   // Merge default config, preset, and props
   const config = useMemo(() => {
-    const presetConfig =
-      props.preset && PRESETS[props.preset] ? PRESETS[props.preset] : {};
+    const presetConfig: Partial<GradualBlurProps> =
+      (props.preset && PRESETS[props.preset]) || {};
     return mergeConfigs(DEFAULT_CONFIG, presetConfig, props);
   }, [props]);
 
@@ -231,7 +233,7 @@ const GradualBlur: React.FC<PropsWithChildren<GradualBlurProps>> = (props) => {
         ? config.strength * config.hoverIntensity
         : config.strength;
 
-    const curveFunc = CURVE_FUNCTIONS[config.curve] || CURVE_FUNCTIONS.linear;
+    const curveFunc = CURVE_FUNCTIONS[config.curve] || CURVE_FUNCTIONS.linear || ((x: number) => x);
 
     for (let i = 1; i <= config.divCount; i++) {
       let progress = i / config.divCount;
@@ -324,6 +326,7 @@ const GradualBlur: React.FC<PropsWithChildren<GradualBlurProps>> = (props) => {
       );
       return () => clearTimeout(t);
     }
+    return undefined;
   }, [isVisible, config.animated, config.onAnimationComplete, config.duration]);
 
   return (

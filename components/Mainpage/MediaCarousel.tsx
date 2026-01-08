@@ -42,6 +42,8 @@ export const MediaCarousel: React.FC<MediaCarouselProps> = ({
 
   const slide = slides[current];
 
+  if (!slide) return null;
+
   return (
     <div
       className="relative w-full overflow-hidden rounded-[32px] border border-neutral-700/60 bg-neutral-900/30"

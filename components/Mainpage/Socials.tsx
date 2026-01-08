@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { motion, useMotionValue, useMotionTemplate, AnimatePresence } from "framer-motion";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Copy, Check, Sparkles, Scissors, QrCode, X, CreditCard, Users, Timer } from "lucide-react";
+import { Copy, Check, Sparkles, Scissors, QrCode, X, Users, Timer } from "lucide-react";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import type { Engine } from "@tsparticles/engine";
@@ -256,7 +256,7 @@ const PixelCard = ({ variant = 'default', gap, speed, colors, noFocus, className
     const effGap = parseInt(finalGap.toString(), 10); 
     for (let x = 0; x < width; x += effGap) {
       for (let y = 0; y < height; y += effGap) {
-        const color = colorsArray[Math.floor(Math.random() * colorsArray.length)];
+        const color = colorsArray[Math.floor(Math.random() * colorsArray.length)] || '#3b82f6';
         const dx = x - width / 2;
         const dy = y - height / 2;
         const distance = Math.sqrt(dx * dx + dy * dy);
@@ -280,6 +280,7 @@ const PixelCard = ({ variant = 'default', gap, speed, colors, noFocus, className
     let allIdle = true;
     for (let i = 0; i < pixelsRef.current.length; i++) {
       const pixel = pixelsRef.current[i];
+      if (!pixel) continue;
       // @ts-ignore
       pixel[fnName]();
       if (!pixel.isIdle) allIdle = false;
@@ -785,7 +786,7 @@ const MiniTradingChart = ({ width = 60, height = 24 }: { width?: number; height?
     setAreaPath(initialPaths.area);
     const updateChart = () => {
       const currentData = dataPointsRef.current;
-      const last = currentData[currentData.length - 1];
+      const last = currentData[currentData.length - 1] ?? 30;
       const change = (Math.random() - 0.45) * 15;
       let newValue = Math.max(10, Math.min(65, last + change));
       const newData = [...currentData.slice(1), newValue];

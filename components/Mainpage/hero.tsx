@@ -51,7 +51,7 @@ interface MediaCarouselProps {
 
 export const MediaCarousel: React.FC<MediaCarouselProps> = ({
   slides,
-  height = 540,
+  height: _height = 540,
   autoSlideInterval = 8000,
 }) => {
   const [current, setCurrent] = useState(0);
@@ -63,6 +63,8 @@ export const MediaCarousel: React.FC<MediaCarouselProps> = ({
   }, [slides.length, autoSlideInterval]);
 
   const slide = slides[current];
+
+  if (!slide) return null;
 
   return (
     <div
@@ -157,7 +159,7 @@ export const MediaCarousel: React.FC<MediaCarouselProps> = ({
 };
 
 // --- Roll digits (single-card 3D roll) ---
-const RollDigit = ({ value }: { value: string }) => {
+/* const RollDigit = ({ value }: { value: string }) => {
   const [prev, setPrev] = React.useState(value);
   const [animKey, setAnimKey] = React.useState(0);
   const [animating, setAnimating] = React.useState(false);
@@ -223,10 +225,10 @@ const RollDigit = ({ value }: { value: string }) => {
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.06),transparent_45%,transparent_55%,rgba(0,0,0,0.28))]" />
     </div>
   );
-};
+}; */
 
 //Helpers
-const pad2 = (n: number) => n.toString().padStart(2, "0");
+// const pad2 = (n: number) => n.toString().padStart(2, "0");
 type Parts = { totalMs: number; d: number; h: number; m: number; s: number };
 
 const calcParts = (deadlineISO: string): Parts => {
@@ -247,7 +249,7 @@ export function Hero() {
   const parentRef = useRef<HTMLDivElement>(null);
 
   const [trade, setTrade] = useState<Trade | null>(null);
-  const [parts, setParts] = useState<Parts>({ totalMs: 0, d: 0, h: 0, m: 0, s: 0 });
+  const [_parts, setParts] = useState<Parts>({ totalMs: 0, d: 0, h: 0, m: 0, s: 0 });
 
   useEffect(() => {
     (async () => {

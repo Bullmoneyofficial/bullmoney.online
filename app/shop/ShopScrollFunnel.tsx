@@ -72,7 +72,10 @@ const startBackgroundMusic = (audioContext: AudioContext | null, bgMusicRef: Rea
   
   const changeTone = () => {
     if (oscillator && bgMusicRef.current) {
-      oscillator.frequency.setValueAtTime(melody[index], audioContext.currentTime);
+      const freq = melody[index];
+      if (freq !== undefined) {
+        oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+      }
       index = (index + 1) % melody.length;
     }
   };
@@ -90,76 +93,6 @@ const stopBackgroundMusic = (bgMusicRef: React.MutableRefObject<OscillatorNode |
   }
 };
 
-// A* Pathfinding Algorithm for Ghost AI
-const findPath = (start: Position, target: Position, isWallFunc: (x: number, y: number) => boolean): Position[] => {
-  const openSet: Array<{pos: Position, g: number, h: number, f: number, parent: Position | null}> = [];
-  const closedSet = new Set<string>();
-  
-  const heuristic = (a: Position, b: Position) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
-  
-  openSet.push({
-    pos: start,
-    g: 0,
-    h: heuristic(start, target),
-    f: heuristic(start, target),
-    parent: null
-  });
-  
-  while (openSet.length > 0) {
-    openSet.sort((a, b) => a.f - b.f);
-    const current = openSet.shift()!;
-    
-    if (current.pos.x === target.x && current.pos.y === target.y) {
-      const path: Position[] = [];
-      let node = current;
-      while (node.parent) {
-        path.unshift(node.pos);
-        const parentNode = openSet.find(n => n.pos.x === node.parent!.x && n.pos.y === node.parent!.y);
-        if (!parentNode) break;
-        node = parentNode;
-      }
-      return path;
-    }
-    
-    closedSet.add(`${current.pos.x},${current.pos.y}`);
-    
-    const neighbors = [
-      { dx: 1, dy: 0 }, { dx: -1, dy: 0 },
-      { dx: 0, dy: 1 }, { dx: 0, dy: -1 }
-    ];
-    
-    for (const {dx, dy} of neighbors) {
-      const newX = current.pos.x + dx;
-      const newY = current.pos.y + dy;
-      const key = `${newX},${newY}`;
-      
-      if (isWallFunc(newX, newY) || closedSet.has(key)) continue;
-      
-      const g = current.g + 1;
-      const h = heuristic({x: newX, y: newY}, target);
-      const f = g + h;
-      
-      const existing = openSet.find(n => n.pos.x === newX && n.pos.y === newY);
-      if (!existing || g < existing.g) {
-        if (existing) {
-          existing.g = g;
-          existing.f = f;
-          existing.parent = current.pos;
-        } else {
-          openSet.push({
-            pos: {x: newX, y: newY},
-            g, h, f,
-            parent: current.pos
-          });
-        }
-      }
-    }
-    
-    if (openSet.length > 100) break; // Performance limit
-  }
-  
-  return [];
-};
 
 const PAC_MAP = [
   "#####################",
@@ -186,7 +119,7 @@ const PAC_MAP = [
   "#####################",
 ];
 
-const WIDTH = PAC_MAP[0].length;
+const WIDTH = PAC_MAP[0]?.length || 0;
 const HEIGHT = PAC_MAP.length;
 
 // Difficulty configurations
@@ -236,11 +169,7 @@ const THEMES = {
     wallBorder: 'border-red-500/40'
   }
 };
-
-const PACMAN_SPEED = 120;
-const GHOST_SPEED = 200;
 const POWER_DURATION = 8000;
-const RESPAWN_DELAY = 3000;
 
 // Main wrapper component with lazy loading
 const GameBoyPacman = () => {
@@ -251,7 +180,7 @@ const GameBoyPacman = () => {
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !isLoaded) {
+        if (entry && entry.isIntersecting && !isLoaded) {
           setIsInView(true);
           setIsLoaded(true);
         }
@@ -310,12 +239,10 @@ const GameBoyPacmanGame = () => {
   const [showPacmanEye, setShowPacmanEye] = useState<boolean>(true);
   const [joystickPos, setJoystickPos] = useState<Position>({ x: 0, y: 0 });
   const [isJoystickActive, setIsJoystickActive] = useState<boolean>(false);
-  const [particles, setParticles] = useState<Array<{id: number, x: number, y: number}>>([]);
-  const [ghostsScared, setGhostsScared] = useState<boolean>(false);
+  const [, setGhostsScared] = useState<boolean>(false);
   const [combo, setCombo] = useState<number>(0);
   const [showCombo, setShowCombo] = useState<boolean>(false);
   const [screenShake, setScreenShake] = useState<boolean>(false);
-  const [pacmanTrail, setPacmanTrail] = useState<Array<{x: number, y: number, id: number}>>([]);
   const [scorePulse, setScorePulse] = useState<boolean>(false);
   const [fps, setFps] = useState<number>(60);
   const [dangerLevel, setDangerLevel] = useState<number>(0);
@@ -335,8 +262,6 @@ const GameBoyPacmanGame = () => {
   const gameStartTimeRef = useRef<number>(0);
   const bgMusicRef = useRef<OscillatorNode | null>(null);
   const bgGainRef = useRef<GainNode | null>(null);
-  const particleIdRef = useRef<number>(0);
-  const trailIdRef = useRef<number>(0);
   const comboTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const ghostModeRef = useRef<'scatter' | 'chase'>('chase');
   const readyRef = useRef<boolean>(false);
@@ -468,7 +393,10 @@ const GameBoyPacmanGame = () => {
         { emoji: '🔑', points: 5000 }
       ];
       const fruitIndex = Math.min(level - 1, fruits.length - 1);
-      setFruit({ x: 10, y: 14, ...fruits[fruitIndex] });
+      const selectedFruit = fruits[fruitIndex];
+      if (selectedFruit) {
+        setFruit({ x: 10, y: 14, ...selectedFruit });
+      }
       setTimeout(() => setFruit(null), 8000); // 8 seconds to collect
     }, 5000); // Appears after 5 seconds
   }, [level]);
@@ -499,9 +427,10 @@ const GameBoyPacmanGame = () => {
       const timer = setTimeout(() => {
         setShowPacmanEye(false);
       }, 10000);
-      
+
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [gameState]);
 
   // Keyboard controls
@@ -516,9 +445,10 @@ const GameBoyPacmanGame = () => {
         'ArrowRight': { dx: 1, dy: 0 }, 'd': { dx: 1, dy: 0 }, 'D': { dx: 1, dy: 0 }
       };
 
-      if (keyMap[e.key]) {
+      const direction = keyMap[e.key];
+      if (direction) {
         e.preventDefault();
-        setNextDirection(keyMap[e.key]);
+        setNextDirection(direction);
       }
 
       if (e.key === 'r' || e.key === 'R') {
@@ -700,7 +630,6 @@ const GameBoyPacmanGame = () => {
 
           let targetX = pacPos.x;
           let targetY = pacPos.y;
-          const shouldUseAdvancedAI = difficulty !== 'easy';
 
           // BLINKY (RED) - The Chaser - Direct pursuit
           if (ghost.id === 'red') {
@@ -803,7 +732,9 @@ const GameBoyPacmanGame = () => {
               }
             }
           }
-          
+
+          if (!bestMove) return ghost;
+
           return {
             ...ghost,
             x: ghost.x + bestMove.dx,
@@ -870,7 +801,7 @@ const GameBoyPacmanGame = () => {
                 newSet.delete(ghost.id);
                 return newSet;
               });
-            }, RESPAWN_DELAY);
+            }, 3000);
           } else if (!isPowerActive) {
             if (soundOn && audioContextRef.current) {
               // Death sound
@@ -923,6 +854,7 @@ const GameBoyPacmanGame = () => {
     if (!joystickRef.current) return;
     setIsJoystickActive(true);
     const touch = 'touches' in e ? e.touches[0] : e;
+    if (!touch) return;
     const rect = joystickRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
@@ -933,6 +865,7 @@ const GameBoyPacmanGame = () => {
     if (!isJoystickActive || !joystickRef.current) return;
     e.preventDefault();
     const touch = 'touches' in e ? e.touches[0] : e;
+    if (!touch) return;
     const rect = joystickRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
@@ -974,6 +907,7 @@ const GameBoyPacmanGame = () => {
     const cells = [];
     for (let y = 0; y < HEIGHT; y++) {
       const row = PAC_MAP[y];
+      if (!row) continue;
       for (let x = 0; x < WIDTH; x++) {
         const cell = row[x];
         const isPacman = pacmanPos.x === x && pacmanPos.y === y;
@@ -1059,7 +993,7 @@ const GameBoyPacmanGame = () => {
                   {/* Ghost ID indicator (debug) */}
                   {difficulty === 'easy' && (
                     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-white text-[6px] font-bold opacity-50">
-                      {ghost.id[0].toUpperCase()}
+                      {ghost.id[0]?.toUpperCase()}
                     </div>
                   )}
                 </div>

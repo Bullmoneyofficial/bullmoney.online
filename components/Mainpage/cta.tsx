@@ -251,7 +251,7 @@ export const TradingViewDropdown = ({
               >
                 <span className="absolute inset-0 rounded-full border border-sky-400 opacity-0 blur-sm transition group-hover:opacity-100"></span>
                 <ChartBar className="relative z-10 h-4 w-4 transition-transform group-hover:rotate-12" />
-                <span className="relative z-10">{selected.label}</span>
+                <span className="relative z-10">{selected?.label}</span>
                 <motion.div
                   animate={{ rotate: open ? 180 : 0 }}
                   transition={{ duration: 0.3 }}
@@ -278,7 +278,7 @@ export const TradingViewDropdown = ({
                       onClick={() => handleSelect(chart)}
                       className={cn(
                         "block w-full px-4 py-2 text-left text-sm text-white transition-all duration-200 hover:bg-gradient-to-r hover:from-sky-600 hover:to-blue-700",
-                        selected.label === chart.label && "bg-sky-600/60 font-bold"
+                        selected?.label === chart.label && "bg-sky-600/60 font-bold"
                       )}
                     >
                       {chart.label}
@@ -290,7 +290,7 @@ export const TradingViewDropdown = ({
 
             {/* Live Chart */}
             <div className="relative mt-4 w-full rounded-2xl border border-neutral-700 bg-neutral-950/40 p-2">
-              <TradingViewMarketOverview height={560} tabs={selected.tabConfig} />
+              <TradingViewMarketOverview height={560} tabs={selected?.tabConfig} />
             </div>
 
             {/* Hide Chart */}

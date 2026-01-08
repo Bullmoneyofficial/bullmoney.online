@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, memo, Suspense } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 // ==========================================
 // MEMORY MANAGEMENT & LOADING SYSTEM
@@ -48,11 +48,6 @@ export const OptimizedComponentLoader = memo<{
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const shouldAggressivelyOptimize = isMobile && finalConfig.aggressiveMobile;
 
-  // Adjust config based on mobile/priority
-  const adjustedPreload = shouldAggressivelyOptimize
-    ? Math.min(finalConfig.preloadDistance! / 2, 400)
-    : finalConfig.preloadDistance!;
-
   useEffect(() => {
     isMounted.current = true;
     return () => {
@@ -92,6 +87,7 @@ export const OptimizedComponentLoader = memo<{
         }
       }, finalConfig.cleanupDelay);
     }
+    return undefined;
   }, [isVisible, hasLoaded, shouldAggressivelyOptimize, finalConfig.cleanupDelay]);
 
   if (!shouldLoad) {

@@ -62,10 +62,10 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     const setRotation = gsap.quickSetter(cursor, "rotation", "deg");
     
     // Corner Setters
-    const setCorner1 = { x: gsap.quickSetter(corners[0], "x", "px"), y: gsap.quickSetter(corners[0], "y", "px") };
-    const setCorner2 = { x: gsap.quickSetter(corners[1], "x", "px"), y: gsap.quickSetter(corners[1], "y", "px") };
-    const setCorner3 = { x: gsap.quickSetter(corners[2], "x", "px"), y: gsap.quickSetter(corners[2], "y", "px") };
-    const setCorner4 = { x: gsap.quickSetter(corners[3], "x", "px"), y: gsap.quickSetter(corners[3], "y", "px") };
+    const setCorner1 = corners[0] ? { x: gsap.quickSetter(corners[0], "x", "px"), y: gsap.quickSetter(corners[0], "y", "px") } : { x: () => {}, y: () => {} };
+    const setCorner2 = corners[1] ? { x: gsap.quickSetter(corners[1], "x", "px"), y: gsap.quickSetter(corners[1], "y", "px") } : { x: () => {}, y: () => {} };
+    const setCorner3 = corners[2] ? { x: gsap.quickSetter(corners[2], "x", "px"), y: gsap.quickSetter(corners[2], "y", "px") } : { x: () => {}, y: () => {} };
+    const setCorner4 = corners[3] ? { x: gsap.quickSetter(corners[3], "x", "px"), y: gsap.quickSetter(corners[3], "y", "px") } : { x: () => {}, y: () => {} };
 
     // Init Logic
     if (hideDefaultCursor) {
@@ -141,7 +141,7 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     };
 
     const onMove = (e: MouseEvent) => updateInput(e.clientX, e.clientY);
-    const onTouch = (e: TouchEvent) => e.touches.length && updateInput(e.touches[0].clientX, e.touches[0].clientY);
+    const onTouch = (e: TouchEvent) => e.touches.length && e.touches[0] && updateInput(e.touches[0].clientX, e.touches[0].clientY);
     
     // --- CLICK (FIRE) ---
     const onClick = () => {

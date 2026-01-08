@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import './LaserFlow.css';
 
@@ -263,7 +263,7 @@ const LaserFlow: React.FC<Props> = ({
   style,
   wispDensity = 1.2,
   dpr = 1,
-  mouseSmoothTime = 0.1,
+  mouseSmoothTime: _mouseSmoothTime = 0.1,
   mouseTiltStrength = 0.5,
   horizontalBeamOffset = 0.0,
   verticalBeamOffset = -0.2, // Start slightly below center
@@ -365,7 +365,7 @@ const LaserFlow: React.FC<Props> = ({
         const w = mountRef.current.clientWidth;
         const h = mountRef.current.clientHeight;
         rendererRef.current.setSize(w, h);
-        materialRef.current.uniforms.iResolution.value.set(w, h, 1);
+        materialRef.current.uniforms.iResolution?.value.set(w, h, 1);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -377,21 +377,22 @@ const LaserFlow: React.FC<Props> = ({
 
       if (materialRef.current) {
         // Update Time
-        materialRef.current.uniforms.iTime.value = timeRef.current;
-        materialRef.current.uniforms.uFlowTime.value += 0.01 * flowSpeed;
-        materialRef.current.uniforms.uFogTime.value += 0.01;
+        if (materialRef.current.uniforms.iTime) materialRef.current.uniforms.iTime.value = timeRef.current;
+        if (materialRef.current.uniforms.uFlowTime) materialRef.current.uniforms.uFlowTime.value += 0.01 * flowSpeed;
+        if (materialRef.current.uniforms.uFogTime) materialRef.current.uniforms.uFogTime.value += 0.01;
 
         // Smooth Mouse
-        const lerpFactor = 1.0 - Math.pow(0.1, mouseSmoothTime); // Simple damping
-        mouseRef.current.lerp(targetMouseRef.current, 0.1); 
-        
+        mouseRef.current.lerp(targetMouseRef.current, 0.1);
+
         // iMouse in Shadertoy is xy = current pos, zw = click pos. We just use xy here.
-        materialRef.current.uniforms.iMouse.value.set(
-            mouseRef.current.x,
-            mouseRef.current.y,
-            0, 
-            0
-        );
+        if (materialRef.current.uniforms.iMouse) {
+          materialRef.current.uniforms.iMouse.value.set(
+              mouseRef.current.x,
+              mouseRef.current.y,
+              0,
+              0
+          );
+        }
       }
 
       renderer.render(scene, camera);
@@ -419,23 +420,23 @@ const LaserFlow: React.FC<Props> = ({
   useEffect(() => {
     if (!materialRef.current) return;
     const u = materialRef.current.uniforms;
-    
-    u.uWispDensity.value = wispDensity;
-    u.uTiltScale.value = mouseTiltStrength;
-    u.uBeamXFrac.value = horizontalBeamOffset;
-    u.uBeamYFrac.value = verticalBeamOffset;
-    u.uFlowSpeed.value = flowSpeed;
-    u.uVLenFactor.value = verticalSizing;
-    u.uHLenFactor.value = horizontalSizing;
-    u.uFogIntensity.value = fogIntensity;
-    u.uFogScale.value = fogScale;
-    u.uWSpeed.value = wispSpeed;
-    u.uWIntensity.value = wispIntensity;
-    u.uFlowStrength.value = flowStrength;
-    u.uDecay.value = decay;
-    u.uFalloffStart.value = falloffStart;
-    u.uFogFallSpeed.value = fogFallSpeed;
-    u.uColor.value.set(color);
+
+    if (u.uWispDensity) u.uWispDensity.value = wispDensity;
+    if (u.uTiltScale) u.uTiltScale.value = mouseTiltStrength;
+    if (u.uBeamXFrac) u.uBeamXFrac.value = horizontalBeamOffset;
+    if (u.uBeamYFrac) u.uBeamYFrac.value = verticalBeamOffset;
+    if (u.uFlowSpeed) u.uFlowSpeed.value = flowSpeed;
+    if (u.uVLenFactor) u.uVLenFactor.value = verticalSizing;
+    if (u.uHLenFactor) u.uHLenFactor.value = horizontalSizing;
+    if (u.uFogIntensity) u.uFogIntensity.value = fogIntensity;
+    if (u.uFogScale) u.uFogScale.value = fogScale;
+    if (u.uWSpeed) u.uWSpeed.value = wispSpeed;
+    if (u.uWIntensity) u.uWIntensity.value = wispIntensity;
+    if (u.uFlowStrength) u.uFlowStrength.value = flowStrength;
+    if (u.uDecay) u.uDecay.value = decay;
+    if (u.uFalloffStart) u.uFalloffStart.value = falloffStart;
+    if (u.uFogFallSpeed) u.uFogFallSpeed.value = fogFallSpeed;
+    if (u.uColor) u.uColor.value.set(color);
     
   }, [
     wispDensity, mouseTiltStrength, horizontalBeamOffset, verticalBeamOffset,

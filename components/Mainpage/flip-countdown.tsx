@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 
-type TimeLeft = { days: number; hours: number; minutes: number; seconds: number };
+// type TimeLeft = { days: number; hours: number; minutes: number; seconds: number };
 const pad = (n: number) => n.toString().padStart(2, "0");
 
 const Unit = ({ label, value }: { label: string; value: string }) => (

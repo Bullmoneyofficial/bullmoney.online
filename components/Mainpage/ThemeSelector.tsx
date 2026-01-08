@@ -156,7 +156,7 @@ export const ThemeSelector = ({
                     <div className="flex-1 pb-4">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
                             <Monitor className="w-3 h-3 text-blue-500"/> 
-                            VISUAL_INTERFACE: <GlowText text={currentTheme.name.toUpperCase()} className="text-blue-300 ml-1"/>
+                            VISUAL_INTERFACE: <GlowText text={currentTheme?.name?.toUpperCase() || 'UNKNOWN'} className="text-blue-300 ml-1"/>
                             
                             {/* Track Info */}
                             <span className="ml-auto flex items-center gap-2 text-[9px] text-gray-500 normal-case tracking-normal">

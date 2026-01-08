@@ -104,7 +104,8 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
 
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const clientY = 'touches' in e ? e.touches[0]?.clientY : e.clientY;
+    if (clientY === undefined) return;
     const relativeY = clientY - rect.top;
     const percentage = Math.max(0, Math.min(1, relativeY / rect.height));
 
@@ -119,7 +120,8 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
 
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const clientY = 'touches' in e ? e.touches[0]?.clientY : e.clientY;
+    if (clientY === undefined) return;
     const relativeY = clientY - rect.top;
     const percentage = Math.max(0, Math.min(1, relativeY / rect.height));
 
@@ -211,6 +213,7 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
         window.removeEventListener('mouseup', handleGlobalEnd);
       };
     }
+    return undefined;
   }, [isHolding, handleHoldMove, handleHoldEnd]);
 
   // BUG FIX #13: Adaptive sizing based on number of pages AND device

@@ -191,22 +191,22 @@ function Form() {
   );
 }
 
-const Logo = () => {
-  return (
-    <Link
-      href="/"
-      className="font-normal flex space-x-2 items-center text-sm mr-4  text-black px-2 py-1  relative z-20"
-    >
-      <Image
-        src="https://assets.aceternity.com/logo-dark.png"
-        alt="logo"
-        width={30}
-        height={30}
-      />
-      <span className="font-medium text-black dark:text-white">DevStudio</span>
-    </Link>
-  );
-};
+// const Logo = () => {
+//   return (
+//     <Link
+//       href="/"
+//       className="font-normal flex space-x-2 items-center text-sm mr-4  text-black px-2 py-1  relative z-20"
+//     >
+//       <Image
+//         src="https://assets.aceternity.com/logo-dark.png"
+//         alt="logo"
+//         width={30}
+//         height={30}
+//       />
+//       <span className="font-medium text-black dark:text-white">DevStudio</span>
+//     </Link>
+//   );
+// };
 
 export const FeaturedTestimonials = ({
   className,
@@ -252,7 +252,7 @@ export const FeaturedTestimonials = ({
         )}
       >
         <div className="flex flex-row items-center mb-4 sm:mb-0">
-          {images.map((image, idx) => (
+          {images.map((image, _idx) => (
             <div className="-mr-4  relative group" key={image.name}>
               <div>
                 <motion.div

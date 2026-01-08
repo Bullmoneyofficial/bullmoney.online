@@ -1,11 +1,6 @@
 import React, { useEffect, useRef, useId, useState } from 'react';
 import './GlassSurface.css';
 
-// Define explicit types for SVG elements to prevent TS errors
-type SVGFEDisplacementMapElement = React.ComponentProps<'feDisplacementMap'>;
-type SVGFEGaussianBlurElement = React.ComponentProps<'feGaussianBlur'>;
-type SVGFEImageElement = React.ComponentProps<'feImage'>;
-
 export interface GlassSurfaceProps {
   children?: React.ReactNode;
   width?: number | string;

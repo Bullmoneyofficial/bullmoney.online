@@ -845,7 +845,7 @@ function StepCard({
   );
 }
 
-function Accordion({ className, children }: any) {
+function Accordion({ children }: any) {
   return <div className="space-y-2">{children}</div>;
 }
 
@@ -889,67 +889,6 @@ function AccordionItem({ title, children, defaultOpen = false }: any) {
 
 
 /* ============================================================================
-   VIP panel with mouse-follow shimmer (unchanged)
-============================================================================ */
-
-function ShimmerPanel({
-  className,
-  children,
-}: {
-  className?: string;
-  children: React.ReactNode;
-}) {
-  const ref = React.useRef<HTMLDivElement | null>(null);
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-
-  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const r = ref.current?.getBoundingClientRect();
-    if (!r) return;
-    mx.set(e.clientX - r.left);
-    my.set(e.clientY - r.top);
-  };
-
-  const glow = useMotionTemplate`radial-gradient(220px at ${mx}px ${my}px, rgba(56,189,248,.20), transparent 60%)`;
-
-  return (
-    <div
-      ref={ref}
-      onMouseMove={onMove}
-      className={cn(
-        "relative overflow-hidden rounded-2xl p-5 ring-1 ring-white/10",
-        "bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm",
-        "shadow-[0_1px_1px_rgba(0,0,0,0.05),0_12px_60px_rgba(2,6,23,0.35)]",
-        className
-      )}
-    >
-      {/* animated border aura */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-2xl p-[1px]"
-        style={{
-          background:
-            "conic-gradient(from 180deg at 50% 50%, rgba(56,189,248,.25), rgba(99,102,241,.25), rgba(129,140,248,.3), rgba(56,189,248,.25))",
-          WebkitMask:
-            "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-          WebkitMaskComposite: "xor",
-          maskComposite: "exclude",
-        }}
-      />
-
-      {/* mouse-follow shimmer */}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{ background: glow }}
-      />
-
-      {children}
-    </div>
-  );
-}
-
-/* ============================================================================
    Small bits (unchanged)
 ============================================================================ */
 
@@ -972,15 +911,6 @@ function FeatureItem({ children }: { children: React.ReactNode }) {
       </span>
       <span className="font-semibold">{children}</span>
     </li>
-  );
-}
-
-function FreePerk({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex items-start gap-2 rounded-xl border border-white/5 bg-neutral-950/70 px-3 py-2 text-xs md:text-sm text-neutral-200 shadow-[0_18px_45px_rgba(0,0,0,0.6)]">
-      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400" />
-      <p>{children}</p>
-    </div>
   );
 }
 

@@ -16,11 +16,12 @@ export const ParticleEffect = memo(({ trigger }: { trigger: number }) => {
   useEffect(() => {
     if (trigger === 0) return;
     
+    const colors = ['#3b82f6', '#a855f7', '#22c55e', '#ef4444', '#f59e0b'];
     const newParticles = Array.from({ length: 15 }, (_, i) => ({
       id: Date.now() + i,
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
-      color: ['#3b82f6', '#a855f7', '#22c55e', '#ef4444', '#f59e0b'][Math.floor(Math.random() * 5)]
+      color: colors[Math.floor(Math.random() * colors.length)] || '#3b82f6'
     }));
     
     setParticles(prev => [...prev, ...newParticles]);
@@ -96,12 +97,17 @@ export const OrientationOverlay = ({ onDismiss }: { onDismiss: () => void }) => 
   }, [onDismiss]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartY.current = e.touches[0].clientY;
+    const touch = e.touches[0];
+    if (touch) {
+      touchStartY.current = touch.clientY;
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartY.current === null) return;
-    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+    const deltaY = touch.clientY - touchStartY.current;
     // Swipe down to close
     if (deltaY > 100) {
       onDismiss();
@@ -275,7 +281,7 @@ export const InfoPanel = ({ config, isOpen, onClose, accentColor }: any) => {
 // ----------------------------------------------------------------------
 // 4. MUSIC SYSTEM
 // ----------------------------------------------------------------------
-export const BackgroundMusicSystem = ({ themeId, onReady, volume, trackKey }: { themeId: string; onReady: (player: any) => void; volume: number; trackKey?: number; }) => {
+export const BackgroundMusicSystem = ({ themeId, onReady, volume: _volume, trackKey }: { themeId: string; onReady: (player: any) => void; volume: number; trackKey?: number; }) => {
   const videoId = (THEME_SOUNDTRACKS && THEME_SOUNDTRACKS[themeId]) ? THEME_SOUNDTRACKS[themeId] : 'jfKfPfyJRdk';
 
   // Log theme and video changes for debugging

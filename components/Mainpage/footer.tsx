@@ -6,9 +6,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SparklesCore } from "./sparkles"; 
 import { Logo } from "./logo";
 import { cn } from "@/lib/utils";
-import { 
-  Instagram, Youtube, Twitter, MessageCircle, Send, MonitorPlay, 
-  X, ChevronRight, ExternalLink, ShieldAlert, AlertTriangle, CheckCircle2, 
+import {
+  Instagram, Youtube, MessageCircle, Send,
+  X, ChevronRight, ExternalLink, ShieldAlert, AlertTriangle, CheckCircle2,
   XSquareIcon
 } from "lucide-react";
 
@@ -287,7 +287,7 @@ const PixelCard = ({
     const pxs = [];
     for (let x = 0; x < width; x += parseInt(finalGap.toString(), 10)) {
       for (let y = 0; y < height; y += parseInt(finalGap.toString(), 10)) {
-        const color = colorsArray[Math.floor(Math.random() * colorsArray.length)];
+        const color = colorsArray[Math.floor(Math.random() * colorsArray.length)] || "#FFFFFF";
         const dx = x - width / 2;
         const dy = y - height / 2;
         const distance = Math.sqrt(dx * dx + dy * dy);
@@ -316,6 +316,7 @@ const PixelCard = ({
     let allIdle = true;
     for (let i = 0; i < pixelsRef.current.length; i++) {
       const pixel = pixelsRef.current[i];
+      if (!pixel) continue;
       // @ts-ignore
       pixel[fnName]();
       if (!pixel.isIdle) {
@@ -416,7 +417,7 @@ const SocialsRow = () => {
   );
 };
 
-const SocialIcon = ({ href, icon, alt }: { href: string; icon: React.ReactNode; alt: string }) => {
+const SocialIcon = ({ href, icon, alt: _alt }: { href: string; icon: React.ReactNode; alt: string }) => {
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" className="group block shrink-0">
       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>

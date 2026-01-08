@@ -170,7 +170,7 @@ export const TouchFeedback: React.FC<TouchFeedbackProps> = ({
   children,
   onTap,
   hapticFeedback = true,
-  soundFeedback = false,
+  soundFeedback: _soundFeedback = false,
   className = '',
   activeScale = 0.95,
 }) => {
@@ -227,12 +227,14 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
   const startY = useRef(0);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    startY.current = e.touches[0].clientY;
+    if (e.touches[0]) {
+      startY.current = e.touches[0].clientY;
+    }
   }, []);
 
   const handleTouchMove = useCallback(
     (e: React.TouchEvent) => {
-      if (window.scrollY > 0 || isRefreshing) return;
+      if (window.scrollY > 0 || isRefreshing || !e.touches[0]) return;
 
       const currentY = e.touches[0].clientY;
       const distance = Math.min(currentY - startY.current, maxPullDown);

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Theme } from '@/constants/theme-data'
 
 interface ThemeEffectsProps {
@@ -14,7 +14,7 @@ export const ThemeEffects = ({ theme, children }: ThemeEffectsProps) => {
     if (theme.audioUrl) {
       const audio = new Audio(theme.audioUrl);
       audio.volume = 0.4; // Keep it subtle
-      audio.play().catch(e => console.log("Audio play failed (user interaction required first)"));
+      audio.play().catch(() => console.log("Audio play failed (user interaction required first)"));
     }
   }, [theme.id]); // Only play when ID changes
 

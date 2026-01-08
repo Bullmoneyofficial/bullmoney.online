@@ -125,7 +125,7 @@ export class ParticleSystem {
         vx: Math.cos(angle) * velocity,
         vy: Math.sin(angle) * velocity - 2, // Initial upward bias
         size: 4 + Math.random() * 4,
-        color: particleColors[Math.floor(Math.random() * particleColors.length)],
+        color: particleColors[Math.floor(Math.random() * particleColors.length)] || '#FFFFFF',
         life: 1,
         maxLife: 60 + Math.random() * 60,
         type,

@@ -1,23 +1,13 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef } from "react";
 import { cn } from "@/lib/utils";
 import {
-  IconCheck,
-  IconClipboard,
-  IconClipboardCheck,
-  IconExternalLink,
-  IconDownload,
-  IconChevronDown,
-} from "@tabler/icons-react";
-import {
   motion,
-  AnimatePresence,
   useMotionTemplate,
   useMotionValue,
   useSpring,
 } from "framer-motion";
-import { supabase } from "@/lib/supabaseClient";
 import { SparklesCore } from "./sparkles"; 
 
 
@@ -27,18 +17,9 @@ import { SparklesCore } from "./sparkles";
 // =========================================
 
 export function Pricing() {
-  const [copied, setCopied] = React.useState(false);
-  const [activePartner, setActivePartner] = React.useState<"Vantage broker" | "XM">(
+  const [activePartner] = React.useState<"Vantage broker" | "XM">(
     "Vantage broker"
   );
-
-  const copyPartnerCode = async (code: string) => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1100);
-    } catch {}
-  };
 
   return (
     <section
@@ -178,8 +159,8 @@ export function Pricing() {
 }
 
 /* ============================================================================
-   VIP panel with mouse-follow shimmer
-============================================================================ */
+   VIP panel with mouse-follow shimmer - UNUSED
+============================================================================
 
 function ShimmerPanel({
   className,
@@ -233,6 +214,7 @@ function ShimmerPanel({
     </div>
   );
 }
+*/
 
 /* ============================================================================
    INLINE Evervault-style Card (reactive code badge)

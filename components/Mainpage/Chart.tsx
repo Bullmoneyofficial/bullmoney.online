@@ -246,8 +246,10 @@ const GhostCursorBackground = ({
       composer.setPixelRatio(dpr);
       composer.setSize(cssW, cssH);
       
-      material.uniforms.iResolution.value.set(wpx, hpx, 1);
-      material.uniforms.iScale.value = calculateScale(host);
+      material.uniforms.iResolution?.value.set(wpx, hpx, 1);
+      if (material.uniforms.iScale) {
+        material.uniforms.iScale.value = calculateScale(host);
+      }
       bloomPass.setSize(wpx, hpx);
     };
 
@@ -261,14 +263,14 @@ const GhostCursorBackground = ({
       const now = performance.now();
       const t = (now - start) / 1000;
 
-      if (pointerActiveRef.current) {
+      if (pointerActiveRef.current && material.uniforms.iMouse) {
         velocityRef.current.set(
           currentMouseRef.current.x - material.uniforms.iMouse.value.x,
           currentMouseRef.current.y - material.uniforms.iMouse.value.y
         );
         material.uniforms.iMouse.value.copy(currentMouseRef.current);
         fadeOpacityRef.current = 1.0;
-      } else {
+      } else if (material.uniforms.iMouse) {
         velocityRef.current.multiplyScalar(inertia);
         if (velocityRef.current.lengthSq() > 1e-6) {
           material.uniforms.iMouse.value.add(velocityRef.current);
@@ -280,17 +282,19 @@ const GhostCursorBackground = ({
         }
       }
 
-      const N = trailBufRef.current.length;
-      headRef.current = (headRef.current + 1) % N;
-      trailBufRef.current[headRef.current].copy(material.uniforms.iMouse.value);
-      const arr = material.uniforms.iPrevMouse.value;
-      for (let i = 0; i < N; i++) {
-        const srcIdx = (headRef.current - i + N) % N;
-        arr[i].copy(trailBufRef.current[srcIdx]);
+      if (material.uniforms.iMouse && material.uniforms.iPrevMouse) {
+        const N = trailBufRef.current.length;
+        headRef.current = (headRef.current + 1) % N;
+        trailBufRef.current[headRef.current].copy(material.uniforms.iMouse.value);
+        const arr = material.uniforms.iPrevMouse.value;
+        for (let i = 0; i < N; i++) {
+          const srcIdx = (headRef.current - i + N) % N;
+          arr[i].copy(trailBufRef.current[srcIdx]);
+        }
       }
 
-      material.uniforms.iOpacity.value = fadeOpacityRef.current;
-      material.uniforms.iTime.value = t;
+      if (material.uniforms.iOpacity) material.uniforms.iOpacity.value = fadeOpacityRef.current;
+      if (material.uniforms.iTime) material.uniforms.iTime.value = t;
       if (filmPass.uniforms?.iTime) filmPass.uniforms.iTime.value = t;
 
       composer.render();
@@ -339,7 +343,6 @@ const GhostCursorBackground = ({
 
 export default function RecruitPage() {
   const [open, setOpen] = useState(false);
-  const [activePartner, setActivePartner] = useState("Vantage broker");
   const [isLive, setIsLive] = useState(false); 
   const router = useRouter(); 
 

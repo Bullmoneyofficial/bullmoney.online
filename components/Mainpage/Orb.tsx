@@ -20,7 +20,6 @@ export default function Orb({
   buttonLabel = "Click Me",
 }: OrbProps) {
   const ctnDom = useRef<HTMLDivElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const vert = /* glsl */ `
     precision highp float;

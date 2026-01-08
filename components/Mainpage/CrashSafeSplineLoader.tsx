@@ -40,11 +40,11 @@ export const CrashSafeSplineLoader = memo<CrashSafeSplineLoaderProps>(({
   isVisible,
   allowInput = true,
   className = '',
-  onError,
+  onError: _onError,
 }) => {
   const [loadState, setLoadState] = useState<'checking' | 'safe' | 'fallback' | 'error'>('checking');
   const [canLoadSpline, setCanLoadSpline] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, _setErrorMessage] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   const isMounted = useRef(true);

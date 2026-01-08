@@ -15,10 +15,10 @@ import Link from "next/link";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
-  Loader2, Edit2, Save, X, Trash2,
+  Loader2, X,
   Lock, Zap, ShieldCheck, Users, Star, BarChart3,
-  Youtube, PlayCircle, ExternalLink, Plus, Copy, Check,
-  ChevronLeft, HelpCircle, Terminal, Code2, Binary
+  Youtube, PlayCircle, ExternalLink, Plus,
+  ChevronLeft, Terminal
 } from "lucide-react";
 
 import { useShop, type Product } from "@/app/VIP/ShopContext";
@@ -52,7 +52,7 @@ const getYoutubeId = (url: string | undefined): string | null => {
   if (!url) return null;
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
   const match = url.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : null;
+  return (match && match[2]?.length === 11) ? match[2] : null;
 };
 
 const SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #3b82f6 50%, #00000000 100%)";
@@ -175,7 +175,8 @@ const SystemOverrideOverlay = ({ onClose }: { onClose: () => void }) => {
 
 
 // --- MATRIX DECODER TOOLTIP COMPONENT ---
-const MatrixLogoDecoder = ({ trigger }: { trigger: boolean }) => {
+// Commented out - unused component
+/* const MatrixLogoDecoder = ({ trigger }: { trigger: boolean }) => {
   const [decoded, setDecoded] = useState(false);
   const [text, setText] = useState("");
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&";
@@ -187,7 +188,7 @@ const MatrixLogoDecoder = ({ trigger }: { trigger: boolean }) => {
       const interval = setInterval(() => {
         setText(Array(8).fill(0).map(() => chars[Math.floor(Math.random() * chars.length)]).join(""));
         iterations++;
-        if (iterations > 10) { 
+        if (iterations > 10) {
           clearInterval(interval);
           setDecoded(true);
         }
@@ -203,13 +204,13 @@ const MatrixLogoDecoder = ({ trigger }: { trigger: boolean }) => {
           {text}
         </span>
       ) : (
-        <motion.div 
+        <motion.div
             initial={{ opacity: 0, scale: 0.8, filter: "blur(4px)" }}
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
             className="relative w-full h-full"
         >
             <Image src={LogoImage} alt="Bull Money Logo" fill className="object-contain" />
-            <motion.div 
+            <motion.div
                 initial={{ left: "-100%" }}
                 animate={{ left: "100%" }}
                 transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3, ease: "linear" }}
@@ -219,7 +220,7 @@ const MatrixLogoDecoder = ({ trigger }: { trigger: boolean }) => {
       )}
     </div>
   );
-};
+}; */
 
 // --- HELPER TIP COMPONENT ---
 const HelperTip = ({ 
@@ -447,6 +448,7 @@ const VideoCard = React.memo(({
     } else {
         setShowTip(false);
     }
+    return undefined;
   }, [isInView]);
 
   return (
@@ -528,15 +530,15 @@ VideoCard.displayName = "VideoCard";
 
 // --- MAIN HERO PARALLAX ---
 const HeroParallax = () => {
-  const { state, updateProduct, deleteProduct, createProduct } = useShop() as any; 
-  const { products = [], hero, isAdmin, loading, categories = [] } = state || {};
+  const { state, createProduct } = useShop() as any;
+  const { products = [], hero, isAdmin, loading } = state || {};
   const isMobile = useIsMobile();
   const willChange = useWillChange();
 
   const [activeFooterIndex, setActiveFooterIndex] = useState(0);
   const TOTAL_FOOTER_ITEMS = 4;
 
-  const [logoTrigger, setLogoTrigger] = useState(false);
+  const [_logoTrigger, setLogoTrigger] = useState(false);
   const [showEasterEgg, setShowEasterEgg] = useState(false); // State for full-screen overlay
 
   useEffect(() => {
@@ -562,7 +564,7 @@ const HeroParallax = () => {
   }), []);
 
   // Handle Logo Click (Triggers animation and full screen takeover)
-  const handleLogoClick = (e: React.MouseEvent) => {
+  const handleLogoClick = (_e: React.MouseEvent) => {
     // 1. Re-trigger the decoder animation in the tooltip
     setLogoTrigger(false);
     setTimeout(() => setLogoTrigger(true), 10);
@@ -609,18 +611,17 @@ const HeroParallax = () => {
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
   const [activeLayoutId, setActiveLayoutId] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [_isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [editForm, setEditForm] = useState<Partial<Product>>({});
+  const [_editForm, setEditForm] = useState<Partial<Product>>({});
   const [adminEditing, setAdminEditing] = useState<Product | null>(null);
-  const [copied, setCopied] = useState(false);
 
-  const relatedProducts = useMemo(() => {
+  /* const relatedProducts = useMemo(() => {
     if (!products || !activeProduct) return [];
     return products
       .filter((p: Product) => (p._id || p.id) !== (activeProduct._id || activeProduct.id))
       .slice(0, 3);
-  }, [products, activeProduct]);
+  }, [products, activeProduct]); */
 
   const handleOpen = useCallback((product: Product, layoutId: string) => {
     setActiveProduct(product);
@@ -656,7 +657,7 @@ const HeroParallax = () => {
       }
   };
 
-  const handleSaveEdit = async (e?: React.MouseEvent) => {
+  /* const handleSaveEdit = async (e?: React.MouseEvent) => {
     if(e) e.stopPropagation();
     if(!activeProduct) return;
     const pid = activeProduct._id || activeProduct.id;
@@ -670,7 +671,7 @@ const HeroParallax = () => {
           payload.imageUrl = `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`;
       }
       // @ts-ignore
-      delete payload._id; 
+      delete payload._id;
       // @ts-ignore
       delete payload.id;
       await updateProduct(pid, payload as Product);
@@ -682,9 +683,9 @@ const HeroParallax = () => {
     } finally {
       setIsSaving(false);
     }
-  };
+  }; */
 
-  const handleDelete = async (e: React.MouseEvent) => {
+  /* const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if(!activeProduct) return;
     const pid = activeProduct._id || activeProduct.id;
@@ -700,7 +701,7 @@ const HeroParallax = () => {
         setIsSaving(false);
       }
     }
-  }
+  } */
 
   useEffect(() => {
     if (activeProduct) {

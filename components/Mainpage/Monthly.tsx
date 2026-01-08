@@ -108,7 +108,7 @@ export default function Monthly() {
           "max-w-7xl mx-auto md:grid-cols-2 xl:grid-cols-3"
         )}
       >
-        {plans.map((tier, tierIdx) => (
+        {plans.map((tier) => (
           <Card plan={tier} key={tier.id} onClick={tier.onClick} />
         ))}
       </div>

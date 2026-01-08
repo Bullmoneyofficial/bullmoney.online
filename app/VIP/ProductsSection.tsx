@@ -72,7 +72,7 @@ const ShimmerBorder = ({
 };
 
 // --- SPARKLES CORE ---
-interface SparklesCoreProps {
+/* interface SparklesCoreProps {
   id?: string;
   className?: string;
   background?: string;
@@ -90,26 +90,24 @@ const SparklesCore = ({
   children,
 }: SparklesCoreProps) => {
   return (
-    <div 
+    <div
       id={id}
       className={className}
       style={{ background: background || "transparent" }}
     >
-      {/* Simplified for this implementation to avoid heavy external deps if not needed, 
-          but retaining structure for visual compatibility */}
+      {/* Simplified for this implementation to avoid heavy external deps if not needed,
+          but retaining structure for visual compatibility * /}
       {children}
       <div className="absolute inset-0 pointer-events-none">
-          {/* Static fallbacks or actual tsparticles integration here */}
+          {/* Static fallbacks or actual tsparticles integration here * /}
       </div>
     </div>
   );
-};
+}; */
 
 // =========================================
 // 2. INTERACTIVE CARD WRAPPER
 // =========================================
-
-const DEFAULT_GLOW_COLOR = "79, 70, 229"; // Indigo
 
 type InteractiveCardProps = {
   children: React.ReactNode;

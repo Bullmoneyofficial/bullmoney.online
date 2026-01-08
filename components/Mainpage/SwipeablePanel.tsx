@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, ReactNode } from 'react';
-import { ChevronUp, ChevronDown, GripHorizontal } from 'lucide-react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 
 interface SwipeablePanelProps {
   children: ReactNode;
@@ -69,12 +69,14 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    setIsDragging(true);
-    setDragStartY(e.touches[0].clientY);
+    if (e.touches[0]) {
+      setIsDragging(true);
+      setDragStartY(e.touches[0].clientY);
+    }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !panelRef.current) return;
+    if (!isDragging || !panelRef.current || !e.touches[0]) return;
 
     const currentY = e.touches[0].clientY;
     const deltaY = dragStartY - currentY;
@@ -180,6 +182,7 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
         window.removeEventListener('mouseup', handleMouseUp);
       };
     }
+    return undefined;
   }, [isDragging, dragStartY]);
 
   // Discreet “peek” affordance on first visit

@@ -177,7 +177,9 @@ const useLivePrice = (assetKey: AssetKey) => {
     setPrice(0);
     setPrevPrice(0);
     try {
-      const symbol = ASSETS[assetKey].symbol.split(":")[1].toLowerCase();
+      const symbolParts = ASSETS[assetKey].symbol.split(":");
+      const symbol = symbolParts[1]?.toLowerCase();
+      if (!symbol) return;
       ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@trade`);
       ws.onmessage = (event) => {
         const now = Date.now();
@@ -206,7 +208,7 @@ const useMouseVelocity = () => {
   const smoothY = useSpring(y, { damping: 50, stiffness: 400 });
   const velocity = useTransform(
     [useVelocity(smoothX), useVelocity(smoothY)],
-    ([latestX, latestY]: number[]) => Math.sqrt(latestX ** 2 + latestY ** 2)
+    ([latestX, latestY]: number[]) => Math.sqrt((latestX || 0) ** 2 + (latestY || 0) ** 2)
   );
   return { x, y, velocity };
 };

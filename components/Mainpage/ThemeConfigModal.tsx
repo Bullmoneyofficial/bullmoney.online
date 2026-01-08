@@ -144,8 +144,8 @@ export const ThemeConfigModal = ({
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         className="w-full h-full lg:max-w-7xl lg:max-h-[90vh] bg-[#050505] lg:rounded-xl overflow-hidden border border-blue-500/50 shadow-[0_0_50px_rgba(37,99,235,0.5)] flex flex-col min-h-0"
                         onClick={(e) => e.stopPropagation()}
-                        style={{ 
-                            filter: isMobile ? currentTheme.mobileFilter : currentTheme.filter, 
+                        style={{
+                            filter: isMobile ? currentTheme?.mobileFilter : currentTheme?.filter,
                             transition: 'filter 0.5s ease-in-out'
                         }}
                     >

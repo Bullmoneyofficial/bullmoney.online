@@ -40,8 +40,7 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
     "###########",
   ]), []);
 
-  const width = PAC_MAP[0].length;
-  const height = PAC_MAP.length;
+  const width = PAC_MAP[0]?.length || 0;
 
   const coordKey = (x: number, y: number) => `${x},${y}`;
   const isUnlocked = progress > 0.75;

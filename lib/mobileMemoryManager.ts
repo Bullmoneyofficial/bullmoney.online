@@ -11,12 +11,6 @@ interface MemoryStatus {
   reason?: string;
 }
 
-interface SceneGroup {
-  id: string;
-  scenes: string[];
-  priority: 'critical' | 'high' | 'normal';
-}
-
 class MobileMemoryManager {
   private activeScenes = new Set<string>();
   private sceneGroups = new Map<string, string[]>(); // Group ID -> scene URLs
@@ -113,7 +107,7 @@ class MobileMemoryManager {
   /**
    * Register a scene group (e.g., split view with 2 scenes)
    */
-  registerSceneGroup(groupId: string, sceneUrls: string[], priority: 'critical' | 'high' | 'normal' = 'normal'): void {
+  registerSceneGroup(groupId: string, sceneUrls: string[], _priority: 'critical' | 'high' | 'normal' = 'normal'): void {
     this.sceneGroups.set(groupId, sceneUrls);
     sceneUrls.forEach(url => {
       this.sceneToGroup.set(url, groupId);
@@ -237,9 +231,11 @@ class MobileMemoryManager {
 
     if (nonCriticalGroups.length > 0) {
       const oldestGroup = nonCriticalGroups[0];
-      this.unregisterSceneGroup(oldestGroup);
-      console.log(`[MemoryManager] Made room by unloading group: ${oldestGroup}`);
-      return true;
+      if (oldestGroup) {
+        this.unregisterSceneGroup(oldestGroup);
+        console.log(`[MemoryManager] Made room by unloading group: ${oldestGroup}`);
+        return true;
+      }
     }
 
     // Fallback: unload individual scenes
@@ -249,9 +245,11 @@ class MobileMemoryManager {
 
     if (nonCriticalScenes.length > 0) {
       const oldestScene = nonCriticalScenes[0];
-      this.unregisterScene(oldestScene);
-      console.log(`[MemoryManager] Made room by unloading scene: ${oldestScene}`);
-      return true;
+      if (oldestScene) {
+        this.unregisterScene(oldestScene);
+        console.log(`[MemoryManager] Made room by unloading scene: ${oldestScene}`);
+        return true;
+      }
     }
 
     return false;

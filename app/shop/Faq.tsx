@@ -14,13 +14,11 @@ import {
   motion, 
   AnimatePresence 
 } from 'framer-motion';
-import { 
-  Zap, 
-  X, 
-  ChevronDown, 
-  HelpCircle, 
-  Info, 
-  Send, 
+import {
+  Zap,
+  X,
+  ChevronDown,
+  Send,
   ShieldAlert,
   MessageSquare
 } from 'lucide-react';
@@ -283,6 +281,7 @@ const TrueFocus: React.FC<TrueFocusProps> = ({
       }, (animationDuration + pauseBetweenAnimations) * 1000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [manualMode, animationDuration, pauseBetweenAnimations, words.length]);
 
   useEffect(() => {

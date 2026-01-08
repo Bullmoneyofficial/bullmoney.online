@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, forwardRef, useCallback } from 'react';
 import { createPortal } from 'react-dom'; // <--- KEY FIX
-import { Volume2, Volume1, VolumeX, Palette, Sparkles, Music, Hand } from 'lucide-react';
+import { Volume2, Volume1, VolumeX, Palette, Music, Hand } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -35,7 +35,7 @@ const ControlButton = forwardRef<HTMLButtonElement, {
   label: string;
   className?: string;
   children?: React.ReactNode;
-}>(({ onClick, active, icon: Icon, label, className, children }, ref) => (
+}>(({ onClick, active, icon: Icon, label: _label, className, children }, ref) => (
   <motion.button
     ref={ref}
     whileHover={{ scale: 1.05 }}
@@ -181,13 +181,14 @@ export const BottomControls = ({
         // Wait 600ms for the entrance animation (slide up) to finish
         // This is crucial: if we measure too early, we get the "slide up" coordinates, not the final ones
         const timer = setTimeout(updatePositions, 600);
-        
+
         window.addEventListener('resize', updatePositions);
         return () => {
             clearTimeout(timer);
             window.removeEventListener('resize', updatePositions);
         };
     }
+    return undefined;
   }, [visible, updatePositions]);
 
   // Animation Loop

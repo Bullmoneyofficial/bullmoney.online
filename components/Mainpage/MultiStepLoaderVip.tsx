@@ -56,8 +56,10 @@ const useLivePrice = (assetKey: AssetKey) => {
     lastUpdateRef.current = 0;
     setPrice(0);
     setPrevPrice(0);
-    const symbol = ASSETS[assetKey].symbol.split(":")[1].toLowerCase();
-    
+    const symbolParts = ASSETS[assetKey].symbol.split(":");
+    const symbol = symbolParts[1]?.toLowerCase();
+    if (!symbol) return;
+
     ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@trade`);
     ws.onmessage = (event) => {
       const now = Date.now();
@@ -93,7 +95,7 @@ const useMouseVelocity = () => {
 
   const velocity = useTransform(
     [xVelocity, yVelocity],
-    ([latestX, latestY]: number[]) => Math.sqrt(latestX ** 2 + latestY ** 2)
+    ([latestX, latestY]: number[]) => Math.sqrt((latestX ?? 0) ** 2 + (latestY ?? 0) ** 2)
   );
 
   return { x, y, velocity };
@@ -318,7 +320,7 @@ const EncryptedText = memo(({ text, className }: { text: string; className?: str
     let iter = 0;
     const interval = setInterval(() => {
       setDisplay(
-        text.split("").map((letter, index) => {
+        text.split("").map((_letter, index) => {
             if (index < iter) return text[index];
             return CHARS[Math.floor(Math.random() * CHARS.length)];
           }).join("")
@@ -353,7 +355,7 @@ export const MultiStepLoaderVip = ({ loadingStates, loading }: { loadingStates: 
   useEffect(() => {
     if (loading) {
       audioRef.current = new Audio("/modals.mp3");
-      audioRef.current.volume = 1.0; 
+      audioRef.current.volume = 1.0;
       audioRef.current.play().catch(() => {});
       const timer = setTimeout(() => {
         if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
@@ -361,6 +363,7 @@ export const MultiStepLoaderVip = ({ loadingStates, loading }: { loadingStates: 
       return () => clearTimeout(timer);
     } else {
       if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+      return undefined;
     }
   }, [loading]);
 

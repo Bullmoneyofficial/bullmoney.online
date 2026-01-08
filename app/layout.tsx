@@ -13,6 +13,9 @@ import { ShopProvider } from "@/app/VIP/ShopContext";
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_BASE_URL || "https://www.bullmoney.shop"
+  ),
   title: "BullMoney | Trading Community",
   description:
     "Join BullMoney  the all-in-one trading community for Crypto, Stocks, Forex, and Metals. Trade, learn, and track live markets together in real time. Money made easy.",

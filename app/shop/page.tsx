@@ -85,14 +85,12 @@ const OnboardingHelper = ({ onDismiss }: { onDismiss: () => void }) => {
 // =========================================
 // 2. AUDIO ARCHITECTURE
 // =========================================
-const BackgroundMusicSystem = ({ 
-  themeId, 
-  onReady,
-  volume 
-}: { 
+const BackgroundMusicSystem = ({
+  themeId,
+  onReady
+}: {
   themeId: string;
   onReady: (player: any) => void;
-  volume: number;
 }) => {
   const videoId = (THEME_SOUNDTRACKS && THEME_SOUNDTRACKS[themeId]) 
     ? THEME_SOUNDTRACKS[themeId] 
@@ -283,7 +281,7 @@ export default function ShopPage() {
   const playerRef = useRef<any>(null);
   
   // State to track if user is hovering a theme preview (to pause BG music)
-  const [isPreviewing, setIsPreviewing] = useState(false);
+  const isPreviewing = false;
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showHelper, setShowHelper] = useState(false);
 
@@ -293,7 +291,7 @@ export default function ShopPage() {
   }, [activeThemeId]);
 
   // Derived accent color based on theme
-  const accentColor = useMemo(() => getThemeColor(activeThemeId), [activeThemeId]);
+  const accentColor = useMemo(() => getThemeColor(activeThemeId) || '', [activeThemeId]);
     
   const isPlaying = useMemo(() => !isMuted, [isMuted]);
 
@@ -395,7 +393,7 @@ export default function ShopPage() {
     setCurrentStage("hold"); 
   }, []);
 
-  const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
+  const handleThemeChange = useCallback((themeId: string, _sound: SoundProfile, muted: boolean) => {
     setIsTransitioning(true);
     setTimeout(() => {
         setActiveThemeId(themeId);
@@ -443,10 +441,9 @@ export default function ShopPage() {
       <SpeedInsights />
 
       {/* AUDIO SYSTEM */}
-      <BackgroundMusicSystem 
-        themeId={activeThemeId} 
-        onReady={handlePlayerReady} 
-        volume={volume}
+      <BackgroundMusicSystem
+        themeId={activeThemeId}
+        onReady={handlePlayerReady}
       />
 
       {/* FIXED WIDGETS (Z-Index 400,000) - Above Configurator & Lens */}
@@ -456,7 +453,7 @@ export default function ShopPage() {
               isPlaying={isPlaying} 
               onToggleMusic={toggleMusic} 
               onOpenTheme={handleOpenTheme}
-              themeName={activeTheme.name} 
+              themeName={activeTheme?.name || ''} 
               volume={volume}
               onVolumeChange={handleVolumeChange}
               accentColor={accentColor} 
@@ -506,9 +503,9 @@ export default function ShopPage() {
         {currentStage === "register" && (
             <div 
                 className="fixed inset-0 z-[100000] bg-black transition-all duration-500"
-                style={{ 
-                    filter: activeTheme.filter,
-                    WebkitFilter: activeTheme.filter,
+                style={{
+                    filter: activeTheme?.filter,
+                    WebkitFilter: activeTheme?.filter,
                     transform: 'translateZ(0)' // Force new stacking context
                 }}
             >
@@ -517,26 +514,26 @@ export default function ShopPage() {
             </div>
         )}
         {currentStage === "hold" && (
-            <div 
+            <div
                 className="fixed inset-0 z-[100000] transition-all duration-500"
-                style={{ 
-                    filter: activeTheme.filter,
-                    WebkitFilter: activeTheme.filter,
+                style={{
+                    filter: activeTheme?.filter,
+                    WebkitFilter: activeTheme?.filter,
                     transform: 'translateZ(0)'
                 }}
             >
                 {/* @ts-ignore */}
                 <BullMoneyGate onUnlock={handleHoldComplete} theme={activeTheme}>
-                    <></> 
+                    <></>
                 </BullMoneyGate>
             </div>
         )}
         {currentStage === "v2" && (
-            <div 
+            <div
                 className="fixed inset-0 z-[100000] transition-all duration-500"
-                style={{ 
-                    filter: activeTheme.filter,
-                    WebkitFilter: activeTheme.filter,
+                style={{
+                    filter: activeTheme?.filter,
+                    WebkitFilter: activeTheme?.filter,
                     transform: 'translateZ(0)'
                 }}
             >

@@ -103,7 +103,7 @@ const LivePriceDisplay = ({ price, prevPrice }: { price: string, prevPrice: stri
 };
 
 const LiveTickerTape = ({ tickers }: { tickers: Record<string, TickerData> }) => {
-    const tickerList = TARGET_PAIRS.map(symbol => tickers[symbol]).filter(Boolean);
+    const tickerList = TARGET_PAIRS.map(symbol => tickers[symbol]).filter((t): t is TickerData => Boolean(t));
     const displayList = tickerList.length > 0 ? tickerList : TARGET_PAIRS.map(p => ({ symbol: p, price: '---', percentChange: '0.00', prevPrice: '0' }));
     const loopList = [...displayList, ...displayList, ...displayList];
 
@@ -272,7 +272,7 @@ export default function FixedThemeConfigurator({
     const [currentSound, setCurrentSound] = useState<SoundProfile>('MECHANICAL');
     const [showWelcome, setShowWelcome] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
-    const [activeCategory, setActiveCategory] = useState<ThemeCategory>('SENTIMENT'); 
+    const [activeCategory] = useState<ThemeCategory>('SENTIMENT'); 
     const [isMobile, setIsMobile] = useState(false); 
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
     

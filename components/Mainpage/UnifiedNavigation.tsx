@@ -41,7 +41,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
   disabled = false
 }) => {
   const [isGridOpen, setIsGridOpen] = useState(false);
-  const [isHovering, setIsHovering] = useState(false);
+  const [_isHovering, setIsHovering] = useState(false);
 
   const handlePrevPage = () => {
     if (disabled || currentPage <= 1) return;

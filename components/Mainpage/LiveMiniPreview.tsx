@@ -48,7 +48,7 @@ const getAssetInfo = (themeName: string): AssetInfo => {
     
     // 1. Iterate through the map to find a match in the theme name (prioritizing full names)
     const matches = Object.entries(ASSET_MAPPINGS)
-        .filter(([key, info]) => text.includes(key));
+        .filter(([key, _info]) => text.includes(key));
     
     // Find the best match: the longest keyword is usually the most specific
     const bestMatch = matches.sort((a, b) => b[0].length - a[0].length)[0];
@@ -66,12 +66,15 @@ const getAssetInfo = (themeName: string): AssetInfo => {
 
     // 2. Default Fallback (BTC)
     const defaultInfo = ASSET_MAPPINGS['btc'];
-    return { 
-        symbol: defaultInfo.symbol, 
-        type: defaultInfo.type, 
-        base: defaultInfo.base, 
-        label: 'BTC', 
-        decimals: defaultInfo.decimals 
+    if (!defaultInfo) {
+        return { symbol: 'BTCUSDT', type: 'CRYPTO', base: 60000, label: 'BTC', decimals: 2 };
+    }
+    return {
+        symbol: defaultInfo.symbol,
+        type: defaultInfo.type,
+        base: defaultInfo.base,
+        label: 'BTC',
+        decimals: defaultInfo.decimals
     };
 };
 

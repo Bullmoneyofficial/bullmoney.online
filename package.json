@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start -p $PORT",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "echo 'Running production readiness checks...' && npm run lint && npm run build",
+    "type-check": "tsc --noEmit",
+    "validate": "npm run type-check && npm run lint"
   },
   "dependencies": {
     "@calcom/embed-react": "^1.5.3",

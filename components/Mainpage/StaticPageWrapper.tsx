@@ -27,7 +27,7 @@ export const StaticPageWrapper = memo<StaticPageWrapperProps>(({
   children,
   animationType = 'fade',
   enableParallax = true,
-  enableTextReveal = false,
+  enableTextReveal: _enableTextReveal = false,
   enableScrollGradient = false,
   className = '',
 }) => {

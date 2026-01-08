@@ -160,6 +160,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
       }, 150);  // Ultra-fast 150ms cleanup for instant memory recovery
       return () => clearTimeout(unloadTimer);
     }
+    return undefined;
   }, [isVisible, isLoaded, isMobile, isHeavy, disabled, mobileOptIn, forceLiteSpline, forceLoadOverride, isCritical, eagerLoad, sceneUrl]);
 
   useEffect(() => {

@@ -442,16 +442,17 @@ const DockItem = memo(({ mouseX, item, isTipActive, onClick, accentColor }: Dock
     <>
       <motion.div
         ref={ref}
-        style={{ width, height: width }}
+        style={{
+          width,
+          height: width,
+          ...(( item as any).glow && { filter: `drop-shadow(0 0 6px ${(item as any).color || accentColor})` })
+        }}
         onHoverStart={handleHoverStart}
         onHoverEnd={() => setHovered(false)}
         onTouchStart={handleHoverStart}
         className={`mac-gpu-accelerate relative flex items-center justify-center rounded-full shadow-sm overflow-hidden z-20 cursor-pointer active:scale-90 transition-transform touch-manipulation ${
           (item as any).glow ? 'shadow-[0_0_12px_currentColor]' : ''
         }`}
-        style={{
-          ...(( item as any).glow && { filter: `drop-shadow(0 0 6px ${(item as any).color || accentColor})` })
-        }}
       >
         {/* THEMED SHIMMER GRADIENT */}
         <motion.div
@@ -520,7 +521,7 @@ const DockItem = memo(({ mouseX, item, isTipActive, onClick, accentColor }: Dock
   return (
     <Link
       href={item.link as any}
-      onClick={(e) => {
+      onClick={() => {
         playClick();
         if (navigator.vibrate) navigator.vibrate(10);
       }}
@@ -540,7 +541,7 @@ const DockItem = memo(({ mouseX, item, isTipActive, onClick, accentColor }: Dock
 DockItem.displayName = "DockItem";
 
 // --- MOBILE NAV ---
-const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMuted, onMuteToggle, disableSpline, onPerformanceToggle, infoPanelOpen, onInfoToggle, onFaqClick, onControlCenterToggle }: any) => {
+const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMuted, onMuteToggle, disableSpline, onPerformanceToggle, infoPanelOpen, onInfoToggle, onFaqClick, onControlCenterToggle: _onControlCenterToggle }: any) => {
   const [open, setOpen] = useState(false);
   const [activeTipIndex, setActiveTipIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -881,7 +882,7 @@ const AnimatedLogoWrapper = ({ children, accentColor }: { children: React.ReactN
 );
 
 // --- CONTROL BUTTONS COMPONENT ---
-const ControlButtons = memo(({ isMuted, onMuteToggle, disableSpline, onPerformanceToggle, infoPanelOpen, onInfoToggle, onFaqClick, onControlCenterToggle, accentColor }: any) => {
+const ControlButtons = memo(({ isMuted, onMuteToggle, disableSpline, onPerformanceToggle, infoPanelOpen, onInfoToggle, onFaqClick, onControlCenterToggle: _onControlCenterToggle, accentColor }: any) => {
   const controlButtons = [
     {
       icon: infoPanelOpen ? Unlock : Lock,

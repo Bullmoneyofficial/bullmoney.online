@@ -63,7 +63,9 @@ const useLivePrice = (assetKey: AssetKey) => {
   useEffect(() => {
     let ws: WebSocket | null = null;
     try {
-      const symbol = ASSETS[assetKey].symbol.split(":")[1].toLowerCase();
+      const symbolParts = ASSETS[assetKey].symbol.split(":");
+      const symbol = symbolParts[1]?.toLowerCase();
+      if (!symbol) return;
       ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@trade`);
       ws.onmessage = (event) => {
         const now = Date.now();
@@ -89,7 +91,7 @@ const useMouseVelocity = () => {
   const smoothY = useSpring(y, { damping: 40, stiffness: 250 });
   const velocity = useTransform(
     [useVelocity(smoothX), useVelocity(smoothY)],
-    ([latestX, latestY]: number[]) => Math.sqrt(latestX ** 2 + latestY ** 2)
+    ([latestX, latestY]: number[]) => Math.sqrt((latestX ?? 0) ** 2 + (latestY ?? 0) ** 2)
   );
   return { x, y, velocity };
 };
@@ -413,7 +415,6 @@ export default function QuickGate({ children, onUnlock, onFinished }: QuickGateP
   const [isCompleted, setIsCompleted] = useState(false);
   const [gateVisible, setGateVisible] = useState(true);
   const [showTerminal, setShowTerminal] = useState(false);
-  const [gameScore, setGameScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
   const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number }>>([]);
 
@@ -438,7 +439,6 @@ export default function QuickGate({ children, onUnlock, onFinished }: QuickGateP
   }, [onFinished, onUnlock]);
 
   const handleGameScore = useCallback((score: number) => {
-    setGameScore(score);
     if (score > bestScore) setBestScore(score);
   }, [bestScore]);
 

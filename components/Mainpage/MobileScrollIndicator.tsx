@@ -90,7 +90,7 @@ export const MobileScrollIndicator: React.FC<MobileScrollIndicatorProps> = ({
   }, [scrollContainerRef, isHolding, isDragging]);
 
   // Handle touch/mouse drag on indicator
-  const handleDragStart = (clientY: number) => {
+  const handleDragStart = (_clientY: number) => {
     setIsDragging(true);
     setIsHolding(true);
     setIsVisible(true);
@@ -139,12 +139,18 @@ export const MobileScrollIndicator: React.FC<MobileScrollIndicatorProps> = ({
   // Touch handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
-    handleDragStart(e.touches[0].clientY);
+    const touch = e.touches[0];
+    if (touch) {
+      handleDragStart(touch.clientY);
+    }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     e.preventDefault();
-    handleDragMove(e.touches[0].clientY);
+    const touch = e.touches[0];
+    if (touch) {
+      handleDragMove(touch.clientY);
+    }
   };
 
   const handleTouchEnd = () => {

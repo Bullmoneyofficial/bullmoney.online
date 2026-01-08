@@ -410,7 +410,7 @@ const InlineFaq = () => {
           >
             <div className="h-[2px] flex-1 bg-gradient-to-r from-blue-500 to-transparent" />
             <p className="text-xs uppercase text-blue-400 font-mono tracking-[0.2em] whitespace-nowrap">
-              {FAQ_CONTENT[currentCategoryIndex].category}
+              {FAQ_CONTENT[currentCategoryIndex]?.category}
             </p>
             <div className="h-[2px] flex-1 bg-gradient-to-l from-blue-500 to-transparent" />
           </motion.div>

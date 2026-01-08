@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 // OGL imports for the Orb
 import { Renderer, Program, Mesh, Triangle, Vec3 } from "ogl";
 // Three.js imports for the Ghost Cursor
@@ -254,8 +254,10 @@ const GhostCursorBackground = React.memo(({
       composer.setSize(width, height);
       composer.setPixelRatio(dpr * RENDER_SCALE);
       
-      material.uniforms.iResolution.value.set(wPx, hPx, 1);
-      material.uniforms.iScale.value = Math.max(0.5, Math.min(2.0, Math.min(width, height) / 600));
+      material.uniforms.iResolution?.value?.set(wPx, hPx, 1);
+      if (material.uniforms.iScale) {
+        material.uniforms.iScale.value = Math.max(0.5, Math.min(2.0, Math.min(width, height) / 600));
+      }
     };
 
     const ro = new ResizeObserver(resize);
@@ -264,7 +266,9 @@ const GhostCursorBackground = React.memo(({
 
     // Intersection Observer to stop rendering when not visible
     const observer = new IntersectionObserver(([entry]) => {
-      isVisibleRef.current = entry.isIntersecting;
+      if (entry) {
+        isVisibleRef.current = entry.isIntersecting;
+      }
     });
     observer.observe(host);
 
@@ -281,14 +285,14 @@ const GhostCursorBackground = React.memo(({
       const t = (now - start) / 1000;
 
       // Logic: Mouse Inertia
-      if (pointerActiveRef.current) {
+      if (pointerActiveRef.current && material.uniforms.iMouse?.value) {
         velocityRef.current.set(
           currentMouseRef.current.x - material.uniforms.iMouse.value.x,
           currentMouseRef.current.y - material.uniforms.iMouse.value.y
         );
         material.uniforms.iMouse.value.copy(currentMouseRef.current);
         fadeOpacityRef.current = 1.0;
-      } else {
+      } else if (material.uniforms.iMouse?.value) {
         velocityRef.current.multiplyScalar(inertia);
         material.uniforms.iMouse.value.add(velocityRef.current);
         const dt = now - lastMoveTimeRef.current;
@@ -298,17 +302,31 @@ const GhostCursorBackground = React.memo(({
       }
 
       // Logic: Trail
-      const N = trailBufRef.current.length;
-      headRef.current = (headRef.current + 1) % N;
-      trailBufRef.current[headRef.current].copy(material.uniforms.iMouse.value);
-      const arr = material.uniforms.iPrevMouse.value as THREE.Vector2[];
-      
-      // Update Uniforms
-      for (let i = 0; i < N; i++) {
-        arr[i].copy(trailBufRef.current[(headRef.current - i + N) % N]);
+      if (material.uniforms.iMouse?.value && material.uniforms.iPrevMouse?.value) {
+        const N = trailBufRef.current.length;
+        headRef.current = (headRef.current + 1) % N;
+        const trailItem = trailBufRef.current[headRef.current];
+        if (trailItem) {
+          trailItem.copy(material.uniforms.iMouse.value);
+        }
+        const arr = material.uniforms.iPrevMouse.value as THREE.Vector2[];
+
+        // Update Uniforms
+        for (let i = 0; i < N; i++) {
+          const arrItem = arr[i];
+          const trailIdx = (headRef.current - i + N) % N;
+          const trailItem2 = trailBufRef.current[trailIdx];
+          if (arrItem && trailItem2) {
+            arrItem.copy(trailItem2);
+          }
+        }
       }
-      material.uniforms.iOpacity.value = fadeOpacityRef.current;
-      material.uniforms.iTime.value = t;
+      if (material.uniforms.iOpacity) {
+        material.uniforms.iOpacity.value = fadeOpacityRef.current;
+      }
+      if (material.uniforms.iTime) {
+        material.uniforms.iTime.value = t;
+      }
 
       composer.render();
       rafRef.current = requestAnimationFrame(animate);
@@ -340,7 +358,9 @@ const GhostCursorBackground = React.memo(({
 
   // Color update
   useEffect(() => {
-    if (materialRef.current) materialRef.current.uniforms.iBaseColor.value.set(color);
+    if (materialRef.current?.uniforms.iBaseColor?.value) {
+      materialRef.current.uniforms.iBaseColor.value.set(color);
+    }
   }, [color]);
 
   return <div ref={containerRef} className="absolute inset-0 z-0 pointer-events-none" style={style} />;
@@ -529,7 +549,9 @@ export default function Orb({
 
     // Intersection Observer
     const observer = new IntersectionObserver(([entry]) => {
-      isVisibleRef.current = entry.isIntersecting;
+      if (entry) {
+        isVisibleRef.current = entry.isIntersecting;
+      }
     });
     observer.observe(container);
 

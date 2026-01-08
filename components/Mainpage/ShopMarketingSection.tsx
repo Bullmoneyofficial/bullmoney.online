@@ -216,7 +216,7 @@ const MiniTradingChart = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setDataPoints((prev) => {
-        const last = prev[prev.length - 1];
+        const last = prev[prev.length - 1] ?? 30;
         const change = Math.floor(Math.random() * 13) - 5;
         let newValue = last + change;
         if (newValue < 10) newValue = 15;

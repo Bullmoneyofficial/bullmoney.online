@@ -197,7 +197,7 @@ export function useLazyLoad(options?: IntersectionObserverInit) {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !hasLoaded) {
+        if (entry?.isIntersecting && !hasLoaded) {
           setIsVisible(true);
           setHasLoaded(true);
         }

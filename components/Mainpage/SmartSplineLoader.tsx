@@ -43,7 +43,7 @@ export const SmartSplineLoader = memo(({
   const [hasSplineLoaded, setHasSplineLoaded] = useState(false);
   const [cachedBlob, setCachedBlob] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [loadProgress, setLoadProgress] = useState(0);
+  const [_loadProgress, _setLoadProgress] = useState(0);
   const splineRef = useRef<any>(null);
   const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -55,8 +55,6 @@ export const SmartSplineLoader = memo(({
   const isMobile = deviceProfile?.isMobile ?? false;
   const isWebView = deviceProfile?.isWebView ?? false;
   const isHighEnd = deviceProfile?.isHighEndDevice ?? true;
-  const prefersReducedData = deviceProfile?.prefersReducedData ?? false;
-  const connectionType = deviceProfile?.connectionType ?? '4g';
 
   // Load from cache or network with smart detection for Safari, Chrome, WebView
   const loadSpline = async () => {

@@ -17,9 +17,9 @@ export default function LazySplineSection({ scene, className = "", children }: P
     const observer = new IntersectionObserver(
       ([entry]) => {
         // Only load the heavy 3D scene when the user scrolls near it (10% visible)
-        if (entry.isIntersecting) {
+        if (entry?.isIntersecting) {
           setIsVisible(true);
-          observer.disconnect(); 
+          observer.disconnect();
         }
       },
       { threshold: 0.1 }
