@@ -27,24 +27,6 @@ type LoaderProps = {
   theme?: unknown;
 };
 
-// --- ANIMATED BORDER ---
-const MovingBorder = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
-  return (
-    <div className="relative p-[2px] overflow-hidden rounded-3xl group">
-      <motion.div
-        initial={{ rotate: 0 }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-        className="absolute inset-[-200%] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,#3b82f6_50%,transparent_100%)]"
-        style={{ willChange: "transform" }}
-      />
-      <div className={cn("relative h-full w-full bg-slate-950 rounded-3xl", className)}>
-        {children}
-      </div>
-    </div>
-  );
-};
-
 // --- LIVE PRICE HOOK ---
 const useLivePrice = (assetKey: AssetKey) => {
   const [price, setPrice] = useState<number>(0);
@@ -394,7 +376,13 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
           <motion.div
             exit={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }}
             transition={{ duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96] }}
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950/20 to-slate-950 text-white overflow-hidden"
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950/20 to-slate-950 text-white overflow-hidden cursor-auto"
+            onMouseDown={handleInteractionStart}
+            onMouseUp={handleInteractionEnd}
+            onMouseLeave={handleInteractionEnd}
+            onTouchStart={handleInteractionStart}
+            onTouchEnd={handleInteractionEnd}
+            onTouchCancel={handleInteractionEnd}
           >
             {/* Animated Background Grid */}
             <div className="absolute inset-0 overflow-hidden opacity-20">
@@ -452,22 +440,31 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
             {/* Main Content */}
             <motion.div
               style={{ x: shakeX, y: shakeY, scale }}
-              className="relative z-30 flex flex-col items-center gap-6 w-full max-w-lg px-6"
+              className="relative z-30 flex flex-col items-center gap-6 w-full max-w-lg px-6 pb-16"
             >
-              {/* Logo */}
-              <motion.div
+              {/* Holdable Asset Icon */}
+              <motion.button
+                type="button"
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                className="relative"
+                className="relative cursor-pointer select-none outline-none"
+                aria-label="Hold to enter"
               >
+                <div
+                  className="absolute inset-[-10px] rounded-full opacity-80"
+                  style={{
+                    background: `conic-gradient(#60a5fa ${progress}%, rgba(255,255,255,0.08) ${progress}%)`,
+                    filter: isHolding ? "drop-shadow(0 0 35px rgba(59,130,246,0.55))" : "none",
+                  }}
+                />
                 <motion.div
                   animate={{
                     boxShadow: isHolding
                       ? "0 0 60px rgba(59, 130, 246, 0.8), 0 0 120px rgba(59, 130, 246, 0.4)"
                       : "0 0 30px rgba(59, 130, 246, 0.5)",
                   }}
-                  className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-4xl font-bold"
+                  className="relative w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-5xl font-bold"
                 >
                   {ASSETS[selectedAsset].icon}
                 </motion.div>
@@ -476,10 +473,10 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
                     transition={{ duration: 1, repeat: Infinity }}
-                    className="absolute inset-0 rounded-full border-4 border-blue-400"
+                    className="absolute inset-[-6px] rounded-full border-4 border-blue-400"
                   />
                 )}
-              </motion.div>
+              </motion.button>
 
               {/* Price Display */}
               <motion.div
@@ -543,125 +540,83 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 </div>
               </motion.div>
 
-              {/* Interactive Button */}
+              {/* Progress Display */}
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="relative w-full max-w-md h-24 cursor-pointer select-none"
-                onMouseDown={handleInteractionStart}
-                onMouseUp={handleInteractionEnd}
-                onMouseLeave={handleInteractionEnd}
-                onTouchStart={handleInteractionStart}
-                onTouchEnd={handleInteractionEnd}
-                onTouchCancel={handleInteractionEnd}
+                className="w-full max-w-md flex flex-col items-center gap-3"
               >
-                <MovingBorder>
-                  <motion.div
-                    whileTap={{ scale: 0.98 }}
-                    className="relative h-full w-full flex items-center justify-center overflow-hidden"
-                  >
-                    {/* Progress Fill */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500"
-                      style={{
-                        transformOrigin: "left",
-                        transform: `scaleX(${progress / 100})`,
-                      }}
-                    />
-
-                    {/* Shimmer Effect */}
-                    {isHolding && (
-                      <motion.div
-                        animate={{
-                          x: ["-100%", "200%"],
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "linear",
-                        }}
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                        style={{ width: "50%" }}
-                      />
-                    )}
-
-                    {/* Button Content */}
-                    <div className="relative z-10 flex items-center gap-3">
-                      <motion.span
-                        animate={{
-                          scale: isHolding ? [1, 1.1, 1] : 1,
-                        }}
-                        transition={{
-                          duration: 0.5,
-                          repeat: isHolding ? Infinity : 0,
-                        }}
-                        className="text-2xl md:text-3xl font-black tracking-tighter"
-                        style={{
-                          color: progress > 50 ? "#000000" : "#ffffff",
-                          textShadow: progress > 50 ? "none" : "0 2px 10px rgba(0,0,0,0.5)",
-                        }}
-                      >
-                        {progress === 0 ? "HOLD TO ENTER" : progress >= 100 ? "LAUNCHING" : `${Math.floor(progress)}%`}
-                      </motion.span>
-                      <motion.div
-                        animate={{
-                          rotate: isHolding ? 360 : 0,
-                          x: isHolding ? 5 : 0,
-                          y: isHolding ? -5 : 0,
-                        }}
-                        transition={{
-                          rotate: { duration: 2, repeat: Infinity, ease: "linear" },
-                        }}
-                      >
-                        <ArrowUpRight
-                          className="w-7 h-7"
-                          style={{
-                            color: progress > 50 ? "#000000" : "#ffffff",
-                          }}
-                        />
-                      </motion.div>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="absolute bottom-2 left-4 right-4 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                      <motion.div
-                        className="h-full bg-gradient-to-r from-cyan-400 to-blue-500"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                  </motion.div>
-                </MovingBorder>
-
-                {/* Particles */}
-                {particles.map((p) => (
-                  <motion.div
-                    key={p.id}
-                    initial={{ opacity: 1 }}
-                    animate={{ opacity: 0 }}
-                    transition={{ duration: 1 }}
-                    className="absolute pointer-events-none"
+                <div className="flex items-center gap-2 text-2xl md:text-3xl font-black tracking-tighter">
+                  <motion.span
+                    animate={{
+                      scale: isHolding ? [1, 1.08, 1] : 1,
+                    }}
+                    transition={{
+                      duration: 0.5,
+                      repeat: isHolding ? Infinity : 0,
+                    }}
                     style={{
-                      left: p.x,
-                      top: p.y,
+                      color: progress > 50 ? "#60a5fa" : "#ffffff",
+                      textShadow: progress > 50 ? "0 0 20px rgba(59,130,246,0.7)" : "0 2px 10px rgba(0,0,0,0.5)",
                     }}
                   >
-                    <Sparkles className="w-4 h-4 text-blue-400" />
+                    {progress === 0 ? "HOLD TO ENTER" : progress >= 100 ? "LAUNCHING" : `${Math.floor(progress)}%`}
+                  </motion.span>
+                  <motion.div
+                    animate={{
+                      rotate: isHolding ? 360 : 0,
+                      x: isHolding ? 5 : 0,
+                      y: isHolding ? -5 : 0,
+                    }}
+                    transition={{
+                      rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+                    }}
+                  >
+                    <ArrowUpRight
+                      className="w-7 h-7"
+                      style={{
+                        color: progress > 50 ? "#60a5fa" : "#ffffff",
+                      }}
+                    />
                   </motion.div>
-                ))}
+                </div>
+                <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-cyan-400 to-blue-500"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
               </motion.div>
+
+              {/* Particles */}
+              {particles.map((p) => (
+                <motion.div
+                  key={p.id}
+                  initial={{ opacity: 1 }}
+                  animate={{ opacity: 0 }}
+                  transition={{ duration: 1 }}
+                  className="absolute pointer-events-none"
+                  style={{
+                    left: p.x,
+                    top: p.y,
+                  }}
+                >
+                  <Sparkles className="w-4 h-4 text-blue-400" />
+                </motion.div>
+              ))}
 
               {/* Helper Tip */}
               <AnimatePresence>
                 {showTip && progress === 0 && (
                   <motion.div
-                    initial={{ y: 10, opacity: 0 }}
+                    initial={{ y: 12, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: -10, opacity: 0 }}
-                    className="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/50 px-4 py-2 rounded-full border border-slate-700"
+                    exit={{ y: -12, opacity: 0 }}
+                    className="pointer-events-none mt-6 flex items-center gap-2 text-xs text-white/90 bg-gradient-to-r from-blue-500/80 via-cyan-400/80 to-blue-600/80 px-5 py-2 rounded-full border border-white/30 shadow-[0_0_25px_rgba(59,130,246,0.8)] backdrop-blur"
                   >
-                    <Zap className="w-3 h-3 text-yellow-400" />
-                    Hold the button to access the website
+                    <Zap className="w-3 h-3 text-yellow-200 drop-shadow" />
+                    Press and hold anywhere until 100% to access the website
                   </motion.div>
                 )}
               </AnimatePresence>
