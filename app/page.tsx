@@ -36,6 +36,10 @@ const PerformancePrompt = dynamic(() => import('@/components/Mainpage/Performanc
 const ProgressBar = dynamic(() => import('@/components/Mainpage/ProgressBar').then(m => m.ProgressBar), { ssr: false });
 const FAQOverlay = dynamic(() => import('@/components/Mainpage/FAQOverlay').then(m => m.FAQOverlay), { ssr: false });
 const PerfToast = dynamic(() => import('@/components/Mainpage/PerfToast').then(m => m.PerfToast), { ssr: false });
+const MobileStaticContent = dynamic(() => import('@/components/Mainpage/MobileStaticContent'), {
+  ssr: false,
+  loading: () => <div className="min-h-[100dvh] w-full bg-black" />,
+});
 
 // Configuration and utilities
 import { useDeviceProfile } from '@/lib/deviceProfile';
@@ -100,13 +104,18 @@ export default function Home() {
     contentMounted: pageState.contentMounted,
   });
 
+  const isMobileLike = deviceProfile.isMobile || performanceState.isTouch || performanceState.isCompactViewport;
+  const useMobileStaticContent = deviceProfile.isMobile || performanceState.isTouch;
+  const effectiveDisableSpline = performanceState.disableSpline || useMobileStaticContent;
+  const shouldUseSplines = !useMobileStaticContent && !performanceState.disableSpline;
+
   // Telemetry tracking
   React.useEffect(() => {
     telemetryContextRef.current = {
       stage: pageState.currentStage,
       activePage: pageState.activePage,
       isTouch: performanceState.isTouch,
-      disableSpline: performanceState.disableSpline,
+      disableSpline: effectiveDisableSpline,
       isSafeMode: performanceState.isSafeMode,
       isSafari: performanceState.isSafari,
       deviceProfile: {
@@ -118,7 +127,7 @@ export default function Home() {
       },
       ua: typeof navigator !== 'undefined' ? navigator.userAgent : '',
     };
-  }, [pageState.activePage, pageState.currentStage, deviceProfile, performanceState]);
+  }, [pageState.activePage, pageState.currentStage, deviceProfile, performanceState, effectiveDisableSpline]);
 
   React.useEffect(() => {
     const uninstall = installCrashTelemetry(() => telemetryContextRef.current);
@@ -142,8 +151,8 @@ export default function Home() {
   // Computed values
   // FIXED: Ensure all devices can load 3D splines - no restrictions based on device type
   const prioritizedSplineScenes = useMemo(() => {
-    if (performanceState.disableSpline) {
-      console.log('[App] Splines disabled via performance toggle');
+    if (!shouldUseSplines) {
+      console.log(useMobileStaticContent ? '[App] Mobile static mode - splines disabled' : '[App] Splines disabled via performance toggle');
       return [];
     }
     const baseScenes = ["/scene1.splinecode", "/scene.splinecode", "/scene2.splinecode", "/scene3.splinecode", "/scene4.splinecode", "/scene5.splinecode", "/scene6.splinecode"];
@@ -152,27 +161,26 @@ export default function Home() {
     // Low-end devices: Still load all scenes with crash-safe loaders
     console.log('[App] Splines enabled - will load all scenes with device-optimized quality');
     return baseScenes;
-  }, [performanceState.disableSpline]);
+  }, [shouldUseSplines, useMobileStaticContent]);
 
   const criticalSplineScenes = useMemo(() => prioritizedSplineScenes.slice(0, 2), [prioritizedSplineScenes]);
 
   // Initialize optimization system
   useOptimizations({
     enableServiceWorker: true,
-    criticalScenes: criticalSplineScenes.length ? criticalSplineScenes : ['/scene1.splinecode'],
-    preloadScenes: performanceState.disableSpline ? [] : prioritizedSplineScenes.slice(1)
+    criticalScenes: shouldUseSplines ? (criticalSplineScenes.length ? criticalSplineScenes : ['/scene1.splinecode']) : [],
+    preloadScenes: shouldUseSplines ? prioritizedSplineScenes.slice(1) : []
   });
 
   const visiblePages = useMemo(() => {
-    if (performanceState.disableSpline) {
+    if (effectiveDisableSpline) {
       const firstPage = PAGE_CONFIG.find(page => page.id === 1);
       const tsxPages = PAGE_CONFIG.filter(page => page.type === 'tsx');
       return firstPage ? [firstPage, ...tsxPages] : tsxPages;
     }
     return PAGE_CONFIG;
-  }, [performanceState.disableSpline]);
+  }, [effectiveDisableSpline]);
 
-  const isMobileLike = deviceProfile.isMobile || performanceState.isTouch || performanceState.isCompactViewport;
   const showMobileQuickActions = useMemo(
     () => pageState.currentStage === 'content' && isMobileLike && !uiState.showConfigurator && !uiState.faqOpen && !uiState.controlCenterOpen && !uiState.showPerfPrompt && !uiState.showThemeQuickPick,
     [uiState, pageState.currentStage, isMobileLike]
@@ -185,7 +193,7 @@ export default function Home() {
   const safeAreaBottom = 'calc(env(safe-area-inset-bottom, 0px) + 10px)';
 
   const shouldRenderContent = pageState.currentStage === 'content' || pageState.contentMounted;
-  const showHeroLoaderOverlay = pageState.currentStage === 'content' && !performanceState.heroSceneReady && !performanceState.heroLoaderHidden;
+  const showHeroLoaderOverlay = pageState.currentStage === 'content' && shouldUseSplines && !performanceState.heroSceneReady && !performanceState.heroLoaderHidden;
   const heroLoaderMessage = deviceProfile.isMobile ? 'Optimizing for Mobile Trading' : 'Loading Premium Trading Experience';
 
   // Handlers
@@ -241,6 +249,15 @@ export default function Home() {
     uiState.setShowPerfPrompt(false);
   }, [uiState, performanceState]);
 
+  const handlePerformanceToggle = useCallback(() => {
+    if (useMobileStaticContent) {
+      uiState.setPerfToast({ message: 'Mobile static mode - 3D disabled', type: 'info' });
+      setTimeout(() => uiState.setPerfToast(null), 2500);
+      return;
+    }
+    performanceState.handlePerformanceToggle(uiState.setPerfToast, themeState.setParticleTrigger);
+  }, [useMobileStaticContent, uiState, performanceState, themeState]);
+
   // FIXED: Default to high performance (3D enabled) for all devices
   // Users can switch to balanced mode if needed via performance toggle
   const defaultPerfMode = useMemo(() => {
@@ -254,12 +271,12 @@ export default function Home() {
 
   // Swipe navigation
   const navigateToNextPage = useCallback(() => {
-    const maxPages = performanceState.disableSpline ? visiblePages.length : PAGE_CONFIG.length;
+    const maxPages = effectiveDisableSpline ? visiblePages.length : PAGE_CONFIG.length;
     if (pageState.activePage < maxPages) {
       playClick();
       pageState.pageRefs.current[pageState.activePage]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [pageState, performanceState, visiblePages]);
+  }, [pageState, effectiveDisableSpline, visiblePages]);
 
   const navigateToPrevPage = useCallback(() => {
     if (pageState.activePage > 1) {
@@ -306,13 +323,13 @@ export default function Home() {
       {/* Mobile Quick Actions */}
       <MobileQuickActions
         isVisible={showMobileQuickActions}
-        disableSpline={performanceState.disableSpline}
+        disableSpline={effectiveDisableSpline}
         isPlaying={!musicState.isMuted}
         volume={musicState.volume}
         safeAreaInlinePadding={safeAreaInlinePadding}
         safeAreaBottom={safeAreaBottom}
         accentColor={themeState.accentColor}
-        onPerformanceToggle={() => performanceState.handlePerformanceToggle(uiState.setPerfToast, themeState.setParticleTrigger)}
+        onPerformanceToggle={handlePerformanceToggle}
         onMusicToggle={musicState.toggleMusic}
         onThemeClick={() => {
           uiState.setControlCenterOpen(false);
@@ -330,7 +347,7 @@ export default function Home() {
       />
 
       {/* Info Panel */}
-      {shouldRenderContent && (
+      {shouldRenderContent && !useMobileStaticContent && (
         <InfoPanel
           config={PAGE_CONFIG[pageState.activePage - 1]}
           isOpen={uiState.infoPanelOpen}
@@ -343,14 +360,16 @@ export default function Home() {
       <FAQOverlay isOpen={uiState.faqOpen} onClose={() => uiState.setFaqOpen(false)} />
 
       {/* Progress Bar */}
-      <ProgressBar isVisible={pageState.currentStage === 'content'} activePage={pageState.activePage} totalPages={visiblePages.length} />
+      {!useMobileStaticContent && (
+        <ProgressBar isVisible={pageState.currentStage === 'content'} activePage={pageState.activePage} totalPages={visiblePages.length} />
+      )}
 
       {/* Performance Toast */}
       <PerfToast toast={uiState.perfToast} />
 
       {/* Performance Prompt */}
       <PerformancePrompt
-        isVisible={uiState.showPerfPrompt && pageState.currentStage === 'content'}
+        isVisible={!useMobileStaticContent && uiState.showPerfPrompt && pageState.currentStage === 'content'}
         accentColor={themeState.accentColor}
         deviceProfile={deviceProfile}
         defaultPerfMode={defaultPerfMode}
@@ -411,10 +430,10 @@ export default function Home() {
               onThemeChange={(themeId) => themeState.handleQuickThemeChange(themeId, musicState.isMuted, musicState.safePlay)}
               isMuted={musicState.isMuted}
               onMuteToggle={musicState.toggleMusic}
-              disableSpline={performanceState.disableSpline}
-              onPerformanceToggle={() => performanceState.handlePerformanceToggle(uiState.setPerfToast, themeState.setParticleTrigger)}
-              infoPanelOpen={uiState.infoPanelOpen}
-              onInfoToggle={() => uiState.setInfoPanelOpen((prev) => !prev)}
+              disableSpline={effectiveDisableSpline}
+              onPerformanceToggle={handlePerformanceToggle}
+              infoPanelOpen={useMobileStaticContent ? false : uiState.infoPanelOpen}
+              onInfoToggle={useMobileStaticContent ? undefined : () => uiState.setInfoPanelOpen((prev) => !prev)}
               onFaqClick={() => uiState.setFaqOpen(true)}
               onControlCenterToggle={() => uiState.setControlCenterOpen((prev) => !prev)}
             />
@@ -454,72 +473,97 @@ export default function Home() {
           <ThreeDHintIcon
             onClick={() => uiState.setControlCenterOpen((prev) => !prev)}
             accentColor={themeState.accentColor}
-            disableSpline={performanceState.disableSpline}
+            disableSpline={effectiveDisableSpline}
             showHint={!pageState.hasSeenIntro}
             isOpen={uiState.controlCenterOpen}
             dockSide={isMobileLike ? 'left' : 'right'}
           />
 
           {/* Scroll Container - Enhanced for Mobile */}
-          <main
-            ref={pageState.scrollContainerRef}
-            data-scroll-container
-            className={`profit-reveal w-full h-full flex flex-col overflow-y-scroll overflow-x-hidden unified-scroll ${performanceState.isTouch ? 'touch-device' : 'non-touch-device snap-y snap-mandatory scroll-smooth'} bg-black no-scrollbar text-white relative`}
-            onTouchStart={swipeHandlers.onTouchStart}
-            onTouchMove={swipeHandlers.onTouchMove}
-            onTouchEnd={swipeHandlers.onTouchEnd}
-            style={{
-              WebkitOverflowScrolling: 'touch',
-              WebkitTapHighlightColor: 'transparent',
-              touchAction: 'pan-y',
-              maxWidth: '100vw',
-              maxHeight: '100dvh',
-              paddingLeft: 'env(safe-area-inset-left, 0px)',
-              paddingRight: 'env(safe-area-inset-right, 0px)',
-              scrollbarGutter: 'stable both-edges',
-              // Mobile-specific improvements
-              scrollPaddingTop: isMobileLike ? '100px' : '0px',
-              paddingBottom: isMobileLike ? 'calc(80px + env(safe-area-inset-bottom, 0px))' : '0px'
-            }}
-          >
-            {pageState.showOrientationWarning && <OrientationOverlay onDismiss={handleOrientationDismiss} />}
+          {useMobileStaticContent ? (
+            <main
+              ref={pageState.scrollContainerRef}
+              data-scroll-container
+              className={`profit-reveal w-full min-h-[100dvh] overflow-y-auto overflow-x-hidden unified-scroll mobile-scroll bg-black no-scrollbar text-white relative`}
+              style={{
+                WebkitOverflowScrolling: 'touch',
+                WebkitTapHighlightColor: 'transparent',
+                touchAction: 'pan-y',
+                maxWidth: '100vw',
+                maxHeight: '100dvh',
+                paddingLeft: 'env(safe-area-inset-left, 0px)',
+                paddingRight: 'env(safe-area-inset-right, 0px)',
+                scrollbarGutter: 'stable both-edges',
+                paddingBottom: isMobileLike ? 'calc(80px + env(safe-area-inset-bottom, 0px))' : '0px'
+              }}
+            >
+              {pageState.showOrientationWarning && <OrientationOverlay onDismiss={handleOrientationDismiss} />}
+              <MobileStaticContent />
+              <div className="w-full mt-10">
+                <Footer />
+              </div>
+            </main>
+          ) : (
+            <main
+              ref={pageState.scrollContainerRef}
+              data-scroll-container
+              className={`profit-reveal w-full h-full flex flex-col overflow-y-scroll overflow-x-hidden unified-scroll ${performanceState.isTouch ? 'touch-device' : 'non-touch-device snap-y snap-mandatory scroll-smooth'} bg-black no-scrollbar text-white relative`}
+              onTouchStart={swipeHandlers.onTouchStart}
+              onTouchMove={swipeHandlers.onTouchMove}
+              onTouchEnd={swipeHandlers.onTouchEnd}
+              style={{
+                WebkitOverflowScrolling: 'touch',
+                WebkitTapHighlightColor: 'transparent',
+                touchAction: 'pan-y',
+                maxWidth: '100vw',
+                maxHeight: '100dvh',
+                paddingLeft: 'env(safe-area-inset-left, 0px)',
+                paddingRight: 'env(safe-area-inset-right, 0px)',
+                scrollbarGutter: 'stable both-edges',
+                // Mobile-specific improvements
+                scrollPaddingTop: isMobileLike ? '100px' : '0px',
+                paddingBottom: isMobileLike ? 'calc(80px + env(safe-area-inset-bottom, 0px))' : '0px'
+              }}
+            >
+              {pageState.showOrientationWarning && <OrientationOverlay onDismiss={handleOrientationDismiss} />}
 
-            {/* Scroll Pages */}
-            {visiblePages.map((page) => (
-              <React.Fragment key={page.id}>
-                {page.type === 'split' ? (
-                  <DraggableSplitSection
-                    config={page}
-                    activePage={pageState.activePage}
-                    onVisible={(el: HTMLElement | null) => { pageState.pageRefs.current[page.id - 1] = el; }}
-                    parallaxOffset={performanceState.parallaxOffset}
-                    disableSpline={performanceState.disableSpline}
-                    useCrashSafeSpline={true}
-                    forceLiteSpline={false}
-                    eagerRenderSplines={performanceState.splinesEnabled}
-                    deviceProfile={deviceProfile}
-                  />
-                ) : (
-                  <FullScreenSection
-                    config={page}
-                    activePage={pageState.activePage}
-                    onVisible={(el: HTMLElement | null) => { pageState.pageRefs.current[page.id - 1] = el; }}
-                    parallaxOffset={performanceState.parallaxOffset}
-                    disableSpline={performanceState.disableSpline}
-                    useCrashSafeSpline={true}
-                    forceLiteSpline={false}
-                    eagerRenderSplines={performanceState.splinesEnabled}
-                    onSceneReady={page.id === 1 ? handleHeroReady : undefined}
-                    deviceProfile={deviceProfile}
-                  />
-                )}
-              </React.Fragment>
-            ))}
+              {/* Scroll Pages */}
+              {visiblePages.map((page) => (
+                <React.Fragment key={page.id}>
+                  {page.type === 'split' ? (
+                    <DraggableSplitSection
+                      config={page}
+                      activePage={pageState.activePage}
+                      onVisible={(el: HTMLElement | null) => { pageState.pageRefs.current[page.id - 1] = el; }}
+                      parallaxOffset={performanceState.parallaxOffset}
+                      disableSpline={effectiveDisableSpline}
+                      useCrashSafeSpline={true}
+                      forceLiteSpline={false}
+                      eagerRenderSplines={performanceState.splinesEnabled}
+                      deviceProfile={deviceProfile}
+                    />
+                  ) : (
+                    <FullScreenSection
+                      config={page}
+                      activePage={pageState.activePage}
+                      onVisible={(el: HTMLElement | null) => { pageState.pageRefs.current[page.id - 1] = el; }}
+                      parallaxOffset={performanceState.parallaxOffset}
+                      disableSpline={effectiveDisableSpline}
+                      useCrashSafeSpline={true}
+                      forceLiteSpline={false}
+                      eagerRenderSplines={performanceState.splinesEnabled}
+                      onSceneReady={page.id === 1 ? handleHeroReady : undefined}
+                      deviceProfile={deviceProfile}
+                    />
+                  )}
+                </React.Fragment>
+              ))}
 
-            <div className="w-full mt-10">
-              <Footer />
-            </div>
-          </main>
+              <div className="w-full mt-10">
+                <Footer />
+              </div>
+            </main>
+          )}
         </div>
       )}
     </>
