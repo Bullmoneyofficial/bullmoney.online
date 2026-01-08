@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, Suspense, memo, lazy } from 'react';
 import { Loader2 } from 'lucide-react';
 import { devicePrefs } from '@/lib/smartStorage';
+import { getCacheName, isValidSplineBlob } from '@/lib/splineCache';
+import { scheduleSceneStorageSave, getStoredSceneBlob } from '@/lib/sceneStorage';
 
 // Lazy load Spline only when needed
 const Spline = lazy(() => import('@splinetool/react-spline').then((mod) => ({ default: mod.default || mod })));
@@ -92,6 +94,20 @@ export const SmartSplineLoader = memo(({
         cached: cachedBlob ? '✅ Yes' : '⏳ Fetching'
       });
 
+      let fastStorageBlobLoaded = false;
+      try {
+        const storedBlob = await getStoredSceneBlob(scene);
+        if (storedBlob) {
+          fastStorageBlobLoaded = true;
+          const blobUrl = URL.createObjectURL(storedBlob);
+          blobUrlsRef.current.add(blobUrl);
+          setCachedBlob(blobUrl);
+          console.log('[SmartSplineLoader] Fast storage hit', scene);
+        }
+      } catch (fastStorageError) {
+        console.warn('[SmartSplineLoader] Fast storage read failed', fastStorageError);
+      }
+
       // CRITICAL: For first loader (priority=critical), ensure immediate visibility
       if (priority === 'critical') {
         // HERO SCENE: Maximum priority loading with trading-optimized settings
@@ -123,25 +139,35 @@ export const SmartSplineLoader = memo(({
         try {
           // Use priority-specific cache names for better organization
           const cacheName = priority === 'critical'
-            ? 'bullmoney-hero-instant-v1'  // Dedicated hero cache for instant loading
-            : isWebViewBrowser ? 'bullmoney-webview-v1' : 'bullmoney-spline-v2';
+            ? getCacheName({ scope: 'hero' })
+            : getCacheName({ webview: isWebViewBrowser });
 
           const cache = await caches.open(cacheName);
-          const cachedResponse = await cache.match(scene);
+          let cachedResponse = await cache.match(scene);
 
           if (cachedResponse) {
-            const blob = await cachedResponse.blob();
-            const blobUrl = URL.createObjectURL(blob);
-            // BUG FIX #2: Track the blob URL for cleanup
-            blobUrlsRef.current.add(blobUrl);
-            setCachedBlob(blobUrl);
+            const cachedSceneBlob = await cachedResponse.clone().blob();
+            if (isValidSplineBlob(cachedSceneBlob)) {
+              if (!fastStorageBlobLoaded) {
+                const blobUrl = URL.createObjectURL(cachedSceneBlob);
+                blobUrlsRef.current.add(blobUrl);
+                setCachedBlob(blobUrl);
+              }
+              scheduleSceneStorageSave(scene, cachedSceneBlob);
 
-            if (priority === 'critical') {
-              console.log(`[SmartSplineLoader] ✅ Hero scene loaded from instant cache (${(blob.size / 1024).toFixed(2)}KB)`);
+              if (priority === 'critical') {
+                console.log(`[SmartSplineLoader] ✅ Hero scene loaded from instant cache (${(cachedSceneBlob.size / 1024).toFixed(2)}KB)`);
+              } else {
+                console.log(`[SmartSplineLoader] Loaded ${scene} from ${cacheName} cache`);
+              }
             } else {
-              console.log(`[SmartSplineLoader] Loaded ${scene} from ${cacheName} cache`);
+              await cache.delete(scene);
+              cachedResponse = null;
+              console.warn('[SmartSplineLoader] Invalid cached blob detected, deleted from cache');
             }
-          } else {
+          }
+
+          if (!cachedResponse) {
             // Fetch and cache for next time with optimized settings
             console.log(`[SmartSplineLoader] ${priority === 'critical' ? '🚀 Fetching hero scene' : 'Fetching'} ${scene} from network...`);
             const response = await fetch(scene, {
@@ -151,10 +177,17 @@ export const SmartSplineLoader = memo(({
             } as any);
 
             if (response.ok) {
-              const blob = await response.clone().blob();
-              const blobUrl = URL.createObjectURL(blob);
-              blobUrlsRef.current.add(blobUrl);
-              setCachedBlob(blobUrl);
+              const validationClone = response.clone();
+              const networkBlob = await validationClone.blob();
+              if (!isValidSplineBlob(networkBlob)) {
+                throw new Error('Fetched spline blob is invalid or truncated');
+              }
+              if (!fastStorageBlobLoaded) {
+                const blobUrl = URL.createObjectURL(networkBlob);
+                blobUrlsRef.current.add(blobUrl);
+                setCachedBlob(blobUrl);
+              }
+              scheduleSceneStorageSave(scene, networkBlob);
 
               // For critical scenes, cache immediately (blocking)
               // For others, cache in background

@@ -11,6 +11,8 @@ import { PAGE_CONFIG } from '@/lib/pageConfig';
 import { useOptimizations } from '@/lib/useOptimizations';
 import { userStorage, devicePrefs } from '@/lib/smartStorage';
 import { createSwipeHandlers } from '@/lib/interactionUtils';
+import { getCacheName, isValidSplineBlob } from '@/lib/splineCache';
+import { scheduleSceneStorageSave } from '@/lib/sceneStorage';
 import '@/styles/unified-ui.css';
 
 // Custom hooks
@@ -355,6 +357,181 @@ function Home() {
     [pageState.currentStage, pageState.contentMounted]
   );
 
+  const prefetchedScenesRef = React.useRef<Set<string>>(new Set());
+  type TimerHandle = ReturnType<typeof setTimeout>;
+  const prefetchIdleHandleRef = React.useRef<TimerHandle | null>(null);
+  const splineLibraryWarmRef = React.useRef(false);
+
+  const shouldAllowScenePrefetch = useMemo(
+    () =>
+      shouldUseSplines &&
+      performanceState.heroSceneReady &&
+      !deviceProfile.prefersReducedData &&
+      networkOptimizations.maxScenes > CRITICAL_SPLINE_COUNT &&
+      pageState.currentStage === 'content',
+    [
+      shouldUseSplines,
+      performanceState.heroSceneReady,
+      deviceProfile.prefersReducedData,
+      networkOptimizations.maxScenes,
+      pageState.currentStage,
+    ]
+  );
+
+  const prefetchSceneAsset = useCallback(
+    async (scene: string) => {
+      if (prefetchedScenesRef.current.has(scene)) return;
+      if (typeof window === 'undefined') return;
+
+      // Honor data-saver modes
+      const connection = (navigator as any)?.connection;
+      if (connection?.saveData) {
+        console.log('[App] Skipping scene prefetch due to Save-Data preference');
+        return;
+      }
+
+      if (!('caches' in window)) return;
+
+      try {
+        const cacheName = getCacheName({ prefetch: true, webview: deviceProfile.isWebView });
+        const cache = await caches.open(cacheName);
+
+        const cachedResponse = await cache.match(scene);
+        if (cachedResponse) {
+          const cachedBlob = await cachedResponse.clone().blob();
+          if (isValidSplineBlob(cachedBlob)) {
+            prefetchedScenesRef.current.add(scene);
+            return;
+          }
+          await cache.delete(scene);
+          console.log('[App] Removed invalid cached blob for scene', scene);
+        }
+
+        const response = await fetch(scene, {
+          cache: 'force-cache',
+          credentials: 'same-origin',
+        });
+
+        if (!response.ok) {
+          throw new Error(`prefetch failed: ${response.status}`);
+        }
+
+        const blobForValidation = await response.clone().blob();
+        if (!isValidSplineBlob(blobForValidation)) {
+          throw new Error('Invalid scene blob received during prefetch');
+        }
+
+        scheduleSceneStorageSave(scene, blobForValidation);
+
+        await cache.put(scene, response);
+
+        prefetchedScenesRef.current.add(scene);
+        console.log(`[App] Prefetched spline scene for warm cache: ${scene}`);
+      } catch (error) {
+        console.warn('[App] Scene prefetch failed', scene, error);
+      }
+    },
+    [deviceProfile.isWebView]
+  );
+
+  React.useEffect(() => {
+    if (!shouldUseSplines || splineLibraryWarmRef.current) return;
+    if (typeof window === 'undefined') return;
+    splineLibraryWarmRef.current = true;
+    import('@splinetool/react-spline')
+      .then(() => {
+        console.log('[App] Spline library preloaded');
+      })
+      .catch(err => {
+        console.warn('[App] Failed to preload Spline library', err);
+      });
+  }, [shouldUseSplines]);
+
+  React.useEffect(() => {
+    if (!shouldAllowScenePrefetch) return;
+    if (prioritizedSplineScenes.length <= CRITICAL_SPLINE_COUNT) return;
+
+    const limit = isMobileLike ? 1 : 3;
+    const scenesToPrefetch = prioritizedSplineScenes
+      .slice(CRITICAL_SPLINE_COUNT, CRITICAL_SPLINE_COUNT + limit)
+      .filter(scene => !prefetchedScenesRef.current.has(scene));
+
+    if (!scenesToPrefetch.length) return;
+
+    const runPrefetch = () => {
+      scenesToPrefetch.forEach(scene => {
+        prefetchSceneAsset(scene);
+      });
+    };
+
+    if (typeof window !== 'undefined') {
+      const hasRIC = typeof (globalThis as any).requestIdleCallback === 'function';
+      if (hasRIC) {
+        prefetchIdleHandleRef.current = (globalThis as any).requestIdleCallback(runPrefetch, {
+          timeout: 2000,
+        });
+      } else {
+        prefetchIdleHandleRef.current = globalThis.setTimeout(runPrefetch, 1200);
+      }
+    } else {
+      runPrefetch();
+    }
+
+    return () => {
+      if (prefetchIdleHandleRef.current !== null && typeof window !== 'undefined') {
+        const hasCancel = typeof (globalThis as any).cancelIdleCallback === 'function';
+        if (hasCancel) {
+          (globalThis as any).cancelIdleCallback(prefetchIdleHandleRef.current);
+        } else {
+        globalThis.clearTimeout(prefetchIdleHandleRef.current);
+        }
+        prefetchIdleHandleRef.current = null;
+      }
+    };
+  }, [shouldAllowScenePrefetch, prioritizedSplineScenes, prefetchSceneAsset, isMobileLike]);
+
+  const [deferredUIReady, setDeferredUIReady] = React.useState(false);
+  React.useEffect(() => {
+    if (!shouldRenderContent) {
+      setDeferredUIReady(false);
+      return;
+    }
+
+    let idleHandle: TimerHandle | null = null;
+    let usedIdleAPI = false;
+    let cancelled = false;
+
+    const activateDeferredUI = () => {
+      if (!cancelled) {
+        setDeferredUIReady(true);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      const hasRIC = typeof (globalThis as any).requestIdleCallback === 'function';
+      if (hasRIC) {
+        usedIdleAPI = true;
+        idleHandle = (globalThis as any).requestIdleCallback(activateDeferredUI, { timeout: 1200 });
+      } else {
+        idleHandle = globalThis.setTimeout(activateDeferredUI, 600);
+      }
+    }
+
+    return () => {
+      cancelled = true;
+      if (idleHandle !== null && typeof window !== 'undefined') {
+        const hasCancel = typeof (globalThis as any).cancelIdleCallback === 'function';
+        if (usedIdleAPI && hasCancel) {
+          (globalThis as any).cancelIdleCallback(idleHandle);
+        } else {
+          globalThis.clearTimeout(idleHandle);
+        }
+      }
+    };
+  }, [shouldRenderContent]);
+
+  const renderDeferredUI = shouldRenderContent && deferredUIReady;
+
   const showHeroLoaderOverlay = useMemo(
     () =>
       pageState.currentStage === 'content' &&
@@ -632,10 +809,14 @@ function Home() {
       )}
 
       {/* ===== Particle Effects ===== */}
-      {shouldShowParticles && <ParticleEffect trigger={themeState.particleTrigger} />}
+      {shouldShowParticles && renderDeferredUI && (
+        <ParticleEffect trigger={themeState.particleTrigger} />
+      )}
 
       {/* ===== Custom Cursor ===== */}
-      {shouldShowCustomCursor && <CustomCursor accentColor={themeState.accentColor} />}
+      {shouldShowCustomCursor && renderDeferredUI && (
+        <CustomCursor accentColor={themeState.accentColor} />
+      )}
 
       {/* ===== Mobile Quick Actions ===== */}
       <MobileQuickActions
@@ -802,7 +983,7 @@ function Home() {
           }
         >
           {/* ===== Target Cursor ===== */}
-          {!performanceState.isTouch && (
+          {!performanceState.isTouch && renderDeferredUI && (
             <TargetCursor
               spinDuration={2}
               hideDefaultCursor={false}
@@ -811,7 +992,7 @@ function Home() {
           )}
 
           {/* ===== Vertical Page Scroll ===== */}
-          {!isMobileLike && (
+          {!isMobileLike && renderDeferredUI && (
             <VerticalPageScroll
               currentPage={pageState.activePage}
               totalPages={visiblePages.length}
@@ -822,13 +1003,17 @@ function Home() {
           )}
 
           {/* ===== 3D Hint Icon / Control Center ===== */}
-          <ThreeDHintIcon
-            accentColor={themeState.accentColor}
-            disableSpline={effectiveDisableSpline}
-            showHint={!pageState.hasSeenIntro}
-            dockSide={isMobileLike ? 'left' : 'right'} onTogglePanel={function (): void {
-              throw new Error('Function not implemented.');
-            } }          />
+          {renderDeferredUI && (
+            <ThreeDHintIcon
+              accentColor={themeState.accentColor}
+              disableSpline={effectiveDisableSpline}
+              showHint={!pageState.hasSeenIntro}
+              dockSide={isMobileLike ? 'left' : 'right'}
+              onTogglePanel={() => {
+                throw new Error('Function not implemented.');
+              }}
+            />
+          )}
 
           {/* ===== Scroll Container - Mobile Static Content ===== */}
           {useMobileStaticContent ? (
