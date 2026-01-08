@@ -342,7 +342,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
 });
 SceneWrapper.displayName = "SceneWrapper";
 
-export const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false, onSceneReady, deviceProfile, eagerRenderSplines = true }: any) => {
+export const FullScreenSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false, onSceneReady, deviceProfile, eagerRenderSplines = true, renderAllScenes = false }: any) => {
   const isHeavyScene = config.id === 5 || config.id === 6 || config.id === 10;
   const isMobileSensitive = config.id === 3 || config.id === 4;
   const isLastPage = config.id === 10;
@@ -369,6 +369,8 @@ export const FullScreenSection = memo(({ config, activePage, onVisible, parallax
     // If splines are disabled via performance mode, don't render spline scenes
     if (disableSpline && config.type !== 'tsx') return false;
 
+    if (renderAllScenes) return true;
+
     const distance = Math.abs(config.id - activePage);
 
     // CRITICAL: Hero scene (id=1) always renders when within reasonable distance
@@ -392,7 +394,7 @@ export const FullScreenSection = memo(({ config, activePage, onVisible, parallax
     // ENHANCED: Spline scenes render more aggressively
     // Memory manager prevents overload, not the render logic
     return withinSplineRange;
-  }, [config.id, config.type, activePage, isLastPage, isMobile, disableSpline]);
+  }, [config.id, config.type, activePage, isLastPage, isMobile, disableSpline, renderAllScenes]);
 
   const isActive = config.id === activePage;
 
@@ -450,7 +452,7 @@ export const FullScreenSection = memo(({ config, activePage, onVisible, parallax
 });
 FullScreenSection.displayName = "FullScreenSection";
 
-export const DraggableSplitSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false, deviceProfile, eagerRenderSplines = true }: any) => {
+export const DraggableSplitSection = memo(({ config, activePage, onVisible, parallaxOffset, disableSpline = false, useCrashSafeSpline = false, forceLiteSpline = false, deviceProfile, eagerRenderSplines = true, renderAllScenes = false }: any) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [splitPos, setSplitPos] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
@@ -634,13 +636,15 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
     // If splines are disabled via performance mode, don't render
     if (disableSpline) return false;
 
+    if (renderAllScenes) return true;
+
     const distance = Math.abs(config.id - activePage);
     // FIXED: More lenient for mobile - render current + 1 adjacent
     // This allows split scenes to pre-load for smoother transitions
     // Memory manager will handle the actual scene loading limits
     const threshold = isMobile ? 1 : 2;
     return distance <= threshold;
-  }, [config.id, activePage, isMobile, disableSpline]);
+  }, [config.id, activePage, isMobile, disableSpline, renderAllScenes]);
 
   const shouldRender = shouldRenderBasic;
 

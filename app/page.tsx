@@ -195,6 +195,7 @@ export default function Home() {
   const shouldRenderContent = pageState.currentStage === 'content' || pageState.contentMounted;
   const showHeroLoaderOverlay = pageState.currentStage === 'content' && shouldUseSplines && !performanceState.heroSceneReady && !performanceState.heroLoaderHidden;
   const heroLoaderMessage = deviceProfile.isMobile ? 'Optimizing for Mobile Trading' : 'Loading Premium Trading Experience';
+  const renderAllScenes = deviceProfile.isDesktop && !effectiveDisableSpline;
 
   // Handlers
   const handleOrientationDismiss = useCallback(() => {
@@ -534,28 +535,30 @@ export default function Home() {
                     <DraggableSplitSection
                       config={page}
                       activePage={pageState.activePage}
-                      onVisible={(el: HTMLElement | null) => { pageState.pageRefs.current[page.id - 1] = el; }}
-                      parallaxOffset={performanceState.parallaxOffset}
-                      disableSpline={effectiveDisableSpline}
-                      useCrashSafeSpline={true}
-                      forceLiteSpline={false}
-                      eagerRenderSplines={performanceState.splinesEnabled}
-                      deviceProfile={deviceProfile}
-                    />
-                  ) : (
-                    <FullScreenSection
-                      config={page}
+                    onVisible={(el: HTMLElement | null) => { pageState.pageRefs.current[page.id - 1] = el; }}
+                    parallaxOffset={performanceState.parallaxOffset}
+                    disableSpline={effectiveDisableSpline}
+                    useCrashSafeSpline={true}
+                    forceLiteSpline={false}
+                    eagerRenderSplines={performanceState.splinesEnabled}
+                    renderAllScenes={renderAllScenes}
+                    deviceProfile={deviceProfile}
+                  />
+                ) : (
+                  <FullScreenSection
+                    config={page}
                       activePage={pageState.activePage}
                       onVisible={(el: HTMLElement | null) => { pageState.pageRefs.current[page.id - 1] = el; }}
-                      parallaxOffset={performanceState.parallaxOffset}
-                      disableSpline={effectiveDisableSpline}
-                      useCrashSafeSpline={true}
-                      forceLiteSpline={false}
-                      eagerRenderSplines={performanceState.splinesEnabled}
-                      onSceneReady={page.id === 1 ? handleHeroReady : undefined}
-                      deviceProfile={deviceProfile}
-                    />
-                  )}
+                    parallaxOffset={performanceState.parallaxOffset}
+                    disableSpline={effectiveDisableSpline}
+                    useCrashSafeSpline={true}
+                    forceLiteSpline={false}
+                    eagerRenderSplines={performanceState.splinesEnabled}
+                    renderAllScenes={renderAllScenes}
+                    onSceneReady={page.id === 1 ? handleHeroReady : undefined}
+                    deviceProfile={deviceProfile}
+                  />
+                )}
                 </React.Fragment>
               ))}
 
