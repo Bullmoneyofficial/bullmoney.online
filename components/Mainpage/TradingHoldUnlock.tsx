@@ -80,6 +80,68 @@ interface MarketState {
   volume: number;
 }
 
+// --- PARTICLE SYSTEM ---
+const Particle = ({ x, y, color, delay }: { x: number; y: number; color: string; delay: number }) => {
+  const randomAngle = Math.random() * Math.PI * 2;
+  const randomDistance = 50 + Math.random() * 100;
+  const endX = x + Math.cos(randomAngle) * randomDistance;
+  const endY = y + Math.sin(randomAngle) * randomDistance;
+
+  return (
+    <motion.div
+      className="absolute w-2 h-2 rounded-full pointer-events-none"
+      style={{
+        left: x,
+        top: y,
+        backgroundColor: color,
+        boxShadow: `0 0 10px ${color}`,
+      }}
+      initial={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+      animate={{
+        opacity: 0,
+        scale: 0,
+        x: endX - x,
+        y: endY - y,
+      }}
+      transition={{
+        duration: 1 + Math.random() * 0.5,
+        delay: delay,
+        ease: "easeOut",
+      }}
+    />
+  );
+};
+
+const ParticleExplosion = ({ active, color = "#3b82f6" }: { active: boolean; color?: string }) => {
+  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; delay: number }>>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!active || !containerRef.current) return undefined;
+    const container = containerRef.current;
+
+    const interval = setInterval(() => {
+      const rect = container.getBoundingClientRect();
+      const newParticles = Array.from({ length: 5 }, (_, i) => ({
+        id: Date.now() + i,
+        x: Math.random() * rect.width,
+        y: Math.random() * rect.height,
+        delay: Math.random() * 0.2,
+      }));
+      setParticles(prev => [...prev.slice(-20), ...newParticles]);
+    }, 200);
+    return () => clearInterval(interval);
+  }, [active]);
+
+  return (
+    <div ref={containerRef} className="absolute inset-0 pointer-events-none z-40 overflow-hidden">
+      {particles.map(p => (
+        <Particle key={p.id} x={p.x} y={p.y} color={color} delay={p.delay} />
+      ))}
+    </div>
+  );
+};
+
 // --- COMPONENT: ANIMATED BORDER ---
 const AnimatedBorder = ({ 
   children, 
@@ -417,6 +479,112 @@ const ReactiveLogo = ({ isActive }: { isActive: boolean }) => {
   );
 };
 
+// --- ACHIEVEMENT NOTIFICATION ---
+const AchievementNotification = ({ achievement }: { achievement: { id: string; title: string; timestamp: number } }) => {
+  return (
+    <motion.div
+      initial={{ x: 300, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: 300, opacity: 0 }}
+      className="relative mb-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 border border-blue-400/50 shadow-lg shadow-blue-500/50 backdrop-blur-xl max-w-[90vw] sm:max-w-xs"
+    >
+      <motion.div
+        className="text-xs sm:text-sm font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis"
+        animate={{
+          scale: [1, 1.05, 1],
+        }}
+        transition={{
+          duration: 0.3,
+          repeat: 2,
+        }}
+      >
+        {achievement.title}
+      </motion.div>
+      <motion.div
+        className="absolute inset-0 bg-white/20 rounded-lg sm:rounded-xl"
+        initial={{ scaleX: 1 }}
+        animate={{ scaleX: 0 }}
+        transition={{ duration: 3, ease: "linear" }}
+        style={{ transformOrigin: "left" }}
+      />
+    </motion.div>
+  );
+};
+
+// --- COMBO DISPLAY ---
+const ComboDisplay = ({ combo, maxCombo }: { combo: number; maxCombo: number }) => {
+  if (combo === 0) return null;
+
+  const getComboColor = (c: number) => {
+    if (c >= 50) return "from-purple-500 via-pink-500 to-red-500";
+    if (c >= 30) return "from-orange-500 via-red-500 to-pink-500";
+    if (c >= 15) return "from-yellow-500 via-orange-500 to-red-500";
+    return "from-blue-500 via-cyan-500 to-blue-600";
+  };
+
+  const getComboText = (c: number) => {
+    if (c >= 50) return "LEGENDARY!!!";
+    if (c >= 30) return "GODLIKE!!";
+    if (c >= 15) return "DOMINATING!";
+    if (c >= 10) return "ON FIRE!";
+    return "COMBO!";
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.5, y: -20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.5, y: 20 }}
+      className="absolute top-16 sm:top-20 md:top-24 left-1/2 -translate-x-1/2 z-50 px-4"
+    >
+      <motion.div
+        className="relative px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl bg-black/80 border-2 backdrop-blur-xl"
+        animate={{
+          scale: [1, 1.1, 1],
+          borderColor: ["#3b82f6", "#60a5fa", "#3b82f6"],
+        }}
+        transition={{
+          scale: { duration: 0.3, repeat: Infinity },
+          borderColor: { duration: 1, repeat: Infinity },
+        }}
+      >
+        <motion.div
+          className={cn(
+            "text-3xl sm:text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r",
+            getComboColor(combo)
+          )}
+          animate={{
+            scale: [1, 1.05, 1],
+          }}
+          transition={{
+            duration: 0.2,
+            repeat: Infinity,
+          }}
+        >
+          {combo}x
+        </motion.div>
+        <motion.div
+          className="text-[10px] sm:text-xs md:text-sm font-bold text-white uppercase tracking-wider text-center"
+          animate={{
+            opacity: [0.7, 1, 0.7],
+          }}
+          transition={{
+            duration: 0.5,
+            repeat: Infinity,
+          }}
+        >
+          {getComboText(combo)}
+        </motion.div>
+        {maxCombo > combo && (
+          <div className="text-[9px] sm:text-[10px] text-slate-400 text-center mt-1">
+            Best: {maxCombo}x
+          </div>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+};
+
 // --- MARKET INDICATOR ---
 const MarketIndicator = ({ label, value, icon: Icon, trend, isActive }: { 
   label: string; 
@@ -488,8 +656,27 @@ const PriceTargetSystem = ({
   assetKey: AssetKey;
   isActive?: boolean;
 }) => {
-  const distance = currentPrice > 0 ? ((targetPrice - currentPrice) / currentPrice) * 100 : 0;
+  const distance = ((targetPrice - currentPrice) / currentPrice) * 100;
   const asset = ASSETS[assetKey];
+
+  // Simulate price pumping when active
+  const [displayedCurrent, setDisplayedCurrent] = useState(currentPrice);
+  const [displayedTarget, setDisplayedTarget] = useState(targetPrice);
+
+  useEffect(() => {
+    if (isActive) {
+      const interval = setInterval(() => {
+        const pumpAmount = currentPrice * (0.0001 + (progress / 100) * 0.001);
+        setDisplayedCurrent(prev => prev + pumpAmount + (Math.random() - 0.5) * pumpAmount);
+        setDisplayedTarget(prev => prev + pumpAmount * 1.5 + (Math.random() - 0.5) * pumpAmount);
+      }, 100);
+      return () => clearInterval(interval);
+    } else {
+      setDisplayedCurrent(currentPrice);
+      setDisplayedTarget(targetPrice);
+      return undefined;
+    }
+  }, [isActive, currentPrice, targetPrice, progress]);
 
   return (
     <AnimatedBorder glowColor={asset.color} className="w-full">
@@ -554,7 +741,7 @@ const PriceTargetSystem = ({
                 repeat: Infinity,
               }}
             >
-              ${currentPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ${displayedCurrent.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </motion.div>
           </div>
           <div>
@@ -573,7 +760,7 @@ const PriceTargetSystem = ({
                 repeat: Infinity,
               }}
             >
-              ${targetPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ${displayedTarget.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </motion.div>
           </div>
         </div>
@@ -861,21 +1048,137 @@ export default function BullMoneyGate({
   const [isCompleted, setIsCompleted] = useState(false);
   const [showTerminal, setShowTerminal] = useState(false);
 
+  // Add CSS for better mobile performance
+  useEffect(() => {
+    // Prevent pull-to-refresh on mobile
+    const preventPull = (e: TouchEvent) => {
+      if (gateVisible) {
+        e.preventDefault();
+      }
+    };
+    
+    document.addEventListener('touchmove', preventPull, { passive: false });
+    
+    // Prevent text selection during drag
+    document.body.style.userSelect = 'none';
+    document.body.style.webkitUserSelect = 'none';
+    
+    return () => {
+      document.removeEventListener('touchmove', preventPull);
+      document.body.style.userSelect = '';
+      document.body.style.webkitUserSelect = '';
+    };
+  }, [gateVisible]);
+
   // Trading state
   const [selectedAsset, setSelectedAsset] = useState<AssetKey>("BTC");
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState(0);
   const [isTrading, setIsTrading] = useState(false);
+  const [boostActive, setBoostActive] = useState(false);
+  const lastTapRef = useRef<number>(0);
+
+  // Double tap boost
+  const handleTap = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      // Double tap detected
+      setBoostActive(true);
+      playSuccess();
+      if (navigator.vibrate) navigator.vibrate([20, 10, 20]);
+      setTimeout(() => setBoostActive(false), 3000);
+    }
+    lastTapRef.current = now;
+  };
 
   // Market data
   const { price: realPrice, prevPrice, change24h } = useLivePrice(selectedAsset);
   const marketState = useMarketState(realPrice, prevPrice);
   const [targetPrice, setTargetPrice] = useState(0);
-  const [animatedCurrentPrice, setAnimatedCurrentPrice] = useState(0);
-  const [animatedTargetPrice, setAnimatedTargetPrice] = useState(0);
+  
+  // Simulate moon price when trading
+  const [displayedPrice, setDisplayedPrice] = useState(realPrice);
+  const [displayedChange, setDisplayedChange] = useState(change24h);
 
   // Audio
   const { playTick, playSuccess, playAlert } = useAudioEngine();
+
+  // Combo system
+  const [combo, setCombo] = useState(0);
+  const [maxCombo, setMaxCombo] = useState(0);
+  const comboTimerRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | undefined;
+
+    if (isTrading) {
+      interval = setInterval(() => {
+        setCombo(prev => {
+          const newCombo = prev + 1;
+          setMaxCombo(max => Math.max(max, newCombo));
+          return newCombo;
+        });
+      }, 500);
+
+      if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
+    } else {
+      comboTimerRef.current = setTimeout(() => {
+        setCombo(0);
+      }, 2000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+      if (comboTimerRef.current) {
+        clearTimeout(comboTimerRef.current);
+        comboTimerRef.current = undefined;
+      }
+    };
+  }, [isTrading]);
+
+  // Achievement system
+  const [achievements, setAchievements] = useState<Array<{ id: string; title: string; timestamp: number }>>([]);
+  const achievementsShownRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const checkAchievements = () => {
+      const newAchievements: Array<{ id: string; title: string }> = [];
+      
+      if (progress >= 25 && !achievementsShownRef.current.has('phase1')) {
+        newAchievements.push({ id: 'phase1', title: '🎯 Phase I Complete!' });
+      }
+      if (progress >= 50 && !achievementsShownRef.current.has('phase2')) {
+        newAchievements.push({ id: 'phase2', title: '⚡ Phase II Complete!' });
+      }
+      if (progress >= 75 && !achievementsShownRef.current.has('phase3')) {
+        newAchievements.push({ id: 'phase3', title: '🔥 Phase III Complete!' });
+      }
+      if (combo >= 20 && !achievementsShownRef.current.has('combo20')) {
+        newAchievements.push({ id: 'combo20', title: '💫 Combo Master!' });
+      }
+      if (combo >= 50 && !achievementsShownRef.current.has('combo50')) {
+        newAchievements.push({ id: 'combo50', title: '👑 Combo Legend!' });
+      }
+
+      newAchievements.forEach(ach => {
+        achievementsShownRef.current.add(ach.id);
+        setAchievements(prev => [...prev, { ...ach, timestamp: Date.now() }]);
+        playSuccess();
+        if (navigator.vibrate) navigator.vibrate([30, 20, 30, 20, 50]);
+      });
+    };
+
+    checkAchievements();
+  }, [progress, combo, playSuccess]);
+
+  // Clean up old achievements
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setAchievements(prev => prev.filter(a => now - a.timestamp < 3000));
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
 
   // Animation
   const requestRef = useRef<number>();
@@ -890,40 +1193,26 @@ export default function BullMoneyGate({
     }
   }, [realPrice, targetPrice, selectedAsset]);
 
-  // Animate price/target while holding
+  // Pump displayed price when trading (moon simulation)
   useEffect(() => {
-    if (realPrice <= 0 || targetPrice <= 0) {
-      setAnimatedCurrentPrice(realPrice);
-      setAnimatedTargetPrice(targetPrice);
-      return;
+    if (isTrading && realPrice > 0) {
+      const interval = setInterval(() => {
+        const pumpMultiplier = 1 + (progress / 100) * 0.002; // Up to 0.2% increase per tick
+        const volatility = (Math.random() - 0.5) * (realPrice * 0.0001);
+        setDisplayedPrice(prev => prev * pumpMultiplier + volatility);
+        
+        // Calculate increasing change percentage
+        const baseChange = change24h;
+        const additionalChange = (progress / 100) * 8; // Add up to 8% based on progress
+        setDisplayedChange(baseChange + additionalChange);
+      }, 100);
+      return () => clearInterval(interval);
+    } else {
+      setDisplayedPrice(realPrice);
+      setDisplayedChange(change24h);
+      return undefined;
     }
-
-    if (!isTrading && progress === 0) {
-      setAnimatedCurrentPrice(realPrice);
-      setAnimatedTargetPrice(targetPrice);
-      return;
-    }
-
-    const interval = setInterval(() => {
-      const hold = isTrading ? Math.min(1, Math.max(0, progress / 100)) : 0;
-      const desiredTarget = targetPrice * (1 + hold * 0.01);
-      const desiredCurrent = realPrice + (desiredTarget - realPrice) * hold;
-
-      const jitter = isTrading ? realPrice * (0.00004 + hold * 0.0002) : 0;
-
-      setAnimatedTargetPrice((prev) => {
-        const next = prev + (desiredTarget - prev) * 0.14 + (Math.random() - 0.5) * jitter * 1.4;
-        return Math.max(0, next);
-      });
-
-      setAnimatedCurrentPrice((prev) => {
-        const next = prev + (desiredCurrent - prev) * 0.18 + (Math.random() - 0.5) * jitter;
-        return Math.max(0, next);
-      });
-    }, 50);
-
-    return () => clearInterval(interval);
-  }, [realPrice, targetPrice, isTrading, progress]);
+  }, [isTrading, realPrice, progress, change24h]);
 
   // Reset on asset change
   useEffect(() => {
@@ -931,8 +1220,6 @@ export default function BullMoneyGate({
     setPhase(0);
     setTargetPrice(0);
     setIsCompleted(false);
-    setAnimatedCurrentPrice(0);
-    setAnimatedTargetPrice(0);
   }, [selectedAsset]);
 
   // Main animation loop
@@ -947,7 +1234,8 @@ export default function BullMoneyGate({
         const baseSpeed = 0.8;
         const momentumBoost = Math.abs(marketState.momentum) * 0.1;
         const phaseBoost = phase * 0.3;
-        const speed = baseSpeed + momentumBoost + phaseBoost;
+        const doubleTapBoost = boostActive ? 2.0 : 1.0; // 2x speed when boosted
+        const speed = (baseSpeed + momentumBoost + phaseBoost) * doubleTapBoost;
         
         next = Math.min(prev + speed, 100);
 
@@ -957,7 +1245,18 @@ export default function BullMoneyGate({
           lastPhaseRef.current = newPhase;
           setPhase(newPhase);
           playAlert();
-          if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+          if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+          
+          // Flash effect on phase complete
+          const flash = document.createElement('div');
+          flash.className = 'fixed inset-0 z-[90] pointer-events-none bg-blue-400';
+          flash.style.opacity = '0.3';
+          document.body.appendChild(flash);
+          setTimeout(() => {
+            flash.style.transition = 'opacity 0.3s';
+            flash.style.opacity = '0';
+            setTimeout(() => flash.remove(), 300);
+          }, 50);
         }
 
         // Tick sounds
@@ -967,9 +1266,13 @@ export default function BullMoneyGate({
           lastTickRef.current = now;
         }
 
-        // Haptic feedback
-        if (navigator.vibrate && Math.random() < 0.3) {
-          navigator.vibrate(5);
+        // Enhanced continuous haptic feedback
+        if (navigator.vibrate) {
+          // More intense continuous vibration
+          if (Math.random() < 0.8) {
+            const intensity = Math.min(next, 100);
+            navigator.vibrate(Math.floor(10 + (intensity / 100) * 20));
+          }
         }
 
       } else {
@@ -1039,7 +1342,7 @@ export default function BullMoneyGate({
           <motion.div
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.5 }}
-            className="fixed inset-0 z-[60] h-[100dvh] w-screen bg-[#0a0a0a] text-white overflow-hidden select-none touch-none"
+            className="fixed inset-0 z-[60] h-[100dvh] w-screen bg-[#0a0a0a] text-white overflow-hidden select-none touch-none safe-area-inset"
             style={{
               fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
             }}
@@ -1049,19 +1352,65 @@ export default function BullMoneyGate({
               <TradingViewWidget assetKey={selectedAsset} id="tv-bg" minimal={true} />
             </div>
 
+            {/* CRT Scan Lines Effect */}
+            <div className="absolute inset-0 z-[5] pointer-events-none">
+              <motion.div
+                className="absolute inset-0 opacity-10"
+                style={{
+                  backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(59, 130, 246, 0.1) 2px, rgba(59, 130, 246, 0.1) 4px)",
+                }}
+                animate={{
+                  opacity: [0.05, 0.15, 0.05],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              />
+              <motion.div
+                className="absolute inset-x-0 h-32 bg-gradient-to-b from-transparent via-blue-500/10 to-transparent"
+                animate={{
+                  y: ["-100%", "200%"],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              />
+            </div>
+
             {/* Gradient overlays */}
             <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-transparent to-[#0a0a0a] z-10" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.15),transparent_70%)] z-10" />
 
+            {/* Particle System */}
+            <ParticleExplosion active={isTrading && progress > 50} color="#3b82f6" />
+
+            {/* Combo Display */}
+            <AnimatePresence>
+              {combo > 5 && <ComboDisplay combo={combo} maxCombo={maxCombo} />}
+            </AnimatePresence>
+
+            {/* Achievement Notifications */}
+            <div className="fixed top-20 sm:top-4 right-2 sm:right-4 z-50 flex flex-col items-end max-w-[calc(100vw-1rem)]">
+              <AnimatePresence>
+                {achievements.map(achievement => (
+                  <AchievementNotification key={achievement.timestamp} achievement={achievement} />
+                ))}
+              </AnimatePresence>
+            </div>
+
             {/* Asset selector */}
-            <div className="absolute top-6 left-0 right-0 z-50 flex justify-center">
-              <div className="flex items-center gap-2 p-2 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10">
+            <div className="absolute top-4 sm:top-6 left-0 right-0 z-50 flex justify-center px-2">
+              <div className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 rounded-xl sm:rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10">
                 {Object.entries(ASSETS).map(([key, asset]) => (
                   <motion.button
                     key={key}
                     onClick={() => !isTrading && setSelectedAsset(key as AssetKey)}
                     className={cn(
-                      "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all",
+                      "flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold transition-all",
                       key === selectedAsset
                         ? "bg-white/20 text-white shadow-lg"
                         : "text-slate-500 hover:text-slate-300"
@@ -1070,8 +1419,8 @@ export default function BullMoneyGate({
                     whileTap={{ scale: 0.95 }}
                     disabled={isTrading}
                   >
-                    <span className="text-lg">{asset.icon}</span>
-                    <span>{asset.id}</span>
+                    <span className="text-sm sm:text-lg">{asset.icon}</span>
+                    <span className="hidden xs:inline sm:inline">{asset.id}</span>
                   </motion.button>
                 ))}
               </div>
@@ -1079,21 +1428,35 @@ export default function BullMoneyGate({
 
             {/* Main content */}
             <motion.div
-              className="relative z-30 flex flex-col items-center justify-center h-full w-full px-4 md:px-8 pt-24 pb-8"
+              className="relative z-30 flex flex-col items-center justify-center min-h-full w-full px-4 md:px-8 pt-16 sm:pt-20 md:pt-24 pb-4 sm:pb-6 md:pb-8 overflow-y-auto"
+              style={{ willChange: 'transform, opacity' }}
               animate={isCompleted ? {
                 scale: 0.8,
                 opacity: 0,
                 filter: "blur(20px)",
+              } : isTrading ? {
+                scale: 1,
+                opacity: 1,
+                filter: "blur(0px)",
+                x: [0, -3, 3, -3, 3, -2, 2, 0],
+                y: [0, -2, 2, -2, 2, -1, 1, 0],
               } : {
                 scale: 1,
                 opacity: 1,
                 filter: "blur(0px)",
               }}
-              transition={{ duration: 0.6, ease: "easeInOut" }}
+              transition={isTrading ? { 
+                duration: 0.15,
+                repeat: Infinity,
+                ease: "easeInOut"
+              } : { 
+                duration: 0.6, 
+                ease: "easeInOut" 
+              }}
             >
               {/* Logo */}
               <motion.div
-                className="mb-4 sm:mb-6"
+                className="mb-3 md:mb-4"
                 animate={{
                   y: isTrading ? [0, -5, 0] : 0,
                 }}
@@ -1108,7 +1471,7 @@ export default function BullMoneyGate({
 
               {/* Title */}
               <motion.h1
-                className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-500"
+                className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter mb-1 md:mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-500"
                 animate={{
                   backgroundPosition: ["0%", "100%"],
                 }}
@@ -1124,58 +1487,94 @@ export default function BullMoneyGate({
                 BULLMONEY
               </motion.h1>
 
-              <p className="text-xs sm:text-sm text-slate-400 mb-8 sm:mb-12 font-medium">
+              <p className="text-xs sm:text-sm text-slate-400 mb-6 md:mb-8 font-medium">
                 High-Frequency Trading Interface
               </p>
 
               {/* Main trading interface */}
-              <div className="w-full max-w-2xl space-y-6">
-	                {/* Market indicators */}
-	                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-	                  <MarketIndicator
-	                    label="Price"
-	                    value={`$${animatedCurrentPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-	                    icon={DollarSign}
-	                    trend={realPrice > prevPrice ? "up" : realPrice < prevPrice ? "down" : "neutral"}
-	                    isActive={isTrading}
-	                  />
+              <div className="w-full max-w-2xl space-y-4 md:space-y-5">
+                {/* Market indicators */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <MarketIndicator
+                    label="Price"
+                    value={`$${displayedPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    icon={DollarSign}
+                    trend={displayedPrice > prevPrice ? "up" : displayedPrice < prevPrice ? "down" : "neutral"}
+                    isActive={isTrading}
+                  />
                   <MarketIndicator
                     label="24h Change"
-                    value={`${change24h >= 0 ? "+" : ""}${change24h.toFixed(2)}%`}
-                    icon={change24h >= 0 ? TrendingUp : TrendingDown}
-                    trend={change24h >= 0 ? "up" : "down"}
+                    value={`${displayedChange >= 0 ? "+" : ""}${displayedChange.toFixed(2)}%`}
+                    icon={displayedChange >= 0 ? TrendingUp : TrendingDown}
+                    trend={displayedChange >= 0 ? "up" : "down"}
+                    isActive={isTrading}
                   />
                   <MarketIndicator
                     label="Volatility"
                     value={`${marketState.volatility.toFixed(0)}%`}
                     icon={Activity}
                     trend="neutral"
+                    isActive={isTrading}
                   />
                   <MarketIndicator
                     label="Momentum"
                     value={`${marketState.momentum >= 0 ? "+" : ""}${marketState.momentum.toFixed(1)}`}
                     icon={BarChart3}
                     trend={marketState.momentum >= 0 ? "up" : "down"}
+                    isActive={isTrading}
                   />
                 </div>
 
-	                {/* Price target */}
-	                <PriceTargetSystem
-	                  currentPrice={animatedCurrentPrice}
-	                  targetPrice={animatedTargetPrice}
-	                  progress={progress}
-	                  assetKey={selectedAsset}
-	                  isActive={isTrading}
-	                />
-
-                {/* Trading action button */}
-                <TradingActionButton
-                  phase={phase}
+                {/* Price target */}
+                <PriceTargetSystem
+                  currentPrice={realPrice}
+                  targetPrice={targetPrice}
                   progress={progress}
-                  onPress={() => !isCompleted && setIsTrading(true)}
-                  onRelease={() => setIsTrading(false)}
+                  assetKey={selectedAsset}
                   isActive={isTrading}
                 />
+
+                {/* Trading action button */}
+                <div 
+                  className="relative touch-manipulation" 
+                  onClick={handleTap}
+                  style={{ touchAction: 'manipulation' }}
+                >
+                  <TradingActionButton
+                    phase={phase}
+                    progress={progress}
+                    onPress={() => !isCompleted && setIsTrading(true)}
+                    onRelease={() => setIsTrading(false)}
+                    isActive={isTrading}
+                  />
+                  
+                  {/* Boost Indicator */}
+                  <AnimatePresence>
+                    {boostActive && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.8, y: -10 }}
+                        className="absolute -top-10 sm:-top-12 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 border-2 border-yellow-300 shadow-lg shadow-yellow-500/50 whitespace-nowrap"
+                      >
+                        <motion.div
+                          className="text-xs sm:text-sm font-black text-white flex items-center gap-1.5 sm:gap-2"
+                          animate={{
+                            scale: [1, 1.1, 1],
+                          }}
+                          transition={{
+                            duration: 0.3,
+                            repeat: Infinity,
+                          }}
+                        >
+                          <Zap className="w-3 h-3 sm:w-4 sm:h-4 fill-white" />
+                          <span>2X BOOST!</span>
+                          <Zap className="w-3 h-3 sm:w-4 sm:h-4 fill-white" />
+                        </motion.div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 {/* Status message */}
                 <AnimatePresence>
@@ -1210,16 +1609,108 @@ export default function BullMoneyGate({
               </div>
 
               {/* Bottom hint */}
-              {progress === 0 && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1 }}
-                  className="absolute bottom-8 text-xs text-slate-600 uppercase tracking-wider font-bold"
-                >
-                  Press and hold to execute trades
-                </motion.p>
-              )}
+              <AnimatePresence>
+                {progress === 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ delay: 0.5 }}
+                    className="absolute bottom-6 md:bottom-8 left-0 right-0 flex flex-col items-center gap-3"
+                  >
+                    <motion.div
+                      className="relative px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl bg-blue-500/20 border-2 border-blue-400/50 backdrop-blur-sm"
+                      animate={{
+                        boxShadow: [
+                          "0 0 20px rgba(59, 130, 246, 0.3)",
+                          "0 0 40px rgba(59, 130, 246, 0.6)",
+                          "0 0 20px rgba(59, 130, 246, 0.3)",
+                        ],
+                        borderColor: [
+                          "rgba(59, 130, 246, 0.5)",
+                          "rgba(96, 165, 250, 0.8)",
+                          "rgba(59, 130, 246, 0.5)",
+                        ],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      <motion.p
+                        className="text-xs sm:text-sm md:text-base font-bold text-white text-center"
+                        animate={{
+                          color: ["#ffffff", "#60a5fa", "#ffffff"],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        Hold the button above to access the website
+                      </motion.p>
+                      
+                      {/* Glow effect */}
+                      <motion.div
+                        className="absolute inset-0 bg-blue-500/30 rounded-xl sm:rounded-2xl blur-xl -z-10"
+                        animate={{
+                          opacity: [0.3, 0.6, 0.3],
+                          scale: [1, 1.1, 1],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
+                    </motion.div>
+
+                    <motion.div
+                      className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-slate-500"
+                      animate={{
+                        opacity: [0.5, 1, 0.5],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      <motion.div
+                        animate={{
+                          y: [0, -3, 0],
+                        }}
+                        transition={{
+                          duration: 1,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        👆
+                      </motion.div>
+                      <span className="uppercase tracking-wider font-bold">Press & Hold</span>
+                    </motion.div>
+
+                    <motion.div
+                      className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-blue-400 mt-1"
+                      animate={{
+                        opacity: [0.4, 0.8, 0.4],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 0.5,
+                      }}
+                    >
+                      <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                      <span className="uppercase tracking-wider font-bold">Double-Tap for 2x Boost</span>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           </motion.div>
         )}
@@ -1233,7 +1724,7 @@ export default function BullMoneyGate({
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 20, opacity: 0, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed bottom-2 sm:bottom-4 right-2 sm:right-4 left-2 sm:left-auto z-50 w-auto sm:w-[400px] md:w-[500px] h-[500px] sm:h-[550px] md:h-[600px] bg-[#0b1221]/95 backdrop-blur-xl border-2 border-blue-500/30 rounded-2xl sm:rounded-3xl shadow-2xl shadow-blue-900/40 flex flex-col overflow-hidden"
+            className="fixed bottom-2 sm:bottom-4 md:bottom-6 right-2 sm:right-4 md:right-6 left-2 sm:left-auto z-50 w-auto sm:w-[400px] md:w-[500px] h-[70vh] sm:h-[550px] md:h-[600px] max-h-[calc(100vh-5rem)] bg-[#0b1221]/95 backdrop-blur-xl border-2 border-blue-500/30 rounded-2xl sm:rounded-3xl shadow-2xl shadow-blue-900/40 flex flex-col overflow-hidden"
           >
             {/* Terminal header */}
             <div className="h-12 sm:h-14 md:h-16 flex items-center justify-between px-3 sm:px-4 md:px-6 border-b border-white/10 bg-gradient-to-r from-blue-500/10 to-transparent">
@@ -1268,8 +1759,8 @@ export default function BullMoneyGate({
                   <div className="text-base sm:text-lg font-bold text-green-400">+{(progress * 47.3).toFixed(0)}%</div>
                 </div>
                 <div className="p-2 rounded-lg bg-white/5">
-                  <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase">Win Rate</div>
-                  <div className="text-base sm:text-lg font-bold text-white">100%</div>
+                  <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase">Max Combo</div>
+                  <div className="text-base sm:text-lg font-bold text-cyan-400">{maxCombo}x</div>
                 </div>
                 <div className="p-2 rounded-lg bg-white/5">
                   <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase">Trades</div>
