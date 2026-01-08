@@ -10,6 +10,7 @@ interface ThreeDHintIconProps {
   disableSpline?: boolean;
   showHint?: boolean;
   isOpen?: boolean;
+  dockSide?: 'left' | 'right';
 }
 
 export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
@@ -17,11 +18,13 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
   accentColor = '#3b82f6',
   disableSpline = false,
   showHint = true,
-  isOpen = false
+  isOpen = false,
+  dockSide = 'right'
 }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [showInitialHint, setShowInitialHint] = useState(showHint);
   const [pulse, setPulse] = useState(true);
+  const tooltipOffsetX = dockSide === 'left' ? -10 : 10;
 
   useEffect(() => {
     if (showHint) {
@@ -53,10 +56,14 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
 
   return (
     <div
-      className="fixed right-4 z-[999] pointer-events-auto"
+      className="fixed z-[10000] pointer-events-auto"
       style={{
-        right: 'max(1rem, calc(1rem + env(safe-area-inset-right, 0px)))',
-        top: 'calc(50vh - 220px + env(safe-area-inset-top, 0px))', // Positioned above the scrollbar
+        ...(dockSide === 'left'
+          ? { left: 'calc(env(safe-area-inset-left, 0px) + 22px)' }
+          : { right: 'max(1rem, calc(1rem + env(safe-area-inset-right, 0px)))' }),
+        top: dockSide === 'left'
+          ? 'calc(50vh - 120px + env(safe-area-inset-top, 0px))'
+          : 'calc(50vh - 220px + env(safe-area-inset-top, 0px))',
       }}
     >
       <motion.button
@@ -156,17 +163,23 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
       <AnimatePresence>
         {(isHovering || showInitialHint) && !isOpen && (
           <motion.div
-            initial={{ opacity: 0, x: 10, scale: 0.9 }}
+            initial={{ opacity: 0, x: tooltipOffsetX, scale: 0.9 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 10, scale: 0.9 }}
+            exit={{ opacity: 0, x: tooltipOffsetX, scale: 0.9 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="absolute right-full mr-3 top-1/2 -translate-y-1/2 pointer-events-none whitespace-nowrap"
+            className={`absolute top-1/2 -translate-y-1/2 pointer-events-none whitespace-nowrap ${
+              dockSide === 'left' ? 'left-full ml-3' : 'right-full mr-3'
+            }`}
           >
             <div className="relative">
               {/* Arrow */}
               <div
-                className="absolute right-[-8px] top-1/2 -translate-y-1/2 w-0 h-0 border-y-8 border-y-transparent border-l-8"
-                style={{ borderLeftColor: accentColor }}
+                className={`absolute top-1/2 -translate-y-1/2 w-0 h-0 border-y-8 border-y-transparent ${
+                  dockSide === 'left'
+                    ? 'left-[-8px] border-r-8'
+                    : 'right-[-8px] border-l-8'
+                }`}
+                style={dockSide === 'left' ? { borderRightColor: accentColor } : { borderLeftColor: accentColor }}
               />
 
               {/* Content */}
@@ -180,7 +193,7 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
                 <Sparkles size={16} className="text-white" />
                 <div>
                   <div className="text-sm font-bold text-white">
-                    {disableSpline ? 'Enable 3D' : 'Control Center'}
+                    {disableSpline ? 'Enable 3D' : 'Control Panel'}
                   </div>
                   <div className="text-[10px] text-white/80">
                     {disableSpline ? 'Turn on 3D scenes' : 'Tap to toggle controls'}
@@ -199,14 +212,16 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full mt-2 right-0 px-3 py-1.5 rounded-full bg-black/80 border border-white/20 backdrop-blur-xl shadow-lg lg:hidden"
+            className={`absolute top-full mt-2 px-3 py-1.5 rounded-full bg-black/80 border border-white/20 backdrop-blur-xl shadow-lg lg:hidden ${
+              dockSide === 'left' ? 'left-0' : 'right-0'
+            }`}
             style={{
               boxShadow: `0 0 20px ${accentColor}40`,
             }}
           >
             <div className="text-[10px] font-bold text-white flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-              Tap for Controls
+              Control Panel
             </div>
           </motion.div>
         )}
@@ -219,7 +234,9 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute top-full mt-2 right-0 px-2 py-1 rounded-full border backdrop-blur-xl shadow-lg"
+            className={`absolute top-full mt-2 px-2 py-1 rounded-full border backdrop-blur-xl shadow-lg ${
+              dockSide === 'left' ? 'left-0' : 'right-0'
+            }`}
             style={{
               backgroundColor: `${accentColor}20`,
               borderColor: `${accentColor}60`,

@@ -193,7 +193,7 @@ export function MobileQuickActions({
                 className="absolute left-[4.5rem] top-2 pointer-events-none"
               >
                 <div className="bg-blue-600/90 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-lg backdrop-blur-md border border-blue-400/50 whitespace-nowrap flex items-center gap-2">
-                  <span>Quick Menu</span>
+                  <span>3D / Volume Settings</span>
                   <div className="w-2 h-2 bg-blue-600/90 absolute -left-1 top-1/2 -translate-y-1/2 rotate-45 border-l border-b border-blue-400/50" />
                 </div>
               </motion.div>

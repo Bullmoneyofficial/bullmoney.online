@@ -444,7 +444,13 @@ export default function Home() {
           {!isMobileLike && <VerticalPageScroll currentPage={pageState.activePage} totalPages={visiblePages.length} onPageChange={(idx) => pageState.pageRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'start' })} accentColor={themeState.accentColor} disabled={pageState.currentStage !== 'content'} />}
 
           {/* FIXED: 3D Hint Icon now serves as the main control center access point */}
-          <ThreeDHintIcon onClick={() => uiState.setControlCenterOpen(true)} accentColor={themeState.accentColor} disableSpline={performanceState.disableSpline} showHint={!pageState.hasSeenIntro} />
+          <ThreeDHintIcon
+            onClick={() => uiState.setControlCenterOpen(true)}
+            accentColor={themeState.accentColor}
+            disableSpline={performanceState.disableSpline}
+            showHint={!pageState.hasSeenIntro}
+            dockSide={isMobileLike ? 'left' : 'right'}
+          />
 
           {/* Scroll Container - Enhanced for Mobile */}
           <main
