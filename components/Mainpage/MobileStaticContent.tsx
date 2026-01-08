@@ -32,6 +32,9 @@ const MobileSplineSection = ({
     const root = el.closest("[data-scroll-container]") as Element | null;
     const observer = new IntersectionObserver(
       ([entry]) => {
+        if (!entry) {
+          return;
+        }
         setIsInView(entry.isIntersecting && entry.intersectionRatio > 0.15);
       },
       { root, threshold: [0, 0.15, 0.5] }
