@@ -16,7 +16,6 @@ interface UsePageInitializationProps {
   setHasRegistered: (value: boolean) => void;
   setCurrentStage: (value: "register" | "hold" | "v2" | "content") => void;
   setIsCompactViewport: (value: boolean) => void;
-  setShowPerfPrompt?: (value: boolean) => void;
   isTouchRef: React.MutableRefObject<boolean>;
   prefersReducedMotionRef: React.MutableRefObject<boolean>;
   deviceProfile: any;
@@ -39,7 +38,6 @@ export function usePageInitialization({
   setHasRegistered,
   setCurrentStage,
   setIsCompactViewport,
-  setShowPerfPrompt,
   isTouchRef,
   prefersReducedMotionRef,
   deviceProfile,

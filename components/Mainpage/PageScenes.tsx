@@ -368,6 +368,9 @@ export const FullScreenSection = memo(({ config, activePage, onVisible, parallax
     const root = el.closest('[data-scroll-container]') as Element | null;
     const observer = new IntersectionObserver(
       ([entry]) => {
+        if (!entry) {
+          return;
+        }
         setIsInView(entry.isIntersecting && entry.intersectionRatio > 0.25);
       },
       { root, threshold: [0, 0.25, 0.6] }
@@ -500,6 +503,9 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
     const root = el.closest('[data-scroll-container]') as Element | null;
     const observer = new IntersectionObserver(
       ([entry]) => {
+        if (!entry) {
+          return;
+        }
         setIsInView(entry.isIntersecting && entry.intersectionRatio > 0.25);
       },
       { root, threshold: [0, 0.25, 0.6] }
