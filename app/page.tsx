@@ -302,8 +302,6 @@ export default function Home() {
       {/* Mobile Quick Actions */}
       <MobileQuickActions
         isVisible={showMobileQuickActions}
-        disableSpline={performanceState.disableSpline}
-        isPlaying={!musicState.isMuted}
         volume={musicState.volume}
         safeAreaInlinePadding={safeAreaInlinePadding}
         safeAreaBottom={safeAreaBottom}
