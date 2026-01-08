@@ -192,7 +192,6 @@ export default function Home() {
     }),
     []
   );
-  const safeAreaRight = 'calc(env(safe-area-inset-right, 0px) + 12px)';
   const safeAreaBottom = 'calc(env(safe-area-inset-bottom, 0px) + 10px)';
 
   const prioritizedSplineScenes = useMemo(() => {
