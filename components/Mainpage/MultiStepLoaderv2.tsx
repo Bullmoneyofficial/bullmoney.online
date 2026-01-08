@@ -31,26 +31,54 @@ type LoaderProps = {
 const useLivePrice = (assetKey: AssetKey) => {
   const [price, setPrice] = useState<number>(0);
   const lastUpdateRef = useRef<number>(0);
+  const lastPriceRef = useRef<number>(0);
 
   useEffect(() => {
     let ws: WebSocket | null = null;
+    const controller = new AbortController();
     try {
       const symbolParts = ASSETS[assetKey].symbol.split(":");
       const symbol = symbolParts[1]?.toLowerCase();
-      if (!symbol) return;
+      const symbolUpper = symbolParts[1]?.toUpperCase();
+      if (!symbol || !symbolUpper) return;
+
+      const fetchInitial = async () => {
+        try {
+          const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbolUpper}`, { signal: controller.signal });
+          if (!res.ok) return;
+          const data = await res.json();
+          const p = parseFloat(data.price);
+          if (!Number.isNaN(p)) {
+            lastPriceRef.current = p;
+            setPrice(p);
+          }
+        } catch (err) {
+          if (!controller.signal.aborted) {
+            console.error("Initial price fetch failed", err);
+          }
+        }
+      };
+
+      fetchInitial();
+
       ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@trade`);
       ws.onmessage = (event) => {
         const now = Date.now();
         if (now - lastUpdateRef.current > 100) {
           const data = JSON.parse(event.data);
-          setPrice(parseFloat(data.p));
-          lastUpdateRef.current = now;
+          const nextPrice = parseFloat(data.p);
+          if (!Number.isNaN(nextPrice)) {
+            lastPriceRef.current = nextPrice;
+            setPrice(nextPrice);
+            lastUpdateRef.current = now;
+          }
         }
       };
     } catch (e) {
       console.error(e);
     }
     return () => {
+      controller.abort();
       if (ws) ws.close();
     };
   }, [assetKey]);
@@ -342,7 +370,9 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
 
   const handleInteractionStart = (e: React.MouseEvent | React.TouchEvent) => {
     if (isCompleted) return;
-    
+    const target = e.target as HTMLElement | null;
+    if (target && target.closest("[data-hold-ignore]")) return;
+
     setIsHolding(true);
     
     let x = 0, y = 0;
@@ -417,6 +447,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
               className="absolute top-6 md:top-8 z-50 flex gap-2"
+              data-hold-ignore
             >
               {Object.entries(ASSETS).map(([key, asset]) => (
                 <motion.button
