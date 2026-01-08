@@ -17,6 +17,7 @@ interface MobileQuickActionsProps {
   onThemeClick?: () => void;
   onHelpClick?: () => void;
   safeAreaInlinePadding?: React.CSSProperties;
+  safeAreaBottom?: React.CSSProperties['bottom'];
 }
 
 export function MobileQuickActions({
@@ -29,6 +30,7 @@ export function MobileQuickActions({
   onThemeClick,
   onHelpClick,
   safeAreaInlinePadding,
+  safeAreaBottom,
 }: MobileQuickActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -79,7 +81,11 @@ export function MobileQuickActions({
   return (
     <>
       {/* Constraints Area */}
-      <div ref={constraintsRef} className="fixed inset-4 pointer-events-none z-[-1]" />
+      <div
+        ref={constraintsRef}
+        className="fixed inset-4 pointer-events-none z-[-1]"
+        style={safeAreaBottom ? { bottom: safeAreaBottom } : undefined}
+      />
 
       {/* Backdrop: Close on tap outside when open */}
       <AnimatePresence>
