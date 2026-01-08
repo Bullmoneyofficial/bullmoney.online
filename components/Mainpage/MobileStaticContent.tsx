@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useDeviceProfile } from "@/lib/deviceProfile";
 import { SmartSplineLoader } from "@/components/Mainpage/SmartSplineLoader";
@@ -20,20 +20,57 @@ const MobileSplineSection = ({
   scene: string;
   priority: "critical" | "high" | "normal" | "low";
   deviceProfile: ReturnType<typeof useDeviceProfile>;
-}) => (
-  <div
-    className="relative w-full h-[100dvh] overflow-hidden bg-black"
-    style={{ touchAction: "none" }}
-  >
-    <SmartSplineLoader
-      scene={scene}
-      priority={priority}
-      enableInteraction={true}
-      deviceProfile={deviceProfile}
-      className="absolute inset-0 w-full h-full"
-    />
-  </div>
-);
+}) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isInView, setIsInView] = useState(false);
+  const [isPointerActive, setIsPointerActive] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const root = el.closest("[data-scroll-container]") as Element | null;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting && entry.intersectionRatio > 0.15);
+      },
+      { root, threshold: [0, 0.15, 0.5] }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isInView) {
+      setIsPointerActive(false);
+    }
+  }, [isInView]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative w-full h-[100dvh] overflow-hidden bg-black"
+      style={{ touchAction: "none", contain: "layout paint size", transform: "none" }}
+      onPointerEnter={() => setIsPointerActive(true)}
+      onPointerLeave={() => setIsPointerActive(false)}
+      onPointerDown={() => setIsPointerActive(true)}
+      onPointerUp={() => setIsPointerActive(false)}
+      onPointerCancel={() => setIsPointerActive(false)}
+      onTouchStart={() => setIsPointerActive(true)}
+      onTouchEnd={() => setIsPointerActive(false)}
+      onTouchCancel={() => setIsPointerActive(false)}
+    >
+      <SmartSplineLoader
+        scene={scene}
+        priority={priority}
+        enableInteraction={isInView && isPointerActive}
+        deviceProfile={deviceProfile}
+        className="absolute inset-0 w-full h-full"
+      />
+    </div>
+  );
+};
 
 export function MobileStaticContent() {
   const deviceProfile = useDeviceProfile();

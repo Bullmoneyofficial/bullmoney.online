@@ -5,43 +5,43 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 
 interface ThreeDHintIconProps {
-  onClick: () => void;
+  onTogglePanel: () => void; // Renamed for clarity
   accentColor?: string;
   disableSpline?: boolean;
   showHint?: boolean;
-  isOpen?: boolean;
+  isPanelOpen?: boolean; // More specific name
   dockSide?: 'left' | 'right';
 }
 
 export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
-  onClick,
+  onTogglePanel,
   accentColor = '#3b82f6',
   disableSpline = false,
   showHint = true,
-  isOpen = false,
+  isPanelOpen = false,
   dockSide = 'right'
 }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [showInitialHint, setShowInitialHint] = useState(showHint);
   const [pulse, setPulse] = useState(true);
+  
   const tooltipOffsetX = dockSide === 'left' ? -10 : 10;
   const horizontalInset = 'calc(env(safe-area-inset-left, 0px) + 22px)';
   const horizontalInsetRight = 'calc(env(safe-area-inset-right, 0px) + 22px)';
-  const topOffset = dockSide === 'left'
-    ? 'calc(50vh - 120px + env(safe-area-inset-top, 0px))'
-    : 'calc(50vh - 120px + env(safe-area-inset-top, 0px))';
+  const topOffset = 'calc(50vh - 120px + env(safe-area-inset-top, 0px))';
 
+  // Hide initial hint after 15 seconds
   useEffect(() => {
-    if (showHint) {
+    if (showHint && !isPanelOpen) {
       const timer = setTimeout(() => setShowInitialHint(false), 15000);
       return () => clearTimeout(timer);
     }
     return undefined;
-  }, [showHint]);
+  }, [showHint, isPanelOpen]);
 
-  // Pulse when 3D is disabled
+  // Pulse animation when 3D is disabled
   useEffect(() => {
-    if (disableSpline) {
+    if (disableSpline && !isPanelOpen) {
       setPulse(true);
       const interval = setInterval(() => {
         setPulse(prev => !prev);
@@ -51,11 +51,27 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
       setPulse(false);
     }
     return undefined;
-  }, [disableSpline]);
+  }, [disableSpline, isPanelOpen]);
 
-  const handleClick = () => {
+  // Hide hint when panel opens
+  useEffect(() => {
+    if (isPanelOpen) {
+      setShowInitialHint(false);
+      setIsHovering(false);
+    }
+  }, [isPanelOpen]);
+
+  const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
+    // Prevent event bubbling to avoid conflicts with mobile quick actions
+    e.stopPropagation();
+    
+    // Haptic feedback
     if (navigator.vibrate) navigator.vibrate(15);
-    onClick();
+    
+    // Toggle the panel
+    onTogglePanel();
+    
+    // Hide hint
     setShowInitialHint(false);
   };
 
@@ -68,74 +84,84 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
           : { right: horizontalInsetRight }),
         top: topOffset,
       }}
+      // Prevent touch events from bubbling to mobile quick actions
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchEnd={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
     >
       <motion.div
         animate={{
-          boxShadow: pulse || isOpen
+          boxShadow: pulse || isPanelOpen
             ? `0 0 25px ${accentColor}60, 0 0 40px ${accentColor}30`
             : `0 0 15px ${accentColor}50`
         }}
-        transition={{ duration: 1.5, repeat: pulse || isOpen ? Infinity : 0, ease: "easeInOut" }}
+        transition={{ duration: 1.5, repeat: pulse || isPanelOpen ? Infinity : 0, ease: "easeInOut" }}
         className="relative flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full border border-white/20 bg-black/80 shadow-2xl overflow-hidden"
       >
         <motion.button
-          onTap={handleClick}
+          onClick={handleClick}
           onMouseEnter={() => {
             setIsHovering(true);
             setShowInitialHint(false);
           }}
           onMouseLeave={() => setIsHovering(false)}
           onTouchStart={(e) => {
-            setShowInitialHint(false);
             e.currentTarget.style.transform = 'scale(0.9)';
           }}
           onTouchEnd={(e) => {
             e.currentTarget.style.transform = '';
           }}
-          className="relative w-full h-full flex items-center justify-center outline-none z-10 rounded-full overflow-hidden"
+          className="relative w-full h-full flex items-center justify-center outline-none z-10 rounded-full overflow-hidden cursor-pointer touch-none"
           style={{ WebkitTapHighlightColor: 'transparent' }}
+          aria-label={isPanelOpen ? 'Close control panel' : 'Open control panel'}
         >
+          {/* Rotating gradient background */}
           <motion.div
             className="absolute inset-0"
-            animate={{ rotate: isOpen ? 0 : 360 }}
+            animate={{ rotate: isPanelOpen ? 0 : 360 }}
             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
             style={{
-              background: `conic-gradient(from 0deg, ${accentColor}, ${accentColor}, ${accentColor})`
+              background: `conic-gradient(from 0deg, ${accentColor}, ${accentColor}80, ${accentColor})`
             }}
           />
+          
+          {/* Inner circle */}
           <div className="absolute inset-[3px] rounded-full bg-black/90 flex items-center justify-center">
             <motion.div
-              animate={{ rotate: isOpen ? 180 : 0 }}
+              animate={{ rotate: isPanelOpen ? 180 : 0 }}
               transition={{ type: "spring", stiffness: 200, damping: 20 }}
             >
               <Sparkles
                 size={20}
                 className="sm:w-6 sm:h-6"
                 style={{ color: accentColor }}
+                strokeWidth={2.5}
               />
             </motion.div>
           </div>
+          
+          {/* Glow effect */}
           <motion.div
             className="absolute inset-0 rounded-full"
             animate={{
-              boxShadow: isOpen
+              boxShadow: isPanelOpen
                 ? `0 0 18px ${accentColor}60, 0 0 40px ${accentColor}40`
                 : `0 0 25px ${accentColor}40`
             }}
-            transition={{ duration: 1.5, repeat: pulse || isOpen ? Infinity : 0, ease: "easeInOut" }}
+            transition={{ duration: 1.5, repeat: pulse || isPanelOpen ? Infinity : 0, ease: "easeInOut" }}
           />
         </motion.button>
       </motion.div>
 
-      {/* Tooltip / Hint - FIXED: Now overlays as fixed element */}
+      {/* Desktop Tooltip */}
       <AnimatePresence>
-        {(isHovering || showInitialHint) && !isOpen && (
+        {(isHovering || showInitialHint) && !isPanelOpen && (
           <motion.div
             initial={{ opacity: 0, x: tooltipOffsetX, scale: 0.9 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: tooltipOffsetX, scale: 0.9 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="fixed pointer-events-none whitespace-nowrap z-[10001]"
+            className="fixed pointer-events-none whitespace-nowrap z-[10001] hidden sm:block"
             style={{
               left: dockSide === 'left' ? `calc(env(safe-area-inset-left, 0px) + 92px)` : 'auto',
               right: dockSide === 'right' ? `calc(env(safe-area-inset-right, 0px) + 92px)` : 'auto',
@@ -180,12 +206,12 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
 
       {/* Mobile Hint Text */}
       <AnimatePresence>
-        {showInitialHint && !isOpen && (
+        {showInitialHint && !isPanelOpen && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className={`absolute top-full mt-2 px-3 py-1.5 rounded-full bg-black/80 border border-white/20 backdrop-blur-xl shadow-lg lg:hidden ${
+            className={`absolute top-full mt-2 px-3 py-1.5 rounded-full bg-black/80 border border-white/20 backdrop-blur-xl shadow-lg sm:hidden ${
               dockSide === 'left' ? 'left-0' : 'right-0'
             }`}
             style={{
@@ -200,9 +226,9 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Open/Close Status Indicator */}
+      {/* Open Status Indicator */}
       <AnimatePresence>
-        {isOpen && (
+        {isPanelOpen && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}

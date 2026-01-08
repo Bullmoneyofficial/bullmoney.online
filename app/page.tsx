@@ -1,53 +1,17 @@
 "use client";
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, memo } from 'react';
 import dynamic from 'next/dynamic';
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { installCrashTelemetry, safeMark } from '@/lib/telemetry';
-
-// Interaction utilities
 import { playClick } from '@/lib/interactionUtils';
-
-// Component imports
-const FullScreenSection = dynamic(() => import('@/components/Mainpage/PageScenes').then((mod) => mod.FullScreenSection), { ssr: false, loading: () => <section className="h-[100dvh] w-full bg-black" /> });
-const DraggableSplitSection = dynamic(() => import('@/components/Mainpage/PageScenes').then((mod) => mod.DraggableSplitSection), { ssr: false, loading: () => <section className="h-[100dvh] w-full bg-black" /> });
-const Navbar = dynamic(() => import('@/components/Mainpage/navbar').then((mod) => mod.Navbar), { ssr: false, loading: () => null });
-const RegisterPage = dynamic(() => import('./register/pagemode'), { ssr: false, loading: () => <div className="fixed inset-0 bg-black" /> });
-const BullMoneyGate = dynamic(() => import('@/components/Mainpage/TradingHoldUnlock'), { ssr: false, loading: () => <div className="fixed inset-0 bg-black" /> });
-const MultiStepLoaderV2 = dynamic(() => import('@/components/Mainpage/MultiStepLoaderv2'), { ssr: false, loading: () => <div className="fixed inset-0 bg-black" /> });
-const Footer = dynamic(() => import('@/components/Mainpage/footer').then((mod) => mod.Footer), { ssr: false, loading: () => <div className="h-24" /> });
-const ParticleEffect = dynamic(() => import('@/components/Mainpage/PageElements').then((mod) => mod.ParticleEffect), { ssr: false, loading: () => null });
-const OrientationOverlay = dynamic(() => import('@/components/Mainpage/PageElements').then((mod) => mod.OrientationOverlay), { ssr: false, loading: () => null });
-const InfoPanel = dynamic(() => import('@/components/Mainpage/PageElements').then((mod) => mod.InfoPanel), { ssr: false, loading: () => null });
-const BackgroundMusicSystem = dynamic(() => import('@/components/Mainpage/PageElements').then((mod) => mod.BackgroundMusicSystem), { ssr: false, loading: () => null });
-const CustomCursor = dynamic(() => import('@/components/Mainpage/PageElements').then((mod) => mod.CustomCursor), { ssr: false, loading: () => null });
-const HeroLoaderOverlay = dynamic(() => import('@/components/Mainpage/PageElements').then((mod) => mod.HeroLoaderOverlay), { ssr: false, loading: () => null });
-const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor'), { ssr: false, loading: () => <div className="hidden">Loading...</div> });
-const LiveMarketTicker = dynamic(() => import('@/components/Mainpage/LiveMarketTicker').then(mod => mod.LiveMarketTicker), { ssr: false, loading: () => <div className="h-10 bg-black border-b border-white/10" /> });
-const VerticalPageScroll = dynamic(() => import('@/components/Mainpage/VerticalPageScroll'), { ssr: false, loading: () => null });
-const ThreeDHintIcon = dynamic(() => import('@/components/Mainpage/ThreeDHintIcon'), { ssr: false, loading: () => null });
-const FixedThemeConfigurator = dynamic(() => import('@/components/Mainpage/ThemeComponents').then((mod) => mod.default), { ssr: false });
-
-// Extracted UI components
-const QuickThemePicker = dynamic(() => import('@/components/Mainpage/QuickThemePicker').then(m => m.QuickThemePicker), { ssr: false });
-const MobileQuickActions = dynamic(() => import('@/components/Mainpage/MobileQuickActions').then(m => m.MobileQuickActions), { ssr: false });
-const PerformancePrompt = dynamic(() => import('@/components/Mainpage/PerformancePrompt').then(m => m.PerformancePrompt), { ssr: false });
-const ProgressBar = dynamic(() => import('@/components/Mainpage/ProgressBar').then(m => m.ProgressBar), { ssr: false });
-const FAQOverlay = dynamic(() => import('@/components/Mainpage/FAQOverlay').then(m => m.FAQOverlay), { ssr: false });
-const PerfToast = dynamic(() => import('@/components/Mainpage/PerfToast').then(m => m.PerfToast), { ssr: false });
-const MobileStaticContent = dynamic(() => import('@/components/Mainpage/MobileStaticContent'), {
-  ssr: false,
-  loading: () => <div className="min-h-[100dvh] w-full bg-black" />,
-});
-
-// Configuration and utilities
 import { useDeviceProfile } from '@/lib/deviceProfile';
 import { PAGE_CONFIG } from '@/lib/pageConfig';
 import { useOptimizations } from '@/lib/useOptimizations';
 import { userStorage, devicePrefs } from '@/lib/smartStorage';
-import '@/styles/unified-ui.css';
 import { createSwipeHandlers } from '@/lib/interactionUtils';
+import '@/styles/unified-ui.css';
 
 // Custom hooks
 import { usePageState } from '@/hooks/usePageState';
@@ -58,21 +22,230 @@ import { usePerformanceState } from '@/hooks/usePerformanceState';
 import { usePageInitialization } from '@/hooks/usePageInitialization';
 import { useScrollManagement } from '@/hooks/useScrollManagement';
 
-export default function Home() {
+// ============================================================================
+// DYNAMIC IMPORTS - Organized by priority and usage
+// ============================================================================
+
+// Critical UI Components (Load immediately)
+const Navbar = dynamic(() => import('@/components/Mainpage/navbar').then(m => m.Navbar), {
+  ssr: false,
+  loading: () => null
+});
+
+const LiveMarketTicker = dynamic(() => import('@/components/Mainpage/LiveMarketTicker').then(m => m.LiveMarketTicker), {
+  ssr: false,
+  loading: () => <div className="h-10 bg-black border-b border-white/10" />
+});
+
+// Page Scene Components
+const FullScreenSection = dynamic(() => import('@/components/Mainpage/PageScenes').then(m => m.FullScreenSection), {
+  ssr: false,
+  loading: () => <section className="h-[100dvh] w-full bg-black" />
+});
+
+const DraggableSplitSection = dynamic(() => import('@/components/Mainpage/PageScenes').then(m => m.DraggableSplitSection), {
+  ssr: false,
+  loading: () => <section className="h-[100dvh] w-full bg-black" />
+});
+
+// Gate/Flow Components
+const RegisterPage = dynamic(() => import('./register/pagemode'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 bg-black" />
+});
+
+const BullMoneyGate = dynamic(() => import('@/components/Mainpage/TradingHoldUnlock'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 bg-black" />
+});
+
+const MultiStepLoaderV2 = dynamic(() => import('@/components/Mainpage/MultiStepLoaderv2'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 bg-black" />
+});
+
+// Interactive Elements
+const MobileQuickActions = dynamic(() => import('@/components/Mainpage/MobileQuickActions').then(m => m.MobileQuickActions), {
+  ssr: false
+});
+
+const QuickThemePicker = dynamic(() => import('@/components/Mainpage/QuickThemePicker').then(m => m.QuickThemePicker), {
+  ssr: false
+});
+
+const ThreeDHintIcon = dynamic(() => import('@/components/Mainpage/ThreeDHintIcon'), {
+  ssr: false,
+  loading: () => null
+});
+
+const VerticalPageScroll = dynamic(() => import('@/components/Mainpage/VerticalPageScroll'), {
+  ssr: false,
+  loading: () => null
+});
+
+// UI Overlays
+const FAQOverlay = dynamic(() => import('@/components/Mainpage/FAQOverlay').then(m => m.FAQOverlay), {
+  ssr: false
+});
+
+const PerformancePrompt = dynamic(() => import('@/components/Mainpage/PerformancePrompt').then(m => m.PerformancePrompt), {
+  ssr: false
+});
+
+const InfoPanel = dynamic(() => import('@/components/Mainpage/PageElements').then(m => m.InfoPanel), {
+  ssr: false,
+  loading: () => null
+});
+
+const OrientationOverlay = dynamic(() => import('@/components/Mainpage/PageElements').then(m => m.OrientationOverlay), {
+  ssr: false,
+  loading: () => null
+});
+
+const HeroLoaderOverlay = dynamic(() => import('@/components/Mainpage/PageElements').then(m => m.HeroLoaderOverlay), {
+  ssr: false,
+  loading: () => null
+});
+
+// Visual Effects (Non-critical)
+const ParticleEffect = dynamic(() => import('@/components/Mainpage/PageElements').then(m => m.ParticleEffect), {
+  ssr: false,
+  loading: () => null
+});
+
+const CustomCursor = dynamic(() => import('@/components/Mainpage/PageElements').then(m => m.CustomCursor), {
+  ssr: false,
+  loading: () => null
+});
+
+const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor'), {
+  ssr: false,
+  loading: () => null
+});
+
+// System Components
+const BackgroundMusicSystem = dynamic(() => import('@/components/Mainpage/PageElements').then(m => m.BackgroundMusicSystem), {
+  ssr: false,
+  loading: () => null
+});
+
+const ProgressBar = dynamic(() => import('@/components/Mainpage/ProgressBar').then(m => m.ProgressBar), {
+  ssr: false,
+  loading: () => null
+});
+
+const PerfToast = dynamic(() => import('@/components/Mainpage/PerfToast').then(m => m.PerfToast), {
+  ssr: false,
+  loading: () => null
+});
+
+const Footer = dynamic(() => import('@/components/Mainpage/footer').then(m => m.Footer), {
+  ssr: false,
+  loading: () => <div className="h-24" />
+});
+
+const FixedThemeConfigurator = dynamic(() => import('@/components/Mainpage/ThemeComponents'), {
+  ssr: false
+});
+
+const MobileStaticContent = dynamic(() => import('@/components/Mainpage/MobileStaticContent'), {
+  ssr: false,
+  loading: () => <div className="min-h-[100dvh] w-full bg-black" />
+});
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const SPLINE_SCENES = [
+  "/scene1.splinecode",
+  "/scene.splinecode",
+  "/scene2.splinecode",
+  "/scene3.splinecode",
+  "/scene4.splinecode",
+  "/scene5.splinecode",
+  "/scene6.splinecode"
+] as const;
+
+const NAVBAR_HEIGHT_DESKTOP = 96;
+const NAVBAR_HEIGHT_MOBILE = 128;
+const PERF_TOAST_DURATION = 2500;
+const CRITICAL_SPLINE_COUNT = 2;
+
+// Network-based optimization thresholds
+const NETWORK_THRESHOLDS = {
+  'slow-2g': { maxScenes: 0, enableEffects: false, preloadDelay: 5000 },
+  '2g': { maxScenes: 1, enableEffects: false, preloadDelay: 3000 },
+  '3g': { maxScenes: 2, enableEffects: false, preloadDelay: 2000 },
+  '4g': { maxScenes: 7, enableEffects: true, preloadDelay: 1000 },
+  'wifi': { maxScenes: 7, enableEffects: true, preloadDelay: 500 },
+} as const;
+
+// Mobile layout constants
+const MOBILE_LAYOUT = {
+  minTouchTarget: 44, // iOS minimum
+  safeAreaPadding: 16,
+  bottomNavHeight: 80,
+  quickActionSize: 56,
+  compactBreakpoint: 768,
+} as const;
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+const calculateSafeAreaInlinePadding = () => ({
+  paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 10px)',
+  paddingRight: 'calc(env(safe-area-inset-right, 0px) + 10px)',
+});
+
+const calculateNavbarHeight = (isMobile: boolean) =>
+  `calc(env(safe-area-inset-top, 0px) + ${isMobile ? NAVBAR_HEIGHT_MOBILE : NAVBAR_HEIGHT_DESKTOP}px)`;
+
+// Network-aware loading strategy
+const getNetworkOptimizations = (connectionType: string, isMobile: boolean) => {
+  const networkType = connectionType as keyof typeof NETWORK_THRESHOLDS;
+  const defaults = NETWORK_THRESHOLDS['4g'];
+  const thresholds = NETWORK_THRESHOLDS[networkType] || defaults;
+  
+  return {
+    ...thresholds,
+    // Mobile gets more aggressive optimizations
+    maxScenes: isMobile ? Math.min(thresholds.maxScenes, 2) : thresholds.maxScenes,
+    enableEffects: isMobile ? false : thresholds.enableEffects,
+    preloadDelay: isMobile ? thresholds.preloadDelay * 1.5 : thresholds.preloadDelay,
+  };
+};
+
+// Detect if device should use mobile-optimized layout
+const shouldUseMobileLayout = (deviceProfile: any, isTouch: boolean, isCompactViewport: boolean) => {
+  return deviceProfile.isMobile || 
+         deviceProfile.isWebView || 
+         isTouch || 
+         isCompactViewport ||
+         (typeof window !== 'undefined' && window.innerWidth < MOBILE_LAYOUT.compactBreakpoint);
+};
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+function Home() {
   const deviceProfile = useDeviceProfile();
 
-  // State management hooks
+  // ===== State Management =====
   const pageState = usePageState();
   const uiState = useUIState();
   const themeState = useThemeState();
   const musicState = useMusicState();
   const performanceState = usePerformanceState();
 
+  // ===== Refs =====
   const prefersReducedMotionRef = React.useRef(false);
   const isTouchRef = React.useRef(false);
   const telemetryContextRef = React.useRef<Record<string, unknown>>({});
 
-  // Initialize page
+  // ===== Initialize Page =====
   usePageInitialization({
     setIsClient: pageState.setIsClient,
     setIsTouch: performanceState.setIsTouch,
@@ -92,7 +265,7 @@ export default function Home() {
     deviceProfile,
   });
 
-  // Scroll management
+  // ===== Scroll Management =====
   useScrollManagement({
     scrollContainerRef: pageState.scrollContainerRef,
     setParallaxOffset: performanceState.setParallaxOffset,
@@ -104,12 +277,156 @@ export default function Home() {
     contentMounted: pageState.contentMounted,
   });
 
-  const isMobileLike = deviceProfile.isMobile || performanceState.isTouch || performanceState.isCompactViewport;
-  const useMobileStaticContent = deviceProfile.isMobile || performanceState.isTouch;
-  const effectiveDisableSpline = performanceState.disableSpline || useMobileStaticContent;
-  const shouldUseSplines = !useMobileStaticContent && !performanceState.disableSpline;
+  // ===== Computed Values =====
+  const isMobileLike = useMemo(
+    () => shouldUseMobileLayout(deviceProfile, performanceState.isTouch, performanceState.isCompactViewport),
+    [deviceProfile, performanceState.isTouch, performanceState.isCompactViewport]
+  );
 
-  // Telemetry tracking
+  const networkOptimizations = useMemo(
+    () => getNetworkOptimizations(deviceProfile.connectionType ?? '4g', isMobileLike),
+    [deviceProfile.connectionType, isMobileLike]
+  );
+
+  const useMobileStaticContent = useMemo(
+    () => isMobileLike || deviceProfile.prefersReducedData || networkOptimizations.maxScenes === 0,
+    [isMobileLike, deviceProfile.prefersReducedData, networkOptimizations.maxScenes]
+  );
+
+  const effectiveDisableSpline = useMemo(
+    () => performanceState.disableSpline || useMobileStaticContent || networkOptimizations.maxScenes === 0,
+    [performanceState.disableSpline, useMobileStaticContent, networkOptimizations.maxScenes]
+  );
+
+  const shouldUseSplines = useMemo(
+    () => !useMobileStaticContent && !performanceState.disableSpline && networkOptimizations.maxScenes > 0,
+    [useMobileStaticContent, performanceState.disableSpline, networkOptimizations.maxScenes]
+  );
+
+  const prioritizedSplineScenes = useMemo(() => {
+    if (!shouldUseSplines) {
+      console.log(
+        useMobileStaticContent
+          ? '[App] Mobile static mode - splines disabled'
+          : '[App] Splines disabled via performance toggle'
+      );
+      return [];
+    }
+    
+    // Network-aware scene loading
+    const maxScenes = networkOptimizations.maxScenes;
+    const scenesToLoad = SPLINE_SCENES.slice(0, maxScenes);
+    
+    console.log(`[App] Loading ${scenesToLoad.length}/${SPLINE_SCENES.length} scenes for ${deviceProfile.connectionType} connection`);
+    return scenesToLoad;
+  }, [shouldUseSplines, useMobileStaticContent, networkOptimizations.maxScenes, deviceProfile.connectionType]);
+
+  const criticalSplineScenes = useMemo(
+    () => prioritizedSplineScenes.slice(0, CRITICAL_SPLINE_COUNT),
+    [prioritizedSplineScenes]
+  );
+
+  const visiblePages = useMemo(() => {
+    if (effectiveDisableSpline) {
+      const firstPage = PAGE_CONFIG.find(page => page.id === 1);
+      const tsxPages = PAGE_CONFIG.filter(page => page.type === 'tsx');
+      return firstPage ? [firstPage, ...tsxPages] : tsxPages;
+    }
+    return PAGE_CONFIG;
+  }, [effectiveDisableSpline]);
+
+  const showMobileQuickActions = useMemo(
+    () =>
+      pageState.currentStage === 'content' &&
+      isMobileLike &&
+      !uiState.showConfigurator &&
+      !uiState.faqOpen &&
+      !uiState.controlCenterOpen &&
+      !uiState.showPerfPrompt &&
+      !uiState.showThemeQuickPick,
+    [uiState, pageState.currentStage, isMobileLike]
+  );
+
+  const safeAreaInlinePadding = useMemo(calculateSafeAreaInlinePadding, []);
+  const safeAreaBottom = useMemo(() => 'calc(env(safe-area-inset-bottom, 0px) + 10px)', []);
+
+  const shouldRenderContent = useMemo(
+    () => pageState.currentStage === 'content' || pageState.contentMounted,
+    [pageState.currentStage, pageState.contentMounted]
+  );
+
+  const showHeroLoaderOverlay = useMemo(
+    () =>
+      pageState.currentStage === 'content' &&
+      shouldUseSplines &&
+      !performanceState.heroSceneReady &&
+      !performanceState.heroLoaderHidden,
+    [pageState.currentStage, shouldUseSplines, performanceState.heroSceneReady, performanceState.heroLoaderHidden]
+  );
+
+  const heroLoaderMessage = useMemo(
+    () => (deviceProfile.isMobile ? 'Optimizing for Mobile Trading' : 'Loading Premium Trading Experience'),
+    [deviceProfile.isMobile]
+  );
+
+  const renderAllScenes = useMemo(
+    () => deviceProfile.isDesktop && !effectiveDisableSpline,
+    [deviceProfile.isDesktop, effectiveDisableSpline]
+  );
+
+  const defaultPerfMode = useMemo(() => {
+    if (deviceProfile.prefersReducedMotion) return 'balanced';
+    if (deviceProfile.prefersReducedData && deviceProfile.connectionType === 'slow-2g') return 'balanced';
+    console.log('[App] Default performance mode: high (3D enabled)');
+    return 'high';
+  }, [deviceProfile]);
+
+  const shouldShowParticles = useMemo(
+    () =>
+      shouldRenderContent &&
+      !performanceState.isSafeMode &&
+      !deviceProfile.prefersReducedMotion &&
+      deviceProfile.isHighEndDevice &&
+      !isMobileLike &&
+      networkOptimizations.enableEffects,
+    [shouldRenderContent, performanceState, deviceProfile, isMobileLike, networkOptimizations.enableEffects]
+  );
+
+  const shouldShowCustomCursor = useMemo(
+    () =>
+      shouldRenderContent &&
+      !isMobileLike &&
+      !deviceProfile.prefersReducedMotion &&
+      !performanceState.isSafari &&
+      networkOptimizations.enableEffects,
+    [shouldRenderContent, isMobileLike, deviceProfile, performanceState, networkOptimizations.enableEffects]
+  );
+
+  // ===== Initialize Optimization System =====
+  useOptimizations({
+    enableServiceWorker: !isMobileLike || deviceProfile.connectionType !== 'slow-2g',
+    criticalScenes: shouldUseSplines
+      ? criticalSplineScenes.length
+        ? criticalSplineScenes
+        : ['/scene1.splinecode']
+      : [],
+    preloadScenes: shouldUseSplines ? prioritizedSplineScenes.slice(1) : [],
+  });
+
+  // ===== Delayed Preloading for Slow Networks =====
+  React.useEffect(() => {
+    if (!shouldUseSplines || prioritizedSplineScenes.length === 0) return;
+
+    const delay = networkOptimizations.preloadDelay;
+    const timer = setTimeout(() => {
+      console.log(`[App] Starting scene preload after ${delay}ms delay`);
+      // Preload trigger - the useOptimizations hook handles actual preloading
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [shouldUseSplines, prioritizedSplineScenes, networkOptimizations.preloadDelay]);
+
+  // ===== Telemetry Tracking =====
   React.useEffect(() => {
     telemetryContextRef.current = {
       stage: pageState.currentStage,
@@ -127,11 +444,11 @@ export default function Home() {
       },
       ua: typeof navigator !== 'undefined' ? navigator.userAgent : '',
     };
-  }, [pageState.activePage, pageState.currentStage, deviceProfile, performanceState, effectiveDisableSpline]);
+  }, [pageState, deviceProfile, performanceState, effectiveDisableSpline]);
 
   React.useEffect(() => {
     const uninstall = installCrashTelemetry(() => telemetryContextRef.current);
-    return () => uninstall();
+    return uninstall;
   }, []);
 
   React.useEffect(() => {
@@ -146,58 +463,9 @@ export default function Home() {
     if (pageState.currentStage === 'content') {
       pageState.setContentMounted(true);
     }
-  }, [pageState.currentStage]);
+  }, [pageState.currentStage, pageState]);
 
-  // Computed values
-  // FIXED: Ensure all devices can load 3D splines - no restrictions based on device type
-  const prioritizedSplineScenes = useMemo(() => {
-    if (!shouldUseSplines) {
-      console.log(useMobileStaticContent ? '[App] Mobile static mode - splines disabled' : '[App] Splines disabled via performance toggle');
-      return [];
-    }
-    const baseScenes = ["/scene1.splinecode", "/scene.splinecode", "/scene2.splinecode", "/scene3.splinecode", "/scene4.splinecode", "/scene5.splinecode", "/scene6.splinecode"];
-    // Mobile: Load all scenes but with memory management
-    // Desktop: Load all scenes
-    // Low-end devices: Still load all scenes with crash-safe loaders
-    console.log('[App] Splines enabled - will load all scenes with device-optimized quality');
-    return baseScenes;
-  }, [shouldUseSplines, useMobileStaticContent]);
-
-  const criticalSplineScenes = useMemo(() => prioritizedSplineScenes.slice(0, 2), [prioritizedSplineScenes]);
-
-  // Initialize optimization system
-  useOptimizations({
-    enableServiceWorker: true,
-    criticalScenes: shouldUseSplines ? (criticalSplineScenes.length ? criticalSplineScenes : ['/scene1.splinecode']) : [],
-    preloadScenes: shouldUseSplines ? prioritizedSplineScenes.slice(1) : []
-  });
-
-  const visiblePages = useMemo(() => {
-    if (effectiveDisableSpline) {
-      const firstPage = PAGE_CONFIG.find(page => page.id === 1);
-      const tsxPages = PAGE_CONFIG.filter(page => page.type === 'tsx');
-      return firstPage ? [firstPage, ...tsxPages] : tsxPages;
-    }
-    return PAGE_CONFIG;
-  }, [effectiveDisableSpline]);
-
-  const showMobileQuickActions = useMemo(
-    () => pageState.currentStage === 'content' && isMobileLike && !uiState.showConfigurator && !uiState.faqOpen && !uiState.controlCenterOpen && !uiState.showPerfPrompt && !uiState.showThemeQuickPick,
-    [uiState, pageState.currentStage, isMobileLike]
-  );
-
-  const safeAreaInlinePadding = useMemo(() => ({
-    paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 10px)',
-    paddingRight: 'calc(env(safe-area-inset-right, 0px) + 10px)',
-  }), []);
-  const safeAreaBottom = 'calc(env(safe-area-inset-bottom, 0px) + 10px)';
-
-  const shouldRenderContent = pageState.currentStage === 'content' || pageState.contentMounted;
-  const showHeroLoaderOverlay = pageState.currentStage === 'content' && shouldUseSplines && !performanceState.heroSceneReady && !performanceState.heroLoaderHidden;
-  const heroLoaderMessage = deviceProfile.isMobile ? 'Optimizing for Mobile Trading' : 'Loading Premium Trading Experience';
-  const renderAllScenes = deviceProfile.isDesktop && !effectiveDisableSpline;
-
-  // Handlers
+  // ===== Event Handlers =====
   const handleOrientationDismiss = useCallback(() => {
     pageState.setShowOrientationWarning(false);
     pageState.orientationDismissedRef.current = true;
@@ -208,15 +476,17 @@ export default function Home() {
     pageState.setHasRegistered(true);
     const holdShown = pageState.hasSeenHold || userStorage.get('bm_hold_seen') === 'true';
     if (holdShown) {
-      pageState.setCurrentStage("content");
+      pageState.setCurrentStage('content');
     } else {
       userStorage.set('bm_hold_seen', 'true');
       pageState.setHasSeenHold(true);
-      pageState.setCurrentStage("hold");
+      pageState.setCurrentStage('hold');
     }
   }, [pageState]);
 
-  const handleHoldComplete = useCallback(() => pageState.setCurrentStage("content"), [pageState]);
+  const handleHoldComplete = useCallback(() => {
+    pageState.setCurrentStage('content');
+  }, [pageState]);
 
   const handleV2Complete = useCallback(() => {
     musicState.safePlay();
@@ -226,9 +496,9 @@ export default function Home() {
     }
     themeState.setParticleTrigger(prev => prev + 1);
     if (pageState.hasRegistered) {
-      pageState.setCurrentStage("content");
+      pageState.setCurrentStage('content');
     } else {
-      pageState.setCurrentStage("register");
+      pageState.setCurrentStage('register');
     }
   }, [pageState, musicState, themeState]);
 
@@ -237,71 +507,121 @@ export default function Home() {
     performanceState.setHeroLoaderHidden(true);
   }, [performanceState]);
 
-  const applyPerformanceChoice = useCallback((mode: 'high' | 'balanced') => {
-    if (uiState.perfPromptTimeoutRef.current) {
-      window.clearTimeout(uiState.perfPromptTimeoutRef.current);
-      uiState.perfPromptTimeoutRef.current = null;
-    }
-    const enable3D = mode === 'high';
-    performanceState.setDisableSpline(!enable3D);
-    devicePrefs.set('spline_enabled', enable3D ? 'true' : 'false');
-    devicePrefs.set('spline_pref_v2', 'true');
-    devicePrefs.set('perf_choice', mode);
-    uiState.setShowPerfPrompt(false);
-  }, [uiState, performanceState]);
+  const applyPerformanceChoice = useCallback(
+    (mode: 'high' | 'balanced') => {
+      if (uiState.perfPromptTimeoutRef.current) {
+        window.clearTimeout(uiState.perfPromptTimeoutRef.current);
+        uiState.perfPromptTimeoutRef.current = null;
+      }
+      const enable3D = mode === 'high';
+      performanceState.setDisableSpline(!enable3D);
+      devicePrefs.set('spline_enabled', enable3D ? 'true' : 'false');
+      devicePrefs.set('spline_pref_v2', 'true');
+      devicePrefs.set('perf_choice', mode);
+      uiState.setShowPerfPrompt(false);
+    },
+    [uiState, performanceState]
+  );
 
   const handlePerformanceToggle = useCallback(() => {
     if (useMobileStaticContent) {
       uiState.setPerfToast({ message: 'Mobile static mode - 3D disabled', type: 'info' });
-      setTimeout(() => uiState.setPerfToast(null), 2500);
+      setTimeout(() => uiState.setPerfToast(null), PERF_TOAST_DURATION);
       return;
     }
     performanceState.handlePerformanceToggle(uiState.setPerfToast, themeState.setParticleTrigger);
   }, [useMobileStaticContent, uiState, performanceState, themeState]);
 
-  // FIXED: Default to high performance (3D enabled) for all devices
-  // Users can switch to balanced mode if needed via performance toggle
-  const defaultPerfMode = useMemo(() => {
-    // Only use balanced mode if user explicitly prefers reduced data AND is on slow connection
-    if (deviceProfile.prefersReducedMotion) return 'balanced';
-    if (deviceProfile.prefersReducedData && deviceProfile.connectionType === 'slow-2g') return 'balanced';
-    // Default to high performance (3D enabled) for all other devices
-    console.log('[App] Default performance mode: high (3D enabled)');
-    return 'high';
-  }, [deviceProfile]);
+  const handleThemeQuickPickOpen = useCallback(() => {
+    uiState.setControlCenterOpen(false);
+    uiState.setShowThemeQuickPick(true);
+  }, [uiState]);
 
-  // Swipe navigation
+  const handleThemeQuickPickClose = useCallback(() => {
+    uiState.setShowThemeQuickPick(false);
+  }, [uiState]);
+
+  const handleThemeChange = useCallback(
+    (themeId: string) => {
+      themeState.handleQuickThemeChange(themeId, musicState.isMuted, musicState.safePlay);
+    },
+    [themeState, musicState]
+  );
+
+  const handleFaqOpen = useCallback(() => {
+    uiState.setFaqOpen(true);
+  }, [uiState]);
+
+  const handleFaqClose = useCallback(() => {
+    uiState.setFaqOpen(false);
+  }, [uiState]);
+
+  const handleInfoPanelToggle = useCallback(() => {
+    uiState.setInfoPanelOpen(prev => !prev);
+  }, [uiState]);
+
+  const handleInfoPanelClose = useCallback(() => {
+    uiState.setInfoPanelOpen(false);
+  }, [uiState]);
+
+  const handleControlCenterToggle = useCallback(() => {
+    uiState.setControlCenterOpen(prev => !prev);
+  }, [uiState]);
+
+  const handleConfiguratorClose = useCallback(() => {
+    uiState.setShowConfigurator(false);
+  }, [uiState]);
+
   const navigateToNextPage = useCallback(() => {
     const maxPages = effectiveDisableSpline ? visiblePages.length : PAGE_CONFIG.length;
     if (pageState.activePage < maxPages) {
       playClick();
-      pageState.pageRefs.current[pageState.activePage]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      pageState.pageRefs.current[pageState.activePage]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
     }
   }, [pageState, effectiveDisableSpline, visiblePages]);
 
   const navigateToPrevPage = useCallback(() => {
     if (pageState.activePage > 1) {
       playClick();
-      pageState.pageRefs.current[pageState.activePage - 2]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      pageState.pageRefs.current[pageState.activePage - 2]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
     }
   }, [pageState]);
 
-  const swipeHandlers = useMemo(() => createSwipeHandlers({
-    onSwipeLeft: navigateToNextPage,
-    onSwipeRight: navigateToPrevPage,
-    threshold: 80,
-    velocityThreshold: 0.4,
-    preventScroll: false,
-  }), [navigateToNextPage, navigateToPrevPage]);
+  const swipeHandlers = useMemo(
+    () =>
+      createSwipeHandlers({
+        onSwipeLeft: navigateToNextPage,
+        onSwipeRight: navigateToPrevPage,
+        threshold: 80,
+        velocityThreshold: 0.4,
+        preventScroll: false,
+      }),
+    [navigateToNextPage, navigateToPrevPage]
+  );
 
+  const handlePageChange = useCallback(
+    (idx: number) => {
+      pageState.pageRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+    [pageState]
+  );
+
+  // ===== Early Return =====
   if (!pageState.isClient) return null;
 
+  // ===== Render =====
   return (
     <>
       <Analytics />
       <SpeedInsights />
 
-      {/* Background Music */}
+      {/* ===== Background Music ===== */}
       {shouldRenderContent && (
         <BackgroundMusicSystem
           themeId={themeState.activeThemeId}
@@ -311,17 +631,13 @@ export default function Home() {
         />
       )}
 
-      {/* Particle Effects */}
-      {shouldRenderContent && !performanceState.isSafeMode && !deviceProfile.prefersReducedMotion && deviceProfile.isHighEndDevice && !deviceProfile.isMobile && !performanceState.isTouch && (
-        <ParticleEffect trigger={themeState.particleTrigger} />
-      )}
+      {/* ===== Particle Effects ===== */}
+      {shouldShowParticles && <ParticleEffect trigger={themeState.particleTrigger} />}
 
-      {/* Custom Cursor */}
-      {shouldRenderContent && !deviceProfile.isMobile && !deviceProfile.prefersReducedMotion && !performanceState.isTouch && !performanceState.isSafari && (
-        <CustomCursor accentColor={themeState.accentColor} />
-      )}
+      {/* ===== Custom Cursor ===== */}
+      {shouldShowCustomCursor && <CustomCursor accentColor={themeState.accentColor} />}
 
-      {/* Mobile Quick Actions */}
+      {/* ===== Mobile Quick Actions ===== */}
       <MobileQuickActions
         isVisible={showMobileQuickActions}
         disableSpline={effectiveDisableSpline}
@@ -332,95 +648,119 @@ export default function Home() {
         accentColor={themeState.accentColor}
         onPerformanceToggle={handlePerformanceToggle}
         onMusicToggle={musicState.toggleMusic}
-        onThemeClick={() => {
-          uiState.setControlCenterOpen(false);
-          uiState.setShowThemeQuickPick(true);
-        }}
-        onHelpClick={() => uiState.setFaqOpen(true)}
+        onThemeClick={handleThemeQuickPickOpen}
+        onHelpClick={handleFaqOpen}
       />
 
-      {/* Quick Theme Picker */}
+      {/* ===== Quick Theme Picker ===== */}
       <QuickThemePicker
         isOpen={uiState.showThemeQuickPick}
-        onClose={() => uiState.setShowThemeQuickPick(false)}
+        onClose={handleThemeQuickPickClose}
         activeThemeId={themeState.activeThemeId}
-        onThemeChange={(themeId) => themeState.handleQuickThemeChange(themeId, musicState.isMuted, musicState.safePlay)}
+        onThemeChange={handleThemeChange}
       />
 
-      {/* Info Panel */}
+      {/* ===== Info Panel ===== */}
       {shouldRenderContent && !useMobileStaticContent && (
         <InfoPanel
           config={PAGE_CONFIG[pageState.activePage - 1]}
           isOpen={uiState.infoPanelOpen}
-          onClose={() => uiState.setInfoPanelOpen(false)}
+          onClose={handleInfoPanelClose}
           accentColor={themeState.accentColor}
         />
       )}
 
-      {/* FAQ Overlay */}
-      <FAQOverlay isOpen={uiState.faqOpen} onClose={() => uiState.setFaqOpen(false)} />
+      {/* ===== FAQ Overlay ===== */}
+      <FAQOverlay isOpen={uiState.faqOpen} onClose={handleFaqClose} />
 
-      {/* Progress Bar */}
+      {/* ===== Progress Bar ===== */}
       {!useMobileStaticContent && (
-        <ProgressBar isVisible={pageState.currentStage === 'content'} activePage={pageState.activePage} totalPages={visiblePages.length} />
+        <ProgressBar
+          isVisible={pageState.currentStage === 'content'}
+          activePage={pageState.activePage}
+          totalPages={visiblePages.length}
+        />
       )}
 
-      {/* Performance Toast */}
+      {/* ===== Performance Toast ===== */}
       <PerfToast toast={uiState.perfToast} />
 
-      {/* Performance Prompt */}
+      {/* ===== Performance Prompt ===== */}
       <PerformancePrompt
-        isVisible={!useMobileStaticContent && uiState.showPerfPrompt && pageState.currentStage === 'content'}
+        isVisible={
+          !useMobileStaticContent && uiState.showPerfPrompt && pageState.currentStage === 'content'
+        }
         accentColor={themeState.accentColor}
         deviceProfile={deviceProfile}
         defaultPerfMode={defaultPerfMode}
         onChoose={applyPerformanceChoice}
       />
 
-      {/* Theme Configurator - Z-Index 300,000 (Below Navbar) */}
+      {/* ===== Theme Configurator ===== */}
       {uiState.showConfigurator && (
         <div className="fixed inset-0 z-[300000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="relative w-full max-w-6xl h-[80vh] bg-[#020617] rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
-            <button onClick={() => uiState.setShowConfigurator(false)} className="absolute top-6 right-6 z-[10] p-2 text-white/50 hover:text-white transition-all">
+            <button
+              onClick={handleConfiguratorClose}
+              className="absolute top-6 right-6 z-[10] p-2 text-white/50 hover:text-white transition-all"
+              aria-label="Close theme configurator"
+            >
               ✕
             </button>
             {/* @ts-ignore */}
             <FixedThemeConfigurator
               initialThemeId={themeState.activeThemeId}
-              onThemeChange={(themeId: string, sound: any, muted: boolean) => themeState.handleThemeChange(themeId, sound, muted, musicState.safePlay)}
+              onThemeChange={(themeId: string, sound: any, muted: boolean) =>
+                themeState.handleThemeChange(themeId, sound, muted, musicState.safePlay)
+              }
             />
           </div>
         </div>
       )}
 
-      {/* Gating Screens - Z-Index 100,000 (Below Everything) */}
-      {pageState.currentStage === "register" && (
-        <div className="fixed inset-0 z-[100000] bg-black transition-all duration-500" style={{ filter: themeState.activeTheme?.filter || 'none' }}>
+      {/* ===== Gating Screens ===== */}
+      {pageState.currentStage === 'register' && (
+        <div
+          className="fixed inset-0 z-[100000] bg-black transition-all duration-500"
+          style={{ filter: themeState.activeTheme?.filter || 'none' }}
+        >
           {/* @ts-ignore */}
           <RegisterPage onUnlock={handleRegisterComplete} theme={themeState.activeTheme} />
         </div>
       )}
 
-      {pageState.currentStage === "hold" && (
-        <div className="fixed inset-0 z-[100000] transition-all duration-500" style={{ filter: themeState.activeTheme?.filter || 'none' }}>
+      {pageState.currentStage === 'hold' && (
+        <div
+          className="fixed inset-0 z-[100000] transition-all duration-500"
+          style={{ filter: themeState.activeTheme?.filter || 'none' }}
+        >
           {/* @ts-ignore */}
-          <BullMoneyGate onUnlock={handleHoldComplete} theme={themeState.activeTheme}><></></BullMoneyGate>
+          <BullMoneyGate onUnlock={handleHoldComplete} theme={themeState.activeTheme}>
+            <></>
+          </BullMoneyGate>
         </div>
       )}
 
-      {pageState.currentStage === "v2" && (
-        <div className="fixed inset-0 z-[100000] transition-all duration-500" style={{ filter: themeState.activeTheme?.filter || 'none' }}>
+      {pageState.currentStage === 'v2' && (
+        <div
+          className="fixed inset-0 z-[100000] transition-all duration-500"
+          style={{ filter: themeState.activeTheme?.filter || 'none' }}
+        >
           {/* @ts-ignore */}
           <MultiStepLoaderV2 onFinished={handleV2Complete} theme={themeState.activeTheme} />
         </div>
       )}
 
-      {showHeroLoaderOverlay && <HeroLoaderOverlay visible={showHeroLoaderOverlay} message={heroLoaderMessage} accentColor={themeState.accentColor} />}
+      {/* ===== Hero Loader Overlay ===== */}
+      {showHeroLoaderOverlay && (
+        <HeroLoaderOverlay
+          visible={showHeroLoaderOverlay}
+          message={heroLoaderMessage}
+          accentColor={themeState.accentColor}
+        />
+      )}
 
-      {/* ✅ FIXED HEADER - Z-Index 250,000 (Between Lens and Configurator)
-          Positioned at top of everything to unravel properly like shop page
-          FIXED: LiveMarketTicker now positioned correctly below navbar
-      */}
+      {/* ===== Fixed Header ===== */}
       {pageState.currentStage === 'content' && (
         <>
           <header className="fixed top-0 left-0 right-0 z-[250000] w-full transition-all duration-300">
@@ -428,64 +768,74 @@ export default function Home() {
               setShowConfigurator={uiState.setShowConfigurator}
               activeThemeId={themeState.activeThemeId}
               accentColor={themeState.accentColor}
-              onThemeChange={(themeId) => themeState.handleQuickThemeChange(themeId, musicState.isMuted, musicState.safePlay)}
+              onThemeChange={handleThemeChange}
               isMuted={musicState.isMuted}
               onMuteToggle={musicState.toggleMusic}
               disableSpline={effectiveDisableSpline}
               onPerformanceToggle={handlePerformanceToggle}
               infoPanelOpen={useMobileStaticContent ? false : uiState.infoPanelOpen}
-              onInfoToggle={useMobileStaticContent ? undefined : () => uiState.setInfoPanelOpen((prev) => !prev)}
-              onFaqClick={() => uiState.setFaqOpen(true)}
-              onControlCenterToggle={() => uiState.setControlCenterOpen((prev) => !prev)}
+              onInfoToggle={useMobileStaticContent ? undefined : handleInfoPanelToggle}
+              onFaqClick={handleFaqOpen}
+              onControlCenterToggle={handleControlCenterToggle}
             />
           </header>
-          {/* LiveMarketTicker positioned below navbar */}
+
+          {/* ===== Live Market Ticker ===== */}
           <div
             className="fixed left-0 right-0 z-[249000] w-full transition-all duration-300"
             style={{
-              top: 'calc(env(safe-area-inset-top, 0px) + var(--navbar-height, 128px))',
+              top: calculateNavbarHeight(isMobileLike),
             }}
           >
-            <style jsx>{`
-              @media (min-width: 1024px) {
-                div {
-                  --navbar-height: 96px;
-                }
-              }
-              @media (max-width: 1023px) {
-                div {
-                  --navbar-height: 128px;
-                }
-              }
-            `}</style>
             <LiveMarketTicker />
           </div>
         </>
       )}
 
-      {/* Main Content */}
+      {/* ===== Main Content ===== */}
       {shouldRenderContent && (
-        <div className={pageState.currentStage === 'content' ? 'w-full h-[100dvh] relative' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
-          {!performanceState.isTouch && <TargetCursor spinDuration={2} hideDefaultCursor={false} targetSelector=".cursor-target, a, button" />}
+        <div
+          className={
+            pageState.currentStage === 'content'
+              ? 'w-full h-[100dvh] relative'
+              : 'opacity-0 pointer-events-none h-0 overflow-hidden'
+          }
+        >
+          {/* ===== Target Cursor ===== */}
+          {!performanceState.isTouch && (
+            <TargetCursor
+              spinDuration={2}
+              hideDefaultCursor={false}
+              targetSelector=".cursor-target, a, button"
+            />
+          )}
 
-          {!isMobileLike && <VerticalPageScroll currentPage={pageState.activePage} totalPages={visiblePages.length} onPageChange={(idx) => pageState.pageRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'start' })} accentColor={themeState.accentColor} disabled={pageState.currentStage !== 'content'} />}
+          {/* ===== Vertical Page Scroll ===== */}
+          {!isMobileLike && (
+            <VerticalPageScroll
+              currentPage={pageState.activePage}
+              totalPages={visiblePages.length}
+              onPageChange={handlePageChange}
+              accentColor={themeState.accentColor}
+              disabled={pageState.currentStage !== 'content'}
+            />
+          )}
 
-          {/* FIXED: 3D Hint Icon now serves as the main control center access point */}
+          {/* ===== 3D Hint Icon / Control Center ===== */}
           <ThreeDHintIcon
-            onClick={() => uiState.setControlCenterOpen((prev) => !prev)}
             accentColor={themeState.accentColor}
             disableSpline={effectiveDisableSpline}
             showHint={!pageState.hasSeenIntro}
-            isOpen={uiState.controlCenterOpen}
-            dockSide={isMobileLike ? 'left' : 'right'}
-          />
+            dockSide={isMobileLike ? 'left' : 'right'} onTogglePanel={function (): void {
+              throw new Error('Function not implemented.');
+            } }          />
 
-          {/* Scroll Container - Enhanced for Mobile */}
+          {/* ===== Scroll Container - Mobile Static Content ===== */}
           {useMobileStaticContent ? (
             <main
               ref={pageState.scrollContainerRef}
               data-scroll-container
-              className={`profit-reveal w-full min-h-[100dvh] overflow-y-auto overflow-x-hidden unified-scroll mobile-scroll bg-black no-scrollbar text-white relative`}
+              className="profit-reveal w-full min-h-[100dvh] overflow-y-auto overflow-x-hidden unified-scroll mobile-scroll bg-black no-scrollbar text-white relative"
               style={{
                 WebkitOverflowScrolling: 'touch',
                 WebkitTapHighlightColor: 'transparent',
@@ -495,20 +845,40 @@ export default function Home() {
                 paddingLeft: 'env(safe-area-inset-left, 0px)',
                 paddingRight: 'env(safe-area-inset-right, 0px)',
                 scrollbarGutter: 'stable both-edges',
-                paddingBottom: isMobileLike ? 'calc(80px + env(safe-area-inset-bottom, 0px))' : '0px'
+                // Mobile-optimized layout
+                paddingTop: isMobileLike ? calculateNavbarHeight(true) : '0px',
+                paddingBottom: isMobileLike
+                  ? `calc(${MOBILE_LAYOUT.bottomNavHeight}px + env(safe-area-inset-bottom, 0px) + ${MOBILE_LAYOUT.safeAreaPadding}px)`
+                  : '0px',
+                // Improve scroll performance
+                willChange: 'scroll-position',
+                transform: 'translateZ(0)', // Force GPU acceleration
+                backfaceVisibility: 'hidden',
               }}
             >
-              {pageState.showOrientationWarning && <OrientationOverlay onDismiss={handleOrientationDismiss} />}
+              {/* Orientation Warning */}
+              {pageState.showOrientationWarning && (
+                <OrientationOverlay onDismiss={handleOrientationDismiss} />
+              )}
+
+              {/* Mobile Content */}
               <MobileStaticContent />
+
+              {/* Footer */}
               <div className="w-full mt-10">
                 <Footer />
               </div>
             </main>
           ) : (
+            /* ===== Scroll Container - Desktop/Interactive Content ===== */
             <main
               ref={pageState.scrollContainerRef}
               data-scroll-container
-              className={`profit-reveal w-full h-full flex flex-col overflow-y-scroll overflow-x-hidden unified-scroll ${performanceState.isTouch ? 'touch-device' : 'non-touch-device snap-y snap-mandatory scroll-smooth'} bg-black no-scrollbar text-white relative`}
+              className={`profit-reveal w-full h-full flex flex-col overflow-y-scroll overflow-x-hidden unified-scroll ${
+                performanceState.isTouch
+                  ? 'touch-device'
+                  : 'non-touch-device snap-y snap-mandatory scroll-smooth'
+              } bg-black no-scrollbar text-white relative`}
               onTouchStart={swipeHandlers.onTouchStart}
               onTouchMove={swipeHandlers.onTouchMove}
               onTouchEnd={swipeHandlers.onTouchEnd}
@@ -521,12 +891,20 @@ export default function Home() {
                 paddingLeft: 'env(safe-area-inset-left, 0px)',
                 paddingRight: 'env(safe-area-inset-right, 0px)',
                 scrollbarGutter: 'stable both-edges',
-                // Mobile-specific improvements
-                scrollPaddingTop: isMobileLike ? '100px' : '0px',
-                paddingBottom: isMobileLike ? 'calc(80px + env(safe-area-inset-bottom, 0px))' : '0px'
+                scrollPaddingTop: isMobileLike ? calculateNavbarHeight(true) : '0px',
+                paddingBottom: isMobileLike
+                  ? `calc(${MOBILE_LAYOUT.bottomNavHeight}px + env(safe-area-inset-bottom, 0px))`
+                  : '0px',
+                // Performance optimizations
+                willChange: 'scroll-position',
+                transform: 'translateZ(0)',
+                backfaceVisibility: 'hidden',
               }}
             >
-              {pageState.showOrientationWarning && <OrientationOverlay onDismiss={handleOrientationDismiss} />}
+              {/* Orientation Warning */}
+              {pageState.showOrientationWarning && (
+                <OrientationOverlay onDismiss={handleOrientationDismiss} />
+              )}
 
               {/* Scroll Pages */}
               {visiblePages.map((page) => (
@@ -535,33 +913,38 @@ export default function Home() {
                     <DraggableSplitSection
                       config={page}
                       activePage={pageState.activePage}
-                    onVisible={(el: HTMLElement | null) => { pageState.pageRefs.current[page.id - 1] = el; }}
-                    parallaxOffset={performanceState.parallaxOffset}
-                    disableSpline={effectiveDisableSpline}
-                    useCrashSafeSpline={true}
-                    forceLiteSpline={false}
-                    eagerRenderSplines={performanceState.splinesEnabled}
-                    renderAllScenes={renderAllScenes}
-                    deviceProfile={deviceProfile}
-                  />
-                ) : (
-                  <FullScreenSection
-                    config={page}
+                      onVisible={(el: HTMLElement | null) => {
+                        pageState.pageRefs.current[page.id - 1] = el;
+                      }}
+                      parallaxOffset={performanceState.parallaxOffset}
+                      disableSpline={effectiveDisableSpline}
+                      useCrashSafeSpline={true}
+                      forceLiteSpline={isMobileLike || !networkOptimizations.enableEffects}
+                      eagerRenderSplines={performanceState.splinesEnabled && networkOptimizations.enableEffects}
+                      renderAllScenes={renderAllScenes}
+                      deviceProfile={deviceProfile}
+                    />
+                  ) : (
+                    <FullScreenSection
+                      config={page}
                       activePage={pageState.activePage}
-                      onVisible={(el: HTMLElement | null) => { pageState.pageRefs.current[page.id - 1] = el; }}
-                    parallaxOffset={performanceState.parallaxOffset}
-                    disableSpline={effectiveDisableSpline}
-                    useCrashSafeSpline={true}
-                    forceLiteSpline={false}
-                    eagerRenderSplines={performanceState.splinesEnabled}
-                    renderAllScenes={renderAllScenes}
-                    onSceneReady={page.id === 1 ? handleHeroReady : undefined}
-                    deviceProfile={deviceProfile}
-                  />
-                )}
+                      onVisible={(el: HTMLElement | null) => {
+                        pageState.pageRefs.current[page.id - 1] = el;
+                      }}
+                      parallaxOffset={performanceState.parallaxOffset}
+                      disableSpline={effectiveDisableSpline}
+                      useCrashSafeSpline={true}
+                      forceLiteSpline={isMobileLike || !networkOptimizations.enableEffects}
+                      eagerRenderSplines={performanceState.splinesEnabled && networkOptimizations.enableEffects}
+                      renderAllScenes={renderAllScenes}
+                      onSceneReady={page.id === 1 ? handleHeroReady : undefined}
+                      deviceProfile={deviceProfile}
+                    />
+                  )}
                 </React.Fragment>
               ))}
 
+              {/* Footer */}
               <div className="w-full mt-10">
                 <Footer />
               </div>
@@ -572,3 +955,5 @@ export default function Home() {
     </>
   );
 }
+
+export default memo(Home);

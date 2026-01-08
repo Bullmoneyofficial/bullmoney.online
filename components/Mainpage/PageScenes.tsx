@@ -195,6 +195,9 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
     }
   }, [isLoaded, onSceneReady]);
 
+  const inputActive = allowInput && isVisible;
+  const parallaxShift = inputActive ? 0 : parallaxOffset * 0.5;
+
   // Render different states based on shouldRenderContent flag
   // This ensures hooks are always called in the same order
   if (!shouldRenderContent) {
@@ -203,7 +206,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
       return (
         <div
           className="w-full h-full relative transition-opacity duration-700 parallax-layer flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
-          style={{ transform: `translateY(${parallaxOffset * 0.4}px) translateZ(0)` }}
+          style={{ transform: `translateY(${inputActive ? 0 : parallaxOffset * 0.4}px) translateZ(0)` }}
         >
           <div
             className="absolute inset-0 opacity-30"
@@ -230,7 +233,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
         <div
           className="w-full h-full relative transition-opacity duration-700 parallax-layer flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
           style={{
-            transform: `translateY(${parallaxOffset * 0.5}px) translateZ(0)`,
+            transform: `translateY(${inputActive ? 0 : parallaxOffset * 0.5}px) translateZ(0)`,
           }}
         >
           <div
@@ -263,7 +266,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
       return (
         <div
           className="w-full h-full relative flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
-          style={{ transform: `translateY(${parallaxOffset * 0.35}px) translateZ(0)` }}
+          style={{ transform: `translateY(${inputActive ? 0 : parallaxOffset * 0.35}px) translateZ(0)` }}
         >
           <div
             className="absolute inset-0 opacity-30"
@@ -290,7 +293,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
         ${forceNoPointer ? 'pointer-events-none' : (allowInput ? 'pointer-events-auto' : 'pointer-events-none')}
       `}
       style={{
-        transform: `translateY(${parallaxOffset * 0.5}px) translateZ(0)`,
+        transform: `translateY(${parallaxShift}px) translateZ(0)`,
         willChange: isVisible ? 'transform' : 'auto',
         minHeight: '100%',
         minWidth: '100%'
@@ -349,12 +352,29 @@ export const FullScreenSection = memo(({ config, activePage, onVisible, parallax
   const isTSX = config.type === 'tsx';
   const sectionRef = useRef<HTMLElement | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [isInView, setIsInView] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const root = el.closest('[data-scroll-container]') as Element | null;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting && entry.intersectionRatio > 0.25);
+      },
+      { root, threshold: [0, 0.25, 0.6] }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   // PERFORMANCE MODE: Hide non-TSX pages completely when splines are disabled
@@ -422,7 +442,7 @@ export const FullScreenSection = memo(({ config, activePage, onVisible, parallax
           <SceneWrapper
             isVisible={shouldRender}
             sceneUrl={config.scene}
-            allowInput={!config.disableInteraction}
+            allowInput={isInView && !config.disableInteraction}
             parallaxOffset={isHeavyScene ? parallaxOffset * 0.15 : (isMobileSensitive || isLastPage) ? parallaxOffset * 0.3 : parallaxOffset}
             isHeavy={isHeavyScene || isMobileSensitive || isLastPage}
             disabled={disableSpline}
@@ -464,12 +484,29 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
   const [activeScene, setActiveScene] = useState<'left' | 'right'>('left'); // Mobile: only load one scene at a time
   const sceneSwitchTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false); // BUG FIX #19: Prevent double-loading
+  const [isInView, setIsInView] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const root = el.closest('[data-scroll-container]') as Element | null;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting && entry.intersectionRatio > 0.25);
+      },
+      { root, threshold: [0, 0.25, 0.6] }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   // BUG FIX #19: Debounced scene switching with transition guard to prevent race conditions
@@ -780,6 +817,7 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
             eagerLoad={eagerRenderSplines && !disableSpline && shouldRenderSceneA}
             skeletonLabel={config.labelA}
             useCrashSafe={useCrashSafeSpline || !!deviceProfile?.isMobile || config.id === 6}
+            allowInput={isInView}
             deviceProfile={deviceProfile}
           />
         </div>
@@ -820,6 +858,7 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
                eagerLoad={eagerRenderSplines && !disableSpline && shouldRenderSceneB}
                skeletonLabel={config.labelB}
                useCrashSafe={useCrashSafeSpline || !!deviceProfile?.isMobile || config.id === 6}
+               allowInput={isInView}
                deviceProfile={deviceProfile}
              />
         </div>

@@ -709,6 +709,7 @@ export const SmartSplineLoader = memo(({
               top: 0,
               left: 0,
               pointerEvents: enableInteraction ? 'auto' : 'none',
+              touchAction: enableInteraction ? 'none' : 'auto',
               // OPTIMIZATION: Reduce rendering complexity on mobile
               ...(isMobile && !isHighEnd ? {
                 imageRendering: 'auto',
