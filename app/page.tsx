@@ -36,7 +36,6 @@ const PerformancePrompt = dynamic(() => import('@/components/Mainpage/Performanc
 const ProgressBar = dynamic(() => import('@/components/Mainpage/ProgressBar').then(m => m.ProgressBar), { ssr: false });
 const FAQOverlay = dynamic(() => import('@/components/Mainpage/FAQOverlay').then(m => m.FAQOverlay), { ssr: false });
 const PerfToast = dynamic(() => import('@/components/Mainpage/PerfToast').then(m => m.PerfToast), { ssr: false });
-const FaqButton = dynamic(() => import('@/app/shop/Faq'), { ssr: false });
 
 // Configuration and utilities
 import { useDeviceProfile } from '@/lib/deviceProfile';
@@ -68,7 +67,6 @@ export default function Home() {
   const prefersReducedMotionRef = React.useRef(false);
   const isTouchRef = React.useRef(false);
   const telemetryContextRef = React.useRef<Record<string, unknown>>({});
-  const heroLoaderFallbackRef = React.useRef<number | null>(null);
 
   // Initialize page
   usePageInitialization({
@@ -85,7 +83,6 @@ export default function Home() {
     setHasRegistered: pageState.setHasRegistered,
     setCurrentStage: pageState.setCurrentStage,
     setIsCompactViewport: performanceState.setIsCompactViewport,
-    setShowPerfPrompt: uiState.setShowPerfPrompt,
     isTouchRef,
     prefersReducedMotionRef,
     deviceProfile,
@@ -177,24 +174,15 @@ export default function Home() {
     [uiState, pageState.currentStage, isMobileLike]
   );
 
+  const safeAreaInlinePadding = useMemo(() => ({
+    paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 10px)',
+    paddingRight: 'calc(env(safe-area-inset-right, 0px) + 10px)',
+  }), []);
   const safeAreaBottom = 'calc(env(safe-area-inset-bottom, 0px) + 10px)';
-  const safeAreaInlinePadding = {
-    paddingLeft: 'env(safe-area-inset-left, 0px)',
-    paddingRight: 'env(safe-area-inset-right, 0px)',
-  };
 
   const shouldRenderContent = pageState.currentStage === 'content' || pageState.contentMounted;
   const showHeroLoaderOverlay = pageState.currentStage === 'content' && !performanceState.heroSceneReady && !performanceState.heroLoaderHidden;
   const heroLoaderMessage = deviceProfile.isMobile ? 'Optimizing for Mobile Trading' : 'Loading Premium Trading Experience';
-  const isTickerObscured =
-    uiState.showConfigurator ||
-    uiState.faqOpen ||
-    uiState.infoPanelOpen ||
-    uiState.controlCenterOpen ||
-    uiState.showThemeQuickPick ||
-    uiState.showPerfPrompt ||
-    pageState.showOrientationWarning;
-  const isLiveTickerHidden = isTickerObscured;
 
   // Handlers
   const handleOrientationDismiss = useCallback(() => {
@@ -235,53 +223,6 @@ export default function Home() {
     performanceState.setHeroSceneReady(true);
     performanceState.setHeroLoaderHidden(true);
   }, [performanceState]);
-
-  React.useEffect(() => {
-    if (performanceState.heroSceneReady) {
-      if (heroLoaderFallbackRef.current) {
-        window.clearTimeout(heroLoaderFallbackRef.current);
-        heroLoaderFallbackRef.current = null;
-      }
-      if (!performanceState.heroLoaderHidden) {
-        performanceState.setHeroLoaderHidden(true);
-      }
-      return;
-    }
-
-    if (pageState.currentStage !== 'content') return;
-
-    if (performanceState.disableSpline) {
-      if (!performanceState.heroLoaderHidden) {
-        performanceState.setHeroLoaderHidden(true);
-      }
-      return;
-    }
-
-    if (heroLoaderFallbackRef.current) {
-      window.clearTimeout(heroLoaderFallbackRef.current);
-    }
-
-    const fallbackDelay = (deviceProfile.isMobile || performanceState.isSafeMode) ? 4500 : 7500;
-    heroLoaderFallbackRef.current = window.setTimeout(() => {
-      performanceState.setHeroLoaderHidden(true);
-      heroLoaderFallbackRef.current = null;
-    }, fallbackDelay);
-
-    return () => {
-      if (heroLoaderFallbackRef.current) {
-        window.clearTimeout(heroLoaderFallbackRef.current);
-        heroLoaderFallbackRef.current = null;
-      }
-    };
-  }, [
-    deviceProfile.isMobile,
-    pageState.currentStage,
-    performanceState.disableSpline,
-    performanceState.heroLoaderHidden,
-    performanceState.heroSceneReady,
-    performanceState.isSafeMode,
-    performanceState.setHeroLoaderHidden,
-  ]);
 
   const applyPerformanceChoice = useCallback((mode: 'high' | 'balanced') => {
     if (uiState.perfPromptTimeoutRef.current) {
@@ -473,13 +414,10 @@ export default function Home() {
           </header>
           {/* LiveMarketTicker positioned below navbar */}
           <div
-            className={`fixed left-0 right-0 z-[249000] w-full transition-opacity duration-300 ${
-              isLiveTickerHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'
-            }`}
+            className="fixed left-0 right-0 z-[249000] w-full transition-all duration-300"
             style={{
               top: 'calc(env(safe-area-inset-top, 0px) + var(--navbar-height, 128px))',
             }}
-            aria-hidden={isLiveTickerHidden}
           >
             <style jsx>{`
               @media (min-width: 1024px) {
@@ -506,13 +444,7 @@ export default function Home() {
           {!isMobileLike && <VerticalPageScroll currentPage={pageState.activePage} totalPages={visiblePages.length} onPageChange={(idx) => pageState.pageRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'start' })} accentColor={themeState.accentColor} disabled={pageState.currentStage !== 'content'} />}
 
           {/* FIXED: 3D Hint Icon now serves as the main control center access point */}
-          <ThreeDHintIcon
-            onClick={() => uiState.setControlCenterOpen(prev => !prev)}
-            accentColor={themeState.accentColor}
-            disableSpline={performanceState.disableSpline}
-            showHint={!pageState.hasSeenIntro}
-            isOpen={uiState.controlCenterOpen}
-          />
+          <ThreeDHintIcon onClick={() => uiState.setControlCenterOpen(true)} accentColor={themeState.accentColor} disableSpline={performanceState.disableSpline} showHint={!pageState.hasSeenIntro} />
 
           {/* Scroll Container - Enhanced for Mobile */}
           <main
@@ -570,12 +502,7 @@ export default function Home() {
               </React.Fragment>
             ))}
 
-            {/* FAQ & Footer */}
             <div className="w-full mt-10">
-              {/* FAQ positioned at bottom of page */}
-              <div className="w-full flex justify-center py-8 border-t border-white/10">
-                <FaqButton />
-              </div>
               <Footer />
             </div>
           </main>

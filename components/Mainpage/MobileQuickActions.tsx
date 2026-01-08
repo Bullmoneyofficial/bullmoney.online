@@ -192,7 +192,7 @@ export function MobileQuickActions({
   );
 }
 
-// ... ActionButton component remains the same
+// ... ActionButton component remains the samen
 interface ActionButtonProps {
   icon: React.ReactNode;
   label: string;
