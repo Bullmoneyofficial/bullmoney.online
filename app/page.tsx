@@ -581,7 +581,7 @@ export default function Home() {
         }
       }
     };
-  }, []);
+  }, [contentMounted]);
 
   // OPTIMIZED: Aggressive parallel preloading of ALL Spline scenes for instant loading
   useEffect(() => {
@@ -781,7 +781,7 @@ export default function Home() {
 
   // BUG FIX #6: SCROLL OBSERVER - Debounced intersection observer to prevent infinite loops
   useEffect(() => {
-    if(currentStage !== 'content') return;
+    if (currentStage !== 'content' || !contentMounted) return;
 
     const isMobile = window.innerWidth < 768;
     // BUG FIX #6: Use ref for debounce timer so it persists across callback invocations
@@ -836,7 +836,7 @@ export default function Home() {
       }
       observerRef.current?.disconnect();
     };
-  }, [currentStage, activePage]);
+  }, [currentStage, activePage, contentMounted]);
 
   const handleRef = useCallback((el: HTMLElement | null, index: number) => {
     pageRefs.current[index] = el;
