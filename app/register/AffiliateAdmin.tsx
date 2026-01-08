@@ -1,19 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useRef } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Search, Save, X, LogOut, Users, DollarSign, 
-  BarChart3, AtSign, Loader2, Lock, ShieldCheck, ChevronRight, Unlock, AlertTriangle, RefreshCw
+import {
+  Search, Save, X, LogOut, Users, DollarSign,
+  BarChart3, AtSign, Loader2, Lock, ShieldCheck, ChevronRight, AlertTriangle, RefreshCw
 } from "lucide-react";
-
-// --- THREE.JS IMPORTS FOR GHOST GLOW ---
-import * as THREE from "three";
-import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
-import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 
 // --- 1. SUPABASE CONFIGURATION ---
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -157,7 +150,7 @@ const useAffiliate = () => {
 
 // --- A. ACCESS PORTAL (Login) ---
 function AccessPortal() {
-  const { login, skipLogin } = useAffiliate();
+  const { login } = useAffiliate();
   const [showLogin, setShowLogin] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");

@@ -6,8 +6,7 @@ import React, {
   useState,
   createContext,
   useContext,
-  useMemo,
-  PropsWithChildren
+  useMemo
 } from 'react';
 import { createPortal } from 'react-dom';
 import { gsap } from 'gsap';

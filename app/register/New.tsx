@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { createClient } from '@supabase/supabase-js'; 
 import { 
   Check, Mail, Hash, Lock, ArrowRight, ChevronLeft, ExternalLink, 

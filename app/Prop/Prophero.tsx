@@ -4,30 +4,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import Balancer from "react-wrap-balancer";
-import Link from "next/link";
-import { Button } from "../../components/Mainpage/button";
-import { useCalEmbed } from "@/app/hooks/useCalEmbed";
-import { CONSTANTS } from "@/constants/links";
 import { ContainerScroll } from "@/components/Mainpage/container-scroll-animation";
-
-interface HeroProps {
-  imageUrl: string;
-}
 
 export function Hero() {
   const containerRef = useRef<HTMLDivElement>(null);
   const parentRef = useRef<HTMLDivElement>(null);
-
-  const calOptions = useCalEmbed({
-    namespace: CONSTANTS.CALCOM_NAMESPACE,
-    styles: {
-      branding: {
-        brandColor: CONSTANTS.CALCOM_BRAND_COLOR,
-      },
-    },
-    hideEventTypeDetails: CONSTANTS.CALCOM_HIDE_EVENT_TYPE_DETAILS,
-    layout: CONSTANTS.CALCOM_LAYOUT,
-  });
 
   return (
     <div
@@ -186,7 +167,7 @@ const CollisionMechanism = React.forwardRef<
       repeatDelay?: number;
     };
   }
->(({ parentRef, containerRef, beamOptions = {} }, ref) => {
+>(({ parentRef, containerRef, beamOptions = {} }) => {
   const beamRef = useRef<HTMLDivElement>(null);
   const [collision, setCollision] = useState<{
     detected: boolean;

@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js'; 
-import { 
-  Users, Search, Calendar, CheckCircle2, 
-  ArrowLeft, RefreshCw, Download, 
-  Shield, TrendingUp, MoreHorizontal, Lock, AlertTriangle, Tag, AtSign,
-  X, Copy, Activity, DollarSign, ChevronRight, CreditCard
+import {
+  Users, Search, Calendar, CheckCircle2,
+  ArrowLeft, RefreshCw, Download,
+  Shield, TrendingUp, Lock, AlertTriangle, Tag, AtSign,
+  X, Copy, Activity, DollarSign, CreditCard
 } from 'lucide-react';
 import { cn } from "@/lib/utils"; 
 import { motion, AnimatePresence } from "framer-motion";
@@ -39,6 +39,7 @@ interface DashboardStats {
 const maskEmail = (email: string) => {
   if (!email) return 'Unknown';
   const [name, domain] = email.split('@');
+  if (!name || !domain) return 'Unknown';
   if (name.length <= 3) return `${name}***@${domain}`;
   return `${name.slice(0, 3)}***${name.slice(-1)}@${domain}`;
 };

@@ -68,14 +68,12 @@ const OnboardingHelper = ({ onDismiss }: { onDismiss: () => void }) => {
 // =========================================
 // 2. AUDIO ARCHITECTURE
 // =========================================
-const BackgroundMusicSystem = ({ 
-  themeId, 
-  onReady,
-  volume 
-}: { 
+const BackgroundMusicSystem = ({
+  themeId,
+  onReady
+}: {
   themeId: string;
   onReady: (player: any) => void;
-  volume: number;
 }) => {
   const videoId = (THEME_SOUNDTRACKS && THEME_SOUNDTRACKS[themeId]) 
     ? THEME_SOUNDTRACKS[themeId] 
@@ -355,7 +353,7 @@ export default function Home() {
       else if (!showConfigurator) safePlay();
   }, [isMuted, showConfigurator, safePlay, safePause]);
 
-  const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
+  const handleThemeChange = useCallback((themeId: string, _sound: SoundProfile, muted: boolean) => {
     setIsTransitioning(true);
     setTimeout(() => {
         setActiveThemeId(themeId);
@@ -405,10 +403,9 @@ export default function Home() {
       <SpeedInsights />
 
       {/* AUDIO SYSTEM */}
-      <BackgroundMusicSystem 
-        themeId={activeThemeId} 
-        onReady={handlePlayerReady} 
-        volume={volume}
+      <BackgroundMusicSystem
+        themeId={activeThemeId}
+        onReady={handlePlayerReady}
       />
 
       {/* FIXED WIDGETS (Z-Index 400,000) - With Theme Prop */}

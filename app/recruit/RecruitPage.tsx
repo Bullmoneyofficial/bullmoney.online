@@ -140,15 +140,6 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     }
   };
 
-  const handleReset = () => {
-    setFormData(prev => ({ ...prev, email: '', mt5Number: '' })); 
-    setStep(1);
-    setSubmitError(null);
-    setLoading(true);
-    setLoadingText("RESETTING SESSION");
-    setTimeout(() => setLoading(false), 1000);
-  };
-
   // --- HELPERS ---
   const isVantage = activeBroker === 'Vantage';
   const brokerCode = isVantage ? "BULLMONEY" : "X3R7P";

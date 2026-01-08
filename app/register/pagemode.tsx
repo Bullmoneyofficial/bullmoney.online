@@ -4,10 +4,10 @@ import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { createClient } from '@supabase/supabase-js'; 
 import { gsap } from 'gsap';
 import dynamic from 'next/dynamic';
-import { 
-  Check, Mail, Hash, Lock, 
+import {
+  Check, Mail, Hash, Lock,
   ArrowRight, ChevronLeft, ExternalLink, AlertCircle,
-  Copy, Plus, LogIn, Eye, EyeOff, HelpCircle, FolderPlus, Loader2, ShieldCheck, Clock, User
+  Copy, Plus, Eye, EyeOff, FolderPlus, Loader2, ShieldCheck, Clock, User
 } from 'lucide-react';
 
 import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "framer-motion";
@@ -199,10 +199,12 @@ const TargetCursorComponent = memo(({
 
                 for(let i = 0; i < corners.length; i++) {
                     const corner = corners[i];
+                    const targetPosition = state.targetCornerPositions[i];
+                    if (!corner || !targetPosition) continue;
                     const currentX = gsap.getProperty(corner, 'x') as number;
                     const currentY = gsap.getProperty(corner, 'y') as number;
-                    const targetX = state.targetCornerPositions[i].x - cursorX;
-                    const targetY = state.targetCornerPositions[i].y - cursorY;
+                    const targetX = targetPosition.x - cursorX;
+                    const targetY = targetPosition.y - cursorY;
 
                     const finalX = currentX + (targetX - currentX) * strength;
                     const finalY = currentY + (targetY - currentY) * strength;
@@ -254,7 +256,10 @@ const TargetCursorComponent = memo(({
                           { x: 6, y: 6 },
                           { x: -18, y: 6 }
                         ];
-                        corners.forEach((c, i) => gsap.to(c, { x: positions[i].x, y: positions[i].y, duration: 0.3, ease: 'power3.out' }));
+                        corners.forEach((c, i) => {
+                          const pos = positions[i];
+                          if (c && pos) gsap.to(c, { x: pos.x, y: pos.y, duration: 0.3, ease: 'power3.out' });
+                        });
                         spinTlRef.current?.restart();
                     };
                     target.addEventListener('mouseleave', handleLeave);

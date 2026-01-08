@@ -93,14 +93,12 @@ const OnboardingHelper = ({ onDismiss, theme }: { onDismiss: () => void, theme: 
 // =========================================
 // 2. AUDIO ARCHITECTURE
 // =========================================
-const BackgroundMusicSystem = ({ 
-  themeId, 
-  onReady,
-  volume 
-}: { 
+const BackgroundMusicSystem = ({
+  themeId,
+  onReady
+}: {
   themeId: string;
   onReady: (player: any) => void;
-  volume: number;
 }) => {
   const videoId = (THEME_SOUNDTRACKS && THEME_SOUNDTRACKS[themeId]) 
     ? THEME_SOUNDTRACKS[themeId] 
@@ -302,7 +300,7 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
   const [volume, setVolume] = useState(25);
   const playerRef = useRef<any>(null);
   
-  const [isPreviewing, setIsPreviewing] = useState(false);
+  const isPreviewing = false;
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showHelper, setShowHelper] = useState(false);
 
@@ -344,9 +342,10 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
             } else {
                 setCurrentStage("hold");
             }
-        }, 5000); 
+        }, 5000);
         return () => clearTimeout(timer);
     }
+    return undefined;
   }, [currentStage]);
 
   // Scroll Lock
@@ -436,7 +435,7 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
       else if (!showConfigurator && !isPreviewing) safePlay();
   }, [isMuted, showConfigurator, isPreviewing, safePlay, safePause]);
 
-  const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
+  const handleThemeChange = useCallback((themeId: string, _sound: SoundProfile, muted: boolean) => {
     setIsTransitioning(true);
     setTimeout(() => {
         setActiveThemeId(themeId);
@@ -487,10 +486,9 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
       <SpeedInsights />
 
       {/* AUDIO SYSTEM */}
-      <BackgroundMusicSystem 
-        themeId={activeThemeId} 
-        onReady={handlePlayerReady} 
-        volume={volume}
+      <BackgroundMusicSystem
+        themeId={activeThemeId}
+        onReady={handlePlayerReady}
       />
 
       {/* FIXED WIDGETS (Z-Index 400,000) */}
@@ -534,23 +532,23 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
         )}
 
         {/* GLOBAL THEME LENS (Z-Index 200,000) - Tints everything below */}
-        <div 
+        <div
             id="global-theme-lens"
             className="fixed inset-0 pointer-events-none w-screen h-screen z-[200000]"
-            style={{ 
-                backdropFilter: activeTheme.filter,
-                WebkitBackdropFilter: activeTheme.filter, 
-                transition: 'backdrop-filter 0.5s ease' 
+            style={{
+                backdropFilter: activeTheme?.filter,
+                WebkitBackdropFilter: activeTheme?.filter,
+                transition: 'backdrop-filter 0.5s ease'
             }}
         />
 
         {/* LOADER STACK (Z-Index 100,000) - Below Lens */}
         {currentStage === "affiliate" && (
-             <div 
+             <div
                 className="fixed inset-0 z-[100000] bg-black transition-all duration-500"
-                style={{ 
-                    filter: activeTheme.filter,
-                    WebkitFilter: activeTheme.filter,
+                style={{
+                    filter: activeTheme?.filter,
+                    WebkitFilter: activeTheme?.filter,
                     transform: 'translateZ(0)'
                 }}
             >
@@ -562,11 +560,11 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
         )}
 
         {currentStage === "v2" && (
-            <div 
+            <div
                 className="fixed inset-0 z-[100000] transition-all duration-500"
-                style={{ 
-                    filter: activeTheme.filter,
-                    WebkitFilter: activeTheme.filter,
+                style={{
+                    filter: activeTheme?.filter,
+                    WebkitFilter: activeTheme?.filter,
                     transform: 'translateZ(0)'
                 }}
             >
@@ -576,17 +574,17 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
         )}
 
         {currentStage === "hold" && (
-            <div 
+            <div
                 className="fixed inset-0 z-[100000] transition-all duration-500"
-                style={{ 
-                    filter: activeTheme.filter,
-                    WebkitFilter: activeTheme.filter,
+                style={{
+                    filter: activeTheme?.filter,
+                    WebkitFilter: activeTheme?.filter,
                     transform: 'translateZ(0)'
                 }}
             >
                 {/* @ts-ignore */}
                 <BullMoneyGate onUnlock={handleHoldComplete} theme={activeTheme}>
-                    <></> 
+                    <></>
                 </BullMoneyGate>
             </div>
         )}
