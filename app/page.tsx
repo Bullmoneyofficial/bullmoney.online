@@ -184,11 +184,40 @@ export default function Home() {
   const telemetryContextRef = useRef<Record<string, unknown>>({});
   const perfPromptTimeoutRef = useRef<number | null>(null);
 
+  const prioritizedSplineScenes = useMemo(() => {
+    if (disableSpline) return [];
+    const baseScenes = [
+      "/scene1.splinecode",  // Hero - Critical
+      "/scene.splinecode",   // Showcase - High priority
+      "/scene2.splinecode",  // Final
+      "/scene3.splinecode",  // Concept
+      "/scene4.splinecode",  // Prototype (split)
+      "/scene5.splinecode",  // Wireframe (split)
+      "/scene6.splinecode",  // Interactive
+    ];
+
+    // Mobile, in-app, or constrained data: keep to 3 lightweight hero-ready scenes
+    if (deviceProfile.isMobile || isSafeMode || deviceProfile.prefersReducedData) {
+      return baseScenes.slice(0, 3);
+    }
+
+    // Standard desktops: keep first four to avoid overfetching on mid-tier GPUs/CPUs
+    if (!deviceProfile.isHighEndDevice) {
+      return baseScenes.slice(0, 4);
+    }
+
+    // High-end devices can handle the full set
+    return baseScenes;
+  }, [disableSpline, deviceProfile.isHighEndDevice, deviceProfile.isMobile, deviceProfile.prefersReducedData, isSafeMode]);
+
+  const criticalSplineScenes = useMemo(() => prioritizedSplineScenes.slice(0, 2), [prioritizedSplineScenes]);
+  const preloadSplineScenes = useMemo(() => prioritizedSplineScenes.slice(1), [prioritizedSplineScenes]);
+
   // Initialize optimization system with performance mode awareness
   const { isReady: optimizationsReady } = useOptimizations({
     enableServiceWorker: true,
-    criticalScenes: ['/scene1.splinecode'], // Hero scene - always prioritized
-    preloadScenes: disableSpline ? [] : ['/scene.splinecode', '/scene2.splinecode'] // Skip preload in performance mode
+    criticalScenes: criticalSplineScenes.length ? criticalSplineScenes : ['/scene1.splinecode'], // Hero scene - always prioritized
+    preloadScenes: disableSpline ? [] : preloadSplineScenes // Skip preload in performance mode
   });
 
   useEffect(() => {
@@ -265,9 +294,10 @@ export default function Home() {
       window.clearTimeout(heroLoaderFallbackRef.current);
     }
 
+    const fallbackDelay = (deviceProfile.isMobile || isSafeMode) ? 4500 : 7500;
     heroLoaderFallbackRef.current = window.setTimeout(() => {
       setHeroLoaderHidden(true);
-    }, 7500);
+    }, fallbackDelay);
 
     return () => {
       if (heroLoaderFallbackRef.current) {
@@ -275,7 +305,7 @@ export default function Home() {
         heroLoaderFallbackRef.current = null;
       }
     };
-  }, [heroSceneReady, currentStage]);
+  }, [heroSceneReady, currentStage, deviceProfile.isMobile, isSafeMode]);
 
   const activeTheme = useMemo(() => {
     if (!ALL_THEMES || ALL_THEMES.length === 0) return FALLBACK_THEME as Theme;
@@ -540,19 +570,13 @@ export default function Home() {
   useEffect(() => {
     if (!isClient || disableSpline || currentStage !== 'content') return;
 
-    // Preload ALL scenes in parallel for instant switching
-    const allScenes = [
-      "/scene1.splinecode",  // Hero - Critical
-      "/scene.splinecode",   // Showcase - High priority
-      "/scene2.splinecode",  // Final
-      "/scene3.splinecode",  // Concept
-      "/scene4.splinecode",  // Prototype (split)
-      "/scene5.splinecode",  // Wireframe (split)
-      "/scene6.splinecode",  // Interactive
-    ];
+    // Preload only the prioritized scenes (mobile-first trims to 3)
+    const scenesToPreload = prioritizedSplineScenes.length
+      ? prioritizedSplineScenes
+      : ["/scene1.splinecode"];
 
     // Use high-priority preload for critical scenes, prefetch for others
-    allScenes.forEach((scene, index) => {
+    scenesToPreload.forEach((scene, index) => {
       const link = document.createElement("link");
       // First 2 scenes are critical - use preload
       if (index < 2) {
@@ -574,17 +598,17 @@ export default function Home() {
       caches.open(cacheName).then(cache => {
         // Fetch all scenes in parallel
         Promise.all(
-          allScenes.map(scene =>
+          scenesToPreload.map(scene =>
             fetch(scene, { cache: 'force-cache' })
               .then(res => res.ok ? cache.put(scene, res) : null)
               .catch(() => null)
           )
         ).then(() => {
-          console.log('[Performance] All Spline scenes preloaded and cached');
+          console.log('[Performance] Spline scenes preloaded and cached', scenesToPreload);
         });
       }).catch(() => {});
     }
-  }, [isClient, disableSpline, currentStage]);
+  }, [isClient, disableSpline, currentStage, prioritizedSplineScenes]);
 
   // Warm key assets once to keep subsequent visits snappy
   useEffect(() => {
@@ -599,9 +623,14 @@ export default function Home() {
       }).filter(Boolean) as string[];
 
       const uniqueScenes = Array.from(new Set(sceneUrls));
+      const prioritizedWarmList = prioritizedSplineScenes.length ? prioritizedSplineScenes : uniqueScenes;
+      const finalWarmTargets = (deviceProfile.isMobile || deviceProfile.prefersReducedData || isSafeMode)
+        ? prioritizedWarmList.slice(0, Math.min(3, prioritizedWarmList.length))
+        : prioritizedWarmList;
+
       try {
         const cache = typeof window !== 'undefined' && 'caches' in window ? await caches.open('bullmoney-prewarm-v1') : null;
-        await Promise.all(uniqueScenes.map(async (url) => {
+        await Promise.all(finalWarmTargets.map(async (url) => {
           try {
             const req = new Request(url, { cache: 'force-cache' });
             if (cache) {
@@ -623,7 +652,7 @@ export default function Home() {
     } else {
       setTimeout(scheduleWarm, 800);
     }
-  }, [isClient, isSafari, disableSpline, currentStage]);
+  }, [isClient, isSafari, disableSpline, currentStage, deviceProfile.isMobile, deviceProfile.prefersReducedData, isSafeMode, prioritizedSplineScenes]);
 
   // Force-warm critical spline scenes even in safe/in-app browsers to avoid first-load failures
   useEffect(() => {
@@ -660,7 +689,8 @@ export default function Home() {
     };
 
     const prefetchAll = async () => {
-      for (const scene of CRITICAL_SPLINE_SCENES) {
+      const targetScenes = criticalSplineScenes.length ? criticalSplineScenes : CRITICAL_SPLINE_SCENES;
+      for (const scene of targetScenes) {
         await prefetchWithRetry(scene);
       }
     };
@@ -673,7 +703,7 @@ export default function Home() {
     }
 
     return () => { cancelled = true; };
-  }, [isClient, isSafari, currentStage, disableSpline]);
+  }, [isClient, isSafari, currentStage, disableSpline, criticalSplineScenes]);
 
   useEffect(() => {
     if (!isClient || currentStage !== 'content' || !contentMounted || sessionRestoredRef.current) return;
@@ -1150,6 +1180,12 @@ export default function Home() {
     };
   }, []);
 
+  const isMobileLike = deviceProfile.isMobile || isTouch;
+  const showMobileQuickActions = useMemo(
+    () => currentStage === 'content' && isMobileLike && !showConfigurator && !faqOpen && !controlCenterOpen && !showPerfPrompt && !showThemeQuickPick,
+    [controlCenterOpen, currentStage, faqOpen, isMobileLike, showConfigurator, showPerfPrompt, showThemeQuickPick]
+  );
+
   const heroLoaderMessage = deviceProfile.isMobile
     ? 'Optimizing for Mobile Trading'
     : 'Loading Premium Trading Experience';
@@ -1179,9 +1215,75 @@ export default function Home() {
           trackKey={musicKey}
         />
       )}
-      {shouldRenderContent && !isSafeMode && !deviceProfile.prefersReducedMotion && deviceProfile.isHighEndDevice && <ParticleEffect trigger={particleTrigger} />}
+      {shouldRenderContent && !isSafeMode && !deviceProfile.prefersReducedMotion && deviceProfile.isHighEndDevice && !deviceProfile.isMobile && !isTouch && <ParticleEffect trigger={particleTrigger} />}
       {shouldRenderContent && !deviceProfile.isMobile && !deviceProfile.prefersReducedMotion && !isTouch && !isSafari && (
         <CustomCursor accentColor={accentColor} />
+      )}
+
+      {showMobileQuickActions && (
+        <div
+          className="fixed inset-x-0 bottom-0 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+10px)]"
+          style={{ zIndex: UI_LAYERS.NAVBAR + 2, maxWidth: '100vw' }}
+        >
+          <div className="max-w-4xl mx-auto rounded-2xl border border-white/10 bg-black/80 backdrop-blur-xl shadow-[0_12px_60px_rgba(0,0,0,0.55)] px-3 py-2 flex items-center gap-2">
+            <button
+              onClick={() => {
+                playClick();
+                if (navigator.vibrate) navigator.vibrate(10);
+                handlePerformanceToggle();
+              }}
+              className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide active:scale-95 transition-all ${
+                disableSpline
+                  ? 'bg-gradient-to-r from-orange-500/20 to-amber-500/10 border border-orange-500/30 text-orange-100'
+                  : 'bg-gradient-to-r from-blue-500/20 to-purple-500/10 border border-blue-500/30 text-blue-100'
+              }`}
+              aria-label="Toggle performance mode"
+            >
+              <Zap size={18} className="drop-shadow-[0_0_8px_currentColor]" />
+              <span>{disableSpline ? 'Speed' : '3D'}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                playClick();
+                if (navigator.vibrate) navigator.vibrate(8);
+                toggleMusic();
+              }}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide active:scale-95 transition-all bg-white/5 border border-white/10 text-white/80"
+              aria-label="Toggle audio"
+            >
+              {isPlaying ? (volume > 50 ? <Volume2 size={18} /> : <Volume1 size={18} />) : <VolumeX size={18} />}
+              <span>{isPlaying ? 'Audio On' : 'Muted'}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                playClick();
+                if (navigator.vibrate) navigator.vibrate(8);
+                setControlCenterOpen(false);
+                setShowThemeQuickPick(true);
+              }}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide active:scale-95 transition-all bg-white/5 border border-white/10 text-white/80"
+              aria-label="Open theme switcher"
+            >
+              <Palette size={18} />
+              <span>Theme</span>
+            </button>
+
+            <button
+              onClick={() => {
+                playClick();
+                if (navigator.vibrate) navigator.vibrate(10);
+                setFaqOpen(true);
+              }}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide active:scale-95 transition-all bg-white/5 border border-white/10 text-white/80"
+              aria-label="Open help"
+            >
+              <MessageCircle size={18} />
+              <span>Help</span>
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Quick Theme Picker */}
@@ -1940,13 +2042,15 @@ export default function Home() {
         </div>
 
         {/* VERTICAL PAGE SCROLL - Right side scroll UI */}
-        <VerticalPageScroll
-          currentPage={activePage}
-          totalPages={visiblePages.length}
-          onPageChange={scrollToPage}
-          accentColor={accentColor}
-          disabled={currentStage !== 'content'}
-        />
+        {!isMobileLike && (
+          <VerticalPageScroll
+            currentPage={activePage}
+            totalPages={visiblePages.length}
+            onPageChange={scrollToPage}
+            accentColor={accentColor}
+            disabled={currentStage !== 'content'}
+          />
+        )}
 
         {/* 3D HINT ICON - Glowing hint for 3D controls */}
         <ThreeDHintIcon
