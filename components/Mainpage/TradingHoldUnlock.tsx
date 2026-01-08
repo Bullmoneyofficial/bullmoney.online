@@ -261,47 +261,64 @@ const useLivePrice = (assetKey: AssetKey) => {
   const [change24h, setChange24h] = useState<number>(0);
   const lastUpdateRef = useRef<number>(0);
   const lastPriceRef = useRef<number>(0);
-  const initialPriceRef = useRef<number>(0);
 
   useEffect(() => {
     let ws: WebSocket | null = null;
+    const controller = new AbortController();
+    let pollId: ReturnType<typeof setInterval> | null = null;
     lastPriceRef.current = 0;
     lastUpdateRef.current = 0;
-    initialPriceRef.current = 0;
-    setPrice(0);
-    setPrevPrice(0);
-    
+
+    const symbolParts = ASSETS[assetKey].symbol.split(":");
+    const symbol = symbolParts[1]?.toLowerCase();
+    const symbolUpper = symbolParts[1]?.toUpperCase();
+    if (!symbol || !symbolUpper) return;
+
+    const applyPrice = (currentPrice: number) => {
+      if (!Number.isFinite(currentPrice)) return;
+      const prev = lastPriceRef.current || currentPrice;
+      setPrevPrice(prev);
+      setPrice(currentPrice);
+      lastPriceRef.current = currentPrice;
+      lastUpdateRef.current = Date.now();
+    };
+
+    const fetchTicker = async () => {
+      try {
+        const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbolUpper}`, { signal: controller.signal });
+        if (!res.ok) return;
+        const data = await res.json();
+        const currentPrice = parseFloat(data.lastPrice ?? data.price);
+        const changePct = parseFloat(data.priceChangePercent ?? data.priceChange24h ?? data.priceChange ?? "0");
+        applyPrice(currentPrice);
+        if (Number.isFinite(changePct)) setChange24h(changePct);
+      } catch (err) {
+        if (!controller.signal.aborted) console.error("Initial price fetch failed", err);
+      }
+    };
+
+    fetchTicker();
+    pollId = setInterval(fetchTicker, 2000);
+
     try {
-      const symbolParts = ASSETS[assetKey].symbol.split(":");
-      const symbol = symbolParts[1]?.toLowerCase();
-      if (!symbol) return;
-      
       ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@trade`);
-      
       ws.onmessage = (event) => {
         const now = Date.now();
-        if (now - lastUpdateRef.current > 50) { 
+        if (now - lastUpdateRef.current > 100) {
           const data = JSON.parse(event.data);
           const currentPrice = parseFloat(data.p);
-          
-          if (initialPriceRef.current === 0) {
-            initialPriceRef.current = currentPrice;
-          }
-          
-          const change = ((currentPrice - initialPriceRef.current) / initialPriceRef.current) * 100;
-          setChange24h(change);
-          
-          setPrevPrice(lastPriceRef.current);
-          setPrice(currentPrice);
-          lastPriceRef.current = currentPrice;
-          lastUpdateRef.current = now;
+          applyPrice(currentPrice);
         }
       };
     } catch (e) {
       console.error("WS Error", e);
     }
     
-    return () => { if (ws) ws.close(); };
+    return () => { 
+      controller.abort();
+      if (pollId) clearInterval(pollId);
+      if (ws) ws.close(); 
+    };
   }, [assetKey]);
 
   return { price, prevPrice, change24h };
@@ -661,27 +678,8 @@ const PriceTargetSystem = ({
   volatility: number;
   momentum: number;
 }) => {
-  const distance = ((targetPrice - currentPrice) / currentPrice) * 100;
+  const distance = currentPrice > 0 ? ((targetPrice - currentPrice) / currentPrice) * 100 : 0;
   const asset = ASSETS[assetKey];
-
-  // Simulate price pumping when active
-  const [displayedCurrent, setDisplayedCurrent] = useState(currentPrice);
-  const [displayedTarget, setDisplayedTarget] = useState(targetPrice);
-
-  useEffect(() => {
-    if (isActive) {
-      const interval = setInterval(() => {
-        const pumpAmount = currentPrice * (0.0001 + (progress / 100) * 0.001);
-        setDisplayedCurrent(prev => prev + pumpAmount + (Math.random() - 0.5) * pumpAmount);
-        setDisplayedTarget(prev => prev + pumpAmount * 1.5 + (Math.random() - 0.5) * pumpAmount);
-      }, 100);
-      return () => clearInterval(interval);
-    } else {
-      setDisplayedCurrent(currentPrice);
-      setDisplayedTarget(targetPrice);
-      return undefined;
-    }
-  }, [isActive, currentPrice, targetPrice, progress]);
 
   return (
     <AnimatedBorder glowColor={asset.color} className="w-full">
@@ -774,7 +772,9 @@ const PriceTargetSystem = ({
                 repeat: Infinity,
               }}
             >
-              ${displayedCurrent.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {currentPrice > 0
+                ? `$${currentPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                : "--"}
             </motion.div>
           </div>
           <div>
@@ -793,7 +793,9 @@ const PriceTargetSystem = ({
                 repeat: Infinity,
               }}
             >
-              ${displayedTarget.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {targetPrice > 0
+                ? `$${targetPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                : "--"}
             </motion.div>
           </div>
         </div>
@@ -815,7 +817,7 @@ const PriceTargetSystem = ({
                 repeat: Infinity,
               }}
             >
-              {distance > 0 ? "+" : ""}{distance.toFixed(2)}%
+              {currentPrice > 0 && targetPrice > 0 ? `${distance > 0 ? "+" : ""}${distance.toFixed(2)}%` : "--"}
             </motion.span>
           </div>
           <div className="relative h-2 bg-white/5 rounded-full overflow-hidden">
@@ -1141,10 +1143,6 @@ export default function BullMoneyGate({
   const { price: realPrice, prevPrice, change24h } = useLivePrice(selectedAsset);
   const marketState = useMarketState(realPrice, prevPrice);
   const [targetPrice, setTargetPrice] = useState(0);
-  
-  // Simulate moon price when trading
-  const [displayedPrice, setDisplayedPrice] = useState(realPrice);
-  const [displayedChange, setDisplayedChange] = useState(change24h);
 
   // Audio
   const { playTick, playSuccess, playAlert } = useAudioEngine();
@@ -1238,27 +1236,6 @@ export default function BullMoneyGate({
       setTargetPrice(realPrice * multiplier);
     }
   }, [realPrice, targetPrice, selectedAsset]);
-
-  // Pump displayed price when trading (moon simulation)
-  useEffect(() => {
-    if (isTrading && realPrice > 0) {
-      const interval = setInterval(() => {
-        const pumpMultiplier = 1 + (progress / 100) * 0.002; // Up to 0.2% increase per tick
-        const volatility = (Math.random() - 0.5) * (realPrice * 0.0001);
-        setDisplayedPrice(prev => prev * pumpMultiplier + volatility);
-        
-        // Calculate increasing change percentage
-        const baseChange = change24h;
-        const additionalChange = (progress / 100) * 8; // Add up to 8% based on progress
-        setDisplayedChange(baseChange + additionalChange);
-      }, 100);
-      return () => clearInterval(interval);
-    } else {
-      setDisplayedPrice(realPrice);
-      setDisplayedChange(change24h);
-      return undefined;
-    }
-  }, [isTrading, realPrice, progress, change24h]);
 
   // Reset on asset change
   useEffect(() => {
@@ -1459,6 +1436,8 @@ export default function BullMoneyGate({
               <div
                 className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 rounded-xl sm:rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10"
                 data-hold-ignore
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
               >
                 {Object.entries(ASSETS).map(([key, asset]) => (
                   <motion.button
@@ -1552,9 +1531,9 @@ export default function BullMoneyGate({
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   <MarketIndicator
                     label="Price"
-                    value={`$${displayedPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    value={realPrice > 0 ? `$${realPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "--"}
                     icon={DollarSign}
-                    trend={displayedPrice > prevPrice ? "up" : displayedPrice < prevPrice ? "down" : "neutral"}
+                    trend={realPrice > prevPrice ? "up" : realPrice < prevPrice ? "down" : "neutral"}
                     isActive={isTrading}
                   />
                 </div>
@@ -1566,7 +1545,7 @@ export default function BullMoneyGate({
                   progress={progress}
                   assetKey={selectedAsset}
                   isActive={isTrading}
-                  change24h={displayedChange}
+                  change24h={change24h}
                   volatility={marketState.volatility}
                   momentum={marketState.momentum}
                 />

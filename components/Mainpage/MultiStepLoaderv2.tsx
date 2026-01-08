@@ -36,13 +36,14 @@ const useLivePrice = (assetKey: AssetKey) => {
   useEffect(() => {
     let ws: WebSocket | null = null;
     const controller = new AbortController();
+    let pollId: ReturnType<typeof setInterval> | null = null;
     try {
       const symbolParts = ASSETS[assetKey].symbol.split(":");
       const symbol = symbolParts[1]?.toLowerCase();
       const symbolUpper = symbolParts[1]?.toUpperCase();
       if (!symbol || !symbolUpper) return;
 
-      const fetchInitial = async () => {
+      const fetchTicker = async () => {
         try {
           const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbolUpper}`, { signal: controller.signal });
           if (!res.ok) return;
@@ -59,7 +60,8 @@ const useLivePrice = (assetKey: AssetKey) => {
         }
       };
 
-      fetchInitial();
+      fetchTicker();
+      pollId = setInterval(fetchTicker, 2000);
 
       ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@trade`);
       ws.onmessage = (event) => {
@@ -79,6 +81,7 @@ const useLivePrice = (assetKey: AssetKey) => {
     }
     return () => {
       controller.abort();
+      if (pollId) clearInterval(pollId);
       if (ws) ws.close();
     };
   }, [assetKey]);
@@ -221,17 +224,15 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   const requestRef = useRef<number>();
   const completionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasFinishedRef = useRef(false);
-  const basePriceRef = useRef(0);
   const particleIdRef = useRef(0);
 
   const { startEngine, updateEngine, stopEngine, playSuccess } = useAudioEngine();
 
   useEffect(() => {
-    if (!isHolding && realPrice > 0) {
-      basePriceRef.current = realPrice;
+    if (realPrice > 0) {
       setDisplayPrice(realPrice);
     }
-  }, [realPrice, isHolding]);
+  }, [realPrice]);
 
   useEffect(() => {
     if (isCompleted) return;
@@ -293,10 +294,6 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
         shakeX.set((Math.random() - 0.5) * shakeAmount);
         shakeY.set((Math.random() - 0.5) * shakeAmount);
 
-        // Price pump effect
-        const pumpMultiplier = Math.pow(next * 0.01, 2.5) * 5000;
-        setDisplayPrice(basePriceRef.current + pumpMultiplier);
-
         // Haptic feedback
         if (typeof navigator !== "undefined" && navigator.vibrate) {
           if (next > 80 && Math.random() < 0.4) navigator.vibrate(10);
@@ -307,7 +304,6 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
         scale.set(1);
         glow.set(0);
         next = Math.max(prev - 8, 0);
-        if (basePriceRef.current > 0) setDisplayPrice(basePriceRef.current);
       }
 
       if (next >= 100 && !isCompleted) {
@@ -448,6 +444,8 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
               transition={{ delay: 0.2 }}
               className="absolute top-6 md:top-8 z-50 flex gap-2"
               data-hold-ignore
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
             >
               {Object.entries(ASSETS).map(([key, asset]) => (
                 <motion.button
@@ -525,10 +523,12 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                     textShadow: isHolding ? "0 0 20px rgba(59, 130, 246, 0.8)" : "none",
                   }}
                 >
-                  ${(displayPrice || realPrice).toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
+                  {displayPrice > 0 || realPrice > 0
+                    ? `$${(displayPrice > 0 ? displayPrice : realPrice).toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}`
+                    : "--"}
                 </motion.div>
 
                 {/* Status Text */}

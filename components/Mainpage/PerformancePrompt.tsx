@@ -175,7 +175,7 @@ export function PerformancePrompt({
                 className="absolute inset-[-100%]"
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                style={{ background: getShimmerGradient('#f97316') }}
+                style={{ background: getShimmerGradient('#8f16f9ff') }}
               />
 
               <div className="absolute inset-[1.5px] rounded-xl bg-black/80 p-5 sm:p-6">
@@ -232,7 +232,7 @@ export function PerformancePrompt({
 
           {/* Footer note */}
           <p className="text-center text-[10px] text-white/50 mt-4">
-            💡 Toggle anytime via the performance button
+             Toggle anytime via the performance button
           </p>
         </div>
 
