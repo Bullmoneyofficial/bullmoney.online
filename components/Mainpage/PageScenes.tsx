@@ -113,43 +113,32 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
         }
       }
 
-      if (eagerLoad) {
+      // FIXED: Immediate loading for all scenes - no delays
+      // Use requestAnimationFrame for smoother rendering without blocking
+      const loadScene = () => {
         setIsLoaded(true);
         if (isMobile && !isRegistered.current) {
           memoryManager.registerScene(sceneUrl);
           isRegistered.current = true;
         }
+      };
+
+      // For eager load or critical scenes, load immediately
+      if (eagerLoad || isCritical || forceLoadOverride) {
+        loadScene();
         return;
       }
 
-      // Ultra-fast loading on all devices for smooth experience
-      // Reduced delay for critical scenes to ensure they always show
-      const delay = isMobile ? (isHeavy ? 100 : 0) : 0;
+      // For other scenes, use requestAnimationFrame for smooth rendering
+      const rafHandle = requestAnimationFrame(() => {
+        loadScene();
+      });
 
-      // Use requestIdleCallback for non-critical, non-heavy scenes only
-      if (typeof window !== 'undefined' && 'requestIdleCallback' in window && !isHeavy && !isCritical) {
-        const handle = (window as any).requestIdleCallback(() => {
-          setIsLoaded(true);
-          if (isMobile && !isRegistered.current) {
-            memoryManager.registerScene(sceneUrl);
-            isRegistered.current = true;
-          }
-        }, { timeout: delay || 50 });
-        return () => (window as any).cancelIdleCallback(handle);
-      } else {
-        const timer = setTimeout(() => {
-          setIsLoaded(true);
-          if (isMobile && !isRegistered.current) {
-            memoryManager.registerScene(sceneUrl);
-            isRegistered.current = true;
-          }
-        }, delay);
-        return () => clearTimeout(timer);
-      }
+      return () => cancelAnimationFrame(rafHandle);
     }
 
-    // ULTRA-AGGRESSIVE memory management: Instant unload on mobile for stability
-    // PERFORMANCE: Immediate cleanup to prevent WebGL memory crashes
+    // FIXED: Balanced memory management - give scenes time to fade out before unloading
+    // This prevents jarring visual glitches while still freeing memory quickly
     if (!isVisible && isMobile && isLoaded && !isCritical && !forceLoadOverride) {
       const unloadTimer = setTimeout(() => {
         setIsLoaded(false);
@@ -157,7 +146,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
           memoryManager.unregisterScene(sceneUrl);
           isRegistered.current = false;
         }
-      }, 150);  // Ultra-fast 150ms cleanup for instant memory recovery
+      }, 500);  // Increased from 150ms to 500ms to allow smooth fade-out transitions
       return () => clearTimeout(unloadTimer);
     }
     return undefined;

@@ -1,10 +1,37 @@
 /**
  * Unified UI Styles
  * Game-like interface that's identical on mobile and desktop
+ * Enhanced for Premium Mobile Experience
  */
 
 /* Remove mobile-specific and desktop-specific media queries */
 /* Everything should work the same way on all devices */
+
+/* Mobile Touch Optimization */
+@media (hover: none) and (pointer: coarse) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+
+  /* Improve scroll performance on mobile */
+  .unified-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Prevent text selection on interactive elements */
+  button, a, .cursor-target {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
 
 /* Game-like animations */
 @keyframes pulseGlow {

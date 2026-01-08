@@ -36,7 +36,6 @@ import Link from "next/link";
 import Image from "next/image";
 // Ensure these paths exist in your project
 import BullLogo from "@/public/BULL.svg";
-import Faq from "@/app/shop/Faq";
 
 // --- IMPORT YOUR CARD ---
 import ReflectiveCard, { ReflectiveCardHandle } from '@/components/ReflectiveCard';
@@ -79,6 +78,46 @@ const GLOBAL_STYLES = `
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  /* Premium shimmer animation for navbar */
+  @keyframes premium-shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+
+  .navbar-premium-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(59, 130, 246, 0.15) 25%,
+      rgba(59, 130, 246, 0.3) 50%,
+      rgba(59, 130, 246, 0.15) 75%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: premium-shimmer 3s ease-in-out infinite;
+  }
+
+  /* Glass morphism effect */
+  .navbar-glass {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(255, 255, 255, 0.97);
+  }
+
+  .dark .navbar-glass {
+    background: rgba(2, 6, 23, 0.97);
+  }
+
+  /* Glow effect for active states */
+  @keyframes navbar-glow-pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  .navbar-glow {
+    animation: navbar-glow-pulse 2s ease-in-out infinite;
   }
 `;
 
@@ -133,11 +172,9 @@ export const Navbar = ({
 
       {/* Navbar Container */}
       <div
-        className="fixed top-0 inset-x-0 z-[1000] pointer-events-none select-none h-32 lg:h-24"
+        className="relative inset-x-0 pointer-events-none select-none h-32 lg:h-24 w-full"
         style={{
           paddingTop: 'env(safe-area-inset-top, 0px)',
-          // Ensure navbar is always visible above content
-          isolation: 'isolate'
         }}
       >
 
@@ -168,30 +205,37 @@ export const Navbar = ({
         </div>
 
         {/* --- MOBILE/TAB LAYOUT --- */}
-        {/* BUG FIX #10: Fixed mobile layout to prevent navbar cutoff */}
-        <div className="lg:hidden flex justify-between items-start w-full px-2 sm:px-4 pt-2 sm:pt-4 z-[1010] relative gap-2">
-            <div className="pointer-events-auto pt-2 shrink-0 relative z-[60] max-w-[40%]">
-               <AnimatedLogoWrapper accentColor={accentColor}>
-                   <Image
-                      src={BullLogo}
-                      alt="Bull Logo"
-                      width={40}
-                      height={40}
-                      className="object-contain shrink-0"
-                      priority
-                   />
-                   <span className="font-black text-base sm:text-xl tracking-tighter text-neutral-900 dark:text-white whitespace-nowrap overflow-hidden text-ellipsis">
-                      BULLMONEY
-                   </span>
-               </AnimatedLogoWrapper>
-            </div>
+        {/* Enhanced mobile layout with premium styling */}
+        <div className="lg:hidden flex flex-col w-full px-2 sm:px-3 pt-2 sm:pt-3 z-[1010] relative gap-2">
+            {/* Mobile Header Row */}
+            <div className="flex justify-between items-center w-full gap-2">
+              {/* Logo Section */}
+              <div className="pointer-events-auto shrink-0 relative z-[60]">
+                 <Link href="/" className="no-underline">
+                   <AnimatedLogoWrapper accentColor={accentColor}>
+                       <Image
+                          src={BullLogo}
+                          alt="Bull Logo"
+                          width={36}
+                          height={36}
+                          className="object-contain shrink-0"
+                          priority
+                       />
+                       <span className="font-black text-sm sm:text-base tracking-tighter text-neutral-900 dark:text-white whitespace-nowrap">
+                          BULLMONEY
+                       </span>
+                   </AnimatedLogoWrapper>
+                 </Link>
+              </div>
 
-            <div className="pointer-events-auto flex justify-end min-w-0 flex-1 relative z-[60] overflow-visible">
-               <MobileNav
-                 setShowConfigurator={setShowConfigurator}
-                 setShowIdModal={setShowIdModal}
-                 {...controlsProps}
-               />
+              {/* Mobile Nav Section */}
+              <div className="pointer-events-auto flex justify-end min-w-0 flex-1 relative z-[60] overflow-visible">
+                 <MobileNav
+                   setShowConfigurator={setShowConfigurator}
+                   setShowIdModal={setShowIdModal}
+                   {...controlsProps}
+                 />
+              </div>
             </div>
         </div>
       </div>
@@ -302,8 +346,23 @@ const DesktopNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isM
     <motion.div
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="flex items-center gap-4 pointer-events-auto px-6 py-2 rounded-2xl transition-colors duration-300 bg-white/95 dark:bg-neutral-950/95 border border-neutral-200 dark:border-white/10 shadow-xl"
+      className="relative flex items-center gap-4 pointer-events-auto px-6 py-2 rounded-2xl transition-all duration-300 navbar-glass border border-neutral-200/50 dark:border-white/20 shadow-2xl overflow-hidden group"
+      style={{
+        boxShadow: `0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px ${accentColor}20, 0 0 20px ${accentColor}10`
+      }}
     >
+      {/* Premium shimmer overlay */}
+      <div className="absolute inset-0 navbar-premium-shimmer pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+      {/* Accent glow line at top */}
+      <div
+        className="absolute top-0 left-0 right-0 h-[2px] navbar-glow"
+        style={{
+          background: `linear-gradient(90deg, transparent, ${accentColor}, transparent)`,
+          boxShadow: `0 0 8px ${accentColor}`
+        }}
+      />
+
       <Dock
         items={NAV_ITEMS}
         setShowConfigurator={setShowConfigurator}
@@ -311,7 +370,7 @@ const DesktopNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isM
         accentColor={accentColor}
       />
 
-      <div className="flex justify-end ml-2 gap-2 items-center border-l border-neutral-200 dark:border-white/10 pl-4">
+      <div className="flex justify-end ml-2 gap-2 items-center border-l border-neutral-200/50 dark:border-white/20 pl-4">
         {/* Control Buttons */}
         <ControlButtons
           isMuted={isMuted}
@@ -324,9 +383,6 @@ const DesktopNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isM
           onControlCenterToggle={onControlCenterToggle}
           accentColor={accentColor}
         />
-        <div className="hidden md:block ml-2 pl-2 border-l border-neutral-200 dark:border-white/10">
-            <Faq />
-        </div>
       </div>
     </motion.div>
   );
@@ -619,18 +675,34 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMu
   }, [setShowIdModal]);
 
   return (
-    <motion.div 
+    <motion.div
       animate={{ width: "auto" }}
-      className="flex flex-col items-end bg-white/95 dark:bg-neutral-950/95 border border-neutral-200 dark:border-white/10 shadow-lg rounded-2xl relative max-w-full"
+      className="relative flex flex-col items-end navbar-glass border border-neutral-200/50 dark:border-white/20 shadow-2xl rounded-2xl max-w-full group"
       style={{
         maxWidth: 'min(100vw - 12px, 680px)',
         marginRight: 'env(safe-area-inset-right, 0px)',
+        boxShadow: `0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px ${accentColor}20, 0 0 20px ${accentColor}10`,
+        // FIXED: Allow overflow so expanded menu is visible
+        overflow: open ? 'visible' : 'hidden'
       }}
     >
+      {/* Premium shimmer overlay for mobile */}
+      <div className="absolute inset-0 navbar-premium-shimmer pointer-events-none opacity-0 group-active:opacity-100 transition-opacity duration-300" />
+
+      {/* Accent glow line at top */}
+      <div
+        className="absolute top-0 left-0 right-0 h-[2px] navbar-glow"
+        style={{
+          background: `linear-gradient(90deg, transparent, ${accentColor}, transparent)`,
+          boxShadow: `0 0 8px ${accentColor}`
+        }}
+      />
       <div className="flex items-center gap-1.5 p-1.5 relative z-20 max-w-full">
-         {/* Scroll indicator for mobile nav */}
-         <div className="absolute left-0 right-0 bottom-0 h-0.5 bg-white/10 md:hidden">
-           <div className="h-full w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
+         {/* Enhanced scroll indicator for mobile nav */}
+         <div className="absolute left-0 right-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-white/5 to-transparent md:hidden overflow-hidden">
+           <div className="h-full w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-pulse" style={{
+             boxShadow: `0 0 8px ${accentColor}`
+           }} />
          </div>
          {/* BUG FIX #10: Fixed scrollable area width calculation */}
          <div
@@ -782,20 +854,26 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMu
       </div>
 
       {/* ... Expanded Menu ... */}
-      {/* BUG FIX #10: Fixed expanded menu to be fully visible on mobile */}
+      {/* FIXED: Enhanced mobile menu expansion with better visibility and z-index */}
       <AnimatePresence>
         {open && (
            <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="absolute top-full left-0 right-0 mt-1 min-w-[200px] max-w-full overflow-hidden rounded-2xl z-[70] shadow-2xl"
+            className="absolute top-full left-0 right-0 mt-1 min-w-[200px] max-w-full overflow-visible rounded-2xl shadow-2xl"
             style={{
+              // FIXED: Much higher z-index to ensure visibility above all content
+              zIndex: 999999,
               // Ensure it doesn't overflow viewport
               maxHeight: 'calc(100vh - 120px)',
             }}
           >
-            <div className="px-4 pb-4 pt-2 flex flex-col gap-3 border-t border-neutral-100 dark:border-white/5 w-full bg-white/95 dark:bg-neutral-950/95 overflow-y-auto max-h-[70vh]">
+            <div className="px-4 pb-4 pt-2 flex flex-col gap-3 border-t border-neutral-100 dark:border-white/5 w-full bg-white/98 dark:bg-neutral-950/98 backdrop-blur-xl overflow-y-auto max-h-[70vh] shadow-2xl rounded-2xl"
+                 style={{
+                   // Additional shadow for visibility
+                   boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                 }}>
                {[...FOOTER_NAV_ITEMS, ...NAV_ITEMS].map((item, i) => (
                   <Link
                     key={i}
@@ -821,7 +899,6 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMu
                      </div>
                   </Link>
                ))}
-               <div className="mt-2 flex justify-center gap-4 flex-wrap"><Faq /></div>
             </div>
           </motion.div>
         )}
@@ -895,8 +972,9 @@ const ControlButtons = memo(({ isMuted, onMuteToggle, disableSpline, onPerforman
         if (navigator.vibrate) navigator.vibrate(15);
         onInfoToggle();
       },
-      label: infoPanelOpen ? 'Close page info' : 'Open page info',
+      label: infoPanelOpen ? '🔓 Page Info Unlocked' : '🔒 Unlock Page Info',
       color: accentColor,
+      isActive: infoPanelOpen,
     },
     {
       icon: isMuted ? VolumeX : Volume2,
@@ -905,8 +983,9 @@ const ControlButtons = memo(({ isMuted, onMuteToggle, disableSpline, onPerforman
         if (navigator.vibrate) navigator.vibrate(10);
         onMuteToggle();
       },
-      label: isMuted ? 'Unmute' : 'Mute',
+      label: isMuted ? '🔇 Audio Muted (Click to Unmute)' : '🔊 Audio Playing',
       color: isMuted ? 'rgba(239, 68, 68, 1)' : accentColor,
+      isActive: !isMuted,
     },
     {
       icon: Zap,
@@ -916,10 +995,11 @@ const ControlButtons = memo(({ isMuted, onMuteToggle, disableSpline, onPerforman
         if (navigator.vibrate) navigator.vibrate([10, 50, 10]); // Double pulse for mode change
         onPerformanceToggle();
       },
-      label: disableSpline ? '⚡ Performance Mode (Click for Full 3D)' : '✨ Full 3D Mode (Click for Performance)',
-      color: disableSpline ? '#f97316' : '#3b82f6', // Orange for performance, Blue for 3D
-      badge: disableSpline ? 'FASTEST' : 'PREMIUM',
+      label: disableSpline ? '⚡ Performance Mode → Click for Full 3D Experience' : '✨ Full 3D Mode → Click for Maximum Performance',
+      color: disableSpline ? '#f97316' : '#10b981', // Orange for performance, Green for 3D
+      badge: disableSpline ? '⚡' : '✨',
       glowEffect: true,
+      isPremium: true,
     },
     {
       icon: HelpCircle,
@@ -928,7 +1008,7 @@ const ControlButtons = memo(({ isMuted, onMuteToggle, disableSpline, onPerforman
         if (navigator.vibrate) navigator.vibrate(15);
         onFaqClick();
       },
-      label: 'Help & FAQ',
+      label: '❓ Help & FAQ',
       color: accentColor,
     },
   ];
@@ -948,12 +1028,13 @@ const ControlButtons = memo(({ isMuted, onMuteToggle, disableSpline, onPerforman
             e.currentTarget.style.transform = '';
           }}
           className={`relative w-9 h-9 rounded-full overflow-hidden shadow-sm hover:scale-110 active:scale-95 transition-all touch-manipulation group ${
-            button.glowEffect ? 'shadow-[0_0_15px_currentColor]' : ''
-          }`}
+            button.glowEffect ? 'shadow-[0_0_20px_currentColor]' : ''
+          } ${button.isActive ? 'ring-2 ring-offset-1 ring-offset-white dark:ring-offset-neutral-900' : ''}`}
           style={{
             WebkitTapHighlightColor: 'transparent',
             color: button.color,
-            ...(button.glowEffect && { filter: `drop-shadow(0 0 8px ${button.color})` })
+            ...(button.glowEffect && { filter: `drop-shadow(0 0 12px ${button.color})` }),
+            ...(button.isActive && { ringColor: button.color })
           }}
           aria-label={button.label}
           title={button.label}
@@ -961,26 +1042,70 @@ const ControlButtons = memo(({ isMuted, onMuteToggle, disableSpline, onPerforman
           <motion.div
             className="absolute inset-[-100%]"
             animate={{ rotate: 360 }}
-            transition={{ duration: button.glowEffect ? 2 : 3, repeat: Infinity, ease: "linear" }}
+            transition={{
+              duration: button.isPremium ? 1.5 : (button.glowEffect ? 2 : 3),
+              repeat: Infinity,
+              ease: "linear"
+            }}
             style={{ background: getShimmerGradient(button.color) }}
           />
-          <div className="absolute inset-[1.5px] rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center z-10">
-            <button.icon size={16} style={{ color: button.color }} className={button.glowEffect ? 'drop-shadow-[0_0_4px_currentColor]' : ''} />
+          <div className={`absolute inset-[1.5px] rounded-full flex items-center justify-center z-10 transition-all ${
+            button.isActive ? 'bg-gray-50 dark:bg-neutral-700' : 'bg-gray-100 dark:bg-neutral-800'
+          }`}>
+            <button.icon
+              size={16}
+              style={{ color: button.color }}
+              className={`${button.glowEffect ? 'drop-shadow-[0_0_6px_currentColor]' : ''} ${button.isActive ? 'scale-110' : ''} transition-transform`}
+            />
           </div>
 
           {/* Badge for performance modes */}
           {button.badge && (
-            <div className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-current rounded-full z-20 animate-pulse">
-              <span className="text-[7px] font-black text-white" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+            <div
+              className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full z-20 animate-pulse"
+              style={{
+                backgroundColor: button.color,
+                boxShadow: `0 0 10px ${button.color}`
+              }}
+            >
+              <span className="text-[9px] font-black text-white" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                 {button.badge}
               </span>
             </div>
           )}
 
-          {/* Enhanced Tooltip */}
-          <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-[9px] font-bold rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 border border-white/10">
-            {button.label}
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-neutral-900 dark:bg-white"></div>
+          {/* Active indicator ring */}
+          {button.isActive && (
+            <motion.div
+              className="absolute inset-0 rounded-full border-2 pointer-events-none"
+              style={{ borderColor: button.color }}
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+          )}
+
+          {/* Enhanced Tooltip with premium styling */}
+          <div
+            className="absolute -bottom-14 left-1/2 -translate-x-1/2 px-3 py-2 rounded-lg shadow-2xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 border max-w-[200px]"
+            style={{
+              background: `linear-gradient(135deg, ${button.color}15, ${button.color}05)`,
+              borderColor: `${button.color}40`,
+              backdropFilter: 'blur(10px)'
+            }}
+          >
+            <div className="relative z-10">
+              <span className="text-[10px] font-bold text-neutral-900 dark:text-white block">
+                {button.label}
+              </span>
+            </div>
+            <div
+              className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45"
+              style={{
+                background: `linear-gradient(135deg, ${button.color}15, ${button.color}05)`,
+                borderLeft: `1px solid ${button.color}40`,
+                borderTop: `1px solid ${button.color}40`
+              }}
+            />
           </div>
         </button>
       ))}

@@ -51,17 +51,33 @@ const buildProfile = (): DeviceProfile => {
   const isWebView = IN_APP_BROWSER_REGEX.test(ua) || ('standalone' in navigator && !!(navigator as any).standalone);
 
   // Enhanced high-end detection: Consider GPU, screen resolution, and device capabilities
-  const hasHighResScreen = window.innerWidth >= 1920 || window.devicePixelRatio >= 2;
   const hasModernBrowser = 'IntersectionObserver' in window && 'requestIdleCallback' in window;
 
-  const isHighEndDevice =
-    !isMobile &&
-    !supportsReducedData &&
-    memory >= 4 &&
-    cores >= 4 &&
-    hasHighResScreen &&
-    hasModernBrowser &&
-    effectiveType !== '3g'; // Exclude 3G connections even on desktop
+  // Check for WebGL support (critical for 3D)
+  const hasWebGL = (() => {
+    try {
+      const canvas = document.createElement('canvas');
+      return !!(canvas.getContext('webgl') || canvas.getContext('webgl2'));
+    } catch (e) {
+      return false;
+    }
+  })();
+
+  // More intelligent high-end device detection
+  // Desktop: reasonable specs + WebGL
+  // Mobile: high memory + modern features + good connection
+  const isHighEndDevice = (() => {
+    if (!hasWebGL || !hasModernBrowser) return false;
+
+    if (!isMobile) {
+      // Desktop: require at least 4GB RAM and 2+ cores
+      return memory >= 4 && cores >= 2;
+    } else {
+      // Mobile: require 4GB+ RAM, 4+ cores, and not on slow connection
+      const isFastConnection = !['slow-2g', '2g'].includes(effectiveType);
+      return memory >= 4 && cores >= 4 && isFastConnection && !supportsReducedData;
+    }
+  })();
 
   return {
     isMobile,

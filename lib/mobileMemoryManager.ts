@@ -51,26 +51,39 @@ class MobileMemoryManager {
 
     this.isLowMemory = memory < 4 || isSlowConnection;
 
-    // SMART LIMITS: Allow split scenes but limit total
+    // Adaptive limits based on device capabilities
     if (this.isMobile) {
-      // Mobile: Allow 2 scenes (for split views) but only 1 group at a time
-      this.maxConcurrentScenes = 2; // Increased from 1 to handle split views
-      this.maxConcurrentGroups = 1;  // Only 1 page/group active
-
-      if (memory < 4 || this.isLowMemory) {
-        this.maxConcurrentScenes = 2; // Still allow split views on low memory
+      // Mobile: Conservative approach to prevent crashes
+      if (memory >= 6 && !isSlowConnection) {
+        // High-end mobile (iPhone 13+, flagship Android)
+        this.maxConcurrentScenes = 4;
+        this.maxConcurrentGroups = 2;
+      } else if (memory >= 4) {
+        // Mid-range mobile
+        this.maxConcurrentScenes = 3;
+        this.maxConcurrentGroups = 2;
+      } else {
+        // Low-end mobile or slow connection
+        this.maxConcurrentScenes = 2;
         this.maxConcurrentGroups = 1;
       }
     } else {
-      // Desktop
+      // Desktop: More generous limits
       if (memory >= 8 && !this.isLowMemory) {
-        this.maxConcurrentScenes = 6; // High-end desktop
-        this.maxConcurrentGroups = 3;
+        // High-end desktop
+        this.maxConcurrentScenes = 10;
+        this.maxConcurrentGroups = 5;
+      } else if (memory >= 6) {
+        // Mid-range desktop
+        this.maxConcurrentScenes = 7;
+        this.maxConcurrentGroups = 4;
       } else if (memory >= 4) {
-        this.maxConcurrentScenes = 4; // Standard desktop
-        this.maxConcurrentGroups = 2;
+        // Lower-end desktop
+        this.maxConcurrentScenes = 5;
+        this.maxConcurrentGroups = 3;
       } else {
-        this.maxConcurrentScenes = 3; // Low-end desktop
+        // Very low-end desktop
+        this.maxConcurrentScenes = 3;
         this.maxConcurrentGroups = 2;
       }
     }

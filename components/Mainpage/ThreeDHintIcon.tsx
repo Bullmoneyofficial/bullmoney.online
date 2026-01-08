@@ -9,13 +9,15 @@ interface ThreeDHintIconProps {
   accentColor?: string;
   disableSpline?: boolean;
   showHint?: boolean;
+  isOpen?: boolean;
 }
 
 export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
   onClick,
   accentColor = '#3b82f6',
   disableSpline = false,
-  showHint = true
+  showHint = true,
+  isOpen = false
 }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [showInitialHint, setShowInitialHint] = useState(showHint);
@@ -76,7 +78,7 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
           WebkitTapHighlightColor: 'transparent',
         }}
         animate={{
-          scale: pulse ? [1, 1.1, 1] : 1,
+          scale: pulse ? [1, 1.1, 1] : (isOpen ? 1.05 : 1),
         }}
         transition={{
           duration: 0.8,
@@ -88,22 +90,32 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
         <motion.div
           className="absolute inset-0"
           animate={{ rotate: 360 }}
-          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: isOpen ? 2 : 4, repeat: Infinity, ease: "linear" }}
           style={{
-            background: `conic-gradient(from 0deg, ${accentColor}, #ffffff, ${accentColor})`,
+            background: `conic-gradient(from 0deg, ${accentColor}, ${isOpen ? accentColor : '#ffffff'}, ${accentColor})`,
           }}
         />
 
         {/* Inner Circle */}
         <div className="absolute inset-[2px] rounded-full bg-black/90 backdrop-blur-xl flex items-center justify-center">
-          <Sparkles
-            size={20}
-            className="sm:w-6 sm:h-6"
-            style={{ color: accentColor }}
-          />
+          <motion.div
+            animate={{
+              rotate: isOpen ? 180 : 0,
+            }}
+            transition={{
+              duration: 0.3,
+              ease: "easeInOut"
+            }}
+          >
+            <Sparkles
+              size={20}
+              className="sm:w-6 sm:h-6"
+              style={{ color: accentColor }}
+            />
+          </motion.div>
 
-          {/* Pulsing Ring when 3D is off */}
-          {disableSpline && (
+          {/* Pulsing Ring when 3D is off or menu is open */}
+          {(disableSpline || isOpen) && (
             <motion.div
               className="absolute inset-0 rounded-full border-2"
               style={{ borderColor: accentColor }}
@@ -112,7 +124,7 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
                 opacity: [0.5, 0, 0.5],
               }}
               transition={{
-                duration: 2,
+                duration: isOpen ? 1.5 : 2,
                 repeat: Infinity,
                 ease: "easeOut"
               }}
@@ -123,21 +135,18 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
         {/* Glow Effect */}
         <motion.div
           className="absolute inset-0 rounded-full"
-          style={{
-            boxShadow: `0 0 ${isHovering ? '40px' : '20px'} ${accentColor}${isHovering ? '80' : '60'}`,
-          }}
           animate={{
-            boxShadow: pulse
+            boxShadow: pulse || isOpen
               ? [
                   `0 0 20px ${accentColor}60`,
-                  `0 0 35px ${accentColor}80`,
+                  `0 0 ${isOpen ? '50px' : '35px'} ${accentColor}${isOpen ? '90' : '80'}`,
                   `0 0 20px ${accentColor}60`,
                 ]
               : `0 0 ${isHovering ? '40px' : '20px'} ${accentColor}${isHovering ? '80' : '60'}`,
           }}
           transition={{
-            duration: 2,
-            repeat: pulse ? Infinity : 0,
+            duration: isOpen ? 1.5 : 2,
+            repeat: (pulse || isOpen) ? Infinity : 0,
             ease: "easeInOut"
           }}
         />
@@ -145,7 +154,7 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
 
       {/* Tooltip / Hint */}
       <AnimatePresence>
-        {(isHovering || showInitialHint) && (
+        {(isHovering || showInitialHint) && !isOpen && (
           <motion.div
             initial={{ opacity: 0, x: 10, scale: 0.9 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -171,10 +180,10 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
                 <Sparkles size={16} className="text-white" />
                 <div>
                   <div className="text-sm font-bold text-white">
-                    {disableSpline ? 'Enable' : 'Control'} 3D
+                    {disableSpline ? 'Enable 3D' : 'Control Center'}
                   </div>
                   <div className="text-[10px] text-white/80">
-                    {disableSpline ? 'Turn on 3D scenes' : 'Adjust 3D settings'}
+                    {disableSpline ? 'Turn on 3D scenes' : 'Tap to toggle controls'}
                   </div>
                 </div>
               </div>
@@ -184,22 +193,51 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
       </AnimatePresence>
 
       {/* Mobile Hint Text */}
-      {showInitialHint && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className="absolute top-full mt-2 right-0 px-3 py-1.5 rounded-full bg-black/80 border border-white/20 backdrop-blur-xl shadow-lg lg:hidden"
-          style={{
-            boxShadow: `0 0 20px ${accentColor}40`,
-          }}
-        >
-          <div className="text-[10px] font-bold text-white flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-            Tap for 3D Controls
-          </div>
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {showInitialHint && !isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute top-full mt-2 right-0 px-3 py-1.5 rounded-full bg-black/80 border border-white/20 backdrop-blur-xl shadow-lg lg:hidden"
+            style={{
+              boxShadow: `0 0 20px ${accentColor}40`,
+            }}
+          >
+            <div className="text-[10px] font-bold text-white flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+              Tap for Controls
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Open/Close Status Indicator */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="absolute top-full mt-2 right-0 px-2 py-1 rounded-full border backdrop-blur-xl shadow-lg"
+            style={{
+              backgroundColor: `${accentColor}20`,
+              borderColor: `${accentColor}60`,
+              boxShadow: `0 0 20px ${accentColor}40`,
+            }}
+          >
+            <div className="text-[9px] font-black uppercase tracking-wider flex items-center gap-1" style={{ color: accentColor }}>
+              <motion.span
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ backgroundColor: accentColor }}
+              />
+              OPEN
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
