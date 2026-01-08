@@ -56,7 +56,9 @@ const cleanupOldEntries = async (db: IDBDatabase) => {
     const index = store.index('savedAt');
 
     index.openCursor().onsuccess = event => {
-      const cursor = event.target.result as IDBCursorWithValue | null;
+      const requestTarget = event.target as IDBRequest | null;
+      if (!requestTarget) return;
+      const cursor = requestTarget.result as IDBCursorWithValue | null;
       if (!cursor) return;
       const record = cursor.value as StoredSceneRecord;
       if (record.savedAt < threshold) {

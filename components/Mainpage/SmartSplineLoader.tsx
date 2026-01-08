@@ -143,7 +143,7 @@ export const SmartSplineLoader = memo(({
             : getCacheName({ webview: isWebViewBrowser });
 
           const cache = await caches.open(cacheName);
-          let cachedResponse = await cache.match(scene);
+          let cachedResponse: Response | undefined = await cache.match(scene);
 
           if (cachedResponse) {
             const cachedSceneBlob = await cachedResponse.clone().blob();
@@ -162,7 +162,7 @@ export const SmartSplineLoader = memo(({
               }
             } else {
               await cache.delete(scene);
-              cachedResponse = null;
+              cachedResponse = undefined;
               console.warn('[SmartSplineLoader] Invalid cached blob detected, deleted from cache');
             }
           }
