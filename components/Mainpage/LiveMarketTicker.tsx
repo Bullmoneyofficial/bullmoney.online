@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
 interface MarketData {
@@ -10,55 +10,165 @@ interface MarketData {
   isUp: boolean;
 }
 
+type CoinGeckoMarketResponse = {
+  id: string;
+  symbol: string;
+  current_price?: number;
+  price_change_percentage_24h?: number;
+};
+
+const PRICE_REFRESH_INTERVAL = 15000;
+const FLASH_DURATION = 650;
+const COIN_ORDER = [
+  { id: 'bitcoin', symbol: 'BTC' },
+  { id: 'ethereum', symbol: 'ETH' },
+  { id: 'solana', symbol: 'SOL' },
+  { id: 'ripple', symbol: 'XRP' },
+  { id: 'cardano', symbol: 'ADA' },
+  { id: 'dogecoin', symbol: 'DOGE' },
+  { id: 'chainlink', symbol: 'LINK' },
+  { id: 'polkadot', symbol: 'DOT' },
+  { id: 'polygon', symbol: 'MATIC' },
+  { id: 'avalanche-2', symbol: 'AVAX' },
+];
+
+const baseTickerData: MarketData[] = COIN_ORDER.map((coin) => ({
+  symbol: coin.symbol,
+  price: '—',
+  change: 0,
+  isUp: true,
+}));
+
+const usdFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 2,
+});
+
+const smallUsdFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 6,
+});
+
+const formatUsdPrice = (value: number) =>
+  Math.abs(value) < 0.01 ? smallUsdFormatter.format(value) : usdFormatter.format(value);
+
 export const LiveMarketTicker: React.FC = () => {
-  const [marketData, setMarketData] = useState<MarketData[]>([
-    { symbol: 'BTC', price: '$98,432', change: 4.2, isUp: true },
-    { symbol: 'ETH', price: '$3,842', change: 2.8, isUp: true },
-    { symbol: 'SOL', price: '$142', change: 6.1, isUp: true },
-    { symbol: 'XRP', price: '$0.58', change: -1.2, isUp: false },
-    { symbol: 'ADA', price: '$0.42', change: 3.5, isUp: true },
-    { symbol: 'DOGE', price: '$0.08', change: -0.8, isUp: false },
-    { symbol: 'LINK', price: '$18.24', change: 5.3, isUp: true },
-    { symbol: 'DOT', price: '$8.92', change: 1.7, isUp: true },
-    { symbol: 'MATIC', price: '$0.92', change: -2.1, isUp: false },
-    { symbol: 'AVAX', price: '$42.18', change: 7.2, isUp: true },
-  ]);
+  const [marketData, setMarketData] = useState<MarketData[]>(baseTickerData);
   const [flashingSymbols, setFlashingSymbols] = useState<Set<string>>(new Set());
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Simulate live price updates with realistic market behavior
+  const marketDataRef = useRef<MarketData[]>(baseTickerData);
+  const flashTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const hasFetchedOnceRef = useRef(false);
+
+  const triggerFlash = useCallback((symbols: string[]) => {
+    if (!symbols.length) return;
+
+    setFlashingSymbols((prev) => {
+      const next = new Set(prev);
+      symbols.forEach((symbol) => next.add(symbol));
+      return next;
+    });
+
+    symbols.forEach((symbol) => {
+      if (flashTimeoutsRef.current[symbol]) {
+        clearTimeout(flashTimeoutsRef.current[symbol]);
+      }
+
+      flashTimeoutsRef.current[symbol] = setTimeout(() => {
+        setFlashingSymbols((prev) => {
+          const next = new Set(prev);
+          next.delete(symbol);
+          return next;
+        });
+        delete flashTimeoutsRef.current[symbol];
+      }, FLASH_DURATION);
+    });
+  }, []);
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      setMarketData(prev => prev.map(coin => {
-        // More volatile updates - markets move fast!
-        const volatility = Math.abs(coin.change) > 5 ? 0.8 : 0.4; // High movers stay volatile
-        const randomChange = (Math.random() - 0.48) * volatility; // Slight upward bias for FOMO
-        const newChange = Math.round((coin.change + randomChange) * 10) / 10;
+    let isCancelled = false;
 
-        // Clamp to realistic ranges (-15% to +20%)
-        const clampedChange = Math.max(-15, Math.min(20, newChange));
+    const fetchMarketData = async () => {
+      try {
+        const params = new URLSearchParams({
+          vs_currency: 'usd',
+          ids: COIN_ORDER.map((coin) => coin.id).join(','),
+          order: 'market_cap_desc',
+          per_page: COIN_ORDER.length.toString(),
+          page: '1',
+          sparkline: 'false',
+          price_change_percentage: '24h',
+        });
 
-        // Flash effect for significant changes (>0.5% difference)
-        if (Math.abs(clampedChange - coin.change) > 0.5) {
-          setFlashingSymbols(prev => new Set(prev).add(coin.symbol));
-          setTimeout(() => {
-            setFlashingSymbols(prev => {
-              const newSet = new Set(prev);
-              newSet.delete(coin.symbol);
-              return newSet;
-            });
-          }, 500);
+        const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?${params}`);
+
+        if (!response.ok) {
+          throw new Error(`Market request failed with ${response.status}`);
         }
 
-        return {
-          ...coin,
-          change: clampedChange,
-          isUp: clampedChange > 0,
-        };
-      }));
-    }, 2000); // Faster updates for urgency (2s instead of 3s)
+        const payload: CoinGeckoMarketResponse[] = await response.json();
+        if (isCancelled) return;
 
-    return () => clearInterval(interval);
-  }, []);
+        const nextData: MarketData[] = COIN_ORDER.map((coin) => {
+          const result = payload.find((entry) => entry.id === coin.id);
+          const currentPrice =
+            typeof result?.current_price === 'number' ? result.current_price : undefined;
+          const changeValue = result?.price_change_percentage_24h ?? 0;
+          const roundedChange = Number(changeValue.toFixed(2));
+          const symbol = result?.symbol?.toUpperCase() ?? coin.symbol;
+          return {
+            symbol,
+            price:
+              typeof currentPrice === 'number'
+                ? formatUsdPrice(currentPrice)
+                : baseTickerData.find((base) => base.symbol === coin.symbol)?.price ?? '—',
+            change: roundedChange,
+            isUp: roundedChange >= 0,
+          };
+        });
+
+        if (isCancelled) return;
+
+        const symbolsToFlash: string[] = [];
+        if (hasFetchedOnceRef.current) {
+          nextData.forEach((nextCoin) => {
+            const prevCoin = marketDataRef.current.find((item) => item.symbol === nextCoin.symbol);
+            if (prevCoin && Math.abs(nextCoin.change - prevCoin.change) > 0.5) {
+              symbolsToFlash.push(nextCoin.symbol);
+            }
+          });
+        }
+
+        marketDataRef.current = nextData;
+        setMarketData(nextData);
+        setErrorMessage(null);
+
+        if (symbolsToFlash.length) {
+          triggerFlash(symbolsToFlash);
+        }
+
+        if (!hasFetchedOnceRef.current) {
+          hasFetchedOnceRef.current = true;
+        }
+      } catch (error) {
+        if (isCancelled) return;
+        console.error('Failed to fetch market data', error);
+        setErrorMessage('Live data unavailable');
+      }
+    };
+
+    fetchMarketData();
+    const intervalId = setInterval(fetchMarketData, PRICE_REFRESH_INTERVAL);
+
+    return () => {
+      isCancelled = true;
+      clearInterval(intervalId);
+      Object.values(flashTimeoutsRef.current).forEach(clearTimeout);
+    };
+  }, [triggerFlash]);
 
   // Duplicate the data for seamless loop
   const duplicatedData = [...marketData, ...marketData];
@@ -157,7 +267,7 @@ export const LiveMarketTicker: React.FC = () => {
         </div>
 
         {/* Trade now CTA */}
-        <div className="ml-4 shrink-0">
+        <div className="ml-4 shrink-0 flex flex-col items-end gap-1">
           <motion.button
             className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/40 text-xs font-bold text-green-400 hover:from-green-500/30 hover:to-blue-500/30 transition-all"
             whileHover={{ scale: 1.05 }}
@@ -165,6 +275,11 @@ export const LiveMarketTicker: React.FC = () => {
           >
             TRADE NOW →
           </motion.button>
+          {errorMessage && (
+            <span className="text-[10px] uppercase tracking-wider text-red-400">
+              {errorMessage}
+            </span>
+          )}
         </div>
       </div>
 
