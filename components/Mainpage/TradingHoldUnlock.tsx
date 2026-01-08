@@ -649,12 +649,18 @@ const PriceTargetSystem = ({
   progress,
   assetKey,
   isActive,
+  change24h,
+  volatility,
+  momentum,
 }: {
   currentPrice: number;
   targetPrice: number;
   progress: number;
   assetKey: AssetKey;
   isActive?: boolean;
+  change24h: number;
+  volatility: number;
+  momentum: number;
 }) => {
   const distance = ((targetPrice - currentPrice) / currentPrice) * 100;
   const asset = ASSETS[assetKey];
@@ -723,6 +729,34 @@ const PriceTargetSystem = ({
           >
             <Radio className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-400 animate-pulse" />
             <span className="text-[9px] sm:text-[10px] font-bold text-blue-400">ACTIVE</span>
+          </motion.div>
+        </div>
+
+        {/* Compact market stats */}
+        <div className="flex flex-wrap gap-2 mt-2">
+          <motion.div
+            className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] sm:text-xs font-semibold text-slate-200"
+            animate={isActive ? { scale: [1, 1.05, 1] } : {}}
+            transition={{ duration: 0.3, repeat: Infinity }}
+          >
+            <TrendingUp className="w-3 h-3 text-green-400" />
+            <span>{`${change24h >= 0 ? "+" : ""}${change24h.toFixed(2)}% 24h`}</span>
+          </motion.div>
+          <motion.div
+            className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] sm:text-xs font-semibold text-slate-200"
+            animate={isActive ? { scale: [1, 1.05, 1] } : {}}
+            transition={{ duration: 0.35, repeat: Infinity, delay: 0.1 }}
+          >
+            <Activity className="w-3 h-3 text-cyan-400" />
+            <span>{`${volatility.toFixed(0)}% Volatility`}</span>
+          </motion.div>
+          <motion.div
+            className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] sm:text-xs font-semibold text-slate-200"
+            animate={isActive ? { scale: [1, 1.05, 1] } : {}}
+            transition={{ duration: 0.4, repeat: Infinity, delay: 0.2 }}
+          >
+            <BarChart3 className="w-3 h-3 text-blue-300" />
+            <span>{`${momentum >= 0 ? "+" : ""}${momentum.toFixed(1)} Momentum`}</span>
           </motion.div>
         </div>
 
@@ -1091,6 +1125,19 @@ export default function BullMoneyGate({
     lastTapRef.current = now;
   };
 
+  const handleHoldStart = useCallback((e?: React.MouseEvent | React.TouchEvent) => {
+    if (isCompleted) return;
+    const target = (e?.target as HTMLElement | undefined);
+    if (target && target.closest('[data-hold-ignore]')) return;
+    if (e && 'touches' in e) e.preventDefault();
+    setIsTrading(true);
+  }, [isCompleted]);
+
+  const handleHoldEnd = useCallback((e?: React.MouseEvent | React.TouchEvent) => {
+    if (e && 'touches' in e) e.preventDefault();
+    setIsTrading(false);
+  }, []);
+
   // Market data
   const { price: realPrice, prevPrice, change24h } = useLivePrice(selectedAsset);
   const marketState = useMarketState(realPrice, prevPrice);
@@ -1343,6 +1390,12 @@ export default function BullMoneyGate({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.5 }}
             className="fixed inset-0 z-[60] h-[100dvh] w-screen bg-[#0a0a0a] text-white overflow-hidden select-none touch-none safe-area-inset"
+            onMouseDown={handleHoldStart}
+            onMouseUp={handleHoldEnd}
+            onMouseLeave={handleHoldEnd}
+            onTouchStart={handleHoldStart}
+            onTouchEnd={handleHoldEnd}
+            onTouchCancel={handleHoldEnd}
             style={{
               fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
             }}
@@ -1404,7 +1457,10 @@ export default function BullMoneyGate({
 
             {/* Asset selector */}
             <div className="absolute top-4 sm:top-6 left-0 right-0 z-50 flex justify-center px-2">
-              <div className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 rounded-xl sm:rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10">
+              <div
+                className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 rounded-xl sm:rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10"
+                data-hold-ignore
+              >
                 {Object.entries(ASSETS).map(([key, asset]) => (
                   <motion.button
                     key={key}
@@ -1493,34 +1549,13 @@ export default function BullMoneyGate({
 
               {/* Main trading interface */}
               <div className="w-full max-w-2xl space-y-4 md:space-y-5">
-                {/* Market indicators */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {/* Market indicator (condensed) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   <MarketIndicator
                     label="Price"
                     value={`$${displayedPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     icon={DollarSign}
                     trend={displayedPrice > prevPrice ? "up" : displayedPrice < prevPrice ? "down" : "neutral"}
-                    isActive={isTrading}
-                  />
-                  <MarketIndicator
-                    label="24h Change"
-                    value={`${displayedChange >= 0 ? "+" : ""}${displayedChange.toFixed(2)}%`}
-                    icon={displayedChange >= 0 ? TrendingUp : TrendingDown}
-                    trend={displayedChange >= 0 ? "up" : "down"}
-                    isActive={isTrading}
-                  />
-                  <MarketIndicator
-                    label="Volatility"
-                    value={`${marketState.volatility.toFixed(0)}%`}
-                    icon={Activity}
-                    trend="neutral"
-                    isActive={isTrading}
-                  />
-                  <MarketIndicator
-                    label="Momentum"
-                    value={`${marketState.momentum >= 0 ? "+" : ""}${marketState.momentum.toFixed(1)}`}
-                    icon={BarChart3}
-                    trend={marketState.momentum >= 0 ? "up" : "down"}
                     isActive={isTrading}
                   />
                 </div>
@@ -1532,6 +1567,9 @@ export default function BullMoneyGate({
                   progress={progress}
                   assetKey={selectedAsset}
                   isActive={isTrading}
+                  change24h={displayedChange}
+                  volatility={marketState.volatility}
+                  momentum={marketState.momentum}
                 />
 
                 {/* Trading action button */}
@@ -1543,8 +1581,8 @@ export default function BullMoneyGate({
                   <TradingActionButton
                     phase={phase}
                     progress={progress}
-                    onPress={() => !isCompleted && setIsTrading(true)}
-                    onRelease={() => setIsTrading(false)}
+                    onPress={handleHoldStart}
+                    onRelease={handleHoldEnd}
                     isActive={isTrading}
                   />
                   
@@ -1602,7 +1640,7 @@ export default function BullMoneyGate({
                       className="flex items-center justify-center gap-2 text-xs sm:text-sm font-medium text-slate-400"
                     >
                       <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                      <span>Hold to continue trading</span>
+                      <span>Hold anywhere to continue trading</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -1612,24 +1650,19 @@ export default function BullMoneyGate({
               <AnimatePresence>
                 {progress === 0 && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ delay: 0.5 }}
-                    className="absolute bottom-6 md:bottom-8 left-0 right-0 flex flex-col items-center gap-3"
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ delay: 0.4 }}
+                    className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28 flex flex-col items-center gap-1.5"
                   >
                     <motion.div
-                      className="relative px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl bg-blue-500/20 border-2 border-blue-400/50 backdrop-blur-sm"
+                      className="relative px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-blue-500/15 border border-blue-400/40 backdrop-blur-sm shadow-[0_0_18px_rgba(59,130,246,0.4)]"
                       animate={{
                         boxShadow: [
-                          "0 0 20px rgba(59, 130, 246, 0.3)",
-                          "0 0 40px rgba(59, 130, 246, 0.6)",
-                          "0 0 20px rgba(59, 130, 246, 0.3)",
-                        ],
-                        borderColor: [
-                          "rgba(59, 130, 246, 0.5)",
-                          "rgba(96, 165, 250, 0.8)",
-                          "rgba(59, 130, 246, 0.5)",
+                          "0 0 10px rgba(59, 130, 246, 0.3)",
+                          "0 0 18px rgba(59, 130, 246, 0.5)",
+                          "0 0 10px rgba(59, 130, 246, 0.3)",
                         ],
                       }}
                       transition={{
@@ -1638,75 +1671,22 @@ export default function BullMoneyGate({
                         ease: "easeInOut",
                       }}
                     >
-                      <motion.p
-                        className="text-xs sm:text-sm md:text-base font-bold text-white text-center"
-                        animate={{
-                          color: ["#ffffff", "#60a5fa", "#ffffff"],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                      >
-                        Hold the button above to access the website
-                      </motion.p>
-                      
-                      {/* Glow effect */}
-                      <motion.div
-                        className="absolute inset-0 bg-blue-500/30 rounded-xl sm:rounded-2xl blur-xl -z-10"
-                        animate={{
-                          opacity: [0.3, 0.6, 0.3],
-                          scale: [1, 1.1, 1],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                      />
+                      <p className="text-[11px] sm:text-xs font-semibold text-white text-center whitespace-nowrap">
+                        Hold anywhere to unlock
+                      </p>
                     </motion.div>
-
                     <motion.div
-                      className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-slate-500"
-                      animate={{
-                        opacity: [0.5, 1, 0.5],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
+                      className="flex items-center gap-1 text-[10px] sm:text-xs text-slate-400"
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     >
                       <motion.div
-                        animate={{
-                          y: [0, -3, 0],
-                        }}
-                        transition={{
-                          duration: 1,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
+                        animate={{ y: [0, -3, 0] }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
                       >
-                        👆
+                        
                       </motion.div>
                       <span className="uppercase tracking-wider font-bold">Press & Hold</span>
-                    </motion.div>
-
-                    <motion.div
-                      className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-blue-400 mt-1"
-                      animate={{
-                        opacity: [0.4, 0.8, 0.4],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: 0.5,
-                      }}
-                    >
-                      <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                      <span className="uppercase tracking-wider font-bold">Double-Tap for 2x Boost</span>
                     </motion.div>
                   </motion.div>
                 )}
