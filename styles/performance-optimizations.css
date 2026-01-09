@@ -135,3 +135,395 @@ iframe {
 *:focus:not(:focus-visible) {
   outline: none;
 }
+
+/* ============================================================================
+   SHIMMER / FPS FIX - MacBooks and iPhones
+   ============================================================================ */
+
+/* Optimize all shimmer effects to prevent FPS drops */
+@keyframes shimmer-optimized {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.shimmer-effect,
+[class*="shimmer"] {
+  position: relative;
+  overflow: hidden;
+  /* Force GPU acceleration */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+}
+
+.shimmer-effect::after,
+[class*="shimmer"]::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 50%,
+    transparent 100%
+  );
+  animation: shimmer-optimized 2.5s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+  pointer-events: none;
+}
+
+/* Reduce shimmer intensity on mobile for better FPS */
+@media (max-width: 768px) {
+  .shimmer-effect::after,
+  [class*="shimmer"]::after {
+    animation-duration: 3s;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.03) 50%,
+      transparent 100%
+    );
+  }
+}
+
+/* ============================================================================
+   SCROLLBAR FIX - Desktop Right Scrollbar
+   ============================================================================ */
+
+/* Fix spinning element in scrollbar */
+.target-cursor-wrapper {
+  /* Ensure cursor wrapper doesn't interfere with scrollbar */
+  pointer-events: none !important;
+  /* Keep within bounds */
+  contain: layout style;
+  /* Prevent overflow */
+  overflow: visible;
+}
+
+.target-cursor-wrapper * {
+  pointer-events: none !important;
+}
+
+/* Smooth scroll improvements for desktop keyboard/mouse/trackpad */
+.non-touch-device.unified-scroll {
+  /* Better scroll snap */
+  scroll-snap-type: y mandatory;
+  scroll-padding: 0;
+  /* Smoother transitions */
+  scroll-behavior: smooth;
+  /* Optimize for keyboard */
+  scroll-padding-block: 0;
+}
+
+/* Keyboard scroll improvements */
+@media (pointer: fine) {
+  .unified-scroll {
+    /* Smoother keyboard scrolling */
+    scroll-behavior: smooth;
+    /* Better snap points */
+    scroll-snap-stop: normal;
+  }
+
+  section {
+    /* Ensure sections snap properly */
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+}
+
+/* ============================================================================
+   BUTTON / TAP FIX - Mobile Interactions
+   ============================================================================ */
+
+/* Fix all buttons, taps, and touch interactions */
+button,
+a,
+[role="button"],
+[role="menuitem"],
+.cursor-target,
+.interactive-element,
+[onClick],
+[onTap],
+[onTouchStart] {
+  /* Remove iOS tap highlight */
+  -webkit-tap-highlight-color: transparent;
+
+  /* Ensure clickability */
+  pointer-events: auto !important;
+  user-select: none;
+  -webkit-user-select: none;
+
+  /* Prevent text selection on long press */
+  -webkit-touch-callout: none;
+
+  /* Optimize touch response */
+  touch-action: manipulation;
+
+  /* Ensure proper z-index */
+  position: relative;
+}
+
+/* Ensure buttons in overlays/modals work */
+.fixed button,
+.absolute button,
+[role="dialog"] button,
+[role="menu"] button,
+[aria-haspopup] button {
+  position: relative;
+  z-index: 10;
+  pointer-events: auto !important;
+}
+
+/* Mobile touch targets - minimum 44x44 for iOS */
+@media (max-width: 768px), (pointer: coarse) {
+  button,
+  a:not(.no-touch-target),
+  [role="button"] {
+    min-width: 44px;
+    min-height: 44px;
+    padding: max(8px, 0.5rem);
+  }
+}
+
+/* Fix framer-motion buttons */
+[class*="motion-"] button,
+button[style*="transform"] {
+  touch-action: manipulation;
+  pointer-events: auto !important;
+}
+
+/* ============================================================================
+   SPLINE LOADING FIX - Hero Scene
+   ============================================================================ */
+
+/* Fix spline loading in small box on desktop */
+.spline-container,
+[class*="spline"] > div {
+  /* Ensure full dimensions */
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100%;
+  min-height: 100%;
+
+  /* Force GPU layer */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform, opacity;
+
+  /* Contain paint operations */
+  contain: layout style paint;
+
+  /* Prevent shrinking */
+  flex-shrink: 0;
+}
+
+/* Fix Spline canvas sizing */
+canvas[data-engine="three.js r152"],
+canvas[class*="spline"] {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+}
+
+/* ============================================================================
+   SPLIT SCREEN FIX - Desktop Dual Spline Loading
+   ============================================================================ */
+
+/* Optimize split section performance */
+.split-section,
+[class*="split"] {
+  /* Contain paint for both panels */
+  contain: layout style;
+
+  /* Optimize rendering */
+  will-change: auto;
+}
+
+/* Ensure both splines load on desktop */
+@media (min-width: 1024px) {
+  .split-section .spline-container {
+    /* Pre-render both splines */
+    visibility: visible;
+    opacity: 1;
+    /* Optimize loading */
+    content-visibility: auto;
+  }
+}
+
+/* Mobile - only render visible spline */
+@media (max-width: 768px) {
+  .split-section .spline-container:not(.active) {
+    /* Lazy load non-visible splines */
+    content-visibility: auto;
+    contain-intrinsic-size: 100vw 100vh;
+  }
+}
+
+/* ============================================================================
+   LOADER FIX - Tap Everywhere vs Assist Selection
+   ============================================================================ */
+
+/* Fix loader tap conflicts */
+[data-loader="multistep"],
+[data-loader="hold-unlock"] {
+  /* Allow pointer events for buttons inside */
+  pointer-events: auto;
+}
+
+/* Loader buttons should always work */
+[data-loader] button,
+[data-loader] [role="button"],
+[data-loader] .assist-selector {
+  pointer-events: auto !important;
+  touch-action: manipulation;
+  z-index: 100;
+  position: relative;
+}
+
+/* Tap-everywhere backdrop should be below buttons */
+[data-tap-anywhere] {
+  pointer-events: auto;
+  z-index: 1;
+}
+
+[data-tap-anywhere] button,
+[data-tap-anywhere] [data-interactive] {
+  pointer-events: auto !important;
+  z-index: 10;
+}
+
+/* ============================================================================
+   MOBILE PERFORMANCE - Heavy Elements
+   ============================================================================ */
+
+/* Optimize mobile rendering for heavy elements */
+@media (max-width: 768px) {
+  /* Simplify animations */
+  .animate-spin,
+  .animate-pulse,
+  [class*="animate-"] {
+    animation-duration: 1.5s !important;
+  }
+
+  /* Reduce backdrop blur */
+  .backdrop-blur-xl {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+  }
+
+  .backdrop-blur-md {
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+  }
+
+  /* Disable parallax on mobile */
+  .parallax-layer {
+    transform: none !important;
+    will-change: auto !important;
+  }
+
+  /* Simplify shadows */
+  [class*="shadow-2xl"] {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  /* Optimize gradients */
+  .bg-gradient-to-r,
+  .bg-gradient-to-br,
+  [class*="bg-gradient-"] {
+    will-change: auto;
+  }
+}
+
+/* ============================================================================
+   CURSOR DISAPPEARING FIX
+   ============================================================================ */
+
+/* Desktop - allow custom cursor */
+@media (min-width: 1024px) and (pointer: fine) {
+  .use-custom-cursor {
+    cursor: none !important;
+  }
+
+  .use-custom-cursor *:not(button):not(a):not([role="button"]) {
+    cursor: none !important;
+  }
+
+  .use-custom-cursor button,
+  .use-custom-cursor a,
+  .use-custom-cursor [role="button"] {
+    cursor: none !important;
+    /* Ensure clickability */
+    pointer-events: auto !important;
+  }
+}
+
+/* Mobile - never hide cursor */
+@media (max-width: 1023px), (pointer: coarse) {
+  .use-custom-cursor,
+  .use-custom-cursor * {
+    cursor: default !important;
+  }
+
+  .target-cursor-wrapper {
+    display: none !important;
+  }
+}
+
+/* ============================================================================
+   MACBOOK RETINA OPTIMIZATIONS
+   ============================================================================ */
+
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Optimize text rendering */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Optimize images */
+  img {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+/* ============================================================================
+   IPHONE OPTIMIZATIONS
+   ============================================================================ */
+
+/* iOS-specific optimizations */
+@supports (-webkit-touch-callout: none) {
+  /* Fix viewport height */
+  .h-\[100dvh\],
+  .min-h-\[100dvh\] {
+    height: -webkit-fill-available;
+    min-height: -webkit-fill-available;
+  }
+
+  /* Optimize scrolling */
+  .overflow-y-auto,
+  .overflow-y-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Fix transform flickering */
+  .transform,
+  [class*="transform-"],
+  [style*="transform"] {
+    -webkit-transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    -webkit-perspective: 1000;
+  }
+}

@@ -1366,6 +1366,8 @@ export default function BullMoneyGate({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.5 }}
             className="fixed inset-0 z-[60] h-[100dvh] w-screen bg-[#0a0a0a] text-white overflow-hidden select-none touch-none safe-area-inset"
+            data-loader="hold-unlock"
+            data-tap-anywhere
             onMouseDown={handleHoldStart}
             onMouseUp={handleHoldEnd}
             onMouseLeave={handleHoldEnd}
@@ -1432,19 +1434,21 @@ export default function BullMoneyGate({
             </div>
 
             {/* Asset selector */}
-            <div className="absolute top-4 sm:top-6 left-0 right-0 z-50 flex justify-center px-2">
+            <div className="absolute top-4 sm:top-6 left-0 right-0 z-[100] flex justify-center px-2">
               <div
-                className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 rounded-xl sm:rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10"
+                className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 rounded-xl sm:rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 assist-selector"
                 data-hold-ignore
+                data-interactive
                 onMouseDown={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
+                style={{ pointerEvents: 'auto' }}
               >
                 {Object.entries(ASSETS).map(([key, asset]) => (
                   <motion.button
                     key={key}
                     onClick={() => !isTrading && setSelectedAsset(key as AssetKey)}
                     className={cn(
-                      "flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold transition-all",
+                      "flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold transition-all min-w-[44px] min-h-[44px]",
                       key === selectedAsset
                         ? "bg-white/20 text-white shadow-lg"
                         : "text-slate-500 hover:text-slate-300"
@@ -1452,6 +1456,11 @@ export default function BullMoneyGate({
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     disabled={isTrading}
+                    style={{
+                      pointerEvents: 'auto',
+                      touchAction: 'manipulation',
+                      WebkitTapHighlightColor: 'transparent'
+                    }}
                   >
                     <span className="text-sm sm:text-lg">{asset.icon}</span>
                     <span className="hidden xs:inline sm:inline">{asset.id}</span>

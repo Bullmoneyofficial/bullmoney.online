@@ -403,6 +403,8 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
             exit={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }}
             transition={{ duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96] }}
             className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950/20 to-slate-950 text-white overflow-hidden cursor-auto"
+            data-loader="multistep"
+            data-tap-anywhere
             onMouseDown={handleInteractionStart}
             onMouseUp={handleInteractionEnd}
             onMouseLeave={handleInteractionEnd}
@@ -442,10 +444,12 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="absolute top-6 md:top-8 z-50 flex gap-2"
+              className="absolute top-6 md:top-8 z-[100] flex gap-2 assist-selector"
               data-hold-ignore
+              data-interactive
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
+              style={{ pointerEvents: 'auto' }}
             >
               {Object.entries(ASSETS).map(([key, asset]) => (
                 <motion.button
@@ -454,11 +458,16 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setSelectedAsset(key as AssetKey)}
                   className={cn(
-                    "px-4 py-2 rounded-full text-xs font-bold border-2 transition-all backdrop-blur-sm",
+                    "px-4 py-2 rounded-full text-xs font-bold border-2 transition-all backdrop-blur-sm min-w-[44px] min-h-[44px]",
                     key === selectedAsset
                       ? "bg-blue-500/30 text-white border-blue-400 shadow-lg shadow-blue-500/50"
                       : "text-slate-400 border-slate-700 hover:border-slate-600"
                   )}
+                  style={{
+                    pointerEvents: 'auto',
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent'
+                  }}
                 >
                   <span className="mr-1">{asset.icon}</span>
                   {asset.id}

@@ -711,8 +711,13 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
   // BUG FIX #19: MOBILE CRASH FIX - On mobile, only render one scene at a time in split view to prevent memory crashes
   // activeScene is managed above with split position: 'left' = A, 'right' = B
   // During transition, render neither to prevent overlap
+  // DESKTOP FIX: Always render both scenes on desktop for smooth experience
   const shouldRenderSceneA = isMobile ? (shouldRender && activeScene === 'left' && !isTransitioning) : shouldRender;
   const shouldRenderSceneB = isMobile ? (shouldRender && activeScene === 'right' && !isTransitioning) : shouldRender;
+
+  // Force eager loading on desktop for split scenes
+  const eagerLoadA = !isMobile && shouldRender && eagerRenderSplines;
+  const eagerLoadB = !isMobile && shouldRender && eagerRenderSplines;
 
   // FIX #7: Remove snap classes on split section for mobile
   if (disableSpline) {
@@ -722,7 +727,7 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
   return (
     <section
       ref={containerRef}
-      className={`relative w-full ${isMobile ? 'min-h-[100dvh]' : 'h-[100dvh]'} flex-none overflow-hidden bg-black flex ${layoutClass} ${isDragging ? 'select-none cursor-grabbing' : ''} mobile-optimize`}
+      className={`split-section relative w-full ${isMobile ? 'min-h-[100dvh]' : 'h-[100dvh]'} flex-none overflow-hidden bg-black flex ${layoutClass} ${isDragging ? 'select-none cursor-grabbing' : ''} mobile-optimize`}
     >
       {isDragging && <div className="absolute inset-0 z-[60] bg-transparent" />}
 
@@ -819,8 +824,8 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
             parallaxOffset={parallaxOffset * 0.3}
             disabled={disableSpline}
             forceLiteSpline={forceLiteSpline || isMobile}
-            forceLoadOverride={false}
-            eagerLoad={eagerRenderSplines && !disableSpline && shouldRenderSceneA}
+            forceLoadOverride={!isMobile && shouldRender}
+            eagerLoad={eagerLoadA || (eagerRenderSplines && !disableSpline && shouldRenderSceneA)}
             skeletonLabel={config.labelA}
             useCrashSafe={useCrashSafeSpline || !!deviceProfile?.isMobile || config.id === 6}
             allowInput={isInView}
@@ -860,8 +865,8 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
                parallaxOffset={parallaxOffset * 0.7}
                disabled={disableSpline}
                forceLiteSpline={forceLiteSpline || isMobile}
-               forceLoadOverride={false}
-               eagerLoad={eagerRenderSplines && !disableSpline && shouldRenderSceneB}
+               forceLoadOverride={!isMobile && shouldRender}
+               eagerLoad={eagerLoadB || (eagerRenderSplines && !disableSpline && shouldRenderSceneB)}
                skeletonLabel={config.labelB}
                useCrashSafe={useCrashSafeSpline || !!deviceProfile?.isMobile || config.id === 6}
                allowInput={isInView}
