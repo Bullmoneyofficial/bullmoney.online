@@ -284,7 +284,10 @@ class InputManager {
   }) {
     const getPoint = (e: MouseEvent | TouchEvent) => {
       if ('touches' in e && e.touches.length > 0) {
-        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        const firstTouch = e.touches[0];
+        if (firstTouch) {
+          return { x: firstTouch.clientX, y: firstTouch.clientY };
+        }
       }
       if ('clientX' in e) {
         return { x: e.clientX, y: e.clientY };
