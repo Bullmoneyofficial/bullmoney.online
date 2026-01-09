@@ -60,6 +60,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
         window.removeEventListener('pwa-install-available', handleBeforeInstallPrompt);
       };
     }
+    return () => {};
   }, [autoShow, delay, hasBeenDismissed]);
 
   const handleInstall = useCallback(async () => {
