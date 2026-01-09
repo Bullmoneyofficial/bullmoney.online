@@ -295,7 +295,7 @@ class SplineLoader {
         }
       }
 
-      const blob = new Blob(chunks, { type: 'application/octet-stream' });
+      const blob = new Blob(chunks as BlobPart[], { type: 'application/octet-stream' });
 
       // Cache for next time
       await this.cache.store(url, blob);

@@ -51,13 +51,14 @@ export interface DeviceInfo {
     type: string;
     effectiveType: '4g' | '3g' | '2g' | 'slow-2g';
     downlink: number; // Mbps
+    measuredDownlink?: number;
+    measuredUpload?: number;
     rtt: number; // ms
+    jitter?: number; // ms
     saveData: boolean;
     ip: string;
     location: string;
     isp: string;
-    measuredDownlink?: number;
-    jitter?: number;
     testTimestamp?: number;
   };
 
@@ -84,6 +85,7 @@ export interface DeviceInfo {
     fps: number;
     frameTime: number; // ms
     networkSpeed: number; // Mbps (measured)
+    uploadSpeed: number; // Mbps (measured)
     latency: number; // ms
     jitter: number; // ms
     timestamp: number;
@@ -98,8 +100,8 @@ class DeviceMonitor {
   private info: Partial<DeviceInfo> = {};
   private fps = 0;
   private frameCount = 0;
-  private lastFrameTime = 0;
   private networkSpeed = 0;
+  private uploadSpeed = 0;
   private latency = 0;
   private latencyJitter = 0;
   private battery: any = null;
@@ -272,7 +274,7 @@ class DeviceMonitor {
 
     // GPU
     const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
 
     let vendor = 'Unknown';
     let renderer = 'Unknown';
@@ -347,7 +349,11 @@ class DeviceMonitor {
       saveData,
       ip,
       location,
-      isp
+      isp,
+      measuredDownlink: downlink,
+      measuredUpload: 0,
+      jitter: 0,
+      testTimestamp: Date.now()
     };
   }
 
@@ -452,7 +458,6 @@ class DeviceMonitor {
         }
       }
 
-      this.lastFrameTime = timestamp;
       requestAnimationFrame(measureFPS);
     };
 
@@ -464,21 +469,29 @@ class DeviceMonitor {
    */
   private async startNetworkSpeedTest(): Promise<void> {
     const pingUrl = 'https://speed.cloudflare.com/__down?bytes=64';
-    const testUrl = 'https://speed.cloudflare.com/__down?bytes=2500000';
+    const downUrl = 'https://speed.cloudflare.com/__down?bytes=2500000';
+    const upUrl = 'https://speed.cloudflare.com/__up';
 
     const test = async () => {
       try {
-        const [{ latency, jitter }, measuredSpeed] = await Promise.all([
-          this.measureLatency(pingUrl),
-          this.measureDownloadSpeed(`${testUrl}&ts=${Date.now()}`)
+        const latencyProbe = this.measureLatency(pingUrl);
+        const downloadProbe = this.measureDownloadSpeed(`${downUrl}&ts=${Date.now()}`);
+        const uploadProbe = this.measureUploadSpeed(`${upUrl}?ts=${Date.now()}`, 600000);
+
+        const [{ latency, jitter }, measuredSpeed, measuredUpload] = await Promise.all([
+          latencyProbe,
+          downloadProbe,
+          uploadProbe
         ]);
 
         this.networkSpeed = measuredSpeed;
+        this.uploadSpeed = measuredUpload;
         this.latency = latency;
         this.latencyJitter = jitter;
 
         if (this.info.network) {
           this.info.network.measuredDownlink = measuredSpeed;
+          this.info.network.measuredUpload = measuredUpload;
           this.info.network.downlink = this.info.network.downlink || measuredSpeed;
           this.info.network.rtt = latency;
           this.info.network.jitter = jitter;
@@ -492,13 +505,14 @@ class DeviceMonitor {
         console.warn('[DeviceMonitor] Network test failed', error);
         if (this.info.network) {
           this.networkSpeed = this.info.network.downlink || this.networkSpeed;
+          this.uploadSpeed = this.info.network.measuredUpload || this.uploadSpeed;
           this.latency = this.info.network.rtt || this.latency;
         }
       }
     };
 
     await test();
-    setInterval(test, 45000);
+    setInterval(test, 15000);
   }
 
   /**
@@ -523,6 +537,24 @@ class DeviceMonitor {
 
     const duration = (performance.now() - startTime) / 1000;
     const sizeMB = bytes / 1024 / 1024;
+    const speedMbps = (sizeMB * 8) / Math.max(duration, 0.001);
+    return Math.round(speedMbps * 100) / 100;
+  }
+
+  /**
+   * Measure upload speed by sending a buffer
+   */
+  private async measureUploadSpeed(url: string, sizeBytes = 400000): Promise<number> {
+    const payload = new Uint8Array(sizeBytes);
+    const startTime = performance.now();
+    await fetch(url, {
+      method: 'POST',
+      cache: 'no-store',
+      mode: 'cors',
+      body: payload
+    });
+    const duration = (performance.now() - startTime) / 1000;
+    const sizeMB = sizeBytes / 1024 / 1024;
     const speedMbps = (sizeMB * 8) / Math.max(duration, 0.001);
     return Math.round(speedMbps * 100) / 100;
   }
@@ -577,6 +609,7 @@ class DeviceMonitor {
     // Ensure the latest latency is reflected in the network payload
     network.rtt = this.latency || network.rtt;
     network.measuredDownlink = this.networkSpeed || network.measuredDownlink || network.downlink;
+    network.measuredUpload = this.uploadSpeed || network.measuredUpload || 0;
     network.jitter = this.latencyJitter || network.jitter || 0;
 
     return {
@@ -586,6 +619,7 @@ class DeviceMonitor {
         fps: this.fps,
         frameTime: 1000 / Math.max(this.fps, 1),
         networkSpeed: this.networkSpeed,
+        uploadSpeed: this.uploadSpeed,
         latency: this.latency,
         jitter: this.latencyJitter,
         timestamp: Date.now()
@@ -621,6 +655,7 @@ class DeviceMonitor {
       'Connection': info.network.effectiveType.toUpperCase(),
       'Network Type': info.network.type,
       'Downlink': `${info.network.downlink} Mbps`,
+      'Measured Upload': `${info.network.measuredUpload ?? info.live.uploadSpeed} Mbps`,
       'Measured Downlink': `${info.network.measuredDownlink ?? info.live.networkSpeed} Mbps`,
       'RTT': `${info.network.rtt}ms`,
       'Jitter': `${info.network.jitter ?? info.live.jitter}ms`,
@@ -640,8 +675,9 @@ class DeviceMonitor {
       'FPS': info.live.fps,
       'Frame Time': `${info.live.frameTime.toFixed(2)}ms`,
       'Network Speed': `${info.live.networkSpeed} Mbps`,
+      'Upload Speed': `${info.live.uploadSpeed} Mbps`,
       'Latency': `${info.live.latency}ms`,
-      'Jitter': `${info.live.jitter}ms`
+      'Jitter (Live)': `${info.live.jitter}ms`
     };
   }
 

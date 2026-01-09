@@ -229,7 +229,6 @@ export class ChunkStreamer {
 export class AdaptiveQualityManager {
   private frameHistory: number[] = [];
   private readonly HISTORY_SIZE = 60; // 1 second at 60fps
-  private readonly TARGET_FPS = 60;
   private readonly MIN_FPS = 30;
 
   private currentQuality: 'ultra' | 'high' | 'medium' | 'low' = 'high';

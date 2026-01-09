@@ -215,6 +215,8 @@ export function UltimateControlPanel({
   const [showSensitive, setShowSensitive] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const [dragProgress, setDragProgress] = useState(0);
+  const sessionStartRef = useRef<number>(Date.now());
+  const [sessionDuration, setSessionDuration] = useState('0m');
 
   // Update device info periodically
   useEffect(() => {
@@ -227,6 +229,24 @@ export function UltimateControlPanel({
     const interval = setInterval(updateInfo, 1000); // Update every second
 
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const formatDuration = (ms: number) => {
+      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      if (hours > 0) return `${hours}h ${minutes}m`;
+      if (minutes > 0) return `${minutes}m ${seconds}s`;
+      return `${seconds}s`;
+    };
+
+    const timer = setInterval(() => {
+      setSessionDuration(formatDuration(Date.now() - sessionStartRef.current));
+    }, 1000);
+
+    return () => clearInterval(timer);
   }, []);
 
   // Handle refresh
@@ -257,6 +277,7 @@ export function UltimateControlPanel({
   const performanceScore = calculate3DPerformance(deviceInfo);
   const queueStats = queueManager.getStats();
   const liveSpeed = Math.max(0, deviceInfo.live.networkSpeed || deviceInfo.network.measuredDownlink || deviceInfo.network.downlink || 0);
+  const liveUpload = Math.max(0, deviceInfo.live.uploadSpeed || deviceInfo.network.measuredUpload || 0);
   const liveLatency = Math.max(0, deviceInfo.live.latency || deviceInfo.network.rtt || 0);
   const liveJitter = Math.max(0, deviceInfo.live.jitter || deviceInfo.network.jitter || 0);
   const reportedDownlink = deviceInfo.network.downlink || 0;
@@ -520,6 +541,13 @@ export function UltimateControlPanel({
                           sublabel={`Jitter: ${Math.round(liveJitter)}ms`}
                           color="#f59e0b"
                         />
+                        <StatCard
+                          icon={Zap}
+                          label="Upload"
+                          value={`${liveUpload.toFixed(2)} Mbps`}
+                          sublabel="Measured upload"
+                          color="#a855f7"
+                        />
                       </div>
 
                       {/* Connection Type */}
@@ -733,7 +761,19 @@ export function UltimateControlPanel({
                           <div className="p-3 rounded-lg bg-white/5">
                             <div className="text-xs text-white/50">Session</div>
                             <div className="text-sm font-semibold text-white">
-                              {Math.floor(performance.now() / 60000)}m
+                              {sessionDuration}
+                            </div>
+                          </div>
+                          <div className="p-3 rounded-lg bg-white/5">
+                            <div className="text-xs text-white/50">IP</div>
+                            <div className="text-sm font-semibold text-white truncate">
+                              {showSensitive ? deviceInfo.network.ip : '•••.•••.•••.•••'}
+                            </div>
+                          </div>
+                          <div className="p-3 rounded-lg bg-white/5">
+                            <div className="text-xs text-white/50">ISP</div>
+                            <div className="text-sm font-semibold text-white truncate">
+                              {deviceInfo.network.isp || 'Unknown'}
                             </div>
                           </div>
                         </div>
@@ -759,6 +799,22 @@ export function UltimateControlPanel({
                         >
                           <Globe size={18} />
                           View Full Details
+                        </button>
+                        <button
+                          onClick={async () => {
+                            const info = JSON.stringify(deviceMonitor.getFormattedInfo(), null, 2);
+                            if (navigator.clipboard?.writeText) {
+                              await navigator.clipboard.writeText(info);
+                              alert('Device snapshot copied to clipboard');
+                            } else {
+                              console.log(info);
+                              alert('Clipboard unavailable; details logged to console');
+                            }
+                          }}
+                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border border-white/10 text-white font-semibold hover:from-emerald-500/30 hover:to-blue-500/30 transition-all flex items-center justify-center gap-2"
+                        >
+                          <Globe size={18} />
+                          Copy Device Snapshot
                         </button>
                       </div>
                     </motion.div>

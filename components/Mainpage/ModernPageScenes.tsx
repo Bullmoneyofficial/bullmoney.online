@@ -10,7 +10,6 @@ import { ChevronDown, ChevronUp, GripHorizontal, GripVertical, Zap } from 'lucid
 import { playClick } from '@/lib/interactionUtils';
 import { ModernSplineLoader } from '@/components/Mainpage/ModernSplineLoader';
 import { TSXWrapper } from '@/components/Mainpage/PageElements';
-import { splineManager } from '@/lib/splineManager';
 
 // ============================================================================
 // SCENE WRAPPER - Handles visibility and loading logic
@@ -40,6 +39,8 @@ const SceneWrapper = memo<SceneWrapperProps>(({
 
   // Determine when to load based on visibility
   useEffect(() => {
+    let cleanup: (() => void) | undefined;
+
     if (disabled) {
       setShouldLoad(false);
       return;
@@ -60,12 +61,13 @@ const SceneWrapper = memo<SceneWrapperProps>(({
         const handle = (window as any).requestIdleCallback(scheduleLoad, {
           timeout: 100
         });
-        return () => (window as any).cancelIdleCallback(handle);
+        cleanup = () => (window as any).cancelIdleCallback(handle);
       } else {
         const handle = setTimeout(scheduleLoad, 50);
-        return () => clearTimeout(handle);
+        cleanup = () => clearTimeout(handle);
       }
     }
+    return cleanup;
   }, [isVisible, disabled, priority, shouldLoad]);
 
   const handleLoad = useCallback(() => {
@@ -132,7 +134,7 @@ export const FullScreenSection = memo<FullScreenSectionProps>(({
   activePage,
   onVisible,
   disableSpline = false,
-  deviceProfile
+  deviceProfile: _deviceProfile
 }) => {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [isInView, setIsInView] = useState(false);
@@ -249,7 +251,7 @@ export const DraggableSplitSection = memo<DraggableSplitSectionProps>(({
   activePage,
   onVisible,
   disableSpline = false,
-  deviceProfile
+  deviceProfile: _deviceProfile
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [splitPos, setSplitPos] = useState(50);

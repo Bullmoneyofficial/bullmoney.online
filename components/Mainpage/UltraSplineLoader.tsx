@@ -285,6 +285,7 @@ export function UltraSplineLoader({
   // Load scene with streaming
   useEffect(() => {
     let cancelled = false;
+    let cleanup: (() => void) | undefined;
 
     async function loadScene() {
       try {
@@ -318,15 +319,12 @@ export function UltraSplineLoader({
 
         const objectUrl = URL.createObjectURL(blob);
         setSceneUrl(objectUrl);
+        cleanup = () => URL.revokeObjectURL(objectUrl);
 
         setLoadState(prev => ({
           ...prev,
           status: 'ready'
         }));
-
-        return () => {
-          URL.revokeObjectURL(objectUrl);
-        };
       } catch (error: any) {
         if (!cancelled) {
           console.error('[UltraSplineLoader] Load failed:', error);
@@ -343,6 +341,7 @@ export function UltraSplineLoader({
 
     return () => {
       cancelled = true;
+      if (cleanup) cleanup();
     };
   }, [scene, priority, onError]);
 
@@ -472,12 +471,16 @@ export function UltraSplineLoader({
     let velocity = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
-      lastTouchY = e.touches[0].clientY;
+      const touch = e.touches.item(0);
+      if (!touch) return;
+      lastTouchY = touch.clientY;
       velocity = 0;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      const currentY = e.touches[0].clientY;
+      const touch = e.touches.item(0);
+      if (!touch) return;
+      const currentY = touch.clientY;
       const delta = currentY - lastTouchY;
       velocity = delta;
       lastTouchY = currentY;
@@ -551,7 +554,8 @@ export function UltraSplineLoader({
               onError={(error) => {
                 console.error('[UltraSplineLoader] Spline error:', error);
                 setLoadState(prev => ({ ...prev, status: 'error' }));
-                onError?.(error);
+                const normalized = error instanceof Error ? error : new Error('Spline error');
+                onError?.(normalized);
               }}
               style={{
                 width: '100%',

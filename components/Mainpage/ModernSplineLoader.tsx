@@ -13,7 +13,6 @@
 
 import React, { useState, useEffect, useRef, Suspense, lazy, useTransition } from 'react';
 import { Loader2 } from 'lucide-react';
-import { splineManager } from '@/lib/splineManager';
 import { queueManager } from '@/lib/splineQueueManager';
 
 // Lazy load Spline runtime
@@ -236,7 +235,7 @@ export function ModernSplineLoader({
     message: 'Initializing...',
   });
   const [sceneUrl, setSceneUrl] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const splineRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const cleanupRef = useRef<(() => void) | null>(null);

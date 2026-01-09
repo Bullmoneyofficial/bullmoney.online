@@ -95,9 +95,12 @@ class PerformanceMonitor {
       const lcpObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
         const lastEntry = entries[entries.length - 1] as any;
-        this.metrics.lcp = lastEntry.renderTime || lastEntry.loadTime;
+        if (!lastEntry) return;
+        const value = lastEntry.renderTime || lastEntry.loadTime;
+        if (typeof value !== 'number') return;
+        this.metrics.lcp = value;
 
-        if (this.metrics.lcp > 2500) {
+        if (this.metrics.lcp && this.metrics.lcp > 2500) {
           this.warnings.push(`LCP is slow: ${this.metrics.lcp.toFixed(0)}ms (target: <2500ms)`);
         }
       });
@@ -380,7 +383,8 @@ class PerformanceMonitor {
       }
 
       const entries = performance.getEntriesByName(name, 'measure');
-      return entries.length > 0 ? entries[entries.length - 1].duration : null;
+      const last = entries.length > 0 ? entries[entries.length - 1] : null;
+      return last ? last.duration : null;
     } catch (e) {
       console.warn('[PerformanceMonitor] Failed to measure:', name);
       return null;
