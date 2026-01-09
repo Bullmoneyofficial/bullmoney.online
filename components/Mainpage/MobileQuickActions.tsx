@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { 
-  MessageCircle, Palette, Volume1, Volume2, VolumeX, 
-  Zap, Settings2, X, GripHorizontal, Command
+import {
+  MessageCircle, Palette, Volume1, Volume2, VolumeX,
+  Zap, Settings2, X, GripHorizontal, Command, Activity
 } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
@@ -35,6 +35,7 @@ interface MobileQuickActionsProps {
   onMusicToggle?: () => void;
   onThemeClick?: () => void;
   onHelpClick?: () => void;
+  onControlCenterToggle?: () => void;
   safeAreaInlinePadding?: React.CSSProperties;
   safeAreaBottom?: React.CSSProperties['bottom'];
   accentColor?: string;
@@ -49,6 +50,7 @@ export function MobileQuickActions({
   onMusicToggle,
   onThemeClick,
   onHelpClick,
+  onControlCenterToggle,
   safeAreaInlinePadding,
   safeAreaBottom,
   accentColor = '#3b82f6',
@@ -69,7 +71,8 @@ export function MobileQuickActions({
     showMusic: typeof onMusicToggle === 'function',
     showTheme: typeof onThemeClick === 'function',
     showHelp: typeof onHelpClick === 'function',
-  }), [onPerformanceToggle, onMusicToggle, onThemeClick, onHelpClick]);
+    showControlCenter: typeof onControlCenterToggle === 'function',
+  }), [onPerformanceToggle, onMusicToggle, onThemeClick, onHelpClick, onControlCenterToggle]);
 
   const hasAnyActions = Object.values(actionFlags).some(Boolean);
 
@@ -185,7 +188,7 @@ export function MobileQuickActions({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[9990] bg-black/20 backdrop-blur-[2px]"
+            className="fixed inset-0 z-[245000] bg-black/20 backdrop-blur-[2px]"
             onClick={closeMenu}
             aria-hidden="true"
           />
@@ -202,7 +205,7 @@ export function MobileQuickActions({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         initial={position}
-        className="fixed z-[9999] touch-none"
+        className="fixed z-[248000] touch-auto pointer-events-auto"
         style={{
           ...(safeAreaInlinePadding || {}),
           left: stackLeft,
@@ -376,8 +379,20 @@ export function MobileQuickActions({
                   />
                 )}
 
+                {actionFlags.showControlCenter && (
+                  <ActionButton
+                    icon={<Activity size={18} strokeWidth={2.5} />}
+                    label="DEVICE"
+                    value="INFO"
+                    active={true}
+                    onClick={() => handleAction(onControlCenterToggle, 12)}
+                    colorClass="text-cyan-400"
+                    ariaLabel="Open device control panel"
+                  />
+                )}
+
                 {actionFlags.showHelp && (
-                  <ActionButton 
+                  <ActionButton
                     icon={<MessageCircle size={18} strokeWidth={2.5} />}
                     label="SYSTEM"
                     value="HELP"

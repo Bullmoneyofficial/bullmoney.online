@@ -431,17 +431,18 @@ export const CustomCursor = ({ accentColor }: { accentColor: string }) => {
   }, []);
   
   return (
-    <>
+    <div className="fixed inset-0 pointer-events-none z-[999999]" aria-hidden="true">
       {trails.map((trail, i) => (
         <div
           key={trail.id}
-          className="cursor-trail"
+          className="fixed w-4 h-4 rounded-full pointer-events-none"
           style={{
             left: trail.x,
             top: trail.y,
             backgroundColor: accentColor,
             opacity: (10 - i) / 10 * 0.3,
-            transform: `translate(-50%, -50%) scale(${(10 - i) / 10})`
+            transform: `translate(-50%, -50%) scale(${(10 - i) / 10})`,
+            transition: 'none'
           }}
         />
       ))}
@@ -451,21 +452,20 @@ export const CustomCursor = ({ accentColor }: { accentColor: string }) => {
           left: position.x,
           top: position.y,
           borderColor: accentColor,
-          zIndex: UI_LAYERS.CURSOR,
           transform: 'translate(-50%, -50%)',
           transition: 'transform 0.1s ease-out'
         }}
       />
-    </>
+    </div>
   );
 };
 
 export const HeroLoaderOverlay = memo(({ visible, message, accentColor }: { visible: boolean; message: string; accentColor: string }) => (
   <div
-    className={`fixed inset-0 flex items-center justify-center transition-opacity duration-400 ${
+    className={`fixed inset-0 z-[260000] flex items-center justify-center transition-opacity duration-400 ${
       visible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
     }`}
-    style={{ zIndex: UI_LAYERS.THEME_CONFIGURATOR, backgroundColor: 'rgba(0,0,0,0.95)' }}
+    style={{ backgroundColor: 'rgba(0,0,0,0.95)' }}
   >
     <div className="flex flex-col items-center gap-6 rounded-3xl border border-white/10 bg-gradient-to-br from-black via-gray-900/50 to-black px-8 py-12 text-center shadow-[0_30px_120px_rgba(0,0,0,0.8)] max-w-md mx-4">
       {/* Trading-themed animated loader */}

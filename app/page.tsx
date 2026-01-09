@@ -84,6 +84,10 @@ const VerticalPageScroll = dynamic(() => import('@/components/Mainpage/VerticalP
   ssr: false,
   loading: () => null
 });
+const UltimateControlPanel = dynamic(
+  () => import('@/components/Mainpage/UltimateControlPanel').then(m => m.UltimateControlPanel),
+  { ssr: false }
+);
 
 // UI Overlays
 const FAQOverlay = dynamic(() => import('@/components/Mainpage/FAQOverlay').then(m => m.FAQOverlay), {
@@ -196,11 +200,6 @@ const MOBILE_LAYOUT = {
 // HELPER FUNCTIONS
 // ============================================================================
 
-const calculateSafeAreaInlinePadding = () => ({
-  paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 10px)',
-  paddingRight: 'calc(env(safe-area-inset-right, 0px) + 10px)',
-});
-
 const calculateNavbarHeight = (isMobile: boolean) =>
   `calc(env(safe-area-inset-top, 0px) + ${isMobile ? NAVBAR_HEIGHT_MOBILE : NAVBAR_HEIGHT_DESKTOP}px)`;
 
@@ -290,23 +289,21 @@ function Home() {
     [deviceProfile.connectionType, isMobileLike]
   );
 
-  const canUseMobileSplines = useMemo(
-    () =>
-      deviceProfile.isMobile &&
-      deviceProfile.isHighEndDevice &&
-      !deviceProfile.prefersReducedData &&
-      networkOptimizations.maxScenes > 0,
-    [deviceProfile, networkOptimizations.maxScenes]
+  // Mobile devices always get the optimized mobile layout
+  const shouldUseMobileOnlyStatic = useMemo(
+    () => isMobileLike,
+    [isMobileLike]
   );
 
   const useMobileStaticContent = useMemo(
-    () => (isMobileLike && !canUseMobileSplines) || deviceProfile.prefersReducedData || networkOptimizations.maxScenes === 0,
-    [isMobileLike, canUseMobileSplines, deviceProfile.prefersReducedData, networkOptimizations.maxScenes]
+    () => shouldUseMobileOnlyStatic || deviceProfile.prefersReducedData || networkOptimizations.maxScenes === 0,
+    [shouldUseMobileOnlyStatic, deviceProfile.prefersReducedData, networkOptimizations.maxScenes]
   );
 
+  // For non-critical Splines only - hero Spline always renders
   const effectiveDisableSpline = useMemo(
-    () => performanceState.disableSpline || useMobileStaticContent || networkOptimizations.maxScenes === 0,
-    [performanceState.disableSpline, useMobileStaticContent, networkOptimizations.maxScenes]
+    () => performanceState.disableSpline,
+    [performanceState.disableSpline]
   );
 
   const shouldUseSplines = useMemo(
@@ -352,13 +349,11 @@ function Home() {
       isMobileLike &&
       !uiState.showConfigurator &&
       !uiState.faqOpen &&
-      !uiState.controlCenterOpen &&
       !uiState.showPerfPrompt &&
       !uiState.showThemeQuickPick,
     [uiState, pageState.currentStage, isMobileLike]
   );
 
-  const safeAreaInlinePadding = useMemo(calculateSafeAreaInlinePadding, []);
   const safeAreaBottom = useMemo(() => 'calc(env(safe-area-inset-bottom, 0px) + 10px)', []);
 
   const shouldRenderContent = useMemo(
@@ -592,6 +587,7 @@ function Home() {
     [shouldRenderContent, isMobileLike, deviceProfile, performanceState, networkOptimizations.enableEffects]
   );
 
+
   // ===== Initialize Optimization System =====
   useOptimizations({
     enableServiceWorker: !isMobileLike || deviceProfile.connectionType !== 'slow-2g',
@@ -755,12 +751,14 @@ function Home() {
   }, [uiState]);
 
   const handleControlCenterToggle = useCallback(() => {
+    uiState.setShowThemeQuickPick(false);
     uiState.setControlCenterOpen(prev => !prev);
   }, [uiState]);
 
   const handleConfiguratorClose = useCallback(() => {
     uiState.setShowConfigurator(false);
   }, [uiState]);
+
 
   const navigateToNextPage = useCallback(() => {
     const maxPages = effectiveDisableSpline ? visiblePages.length : PAGE_CONFIG.length;
@@ -830,21 +828,6 @@ function Home() {
       {shouldShowCustomCursor && renderDeferredUI && (
         <CustomCursor accentColor={themeState.accentColor} />
       )}
-
-      {/* ===== Mobile Quick Actions ===== */}
-      <MobileQuickActions
-        isVisible={showMobileQuickActions}
-        disableSpline={effectiveDisableSpline}
-        isPlaying={!musicState.isMuted}
-        volume={musicState.volume}
-        safeAreaInlinePadding={safeAreaInlinePadding}
-        safeAreaBottom={safeAreaBottom}
-        accentColor={themeState.accentColor}
-        onPerformanceToggle={handlePerformanceToggle}
-        onMusicToggle={musicState.toggleMusic}
-        onThemeClick={handleThemeQuickPickOpen}
-        onHelpClick={handleFaqOpen}
-      />
 
       {/* ===== Quick Theme Picker ===== */}
       <QuickThemePicker
@@ -954,6 +937,17 @@ function Home() {
         />
       )}
 
+      {/* ===== Ultimate Control Panel ===== */}
+      {shouldRenderContent && (
+        <UltimateControlPanel
+          isOpen={uiState.controlCenterOpen}
+          onOpenChange={(isOpen) => uiState.setControlCenterOpen(isOpen)}
+          userEmail="user@bullmoney.online"
+          userName="Trader"
+          accentColor={themeState.accentColor}
+        />
+      )}
+
       {/* ===== Fixed Header ===== */}
       {pageState.currentStage === 'content' && (
         <>
@@ -1021,10 +1015,26 @@ function Home() {
               accentColor={themeState.accentColor}
               disableSpline={effectiveDisableSpline}
               showHint={!pageState.hasSeenIntro}
+              isPanelOpen={uiState.controlCenterOpen}
               dockSide={isMobileLike ? 'left' : 'right'}
-              onTogglePanel={() => {
-                throw new Error('Function not implemented.');
-              }}
+              onTogglePanel={handleControlCenterToggle}
+            />
+          )}
+
+          {/* ===== Mobile Quick Actions ===== */}
+          {showMobileQuickActions && (
+            <MobileQuickActions
+              isVisible={showMobileQuickActions}
+              disableSpline={effectiveDisableSpline}
+              isPlaying={!musicState.isMuted}
+              volume={musicState.volume}
+              safeAreaBottom={safeAreaBottom}
+              accentColor={themeState.accentColor}
+              onPerformanceToggle={handlePerformanceToggle}
+              onMusicToggle={musicState.toggleMusic}
+              onThemeClick={handleThemeQuickPickOpen}
+              onHelpClick={handleFaqOpen}
+              onControlCenterToggle={handleControlCenterToggle}
             />
           )}
 
@@ -1060,7 +1070,9 @@ function Home() {
               )}
 
               {/* Mobile Content */}
-              <MobileStaticContent />
+              <MobileStaticContent
+                disableSpline={effectiveDisableSpline}
+              />
 
               {/* Footer */}
               <div className="w-full mt-10">

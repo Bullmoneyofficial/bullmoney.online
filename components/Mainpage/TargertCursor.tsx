@@ -217,7 +217,7 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
 
   return (
     <>
-      <div ref={cursorRef} className="target-cursor-wrapper" style={{ pointerEvents: 'none' }}>
+      <div ref={cursorRef} className="target-cursor-wrapper fixed inset-0 z-[999998]" style={{ pointerEvents: 'none' }}>
         <div className="target-cursor-dot" />
         <div className="target-cursor-corner corner-tl" />
         <div className="target-cursor-corner corner-tr" />
