@@ -63,31 +63,43 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
 
   const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
     // Prevent event bubbling to avoid conflicts with mobile quick actions
+    e.preventDefault();
     e.stopPropagation();
-    
+
+    // Play audio feedback
+    if (typeof window !== 'undefined') {
+      try {
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGWi78OScTgwMUKnk8LJnHAU7k9nxy3omBSh+zPLaizsKGGS57OihUBELTKXh8bllHAU7k9nxy3omBSh+zPLaizsKGGS57OihUBELTKXh8bllHAU7k9nxy3omBSh+zPLaizsKGGS57OihUBELTKXh8bllHAU7k9nxy3omBSh+zPLaizsKGGS57OihUBELTKXh8bllHAU7k9nxy3omBSh+zPLaizsKGGS57OihUBELTKXh8Q==');
+        audio.volume = 0.2;
+        audio.play().catch(() => {});
+      } catch {}
+    }
+
     // Haptic feedback
     if (navigator.vibrate) navigator.vibrate(15);
-    
+
     // Toggle the panel
     onTogglePanel();
-    
+
     // Hide hint
     setShowInitialHint(false);
   };
 
   return (
     <div
-      className="fixed z-[10000] pointer-events-auto"
+      className="fixed z-[254000] pointer-events-auto"
       style={{
         ...(dockSide === 'left'
           ? { left: horizontalInset }
           : { right: horizontalInsetRight }),
         top: topOffset,
+        touchAction: 'manipulation'
       }}
       // Prevent touch events from bubbling to mobile quick actions
       onTouchStart={(e) => e.stopPropagation()}
       onTouchEnd={(e) => e.stopPropagation()}
       onTouchMove={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
       <motion.div
         animate={{
@@ -106,13 +118,15 @@ export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
           }}
           onMouseLeave={() => setIsHovering(false)}
           onTouchStart={(e) => {
+            e.stopPropagation();
             e.currentTarget.style.transform = 'scale(0.9)';
           }}
           onTouchEnd={(e) => {
+            e.stopPropagation();
             e.currentTarget.style.transform = '';
           }}
-          className="relative w-full h-full flex items-center justify-center outline-none z-10 rounded-full overflow-hidden cursor-pointer touch-none"
-          style={{ WebkitTapHighlightColor: 'transparent' }}
+          className="relative w-full h-full flex items-center justify-center outline-none z-10 rounded-full overflow-hidden cursor-pointer touch-manipulation min-w-[48px] min-h-[48px]"
+          style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
           aria-label={isPanelOpen ? 'Close control panel' : 'Open control panel'}
         >
           {/* Rotating gradient background */}

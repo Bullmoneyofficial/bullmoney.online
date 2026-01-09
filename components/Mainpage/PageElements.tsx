@@ -164,6 +164,7 @@ export const InfoPanel = ({ config, isOpen, onClose, accentColor }: any) => {
     () =>
       createSwipeHandlers({
         onSwipeLeft: () => onClose(),
+        onSwipeDown: () => onClose(), // Added: swipe down to close
         threshold: 70,
         velocityThreshold: 0.25,
         preventScroll: false,
@@ -172,43 +173,86 @@ export const InfoPanel = ({ config, isOpen, onClose, accentColor }: any) => {
   );
 
   return (
-    <div
-      className={`fixed left-0 top-0 h-full w-[85vw] sm:w-[22rem] md:w-[26rem] max-w-md apple-surface bg-black/70 backdrop-blur-2xl border-r transition-transform duration-500 ease-out ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}
-      style={{
-        zIndex: UI_LAYERS.INFO_PANEL,
-        borderColor: `${accentColor}35`,
-        boxShadow: '0 40px 120px rgba(0,0,0,0.5)',
-        backgroundImage: `linear-gradient(160deg, ${accentColor}12, rgba(255,255,255,0.02))`,
-        touchAction: 'pan-y'
-      }}
-      onTouchStart={swipeHandlers.onTouchStart}
-      onTouchMove={swipeHandlers.onTouchMove}
-      onTouchEnd={swipeHandlers.onTouchEnd}
-      onMouseDown={swipeHandlers.onMouseDown}
-      onMouseMove={swipeHandlers.onMouseMove}
-      onMouseUp={swipeHandlers.onMouseUp}
-    >
+    <>
+      {/* Backdrop - tap anywhere to close */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300"
+          style={{
+            zIndex: UI_LAYERS.INFO_PANEL - 1,
+            touchAction: 'manipulation'
+          }}
+          onClick={handleClose}
+          onTouchStart={(e) => {
+            e.stopPropagation();
+          }}
+          onTouchEnd={(e) => {
+            e.stopPropagation();
+            handleClose();
+          }}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Info Panel */}
+      <div
+        className={`fixed left-0 top-0 h-full w-[85vw] sm:w-[22rem] md:w-[26rem] max-w-md apple-surface bg-black/70 backdrop-blur-2xl border-r transition-transform duration-500 ease-out ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        style={{
+          zIndex: UI_LAYERS.INFO_PANEL,
+          borderColor: `${accentColor}35`,
+          boxShadow: '0 40px 120px rgba(0,0,0,0.5)',
+          backgroundImage: `linear-gradient(160deg, ${accentColor}12, rgba(255,255,255,0.02))`,
+          touchAction: 'pan-y'
+        }}
+        onTouchStart={swipeHandlers.onTouchStart}
+        onTouchMove={swipeHandlers.onTouchMove}
+        onTouchEnd={swipeHandlers.onTouchEnd}
+        onMouseDown={swipeHandlers.onMouseDown}
+        onMouseMove={swipeHandlers.onMouseMove}
+        onMouseUp={swipeHandlers.onMouseUp}
+      >
+      {/* Swipe-down indicator */}
+      <div
+        className="absolute top-3 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-50 pointer-events-none"
+        style={{ touchAction: 'none' }}
+      >
+        <div
+          className="w-12 h-1 rounded-full bg-white/30"
+          style={{ backgroundColor: `${accentColor}60` }}
+        />
+        <div className="text-[9px] text-white/40 font-mono tracking-wider">SWIPE DOWN</div>
+      </div>
+
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
+          playClick();
+          if (navigator.vibrate) navigator.vibrate(10);
           handleClose();
         }}
         onDoubleClick={(e) => {
           e.stopPropagation();
           onClose();
         }}
-        onTouchStart={(e) => { 
-          e.stopPropagation(); 
-          handleClose(); 
+        onTouchStart={(e) => {
+          e.stopPropagation();
+          playHover();
+          e.currentTarget.style.transform = 'scale(0.9)';
+        }}
+        onTouchEnd={(e) => {
+          e.stopPropagation();
+          e.currentTarget.style.transform = '';
+          handleClose();
         }}
         onMouseEnter={() => playHover()}
-        className="absolute top-6 right-6 text-white/50 hover:text-white p-2 transition-colors"
+        className="absolute top-6 right-6 text-white/50 hover:text-white p-3 rounded-full hover:bg-white/10 active:bg-white/20 transition-all min-w-[48px] min-h-[48px] flex items-center justify-center touch-manipulation z-20"
+        style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
         aria-label="Close info panel"
       >
-        <X size={24} />
+        <X size={24} strokeWidth={2.5} />
       </button>
     
       <div className="p-8 h-full overflow-y-auto no-scrollbar flex flex-col gap-6">
@@ -276,6 +320,7 @@ export const InfoPanel = ({ config, isOpen, onClose, accentColor }: any) => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

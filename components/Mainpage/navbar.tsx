@@ -723,19 +723,22 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMu
                  key={i}
                  href={item.link as any}
                  ref={(el) => { itemsRef.current[i] = el; }}
-                 onClick={() => {
+                 onClick={(e) => {
+                   e.stopPropagation();
                    playClick();
                    if (navigator.vibrate) navigator.vibrate(10);
                  }}
                  onTouchStart={(e) => {
+                   e.stopPropagation();
                    playHover();
                    e.currentTarget.style.transform = 'scale(0.9)';
                  }}
                  onTouchEnd={(e) => {
+                   e.stopPropagation();
                    e.currentTarget.style.transform = '';
                  }}
-                 className="relative flex-shrink-0 flex flex-col items-center group pt-1 min-w-[44px] touch-manipulation active:scale-90 transition-transform"
-                 style={{ WebkitTapHighlightColor: 'transparent' }}
+                 className="relative flex-shrink-0 flex flex-col items-center justify-center group pt-1 min-w-[48px] min-h-[48px] touch-manipulation active:scale-90 transition-transform"
+                 style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                >
                   <MobileNavItemContent item={item} accentColor={accentColor} />
                   <AnimatePresence>
@@ -750,21 +753,24 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMu
               return (
                 <button
                   key={`control-${i}`}
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     playClick();
                     if (navigator.vibrate) navigator.vibrate(15);
                     item.onClick();
                   }}
                   onTouchStart={(e) => {
+                    e.stopPropagation();
                     playHover();
                     e.currentTarget.style.transform = 'scale(0.9)';
                   }}
                   onTouchEnd={(e) => {
+                    e.stopPropagation();
                     e.currentTarget.style.transform = '';
                   }}
                   ref={(el) => { itemsRef.current[currentIndex] = el; }}
-                  className="relative flex-shrink-0 flex flex-col items-center group pt-1 min-w-[44px] touch-manipulation active:scale-90 transition-transform"
-                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  className="relative flex-shrink-0 flex flex-col items-center justify-center group pt-1 min-w-[48px] min-h-[48px] touch-manipulation active:scale-90 transition-transform"
+                  style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                 >
                   <MobileNavItemContent
                     item={{ name: item.name, icon: item.icon, link: null }}
@@ -785,21 +791,24 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMu
 
             {/* 3. Add ID Button */}
             <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   playClick();
                   if (navigator.vibrate) navigator.vibrate(15);
                   handleOpenId();
                 }}
                 onTouchStart={(e) => {
+                  e.stopPropagation();
                   playHover();
                   e.currentTarget.style.transform = 'scale(0.9)';
                 }}
                 onTouchEnd={(e) => {
+                  e.stopPropagation();
                   e.currentTarget.style.transform = '';
                 }}
                 ref={(el) => { itemsRef.current[NAV_ITEMS.length + controlItems.length] = el; }}
-                className="relative flex-shrink-0 flex flex-col items-center group pt-1 min-w-[44px] touch-manipulation active:scale-90 transition-transform"
-                style={{ WebkitTapHighlightColor: 'transparent' }}
+                className="relative flex-shrink-0 flex flex-col items-center justify-center group pt-1 min-w-[48px] min-h-[48px] touch-manipulation active:scale-90 transition-transform"
+                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
             >
                 <MobileNavItemContent item={idItem} accentColor={accentColor} />
                 <AnimatePresence>
@@ -809,21 +818,24 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMu
 
             {/* 4. Add Theme Button */}
             <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   playClick();
                   if (navigator.vibrate) navigator.vibrate(15);
                   handleOpenConfigurator();
                 }}
                 onTouchStart={(e) => {
+                  e.stopPropagation();
                   playHover();
                   e.currentTarget.style.transform = 'scale(0.9)';
                 }}
                 onTouchEnd={(e) => {
+                  e.stopPropagation();
                   e.currentTarget.style.transform = '';
                 }}
                 ref={(el) => { itemsRef.current[NAV_ITEMS.length + controlItems.length + 1] = el; }}
-                className="relative flex-shrink-0 flex flex-col items-center group pt-1 min-w-[44px] touch-manipulation active:scale-90 transition-transform"
-                style={{ WebkitTapHighlightColor: 'transparent' }}
+                className="relative flex-shrink-0 flex flex-col items-center justify-center group pt-1 min-w-[48px] min-h-[48px] touch-manipulation active:scale-90 transition-transform"
+                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
             >
                 <MobileNavItemContent item={themeItem} accentColor={accentColor} />
                 <AnimatePresence>
@@ -880,24 +892,27 @@ const MobileNav = memo(({ setShowConfigurator, setShowIdModal, accentColor, isMu
                   <Link
                     key={i}
                     href={item.link as any}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       playClick();
                       if (navigator.vibrate) navigator.vibrate(12);
                       setOpen(false);
                     }}
                     onTouchStart={(e) => {
+                      e.stopPropagation();
                       playHover();
                       e.currentTarget.style.transform = 'scale(0.97)';
                     }}
                     onTouchEnd={(e) => {
+                      e.stopPropagation();
                       e.currentTarget.style.transform = '';
                     }}
-                    className="relative group block rounded-xl overflow-hidden touch-manipulation active:scale-95 transition-transform"
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
+                    className="relative group block rounded-xl overflow-hidden touch-manipulation active:scale-95 transition-transform min-h-[52px]"
+                    style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                   >
-                     <div className="relative m-[1px] bg-white dark:bg-neutral-900 rounded-xl flex items-center gap-4 p-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-                        <div className="w-8 h-8 p-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-md group-hover:scale-110 transition-transform">{item.icon}</div>
-                        <span className="font-bold text-neutral-600 dark:text-neutral-300">{item.name}</span>
+                     <div className="relative m-[1px] bg-white dark:bg-neutral-900 rounded-xl flex items-center gap-4 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors min-h-[50px]">
+                        <div className="w-10 h-10 p-2 bg-neutral-200 dark:bg-neutral-800 rounded-md group-hover:scale-110 transition-transform flex items-center justify-center">{item.icon}</div>
+                        <span className="font-bold text-neutral-600 dark:text-neutral-300 text-base">{item.name}</span>
                      </div>
                   </Link>
                ))}

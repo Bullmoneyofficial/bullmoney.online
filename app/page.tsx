@@ -17,6 +17,7 @@ import { scheduleSceneStorageSave } from '@/lib/sceneStorage';
 import '@/lib/inputManager';
 import '@/styles/unified-ui.css';
 import '@/styles/performance-optimizations.css';
+import '@/styles/mobile-optimizations.css';
 
 // Custom hooks
 import { usePageState } from '@/hooks/usePageState';
@@ -1074,8 +1075,8 @@ function Home() {
                 touchAction: 'pan-y',
                 maxWidth: '100vw',
                 maxHeight: '100dvh',
-                paddingLeft: 'env(safe-area-inset-left, 0px)',
-                paddingRight: 'env(safe-area-inset-right, 0px)',
+                paddingLeft: 'max(env(safe-area-inset-left, 0px), 8px)',
+                paddingRight: 'max(env(safe-area-inset-right, 0px), 8px)',
                 scrollbarGutter: 'stable both-edges',
                 // Mobile-optimized layout
                 paddingTop: isMobileLike ? calculateNavbarHeight(true) : '0px',
@@ -1086,6 +1087,10 @@ function Home() {
                 willChange: 'scroll-position',
                 transform: 'translateZ(0)', // Force GPU acceleration
                 backfaceVisibility: 'hidden',
+                // Better mobile interaction
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                pointerEvents: 'auto',
               }}
             >
               {/* Orientation Warning */}
@@ -1122,8 +1127,8 @@ function Home() {
                 touchAction: 'pan-y',
                 maxWidth: '100vw',
                 maxHeight: '100dvh',
-                paddingLeft: 'env(safe-area-inset-left, 0px)',
-                paddingRight: 'env(safe-area-inset-right, 0px)',
+                paddingLeft: 'max(env(safe-area-inset-left, 0px), 8px)',
+                paddingRight: 'max(env(safe-area-inset-right, 0px), 8px)',
                 scrollbarGutter: 'stable both-edges',
                 scrollPaddingTop: isMobileLike ? calculateNavbarHeight(true) : '0px',
                 paddingBottom: isMobileLike
@@ -1133,6 +1138,10 @@ function Home() {
                 willChange: 'scroll-position',
                 transform: 'translateZ(0)',
                 backfaceVisibility: 'hidden',
+                // Better mobile interaction
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                pointerEvents: 'auto',
               }}
             >
               {/* Orientation Warning */}

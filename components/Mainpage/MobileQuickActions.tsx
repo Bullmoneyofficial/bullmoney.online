@@ -188,9 +188,14 @@ export function MobileQuickActions({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[245000] bg-black/20 backdrop-blur-[2px]"
+            className="fixed inset-0 z-[252000] bg-black/20 backdrop-blur-[2px]"
             onClick={closeMenu}
+            onTouchStart={(e) => {
+              e.stopPropagation();
+              closeMenu();
+            }}
             aria-hidden="true"
+            style={{ touchAction: 'manipulation' }}
           />
         )}
       </AnimatePresence>
@@ -205,7 +210,7 @@ export function MobileQuickActions({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         initial={position}
-        className="fixed z-[248000] touch-auto pointer-events-auto"
+        className="fixed z-[253000] touch-auto pointer-events-auto"
         style={{
           ...(safeAreaInlinePadding || {}),
           left: stackLeft,
@@ -238,17 +243,22 @@ export function MobileQuickActions({
                 setHasInteracted(true);
               }}
               onMouseLeave={() => setIsButtonHovering(false)}
-              onTouchStart={() => {
+              onTouchStart={(e) => {
+                e.stopPropagation();
                 setIsButtonHovering(true);
                 setHasInteracted(true);
               }}
-              onTouchEnd={() => setIsButtonHovering(false)}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+                setIsButtonHovering(false);
+              }}
               onFocus={() => setHasInteracted(true)}
               className="relative w-full h-full flex items-center justify-center outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black z-10 rounded-full overflow-hidden"
               type="button"
               aria-label={isOpen ? "Close quick settings" : "Open quick settings"}
               aria-expanded={isOpen}
               aria-haspopup="menu"
+              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
             >
               {/* Animated gradient ring */}
               {!prefersReducedMotion && (
@@ -342,6 +352,10 @@ export function MobileQuickActions({
                 className="flex flex-col gap-1.5 overflow-hidden bg-black/95 backdrop-blur-xl rounded-xl border border-white/10 p-2 shadow-2xl origin-top min-w-[180px]"
                 role="menu"
                 aria-orientation="vertical"
+                onClick={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
+                style={{ touchAction: 'manipulation' }}
               >
                 {actionFlags.showPerformance && (
                   <ActionButton 
@@ -421,14 +435,14 @@ interface ActionButtonProps {
   ariaLabel?: string;
 }
 
-const ActionButton = React.memo(({ 
-  icon, 
-  label, 
-  value, 
-  onClick, 
-  colorClass, 
+const ActionButton = React.memo(({
+  icon,
+  label,
+  value,
+  onClick,
+  colorClass,
   active,
-  ariaLabel 
+  ariaLabel
 }: ActionButtonProps) => {
   const prefersReducedMotion = useReducedMotion();
 
@@ -437,10 +451,19 @@ const ActionButton = React.memo(({
       whileHover={prefersReducedMotion ? {} : { x: 4, backgroundColor: 'rgba(255,255,255,0.08)' }}
       whileTap={prefersReducedMotion ? {} : { scale: 0.97 }}
       onTap={onClick}
-      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 group text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+      onTouchStart={(e) => {
+        e.stopPropagation();
+        e.currentTarget.style.transform = 'scale(0.97)';
+      }}
+      onTouchEnd={(e) => {
+        e.stopPropagation();
+        e.currentTarget.style.transform = '';
+      }}
+      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 group text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black min-h-[52px] touch-manipulation"
       type="button"
       role="menuitem"
       aria-label={ariaLabel}
+      style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
     >
       {/* Icon container */}
       <div className={`p-2 rounded-lg bg-white/5 border border-white/10 shadow-inner transition-all duration-200 ${active ? colorClass : 'text-gray-600'} group-hover:bg-white/10`}>

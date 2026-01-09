@@ -262,11 +262,18 @@ export function UltimateControlPanel({
   };
 
   const handleDragEnd = (_: any, info: PanInfo) => {
-    if (info.offset.y < -100) {
-      onOpenChange(true);
-    } else if (info.offset.y > 100) {
+    const velocity = info.velocity.y;
+    const offset = info.offset.y;
+
+    // Close on swipe down - more lenient thresholds for better UX
+    if (offset > 80 || (offset > 50 && velocity > 100)) {
       onOpenChange(false);
     }
+    // Open on swipe up (when closed)
+    else if (offset < -80 || (offset < -50 && velocity < -100)) {
+      onOpenChange(true);
+    }
+
     setDragProgress(0);
   };
 
@@ -342,7 +349,15 @@ export function UltimateControlPanel({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => onOpenChange(false)}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+              }}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+                onOpenChange(false);
+              }}
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[249999]"
+              style={{ touchAction: 'manipulation' }}
             />
 
             {/* Panel */}
@@ -362,8 +377,12 @@ export function UltimateControlPanel({
               }}
             >
               {/* Drag handle */}
-              <div className="flex justify-center py-3">
-                <div className="w-12 h-1.5 rounded-full bg-white/20" />
+              <div className="flex flex-col items-center gap-1 py-3 cursor-grab active:cursor-grabbing">
+                <div
+                  className="w-12 h-1.5 rounded-full bg-white/30"
+                  style={{ backgroundColor: `${accentColor}60` }}
+                />
+                <div className="text-[9px] text-white/30 font-mono tracking-wider">SWIPE DOWN</div>
               </div>
 
               {/* Header */}
@@ -376,9 +395,22 @@ export function UltimateControlPanel({
                     <motion.button
                       whileHover={{ scale: 1.1, rotate: 180 }}
                       whileTap={{ scale: 0.9 }}
-                      onClick={handleRefresh}
-                      className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRefresh();
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                        e.currentTarget.style.transform = 'scale(0.9)';
+                      }}
+                      onTouchEnd={(e) => {
+                        e.stopPropagation();
+                        e.currentTarget.style.transform = '';
+                      }}
+                      className="p-3 rounded-full bg-white/5 hover:bg-white/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
+                      style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                       disabled={isRefreshing}
+                      aria-label="Refresh device info"
                     >
                       <RefreshCw
                         size={18}
@@ -388,8 +420,21 @@ export function UltimateControlPanel({
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      onClick={() => onOpenChange(false)}
-                      className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenChange(false);
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                        e.currentTarget.style.transform = 'scale(0.9)';
+                      }}
+                      onTouchEnd={(e) => {
+                        e.stopPropagation();
+                        e.currentTarget.style.transform = '';
+                      }}
+                      className="p-3 rounded-full bg-white/5 hover:bg-white/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
+                      style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+                      aria-label="Close device center"
                     >
                       <ChevronDown size={18} className="text-white/70" />
                     </motion.button>
@@ -408,12 +453,26 @@ export function UltimateControlPanel({
                   ].map((tab) => (
                     <button
                       key={tab.id}
-                      onClick={() => setActiveTab(tab.id as any)}
-                      className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveTab(tab.id as any);
+                        if (navigator.vibrate) navigator.vibrate(10);
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                        e.currentTarget.style.transform = 'scale(0.95)';
+                      }}
+                      onTouchEnd={(e) => {
+                        e.stopPropagation();
+                        e.currentTarget.style.transform = '';
+                      }}
+                      className={`flex-1 px-3 py-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
                         activeTab === tab.id
                           ? 'bg-white/10 text-white'
-                          : 'text-white/50 hover:text-white/70'
+                          : 'text-white/50 hover:text-white/70 active:scale-95'
                       }`}
+                      style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+                      aria-label={`View ${tab.label}`}
                     >
                       <tab.icon size={14} />
                       <span className="hidden sm:inline">{tab.label}</span>
