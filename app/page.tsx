@@ -587,6 +587,27 @@ function Home() {
     [shouldRenderContent, isMobileLike, deviceProfile, performanceState, networkOptimizations.enableEffects]
   );
 
+  React.useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const className = 'use-custom-cursor';
+    const root = document.documentElement;
+    const body = document.body;
+    const enableCustom = shouldShowCustomCursor && renderDeferredUI && !performanceState.isTouch;
+
+    if (enableCustom) {
+      root.classList.add(className);
+      body.classList.add(className);
+    } else {
+      root.classList.remove(className);
+      body.classList.remove(className);
+    }
+
+    return () => {
+      root.classList.remove(className);
+      body.classList.remove(className);
+    };
+  }, [shouldShowCustomCursor, renderDeferredUI, performanceState.isTouch]);
+
 
   // ===== Initialize Optimization System =====
   useOptimizations({

@@ -9,7 +9,7 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 import { ChevronDown, ChevronUp, GripHorizontal, GripVertical, Zap } from 'lucide-react';
 import { playClick } from '@/lib/interactionUtils';
 import { ModernSplineLoader } from '@/components/Mainpage/ModernSplineLoader';
-import { TSXWrapper, ErrorBoundary } from '@/components/Mainpage/PageElements';
+import { TSXWrapper } from '@/components/Mainpage/PageElements';
 import { splineManager } from '@/lib/splineManager';
 
 // ============================================================================

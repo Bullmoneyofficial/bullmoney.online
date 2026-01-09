@@ -36,6 +36,7 @@ export interface DeviceInfo {
       vendor: string;
       renderer: string;
       tier: 'high' | 'medium' | 'low';
+      score?: number;
     };
     memory: {
       total: number; // GB
@@ -55,6 +56,9 @@ export interface DeviceInfo {
     ip: string;
     location: string;
     isp: string;
+    measuredDownlink?: number;
+    jitter?: number;
+    testTimestamp?: number;
   };
 
   // Battery
@@ -81,6 +85,7 @@ export interface DeviceInfo {
     frameTime: number; // ms
     networkSpeed: number; // Mbps (measured)
     latency: number; // ms
+    jitter: number; // ms
     timestamp: number;
   };
 }
@@ -96,6 +101,7 @@ class DeviceMonitor {
   private lastFrameTime = 0;
   private networkSpeed = 0;
   private latency = 0;
+  private latencyJitter = 0;
   private battery: any = null;
 
   constructor() {
@@ -211,6 +217,52 @@ class DeviceMonitor {
   }
 
   /**
+   * Classify GPU tier with a simple numeric score for clarity
+   */
+  private classifyGpuTier(renderer: string, vendor: string, memory: number): { tier: 'high' | 'medium' | 'low'; score: number } {
+    const label = `${vendor} ${renderer}`.toLowerCase();
+
+    // Heuristic score based on known GPU strings and available memory
+    let score = 40; // baseline
+
+    if (/rtx|rx\s?[6-9]|radeon\s?pro|apple m[12]|apple gpu|geforce rtx|quadro|a[4-9]000/.test(label)) {
+      score = 95;
+    } else if (/gtx\s?(1|9)|mx\s?(4|5)|iris\s?xe|vega|m1|m2|apple\sgpu/.test(label)) {
+      score = 78;
+    } else if (/adreno\s?(6|7)|mali-g7|mali-g6/.test(label)) {
+      score = 72;
+    } else if (/adreno\s?5|mali-g5|uhd\s?graphics/.test(label)) {
+      score = 58;
+    } else if (/intel hd|mali|powervr|adreno/.test(label)) {
+      score = 45;
+    }
+
+    // Memory can hint capability
+    if (memory >= 12) score += 8;
+    else if (memory >= 8) score += 5;
+    else if (memory <= 2) score -= 8;
+
+    score = Math.max(20, Math.min(100, score));
+
+    let tier: 'high' | 'medium' | 'low' = 'medium';
+    if (score >= 85) tier = 'high';
+    else if (score <= 45) tier = 'low';
+
+    return { tier, score };
+  }
+
+  /**
+   * Map a measured speed back to a human readable connection tier
+   */
+  private deriveEffectiveTypeFromSpeed(speedMbps: number, fallback: string): '4g' | '3g' | '2g' | 'slow-2g' {
+    if (!speedMbps || Number.isNaN(speedMbps)) return (fallback as any) || '4g';
+    if (speedMbps < 0.15) return 'slow-2g';
+    if (speedMbps < 0.4) return '2g';
+    if (speedMbps < 1.5) return '3g';
+    return '4g';
+  }
+
+  /**
    * Detect performance capabilities
    */
   private async detectPerformance(): Promise<void> {
@@ -224,28 +276,24 @@ class DeviceMonitor {
 
     let vendor = 'Unknown';
     let renderer = 'Unknown';
+    const memory = (navigator as any).deviceMemory || 4;
+    const jsMemory = (performance as any).memory;
+
     let tier: 'high' | 'medium' | 'low' = 'medium';
+    let score = 50;
 
     if (gl) {
       const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
       if (debugInfo) {
         vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
         renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-
-        // Determine GPU tier
-        if (/Apple GPU|Mali-G7|Adreno 6|Adreno 7|RTX|RX|Radeon/.test(renderer)) {
-          tier = 'high';
-        } else if (/Mali-G5|Adreno 5|Intel/.test(renderer)) {
-          tier = 'medium';
-        } else {
-          tier = 'low';
-        }
+        const classified = this.classifyGpuTier(renderer || '', vendor || '', memory);
+        tier = classified.tier;
+        score = classified.score;
       }
     }
 
     // Memory
-    const memory = (navigator as any).deviceMemory || 4;
-    const jsMemory = (performance as any).memory;
 
     let used = 0;
     let limit = 0;
@@ -259,7 +307,7 @@ class DeviceMonitor {
 
     this.info.performance = {
       cpu: { cores, architecture },
-      gpu: { vendor, renderer, tier },
+      gpu: { vendor, renderer, tier, score },
       memory: { total: memory, used, limit, percentage }
     };
   }
@@ -415,51 +463,131 @@ class DeviceMonitor {
    * Start network speed test
    */
   private async startNetworkSpeedTest(): Promise<void> {
-    // Test every 30 seconds
+    const pingUrl = 'https://speed.cloudflare.com/__down?bytes=64';
+    const testUrl = 'https://speed.cloudflare.com/__down?bytes=2500000';
+
     const test = async () => {
       try {
-        // Download a small file to measure speed
-        const testUrl = 'https://www.google.com/favicon.ico?' + Date.now();
-        const startTime = performance.now();
+        const [{ latency, jitter }, measuredSpeed] = await Promise.all([
+          this.measureLatency(pingUrl),
+          this.measureDownloadSpeed(`${testUrl}&ts=${Date.now()}`)
+        ]);
 
-        const response = await fetch(testUrl, { cache: 'no-store' });
-        const blob = await response.blob();
+        this.networkSpeed = measuredSpeed;
+        this.latency = latency;
+        this.latencyJitter = jitter;
 
-        const endTime = performance.now();
-        const duration = (endTime - startTime) / 1000; // seconds
-        const sizeMB = blob.size / 1024 / 1024;
-        const speedMbps = (sizeMB * 8) / duration;
-
-        this.networkSpeed = Math.round(speedMbps * 100) / 100;
-
-        // Measure latency
-        const pingStart = performance.now();
-        await fetch(testUrl, { method: 'HEAD', cache: 'no-store' });
-        this.latency = Math.round(performance.now() - pingStart);
-
+        if (this.info.network) {
+          this.info.network.measuredDownlink = measuredSpeed;
+          this.info.network.downlink = this.info.network.downlink || measuredSpeed;
+          this.info.network.rtt = latency;
+          this.info.network.jitter = jitter;
+          this.info.network.effectiveType = this.deriveEffectiveTypeFromSpeed(
+            measuredSpeed,
+            this.info.network.effectiveType
+          );
+          this.info.network.testTimestamp = Date.now();
+        }
       } catch (error) {
-        console.warn('[DeviceMonitor] Network test failed');
+        console.warn('[DeviceMonitor] Network test failed', error);
+        if (this.info.network) {
+          this.networkSpeed = this.info.network.downlink || this.networkSpeed;
+          this.latency = this.info.network.rtt || this.latency;
+        }
       }
     };
 
-    // Initial test
     await test();
+    setInterval(test, 45000);
+  }
 
-    // Periodic tests
-    setInterval(test, 30000);
+  /**
+   * Measure download speed using a streamed payload
+   */
+  private async measureDownloadSpeed(url: string): Promise<number> {
+    const startTime = performance.now();
+    const response = await fetch(url, { cache: 'no-store' });
+
+    let bytes = 0;
+    if (response.body?.getReader) {
+      const reader = response.body.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        bytes += value?.length || 0;
+      }
+    } else {
+      const buffer = await response.arrayBuffer();
+      bytes = buffer.byteLength;
+    }
+
+    const duration = (performance.now() - startTime) / 1000;
+    const sizeMB = bytes / 1024 / 1024;
+    const speedMbps = (sizeMB * 8) / Math.max(duration, 0.001);
+    return Math.round(speedMbps * 100) / 100;
+  }
+
+  /**
+   * Measure latency and jitter with multiple pings
+   */
+  private async measureLatency(url: string, samples = 3): Promise<{ latency: number; jitter: number }> {
+    const results: number[] = [];
+
+    for (let i = 0; i < samples; i++) {
+      const pingUrl = `${url}&ts=${Date.now()}-${i}`;
+      const start = performance.now();
+      try {
+        await fetch(pingUrl, { method: 'GET', cache: 'no-store' });
+        results.push(performance.now() - start);
+      } catch (error) {
+        console.warn('[DeviceMonitor] Latency probe failed', error);
+      }
+    }
+
+    if (!results.length) {
+      const fallbackRtt = this.info.network?.rtt || 0;
+      return { latency: fallbackRtt, jitter: this.latencyJitter };
+    }
+
+    const avg = results.reduce((a, b) => a + b, 0) / Math.max(results.length, 1);
+    const variance = results.reduce((sum, r) => sum + Math.pow(r - avg, 2), 0) / Math.max(results.length, 1);
+    const jitter = Math.sqrt(variance);
+
+    return {
+      latency: Math.round(avg),
+      jitter: Math.round(jitter)
+    };
   }
 
   /**
    * Get complete device info
    */
   getInfo(): DeviceInfo {
+    const network = this.info.network || {
+      type: 'unknown',
+      effectiveType: '4g' as const,
+      downlink: 0,
+      rtt: 0,
+      saveData: false,
+      ip: 'Unknown',
+      location: 'Unknown',
+      isp: 'Unknown'
+    };
+
+    // Ensure the latest latency is reflected in the network payload
+    network.rtt = this.latency || network.rtt;
+    network.measuredDownlink = this.networkSpeed || network.measuredDownlink || network.downlink;
+    network.jitter = this.latencyJitter || network.jitter || 0;
+
     return {
       ...this.info,
+      network,
       live: {
         fps: this.fps,
         frameTime: 1000 / Math.max(this.fps, 1),
         networkSpeed: this.networkSpeed,
         latency: this.latency,
+        jitter: this.latencyJitter,
         timestamp: Date.now()
       }
     } as DeviceInfo;
@@ -493,7 +621,9 @@ class DeviceMonitor {
       'Connection': info.network.effectiveType.toUpperCase(),
       'Network Type': info.network.type,
       'Downlink': `${info.network.downlink} Mbps`,
+      'Measured Downlink': `${info.network.measuredDownlink ?? info.live.networkSpeed} Mbps`,
       'RTT': `${info.network.rtt}ms`,
+      'Jitter': `${info.network.jitter ?? info.live.jitter}ms`,
       'Data Saver': info.network.saveData ? 'ON' : 'OFF',
 
       // Battery
@@ -510,7 +640,8 @@ class DeviceMonitor {
       'FPS': info.live.fps,
       'Frame Time': `${info.live.frameTime.toFixed(2)}ms`,
       'Network Speed': `${info.live.networkSpeed} Mbps`,
-      'Latency': `${info.live.latency}ms`
+      'Latency': `${info.live.latency}ms`,
+      'Jitter': `${info.live.jitter}ms`
     };
   }
 

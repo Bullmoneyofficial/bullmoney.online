@@ -224,7 +224,19 @@ export const GLOBAL_STYLES = `
   html, body { 
     background-color: black; 
     overflow-x: hidden;
-    cursor: none; /* Custom cursor */
+    cursor: auto;
+  }
+
+  /* Enable custom cursor only when explicitly toggled */
+  html.use-custom-cursor, body.use-custom-cursor {
+    cursor: none;
+  }
+
+  /* Never hide cursor on coarse pointer devices */
+  @media (pointer: coarse) {
+    html.use-custom-cursor, body.use-custom-cursor {
+      cursor: auto !important;
+    }
   }
   
   /* Custom Cursor Trail */

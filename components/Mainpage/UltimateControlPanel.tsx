@@ -60,9 +60,8 @@ function calculate3DPerformance(info: DeviceInfo): number {
   let score = 0;
 
   // GPU tier (40 points)
-  if (info.performance.gpu.tier === 'high') score += 40;
-  else if (info.performance.gpu.tier === 'medium') score += 25;
-  else score += 10;
+  const gpuScore = info.performance.gpu.score ?? (info.performance.gpu.tier === 'high' ? 90 : info.performance.gpu.tier === 'medium' ? 65 : 35);
+  score += Math.min(40, Math.round((gpuScore / 100) * 40));
 
   // FPS (30 points)
   const fps = info.live.fps;
@@ -257,6 +256,11 @@ export function UltimateControlPanel({
 
   const performanceScore = calculate3DPerformance(deviceInfo);
   const queueStats = queueManager.getStats();
+  const liveSpeed = Math.max(0, deviceInfo.live.networkSpeed || deviceInfo.network.measuredDownlink || deviceInfo.network.downlink || 0);
+  const liveLatency = Math.max(0, deviceInfo.live.latency || deviceInfo.network.rtt || 0);
+  const liveJitter = Math.max(0, deviceInfo.live.jitter || deviceInfo.network.jitter || 0);
+  const reportedDownlink = deviceInfo.network.downlink || 0;
+  const measuredType = (deviceInfo.network.effectiveType || '4g').toUpperCase();
 
   return (
     <>
@@ -505,15 +509,15 @@ export function UltimateControlPanel({
                         <StatCard
                           icon={TrendingUp}
                           label="Speed"
-                          value={`${deviceInfo.live.networkSpeed} Mbps`}
-                          sublabel="Live measurement"
+                          value={`${liveSpeed.toFixed(2)} Mbps`}
+                          sublabel="Measured download"
                           color="#22c55e"
                         />
                         <StatCard
                           icon={Activity}
                           label="Latency"
-                          value={`${deviceInfo.live.latency}ms`}
-                          sublabel={`RTT: ${deviceInfo.network.rtt}ms`}
+                          value={`${Math.round(liveLatency)}ms`}
+                          sublabel={`Jitter: ${Math.round(liveJitter)}ms`}
                           color="#f59e0b"
                         />
                       </div>
@@ -525,7 +529,7 @@ export function UltimateControlPanel({
                           <div className="flex-1">
                             <div className="text-sm text-white/50">Connection</div>
                             <div className="text-lg font-bold text-white">
-                              {deviceInfo.network.effectiveType.toUpperCase()}
+                              {measuredType}
                             </div>
                             <div className="text-xs text-white/40">
                               {deviceInfo.network.type}
@@ -536,6 +540,29 @@ export function UltimateControlPanel({
                               Data Saver
                             </div>
                           )}
+                        </div>
+                      </div>
+
+                      <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm text-white/60">Link quality</span>
+                          <span className="text-xs text-white/40">
+                            Last test: {deviceInfo.network.testTimestamp ? new Date(deviceInfo.network.testTimestamp).toLocaleTimeString() : 'Just now'}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="text-white/70">
+                            Measured: <span className="text-white font-semibold">{liveSpeed.toFixed(2)} Mbps</span>
+                          </div>
+                          <div className="text-white/70">
+                            Reported: <span className="text-white font-semibold">{reportedDownlink.toFixed(2)} Mbps</span>
+                          </div>
+                          <div className="text-white/70">
+                            Latency: <span className="text-white font-semibold">{Math.round(liveLatency)}ms</span>
+                          </div>
+                          <div className="text-white/70">
+                            Jitter: <span className="text-white font-semibold">{Math.round(liveJitter)}ms</span>
+                          </div>
                         </div>
                       </div>
 
@@ -607,12 +634,24 @@ export function UltimateControlPanel({
                         icon={Monitor}
                         label="GPU"
                         value={deviceInfo.performance.gpu.tier.toUpperCase() + ' Tier'}
-                        sublabel={deviceInfo.performance.gpu.renderer}
+                        sublabel={`Score ${Math.round(deviceInfo.performance.gpu.score ?? 0) || 0}/100 • ${deviceInfo.performance.gpu.vendor || ''} ${deviceInfo.performance.gpu.renderer || ''}`}
                         color={
                           deviceInfo.performance.gpu.tier === 'high' ? '#22c55e' :
                           deviceInfo.performance.gpu.tier === 'medium' ? '#f59e0b' : '#ef4444'
                         }
                       />
+
+                      <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                        <div className="text-sm text-white/60 mb-3">Device Snapshot</div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="text-white/70">CPU: <span className="text-white font-semibold">{deviceInfo.performance.cpu.cores} cores</span></div>
+                          <div className="text-white/70">Arch: <span className="text-white font-semibold">{deviceInfo.performance.cpu.architecture}</span></div>
+                          <div className="text-white/70">Pixel Ratio: <span className="text-white font-semibold">{deviceInfo.screen.pixelRatio}x</span></div>
+                          <div className="text-white/70">Resolution: <span className="text-white font-semibold">{deviceInfo.screen.width}×{deviceInfo.screen.height}</span></div>
+                          <div className="text-white/70">Touch: <span className="text-white font-semibold">{deviceInfo.screen.touchSupport ? 'Yes' : 'No'}</span></div>
+                          <div className="text-white/70">Battery: <span className="text-white font-semibold">{deviceInfo.battery.level >= 0 ? `${deviceInfo.battery.level}%` : 'Unknown'}</span></div>
+                        </div>
+                      </div>
 
                       {/* Memory */}
                       <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10">
