@@ -13,7 +13,8 @@ import { userStorage, devicePrefs } from '@/lib/smartStorage';
 import { createSwipeHandlers } from '@/lib/interactionUtils';
 import { getCacheName, isValidSplineBlob } from '@/lib/splineCache';
 import { scheduleSceneStorageSave } from '@/lib/sceneStorage';
-import { inputManager } from '@/lib/inputManager';
+// @ts-ignore - Required for side effects (input manager initialization)
+import '@/lib/inputManager';
 import '@/styles/unified-ui.css';
 import '@/styles/performance-optimizations.css';
 
