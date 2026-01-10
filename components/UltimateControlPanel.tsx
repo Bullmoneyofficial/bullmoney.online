@@ -14,6 +14,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import {
   Activity,
@@ -32,7 +33,13 @@ import {
   TrendingUp,
   Globe,
   Eye,
-  EyeOff
+  EyeOff,
+  ChevronRight,
+  Sparkles,
+  Send,
+  Settings,
+  Edit2,
+  Fingerprint
 } from 'lucide-react';
 import { deviceMonitor, type DeviceInfo } from '@/lib/deviceMonitor';
 import { queueManager } from '@/lib/splineQueueManager';
@@ -47,6 +54,19 @@ interface UltimateControlPanelProps {
   userEmail?: string;
   userName?: string;
   accentColor?: string;
+  // Action button props
+  onServicesClick?: () => void;
+  onContactClick?: () => void;
+  onThemeClick?: () => void;
+  onAdminClick?: () => void;
+  onIdentityClick?: () => void;
+  isAdmin?: boolean;
+  isAuthenticated?: boolean;
+  showServicesButton?: boolean;
+  showContactButton?: boolean;
+  showThemeButton?: boolean;
+  showAdminButton?: boolean;
+  showIdentityButton?: boolean;
 }
 
 // ============================================================================
@@ -207,7 +227,19 @@ export function UltimateControlPanel({
   onOpenChange,
   userEmail,
   userName,
-  accentColor = '#3b82f6'
+  accentColor = '#3b82f6',
+  onServicesClick,
+  onContactClick,
+  onThemeClick,
+  onAdminClick,
+  onIdentityClick,
+  isAdmin = false,
+  isAuthenticated = false,
+  showServicesButton = true,
+  showContactButton = true,
+  showThemeButton = true,
+  showAdminButton = true,
+  showIdentityButton = true,
 }: UltimateControlPanelProps) {
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'network' | 'performance' | 'account'>('overview');
@@ -217,6 +249,12 @@ export function UltimateControlPanel({
   const [dragProgress, setDragProgress] = useState(0);
   const sessionStartRef = useRef<number>(Date.now());
   const [sessionDuration, setSessionDuration] = useState('0m');
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure component only renders on client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Update device info periodically
   useEffect(() => {
@@ -255,29 +293,45 @@ export function UltimateControlPanel({
     window.location.reload();
   };
 
-  // Handle drag
-  const handleDrag = (_: any, info: PanInfo) => {
-    const progress = Math.max(0, Math.min(1, -info.offset.y / 200));
+  // Handle drag for right-side swipeable FPS button
+  const handleSwipeableDrag = (_: any, info: PanInfo) => {
+    // Only track leftward drag (negative x)
+    const progress = Math.max(0, Math.min(1, Math.abs(Math.min(0, info.offset.x)) / 100));
     setDragProgress(progress);
   };
 
-  const handleDragEnd = (_: any, info: PanInfo) => {
-    const velocity = info.velocity.y;
-    const offset = info.offset.y;
+  const handleSwipeableDragEnd = (_: any, info: PanInfo) => {
+    const velocity = info.velocity.x;
+    const offset = info.offset.x;
 
-    // Close on swipe down - more lenient thresholds for better UX
-    if (offset > 80 || (offset > 50 && velocity > 100)) {
-      onOpenChange(false);
-    }
-    // Open on swipe up (when closed)
-    else if (offset < -80 || (offset < -50 && velocity < -100)) {
+    // Open on swipe LEFT (negative offset for right-positioned button)
+    if (offset < -50 || (offset < -30 && velocity < -100)) {
       onOpenChange(true);
     }
 
     setDragProgress(0);
   };
 
-  if (!deviceInfo) {
+  // Handle drag for panel (slides from right, swipe right to close)
+  const handlePanelDrag = (_: any, info: PanInfo) => {
+    // Only track rightward drag (positive x)
+    const progress = Math.max(0, Math.min(1, Math.max(0, info.offset.x) / 200));
+    setDragProgress(progress);
+  };
+
+  const handlePanelDragEnd = (_: any, info: PanInfo) => {
+    const velocity = info.velocity.x;
+    const offset = info.offset.x;
+
+    // Close on swipe RIGHT (positive offset for right-positioned panel)
+    if (offset > 80 || (offset > 50 && velocity > 100)) {
+      onOpenChange(false);
+    }
+
+    setDragProgress(0);
+  };
+
+  if (!deviceInfo || !mounted) {
     return null;
   }
 
@@ -290,61 +344,271 @@ export function UltimateControlPanel({
   const reportedDownlink = deviceInfo.network.downlink || 0;
   const measuredType = (deviceInfo.network.effectiveType || '4g').toUpperCase();
 
-  return (
+  // Default handlers for buttons
+  const handleServicesClick = onServicesClick || (() => console.log('Services clicked'));
+  const handleContactClick = onContactClick || (() => console.log('Contact clicked'));
+  const handleThemeClick = onThemeClick || (() => console.log('Theme clicked'));
+  const handleAdminClick = onAdminClick || (() => console.log('Admin clicked'));
+  const handleIdentityClick = onIdentityClick || (() => console.log('Identity clicked'));
+
+  const portalContent = (
     <>
-      {/* Handle (visible when closed) */}
-      <AnimatePresence>
+      {/* Expandable FPS Button with Actions (visible when closed) */}
+      <AnimatePresence mode="wait">
         {!isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-0 left-0 right-0 z-[250000] flex justify-center pointer-events-none"
+            key="fps-action-button"
+            initial={{ x: 100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 100, opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="fixed right-0 z-[250000] pointer-events-none"
             style={{
-              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 8px)'
+              top: '50%',
+              transform: 'translateY(-50%)',
+              paddingRight: 'calc(env(safe-area-inset-right, 0px) + 8px)'
             }}
           >
-            <motion.button
-              onClick={() => onOpenChange(true)}
-              drag="y"
-              dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={0.2}
-              onDrag={handleDrag}
-              onDragEnd={handleDragEnd}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-6 py-2.5 rounded-full bg-gradient-to-r from-blue-500/90 to-purple-500/90 backdrop-blur-xl border border-white/20 shadow-2xl flex items-center gap-2 pointer-events-auto group"
-              style={{
-                boxShadow: `0 8px 32px ${accentColor}40, 0 0 0 1px rgba(255,255,255,0.1)`
+            <motion.div
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.3}
+              onDrag={handleSwipeableDrag}
+              onDragEnd={handleSwipeableDragEnd}
+              whileHover="hover"
+              initial="initial"
+              className="relative pointer-events-auto group touch-manipulation"
+              style={{ 
+                WebkitTapHighlightColor: 'transparent',
+                touchAction: 'manipulation'
               }}
             >
-              <Activity size={16} className="text-white animate-pulse" />
-              <span className="text-white text-sm font-semibold">
-                {deviceInfo.live.fps} FPS
-              </span>
-              <ChevronUp size={16} className="text-white/70 group-hover:text-white transition-colors" />
-
-              {/* Drag indicator */}
-              {dragProgress > 0 && (
-                <motion.div
-                  className="absolute -top-1 left-0 right-0 h-1 bg-white/50 rounded-full"
-                  style={{
-                    scaleX: dragProgress,
-                    transformOrigin: 'left'
-                  }}
+              {/* Blue shimmer background */}
+              <div className="absolute inset-0 rounded-l-2xl overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-l from-blue-500/60 via-blue-400/60 to-blue-500/60 animate-shimmer" 
+                     style={{
+                       backgroundSize: '200% 100%',
+                       animation: 'shimmer 3s linear infinite'
+                     }}
                 />
-              )}
-            </motion.button>
+              </div>
+              
+              {/* Main FPS Content - Always visible */}
+              <motion.div 
+                variants={{
+                  initial: { x: 0 },
+                  hover: { x: -8 }
+                }}
+                className="relative rounded-l-2xl backdrop-blur-lg border-y border-l border-blue-400/20 bg-transparent"
+              >
+                {/* FPS Display */}
+                <div 
+                  className="px-4 py-3 cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onOpenChange(true);
+                  }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <ChevronRight 
+                      size={16} 
+                      className="text-blue-300/70 group-hover:text-blue-200 transition-colors mr-1 rotate-180"
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-blue-100 text-lg font-black leading-none drop-shadow-lg">
+                        {deviceInfo.live.fps}
+                      </span>
+                      <span className="text-blue-200/80 text-[9px] font-semibold uppercase tracking-wider drop-shadow">
+                        FPS
+                      </span>
+                    </div>
+                    <Activity size={18} className="text-blue-400 animate-pulse" />
+                  </div>
+                </div>
+
+                {/* Action Buttons - Shown on hover */}
+                <motion.div
+                  variants={{
+                    initial: { height: 0, opacity: 0 },
+                    hover: { height: 'auto', opacity: 1 }
+                  }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden border-t border-blue-400/20"
+                >
+                  {/* Services Button */}
+                  {showServicesButton && (
+                    <div
+                      className="px-4 py-2.5 cursor-pointer hover:bg-blue-500/10 transition-colors border-b border-blue-400/10"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleServicesClick();
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Sparkles size={14} className="text-blue-400" />
+                        <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
+                          Services
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Contact Button */}
+                  {showContactButton && (
+                    <div
+                      className="px-4 py-2.5 cursor-pointer hover:bg-blue-500/10 transition-colors border-b border-blue-400/10"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleContactClick();
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Send size={14} className="text-blue-400" />
+                        <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
+                          Contact
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Theme Button */}
+                  {showThemeButton && (
+                    <div
+                      className="px-4 py-2.5 cursor-pointer hover:bg-blue-500/10 transition-colors border-b border-blue-400/10"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleThemeClick();
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Settings size={14} className="text-blue-400" />
+                        <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
+                          Theme
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Admin Button */}
+                  {isAdmin && showAdminButton && (
+                    <div
+                      className="px-4 py-2.5 cursor-pointer hover:bg-blue-500/10 transition-colors border-b border-blue-400/10"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleAdminClick();
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Edit2 size={14} className="text-blue-400" />
+                        <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
+                          Admin
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* VIP Badge */}
+                  {!isAdmin && isAuthenticated && (
+                    <div className="px-4 py-2.5 border-b border-blue-400/10">
+                      <div className="flex items-center gap-2">
+                        <Sparkles size={14} className="text-blue-400" />
+                        <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
+                          VIP Member
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Identity Button */}
+                  {!isAdmin && !isAuthenticated && showIdentityButton && (
+                    <div
+                      className="px-4 py-2.5 cursor-pointer hover:bg-blue-500/10 transition-colors"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleIdentityClick();
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Fingerprint size={14} className="text-blue-400" />
+                        <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
+                          Identity
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+
+                {/* Drag indicator */}
+                {dragProgress > 0 && (
+                  <motion.div
+                    className="absolute top-0 left-0 bottom-0 w-1 bg-blue-400/50 rounded-r-full"
+                    style={{
+                      scaleY: dragProgress,
+                      transformOrigin: 'center'
+                    }}
+                  />
+                )}
+              </motion.div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Panel */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {isOpen && (
-          <>
+          <React.Fragment key="panel-wrapper">
             {/* Backdrop */}
             <motion.div
+              key="backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -362,31 +626,36 @@ export function UltimateControlPanel({
 
             {/* Panel */}
             <motion.div
+              key="panel"
               ref={panelRef}
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              drag="y"
-              dragConstraints={{ top: 0, bottom: 0 }}
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.1}
-              onDragEnd={handleDragEnd}
+              onDrag={handlePanelDrag}
+              onDragEnd={handlePanelDragEnd}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-[250000] max-h-[85vh] overflow-hidden rounded-t-3xl bg-gradient-to-b from-gray-900/98 to-black/98 backdrop-blur-2xl border-t border-white/10 shadow-2xl"
+              className="fixed right-0 top-0 bottom-0 z-[250000] w-full max-w-md overflow-hidden bg-gradient-to-br from-gray-900/98 to-black/98 backdrop-blur-2xl border-l border-white/10 shadow-2xl"
               style={{
-                paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)'
+                paddingRight: 'env(safe-area-inset-right, 0px)',
+                paddingBottom: 'env(safe-area-inset-bottom, 0px)'
               }}
             >
               {/* Drag handle */}
-              <div className="flex flex-col items-center gap-1 py-3 cursor-grab active:cursor-grabbing">
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 py-3 px-2 cursor-grab active:cursor-grabbing">
                 <div
-                  className="w-12 h-1.5 rounded-full bg-white/30"
+                  className="h-12 w-1.5 rounded-full bg-white/30"
                   style={{ backgroundColor: `${accentColor}60` }}
                 />
-                <div className="text-[9px] text-white/30 font-mono tracking-wider">SWIPE DOWN</div>
+                <div className="text-[9px] text-white/30 font-mono tracking-wider [writing-mode:vertical-lr] rotate-180">
+                  SWIPE
+                </div>
               </div>
 
               {/* Header */}
-              <div className="px-6 pb-4">
+              <div className="px-6 pt-6 pb-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60">
                     Device Center
@@ -436,7 +705,7 @@ export function UltimateControlPanel({
                       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                       aria-label="Close device center"
                     >
-                      <ChevronDown size={18} className="text-white/70" />
+                      <ChevronRight size={18} className="text-white/70" />
                     </motion.button>
                   </div>
                 </div>
@@ -483,8 +752,9 @@ export function UltimateControlPanel({
 
               {/* Content */}
               <div
-                className="px-6 overflow-y-auto max-h-[60vh] pb-6"
+                className="px-6 overflow-y-auto pb-6"
                 style={{
+                  height: 'calc(100vh - 180px)',
                   WebkitOverflowScrolling: 'touch',
                   overscrollBehavior: 'contain',
                   touchAction: 'pan-y'
@@ -881,11 +1151,25 @@ export function UltimateControlPanel({
                 </AnimatePresence>
               </div>
             </motion.div>
-          </>
+          </React.Fragment>
         )}
       </AnimatePresence>
+
+      {/* Shimmer animation keyframes - add to global CSS */}
+      <style jsx global>{`
+        @keyframes shimmer {
+          0% {
+            background-position: -200% center;
+          }
+          100% {
+            background-position: 200% center;
+          }
+        }
+      `}</style>
     </>
   );
+
+  return createPortal(portalContent, document.body);
 }
 
 export default UltimateControlPanel;

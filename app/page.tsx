@@ -6,8 +6,6 @@ import CTA from "@/components/Chartnews";
 import { Features } from "@/components/features";
 import { LiveMarketTicker } from "@/components/LiveMarketTicker";
 import { GlobalThemeProvider } from "@/contexts/GlobalThemeProvider";
-import { SwipeablePanel } from "@/components/Mainpage/SwipeablePanel";
-import { ThemeSelector } from "@/components/Mainpage/ThemeSelector";
 import HiddenYoutubePlayer from "@/components/Mainpage/HiddenYoutubePlayer";
 import { ALL_THEMES } from "@/constants/theme-data";
 import type { SoundProfile } from "@/constants/theme-data";
@@ -217,38 +215,11 @@ function HomeContent() {
             />
           )}
 
-          <SwipeablePanel
-            title="Theme & Music Control"
-            icon={<Settings size={20} />}
-            position="bottom"
-            maxHeight="85vh"
-            minHeight="32px"
-            open={panelOpen}
-            onOpenChange={setPanelOpen}
-            accentColor={currentTheme?.accentColor || '#3b82f6'}
-            zIndex={9999}
-          >
-            <ThemeSelector
-              activeThemeId={activeThemeId}
-              setActiveThemeId={setActiveThemeId}
-              activeCategory={activeCategory}
-              setActiveCategory={setActiveCategory}
-              isMobile={isMobile}
-              currentSound={currentSound}
-              setCurrentSound={setCurrentSound}
-              isMuted={isMuted}
-              setIsMuted={setIsMuted}
-              onSave={handleSaveTheme}
-              onExit={handleExit}
-              onHover={handleHover}
-            />
-          </SwipeablePanel>
         </>
       )}
     </>
   );
 }
-
 export default function Home() {
   return (
     <GlobalThemeProvider>

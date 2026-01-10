@@ -11,24 +11,24 @@ import {
   MotionValue,
   AnimatePresence,
   useWillChange,
-  PanInfo,
   useAnimation
 } from "framer-motion";
 import Image from "next/image";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Loader2, Edit2, Save, X, Trash2, Upload, ChevronDown, Lock, Info, Instagram, Send, Sparkles, Cpu, Fingerprint, DollarSign } from "lucide-react";
+import { Loader2, Edit2, Save, X, Trash2, Upload, Instagram, Send } from "lucide-react";
 
 // --- CONTEXT INTEGRATION ---
 import { useStudio, type Project } from "@/context/StudioContext";
 
 // --- EXTERNAL COMPONENTS ---
-import About from "@/components/ui/About";
 import ServicesModal from "@/components/ui/SeviceModal";
 import AdminModal from "@/components/AdminModal";
 import ReflectiveCard from '@/components/ReflectiveCard';
-
-
+import HiddenYoutubePlayer from "@/components/Mainpage/HiddenYoutubePlayer";
+import { ALL_THEMES } from "@/constants/theme-data";
+import type { SoundProfile } from "@/constants/theme-data";
+import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 
 const DynamicUltimateControlPanel = dynamic(() => import('./UltimateControlPanel').then(mod => mod.UltimateControlPanel), {
   ssr: false,
@@ -95,19 +95,19 @@ const ContactSelectionModal = ({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-neutral-950 border border-#3b82f6/30 p-8 pt-12 rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
+                className="bg-neutral-950 border border-blue-500/30 p-8 pt-12 rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
             >
                 <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay bg-[url('/noise.png')]"></div>
-                 <div className="absolute inset-0 pointer-events-none opacity-30 bg-gradient-to-br from-#3b82f6/10 to-transparent"></div>
+                 <div className="absolute inset-0 pointer-events-none opacity-30 bg-gradient-to-br from-blue-500/10 to-transparent"></div>
 
                 <button 
                     onClick={onClose} 
-                    className="absolute top-3 right-3 z-50 p-2 bg-neutral-900 border border-neutral-800 rounded-full text-neutral-400 hover:text-white hover:border-#3b82f6 hover:bg-neutral-800 transition-all shadow-lg"
+                    className="absolute top-3 right-3 z-50 p-2 bg-neutral-900 border border-neutral-800 rounded-full text-neutral-400 hover:text-white hover:border-blue-500 hover:bg-neutral-800 transition-all shadow-lg"
                 >
                     <X size={20} />
                 </button>
                 
-                <h3 className="text-2xl font-serif font-bold text-center mb-2 text-#3b82f6 z-10 relative">Choose Platform</h3>
+                <h3 className="text-2xl font-serif font-bold text-center mb-2 text-blue-500 z-10 relative">Choose Platform</h3>
                 <p className="text-center text-neutral-400 text-sm mb-6 z-10 relative">How would you like to connect?</p>
 
                 <div className="space-y-4 z-10 relative">
@@ -115,14 +115,14 @@ const ContactSelectionModal = ({
                         href={instagramLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-#60a5fa focus:ring-offset-2 focus:ring-offset-slate-50"
+                        className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-50"
                     >
                         <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#bfdbfe_50%,#3b82f6_100%)]" />
                         <span className="flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-neutral-950 px-6 py-3 text-sm font-medium text-white backdrop-blur-3xl transition-colors group-hover:bg-neutral-900">
-                             <div className="bg-#3b82f6/20 p-2 rounded-full mr-4">
-                                <Instagram size={24} className="text-#3b82f6" />
+                             <div className="bg-blue-500/20 p-2 rounded-full mr-4">
+                                <Instagram size={24} className="text-blue-500" />
                             </div>
-                            <span className="font-bold tracking-wide text-lg text-#60a5fa">Instagram</span>
+                            <span className="font-bold tracking-wide text-lg text-blue-400">Instagram</span>
                         </span>
                     </a>
 
@@ -130,14 +130,14 @@ const ContactSelectionModal = ({
                         href={telegramLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-#60a5fa focus:ring-offset-2 focus:ring-offset-slate-50"
+                        className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-50"
                     >
                         <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#bfdbfe_50%,#3b82f6_100%)]" />
                         <span className="flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-neutral-950 px-6 py-3 text-sm font-medium text-white backdrop-blur-3xl transition-colors group-hover:bg-neutral-900">
-                            <div className="bg-#3b82f6/20 p-2 rounded-full mr-4">
-                                <Send size={24} className="text-#3b82f6" />
+                            <div className="bg-blue-500/20 p-2 rounded-full mr-4">
+                                <Send size={24} className="text-blue-500" />
                             </div>
-                            <span className="font-bold tracking-wide text-lg text-#60a5fa">Telegram</span>
+                            <span className="font-bold tracking-wide text-lg text-blue-400">Telegram</span>
                         </span>
                     </a>
                 </div>
@@ -145,167 +145,6 @@ const ContactSelectionModal = ({
         </div>
     );
 };
-
-// --- 1. VISUAL COMPONENTS ---
-
-const GridLineVertical = React.memo(({ className, offset }: { className?: string; offset?: string }) => {
-  return (
-    <div
-      style={
-        {
-          "--background": "#ffffff",
-          "--color": "rgba(0, 0, 0, 0.2)",
-          "--height": "5px",
-          "--width": "1px",
-          "--fade-stop": "90%",
-          "--offset": offset || "150px",
-          "--color-dark": "rgba(255, 255, 255, 0.3)",
-          maskComposite: "exclude",
-        } as React.CSSProperties
-      }
-      className={cn(
-        "absolute top-[calc(var(--offset)/2*-1)] h-[calc(100%+var(--offset))] w-[var(--width)]",
-        "bg-[linear-gradient(to_bottom,var(--color),var(--color)_50%,transparent_0,transparent)]",
-        "[background-size:var(--width)_var(--height)]",
-        "[mask:linear-gradient(to_top,var(--background)_var(--fade-stop),transparent),_linear-gradient(to_bottom,var(--background)_var(--fade-stop),transparent),_linear-gradient(black,black)]",
-        "[mask-composite:exclude]",
-        "z-10", 
-        "dark:bg-[linear-gradient(to_bottom,var(--color-dark),var(--color-dark)_50%,transparent_0,transparent)]",
-        className
-      )}
-    ></div>
-  );
-});
-GridLineVertical.displayName = "GridLineVertical";
-
-const BackgroundGrids = React.memo(() => {
-  return (
-    <div className="pointer-events-none absolute inset-0 z-0 grid h-full w-full -rotate-45 transform select-none grid-cols-2 gap-10 md:grid-cols-4">
-      <div className="relative h-full w-full">
-        <GridLineVertical className="left-0" />
-        <GridLineVertical className="left-auto right-0" />
-      </div>
-      <div className="relative h-full w-full">
-        <GridLineVertical className="left-0" />
-        <GridLineVertical className="left-auto right-0" />
-      </div>
-      <div className="relative h-full w-full bg-gradient-to-b from-transparent via-neutral-100 to-transparent dark:via-neutral-900">
-        <GridLineVertical className="left-0" />
-        <GridLineVertical className="left-auto right-0" />
-      </div>
-      <div className="relative h-full w-full">
-        <GridLineVertical className="left-0" />
-        <GridLineVertical className="left-auto right-0" />
-      </div>
-    </div>
-  );
-});
-BackgroundGrids.displayName = "BackgroundGrids";
-
-const Explosion = ({ ...props }: React.HTMLProps<HTMLDivElement>) => {
-  const [spans, setSpans] = useState<{ id: number; initialX: number; initialY: number; directionX: number; directionY: number; }[]>([]);
-
-  useEffect(() => {
-    const newSpans = Array.from({ length: 20 }, (_, index) => ({
-      id: index,
-      initialX: 0,
-      initialY: 0,
-      directionX: Math.floor(Math.random() * 80 - 40),
-      directionY: Math.floor(Math.random() * -50 - 10),
-    }));
-    setSpans(newSpans);
-  }, []);
-
-  return (
-    <div {...props} className={cn("absolute z-50 h-2 w-2", props.className)}>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0, 1, 0] }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 1, ease: "easeOut" }}
-        className="absolute -inset-x-10 top-0 m-auto h-[4px] w-10 rounded-full bg-gradient-to-r from-transparent via-#60a5fa to-transparent blur-sm"
-      ></motion.div>
-      {spans.map((span) => (
-        <motion.span
-          key={span.id}
-          initial={{ x: span.initialX, y: span.initialY, opacity: 1 }}
-          animate={{ x: span.directionX, y: span.directionY, opacity: 0 }}
-          transition={{ duration: Math.random() * 1.5 + 0.5, ease: "easeOut" }}
-          className="absolute h-1 w-1 rounded-full bg-gradient-to-b from-#60a5fa to-#93c5fd"
-        />
-      ))}
-    </div>
-  );
-};
-
-const CollisionMechanism = React.memo(React.forwardRef<
-  HTMLDivElement,
-  {
-    containerRef: React.RefObject<HTMLDivElement>;
-    parentRef: React.RefObject<HTMLDivElement>;
-    beamOptions?: { initialX?: number; translateX?: number; initialY?: number; translateY?: number; rotate?: number; className?: string; duration?: number; delay?: number; repeatDelay?: number; };
-  }
->(({ parentRef, containerRef, beamOptions = {} }, ref) => {
-  const beamRef = useRef<HTMLDivElement>(null);
-  const [collision, setCollision] = useState<{ detected: boolean; coordinates: { x: number; y: number } | null; }>({ detected: false, coordinates: null });
-  const [beamKey, setBeamKey] = useState(0);
-  const [cycleCollisionDetected, setCycleCollisionDetected] = useState(false);
-
-  useEffect(() => {
-    const checkCollision = () => {
-      if (beamRef.current && containerRef.current && parentRef.current && !cycleCollisionDetected) {
-        const beamRect = beamRef.current.getBoundingClientRect();
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const parentRect = parentRef.current.getBoundingClientRect();
-
-        if (beamRect.bottom >= containerRect.top) {
-          const relativeX = beamRect.left - parentRect.left + beamRect.width / 2;
-          const relativeY = beamRect.bottom - parentRect.top;
-          setCollision({ detected: true, coordinates: { x: relativeX, y: relativeY } });
-          setCycleCollisionDetected(true);
-          if (beamRef.current) beamRef.current.style.opacity = "0";
-        }
-      }
-    };
-    const animationInterval = setInterval(checkCollision, 50);
-    return () => clearInterval(animationInterval);
-  }, [cycleCollisionDetected, containerRef, parentRef]);
-
-  useEffect(() => {
-    if (collision.detected && collision.coordinates) {
-      setTimeout(() => {
-        setCollision({ detected: false, coordinates: null });
-        setCycleCollisionDetected(false);
-        if (beamRef.current) beamRef.current.style.opacity = "1";
-      }, 2000);
-      setTimeout(() => setBeamKey((prevKey) => prevKey + 1), 2000);
-    }
-  }, [collision]);
-
-  return (
-    <>
-      <motion.div
-        key={beamKey}
-        ref={beamRef}
-        animate="animate"
-        initial={{ translateY: beamOptions.initialY || "-200px", translateX: beamOptions.initialX || "0px", rotate: beamOptions.rotate || -45 }}
-        variants={{ animate: { translateY: beamOptions.translateY || "800px", translateX: beamOptions.translateX || "700px", rotate: beamOptions.rotate || -45 } }}
-        transition={{ duration: beamOptions.duration || 8, repeat: Infinity, repeatType: "loop", ease: "linear", delay: beamOptions.delay || 0, repeatDelay: beamOptions.repeatDelay || 0 }}
-        className={cn("absolute left-96 top-20 m-auto h-14 w-px rounded-full bg-gradient-to-t from-#3b82f6 via-#60a5fa to-transparent", beamOptions.className)}
-      />
-      <AnimatePresence>
-        {collision.detected && collision.coordinates && (
-          <Explosion
-            key={`${collision.coordinates.x}-${collision.coordinates.y}`}
-            className=""
-            style={{ left: `${collision.coordinates.x + 20}px`, top: `${collision.coordinates.y}px`, transform: "translate(-50%, -50%)" }}
-          />
-        )}
-      </AnimatePresence>
-    </>
-  );
-}));
-CollisionMechanism.displayName = "CollisionMechanism";
 
 // --- 2. PRODUCT CARD ---
 const ProductCard = React.memo(({
@@ -348,7 +187,7 @@ const ProductCard = React.memo(({
                    {project.title}
                 </h2>
                 {project.price && (
-                    <p className="text-#60a5fa font-bold text-sm mt-1 flex items-center gap-2">
+                    <p className="text-blue-400 font-bold text-sm mt-1 flex items-center gap-2">
                         {project.price} 
                         {project.duration && (
                             <>
@@ -369,171 +208,14 @@ const ProductCard = React.memo(({
 });
 ProductCard.displayName = "ProductCard";
 
-const ShimmerButton = ({ onClick, children, className = '', gradient = 'from_90deg_at_50%_50%,#3b82f6_0%,#bfdbfe_50%,#3b82f6_100%' }: { onClick: () => void; children: React.ReactNode; className?: string, gradient?: string }) => (
-    <button
-        onClick={onClick}
-        className={cn("w-full relative inline-flex h-14 items-center justify-center rounded-xl p-[2px] overflow-hidden", className)}
-    >
-        <span className={`absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(${gradient})]`} />
-        <span className="inline-flex h-full w-full cursor-pointer items-center justify-center gap-3 rounded-[10px] bg-neutral-950 px-3 text-base font-medium text-white backdrop-blur-3xl">
-            {children}
-        </span>
-    </button>
-);
-
-const SwipableButtons = ({
-  buttonText,
-  contactButtonText,
-  isAdmin,
-  isAuthenticated,
-  setIsContactModalOpen,
-  setIsAdminOpen,
-  onUcpOpen,
-  onReflectiveCardOpen,
-  onServicesOpen,
-}: {
-  buttonText: string;
-  contactButtonText: string;
-  isAdmin: boolean;
-  isAuthenticated: boolean;
-  setIsContactModalOpen: (isOpen: boolean) => void;
-  setIsAdminOpen: (isOpen: boolean) => void;
-  onUcpOpen: () => void;
-  onReflectiveCardOpen: () => void;
-  onServicesOpen: () => void;
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const controls = useAnimation();
-
-  const toggleOpen = () => setIsOpen(prev => !prev);
-
-  const handleServicesClick = () => {
-    onServicesOpen();
-    setIsOpen(false);
-  };
-
-  useEffect(() => {
-    if (isOpen) {
-      controls.start({ x: 0 });
-    } else {
-      controls.start({ x: -320 });
-    }
-  }, [isOpen, controls]);
-
-  const onDragEnd = (event: any, info: PanInfo) => {
-    const swipeThreshold = 50;
-    if (info.offset.x > swipeThreshold) {
-      setIsOpen(true);
-    } else if (info.offset.x < -swipeThreshold) {
-      setIsOpen(false);
-    } else {
-      // Snap back to original position if not dragged far enough
-      if(isOpen) controls.start({ x: 0 });
-      else controls.start({ x: -320 });
-    }
-  };
-
-  return (
-    <>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onTap={() => setIsOpen(false)}
-            className="fixed inset-0 bg-black/50 z-40"
-          />
-        )}
-      </AnimatePresence>
-      <motion.div
-        drag="x"
-        onDragEnd={onDragEnd}
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={{ left: 0.1, right: 0.1 }}
-        animate={controls}
-        initial={{ x: -320 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 40 }}
-        className="fixed top-1/2 -translate-y-1/2 left-0 z-50 flex items-center cursor-grab active:cursor-grabbing"
-      >
-        <div className="relative w-[320px] bg-neutral-950/80 backdrop-blur-xl border-r border-neutral-800 p-4 flex flex-col gap-4">
-          <ShimmerButton onClick={handleServicesClick}>
-            <Sparkles size={18} />
-            <span>{buttonText}</span>
-          </ShimmerButton>
-
-          <ShimmerButton
-            onClick={() => {
-              setIsContactModalOpen(true);
-              setIsOpen(false);
-            }}
-          >
-            <Send size={18} />
-            <span>{contactButtonText}</span>
-            <span className="ml-1">✨</span>
-          </ShimmerButton>
-          
-          <ShimmerButton
-            onClick={() => {
-              onUcpOpen();
-              setIsOpen(false);
-            }}
-          >
-            <Cpu size={18} />
-            <span>Device Center</span>
-          </ShimmerButton>
-          
-          {isAdmin ? (
-              <ShimmerButton
-                  onClick={() => {
-                    setIsAdminOpen(true);
-                    setIsOpen(false);
-                  }}
-                  gradient="from_90deg_at_50%_50%,#10b981_0%,#6ee7b7_50%,#10b981_100%"
-              >
-                  <Edit2 size={18} />
-                  <span>Admin Panel</span>
-              </ShimmerButton>
-          ) : isAuthenticated ? (
-             <div className="w-full relative inline-flex h-14 items-center justify-center rounded-xl p-[2px] overflow-hidden">
-                <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#facc15_0%,#fef08a_50%,#facc15_100%)]" />
-                <span className="inline-flex h-full w-full items-center justify-center gap-3 rounded-[10px] bg-neutral-950 px-3 text-base font-medium text-white backdrop-blur-3xl">
-                    <Sparkles size={18} className="text-yellow-400" />
-                    <span className="font-bold tracking-wide text-yellow-400">VIP Member</span>
-                </span>
-            </div>
-          ) : (
-             <ShimmerButton onClick={() => {
-                onReflectiveCardOpen();
-                setIsOpen(false);
-              }}>
-                <Fingerprint size={18} /> 
-                <span>Identity</span>
-             </ShimmerButton>
-          )}
-        </div>
-        <motion.div
-          onTap={toggleOpen}
-          className="relative -ml-1 w-8 h-24 bg-neutral-800/80 rounded-r-lg flex items-center justify-center cursor-pointer group"
-          whileHover={{ scale: 1.1 }}
-        >
-          <div className="w-1 h-6 bg-blue-500 rounded-full shadow-[0_0_10px_2px_#3b82f6] animate-pulse"></div>
-          <div className="absolute left-full ml-2 w-max px-3 py-2 bg-neutral-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-            {isOpen ? "Close" : "Actions"}
-          </div>
-        </motion.div>
-      </motion.div>
-    </>
-  );
-};
-
 // --- 3. MAIN HERO PARALLAX ---
 const HeroParallax = () => {
   const { 
     state, 
-    updateProject, deleteProject, 
-    updateServiceItem, deleteServiceItem, 
+    updateProject, 
+    deleteProject, 
+    updateServiceItem, 
+    deleteServiceItem, 
     uploadFile 
   } = useStudio();
   
@@ -542,31 +224,53 @@ const HeroParallax = () => {
   const isMobile = useIsMobile();
   const willChange = useWillChange();
 
-  const headline = hero?.headline || "BullMoney";
-  const subheadline = hero?.subheadline || "Elite Trading Community & Premium Trading Setups";
   const buttonText = hero?.button_text || "View Trading Setups";
-  const contactButtonText = (hero as any)?.contact_button_text || "Start Trading";
+
+  // Theme state
+  const [activeThemeId, setActiveThemeId] = useState('t01');
+  const [activeCategory, setActiveCategory] = useState<'SPECIAL' | 'SENTIMENT' | 'ASSETS' | 'CRYPTO' | 'HISTORICAL' | 'OPTICS' | 'GLITCH' | 'EXOTIC' | 'LOCATION' | 'ELEMENTAL' | 'CONCEPTS' | 'MEME' | 'SEASONAL'>('SPECIAL');
+  const [currentSound, setCurrentSound] = useState<SoundProfile>('MECHANICAL');
+  const [isMuted, setIsMuted] = useState(false);
+  const [hoverThemeId, setHoverThemeId] = useState<string | null>(null);
+
+  // Audio engine
+  const audioProfile = currentSound === 'MECHANICAL' || currentSound === 'SOROS' || currentSound === 'SCI-FI' || currentSound === 'SILENT'
+    ? currentSound
+    : 'MECHANICAL';
+  const sfx = useAudioEngine(!isMuted, audioProfile);
 
   const [isUcpOpen, setIsUcpOpen] = useState(false);
   const [isReflectiveCardOpen, setIsReflectiveCardOpen] = useState(false);
   const servicesModalRef = useRef<HTMLDivElement>(null);
 
-  const handleServicesOpen = () => {
-    const triggerButton = servicesModalRef.current?.querySelector('button');
-    if (triggerButton) {
-      triggerButton.click();
+  useEffect(() => {
+    const saved = localStorage.getItem('user_theme_id');
+    if (saved) {
+      setActiveThemeId(saved);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const theme = ALL_THEMES.find(t => t.id === activeThemeId);
+    if (theme && typeof document !== 'undefined') {
+      const root = document.documentElement;
+      root.style.filter = isMobile ? theme.mobileFilter : theme.filter;
+      root.style.setProperty('--accent-color', theme.accentColor || '#3b82f6');
+    }
+  }, [activeThemeId, isMobile]);
+
+  const currentTheme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
+  const displayTheme = hoverThemeId ? ALL_THEMES.find(t => t.id === hoverThemeId) : currentTheme;
 
   const parallaxItems = useMemo(() => {
-    const formattedProjects: GridItem[] = projects.map(p => ({
+    const formattedProjects: GridItem[] = projects.map((p: Project) => ({
         ...p,
         _source: 'project' as const,
         uniqueKey: `proj-${p.id}`
     }));
 
     const heroImages = hero?.hero_images || [];
-    const formattedServices: GridItem[] = serviceItems.map((s, index) => {
+    const formattedServices: GridItem[] = serviceItems.map((s: any, index: number) => {
         const serviceData = s as any;
         const specificImage = serviceData.image_url || serviceData.thumbnail;
         const hasSpecificImage = specificImage && typeof specificImage === 'string' && specificImage.trim() !== "";
@@ -590,7 +294,7 @@ const HeroParallax = () => {
         };
     });
 
-    const formattedHeroImages: GridItem[] = heroImages.map((img, i) => ({
+    const formattedHeroImages: GridItem[] = heroImages.map((img: string, i: number) => ({
         id: -1 * (i + 1),
         title: `Trading Setup ${i + 1}`,
         thumbnail: img,
@@ -621,24 +325,14 @@ const HeroParallax = () => {
     }));
   }, [projects, serviceItems, hero, isMobile]);
 
-  const itemsPerRow = Math.ceil(parallaxItems.length / 3);
-  const firstRow = parallaxItems.slice(0, itemsPerRow);
-  const secondRow = parallaxItems.slice(itemsPerRow, itemsPerRow * 2);
-  const thirdRow = parallaxItems.slice(itemsPerRow * 2, parallaxItems.length);
-
   const ref = useRef(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const parentRef = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const springConfig = { stiffness: 300, damping: 30, bounce: 100 };
   
   const translateX = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? 100 : 600]), springConfig);
   const translateXReverse = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? -100 : -600]), springConfig);
-  const rotateX = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? 0 : 15, 0]), springConfig);
-  const rotateZ = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? 0 : 20, 0]), springConfig);
-  const opacity = useSpring(useTransform(scrollYProgress, [0, 0.2], [0.2, 1]), springConfig);
-  const translateY = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? -100 : -700, isMobile ? 0 : 200]), springConfig);
 
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [activeProject, setActiveProject] = useState<GridItem | null>(null);
@@ -786,7 +480,7 @@ const HeroParallax = () => {
 
   if (loading) {
       return (
-          <div className="h-screen w-full flex items-center justify-center bg-neutral-950 text-#3b82f6">
+          <div className="h-screen w-full flex items-center justify-center bg-neutral-950 text-blue-500">
               <Loader2 className="animate-spin w-10 h-10" />
           </div>
       )
@@ -806,6 +500,9 @@ const HeroParallax = () => {
       .transform-gpu { transform: translate3d(0,0,0); -webkit-transform: translate3d(0,0,0); }
       .safari-mask-fix { -webkit-mask-image: -webkit-radial-gradient(white, black); mask-image: radial-gradient(white, black); isolation: isolate; }
       .safari-fix-layer { transform: translateZ(0); -webkit-transform: translateZ(0); }
+      .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 3px; }
     `}</style>
 
     {isAdmin && <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />}
@@ -822,6 +519,14 @@ const HeroParallax = () => {
     </div>
 
     <DynamicUltimateControlPanel isOpen={isUcpOpen} onOpenChange={setIsUcpOpen} />
+    
+    {displayTheme?.youtubeId && (
+      <HiddenYoutubePlayer
+        videoId={displayTheme.youtubeId}
+        isPlaying={!isMuted}
+        volume={isMuted ? 0 : 15}
+      />
+    )}
     
     <AnimatePresence>
         {isReflectiveCardOpen && (
@@ -865,7 +570,7 @@ const HeroParallax = () => {
             {canEdit && !isEditing && (
               <button
                 onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-                className="absolute top-4 left-4 md:left-auto md:right-16 z-50 p-2 bg-#3b82f6 rounded-full text-black hover:bg-#60a5fa transition-colors shadow-lg flex gap-2 items-center px-4 font-bold text-xs"
+                className="absolute top-4 left-4 md:left-auto md:right-16 z-50 p-2 bg-blue-500 rounded-full text-black hover:bg-blue-400 transition-colors shadow-lg flex gap-2 items-center px-4 font-bold text-xs"
               >
                   <Edit2 size={14} /> Edit {activeProject._source === 'service' ? 'Service' : 'Look'}
               </button>
@@ -885,10 +590,10 @@ const HeroParallax = () => {
                     className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:bg-black/70 transition-colors z-20"
                   >
                     {isUploadingImage ? (
-                        <Loader2 className="animate-spin text-#3b82f6 w-8 h-8" />
+                        <Loader2 className="animate-spin text-blue-500 w-8 h-8" />
                       ) : (
                         <>
-                          <Upload className="text-#3b82f6 w-8 h-8 mb-2" />
+                          <Upload className="text-blue-500 w-8 h-8 mb-2" />
                           <p className="text-white text-xs font-bold uppercase tracking-widest">Click to Change Image</p>
                         </>
                       )}
@@ -920,7 +625,7 @@ const HeroParallax = () => {
                              <input 
                               value={editForm.title} 
                               onChange={(e) => setEditForm({...editForm, title: e.target.value})}
-                              className="w-full bg-transparent p-2 border-b border-neutral-300 dark:border-neutral-700 outline-none focus:border-#3b82f6 text-neutral-900 dark:text-white text-base md:text-sm"
+                              className="w-full bg-transparent p-2 border-b border-neutral-300 dark:border-neutral-700 outline-none focus:border-blue-500 text-neutral-900 dark:text-white text-base md:text-sm"
                             />
                           </div>
                           <div className="mt-4">
@@ -929,7 +634,7 @@ const HeroParallax = () => {
                               rows={5}
                               value={editForm.description || ""} 
                               onChange={(e) => setEditForm({...editForm, description: e.target.value})}
-                              className="w-full bg-transparent p-2 border-b border-neutral-300 dark:border-neutral-700 outline-none focus:border-#3b82f6 text-neutral-900 dark:text-white resize-none text-base md:text-sm"
+                              className="w-full bg-transparent p-2 border-b border-neutral-300 dark:border-neutral-700 outline-none focus:border-blue-500 text-neutral-900 dark:text-white resize-none text-base md:text-sm"
                             />
                           </div>
                       </div>
@@ -940,7 +645,7 @@ const HeroParallax = () => {
                           <input 
                             value={editForm.price || ""} 
                             onChange={(e) => setEditForm({...editForm, price: e.target.value})}
-                            className="w-full bg-neutral-100 dark:bg-neutral-800 p-3 rounded-lg outline-none border border-transparent focus:border-#3b82f6 text-base md:text-sm"
+                            className="w-full bg-neutral-100 dark:bg-neutral-800 p-3 rounded-lg outline-none border border-transparent focus:border-blue-500 text-base md:text-sm"
                           />
                         </div>
                         <div>
@@ -948,7 +653,7 @@ const HeroParallax = () => {
                           <input 
                             value={editForm.duration || ""} 
                             onChange={(e) => setEditForm({...editForm, duration: e.target.value})}
-                            className="w-full bg-neutral-100 dark:bg-neutral-800 p-3 rounded-lg outline-none border border-transparent focus:border-#3b82f6 text-base md:text-sm"
+                            className="w-full bg-neutral-100 dark:bg-neutral-800 p-3 rounded-lg outline-none border border-transparent focus:border-blue-500 text-base md:text-sm"
                           />
                         </div>
                       </div>
@@ -958,7 +663,7 @@ const HeroParallax = () => {
                         <input 
                             value={editForm.technique || ""} 
                             onChange={(e) => setEditForm({...editForm, technique: e.target.value})}
-                            className="w-full bg-neutral-100 dark:bg-neutral-800 p-3 rounded-lg outline-none border border-transparent focus:border-#3b82f6 text-base md:text-sm"
+                            className="w-full bg-neutral-100 dark:bg-neutral-800 p-3 rounded-lg outline-none border border-transparent focus:border-blue-500 text-base md:text-sm"
                         />
                       </div>
 
@@ -966,7 +671,7 @@ const HeroParallax = () => {
                         <button 
                           onClick={handleSaveEdit} 
                           disabled={isSaving || isUploadingImage}
-                          className="flex-1 bg-#3b82f6 hover:bg-#60a5fa text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+                          className="flex-1 bg-blue-500 hover:bg-blue-400 text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2 text-sm disabled:opacity-50"
                         >
                           {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : <><Save size={16} /> Save</>}
                         </button>
@@ -997,7 +702,7 @@ const HeroParallax = () => {
                          <h3 className="text-4xl md:text-5xl font-serif font-bold text-neutral-900 dark:text-white mb-2 leading-tight">
                             {activeProject.title}
                         </h3>
-                         <div className="h-1 w-20 bg-#3b82f6 mb-6" />
+                         <div className="h-1 w-20 bg-blue-500 mb-6" />
                     </motion.div>
 
                     <motion.div 
@@ -1056,23 +761,11 @@ const HeroParallax = () => {
         className="h-screen pt-10 pb-0 overflow-hidden antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d]"
     >
         <div className="absolute inset-0 w-full h-full z-0 bg-black/5 pointer-events-none md:pointer-events-auto">
-          <Spline scene="/scene1.splinecode" onLoad={() => {}} onError={() => {}} />
+          <Spline scene="/scene1.splinecode" placeholder={undefined} className={undefined} />
         </div>
         <div className="max-w-7xl relative mx-auto pt-32 pb-12 md:py-32 px-4 w-full z-20 mb-10 md:mb-32">
-            <div className="relative z-20 flex flex-col items-start gap-4 pointer-events-none">
-            </div>
             
-            <SwipableButtons
-              buttonText={buttonText}
-              contactButtonText={contactButtonText}
-              isAdmin={isAdmin}
-              isAuthenticated={isAuthenticated}
-              setIsContactModalOpen={setIsContactModalOpen}
-              setIsAdminOpen={setIsAdminOpen}
-              onUcpOpen={() => setIsUcpOpen(true)}
-              onReflectiveCardOpen={() => setIsReflectiveCardOpen(true)}
-              onServicesOpen={handleServicesOpen}
-            />
+            {/* SwipableButtons (Actions Panel) REMOVED here */}
             
         </div>
     </div>
