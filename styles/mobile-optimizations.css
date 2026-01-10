@@ -1,0 +1,433 @@
+/* ============================================================================
+   MOBILE-FIRST RESPONSIVE OPTIMIZATIONS
+   Cross-browser compatible styles for all devices
+   ============================================================================ */
+
+/* ============================================================================
+   CSS CUSTOM PROPERTIES (CSS Variables)
+   ============================================================================ */
+:root {
+  /* Viewport height fix for mobile browsers */
+  --vh: 1vh;
+
+  /* Safe area insets for notched devices (iPhone X+) */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+
+  /* Touch target minimum size (44px recommended by Apple HIG) */
+  --touch-target-min: 44px;
+
+  /* Mobile-optimized spacing */
+  --spacing-mobile: 16px;
+  --spacing-tablet: 24px;
+  --spacing-desktop: 32px;
+}
+
+/* ============================================================================
+   BASE RESET & MOBILE-FIRST DEFAULTS
+   ============================================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  /* Prevent text size adjustment after orientation changes in iOS */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Remove tap highlight on mobile */
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  /* Use CSS custom property for viewport height */
+  height: 100%;
+  height: calc(var(--vh, 1vh) * 100);
+  /* Prevent font scaling in landscape on iOS */
+  -webkit-text-size-adjust: 100%;
+  /* Enable font smoothing on all browsers */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent pull-to-refresh and overscroll */
+  overscroll-behavior-y: none;
+  /* Enable smooth scrolling */
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100%;
+  min-height: calc(var(--vh, 1vh) * 100);
+  /* Prevent mobile browser bars from causing layout shifts */
+  position: fixed;
+  width: 100%;
+  overflow: hidden;
+  /* Font rendering optimization */
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================================
+   TOUCH OPTIMIZATIONS
+   ============================================================================ */
+
+/* Ensure all interactive elements meet minimum touch target size */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+[tabindex]:not([tabindex="-1"]) {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  /* Prevent callout on long press (iOS) */
+  -webkit-touch-callout: none;
+  /* Disable user selection for better touch UX */
+  user-select: none;
+  -webkit-user-select: none;
+  /* Ensure proper touch handling */
+  touch-action: manipulation;
+}
+
+/* Allow text selection in input fields */
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Remove default button styles */
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+/* Active state for touch feedback */
+button:active,
+a:active,
+[role="button"]:active {
+  opacity: 0.7;
+  transform: scale(0.98);
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
+
+/* ============================================================================
+   RESPONSIVE IMAGES & MEDIA
+   ============================================================================ */
+
+img,
+video,
+iframe,
+canvas,
+svg {
+  max-width: 100%;
+  height: auto;
+  /* Prevent layout shifts */
+  display: block;
+  /* GPU acceleration */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Lazy loading images */
+img[loading="lazy"] {
+  /* Prevent layout shifts during load */
+  aspect-ratio: attr(width) / attr(height);
+}
+
+/* ============================================================================
+   MOBILE-FIRST LAYOUT UTILITIES
+   ============================================================================ */
+
+.container-mobile {
+  width: 100%;
+  padding-left: var(--spacing-mobile);
+  padding-right: var(--spacing-mobile);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.container-safe {
+  padding-left: max(var(--spacing-mobile), var(--safe-area-inset-left));
+  padding-right: max(var(--spacing-mobile), var(--safe-area-inset-right));
+  padding-top: max(var(--spacing-mobile), var(--safe-area-inset-top));
+  padding-bottom: max(var(--spacing-mobile), var(--safe-area-inset-bottom));
+}
+
+/* ============================================================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================================================ */
+
+/* GPU-accelerated animations */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+}
+
+/* Prevent layout thrashing */
+.no-layout-shift {
+  contain: layout style paint;
+}
+
+/* Optimize scroll performance */
+.smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+
+/* ============================================================================
+   CROSS-BROWSER COMPATIBILITY FIXES
+   ============================================================================ */
+
+/* Safari-specific fixes */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari viewport units fix */
+  body {
+    min-height: -webkit-fill-available;
+  }
+
+  /* Fix for input zoom on iOS */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Firefox-specific fixes */
+@-moz-document url-prefix() {
+  /* Firefox scrollbar styling */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  }
+}
+
+/* Chrome/Edge-specific fixes */
+@supports (-webkit-appearance: none) {
+  /* Custom scrollbar for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE BREAKPOINTS
+   ============================================================================ */
+
+/* Small devices (phones, less than 640px) */
+@media (min-width: 640px) {
+  .container-mobile {
+    max-width: 640px;
+  }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+  :root {
+    --spacing: var(--spacing-tablet);
+  }
+
+  .container-mobile {
+    max-width: 768px;
+    padding-left: var(--spacing-tablet);
+    padding-right: var(--spacing-tablet);
+  }
+}
+
+/* Large devices (desktops, 1024px and up) */
+@media (min-width: 1024px) {
+  :root {
+    --spacing: var(--spacing-desktop);
+  }
+
+  .container-mobile {
+    max-width: 1024px;
+    padding-left: var(--spacing-desktop);
+    padding-right: var(--spacing-desktop);
+  }
+
+  /* Enable hover effects only on devices with hover capability */
+  @media (hover: hover) {
+    button:hover,
+    a:hover,
+    [role="button"]:hover {
+      opacity: 0.8;
+      transform: translateY(-2px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+  }
+}
+
+/* Extra large devices (large desktops, 1280px and up) */
+@media (min-width: 1280px) {
+  .container-mobile {
+    max-width: 1280px;
+  }
+}
+
+/* 2XL devices (very large desktops, 1536px and up) */
+@media (min-width: 1536px) {
+  .container-mobile {
+    max-width: 1536px;
+  }
+}
+
+/* ============================================================================
+   ORIENTATION-SPECIFIC STYLES
+   ============================================================================ */
+
+@media (orientation: portrait) {
+  .landscape-only {
+    display: none !important;
+  }
+}
+
+@media (orientation: landscape) {
+  .portrait-only {
+    display: none !important;
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY & REDUCED MOTION
+   ============================================================================ */
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  * {
+    border-width: 2px !important;
+  }
+}
+
+/* Dark mode preference */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+/* ============================================================================
+   PRINT STYLES
+   ============================================================================ */
+
+@media print {
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  a,
+  a:visited {
+    text-decoration: underline;
+  }
+
+  img {
+    page-break-inside: avoid;
+  }
+
+  h2,
+  h3,
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+
+  h2,
+  h3 {
+    page-break-after: avoid;
+  }
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+
+/* Hide visually but keep accessible to screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Hide from screen readers but visible */
+.aria-hidden {
+  aria-hidden: true;
+}
+
+/* Responsive visibility utilities */
+.mobile-only {
+  display: block;
+}
+
+.tablet-up {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none;
+  }
+
+  .tablet-up {
+    display: block;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Remove focus outline for mouse users */
+*:focus:not(:focus-visible) {
+  outline: none;
+}

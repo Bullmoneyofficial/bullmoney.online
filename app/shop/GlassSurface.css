@@ -1,0 +1,111 @@
+.glass-surface {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  max-width: 100%;
+  transition: opacity 0.26s ease-out;
+}
+
+/* Ensure the SVG filter definition takes up no space */
+.glass-surface__filter {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.glass-surface__content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: inherit;
+}
+
+/* =========================================
+   DESKTOP / ANDROID (Real SVG Distortion)
+   ========================================= */
+.glass-desktop-svg {
+  /* Connects to the SVG filter ID defined in React */
+  backdrop-filter: var(--filter-id) saturate(var(--glass-saturation, 1.2));
+  -webkit-backdrop-filter: var(--filter-id) saturate(var(--glass-saturation, 1.2));
+  
+  /* Fallback background if filter is slow to load */
+  background: rgba(255, 255, 255, 0.02); 
+  box-shadow: 
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+    0 10px 40px rgba(0,0,0,0.5);
+}
+
+/* =========================================
+   IOS / MOBILE OPTIMIZED (Native Blur + Simulation)
+   ========================================= */
+.glass-mobile-3d {
+  /* 1. CRITICAL for iOS: Use native blur, NOT the SVG filter url() */
+  backdrop-filter: blur(var(--blur, 8px)) saturate(var(--glass-saturation, 1.4));
+  -webkit-backdrop-filter: blur(var(--blur, 8px)) saturate(var(--glass-saturation, 1.4));
+  
+  /* 2. Semi-transparent background to ensure visibility */
+  background: linear-gradient(
+    135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.02) 50%, 
+    rgba(255, 255, 255, 0.05) 100%
+  );
+
+  /* 3. 3D Border effect */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 10px 30px rgba(0,0,0,0.2),
+    inset 1px 1px 0px 0px rgba(255, 255, 255, 0.15);
+}
+
+/* Dark mode adjustment for mobile */
+@media (prefers-color-scheme: dark) {
+  .glass-mobile-3d {
+    background: linear-gradient(
+      135deg, 
+      rgba(0, 0, 0, 0.2) 0%, 
+      rgba(0, 0, 0, 0.05) 50%, 
+      rgba(0, 0, 0, 0.1) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* The "Fake" Liquid Layer for Mobile 
+   Simulates the chromatic aberration without SVG overhead */
+.mobile-liquid-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.5;
+  border-radius: inherit;
+  
+  background: radial-gradient(
+    circle at 30% 70%,
+    rgba(255, 0, 0, 0.12),
+    transparent 50%
+  ),
+  radial-gradient(
+    circle at 70% 30%,
+    rgba(0, 0, 255, 0.12),
+    transparent 50%
+  );
+  
+  mix-blend-mode: overlay;
+  animation: mobile-breathing 6s ease-in-out infinite alternate;
+}
+
+@keyframes mobile-breathing {
+  0% { transform: scale(1); filter: hue-rotate(0deg); }
+  100% { transform: scale(1.1); filter: hue-rotate(20deg); }
+}

@@ -1,0 +1,198 @@
+/* app/shop/ShopScrollFunnel.css */
+
+.funnel-page-wrapper {
+  background-color: #050505;
+  color: white;
+  width: 100%;
+  position: relative;
+  /* Default Desktop Height */
+  min-height: 250vh; 
+}
+
+/* --- WRAPPERS & ANIMATION --- */
+.glass-centering-wrapper {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  pointer-events: none;
+  width: auto;
+  height: auto;
+}
+
+.glass-bobbing-layer {
+  animation: float-vertical 6s ease-in-out infinite;
+}
+
+@keyframes float-vertical {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+/* --- GLASS STYLES --- */
+.glass-lens {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.05); 
+}
+
+.enter-shop-btn {
+  background: rgba(255, 255, 255, 0);
+  color: rgb(255, 255, 255);
+  border: none;
+  padding: 0.8rem 2rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 999px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0);
+  white-space: nowrap; /* Prevents button text wrapping */
+}
+
+.enter-shop-btn:hover {
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0);
+}
+
+/* --- SCROLLING CONTENT --- */
+.scrolling-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Add padding so the first element isn't hidden behind the header/lens immediately */
+  padding-top: 10vh; 
+  padding-bottom: 20vh;
+}
+
+.scroll-section {
+  /* DESKTOP SPACING */
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Typography Defaults */
+.scroll-subtitle {
+  font-size: 0.9rem;
+  letter-spacing: 4px;
+  color: #888;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.scroll-title {
+  font-size: clamp(3rem, 10vw, 7rem);
+  font-weight: 900;
+  line-height: 0.9;
+  text-align: center;
+  color: white;
+  text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.image-wrapper {
+  width: 90%;
+  max-width: 800px;
+  border-radius: 30px;
+  overflow: hidden;
+  box-shadow: 0 20px 80px rgba(0,0,0,0.6);
+  animation: float-image 7s ease-in-out infinite reverse;
+}
+
+@keyframes float-image {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(15px); }
+}
+
+.bg-image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.evervault-float {
+  animation: float-vertical 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+.pacman-grid {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pacman-grid:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(16, 185, 129, 0.18);
+}
+
+/* =========================================
+   MOBILE OPTIMIZATIONS
+   ========================================= */
+@media (max-width: 768px) {
+  
+  /* 1. Reduce overall scroll length */
+  .funnel-page-wrapper {
+    min-height: 180vh; 
+  }
+
+  /* 2. Tighten vertical spacing */
+  .scrolling-content {
+    padding-top: 5vh;
+    padding-bottom: 10vh;
+    gap: 5vh; 
+  }
+
+  /* 3. Make sections shorter */
+  .scroll-section {
+    min-height: 50vh; 
+  }
+  
+  /* 4. Footer tweak */
+  .footer-sect {
+    min-height: 30vh;
+  }
+
+  /* 5. Adjust Fonts */
+  .scroll-title {
+    font-size: 3.5rem; 
+  }
+  
+  .scroll-subtitle {
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+  }
+
+  /* 6. Adjust Animation */
+  .glass-bobbing-layer {
+    animation: float-vertical 4s ease-in-out infinite; 
+  }
+  
+  @keyframes float-vertical {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); } 
+  }
+
+  /* 7. Make Button Smaller */
+  .enter-shop-btn {
+    /* First value controls HEIGHT, Second value controls WIDTH */
+    padding: 0.35rem 1rem !important; 
+    
+    /* Make text smaller to fit the smaller button */
+    font-size: 0.7rem !important;     
+    
+    /* Ensures text stays centered vertically */
+    line-height: 1.2;                 
+    
+    /* Prevents the button from stretching to full width */
+    width: fit-content;               
+    margin: 0 auto; /* Centers the button if it's a block element */
+  }
+}
