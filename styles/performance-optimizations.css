@@ -1,0 +1,44 @@
+/* Performance Optimizations */
+
+/* GPU Acceleration for animations */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Will-change for animated elements */
+.animated-element {
+  will-change: transform, opacity;
+}
+
+/* Containment for better rendering performance */
+.card,
+.section {
+  contain: layout style paint;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Image loading optimization */
+img {
+  content-visibility: auto;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Font loading optimization */
+@font-face {
+  font-display: swap;
+}
