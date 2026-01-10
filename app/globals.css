@@ -159,8 +159,43 @@ html {
   }
 }
 
+/* Mobile Touch Scrolling Improvements */
+html {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+body {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Allow scrolling in main content and sections */
+main, section, [data-allow-scroll], [data-scrollable] {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
+}
+
+/* Ensure canvas and interactive elements don't block scrolling */
+canvas {
+  touch-action: pan-y;
+}
+
+/* Fix for iOS Safari */
+@supports (-webkit-touch-callout: none) {
+  body {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+}
+
 .spline-container {
   height: 100%; /* Make it fill its parent's height */
   width: 100%; /* Make it fill its parent's width */
   position: relative; /* Needed for absolutely positioned children */
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }

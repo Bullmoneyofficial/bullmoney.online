@@ -41,7 +41,11 @@ const DraggableSplit: React.FC<DraggableSplitProps> = ({ children, initialRatio 
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
     if (!isDragging) return;
-    e.preventDefault();
+    // Only prevent default if we're actively dragging the divider
+    const target = e.target as HTMLElement;
+    if (target && target.closest('.draggable-divider')) {
+      e.preventDefault();
+    }
     updateSplit(e.touches[0].clientY);
   }, [isDragging, updateSplit]);
 
@@ -70,10 +74,13 @@ const DraggableSplit: React.FC<DraggableSplitProps> = ({ children, initialRatio 
     <div
       ref={containerRef}
       className="flex flex-col w-full h-[800px] overflow-hidden relative bg-black/5 rounded-lg"
+      data-allow-scroll
+      data-scrollable
     >
       <div
         style={{ height: `calc(${splitRatio * 100}% - 6px)` }}
         className="overflow-hidden"
+        data-allow-scroll
       >
         {children[0]}
       </div>
@@ -81,11 +88,11 @@ const DraggableSplit: React.FC<DraggableSplitProps> = ({ children, initialRatio 
       <div
         onMouseDown={handleStart}
         onTouchStart={handleStart}
-        className={`h-3 flex-shrink-0 cursor-row-resize relative group transition-all duration-200 ${
+        className={`h-3 flex-shrink-0 cursor-row-resize relative group transition-all duration-200 draggable-divider ${
           isDragging ? 'bg-blue-500' : 'bg-blue-600 hover:bg-blue-500'
         }`}
       >
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className={`h-1 w-12 rounded-full transition-all duration-200 ${
             isDragging ? 'bg-white scale-110' : 'bg-white/60 group-hover:bg-white/80'
           }`} />
@@ -95,6 +102,7 @@ const DraggableSplit: React.FC<DraggableSplitProps> = ({ children, initialRatio 
       <div
         style={{ height: `calc(${(1 - splitRatio) * 100}% - 6px)` }}
         className="overflow-hidden"
+        data-allow-scroll
       >
         {children[1]}
       </div>

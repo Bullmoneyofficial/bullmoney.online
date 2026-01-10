@@ -5,6 +5,14 @@ import Hero from "@/components/hero";
 import CTA from "@/components/Chartnews";
 import { Features } from "@/components/features";
 import { LiveMarketTicker } from "@/components/LiveMarketTicker";
+import { GlobalThemeProvider } from "@/contexts/GlobalThemeProvider";
+import { SwipeablePanel } from "@/components/Mainpage/SwipeablePanel";
+import { ThemeSelector } from "@/components/Mainpage/ThemeSelector";
+import HiddenYoutubePlayer from "@/components/Mainpage/HiddenYoutubePlayer";
+import { ALL_THEMES } from "@/constants/theme-data";
+import type { SoundProfile } from "@/constants/theme-data";
+import { Settings } from "lucide-react";
+import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 
 const DraggableSplit = lazy(() => import('@/components/DraggableSplit'));
 const SplineScene = lazy(() => import('@/components/SplineScene'));
@@ -48,25 +56,130 @@ function LazySplineContainer({ scene }: { scene: string }) {
   );
 }
 
+function HomeContent() {
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [activeThemeId, setActiveThemeId] = useState('t01');
+  const [activeCategory, setActiveCategory] = useState<'SPECIAL' | 'SENTIMENT' | 'ASSETS' | 'CRYPTO' | 'HISTORICAL' | 'OPTICS' | 'GLITCH' | 'EXOTIC' | 'LOCATION' | 'ELEMENTAL' | 'CONCEPTS' | 'MEME' | 'SEASONAL'>('SPECIAL');
+  const [currentSound, setCurrentSound] = useState<SoundProfile>('MECHANICAL');
+  const [isMuted, setIsMuted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [hoverThemeId, setHoverThemeId] = useState<string | null>(null);
+
+  // Audio engine - map SoundProfile to AudioSoundProfile
+  const audioProfile = currentSound === 'MECHANICAL' || currentSound === 'SOROS' || currentSound === 'SCI-FI' || currentSound === 'SILENT'
+    ? currentSound
+    : 'MECHANICAL';
+  const sfx = useAudioEngine(!isMuted, audioProfile);
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Load saved theme from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('user_theme_id');
+    if (saved) {
+      setActiveThemeId(saved);
+    }
+  }, []);
+
+  // Apply theme filter
+  useEffect(() => {
+    const theme = ALL_THEMES.find(t => t.id === activeThemeId);
+    if (theme && typeof document !== 'undefined') {
+      const root = document.documentElement;
+      root.style.filter = isMobile ? theme.mobileFilter : theme.filter;
+      root.style.setProperty('--accent-color', theme.accentColor || '#3b82f6');
+    }
+  }, [activeThemeId, isMobile]);
+
+  const handleSaveTheme = (themeId: string) => {
+    setActiveThemeId(themeId);
+    localStorage.setItem('user_theme_id', themeId);
+    sfx.confirm();
+    setPanelOpen(false);
+  };
+
+  const handleExit = () => {
+    sfx.click();
+    setPanelOpen(false);
+  };
+
+  const handleHover = (id: string | null) => {
+    setHoverThemeId(id);
+  };
+
+  const currentTheme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
+  const displayTheme = hoverThemeId ? ALL_THEMES.find(t => t.id === hoverThemeId) : currentTheme;
+
+  return (
+    <>
+      <main className="min-h-screen flex flex-col" data-allow-scroll data-scrollable>
+        <Hero />
+        <CTA />
+        <Features />
+
+        <section className="w-full max-w-7xl mx-auto px-4 py-16" data-allow-scroll>
+          <Suspense fallback={
+            <div className="w-full h-[800px] bg-black/5 rounded-lg animate-pulse" />
+          }>
+            <DraggableSplit>
+              <LazySplineContainer scene="/scene4.splinecode" />
+              <LazySplineContainer scene="/scene3.splinecode" />
+            </DraggableSplit>
+          </Suspense>
+        </section>
+
+        <LiveMarketTicker />
+      </main>
+
+      {/* Background Music Player - Hidden */}
+      {displayTheme?.youtubeId && (
+        <HiddenYoutubePlayer
+          videoId={displayTheme.youtubeId}
+          isPlaying={!isMuted}
+          volume={isMuted ? 0 : 15}
+        />
+      )}
+
+      {/* Swipeable Control Panel from Bottom */}
+      <SwipeablePanel
+        title="Theme & Music Control"
+        icon={<Settings size={20} />}
+        position="bottom"
+        maxHeight="85vh"
+        minHeight="32px"
+        open={panelOpen}
+        onOpenChange={setPanelOpen}
+        accentColor={currentTheme?.accentColor || '#3b82f6'}
+        zIndex={9999}
+      >
+        <ThemeSelector
+          activeThemeId={activeThemeId}
+          setActiveThemeId={setActiveThemeId}
+          activeCategory={activeCategory}
+          setActiveCategory={setActiveCategory}
+          isMobile={isMobile}
+          currentSound={currentSound}
+          setCurrentSound={setCurrentSound}
+          isMuted={isMuted}
+          setIsMuted={setIsMuted}
+          onSave={handleSaveTheme}
+          onExit={handleExit}
+          onHover={handleHover}
+        />
+      </SwipeablePanel>
+    </>
+  );
+}
+
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col">
-      <Hero />
-      <CTA />
-      <Features />
-
-      <section className="w-full max-w-7xl mx-auto px-4 py-16">
-        <Suspense fallback={
-          <div className="w-full h-[800px] bg-black/5 rounded-lg animate-pulse" />
-        }>
-          <DraggableSplit>
-            <LazySplineContainer scene="/scene4.splinecode" />
-            <LazySplineContainer scene="/scene3.splinecode" />
-          </DraggableSplit>
-        </Suspense>
-      </section>
-
-      <LiveMarketTicker />
-    </main>
+    <GlobalThemeProvider>
+      <HomeContent />
+    </GlobalThemeProvider>
   );
 }

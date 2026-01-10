@@ -156,33 +156,68 @@ export default function RootLayout({
               window.addEventListener('resize', setVH);
               window.addEventListener('orientationchange', setVH);
 
-              // Disable Pull-to-Refresh on iOS
+              // Disable Pull-to-Refresh on iOS (only at edges, allow normal scrolling)
               document.addEventListener('touchmove', function(e) {
                 if (e.touches.length > 1) return;
                 const target = e.target;
-                if (target && target.closest && !target.closest('[data-allow-scroll]')) {
-                  if (window.scrollY === 0) {
-                    e.preventDefault();
-                  }
+
+                // Allow scrolling in marked scrollable areas
+                if (target && target.closest && (
+                  target.closest('[data-allow-scroll]') ||
+                  target.closest('main') ||
+                  target.closest('[data-scrollable]') ||
+                  target.closest('.overflow-y-auto') ||
+                  target.closest('.overflow-auto')
+                )) {
+                  return; // Allow normal scrolling
+                }
+
+                // Only prevent at the very top
+                if (window.scrollY === 0) {
+                  e.preventDefault();
                 }
               }, { passive: false });
 
-              // Prevent iOS Bounce Effect
+              // Prevent iOS Bounce Effect (only at document edges, not during normal scroll)
               let lastY = 0;
+              let isScrolling = false;
+
               document.addEventListener('touchstart', function(e) {
                 lastY = e.touches[0].clientY;
+                isScrolling = false;
               }, { passive: true });
 
               document.addEventListener('touchmove', function(e) {
+                const target = e.target;
+
+                // Allow scrolling in scrollable containers
+                if (target && target.closest && (
+                  target.closest('[data-allow-scroll]') ||
+                  target.closest('main') ||
+                  target.closest('[data-scrollable]') ||
+                  target.closest('.overflow-y-auto') ||
+                  target.closest('.overflow-auto')
+                )) {
+                  return; // Allow normal scrolling
+                }
+
                 const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
                 const scrollHeight = document.documentElement.scrollHeight;
                 const clientHeight = document.documentElement.clientHeight;
                 const currentY = e.touches[0].clientY;
+                const deltaY = currentY - lastY;
 
-                if ((scrollTop <= 0 && currentY > lastY) ||
-                    (scrollTop + clientHeight >= scrollHeight && currentY < lastY)) {
+                // Only prevent bounce at absolute edges
+                const atTop = scrollTop <= 0;
+                const atBottom = scrollTop + clientHeight >= scrollHeight - 1;
+                const pullingDown = deltaY > 0;
+                const pullingUp = deltaY < 0;
+
+                // Only prevent if we're at an edge AND trying to go beyond it
+                if ((atTop && pullingDown) || (atBottom && pullingUp)) {
                   e.preventDefault();
                 }
+
                 lastY = currentY;
               }, { passive: false });
 
