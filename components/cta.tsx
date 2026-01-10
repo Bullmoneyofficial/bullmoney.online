@@ -394,7 +394,7 @@ export function CTA() {
               </motion.h2>
 
               <p className="text-lg text-neutral-600 dark:text-neutral-400 mb-10 max-w-lg leading-relaxed">
-                 Join 500+ profitable traders using BullMoney's premium trading setups for Crypto, Forex & Stocks. Daily market analysis, expert entry/exit strategies, and proven risk management.
+                 Join 500+ profitable traders using BullMoney&apos;s premium trading setups for Crypto, Forex & Stocks. Daily market analysis, expert entry/exit strategies, and proven risk management.
               </p>
 
               {/* UPDATED: Main Booking Button to open Contact Modal */}

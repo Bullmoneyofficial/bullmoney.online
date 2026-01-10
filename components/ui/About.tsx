@@ -241,7 +241,7 @@ const CloseButton = () => {
 // 2. TEXT TYPE COMPONENT
 // ==========================================
 
-const TextType = React.memo(({
+const TextType = React.memo(function TextType({
   text,
   as: Component = 'div',
   typingSpeed = 50,
@@ -261,7 +261,7 @@ const TextType = React.memo(({
   startOnVisible = false,
   reverseMode = false,
   ...props
-}: any) => {
+}: any) {
   const [displayedText, setDisplayedText] = useState('');
   const [currentCharIndex, setCurrentCharIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
