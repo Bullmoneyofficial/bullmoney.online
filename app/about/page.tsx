@@ -32,7 +32,7 @@ const FixedThemeConfigurator = dynamic(
 // --- PAGE SPECIFIC CONTENT IMPORTS ---
 import { AboutContent } from "./AboutContent";
 import { Pricing } from "@/app/shop/pricing"; 
-import { Why } from "@/components/Mainpage/Why"; 
+import { Features as Why } from "@/components/Mainpage/features"; 
 import Socials from "@/components/Mainpage/Socialsfooter";
 import Shopmain from "@/components/Mainpage/ShopMainpage";
 

@@ -205,6 +205,7 @@ export function Features() {
                 </AnimatePresence>
               <Image
                 src="/GTFLOGO.png"
+                alt="Goat Funded Trader Logo"
                 height={220}
                 width={220}
                 className="object-contain rounded-lg"
@@ -395,9 +396,9 @@ const CardPattern = ({ mouseX, mouseY, randomString }: any) => {
         className="absolute inset-0 rounded-2xl opacity-0 mix-blend-overlay group-hover/card:opacity-100"
         style={style}
       >
-        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white/80 font-mono font-bold">
+        <div className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white/80 font-mono font-bold">
           {randomString}
-        </p>
+        </div>
       </motion.div>
     </div>
   );
