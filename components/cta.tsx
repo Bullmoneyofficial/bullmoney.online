@@ -235,7 +235,7 @@ const CardSwap: React.FC<CardSwapProps> = ({
 
     const interval = setInterval(swap, delay);
     return () => clearInterval(interval);
-  }, [cardDistance, verticalDistance, delay, skewAmount, refs, isPaused]);
+  }, [cardDistance, verticalDistance, delay, skewAmount, refs, isPaused, childArr]);
 
   return (
     <div ref={container} className="relative perspective-container" style={{ width, height }}>
@@ -367,7 +367,7 @@ export function CTA() {
                    {reviewImages.length > 0 ? (
                       reviewImages.map((src, i) => (
                         <div key={i} className="w-8 h-8 rounded-full border-2 border-white dark:border-neutral-900 overflow-hidden">
-                          <img src={src} alt="Client" className="w-full h-full object-cover" />
+                          <img src={src} alt={`Client ${i + 1}`} className="w-full h-full object-cover" />
                         </div>
                       ))
                    ) : (
@@ -432,10 +432,10 @@ export function CTA() {
                         className="relative group w-full h-full"
                         onClick={() => setActiveCard(card)}
                       >
-                        <img 
-                          src={card.image} 
-                          alt={card.title} 
-                          className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-500" 
+                        <img
+                          src={card.image}
+                          alt={card.title || "Trading setup"}
+                          className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-500"
                         />
                         {/* Overlay on Card (Pre-Expand) */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
@@ -486,7 +486,7 @@ export function CTA() {
 
                 {/* Left: Image */}
                 <div className="w-full md:w-1/2 h-64 md:h-auto relative">
-                   <img src={activeCard.image} alt={activeCard.title} className="w-full h-full object-cover" />
+                   <img src={activeCard.image} alt={activeCard.title || "Trading setup detail"} className="w-full h-full object-cover" />
                 </div>
 
                 {/* Right: Details */}

@@ -89,7 +89,7 @@ export const formatValidationError = (error: z.ZodError) => {
   }));
 };
 
-export default {
+const validation = {
   validateEmail,
   validatePassword,
   validateUsername,
@@ -103,3 +103,5 @@ export default {
   UpdateProductSchema,
   formatValidationError,
 };
+
+export default validation;

@@ -271,13 +271,14 @@ const TargetCursorComponent = memo(({
 
     // --- CLEANUP FUNCTION ---
     return () => {
+        const state = stateRef.current;
         document.body.classList.remove('custom-cursor-active');
         window.removeEventListener('mousemove', moveCursor);
         window.removeEventListener('mousedown', handleDown);
         window.removeEventListener('mouseup', handleUp);
-        
-        if(stateRef.current.tickerFn) gsap.ticker.remove(stateRef.current.tickerFn);
-        ctx.revert(); 
+
+        if(state.tickerFn) gsap.ticker.remove(state.tickerFn);
+        ctx.revert();
     };
   }, [isMobile, hideDefaultCursor, spinDuration, targetSelector, hoverDuration, parallaxOn, moveCursor, handleDown, handleUp]);
 

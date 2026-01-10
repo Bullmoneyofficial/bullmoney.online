@@ -88,4 +88,5 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult> {
   }
 }
 
-export default { requireAdmin, requireAuth };
+const auth = { requireAdmin, requireAuth };
+export default auth;

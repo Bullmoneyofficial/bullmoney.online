@@ -753,7 +753,7 @@ const GameBoyPacmanGame = () => {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [isWall, difficulty]);
+  }, [isWall, difficulty, resetBoard]);
 
   // Collision detection - OPTIMIZED (less frequent)
   useEffect(() => {

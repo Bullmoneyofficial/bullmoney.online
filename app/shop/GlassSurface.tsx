@@ -108,10 +108,10 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     if (isIOS) return;
 
     updateSVG();
-    
+
     [
       { ref: redChannelRef, offset: redOffset },
-  
+
       { ref: blueChannelRef, offset: blueOffset }
     ].forEach(({ ref, offset }) => {
       if (ref.current) {
@@ -126,8 +126,8 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
       gaussianBlurRef.current.setAttribute('stdDeviation', displace.toString());
     }
   }, [
-    distortionScale, redOffset, greenOffset, blueOffset, 
-    xChannel, yChannel, displace, isIOS, width, height
+    distortionScale, redOffset, greenOffset, blueOffset,
+    xChannel, yChannel, displace, isIOS, width, height, updateSVG
   ]);
 
   // 4. Resize Observer
@@ -136,7 +136,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     const resizeObserver = new ResizeObserver(() => requestAnimationFrame(updateSVG));
     resizeObserver.observe(containerRef.current);
     return () => resizeObserver.disconnect();
-  }, [isIOS]);
+  }, [isIOS, updateSVG]);
 
   const containerStyle = {
     ...style,

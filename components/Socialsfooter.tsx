@@ -618,13 +618,15 @@ const BrandIcons = {
 };
 
 export const SocialsRow = () => {
-  const socials = [
-    { href: "https://youtube.com/@bullmoney.online", Icon: BrandIcons.Youtube, color: "text-red-500", label: "YouTube" },
-    { href: "https://www.instagram.com/bullmoney.online/", Icon: BrandIcons.Instagram, color: "text-pink-500", label: "Instagram" },
-    { href: "https://discord.com/invite/9vVB44ZrNA", Icon: BrandIcons.Discord, color: "text-indigo-500", label: "Discord" },
-    { href: "https://t.me/bullmoneyfx", Icon: BrandIcons.Telegram, color: "text-blue-400", label: "Telegram" },
-  ];
-  const marqueeSocials = useMemo(() => [...socials, ...socials, ...socials, ...socials, ...socials, ...socials], [socials]); 
+  const marqueeSocials = useMemo(() => {
+    const socials = [
+      { href: "https://youtube.com/@bullmoney.online", Icon: BrandIcons.Youtube, color: "text-red-500", label: "YouTube" },
+      { href: "https://www.instagram.com/bullmoney.online/", Icon: BrandIcons.Instagram, color: "text-pink-500", label: "Instagram" },
+      { href: "https://discord.com/invite/9vVB44ZrNA", Icon: BrandIcons.Discord, color: "text-indigo-500", label: "Discord" },
+      { href: "https://t.me/bullmoneyfx", Icon: BrandIcons.Telegram, color: "text-blue-400", label: "Telegram" },
+    ];
+    return [...socials, ...socials, ...socials, ...socials, ...socials, ...socials];
+  }, []); 
 
   return (
     <div className="relative flex w-full flex-col items-center justify-center py-0">

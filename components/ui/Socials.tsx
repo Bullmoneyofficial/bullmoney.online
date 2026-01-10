@@ -66,8 +66,9 @@ const SmartImage = ({ src, alt, className }: { src: string, alt: string, classNa
                 <div className="w-6 h-6 border-2 border-zinc-300 border-t-zinc-600 rounded-full animate-spin"/>
             </div>
         )}
-        <img 
-            src={imgSrc} alt={alt} 
+        <img
+            src={imgSrc}
+            alt={alt}
             className={`w-full h-full object-cover transition-opacity duration-500 ${loading ? 'opacity-0' : 'opacity-100'}`}
             onLoad={() => setLoading(false)}
             onError={handleError}

@@ -479,6 +479,7 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     window.addEventListener('mouseover', enterHandler as EventListener);
 
     return () => {
+      const activeStrength = activeStrengthRef.current;
       if (tickerFnRef.current) gsap.ticker.remove(tickerFnRef.current);
       window.removeEventListener('mousemove', moveHandler);
       window.removeEventListener('mouseover', enterHandler as EventListener);
@@ -490,7 +491,7 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
       document.body.classList.remove('custom-cursor-active');
       isActiveRef.current = false;
       targetCornerPositionsRef.current = null;
-      activeStrengthRef.current.current = 0;
+      activeStrength.current = 0;
     };
   }, [targetSelector, spinDuration, moveCursor, constants, hideDefaultCursor, isMobile, hoverDuration, parallaxOn]);
 

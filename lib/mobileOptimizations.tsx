@@ -145,7 +145,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
     <img
       ref={imgRef}
       src={currentSrc}
-      alt={alt}
+      alt={alt || "Image"}
       className={`${className} transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
       loading="lazy"
       {...props}

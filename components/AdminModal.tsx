@@ -259,7 +259,7 @@ function Dashboard({ onClose }: { onClose: () => void }) {
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {heroForm.hero_images && heroForm.hero_images.map((url, idx) => (
                             <div key={idx} className="aspect-[2/3] relative group rounded-xl overflow-hidden bg-black border border-neutral-800">
-                                <img src={url} className="h-full w-full object-cover" />
+                                <img src={url} alt="Hero background layer" className="h-full w-full object-cover" />
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                                     <button onClick={() => removeHeroImage(idx)} className="text-red-500 bg-white p-2 rounded-full hover:scale-110 transition-transform"><Trash2 size={16}/></button>
                                 </div>
@@ -295,7 +295,7 @@ function Dashboard({ onClose }: { onClose: () => void }) {
                 <div className={`card-section mb-8 transition-colors ${editingProjectId ? "border-amber-500/50 bg-amber-900/5" : ""}`}>
                     <div className="flex flex-col md:flex-row gap-4 mb-4">
                          <div className="w-full md:w-28 aspect-square md:h-28 bg-black rounded-xl border border-neutral-700 overflow-hidden relative group shrink-0">
-                            {projectForm.thumbnail ? <img src={projectForm.thumbnail} className="h-full w-full object-cover" /> : <div className="h-full flex items-center justify-center text-neutral-600"><ImageIcon/></div>}
+                            {projectForm.thumbnail ? <img src={projectForm.thumbnail} alt="Project thumbnail" className="h-full w-full object-cover" /> : <div className="h-full flex items-center justify-center text-neutral-600"><ImageIcon/></div>}
                             <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center cursor-pointer transition-opacity">
                                 <Upload className="text-white mb-1" size={20}/>
                                 <span className="text-[9px] text-white font-bold uppercase">Alterar Foto</span>
@@ -332,7 +332,7 @@ function Dashboard({ onClose }: { onClose: () => void }) {
                     <h4 className="section-label mb-2">Seus Looks Ativos ({state.projects.length})</h4>
                     {state.projects.map(p => (
                         <div key={p.id} className="flex items-center gap-4 bg-neutral-900 p-3 rounded-xl border border-neutral-800 hover:border-neutral-600 transition-colors group">
-                            <img src={p.thumbnail} className="h-12 w-12 rounded-lg object-cover" />
+                            <img src={p.thumbnail} alt={p.title} className="h-12 w-12 rounded-lg object-cover" />
                             <div className="flex-1">
                                 <div className="text-white text-sm font-bold">{p.title}</div>
                                 <div className="text-neutral-500 text-xs">{p.price} • {p.duration}</div>
@@ -375,7 +375,7 @@ function Dashboard({ onClose }: { onClose: () => void }) {
                                        
                                        {/* Left: Info */}
                                        <div className="flex items-center gap-3 w-full sm:w-auto mb-2 sm:mb-0">
-                                          {item.image_url && <img src={item.image_url} className="w-10 h-10 rounded-lg object-cover bg-neutral-900" />}
+                                          {item.image_url && <img src={item.image_url} alt={item.name} className="w-10 h-10 rounded-lg object-cover bg-neutral-900" />}
                                           <div className="flex flex-col">
                                             <span className="font-bold text-white text-base sm:text-sm">{item.name}</span>
                                             <span className="text-[10px] text-neutral-500">{item.detail_time}</span>
@@ -415,7 +415,7 @@ function Dashboard({ onClose }: { onClose: () => void }) {
                                        {/* Image Upload for Service */}
                                        <div className="mb-4 flex items-center gap-3">
                                             <div className="w-16 h-16 bg-neutral-900 rounded-lg border border-neutral-800 flex items-center justify-center relative overflow-hidden group shrink-0">
-                                                {serviceForm.image_url ? <img src={serviceForm.image_url} className="w-full h-full object-cover" /> : <ImageIcon size={20} className="text-neutral-600" />}
+                                                {serviceForm.image_url ? <img src={serviceForm.image_url} alt="Service item preview" className="w-full h-full object-cover" /> : <ImageIcon size={20} className="text-neutral-600" />}
                                                 <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
                                                     <Upload size={14} className="text-white"/>
                                                     <input type="file" hidden accept="image/*" onChange={(e) => handleUpload(e, (url) => setServiceForm(prev => ({...prev, image_url: url})))} />
@@ -583,7 +583,7 @@ function Dashboard({ onClose }: { onClose: () => void }) {
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                          {state.gallery.map(item => (
                              <div key={item.id} className="aspect-square bg-neutral-900 rounded-xl overflow-hidden relative group border border-neutral-800">
-                                 {item.media_type === 'video' ? <video src={item.media_url} className="h-full w-full object-cover" muted /> : <img src={item.media_url} className="h-full w-full object-cover" />}
+                                 {item.media_type === 'video' ? <video src={item.media_url} className="h-full w-full object-cover" muted /> : <img src={item.media_url} alt="Gallery item" className="h-full w-full object-cover" />}
                                  <button onClick={() => deleteGalleryItem(item.id)} className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-red-500 transition-all"><Trash2 size={24} /></button>
                              </div>
                          ))}

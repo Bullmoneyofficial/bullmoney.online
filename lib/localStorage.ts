@@ -49,7 +49,7 @@ export const hasItem = (key: string): boolean => {
 export const safeGetItem = getItem;
 export const safeSetItem = setItem;
 
-export default {
+const localStorage = {
   setItem,
   getItem,
   removeItem,
@@ -58,3 +58,5 @@ export default {
   safeGetItem,
   safeSetItem,
 };
+
+export default localStorage;

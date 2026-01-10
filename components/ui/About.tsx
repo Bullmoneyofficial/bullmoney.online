@@ -374,6 +374,7 @@ const TextType = React.memo(function TextType({
     reverseMode,
     variableSpeed,
     onSentenceComplete,
+    getRandomSpeed,
   ]);
 
   const shouldHideCursor =

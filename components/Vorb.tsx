@@ -354,7 +354,7 @@ const GhostCursorBackground = React.memo(({
       composer.dispose();
       if(host.contains(renderer.domElement)) host.removeChild(renderer.domElement);
     };
-  }, [trailLength, bloomStrength, bloomRadius, color]);
+  }, [trailLength, bloomStrength, bloomRadius, color, baseVertexShader, fragmentShader]);
 
   // Color update
   useEffect(() => {
@@ -604,7 +604,7 @@ export default function Orb({
       if(container.contains(gl.canvas)) container.removeChild(gl.canvas);
       gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
-  }, [hue, hoverIntensity, rotateOnHover, forceHoverState]);
+  }, [hue, hoverIntensity, rotateOnHover, forceHoverState, vert, frag]);
 
   return (
     <div ref={ctnDom} className="relative w-full h-full flex items-center justify-center bg-transparent">

@@ -68,8 +68,7 @@ export function Hint({
       window.removeEventListener("scroll", onScroll, { capture: true } as any);
       window.removeEventListener("resize", onScroll);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, hide, show]);
 
   const child = useMemo(() => {
     const props: any = {

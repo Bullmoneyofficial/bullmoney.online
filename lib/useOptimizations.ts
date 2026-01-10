@@ -23,8 +23,8 @@ export function useOptimizations(config?: {
   // Memoize config to prevent unnecessary re-initialization
   const stableConfig = useMemo(() => config, [
     config?.enableServiceWorker,
-    JSON.stringify(config?.criticalScenes || []),
-    JSON.stringify(config?.preloadScenes || [])
+    config?.criticalScenes,
+    config?.preloadScenes
   ]);
 
   useEffect(() => {
@@ -69,7 +69,7 @@ export function useOptimizations(config?: {
     };
 
     init();
-  }, [deviceProfile, stableConfig]);
+  }, [deviceProfile, stableConfig, config?.criticalScenes, config?.preloadScenes]);
 
   return {
     deviceProfile,
@@ -159,7 +159,7 @@ export function useUserPreferences() {
     // Load preferences
     const saved = userStorage.get('preferences', preferences) as typeof preferences;
     setPreferencesState(saved);
-  }, []);
+  }, [preferences]);
 
   const updatePreference = <K extends keyof typeof preferences>(
     key: K,
