@@ -308,7 +308,7 @@ const HeroParallax = () => {
       // @ts-ignore
       delete payload.id;
       await updateProduct(pid, payload as Product);
-      setActiveProduct(prev => prev ? { ...prev, ...payload } as Product : null);
+      setActiveProduct((prev: Product | null) => prev ? { ...prev, ...payload } as Product : null);
       setIsEditing(false);
     } catch (error) {
       console.error("Save failed:", error);

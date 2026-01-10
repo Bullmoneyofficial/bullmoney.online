@@ -16,13 +16,7 @@ const ShopMarketingSection = () => {
       
       {/* 1. Ghost Cursor Layer (Z-0) */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        <GhostCursor
-            className="w-full h-full"
-            color="#3b82f6" 
-            bloomStrength={0.15}
-            bloomRadius={0.8}
-            trailLength={50}
-        />
+        <GhostCursor />
       </div>
 
       {/* 2. Promo Strip */}

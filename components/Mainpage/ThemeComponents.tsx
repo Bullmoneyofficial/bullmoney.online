@@ -13,6 +13,8 @@ export interface Theme {
   filter: string;
   mobileFilter: string;
   primaryColor?: string;
+  status?: string;
+  category?: string;
 }
 
 export const ALL_THEMES: Theme[] = [];

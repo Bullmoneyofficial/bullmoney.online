@@ -706,7 +706,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 transition={{ delay: 0.1 }}
                 className="text-lg text-slate-300"
               >
-                You've successfully accessed the site
+                You&apos;ve successfully accessed the site
               </motion.p>
             </div>
           </motion.div>

@@ -452,9 +452,9 @@ export default function ProductsSection() {
                                 className="w-full appearance-none bg-black/50 border border-white/10 rounded-lg pl-4 pr-10 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500/50 cursor-pointer transition-colors"
                             >
                                 <option value="all">All Categories</option>
-                                {categories.map((c) => (
+                                {categories?.map((c: { _id?: string; id?: string; name: string }) => (
                                     <option key={c._id || c.id} value={c.name}>{c.name}</option>
-                                ))}
+                                )) || []}
                             </select>
                             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 pointer-events-none" />
                         </div>
@@ -498,7 +498,7 @@ export default function ProductsSection() {
                     <ProductBentoCard
                         key={pid}
                         product={{ ...p, id: pid }}
-                        isAdmin={isAdmin}
+                        isAdmin={isAdmin || false}
                         onEdit={() => setEditing({ ...p, id: pid })}
                         onDelete={() => deleteProduct(pid)}
                         onToggleVisibility={() => toggleVisibility(pid)}
@@ -530,7 +530,7 @@ export default function ProductsSection() {
             
             {/* The Modal */}
             <div className="relative w-full max-w-4xl max-h-[90vh] z-10 pointer-events-none">
-                 {products.filter(p => (p._id || p.id!) === expandedId).map(p => {
+                 {products.filter((p: Product) => (p._id || p.id!) === expandedId).map((p: Product) => {
                     const pid = p._id || p.id!;
                     return (
                         <div key={pid} className="pointer-events-auto h-full">

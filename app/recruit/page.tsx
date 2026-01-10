@@ -522,11 +522,9 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
                     >
                         <X size={28} />
                     </button>
-                    {/* @ts-ignore */}
-                    <FixedThemeConfigurator 
-                        initialThemeId={activeThemeId}
-                        onThemeChange={handleThemeChange} 
-                    />
+                    <FixedThemeConfigurator>
+                        <div />
+                    </FixedThemeConfigurator>
                 </div>
             </div>
         )}
@@ -595,7 +593,7 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
             <Navbar 
                 setShowConfigurator={setShowConfigurator} 
                 activeThemeId={activeThemeId}
-                onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)}
+                onThemeChange={(themeId) => handleThemeChange(themeId, { name: 'MECHANICAL', volume: 50 }, isMuted)}
             />
 
             <main className="relative min-h-screen z-10">

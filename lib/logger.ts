@@ -49,5 +49,8 @@ export const audioLogger: LoggerType = {
   },
 };
 
+// Optimization logger alias
+export const optimizationLogger = logger;
+
 export { logger };
 export default logger;

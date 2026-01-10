@@ -478,12 +478,9 @@ export default function ShopPage() {
                     >
                         <X size={28} />
                     </button>
-                    {/* @ts-ignore */}
-                    <FixedThemeConfigurator 
-                        initialThemeId={activeThemeId}
-                        onThemeChange={handleThemeChange} 
-                        // Logic to pause BG music during preview
-                    />
+                    <FixedThemeConfigurator>
+                        <div />
+                    </FixedThemeConfigurator>
                 </div>
             </div>
         )}
@@ -550,7 +547,7 @@ export default function ShopPage() {
                 <Navbar 
                     setShowConfigurator={setShowConfigurator} 
                     activeThemeId={activeThemeId}
-                    onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)}
+                    onThemeChange={(themeId) => handleThemeChange(themeId, { name: 'MECHANICAL', volume: 50 }, isMuted)}
                 />
             </header>
         )}

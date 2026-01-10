@@ -1082,7 +1082,7 @@ const HeroParallax = () => {
         className="h-screen pt-10 pb-0 overflow-hidden antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d]"
     >
         <div className="absolute inset-0 w-full h-full z-0 bg-black/5">
-          <Spline scene="/scene1.splinecode" />
+          <Spline scene="/scene1.splinecode" onLoad={() => {}} onError={() => {}} />
         </div>
         {/* HEADER SECTION */}
         <div className="max-w-7xl relative mx-auto pt-32 pb-12 md:py-32 px-4 w-full z-20 mb-10 md:mb-32">

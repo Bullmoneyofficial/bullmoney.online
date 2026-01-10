@@ -458,11 +458,9 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
                     >
                         <X size={28} />
                     </button>
-                    {/* @ts-ignore */}
-                    <FixedThemeConfigurator 
-                        initialThemeId={activeThemeId}
-                        onThemeChange={handleThemeChange} 
-                    />
+                    <FixedThemeConfigurator>
+                        <div />
+                    </FixedThemeConfigurator>
                 </div>
             </div>
         )}

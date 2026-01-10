@@ -452,11 +452,9 @@ export default function Page({
                     >
                         <X size={28} />
                     </button>
-                    {/* @ts-ignore */}
-                    <FixedThemeConfigurator 
-                        initialThemeId={activeThemeId}
-                        onThemeChange={handleThemeChange} 
-                    />
+                    <FixedThemeConfigurator>
+                        <div />
+                    </FixedThemeConfigurator>
                 </div>
             </div>
         )}
@@ -521,7 +519,7 @@ export default function Page({
             <Navbar 
                 setShowConfigurator={setShowConfigurator} 
                 activeThemeId={activeThemeId}
-                onThemeChange={(themeId) => handleThemeChange(themeId, 'MECHANICAL' as SoundProfile, isMuted)}
+                onThemeChange={(themeId) => handleThemeChange(themeId, { name: 'MECHANICAL', volume: 50 }, isMuted)}
             />
 
             <main className="relative min-h-screen pt-20 px-6 z-10">
