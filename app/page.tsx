@@ -9,21 +9,25 @@ import { GlobalThemeProvider } from "@/contexts/GlobalThemeProvider";
 import HiddenYoutubePlayer from "@/components/Mainpage/HiddenYoutubePlayer";
 import { ALL_THEMES } from "@/constants/theme-data";
 import type { SoundProfile } from "@/constants/theme-data";
-import { Settings } from "lucide-react";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 
-// Import the sequential loaders
+// Import loaders
 import PageMode from "@/components/REGISTER USERS/pagemode";
 import MultiStepLoaderv2 from "@/components/MultiStepLoaderv2";
 
+// Lazy imports
 const DraggableSplit = lazy(() => import('@/components/DraggableSplit'));
 const SplineScene = lazy(() => import('@/components/SplineScene'));
 
+// OPTIMIZED CONTAINER: Loads 500px before coming into view
 function LazySplineContainer({ scene }: { scene: string }) {
   const [shouldLoad, setShouldLoad] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!containerRef.current) return;
+    
+    // Create observer to trigger load early (rootMargin 500px)
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -31,27 +35,26 @@ function LazySplineContainer({ scene }: { scene: string }) {
           observer.disconnect();
         }
       },
-      { rootMargin: '300px' }
+      { rootMargin: '500px' } // KEY: Start loading when user is scrolling towards it
     );
 
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
-
+    observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
 
   return (
-    <div ref={containerRef} className="w-full h-full">
+    <div ref={containerRef} className="w-full h-full relative isolate">
       {shouldLoad ? (
         <Suspense fallback={
-          <div className="flex items-center justify-center w-full h-full bg-black/5 animate-pulse rounded">
-            <span className="text-white/40 text-sm">Loading scene...</span>
+          <div className="w-full h-full flex items-center justify-center bg-black/5 rounded">
+            {/* Simple CSS loader is better than text */}
+            <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
           </div>
         }>
           <SplineScene scene={scene} />
         </Suspense>
       ) : (
+        // Static placeholder while waiting to be scrolled into view
         <div className="w-full h-full bg-black/5 rounded" />
       )}
     </div>
@@ -59,167 +62,129 @@ function LazySplineContainer({ scene }: { scene: string }) {
 }
 
 function HomeContent() {
-  // State to control what's showing
   const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'content'>('pagemode');
   const [isInitialized, setIsInitialized] = useState(false);
-
-  const [panelOpen, setPanelOpen] = useState(false);
   const [activeThemeId, setActiveThemeId] = useState('t01');
-  const [activeCategory, setActiveCategory] = useState<'SPECIAL' | 'SENTIMENT' | 'ASSETS' | 'CRYPTO' | 'HISTORICAL' | 'OPTICS' | 'GLITCH' | 'EXOTIC' | 'LOCATION' | 'ELEMENTAL' | 'CONCEPTS' | 'MEME' | 'SEASONAL'>('SPECIAL');
-  const [currentSound, setCurrentSound] = useState<SoundProfile>('MECHANICAL');
-  const [isMuted, setIsMuted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [hoverThemeId, setHoverThemeId] = useState<string | null>(null);
+  const [isMuted] = useState(false);
+  
+  // Theme & Audio setup
+  const theme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
+  const sfx = useAudioEngine(!isMuted, 'MECHANICAL');
 
-  // Audio engine
-  const audioProfile = currentSound === 'MECHANICAL' || currentSound === 'SOROS' || currentSound === 'SCI-FI' || currentSound === 'SILENT'
-    ? currentSound
-    : 'MECHANICAL';
-  const sfx = useAudioEngine(!isMuted, audioProfile);
-
-  // Initialize on mount - check if user has session
+  // 1. STEALTH PRE-LOADER
+  // While user is looking at the Loader/Intro, we download the heavy 3D engine
   useEffect(() => {
-    const checkSession = () => {
-      const hasSession = localStorage.getItem("bullmoney_session");
-      
-      if (hasSession) {
-        // Returning user - skip PageMode, go straight to loader
-        console.log("Has session - showing loader");
-        setCurrentView('loader');
-      } else {
-        // New user - show PageMode
-        console.log("No session - showing PageMode");
-        setCurrentView('pagemode');
+    const preloadSplineEngine = async () => {
+      try {
+        // This puts the 3MB engine in the browser cache
+        await import('@splinetool/runtime'); 
+        console.log("3D Engine pre-cached in background");
+      } catch (e) {
+        console.warn("Preload failed", e);
       }
-      
-      setIsInitialized(true);
     };
 
-    checkSession();
+    // Delay slightly to not slow down the initial UI paint
+    const t = setTimeout(preloadSplineEngine, 2000);
+    return () => clearTimeout(t);
   }, []);
 
+  // 2. Session Check
   useEffect(() => {
-    setIsMobile(window.innerWidth < 768);
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('user_theme_id');
-    if (saved) {
-      setActiveThemeId(saved);
+    const hasSession = localStorage.getItem("bullmoney_session");
+    if (hasSession) {
+      setCurrentView('loader');
+    } else {
+      setCurrentView('pagemode');
     }
+    setIsInitialized(true);
   }, []);
 
+  // 3. Mobile Check
   useEffect(() => {
-    const theme = ALL_THEMES.find(t => t.id === activeThemeId);
-    if (theme && typeof document !== 'undefined') {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // 4. Theme Application
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
       const root = document.documentElement;
       root.style.filter = isMobile ? theme.mobileFilter : theme.filter;
       root.style.setProperty('--accent-color', theme.accentColor || '#3b82f6');
     }
-  }, [activeThemeId, isMobile]);
+  }, [theme, isMobile]);
 
-  const handleSaveTheme = (themeId: string) => {
-    setActiveThemeId(themeId);
-    localStorage.setItem('user_theme_id', themeId);
-    sfx.confirm();
-    setPanelOpen(false);
-  };
-
-  const handleExit = () => {
-    sfx.click();
-    setPanelOpen(false);
-  };
-
-  const handleHover = (id: string | null) => {
-    setHoverThemeId(id);
-  };
-
-  // When PageMode is unlocked (user registered/logged in)
+  // Handlers
   const handlePageModeUnlock = () => {
-    console.log("PageMode unlocked - showing loader");
     setCurrentView('loader');
   };
 
-  // Monitor loader completion - auto-advance after loader animation
   useEffect(() => {
     if (currentView === 'loader') {
-      // Wait for the loader to complete its full cycle
-      // Adjust this duration based on your MultiStepLoaderv2's animation length
       const timer = setTimeout(() => {
-        console.log("Loader animation complete - showing content");
         setCurrentView('content');
-      }, 5000); // 5 seconds - adjust based on your loader's duration
-      
+      }, 5000); 
       return () => clearTimeout(timer);
     }
   }, [currentView]);
 
-  const currentTheme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
-  const displayTheme = hoverThemeId ? ALL_THEMES.find(t => t.id === hoverThemeId) : currentTheme;
-
-  // Don't render anything until initialized
-  if (!isInitialized) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
-  }
+  if (!isInitialized) return null;
 
   return (
     <>
-      {/* STEP 1: PageMode - Only for first-time users */}
       {currentView === 'pagemode' && (
         <div className="fixed inset-0 z-[99999]">
           <PageMode onUnlock={handlePageModeUnlock} />
         </div>
       )}
 
-      {/* STEP 2: MultiStepLoader - Shows after PageMode OR on every reload for returning users */}
       {currentView === 'loader' && (
         <div className="fixed inset-0 z-[99999]">
           <MultiStepLoaderv2 />
         </div>
       )}
 
-      {/* STEP 3: Main Content - Only shows after loader completes */}
+      {/* Main Content: Rendered but hidden if in previous steps? No, only render when ready */}
       {currentView === 'content' && (
         <>
-          <main className="min-h-screen flex flex-col" data-allow-scroll data-scrollable>
+          <main className="min-h-screen flex flex-col w-full overflow-x-hidden" data-allow-scroll data-scrollable>
             <Hero />
             <CTA />
             <Features />
 
             <section className="w-full max-w-7xl mx-auto px-4 py-16" data-allow-scroll>
-              <Suspense fallback={
-                <div className="w-full h-[800px] bg-black/5 rounded-lg animate-pulse" />
-              }>
-                <DraggableSplit>
-                  <LazySplineContainer scene="/scene4.splinecode" />
-                  <LazySplineContainer scene="/scene3.splinecode" />
-                </DraggableSplit>
-              </Suspense>
+              <div className="w-full h-[800px]">
+                <Suspense fallback={<div className="w-full h-full bg-black/5 rounded-lg" />}>
+                  <DraggableSplit>
+                    {/* Scene 4 */}
+                    <LazySplineContainer scene="/scene4.splinecode" />
+                    {/* Scene 3 */}
+                    <LazySplineContainer scene="/scene3.splinecode" />
+                  </DraggableSplit>
+                </Suspense>
+              </div>
             </section>
 
             <LiveMarketTicker />
           </main>
 
-          {displayTheme?.youtubeId && (
+          {theme.youtubeId && (
             <HiddenYoutubePlayer
-              videoId={displayTheme.youtubeId}
+              videoId={theme.youtubeId}
               isPlaying={!isMuted}
               volume={isMuted ? 0 : 15}
             />
           )}
-
         </>
       )}
     </>
   );
 }
+
 export default function Home() {
   return (
     <GlobalThemeProvider>
