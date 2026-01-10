@@ -537,7 +537,6 @@ const HeroParallax = () => {
     uploadFile 
   } = useStudio();
   
-  // !!! FIXED: Destructure isAdmin here !!!
   const { projects, serviceItems, hero, loading, isAuthenticated, isAdmin } = state;
   
   const isMobile = useIsMobile();
@@ -553,30 +552,24 @@ const HeroParallax = () => {
   const servicesModalRef = useRef<HTMLDivElement>(null);
 
   const handleServicesOpen = () => {
-    // Find and click the hidden services modal trigger button
     const triggerButton = servicesModalRef.current?.querySelector('button');
     if (triggerButton) {
       triggerButton.click();
     }
   };
 
-  // --- PARALLAX DATA PREP ---
   const parallaxItems = useMemo(() => {
-    // 1. Prepare Projects
     const formattedProjects: GridItem[] = projects.map(p => ({
         ...p,
         _source: 'project' as const,
         uniqueKey: `proj-${p.id}`
     }));
 
-    // 2. Prepare Services
     const heroImages = hero?.hero_images || [];
     const formattedServices: GridItem[] = serviceItems.map((s, index) => {
         const serviceData = s as any;
         const specificImage = serviceData.image_url || serviceData.thumbnail;
-
         const hasSpecificImage = specificImage && typeof specificImage === 'string' && specificImage.trim() !== "";
-
         const displayImg = hasSpecificImage
             ? specificImage
             : (heroImages.length > 0
@@ -597,7 +590,6 @@ const HeroParallax = () => {
         };
     });
 
-    // 3. Prepare Hero Images (Placeholders)
     const formattedHeroImages: GridItem[] = heroImages.map((img, i) => ({
         id: -1 * (i + 1),
         title: `Trading Setup ${i + 1}`,
@@ -634,7 +626,6 @@ const HeroParallax = () => {
   const secondRow = parallaxItems.slice(itemsPerRow, itemsPerRow * 2);
   const thirdRow = parallaxItems.slice(itemsPerRow * 2, parallaxItems.length);
 
-  // --- PHYSICS CONFIG ---
   const ref = useRef(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const parentRef = useRef<HTMLDivElement>(null);
@@ -649,7 +640,6 @@ const HeroParallax = () => {
   const opacity = useSpring(useTransform(scrollYProgress, [0, 0.2], [0.2, 1]), springConfig);
   const translateY = useSpring(useTransform(scrollYProgress, [0, 0.2], [isMobile ? -100 : -700, isMobile ? 0 : 200]), springConfig);
 
-  // --- MODAL & EDIT STATE ---
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [activeProject, setActiveProject] = useState<GridItem | null>(null);
   const [activeLayoutId, setActiveLayoutId] = useState<string | null>(null);
@@ -657,8 +647,6 @@ const HeroParallax = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const quickEditFileInputRef = useRef<HTMLInputElement>(null);
-  
-  // --- NEW CONTACT MODAL STATE ---
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
   const [editForm, setEditForm] = useState<ProjectFormData>({
@@ -692,7 +680,6 @@ const HeroParallax = () => {
     setIsEditing(false);
   }, []);
 
-  // --- DATA SANITIZATION ---
   const sanitizeData = (form: ProjectFormData) => {
       return {
           ...form,
@@ -805,12 +792,10 @@ const HeroParallax = () => {
       )
   }
 
-  // !!! SECURITY FIX: Only allow edits if isAdmin is true, not just isAuthenticated !!!
   const canEdit = isAdmin && activeProject?._source !== 'hero_placeholder';
 
   return (
     <>
-    {/* --- STYLES --- */}
     <style jsx global>{`
       @keyframes shimmer {
         0% { background-position: 200% 0; }
@@ -823,10 +808,8 @@ const HeroParallax = () => {
       .safari-fix-layer { transform: translateZ(0); -webkit-transform: translateZ(0); }
     `}</style>
 
-    {/* Admin Modal - Gated inside component by isAdmin check, but also gated here visually */}
     {isAdmin && <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />}
 
-    {/* --- CONTACT SELECTION MODAL --- */}
     <ContactSelectionModal
         isOpen={isContactModalOpen}
         onClose={() => setIsContactModalOpen(false)}
@@ -834,7 +817,6 @@ const HeroParallax = () => {
         telegramLink="https://t.me/addlist/gg09afc4lp45YjQ0"
     />
 
-    {/* --- SERVICES MODAL (Hidden trigger) --- */}
     <div ref={servicesModalRef} style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'auto' }}>
         <ServicesModal btnText={buttonText} />
     </div>
@@ -852,7 +834,6 @@ const HeroParallax = () => {
             >
                 <div onClick={(e) => e.stopPropagation()}>
                     <ReflectiveCard onVerificationComplete={() => {
-                        // maybe refresh auth state here
                         setTimeout(() => setIsReflectiveCardOpen(false), 2000);
                     }} />
                 </div>
@@ -860,8 +841,6 @@ const HeroParallax = () => {
         )}
     </AnimatePresence>
 
-
-    {/* --- PROJECT OVERLAY (MODAL) --- */}
     <AnimatePresence>
       {activeProject && activeLayoutId && (
         <motion.div
@@ -876,7 +855,6 @@ const HeroParallax = () => {
             className="relative w-full max-w-5xl bg-white dark:bg-neutral-900 rounded-none md:rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[100dvh] md:h-[85vh] md:max-h-[800px] safari-fix-layer"
             onClick={(e) => e.stopPropagation()} 
           >
-            {/* CLOSE BUTTON */}
             <button
                 onClick={handleClose}
                 className="absolute top-4 right-4 z-50 p-2 bg-black/40 backdrop-blur border border-white/10 rounded-full text-white hover:bg-white hover:text-black transition-colors"
@@ -884,7 +862,6 @@ const HeroParallax = () => {
                 <X size={20} />
             </button>
 
-            {/* EDIT TOGGLE - Only if canEdit (which is now just Admin) */}
             {canEdit && !isEditing && (
               <button
                 onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
@@ -894,7 +871,6 @@ const HeroParallax = () => {
               </button>
             )}
 
-            {/* LEFT: IMAGE SECTION */}
             <div className="w-full md:w-3/5 h-[40vh] md:h-full relative bg-neutral-200 dark:bg-neutral-800 group/image">
                  <Image
                     src={isEditing ? editForm.thumbnail : activeProject.thumbnail}
@@ -934,7 +910,6 @@ const HeroParallax = () => {
                 )}
             </div>
 
-            {/* RIGHT: CONTENT SECTION */}
             <div className="w-full md:w-2/5 p-6 md:p-12 flex flex-col overflow-y-auto bg-white dark:bg-neutral-900 custom-scrollbar relative">
                 {isEditing ? (
                   <div className="space-y-4 animate-in fade-in duration-300 pb-20" onClick={(e) => e.stopPropagation()}>
@@ -1076,20 +1051,17 @@ const HeroParallax = () => {
       )}
     </AnimatePresence>
 
-    {/* --- HERO SCROLL SECTION --- */}
     <div
         ref={ref}
         className="h-screen pt-10 pb-0 overflow-hidden antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d]"
     >
-        <div className="absolute inset-0 w-full h-full z-0 bg-black/5">
+        <div className="absolute inset-0 w-full h-full z-0 bg-black/5 pointer-events-none md:pointer-events-auto">
           <Spline scene="/scene1.splinecode" onLoad={() => {}} onError={() => {}} />
         </div>
-        {/* HEADER SECTION */}
         <div className="max-w-7xl relative mx-auto pt-32 pb-12 md:py-32 px-4 w-full z-20 mb-10 md:mb-32">
             <div className="relative z-20 flex flex-col items-start gap-4 pointer-events-none">
             </div>
             
-            {/* Buttons / Modals */}
             <SwipableButtons
               buttonText={buttonText}
               contactButtonText={contactButtonText}
@@ -1105,7 +1077,6 @@ const HeroParallax = () => {
         </div>
     </div>
 
-    {/* --- FOOTER --- */}
     <div ref={containerRef} className="absolute bottom-0 w-full h-px" />
     </>
   );
