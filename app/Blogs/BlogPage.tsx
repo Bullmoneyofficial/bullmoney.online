@@ -479,6 +479,7 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     window.addEventListener('mouseover', enterHandler as EventListener);
 
     return () => {
+      // Copy ref value to local variable at start of cleanup
       const activeStrength = activeStrengthRef.current;
       if (tickerFnRef.current) gsap.ticker.remove(tickerFnRef.current);
       window.removeEventListener('mousemove', moveHandler);

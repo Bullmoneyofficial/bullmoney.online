@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useId, useState } from 'react';
+import React, { useEffect, useRef, useId, useState, useCallback } from 'react';
 import './GlassSurface.css';
 
 export interface GlassSurfaceProps {
@@ -97,11 +97,11 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     return `data:image/svg+xml,${encodeURIComponent(svgContent)}`;
   };
 
-  const updateSVG = () => {
+  const updateSVG = useCallback(() => {
     if (feImageRef.current && !isIOS) {
       feImageRef.current.setAttribute('href', generateDisplacementMap());
     }
-  };
+  }, [isIOS]);
 
   // 3. Update SVG Filters (Desktop Only)
   useEffect(() => {

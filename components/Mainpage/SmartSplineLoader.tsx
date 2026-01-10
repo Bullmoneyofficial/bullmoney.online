@@ -277,8 +277,10 @@ export const SmartSplineLoader = memo(({
         loadTimeoutRef.current = null;
       }
 
+      // Copy ref value to local variable at start of cleanup
+      const blobUrls = blobUrlsRef.current;
       // Revoke all blob URLs created by this component
-      blobUrlsRef.current.forEach(blobUrl => {
+      blobUrls.forEach(blobUrl => {
         try {
           URL.revokeObjectURL(blobUrl);
           console.log('[SmartSplineLoader] Revoked blob URL:', blobUrl);
@@ -286,7 +288,7 @@ export const SmartSplineLoader = memo(({
           console.warn('[SmartSplineLoader] Failed to revoke blob URL:', e);
         }
       });
-      blobUrlsRef.current.clear();
+      blobUrls.clear();
     };
   }, []); // Empty deps = only on unmount
 

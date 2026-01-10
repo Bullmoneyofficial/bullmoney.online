@@ -166,7 +166,9 @@ export const LiveMarketTicker: React.FC = () => {
     return () => {
       isCancelled = true;
       clearInterval(intervalId);
-      Object.values(flashTimeoutsRef.current).forEach(clearTimeout);
+      // Copy ref value to local variable at start of cleanup
+      const flashTimeouts = flashTimeoutsRef.current;
+      Object.values(flashTimeouts).forEach(clearTimeout);
     };
   }, [triggerFlash]);
 

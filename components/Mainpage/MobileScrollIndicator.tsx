@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 interface MobileScrollIndicatorProps {
   scrollContainerRef: React.RefObject<HTMLElement>;
@@ -28,7 +28,7 @@ export const MobileScrollIndicator: React.FC<MobileScrollIndicatorProps> = ({
   const rafRef = useRef<number | null>(null);
 
   // Update scroll percentage with RAF for performance
-  const updateScrollPercentage = () => {
+  const updateScrollPercentage = useCallback(() => {
     if (!scrollContainerRef.current) return;
 
     // Cancel any pending RAF
@@ -47,10 +47,10 @@ export const MobileScrollIndicator: React.FC<MobileScrollIndicatorProps> = ({
 
       setScrollPercentage(Math.min(Math.max(percentage, 0), 100));
     });
-  };
+  }, [scrollContainerRef]);
 
   // Show indicator temporarily
-  const showIndicator = () => {
+  const showIndicator = useCallback(() => {
     setIsVisible(true);
 
     if (hideTimeoutRef.current) {
@@ -62,7 +62,7 @@ export const MobileScrollIndicator: React.FC<MobileScrollIndicatorProps> = ({
         setIsVisible(false);
       }
     }, 2000);
-  };
+  }, [isHolding, isDragging]);
 
   // Handle scroll events
   useEffect(() => {
@@ -87,7 +87,7 @@ export const MobileScrollIndicator: React.FC<MobileScrollIndicatorProps> = ({
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [scrollContainerRef, isHolding, isDragging]);
+  }, [scrollContainerRef, isHolding, isDragging, updateScrollPercentage, showIndicator]);
 
   // Handle touch/mouse drag on indicator
   const handleDragStart = (_clientY: number) => {
@@ -96,7 +96,7 @@ export const MobileScrollIndicator: React.FC<MobileScrollIndicatorProps> = ({
     setIsVisible(true);
   };
 
-  const handleDragMove = (clientY: number) => {
+  const handleDragMove = useCallback((clientY: number) => {
     if (!isDragging || !indicatorRef.current || !scrollContainerRef.current) return;
 
     // Use RAF for smooth dragging at 60fps
@@ -124,7 +124,7 @@ export const MobileScrollIndicator: React.FC<MobileScrollIndicatorProps> = ({
         behavior: 'auto'
       });
     });
-  };
+  }, [isDragging, scrollContainerRef]);
 
   const handleDragEnd = () => {
     setIsDragging(false);

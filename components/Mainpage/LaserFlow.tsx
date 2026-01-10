@@ -403,11 +403,14 @@ const LaserFlow: React.FC<Props> = ({
 
     // Cleanup
     return () => {
+      // Copy ref value to local variable at start of cleanup
+      const mount = mountRef.current;
+      const rendererDom = rendererRef.current;
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
-      if (mountRef.current && rendererRef.current) {
-        mountRef.current.removeChild(rendererRef.current.domElement);
+      if (mount && rendererDom) {
+        mount.removeChild(rendererDom.domElement);
       }
       renderer.dispose();
       geometry.dispose();

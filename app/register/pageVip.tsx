@@ -272,6 +272,7 @@ const TargetCursorComponent = memo(({
 
     // --- CLEANUP FUNCTION ---
     return () => {
+        // Copy ref value to local variable at start of cleanup
         const state = stateRef.current;
         document.body.classList.remove('custom-cursor-active');
         window.removeEventListener('mousemove', moveCursor);
