@@ -8,7 +8,6 @@ import { LiveMarketTicker } from "@/components/LiveMarketTicker";
 import { GlobalThemeProvider } from "@/contexts/GlobalThemeProvider";
 import HiddenYoutubePlayer from "@/components/Mainpage/HiddenYoutubePlayer";
 import { ALL_THEMES } from "@/constants/theme-data";
-import type { SoundProfile } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 
 // Import loaders
@@ -19,43 +18,48 @@ import MultiStepLoaderv2 from "@/components/MultiStepLoaderv2";
 const DraggableSplit = lazy(() => import('@/components/DraggableSplit'));
 const SplineScene = lazy(() => import('@/components/SplineScene'));
 
-// OPTIMIZED CONTAINER: Loads 500px before coming into view
+// --- SMART CONTAINER: Handles Preloading & FPS Saving ---
 function LazySplineContainer({ scene }: { scene: string }) {
-  const [shouldLoad, setShouldLoad] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
     
-    // Create observer to trigger load early (rootMargin 500px)
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setShouldLoad(true);
-          observer.disconnect();
+        setIsInView(entry.isIntersecting);
+        
+        // Mark as loaded once it hits the buffer zone
+        if (entry.isIntersecting && !hasLoadedOnce) {
+          setHasLoadedOnce(true);
         }
       },
-      { rootMargin: '500px' } // KEY: Start loading when user is scrolling towards it
+      { 
+        // Load 600px before it hits the screen, Unload when 600px away
+        rootMargin: '600px' 
+      }
     );
 
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, []);
+  }, [hasLoadedOnce]);
 
   return (
-    <div ref={containerRef} className="w-full h-full relative isolate">
-      {shouldLoad ? (
+    // 'isolate' is crucial here so the Interaction Button in SplineScene works correctly with z-index
+    <div ref={containerRef} className="w-full h-full relative isolate transition-opacity duration-700">
+      {isInView ? (
         <Suspense fallback={
           <div className="w-full h-full flex items-center justify-center bg-black/5 rounded">
-            {/* Simple CSS loader is better than text */}
-            <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+             <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
           </div>
         }>
           <SplineScene scene={scene} />
         </Suspense>
       ) : (
-        // Static placeholder while waiting to be scrolled into view
-        <div className="w-full h-full bg-black/5 rounded" />
+        // Placeholder when scrolled away (saves FPS by unmounting the heavy 3D canvas)
+        <div className={`w-full h-full bg-neutral-900/5 rounded transition-opacity duration-500 ${hasLoadedOnce ? 'opacity-100' : 'opacity-0'}`} />
       )}
     </div>
   );
@@ -64,28 +68,24 @@ function LazySplineContainer({ scene }: { scene: string }) {
 function HomeContent() {
   const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'content'>('pagemode');
   const [isInitialized, setIsInitialized] = useState(false);
-  const [activeThemeId, setActiveThemeId] = useState('t01');
+  const [activeThemeId, setActiveThemeId] = useState('t01'); // Ensure this matches your theme logic
   const [isMobile, setIsMobile] = useState(false);
   const [isMuted] = useState(false);
   
   // Theme & Audio setup
   const theme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
-  const sfx = useAudioEngine(!isMuted, 'MECHANICAL');
+  useAudioEngine(!isMuted, 'MECHANICAL');
 
   // 1. STEALTH PRE-LOADER
-  // While user is looking at the Loader/Intro, we download the heavy 3D engine
   useEffect(() => {
     const preloadSplineEngine = async () => {
       try {
-        // This puts the 3MB engine in the browser cache
         await import('@splinetool/runtime'); 
         console.log("3D Engine pre-cached in background");
       } catch (e) {
         console.warn("Preload failed", e);
       }
     };
-
-    // Delay slightly to not slow down the initial UI paint
     const t = setTimeout(preloadSplineEngine, 2000);
     return () => clearTimeout(t);
   }, []);
@@ -118,7 +118,6 @@ function HomeContent() {
     }
   }, [theme, isMobile]);
 
-  // Handlers
   const handlePageModeUnlock = () => {
     setCurrentView('loader');
   };
@@ -148,7 +147,6 @@ function HomeContent() {
         </div>
       )}
 
-      {/* Main Content: Rendered but hidden if in previous steps? No, only render when ready */}
       {currentView === 'content' && (
         <>
           <main className="min-h-screen flex flex-col w-full overflow-x-hidden" data-allow-scroll data-scrollable>
@@ -160,9 +158,8 @@ function HomeContent() {
               <div className="w-full h-[800px]">
                 <Suspense fallback={<div className="w-full h-full bg-black/5 rounded-lg" />}>
                   <DraggableSplit>
-                    {/* Scene 4 */}
+                    {/* The Scenes */}
                     <LazySplineContainer scene="/scene4.splinecode" />
-                    {/* Scene 3 */}
                     <LazySplineContainer scene="/scene3.splinecode" />
                   </DraggableSplit>
                 </Suspense>
