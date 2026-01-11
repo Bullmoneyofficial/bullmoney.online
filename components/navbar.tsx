@@ -134,6 +134,9 @@ function DockItem({
       onMouseDown={() => {
         SoundEffects.click();
       }}
+      onTouchStart={() => {
+        SoundEffects.click();
+      }}
       className={cn(
         "relative flex flex-col items-center justify-center cursor-pointer mb-2",
         className
@@ -858,6 +861,8 @@ export const Navbar = () => {
                 {/* Theme Selector Button - Centered */}
                 <button
                     onClick={() => { SoundEffects.click(); setIsThemeSelectorOpen(true); }}
+                    onMouseEnter={() => SoundEffects.hover()}
+                    onTouchStart={() => SoundEffects.click()}
                     className="p-1.5 rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
                     style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                     title="Theme Selector"
@@ -871,6 +876,8 @@ export const Navbar = () => {
                 {/* Menu Toggle Button - Centered */}
                 <button
                     onClick={() => { SoundEffects.click(); setOpen(!open); }}
+                    onMouseEnter={() => SoundEffects.hover()}
+                    onTouchStart={() => SoundEffects.click()}
                     className="p-1.5 rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
                     style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                     title={open ? 'Close menu' : 'Open menu'}
@@ -902,30 +909,34 @@ export const Navbar = () => {
               <div className="flex flex-col gap-2 sm:gap-3 items-center text-center">
                 <Link
                   href="/"
-                  onClick={() => setOpen(false)}
+                  onClick={() => { SoundEffects.click(); setOpen(false); }}
+                  onMouseEnter={() => SoundEffects.hover()}
+                  onTouchStart={() => SoundEffects.click()}
                   className="text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors w-full py-2 rounded-lg hover:bg-blue-500/10"
                 >
                   Home
                 </Link>
 
-                <div className="relative w-full">
+                <div className="relative w-full" onMouseEnter={() => SoundEffects.hover()} onTouchStart={() => SoundEffects.click()}>
                     <span className="text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 pointer-events-none block py-2 rounded-lg hover:bg-blue-500/10 cursor-pointer transition-colors">Setups</span>
                     <div className="absolute inset-0 opacity-0"><ServicesModal /></div>
                 </div>
 
                 <Link
                   href="/recruit?src=nav"
-                  onClick={() => setOpen(false)}
+                  onClick={() => { SoundEffects.click(); setOpen(false); }}
+                  onMouseEnter={() => SoundEffects.hover()}
+                  onTouchStart={() => SoundEffects.click()}
                   className="text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors w-full py-2 rounded-lg hover:bg-blue-500/10"
                 >
                   Affiliates
                 </Link>
 
-                <div className="relative w-full" onClick={() => { setIsFaqOpen(true); setOpen(false); }}>
+                <div className="relative w-full" onClick={() => { SoundEffects.click(); setIsFaqOpen(true); setOpen(false); }} onMouseEnter={() => SoundEffects.hover()} onTouchStart={() => SoundEffects.click()}>
                     <span className="text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 cursor-pointer block py-2 rounded-lg hover:bg-blue-500/10 transition-colors">FAQ</span>
                 </div>
 
-                <div className="relative w-full">
+                <div className="relative w-full" onMouseEnter={() => SoundEffects.hover()} onTouchStart={() => SoundEffects.click()}>
                     <span className={cn(
                         "text-sm sm:text-base font-semibold pointer-events-none flex items-center justify-center gap-2 py-2 rounded-lg transition-colors",
                         hasReward ? "text-blue-300 font-bold animate-pulse bg-blue-500/10" : "text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 hover:bg-blue-500/10"
@@ -937,7 +948,9 @@ export const Navbar = () => {
 
                 <Link
                   href="/products"
-                  onClick={() => setOpen(false)}
+                  onClick={() => { SoundEffects.click(); setOpen(false); }}
+                  onMouseEnter={() => SoundEffects.hover()}
+                  onTouchStart={() => SoundEffects.click()}
                   className="w-full rounded-lg bg-blue-500 text-white px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold shadow-md hover:bg-blue-600 transition-all transform hover:scale-105 border-2 border-blue-400/30 hover:border-blue-300/60 flex items-center justify-center min-h-[40px]"
                 >
                   Products
@@ -945,7 +958,9 @@ export const Navbar = () => {
 
                 {/* Theme Selector Button for Mobile */}
                 <button
-                  onClick={() => { setOpen(false); setIsThemeSelectorOpen(true); }}
+                  onClick={() => { SoundEffects.click(); setOpen(false); setIsThemeSelectorOpen(true); }}
+                  onMouseEnter={() => SoundEffects.hover()}
+                  onTouchStart={() => SoundEffects.click()}
                   className="flex items-center justify-center gap-2 text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors w-full py-2 rounded-lg hover:bg-blue-500/10"
                 >
                   <IconPalette size={16} /> Theme
@@ -953,7 +968,9 @@ export const Navbar = () => {
 
                 {mounted && (!isAuthenticated || isAdmin) && (
                     <button
-                      onClick={() => { setOpen(false); setIsAdminOpen(true); }}
+                      onClick={() => { SoundEffects.click(); setOpen(false); setIsAdminOpen(true); }}
+                      onMouseEnter={() => SoundEffects.hover()}
+                      onTouchStart={() => SoundEffects.click()}
                       className={cn(
                         "flex items-center justify-center gap-2 text-[10px] sm:text-xs uppercase tracking-widest transition-colors mt-1 py-2 rounded-lg w-full",
                         isAdmin ? "text-blue-300 hover:text-blue-200 hover:bg-blue-500/10 font-bold" : "text-blue-200/60 hover:text-blue-300 hover:bg-blue-500/10"

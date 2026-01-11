@@ -63,28 +63,36 @@ const getThemeColor = (theme: Partial<Theme> | any) => {
 };
 
 // =========================================
-// 1. ONBOARDING HELPER
+// 1. ONBOARDING HELPER (SIMPLIFIED - No click overlay)
 // =========================================
 const OnboardingHelper = ({ onDismiss, theme }: { onDismiss: () => void, theme: any }) => {
     const color = getThemeColor(theme);
+    
+    // Auto-dismiss after 3 seconds to prevent any blocking issues
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            onDismiss();
+        }, 3000);
+        return () => clearTimeout(timer);
+    }, [onDismiss]);
+    
     return (
         <div 
-            onClick={onDismiss}
-            className="fixed inset-0 z-[500000] bg-black/60 backdrop-blur-[2px] cursor-pointer animate-in fade-in duration-700"
+            className="fixed bottom-24 left-8 z-[500000] pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-700"
         >
-            <div className="relative w-full h-full">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-                    <h2 
-                        className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tighter animate-pulse"
-                        style={{ textShadow: `0 0 25px ${color}99` }}
-                    >
-                        Customize Your Vibe
-                    </h2>
-                    <p className="text-white/80 text-lg md:text-xl font-mono opacity-90">
-                        Choose a Theme & Soundtrack
-                    </p>
-                    <div className="mt-4 text-xs text-white/40 uppercase tracking-widest">Click anywhere to start</div>
-                </div>
+            <div 
+                className="bg-black/80 backdrop-blur-xl rounded-2xl px-6 py-4 border border-white/20 shadow-2xl"
+                style={{ boxShadow: `0 0 40px ${color}40` }}
+            >
+                <h2 
+                    className="text-lg md:text-xl font-bold text-white mb-1 tracking-tight"
+                    style={{ textShadow: `0 0 15px ${color}99` }}
+                >
+                    🎨 Customize Your Vibe
+                </h2>
+                <p className="text-white/70 text-sm font-medium">
+                    Use the controls below
+                </p>
             </div>
         </div>
     );

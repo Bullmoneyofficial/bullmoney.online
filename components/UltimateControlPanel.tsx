@@ -301,19 +301,31 @@ export function UltimateControlPanel({
   };
 
   // Handle drag for right-side swipeable FPS button
+  const swipeSoundPlayedRef = useRef(false);
+  
   const handleSwipeableDrag = (_: any, info: PanInfo) => {
     // Only track leftward drag (negative x)
     const progress = Math.max(0, Math.min(1, Math.abs(Math.min(0, info.offset.x)) / 100));
     setDragProgress(progress);
+    
+    // Play swoosh sound when user starts swiping with enough progress
+    if (progress > 0.2 && !swipeSoundPlayedRef.current) {
+      SoundEffects.swoosh();
+      swipeSoundPlayedRef.current = true;
+    }
   };
 
   const handleSwipeableDragEnd = (_: any, info: PanInfo) => {
     const velocity = info.velocity.x;
     const offset = info.offset.x;
 
+    // Reset the sound played flag for next swipe
+    swipeSoundPlayedRef.current = false;
+
     // Open on swipe LEFT (negative offset for right-positioned button)
     // Swipe should open panel directly without needing tap first
     if (offset < -50 || (offset < -30 && velocity < -100)) {
+      SoundEffects.swipe(); // Play swipe sound on successful open
       onOpenChange(true);
       setIsMobileExpanded(false); // Reset mobile expanded state when panel opens
     }
@@ -322,19 +334,31 @@ export function UltimateControlPanel({
   };
 
   // Handle drag for panel (slides from right, swipe right to close)
+  const panelSwipeSoundPlayedRef = useRef(false);
+  
   const handlePanelDrag = (_: any, info: PanInfo) => {
     // Only track rightward drag (positive x)
     const progress = Math.max(0, Math.min(1, Math.max(0, info.offset.x) / 200));
     setDragProgress(progress);
+    
+    // Play swoosh sound when user starts swiping to close with enough progress
+    if (progress > 0.15 && !panelSwipeSoundPlayedRef.current) {
+      SoundEffects.swoosh();
+      panelSwipeSoundPlayedRef.current = true;
+    }
   };
 
   const handlePanelDragEnd = (_: any, info: PanInfo) => {
     const velocity = info.velocity.x;
     const offset = info.offset.x;
 
+    // Reset the sound played flag for next swipe
+    panelSwipeSoundPlayedRef.current = false;
+
     // Close on swipe RIGHT (positive offset for right-positioned panel)
     // Increased threshold to prevent accidental closes
     if (offset > 120 || (offset > 80 && velocity > 200)) {
+      SoundEffects.swipe(); // Play swipe sound when closing completes
       onOpenChange(false);
     }
 
@@ -476,6 +500,7 @@ export function UltimateControlPanel({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    SoundEffects.click(); // Play click sound
                     // Desktop: always open panel
                     if (window.matchMedia('(hover: hover)').matches) {
                       onOpenChange(true);
@@ -489,12 +514,14 @@ export function UltimateControlPanel({
                       }
                     }
                   }}
+                  onMouseEnter={() => SoundEffects.hover()}
                   onTouchStart={(e) => {
                     e.stopPropagation();
                   }}
                   onTouchEnd={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    SoundEffects.click(); // Play click sound
                     // Mobile: first tap expands, second tap opens panel
                     if (isMobileExpanded) {
                       onOpenChange(true);
@@ -546,6 +573,7 @@ export function UltimateControlPanel({
                         e.stopPropagation();
                         handleServicesClick();
                       }}
+                      onMouseEnter={() => SoundEffects.hover()}
                       style={{ 
                         WebkitTapHighlightColor: 'transparent',
                         touchAction: 'manipulation',
@@ -571,6 +599,7 @@ export function UltimateControlPanel({
                         e.stopPropagation();
                         handleContactClick();
                       }}
+                      onMouseEnter={() => SoundEffects.hover()}
                       style={{ 
                         WebkitTapHighlightColor: 'transparent',
                         touchAction: 'manipulation',
@@ -596,6 +625,7 @@ export function UltimateControlPanel({
                         e.stopPropagation();
                         handleThemeClick();
                       }}
+                      onMouseEnter={() => SoundEffects.hover()}
                       style={{ 
                         WebkitTapHighlightColor: 'transparent',
                         touchAction: 'manipulation',
@@ -621,6 +651,7 @@ export function UltimateControlPanel({
                         e.stopPropagation();
                         handleAdminClick();
                       }}
+                      onMouseEnter={() => SoundEffects.hover()}
                       style={{ 
                         WebkitTapHighlightColor: 'transparent',
                         touchAction: 'manipulation',
@@ -658,6 +689,7 @@ export function UltimateControlPanel({
                         e.stopPropagation();
                         handleIdentityClick();
                       }}
+                      onMouseEnter={() => SoundEffects.hover()}
                       style={{ 
                         WebkitTapHighlightColor: 'transparent',
                         touchAction: 'manipulation',
@@ -754,8 +786,10 @@ export function UltimateControlPanel({
                       whileTap={{ scale: 0.9 }}
                       onClick={(e) => {
                         e.stopPropagation();
+                        SoundEffects.click();
                         handleRefresh();
                       }}
+                      onMouseEnter={() => SoundEffects.hover()}
                       onTouchStart={(e) => {
                         e.stopPropagation();
                         e.currentTarget.style.transform = 'scale(0.9)';
@@ -763,6 +797,7 @@ export function UltimateControlPanel({
                       onTouchEnd={(e) => {
                         e.stopPropagation();
                         e.currentTarget.style.transform = '';
+                        SoundEffects.click();
                       }}
                       className="p-3 rounded-full bg-white/5 hover:bg-white/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
                       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
@@ -779,8 +814,10 @@ export function UltimateControlPanel({
                       whileTap={{ scale: 0.9 }}
                       onClick={(e) => {
                         e.stopPropagation();
+                        SoundEffects.close();
                         onOpenChange(false);
                       }}
+                      onMouseEnter={() => SoundEffects.hover()}
                       onTouchStart={(e) => {
                         e.stopPropagation();
                         e.currentTarget.style.transform = 'scale(0.9)';
@@ -788,6 +825,7 @@ export function UltimateControlPanel({
                       onTouchEnd={(e) => {
                         e.stopPropagation();
                         e.currentTarget.style.transform = '';
+                        SoundEffects.close();
                       }}
                       className="p-3 rounded-full bg-white/5 hover:bg-white/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
                       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
@@ -812,9 +850,11 @@ export function UltimateControlPanel({
                       key={tab.id}
                       onClick={(e) => {
                         e.stopPropagation();
+                        SoundEffects.tab(); // Play tab switch sound
                         setActiveTab(tab.id as any);
                         if (navigator.vibrate) navigator.vibrate(10);
                       }}
+                      onMouseEnter={() => SoundEffects.hover()}
                       onTouchStart={(e) => {
                         e.stopPropagation();
                         e.currentTarget.style.transform = 'scale(0.95)';
@@ -822,6 +862,7 @@ export function UltimateControlPanel({
                       onTouchEnd={(e) => {
                         e.stopPropagation();
                         e.currentTarget.style.transform = '';
+                        SoundEffects.tab(); // Play tab switch sound
                       }}
                       className={`flex-1 px-3 py-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
                         activeTab === tab.id
@@ -1030,7 +1071,8 @@ export function UltimateControlPanel({
                             </div>
                           </div>
                           <button
-                            onClick={() => setShowSensitive(!showSensitive)}
+                            onClick={() => { SoundEffects.click(); setShowSensitive(!showSensitive); }}
+                            onMouseEnter={() => SoundEffects.hover()}
                             className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
                           >
                             {showSensitive ? (
@@ -1199,7 +1241,8 @@ export function UltimateControlPanel({
                       {/* Actions */}
                       <div className="space-y-2">
                         <button
-                          onClick={handleRefresh}
+                          onClick={() => { SoundEffects.click(); handleRefresh(); }}
+                          onMouseEnter={() => SoundEffects.hover()}
                           className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-white/10 text-white font-semibold hover:from-blue-500/30 hover:to-purple-500/30 transition-all flex items-center justify-center gap-2"
                         >
                           <RefreshCw size={18} />
@@ -1208,10 +1251,12 @@ export function UltimateControlPanel({
 
                         <button
                           onClick={() => {
+                            SoundEffects.click();
                             const info = deviceMonitor.getFormattedInfo();
                             console.table(info);
                             alert('Device info logged to console (F12)');
                           }}
+                          onMouseEnter={() => SoundEffects.hover()}
                           className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 font-semibold hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2"
                         >
                           <Globe size={18} />
@@ -1219,15 +1264,18 @@ export function UltimateControlPanel({
                         </button>
                         <button
                           onClick={async () => {
+                            SoundEffects.click();
                             const info = JSON.stringify(deviceMonitor.getFormattedInfo(), null, 2);
                             if (navigator.clipboard?.writeText) {
                               await navigator.clipboard.writeText(info);
+                              SoundEffects.success();
                               alert('Device snapshot copied to clipboard');
                             } else {
                               console.log(info);
                               alert('Clipboard unavailable; details logged to console');
                             }
                           }}
+                          onMouseEnter={() => SoundEffects.hover()}
                           className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500/20 to-blue-500/20 border border-white/10 text-white font-semibold hover:from-blue-500/30 hover:to-blue-500/30 transition-all flex items-center justify-center gap-2"
                         >
                           <Globe size={18} />

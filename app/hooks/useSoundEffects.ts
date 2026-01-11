@@ -3,61 +3,193 @@
 import { useRef, useCallback } from 'react';
 
 /**
- * Simple, lightweight sound effects hook for UI interactions
- * Uses HTML5 Audio for maximum compatibility
+ * Simple, lightweight sound effects using Web Audio API
+ * No external dependencies - generates sounds programmatically
  */
 
-// CDN-hosted sound URLs for consistency
-const SOUND_URLS = {
-  // Click sounds
-  click: 'https://assets.codepen.io/127738/click_mech.mp3',
-  clickSoft: 'https://cdn.pixabay.com/download/audio/2022/03/24/audio_c8b829532c.mp3',
-  
-  // Hover sounds
-  hover: 'https://assets.codepen.io/127738/ui_hover.mp3',
-  hoverSoft: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_2434522961.mp3',
-  
-  // Confirmation/success sounds
-  confirm: 'https://cdn.pixabay.com/download/audio/2022/03/24/audio_804e38692c.mp3',
-  success: 'https://cdn.pixabay.com/download/audio/2022/03/24/audio_03d2572f88.mp3',
-  
-  // Navigation sounds
-  open: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3',
-  close: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_a777659546.mp3',
-  
-  // Special sounds
-  boot: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_cda839211d.mp3',
-  error: 'https://cdn.pixabay.com/download/audio/2021/08/04/audio_c6ccf3232f.mp3',
-};
+type SoundType = 'click' | 'clickSoft' | 'hover' | 'hoverSoft' | 'confirm' | 'success' | 'open' | 'close' | 'boot' | 'error' | 'swipe' | 'swoosh' | 'tab';
 
-type SoundType = keyof typeof SOUND_URLS;
+// Web Audio API context singleton
+let audioContext: AudioContext | null = null;
+let hasUserInteracted = false;
 
-// Audio element pool for performance
-const audioPool = new Map<string, HTMLAudioElement>();
+// Track user interaction for autoplay policy
+if (typeof window !== 'undefined') {
+  const markInteracted = () => {
+    hasUserInteracted = true;
+    window.removeEventListener('click', markInteracted);
+    window.removeEventListener('touchstart', markInteracted);
+    window.removeEventListener('keydown', markInteracted);
+  };
+  window.addEventListener('click', markInteracted);
+  window.addEventListener('touchstart', markInteracted);
+  window.addEventListener('keydown', markInteracted);
+}
 
-// Get or create audio element
-const getAudio = (url: string): HTMLAudioElement | null => {
+// Initialize or get audio context
+const getAudioContext = (): AudioContext | null => {
   if (typeof window === 'undefined') return null;
   
-  if (!audioPool.has(url)) {
-    const audio = new Audio(url);
-    audio.preload = 'auto';
-    audio.crossOrigin = 'anonymous';
-    audioPool.set(url, audio);
+  try {
+    if (!audioContext) {
+      const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+      if (Ctx) {
+        audioContext = new Ctx();
+      }
+    }
+    
+    // Resume if suspended
+    if (audioContext?.state === 'suspended' && hasUserInteracted) {
+      audioContext.resume().catch(() => {});
+    }
+    
+    return audioContext;
+  } catch (e) {
+    return null;
   }
-  return audioPool.get(url) || null;
 };
 
-// Preload all sounds
+// Play a synthesized tone
+const playTone = (
+  frequency: number,
+  type: OscillatorType,
+  duration: number,
+  volume: number,
+  attack: number = 0.005,
+  decay: number = 0.1
+) => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = type;
+    osc.frequency.setValueAtTime(frequency, now);
+    
+    // ADSR envelope
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(volume, now + attack);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start(now);
+    osc.stop(now + duration + 0.1);
+  } catch (e) {
+    // Silent fail
+  }
+};
+
+// Play mechanical click with filter
+const playMechanicalClick = (volume: number) => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(150, now);
+    
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(800, now);
+    filter.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+    
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(volume, now + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start(now);
+    osc.stop(now + 0.15);
+  } catch (e) {
+    // Silent fail
+  }
+};
+
+// Play soft hover sound
+const playSoftHover = (volume: number) => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(400, now);
+    osc.frequency.exponentialRampToValueAtTime(600, now + 0.03);
+    
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(volume * 0.3, now + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start(now);
+    osc.stop(now + 0.1);
+  } catch (e) {
+    // Silent fail
+  }
+};
+
+// Play swipe/swoosh sound
+const playSwipe = (volume: number) => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  
+  try {
+    const now = ctx.currentTime;
+    
+    // Create noise for swoosh effect
+    const bufferSize = ctx.sampleRate * 0.15;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    }
+    
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(2000, now);
+    filter.frequency.exponentialRampToValueAtTime(500, now + 0.15);
+    filter.Q.value = 1;
+    
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(volume * 0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    
+    noise.start(now);
+    noise.stop(now + 0.2);
+  } catch (e) {
+    // Silent fail
+  }
+};
+
+// Preload sounds (initializes audio context on user interaction)
 export const preloadSounds = () => {
   if (typeof window === 'undefined') return;
-  
-  Object.values(SOUND_URLS).forEach(url => {
-    const audio = getAudio(url);
-    if (audio) {
-      audio.load();
-    }
-  });
+  getAudioContext();
 };
 
 export interface SoundEffectsAPI {
@@ -77,41 +209,54 @@ export interface SoundEffectsAPI {
 export const useSoundEffects = (initialEnabled: boolean = true, initialVolume: number = 0.3): SoundEffectsAPI => {
   const enabledRef = useRef(initialEnabled);
   const volumeRef = useRef(initialVolume);
-  const hasUserInteracted = useRef(false);
-
-  // Track user interaction for autoplay policy
-  if (typeof window !== 'undefined' && !hasUserInteracted.current) {
-    const markInteracted = () => {
-      hasUserInteracted.current = true;
-      window.removeEventListener('click', markInteracted);
-      window.removeEventListener('touchstart', markInteracted);
-      window.removeEventListener('keydown', markInteracted);
-    };
-    window.addEventListener('click', markInteracted);
-    window.addEventListener('touchstart', markInteracted);
-    window.addEventListener('keydown', markInteracted);
-  }
 
   const play = useCallback((type: SoundType) => {
     if (!enabledRef.current || typeof window === 'undefined') return;
     
-    const url = SOUND_URLS[type];
-    if (!url) return;
-
-    try {
-      const audio = getAudio(url);
-      if (audio) {
-        // Reset and play
-        audio.currentTime = 0;
-        audio.volume = Math.min(1, Math.max(0, volumeRef.current));
-        
-        // Use promise-based play with silent catch for autoplay policy
-        audio.play().catch(() => {
-          // Silently fail if autoplay is blocked
+    const vol = volumeRef.current;
+    
+    switch (type) {
+      case 'click':
+      case 'clickSoft':
+        playMechanicalClick(vol);
+        break;
+      case 'hover':
+      case 'hoverSoft':
+        playSoftHover(vol);
+        break;
+      case 'confirm':
+        playTone(440, 'sine', 0.15, vol * 0.5);
+        setTimeout(() => playTone(554, 'sine', 0.15, vol * 0.5), 50);
+        setTimeout(() => playTone(659, 'sine', 0.2, vol * 0.5), 100);
+        break;
+      case 'success':
+        [440, 554, 659, 880].forEach((freq, i) => {
+          setTimeout(() => playTone(freq, 'sine', 0.1, vol * 0.4), i * 60);
         });
-      }
-    } catch (e) {
-      // Silently fail on any audio errors
+        break;
+      case 'open':
+        playTone(300, 'sine', 0.08, vol * 0.4);
+        setTimeout(() => playTone(500, 'sine', 0.1, vol * 0.4), 40);
+        break;
+      case 'close':
+        playTone(500, 'sine', 0.08, vol * 0.4);
+        setTimeout(() => playTone(300, 'sine', 0.1, vol * 0.4), 40);
+        break;
+      case 'boot':
+        playTone(100, 'sawtooth', 0.8, vol * 0.3);
+        setTimeout(() => playTone(200, 'square', 0.5, vol * 0.2), 200);
+        break;
+      case 'error':
+        playTone(200, 'square', 0.15, vol * 0.4);
+        setTimeout(() => playTone(150, 'square', 0.2, vol * 0.4), 100);
+        break;
+      case 'swipe':
+      case 'swoosh':
+        playSwipe(vol);
+        break;
+      case 'tab':
+        playTone(600, 'sine', 0.05, vol * 0.3);
+        break;
     }
   }, []);
 
@@ -158,18 +303,50 @@ export const SoundEffects = {
   play: (type: SoundType) => {
     if (!globalEnabled || typeof window === 'undefined') return;
     
-    const url = SOUND_URLS[type];
-    if (!url) return;
-
-    try {
-      const audio = getAudio(url);
-      if (audio) {
-        audio.currentTime = 0;
-        audio.volume = globalVolume;
-        audio.play().catch(() => {});
-      }
-    } catch (e) {
-      // Silent fail
+    const vol = globalVolume;
+    
+    switch (type) {
+      case 'click':
+      case 'clickSoft':
+        playMechanicalClick(vol);
+        break;
+      case 'hover':
+      case 'hoverSoft':
+        playSoftHover(vol);
+        break;
+      case 'confirm':
+        playTone(440, 'sine', 0.15, vol * 0.5);
+        setTimeout(() => playTone(554, 'sine', 0.15, vol * 0.5), 50);
+        setTimeout(() => playTone(659, 'sine', 0.2, vol * 0.5), 100);
+        break;
+      case 'success':
+        [440, 554, 659, 880].forEach((freq, i) => {
+          setTimeout(() => playTone(freq, 'sine', 0.1, vol * 0.4), i * 60);
+        });
+        break;
+      case 'open':
+        playTone(300, 'sine', 0.08, vol * 0.4);
+        setTimeout(() => playTone(500, 'sine', 0.1, vol * 0.4), 40);
+        break;
+      case 'close':
+        playTone(500, 'sine', 0.08, vol * 0.4);
+        setTimeout(() => playTone(300, 'sine', 0.1, vol * 0.4), 40);
+        break;
+      case 'boot':
+        playTone(100, 'sawtooth', 0.8, vol * 0.3);
+        setTimeout(() => playTone(200, 'square', 0.5, vol * 0.2), 200);
+        break;
+      case 'error':
+        playTone(200, 'square', 0.15, vol * 0.4);
+        setTimeout(() => playTone(150, 'square', 0.2, vol * 0.4), 100);
+        break;
+      case 'swipe':
+      case 'swoosh':
+        playSwipe(vol);
+        break;
+      case 'tab':
+        playTone(600, 'sine', 0.05, vol * 0.3);
+        break;
     }
   },
   
@@ -181,6 +358,9 @@ export const SoundEffects = {
   close: () => SoundEffects.play('close'),
   boot: () => SoundEffects.play('boot'),
   error: () => SoundEffects.play('error'),
+  swipe: () => SoundEffects.play('swipe'),
+  swoosh: () => SoundEffects.play('swoosh'),
+  tab: () => SoundEffects.play('tab'),
 };
 
 export default useSoundEffects;
