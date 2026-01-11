@@ -22,10 +22,46 @@ const SplineScene = lazy(() => import('@/components/SplineScene'));
 function LazySplineContainer({ scene }: { scene: string }) {
   const [isInView, setIsInView] = useState(false);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [canRender, setCanRender] = useState(true);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Check if device can handle 3D at mount
+  useEffect(() => {
+    const checkDevice = () => {
+      const isSmallScreen = window.innerWidth < 480;
+      const isMobile = window.innerWidth < 768;
+      const memory = (navigator as any).deviceMemory || 4;
+      
+      // Disable on very small screens or low memory mobile devices
+      if (isSmallScreen || (isMobile && memory < 3)) {
+        setCanRender(false);
+      }
+    };
+    checkDevice();
+  }, []);
+
+  // Track container size to prevent layout shifts
   useEffect(() => {
     if (!containerRef.current) return;
+    
+    const updateSize = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setContainerSize({ width: rect.width, height: rect.height });
+      }
+    };
+    
+    updateSize();
+    
+    const resizeObserver = new ResizeObserver(updateSize);
+    resizeObserver.observe(containerRef.current);
+    
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!containerRef.current || !canRender) return;
     
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -44,22 +80,58 @@ function LazySplineContainer({ scene }: { scene: string }) {
 
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [hasLoadedOnce]);
+  }, [hasLoadedOnce, canRender]);
+
+  // Show optimized fallback on devices that can't handle 3D
+  if (!canRender) {
+    return (
+      <div className="w-full h-full min-h-[300px] relative bg-gradient-to-br from-black via-blue-950/30 to-black rounded-xl overflow-hidden">
+        {/* Shimmer effect like navbar */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-[-100%] animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#00000000_50%)] opacity-20" />
+        </div>
+        
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+          <div className="w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
+            <span className="text-2xl">🚀</span>
+          </div>
+          <p className="text-xs text-blue-300/60">3D View</p>
+          <p className="text-[10px] text-blue-400/40">Optimized for your device</p>
+        </div>
+        
+        <div className="absolute inset-0 rounded-xl border border-blue-500/20" />
+      </div>
+    );
+  }
 
   return (
     // 'isolate' is crucial here so the Interaction Button in SplineScene works correctly with z-index
-    <div ref={containerRef} className="w-full h-full relative isolate transition-opacity duration-700">
+    // Use aspect-ratio and min-height to prevent collapse/blowout
+    <div 
+      ref={containerRef} 
+      className="w-full h-full min-h-[300px] relative isolate overflow-hidden rounded-xl"
+      style={{ 
+        contain: 'layout size',
+        aspectRatio: containerSize.width && containerSize.height ? `${containerSize.width} / ${containerSize.height}` : 'auto'
+      }}
+    >
       {isInView ? (
         <Suspense fallback={
-          <div className="w-full h-full flex items-center justify-center bg-black/5 rounded">
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-black via-blue-950/20 to-black rounded-xl">
              <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
           </div>
         }>
-          <SplineScene scene={scene} />
+          <div className="absolute inset-0">
+            <SplineScene scene={scene} />
+          </div>
         </Suspense>
       ) : (
         // Placeholder when scrolled away (saves FPS by unmounting the heavy 3D canvas)
-        <div className={`w-full h-full bg-neutral-900/5 rounded transition-opacity duration-500 ${hasLoadedOnce ? 'opacity-100' : 'opacity-0'}`} />
+        <div className={`absolute inset-0 bg-gradient-to-br from-black via-blue-950/10 to-black rounded-xl transition-opacity duration-500 ${hasLoadedOnce ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-blue-500/20 animate-pulse" />
+          </div>
+        </div>
       )}
     </div>
   );

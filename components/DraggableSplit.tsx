@@ -67,7 +67,7 @@ const DraggableSplit: React.FC<DraggableSplitProps> = ({ children, initialRatio 
         style={{ height: `${splitRatio * 100}%` }}
         className="w-full relative overflow-hidden"
       >
-        <div className="absolute inset-0 pb-1.5"> {/* Padding bottom for divider space */}
+        <div className="absolute inset-0 pb-1.5" style={{ contain: 'layout' }}> {/* Padding bottom for divider space */}
             {children[0]}
         </div>
       </div>
@@ -97,7 +97,7 @@ const DraggableSplit: React.FC<DraggableSplitProps> = ({ children, initialRatio 
         style={{ height: `${(1 - splitRatio) * 100}%` }}
         className="w-full relative overflow-hidden"
       >
-         <div className="absolute inset-0 pt-1.5"> {/* Padding top for divider space */}
+         <div className="absolute inset-0 pt-1.5" style={{ contain: 'layout' }}> {/* Padding top for divider space */}
             {children[1]}
         </div>
       </div>

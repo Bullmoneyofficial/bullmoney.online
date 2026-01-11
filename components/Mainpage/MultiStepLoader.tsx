@@ -51,15 +51,23 @@ export const MultiStepLoader = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black overflow-hidden"
         >
-          <div className="text-center">
+          {/* Blue shimmer background like navbar */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <span className="absolute inset-[-100%] animate-[spin_6s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-15" />
+          </div>
+          
+          {/* Radial glow */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/30 via-transparent to-transparent pointer-events-none" />
+          
+          <div className="text-center relative z-10">
             <motion.div
               key={currentState}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="text-white text-2xl font-bold"
+              className="text-blue-300 text-2xl font-bold"
             >
               {loadingStates[currentState]?.text}
             </motion.div>
@@ -67,8 +75,10 @@ export const MultiStepLoader = ({
               {loadingStates.map((_, index) => (
                 <div
                   key={index}
-                  className={`h-2 w-2 rounded-full ${
-                    index === currentState ? "bg-white" : "bg-white/30"
+                  className={`h-2 w-2 rounded-full transition-all duration-300 ${
+                    index === currentState 
+                      ? "bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)]" 
+                      : "bg-blue-500/30"
                   }`}
                 />
               ))}
