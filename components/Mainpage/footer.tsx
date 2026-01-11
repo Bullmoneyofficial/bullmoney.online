@@ -259,6 +259,8 @@ const PixelCard = ({
   const pixelsRef = useRef<Pixel[]>([]);
   const animationRef = useRef<number | null>(null);
   const timePreviousRef = useRef(typeof performance !== 'undefined' ? performance.now() : 0);
+  const isMountedRef = useRef(true);
+  const [isVisible, setIsVisible] = useState(false);
   
   const reducedMotion = typeof window !== 'undefined' 
     ? window.matchMedia('(prefers-reduced-motion: reduce)').matches 
@@ -271,64 +273,88 @@ const PixelCard = ({
   const finalNoFocus = noFocus ?? variantCfg.noFocus;
 
   const initPixels = () => {
-    if (!containerRef.current || !canvasRef.current) return;
+    if (!containerRef.current || !canvasRef.current || !isMountedRef.current) return;
 
-    const rect = containerRef.current.getBoundingClientRect();
-    const width = Math.floor(rect.width);
-    const height = Math.floor(rect.height);
-    const ctx = canvasRef.current.getContext('2d');
+    try {
+      const rect = containerRef.current.getBoundingClientRect();
+      const width = Math.floor(rect.width);
+      const height = Math.floor(rect.height);
+      
+      // Prevent creating canvas with zero or negative dimensions
+      if (width <= 0 || height <= 0) return;
+      
+      const ctx = canvasRef.current.getContext('2d');
+      if (!ctx) return;
 
-    canvasRef.current.width = width;
-    canvasRef.current.height = height;
-    canvasRef.current.style.width = `${width}px`;
-    canvasRef.current.style.height = `${height}px`;
+      canvasRef.current.width = width;
+      canvasRef.current.height = height;
+      canvasRef.current.style.width = `${width}px`;
+      canvasRef.current.style.height = `${height}px`;
 
-    const colorsArray = finalColors.split(',');
-    const pxs = [];
-    for (let x = 0; x < width; x += parseInt(finalGap.toString(), 10)) {
-      for (let y = 0; y < height; y += parseInt(finalGap.toString(), 10)) {
-        const color = colorsArray[Math.floor(Math.random() * colorsArray.length)] || "#FFFFFF";
-        const dx = x - width / 2;
-        const dy = y - height / 2;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const delay = reducedMotion ? 0 : distance;
-        if (!ctx) return;
-        pxs.push(new Pixel(canvasRef.current, ctx, x, y, color, getEffectiveSpeed(finalSpeed, reducedMotion), delay));
+      const colorsArray = finalColors.split(',');
+      const pxs = [];
+      const gapValue = Math.max(1, parseInt(finalGap.toString(), 10));
+      
+      for (let x = 0; x < width; x += gapValue) {
+        for (let y = 0; y < height; y += gapValue) {
+          const color = colorsArray[Math.floor(Math.random() * colorsArray.length)] || "#FFFFFF";
+          const dx = x - width / 2;
+          const dy = y - height / 2;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          const delay = reducedMotion ? 0 : distance;
+          pxs.push(new Pixel(canvasRef.current, ctx, x, y, color, getEffectiveSpeed(finalSpeed, reducedMotion), delay));
+        }
       }
+      pixelsRef.current = pxs;
+    } catch (error) {
+      console.warn('PixelCard initPixels error:', error);
     }
-    pixelsRef.current = pxs;
   };
 
   const doAnimate = (fnName: keyof Pixel) => {
+    if (!isMountedRef.current) return;
+    
     animationRef.current = requestAnimationFrame(() => doAnimate(fnName));
-    const timeNow = performance.now();
-    const timePassed = timeNow - timePreviousRef.current;
-    const timeInterval = 1000 / 60;
+    
+    try {
+      const timeNow = performance.now();
+      const timePassed = timeNow - timePreviousRef.current;
+      const timeInterval = 1000 / 60;
 
-    if (timePassed < timeInterval) return;
-    timePreviousRef.current = timeNow - (timePassed % timeInterval);
+      if (timePassed < timeInterval) return;
+      timePreviousRef.current = timeNow - (timePassed % timeInterval);
 
-    const ctx = canvasRef.current?.getContext('2d');
-    if (!ctx || !canvasRef.current) return;
+      const ctx = canvasRef.current?.getContext('2d');
+      if (!ctx || !canvasRef.current) return;
 
-    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 
-    let allIdle = true;
-    for (let i = 0; i < pixelsRef.current.length; i++) {
-      const pixel = pixelsRef.current[i];
-      if (!pixel) continue;
-      // @ts-ignore
-      pixel[fnName]();
-      if (!pixel.isIdle) {
-        allIdle = false;
+      let allIdle = true;
+      for (let i = 0; i < pixelsRef.current.length; i++) {
+        const pixel = pixelsRef.current[i];
+        if (!pixel) continue;
+        // @ts-ignore
+        pixel[fnName]();
+        if (!pixel.isIdle) {
+          allIdle = false;
+        }
       }
-    }
-    if (allIdle) {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      if (allIdle && animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+    } catch (error) {
+      // Silently handle animation errors to prevent crashes
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
     }
   };
 
   const handleAnimation = (name: keyof Pixel) => {
+    if (!isMountedRef.current) return;
+    
     if (animationRef.current !== null) {
       cancelAnimationFrame(animationRef.current);
     }
@@ -346,21 +372,52 @@ const PixelCard = ({
     handleAnimation('disappear');
   };
 
+  // Intersection Observer to only render when visible
   useEffect(() => {
-    initPixels();
-    const observer = new ResizeObserver(() => {
-      initPixels();
-    });
+    isMountedRef.current = true;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          setIsVisible(entry.isIntersecting);
+        });
+      },
+      { rootMargin: '50px', threshold: 0 }
+    );
+    
     if (containerRef.current) {
       observer.observe(containerRef.current);
     }
+    
     return () => {
+      isMountedRef.current = false;
       observer.disconnect();
       if (animationRef.current !== null) {
         cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
       }
     };
-  }, [finalGap, finalSpeed, finalColors, finalNoFocus]);
+  }, []);
+
+  useEffect(() => {
+    if (isVisible) {
+      initPixels();
+    }
+    
+    const resizeObserver = new ResizeObserver(() => {
+      if (isVisible && isMountedRef.current) {
+        initPixels();
+      }
+    });
+    
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [isVisible, finalGap, finalSpeed, finalColors, finalNoFocus]);
 
   return (
     <div
@@ -372,7 +429,9 @@ const PixelCard = ({
       onBlur={finalNoFocus ? undefined : onBlur}
       tabIndex={finalNoFocus ? -1 : 0}
     >
-      <canvas className="absolute inset-0 z-0 h-full w-full pointer-events-none" ref={canvasRef} />
+      {isVisible && (
+        <canvas className="absolute inset-0 z-0 h-full w-full pointer-events-none" ref={canvasRef} />
+      )}
       <div className="relative z-10">{children}</div>
     </div>
   );
@@ -462,6 +521,13 @@ const DisclaimerSection = ({ number, title, text }: { number: string; title: str
 export function Footer() {
   const [openDisclaimer, setOpenDisclaimer] = useState(false);
   const [openApps, setOpenApps] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Ensure client-side only rendering for animations
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
 
   // Button Styles - Navbar style
   const btnBase = "h-10 inline-flex items-center justify-center rounded-xl px-4 text-sm font-medium transition-all duration-200";
@@ -496,99 +562,160 @@ export function Footer() {
   ];
 
   return (
-    <footer className="relative w-full overflow-hidden bg-black/95 backdrop-blur-xl border-t border-blue-500/20">
-      {/* Shimmer Border Effect - Like Navbar */}
-      <div className="absolute inset-x-0 top-0 h-[1px] overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent animate-shimmer" 
-             style={{ backgroundSize: '200% 100%', animation: 'shimmer 3s linear infinite' }} 
-        />
-      </div>
-      
-      {/* Subtle Blue Glow - Top */}
-      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
-      
-      {/* SPARKLES BACKGROUND - More subtle */}
-      <div className="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-50">
-        <SparklesCore
-          id="tsparticlesfooter"
-          background="transparent"
-          minSize={0.4}
-          maxSize={1}
-          particleDensity={60}
-          className="w-full h-full"
-          particleColor="#3b82f6"
-        />
-      </div>
+    <>
+    {/* Global keyframes for animations */}
+    <style jsx global>{`
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+    `}</style>
+    
+    <footer className="relative w-full overflow-hidden">
+      {/* === FULL GLASS SHIMMER CONTAINER - Like Navbar === */}
+      <div className="relative group">
+        
+        {/* Spinning Conic Gradient Shimmer Border - Like Navbar */}
+        <span className="absolute inset-[-2px] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#60a5fa_50%,#3b82f6_75%,#00000000_100%)] opacity-60 rounded-t-3xl" />
+        
+        {/* Glass Background Container */}
+        <div className="relative bg-black/80 dark:bg-black/80 backdrop-blur-3xl border-t-2 border-blue-500/40 dark:border-blue-500/40 hover:border-blue-400/60 transition-all duration-500">
+          
+          {/* Top Shimmer Line */}
+          <div className="absolute inset-x-0 top-0 h-[2px] overflow-hidden">
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,#3b82f6,#60a5fa,#3b82f6,transparent)] bg-[length:200%_100%] animate-[shimmer_3s_linear_infinite]" />
+          </div>
+          
+          {/* Subtle Blue Glow - Top */}
+          <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-blue-500/10 via-blue-500/5 to-transparent pointer-events-none" />
+          
+          {/* Radial Glow Effect */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.08)_0%,transparent_70%)] pointer-events-none" />
+          
+          {/* SPARKLES BACKGROUND - More subtle, only render when mounted */}
+          {isMounted && (
+            <div className="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-40">
+              <SparklesCore
+                id="tsparticlesfooter"
+                background="transparent"
+                minSize={0.4}
+                maxSize={1}
+                particleDensity={40}
+                className="w-full h-full"
+                particleColor="#3b82f6"
+              />
+            </div>
+          )}
       
       {/* Content Wrapper */}
       <div className="max-w-7xl mx-auto relative z-10 flex flex-col gap-8 pt-12 pb-8 px-4 sm:px-6">
         
-        {/* Infinite Socials Row - Navbar-style dock */}
-        <div className="w-full pb-8 border-b border-blue-500/10">
-          <p className="text-center text-[10px] uppercase tracking-[0.2em] font-bold text-blue-400/80 mb-6">
-            Join the Community
-          </p>
-          <SocialsRow />
+        {/* Infinite Socials Row - Full Glass Navbar-style dock */}
+        <div className="relative w-full pb-8 border-b border-blue-500/20">
+          {/* Section Glass Container */}
+          <div className="relative overflow-hidden rounded-2xl p-6 bg-black/30 backdrop-blur-xl border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 shadow-[0_0_30px_rgba(59,130,246,0.1)]">
+            {/* Inner shimmer effect */}
+            <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_25%,rgba(59,130,246,0.05)_50%,transparent_75%)] bg-[length:200%_100%] animate-[shimmer_4s_linear_infinite]" />
+            
+            <p className="relative text-center text-[10px] uppercase tracking-[0.25em] font-bold text-blue-400 mb-6 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">
+              Join the Community
+            </p>
+            <SocialsRow />
+          </div>
         </div>
 
         {/* Main Footer Layout - Dock-style container */}
         <div className="flex flex-col lg:flex-row justify-between items-center gap-8">
           
-          {/* Brand & Copyright */}
-          <div className="flex flex-col items-center lg:items-start gap-4">
+          {/* Brand & Copyright - Glass Container */}
+          <div className="relative flex flex-col items-center lg:items-start gap-4 p-4 rounded-2xl bg-black/30 backdrop-blur-xl border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300">
+            {/* Pulse glow effect */}
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 animate-[pulse-glow_3s_ease-in-out_infinite]" />
+            
             <div className="relative">
               {/* Shimmer background for logo */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/10 to-blue-500/0 rounded-xl blur-xl" />
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/20 to-blue-500/0 rounded-xl blur-xl" />
               <Logo />
             </div>
-            <div className="text-neutral-500 text-xs text-center lg:text-left">
+            <div className="relative text-neutral-400 text-xs text-center lg:text-left font-medium">
               &copy; {new Date().getFullYear()} BullMoney. All rights reserved.
             </div>
           </div>
 
-          {/* Controls - Dock-style buttons */}
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            {/* Apps Button */}
+          {/* Controls - Full Glass Dock-style Container */}
+          <div className="relative flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl bg-black/30 backdrop-blur-xl border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 shadow-[0_0_25px_rgba(59,130,246,0.1)]">
+            {/* Shimmer overlay */}
+            <div className="absolute inset-0 rounded-2xl overflow-hidden">
+              <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_30%,rgba(59,130,246,0.08)_50%,transparent_70%)] bg-[length:200%_100%] animate-[shimmer_5s_linear_infinite]" />
+            </div>
+            
+            {/* Apps Button - With spinning shimmer border */}
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => setOpenApps(true)}
-              className={`${btnPrimary} relative overflow-hidden group`}
+              className="relative h-11 inline-flex items-center justify-center rounded-xl px-5 text-sm font-semibold transition-all duration-200 overflow-hidden group"
             >
-              {/* Shimmer effect on hover */}
-              <span className="absolute inset-[-100%] group-hover:animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-0 group-hover:opacity-100 transition-opacity z-0" />
-              <span className="relative z-10 flex items-center gap-2">
-                <ExternalLink className="w-4 h-4" />
+              {/* Spinning shimmer border */}
+              <span className="absolute inset-[-2px] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-80 rounded-xl" />
+              {/* Inner glass background */}
+              <span className="absolute inset-[1px] bg-black/60 backdrop-blur-xl rounded-xl border border-blue-500/30" />
+              <span className="relative z-10 flex items-center gap-2 text-white">
+                <ExternalLink className="w-4 h-4 text-blue-400" />
                 Apps & Tools
               </span>
             </motion.button>
 
-            {/* Disclaimer Button */}
+            {/* Disclaimer Button - Glass style */}
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => setOpenDisclaimer(true)}
-              className={`${btnOutline} relative overflow-hidden group`}
+              className="relative h-11 inline-flex items-center justify-center rounded-xl px-5 text-sm font-semibold transition-all duration-200 overflow-hidden group bg-black/40 backdrop-blur-xl border-2 border-blue-500/30 hover:border-blue-400/60 text-neutral-300 hover:text-white hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]"
             >
               <span className="relative z-10 flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4" />
+                <ShieldAlert className="w-4 h-4 text-blue-400" />
                 Legal Disclaimer
               </span>
             </motion.button>
           </div>
         </div>
 
-        {/* Bottom Bar - Shimmer text like navbar */}
-        <div className="text-center pt-6 border-t border-blue-500/10">
-          <p className="text-2xl sm:text-3xl font-serif font-black tracking-tight">
-            <span className="inline-block text-transparent bg-clip-text bg-[linear-gradient(110deg,#FFFFFF,45%,#3b82f6,55%,#FFFFFF)] bg-[length:250%_100%] animate-shimmer">
-              Bull Money
-            </span>
-          </p>
-          <p className="text-[10px] uppercase tracking-[0.3em] text-blue-400/50 mt-2 font-semibold">
-            Elite Trading Community
-          </p>
+        {/* Bottom Bar - Full Glass Container with Shimmer text */}
+        <div className="relative text-center pt-6 border-t border-blue-500/20">
+          {/* Glass container for bottom section */}
+          <div className="relative inline-block p-6 rounded-2xl bg-black/20 backdrop-blur-xl">
+            {/* Subtle glow behind text */}
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-blue-500/5 to-transparent" />
+            
+            <p className="text-2xl sm:text-3xl font-serif font-black tracking-tight">
+              <span className="inline-block text-transparent bg-clip-text bg-[linear-gradient(110deg,#FFFFFF,35%,#60a5fa,50%,#FFFFFF)] bg-[length:250%_100%] animate-[shimmer_3s_linear_infinite] drop-shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+                Bull Money
+              </span>
+            </p>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-blue-400/70 mt-3 font-bold">
+              Elite Trading Community
+            </p>
+            
+            {/* Decorative dots */}
+            <div className="flex justify-center gap-1.5 mt-4">
+              <span className="w-1 h-1 rounded-full bg-blue-500/60 animate-pulse" />
+              <span className="w-1 h-1 rounded-full bg-blue-400/80 animate-pulse" style={{ animationDelay: '0.2s' }} />
+              <span className="w-1 h-1 rounded-full bg-blue-500/60 animate-pulse" style={{ animationDelay: '0.4s' }} />
+            </div>
+          </div>
         </div>
+      </div>
+      
+      </div>
       </div>
 
       {/* ========= ENHANCED APPS MODAL ========= */}
@@ -736,5 +863,6 @@ export function Footer() {
       </EnhancedModal>
 
     </footer>
+    </>
   );
 }
