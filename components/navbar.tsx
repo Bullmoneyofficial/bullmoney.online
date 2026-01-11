@@ -541,8 +541,21 @@ const ThemeSelectorModal = ({
   const [previewThemeId, setPreviewThemeId] = useState<string | null>(null);
 
   const handleSave = (themeId: string) => {
-    // Save theme preference
+    // Save theme preference to all storage locations
     localStorage.setItem('bullmoney-theme', themeId);
+    localStorage.setItem('user_theme_id', themeId);
+    
+    // Try to use global theme context if available
+    try {
+      // Force a re-render by dispatching storage event
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'user_theme_id',
+        newValue: themeId,
+      }));
+    } catch (e) {
+      // Silent fail if context not available
+    }
+    
     onClose();
   };
 
@@ -811,10 +824,10 @@ export const Navbar = () => {
       </div>
 
       {/* --- MOBILE NAVBAR (SPLIT LAYOUT) --- */}
-      <div className="lg:hidden flex flex-row items-center justify-between w-full px-3 sm:px-6 pointer-events-auto gap-3">
+      <div className="lg:hidden flex flex-row items-center justify-between w-full px-2 sm:px-4 pointer-events-auto gap-2">
 
         {/* 1. LOGO (LEFT) */}
-        <div className="relative flex items-center justify-center overflow-hidden h-20 w-20 sm:h-24 sm:w-24 z-50 flex-shrink-0">
+        <div className="relative flex items-center justify-center overflow-hidden h-16 w-16 sm:h-20 sm:w-20 z-50 flex-shrink-0">
              <Link href="/" className="relative w-full h-full block">
                 <Image
                   src="/BULL.svg"
@@ -827,39 +840,39 @@ export const Navbar = () => {
         </div>
 
         {/* 2. PREMIUM GLASS SHIMMER CONTROLS (RIGHT) */}
-        <div className="relative group rounded-full overflow-hidden shadow-xl z-50 h-14 sm:h-16 flex items-center flex-grow max-w-xs">
+        <div className="relative group rounded-full overflow-hidden shadow-lg z-50 h-12 sm:h-14 flex items-center flex-grow max-w-xs">
             {/* Shimmer Background - Blue like FPS button */}
             <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-100" />
 
             {/* Inner Content Container - Black Glass */}
-            <div className="relative h-full w-full bg-black/40 dark:bg-black/40 backdrop-blur-3xl rounded-full p-[2px] flex items-center justify-center gap-2 px-3 sm:px-4 border-2 border-blue-500/30 dark:border-blue-500/30 hover:border-blue-400/60 transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(59,130,246,0.4)]">
+            <div className="relative h-full w-full bg-black/40 dark:bg-black/40 backdrop-blur-3xl rounded-full p-[2px] flex items-center justify-center gap-1 px-2 sm:px-3 border-2 border-blue-500/30 dark:border-blue-500/30 hover:border-blue-400/60 transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(59,130,246,0.4)]">
                 {/* Theme Selector Button - Centered */}
                 <button
                     onClick={() => setIsThemeSelectorOpen(true)}
-                    className="p-2 rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center min-w-[44px] min-h-[44px]"
+                    className="p-1.5 rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
                     style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                     title="Theme Selector"
                 >
-                    <IconPalette className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <IconPalette className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
 
                 {/* Divider */}
-                <div className="h-5 w-[1px] bg-blue-500/20 dark:bg-blue-500/20"></div>
+                <div className="h-4 w-[1px] bg-blue-500/20 dark:bg-blue-500/20"></div>
 
                 {/* Menu Toggle Button - Centered */}
                 <button
                     onClick={() => setOpen(!open)}
-                    className="p-2 rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center min-w-[44px] min-h-[44px]"
+                    className="p-1.5 rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
                     style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                     title={open ? 'Close menu' : 'Open menu'}
                 >
                     {/* If reward is unlocked, add a little dot to the menu icon */}
                     <div className="relative flex items-center justify-center">
-                        {open ? <IconX className="h-5 w-5 sm:h-6 sm:w-6" /> : <IconMenu2 className="h-5 w-5 sm:h-6 sm:w-6" />}
+                        {open ? <IconX className="h-4 w-4 sm:h-5 sm:w-5" /> : <IconMenu2 className="h-4 w-4 sm:h-5 sm:w-5" />}
                         {hasReward && !open && (
-                             <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                             <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                             </span>
                         )}
                     </div>
@@ -875,37 +888,37 @@ export const Navbar = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="absolute top-24 sm:top-28 left-3 sm:left-4 right-3 sm:right-4 z-40 rounded-3xl border-2 border-blue-500/30 bg-black/40 dark:bg-black/40 p-6 shadow-2xl backdrop-blur-xl dark:border-blue-500/30 hover:border-blue-400/60 transition-all"
+              className="absolute top-20 sm:top-24 left-2 sm:left-3 right-2 sm:right-3 z-40 rounded-2xl border-2 border-blue-500/30 bg-black/40 dark:bg-black/40 p-3 sm:p-4 shadow-2xl backdrop-blur-xl dark:border-blue-500/30 hover:border-blue-400/60 transition-all"
             >
-              <div className="flex flex-col gap-4 items-center text-center">
+              <div className="flex flex-col gap-2 sm:gap-3 items-center text-center">
                 <Link
                   href="/"
                   onClick={() => setOpen(false)}
-                  className="text-base sm:text-lg font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors w-full py-3 rounded-xl hover:bg-blue-500/10"
+                  className="text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors w-full py-2 rounded-lg hover:bg-blue-500/10"
                 >
                   Home
                 </Link>
 
                 <div className="relative w-full">
-                    <span className="text-base sm:text-lg font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 pointer-events-none block py-3 rounded-xl hover:bg-blue-500/10 cursor-pointer transition-colors">Setups</span>
+                    <span className="text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 pointer-events-none block py-2 rounded-lg hover:bg-blue-500/10 cursor-pointer transition-colors">Setups</span>
                     <div className="absolute inset-0 opacity-0"><ServicesModal /></div>
                 </div>
 
                 <Link
                   href="/socials"
                   onClick={() => setOpen(false)}
-                  className="text-base sm:text-lg font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors w-full py-3 rounded-xl hover:bg-blue-500/10"
+                  className="text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors w-full py-2 rounded-lg hover:bg-blue-500/10"
                 >
                   Socials
                 </Link>
 
                 <div className="relative w-full" onClick={() => { setIsFaqOpen(true); setOpen(false); }}>
-                    <span className="text-base sm:text-lg font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 cursor-pointer block py-3 rounded-xl hover:bg-blue-500/10 transition-colors">FAQ</span>
+                    <span className="text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 cursor-pointer block py-2 rounded-lg hover:bg-blue-500/10 transition-colors">FAQ</span>
                 </div>
 
                 <div className="relative w-full">
                     <span className={cn(
-                        "text-base sm:text-lg font-semibold pointer-events-none flex items-center justify-center gap-2 py-3 rounded-xl transition-colors",
+                        "text-sm sm:text-base font-semibold pointer-events-none flex items-center justify-center gap-2 py-2 rounded-lg transition-colors",
                         hasReward ? "text-blue-300 font-bold animate-pulse bg-blue-500/10" : "text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 hover:bg-blue-500/10"
                     )}>
                         {hasReward ? "🎁 Reward Unlocked!" : "Rewards Card"}
@@ -916,7 +929,7 @@ export const Navbar = () => {
                 <Link
                   href="/products"
                   onClick={() => setOpen(false)}
-                  className="w-full rounded-xl bg-blue-500 text-white px-6 py-3 text-sm sm:text-base font-bold shadow-md hover:bg-blue-600 transition-all transform hover:scale-105 border-2 border-blue-400/30 hover:border-blue-300/60 flex items-center justify-center min-h-[44px]"
+                  className="w-full rounded-lg bg-blue-500 text-white px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold shadow-md hover:bg-blue-600 transition-all transform hover:scale-105 border-2 border-blue-400/30 hover:border-blue-300/60 flex items-center justify-center min-h-[40px]"
                 >
                   Products
                 </Link>
@@ -924,23 +937,23 @@ export const Navbar = () => {
                 {/* Theme Selector Button for Mobile */}
                 <button
                   onClick={() => { setOpen(false); setIsThemeSelectorOpen(true); }}
-                  className="flex items-center justify-center gap-2 text-base sm:text-lg font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors w-full py-3 rounded-xl hover:bg-blue-500/10"
+                  className="flex items-center justify-center gap-2 text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors w-full py-2 rounded-lg hover:bg-blue-500/10"
                 >
-                  <IconPalette size={20} /> Theme
+                  <IconPalette size={16} /> Theme
                 </button>
 
                 {mounted && (!isAuthenticated || isAdmin) && (
                     <button
                       onClick={() => { setOpen(false); setIsAdminOpen(true); }}
                       className={cn(
-                        "flex items-center justify-center gap-2 text-[11px] sm:text-xs uppercase tracking-widest transition-colors mt-2 py-3 rounded-xl w-full",
+                        "flex items-center justify-center gap-2 text-[10px] sm:text-xs uppercase tracking-widest transition-colors mt-1 py-2 rounded-lg w-full",
                         isAdmin ? "text-blue-300 hover:text-blue-200 hover:bg-blue-500/10 font-bold" : "text-blue-200/60 hover:text-blue-300 hover:bg-blue-500/10"
                       )}
                     >
                        {isAdmin ? (
-                           <><IconSettings size={14} /> Admin Dashboard</>
+                           <><IconSettings size={12} /> Admin Dashboard</>
                        ) : (
-                           <><IconLock size={14} /> Team Access</>
+                           <><IconLock size={12} /> Team Access</>
                        )}
                     </button>
                 )}

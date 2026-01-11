@@ -383,4 +383,86 @@ export const GLOBAL_STYLES = `
       scroll-snap-type: y proximity; /* Less strict on mobile */
     }
   }
+
+  /* ============================================================ */
+  /* THEME PERSISTENCE & OVERLAY STYLING */
+  /* ============================================================ */
+  
+  /* Theme overlay - applied as persistent background filter */
+  #theme-overlay {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+
+  /* Navbar theme-aware styling */
+  [data-active-theme] .navbar,
+  [data-active-theme] .mobile-navbar {
+    transition: filter 0.3s ease, background-color 0.3s ease;
+  }
+
+  /* Action buttons theme-aware styling */
+  [data-active-theme] .action-button,
+  [data-active-theme] .quick-actions {
+    transition: filter 0.3s ease, background-color 0.3s ease;
+  }
+
+  /* Theme color variable usage throughout the app */
+  :root[data-active-theme] {
+    --theme-transition: filter 0.3s ease, background-color 0.3s ease;
+  }
+
+  /* Ensure theme filter applies to all elements */
+  [data-active-theme="t01"] {
+    /* Bitcoin Orange theme - applies to entire page when set */
+  }
+
+  [data-active-theme="t02"] {
+    /* Ethereum Purple theme - applies to entire page when set */
+  }
+
+  [data-active-theme="t03"] {
+    /* Solana Green theme - applies to entire page when set */
+  }
+
+  /* Smooth transitions when theme changes */
+  * {
+    transition-property: background-color, border-color, color, filter;
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
+  }
+
+  /* Prevent transition delay on specific interactive elements */
+  button, a, input, textarea {
+    transition-property: background-color, border-color, color;
+    transition-duration: 0.15s;
+  }
+
+  /* Performance: Don't animate theme filter on transforms */
+  .will-change-transform,
+  .will-change-auto {
+    filter: none;
+  }
+
+  /* Mobile optimization: Reduce motion on small devices */
+  @media (max-width: 640px) {
+    * {
+      transition-duration: 0.15s;
+    }
+
+    #theme-overlay {
+      transition: opacity 0.15s ease;
+    }
+  }
+
+  /* Prefers-reduced-motion: Respect user preferences */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition-duration: 0ms !important;
+      animation-duration: 0ms !important;
+    }
+
+    #theme-overlay {
+      transition: none;
+    }
+  }
 `;
