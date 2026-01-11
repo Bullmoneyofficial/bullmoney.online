@@ -252,6 +252,10 @@ export function UltimateControlPanel({
   const [mounted, setMounted] = useState(false);
   // Mobile tap expansion state - shows action buttons on tap like desktop hover
   const [isMobileExpanded, setIsMobileExpanded] = useState(false);
+  
+  // Smart tapping state - tracks which modal is currently open
+  // 1 tap = open modal, 2nd tap = close modal (toggle behavior)
+  const [activeModal, setActiveModal] = useState<'services' | 'contact' | 'theme' | 'admin' | 'identity' | null>(null);
 
   // Ensure component only renders on client
   useEffect(() => {
@@ -336,6 +340,17 @@ export function UltimateControlPanel({
     setDragProgress(0);
   };
 
+  // Reset active modal when user presses Escape - must be before early return
+  useEffect(() => {
+    const handleEscKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveModal(null);
+      }
+    };
+    window.addEventListener('keydown', handleEscKey);
+    return () => window.removeEventListener('keydown', handleEscKey);
+  }, []);
+
   if (!deviceInfo || !mounted) {
     return null;
   }
@@ -349,12 +364,54 @@ export function UltimateControlPanel({
   const reportedDownlink = deviceInfo.network.downlink || 0;
   const measuredType = (deviceInfo.network.effectiveType || '4g').toUpperCase();
 
-  // Default handlers for buttons
-  const handleServicesClick = onServicesClick || (() => console.log('Services clicked'));
-  const handleContactClick = onContactClick || (() => console.log('Contact clicked'));
-  const handleThemeClick = onThemeClick || (() => console.log('Theme clicked'));
-  const handleAdminClick = onAdminClick || (() => console.log('Admin clicked'));
-  const handleIdentityClick = onIdentityClick || (() => console.log('Identity clicked'));
+  // Default handlers for buttons - now with smart tapping (toggle behavior)
+  const handleServicesClick = () => {
+    setIsMobileExpanded(false);
+    if (activeModal === 'services') {
+      // 2nd tap - close
+      setActiveModal(null);
+    } else {
+      // 1st tap - open
+      setActiveModal('services');
+      onServicesClick?.();
+    }
+  };
+  const handleContactClick = () => {
+    setIsMobileExpanded(false);
+    if (activeModal === 'contact') {
+      setActiveModal(null);
+    } else {
+      setActiveModal('contact');
+      onContactClick?.();
+    }
+  };
+  const handleThemeClick = () => {
+    setIsMobileExpanded(false);
+    if (activeModal === 'theme') {
+      setActiveModal(null);
+    } else {
+      setActiveModal('theme');
+      onThemeClick?.();
+    }
+  };
+  const handleAdminClick = () => {
+    setIsMobileExpanded(false);
+    if (activeModal === 'admin') {
+      setActiveModal(null);
+    } else {
+      setActiveModal('admin');
+      onAdminClick?.();
+    }
+  };
+  const handleIdentityClick = () => {
+    setIsMobileExpanded(false);
+    if (activeModal === 'identity') {
+      setActiveModal(null);
+    } else {
+      setActiveModal('identity');
+      onIdentityClick?.();
+    }
+  };
 
   const portalContent = (
     <>
@@ -477,11 +534,10 @@ export function UltimateControlPanel({
                   {showServicesButton && (
                     <button
                       type="button"
-                      className="w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation"
+                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation ${activeModal === 'services' ? 'bg-blue-500/20' : ''}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setIsMobileExpanded(false);
                         handleServicesClick();
                       }}
                       style={{ 
@@ -491,9 +547,9 @@ export function UltimateControlPanel({
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <Sparkles size={14} className="text-blue-400" />
+                        <Sparkles size={14} className={`${activeModal === 'services' ? 'text-blue-300' : 'text-blue-400'}`} />
                         <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
-                          Services
+                          {activeModal === 'services' ? 'Close' : 'Services'}
                         </span>
                       </div>
                     </button>
@@ -503,11 +559,10 @@ export function UltimateControlPanel({
                   {showContactButton && (
                     <button
                       type="button"
-                      className="w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation"
+                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation ${activeModal === 'contact' ? 'bg-blue-500/20' : ''}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setIsMobileExpanded(false);
                         handleContactClick();
                       }}
                       style={{ 
@@ -517,9 +572,9 @@ export function UltimateControlPanel({
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <Send size={14} className="text-blue-400" />
+                        <Send size={14} className={`${activeModal === 'contact' ? 'text-blue-300' : 'text-blue-400'}`} />
                         <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
-                          Contact
+                          {activeModal === 'contact' ? 'Close' : 'Contact'}
                         </span>
                       </div>
                     </button>
@@ -529,11 +584,10 @@ export function UltimateControlPanel({
                   {showThemeButton && (
                     <button
                       type="button"
-                      className="w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation"
+                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation ${activeModal === 'theme' ? 'bg-blue-500/20' : ''}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setIsMobileExpanded(false);
                         handleThemeClick();
                       }}
                       style={{ 
@@ -543,9 +597,9 @@ export function UltimateControlPanel({
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <Settings size={14} className="text-blue-400" />
+                        <Settings size={14} className={`${activeModal === 'theme' ? 'text-blue-300' : 'text-blue-400'}`} />
                         <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
-                          Theme
+                          {activeModal === 'theme' ? 'Close' : 'Theme'}
                         </span>
                       </div>
                     </button>
@@ -555,11 +609,10 @@ export function UltimateControlPanel({
                   {isAdmin && showAdminButton && (
                     <button
                       type="button"
-                      className="w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation"
+                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation ${activeModal === 'admin' ? 'bg-blue-500/20' : ''}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setIsMobileExpanded(false);
                         handleAdminClick();
                       }}
                       style={{ 
@@ -569,9 +622,9 @@ export function UltimateControlPanel({
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <Edit2 size={14} className="text-blue-400" />
+                        <Edit2 size={14} className={`${activeModal === 'admin' ? 'text-blue-300' : 'text-blue-400'}`} />
                         <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
-                          Admin
+                          {activeModal === 'admin' ? 'Close' : 'Admin'}
                         </span>
                       </div>
                     </button>
@@ -593,11 +646,10 @@ export function UltimateControlPanel({
                   {!isAdmin && !isAuthenticated && showIdentityButton && (
                     <button
                       type="button"
-                      className="w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors flex items-center touch-manipulation"
+                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors flex items-center touch-manipulation ${activeModal === 'identity' ? 'bg-blue-500/20' : ''}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setIsMobileExpanded(false);
                         handleIdentityClick();
                       }}
                       style={{ 
@@ -607,9 +659,9 @@ export function UltimateControlPanel({
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <Fingerprint size={14} className="text-blue-400" />
+                        <Fingerprint size={14} className={`${activeModal === 'identity' ? 'text-blue-300' : 'text-blue-400'}`} />
                         <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
-                          Identity
+                          {activeModal === 'identity' ? 'Close' : 'Identity'}
                         </span>
                       </div>
                     </button>

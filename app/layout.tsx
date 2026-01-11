@@ -13,7 +13,7 @@ import { ShopProvider } from "@/components/ShopContext";
 
 // Navigation and Footer components
 import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+import { Footer } from "@/components/Mainpage/footer";
 
 // Client-side cursor component for desktop
 import ClientCursor from "@/components/ClientCursor";

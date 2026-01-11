@@ -456,17 +456,17 @@ const DisclaimerSection = ({ number, title, text }: { number: string; title: str
 );
 
 // ==========================================
-// 4. MAIN FOOTER COMPONENT
+// 4. MAIN FOOTER COMPONENT - Navbar-Style Design
 // ==========================================
 
 export function Footer() {
   const [openDisclaimer, setOpenDisclaimer] = useState(false);
   const [openApps, setOpenApps] = useState(false);
 
-  // Button Styles
-  const btnBase = "h-10 inline-flex items-center justify-center rounded-md px-3 text-sm font-medium transition duration-200";
-  const btnOutline = `${btnBase} border border-neutral-700 hover:bg-neutral-800 text-neutral-300`;
-  const btnPrimary = `${btnBase} bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/50 hover:brightness-110 active:scale-[0.98]`;
+  // Button Styles - Navbar style
+  const btnBase = "h-10 inline-flex items-center justify-center rounded-xl px-4 text-sm font-medium transition-all duration-200";
+  const btnOutline = `${btnBase} border-2 border-blue-500/30 hover:border-blue-400/60 bg-black/40 backdrop-blur-xl text-neutral-300 hover:text-white hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]`;
+  const btnPrimary = `${btnBase} bg-black/40 backdrop-blur-xl border-2 border-blue-500/80 shadow-[0_0_20px_rgba(59,130,246,0.5)] text-white hover:shadow-[0_0_30px_rgba(59,130,246,0.6)] active:scale-[0.98]`;
 
   const apps = [
     {
@@ -496,75 +496,98 @@ export function Footer() {
   ];
 
   return (
-    <div className="border-t border-neutral-100 dark:border-white/10 pt-16 pb-8 bg-black text-neutral-300 w-full relative overflow-hidden">
+    <footer className="relative w-full overflow-hidden bg-black/95 backdrop-blur-xl border-t border-blue-500/20">
+      {/* Shimmer Border Effect - Like Navbar */}
+      <div className="absolute inset-x-0 top-0 h-[1px] overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent animate-shimmer" 
+             style={{ backgroundSize: '200% 100%', animation: 'shimmer 3s linear infinite' }} 
+        />
+      </div>
       
-      {/* SPARKLES BACKGROUND */}
-      <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
+      {/* Subtle Blue Glow - Top */}
+      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
+      
+      {/* SPARKLES BACKGROUND - More subtle */}
+      <div className="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-50">
         <SparklesCore
           id="tsparticlesfooter"
           background="transparent"
-          minSize={0.6}
-          maxSize={1.4}
-          particleDensity={100}
+          minSize={0.4}
+          maxSize={1}
+          particleDensity={60}
           className="w-full h-full"
-          particleColor="#FFFFFF"
+          particleColor="#3b82f6"
         />
       </div>
-
-      {/* Top gradient overlay */}
-      <div className="pointer-events-none absolute inset-x-0 -top-20 h-40 bg-gradient-to-b from-sky-500/10 to-transparent z-0" />
       
       {/* Content Wrapper */}
-      <div className="max-w-7xl mx-auto relative z-10 flex flex-col gap-10">
+      <div className="max-w-7xl mx-auto relative z-10 flex flex-col gap-8 pt-12 pb-8 px-4 sm:px-6">
         
-        {/* Infinite Socials Row */}
-        <div className="w-full border-b border-white/5 pb-8">
-            <p className="text-center text-sm text-neutral-500 mb-4 font-semibold uppercase tracking-widest">Join the Community</p>
-            <SocialsRow />
+        {/* Infinite Socials Row - Navbar-style dock */}
+        <div className="w-full pb-8 border-b border-blue-500/10">
+          <p className="text-center text-[10px] uppercase tracking-[0.2em] font-bold text-blue-400/80 mb-6">
+            Join the Community
+          </p>
+          <SocialsRow />
         </div>
 
-        {/* Main Footer Layout */}
-        <div className="flex flex-col md:flex-row justify-between items-start gap-10 px-8">
+        {/* Main Footer Layout - Dock-style container */}
+        <div className="flex flex-col lg:flex-row justify-between items-center gap-8">
           
           {/* Brand & Copyright */}
-          <div className="flex-shrink-0">
-            <div className="mb-4">
+          <div className="flex flex-col items-center lg:items-start gap-4">
+            <div className="relative">
+              {/* Shimmer background for logo */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/10 to-blue-500/0 rounded-xl blur-xl" />
               <Logo />
             </div>
-            <div className="text-neutral-400 text-sm">
-              &copy; copyright Bullmoney 2024.<br/>All rights reserved.
+            <div className="text-neutral-500 text-xs text-center lg:text-left">
+              &copy; {new Date().getFullYear()} BullMoney. All rights reserved.
             </div>
           </div>
 
-          {/* Controls */}
-          <div className="flex flex-col md:flex-row gap-8 w-full md:justify-end">
-            <div className="space-y-3">
-              <p className="font-semibold text-neutral-200 text-sm">Apps &amp; Tools</p>
-              <motion.button
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setOpenApps(true)}
-                className={btnPrimary + " w-56"}
-              >
-                View Apps &amp; Tools
-              </motion.button>
-            </div>
-            
-            <div className="space-y-3">
-              <p className="font-semibold text-neutral-200 text-sm">Legal</p>
-              <motion.button
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setOpenDisclaimer(true)}
-                className={btnOutline + " w-56"}
-              >
-                View Financial Disclaimer
-              </motion.button>
-            </div>
+          {/* Controls - Dock-style buttons */}
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            {/* Apps Button */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setOpenApps(true)}
+              className={`${btnPrimary} relative overflow-hidden group`}
+            >
+              {/* Shimmer effect on hover */}
+              <span className="absolute inset-[-100%] group-hover:animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-0 group-hover:opacity-100 transition-opacity z-0" />
+              <span className="relative z-10 flex items-center gap-2">
+                <ExternalLink className="w-4 h-4" />
+                Apps & Tools
+              </span>
+            </motion.button>
 
-            
-            
+            {/* Disclaimer Button */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setOpenDisclaimer(true)}
+              className={`${btnOutline} relative overflow-hidden group`}
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4" />
+                Legal Disclaimer
+              </span>
+            </motion.button>
           </div>
+        </div>
+
+        {/* Bottom Bar - Shimmer text like navbar */}
+        <div className="text-center pt-6 border-t border-blue-500/10">
+          <p className="text-2xl sm:text-3xl font-serif font-black tracking-tight">
+            <span className="inline-block text-transparent bg-clip-text bg-[linear-gradient(110deg,#FFFFFF,45%,#3b82f6,55%,#FFFFFF)] bg-[length:250%_100%] animate-shimmer">
+              Bull Money
+            </span>
+          </p>
+          <p className="text-[10px] uppercase tracking-[0.3em] text-blue-400/50 mt-2 font-semibold">
+            Elite Trading Community
+          </p>
         </div>
       </div>
 
@@ -712,6 +735,6 @@ export function Footer() {
         </div>
       </EnhancedModal>
 
-    </div>
+    </footer>
   );
 }
