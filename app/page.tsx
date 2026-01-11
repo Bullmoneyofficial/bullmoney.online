@@ -89,8 +89,18 @@ function LazySplineContainer({ scene }: { scene: string }) {
     return (
       <div className="w-full h-full min-h-[300px] relative bg-gradient-to-br from-black via-blue-950/30 to-black rounded-xl overflow-hidden" style={{ touchAction: 'pan-y' }}>
         {/* Shimmer effect like navbar */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute inset-[-100%] animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#00000000_50%)] opacity-20" />
+        <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-xl">
+          <div 
+            className="absolute animate-[spin_8s_linear_infinite] opacity-20" 
+            style={{
+              top: '50%',
+              left: '50%',
+              width: '300%',
+              height: '300%',
+              transform: 'translate(-50%, -50%)',
+              background: 'conic-gradient(from 90deg at 50% 50%, transparent 0deg, rgba(59,130,246,0.4) 60deg, rgba(59,130,246,0.6) 120deg, rgba(59,130,246,0.4) 180deg, transparent 240deg, transparent 360deg)'
+            }}
+          />
         </div>
         
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">

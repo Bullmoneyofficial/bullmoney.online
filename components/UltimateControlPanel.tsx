@@ -137,20 +137,32 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
     <motion.div
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
-      className="relative p-3 rounded-xl overflow-hidden group"
+      className="relative p-3 rounded-xl overflow-hidden group isolate"
     >
-      {/* Glass background with shimmer */}
+      {/* Glass background */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-xl border border-blue-500/20 rounded-xl" />
       
-      {/* Shimmer effect on hover */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
-        <div className="absolute inset-[-100%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#00000000_50%)] opacity-30" />
+      {/* Shimmer effect on hover - full coverage */}
+      <div 
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none overflow-hidden rounded-xl"
+      >
+        <div 
+          className="absolute animate-[spin_4s_linear_infinite]"
+          style={{
+            top: '50%',
+            left: '50%',
+            width: '300%',
+            height: '300%',
+            transform: 'translate(-50%, -50%)',
+            background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(59,130,246,0.15) 60deg, rgba(59,130,246,0.25) 120deg, rgba(59,130,246,0.15) 180deg, transparent 240deg, transparent 360deg)'
+          }}
+        />
       </div>
       
       {/* Accent glow */}
       <div 
-        className="absolute inset-0 opacity-20 rounded-xl transition-opacity group-hover:opacity-40"
-        style={{ background: `radial-gradient(ellipse at top left, ${color}40 0%, transparent 60%)` }}
+        className="absolute inset-0 opacity-15 rounded-xl transition-opacity group-hover:opacity-30 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse at top left, ${color}30 0%, transparent 70%)` }}
       />
       
       {/* Content */}
@@ -189,13 +201,25 @@ function PerformanceRing({ score, size = 120 }: { score: number; size?: number }
   const offset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="relative group" style={{ width: size, height: size }}>
+    <div className="relative group isolate" style={{ width: size, height: size }}>
       {/* Glass background */}
       <div className="absolute inset-2 rounded-full bg-black/40 backdrop-blur-xl border border-blue-500/20" />
       
-      {/* Shimmer effect */}
-      <div className="absolute inset-2 rounded-full overflow-hidden opacity-30 group-hover:opacity-50 transition-opacity">
-        <div className="absolute inset-[-100%] animate-[spin_6s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#00000000_50%)]" />
+      {/* Shimmer effect - full coverage circle */}
+      <div 
+        className="absolute inset-2 opacity-20 group-hover:opacity-35 transition-opacity pointer-events-none overflow-hidden rounded-full"
+      >
+        <div 
+          className="absolute animate-[spin_6s_linear_infinite]"
+          style={{
+            top: '50%',
+            left: '50%',
+            width: '400%',
+            height: '400%',
+            transform: 'translate(-50%, -50%)',
+            background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(59,130,246,0.3) 45deg, rgba(59,130,246,0.5) 90deg, rgba(59,130,246,0.3) 135deg, transparent 180deg, transparent 360deg)'
+          }}
+        />
       </div>
       
       {/* SVG Ring */}
@@ -782,19 +806,29 @@ export function UltimateControlPanel({
               onDrag={handlePanelDrag}
               onDragEnd={handlePanelDragEnd}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed right-0 top-0 bottom-0 z-[250000] w-full max-w-md overflow-hidden bg-black/80 backdrop-blur-2xl border-l border-blue-500/30 shadow-2xl"
+              className="fixed right-0 top-0 bottom-0 z-[250000] w-full max-w-md overflow-hidden bg-black/90 backdrop-blur-2xl border-l border-blue-500/30 shadow-2xl"
               style={{
                 paddingRight: 'env(safe-area-inset-right, 0px)',
                 paddingBottom: 'env(safe-area-inset-bottom, 0px)'
               }}
             >
-              {/* Shimmer background effect */}
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute inset-[-100%] animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_15%,#00000000_30%)] opacity-10" />
+              {/* Shimmer background effect - full coverage */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div 
+                  className="absolute animate-[spin_15s_linear_infinite]"
+                  style={{
+                    top: '50%',
+                    left: '50%',
+                    width: '250%',
+                    height: '250%',
+                    transform: 'translate(-50%, -50%)',
+                    background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(59,130,246,0.08) 30deg, rgba(59,130,246,0.12) 60deg, rgba(59,130,246,0.08) 90deg, transparent 120deg, transparent 360deg)'
+                  }}
+                />
               </div>
               
               {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-950/20 via-transparent to-blue-900/10 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-950/15 via-transparent to-blue-900/10 pointer-events-none" />
               
               {/* Drag handle */}
               <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 py-3 px-2 cursor-grab active:cursor-grabbing z-20">
@@ -872,10 +906,20 @@ export function UltimateControlPanel({
 
               {/* Tabs */}
               <div className="px-6 pb-4 relative z-10">
-                <div className="relative flex gap-2 p-1 rounded-xl bg-black/40 backdrop-blur-lg border border-blue-500/20 overflow-hidden">
-                  {/* Shimmer effect for tabs */}
-                  <div className="absolute inset-0 overflow-hidden opacity-20">
-                    <div className="absolute inset-[-100%] animate-[spin_6s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#00000000_50%)]" />
+                <div className="relative flex gap-2 p-1 rounded-xl bg-black/40 backdrop-blur-lg border border-blue-500/20 overflow-hidden isolate">
+                  {/* Shimmer effect for tabs - full coverage */}
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
+                    <div 
+                      className="absolute animate-[spin_5s_linear_infinite]"
+                      style={{
+                        top: '50%',
+                        left: '50%',
+                        width: '400%',
+                        height: '400%',
+                        transform: 'translate(-50%, -50%)',
+                        background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(59,130,246,0.1) 40deg, rgba(59,130,246,0.18) 80deg, rgba(59,130,246,0.1) 120deg, transparent 160deg, transparent 360deg)'
+                      }}
+                    />
                   </div>
                   
                   {[
