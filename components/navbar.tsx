@@ -346,7 +346,7 @@ function Dock({
 const NAVBAR_TRADING_TIPS = [
   { target: 'Home', text: 'Market overview & latest updates', buttonIndex: 0 },
   { target: 'Setups', text: 'Daily signals & chart analysis', buttonIndex: 1 },
-  { target: 'Socials', text: 'Join 10k+ active traders', buttonIndex: 2 },
+  { target: 'Affiliates', text: 'Join our affiliate program', buttonIndex: 2 },
   { target: 'FAQ', text: 'Trading guides & support', buttonIndex: 3 },
   { target: 'Rewards', text: 'Earn points on every trade', buttonIndex: 4 },
   { target: 'Products', text: 'Pro tools & indicators', buttonIndex: 5 },
@@ -714,9 +714,9 @@ export const Navbar = () => {
     },
     {
         icon: <IconUsersGroup className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
-        label: "Socials",
-        tips: ["Join our Discord", "Follow on Instagram", "Connect with traders"],
-        href: "/socials",
+        label: "Affiliates",
+        tips: ["Join our affiliate program", "Earn commissions", "Grow with us"],
+        href: "/recruit?src=nav",
     },
     {
         icon: <IconHelp className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
@@ -905,11 +905,11 @@ export const Navbar = () => {
                 </div>
 
                 <Link
-                  href="/socials"
+                  href="/recruit?src=nav"
                   onClick={() => setOpen(false)}
                   className="text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors w-full py-2 rounded-lg hover:bg-blue-500/10"
                 >
-                  Socials
+                  Affiliates
                 </Link>
 
                 <div className="relative w-full" onClick={() => { setIsFaqOpen(true); setOpen(false); }}>

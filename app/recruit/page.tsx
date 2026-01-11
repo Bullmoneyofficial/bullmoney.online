@@ -322,27 +322,27 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
     if (storedMute !== null) setIsMuted(storedMute === 'true');
     if (storedVol) setVolume(parseInt(storedVol));
     
-    if (searchParams?.src !== "nav") {
-         router.push("/");
+    // Check if user has already completed the loading sequence
+    const hasVisited = sessionStorage.getItem('affiliate_unlock_complete');
+    if (hasVisited) {
+        // Skip loading stages for returning users
+        setCurrentStage("content");
     } else {
         setCurrentStage("affiliate");
-        if (!hasSeenHelper) {
-            setTimeout(() => setShowHelper(true), 4000);
-        }
     }
-  }, [searchParams, router]);
+    
+    if (!hasSeenHelper) {
+        setTimeout(() => setShowHelper(true), 4000);
+    }
+  }, []);
 
-  // --- LOGIC: Affiliate -> V2 (Refresh) OR Hold (1st Load) ---
+  // --- LOGIC: Faster transition - Affiliate -> Content ---
   useEffect(() => {
     if (currentStage === "affiliate") {
         const timer = setTimeout(() => {
-            const hasVisited = sessionStorage.getItem('affiliate_unlock_complete');
-            if (hasVisited) {
-                setCurrentStage("v2");
-            } else {
-                setCurrentStage("hold");
-            }
-        }, 5000);
+            sessionStorage.setItem('affiliate_unlock_complete', 'true');
+            setCurrentStage("content");
+        }, 3000); // Reduced from 5000ms to 3000ms for faster load
         return () => clearTimeout(timer);
     }
     return undefined;
@@ -458,7 +458,7 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
       safePlay(); 
   }, [safePlay]);
 
-  if (!isClient || searchParams?.src !== "nav") return null;
+  if (!isClient) return null;
 
   return (
     <>
