@@ -116,14 +116,14 @@ function LazySplineContainer({ scene }: { scene: string }) {
 
   return (
     // 'isolate' is crucial here so the Interaction Button in SplineScene works correctly with z-index
-    // Use aspect-ratio and min-height to prevent collapse/blowout
+    // Use fixed height and contain:strict to prevent resize issues
     <div 
       ref={containerRef} 
-      className="w-full h-full min-h-[300px] relative isolate overflow-hidden rounded-xl"
+      className="w-full h-full min-h-[300px] relative isolate overflow-hidden rounded-xl pointer-events-none md:pointer-events-auto"
       style={{ 
-        contain: 'layout size',
-        aspectRatio: containerSize.width && containerSize.height ? `${containerSize.width} / ${containerSize.height}` : 'auto',
-        touchAction: 'pan-y' // Allow vertical scrolling on touch devices
+        contain: 'strict',
+        touchAction: 'pan-y', // Allow vertical scrolling on touch devices
+        position: 'relative'
       }}
     >
       {isInView ? (
@@ -132,7 +132,7 @@ function LazySplineContainer({ scene }: { scene: string }) {
              <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
           </div>
         }>
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 pointer-events-none md:pointer-events-auto" style={{ touchAction: 'pan-y' }}>
             <SplineScene scene={scene} />
           </div>
         </Suspense>
@@ -214,18 +214,42 @@ function HomeContent() {
     }
   }, [currentView]);
 
-  if (!isInitialized) return null;
+  if (!isInitialized) {
+    // Show solid black screen while initializing to prevent any flash of content
+    return (
+      <>
+        <style jsx global>{`
+          nav, footer, header {
+            opacity: 0 !important;
+            pointer-events: none !important;
+          }
+        `}</style>
+        <div className="fixed inset-0 z-[99999] bg-black" />
+      </>
+    );
+  }
 
   return (
     <>
+      {/* Hide navbar/content during loading phases */}
+      {(currentView === 'pagemode' || currentView === 'loader') && (
+        <style jsx global>{`
+          /* Hide navbar and footer during loading */
+          nav, footer, header {
+            opacity: 0 !important;
+            pointer-events: none !important;
+          }
+        `}</style>
+      )}
+
       {currentView === 'pagemode' && (
-        <div className="fixed inset-0 z-[99999]">
+        <div className="fixed inset-0 z-[99999] bg-black">
           <PageMode onUnlock={handlePageModeUnlock} />
         </div>
       )}
 
       {currentView === 'loader' && (
-        <div className="fixed inset-0 z-[99999]">
+        <div className="fixed inset-0 z-[99999] bg-black">
           <MultiStepLoaderv2 />
         </div>
       )}

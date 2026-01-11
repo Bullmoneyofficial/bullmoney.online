@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X } from 'lucide-react';
 import YouTube, { YouTubeEvent, YouTubeProps } from 'react-youtube'; 
@@ -114,8 +115,18 @@ export const ThemeConfigModal = ({
         },
     };
 
-    return (
-        <AnimatePresence>
+    // SSR guard for portal
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
+    // Don't render on server or before mount
+    if (!mounted || typeof window === 'undefined') return null;
+
+    return createPortal(
+        <AnimatePresence mode="wait">
             {isOpen && (
                 <motion.div 
                     initial={{ opacity: 0 }} 
@@ -175,6 +186,7 @@ export const ThemeConfigModal = ({
                     </motion.div>
                 </motion.div>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 };

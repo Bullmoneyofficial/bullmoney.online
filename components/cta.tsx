@@ -10,6 +10,7 @@ import React, {
   ReactNode,
   ReactElement
 } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 // Added BsInstagram and BsWhatsapp to imports
@@ -88,68 +89,87 @@ const ContactSelectionModal = ({
     instagramLink: string; 
     telegramLink: string;
 }) => {
-    if (!isOpen) return null;
+    const [mounted, setMounted] = useState(false);
+    
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+    
+    // Don't render during SSR or before mount
+    if (!mounted || typeof window === 'undefined') return null;
 
-    return (
-        <AnimatePresence>
-            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4" onClick={onClose}>
+    return createPortal(
+        <AnimatePresence mode="wait">
+            {isOpen && (
                 <motion.div 
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="bg-neutral-950 border border-#3b82f6/30 p-8 pt-12 rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
+                    key="contact-modal-backdrop"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4" 
+                    onClick={onClose}
                 >
-                    {/* Background Effects */}
-                    <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
-                    <div className="absolute inset-0 pointer-events-none opacity-30 bg-gradient-to-br from-#3b82f6/10 to-transparent"></div>
-
-                    <button 
-                        onClick={onClose} 
-                        className="absolute top-3 right-3 z-50 p-2 bg-neutral-900 border border-neutral-800 rounded-full text-neutral-400 hover:text-white hover:border-#3b82f6 hover:bg-neutral-800 transition-all shadow-lg"
+                    <motion.div 
+                        key="contact-modal-content"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-neutral-950 border border-blue-500/30 p-8 pt-12 rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
                     >
-                        <BsX size={20} />
-                    </button>
-                    
-                    <h3 className="text-2xl font-serif font-bold text-center mb-2 text-#3b82f6 z-10 relative">Choose Platform</h3>
-                    <p className="text-center text-neutral-400 text-sm mb-6 z-10 relative">How would you like to connect?</p>
+                        {/* Background Effects */}
+                        <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+                        <div className="absolute inset-0 pointer-events-none opacity-30 bg-gradient-to-br from-blue-500/10 to-transparent"></div>
 
-                    <div className="space-y-4 z-10 relative">
-                        {/* Instagram Option */}
-                        <a 
-                            href={instagramLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-#60a5fa focus:ring-offset-2 focus:ring-offset-slate-50"
+                        <button 
+                            onClick={onClose} 
+                            className="absolute top-3 right-3 z-50 p-2 bg-neutral-900 border border-neutral-800 rounded-full text-neutral-400 hover:text-white hover:border-blue-500 hover:bg-neutral-800 transition-all shadow-lg"
                         >
-                            <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#bfdbfe_50%,#3b82f6_100%)]" />
-                            <span className="flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-neutral-950 px-6 py-3 text-sm font-medium text-white backdrop-blur-3xl transition-colors group-hover:bg-neutral-900">
-                                <div className="bg-#3b82f6/20 p-2 rounded-full mr-4">
-                                    <BsInstagram size={20} className="text-#3b82f6" />
-                                </div>
-                                <span className="font-bold tracking-wide text-lg text-#60a5fa">Instagram</span>
-                            </span>
-                        </a>
+                            <BsX size={20} />
+                        </button>
+                        
+                        <h3 className="text-2xl font-serif font-bold text-center mb-2 text-blue-500 z-10 relative">Choose Platform</h3>
+                        <p className="text-center text-neutral-400 text-sm mb-6 z-10 relative">How would you like to connect?</p>
 
-                        {/* Telegram Option */}
-                        <a 
-                            href={telegramLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-#60a5fa focus:ring-offset-2 focus:ring-offset-slate-50"
-                        >
-                            <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#bfdbfe_50%,#3b82f6_100%)]" />
-                            <span className="flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-neutral-950 px-6 py-3 text-sm font-medium text-white backdrop-blur-3xl transition-colors group-hover:bg-neutral-900">
-                                <div className="bg-#3b82f6/20 p-2 rounded-full mr-4">
-                                    <BsTelegram size={20} className="text-#3b82f6" />
-                                </div>
-                                <span className="font-bold tracking-wide text-lg text-#60a5fa">Telegram</span>
-                            </span>
-                        </a>
-                    </div>
+                        <div className="space-y-4 z-10 relative">
+                            {/* Instagram Option */}
+                            <a 
+                                href={instagramLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+                            >
+                                <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#bfdbfe_50%,#3b82f6_100%)]" />
+                                <span className="flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-neutral-950 px-6 py-3 text-sm font-medium text-white backdrop-blur-3xl transition-colors group-hover:bg-neutral-900">
+                                    <div className="bg-blue-500/20 p-2 rounded-full mr-4">
+                                        <BsInstagram size={20} className="text-blue-500" />
+                                    </div>
+                                    <span className="font-bold tracking-wide text-lg text-blue-400">Instagram</span>
+                                </span>
+                            </a>
+
+                            {/* Telegram Option */}
+                            <a 
+                                href={telegramLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+                            >
+                                <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#bfdbfe_50%,#3b82f6_100%)]" />
+                                <span className="flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-neutral-950 px-6 py-3 text-sm font-medium text-white backdrop-blur-3xl transition-colors group-hover:bg-neutral-900">
+                                    <div className="bg-blue-500/20 p-2 rounded-full mr-4">
+                                        <BsTelegram size={20} className="text-blue-500" />
+                                    </div>
+                                    <span className="font-bold tracking-wide text-lg text-blue-400">Telegram</span>
+                                </span>
+                            </a>
+                        </div>
+                    </motion.div>
                 </motion.div>
-            </div>
-        </AnimatePresence>
+            )}
+        </AnimatePresence>,
+        document.body
     );
 };
 

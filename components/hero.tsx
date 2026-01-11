@@ -1,5 +1,6 @@
 "use client";
 import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
+import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 
 const Spline = dynamic(() => import('@/lib/spline-wrapper'), { ssr: false });
@@ -26,7 +27,8 @@ import ServicesModal from "@/components/ui/SeviceModal";
 import AdminModal from "@/components/AdminModal";
 import ReflectiveCard from '@/components/ReflectiveCard';
 import HiddenYoutubePlayer from "@/components/Mainpage/HiddenYoutubePlayer";
-import { ALL_THEMES } from "@/constants/theme-data";
+import { ThemeConfigModal } from "@/components/Mainpage/ThemeConfigModal";
+import { ALL_THEMES, type ThemeCategory } from "@/constants/theme-data";
 import type { SoundProfile } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 
@@ -86,63 +88,84 @@ const ContactSelectionModal = ({
     instagramLink: string; 
     telegramLink: string;
 }) => {
-    if (!isOpen) return null;
+    const [mounted, setMounted] = useState(false);
+    
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+    
+    // Don't render during SSR or before mount
+    if (!mounted || typeof window === 'undefined') return null;
 
-    return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4" onClick={onClose}>
-            <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-neutral-950 border border-blue-500/30 p-8 pt-12 rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
-            >
-                <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay bg-[url('/noise.png')]"></div>
-                 <div className="absolute inset-0 pointer-events-none opacity-30 bg-gradient-to-br from-blue-500/10 to-transparent"></div>
-
-                <button 
-                    onClick={onClose} 
-                    className="absolute top-3 right-3 z-50 p-2 bg-neutral-900 border border-neutral-800 rounded-full text-neutral-400 hover:text-white hover:border-blue-500 hover:bg-neutral-800 transition-all shadow-lg"
+    return createPortal(
+        <AnimatePresence mode="wait">
+            {isOpen && (
+                <motion.div 
+                    key="contact-modal-backdrop"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4" 
+                    onClick={onClose}
                 >
-                    <X size={20} />
-                </button>
-                
-                <h3 className="text-2xl font-serif font-bold text-center mb-2 text-blue-500 z-10 relative">Choose Platform</h3>
-                <p className="text-center text-neutral-400 text-sm mb-6 z-10 relative">How would you like to connect?</p>
-
-                <div className="space-y-4 z-10 relative">
-                    <a 
-                        href={instagramLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+                    <motion.div 
+                        key="contact-modal-content"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-neutral-950 border border-blue-500/30 p-8 pt-12 rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
                     >
-                        <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#bfdbfe_50%,#3b82f6_100%)]" />
-                        <span className="flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-neutral-950 px-6 py-3 text-sm font-medium text-white backdrop-blur-3xl transition-colors group-hover:bg-neutral-900">
-                             <div className="bg-blue-500/20 p-2 rounded-full mr-4">
-                                <Instagram size={24} className="text-blue-500" />
-                            </div>
-                            <span className="font-bold tracking-wide text-lg text-blue-400">Instagram</span>
-                        </span>
-                    </a>
+                        <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay bg-[url('/noise.png')]"></div>
+                         <div className="absolute inset-0 pointer-events-none opacity-30 bg-gradient-to-br from-blue-500/10 to-transparent"></div>
 
-                    <a 
-                        href={telegramLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-50"
-                    >
-                        <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#bfdbfe_50%,#3b82f6_100%)]" />
-                        <span className="flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-neutral-950 px-6 py-3 text-sm font-medium text-white backdrop-blur-3xl transition-colors group-hover:bg-neutral-900">
-                            <div className="bg-blue-500/20 p-2 rounded-full mr-4">
-                                <Send size={24} className="text-blue-500" />
-                            </div>
-                            <span className="font-bold tracking-wide text-lg text-blue-400">Telegram</span>
-                        </span>
-                    </a>
-                </div>
-            </motion.div>
-        </div>
+                        <button 
+                            onClick={onClose} 
+                            className="absolute top-3 right-3 z-50 p-2 bg-neutral-900 border border-neutral-800 rounded-full text-neutral-400 hover:text-white hover:border-blue-500 hover:bg-neutral-800 transition-all shadow-lg"
+                        >
+                            <X size={20} />
+                        </button>
+                        
+                        <h3 className="text-2xl font-serif font-bold text-center mb-2 text-blue-500 z-10 relative">Choose Platform</h3>
+                        <p className="text-center text-neutral-400 text-sm mb-6 z-10 relative">How would you like to connect?</p>
+
+                        <div className="space-y-4 z-10 relative">
+                            <a 
+                                href={instagramLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+                            >
+                                <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#bfdbfe_50%,#3b82f6_100%)]" />
+                                <span className="flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-neutral-950 px-6 py-3 text-sm font-medium text-white backdrop-blur-3xl transition-colors group-hover:bg-neutral-900">
+                                     <div className="bg-blue-500/20 p-2 rounded-full mr-4">
+                                        <Instagram size={24} className="text-blue-500" />
+                                    </div>
+                                    <span className="font-bold tracking-wide text-lg text-blue-400">Instagram</span>
+                                </span>
+                            </a>
+
+                            <a 
+                                href={telegramLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+                            >
+                                <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#bfdbfe_50%,#3b82f6_100%)]" />
+                                <span className="flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-neutral-950 px-6 py-3 text-sm font-medium text-white backdrop-blur-3xl transition-colors group-hover:bg-neutral-900">
+                                    <div className="bg-blue-500/20 p-2 rounded-full mr-4">
+                                        <Send size={24} className="text-blue-500" />
+                                    </div>
+                                    <span className="font-bold tracking-wide text-lg text-blue-400">Telegram</span>
+                                </span>
+                            </a>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>,
+        document.body
     );
 };
 
@@ -241,7 +264,7 @@ const HeroParallax = () => {
 
   const [isUcpOpen, setIsUcpOpen] = useState(false);
   const [isReflectiveCardOpen, setIsReflectiveCardOpen] = useState(false);
-  const servicesModalRef = useRef<HTMLDivElement>(null);
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('user_theme_id');
@@ -342,6 +365,7 @@ const HeroParallax = () => {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const quickEditFileInputRef = useRef<HTMLInputElement>(null);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isServicesModalOpen, setIsServicesModalOpen] = useState(false);
 
   const [editForm, setEditForm] = useState<ProjectFormData>({
     title: "",
@@ -470,13 +494,13 @@ const HeroParallax = () => {
   };
 
   useEffect(() => {
-    if (activeProject || isAdminOpen || isContactModalOpen) {
+    if (activeProject || isAdminOpen || isContactModalOpen || isServicesModalOpen || isThemeModalOpen) {
         document.body.style.overflow = "hidden";
     } else {
         document.body.style.overflow = "auto";
     }
     return () => { document.body.style.overflow = "auto"; }
-  }, [activeProject, isAdminOpen, isContactModalOpen]);
+  }, [activeProject, isAdminOpen, isContactModalOpen, isServicesModalOpen, isThemeModalOpen]);
 
   if (loading) {
       return (
@@ -514,11 +538,42 @@ const HeroParallax = () => {
         telegramLink="https://t.me/addlist/gg09afc4lp45YjQ0"
     />
 
-    <div ref={servicesModalRef} style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'auto' }}>
-        <ServicesModal btnText={buttonText} />
-    </div>
+    {/* Services Modal - Controlled externally */}
+    <ServicesModal 
+      btnText={buttonText} 
+      isOpen={isServicesModalOpen} 
+      onOpenChange={setIsServicesModalOpen}
+      showTrigger={false}
+    />
 
-    <DynamicUltimateControlPanel isOpen={isUcpOpen} onOpenChange={setIsUcpOpen} />
+    <DynamicUltimateControlPanel 
+      isOpen={isUcpOpen} 
+      onOpenChange={setIsUcpOpen}
+      onServicesClick={() => setIsServicesModalOpen(true)}
+      onContactClick={() => setIsContactModalOpen(true)}
+      onThemeClick={() => setIsThemeModalOpen(true)}
+      onAdminClick={() => setIsAdminOpen(true)}
+      onIdentityClick={() => setIsReflectiveCardOpen(true)}
+      isAdmin={isAdmin}
+      isAuthenticated={isAuthenticated}
+    />
+
+    {/* Theme Configuration Modal */}
+    <ThemeConfigModal
+      isOpen={isThemeModalOpen}
+      onClose={() => setIsThemeModalOpen(false)}
+      onSave={(themeId, sound, muted) => {
+        setActiveThemeId(themeId);
+        setCurrentSound(sound);
+        setIsMuted(muted);
+        localStorage.setItem('user_theme_id', themeId);
+      }}
+      initialThemeId={activeThemeId}
+      initialCategory={activeCategory}
+      initialSound={currentSound}
+      initialMuted={isMuted}
+      isMobile={isMobile}
+    />
     
     {displayTheme?.youtubeId && (
       <HiddenYoutubePlayer
@@ -759,9 +814,39 @@ const HeroParallax = () => {
     <div
         ref={ref}
         className="h-screen pt-10 pb-0 overflow-hidden antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d]"
+        style={{ contain: 'layout size' }}
     >
-        <div className="absolute inset-0 w-full h-full z-0 bg-black/5 pointer-events-none md:pointer-events-auto">
-          <Spline scene="/scene1.splinecode" placeholder={undefined} className={undefined} />
+        <div 
+          className="absolute inset-0 w-full h-full z-0 bg-black/5 pointer-events-none md:pointer-events-auto overflow-hidden"
+          style={{ 
+            contain: 'strict',
+            isolation: 'isolate',
+            willChange: 'auto',
+            touchAction: 'pan-y', // Allow vertical scrolling on touch devices
+            maxWidth: '100vw',
+            maxHeight: '100vh'
+          }}
+        >
+          <div 
+            className="w-full h-full pointer-events-none md:pointer-events-auto overflow-hidden"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              contain: 'strict',
+              touchAction: 'pan-y', // Ensure touch scrolling passes through
+              maxWidth: '100%',
+              maxHeight: '100%'
+            }}
+          >
+            <Spline 
+              scene="/scene1.splinecode" 
+              placeholder={undefined} 
+              className="w-full h-full pointer-events-none md:pointer-events-auto max-w-full max-h-full" 
+            />
+          </div>
         </div>
         <div className="max-w-7xl relative mx-auto pt-32 pb-12 md:py-32 px-4 w-full z-20 mb-10 md:mb-32">
             

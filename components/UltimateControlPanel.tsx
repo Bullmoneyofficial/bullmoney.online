@@ -1199,6 +1199,9 @@ export function UltimateControlPanel({
     </>
   );
 
+  // Guard against SSR - only render portal on client
+  if (typeof window === 'undefined') return null;
+  
   return createPortal(portalContent, document.body);
 }
 

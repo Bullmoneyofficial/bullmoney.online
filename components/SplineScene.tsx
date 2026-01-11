@@ -155,9 +155,10 @@ function SplineSceneComponent({
         </div>
       )}
 
-      {/* The 3D Scene Layer */}
+      {/* The 3D Scene Layer - pointer-events-none by default on mobile to allow scrolling */}
       <div 
         className={`w-full h-full transition-opacity duration-500 ${isInteractive ? 'pointer-events-auto' : 'pointer-events-none'}`}
+        style={{ touchAction: isInteractive ? 'none' : 'pan-y' }}
       >
         <Suspense fallback={
           <div className="w-full h-full bg-gradient-to-br from-slate-950 to-neutral-950 flex items-center justify-center">
@@ -174,15 +175,15 @@ function SplineSceneComponent({
         </Suspense>
       </div>
 
-      {/* Interaction Toggle Overlay - Simplified for performance */}
+      {/* Interaction Toggle Overlay - Tap to interact on mobile */}
       {!isInteractive && !hasError && isVisible && (
         <button
           onClick={() => setIsInteractive(true)}
           className="absolute inset-0 z-10 flex items-center justify-center bg-transparent hover:bg-black/5 transition-colors cursor-pointer"
           aria-label="Interact with 3D Scene"
-          style={{ touchAction: 'manipulation' }}
+          style={{ touchAction: 'pan-y' }} // Allow scrolling to pass through
         >
-          <div className="bg-black/20 backdrop-blur-sm text-white px-3 py-1.5 rounded-full flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity text-sm">
+          <div className="bg-black/20 backdrop-blur-sm text-white px-3 py-1.5 rounded-full flex items-center gap-2 opacity-0 group-hover:opacity-100 md:group-hover:opacity-100 transition-opacity text-sm pointer-events-none">
             <span>🖐️ Interact</span>
           </div>
         </button>
@@ -195,7 +196,7 @@ function SplineSceneComponent({
             e.stopPropagation();
             setIsInteractive(false);
           }}
-          className="absolute top-3 right-3 z-50 bg-white/10 backdrop-blur-md text-white p-2 rounded-full hover:bg-white/20 transition-all min-h-[40px] min-w-[40px] flex items-center justify-center"
+          className="absolute top-3 right-3 z-50 bg-white/10 backdrop-blur-md text-white p-2 rounded-full hover:bg-white/20 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center shadow-lg border border-white/20"
           style={{ touchAction: 'manipulation' }}
           aria-label="Exit interaction"
         >

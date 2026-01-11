@@ -68,8 +68,23 @@ interface ModalContextType {
   setOpen: (open: boolean) => void;
 }
 const ModalContext = createContext<ModalContextType | undefined>(undefined);
-const ModalProvider = ({ children }: { children: React.ReactNode }) => {
-  const [open, setOpen] = useState(false);
+const ModalProvider = ({ children, externalOpen, onExternalOpenChange }: { 
+  children: React.ReactNode; 
+  externalOpen?: boolean;
+  onExternalOpenChange?: (open: boolean) => void;
+}) => {
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  // Use external control if provided, otherwise use internal state
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = (value: boolean) => {
+    if (onExternalOpenChange) {
+      onExternalOpenChange(value);
+    } else {
+      setInternalOpen(value);
+    }
+  };
+  
   useEffect(() => { document.body.style.overflow = open ? 'hidden' : 'auto'; }, [open]);
   return <ModalContext.Provider value={{ open, setOpen }}>{children}</ModalContext.Provider>;
 };
@@ -78,8 +93,12 @@ const useModal = () => {
   if (!context) throw new Error('useModal must be used within a ModalProvider');
   return context;
 };
-export function Modal({ children }: { children: React.ReactNode }) {
-  return <ModalProvider>{children}</ModalProvider>;
+export function Modal({ children, isOpen, onOpenChange }: { 
+  children: React.ReactNode;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
+  return <ModalProvider externalOpen={isOpen} onExternalOpenChange={onOpenChange}>{children}</ModalProvider>;
 }
 export const ModalTrigger = ({ children, className }: { children: React.ReactNode; className?: string }) => {
   const { setOpen } = useModal();
@@ -93,19 +112,39 @@ export const ModalTrigger = ({ children, className }: { children: React.ReactNod
 export const ModalBody = ({ children, className }: { children: React.ReactNode; className?: string }) => {
   const { open, setOpen } = useModal();
   const [mounted, setMounted] = useState(false);
+  
   useEffect(() => {
     setMounted(true);
+  }, []);
+  
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false); };
-    if (open) window.addEventListener('keydown', handleKeyDown);
+    if (open && mounted) window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [open, setOpen]);
-  if (!mounted) return null;
+  }, [open, setOpen, mounted]);
+  
+  // Don't render portal during SSR or before mount
+  if (!mounted || typeof window === 'undefined') return null;
+  
   return createPortal(
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {open && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, backdropFilter: 'blur(10px)' }} exit={{ opacity: 0, backdropFilter: 'blur(0px)' }} className="fixed inset-0 z-[9999] flex items-center justify-center h-full w-full bg-zinc-100/10 dark:bg-black/40">
+        <motion.div 
+          key="modal-backdrop"
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1, backdropFilter: 'blur(10px)' }} 
+          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }} 
+          className="fixed inset-0 z-[9999] flex items-center justify-center h-full w-full bg-zinc-100/10 dark:bg-black/40"
+        >
           <div className={cn('absolute inset-0 z-[-1] bg-transparent')} onClick={() => setOpen(false)} />
-          <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} transition={{ type: 'spring', stiffness: 260, damping: 20 }} className={cn('relative w-[95%] md:w-[90%] max-w-5xl max-h-[90%] bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col', className)}>
+          <motion.div 
+            key="modal-content"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }} 
+            animate={{ opacity: 1, scale: 1, y: 0 }} 
+            exit={{ opacity: 0, scale: 0.9, y: 20 }} 
+            transition={{ type: 'spring', stiffness: 260, damping: 20 }} 
+            className={cn('relative w-[95%] md:w-[90%] max-w-5xl max-h-[90%] bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col', className)}
+          >
             <button onClick={() => setOpen(false)} className="absolute top-4 right-4 z-50 p-2 rounded-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 transition-colors shadow-sm"><CloseIcon className="w-4 h-4 text-black dark:text-white" /></button>
             {children}
           </motion.div>
@@ -607,9 +646,14 @@ const styles = `
 @keyframes marquee { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-50%, 0, 0); } }
 `;
 
-interface ServicesModalProps { btnText?: string; }
+interface ServicesModalProps { 
+  btnText?: string;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showTrigger?: boolean;
+}
 
-export default function ServicesModal({ btnText }: ServicesModalProps) {
+export default function ServicesModal({ btnText, isOpen, onOpenChange, showTrigger = true }: ServicesModalProps) {
   const { state, addServiceCategory } = useStudio();
   const [isAddingCat, setIsAddingCat] = useState(false);
   const [newCatName, setNewCatName] = useState("");
@@ -622,10 +666,12 @@ export default function ServicesModal({ btnText }: ServicesModalProps) {
   };
 
   return (
-    <Modal>
-      <ModalTrigger>
-         <span className="flex items-center gap-2">{btnText || "Ver Serviços e Preços"} <SparklesIcon className="w-4 h-4" /></span>
-      </ModalTrigger>
+    <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+      {showTrigger && (
+        <ModalTrigger>
+           <span className="flex items-center gap-2">{btnText || "Ver Serviços e Preços"} <SparklesIcon className="w-4 h-4" /></span>
+        </ModalTrigger>
+      )}
       <ModalBody>
         <ModalContent>
           <style>{styles}</style>
