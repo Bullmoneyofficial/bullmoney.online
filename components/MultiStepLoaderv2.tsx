@@ -98,11 +98,14 @@ const useLivePrice = (assetKey: AssetKey) => {
   return { price };
 };
 
-// --- AUDIO ENGINE ---
+// --- AUDIO ENGINE (CINEMATIC V2) ---
 const useAudioEngine = () => {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const oscillatorRef = useRef<OscillatorNode | null>(null);
+  const subOscRef = useRef<OscillatorNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
+  const subGainRef = useRef<GainNode | null>(null);
+  const filterRef = useRef<BiquadFilterNode | null>(null);
 
   const initAudio = () => {
     if (!audioCtxRef.current) {
@@ -122,18 +125,20 @@ const useAudioEngine = () => {
     if (!ctx) return;
 
     if (!oscillatorRef.current) {
+      // Main engine oscillator - richer tone
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       const filter = ctx.createBiquadFilter();
 
       filter.type = "lowpass";
-      filter.frequency.value = 1200;
+      filter.frequency.value = 800;
+      filter.Q.value = 2;
 
       osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(120, ctx.currentTime);
+      osc.frequency.setValueAtTime(80, ctx.currentTime);
 
       gain.gain.setValueAtTime(0, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.1);
+      gain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.3);
 
       osc.connect(filter);
       filter.connect(gain);
@@ -143,30 +148,101 @@ const useAudioEngine = () => {
 
       oscillatorRef.current = osc;
       gainNodeRef.current = gain;
+      filterRef.current = filter;
+
+      // Sub-bass oscillator for depth
+      const subOsc = ctx.createOscillator();
+      const subGain = ctx.createGain();
+
+      subOsc.type = "sine";
+      subOsc.frequency.setValueAtTime(40, ctx.currentTime);
+
+      subGain.gain.setValueAtTime(0, ctx.currentTime);
+      subGain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.5);
+
+      subOsc.connect(subGain);
+      subGain.connect(ctx.destination);
+
+      subOsc.start();
+
+      subOscRef.current = subOsc;
+      subGainRef.current = subGain;
+
+      // Initial boot-up sound burst
+      const bootOsc = ctx.createOscillator();
+      const bootGain = ctx.createGain();
+      const bootFilter = ctx.createBiquadFilter();
+
+      bootOsc.type = "square";
+      bootOsc.frequency.setValueAtTime(200, ctx.currentTime);
+      bootOsc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.3);
+
+      bootFilter.type = "lowpass";
+      bootFilter.frequency.setValueAtTime(2000, ctx.currentTime);
+      bootFilter.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.3);
+
+      bootGain.gain.setValueAtTime(0.15, ctx.currentTime);
+      bootGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+
+      bootOsc.connect(bootFilter);
+      bootFilter.connect(bootGain);
+      bootGain.connect(ctx.destination);
+
+      bootOsc.start();
+      bootOsc.stop(ctx.currentTime + 0.4);
     }
   };
 
   const updateEngine = (progress: number) => {
     const ctx = audioCtxRef.current;
-    if (!ctx || !oscillatorRef.current || !gainNodeRef.current) return;
+    if (!ctx || !oscillatorRef.current || !gainNodeRef.current || !filterRef.current) return;
 
-    const baseFreq = 120;
-    const addedFreq = (progress / 100) * 380;
     const now = ctx.currentTime;
+    
+    // Main frequency ramps up with progress
+    const baseFreq = 80;
+    const addedFreq = (progress / 100) * 320;
+    oscillatorRef.current.frequency.setTargetAtTime(baseFreq + addedFreq, now, 0.1);
 
-    oscillatorRef.current.frequency.setTargetAtTime(baseFreq + addedFreq, now, 0.08);
+    // Filter opens up as progress increases
+    const filterFreq = 800 + (progress / 100) * 2000;
+    filterRef.current.frequency.setTargetAtTime(filterFreq, now, 0.15);
 
-    if (progress > 70) {
-      gainNodeRef.current.gain.setTargetAtTime(0.08 + Math.random() * 0.04, now, 0.1);
+    // Sub oscillator pitch rises slightly
+    if (subOscRef.current) {
+      subOscRef.current.frequency.setTargetAtTime(40 + (progress / 100) * 30, now, 0.2);
+    }
+
+    // Intensity increases at higher progress
+    if (progress > 50) {
+      const intensity = ((progress - 50) / 50) * 0.04;
+      gainNodeRef.current.gain.setTargetAtTime(0.06 + intensity + Math.random() * 0.02, now, 0.08);
+    }
+
+    // Dramatic buildup near completion
+    if (progress > 85) {
+      const urgency = ((progress - 85) / 15);
+      if (subGainRef.current) {
+        subGainRef.current.gain.setTargetAtTime(0.1 + urgency * 0.08, now, 0.05);
+      }
+      filterRef.current.Q.setTargetAtTime(2 + urgency * 4, now, 0.1);
     }
   };
 
   const stopEngine = () => {
     const ctx = audioCtxRef.current;
     const gainNode = gainNodeRef.current;
-    if (gainNode && ctx) {
+    const subGain = subGainRef.current;
+    
+    if (ctx) {
       const now = ctx.currentTime;
-      gainNode.gain.setTargetAtTime(0, now, 0.15);
+      
+      if (gainNode) {
+        gainNode.gain.setTargetAtTime(0, now, 0.1);
+      }
+      if (subGain) {
+        subGain.gain.setTargetAtTime(0, now, 0.15);
+      }
 
       setTimeout(() => {
         if (oscillatorRef.current) {
@@ -174,6 +250,12 @@ const useAudioEngine = () => {
           oscillatorRef.current.disconnect();
           oscillatorRef.current = null;
         }
+        if (subOscRef.current) {
+          subOscRef.current.stop();
+          subOscRef.current.disconnect();
+          subOscRef.current = null;
+        }
+        filterRef.current = null;
       }, 200);
     }
   };
@@ -183,21 +265,72 @@ const useAudioEngine = () => {
     if (!ctx) return;
     const now = ctx.currentTime;
 
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    // Layered success chord - cinematic feel
+    const frequencies = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+    
+    frequencies.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
 
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(800, now);
-    osc.frequency.exponentialRampToValueAtTime(1400, now + 0.15);
+      osc.type = i === 0 ? "sine" : "triangle";
+      osc.frequency.setValueAtTime(freq, now);
 
-    gain.gain.setValueAtTime(0.25, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+      const delay = i * 0.04;
+      const volume = 0.12 - (i * 0.02);
+      
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(volume, now + delay + 0.02);
+      gain.gain.setValueAtTime(volume, now + delay + 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6 + (i * 0.1));
 
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
 
-    osc.start();
-    osc.stop(now + 0.4);
+      osc.start(now + delay);
+      osc.stop(now + 0.8 + (i * 0.1));
+    });
+
+    // Add shimmer/sparkle effect
+    const shimmerOsc = ctx.createOscillator();
+    const shimmerGain = ctx.createGain();
+    const shimmerFilter = ctx.createBiquadFilter();
+
+    shimmerOsc.type = "sine";
+    shimmerOsc.frequency.setValueAtTime(2000, now);
+    shimmerOsc.frequency.exponentialRampToValueAtTime(4000, now + 0.1);
+    shimmerOsc.frequency.exponentialRampToValueAtTime(1500, now + 0.4);
+
+    shimmerFilter.type = "bandpass";
+    shimmerFilter.frequency.value = 3000;
+    shimmerFilter.Q.value = 5;
+
+    shimmerGain.gain.setValueAtTime(0, now);
+    shimmerGain.gain.linearRampToValueAtTime(0.05, now + 0.02);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+    shimmerOsc.connect(shimmerFilter);
+    shimmerFilter.connect(shimmerGain);
+    shimmerGain.connect(ctx.destination);
+
+    shimmerOsc.start(now);
+    shimmerOsc.stop(now + 0.6);
+
+    // Deep confirmation thud
+    const thud = ctx.createOscillator();
+    const thudGain = ctx.createGain();
+
+    thud.type = "sine";
+    thud.frequency.setValueAtTime(100, now);
+    thud.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+
+    thudGain.gain.setValueAtTime(0.2, now);
+    thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+    thud.connect(thudGain);
+    thudGain.connect(ctx.destination);
+
+    thud.start(now);
+    thud.stop(now + 0.25);
   };
 
   return { startEngine, updateEngine, stopEngine, playSuccess };

@@ -124,7 +124,7 @@ function getPerformanceGrade(score: number): { grade: string; color: string; lab
 // ============================================================================
 
 /**
- * Stat Card Component
+ * Stat Card Component - Glass & Shimmer UI
  */
 function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
   icon: any;
@@ -136,24 +136,40 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
-      className="p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm"
+      whileTap={{ scale: 0.98 }}
+      className="relative p-3 rounded-xl overflow-hidden group"
     >
-      <div className="flex items-start gap-3">
+      {/* Glass background with shimmer */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-xl border border-blue-500/20 rounded-xl" />
+      
+      {/* Shimmer effect on hover */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
+        <div className="absolute inset-[-100%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#00000000_50%)] opacity-30" />
+      </div>
+      
+      {/* Accent glow */}
+      <div 
+        className="absolute inset-0 opacity-20 rounded-xl transition-opacity group-hover:opacity-40"
+        style={{ background: `radial-gradient(ellipse at top left, ${color}40 0%, transparent 60%)` }}
+      />
+      
+      {/* Content */}
+      <div className="relative z-10 flex items-start gap-3">
         <div
-          className="p-2 rounded-lg"
+          className="p-2 rounded-lg backdrop-blur-sm border border-white/10"
           style={{ backgroundColor: `${color}20` }}
         >
           <Icon size={18} style={{ color }} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">
+          <div className="text-[10px] text-blue-300/70 uppercase tracking-wider font-semibold">
             {label}
           </div>
-          <div className="text-sm font-bold text-white truncate mt-0.5">
+          <div className="text-sm font-bold text-white truncate mt-0.5 drop-shadow-lg">
             {value}
           </div>
           {sublabel && (
-            <div className="text-[10px] text-white/40 mt-0.5">
+            <div className="text-[10px] text-blue-200/50 mt-0.5">
               {sublabel}
             </div>
           )}
@@ -164,7 +180,7 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
 }
 
 /**
- * Performance Ring Component
+ * Performance Ring Component - Glass & Shimmer UI
  */
 function PerformanceRing({ score, size = 120 }: { score: number; size?: number }) {
   const { grade, color, label } = getPerformanceGrade(score);
@@ -173,15 +189,23 @@ function PerformanceRing({ score, size = 120 }: { score: number; size?: number }
   const offset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      {/* Background ring */}
-      <svg className="absolute inset-0 -rotate-90">
+    <div className="relative group" style={{ width: size, height: size }}>
+      {/* Glass background */}
+      <div className="absolute inset-2 rounded-full bg-black/40 backdrop-blur-xl border border-blue-500/20" />
+      
+      {/* Shimmer effect */}
+      <div className="absolute inset-2 rounded-full overflow-hidden opacity-30 group-hover:opacity-50 transition-opacity">
+        <div className="absolute inset-[-100%] animate-[spin_6s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#00000000_50%)]" />
+      </div>
+      
+      {/* SVG Ring */}
+      <svg className="absolute inset-0 -rotate-90 z-10">
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.1)"
+          stroke="rgba(59,130,246,0.15)"
           strokeWidth="8"
         />
         <circle
@@ -195,23 +219,24 @@ function PerformanceRing({ score, size = 120 }: { score: number; size?: number }
           strokeDashoffset={offset}
           strokeLinecap="round"
           style={{
-            transition: 'stroke-dashoffset 1s ease, stroke 0.3s ease'
+            transition: 'stroke-dashoffset 1s ease, stroke 0.3s ease',
+            filter: `drop-shadow(0 0 8px ${color}80)`
           }}
         />
       </svg>
 
       {/* Center content */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
+      <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
         <div
-          className="text-4xl font-black"
-          style={{ color }}
+          className="text-4xl font-black drop-shadow-lg"
+          style={{ color, textShadow: `0 0 20px ${color}60` }}
         >
           {grade}
         </div>
-        <div className="text-xs text-white/60 font-semibold">
+        <div className="text-xs text-blue-200/70 font-semibold">
           {label}
         </div>
-        <div className="text-[10px] text-white/40 mt-1">
+        <div className="text-[10px] text-blue-300/50 mt-1">
           {score}/100
         </div>
       </div>
@@ -757,27 +782,35 @@ export function UltimateControlPanel({
               onDrag={handlePanelDrag}
               onDragEnd={handlePanelDragEnd}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed right-0 top-0 bottom-0 z-[250000] w-full max-w-md overflow-hidden bg-gradient-to-br from-gray-900/98 to-black/98 backdrop-blur-2xl border-l border-white/10 shadow-2xl"
+              className="fixed right-0 top-0 bottom-0 z-[250000] w-full max-w-md overflow-hidden bg-black/80 backdrop-blur-2xl border-l border-blue-500/30 shadow-2xl"
               style={{
                 paddingRight: 'env(safe-area-inset-right, 0px)',
                 paddingBottom: 'env(safe-area-inset-bottom, 0px)'
               }}
             >
+              {/* Shimmer background effect */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute inset-[-100%] animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_15%,#00000000_30%)] opacity-10" />
+              </div>
+              
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-950/20 via-transparent to-blue-900/10 pointer-events-none" />
+              
               {/* Drag handle */}
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 py-3 px-2 cursor-grab active:cursor-grabbing">
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 py-3 px-2 cursor-grab active:cursor-grabbing z-20">
                 <div
-                  className="h-12 w-1.5 rounded-full bg-white/30"
+                  className="h-12 w-1.5 rounded-full bg-blue-400/40"
                   style={{ backgroundColor: `${accentColor}60` }}
                 />
-                <div className="text-[9px] text-white/30 font-mono tracking-wider [writing-mode:vertical-lr] rotate-180">
+                <div className="text-[9px] text-blue-300/40 font-mono tracking-wider [writing-mode:vertical-lr] rotate-180">
                   SWIPE
                 </div>
               </div>
 
               {/* Header */}
-              <div className="px-6 pt-6 pb-4">
+              <div className="px-6 pt-6 pb-4 relative z-10">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60">
+                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-100 to-blue-300/70 drop-shadow-lg">
                     Device Center
                   </h2>
                   <div className="flex items-center gap-2">
@@ -838,8 +871,13 @@ export function UltimateControlPanel({
               </div>
 
               {/* Tabs */}
-              <div className="px-6 pb-4">
-                <div className="flex gap-2 p-1 rounded-xl bg-white/5 border border-white/10">
+              <div className="px-6 pb-4 relative z-10">
+                <div className="relative flex gap-2 p-1 rounded-xl bg-black/40 backdrop-blur-lg border border-blue-500/20 overflow-hidden">
+                  {/* Shimmer effect for tabs */}
+                  <div className="absolute inset-0 overflow-hidden opacity-20">
+                    <div className="absolute inset-[-100%] animate-[spin_6s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#00000000_50%)]" />
+                  </div>
+                  
                   {[
                     { id: 'overview', label: 'Overview', icon: Monitor },
                     { id: 'network', label: 'Network', icon: Wifi },
@@ -864,10 +902,10 @@ export function UltimateControlPanel({
                         e.currentTarget.style.transform = '';
                         SoundEffects.tab(); // Play tab switch sound
                       }}
-                      className={`flex-1 px-3 py-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
+                      className={`relative z-10 flex-1 px-3 py-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
                         activeTab === tab.id
-                          ? 'bg-white/10 text-white'
-                          : 'text-white/50 hover:text-white/70 active:scale-95'
+                          ? 'bg-blue-500/20 text-blue-100 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
+                          : 'text-blue-200/60 hover:text-blue-200/90 hover:bg-blue-500/10 active:scale-95'
                       }`}
                       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                       aria-label={`View ${tab.label}`}
@@ -932,38 +970,50 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Screen Info */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10">
-                        <div className="text-xs text-white/50 uppercase tracking-wider font-semibold mb-2">
-                          Display
+                      <div className="relative p-4 rounded-xl overflow-hidden group">
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-xl border border-blue-500/20 rounded-xl" />
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
+                          <div className="absolute inset-[-100%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#00000000_50%)] opacity-30" />
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div>
-                            <span className="text-white/60">Resolution:</span>
-                            <span className="text-white font-semibold ml-2">
-                              {deviceInfo.screen.width}×{deviceInfo.screen.height}
-                            </span>
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl" />
+                        <div className="relative z-10">
+                          <div className="text-xs text-blue-300/70 uppercase tracking-wider font-semibold mb-2">
+                            Display
                           </div>
-                          <div>
-                            <span className="text-white/60">Pixel Ratio:</span>
-                            <span className="text-white font-semibold ml-2">
-                              {deviceInfo.screen.pixelRatio}x
-                            </span>
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                              <span className="text-blue-200/60">Resolution:</span>
+                              <span className="text-white font-semibold ml-2 drop-shadow-lg">
+                                {deviceInfo.screen.width}×{deviceInfo.screen.height}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-blue-200/60">Pixel Ratio:</span>
+                              <span className="text-white font-semibold ml-2 drop-shadow-lg">
+                                {deviceInfo.screen.pixelRatio}x
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
 
                       {/* Battery */}
                       {deviceInfo.battery.level >= 0 && (
-                        <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-blue-500/10 border border-white/10">
-                          <div className="flex items-center justify-between">
+                        <div className="relative p-4 rounded-xl overflow-hidden group">
+                          <div className="absolute inset-0 bg-black/40 backdrop-blur-xl border border-blue-500/20 rounded-xl" />
+                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
+                            <div className="absolute inset-[-100%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#22c55e_25%,#00000000_50%)] opacity-30" />
+                          </div>
+                          <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl" />
+                          <div className="relative z-10 flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <Battery size={18} className="text-green-400" />
-                              <span className="text-white font-semibold">
+                              <Battery size={18} className="text-green-400 drop-shadow-lg" />
+                              <span className="text-white font-semibold drop-shadow-lg">
                                 {deviceInfo.battery.level}%
                               </span>
                             </div>
                             {deviceInfo.battery.charging && (
-                              <div className="text-xs text-green-400 flex items-center gap-1">
+                              <div className="text-xs text-green-400 flex items-center gap-1 drop-shadow-lg">
                                 <Zap size={12} />
                                 Charging
                               </div>
@@ -1009,76 +1059,93 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Connection Type */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-white/10">
-                        <div className="flex items-center gap-3">
-                          <Wifi size={24} className="text-blue-400" />
+                      <div className="relative p-4 rounded-xl overflow-hidden group">
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-xl border border-blue-500/20 rounded-xl" />
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
+                          <div className="absolute inset-[-100%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#00000000_50%)] opacity-30" />
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl" />
+                        <div className="relative z-10 flex items-center gap-3">
+                          <Wifi size={24} className="text-blue-400 drop-shadow-lg" />
                           <div className="flex-1">
-                            <div className="text-sm text-white/50">Connection</div>
-                            <div className="text-lg font-bold text-white">
+                            <div className="text-sm text-blue-200/60">Connection</div>
+                            <div className="text-lg font-bold text-white drop-shadow-lg">
                               {measuredType}
                             </div>
-                            <div className="text-xs text-white/40">
+                            <div className="text-xs text-blue-300/50">
                               {deviceInfo.network.type}
                             </div>
                           </div>
                           {deviceInfo.network.saveData && (
-                            <div className="px-2 py-1 rounded-md bg-orange-500/20 text-orange-300 text-xs font-semibold">
+                            <div className="px-2 py-1 rounded-md bg-orange-500/20 border border-orange-500/30 text-orange-300 text-xs font-semibold">
                               Data Saver
                             </div>
                           )}
                         </div>
                       </div>
 
-                      <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm text-white/60">Link quality</span>
-                          <span className="text-xs text-white/40">
-                            Last test: {deviceInfo.network.testTimestamp ? new Date(deviceInfo.network.testTimestamp).toLocaleTimeString() : 'Just now'}
-                          </span>
+                      <div className="relative p-4 rounded-xl overflow-hidden group">
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-xl border border-blue-500/20 rounded-xl" />
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
+                          <div className="absolute inset-[-100%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#00000000_50%)] opacity-30" />
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div className="text-white/70">
-                            Measured: <span className="text-white font-semibold">{liveSpeed.toFixed(2)} Mbps</span>
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm text-blue-200/70">Link quality</span>
+                            <span className="text-xs text-blue-300/50">
+                              Last test: {deviceInfo.network.testTimestamp ? new Date(deviceInfo.network.testTimestamp).toLocaleTimeString() : 'Just now'}
+                            </span>
                           </div>
-                          <div className="text-white/70">
-                            Reported: <span className="text-white font-semibold">{reportedDownlink.toFixed(2)} Mbps</span>
-                          </div>
-                          <div className="text-white/70">
-                            Latency: <span className="text-white font-semibold">{Math.round(liveLatency)}ms</span>
-                          </div>
-                          <div className="text-white/70">
-                            Jitter: <span className="text-white font-semibold">{Math.round(liveJitter)}ms</span>
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div className="text-blue-200/60">
+                              Measured: <span className="text-white font-semibold drop-shadow-lg">{liveSpeed.toFixed(2)} Mbps</span>
+                            </div>
+                            <div className="text-blue-200/60">
+                              Reported: <span className="text-white font-semibold drop-shadow-lg">{reportedDownlink.toFixed(2)} Mbps</span>
+                            </div>
+                            <div className="text-blue-200/60">
+                              Latency: <span className="text-white font-semibold drop-shadow-lg">{Math.round(liveLatency)}ms</span>
+                            </div>
+                            <div className="text-blue-200/60">
+                              Jitter: <span className="text-white font-semibold drop-shadow-lg">{Math.round(liveJitter)}ms</span>
+                            </div>
                           </div>
                         </div>
                       </div>
 
                       {/* Location */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-white/10">
-                        <div className="flex items-start justify-between gap-3">
+                      <div className="relative p-4 rounded-xl overflow-hidden group">
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-xl border border-blue-500/20 rounded-xl" />
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
+                          <div className="absolute inset-[-100%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#a855f7_25%,#00000000_50%)] opacity-30" />
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl" />
+                        <div className="relative z-10 flex items-start justify-between gap-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <MapPin size={18} className="text-purple-400" />
-                              <span className="text-sm text-white/50">Location</span>
+                              <MapPin size={18} className="text-purple-400 drop-shadow-lg" />
+                              <span className="text-sm text-blue-200/60">Location</span>
                             </div>
-                            <div className="text-white font-semibold mb-1">
+                            <div className="text-white font-semibold mb-1 drop-shadow-lg">
                               {showSensitive ? deviceInfo.network.location : '••••••'}
                             </div>
-                            <div className="text-xs text-white/40">
+                            <div className="text-xs text-blue-300/50">
                               IP: {showSensitive ? deviceInfo.network.ip : '•••.•••.•••.•••'}
                             </div>
-                            <div className="text-xs text-white/40">
+                            <div className="text-xs text-blue-300/50">
                               ISP: {deviceInfo.network.isp}
                             </div>
                           </div>
                           <button
                             onClick={() => { SoundEffects.click(); setShowSensitive(!showSensitive); }}
                             onMouseEnter={() => SoundEffects.hover()}
-                            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                            onTouchStart={() => SoundEffects.click()}
+                            className="p-2 rounded-lg bg-black/30 border border-blue-500/20 hover:bg-blue-500/10 transition-colors backdrop-blur-sm"
                           >
                             {showSensitive ? (
-                              <EyeOff size={16} className="text-white/70" />
+                              <EyeOff size={16} className="text-blue-200/70" />
                             ) : (
-                              <Eye size={16} className="text-white/70" />
+                              <Eye size={16} className="text-blue-200/70" />
                             )}
                           </button>
                         </div>
