@@ -11,31 +11,29 @@ const TargetCursor = dynamic(() => import('@/components/TargertCursor'), {
 
 /**
  * Client-side wrapper for the TargetCursor component
- * Only renders on desktop devices with hover capability
- * Prevents hydration issues and SSR errors
+ * Renders on both desktop and mobile devices
+ * Shows a trading TP target that follows mouse/touch and spins
  */
 export function ClientCursor() {
   const [shouldShow, setShouldShow] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Only show on desktop devices with hover capability (non-touch primary devices)
-    const isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    const isLargeScreen = window.innerWidth >= 768;
-    
-    // Also check for reduced motion preference
+    // Check for reduced motion preference
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     
-    setShouldShow(isDesktop && isLargeScreen && !prefersReducedMotion);
+    // Don't show if user prefers reduced motion
+    if (prefersReducedMotion) {
+      setShouldShow(false);
+      return;
+    }
 
-    // Update on resize
-    const handleResize = () => {
-      const isDesktopNow = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-      const isLargeScreenNow = window.innerWidth >= 768;
-      setShouldShow(isDesktopNow && isLargeScreenNow && !prefersReducedMotion);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    // Check if mobile/touch device
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    setIsMobile(isTouchDevice);
+    
+    // Show on all devices (desktop with mouse, mobile with touch)
+    setShouldShow(true);
   }, []);
 
   if (!shouldShow) return null;
@@ -44,9 +42,10 @@ export function ClientCursor() {
     <TargetCursor 
       targetSelector="a, button, input, .cursor-target, .interactive-object, [role='button']"
       autoMoveSelector="button, a, input, .cursor-target"
-      spinDuration={2}
-      hideDefaultCursor={true}
+      spinDuration={2.5}
+      hideDefaultCursor={!isMobile} // Only hide default cursor on desktop
       idleTimeout={5}
+      enableOnMobile={true}
     />
   );
 }

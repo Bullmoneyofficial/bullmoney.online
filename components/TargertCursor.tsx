@@ -1,5 +1,5 @@
 "use client";
-import React, { useLayoutEffect, useRef, useMemo } from 'react';
+import React, { useLayoutEffect, useRef, useMemo, useState, useEffect } from 'react';
 import { gsap } from 'gsap';
 import '@/components/Mainpage/TargertCursor.css';
 
@@ -12,6 +12,8 @@ export interface TargetCursorProps {
   // Sound URLs
   clickSoundUrl?: string;
   lockSoundUrl?: string;
+  // Mobile support
+  enableOnMobile?: boolean;
 }
 
 const TargetCursor: React.FC<TargetCursorProps> = ({
@@ -22,10 +24,13 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
   idleTimeout = 3,
   // 🎯 GOOGLE / CDN AIM SOUNDS
   clickSoundUrl = 'https://assets.codepen.io/127738/click_mech.mp3',
-  lockSoundUrl = 'https://assets.codepen.io/127738/ui_hover.mp3' // High pitch "Lock-on" blip
+  lockSoundUrl = 'https://assets.codepen.io/127738/ui_hover.mp3', // High pitch "Lock-on" blip
+  enableOnMobile = true
 }) => {
   const cursorRef = useRef<HTMLDivElement>(null);
   const cornersRef = useRef<HTMLDivElement[]>([]);
+  const [isTouching, setIsTouching] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
   
   // Audio Refs
   const clickAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -141,7 +146,25 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     };
 
     const onMove = (e: MouseEvent) => updateInput(e.clientX, e.clientY);
-    const onTouch = (e: TouchEvent) => e.touches.length && e.touches[0] && updateInput(e.touches[0].clientX, e.touches[0].clientY);
+    const onTouch = (e: TouchEvent) => {
+      if (e.touches.length && e.touches[0]) {
+        updateInput(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    };
+    
+    const onTouchStart = (e: TouchEvent) => {
+      setIsTouching(true);
+      if (e.touches.length && e.touches[0]) {
+        updateInput(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    };
+    
+    const onTouchEnd = () => {
+      setIsTouching(false);
+      state.current.isHovering = false;
+      state.current.hoverEl = null;
+      setIsLocked(false);
+    };
     
     // --- CLICK (FIRE) ---
     const onClick = () => {
@@ -169,6 +192,25 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
         }
         state.current.isHovering = !!target;
         state.current.hoverEl = target || null;
+        setIsLocked(!!target);
+    };
+
+    // --- Touch Hover Detection ---
+    const onTouchHover = (e: TouchEvent) => {
+      if (!e.touches[0]) return;
+      const touch = e.touches[0];
+      const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest(targetSelector);
+      
+      if (target && !state.current.isHovering) {
+        if (lockAudioRef.current) {
+          lockAudioRef.current.currentTime = 0;
+          lockAudioRef.current.volume = 0.2;
+          lockAudioRef.current.play().catch(() => {});
+        }
+      }
+      state.current.isHovering = !!target;
+      state.current.hoverEl = target || null;
+      setIsLocked(!!target);
     };
 
     // --- GHOST MODE (Idle Animation) ---
@@ -199,16 +241,22 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     // Bindings
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mousedown', onClick);
-    window.addEventListener('touchstart', onTouch, { passive: true });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouch, { passive: true });
+    window.addEventListener('touchmove', onTouchHover, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', onTouchEnd, { passive: true });
     window.addEventListener('mouseover', onHover, true); 
 
     return () => {
       gsap.ticker.remove(renderLoop); clearInterval(idleTimer); spinTl.current?.kill();
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mousedown', onClick);
-      window.removeEventListener('touchstart', onTouch);
+      window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouch);
+      window.removeEventListener('touchmove', onTouchHover);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('touchcancel', onTouchEnd);
       window.removeEventListener('mouseover', onHover, true);
       document.documentElement.style.cursor = '';
       document.body.style.cursor = '';
@@ -217,12 +265,29 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
 
   return (
     <>
-      <div ref={cursorRef} className="target-cursor-wrapper fixed inset-0 z-[999998]" style={{ pointerEvents: 'none' }}>
+      <div 
+        ref={cursorRef} 
+        className={`target-cursor-wrapper fixed inset-0 z-[999998] ${isTouching ? 'touching' : ''} ${isLocked ? 'locked' : ''}`} 
+        style={{ pointerEvents: 'none' }}
+      >
+        {/* Center dot */}
         <div className="target-cursor-dot" />
+        
+        {/* Crosshairs - Trading TP Target style */}
+        <div className="target-cursor-crosshair-h" />
+        <div className="target-cursor-crosshair-v" />
+        
+        {/* Outer ring */}
+        <div className="target-cursor-ring" />
+        
+        {/* Corner brackets */}
         <div className="target-cursor-corner corner-tl" />
         <div className="target-cursor-corner corner-tr" />
         <div className="target-cursor-corner corner-br" />
         <div className="target-cursor-corner corner-bl" />
+        
+        {/* Touch indicator - larger circle for mobile touch feedback */}
+        <div className="target-cursor-touch-indicator" />
       </div>
       {/* Remote Audio Files - Zero setup required */}
       <audio ref={clickAudioRef} src={clickSoundUrl} crossOrigin="anonymous" preload="auto" />
