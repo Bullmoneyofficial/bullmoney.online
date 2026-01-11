@@ -199,7 +199,7 @@ export const BASE_THEMES: Theme[] = [
     filter: 'none', mobileFilter: 'none', illusion: 'NONE', accentColor: '#ffffff', status: 'AVAILABLE', bgImage: undefined, 
     audioUrl: SFX.click.mech,
     hoverUrl: SFX.hover.scifi,
-    youtubeId: REAL_YOUTUBE_IDS.GENERAL_AMBIENT // Simple Ambient
+    youtubeId: REAL_YOUTUBE_IDS.CYBERPUNK_AMBIENT // Sci-Fi Ambient Background Music
   },
   { 
     id: 't02', name: 'God Candle', description: 'Max Bidding', category: 'SENTIMENT', 

@@ -212,12 +212,14 @@ export default function RootLayout({
 
                 // Only prevent bounce at absolute edges
                 const atTop = scrollTop <= 0;
-                const atBottom = scrollTop + clientHeight >= scrollHeight - 1;
+                // More lenient bottom detection - allow for footer and safe areas
+                const atBottom = scrollTop + clientHeight >= scrollHeight - 50;
                 const pullingDown = deltaY > 0;
                 const pullingUp = deltaY < 0;
 
-                // Only prevent if we're at an edge AND trying to go beyond it
-                if ((atTop && pullingDown) || (atBottom && pullingUp)) {
+                // Only prevent if we're at the TOP and trying to pull down (refresh)
+                // Do NOT prevent scrolling at bottom - let users scroll normally
+                if (atTop && pullingDown) {
                   e.preventDefault();
                 }
 

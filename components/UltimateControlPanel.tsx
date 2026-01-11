@@ -43,6 +43,7 @@ import {
 } from 'lucide-react';
 import { deviceMonitor, type DeviceInfo } from '@/lib/deviceMonitor';
 import { queueManager } from '@/lib/splineQueueManager';
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
 
 // ============================================================================
 // TYPES
@@ -366,6 +367,7 @@ export function UltimateControlPanel({
 
   // Default handlers for buttons - now with smart tapping (toggle behavior)
   const handleServicesClick = () => {
+    SoundEffects.click();
     setIsMobileExpanded(false);
     if (activeModal === 'services') {
       // 2nd tap - close
@@ -377,6 +379,7 @@ export function UltimateControlPanel({
     }
   };
   const handleContactClick = () => {
+    SoundEffects.click();
     setIsMobileExpanded(false);
     if (activeModal === 'contact') {
       setActiveModal(null);
@@ -386,6 +389,7 @@ export function UltimateControlPanel({
     }
   };
   const handleThemeClick = () => {
+    SoundEffects.click();
     setIsMobileExpanded(false);
     if (activeModal === 'theme') {
       setActiveModal(null);
@@ -395,6 +399,7 @@ export function UltimateControlPanel({
     }
   };
   const handleAdminClick = () => {
+    SoundEffects.click();
     setIsMobileExpanded(false);
     if (activeModal === 'admin') {
       setActiveModal(null);
@@ -404,6 +409,7 @@ export function UltimateControlPanel({
     }
   };
   const handleIdentityClick = () => {
+    SoundEffects.click();
     setIsMobileExpanded(false);
     if (activeModal === 'identity') {
       setActiveModal(null);

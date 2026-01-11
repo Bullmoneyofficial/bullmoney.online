@@ -11,6 +11,7 @@ import {
   X, ChevronRight, ExternalLink, ShieldAlert, AlertTriangle, CheckCircle2,
   XSquareIcon
 } from "lucide-react";
+import { SoundEffects } from "@/app/hooks/useSoundEffects";
 
 // ==========================================
 // 1. REUSABLE "ENHANCED MODAL" COMPONENT
@@ -579,7 +580,7 @@ export function Footer() {
         }
     `}</style>
     
-    <footer className="relative w-full overflow-hidden">
+    <footer className="relative w-full overflow-hidden" data-allow-scroll style={{ touchAction: 'pan-y' }}>
       {/* === FULL GLASS SHIMMER CONTAINER - Like Navbar === */}
       <div className="relative group">
         
@@ -616,7 +617,7 @@ export function Footer() {
           )}
       
       {/* Content Wrapper */}
-      <div className="max-w-7xl mx-auto relative z-10 flex flex-col gap-8 pt-12 pb-8 px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto relative z-10 flex flex-col gap-8 pt-12 pb-8 px-4 sm:px-6" style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))' }}>
         
         {/* Infinite Socials Row - Full Glass Navbar-style dock */}
         <div className="relative w-full pb-8 border-b border-blue-500/20">
@@ -661,7 +662,7 @@ export function Footer() {
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => setOpenApps(true)}
+              onClick={() => { SoundEffects.click(); setOpenApps(true); }}
               className="relative h-11 inline-flex items-center justify-center rounded-xl px-5 text-sm font-semibold transition-all duration-200 overflow-hidden group"
             >
               {/* Spinning shimmer border */}
@@ -678,7 +679,7 @@ export function Footer() {
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => setOpenDisclaimer(true)}
+              onClick={() => { SoundEffects.click(); setOpenDisclaimer(true); }}
               className="relative h-11 inline-flex items-center justify-center rounded-xl px-5 text-sm font-semibold transition-all duration-200 overflow-hidden group bg-black/40 backdrop-blur-xl border-2 border-blue-500/30 hover:border-blue-400/60 text-neutral-300 hover:text-white hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]"
             >
               <span className="relative z-10 flex items-center gap-2">

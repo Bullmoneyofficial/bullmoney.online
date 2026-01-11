@@ -48,6 +48,9 @@ import BullMoneyModal from "@/components/Faq";
 import { ThemeSelector } from "@/components/Mainpage/ThemeSelector";
 import { ThemeCategory, SoundProfile } from "@/constants/theme-data";
 
+// --- IMPORT SOUND EFFECTS ---
+import { SoundEffects } from "@/app/hooks/useSoundEffects";
+
 // --- HELPER HOOK FOR ROTATING TIPS ---
 function useRotatingIndex(length: number, interval: number = 5000) {
   const [index, setIndex] = useState(0);
@@ -125,6 +128,12 @@ function DockItem({
       onFocus={() => isHovered.set(1)}
       onBlur={() => isHovered.set(0)}
       onClick={onClick}
+      onMouseEnter={() => {
+        SoundEffects.hover();
+      }}
+      onMouseDown={() => {
+        SoundEffects.click();
+      }}
       className={cn(
         "relative flex flex-col items-center justify-center cursor-pointer mb-2",
         className
@@ -848,7 +857,7 @@ export const Navbar = () => {
             <div className="relative h-full w-full bg-black/40 dark:bg-black/40 backdrop-blur-3xl rounded-full p-[2px] flex items-center justify-center gap-1 px-2 sm:px-3 border-2 border-blue-500/30 dark:border-blue-500/30 hover:border-blue-400/60 transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(59,130,246,0.4)]">
                 {/* Theme Selector Button - Centered */}
                 <button
-                    onClick={() => setIsThemeSelectorOpen(true)}
+                    onClick={() => { SoundEffects.click(); setIsThemeSelectorOpen(true); }}
                     className="p-1.5 rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
                     style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                     title="Theme Selector"
@@ -861,7 +870,7 @@ export const Navbar = () => {
 
                 {/* Menu Toggle Button - Centered */}
                 <button
-                    onClick={() => setOpen(!open)}
+                    onClick={() => { SoundEffects.click(); setOpen(!open); }}
                     className="p-1.5 rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
                     style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                     title={open ? 'Close menu' : 'Open menu'}
