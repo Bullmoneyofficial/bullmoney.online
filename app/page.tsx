@@ -9,6 +9,7 @@ import { GlobalThemeProvider } from "@/contexts/GlobalThemeProvider";
 import HiddenYoutubePlayer from "@/components/Mainpage/HiddenYoutubePlayer";
 import { ALL_THEMES } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
+import Image from "next/image";
 
 // Import loaders
 import PageMode from "@/components/REGISTER USERS/pagemode";
@@ -17,6 +18,7 @@ import MultiStepLoaderv2 from "@/components/MultiStepLoaderv2";
 // Lazy imports
 const DraggableSplit = lazy(() => import('@/components/DraggableSplit'));
 const SplineScene = lazy(() => import('@/components/SplineScene'));
+const TestimonialsCarousel = lazy(() => import('@/components/Testimonial').then(mod => ({ default: mod.TestimonialsCarousel })));
 
 // --- SMART CONTAINER: Handles Preloading & FPS Saving ---
 function LazySplineContainer({ scene }: { scene: string }) {
@@ -85,21 +87,29 @@ function LazySplineContainer({ scene }: { scene: string }) {
   // Show optimized fallback on devices that can't handle 3D
   if (!canRender) {
     return (
-      <div className="w-full h-full min-h-[300px] relative bg-gradient-to-br from-black via-blue-950/30 to-black rounded-xl overflow-hidden">
+      <div className="w-full h-full min-h-[300px] relative bg-gradient-to-br from-black via-blue-950/30 to-black rounded-xl overflow-hidden" style={{ touchAction: 'pan-y' }}>
         {/* Shimmer effect like navbar */}
-        <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute inset-[-100%] animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#00000000_50%)] opacity-20" />
         </div>
         
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-          <div className="w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
-            <span className="text-2xl">🚀</span>
+          {/* Use BullMoney logo instead of rocket emoji */}
+          <div className="w-20 h-20 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center overflow-hidden">
+            <Image 
+              src="/BULL.svg" 
+              alt="BullMoney" 
+              width={48} 
+              height={48} 
+              className="opacity-80"
+              priority
+            />
           </div>
-          <p className="text-xs text-blue-300/60">3D View</p>
+          <p className="text-xs text-blue-300/60 font-semibold">3D View</p>
           <p className="text-[10px] text-blue-400/40">Optimized for your device</p>
         </div>
         
-        <div className="absolute inset-0 rounded-xl border border-blue-500/20" />
+        <div className="absolute inset-0 rounded-xl border border-blue-500/20 pointer-events-none" />
       </div>
     );
   }
@@ -112,7 +122,8 @@ function LazySplineContainer({ scene }: { scene: string }) {
       className="w-full h-full min-h-[300px] relative isolate overflow-hidden rounded-xl"
       style={{ 
         contain: 'layout size',
-        aspectRatio: containerSize.width && containerSize.height ? `${containerSize.width} / ${containerSize.height}` : 'auto'
+        aspectRatio: containerSize.width && containerSize.height ? `${containerSize.width} / ${containerSize.height}` : 'auto',
+        touchAction: 'pan-y' // Allow vertical scrolling on touch devices
       }}
     >
       {isInView ? (
@@ -226,7 +237,8 @@ function HomeContent() {
             <CTA />
             <Features />
 
-            <section className="w-full max-w-7xl mx-auto px-4 py-16" data-allow-scroll>
+            {/* 3D Spline Section - Hidden on small screens, show Testimonials instead */}
+            <section className="w-full max-w-7xl mx-auto px-4 py-16 hidden md:block" data-allow-scroll style={{ touchAction: 'pan-y' }}>
               <div className="w-full h-[800px]">
                 <Suspense fallback={<div className="w-full h-full bg-black/5 rounded-lg" />}>
                   <DraggableSplit>
@@ -236,6 +248,13 @@ function HomeContent() {
                   </DraggableSplit>
                 </Suspense>
               </div>
+            </section>
+
+            {/* Mobile-only Testimonials Section - Shows on small devices instead of heavy 3D */}
+            <section className="w-full max-w-5xl mx-auto px-4 py-12 md:hidden" data-allow-scroll style={{ touchAction: 'pan-y' }}>
+              <Suspense fallback={<div className="w-full h-[320px] bg-neutral-900/60 rounded-3xl animate-pulse" />}>
+                <TestimonialsCarousel />
+              </Suspense>
             </section>
 
             <LiveMarketTicker />

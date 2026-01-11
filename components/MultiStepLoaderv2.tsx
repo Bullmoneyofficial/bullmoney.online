@@ -515,13 +515,13 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
               }}
             />
 
-            {/* Asset Selector - positioned relative to loader, not fixed to viewport */}
-            <div className="absolute top-16 left-0 right-0 z-50 pointer-events-none flex justify-center">
+            {/* Asset Selector - positioned below live ticker, lowered z-index to not overlap icon */}
+            <div className="absolute top-14 sm:top-16 left-0 right-0 z-20 pointer-events-none flex justify-center">
               <motion.div
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="flex gap-2 pointer-events-auto"
+                className="flex gap-1.5 sm:gap-2 pointer-events-auto"
                 data-no-hold
               >
                 {Object.entries(ASSETS).map(([key, asset]) => (
@@ -545,7 +545,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                       setSelectedAsset(key as AssetKey);
                     }}
                     className={cn(
-                      "px-5 py-2.5 rounded-full text-sm font-black border-2 transition-all backdrop-blur-xl min-w-[52px] min-h-[52px] flex items-center gap-1.5 shadow-lg relative overflow-hidden",
+                      "px-3 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-black border-2 transition-all backdrop-blur-xl min-w-[44px] min-h-[44px] sm:min-w-[52px] sm:min-h-[52px] flex items-center gap-1 sm:gap-1.5 shadow-lg relative overflow-hidden",
                       key === selectedAsset
                         ? "bg-black/80 text-blue-400 border-blue-500/80 shadow-[0_0_25px_rgba(59,130,246,0.5)]"
                         : "bg-black/60 text-blue-200/80 border-blue-500/30 hover:border-blue-400/60 hover:bg-black/80"

@@ -250,6 +250,8 @@ export function UltimateControlPanel({
   const sessionStartRef = useRef<number>(Date.now());
   const [sessionDuration, setSessionDuration] = useState('0m');
   const [mounted, setMounted] = useState(false);
+  // Mobile tap expansion state - shows action buttons on tap like desktop hover
+  const [isMobileExpanded, setIsMobileExpanded] = useState(false);
 
   // Ensure component only renders on client
   useEffect(() => {
@@ -305,8 +307,10 @@ export function UltimateControlPanel({
     const offset = info.offset.x;
 
     // Open on swipe LEFT (negative offset for right-positioned button)
+    // Swipe should open panel directly without needing tap first
     if (offset < -50 || (offset < -30 && velocity < -100)) {
       onOpenChange(true);
+      setIsMobileExpanded(false); // Reset mobile expanded state when panel opens
     }
 
     setDragProgress(0);
@@ -324,7 +328,8 @@ export function UltimateControlPanel({
     const offset = info.offset.x;
 
     // Close on swipe RIGHT (positive offset for right-positioned panel)
-    if (offset > 80 || (offset > 50 && velocity > 100)) {
+    // Increased threshold to prevent accidental closes
+    if (offset > 120 || (offset > 80 && velocity > 200)) {
       onOpenChange(false);
     }
 
@@ -376,6 +381,7 @@ export function UltimateControlPanel({
               onDrag={handleSwipeableDrag}
               onDragEnd={handleSwipeableDragEnd}
               whileHover="hover"
+              animate={isMobileExpanded ? "hover" : "initial"}
               initial="initial"
               className="relative pointer-events-auto group touch-manipulation"
               style={{ 
@@ -401,13 +407,24 @@ export function UltimateControlPanel({
                 }}
                 className="relative rounded-l-2xl backdrop-blur-lg border-y border-l border-blue-400/20 bg-transparent"
               >
-                {/* FPS Display - Mobile Tap Optimized */}
+                {/* FPS Display - Mobile Tap Optimized: First tap expands, second tap opens panel */}
                 <div 
                   className="px-4 py-3 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    onOpenChange(true);
+                    // Desktop: always open panel
+                    if (window.matchMedia('(hover: hover)').matches) {
+                      onOpenChange(true);
+                    } else {
+                      // Mobile: first tap expands, second tap opens panel
+                      if (isMobileExpanded) {
+                        onOpenChange(true);
+                        setIsMobileExpanded(false);
+                      } else {
+                        setIsMobileExpanded(true);
+                      }
+                    }
                   }}
                   onTouchStart={(e) => {
                     e.stopPropagation();
@@ -415,7 +432,13 @@ export function UltimateControlPanel({
                   onTouchEnd={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    onOpenChange(true);
+                    // Mobile: first tap expands, second tap opens panel
+                    if (isMobileExpanded) {
+                      onOpenChange(true);
+                      setIsMobileExpanded(false);
+                    } else {
+                      setIsMobileExpanded(true);
+                    }
                   }}
                   style={{ 
                     WebkitTapHighlightColor: 'transparent',
@@ -426,7 +449,7 @@ export function UltimateControlPanel({
                   <div className="flex items-center gap-2">
                     <ChevronRight 
                       size={16} 
-                      className="text-blue-300/70 group-hover:text-blue-200 transition-colors mr-1 rotate-180"
+                      className={`text-blue-300/70 group-hover:text-blue-200 transition-colors mr-1 ${isMobileExpanded ? 'rotate-90' : 'rotate-180'}`}
                     />
                     <div className="flex flex-col">
                       <span className="text-blue-100 text-lg font-black leading-none drop-shadow-lg">

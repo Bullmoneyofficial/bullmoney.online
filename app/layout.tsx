@@ -15,6 +15,9 @@ import { ShopProvider } from "@/components/ShopContext";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 
+// Client-side cursor component for desktop
+import ClientCursor from "@/components/ClientCursor";
+
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
@@ -316,6 +319,8 @@ export default function RootLayout({
             <StudioProvider>
               {/* ✅ ADDED: ShopProvider starts here */}
               <ShopProvider>
+                {/* Custom Cursor for Desktop */}
+                <ClientCursor />
                 <Navbar />
                 {children}
                 <Footer />
