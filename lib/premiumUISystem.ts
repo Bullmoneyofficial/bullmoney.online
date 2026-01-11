@@ -1,0 +1,84 @@
+/**
+ * Premium UI System - Unified Blue Shimmer Design System
+ * 2025 Edition - Production Ready
+ * 
+ * This system provides consistent premium styling across the entire application.
+ * All UI elements use this unified color palette, animation config, and glass effects.
+ */
+
+export const PREMIUM_THEME = {
+  // Core gradients
+  SHIMMER_GRADIENT: "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #3b82f6 50%, #00000000 100%)",
+  BLUE_GLOW: "0 0 20px rgba(59, 130, 246, 0.4)",
+  BLUE_GLOW_STRONG: "0 0 40px rgba(59, 130, 246, 0.6)",
+  GLASS_BG: "rgba(15, 23, 42, 0.6)", // slate-950 with transparency
+  
+  // Animation configs
+  ANIMATIONS: {
+    SHIMMER: { duration: 3, repeat: Infinity, ease: "linear" },
+    GLOW_PULSE: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+    HOVER: { duration: 0.3 },
+    TAP: { duration: 0.15 },
+  },
+  
+  // Border configs
+  BORDERS: {
+    THIN: "1px",
+    MEDIUM: "1.5px",
+    THICK: "2px",
+  },
+  
+  // Colors
+  COLORS: {
+    PRIMARY_BLUE: "#3b82f6",
+    SECONDARY_BLUE: "#2563eb",
+    ACCENT_BLUE: "#0ea5e9",
+    LIGHT_BLUE: "#bfdbfe",
+    DARK_BG: "#050505",
+    PANEL_BG: "#0f172a",
+    TEXT_PRIMARY: "#ffffff",
+    TEXT_SECONDARY: "rgba(255, 255, 255, 0.6)",
+    TEXT_TERTIARY: "rgba(255, 255, 255, 0.4)",
+  },
+} as const;
+
+export const GLASS_STYLES = {
+  backdrop: "backdrop-blur-xl",
+  border: "border border-blue-500/20",
+  shadow: `shadow-lg shadow-blue-500/10`,
+  gradient: `bg-gradient-to-br from-blue-950/40 via-slate-950 to-neutral-950`,
+  gradientAlt: `bg-gradient-to-br from-slate-950/60 via-neutral-950 to-black/80`,
+} as const;
+
+// Mobile-specific optimizations
+export const MOBILE_OPTIMIZATIONS = {
+  // Minimum tap target size (accessibility standard)
+  MIN_TAP_TARGET: "44px",
+  // Safe area padding
+  SAFE_AREA_X: "env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px)",
+  SAFE_AREA_Y: "env(safe-area-inset-top, 0px) env(safe-area-inset-bottom, 0px)",
+  // Touch action optimization
+  TOUCH_ACTION: "manipulation",
+  // Tap highlight removal
+  TAP_HIGHLIGHT: "transparent",
+} as const;
+
+// Z-index layers for proper stacking
+export const Z_LAYERS = {
+  // Backgrounds
+  BACKGROUND: 0,
+  CONTENT: 10,
+  
+  // UI Elements
+  BUTTONS: 20,
+  CARDS: 30,
+  
+  // Interactive
+  OVERLAYS: 100,
+  MODALS: 200,
+  DROPDOWNS: 150,
+  
+  // Top level
+  TOOLTIPS: 300,
+  NOTIFICATIONS: 400,
+} as const;

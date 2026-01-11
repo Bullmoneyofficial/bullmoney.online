@@ -401,9 +401,9 @@ export function UltimateControlPanel({
                 }}
                 className="relative rounded-l-2xl backdrop-blur-lg border-y border-l border-blue-400/20 bg-transparent"
               >
-                {/* FPS Display */}
+                {/* FPS Display - Mobile Tap Optimized */}
                 <div 
-                  className="px-4 py-3 cursor-pointer"
+                  className="px-4 py-3 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -415,6 +415,12 @@ export function UltimateControlPanel({
                   onTouchEnd={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    onOpenChange(true);
+                  }}
+                  style={{ 
+                    WebKitTapHighlightColor: 'transparent',
+                    touchAction: 'manipulation',
+                    userSelect: 'none'
                   }}
                 >
                   <div className="flex items-center gap-2">
@@ -446,7 +452,7 @@ export function UltimateControlPanel({
                   {/* Services Button */}
                   {showServicesButton && (
                     <div
-                      className="px-4 py-2.5 cursor-pointer hover:bg-blue-500/10 transition-colors border-b border-blue-400/10"
+                      className="px-4 py-3 min-h-[44px] cursor-pointer hover:bg-blue-500/10 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -458,6 +464,12 @@ export function UltimateControlPanel({
                       onTouchEnd={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        handleServicesClick();
+                      }}
+                      style={{ 
+                        WebKitTapHighlightColor: 'transparent',
+                        touchAction: 'manipulation',
+                        userSelect: 'none'
                       }}
                     >
                       <div className="flex items-center gap-2">
@@ -472,7 +484,7 @@ export function UltimateControlPanel({
                   {/* Contact Button */}
                   {showContactButton && (
                     <div
-                      className="px-4 py-2.5 cursor-pointer hover:bg-blue-500/10 transition-colors border-b border-blue-400/10"
+                      className="px-4 py-3 min-h-[44px] cursor-pointer hover:bg-blue-500/10 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -484,6 +496,12 @@ export function UltimateControlPanel({
                       onTouchEnd={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        handleContactClick();
+                      }}
+                      style={{ 
+                        WebKitTapHighlightColor: 'transparent',
+                        touchAction: 'manipulation',
+                        userSelect: 'none'
                       }}
                     >
                       <div className="flex items-center gap-2">
@@ -498,7 +516,7 @@ export function UltimateControlPanel({
                   {/* Theme Button */}
                   {showThemeButton && (
                     <div
-                      className="px-4 py-2.5 cursor-pointer hover:bg-blue-500/10 transition-colors border-b border-blue-400/10"
+                      className="px-4 py-3 min-h-[44px] cursor-pointer hover:bg-blue-500/10 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -510,6 +528,12 @@ export function UltimateControlPanel({
                       onTouchEnd={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        handleThemeClick();
+                      }}
+                      style={{ 
+                        WebKitTapHighlightColor: 'transparent',
+                        touchAction: 'manipulation',
+                        userSelect: 'none'
                       }}
                     >
                       <div className="flex items-center gap-2">
@@ -524,7 +548,7 @@ export function UltimateControlPanel({
                   {/* Admin Button */}
                   {isAdmin && showAdminButton && (
                     <div
-                      className="px-4 py-2.5 cursor-pointer hover:bg-blue-500/10 transition-colors border-b border-blue-400/10"
+                      className="px-4 py-3 min-h-[44px] cursor-pointer hover:bg-blue-500/10 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -536,6 +560,12 @@ export function UltimateControlPanel({
                       onTouchEnd={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        handleAdminClick();
+                      }}
+                      style={{ 
+                        WebKitTapHighlightColor: 'transparent',
+                        touchAction: 'manipulation',
+                        userSelect: 'none'
                       }}
                     >
                       <div className="flex items-center gap-2">
@@ -562,7 +592,7 @@ export function UltimateControlPanel({
                   {/* Identity Button */}
                   {!isAdmin && !isAuthenticated && showIdentityButton && (
                     <div
-                      className="px-4 py-2.5 cursor-pointer hover:bg-blue-500/10 transition-colors"
+                      className="px-4 py-3 min-h-[44px] cursor-pointer hover:bg-blue-500/10 transition-colors flex items-center touch-manipulation"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -574,6 +604,12 @@ export function UltimateControlPanel({
                       onTouchEnd={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        handleIdentityClick();
+                      }}
+                      style={{ 
+                        WebKitTapHighlightColor: 'transparent',
+                        touchAction: 'manipulation',
+                        userSelect: 'none'
                       }}
                     >
                       <div className="flex items-center gap-2">
