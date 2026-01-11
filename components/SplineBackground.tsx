@@ -1,28 +1,62 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import Spline from '@splinetool/react-spline';
+import React, { useState, useEffect, useRef, memo } from 'react';
+import dynamic from 'next/dynamic';
 
 interface Props {
-  scene: string;          // The URL to your .splinecode file
-  className?: string;     // Extra styling if needed
-  children?: React.ReactNode; // Your website content (Hero, Shop, etc.)
+  scene: string;
+  className?: string;
+  children?: React.ReactNode;
+  priority?: boolean; // Load immediately without intersection observer
 }
 
-export default function LazySplineSection({ scene, className = "", children }: Props) {
-  const [isVisible, setIsVisible] = useState(false);
+// Lightweight device detection
+const shouldLoadSpline = () => {
+  if (typeof window === 'undefined') return true;
+  
+  const memory = (navigator as any).deviceMemory || 4;
+  const connection = (navigator as any).connection;
+  const effectiveType = connection?.effectiveType || '4g';
+  
+  // Skip spline on very low-end devices
+  if (memory < 2 || effectiveType === 'slow-2g' || effectiveType === '2g') {
+    return false;
+  }
+  return true;
+};
+
+// Dynamic import - only load when needed
+const Spline = dynamic(() => import('@splinetool/react-spline'), {
+  ssr: false,
+  loading: () => null,
+});
+
+function LazySplineSection({ scene, className = "", children, priority = false }: Props) {
+  const [isVisible, setIsVisible] = useState(priority);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [canRender, setCanRender] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Check device capability on mount
   useEffect(() => {
+    setCanRender(shouldLoadSpline());
+  }, []);
+
+  // Intersection observer for lazy loading
+  useEffect(() => {
+    if (priority || !canRender) return;
+    
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // Only load the heavy 3D scene when the user scrolls near it (10% visible)
         if (entry?.isIntersecting) {
           setIsVisible(true);
           observer.disconnect();
         }
       },
-      { threshold: 0.1 }
+      { 
+        threshold: 0.05,
+        rootMargin: '200px' // Start loading before visible
+      }
     );
 
     if (containerRef.current) {
@@ -30,24 +64,34 @@ export default function LazySplineSection({ scene, className = "", children }: P
     }
 
     return () => observer.disconnect();
-  }, []);
+  }, [priority, canRender]);
 
   return (
     <div ref={containerRef} className={`relative w-full ${className}`}>
-      {/* 1. BACKGROUND: The 3D Scene */}
+      {/* BACKGROUND: The 3D Scene or Fallback */}
       <div className="absolute inset-0 w-full h-full -z-10 overflow-hidden">
-        {isVisible ? (
-          <Spline className="w-full h-full object-cover" scene={scene} />
-        ) : (
-          // Lightweight placeholder while loading
-          <div className="w-full h-full bg-black/20" />
-        )}
+        {canRender && isVisible ? (
+          <div className={`w-full h-full transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+            <Spline 
+              className="w-full h-full object-cover" 
+              scene={scene}
+              onLoad={() => setIsLoaded(true)}
+            />
+          </div>
+        ) : null}
+        
+        {/* Gradient fallback - always visible until loaded */}
+        <div 
+          className={`absolute inset-0 bg-gradient-to-br from-slate-900/50 via-blue-950/30 to-black transition-opacity duration-700 ${isLoaded ? 'opacity-0' : 'opacity-100'}`}
+        />
       </div>
 
-      {/* 2. FOREGROUND: Your Page Content */}
+      {/* FOREGROUND: Page Content */}
       <div className="relative z-10">
         {children}
       </div>
     </div>
   );
 }
+
+export default memo(LazySplineSection);

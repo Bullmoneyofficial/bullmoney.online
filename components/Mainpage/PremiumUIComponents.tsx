@@ -18,6 +18,7 @@ export const PremiumShimmerBorder = ({
   active = true,
   onClick,
   interactive = false,
+  style,
 }: {
   children: React.ReactNode;
   className?: string;
@@ -27,6 +28,7 @@ export const PremiumShimmerBorder = ({
   active?: boolean;
   onClick?: () => void;
   interactive?: boolean;
+  style?: React.CSSProperties;
 }) => {
   return (
     <div
@@ -37,6 +39,7 @@ export const PremiumShimmerBorder = ({
         className,
         interactive && "cursor-pointer"
       )}
+      style={style}
     >
       {/* Rotating shimmer gradient */}
       {active && (
@@ -113,7 +116,7 @@ export const PremiumButton = ({
           disabled && "opacity-50 cursor-not-allowed"
         )}
         style={{
-          WebKitTapHighlightColor: MOBILE_OPTIMIZATIONS.TAP_HIGHLIGHT,
+          WebkitTapHighlightColor: MOBILE_OPTIMIZATIONS.TAP_HIGHLIGHT,
           touchAction: MOBILE_OPTIMIZATIONS.TOUCH_ACTION,
         }}
       >
@@ -288,7 +291,7 @@ export const PremiumFloatingButton = ({
             : "bg-slate-900/60 hover:bg-slate-800/60"
         )}
         style={{
-          WebKitTapHighlightColor: MOBILE_OPTIMIZATIONS.TAP_HIGHLIGHT,
+          WebkitTapHighlightColor: MOBILE_OPTIMIZATIONS.TAP_HIGHLIGHT,
           touchAction: MOBILE_OPTIMIZATIONS.TOUCH_ACTION,
           minHeight: MOBILE_OPTIMIZATIONS.MIN_TAP_TARGET,
           minWidth: MOBILE_OPTIMIZATIONS.MIN_TAP_TARGET,

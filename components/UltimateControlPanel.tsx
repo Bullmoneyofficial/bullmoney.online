@@ -418,7 +418,7 @@ export function UltimateControlPanel({
                     onOpenChange(true);
                   }}
                   style={{ 
-                    WebKitTapHighlightColor: 'transparent',
+                    WebkitTapHighlightColor: 'transparent',
                     touchAction: 'manipulation',
                     userSelect: 'none'
                   }}
@@ -467,7 +467,7 @@ export function UltimateControlPanel({
                         handleServicesClick();
                       }}
                       style={{ 
-                        WebKitTapHighlightColor: 'transparent',
+                        WebkitTapHighlightColor: 'transparent',
                         touchAction: 'manipulation',
                         userSelect: 'none'
                       }}
@@ -499,7 +499,7 @@ export function UltimateControlPanel({
                         handleContactClick();
                       }}
                       style={{ 
-                        WebKitTapHighlightColor: 'transparent',
+                        WebkitTapHighlightColor: 'transparent',
                         touchAction: 'manipulation',
                         userSelect: 'none'
                       }}
@@ -531,7 +531,7 @@ export function UltimateControlPanel({
                         handleThemeClick();
                       }}
                       style={{ 
-                        WebKitTapHighlightColor: 'transparent',
+                        WebkitTapHighlightColor: 'transparent',
                         touchAction: 'manipulation',
                         userSelect: 'none'
                       }}
@@ -563,7 +563,7 @@ export function UltimateControlPanel({
                         handleAdminClick();
                       }}
                       style={{ 
-                        WebKitTapHighlightColor: 'transparent',
+                        WebkitTapHighlightColor: 'transparent',
                         touchAction: 'manipulation',
                         userSelect: 'none'
                       }}
@@ -607,7 +607,7 @@ export function UltimateControlPanel({
                         handleIdentityClick();
                       }}
                       style={{ 
-                        WebKitTapHighlightColor: 'transparent',
+                        WebkitTapHighlightColor: 'transparent',
                         touchAction: 'manipulation',
                         userSelect: 'none'
                       }}
