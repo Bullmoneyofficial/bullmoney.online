@@ -145,42 +145,96 @@ const playSoftHover = (volume: number) => {
   }
 };
 
-// Play swipe/swoosh sound
+// Play cinematic swipe/swoosh sound - longer and more intense
 const playSwipe = (volume: number) => {
   const ctx = getAudioContext();
   if (!ctx) return;
   
   try {
     const now = ctx.currentTime;
+    const duration = 0.5; // Longer duration for cinematic feel
     
-    // Create noise for swoosh effect
-    const bufferSize = ctx.sampleRate * 0.15;
+    // Create noise buffer for swoosh texture
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     
+    // Generate shaped noise with exponential decay
     for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+      const t = i / bufferSize;
+      // Envelope: quick attack, sustained body, smooth decay
+      const envelope = Math.sin(t * Math.PI) * Math.exp(-t * 2);
+      data[i] = (Math.random() * 2 - 1) * envelope;
     }
     
     const noise = ctx.createBufferSource();
     noise.buffer = buffer;
     
+    // Bandpass filter with frequency sweep for whoosh effect
     const filter = ctx.createBiquadFilter();
     filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(2000, now);
-    filter.frequency.exponentialRampToValueAtTime(500, now + 0.15);
-    filter.Q.value = 1;
+    filter.frequency.setValueAtTime(3000, now);
+    filter.frequency.exponentialRampToValueAtTime(200, now + duration);
+    filter.Q.value = 2;
     
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(volume * 0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    // High shelf for air/brightness
+    const highShelf = ctx.createBiquadFilter();
+    highShelf.type = 'highshelf';
+    highShelf.frequency.value = 4000;
+    highShelf.gain.value = 6;
     
+    // Low rumble oscillator for depth
+    const rumble = ctx.createOscillator();
+    rumble.type = 'sine';
+    rumble.frequency.setValueAtTime(80, now);
+    rumble.frequency.exponentialRampToValueAtTime(40, now + duration);
+    
+    const rumbleGain = ctx.createGain();
+    rumbleGain.gain.setValueAtTime(volume * 0.15, now);
+    rumbleGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.8);
+    
+    // Whistling high tone for sci-fi edge
+    const whistle = ctx.createOscillator();
+    whistle.type = 'sine';
+    whistle.frequency.setValueAtTime(2000, now);
+    whistle.frequency.exponentialRampToValueAtTime(400, now + duration);
+    
+    const whistleGain = ctx.createGain();
+    whistleGain.gain.setValueAtTime(volume * 0.05, now);
+    whistleGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.6);
+    
+    // Main gain with cinematic envelope
+    const mainGain = ctx.createGain();
+    mainGain.gain.setValueAtTime(0, now);
+    mainGain.gain.linearRampToValueAtTime(volume * 0.4, now + 0.03);
+    mainGain.gain.setValueAtTime(volume * 0.35, now + 0.1);
+    mainGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    
+    // Connect noise chain
     noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
+    filter.connect(highShelf);
+    highShelf.connect(mainGain);
     
+    // Connect rumble
+    rumble.connect(rumbleGain);
+    rumbleGain.connect(ctx.destination);
+    
+    // Connect whistle
+    whistle.connect(whistleGain);
+    whistleGain.connect(ctx.destination);
+    
+    // Connect main output
+    mainGain.connect(ctx.destination);
+    
+    // Start all sources
     noise.start(now);
-    noise.stop(now + 0.2);
+    rumble.start(now);
+    whistle.start(now);
+    
+    // Stop all sources
+    noise.stop(now + duration + 0.1);
+    rumble.stop(now + duration + 0.1);
+    whistle.stop(now + duration + 0.1);
   } catch (e) {
     // Silent fail
   }
