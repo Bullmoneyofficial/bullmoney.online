@@ -463,30 +463,25 @@ export function UltimateControlPanel({
                   </div>
                 </div>
 
-                {/* Action Buttons - Shown on hover */}
+                {/* Action Buttons - Shown on hover or mobile tap */}
                 <motion.div
                   variants={{
-                    initial: { height: 0, opacity: 0 },
-                    hover: { height: 'auto', opacity: 1 }
+                    initial: { height: 0, opacity: 0, pointerEvents: 'none' as const },
+                    hover: { height: 'auto', opacity: 1, pointerEvents: 'auto' as const }
                   }}
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden border-t border-blue-400/20"
+                  style={{ pointerEvents: isMobileExpanded ? 'auto' : undefined }}
                 >
                   {/* Services Button */}
                   {showServicesButton && (
-                    <div
-                      className="px-4 py-3 min-h-[44px] cursor-pointer hover:bg-blue-500/10 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation"
+                    <button
+                      type="button"
+                      className="w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        handleServicesClick();
-                      }}
-                      onTouchStart={(e) => {
-                        e.stopPropagation();
-                      }}
-                      onTouchEnd={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
+                        setIsMobileExpanded(false);
                         handleServicesClick();
                       }}
                       style={{ 
@@ -501,24 +496,18 @@ export function UltimateControlPanel({
                           Services
                         </span>
                       </div>
-                    </div>
+                    </button>
                   )}
 
                   {/* Contact Button */}
                   {showContactButton && (
-                    <div
-                      className="px-4 py-3 min-h-[44px] cursor-pointer hover:bg-blue-500/10 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation"
+                    <button
+                      type="button"
+                      className="w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        handleContactClick();
-                      }}
-                      onTouchStart={(e) => {
-                        e.stopPropagation();
-                      }}
-                      onTouchEnd={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
+                        setIsMobileExpanded(false);
                         handleContactClick();
                       }}
                       style={{ 
@@ -533,24 +522,18 @@ export function UltimateControlPanel({
                           Contact
                         </span>
                       </div>
-                    </div>
+                    </button>
                   )}
 
                   {/* Theme Button */}
                   {showThemeButton && (
-                    <div
-                      className="px-4 py-3 min-h-[44px] cursor-pointer hover:bg-blue-500/10 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation"
+                    <button
+                      type="button"
+                      className="w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        handleThemeClick();
-                      }}
-                      onTouchStart={(e) => {
-                        e.stopPropagation();
-                      }}
-                      onTouchEnd={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
+                        setIsMobileExpanded(false);
                         handleThemeClick();
                       }}
                       style={{ 
@@ -565,24 +548,18 @@ export function UltimateControlPanel({
                           Theme
                         </span>
                       </div>
-                    </div>
+                    </button>
                   )}
 
                   {/* Admin Button */}
                   {isAdmin && showAdminButton && (
-                    <div
-                      className="px-4 py-3 min-h-[44px] cursor-pointer hover:bg-blue-500/10 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation"
+                    <button
+                      type="button"
+                      className="w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        handleAdminClick();
-                      }}
-                      onTouchStart={(e) => {
-                        e.stopPropagation();
-                      }}
-                      onTouchEnd={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
+                        setIsMobileExpanded(false);
                         handleAdminClick();
                       }}
                       style={{ 
@@ -597,12 +574,12 @@ export function UltimateControlPanel({
                           Admin
                         </span>
                       </div>
-                    </div>
+                    </button>
                   )}
 
                   {/* VIP Badge */}
                   {!isAdmin && isAuthenticated && (
-                    <div className="px-4 py-2.5 border-b border-blue-400/10">
+                    <div className="px-4 py-3 min-h-[48px] border-b border-blue-400/10 flex items-center">
                       <div className="flex items-center gap-2">
                         <Sparkles size={14} className="text-blue-400" />
                         <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
@@ -614,19 +591,13 @@ export function UltimateControlPanel({
 
                   {/* Identity Button */}
                   {!isAdmin && !isAuthenticated && showIdentityButton && (
-                    <div
-                      className="px-4 py-3 min-h-[44px] cursor-pointer hover:bg-blue-500/10 transition-colors flex items-center touch-manipulation"
+                    <button
+                      type="button"
+                      className="w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors flex items-center touch-manipulation"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        handleIdentityClick();
-                      }}
-                      onTouchStart={(e) => {
-                        e.stopPropagation();
-                      }}
-                      onTouchEnd={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
+                        setIsMobileExpanded(false);
                         handleIdentityClick();
                       }}
                       style={{ 
@@ -641,7 +612,7 @@ export function UltimateControlPanel({
                           Identity
                         </span>
                       </div>
-                    </div>
+                    </button>
                   )}
                 </motion.div>
 
