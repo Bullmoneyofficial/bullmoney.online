@@ -52,10 +52,21 @@ function getAvailableSections(): SectionId[] {
 function getCurrentSectionIndex(sectionIds: SectionId[]) {
   if (sectionIds.length === 0) return 0;
 
-  const scrollRoot =
-    (document.querySelector("[data-scrollable]") as HTMLElement | null) ||
-    (document.scrollingElement as HTMLElement | null) ||
-    (document.documentElement as HTMLElement);
+  const candidate = document.querySelector<HTMLElement>("[data-scrollable]");
+  const scrollRoot = (() => {
+    if (candidate) {
+      const style = window.getComputedStyle(candidate);
+      const overflowY = style.overflowY;
+      const canScrollY =
+        (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
+        candidate.scrollHeight - candidate.clientHeight > 4;
+      if (canScrollY) return candidate;
+    }
+    return (
+      (document.scrollingElement as HTMLElement | null) ||
+      (document.documentElement as HTMLElement)
+    );
+  })();
   const scrollTop = scrollRoot === document.documentElement ? window.scrollY : scrollRoot.scrollTop;
   const viewportH = scrollRoot === document.documentElement ? window.innerHeight : scrollRoot.clientHeight;
   const rootRectTop = scrollRoot === document.documentElement ? 0 : scrollRoot.getBoundingClientRect().top;
@@ -82,10 +93,21 @@ function scrollToSection(id: SectionId) {
   const element = document.getElementById(id);
   if (!element) return;
 
-  const scrollRoot =
-    (document.querySelector("[data-scrollable]") as HTMLElement | null) ||
-    (document.scrollingElement as HTMLElement | null) ||
-    (document.documentElement as HTMLElement);
+  const candidate = document.querySelector<HTMLElement>("[data-scrollable]");
+  const scrollRoot = (() => {
+    if (candidate) {
+      const style = window.getComputedStyle(candidate);
+      const overflowY = style.overflowY;
+      const canScrollY =
+        (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
+        candidate.scrollHeight - candidate.clientHeight > 4;
+      if (canScrollY) return candidate;
+    }
+    return (
+      (document.scrollingElement as HTMLElement | null) ||
+      (document.documentElement as HTMLElement)
+    );
+  })();
   const scrollTop = scrollRoot === document.documentElement ? window.scrollY : scrollRoot.scrollTop;
   const rootRectTop = scrollRoot === document.documentElement ? 0 : scrollRoot.getBoundingClientRect().top;
 

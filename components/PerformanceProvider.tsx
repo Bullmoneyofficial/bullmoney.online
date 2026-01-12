@@ -11,6 +11,7 @@ import { usePerformanceInit, usePerformanceCSSSync } from '@/hooks/usePerformanc
 interface PerformanceProviderProps {
   children: ReactNode;
   enableSmoothScroll?: boolean;
+  enableMobileSmoothScroll?: boolean;
   smoothScrollOptions?: {
     lerp?: number;
     duration?: number;
@@ -39,6 +40,7 @@ interface PerformanceProviderProps {
 export function PerformanceProvider({ 
   children, 
   enableSmoothScroll = true,
+  enableMobileSmoothScroll = true,
   smoothScrollOptions = {}
 }: PerformanceProviderProps) {
   const [isMobile, setIsMobile] = React.useState(false);
@@ -117,9 +119,9 @@ export function PerformanceProvider({
     }
   }, []);
 
-  // Wrap with Lenis if smooth scroll is enabled AND we're on desktop
-  // Mobile uses native scroll for best 120Hz performance
-  const shouldUseSmoothScroll = enableSmoothScroll && !isMobile;
+  // Wrap with Lenis if smooth scroll is enabled.
+  // We allow mobile Lenis too (for "butter" scrolling) but keep an escape hatch.
+  const shouldUseSmoothScroll = enableSmoothScroll && (!isMobile || enableMobileSmoothScroll);
   
   if (shouldUseSmoothScroll) {
     return (

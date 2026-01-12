@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLenis } from "@/lib/smoothScroll";
 
 type SectionId =
   | "top"
@@ -104,10 +105,23 @@ function getAvailableSections(): SectionId[] {
 function getCurrentSectionIndex(sectionIds: SectionId[]) {
   if (sectionIds.length === 0) return 0;
 
-  const scrollRoot =
-    (document.querySelector("[data-scrollable]") as HTMLElement | null) ||
-    (document.scrollingElement as HTMLElement | null) ||
-    (document.documentElement as HTMLElement);
+  const getScrollRoot = () => {
+    const candidate = document.querySelector<HTMLElement>("[data-scrollable]");
+    if (candidate) {
+      const style = window.getComputedStyle(candidate);
+      const overflowY = style.overflowY;
+      const canScrollY =
+        (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
+        candidate.scrollHeight - candidate.clientHeight > 4;
+      if (canScrollY) return candidate;
+    }
+    return (
+      (document.scrollingElement as HTMLElement | null) ||
+      (document.documentElement as HTMLElement)
+    );
+  };
+
+  const scrollRoot = getScrollRoot();
   const scrollTop = scrollRoot === document.documentElement ? window.scrollY : scrollRoot.scrollTop;
   const viewportH = scrollRoot === document.documentElement ? window.innerHeight : scrollRoot.clientHeight;
   const rootRectTop = scrollRoot === document.documentElement ? 0 : scrollRoot.getBoundingClientRect().top;
@@ -134,10 +148,21 @@ function scrollToSection(id: SectionId) {
   const element = document.getElementById(id);
   if (!element) return;
 
-  const scrollRoot =
-    (document.querySelector("[data-scrollable]") as HTMLElement | null) ||
-    (document.scrollingElement as HTMLElement | null) ||
-    (document.documentElement as HTMLElement);
+  const candidate = document.querySelector<HTMLElement>("[data-scrollable]");
+  const scrollRoot = (() => {
+    if (candidate) {
+      const style = window.getComputedStyle(candidate);
+      const overflowY = style.overflowY;
+      const canScrollY =
+        (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
+        candidate.scrollHeight - candidate.clientHeight > 4;
+      if (canScrollY) return candidate;
+    }
+    return (
+      (document.scrollingElement as HTMLElement | null) ||
+      (document.documentElement as HTMLElement)
+    );
+  })();
   const scrollTop = scrollRoot === document.documentElement ? window.scrollY : scrollRoot.scrollTop;
   const rootRectTop = scrollRoot === document.documentElement ? 0 : scrollRoot.getBoundingClientRect().top;
 
@@ -160,6 +185,7 @@ function highlightNavbar() {
 }
 
 export default function MobileSwipeNavigator() {
+  const { scrollTo: lenisScrollTo } = useLenis();
   const [enabled, setEnabled] = useState(false);
   const [showHint, setShowHint] = useState(true);
   const [lastAction, setLastAction] = useState<string | null>(null);
@@ -185,9 +211,9 @@ export default function MobileSwipeNavigator() {
     if (!enabled) return;
 
     // Make it easier to trigger, especially with fast flicks.
-    const thresholdPx = 44;
-    const dominancePx = 10;
-    const minVelocityPxPerMs = 0.6; // ~600px/s flick
+    const thresholdPx = 32;
+    const dominancePx = 8;
+    const minVelocityPxPerMs = 0.35; // ~350px/s flick
 
     const isBottomHalf = (clientY: number) => clientY >= window.innerHeight * 0.5;
 
@@ -266,31 +292,53 @@ export default function MobileSwipeNavigator() {
       const ids = getAvailableSections();
       const currentIndex = getCurrentSectionIndex(ids);
 
+      const scrollToSectionAnimated = (id: SectionId) => {
+        const element = document.getElementById(id);
+        if (!element) return;
+
+        // Prefer Lenis if provider is active (works via ref even if instance is still initializing).
+        lenisScrollTo(element, { offset: -96, duration: 1.05 });
+
+        // Fallback for cases where Lenis is disabled.
+        scrollToSection(id);
+      };
+
       const goPrev = () => {
         const target = ids[Math.max(0, currentIndex - 1)] || "top";
-        scrollToSection(target);
+        scrollToSectionAnimated(target);
         setLastAction("Swiped ← (UP)");
       };
 
       const goNext = () => {
         const target = ids[Math.min(ids.length - 1, currentIndex + 1)] || "footer";
-        scrollToSection(target);
+        scrollToSectionAnimated(target);
         setLastAction("Swiped → (DOWN)");
       };
 
       const goFooter = () => {
-        scrollToSection("footer");
+        scrollToSectionAnimated("footer");
         setLastAction("Swiped ↓ (FOOTER)");
       };
 
       const navBarMove = () => {
         highlightNavbar();
-        const scrollRoot =
-          (document.querySelector("[data-scrollable]") as HTMLElement | null) ||
-          (document.scrollingElement as HTMLElement | null) ||
-          (document.documentElement as HTMLElement);
+        const candidate = document.querySelector<HTMLElement>("[data-scrollable]");
+        const scrollRoot = (() => {
+          if (candidate) {
+            const style = window.getComputedStyle(candidate);
+            const overflowY = style.overflowY;
+            const canScrollY =
+              (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
+              candidate.scrollHeight - candidate.clientHeight > 4;
+            if (canScrollY) return candidate;
+          }
+          return (
+            (document.scrollingElement as HTMLElement | null) ||
+            (document.documentElement as HTMLElement)
+          );
+        })();
         const scrollTop = scrollRoot === document.documentElement ? window.scrollY : scrollRoot.scrollTop;
-        if (scrollTop > 120) scrollToSection("top");
+        if (scrollTop > 120) scrollToSectionAnimated("top");
         setLastAction("Swiped ↑ (NAVBAR)");
       };
 
@@ -328,7 +376,7 @@ export default function MobileSwipeNavigator() {
       window.removeEventListener("touchend", onTouchEnd);
       window.removeEventListener("touchcancel", onTouchCancel);
     };
-  }, [enabled]);
+  }, [enabled, lenisScrollTo]);
 
   if (!enabled) return null;
 

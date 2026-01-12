@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback, createContext, useContext, ReactNode } from 'react';
+import { useEffect, useRef, useCallback, createContext, useContext, ReactNode, useState } from 'react';
 import Lenis from 'lenis';
 import { usePerformanceStore } from '@/stores/performanceStore';
 
@@ -47,18 +47,22 @@ interface LenisProviderProps {
  */
 export function LenisProvider({ children, options = {} }: LenisProviderProps) {
   const lenisRef = useRef<Lenis | null>(null);
+  const [lenisInstance, setLenisInstance] = useState<Lenis | null>(null);
   const rafRef = useRef<number>(0);
   
   const { updateScroll, refreshRate, isProMotion } = usePerformanceStore();
 
   // Initialize Lenis with 120Hz optimizations for DESKTOP
   useEffect(() => {
-    // Skip Lenis on mobile to avoid scroll blocking
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    if (isMobile) {
-      console.log('[Lenis] Disabled on mobile for native scroll performance');
+    if (typeof window === 'undefined') return;
+
+    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
+    if (prefersReducedMotion) {
+      console.log('[Lenis] Disabled due to prefers-reduced-motion');
       return;
     }
+
+    const isMobile = window.innerWidth < 768;
     
     // ENHANCED: Detect high-end desktop for optimal settings
     const ua = navigator.userAgent.toLowerCase();
@@ -96,28 +100,41 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
     // Optimized duration based on refresh rate
     const duration = isHighRefreshDesktop ? 0.8 : 1.0;
     
-    console.log('[Lenis] Desktop scroll initialized:', {
+    const mobileLerp = 0.12;
+    const mobileDuration = 0.9;
+
+    const appliedLerp = options.lerp ?? (isMobile ? mobileLerp : lerp);
+    const appliedDuration = options.duration ?? (isMobile ? mobileDuration : duration);
+
+    console.log('[Lenis] Scroll initialized:', {
+      device: isMobile ? 'mobile' : 'desktop',
       isAppleSilicon,
       isHighEndDesktop,
       isHighRefreshDesktop,
-      lerp,
-      duration
+      lerp: appliedLerp,
+      duration: appliedDuration
     });
-    
-    lenisRef.current = new Lenis({
-      lerp: options.lerp ?? lerp,
-      duration: options.duration ?? duration,
-      smoothWheel: options.smoothWheel ?? true,
+
+    // Lenis option surface varies by version; keep config flexible.
+    const lenisOptions: any = {
+      lerp: appliedLerp,
+      duration: appliedDuration,
+      smoothWheel: options.smoothWheel ?? !isMobile,
       wheelMultiplier: options.wheelMultiplier ?? (isHighEndDesktop ? 0.7 : 0.8),
-      touchMultiplier: options.touchMultiplier ?? 1.5,
+      touchMultiplier: options.touchMultiplier ?? (isMobile ? 1.0 : 1.5),
       infinite: options.infinite ?? false,
       orientation: 'vertical',
       gestureOrientation: 'vertical',
-      // CRITICAL: Don't override native touch scrolling
-      syncTouch: false,
-      // Don't sync touch to smooth - use native
-      syncTouchLerp: 1,
-    });
+
+      // Mobile: allow touch smoothing for a "butter" feel.
+      // Desktop: wheel smoothing, native touch/trackpad handling.
+      smoothTouch: isMobile,
+      syncTouch: isMobile,
+      syncTouchLerp: isMobile ? 0.12 : 1,
+    };
+
+    lenisRef.current = new Lenis(lenisOptions);
+    setLenisInstance(lenisRef.current);
 
     // Track scroll metrics for performance monitoring
     let lastScrollY = 0;
@@ -162,6 +179,7 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
       cancelAnimationFrame(rafRef.current);
       lenisRef.current?.destroy();
       lenisRef.current = null;
+      setLenisInstance(null);
     };
   }, [options, updateScroll, isProMotion]);
 
@@ -181,7 +199,7 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
   const start = useCallback(() => lenisRef.current?.start(), []);
 
   return (
-    <LenisContext.Provider value={{ lenis: lenisRef.current, scrollTo, stop, start }}>
+    <LenisContext.Provider value={{ lenis: lenisInstance, scrollTo, stop, start }}>
       {children}
     </LenisContext.Provider>
   );
