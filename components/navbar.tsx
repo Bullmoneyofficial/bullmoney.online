@@ -43,6 +43,7 @@ import ServicesModal from "@/components/ui/SeviceModal";
 import { LoyaltyModal } from "@/components/LoyaltyCard";
 import AdminModal from "@/components/AdminModal";
 import BullMoneyModal from "@/components/Faq";
+import RecruitModal from "@/components/RecruitModal";
 
 // --- IMPORT THEME SELECTOR ---
 import { ThemeSelector } from "@/components/Mainpage/ThemeSelector";
@@ -637,6 +638,7 @@ export const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isFaqOpen, setIsFaqOpen] = useState(false);
+  const [isRecruitOpen, setIsRecruitOpen] = useState(false);
   const [isThemeSelectorOpen, setIsThemeSelectorOpen] = useState(false);
   // 👇 STATE TO PREVENT HYDRATION MISMATCH
   const [mounted, setMounted] = useState(false);
@@ -728,7 +730,7 @@ export const Navbar = () => {
         icon: <IconUsersGroup className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
         label: "Affiliates",
         tips: ["Join our affiliate program", "Earn commissions", "Grow with us"],
-        href: "/recruit?src=nav",
+        onClick: () => setIsRecruitOpen(true),
     },
     {
         icon: <IconHelp className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
@@ -784,6 +786,7 @@ export const Navbar = () => {
 
     <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
     <BullMoneyModal isOpen={isFaqOpen} onClose={() => setIsFaqOpen(false)} />
+    <RecruitModal isOpen={isRecruitOpen} onClose={() => setIsRecruitOpen(false)} />
     <ThemeSelectorModal isOpen={isThemeSelectorOpen} onClose={() => setIsThemeSelectorOpen(false)} />
     
     {/* Desktop Moving Trading Tips - follows buttons, hidden when hovering dock */}
@@ -922,15 +925,14 @@ export const Navbar = () => {
                     <div className="absolute inset-0 opacity-0"><ServicesModal /></div>
                 </div>
 
-                <Link
-                  href="/recruit?src=nav"
-                  onClick={() => { SoundEffects.click(); setOpen(false); }}
-                  onMouseEnter={() => SoundEffects.hover()}
+                <div 
+                  className="relative w-full" 
+                  onClick={() => { SoundEffects.click(); setIsRecruitOpen(true); setOpen(false); }} 
+                  onMouseEnter={() => SoundEffects.hover()} 
                   onTouchStart={() => SoundEffects.click()}
-                  className="text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors w-full py-2 rounded-lg hover:bg-blue-500/10"
                 >
-                  Affiliates
-                </Link>
+                    <span className="text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 cursor-pointer block py-2 rounded-lg hover:bg-blue-500/10 transition-colors">Affiliates</span>
+                </div>
 
                 <div className="relative w-full" onClick={() => { SoundEffects.click(); setIsFaqOpen(true); setOpen(false); }} onMouseEnter={() => SoundEffects.hover()} onTouchStart={() => SoundEffects.click()}>
                     <span className="text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 cursor-pointer block py-2 rounded-lg hover:bg-blue-500/10 transition-colors">FAQ</span>

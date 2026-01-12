@@ -115,7 +115,7 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
-      className="p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm overflow-hidden"
+      className="p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm"
     >
       <div className="flex items-start gap-3">
         <div
@@ -313,7 +313,7 @@ export function UltimateControlPanel({
               onDragEnd={handleDragEnd}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 py-2.5 rounded-full bg-gradient-to-r from-blue-500/90 to-purple-500/90 backdrop-blur-xl border border-white/20 shadow-2xl flex items-center gap-2 pointer-events-auto group overflow-hidden"
+              className="px-6 py-2.5 rounded-full bg-gradient-to-r from-blue-500/90 to-purple-500/90 backdrop-blur-xl border border-white/20 shadow-2xl flex items-center gap-2 pointer-events-auto group"
               style={{
                 boxShadow: `0 8px 32px ${accentColor}40, 0 0 0 1px rgba(255,255,255,0.1)`
               }}
@@ -533,7 +533,7 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Screen Info */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10 overflow-hidden">
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10">
                         <div className="text-xs text-white/50 uppercase tracking-wider font-semibold mb-2">
                           Display
                         </div>
@@ -555,7 +555,7 @@ export function UltimateControlPanel({
 
                       {/* Battery */}
                       {deviceInfo.battery.level >= 0 && (
-                        <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-white/10 overflow-hidden">
+                        <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-white/10">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Battery size={18} className="text-green-400" />
@@ -610,7 +610,7 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Connection Type */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-white/10 overflow-hidden">
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-white/10">
                         <div className="flex items-center gap-3">
                           <Wifi size={24} className="text-blue-400" />
                           <div className="flex-1">
@@ -630,7 +630,7 @@ export function UltimateControlPanel({
                         </div>
                       </div>
 
-                      <div className="p-4 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                      <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-sm text-white/60">Link quality</span>
                           <span className="text-xs text-white/40">
@@ -654,7 +654,7 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Location */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-white/10 overflow-hidden">
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-white/10">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
@@ -673,7 +673,7 @@ export function UltimateControlPanel({
                           </div>
                           <button
                             onClick={() => setShowSensitive(!showSensitive)}
-                            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors overflow-hidden"
+                            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
                           >
                             {showSensitive ? (
                               <EyeOff size={16} className="text-white/70" />
@@ -701,7 +701,7 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* FPS */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-white/10 overflow-hidden">
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-white/10">
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="text-sm text-white/50">Current FPS</div>
@@ -728,7 +728,7 @@ export function UltimateControlPanel({
                         }
                       />
 
-                      <div className="p-4 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                      <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                         <div className="text-sm text-white/60 mb-3">Device Snapshot</div>
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div className="text-white/70">CPU: <span className="text-white font-semibold">{deviceInfo.performance.cpu.cores} cores</span></div>
@@ -741,14 +741,14 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Memory */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10 overflow-hidden">
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10">
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-sm text-white/50">Memory Usage</span>
                           <span className="text-sm font-semibold text-white">
                             {deviceInfo.performance.memory.percentage}%
                           </span>
                         </div>
-                        <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                        <div className="w-full h-2 bg-white/10 rounded-full">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${deviceInfo.performance.memory.percentage}%` }}
@@ -761,7 +761,7 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Queue Stats */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-white/10 overflow-hidden">
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-white/10">
                         <div className="text-sm text-white/50 mb-2">Scene Loading</div>
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div>
@@ -795,7 +795,7 @@ export function UltimateControlPanel({
                       className="space-y-4"
                     >
                       {/* User Info */}
-                      <div className="p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10 overflow-hidden">
+                      <div className="p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10">
                         <div className="flex items-center gap-4 mb-4">
                           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
                             <User size={32} className="text-white" />
@@ -811,25 +811,25 @@ export function UltimateControlPanel({
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
-                          <div className="p-3 rounded-xl bg-white/5 overflow-hidden">
+                          <div className="p-3 rounded-lg bg-white/5">
                             <div className="text-xs text-white/50">Status</div>
                             <div className="text-sm font-semibold text-green-400">
                               {userEmail ? 'Active' : 'Guest'}
                             </div>
                           </div>
-                          <div className="p-3 rounded-xl bg-white/5 overflow-hidden">
+                          <div className="p-3 rounded-lg bg-white/5">
                             <div className="text-xs text-white/50">Session</div>
                             <div className="text-sm font-semibold text-white">
                               {sessionDuration}
                             </div>
                           </div>
-                          <div className="p-3 rounded-xl bg-white/5 overflow-hidden">
+                          <div className="p-3 rounded-lg bg-white/5">
                             <div className="text-xs text-white/50">IP</div>
                             <div className="text-sm font-semibold text-white truncate">
                               {showSensitive ? deviceInfo.network.ip : '•••.•••.•••.•••'}
                             </div>
                           </div>
-                          <div className="p-3 rounded-xl bg-white/5 overflow-hidden">
+                          <div className="p-3 rounded-lg bg-white/5">
                             <div className="text-xs text-white/50">ISP</div>
                             <div className="text-sm font-semibold text-white truncate">
                               {deviceInfo.network.isp || 'Unknown'}
@@ -842,7 +842,7 @@ export function UltimateControlPanel({
                       <div className="space-y-2">
                         <button
                           onClick={handleRefresh}
-                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-white/10 text-white font-semibold hover:from-blue-500/30 hover:to-purple-500/30 transition-all flex items-center justify-center gap-2 overflow-hidden"
+                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-white/10 text-white font-semibold hover:from-blue-500/30 hover:to-purple-500/30 transition-all flex items-center justify-center gap-2"
                         >
                           <RefreshCw size={18} />
                           Refresh Website
@@ -854,7 +854,7 @@ export function UltimateControlPanel({
                             console.table(info);
                             alert('Device info logged to console (F12)');
                           }}
-                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 font-semibold hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2 overflow-hidden"
+                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 font-semibold hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2"
                         >
                           <Globe size={18} />
                           View Full Details
@@ -870,7 +870,7 @@ export function UltimateControlPanel({
                               alert('Clipboard unavailable; details logged to console');
                             }
                           }}
-                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border border-white/10 text-white font-semibold hover:from-emerald-500/30 hover:to-blue-500/30 transition-all flex items-center justify-center gap-2 overflow-hidden"
+                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border border-white/10 text-white font-semibold hover:from-emerald-500/30 hover:to-blue-500/30 transition-all flex items-center justify-center gap-2"
                         >
                           <Globe size={18} />
                           Copy Device Snapshot

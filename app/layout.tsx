@@ -71,8 +71,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({
   children,
+  modal,
 }: Readonly<{
   children: React.ReactNode;
+  modal: React.ReactNode;
 }>) {
   const swEnabled = process.env.NODE_ENV === "production";
   return (
@@ -325,6 +327,7 @@ export default function RootLayout({
                 <ClientCursor />
                 <Navbar />
                 {children}
+                {modal}
                 <Footer />
               </ShopProvider>
               {/* ✅ ADDED: ShopProvider ends here */}
