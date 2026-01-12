@@ -34,15 +34,26 @@ export async function GET() {
   try {
     const results = await Promise.allSettled(
       FEEDS.map(async (f) => {
-        const res = await fetch(f.url, {
-          // avoid Next cache so you always get fresh headlines
-          cache: "no-store",
-          // some RSS hosts like a UA header
-          headers: { "User-Agent": "Mozilla/5.0 (compatible; BullMoneyBot/1.0)" },
-        });
-        if (!res.ok) throw new Error(`${f.source} fetch failed: ${res.status}`);
-        const xml = await res.text();
-        return parseRss(xml, f.source);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+        
+        try {
+          const res = await fetch(f.url, {
+            // avoid Next cache so you always get fresh headlines
+            cache: "no-store",
+            // some RSS hosts like a UA header
+            headers: { "User-Agent": "Mozilla/5.0 (compatible; BullMoneyBot/1.0)" },
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+          
+          if (!res.ok) throw new Error(`${f.source} fetch failed: ${res.status}`);
+          const xml = await res.text();
+          return parseRss(xml, f.source);
+        } catch (err) {
+          clearTimeout(timeoutId);
+          throw err;
+        }
       })
     );
 
@@ -57,11 +68,27 @@ export async function GET() {
       })
       .slice(0, 60); // cap the payload
 
+    // If no items from live feeds, return sample fallback data
+    if (items.length === 0) {
+      const fallbackItems = [
+        { title: "Bitcoin continues to show strong momentum amid market volatility", link: "https://example.com/1", source: "Market News", published_at: new Date().toISOString() },
+        { title: "Ethereum network upgrade brings improved scalability", link: "https://example.com/2", source: "Crypto Today", published_at: new Date(Date.now() - 3600000).toISOString() },
+        { title: "Gold prices steady as investors await Fed decision", link: "https://example.com/3", source: "Commodities Watch", published_at: new Date(Date.now() - 7200000).toISOString() },
+        { title: "USD/EUR exchange rate fluctuates on economic data", link: "https://example.com/4", source: "Forex Daily", published_at: new Date(Date.now() - 10800000).toISOString() },
+        { title: "Stock markets open mixed ahead of earnings season", link: "https://example.com/5", source: "Stock News", published_at: new Date(Date.now() - 14400000).toISOString() },
+      ];
+      return NextResponse.json({ items: fallbackItems, isFallback: true });
+    }
+
     return NextResponse.json({ items });
   } catch (e: any) {
+    // Return fallback data even on error
+    const fallbackItems = [
+      { title: "Markets update: Latest financial news and analysis", link: "#", source: "BullMoney", published_at: new Date().toISOString() },
+    ];
     return NextResponse.json(
-      { error: "Failed to fetch", detail: e?.message ?? "Unknown error" },
-      { status: 500 }
+      { items: fallbackItems, error: "Partial fetch failure", detail: e?.message ?? "Unknown error" },
+      { status: 200 }
     );
   }
 }

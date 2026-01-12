@@ -101,9 +101,9 @@ const ShimmerBorder = ({
     
     return (
         <div className={cn("relative overflow-hidden group/shimmer", borderRadius, className)}>
-            {/* Layer 1: The Spinning Gradient */}
+            {/* Layer 1: The Spinning Gradient - pointer-events-none so it doesn't block clicks */}
             <motion.div
-                className="absolute inset-[-100%]" 
+                className="absolute inset-[-100%] pointer-events-none" 
                 animate={{ rotate: 360 }}
                 transition={{ 
                     duration: speed, 
@@ -113,12 +113,12 @@ const ShimmerBorder = ({
                 style={{ background: finalGradient }}
             />
 
-            {/* Layer 2: Inner Mask */}
-            <div className={cn("absolute bg-neutral-950 flex items-center justify-center z-10", borderRadius, borderWidth, innerClassName)}>
+            {/* Layer 2: Inner Mask - pointer-events-none so it doesn't block clicks */}
+            <div className={cn("absolute bg-neutral-950 flex items-center justify-center z-10 pointer-events-none", borderRadius, borderWidth, innerClassName)}>
             </div>
             
-            {/* Content */}
-            <div className="relative z-20 h-full w-full">
+            {/* Content - ensure pointer events work */}
+            <div className="relative z-20 h-full w-full pointer-events-auto">
                 {children}
             </div>
         </div>
@@ -450,6 +450,7 @@ const score = (item: NewsItem) => {
 const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketFilter, onClose: () => void }) => {
     const [items, setItems] = useState<NewsItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
     const [count, setCount] = useState<number>(10);
     const [refreshKey, setRefreshKey] = useState(0);
@@ -470,14 +471,23 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
 
     const load = useCallback(async () => {
         setLoading(true);
+        setError(null);
         try {
             const r = await fetch("/api/crypto-news", { cache: "no-store" });
+            if (!r.ok) {
+                throw new Error(`API returned ${r.status}`);
+            }
             const json = await r.json();
             const rawItems: NewsItem[] = Array.isArray(json?.items) ? json.items : [];
             const tagged = rawItems.map((n) => ({ ...n, category: detectCategory(n.title || "") }));
             setItems(tagged);
             setLastUpdated(new Date());
-        } catch {
+            if (tagged.length === 0) {
+                setError("No news available at the moment. Try refreshing.");
+            }
+        } catch (err: any) {
+            console.error("News fetch error:", err);
+            setError(err?.message || "Failed to load news");
             setItems([]);
         } finally {
             setLoading(false);
@@ -532,6 +542,25 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
             </div>
 
             <div className="flex-1 overflow-y-auto bg-black/90 scrollbar-hide">
+                {/* Error State */}
+                {error && !loading && (
+                    <div className="flex flex-col items-center justify-center p-8 text-center">
+                        <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
+                            <X className="h-8 w-8 text-red-500" />
+                        </div>
+                        <p className="text-red-400 font-medium mb-2">{error}</p>
+                        <button 
+                            onClick={() => setRefreshKey(p => p + 1)}
+                            className="mt-4 px-4 py-2 bg-sky-500/20 text-sky-400 rounded-lg hover:bg-sky-500/30 transition-colors text-sm font-medium"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                )}
+
+                {/* Content - only show if not error */}
+                {!error && (
+                <>
                 <div className="p-4">
                     <div className="flex items-center justify-between">
                         <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Major Headlines</h3>
@@ -541,6 +570,8 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                     <div className="mt-3 grid gap-3 md:grid-cols-5">
                         {loading
                             ? Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-24 animate-pulse rounded-lg bg-white/5 ring-1 ring-white/10" />)
+                            : top5.length === 0 
+                            ? <div className="col-span-5 text-center py-8 text-neutral-500">No headlines available</div>
                             : top5.map((item, i) => (
                                 <a
                                     key={`${item.link}-${i}`}
@@ -577,6 +608,9 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                 <div className="mt-2 h-4 w-2/3 rounded bg-white/5" />
                             </li>
                         ))}
+                        {!loading && rest.length === 0 && (
+                            <li className="p-8 text-center text-neutral-500">No additional news items</li>
+                        )}
                         {!loading && rest.map((n, i) => (
                             <li key={`${n.link}-${i}`} className="group px-4 py-3 transition hover:bg-white/[0.02]">
                                 <div className="flex items-start gap-3">
@@ -596,6 +630,8 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                         ))}
                     </ul>
                 </div>
+                </>
+                )}
             </div>
         </div>
     );
@@ -607,8 +643,23 @@ NewsFeedContent.displayName = "NewsFeedContent";
 function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTip?: boolean }) {
     const [isOpen, setIsOpen] = useState(false);
 
+    const handleOpenModal = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpen(true);
+    }, []);
+
+    const handleCloseModal = useCallback(() => {
+        setIsOpen(false);
+    }, []);
+
     useEffect(() => {
-        const handleEsc = (e: KeyboardEvent) => e.key === "Escape" && setIsOpen(false);
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                setIsOpen(false);
+            }
+        };
         window.addEventListener("keydown", handleEsc);
         return () => window.removeEventListener("keydown", handleEsc);
     }, []);
@@ -628,11 +679,27 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                     )}
                 </AnimatePresence>
 
-                <ShimmerBorder borderRadius="rounded-xl" borderWidth="inset-[2px]" speed={4} className="w-full max-w-xl">
-                    <button
-                        onClick={() => setIsOpen(true)}
-                        className="group relative w-full max-w-xl overflow-hidden rounded-xl bg-[#0a0a0a] p-1 transition-all duration-300 hover:shadow-2xl hover:shadow-sky-500/10 hover:-translate-y-1"
-                    >
+                {/* Simplified button structure - no ShimmerBorder wrapper to avoid click issues */}
+                <div 
+                    onClick={handleOpenModal}
+                    className="relative w-full max-w-xl cursor-pointer group"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && handleOpenModal(e as any)}
+                >
+                    {/* Shimmer border effect - purely decorative */}
+                    <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
+                        <motion.div
+                            className="absolute inset-[-100%]" 
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            style={{ background: shimmerGradient }}
+                        />
+                        <div className="absolute inset-[2px] bg-neutral-950 rounded-xl" />
+                    </div>
+                    
+                    {/* Button content */}
+                    <div className="relative z-10 overflow-hidden rounded-xl bg-[#0a0a0a] p-1 transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-sky-500/10 group-hover:-translate-y-1">
                         <div className="relative flex items-center justify-between rounded-[9px] bg-[#0a0a0a] px-4 py-3 md:px-6 md:py-4">
                             <div className="flex items-center gap-4">
                                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-900/10 text-sky-400 ring-1 ring-sky-500/20 animate-float-slow">
@@ -654,38 +721,57 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                                 <ArrowRight className="h-5 w-5" />
                             </div>
                         </div>
-                    </button>
-                </ShimmerBorder>
+                    </div>
+                </div>
             </div>
 
             <AnimatePresence>
                 {isOpen && (
-                    <div className="fixed inset-0 z-[999999] flex items-center justify-center p-3 md:p-6 pointer-events-auto overflow-hidden">
+                    <div 
+                        className="fixed inset-0 z-[9999999] flex items-center justify-center p-3 md:p-6 overflow-hidden"
+                        style={{ pointerEvents: 'auto' }}
+                    >
+                        {/* Backdrop */}
                         <motion.div
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            onClick={() => setIsOpen(false)}
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }} 
+                            exit={{ opacity: 0 }}
+                            onClick={handleCloseModal}
                             className="absolute inset-0 bg-black/95 backdrop-blur-md cursor-pointer"
+                            style={{ pointerEvents: 'auto' }}
                         />
-                        {/* Modal Body with Shimmer Border */}
-                        <ShimmerBorder
-                            borderRadius="rounded-3xl"
-                            borderWidth="inset-[2px]"
-                            speed={5}
-                            className="relative z-10 w-full max-w-6xl h-[90vh] md:h-[85vh] pointer-events-auto"
+                        
+                        {/* Modal Container */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative z-10 w-full max-w-6xl h-[90vh] md:h-[85vh]"
+                            style={{ pointerEvents: 'auto' }}
                         >
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                                transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                            {/* Shimmer border - decorative */}
+                            <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+                                <motion.div
+                                    className="absolute inset-[-100%]" 
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+                                    style={{ background: shimmerGradient }}
+                                />
+                                <div className="absolute inset-[2px] bg-black rounded-3xl" />
+                            </div>
+                            
+                            {/* Modal content */}
+                            <div 
                                 role="dialog"
                                 aria-modal="true"
-                                onClick={(e) => e.stopPropagation()}
-                                className="relative w-full h-full overflow-hidden rounded-3xl border border-transparent bg-black shadow-2xl pointer-events-auto"
+                                className="relative z-20 w-full h-full overflow-hidden rounded-3xl border border-sky-500/20 bg-black shadow-2xl"
+                                style={{ pointerEvents: 'auto' }}
                             >
-                                <NewsFeedContent activeMarket={activeMarket as MarketFilter} onClose={() => setIsOpen(false)} />
-                            </motion.div>
-                        </ShimmerBorder>
+                                <NewsFeedContent activeMarket={activeMarket as MarketFilter} onClose={handleCloseModal} />
+                            </div>
+                        </motion.div>
                     </div>
                 )}
             </AnimatePresence>

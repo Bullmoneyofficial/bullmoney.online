@@ -7,7 +7,8 @@ import {
   useSpring,
   useMotionValue,
 } from "framer-motion";
-import { ArrowUpRight, Zap, TrendingUp, Sparkles } from "lucide-react";
+import { ArrowUpRight, Zap, TrendingUp, Sparkles, Rocket, Star, Trophy, Flame, Diamond, Moon, Target, Dumbbell, CheckCircle2, CircleDollarSign, BarChart3, Activity } from "lucide-react";
+import Image from "next/image";
 
 // --- TYPES ---
 type AssetKey = "BTC" | "ETH" | "SOL";
@@ -18,6 +19,7 @@ interface Particle {
   y: number;
   vx: number;
   vy: number;
+  iconType?: ParticleIcon;
 }
 
 interface LoaderProps {
@@ -26,6 +28,10 @@ interface LoaderProps {
 
 // --- UTILS ---
 const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(" ");
+
+// Particle icon types for animated burst
+const PARTICLE_ICONS = ["rocket", "dollar", "chart", "zap", "flame", "diamond", "moon", "sparkle"] as const;
+type ParticleIcon = typeof PARTICLE_ICONS[number];
 
 // --- CONFIG ---
 const ASSETS: Record<AssetKey, { id: string; symbol: string; icon: string; color: string }> = {
@@ -98,7 +104,7 @@ const useLivePrice = (assetKey: AssetKey) => {
   return { price };
 };
 
-// --- AUDIO ENGINE (CINEMATIC V2) ---
+// --- AUDIO ENGINE (CINEMATIC V2 - GLITCH-FREE) ---
 const useAudioEngine = () => {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const oscillatorRef = useRef<OscillatorNode | null>(null);
@@ -106,8 +112,10 @@ const useAudioEngine = () => {
   const gainNodeRef = useRef<GainNode | null>(null);
   const subGainRef = useRef<GainNode | null>(null);
   const filterRef = useRef<BiquadFilterNode | null>(null);
+  const isPlayingRef = useRef(false);
+  const lastStartTimeRef = useRef(0);
 
-  const initAudio = () => {
+  const initAudio = useCallback(() => {
     if (!audioCtxRef.current) {
       const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
       audioCtxRef.current = AudioContextClass ? new AudioContextClass() : null;
@@ -118,11 +126,21 @@ const useAudioEngine = () => {
       ctx.resume();
     }
     return ctx;
-  };
+  }, []);
 
-  const startEngine = () => {
+  const startEngine = useCallback(() => {
+    // Prevent rapid restart glitches - minimum 100ms between starts
+    const now = Date.now();
+    if (now - lastStartTimeRef.current < 100) return;
+    lastStartTimeRef.current = now;
+    
+    // Don't restart if already playing
+    if (isPlayingRef.current) return;
+    
     const ctx = initAudio();
     if (!ctx) return;
+
+    isPlayingRef.current = true;
 
     if (!oscillatorRef.current) {
       // Main engine oscillator - richer tone
@@ -138,7 +156,7 @@ const useAudioEngine = () => {
       osc.frequency.setValueAtTime(80, ctx.currentTime);
 
       gain.gain.setValueAtTime(0, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.3);
+      gain.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 0.15);
 
       osc.connect(filter);
       filter.connect(gain);
@@ -158,7 +176,7 @@ const useAudioEngine = () => {
       subOsc.frequency.setValueAtTime(40, ctx.currentTime);
 
       subGain.gain.setValueAtTime(0, ctx.currentTime);
-      subGain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.5);
+      subGain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.2);
 
       subOsc.connect(subGain);
       subGain.connect(ctx.destination);
@@ -168,68 +186,66 @@ const useAudioEngine = () => {
       subOscRef.current = subOsc;
       subGainRef.current = subGain;
 
-      // Initial boot-up sound burst
+      // Quick boot-up blip (shorter, snappier)
       const bootOsc = ctx.createOscillator();
       const bootGain = ctx.createGain();
-      const bootFilter = ctx.createBiquadFilter();
 
       bootOsc.type = "square";
-      bootOsc.frequency.setValueAtTime(200, ctx.currentTime);
-      bootOsc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.3);
+      bootOsc.frequency.setValueAtTime(400, ctx.currentTime);
+      bootOsc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1);
 
-      bootFilter.type = "lowpass";
-      bootFilter.frequency.setValueAtTime(2000, ctx.currentTime);
-      bootFilter.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.3);
+      bootGain.gain.setValueAtTime(0.08, ctx.currentTime);
+      bootGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
 
-      bootGain.gain.setValueAtTime(0.15, ctx.currentTime);
-      bootGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-
-      bootOsc.connect(bootFilter);
-      bootFilter.connect(bootGain);
+      bootOsc.connect(bootGain);
       bootGain.connect(ctx.destination);
 
       bootOsc.start();
-      bootOsc.stop(ctx.currentTime + 0.4);
+      bootOsc.stop(ctx.currentTime + 0.15);
     }
-  };
+  }, [initAudio]);
 
-  const updateEngine = (progress: number) => {
+  const updateEngine = useCallback((progress: number) => {
     const ctx = audioCtxRef.current;
     if (!ctx || !oscillatorRef.current || !gainNodeRef.current || !filterRef.current) return;
+    if (!isPlayingRef.current) return;
 
     const now = ctx.currentTime;
     
-    // Main frequency ramps up with progress
+    // Main frequency ramps up with progress - snappier response
     const baseFreq = 80;
-    const addedFreq = (progress / 100) * 320;
-    oscillatorRef.current.frequency.setTargetAtTime(baseFreq + addedFreq, now, 0.1);
+    const addedFreq = (progress / 100) * 400;
+    oscillatorRef.current.frequency.setTargetAtTime(baseFreq + addedFreq, now, 0.05);
 
     // Filter opens up as progress increases
-    const filterFreq = 800 + (progress / 100) * 2000;
-    filterRef.current.frequency.setTargetAtTime(filterFreq, now, 0.15);
+    const filterFreq = 800 + (progress / 100) * 2500;
+    filterRef.current.frequency.setTargetAtTime(filterFreq, now, 0.08);
 
     // Sub oscillator pitch rises slightly
     if (subOscRef.current) {
-      subOscRef.current.frequency.setTargetAtTime(40 + (progress / 100) * 30, now, 0.2);
+      subOscRef.current.frequency.setTargetAtTime(40 + (progress / 100) * 40, now, 0.1);
     }
 
     // Intensity increases at higher progress
     if (progress > 50) {
-      const intensity = ((progress - 50) / 50) * 0.04;
-      gainNodeRef.current.gain.setTargetAtTime(0.06 + intensity + Math.random() * 0.02, now, 0.08);
+      const intensity = ((progress - 50) / 50) * 0.03;
+      gainNodeRef.current.gain.setTargetAtTime(0.04 + intensity, now, 0.05);
     }
 
     // Dramatic buildup near completion
     if (progress > 85) {
       const urgency = ((progress - 85) / 15);
       if (subGainRef.current) {
-        subGainRef.current.gain.setTargetAtTime(0.1 + urgency * 0.08, now, 0.05);
+        subGainRef.current.gain.setTargetAtTime(0.06 + urgency * 0.05, now, 0.03);
       }
-      filterRef.current.Q.setTargetAtTime(2 + urgency * 4, now, 0.1);
+      filterRef.current.Q.setTargetAtTime(2 + urgency * 3, now, 0.05);
     }
-  };
+  }, []);
 
-  const stopEngine = () => {
+  const stopEngine = useCallback(() => {
+    if (!isPlayingRef.current) return;
+    isPlayingRef.current = false;
+    
     const ctx = audioCtxRef.current;
     const gainNode = gainNodeRef.current;
     const subGain = subGainRef.current;
@@ -237,35 +253,44 @@ const useAudioEngine = () => {
     if (ctx) {
       const now = ctx.currentTime;
       
+      // Quick fade out to prevent clicks
       if (gainNode) {
-        gainNode.gain.setTargetAtTime(0, now, 0.1);
+        gainNode.gain.cancelScheduledValues(now);
+        gainNode.gain.setTargetAtTime(0, now, 0.05);
       }
       if (subGain) {
-        subGain.gain.setTargetAtTime(0, now, 0.15);
+        subGain.gain.cancelScheduledValues(now);
+        subGain.gain.setTargetAtTime(0, now, 0.08);
       }
 
       setTimeout(() => {
-        if (oscillatorRef.current) {
-          oscillatorRef.current.stop();
-          oscillatorRef.current.disconnect();
-          oscillatorRef.current = null;
+        try {
+          if (oscillatorRef.current) {
+            oscillatorRef.current.stop();
+            oscillatorRef.current.disconnect();
+            oscillatorRef.current = null;
+          }
+          if (subOscRef.current) {
+            subOscRef.current.stop();
+            subOscRef.current.disconnect();
+            subOscRef.current = null;
+          }
+          gainNodeRef.current = null;
+          subGainRef.current = null;
+          filterRef.current = null;
+        } catch (e) {
+          // Ignore errors from already stopped oscillators
         }
-        if (subOscRef.current) {
-          subOscRef.current.stop();
-          subOscRef.current.disconnect();
-          subOscRef.current = null;
-        }
-        filterRef.current = null;
-      }, 200);
+      }, 150);
     }
-  };
+  }, []);
 
-  const playSuccess = () => {
+  const playSuccess = useCallback(() => {
     const ctx = initAudio();
     if (!ctx) return;
     const now = ctx.currentTime;
 
-    // Layered success chord - cinematic feel
+    // Layered success chord - snappier, punchier
     const frequencies = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
     
     frequencies.forEach((freq, i) => {
@@ -275,63 +300,63 @@ const useAudioEngine = () => {
       osc.type = i === 0 ? "sine" : "triangle";
       osc.frequency.setValueAtTime(freq, now);
 
-      const delay = i * 0.04;
-      const volume = 0.12 - (i * 0.02);
+      const delay = i * 0.02; // Faster cascade
+      const volume = 0.1 - (i * 0.015);
       
       gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(volume, now + delay + 0.02);
-      gain.gain.setValueAtTime(volume, now + delay + 0.15);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6 + (i * 0.1));
+      gain.gain.linearRampToValueAtTime(volume, now + delay + 0.01);
+      gain.gain.setValueAtTime(volume, now + delay + 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4 + (i * 0.05));
 
       osc.connect(gain);
       gain.connect(ctx.destination);
 
       osc.start(now + delay);
-      osc.stop(now + 0.8 + (i * 0.1));
+      osc.stop(now + 0.5 + (i * 0.05));
     });
 
-    // Add shimmer/sparkle effect
+    // Quick shimmer/sparkle effect
     const shimmerOsc = ctx.createOscillator();
     const shimmerGain = ctx.createGain();
     const shimmerFilter = ctx.createBiquadFilter();
 
     shimmerOsc.type = "sine";
-    shimmerOsc.frequency.setValueAtTime(2000, now);
-    shimmerOsc.frequency.exponentialRampToValueAtTime(4000, now + 0.1);
-    shimmerOsc.frequency.exponentialRampToValueAtTime(1500, now + 0.4);
+    shimmerOsc.frequency.setValueAtTime(2500, now);
+    shimmerOsc.frequency.exponentialRampToValueAtTime(5000, now + 0.05);
+    shimmerOsc.frequency.exponentialRampToValueAtTime(2000, now + 0.2);
 
     shimmerFilter.type = "bandpass";
-    shimmerFilter.frequency.value = 3000;
-    shimmerFilter.Q.value = 5;
+    shimmerFilter.frequency.value = 3500;
+    shimmerFilter.Q.value = 4;
 
     shimmerGain.gain.setValueAtTime(0, now);
-    shimmerGain.gain.linearRampToValueAtTime(0.05, now + 0.02);
-    shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+    shimmerGain.gain.linearRampToValueAtTime(0.04, now + 0.01);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
 
     shimmerOsc.connect(shimmerFilter);
     shimmerFilter.connect(shimmerGain);
     shimmerGain.connect(ctx.destination);
 
     shimmerOsc.start(now);
-    shimmerOsc.stop(now + 0.6);
+    shimmerOsc.stop(now + 0.3);
 
-    // Deep confirmation thud
+    // Quick confirmation thud
     const thud = ctx.createOscillator();
     const thudGain = ctx.createGain();
 
     thud.type = "sine";
-    thud.frequency.setValueAtTime(100, now);
-    thud.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+    thud.frequency.setValueAtTime(120, now);
+    thud.frequency.exponentialRampToValueAtTime(50, now + 0.08);
 
-    thudGain.gain.setValueAtTime(0.2, now);
-    thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    thudGain.gain.setValueAtTime(0.15, now);
+    thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
 
     thud.connect(thudGain);
     thudGain.connect(ctx.destination);
 
     thud.start(now);
-    thud.stop(now + 0.25);
-  };
+    thud.stop(now + 0.12);
+  }, [initAudio]);
 
   return { startEngine, updateEngine, stopEngine, playSuccess };
 };
@@ -359,8 +384,36 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   const hasFinishedRef = useRef(false);
   const particleIdRef = useRef(0);
   const isCompletingRef = useRef(false);
+  const isHoldingRef = useRef(false); // Ref to track holding state for RAF loop
+  const isMountedRef = useRef(false); // Track if component has mounted
+  const hasUserInteractedRef = useRef(false); // CRITICAL: Only allow progress after first user touch
+  const animationStartedRef = useRef(false); // CRITICAL: Animation loop only starts after first interaction
+  const animateFnRef = useRef<() => void>(); // Store animate function for stable reference
 
   const { startEngine, updateEngine, stopEngine, playSuccess } = useAudioEngine();
+
+  // Initialize refs on mount - ensure clean state
+  useEffect(() => {
+    isMountedRef.current = true;
+    isHoldingRef.current = false;
+    hasUserInteractedRef.current = false;
+    isCompletingRef.current = false;
+    hasFinishedRef.current = false;
+    animationStartedRef.current = false; // CRITICAL: Don't auto-start animation
+    
+    // Cancel any existing animation frames
+    if (requestRef.current) {
+      cancelAnimationFrame(requestRef.current);
+      requestRef.current = undefined;
+    }
+    
+    return () => {
+      isMountedRef.current = false;
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (realPrice > 0) {
@@ -370,6 +423,9 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
 
   useEffect(() => {
     if (isCompleted) return;
+
+    // Keep ref in sync with state
+    isHoldingRef.current = isHolding;
 
     if (isHolding) {
       startEngine();
@@ -390,19 +446,41 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
 
   const createParticles = (x: number, y: number) => {
     const newParticles: Particle[] = [];
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 12; i++) {
       newParticles.push({
         id: particleIdRef.current++,
         x,
         y,
-        vx: (Math.random() - 0.5) * 6,
-        vy: -Math.random() * 4 - 3,
+        vx: (Math.random() - 0.5) * 10,
+        vy: -Math.random() * 6 - 4,
+        iconType: PARTICLE_ICONS[Math.floor(Math.random() * PARTICLE_ICONS.length)],
       });
     }
     setParticles((prev) => [...prev, ...newParticles]);
   };
 
+  // Helper to render particle icon
+  const renderParticleIcon = (iconType: ParticleIcon) => {
+    const iconClass = "w-5 h-5 text-blue-400";
+    switch (iconType) {
+      case "rocket": return <Rocket className={iconClass} />;
+      case "dollar": return <CircleDollarSign className={iconClass} />;
+      case "chart": return <BarChart3 className={iconClass} />;
+      case "zap": return <Zap className={iconClass} />;
+      case "flame": return <Flame className={iconClass} />;
+      case "diamond": return <Diamond className={iconClass} />;
+      case "moon": return <Moon className={iconClass} />;
+      case "sparkle": return <Sparkles className={iconClass} />;
+      default: return <Star className={iconClass} />;
+    }
+  };
+
   const animate = useCallback(() => {
+    // HARD LOCK: Never run if component unmounted or user never interacted
+    if (!isMountedRef.current || !hasUserInteractedRef.current) {
+      return; // Don't even schedule next frame
+    }
+    
     if (isCompleted) {
       shakeX.set(0);
       shakeY.set(0);
@@ -410,43 +488,61 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
     }
 
     setProgress((prev) => {
+      // TRIPLE LOCK: Block ALL progress if user hasn't interacted
+      if (!hasUserInteractedRef.current || !isMountedRef.current) {
+        return 0;
+      }
+      
       let next = prev;
+      
+      // Use ref to get current holding state (avoids stale closure)
+      const holding = isHoldingRef.current;
 
-      if (isHolding) {
-        // Only increment if we haven't completed yet
+      // CRITICAL: Only advance progress if user is ACTIVELY holding right now
+      if (holding && hasUserInteractedRef.current) {
+        // Only increment if we haven't completed yet - SNAPPIER PROGRESS
         if (!isCompletingRef.current) {
-          const boost = prev > 70 ? 4.5 : prev > 40 ? 3.5 : 2.5;
+          // Much faster boost values for snappy feel
+          const boost = prev > 70 ? 7 : prev > 40 ? 5.5 : 4;
           next = Math.min(prev + boost, 100);
 
           updateEngine(next);
 
-          scale.set(1 + (next / 100) * 0.2);
-          iconRotate.set((next / 100) * 360);
+          scale.set(1 + (next / 100) * 0.25);
+          iconRotate.set((next / 100) * 720); // Double spin
 
-          const shakeAmount = (next / 100) * 8;
+          const shakeAmount = (next / 100) * 10;
           shakeX.set((Math.random() - 0.5) * shakeAmount);
           shakeY.set((Math.random() - 0.5) * shakeAmount);
 
           if (typeof navigator !== "undefined" && navigator.vibrate) {
-            if (next > 80 && Math.random() < 0.4) navigator.vibrate(10);
+            if (next > 70 && Math.random() < 0.5) navigator.vibrate(8);
           }
 
-          // CRITICAL: Only trigger completion when EXACTLY at 100 AND still holding
-          if (next >= 100 && isHolding) {
+          // CRITICAL: Only trigger completion when progress reaches EXACTLY 100 AND still holding
+          // Triple-check all conditions to prevent premature unlock
+          if (next >= 100 && holding && !isCompletingRef.current && !hasFinishedRef.current && hasUserInteractedRef.current) {
+            // Lock in completion state immediately
             isCompletingRef.current = true;
-            setIsCompleted(true);
-            stopEngine();
-            playSuccess();
-            scale.set(1.3);
+            
+            // Use RAF to ensure state is fully committed before proceeding
+            requestAnimationFrame(() => {
+              setIsCompleted(true);
+              stopEngine();
+              playSuccess();
+              scale.set(1.4);
 
-            if (typeof navigator !== "undefined" && navigator.vibrate) {
-              navigator.vibrate([100, 50, 100]);
-            }
+              if (typeof navigator !== "undefined" && navigator.vibrate) {
+                navigator.vibrate([80, 40, 80]);
+              }
 
-            completionTimeoutRef.current = setTimeout(() => {
-              setGateVisible(false);
-              setTimeout(finishLoader, 300);
-            }, 800);
+              // Delay transition to ensure completion state is visible
+              completionTimeoutRef.current = setTimeout(() => {
+                if (hasFinishedRef.current) return; // Prevent double finish
+                setGateVisible(false);
+                setTimeout(finishLoader, 200);
+              }, 600);
+            });
             return 100;
           }
         } else {
@@ -460,11 +556,12 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
         scale.set(1);
         iconRotate.set(0);
         
-        // Drain progress aggressively
-        next = Math.max(prev - 12, 0);
+        // Drain progress even faster
+        next = Math.max(prev - 16, 0);
         
-        // Reset completion flag if we drop below 100
-        if (next < 100) {
+        // Only reset completion flag if we drop significantly below 100
+        // This prevents glitch from rapid release/hold at 100%
+        if (next < 95) {
           isCompletingRef.current = false;
         }
       }
@@ -472,19 +569,25 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
       return next;
     });
 
-    if (!isCompleted) {
+    // Only continue animation if user has interacted and not completed
+    if (!isCompleted && hasUserInteractedRef.current && isMountedRef.current) {
       requestRef.current = requestAnimationFrame(animate);
     }
-  }, [finishLoader, isCompleted, isHolding, playSuccess, scale, shakeX, shakeY, stopEngine, updateEngine, iconRotate]);
+  }, [finishLoader, isCompleted, playSuccess, scale, shakeX, shakeY, stopEngine, updateEngine, iconRotate]);
 
+  // Keep animate function ref updated
   useEffect(() => {
-    if (!isCompleted) {
-      requestRef.current = requestAnimationFrame(animate);
-    }
+    animateFnRef.current = animate;
+  }, [animate]);
+
+  // CRITICAL: Do NOT auto-start animation on mount
+  // Animation only starts when user first interacts (see handleInteractionStart)
+  useEffect(() => {
+    // Cleanup only - DO NOT START ANIMATION HERE
     return () => {
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, [animate, isCompleted]);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -517,14 +620,24 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   }, []);
 
   const handleInteractionStart = (e: React.MouseEvent | React.TouchEvent) => {
-    if (isCompleted) return;
+    // Block all interaction once completion has started
+    if (isCompleted || isCompletingRef.current || hasFinishedRef.current) return;
     
     const target = e.target as HTMLElement | null;
     if (target?.closest("[data-no-hold]")) {
       return;
     }
 
+    // Mark that user has interacted - this unlocks progress advancement
+    hasUserInteractedRef.current = true;
+    isHoldingRef.current = true; // Update ref immediately
     setIsHolding(true);
+    
+    // CRITICAL: Start animation loop ONLY on first user interaction
+    if (!animationStartedRef.current && animateFnRef.current) {
+      animationStartedRef.current = true;
+      requestRef.current = requestAnimationFrame(animateFnRef.current);
+    }
     
     let x = 0, y = 0;
     if ('touches' in e) {
@@ -545,6 +658,9 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
 
   const handleInteractionEnd = (e: React.MouseEvent | React.TouchEvent) => {
     if ('touches' in e) e.preventDefault();
+    // Don't allow release to affect state once completing
+    if (isCompletingRef.current || hasFinishedRef.current) return;
+    isHoldingRef.current = false; // Update ref immediately
     setIsHolding(false);
   };
 
@@ -571,37 +687,49 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                   backgroundPosition: ["0% 0%", "100% 100%"],
                 }}
                 transition={{
-                  duration: 20,
+                  duration: 15,
                   repeat: Infinity,
                   ease: "linear",
                 }}
                 className="w-full h-full absolute inset-0"
                 style={{
-                  backgroundImage: `linear-gradient(rgba(59, 130, 246, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.2) 1px, transparent 1px)`,
-                  backgroundSize: "50px 50px",
+                  backgroundImage: `linear-gradient(rgba(59, 130, 246, 0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.25) 1px, transparent 1px)`,
+                  backgroundSize: "40px 40px",
                 }}
               />
             </div>
             
-            {/* Navbar-style blue shimmer overlay */}
+            {/* Navbar-style blue shimmer overlay - LEFT TO RIGHT */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              <span className="absolute inset-[-100%] animate-[spin_6s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-10" />
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"
+                animate={{ x: ["-100%", "200%"] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", repeatDelay: 1 }}
+              />
             </div>
 
-            {/* Trading Ticker Tape - Black/Blue navbar style */}
-            <div className="absolute top-0 left-0 right-0 h-10 bg-black/90 backdrop-blur-xl border-b-2 border-blue-500/30 overflow-hidden shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+            {/* Trading Ticker Tape - Black/Blue navbar style with LEFT TO RIGHT shimmer */}
+            <div className="absolute top-0 left-0 right-0 h-10 bg-black/95 backdrop-blur-xl border-b-2 border-blue-500/40 overflow-hidden shadow-[0_0_30px_rgba(59,130,246,0.4)] z-40">
+              {/* Left to right shimmer on ticker */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/30 to-transparent"
+                animate={{ x: ["-100%", "200%"] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              />
               <motion.div
                 animate={{ x: ["-100%", "0%"] }}
-                transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-                className="flex items-center h-full gap-8 whitespace-nowrap text-xs font-mono"
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="flex items-center h-full gap-8 whitespace-nowrap text-xs font-mono relative z-10"
               >
                 {[...Array(3)].map((_, i) => (
                   <React.Fragment key={i}>
-                    <span className="text-blue-400 flex items-center gap-1"><span className="text-blue-500">●</span> BTC/USD +2.45%</span>
-                    <span className="text-blue-300/60">ETH/USD -1.23%</span>
-                    <span className="text-blue-400 flex items-center gap-1"><span className="text-blue-500">●</span> SOL/USD +5.67%</span>
-                    <span className="text-blue-400 flex items-center gap-1"><span className="text-blue-500">●</span> BNB/USD +3.21%</span>
-                    <span className="text-blue-300/60">ADA/USD -0.89%</span>
+                    <span className="text-blue-400 flex items-center gap-1"><span className="text-green-400">▲</span> BTC/USD +2.45%</span>
+                    <span className="text-blue-300/70 flex items-center gap-1"><span className="text-red-400">▼</span> ETH/USD -1.23%</span>
+                    <span className="text-blue-400 flex items-center gap-1"><span className="text-green-400">▲</span> SOL/USD +5.67%</span>
+                    <span className="text-blue-400 flex items-center gap-1"><span className="text-green-400">▲</span> BNB/USD +3.21%</span>
+                    <span className="text-blue-300/70 flex items-center gap-1"><span className="text-red-400">▼</span> ADA/USD -0.89%</span>
+                    <span className="text-yellow-400 flex items-center gap-1"><Activity className="w-3 h-3 animate-pulse" /> BULLMONEY LIVE</span>
+                    <span className="text-yellow-400 flex items-center gap-1"><Activity className="w-3 h-3 animate-pulse" /> BULLMONEY LIVE</span>
                   </React.Fragment>
                 ))}
               </motion.div>
@@ -690,12 +818,16 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                   >
                     {key === selectedAsset && (
                       <>
-                        {/* Blue shimmer like navbar */}
-                        <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-60 z-0" />
+                        {/* Blue shimmer LEFT TO RIGHT like navbar */}
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/50 to-transparent z-0 rounded-full"
+                          animate={{ x: ["-100%", "200%"] }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                        />
                         <motion.div
                           layoutId="activeAsset"
-                          className="absolute inset-[1px] bg-black/90 rounded-full z-[1]"
-                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                          className="absolute inset-[1px] bg-black/95 rounded-full z-[1]"
+                          transition={{ type: "spring", stiffness: 400, damping: 25 }}
                         />
                       </>
                     )}
@@ -820,7 +952,9 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                         exit={{ scale: 0, rotate: 20 }}
                         className="text-sm font-bold text-green-400 flex items-center gap-2"
                       >
-                        <Sparkles className="w-5 h-5" />
+                        <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 0.5, repeat: Infinity }}>
+                          <Trophy className="w-5 h-5" />
+                        </motion.div>
                         ACCESS GRANTED
                       </motion.div>
                     ) : isHolding ? (
@@ -831,8 +965,16 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                         exit={{ y: -10, opacity: 0 }}
                         className="text-xs font-bold text-blue-400 flex items-center gap-2"
                       >
-                        <TrendingUp className="w-4 h-4 animate-pulse" />
-                        PUMPING...
+                        <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 0.4, repeat: Infinity }}>
+                          <Rocket className="w-4 h-4" />
+                        </motion.div>
+                        {progress > 70 ? (
+                          <span className="flex items-center gap-1">ALMOST THERE <motion.span animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 0.3, repeat: Infinity }}><Flame className="w-4 h-4 text-orange-400" /></motion.span></span>
+                        ) : progress > 40 ? (
+                          <span className="flex items-center gap-1">KEEP GOING <motion.span animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 0.4, repeat: Infinity }}><Dumbbell className="w-4 h-4" /></motion.span></span>
+                        ) : (
+                          <span className="flex items-center gap-1">PUMPING <motion.span animate={{ y: [0, -2, 0] }} transition={{ duration: 0.3, repeat: Infinity }}><TrendingUp className="w-4 h-4" /></motion.span></span>
+                        )}
                       </motion.div>
                     ) : progress > 0 ? (
                       <motion.div
@@ -840,9 +982,12 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                         initial={{ y: 10, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: -10, opacity: 0 }}
-                        className="text-xs font-medium text-slate-400"
+                        className="text-xs font-medium text-yellow-400 flex items-center gap-2"
                       >
-                        Keep holding!
+                        <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 0.2, repeat: Infinity }}>
+                          <Zap className="w-4 h-4" />
+                        </motion.div>
+                        <span className="flex items-center gap-1">Don&apos;t let go! <motion.span animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 0.5, repeat: Infinity }}><Diamond className="w-4 h-4 text-cyan-400" /></motion.span></span>
                       </motion.div>
                     ) : null}
                   </AnimatePresence>
@@ -859,30 +1004,30 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 <div className="flex items-center gap-2 text-2xl md:text-3xl font-black tracking-tighter">
                   <motion.span
                     animate={{
-                      scale: isHolding ? [1, 1.08, 1] : 1,
+                      scale: isHolding ? [1, 1.1, 1] : 1,
                     }}
                     transition={{
-                      duration: 0.5,
+                      duration: 0.3,
                       repeat: isHolding ? Infinity : 0,
                     }}
                     style={{
                       color: progress > 50 ? "#60a5fa" : "#ffffff",
-                      textShadow: progress > 50 ? "0 0 20px rgba(59,130,246,0.7)" : "0 2px 10px rgba(0,0,0,0.5)",
+                      textShadow: progress > 50 ? "0 0 25px rgba(59,130,246,0.8)" : "0 2px 10px rgba(0,0,0,0.5)",
                     }}
                   >
-                    {progress === 0 ? "HOLD TO ENTER" : progress >= 100 ? "LAUNCHING" : `${Math.floor(progress)}%`}
+                    {progress === 0 ? "HOLD TO PUMP" : progress >= 100 ? "TO THE MOON" : `${Math.floor(progress)}%`}
                   </motion.span>
                   <motion.div
                     animate={{
                       rotate: isHolding ? 360 : 0,
-                      x: isHolding ? 5 : 0,
-                      y: isHolding ? -5 : 0,
+                      x: isHolding ? 8 : 0,
+                      y: isHolding ? -8 : 0,
                     }}
                     transition={{
-                      rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+                      rotate: { duration: 1, repeat: Infinity, ease: "linear" },
                     }}
                   >
-                    <ArrowUpRight
+                    <Rocket
                       className="w-7 h-7"
                       style={{
                         color: progress > 50 ? "#60a5fa" : "#ffffff",
@@ -906,20 +1051,20 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 </div>
               </motion.div>
 
-              {/* Particles */}
+              {/* Animated Icon Particles */}
               {particles.map((p) => (
                 <motion.div
                   key={p.id}
-                  initial={{ opacity: 1, scale: 1 }}
-                  animate={{ opacity: 0, scale: 0 }}
-                  transition={{ duration: 1.2 }}
+                  initial={{ opacity: 1, scale: 1, rotate: 0 }}
+                  animate={{ opacity: 0, scale: 0.5, rotate: 180 }}
+                  transition={{ duration: 0.8 }}
                   className="absolute pointer-events-none"
                   style={{
                     left: p.x,
                     top: p.y,
                   }}
                 >
-                  <Sparkles className="w-5 h-5 text-blue-400" />
+                  {renderParticleIcon(p.iconType || "sparkle")}
                 </motion.div>
               ))}
 
@@ -930,47 +1075,57 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                     initial={{ y: 12, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: -12, opacity: 0 }}
-                    className="pointer-events-none mt-6 flex items-center gap-2 text-xs text-blue-200 bg-black/80 backdrop-blur-xl px-5 py-2.5 rounded-full border-2 border-blue-500/40 shadow-[0_0_25px_rgba(59,130,246,0.4)]"
+                    className="pointer-events-none mt-6 flex items-center gap-2 text-xs text-blue-200 bg-black/80 backdrop-blur-xl px-5 py-2.5 rounded-full border-2 border-blue-500/40 shadow-[0_0_25px_rgba(59,130,246,0.4)] relative overflow-hidden"
                   >
-                    {/* Pulse indicator like navbar */}
-                    <div className="relative flex h-2 w-2 shrink-0">
+                    {/* Left to right shimmer */}
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/30 to-transparent"
+                      animate={{ x: ["-100%", "200%"] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    {/* Pulse indicator */}
+                    <div className="relative flex h-2 w-2 shrink-0 z-10">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
                     </div>
-                    Press and hold anywhere until 100% to access
+                    <span className="relative z-10 flex items-center gap-1"><Diamond className="w-3 h-3" /> Hold anywhere until 100% <Rocket className="w-3 h-3" /></span>
                   </motion.div>
                 )}
               </AnimatePresence>
             </motion.div>
 
-            {/* Completion Effect */}
+            {/* Completion Effect - Snappy burst */}
             {isCompleted && (
               <>
                 <motion.div
                   initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 3, opacity: [0, 0.8, 0] }}
-                  transition={{ duration: 1 }}
-                  className="absolute inset-0 bg-blue-500/30 rounded-full blur-3xl pointer-events-none"
+                  animate={{ scale: 2.5, opacity: [0, 0.9, 0] }}
+                  transition={{ duration: 0.5 }}
+                  className="absolute inset-0 bg-blue-500/40 rounded-full blur-3xl pointer-events-none"
                 />
                 <motion.div
                   initial={{ scale: 0 }}
-                  animate={{ scale: [0, 1.5, 0] }}
-                  transition={{ duration: 0.6, times: [0, 0.6, 1] }}
+                  animate={{ scale: [0, 1.3, 0] }}
+                  transition={{ duration: 0.4, times: [0, 0.5, 1] }}
                   className="absolute w-full h-full flex items-center justify-center pointer-events-none"
                 >
-                  {[...Array(12)].map((_, i) => (
+                  {/* Burst of animated icons */}
+                  {[Rocket, CircleDollarSign, BarChart3, Zap, Flame, Diamond, Moon, Sparkles, Target, Dumbbell, Trophy, Star].map((Icon, i) => (
                     <motion.div
                       key={i}
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{
-                        scale: [0, 1, 0],
+                        scale: [0, 1.5, 0],
                         opacity: [0, 1, 0],
-                        x: Math.cos((i / 12) * Math.PI * 2) * 150,
-                        y: Math.sin((i / 12) * Math.PI * 2) * 150,
+                        x: Math.cos((i / 12) * Math.PI * 2) * 180,
+                        y: Math.sin((i / 12) * Math.PI * 2) * 180,
+                        rotate: [0, 360],
                       }}
-                      transition={{ duration: 0.8, delay: i * 0.05 }}
-                      className="absolute w-3 h-3 bg-blue-400 rounded-full"
-                    />
+                      transition={{ duration: 0.6, delay: i * 0.03 }}
+                      className="absolute"
+                    >
+                      <Icon className="w-8 h-8 text-blue-400" />
+                    </motion.div>
                   ))}
                 </motion.div>
               </>
@@ -985,35 +1140,76 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.3 }}
             className="min-h-screen bg-black flex items-center justify-center p-8 relative overflow-hidden"
           >
-            {/* Blue shimmer background */}
-            <div className="absolute inset-0 pointer-events-none">
-              <span className="absolute inset-[-100%] animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-10" />
+            {/* Blue shimmer background - LEFT TO RIGHT */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/15 to-transparent"
+                animate={{ x: ["-100%", "200%"] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.5 }}
+              />
             </div>
             
             <div className="text-center text-white flex flex-col items-center gap-4 relative z-10">
+              {/* BullMoney Logo */}
               <motion.div
-                initial={{ scale: 0.8, opacity: 0, rotate: -180 }}
-                animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                transition={{ type: "spring", stiffness: 180, damping: 16 }}
-                className="w-28 h-28 rounded-full bg-black border-2 border-blue-500/50 flex items-center justify-center shadow-[0_0_40px_rgba(59,130,246,0.5)]"
+                initial={{ scale: 0.5, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="relative"
               >
-                <Sparkles className="w-20 h-20 text-blue-400" />
+                {/* Glow effect behind logo */}
+                <div className="absolute inset-[-20px] bg-blue-500/30 rounded-full blur-2xl" />
+                <div className="relative w-32 h-32 rounded-full bg-black border-2 border-blue-500/60 flex items-center justify-center shadow-[0_0_60px_rgba(59,130,246,0.5)] overflow-hidden">
+                  {/* Left to right shimmer on logo container */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/40 to-transparent"
+                    animate={{ x: ["-100%", "200%"] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <Image
+                    src="/BULL.svg"
+                    alt="BullMoney Logo"
+                    width={80}
+                    height={80}
+                    className="object-contain relative z-10"
+                  />
+                </div>
+                {/* Celebration icons around logo */}
+                {[Rocket, CircleDollarSign, TrendingUp, Zap].map((Icon, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ 
+                      scale: [0, 1.2, 1], 
+                      opacity: 1,
+                      x: Math.cos((i / 4) * Math.PI * 2) * 80,
+                      y: Math.sin((i / 4) * Math.PI * 2) * 80,
+                      rotate: [0, 10, -10, 0],
+                    }}
+                    transition={{ delay: 0.2 + i * 0.1, type: "spring", stiffness: 200, rotate: { repeat: Infinity, duration: 1 } }}
+                    className="absolute"
+                    style={{ left: "50%", top: "50%" }}
+                  >
+                    <Icon className="w-6 h-6 text-blue-400" />
+                  </motion.div>
+                ))}
               </motion.div>
+              
               <motion.h1
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="text-5xl font-black text-blue-400"
+                transition={{ delay: 0.15, type: "spring", stiffness: 200 }}
+                className="text-5xl font-black bg-gradient-to-r from-blue-400 via-blue-300 to-blue-500 bg-clip-text text-transparent"
               >
                 Welcome to BullMoney
               </motion.h1>
               <motion.p
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.2 }}
                 className="text-lg text-blue-200/70 max-w-md"
               >
                 You&apos;ve successfully accessed the site. Your {ASSETS[selectedAsset].id} is ready to pump!
@@ -1021,13 +1217,19 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+                transition={{ delay: 0.25, type: "spring", stiffness: 300 }}
                 className="mt-4 flex gap-2"
               >
-                <div className="px-4 py-2 bg-black border-2 border-blue-500/50 rounded-full text-sm font-bold text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-                  {ASSETS[selectedAsset].icon} {ASSETS[selectedAsset].id}
+                <div className="px-4 py-2 bg-black border-2 border-blue-500/50 rounded-full text-sm font-bold text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.3)] relative overflow-hidden">
+                  {/* Shimmer effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/30 to-transparent"
+                    animate={{ x: ["-100%", "200%"] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                  />
+                  <span className="relative z-10">{ASSETS[selectedAsset].icon} {ASSETS[selectedAsset].id}</span>
                 </div>
-                <div className="px-4 py-2 bg-black border-2 border-blue-400/50 rounded-full text-sm font-bold text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                <div className="px-4 py-2 bg-black border-2 border-green-500/50 rounded-full text-sm font-bold text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
                   ✓ Connected
                 </div>
               </motion.div>
