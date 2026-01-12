@@ -47,6 +47,9 @@ import { queueManager } from '@/lib/splineQueueManager';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 
+// --- IMPORT NAVBAR CSS FOR CONSISTENT THEMING ---
+import './navbar.css';
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -141,23 +144,17 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
       whileTap={{ scale: 0.98 }}
       className="relative p-3 rounded-xl overflow-hidden group isolate"
     >
-      {/* Glass background */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-xl border border-blue-500/20 rounded-xl" />
+      {/* Glass background - matches navbar mobile controls */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
       
-      {/* Shimmer effect on hover - full coverage */}
+      {/* Shimmer effect on hover - matches navbar gradient shimmer */}
       <div 
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none overflow-hidden rounded-xl"
       >
-        <div 
-          className="absolute animate-[spin_4s_linear_infinite]"
-          style={{
-            top: '50%',
-            left: '50%',
-            width: '300%',
-            height: '300%',
-            transform: 'translate(-50%, -50%)',
-            background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(59,130,246,0.15) 60deg, rgba(59,130,246,0.25) 120deg, rgba(59,130,246,0.15) 180deg, transparent 240deg, transparent 360deg)'
-          }}
+        <motion.div 
+          animate={{ x: ['0%', '200%'] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/40 to-blue-600/0 opacity-100"
         />
       </div>
       
@@ -204,23 +201,17 @@ function PerformanceRing({ score, size = 120 }: { score: number; size?: number }
 
   return (
     <div className="relative group isolate" style={{ width: size, height: size }}>
-      {/* Glass background */}
-      <div className="absolute inset-2 rounded-full bg-black/40 backdrop-blur-xl border border-blue-500/20" />
+      {/* Glass background - matches navbar */}
+      <div className="absolute inset-2 rounded-full bg-black/50 backdrop-blur-3xl border border-blue-500/30 transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
       
-      {/* Shimmer effect - full coverage circle */}
+      {/* Shimmer effect - matches navbar shimmer pattern */}
       <div 
         className="absolute inset-2 opacity-20 group-hover:opacity-35 transition-opacity pointer-events-none overflow-hidden rounded-full"
       >
-        <div 
-          className="absolute animate-[spin_6s_linear_infinite]"
-          style={{
-            top: '50%',
-            left: '50%',
-            width: '400%',
-            height: '400%',
-            transform: 'translate(-50%, -50%)',
-            background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(59,130,246,0.3) 45deg, rgba(59,130,246,0.5) 90deg, rgba(59,130,246,0.3) 135deg, transparent 180deg, transparent 360deg)'
-          }}
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+          className="absolute w-full h-full bg-gradient-to-r from-blue-600/0 via-blue-500/40 to-blue-600/0"
         />
       </div>
       
@@ -293,9 +284,12 @@ export function UltimateControlPanel({
   showAdminButton = true,
   showIdentityButton = true,
 }: UltimateControlPanelProps) {
-  // Use global theme context for accent color (fallback to prop or default)
+  // Use global theme context for accent color and theme filter (matches navbar)
   const { accentColor: themeAccentColor, activeTheme } = useGlobalTheme();
   const accentColor = propAccentColor || themeAccentColor || '#3b82f6';
+  
+  // Get CSS filter for current theme - matches navbar exactly
+  const themeFilter = activeTheme?.mobileFilter || 'none';
   
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'network' | 'performance' | 'account'>('overview');
@@ -509,10 +503,12 @@ export function UltimateControlPanel({
             animate={{ x: 0, opacity: 1, y: '-50%' }}
             exit={{ x: 100, opacity: 0, y: '-50%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed right-0 z-[250000] pointer-events-none"
+            className="fixed right-0 z-[250000] pointer-events-none control-panel-themed"
             style={{
               top: '50%',
-              paddingRight: 'calc(env(safe-area-inset-right, 0px) + 8px)'
+              paddingRight: 'calc(env(safe-area-inset-right, 0px) + 8px)',
+              filter: themeFilter,
+              transition: 'filter 0.5s ease-in-out, opacity 0.3s ease-in-out'
             }}
           >
             <motion.div
@@ -530,13 +526,12 @@ export function UltimateControlPanel({
                 touchAction: 'manipulation'
               }}
             >
-              {/* Blue shimmer background */}
+              {/* Shimmer background - matches navbar */}
               <div className="absolute inset-0 rounded-l-2xl overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-l from-blue-500/60 via-blue-400/60 to-blue-500/60 animate-shimmer" 
-                     style={{
-                       backgroundSize: '200% 100%',
-                       animation: 'shimmer 3s linear infinite'
-                     }}
+                <motion.div 
+                  animate={{ x: ['0%', '200%'] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/40 to-blue-600/0 opacity-100"
                 />
               </div>
               
@@ -546,7 +541,8 @@ export function UltimateControlPanel({
                   initial: { x: 0 },
                   hover: { x: -8 }
                 }}
-                className="relative rounded-l-2xl backdrop-blur-lg border-y border-l border-blue-400/20 bg-transparent"
+                className="relative rounded-l-2xl bg-black/60 backdrop-blur-3xl border-y border-l border-blue-500/30 transition-all duration-300 hover:border-blue-400/50 shadow-lg shadow-blue-900/20"
+                whileHover={{ boxShadow: "0 0 30px rgba(59, 130, 246, 0.4)" }}
               >
                 {/* FPS Display - Mobile Tap Optimized: First tap expands, second tap opens panel */}
                 <div 
@@ -603,7 +599,7 @@ export function UltimateControlPanel({
                         FPS
                       </span>
                     </div>
-                    <Activity size={18} className="text-blue-400 animate-pulse" />
+                    <Activity size={18} className="text-blue-400/80 animate-pulse" />
                   </div>
                 </div>
 
@@ -614,14 +610,14 @@ export function UltimateControlPanel({
                     hover: { height: 'auto', opacity: 1, pointerEvents: 'auto' as const }
                   }}
                   transition={{ duration: 0.2 }}
-                  className="overflow-hidden border-t border-blue-400/20"
+                  className="overflow-hidden border-t border-blue-400/25 bg-black/30"
                   style={{ pointerEvents: isMobileExpanded ? 'auto' : undefined }}
                 >
                   {/* Services Button */}
                   {showServicesButton && (
                     <button
                       type="button"
-                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation ${activeModal === 'services' ? 'bg-blue-500/20' : ''}`}
+                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors border-b border-blue-400/15 flex items-center touch-manipulation ${activeModal === 'services' ? 'bg-blue-500/25' : ''}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -647,7 +643,7 @@ export function UltimateControlPanel({
                   {showContactButton && (
                     <button
                       type="button"
-                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation ${activeModal === 'contact' ? 'bg-blue-500/20' : ''}`}
+                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors border-b border-blue-400/15 flex items-center touch-manipulation ${activeModal === 'contact' ? 'bg-blue-500/25' : ''}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -673,7 +669,7 @@ export function UltimateControlPanel({
                   {showThemeButton && (
                     <button
                       type="button"
-                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation ${activeModal === 'theme' ? 'bg-blue-500/20' : ''}`}
+                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors border-b border-blue-400/15 flex items-center touch-manipulation ${activeModal === 'theme' ? 'bg-blue-500/25' : ''}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -699,7 +695,7 @@ export function UltimateControlPanel({
                   {isAdmin && showAdminButton && (
                     <button
                       type="button"
-                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors border-b border-blue-400/10 flex items-center touch-manipulation ${activeModal === 'admin' ? 'bg-blue-500/20' : ''}`}
+                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors border-b border-blue-400/15 flex items-center touch-manipulation ${activeModal === 'admin' ? 'bg-blue-500/25' : ''}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -723,7 +719,7 @@ export function UltimateControlPanel({
 
                   {/* VIP Badge */}
                   {!isAdmin && isAuthenticated && (
-                    <div className="px-4 py-3 min-h-[48px] border-b border-blue-400/10 flex items-center">
+                    <div className="px-4 py-3 min-h-[48px] border-b border-blue-400/15 flex items-center bg-blue-500/10">
                       <div className="flex items-center gap-2">
                         <Sparkles size={14} className="text-blue-400" />
                         <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
@@ -737,7 +733,7 @@ export function UltimateControlPanel({
                   {!isAdmin && !isAuthenticated && showIdentityButton && (
                     <button
                       type="button"
-                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/10 active:bg-blue-500/20 transition-colors flex items-center touch-manipulation ${activeModal === 'identity' ? 'bg-blue-500/20' : ''}`}
+                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors flex items-center touch-manipulation ${activeModal === 'identity' ? 'bg-blue-500/25' : ''}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -794,7 +790,7 @@ export function UltimateControlPanel({
                 e.stopPropagation();
                 onOpenChange(false);
               }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[249999]"
+              className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-[249999]"
               style={{ touchAction: 'manipulation' }}
             />
 
@@ -811,29 +807,26 @@ export function UltimateControlPanel({
               onDrag={handlePanelDrag}
               onDragEnd={handlePanelDragEnd}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed right-0 top-0 bottom-0 z-[250000] w-full max-w-md overflow-hidden bg-black/90 backdrop-blur-2xl border-l border-blue-500/30 shadow-2xl"
+              className="fixed right-0 top-0 bottom-0 z-[250000] w-full max-w-md overflow-hidden bg-black/60 backdrop-blur-3xl border-l border-blue-500/30 shadow-2xl shadow-blue-900/20 control-panel-themed"
               style={{
                 paddingRight: 'env(safe-area-inset-right, 0px)',
                 paddingBottom: 'env(safe-area-inset-bottom, 0px)'
               }}
             >
-              {/* Shimmer background effect - full coverage */}
+              {/* Shimmer background effect - matches navbar */}
               <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div 
-                  className="absolute animate-[spin_15s_linear_infinite]"
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                  className="absolute w-full h-full"
                   style={{
-                    top: '50%',
-                    left: '50%',
-                    width: '250%',
-                    height: '250%',
-                    transform: 'translate(-50%, -50%)',
                     background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(59,130,246,0.08) 30deg, rgba(59,130,246,0.12) 60deg, rgba(59,130,246,0.08) 90deg, transparent 120deg, transparent 360deg)'
                   }}
                 />
               </div>
               
               {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-950/15 via-transparent to-blue-900/10 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-950/10 via-transparent to-blue-900/5 pointer-events-none" />
               
               {/* Drag handle */}
               <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 py-3 px-2 cursor-grab active:cursor-grabbing z-20">
@@ -849,12 +842,12 @@ export function UltimateControlPanel({
               {/* Header */}
               <div className="px-6 pt-6 pb-4 relative z-10">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-100 to-blue-300/70 drop-shadow-lg">
+                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-blue-100 drop-shadow-lg">
                     Device Center
                   </h2>
                   <div className="flex items-center gap-2">
                     <motion.button
-                      whileHover={{ scale: 1.1, rotate: 180 }}
+                      whileHover={{ scale: 1.1, rotate: 180, backgroundColor: "rgba(59, 130, 246, 0.15)" }}
                       whileTap={{ scale: 0.9 }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -871,18 +864,18 @@ export function UltimateControlPanel({
                         e.currentTarget.style.transform = '';
                         SoundEffects.click();
                       }}
-                      className="p-3 rounded-full bg-white/5 hover:bg-white/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
+                      className="p-3 rounded-full bg-black/40 hover:bg-blue-500/25 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation border border-blue-500/30 shadow-lg shadow-blue-900/10"
                       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                       disabled={isRefreshing}
                       aria-label="Refresh device info"
                     >
                       <RefreshCw
                         size={18}
-                        className={`text-white/70 ${isRefreshing ? 'animate-spin' : ''}`}
+                        className={`text-blue-200/70 ${isRefreshing ? 'animate-spin' : ''}`}
                       />
                     </motion.button>
                     <motion.button
-                      whileHover={{ scale: 1.1 }}
+                      whileHover={{ scale: 1.1, backgroundColor: "rgba(59, 130, 246, 0.15)" }}
                       whileTap={{ scale: 0.9 }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -899,11 +892,11 @@ export function UltimateControlPanel({
                         e.currentTarget.style.transform = '';
                         SoundEffects.close();
                       }}
-                      className="p-3 rounded-full bg-white/5 hover:bg-white/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
+                      className="p-3 rounded-full bg-black/40 hover:bg-blue-500/25 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation border border-blue-500/30 shadow-lg shadow-blue-900/10"
                       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                       aria-label="Close device center"
                     >
-                      <ChevronRight size={18} className="text-white/70" />
+                      <ChevronRight size={18} className="text-blue-200/70" />
                     </motion.button>
                   </div>
                 </div>
@@ -911,19 +904,13 @@ export function UltimateControlPanel({
 
               {/* Tabs */}
               <div className="px-6 pb-4 relative z-10">
-                <div className="relative flex gap-2 p-1 rounded-xl bg-black/40 backdrop-blur-lg border border-blue-500/20 overflow-hidden isolate">
-                  {/* Shimmer effect for tabs - full coverage */}
+                <div className="relative flex gap-1 p-1.5 rounded-xl bg-black/50 backdrop-blur-3xl border border-blue-500/30 overflow-hidden isolate shadow-lg">
+                  {/* Shimmer effect for tabs - matches navbar */}
                   <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
-                    <div 
-                      className="absolute animate-[spin_5s_linear_infinite]"
-                      style={{
-                        top: '50%',
-                        left: '50%',
-                        width: '400%',
-                        height: '400%',
-                        transform: 'translate(-50%, -50%)',
-                        background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(59,130,246,0.1) 40deg, rgba(59,130,246,0.18) 80deg, rgba(59,130,246,0.1) 120deg, transparent 160deg, transparent 360deg)'
-                      }}
+                    <motion.div 
+                      animate={{ x: ['0%', '200%'] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/20 to-blue-600/0 opacity-100"
                     />
                   </div>
                   
@@ -951,10 +938,10 @@ export function UltimateControlPanel({
                         e.currentTarget.style.transform = '';
                         SoundEffects.tab(); // Play tab switch sound
                       }}
-                      className={`relative z-10 flex-1 px-3 py-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
+                      className={`relative z-10 flex-1 px-3 py-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
                         activeTab === tab.id
-                          ? 'bg-blue-500/20 text-blue-100 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
-                          : 'text-blue-200/60 hover:text-blue-200/90 hover:bg-blue-500/10 active:scale-95'
+                          ? 'bg-blue-500/25 text-blue-100 border border-blue-400/40 shadow-[0_0_20px_rgba(59,130,246,0.4)]'
+                          : 'text-blue-200/70 hover:text-blue-100 hover:bg-blue-500/15 active:scale-95 border border-transparent'
                       }`}
                       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                       aria-label={`View ${tab.label}`}
@@ -1020,11 +1007,15 @@ export function UltimateControlPanel({
 
                       {/* Screen Info */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-black/40 backdrop-blur-xl border border-blue-500/20 rounded-xl" />
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
-                          <div className="absolute inset-[-100%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#00000000_50%)] opacity-30" />
+                          <motion.div 
+                            animate={{ x: ['0%', '200%'] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/30 to-blue-600/0 opacity-100"
+                          />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-xl" />
                         <div className="relative z-10">
                           <div className="text-xs text-blue-300/70 uppercase tracking-wider font-semibold mb-2">
                             Display
@@ -1049,11 +1040,15 @@ export function UltimateControlPanel({
                       {/* Battery */}
                       {deviceInfo.battery.level >= 0 && (
                         <div className="relative p-4 rounded-xl overflow-hidden group">
-                          <div className="absolute inset-0 bg-black/40 backdrop-blur-xl border border-blue-500/20 rounded-xl" />
+                          <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
                           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
-                            <div className="absolute inset-[-100%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#22c55e_25%,#00000000_50%)] opacity-30" />
+                            <motion.div 
+                              animate={{ x: ['0%', '200%'] }}
+                              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                              className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-green-600/0 via-green-500/30 to-green-600/0 opacity-100"
+                            />
                           </div>
-                          <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl" />
+                          <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-blue-500/5 rounded-xl" />
                           <div className="relative z-10 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Battery size={18} className="text-green-400 drop-shadow-lg" />
@@ -1109,11 +1104,15 @@ export function UltimateControlPanel({
 
                       {/* Connection Type */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-black/40 backdrop-blur-xl border border-blue-500/20 rounded-xl" />
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
-                          <div className="absolute inset-[-100%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#00000000_50%)] opacity-30" />
+                          <motion.div 
+                            animate={{ x: ['0%', '200%'] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/30 to-blue-600/0 opacity-100"
+                          />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 rounded-xl" />
                         <div className="relative z-10 flex items-center gap-3">
                           <Wifi size={24} className="text-blue-400 drop-shadow-lg" />
                           <div className="flex-1">
@@ -1134,9 +1133,13 @@ export function UltimateControlPanel({
                       </div>
 
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-black/40 backdrop-blur-xl border border-blue-500/20 rounded-xl" />
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
-                          <div className="absolute inset-[-100%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#00000000_50%)] opacity-30" />
+                          <motion.div 
+                            animate={{ x: ['0%', '200%'] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/30 to-blue-600/0 opacity-100"
+                          />
                         </div>
                         <div className="relative z-10">
                           <div className="flex items-center justify-between mb-3">
@@ -1164,11 +1167,15 @@ export function UltimateControlPanel({
 
                       {/* Location */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-black/40 backdrop-blur-xl border border-blue-500/20 rounded-xl" />
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
-                          <div className="absolute inset-[-100%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#a855f7_25%,#00000000_50%)] opacity-30" />
+                          <motion.div 
+                            animate={{ x: ['0%', '200%'] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-purple-600/0 via-purple-500/30 to-purple-600/0 opacity-100"
+                          />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 rounded-xl" />
                         <div className="relative z-10 flex items-start justify-between gap-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
@@ -1189,7 +1196,7 @@ export function UltimateControlPanel({
                             onClick={() => { SoundEffects.click(); setShowSensitive(!showSensitive); }}
                             onMouseEnter={() => SoundEffects.hover()}
                             onTouchStart={() => SoundEffects.click()}
-                            className="p-2 rounded-lg bg-black/30 border border-blue-500/20 hover:bg-blue-500/10 transition-colors backdrop-blur-sm"
+                            className="p-2 rounded-lg bg-black/30 border border-blue-500/40 hover:bg-blue-500/15 transition-colors backdrop-blur-sm"
                           >
                             {showSensitive ? (
                               <EyeOff size={16} className="text-blue-200/70" />
@@ -1217,14 +1224,23 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* FPS */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-blue-500/10 border border-white/10">
-                        <div className="flex items-center justify-between">
+                      <div className="relative p-4 rounded-xl overflow-hidden group">
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
+                          <motion.div 
+                            animate={{ x: ['0%', '200%'] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-green-600/0 via-green-500/30 to-green-600/0 opacity-100"
+                          />
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-blue-500/5 rounded-xl" />
+                        <div className="relative z-10 flex items-center justify-between">
                           <div>
-                            <div className="text-sm text-white/50">Current FPS</div>
-                            <div className="text-3xl font-black text-white">
+                            <div className="text-sm text-blue-200/60">Current FPS</div>
+                            <div className="text-3xl font-black text-white drop-shadow-lg">
                               {deviceInfo.live.fps}
                             </div>
-                            <div className="text-xs text-white/40">
+                            <div className="text-xs text-blue-200/50">
                               Frame time: {deviceInfo.live.frameTime.toFixed(2)}ms
                             </div>
                           </div>
@@ -1244,23 +1260,40 @@ export function UltimateControlPanel({
                         }
                       />
 
-                      <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                        <div className="text-sm text-white/60 mb-3">Device Snapshot</div>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div className="text-white/70">CPU: <span className="text-white font-semibold">{deviceInfo.performance.cpu.cores} cores</span></div>
-                          <div className="text-white/70">Arch: <span className="text-white font-semibold">{deviceInfo.performance.cpu.architecture}</span></div>
-                          <div className="text-white/70">Pixel Ratio: <span className="text-white font-semibold">{deviceInfo.screen.pixelRatio}x</span></div>
-                          <div className="text-white/70">Resolution: <span className="text-white font-semibold">{deviceInfo.screen.width}×{deviceInfo.screen.height}</span></div>
-                          <div className="text-white/70">Touch: <span className="text-white font-semibold">{deviceInfo.screen.touchSupport ? 'Yes' : 'No'}</span></div>
-                          <div className="text-white/70">Battery: <span className="text-white font-semibold">{deviceInfo.battery.level >= 0 ? `${deviceInfo.battery.level}%` : 'Unknown'}</span></div>
+                      <div className="relative p-4 rounded-xl overflow-hidden group">
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
+                          <motion.div 
+                            animate={{ x: ['0%', '200%'] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/30 to-blue-600/0 opacity-100"
+                          />
+                        </div>
+                        <div className="relative z-10 text-sm text-blue-200/70 mb-3">Device Snapshot</div>
+                        <div className="relative z-10 grid grid-cols-2 gap-2 text-sm">
+                          <div className="text-blue-200/60">CPU: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.performance.cpu.cores} cores</span></div>
+                          <div className="text-blue-200/60">Arch: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.performance.cpu.architecture}</span></div>
+                          <div className="text-blue-200/60">Pixel Ratio: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.screen.pixelRatio}x</span></div>
+                          <div className="text-blue-200/60">Resolution: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.screen.width}×{deviceInfo.screen.height}</span></div>
+                          <div className="text-blue-200/60">Touch: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.screen.touchSupport ? 'Yes' : 'No'}</span></div>
+                          <div className="text-blue-200/60">Battery: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.battery.level >= 0 ? `${deviceInfo.battery.level}%` : 'Unknown'}</span></div>
                         </div>
                       </div>
 
                       {/* Memory */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm text-white/50">Memory Usage</span>
-                          <span className="text-sm font-semibold text-white">
+                      <div className="relative p-4 rounded-xl overflow-hidden group">
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
+                          <motion.div 
+                            animate={{ x: ['0%', '200%'] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-purple-500/30 to-purple-600/0 opacity-100"
+                          />
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-xl" />
+                        <div className="relative z-10 flex items-center justify-between mb-3">
+                          <span className="text-sm text-blue-200/60">Memory Usage</span>
+                          <span className="text-sm font-semibold text-white drop-shadow-lg">
                             {deviceInfo.performance.memory.percentage}%
                           </span>
                         </div>
@@ -1271,30 +1304,39 @@ export function UltimateControlPanel({
                             className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
                           />
                         </div>
-                        <div className="text-xs text-white/40 mt-2">
+                        <div className="text-xs text-blue-200/50 mt-2">
                           {deviceInfo.performance.memory.used}MB / {deviceInfo.performance.memory.limit}MB
                         </div>
                       </div>
 
                       {/* Queue Stats */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-white/10">
-                        <div className="text-sm text-white/50 mb-2">Scene Loading</div>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="relative p-4 rounded-xl overflow-hidden group">
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
+                          <motion.div 
+                            animate={{ x: ['0%', '200%'] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-orange-600/0 via-orange-500/30 to-orange-600/0 opacity-100"
+                          />
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-red-500/5 rounded-xl" />
+                        <div className="relative z-10 text-sm text-blue-200/60 mb-2">Scene Loading</div>
+                        <div className="relative z-10 grid grid-cols-2 gap-2 text-sm">
                           <div>
-                            <span className="text-white/60">Loaded:</span>
-                            <span className="text-white font-semibold ml-2">{queueStats.loaded}</span>
+                            <span className="text-blue-200/60">Loaded:</span>
+                            <span className="text-white font-semibold ml-2 drop-shadow-lg">{queueStats.loaded}</span>
                           </div>
                           <div>
-                            <span className="text-white/60">Loading:</span>
-                            <span className="text-white font-semibold ml-2">{queueStats.loading}</span>
+                            <span className="text-blue-200/60">Loading:</span>
+                            <span className="text-white font-semibold ml-2 drop-shadow-lg">{queueStats.loading}</span>
                           </div>
                           <div>
-                            <span className="text-white/60">Pending:</span>
-                            <span className="text-white font-semibold ml-2">{queueStats.pending}</span>
+                            <span className="text-blue-200/60">Pending:</span>
+                            <span className="text-white font-semibold ml-2 drop-shadow-lg">{queueStats.pending}</span>
                           </div>
                           <div>
-                            <span className="text-white/60">Failed:</span>
-                            <span className="text-white font-semibold ml-2">{queueStats.failed}</span>
+                            <span className="text-blue-200/60">Failed:</span>
+                            <span className="text-white font-semibold ml-2 drop-shadow-lg">{queueStats.failed}</span>
                           </div>
                         </div>
                       </div>
@@ -1311,8 +1353,17 @@ export function UltimateControlPanel({
                       className="space-y-4"
                     >
                       {/* User Info */}
-                      <div className="p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10">
-                        <div className="flex items-center gap-4 mb-4">
+                      <div className="relative p-6 rounded-xl overflow-hidden group">
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
+                          <motion.div 
+                            animate={{ x: ['0%', '200%'] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-purple-500/30 to-purple-600/0 opacity-100"
+                          />
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-xl" />
+                        <div className="relative z-10 flex items-center gap-4 mb-4">
                           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
                             <User size={32} className="text-white" />
                           </div>
@@ -1326,28 +1377,28 @@ export function UltimateControlPanel({
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="p-3 rounded-lg bg-white/5">
-                            <div className="text-xs text-white/50">Status</div>
-                            <div className="text-sm font-semibold text-green-400">
+                        <div className="relative z-10 grid grid-cols-2 gap-3">
+                          <div className="p-3 rounded-lg bg-black/30 backdrop-blur-sm border border-blue-500/20">
+                            <div className="text-xs text-blue-200/60">Status</div>
+                            <div className="text-sm font-semibold text-green-400 drop-shadow-lg">
                               {userEmail ? 'Active' : 'Guest'}
                             </div>
                           </div>
-                          <div className="p-3 rounded-lg bg-white/5">
-                            <div className="text-xs text-white/50">Session</div>
-                            <div className="text-sm font-semibold text-white">
+                          <div className="p-3 rounded-lg bg-black/30 backdrop-blur-sm border border-blue-500/20">
+                            <div className="text-xs text-blue-200/60">Session</div>
+                            <div className="text-sm font-semibold text-white drop-shadow-lg">
                               {sessionDuration}
                             </div>
                           </div>
-                          <div className="p-3 rounded-lg bg-white/5">
-                            <div className="text-xs text-white/50">IP</div>
-                            <div className="text-sm font-semibold text-white truncate">
+                          <div className="p-3 rounded-lg bg-black/30 backdrop-blur-sm border border-blue-500/20">
+                            <div className="text-xs text-blue-200/60">IP</div>
+                            <div className="text-sm font-semibold text-white truncate drop-shadow-lg">
                               {showSensitive ? deviceInfo.network.ip : '•••.•••.•••.•••'}
                             </div>
                           </div>
-                          <div className="p-3 rounded-lg bg-white/5">
-                            <div className="text-xs text-white/50">ISP</div>
-                            <div className="text-sm font-semibold text-white truncate">
+                          <div className="p-3 rounded-lg bg-black/30 backdrop-blur-sm border border-blue-500/20">
+                            <div className="text-xs text-blue-200/60">ISP</div>
+                            <div className="text-sm font-semibold text-white truncate drop-shadow-lg">
                               {deviceInfo.network.isp || 'Unknown'}
                             </div>
                           </div>
@@ -1359,7 +1410,7 @@ export function UltimateControlPanel({
                         <button
                           onClick={() => { SoundEffects.click(); handleRefresh(); }}
                           onMouseEnter={() => SoundEffects.hover()}
-                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-white/10 text-white font-semibold hover:from-blue-500/30 hover:to-purple-500/30 transition-all flex items-center justify-center gap-2"
+                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/40 text-white font-semibold hover:from-blue-500/30 hover:to-purple-500/30 hover:border-blue-400/70 transition-all flex items-center justify-center gap-2"
                         >
                           <RefreshCw size={18} />
                           Refresh Website
@@ -1373,7 +1424,7 @@ export function UltimateControlPanel({
                             alert('Device info logged to console (F12)');
                           }}
                           onMouseEnter={() => SoundEffects.hover()}
-                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 font-semibold hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2"
+                          className="w-full px-4 py-3 rounded-xl bg-black/40 border border-blue-500/40 text-blue-200/70 font-semibold hover:bg-blue-500/15 hover:text-white hover:border-blue-400/70 transition-all flex items-center justify-center gap-2"
                         >
                           <Globe size={18} />
                           View Full Details
@@ -1392,7 +1443,7 @@ export function UltimateControlPanel({
                             }
                           }}
                           onMouseEnter={() => SoundEffects.hover()}
-                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500/20 to-blue-500/20 border border-white/10 text-white font-semibold hover:from-blue-500/30 hover:to-blue-500/30 transition-all flex items-center justify-center gap-2"
+                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500/20 to-blue-500/20 border border-blue-500/40 text-white font-semibold hover:from-blue-500/30 hover:to-blue-500/30 hover:border-blue-400/70 transition-all flex items-center justify-center gap-2"
                         >
                           <Globe size={18} />
                           Copy Device Snapshot
