@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useLenis } from "@/lib/smoothScroll";
 
 type SectionId =
   | "top"
@@ -122,6 +123,7 @@ function scrollToSection(id: SectionId) {
 }
 
 export default function DesktopKeyNavigator() {
+  const { scrollTo: lenisScrollTo } = useLenis();
   const [enabled, setEnabled] = useState(false);
   const [visible, setVisible] = useState(true);
   const [lastKey, setLastKey] = useState<string | null>(null);
@@ -149,14 +151,23 @@ export default function DesktopKeyNavigator() {
       const ids = getAvailableSections();
       const currentIndex = getCurrentSectionIndex(ids);
 
+      const scrollToSectionAnimated = (id: SectionId) => {
+        const element = document.getElementById(id);
+        if (!element) return;
+
+        // Prefer Lenis if available, but always keep a native fallback.
+        lenisScrollTo(element, { offset: -96, duration: 1.0 });
+        scrollToSection(id);
+      };
+
       const goPrev = () => {
         const target = ids[Math.max(0, currentIndex - 1)] || "top";
-        scrollToSection(target);
+        scrollToSectionAnimated(target);
       };
 
       const goNext = () => {
         const target = ids[Math.min(ids.length - 1, currentIndex + 1)] || "footer";
-        scrollToSection(target);
+        scrollToSectionAnimated(target);
       };
 
       const show = (label: string) => {
@@ -165,43 +176,93 @@ export default function DesktopKeyNavigator() {
         window.setTimeout(() => setLastKey(null), 900);
       };
 
-      switch (e.key) {
-        case "ArrowUp":
-        case "PageUp":
+      // Expanded keymap (desktop-friendly):
+      // Prev: ↑/←, PgUp, W/K, H
+      // Next: ↓/→, PgDn, S/J, L, Space/Enter
+      // Top: Home, G
+      // Footer: End, Shift+G
+      // Toggle hint: ?
+      // Hide hint: Esc
+      const key = e.key;
+
+      // Section jumps (1-9) map to visible sections.
+      if (/^[1-9]$/.test(key)) {
+        const index = Math.min(ids.length - 1, Math.max(0, Number(key) - 1));
+        const target = ids[index];
+        if (target) {
           e.preventDefault();
-          goPrev();
-          show(e.key);
-          break;
-        case "ArrowDown":
-        case "PageDown":
-        case " ":
-          e.preventDefault();
-          goNext();
-          show(e.key === " " ? "Space" : e.key);
-          break;
-        case "Home":
-          e.preventDefault();
-          scrollToSection("top");
-          show("Home");
-          break;
-        case "End":
-          e.preventDefault();
-          scrollToSection("footer");
-          show("End");
-          break;
-        case "?":
-        case "k":
-        case "K":
-          setVisible((v) => !v);
-          break;
-        default:
-          break;
+          scrollToSectionAnimated(target);
+          show(`#${key}`);
+        }
+        return;
+      }
+
+      const isPrev =
+        key === "ArrowUp" ||
+        key === "ArrowLeft" ||
+        key === "PageUp" ||
+        key === "w" ||
+        key === "W" ||
+        key === "k" ||
+        key === "K" ||
+        key === "h" ||
+        key === "H";
+
+      const isNext =
+        key === "ArrowDown" ||
+        key === "ArrowRight" ||
+        key === "PageDown" ||
+        key === "s" ||
+        key === "S" ||
+        key === "j" ||
+        key === "J" ||
+        key === "l" ||
+        key === "L" ||
+        key === " " ||
+        key === "Enter";
+
+      if (isPrev) {
+        e.preventDefault();
+        goPrev();
+        show(key);
+        return;
+      }
+
+      if (isNext) {
+        e.preventDefault();
+        goNext();
+        show(key === " " ? "Space" : key);
+        return;
+      }
+
+      if (key === "Home" || key === "g") {
+        e.preventDefault();
+        scrollToSectionAnimated("top");
+        show(key === "g" ? "g" : "Home");
+        return;
+      }
+
+      if (key === "End" || key === "G") {
+        e.preventDefault();
+        scrollToSectionAnimated("footer");
+        show(key === "G" ? "G" : "End");
+        return;
+      }
+
+      if (key === "?") {
+        setVisible((v) => !v);
+        return;
+      }
+
+      if (key === "Escape") {
+        setVisible(false);
+        return;
       }
     };
 
     window.addEventListener("keydown", onKeyDown, { capture: true });
     return () => window.removeEventListener("keydown", onKeyDown, { capture: true } as any);
-  }, [enabled]);
+  }, [enabled, lenisScrollTo]);
 
   if (!enabled || !visible) return null;
 
@@ -233,10 +294,11 @@ export default function DesktopKeyNavigator() {
                 Keyboard Navigation
               </div>
               <div className="mt-1 text-[12px] text-white/90">
-                <span className="font-mono text-blue-300">↑/↓</span> sections •{" "}
-                <span className="font-mono text-blue-300">PgUp/PgDn</span> jump •{" "}
-                <span className="font-mono text-blue-300">Home</span> top •{" "}
-                <span className="font-mono text-blue-300">End</span> footer
+                <span className="font-mono text-blue-300">↑/↓/←/→</span> sections •{" "}
+                <span className="font-mono text-blue-300">W/S</span> or <span className="font-mono text-blue-300">H/J/K/L</span> •{" "}
+                <span className="font-mono text-blue-300">Space/Enter</span> next •{" "}
+                <span className="font-mono text-blue-300">Home/End</span> •{" "}
+                <span className="font-mono text-blue-300">1-9</span> jump
               </div>
               <div className="mt-1 text-[10px] text-blue-200/60">
                 Press <span className="font-mono">K</span> to toggle this hint
