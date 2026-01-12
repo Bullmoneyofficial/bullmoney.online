@@ -211,6 +211,9 @@ function DockItem({
 
 function DockLabel({ children, tips, className = "", isHovered, isXMUser = false, ...rest }: any) {
   const [isVisible, setIsVisible] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const parentRef = useRef<HTMLDivElement>(null);
   const currentIndex = useRotatingIndex(tips?.length || 0);
 
   useEffect(() => {
@@ -221,27 +224,56 @@ function DockLabel({ children, tips, className = "", isHovered, isXMUser = false
     return () => unsubscribe();
   }, [isHovered]);
 
+  useEffect(() => {
+    if (!isVisible || !parentRef.current || !tooltipRef.current) return;
+
+    const updatePosition = () => {
+      const parentRect = parentRef.current?.getBoundingClientRect();
+      if (parentRect) {
+        setPosition({
+          x: parentRect.left + parentRect.width / 2,
+          y: parentRect.bottom + 8,
+        });
+      }
+    };
+
+    // Initial position
+    updatePosition();
+    
+    // Update on resize
+    window.addEventListener('resize', updatePosition);
+    return () => window.removeEventListener('resize', updatePosition);
+  }, [isVisible]);
+
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ opacity: 0, y: 15, x: "-50%", scale: 0.80 }}
-          animate={{ opacity: 1, y: 20, x: "-50%", scale: 1 }}
-          exit={{ opacity: 0, y: 12, x: "-50%", scale: 0.9 }}
-          transition={{ 
-            duration: 0.35, 
-            ease: [0.34, 1.56, 0.64, 1], // cubic-bezier spring curve
-            opacity: { duration: 0.25 }
-          }}
-          className={cn(
-            "absolute top-full left-1/2 -translate-x-1/2 w-max min-w-[160px] rounded-xl border bg-black/75 backdrop-blur-2xl px-4 py-2.5 z-[150] pointer-events-none shadow-2xl",
-            isXMUser
-              ? "border-red-500/50 shadow-[0_0_40px_rgba(239,68,68,0.4),inset_0_0_20px_rgba(239,68,68,0.1)]"
-              : "border-blue-500/50 shadow-[0_0_40px_rgba(59,130,246,0.4),inset_0_0_20px_rgba(59,130,246,0.1)]",
-            className
-          )}
-          role="tooltip"
-        >
+    <>
+      <div ref={parentRef} className="absolute inset-0" />
+      <AnimatePresence>
+        {isVisible && (
+          <motion.div
+            ref={tooltipRef}
+            initial={{ opacity: 0, scale: 0.80 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ 
+              duration: 0.35, 
+              ease: [0.34, 1.56, 0.64, 1], // cubic-bezier spring curve
+              opacity: { duration: 0.25 }
+            }}
+            className={cn(
+              "fixed w-max min-w-[160px] rounded-xl border bg-black/75 backdrop-blur-2xl px-4 py-2.5 z-[150] pointer-events-none shadow-2xl",
+              isXMUser
+                ? "border-red-500/50 shadow-[0_0_40px_rgba(239,68,68,0.4),inset_0_0_20px_rgba(239,68,68,0.1)]"
+                : "border-blue-500/50 shadow-[0_0_40px_rgba(59,130,246,0.4),inset_0_0_20px_rgba(59,130,246,0.1)]",
+              className
+            )}
+            role="tooltip"
+            style={{
+              left: `${position.x}px`,
+              top: `${position.y}px`,
+              transform: 'translateX(-50%)',
+            }}
+          >
           {/* Arrow pointing up */}
           <motion.div 
             initial={{ opacity: 0 }}
@@ -307,6 +339,7 @@ function DockLabel({ children, tips, className = "", isHovered, isXMUser = false
         </motion.div>
       )}
     </AnimatePresence>
+    </>
   );
 }
 
