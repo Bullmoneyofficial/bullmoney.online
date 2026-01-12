@@ -25,14 +25,15 @@ const SECTION_LABELS: Record<SectionId, string> = {
 };
 
 // Swipe configuration - optimized for 2026 touch screens
-const SWIPE_THRESHOLD = 40; // Reduced for better responsiveness
-const VELOCITY_THRESHOLD = 0.25; // Lower threshold for quick flicks
+const MIN_SWIPE_DISTANCE = 25; // Minimum px to register swipe
+const MIN_SWIPE_VELOCITY = 0.2; // Minimum px/ms for quick flicks
 
 interface SwipeState {
   startX: number;
   startY: number;
   startTime: number;
-  tracking: boolean;
+  currentX: number;
+  currentY: number;
 }
 
 export default function MobileSwipeNavigator() {
@@ -42,15 +43,20 @@ export default function MobileSwipeNavigator() {
   const [lastAction, setLastAction] = useState<string | null>(null);
   const [currentSection, setCurrentSection] = useState<SectionId | null>(null);
   const [actionIcon, setActionIcon] = useState<string | null>(null);
-  const swipeRef = useRef<SwipeState>({ startX: 0, startY: 0, startTime: 0, tracking: false });
+  
+  const swipeRef = useRef<SwipeState>({ startX: 0, startY: 0, startTime: 0, currentX: 0, currentY: 0 });
   const actionTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isTrackingRef = useRef(false);
+  const debugRef = useRef(false); // Set to true to see console logs
 
   // Check if we're on a touch device
   useEffect(() => {
     const check = () => {
       const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-      const isMobile = window.innerWidth < 1024 || window.matchMedia("(pointer: coarse)").matches;
-      setEnabled(isTouchDevice && isMobile);
+      const isMobile = window.innerWidth < 1024;
+      const enabled = isTouchDevice && isMobile;
+      setEnabled(enabled);
+      if (debugRef.current) console.log('[SWIPE] Device check:', { isTouchDevice, isMobile, enabled });
     };
     
     check();
@@ -63,6 +69,58 @@ export default function MobileSwipeNavigator() {
       window.removeEventListener("resize", check);
       clearTimeout(hintTimer);
     };
+  }, []);
+
+  // Scroll to section - CRITICAL: Must work reliably
+  const scrollToSection = useCallback((id: SectionId) => {
+    if (debugRef.current) console.log('[SWIPE] Scrolling to:', id);
+    
+    const el = document.getElementById(id);
+    if (!el) {
+      if (debugRef.current) console.log('[SWIPE] Element not found:', id);
+      return;
+    }
+
+    // Try lenis first
+    if (lenis && lenisScrollTo) {
+      try {
+        lenisScrollTo(el, { offset: -96, duration: 0.9 });
+        if (debugRef.current) console.log('[SWIPE] Used lenis scroll');
+        return;
+      } catch (err) {
+        if (debugRef.current) console.log('[SWIPE] Lenis failed, using fallback:', err);
+      }
+    }
+
+    // Fallback: native smooth scroll
+    const top = el.getBoundingClientRect().top + window.scrollY - 96;
+    window.scrollTo({ 
+      top: Math.max(0, top), 
+      behavior: "smooth" 
+    });
+    if (debugRef.current) console.log('[SWIPE] Used native scroll');
+  }, [lenis, lenisScrollTo]);
+
+  // Show action feedback
+  const showAction = useCallback((icon: string, section: SectionId) => {
+    if (debugRef.current) console.log('[SWIPE] Action:', icon, section);
+    
+    setActionIcon(icon);
+    setCurrentSection(section);
+    setLastAction(SECTION_LABELS[section]);
+    setShowHint(false);
+    
+    // Haptic feedback
+    if (navigator.vibrate) {
+      navigator.vibrate([10, 30, 10]);
+    }
+    
+    if (actionTimerRef.current) clearTimeout(actionTimerRef.current);
+    actionTimerRef.current = setTimeout(() => {
+      setLastAction(null);
+      setActionIcon(null);
+      setCurrentSection(null);
+    }, 2000);
   }, []);
 
   // Get visible sections
@@ -79,7 +137,7 @@ export default function MobileSwipeNavigator() {
   const getCurrentIndex = useCallback((sections: SectionId[]): number => {
     if (sections.length === 0) return 0;
     
-    const scrollY = window.scrollY + 96; // Account for navbar height
+    const scrollY = window.scrollY + 96; // Account for navbar
     const viewportMid = scrollY + window.innerHeight * 0.35;
     
     let bestIdx = 0;
@@ -100,191 +158,151 @@ export default function MobileSwipeNavigator() {
     return Math.max(0, Math.min(bestIdx, sections.length - 1));
   }, []);
 
-  // Scroll to section
-  const scrollToSection = useCallback((id: SectionId) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-
-    if (lenis && lenisScrollTo) {
-      lenisScrollTo(el, { offset: -96, duration: 0.9 });
-    } else {
-      // Fallback to native scroll
-      const top = el.getBoundingClientRect().top + window.scrollY - 96;
-      window.scrollTo({ 
-        top: Math.max(0, top), 
-        behavior: "smooth" 
-      });
-    }
-  }, [lenis, lenisScrollTo]);
-
-  // Show action feedback with section info
-  const showAction = useCallback((icon: string, section: SectionId) => {
-    setActionIcon(icon);
-    setCurrentSection(section);
-    setLastAction(SECTION_LABELS[section]);
-    setShowHint(false); // Hide hint after first interaction
-    
-    // Enhanced haptic feedback pattern
-    if (navigator.vibrate) {
-      navigator.vibrate([10, 30, 10]); // Short-pause-short pattern
-    }
-    
-    if (actionTimerRef.current) clearTimeout(actionTimerRef.current);
-    actionTimerRef.current = setTimeout(() => {
-      setLastAction(null);
-      setActionIcon(null);
-      setCurrentSection(null);
-    }, 2000);
-  }, []);
-
-  // Check if touch started on an interactive element
-  const isInteractiveElement = useCallback((target: EventTarget | null): boolean => {
-    const el = target as HTMLElement | null;
-    if (!el) return false;
-
-    // Check if it's an input/textarea/select
-    const tag = el.tagName.toLowerCase();
-    if (tag === "input" || tag === "textarea" || tag === "select") return true;
-    if (el.isContentEditable) return true;
-
-    // Check if it's inside a button/link or has data-swipe-ignore
-    if (el.closest("button, a, [role='button'], [data-swipe-ignore]")) return true;
-
-    // Check if inside a scrollable container (let it scroll naturally)
-    // This is crucial for not blocking legitimate scrolling
-    let parent: HTMLElement | null = el;
-    while (parent && parent !== document.body && parent !== document.documentElement) {
-      const style = window.getComputedStyle(parent);
-      const overflowY = style.overflowY;
-      const isScrollable = (overflowY === "auto" || overflowY === "scroll");
-      
-      if (isScrollable && parent.scrollHeight > parent.clientHeight + 10) {
-        return true;
-      }
-      
-      parent = parent.parentElement;
-    }
-
-    return false;
-  }, []);
-
-  // Touch event handlers
+  // Touch handlers - simplified and more robust
   useEffect(() => {
     if (!enabled) return;
 
     const onTouchStart = (e: TouchEvent) => {
-      if (e.touches.length !== 1) return;
-      if (isInteractiveElement(e.target)) return;
+      // Only track single finger
+      if (e.touches.length !== 1) {
+        isTrackingRef.current = false;
+        return;
+      }
+
+      // Don't start if it's on an interactive element
+      const target = e.target as HTMLElement;
+      if (target && (
+        target.closest("button") ||
+        target.closest("a") ||
+        target.closest("[role='button']") ||
+        target.closest("input") ||
+        target.closest("textarea") ||
+        target.closest("select")
+      )) {
+        if (debugRef.current) console.log('[SWIPE] Skipping interactive element');
+        isTrackingRef.current = false;
+        return;
+      }
 
       const touch = e.touches[0];
       swipeRef.current = {
         startX: touch.clientX,
         startY: touch.clientY,
         startTime: performance.now(),
-        tracking: true,
+        currentX: touch.clientX,
+        currentY: touch.clientY,
       };
+      isTrackingRef.current = true;
+      if (debugRef.current) console.log('[SWIPE] Touch start:', { x: touch.clientX, y: touch.clientY });
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (!swipeRef.current.tracking) return;
-      if (e.touches.length !== 1) {
-        swipeRef.current.tracking = false;
+      if (!isTrackingRef.current || e.touches.length !== 1) {
+        isTrackingRef.current = false;
         return;
       }
 
       const touch = e.touches[0];
-      const deltaX = touch.clientX - swipeRef.current.startX;
-      const deltaY = touch.clientY - swipeRef.current.startY;
+      swipeRef.current.currentX = touch.clientX;
+      swipeRef.current.currentY = touch.clientY;
 
-      // Only prevent vertical scroll if horizontal swipe is clearly dominant
-      // This prevents blocking legitimate vertical scrolling
-      if (Math.abs(deltaX) > Math.abs(deltaY) * 1.5 && Math.abs(deltaX) > 10) {
+      const deltaX = swipeRef.current.currentX - swipeRef.current.startX;
+      const deltaY = swipeRef.current.currentY - swipeRef.current.startY;
+
+      // If significant horizontal movement, prevent default
+      if (Math.abs(deltaX) > 5) {
         e.preventDefault();
       }
     };
 
     const onTouchEnd = (e: TouchEvent) => {
-      if (!swipeRef.current.tracking) return;
-      swipeRef.current.tracking = false;
+      if (!isTrackingRef.current) return;
+      isTrackingRef.current = false;
 
-      const touch = e.changedTouches[0];
-      if (!touch) return;
-
-      const deltaX = touch.clientX - swipeRef.current.startX;
-      const deltaY = touch.clientY - swipeRef.current.startY;
+      const deltaX = swipeRef.current.currentX - swipeRef.current.startX;
+      const deltaY = swipeRef.current.currentY - swipeRef.current.startY;
       const deltaTime = performance.now() - swipeRef.current.startTime;
-      
-      const absX = Math.abs(deltaX);
-      const absY = Math.abs(deltaY);
-      const velocityX = absX / deltaTime;
-      const velocityY = absY / deltaTime;
 
-      // Determine if it's a valid swipe
-      // Lower threshold: 30px or velocity > 0.25 for horizontal, 50px or velocity > 0.3 for vertical
-      const isHorizontalSwipe = absX > absY && (absX >= 30 || velocityX >= 0.25);
-      const isVerticalSwipe = absY > absX * 1.5 && (absY >= 50 || velocityY >= 0.3);
+      const absDeltaX = Math.abs(deltaX);
+      const absDeltaY = Math.abs(deltaY);
+      const velocityX = absDeltaX / Math.max(deltaTime, 1);
+      const velocityY = absDeltaY / Math.max(deltaTime, 1);
 
-      if (!isHorizontalSwipe && !isVerticalSwipe) return;
+      if (debugRef.current) {
+        console.log('[SWIPE] Touch end:', {
+          deltaX,
+          deltaY,
+          absDeltaX,
+          absDeltaY,
+          velocityX,
+          velocityY,
+          time: deltaTime,
+        });
+      }
 
-      const sections = getVisibleSections();
-      if (sections.length === 0) return;
-      
-      const currentIdx = getCurrentIndex(sections);
+      // Determine swipe type - prioritize dominant direction
+      const isHorizontal = absDeltaX > absDeltaY;
+      const isVertical = absDeltaY > absDeltaX * 1.5;
 
-      if (isHorizontalSwipe) {
+      let swiped = false;
+
+      if (isHorizontal && (absDeltaX >= MIN_SWIPE_DISTANCE || velocityX >= MIN_SWIPE_VELOCITY)) {
+        const sections = getVisibleSections();
+        if (sections.length === 0) return;
+
+        const currentIdx = getCurrentIndex(sections);
+
         if (deltaX < 0) {
-          // Swipe LEFT → Next section
+          // LEFT swipe - next section
           const newIdx = Math.min(sections.length - 1, currentIdx + 1);
           const target = sections[newIdx];
           if (target) {
             scrollToSection(target);
             showAction("→", target);
+            swiped = true;
           }
         } else {
-          // Swipe RIGHT → Previous section
+          // RIGHT swipe - previous section
           const newIdx = Math.max(0, currentIdx - 1);
           const target = sections[newIdx];
           if (target) {
             scrollToSection(target);
             showAction("←", target);
+            swiped = true;
           }
         }
-      } else if (isVerticalSwipe) {
+      } else if (isVertical && (absDeltaY >= MIN_SWIPE_DISTANCE * 1.5 || velocityY >= MIN_SWIPE_VELOCITY)) {
         if (deltaY < 0) {
-          // Swipe UP → Go to hero/top
+          // UP swipe - to top
           scrollToSection("hero");
           showAction("↑", "hero");
+          swiped = true;
         } else {
-          // Swipe DOWN → Go to footer
+          // DOWN swipe - to bottom
           scrollToSection("footer");
           showAction("↓", "footer");
+          swiped = true;
         }
       }
+
+      if (debugRef.current) console.log('[SWIPE] Swiped:', swiped);
     };
 
-    const onTouchCancel = () => {
-      swipeRef.current.tracking = false;
-    };
-
-    // Add event listeners with consistent passive flags
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    // Add listeners
+    window.addEventListener("touchstart", onTouchStart, false);
     window.addEventListener("touchmove", onTouchMove, { passive: false });
-    window.addEventListener("touchend", onTouchEnd, { passive: true });
-    window.addEventListener("touchcancel", onTouchCancel, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, false);
 
     return () => {
-      // Clean up all event listeners - must match the addEventListener options
-      window.removeEventListener("touchstart", onTouchStart, { passive: true } as any);
-      window.removeEventListener("touchmove", onTouchMove, { passive: false } as any);
-      window.removeEventListener("touchend", onTouchEnd, { passive: true } as any);
-      window.removeEventListener("touchcancel", onTouchCancel, { passive: true } as any);
+      window.removeEventListener("touchstart", onTouchStart, false);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd, false);
       
-      // Clean up action timer if component unmounts
       if (actionTimerRef.current) {
         clearTimeout(actionTimerRef.current);
       }
     };
-  }, [enabled, isInteractiveElement, getVisibleSections, getCurrentIndex, scrollToSection, showAction]);
+  }, [enabled, getVisibleSections, getCurrentIndex, scrollToSection, showAction]);
 
   // Don't render on desktop
   if (!enabled) return null;
