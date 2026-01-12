@@ -406,6 +406,14 @@ TradingViewDropdown.displayName = "TradingViewDropdown";
 type MarketFilter = "all" | "crypto" | "stocks" | "forex" | "metals";
 type NewsItem = { title: string; link: string; source?: string; published_at?: string; category?: MarketFilter | "other"; };
 
+type LinkPreview = {
+    url: string;
+    title?: string;
+    description?: string;
+    image?: string;
+    siteName?: string;
+};
+
 const MARKET_KEYWORDS = {
   crypto: ["bitcoin", "btc", "ethereum", "eth", "solana", "binance", "crypto", "doge", "xrp", "defi", "blockchain"],
   stocks: ["nasdaq", "dow", "s&p", "tesla", "apple", "microsoft", "amazon", "nvidia", "stock", "earnings", "ipo"],
@@ -455,6 +463,8 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
     const [count, setCount] = useState<number>(10);
     const [refreshKey, setRefreshKey] = useState(0);
+    const [previews, setPreviews] = useState<Record<string, LinkPreview>>({});
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     const NEWS_REFRESH_RATE = 20000;
 
@@ -531,6 +541,54 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
         return uniq;
     }, [top5, rest]);
 
+    const fetchPreview = useCallback(async (url: string) => {
+        try {
+            const r = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`, { cache: "no-store" });
+            const json = await r.json();
+            if (!json || typeof json !== "object") return;
+            const p: LinkPreview = {
+                url,
+                title: typeof (json as any).title === "string" ? (json as any).title : undefined,
+                description: typeof (json as any).description === "string" ? (json as any).description : undefined,
+                image: typeof (json as any).image === "string" ? (json as any).image : undefined,
+                siteName: typeof (json as any).siteName === "string" ? (json as any).siteName : undefined,
+            };
+            setPreviews((prev) => ({ ...prev, [url]: p }));
+        } catch {
+            // ignore
+        }
+    }, []);
+
+    // Prefetch previews for currently visible stories (featured, top stories, first N in feed)
+    useEffect(() => {
+        const links = Array.from(
+            new Set(
+                [featured?.link, ...secondaryTop.map((n) => n.link), ...rest.slice(0, 12).map((n) => n.link)].filter(Boolean) as string[]
+            )
+        );
+        if (links.length === 0) return;
+        const missing = links.filter((l) => !previews[l]);
+        if (missing.length === 0) return;
+
+        let cancelled = false;
+        const run = async () => {
+            // light concurrency (avoid hammering)
+            const queue = missing.slice(0, 14);
+            const workers = Array.from({ length: 3 }).map(async () => {
+                while (!cancelled && queue.length) {
+                    const next = queue.shift();
+                    if (!next) return;
+                    await fetchPreview(next);
+                }
+            });
+            await Promise.allSettled(workers);
+        };
+        run();
+        return () => {
+            cancelled = true;
+        };
+    }, [featured?.link, secondaryTop, rest, previews, fetchPreview]);
+
     const sources = useMemo(() => {
         const filtered = activeMarket === "all" ? items : items.filter((i) => i.category === activeMarket);
         const counts = new Map<string, number>();
@@ -558,8 +616,10 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
             .map(([kw]) => kw.toUpperCase());
     }, [top5, rest]);
 
+    const activePreview = previewUrl ? previews[previewUrl] : undefined;
+
     return (
-        <div className="flex h-full max-h-full flex-col overflow-hidden rounded-2xl bg-black">
+        <div className="relative flex h-full max-h-full flex-col overflow-hidden rounded-2xl bg-black">
             {/* Masthead (mini news site header) */}
             <div className="shrink-0 border-b border-white/10 bg-black/50 backdrop-blur-md">
                 <div className="flex items-center justify-between px-4 md:px-6 py-4">
@@ -711,6 +771,31 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                             rel="noopener noreferrer"
                                             className="group block overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.06] to-white/[0.02] ring-1 ring-white/10 hover:ring-sky-500/30 transition"
                                         >
+                                            <div className="relative">
+                                                {previews[featured.link]?.image ? (
+                                                    <img
+                                                        src={previews[featured.link]?.image}
+                                                        alt=""
+                                                        className="h-44 w-full object-cover opacity-85"
+                                                        loading="lazy"
+                                                        referrerPolicy="no-referrer"
+                                                    />
+                                                ) : (
+                                                    <div className="h-44 w-full bg-white/[0.03] animate-pulse" />
+                                                )}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        setPreviewUrl(featured.link);
+                                                    }}
+                                                    className="absolute right-3 top-3 z-10 rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white ring-1 ring-white/20 hover:bg-white/15"
+                                                >
+                                                    Preview
+                                                </button>
+                                            </div>
                                             <div className="p-5 md:p-6">
                                                 <div className="flex flex-wrap items-center gap-2">
                                                     <span className="rounded-full bg-sky-500/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-sky-300 ring-1 ring-sky-500/20">
@@ -727,7 +812,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                                     {featured.title}
                                                 </h2>
                                                 <p className="mt-2 text-sm text-neutral-400 line-clamp-2">
-                                                    Click to open full story.
+                                                    {previews[featured.link]?.description || "Click to open full story."}
                                                 </p>
                                                 <div className="mt-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-sky-300">
                                                     Read story
@@ -760,16 +845,45 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                                         rel="noopener noreferrer"
                                                         className="group rounded-xl bg-[#0a0a0a] p-4 ring-1 ring-white/5 transition hover:ring-sky-500/30 hover:-translate-y-0.5 duration-200"
                                                     >
-                                                        <div className="flex items-center justify-between gap-3">
-                                                            <div className="min-w-0">
+                                                        <div className="flex items-start gap-4">
+                                                            <div className="shrink-0 w-24">
+                                                                {previews[item.link]?.image ? (
+                                                                    <img
+                                                                        src={previews[item.link]?.image}
+                                                                        alt=""
+                                                                        className="h-16 w-24 rounded-lg object-cover ring-1 ring-white/10"
+                                                                        loading="lazy"
+                                                                        referrerPolicy="no-referrer"
+                                                                    />
+                                                                ) : (
+                                                                    <div className="h-16 w-24 rounded-lg bg-white/[0.03] ring-1 ring-white/10 animate-pulse" />
+                                                                )}
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
                                                                 <div className="text-[9px] font-black uppercase tracking-widest text-neutral-500">
                                                                     {item.source || "Unknown"} • {(item.category || "Market").toString()}
                                                                 </div>
                                                                 <div className="mt-2 line-clamp-2 text-sm font-semibold text-neutral-200 group-hover:text-white transition-colors">
                                                                     {item.title}
                                                                 </div>
+                                                                <p className="mt-1 text-xs text-neutral-500 line-clamp-2">
+                                                                    {previews[item.link]?.description || ""}
+                                                                </p>
                                                             </div>
-                                                            <div className="shrink-0 text-[10px] font-mono text-neutral-600">{timeAgo(item.published_at)}</div>
+                                                            <div className="shrink-0 flex flex-col items-end gap-2">
+                                                                <div className="text-[10px] font-mono text-neutral-600">{timeAgo(item.published_at)}</div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        e.stopPropagation();
+                                                                        setPreviewUrl(item.link);
+                                                                    }}
+                                                                    className="rounded-full bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-neutral-200 ring-1 ring-white/10 hover:ring-sky-500/30"
+                                                                >
+                                                                    Preview
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </a>
                                                 ))}
@@ -809,10 +923,49 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                                     <div className="flex items-start gap-3">
                                                         <span className="mt-2 h-2 w-2 rounded-full bg-sky-500/50 shadow-[0_0_10px_rgba(56,189,248,.55)] group-hover:bg-sky-400 transition-colors" />
                                                         <div className="min-w-0 flex-1">
-                                                            <a href={n.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-start gap-2 group/link w-full">
-                                                                <h3 className="truncate text-sm font-semibold text-neutral-300 group-hover/link:text-sky-300 transition-colors">{n.title}</h3>
-                                                                <IconExternalLink className="mt-1 h-3 w-3 text-neutral-600 opacity-0 transition group-hover/link:opacity-100" />
-                                                            </a>
+                                                            <div className="flex items-start gap-3">
+                                                                <div className="hidden sm:block shrink-0">
+                                                                    {previews[n.link]?.image ? (
+                                                                        <img
+                                                                            src={previews[n.link]?.image}
+                                                                            alt=""
+                                                                            className="h-12 w-16 rounded-lg object-cover ring-1 ring-white/10"
+                                                                            loading="lazy"
+                                                                            referrerPolicy="no-referrer"
+                                                                        />
+                                                                    ) : (
+                                                                        <div className="h-12 w-16 rounded-lg bg-white/[0.03] ring-1 ring-white/10" />
+                                                                    )}
+                                                                </div>
+                                                                <div className="min-w-0 flex-1">
+                                                                    <a href={n.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-start gap-2 group/link w-full">
+                                                                        <h3 className="truncate text-sm font-semibold text-neutral-300 group-hover/link:text-sky-300 transition-colors">{n.title}</h3>
+                                                                        <IconExternalLink className="mt-1 h-3 w-3 text-neutral-600 opacity-0 transition group-hover/link:opacity-100" />
+                                                                    </a>
+                                                                    <p className="mt-1 text-xs text-neutral-500 line-clamp-2">
+                                                                        {previews[n.link]?.description || ""}
+                                                                    </p>
+                                                                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-neutral-600 font-mono uppercase">
+                                                                        {previews[n.link]?.siteName && <span>{previews[n.link]?.siteName}</span>}
+                                                                        {n.source && <span>{previews[n.link]?.siteName ? "•" : ""} {n.source}</span>}
+                                                                        {n.category && n.category !== "other" && <span className="text-sky-700">• {n.category}</span>}
+                                                                        {n.published_at && <time dateTime={n.published_at}>• {timeAgo(n.published_at)}</time>}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="shrink-0">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault();
+                                                                            e.stopPropagation();
+                                                                            setPreviewUrl(n.link);
+                                                                        }}
+                                                                        className="rounded-full bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-neutral-200 ring-1 ring-white/10 hover:ring-sky-500/30"
+                                                                    >
+                                                                        Preview
+                                                                    </button>
+                                                                </div>
+                                                            </div>
                                                             <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-neutral-600 font-mono uppercase">
                                                                 {n.source && <span>{n.source}</span>}
                                                                 {n.category && n.category !== "other" && <span className="text-sky-700">• {n.category}</span>}
@@ -889,6 +1042,73 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                     </div>
                 )}
             </div>
+
+            {/* Mini website preview drawer */}
+            <AnimatePresence>
+                {previewUrl && (
+                    <motion.div
+                        key="news-preview-drawer"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-50"
+                    >
+                        <div
+                            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                            onClick={() => setPreviewUrl(null)}
+                        />
+
+                        <motion.div
+                            initial={{ x: 40, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: 40, opacity: 0 }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.35 }}
+                            className="absolute right-0 top-0 h-full w-full md:w-[48%] bg-black border-l border-white/10"
+                        >
+                            <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10 bg-black/60 backdrop-blur">
+                                <div className="min-w-0">
+                                    <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">Mini Preview</div>
+                                    <div className="truncate text-sm font-semibold text-white">
+                                        {activePreview?.siteName || activePreview?.title || "Article"}
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <a
+                                        href={previewUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="rounded-full bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-neutral-200 ring-1 ring-white/10 hover:ring-sky-500/30"
+                                    >
+                                        Open
+                                    </a>
+                                    <button
+                                        type="button"
+                                        onClick={() => setPreviewUrl(null)}
+                                        className="rounded-full bg-white/5 p-2 text-white ring-1 ring-white/10 hover:ring-sky-500/30"
+                                        aria-label="Close preview"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="h-[calc(100%-52px)] p-3">
+                                <div className="h-full overflow-hidden rounded-2xl ring-1 ring-white/10 bg-white/[0.02]">
+                                    <iframe
+                                        title="News preview"
+                                        src={previewUrl}
+                                        className="h-full w-full"
+                                        sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                                    />
+                                </div>
+                                <p className="mt-2 text-[10px] text-neutral-600 font-mono uppercase tracking-widest">
+                                    Some sites block iframe previews (CSP/X-Frame-Options). Use “Open” if blank.
+                                </p>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 });
