@@ -79,8 +79,8 @@ export default function MobileSwipeNavigator() {
   const getCurrentIndex = useCallback((sections: SectionId[]): number => {
     if (sections.length === 0) return 0;
     
-    const scrollY = window.scrollY;
-    const viewportMid = scrollY + window.innerHeight * 0.4;
+    const scrollY = window.scrollY + 96; // Account for navbar height
+    const viewportMid = scrollY + window.innerHeight * 0.35;
     
     let bestIdx = 0;
     let bestDist = Infinity;
@@ -88,7 +88,8 @@ export default function MobileSwipeNavigator() {
     for (let i = 0; i < sections.length; i++) {
       const el = document.getElementById(sections[i]);
       if (!el) continue;
-      const top = el.getBoundingClientRect().top + scrollY;
+      const rect = el.getBoundingClientRect();
+      const top = rect.top + window.scrollY;
       const dist = Math.abs(top - viewportMid);
       if (dist < bestDist) {
         bestDist = dist;
@@ -96,7 +97,7 @@ export default function MobileSwipeNavigator() {
       }
     }
     
-    return bestIdx;
+    return Math.max(0, Math.min(bestIdx, sections.length - 1));
   }, []);
 
   // Scroll to section
@@ -104,11 +105,15 @@ export default function MobileSwipeNavigator() {
     const el = document.getElementById(id);
     if (!el) return;
 
-    if (lenis) {
+    if (lenis && lenisScrollTo) {
       lenisScrollTo(el, { offset: -96, duration: 0.9 });
     } else {
+      // Fallback to native scroll
       const top = el.getBoundingClientRect().top + window.scrollY - 96;
-      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+      window.scrollTo({ 
+        top: Math.max(0, top), 
+        behavior: "smooth" 
+      });
     }
   }, [lenis, lenisScrollTo]);
 
@@ -146,14 +151,17 @@ export default function MobileSwipeNavigator() {
     if (el.closest("button, a, [role='button'], [data-swipe-ignore]")) return true;
 
     // Check if inside a scrollable container (let it scroll naturally)
+    // This is crucial for not blocking legitimate scrolling
     let parent: HTMLElement | null = el;
-    while (parent && parent !== document.body) {
+    while (parent && parent !== document.body && parent !== document.documentElement) {
       const style = window.getComputedStyle(parent);
       const overflowY = style.overflowY;
-      if ((overflowY === "auto" || overflowY === "scroll") && 
-          parent.scrollHeight > parent.clientHeight + 10) {
+      const isScrollable = (overflowY === "auto" || overflowY === "scroll");
+      
+      if (isScrollable && parent.scrollHeight > parent.clientHeight + 10) {
         return true;
       }
+      
       parent = parent.parentElement;
     }
 
@@ -185,8 +193,9 @@ export default function MobileSwipeNavigator() {
       const deltaX = touch.clientX - swipeRef.current.startX;
       const deltaY = touch.clientY - swipeRef.current.startY;
 
-      // If horizontal swipe is dominant, prevent page scroll
-      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 15) {
+      // Only prevent vertical scroll if horizontal swipe is clearly dominant
+      // This prevents blocking legitimate vertical scrolling
+      if (Math.abs(deltaX) > Math.abs(deltaY) * 1.5 && Math.abs(deltaX) > 20) {
         e.preventDefault();
       }
     };
@@ -247,17 +256,23 @@ export default function MobileSwipeNavigator() {
       swipeRef.current.tracking = false;
     };
 
-    // Add event listeners
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: false });
-    window.addEventListener("touchend", onTouchEnd, { passive: true });
-    window.addEventListener("touchcancel", onTouchCancel, { passive: true });
+    // Add event listeners with consistent passive flags
+    window.addEventListener("touchstart", onTouchStart, { passive: true, capture: false });
+    window.addEventListener("touchmove", onTouchMove, { passive: false, capture: false });
+    window.addEventListener("touchend", onTouchEnd, { passive: true, capture: false });
+    window.addEventListener("touchcancel", onTouchCancel, { passive: true, capture: false });
 
     return () => {
-      window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchmove", onTouchMove);
-      window.removeEventListener("touchend", onTouchEnd);
-      window.removeEventListener("touchcancel", onTouchCancel);
+      // Clean up all event listeners
+      window.removeEventListener("touchstart", onTouchStart, { capture: false } as EventListenerOptions);
+      window.removeEventListener("touchmove", onTouchMove, { capture: false } as EventListenerOptions);
+      window.removeEventListener("touchend", onTouchEnd, { capture: false } as EventListenerOptions);
+      window.removeEventListener("touchcancel", onTouchCancel, { capture: false } as EventListenerOptions);
+      
+      // Clean up action timer if component unmounts
+      if (actionTimerRef.current) {
+        clearTimeout(actionTimerRef.current);
+      }
     };
   }, [enabled, isInteractiveElement, getVisibleSections, getCurrentIndex, scrollToSection, showAction]);
 

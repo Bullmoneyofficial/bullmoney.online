@@ -83,8 +83,8 @@ export default function DesktopKeyNavigator() {
   const getCurrentIndex = useCallback((sections: SectionId[]): number => {
     if (sections.length === 0) return 0;
     
-    const scrollY = window.scrollY;
-    const viewportMid = scrollY + window.innerHeight * 0.35;
+    const scrollY = window.scrollY + 96; // Account for navbar
+    const viewportMid = scrollY + window.innerHeight * 0.3;
     
     let bestIdx = 0;
     let bestDist = Infinity;
@@ -92,15 +92,18 @@ export default function DesktopKeyNavigator() {
     for (let i = 0; i < sections.length; i++) {
       const el = document.getElementById(sections[i]);
       if (!el) continue;
-      const top = el.getBoundingClientRect().top + scrollY;
+      
+      const rect = el.getBoundingClientRect();
+      const top = rect.top + window.scrollY;
       const dist = Math.abs(top - viewportMid);
+      
       if (dist < bestDist) {
         bestDist = dist;
         bestIdx = i;
       }
     }
     
-    return bestIdx;
+    return Math.max(0, Math.min(bestIdx, sections.length - 1));
   }, []);
 
   // Scroll to section - keyboard triggered only, doesn't affect mouse scroll
@@ -108,20 +111,18 @@ export default function DesktopKeyNavigator() {
     const el = document.getElementById(id);
     if (!el) return;
 
-    // Calculate target position with navbar offset
+    // Calculate target position with navbar offset (96px for navbar height)
     const targetTop = el.getBoundingClientRect().top + window.scrollY - 96;
     const finalTop = Math.max(0, targetTop);
     
     // Use Lenis for smooth scroll if available, otherwise native
     if (lenis) {
-      // Stop any ongoing scroll and go to target
-      lenis.stop();
-      lenis.scrollTo(finalTop, { 
+      // Use Lenis scrollTo with proper configuration
+      lenis.scrollTo(el, {
+        offset: -96, // navbar height offset
         duration: 0.6,
         easing: (t: number) => 1 - Math.pow(1 - t, 3) // easeOutCubic
       });
-      // Resume Lenis after animation
-      setTimeout(() => lenis.start(), 650);
     } else {
       // Native smooth scroll fallback
       window.scrollTo({

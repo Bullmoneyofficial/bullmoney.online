@@ -121,16 +121,16 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
       duration: appliedDuration,
       smoothWheel: options.smoothWheel ?? !isMobile,
       wheelMultiplier: options.wheelMultiplier ?? (isHighEndDesktop ? 0.7 : 0.8),
-      touchMultiplier: options.touchMultiplier ?? (isMobile ? 1.0 : 1.5),
+      touchMultiplier: options.touchMultiplier ?? (isMobile ? 1.2 : 1.5),
       infinite: options.infinite ?? false,
       orientation: 'vertical',
       gestureOrientation: 'vertical',
 
-      // Mobile: allow touch smoothing for a "butter" feel.
+      // Mobile: allow touch smoothing for native feel, but don't over-smooth
       // Desktop: wheel smoothing, native touch/trackpad handling.
       smoothTouch: isMobile,
       syncTouch: isMobile,
-      syncTouchLerp: isMobile ? 0.12 : 1,
+      syncTouchLerp: isMobile ? 0.08 : 1,
     };
 
     lenisRef.current = new Lenis(lenisOptions);
@@ -186,13 +186,36 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
   // Scroll to target with smooth animation
   const scrollTo = useCallback((
     target: string | number | HTMLElement,
-    options?: { offset?: number; duration?: number }
+    options?: { offset?: number; duration?: number; easing?: (t: number) => number }
   ) => {
-    lenisRef.current?.scrollTo(target, {
-      offset: options?.offset ?? 0,
-      duration: options?.duration ?? 1.5,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Smooth ease-out
-    });
+    if (!lenisRef.current) {
+      // Fallback for when Lenis is not available
+      if (typeof target === 'number') {
+        window.scrollTo({ top: target, behavior: 'smooth' });
+      } else if (typeof target === 'string') {
+        const el = document.querySelector(target);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } else if (target instanceof HTMLElement) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      return;
+    }
+
+    try {
+      lenisRef.current.scrollTo(target, {
+        offset: options?.offset ?? 0,
+        duration: options?.duration ?? 1.5,
+        easing: options?.easing ?? ((t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))), // Smooth ease-out
+      });
+    } catch (e) {
+      // Fallback if Lenis scrollTo fails
+      console.warn('[Lenis] scrollTo failed, falling back to native scroll:', e);
+      if (typeof target === 'number') {
+        window.scrollTo({ top: target, behavior: 'smooth' });
+      }
+    }
   }, []);
 
   const stop = useCallback(() => lenisRef.current?.stop(), []);
