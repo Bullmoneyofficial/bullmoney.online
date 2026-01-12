@@ -1,0 +1,670 @@
+"use client";
+
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from "next/navigation";
+import dynamic from 'next/dynamic';
+import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube'; 
+import { Volume2, Volume1, VolumeX, X, Palette, Sparkles, MessageCircle } from 'lucide-react'; 
+
+// --- CORE STATIC IMPORTS ---
+import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
+import { safeGetItem, safeSetItem } from '@/lib/localStorage';
+
+// --- LOADER IMPORTS ---
+import { MultiStepLoader } from "@/components/Mainpage/MultiStepLoaderAffiliate";
+import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2";
+import BullMoneyGate from "@/components/Mainpage/TradingHoldUnlock";                      
+
+// --- PAGE CONTENT IMPORTS ---
+import RecruitPage from "@/app/register/New"; 
+import RegisterPage from "@/app/recruit/RecruitPage";
+import Socials from "@/components/Mainpage/Socialsfooter"; 
+
+// --- DYNAMIC IMPORTS ---
+const Shopmain = dynamic(() => import("@/components/Mainpage/ShopMainpage"), { ssr: false });
+const AffiliateAdmin = dynamic(() => import("@/app/register/AffiliateAdmin"), { ssr: false });
+const AffiliateRecruitsDashboard = dynamic(() => import("@/app/recruit/AffiliateRecruitsDashboard"), { ssr: false });
+
+const FixedThemeConfigurator = dynamic(
+    () => import('@/components/Mainpage/ThemeComponents').then((mod) => mod.ThemeSelector), 
+    { ssr: false }
+);
+
+const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor'), { 
+  ssr: false,
+  loading: () => <div className="hidden"></div> 
+});
+
+// --- FALLBACK THEME ---
+const FALLBACK_THEME: Partial<Theme> = {
+    id: 'default',
+    name: 'Loading...',
+    filter: 'none',
+    mobileFilter: 'none',
+};
+
+// --- HELPER: GET THEME COLOR ---
+const getThemeColor = (theme: Partial<Theme> | any) => {
+    if (theme?.primaryColor) return theme.primaryColor;
+    
+    const colorMap: Record<string, string> = {
+        't01': '#3b82f6', // Blue (Default)
+        't02': '#22c55e', // Green (Matrix)
+        't03': '#ef4444', // Red (Sith)
+        't04': '#a855f7', // Purple (Neon)
+        't05': '#eab308', // Gold
+        't06': '#ec4899', // Pink
+    };
+    return colorMap[theme?.id] || '#3b82f6';
+};
+
+// =========================================
+// 1. ONBOARDING HELPER
+// =========================================
+const OnboardingHelper = ({ onDismiss, theme }: { onDismiss: () => void, theme: any }) => {
+    const color = getThemeColor(theme);
+    return (
+        <div 
+            onClick={onDismiss}
+            className="fixed inset-0 z-[500000] bg-black/60 backdrop-blur-[2px] cursor-pointer animate-in fade-in duration-700"
+        >
+            <div className="relative w-full h-full">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center px-4">
+                    <h2 
+                        className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-4 tracking-tighter animate-pulse"
+                        style={{ textShadow: `0 0 25px ${color}99` }}
+                    >
+                        Customize Your Vibe
+                    </h2>
+                    <p className="text-white/80 text-base sm:text-lg md:text-xl font-mono opacity-90">
+                        Choose a Theme & Soundtrack
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// =========================================
+// 2. AUDIO ARCHITECTURE
+// =========================================
+const BackgroundMusicSystem = ({ 
+  themeId, 
+  onReady,
+  volume 
+}: { 
+  themeId: string;
+  onReady: (player: any) => void;
+  volume: number;
+}) => {
+  const videoId = (THEME_SOUNDTRACKS && THEME_SOUNDTRACKS[themeId]) 
+    ? THEME_SOUNDTRACKS[themeId] 
+    : 'jfKfPfyJRdk';
+    
+  const opts: YouTubeProps['opts'] = {
+    height: '1', 
+    width: '1', 
+    playerVars: {
+      autoplay: 1,
+      controls: 0,
+      loop: 1,
+      playlist: videoId, 
+      modestbranding: 1,
+      playsinline: 1,
+      enablejsapi: 1, 
+      origin: typeof window !== 'undefined' ? window.location.origin : undefined,
+    },
+  };
+
+  return (
+    <div className="fixed bottom-0 left-0 opacity-0 pointer-events-none z-[-1] overflow-hidden w-px h-px">
+      <YouTube 
+        videoId={videoId} 
+        opts={opts} 
+        onReady={(event: YouTubeEvent) => { 
+            if(event.target) onReady(event.target);
+        }}
+        onStateChange={(event: YouTubeEvent) => {
+            if (event.data === -1 || event.data === 2) {}
+        }}
+      />
+    </div>
+  );
+};
+
+// =========================================
+// 3. UI CONTROLS (STICKY)
+// =========================================
+const BottomControls = ({ 
+    isPlaying, 
+    onToggleMusic, 
+    onOpenTheme,
+    theme, 
+    volume, 
+    onVolumeChange,
+    visible
+}: { 
+    isPlaying: boolean; 
+    onToggleMusic: () => void, 
+    onOpenTheme: () => void,
+    theme: any,
+    volume: number,
+    onVolumeChange: (val: number) => void,
+    visible: boolean
+}) => {
+    const [isHovered, setIsHovered] = useState(false);
+    const [showHelper, setShowHelper] = useState(true);
+    const color = getThemeColor(theme);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setShowHelper(false), 8000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    if (!visible) return null;
+
+    return (
+        <div 
+            className="pointer-events-auto flex flex-col items-start gap-2 sm:gap-4 transition-all duration-700 ease-in-out absolute bottom-4 left-4 sm:bottom-8 sm:left-8"
+            style={{ 
+                opacity: visible ? 1 : 0,
+                transform: visible ? 'translateY(0)' : 'translateY(20px)' 
+            }}
+            onMouseEnter={() => {
+                setIsHovered(true);
+                setShowHelper(false);
+            }}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            {showHelper && (
+                <div 
+                    className="absolute -top-10 sm:-top-12 left-0 text-white text-[10px] sm:text-[11px] px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-xl animate-pulse flex items-center gap-2 whitespace-nowrap border border-white/20"
+                    style={{ background: `linear-gradient(90deg, ${color}, #000000)` }}
+                >
+                    <Sparkles size={10} className="sm:w-3 sm:h-3" />
+                    <span className="hidden sm:inline">Customize your vibe here!</span>
+                    <span className="sm:hidden">Customize!</span>
+                    <div className="absolute -bottom-1 left-4 w-2 h-2 rotate-45" style={{ backgroundColor: color }} />
+                </div>
+            )}
+
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-black/60 backdrop-blur-xl border border-white/10 p-1.5 sm:p-2 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:border-white/20 transition-colors">
+                <button
+                    onClick={(e) => { e.stopPropagation(); onOpenTheme(); }}
+                    className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-800 text-gray-400 transition-all duration-300 border border-transparent group relative hover:text-white active:scale-95"
+                >   
+                    <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-20 transition-opacity" style={{ backgroundColor: color }} />
+                    <Palette size={16} className="sm:w-[18px] sm:h-[18px]" />
+                </button>
+
+                <div className="w-px h-5 sm:h-6 bg-white/10 mx-0.5 sm:mx-1" />
+
+                <button
+                    onClick={(e) => { e.stopPropagation(); onToggleMusic(); }} 
+                    className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full transition-all duration-500 relative active:scale-95"
+                    style={{
+                        backgroundColor: isPlaying ? `${color}33` : '#1f2937',
+                        color: isPlaying ? color : '#6b7280',
+                        boxShadow: isPlaying ? `0 0 15px ${color}4d` : 'none'
+                    }}
+                >
+                    {isPlaying ? (volume > 50 ? <Volume2 size={16} className="sm:w-[18px] sm:h-[18px]"/> : <Volume1 size={16} className="sm:w-[18px] sm:h-[18px]"/>) : <VolumeX size={16} className="sm:w-[18px] sm:h-[18px]"/>}
+                    {isPlaying && <span className="absolute inset-0 rounded-full border animate-ping opacity-20" style={{ borderColor: color }} />}
+                </button>
+
+                <div className={`hidden sm:flex items-center transition-all duration-500 overflow-hidden ${isHovered ? 'w-24 px-2 opacity-100' : 'w-0 opacity-0'}`}>
+                    <input 
+                        type="range" min="0" max="100" value={volume}
+                        onChange={(e) => onVolumeChange(parseInt(e.target.value))}
+                        className="w-full h-1 rounded-lg appearance-none cursor-pointer"
+                        style={{ accentColor: color, backgroundColor: `${color}33` }}
+                    />
+                </div>
+            </div>
+            
+            <div className={`hidden md:flex flex-col overflow-hidden transition-all duration-500 pl-2 ${isPlaying ? 'max-h-12 opacity-100' : 'max-h-0 opacity-0'}`}>
+                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Now Streaming</span>
+                <div className="flex items-center gap-1">
+                    <span className="text-xs text-white truncate font-mono">{theme?.name || 'Default'} Radio</span>
+                    <div className="flex gap-0.5 items-end h-3">
+                        <span className="w-0.5 h-full animate-music-bar-1" style={{ backgroundColor: color }}/>
+                        <span className="w-0.5 h-full animate-music-bar-2" style={{ backgroundColor: color }}/>
+                        <span className="w-0.5 h-full animate-music-bar-3" style={{ backgroundColor: color }}/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+const SupportWidget = ({ theme }: { theme: any }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const color = getThemeColor(theme);
+  
+  useEffect(() => { setTimeout(() => setIsVisible(true), 500); }, []);
+  
+  return (
+    <div className={`absolute bottom-4 right-4 sm:bottom-8 sm:right-8 z-[9999] pointer-events-auto transition-all duration-700 ease-out transform ${
+      isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'
+    }`}>
+      <a
+        href="https://t.me/+dlP_A0ebMXs3NTg0"
+        target="_blank" rel="noopener noreferrer"
+        className="group relative flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full transition-all duration-300 hover:-translate-y-1 active:scale-95"
+      >
+        <div 
+            className="absolute inset-0 rounded-full blur-[20px] opacity-40 animate-pulse group-hover:opacity-80 group-hover:scale-110 transition-all duration-500"
+            style={{ backgroundColor: color }} 
+        />
+        <div 
+            className="relative flex items-center justify-center w-full h-full rounded-full shadow-inner border overflow-hidden z-10"
+            style={{
+                background: `linear-gradient(135deg, ${color}dd, ${color}, ${color}aa)`,
+                borderColor: `${color}88`
+            }}
+        >
+            <div className="absolute inset-0 bg-white/20 group-hover:bg-white/0 transition-colors" />
+            <MessageCircle className="w-5 h-5 sm:w-7 sm:h-7 text-white relative z-30 drop-shadow-md" strokeWidth={2.5} />
+        </div>
+      </a>
+    </div>
+  );
+};
+
+// =========================================
+// 4. LOADING STATES
+// =========================================
+const affiliateLoadingStates = [
+  { text: "ESTABLISHING SECURE CONNECTION" },
+  { text: "VERIFYING AFFILIATE PROTOCOLS" },
+  { text: "SYNCING RECRUIT DATABASE" },
+  { text: "DECRYPTING DASHBOARD ACCESS" },
+  { text: "WELCOME, ADMIN" },
+];
+
+// =========================================
+// 5. MAIN MODAL COMPONENT
+// =========================================
+
+interface AffiliateModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps) {
+  const router = useRouter();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Stage flow: recruit (registration form) → affiliate (loader) → v2/hold → content
+  const [currentStage, setCurrentStage] = useState<"recruit" | "affiliate" | "v2" | "hold" | "content">("recruit");
+  
+  const [isClient, setIsClient] = useState(false);
+  const [activeThemeId, setActiveThemeId] = useState<string>('t01'); 
+  const [showConfigurator, setShowConfigurator] = useState(false); 
+  const [isMuted, setIsMuted] = useState(false); 
+  const [volume, setVolume] = useState(25);
+  const playerRef = useRef<any>(null);
+  
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showHelper, setShowHelper] = useState(false);
+
+  const activeTheme = useMemo(() => {
+    if (!ALL_THEMES || ALL_THEMES.length === 0) return FALLBACK_THEME as Theme;
+    return ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
+  }, [activeThemeId]);
+    
+  const isPlaying = useMemo(() => !isMuted, [isMuted]);
+
+  // Initialize on mount and when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    setIsClient(true);
+    
+    // Check if user has already completed registration
+    const hasCompletedRecruit = typeof window !== 'undefined' ? sessionStorage.getItem('affiliate_recruit_complete') : null;
+    if (hasCompletedRecruit) {
+      setCurrentStage("affiliate");
+    } else {
+      setCurrentStage("recruit");
+    }
+    
+    const storedTheme = safeGetItem('user_theme_id');
+    const storedMute = safeGetItem('user_is_muted');
+    const storedVol = safeGetItem('user_volume');
+    const hasSeenHelper = safeGetItem('has_seen_theme_onboarding');
+    
+    if (storedTheme) setActiveThemeId(storedTheme);
+    if (storedMute !== null) setIsMuted(storedMute === 'true');
+    if (storedVol) setVolume(parseInt(storedVol));
+    
+    if (!hasSeenHelper) {
+        setTimeout(() => setShowHelper(true), 4000);
+    }
+    
+    // Reset scroll position
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+  }, [isOpen]);
+
+  // Handle recruit completion -> move to affiliate loader
+  const handleRecruitComplete = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('affiliate_recruit_complete', 'true');
+    }
+    setCurrentStage("affiliate");
+  }, []);
+
+  // --- LOGIC: Affiliate -> V2 (Returning) OR Hold (1st Load) ---
+  useEffect(() => {
+    if (!isOpen) return;
+    if (currentStage === "affiliate") {
+        const timer = setTimeout(() => {
+            const hasVisited = typeof window !== 'undefined' ? sessionStorage.getItem('affiliate_unlock_complete') : null;
+            if (hasVisited) {
+                setCurrentStage("v2");
+            } else {
+                setCurrentStage("hold");
+            }
+        }, 5000); 
+        return () => clearTimeout(timer);
+    }
+  }, [isOpen, currentStage]);
+
+  // Scroll Lock when modal is open and not in content stage
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    if (currentStage !== "content") {
+      document.body.style.overflow = 'hidden';
+      document.body.style.height = '100vh';
+    } else {
+      // Keep body locked but allow modal scroll
+      document.body.style.overflow = 'hidden';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+    };
+  }, [isOpen, currentStage]);
+
+  const dismissHelper = () => {
+    setShowHelper(false);
+    safeSetItem('has_seen_theme_onboarding', 'true');
+  };
+
+  const handleOpenTheme = () => {
+      setShowConfigurator(true);
+      if(showHelper) dismissHelper();
+  };
+
+  const safePlay = useCallback(() => {
+      if (isMuted || showConfigurator || isPreviewing || !playerRef.current) return;
+      try {
+          if(typeof playerRef.current.unMute === 'function') playerRef.current.unMute();
+          if(typeof playerRef.current.setVolume === 'function') playerRef.current.setVolume(volume);
+          if(typeof playerRef.current.playVideo === 'function') playerRef.current.playVideo();
+      } catch (e) { console.warn("Audio Player: Interaction prevented", e); }
+  }, [isMuted, showConfigurator, isPreviewing, volume]);
+
+  const safePause = useCallback(() => {
+      try { playerRef.current?.pauseVideo?.(); } catch (e) {}
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const unlockAudio = () => { if(playerRef.current) safePlay(); };
+    window.addEventListener('click', unlockAudio, { once: true });
+    window.addEventListener('touchstart', unlockAudio, { once: true });
+    return () => {
+        window.removeEventListener('click', unlockAudio);
+        window.removeEventListener('touchstart', unlockAudio);
+    };
+  }, [isOpen, safePlay]);
+
+  const handleVolumeChange = (newVol: number) => {
+      setVolume(newVol);
+      safeSetItem('user_volume', newVol.toString());
+      if(playerRef.current) {
+        playerRef.current.setVolume(newVol);
+        if (newVol > 0) playerRef.current.unMute?.();
+      }
+      if (newVol > 0 && isMuted) {
+          setIsMuted(false);
+          safeSetItem('user_is_muted', 'false');
+          safePlay(); 
+      }
+  };
+
+  const handlePlayerReady = useCallback((player: any) => {
+      playerRef.current = player;
+      if (isMuted) player.mute?.();
+      else {
+          player.unMute?.();
+          player.setVolume?.(volume);
+      }
+      if (!isMuted && !showConfigurator && !isPreviewing && currentStage === 'content') player.playVideo?.();
+  }, [isMuted, showConfigurator, isPreviewing, volume, currentStage]);
+
+  useEffect(() => {
+      if (!playerRef.current) return;
+      if (showConfigurator || isPreviewing) safePause();
+      else if (!isMuted) safePlay();
+  }, [showConfigurator, isPreviewing, isMuted, safePause, safePlay]);
+
+  const toggleMusic = useCallback(() => {
+      const newMutedState = !isMuted;
+      setIsMuted(newMutedState);
+      safeSetItem('user_is_muted', String(newMutedState));
+      if (newMutedState) safePause();
+      else if (!showConfigurator && !isPreviewing) safePlay();
+  }, [isMuted, showConfigurator, isPreviewing, safePlay, safePause]);
+
+  const handleThemeChange = useCallback((themeId: string, sound: SoundProfile, muted: boolean) => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+        setActiveThemeId(themeId);
+        setIsMuted(muted); 
+        safeSetItem('user_theme_id', themeId);
+        safeSetItem('user_is_muted', String(muted));
+        setShowConfigurator(false); 
+        setTimeout(() => setIsTransitioning(false), 100);
+    }, 300);
+  }, []);
+
+  // Loader completion handlers (like affrec.tsx)
+  const handleV2Complete = useCallback(() => {
+      setCurrentStage("content");
+      safePlay();
+  }, [safePlay]);
+
+  const handleHoldComplete = useCallback(() => {
+      if (typeof window !== 'undefined') {
+          sessionStorage.setItem('affiliate_unlock_complete', 'true');
+      }
+      setCurrentStage("content");
+      safePlay(); 
+  }, [safePlay]);
+
+  const handleClose = useCallback(() => {
+    safePause();
+    setCurrentStage("affiliate");
+    onClose();
+  }, [safePause, onClose]);
+
+  // Don't render if not open or not client-side
+  if (!isOpen) return null;
+
+  return (
+    <>
+      <style jsx global>{`
+        .affiliate-modal-scroll {
+          background-color: black;
+          overflow-x: hidden;
+          -webkit-overflow-scrolling: touch;
+        }
+        .profit-reveal {
+          animation: profitReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes profitReveal {
+          0% { transform: scale(1.05); opacity: 0; filter: blur(15px); }
+          100% { transform: scale(1); opacity: 1; filter: blur(0px); }
+        }
+        @keyframes music-bar-1 { 0%, 100% { height: 33%; } 50% { height: 100%; } }
+        @keyframes music-bar-2 { 0%, 100% { height: 66%; } 50% { height: 33%; } }
+        @keyframes music-bar-3 { 0%, 100% { height: 100%; } 50% { height: 66%; } }
+        .animate-music-bar-1 { animation: music-bar-1 0.8s ease-in-out infinite; }
+        .animate-music-bar-2 { animation: music-bar-2 1.1s ease-in-out infinite; }
+        .animate-music-bar-3 { animation: music-bar-3 0.9s ease-in-out infinite; }
+      `}</style>
+
+      {/* MODAL OVERLAY - Centered popup with backdrop */}
+      <div 
+        className="fixed inset-0 z-[999999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 md:p-8"
+        onClick={handleClose}
+      >
+        {/* POPUP CONTAINER */}
+        <div 
+          className="relative w-full max-w-4xl h-[85vh] sm:h-[80vh] bg-black rounded-2xl sm:rounded-3xl border border-white/20 shadow-2xl shadow-black/50 overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+        
+        {/* CLOSE BUTTON - Top right of popup */}
+        <button 
+          onClick={handleClose}
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-[9999999] p-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white/70 hover:text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300 group"
+          aria-label="Close modal"
+        >
+          <X size={18} className="sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform duration-300" />
+        </button>
+
+        {/* AUDIO SYSTEM */}
+        {isClient && (
+          <BackgroundMusicSystem 
+            themeId={activeThemeId} 
+            onReady={handlePlayerReady} 
+            volume={volume}
+          />
+        )}
+
+        {/* FIXED WIDGETS (Z-Index 400,000) - Positioned within popup */}
+        <div className="absolute bottom-0 left-0 right-0 z-[400000] pointer-events-none h-24">
+            <BottomControls 
+                visible={currentStage === 'content'}
+                isPlaying={isPlaying} 
+                onToggleMusic={toggleMusic} 
+                onOpenTheme={handleOpenTheme}
+                theme={activeTheme} 
+                volume={volume}
+                onVolumeChange={handleVolumeChange}
+            />
+            <SupportWidget theme={activeTheme} />
+        </div>
+
+        {/* SCROLLABLE CONTENT WRAPPER */}
+        <div 
+          ref={scrollContainerRef}
+          className="relative w-full h-full overflow-y-auto affiliate-modal-scroll rounded-2xl sm:rounded-3xl" 
+          onClick={safePlay}
+        >
+
+          {/* GLOBAL THEME LENS (Z-Index 200,000) - Tints everything below */}
+          <div 
+              id="modal-theme-lens"
+              className="absolute inset-0 pointer-events-none w-full h-full z-[200000] rounded-2xl sm:rounded-3xl"
+              style={{ 
+                  backdropFilter: currentStage !== 'recruit' ? activeTheme.filter : 'none',
+                  WebkitBackdropFilter: currentStage !== 'recruit' ? activeTheme.filter : 'none', 
+                  transition: 'backdrop-filter 0.5s ease' 
+              }}
+          />
+
+          {/* RECRUIT STAGE - Registration Form (Shows First) */}
+          {currentStage === "recruit" && (
+              <div className="absolute inset-0 z-[100000] bg-[#050B14] rounded-2xl sm:rounded-3xl overflow-auto">
+                  <RegisterPage onUnlock={handleRecruitComplete} />
+              </div>
+          )}
+
+          {/* LOADER STACK (Z-Index 100,000) - Matches affrec.tsx */}
+          {currentStage === "affiliate" && (
+               <div 
+                  className="absolute inset-0 z-[100000] bg-black transition-all duration-500 flex items-center justify-center rounded-2xl sm:rounded-3xl"
+                  style={{ 
+                      filter: activeTheme.filter,
+                      WebkitFilter: activeTheme.filter,
+                      transform: 'translateZ(0)'
+                  }}
+              >
+                   <MultiStepLoader 
+                      loadingStates={affiliateLoadingStates} 
+                      loading={true} 
+                    />
+               </div>
+          )}
+
+          {currentStage === "v2" && (
+              <div 
+                  className="absolute inset-0 z-[100000] transition-all duration-500 rounded-2xl sm:rounded-3xl overflow-hidden"
+                  style={{ 
+                      filter: activeTheme.filter,
+                      WebkitFilter: activeTheme.filter,
+                      transform: 'translateZ(0)'
+                  }}
+              >
+                  {/* @ts-ignore */}
+                  <MultiStepLoaderV2 onFinished={handleV2Complete} theme={activeTheme} />
+              </div>
+          )}
+
+          {currentStage === "hold" && (
+              <div 
+                  className="absolute inset-0 z-[100000] transition-all duration-500 rounded-2xl sm:rounded-3xl overflow-hidden"
+                  style={{ 
+                      filter: activeTheme.filter,
+                      WebkitFilter: activeTheme.filter,
+                      transform: 'translateZ(0)'
+                  }}
+              >
+                  {/* @ts-ignore */}
+                  <BullMoneyGate onUnlock={handleHoldComplete} theme={activeTheme}>
+                      <></> 
+                  </BullMoneyGate>
+              </div>
+          )}
+
+          {/* PAGE CONTENT (Scrollable) */}
+          <div className={currentStage === 'content' ? 'profit-reveal min-h-screen' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}>
+              
+              <main className="relative min-h-screen z-10">
+                  {/* Desktop cursor only */}
+                  <div className="hidden md:block">
+                    <TargetCursor spinDuration={2} hideDefaultCursor={true} targetSelector=".cursor-target, a, button" />
+                  </div>
+                  
+                  {currentStage === 'content' && ( 
+                      <div className="relative pt-16 sm:pt-20 pb-24 sm:pb-32">
+                           {/* @ts-ignore */}
+                          <Socials themeId={activeThemeId} theme={activeTheme} />
+                          {/* @ts-ignore */}
+                          <Shopmain themeId={activeThemeId} theme={activeTheme} /> 
+                          
+                          {/* RecruitPage already shown in recruit stage - now show dashboard */}
+                          <AffiliateRecruitsDashboard onBack={handleClose} /> 
+                          <AffiliateAdmin /> 
+                      </div>
+                  )}
+              </main>
+          </div>
+        </div>
+        
+        {/* BACKGROUND FADE FOR TRANSITIONS */}
+        <div className={`absolute inset-0 z-[500000] bg-black pointer-events-none rounded-2xl sm:rounded-3xl transition-opacity duration-300 ease-in-out ${isTransitioning ? 'opacity-100' : 'opacity-0'}`} />
+      </div>
+      </div>
+    </>
+  );
+}

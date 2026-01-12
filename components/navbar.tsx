@@ -43,7 +43,7 @@ import ServicesModal from "@/components/ui/SeviceModal";
 import { LoyaltyModal } from "@/components/LoyaltyCard";
 import AdminModal from "@/components/AdminModal";
 import BullMoneyModal from "@/components/Faq";
-import RecruitModal from "@/components/RecruitModal";
+import AffiliateModal from "@/components/AffiliateModal";
 
 // --- IMPORT THEME SELECTOR ---
 import { ThemeSelector } from "@/components/Mainpage/ThemeSelector";
@@ -638,7 +638,7 @@ export const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isFaqOpen, setIsFaqOpen] = useState(false);
-  const [isRecruitOpen, setIsRecruitOpen] = useState(false);
+  const [isAffiliateOpen, setIsAffiliateOpen] = useState(false);
   const [isThemeSelectorOpen, setIsThemeSelectorOpen] = useState(false);
   // 👇 STATE TO PREVENT HYDRATION MISMATCH
   const [mounted, setMounted] = useState(false);
@@ -730,7 +730,7 @@ export const Navbar = () => {
         icon: <IconUsersGroup className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
         label: "Affiliates",
         tips: ["Join our affiliate program", "Earn commissions", "Grow with us"],
-        onClick: () => setIsRecruitOpen(true),
+      onClick: () => setIsAffiliateOpen(true),
     },
     {
         icon: <IconHelp className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
@@ -786,7 +786,7 @@ export const Navbar = () => {
 
     <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
     <BullMoneyModal isOpen={isFaqOpen} onClose={() => setIsFaqOpen(false)} />
-    <RecruitModal isOpen={isRecruitOpen} onClose={() => setIsRecruitOpen(false)} />
+    <AffiliateModal isOpen={isAffiliateOpen} onClose={() => setIsAffiliateOpen(false)} />
     <ThemeSelectorModal isOpen={isThemeSelectorOpen} onClose={() => setIsThemeSelectorOpen(false)} />
     
     {/* Desktop Moving Trading Tips - follows buttons, hidden when hovering dock */}
@@ -927,7 +927,7 @@ export const Navbar = () => {
 
                 <div 
                   className="relative w-full" 
-                  onClick={() => { SoundEffects.click(); setIsRecruitOpen(true); setOpen(false); }} 
+                  onClick={() => { SoundEffects.click(); setIsAffiliateOpen(true); setOpen(false); }} 
                   onMouseEnter={() => SoundEffects.hover()} 
                   onTouchStart={() => SoundEffects.click()}
                 >

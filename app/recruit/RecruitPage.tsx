@@ -140,6 +140,15 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     }
   };
 
+  const handleReset = () => {
+    setFormData(prev => ({ ...prev, email: '', mt5Number: '' })); 
+    setStep(1);
+    setSubmitError(null);
+    setLoading(true);
+    setLoadingText("RESETTING SESSION");
+    setTimeout(() => setLoading(false), 1000);
+  };
+
   // --- HELPERS ---
   const isVantage = activeBroker === 'Vantage';
   const brokerCode = isVantage ? "BULLMONEY" : "X3R7P";
@@ -151,7 +160,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // --- RENDER: LOADING SCREEN ---
   if (loading) {
     return (
-      <div className="min-h-[500px] md:min-h-[600px] bg-[#050B14] flex flex-col items-center justify-center relative overflow-hidden">
+      <div className="min-h-screen bg-[#050B14] flex flex-col items-center justify-center relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none" />
         <div className="relative z-10 flex flex-col items-center animate-in fade-in zoom-in duration-300">
           <div className={cn(
@@ -174,7 +183,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // --- RENDER: SUCCESS SCREEN ---
   if (step === 5) {
     return (
-      <div className="min-h-[500px] md:min-h-[600px] bg-[#050B14] flex items-center justify-center p-4 relative">
+      <div className="min-h-screen bg-[#050B14] flex items-center justify-center p-4 relative">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-[#050B14] to-[#050B14]" />
         
         <div className="bg-[#0A1120] border border-blue-500/30 p-8 rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.15)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
@@ -208,7 +217,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // --- RENDER: SUBMITTING SCREEN ---
   if (step === 4) {
     return (
-      <div className="min-h-[500px] md:min-h-[600px] bg-[#050B14] flex flex-col items-center justify-center relative">
+      <div className="min-h-screen bg-[#050B14] flex flex-col items-center justify-center relative">
          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none" />
         <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-4" />
         <h2 className="text-xl font-bold text-white">Verifying Account...</h2>
@@ -218,7 +227,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
   // --- RENDER: WIZARD ---
   return (
-    <div className="min-h-[500px] md:min-h-[600px] bg-[#050B14] flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-[#050B14] flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
       <div className={cn(
         "absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-50 transition-colors duration-500",
         isVantage ? "via-purple-600" : "via-blue-600"
