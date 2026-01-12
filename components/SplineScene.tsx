@@ -27,8 +27,8 @@ const Sparkle = dynamic(() => import('react-sparkle'), {
   loading: () => null
 });
 
-// Device tier detection (enhanced for 120Hz support)
-const getDeviceTier = (): 'high' | 'medium' | 'low' => {
+// Device tier detection (enhanced for 120Hz support on ALL devices)
+const getDeviceTier = (): 'ultra' | 'high' | 'medium' | 'low' => {
   if (typeof window === 'undefined') return 'high';
   
   const memory = (navigator as any).deviceMemory || 4;
@@ -38,6 +38,28 @@ const getDeviceTier = (): 'high' | 'medium' | 'low' => {
   const isVeryLowMemory = memory < 4;
   const isLowCores = cores < 4;
   const refreshRate = detectRefreshRate();
+  const ua = navigator.userAgent.toLowerCase();
+  
+  // ENHANCED: Apple Silicon detection for Macs
+  const isMac = /macintosh|mac os x/i.test(ua);
+  let isAppleSilicon = false;
+  if (isMac && !isMobile) {
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+      if (gl) {
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        if (debugInfo) {
+          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
+          isAppleSilicon = renderer.includes('apple') && (renderer.includes('gpu') || /m[1-9]/.test(renderer));
+        }
+      }
+    } catch (e) {}
+    // Fallback: 8+ core Mac is likely Apple Silicon
+    if (!isAppleSilicon && cores >= 8) {
+      isAppleSilicon = true;
+    }
+  }
   
   // High-refresh mobile devices (iPhone Pro, iPad Pro) get tier upgrade
   const isHighRefreshMobile = isMobile && refreshRate >= 120;
@@ -45,6 +67,47 @@ const getDeviceTier = (): 'high' | 'medium' | 'low' => {
   // Force low tier for very small screens or low specs to prevent crashes
   if (isSmallScreen || (isMobile && !isHighRefreshMobile && (isVeryLowMemory || isLowCores))) {
     return 'low';
+  }
+  
+  // ENHANCED: Apple Silicon Macs get ULTRA tier
+  if (isAppleSilicon) {
+    console.log('[SplineScene] 🍎 Apple Silicon detected - ULTRA tier');
+    return 'ultra';
+  }
+  
+  // High-end desktop with discrete GPU or lots of RAM
+  if (!isMobile) {
+    // Check for discrete GPU
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+      if (gl) {
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        if (debugInfo) {
+          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
+          const hasDiscreteGPU = renderer.includes('nvidia') || renderer.includes('geforce') || 
+                                  renderer.includes('radeon') || renderer.includes('amd') ||
+                                  renderer.includes('rtx') || renderer.includes('gtx');
+          if (hasDiscreteGPU && memory >= 8) {
+            console.log('[SplineScene] 🎮 Discrete GPU detected - ULTRA tier');
+            return 'ultra';
+          }
+        }
+      }
+    } catch (e) {}
+    
+    // High-spec desktop: 16GB+ RAM, 8+ cores
+    if (memory >= 16 && cores >= 8) {
+      return 'ultra';
+    }
+    
+    // Good desktop: 8GB+ RAM, 4+ cores
+    if (memory >= 8 && cores >= 4) {
+      return 'high';
+    }
+    
+    // Basic desktop
+    return memory >= 4 ? 'medium' : 'low';
   }
   
   // ProMotion devices get medium or high based on specs
@@ -85,7 +148,7 @@ function SplineSceneComponent({
   
   const [isInteractive, setIsInteractive] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [deviceTier, setDeviceTier] = useState<'high' | 'medium' | 'low'>('medium');
+  const [deviceTier, setDeviceTier] = useState<'ultra' | 'high' | 'medium' | 'low'>('medium');
   const [isVisible, setIsVisible] = useState(false);
   const [shouldRender, setShouldRender] = useState(true);
 
@@ -94,17 +157,20 @@ function SplineSceneComponent({
     const tier = getDeviceTier();
     setDeviceTier(tier);
     
-    // Skip 3D rendering on low-tier devices to prevent crashes
+    // Skip 3D rendering only on LOW tier devices
+    // ENHANCED: Ultra and High tier always render
     const canRender = canRender3D();
     setShouldRender(canRender && tier !== 'low');
     
     if (!canRender || tier === 'low') {
       console.log('🔒 3D scenes disabled for device protection');
+    } else {
+      console.log(`✅ 3D scenes enabled - Device tier: ${tier.toUpperCase()}`);
     }
   }, []);
 
-  // Only show sparkles on high-end desktop devices
-  const showSparkles = withSparkles && deviceTier === 'high' && !hasError;
+  // ENHANCED: Show sparkles on ultra AND high-end devices
+  const showSparkles = withSparkles && (deviceTier === 'ultra' || deviceTier === 'high') && !hasError;
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   // Handle spline loading errors gracefully

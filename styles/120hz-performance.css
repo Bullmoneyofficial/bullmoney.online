@@ -262,6 +262,94 @@ canvas {
 }
 
 /* ============================================================================
+   DESKTOP PERFORMANCE OPTIMIZATIONS
+   For Apple Silicon M1+ Macs and high-performance Windows/Linux desktops
+   ============================================================================ */
+
+/* Base desktop optimizations */
+@media (min-width: 769px) and (hover: hover) {
+  /* Force GPU compositing on interactive elements */
+  .desktop-optimized button,
+  .desktop-optimized a,
+  .desktop-optimized [role="button"],
+  .high-performance button,
+  .high-performance a,
+  .high-performance [role="button"] {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+  }
+  
+  /* Optimize font rendering for desktop */
+  .desktop-optimized,
+  .high-performance {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  /* Desktop hover states */
+  .desktop-optimized .hover-lift:hover,
+  .high-performance .hover-lift:hover {
+    transform: translateY(-4px) translateZ(0);
+    transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+/* Apple Silicon Mac specific optimizations */
+.apple-silicon {
+  /* Ultra-smooth animations for M1/M2/M3/M4 GPUs */
+  --animation-smoothing: 0.4;
+  --spring-stiff: cubic-bezier(0.45, 1.85, 0.35, 0.85);
+  --spring-smooth: cubic-bezier(0.14, 1, 0.28, 1);
+}
+
+.apple-silicon * {
+  /* Enable all visual effects on Apple Silicon */
+  -webkit-font-smoothing: antialiased;
+}
+
+.apple-silicon canvas {
+  /* Apple GPU WebGL optimizations */
+  transform: translate3d(0, 0, 0);
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Discrete GPU optimizations (NVIDIA, AMD) */
+.discrete-gpu {
+  --blur-enabled: 1;
+  --shadows-enabled: 1;
+  --glow-enabled: 1;
+  --particles-enabled: 1;
+}
+
+.discrete-gpu canvas {
+  /* Full quality for discrete GPUs */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* High-performance desktop mode - maximum quality */
+.high-performance.perf-ultra {
+  --blur-amount: 24px;
+  --shadow-opacity: 1;
+  --glow-intensity: 1;
+  --animation-quality: high;
+}
+
+.high-performance.perf-ultra .backdrop-blur-lg {
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
+.high-performance.perf-ultra canvas,
+.high-performance.perf-ultra [data-spline] {
+  /* Maximum GPU utilization for 3D scenes */
+  contain: strict;
+  will-change: contents;
+}
+
+/* ============================================================================
    LAYER MANAGEMENT - Prevent layer explosion
    ============================================================================ */
 

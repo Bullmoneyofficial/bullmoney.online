@@ -42,11 +42,45 @@ export function PerformanceProvider({
   smoothScrollOptions = {}
 }: PerformanceProviderProps) {
   const [isMobile, setIsMobile] = React.useState(false);
+  const [isHighEndDesktop, setIsHighEndDesktop] = React.useState(true);
   
-  // Detect mobile on mount
+  // Detect device type and capabilities on mount
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
-      setIsMobile(window.innerWidth < 768);
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      
+      // Detect high-end desktop (Apple Silicon, high-spec PCs)
+      if (!mobile) {
+        const memory = (navigator as any).deviceMemory || 8;
+        const cores = navigator.hardwareConcurrency || 4;
+        const ua = navigator.userAgent.toLowerCase();
+        const isMac = /macintosh|mac os x/i.test(ua);
+        
+        // Apple Silicon detection
+        let isAppleSilicon = false;
+        try {
+          const canvas = document.createElement('canvas');
+          const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+          if (gl) {
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            if (debugInfo) {
+              const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
+              isAppleSilicon = renderer.includes('apple') && (renderer.includes('gpu') || /m[1-9]/.test(renderer));
+            }
+          }
+        } catch (e) {}
+        
+        // High-end desktop: Apple Silicon OR 8GB+ RAM with 4+ cores
+        const highEnd = isAppleSilicon || (isMac && cores >= 8) || (memory >= 8 && cores >= 4);
+        setIsHighEndDesktop(highEnd);
+        
+        // Apply desktop-specific optimizations
+        if (highEnd) {
+          document.documentElement.classList.add('desktop-optimized', 'high-performance');
+          console.log('[PerformanceProvider] 🖥️ High-end desktop detected, enabling optimizations');
+        }
+      }
     }
   }, []);
   

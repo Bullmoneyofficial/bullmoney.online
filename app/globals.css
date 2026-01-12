@@ -124,6 +124,80 @@ html {
   backface-visibility: hidden;
 }
 
+/* ============================================================================
+   DESKTOP PERFORMANCE OPTIMIZATIONS
+   For Apple Silicon M1+ Macs and high-performance Windows/Linux desktops
+   ============================================================================ */
+
+/* Base desktop optimizations */
+@media (min-width: 769px) and (hover: hover) {
+  html.desktop-optimized,
+  html.high-performance {
+    /* Smooth scroll behavior for desktop */
+    scroll-behavior: auto;
+  }
+  
+  /* Enhanced font rendering on desktop */
+  body.desktop-optimized,
+  body.high-performance {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  /* GPU acceleration for all interactive elements */
+  .desktop-optimized button,
+  .desktop-optimized a,
+  .desktop-optimized [role="button"],
+  .high-performance button,
+  .high-performance a,
+  .high-performance [role="button"] {
+    transform: translateZ(0);
+    transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+  }
+}
+
+/* Apple Silicon Mac specific optimizations */
+.apple-silicon,
+.desktop-optimized.display-120hz {
+  /* Ultra-smooth animations for ProMotion displays */
+  --animation-smoothing: 0.4;
+  --transition-speed-multiplier: 0.8;
+}
+
+/* High-spec desktop (discrete GPU, 16GB+ RAM) */
+.high-performance.perf-ultra {
+  /* Enable all visual effects */
+  --blur-enabled: 1;
+  --shadows-enabled: 1;
+  --glow-enabled: 1;
+  --particles-enabled: 1;
+  
+  /* Enhanced backdrop blur */
+  --backdrop-blur-amount: 24px;
+}
+
+/* Desktop canvas/WebGL optimizations */
+@media (min-width: 769px) {
+  .desktop-optimized canvas,
+  .high-performance canvas {
+    /* Force hardware acceleration */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* Optimize rendering */
+    image-rendering: -webkit-optimize-contrast;
+  }
+  
+  /* 3D scenes on high-end desktop */
+  .desktop-optimized [data-spline],
+  .high-performance [data-spline] {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    contain: layout paint;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

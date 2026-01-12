@@ -86,6 +86,7 @@ export function detectRefreshRate(): number {
 
 /**
  * Detect ProMotion-capable devices (iPhone Pro, iPad Pro, high-refresh monitors)
+ * ENHANCED: Now includes Apple Silicon Macs and high-refresh desktop monitors
  */
 function detectProMotionDevice(): boolean {
   if (typeof window === 'undefined') return false;
@@ -113,9 +114,40 @@ function detectProMotionDevice(): boolean {
   const isIPadPro = /ipad/.test(ua) && dpr >= 2 && screenWidth >= 1024;
   if (isIPadPro) return true;
   
+  // NEW: Apple Silicon Mac detection (M1, M2, M3, M4 with ProMotion displays)
+  const isMac = /macintosh|mac os x/i.test(ua);
+  if (isMac) {
+    // Check for Apple GPU (indicates Apple Silicon)
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+      if (gl) {
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        if (debugInfo) {
+          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
+          // Apple Silicon GPUs
+          if (renderer.includes('apple') && (renderer.includes('gpu') || /m[1-9]/.test(renderer))) {
+            console.log('[120Hz] 🍎 Apple Silicon Mac detected:', renderer);
+            return true;
+          }
+        }
+      }
+    } catch (e) {}
+    
+    // Fallback: Check for high core count (Apple Silicon has 8+ cores)
+    const cores = navigator.hardwareConcurrency || 4;
+    if (cores >= 8) {
+      console.log('[120Hz] 🖥️ High-core Mac detected (likely Apple Silicon)');
+      return true;
+    }
+  }
+  
   // High-refresh gaming monitors (typically 1440p+)
   const isHighRefreshMonitor = screenWidth >= 2560;
-  if (isHighRefreshMonitor) return true;
+  if (isHighRefreshMonitor) {
+    console.log('[120Hz] 🖥️ High-resolution display detected, assuming high-refresh capable');
+    return true;
+  }
   
   // Samsung Galaxy S/Note/Ultra high-refresh detection
   const isSamsungHighRefresh = /samsung|sm-g|sm-n|sm-s/i.test(ua) && dpr >= 2.5;
@@ -128,6 +160,18 @@ function detectProMotionDevice(): boolean {
   // Google Pixel Pro (90Hz+)
   const isPixelPro = /pixel.*pro/i.test(ua);
   if (isPixelPro) return true;
+  
+  // NEW: Windows high-refresh desktop detection
+  const isWindows = /windows/i.test(ua);
+  if (isWindows && screenWidth >= 1920) {
+    const memory = (navigator as any).deviceMemory || 8;
+    const cores = navigator.hardwareConcurrency || 4;
+    // High-spec Windows PC likely has high-refresh monitor
+    if (memory >= 16 && cores >= 8) {
+      console.log('[120Hz] 🖥️ High-spec Windows PC detected');
+      return true;
+    }
+  }
   
   return false;
 }

@@ -35,6 +35,10 @@ export interface AnimationState {
   cpuLoad: number;
   isHighRefreshRate: boolean;
   detectedHz: number;
+  // NEW: Desktop-specific state
+  isAppleSilicon: boolean;
+  isHighEndDesktop: boolean;
+  gpuType: 'integrated' | 'discrete' | 'apple-gpu' | 'unknown';
 }
 
 export interface PerformanceStore {
@@ -96,6 +100,10 @@ export const usePerformanceStore = create<PerformanceStore>()(
       cpuLoad: 0,
       isHighRefreshRate: false,
       detectedHz: 60,
+      // NEW: Desktop-specific defaults
+      isAppleSilicon: false,
+      isHighEndDesktop: false,
+      gpuType: 'unknown',
     },
     
     // Display defaults

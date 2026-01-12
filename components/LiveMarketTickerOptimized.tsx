@@ -188,7 +188,7 @@ export const LiveMarketTickerOptimized: React.FC = memo(function LiveMarketTicke
           priceDataRef.current.set(coin.symbol, newData);
           
           // Update DOM directly
-          updatePriceDOM(coin.symbol, newData, shouldFlash);
+          updatePriceDOM(coin.symbol, newData, shouldFlash ?? false);
         });
 
         hasFetchedOnce = true;

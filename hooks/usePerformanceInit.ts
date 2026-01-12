@@ -66,12 +66,15 @@ export function usePerformanceInit() {
 
   /**
    * Detect ProMotion-capable devices
+   * ENHANCED: Now includes Apple Silicon Macs and all high-refresh desktops
    */
   const detectProMotion = useCallback((): boolean => {
     if (typeof window === 'undefined') return false;
 
     const ua = navigator.userAgent.toLowerCase();
     const dpr = window.devicePixelRatio;
+    const cores = navigator.hardwareConcurrency || 4;
+    const memory = (navigator as any).deviceMemory || 8;
 
     // iPhone Pro models (13 Pro+, 14 Pro+, 15 Pro+, 16 Pro+)
     const isIPhonePro = /iphone/.test(ua) && dpr >= 3;
@@ -82,20 +85,61 @@ export function usePerformanceInit() {
       window.screen.height >= 1024
     );
     
-    // MacBook Pro with ProMotion (14" and 16" from 2021+)
-    const isMacBookPro = /macintosh/.test(ua) && (
+    // ENHANCED: Apple Silicon Mac detection
+    const isMac = /macintosh|mac os x/i.test(ua);
+    let isAppleSilicon = false;
+    if (isMac) {
+      // Check for Apple GPU via WebGL
+      try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+        if (gl) {
+          const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+          if (debugInfo) {
+            const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
+            isAppleSilicon = renderer.includes('apple') && (renderer.includes('gpu') || /m[1-9]/.test(renderer));
+          }
+        }
+      } catch (e) {}
+      // Fallback: 8+ core Mac is likely Apple Silicon
+      if (!isAppleSilicon && cores >= 8) {
+        isAppleSilicon = true;
+      }
+    }
+    
+    // MacBook Pro with ProMotion (14" and 16" from 2021+) or any Apple Silicon Mac
+    const isMacBookPro = isMac && (
+      isAppleSilicon ||
       window.screen.width >= 3024 || // 14" scaled
       window.screen.height >= 1964
+    );
+    
+    // ENHANCED: High-refresh desktop monitor detection
+    const isHighRefreshDesktop = (
+      window.screen.width >= 2560 || // 1440p+ monitors often 144Hz+
+      (memory >= 16 && cores >= 8) // High-spec PC likely has good monitor
     );
     
     // High-refresh gaming monitors (check via Screen API if available)
     const hasScreenAPI = 'refreshRate' in (window.screen as any);
     if (hasScreenAPI) {
       const screenHz = (window.screen as any).refreshRate;
-      return screenHz >= 90;
+      if (screenHz >= 90) return true;
     }
 
-    return isIPhonePro || isIPadPro || isMacBookPro;
+    const result = isIPhonePro || isIPadPro || isMacBookPro || isAppleSilicon || isHighRefreshDesktop;
+    
+    if (result && !isIPhonePro && !isIPadPro) {
+      console.log('[PerformanceInit] 🖥️ Desktop high-refresh detected:', {
+        isAppleSilicon,
+        isMacBookPro,
+        isHighRefreshDesktop,
+        cores,
+        memory: `${memory}GB`
+      });
+    }
+    
+    return result;
   }, []);
 
   /**

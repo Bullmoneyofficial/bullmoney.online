@@ -357,15 +357,174 @@ html.lenis body {
   }
 }
 
-/* Ultra-wide monitors often have high refresh */
+/* ============================================================================
+   DESKTOP PERFORMANCE OPTIMIZATIONS
+   Optimized for Apple Silicon M1+ and high-performance desktops
+   ============================================================================ */
+
+/* High-performance desktop mode */
+.desktop-optimized,
+.high-performance {
+  /* Enable GPU compositing hints */
+  --gpu-compositing: true;
+  --animation-quality: high;
+}
+
+/* Desktop with 120Hz+ displays */
+.desktop-optimized.display-120hz,
+.high-performance.display-120hz {
+  /* Faster transitions for high-refresh displays */
+  --transition-micro: 0.06s;
+  --transition-ui: 0.12s;
+  --transition-content: 0.22s;
+  --transition-page: 0.35s;
+}
+
+/* Desktop-specific smooth scrolling */
+@media (min-width: 769px) and (hover: hover) {
+  html.desktop-optimized {
+    /* Use native smooth scroll momentum */
+    scroll-behavior: auto;
+  }
+  
+  /* Optimize all transforms for GPU */
+  .desktop-optimized * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* GPU layer promotion for interactive elements */
+  .desktop-optimized button,
+  .desktop-optimized a,
+  .desktop-optimized [role="button"],
+  .desktop-optimized .interactive {
+    transform: translateZ(0);
+    will-change: transform, opacity;
+  }
+  
+  /* Faster hover transitions on desktop */
+  .desktop-optimized .hover-lift {
+    transition: transform 0.15s var(--spring-smooth),
+                box-shadow 0.15s ease-out;
+  }
+  
+  .desktop-optimized .hover-scale {
+    transition: transform 0.12s var(--spring-snappy);
+  }
+  
+  /* Smooth hover states */
+  .desktop-optimized .hover-lift:hover {
+    transform: translateY(-6px) translateZ(0);
+    box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.25);
+  }
+  
+  .desktop-optimized .hover-scale:hover {
+    transform: scale(1.03) translateZ(0);
+  }
+}
+
+/* Apple Silicon Mac optimizations */
+.desktop-optimized.display-120hz,
+.apple-silicon {
+  /* Ultra-smooth spring animations */
+  --spring-stiff: cubic-bezier(0.45, 1.85, 0.35, 0.85);
+  --spring-smooth: cubic-bezier(0.14, 1, 0.28, 1);
+  --spring-snappy: cubic-bezier(0.32, 1.6, 0.62, 1);
+}
+
+/* High-spec desktop (16GB+ RAM, discrete GPU) */
+.high-performance {
+  /* Enable all visual effects */
+  --blur-enabled: 1;
+  --shadows-enabled: 1;
+  --glow-enabled: 1;
+  --particles-enabled: 1;
+  --reflections-enabled: 1;
+}
+
+/* Backdrop blur optimizations for desktop */
+@media (min-width: 769px) {
+  .desktop-optimized .backdrop-blur-sm {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  
+  .desktop-optimized .backdrop-blur-md {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  
+  .desktop-optimized .backdrop-blur-lg {
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  
+  /* GPU-accelerated glass effect */
+  .desktop-optimized .glass-effect {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    transform: translateZ(0);
+  }
+}
+
+/* Ultra-wide monitors (2560px+) often have high refresh */
 @media (min-width: 2560px) {
   /* Larger movement for bigger screens */
   .hover-lift:hover {
-    transform: translateY(-6px) translateZ(0);
+    transform: translateY(-8px) translateZ(0);
   }
   
   .scroll-fade-in {
-    transform: translateY(50px) translateZ(0);
+    transform: translateY(60px) translateZ(0);
+  }
+  
+  .scroll-slide-left {
+    transform: translateX(-60px) translateZ(0);
+  }
+  
+  .scroll-slide-right {
+    transform: translateX(60px) translateZ(0);
+  }
+}
+
+/* 4K displays (3840px+) */
+@media (min-width: 3840px) {
+  .hover-lift:hover {
+    transform: translateY(-10px) translateZ(0);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* ============================================================================
+   DESKTOP 3D/CANVAS OPTIMIZATIONS
+   ============================================================================ */
+
+@media (min-width: 769px) {
+  /* Force GPU compositing for canvas elements on desktop */
+  .desktop-optimized canvas,
+  .high-performance canvas {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* Allow canvas to use full GPU power */
+    image-rendering: optimizeSpeed;
+  }
+  
+  /* Spline 3D scenes on high-end desktops */
+  .desktop-optimized [data-spline],
+  .high-performance [data-spline] {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    /* Hint to browser for GPU acceleration */
+    will-change: contents;
+  }
+  
+  /* WebGL context optimization */
+  .desktop-optimized .webgl-container,
+  .high-performance .webgl-container {
+    contain: strict;
+    transform: translateZ(0);
   }
 }
 

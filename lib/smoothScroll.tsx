@@ -42,8 +42,8 @@ interface LenisProviderProps {
  * Provides butter-smooth scrolling optimized for 120Hz displays
  * Uses RAF for perfect frame synchronization
  * 
- * IMPORTANT: If scrolling feels blocked, check that Lenis is not
- * interfering with native scroll. We use syncTouch: false on mobile.
+ * ENHANCED: Now optimized for both mobile AND desktop high-refresh displays
+ * including Apple Silicon Macs with ProMotion
  */
 export function LenisProvider({ children, options = {} }: LenisProviderProps) {
   const lenisRef = useRef<Lenis | null>(null);
@@ -51,7 +51,7 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
   
   const { updateScroll, refreshRate, isProMotion } = usePerformanceStore();
 
-  // Initialize Lenis with 120Hz optimizations
+  // Initialize Lenis with 120Hz optimizations for DESKTOP
   useEffect(() => {
     // Skip Lenis on mobile to avoid scroll blocking
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
@@ -60,14 +60,55 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
       return;
     }
     
-    // Detect refresh rate for optimal lerp
-    const lerp = isProMotion ? 0.06 : 0.08; // Lower lerp = smoother
+    // ENHANCED: Detect high-end desktop for optimal settings
+    const ua = navigator.userAgent.toLowerCase();
+    const isMac = /macintosh|mac os x/i.test(ua);
+    const cores = navigator.hardwareConcurrency || 4;
+    const memory = (navigator as any).deviceMemory || 8;
+    
+    // Detect Apple Silicon
+    let isAppleSilicon = false;
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+      if (gl) {
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        if (debugInfo) {
+          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
+          isAppleSilicon = renderer.includes('apple') && (renderer.includes('gpu') || /m[1-9]/.test(renderer));
+        }
+      }
+    } catch (e) {}
+    
+    // High-end desktop detection
+    const isHighEndDesktop = isAppleSilicon || (isMac && cores >= 8) || (memory >= 16 && cores >= 8);
+    const isHighRefreshDesktop = isProMotion || isAppleSilicon || window.screen.width >= 2560;
+    
+    // Optimized lerp based on device capability
+    // Lower lerp = smoother but more latency, higher = more responsive
+    let lerp = 0.08; // Default for 60Hz
+    if (isHighRefreshDesktop) {
+      lerp = 0.05; // Ultra-smooth for 120Hz+ displays
+    } else if (isProMotion) {
+      lerp = 0.06;
+    }
+    
+    // Optimized duration based on refresh rate
+    const duration = isHighRefreshDesktop ? 0.8 : 1.0;
+    
+    console.log('[Lenis] Desktop scroll initialized:', {
+      isAppleSilicon,
+      isHighEndDesktop,
+      isHighRefreshDesktop,
+      lerp,
+      duration
+    });
     
     lenisRef.current = new Lenis({
       lerp: options.lerp ?? lerp,
-      duration: options.duration ?? 1.0, // Faster for 120Hz
+      duration: options.duration ?? duration,
       smoothWheel: options.smoothWheel ?? true,
-      wheelMultiplier: options.wheelMultiplier ?? 0.8, // Less aggressive
+      wheelMultiplier: options.wheelMultiplier ?? (isHighEndDesktop ? 0.7 : 0.8),
       touchMultiplier: options.touchMultiplier ?? 1.5,
       infinite: options.infinite ?? false,
       orientation: 'vertical',

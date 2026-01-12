@@ -59,6 +59,69 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Enhanced device detection hook - includes desktop tier
+const useDeviceInfo = () => {
+    const [deviceInfo, setDeviceInfo] = useState({
+        isMobile: false,
+        isDesktop: true,
+        isHighEndDesktop: true,
+        isAppleSilicon: false,
+    });
+    
+    useEffect(() => {
+        const ua = navigator.userAgent.toLowerCase();
+        const isMobile = window.innerWidth < 768;
+        const memory = (navigator as any).deviceMemory || 8;
+        const cores = navigator.hardwareConcurrency || 4;
+        const isMac = /macintosh|mac os x/i.test(ua);
+        
+        // Detect Apple Silicon
+        let isAppleSilicon = false;
+        try {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+            if (gl) {
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                if (debugInfo) {
+                    const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
+                    isAppleSilicon = renderer.includes('apple') && (renderer.includes('gpu') || /m[1-9]/.test(renderer));
+                }
+            }
+        } catch (e) {}
+        
+        // Fallback for Macs
+        if (isMac && !isAppleSilicon && cores >= 8) {
+            isAppleSilicon = true;
+        }
+        
+        // High-end desktop detection
+        const isHighEndDesktop = !isMobile && (
+            isAppleSilicon ||
+            (memory >= 8 && cores >= 4)
+        );
+        
+        setDeviceInfo({
+            isMobile,
+            isDesktop: !isMobile,
+            isHighEndDesktop,
+            isAppleSilicon,
+        });
+        
+        const handleResize = () => {
+            setDeviceInfo(prev => ({
+                ...prev,
+                isMobile: window.innerWidth < 768,
+                isDesktop: window.innerWidth >= 768,
+            }));
+        };
+        
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+    
+    return deviceInfo;
+};
+
 const useIsMobile = () => {
     const [isMobile, setIsMobile] = useState(false);
     useEffect(() => {

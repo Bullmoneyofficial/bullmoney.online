@@ -1,6 +1,6 @@
 // ============================================================================
-// MOBILE OPTIMIZATION UTILITIES
-// Comprehensive mobile performance & cross-browser compatibility
+// DEVICE OPTIMIZATION UTILITIES
+// Comprehensive mobile AND desktop performance & cross-browser compatibility
 // ============================================================================
 
 'use client';
@@ -8,7 +8,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 
 // ============================================================================
-// DEVICE DETECTION
+// DEVICE DETECTION (Enhanced for Desktop + Mobile)
 // ============================================================================
 
 export interface DeviceInfo {
@@ -25,6 +25,15 @@ export interface DeviceInfo {
   screenHeight: number;
   devicePixelRatio: number;
   isLandscape: boolean;
+  // NEW: Desktop-specific properties
+  isAppleSilicon: boolean;
+  isMac: boolean;
+  isWindows: boolean;
+  isLinux: boolean;
+  gpuType: 'apple-gpu' | 'nvidia' | 'amd' | 'intel' | 'unknown';
+  performanceTier: 'ultra' | 'high' | 'medium' | 'low';
+  isHighRefresh: boolean;
+  estimatedRefreshRate: number;
 }
 
 export function useDeviceDetection(): DeviceInfo {
@@ -42,6 +51,15 @@ export function useDeviceDetection(): DeviceInfo {
     screenHeight: 1080,
     devicePixelRatio: 1,
     isLandscape: true,
+    // Desktop defaults
+    isAppleSilicon: false,
+    isMac: false,
+    isWindows: false,
+    isLinux: false,
+    gpuType: 'unknown',
+    performanceTier: 'high',
+    isHighRefresh: false,
+    estimatedRefreshRate: 60,
   });
 
   useEffect(() => {
@@ -49,6 +67,8 @@ export function useDeviceDetection(): DeviceInfo {
       const ua = navigator.userAgent;
       const width = window.innerWidth;
       const height = window.innerHeight;
+      const memory = (navigator as any).deviceMemory || 8;
+      const cores = navigator.hardwareConcurrency || 4;
 
       // Device type detection
       const isMobile = width < 768 || /iPhone|iPod|Android.*Mobile/i.test(ua);
@@ -58,6 +78,9 @@ export function useDeviceDetection(): DeviceInfo {
       // OS detection
       const isIOS = /iPad|iPhone|iPod/.test(ua);
       const isAndroid = /Android/.test(ua);
+      const isMac = /Macintosh|Mac OS X/i.test(ua);
+      const isWindows = /Windows/i.test(ua);
+      const isLinux = /Linux/i.test(ua) && !isAndroid;
 
       // Browser detection
       const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
@@ -66,6 +89,66 @@ export function useDeviceDetection(): DeviceInfo {
 
       // Touch support
       const supportsTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+      // GPU Detection
+      let gpuType: 'apple-gpu' | 'nvidia' | 'amd' | 'intel' | 'unknown' = 'unknown';
+      let isAppleSilicon = false;
+      
+      try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+        if (gl) {
+          const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+          if (debugInfo) {
+            const renderer = (gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || '').toLowerCase();
+            
+            if (renderer.includes('apple') && (renderer.includes('gpu') || /m[1-9]/.test(renderer))) {
+              gpuType = 'apple-gpu';
+              isAppleSilicon = true;
+            } else if (renderer.includes('nvidia') || renderer.includes('geforce') || 
+                       renderer.includes('rtx') || renderer.includes('gtx')) {
+              gpuType = 'nvidia';
+            } else if (renderer.includes('amd') || renderer.includes('radeon')) {
+              gpuType = 'amd';
+            } else if (renderer.includes('intel') || renderer.includes('uhd') || renderer.includes('iris')) {
+              gpuType = 'intel';
+            }
+          }
+        }
+      } catch (e) {}
+
+      // Fallback Apple Silicon detection for Macs
+      if (isMac && !isAppleSilicon && cores >= 8) {
+        isAppleSilicon = true;
+        gpuType = 'apple-gpu';
+      }
+
+      // Performance tier classification
+      let performanceTier: 'ultra' | 'high' | 'medium' | 'low';
+      if (isAppleSilicon || (gpuType !== 'intel' && gpuType !== 'unknown' && memory >= 16)) {
+        performanceTier = 'ultra';
+      } else if (memory >= 8 && cores >= 4) {
+        performanceTier = 'high';
+      } else if (memory >= 4 && cores >= 2) {
+        performanceTier = 'medium';
+      } else {
+        performanceTier = 'low';
+      }
+
+      // High refresh detection
+      let estimatedRefreshRate = 60;
+      let isHighRefresh = false;
+      
+      if ('refreshRate' in (window.screen as any)) {
+        estimatedRefreshRate = (window.screen as any).refreshRate;
+        isHighRefresh = estimatedRefreshRate >= 90;
+      } else if (isAppleSilicon) {
+        estimatedRefreshRate = 120;
+        isHighRefresh = true;
+      } else if (width >= 2560 || gpuType === 'nvidia' || gpuType === 'amd') {
+        estimatedRefreshRate = 144;
+        isHighRefresh = true;
+      }
 
       setDeviceInfo({
         isMobile,
@@ -81,6 +164,15 @@ export function useDeviceDetection(): DeviceInfo {
         screenHeight: height,
         devicePixelRatio: window.devicePixelRatio || 1,
         isLandscape: width > height,
+        // Desktop properties
+        isAppleSilicon,
+        isMac,
+        isWindows,
+        isLinux,
+        gpuType,
+        performanceTier,
+        isHighRefresh,
+        estimatedRefreshRate,
       });
     };
 

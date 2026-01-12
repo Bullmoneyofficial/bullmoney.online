@@ -9,6 +9,11 @@ export interface DeviceProfile {
   prefersReducedData: boolean;
   isHighEndDevice: boolean;
   connectionType: string | null;
+  // NEW: Desktop-specific optimizations
+  isAppleSilicon: boolean;
+  isHighRefreshDesktop: boolean;
+  desktopTier: 'ultra' | 'high' | 'medium' | 'low';
+  gpuTier: 'integrated' | 'discrete' | 'apple-gpu' | 'unknown';
 }
 
 const IN_APP_BROWSER_REGEX = /Instagram|FBAN|FBAV|FB_IAB|FBIOS|FB4A|Line|TikTok|Twitter|Snapchat|LinkedInApp/i;
@@ -23,6 +28,11 @@ export const DEFAULT_DEVICE_PROFILE: DeviceProfile = {
   prefersReducedData: false,
   isHighEndDevice: true,
   connectionType: null,
+  // Desktop defaults
+  isAppleSilicon: false,
+  isHighRefreshDesktop: false,
+  desktopTier: 'high',
+  gpuTier: 'unknown',
 };
 
 const buildProfile = (): DeviceProfile => {
@@ -98,6 +108,86 @@ const buildProfile = (): DeviceProfile => {
     }
   })();
 
+  // NEW: Apple Silicon detection (M1, M2, M3, M4+)
+  const isAppleSilicon = (() => {
+    if (typeof navigator === 'undefined') return false;
+    const ua = navigator.userAgent.toLowerCase();
+    // macOS with ARM architecture
+    const isMac = /macintosh|mac os x/i.test(ua);
+    if (!isMac) return false;
+    
+    // Check for WebGL renderer containing Apple GPU
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+      if (gl) {
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        if (debugInfo) {
+          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
+          // Apple Silicon GPUs are identified as "apple m1/m2/m3/m4" or "apple gpu"
+          return renderer.includes('apple') && (renderer.includes('gpu') || /m[1-9]/.test(renderer));
+        }
+      }
+    } catch (e) {}
+    
+    // Fallback: High core count Mac is likely Apple Silicon
+    return isMac && cores >= 8;
+  })();
+
+  // NEW: Desktop tier classification
+  const desktopTier = ((): 'ultra' | 'high' | 'medium' | 'low' => {
+    if (isMobile) return 'medium';
+    
+    // Apple Silicon Macs are ultra tier
+    if (isAppleSilicon) return 'ultra';
+    
+    // High-end desktop: 16GB+ RAM, 8+ cores
+    if (memory >= 16 && cores >= 8) return 'ultra';
+    
+    // Good desktop: 8GB+ RAM, 4+ cores
+    if (memory >= 8 && cores >= 4) return 'high';
+    
+    // Basic desktop: 4GB+ RAM, 2+ cores
+    if (memory >= 4 && cores >= 2) return 'medium';
+    
+    return 'low';
+  })();
+
+  // NEW: GPU tier detection
+  const gpuTier = ((): 'integrated' | 'discrete' | 'apple-gpu' | 'unknown' => {
+    if (isAppleSilicon) return 'apple-gpu';
+    
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+      if (gl) {
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        if (debugInfo) {
+          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
+          // Discrete GPU brands
+          if (renderer.includes('nvidia') || renderer.includes('geforce') || 
+              renderer.includes('radeon') || renderer.includes('amd') ||
+              renderer.includes('rx ') || renderer.includes('rtx') || renderer.includes('gtx')) {
+            return 'discrete';
+          }
+          // Integrated GPUs
+          if (renderer.includes('intel') || renderer.includes('uhd') || renderer.includes('iris')) {
+            return 'integrated';
+          }
+        }
+      }
+    } catch (e) {}
+    
+    return 'unknown';
+  })();
+
+  // NEW: High refresh desktop detection
+  const isHighRefreshDesktop = !isMobile && (
+    isAppleSilicon || // Apple Silicon Macs with ProMotion displays
+    desktopTier === 'ultra' || // High-end desktops likely have high-refresh monitors
+    window.screen.width >= 2560 // Ultra-wide/4K monitors often 120Hz+
+  );
+
   return {
     isMobile,
     isDesktop: !isMobile,
@@ -107,6 +197,11 @@ const buildProfile = (): DeviceProfile => {
     prefersReducedData: !!supportsReducedData,
     isHighEndDevice,
     connectionType: typeof effectiveType === 'string' ? effectiveType : null,
+    // NEW desktop fields
+    isAppleSilicon,
+    isHighRefreshDesktop,
+    desktopTier,
+    gpuTier,
   };
 };
 

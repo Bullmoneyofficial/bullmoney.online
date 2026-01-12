@@ -166,6 +166,8 @@ export default function RootLayout({
                   const w = screen.width;
                   const h = screen.height;
                   const dpr = window.devicePixelRatio;
+                  const cores = navigator.hardwareConcurrency || 4;
+                  const memory = navigator.deviceMemory || 8;
                   
                   // iPhone Pro (13/14/15/16 Pro/Pro Max)
                   if (/iphone/.test(ua) && dpr >= 3) {
@@ -176,6 +178,31 @@ export default function RootLayout({
                   // iPad Pro (all support ProMotion)
                   else if (/ipad/.test(ua) && dpr >= 2 && w >= 1024) {
                     nativeHz = 120;
+                  }
+                  // ENHANCED: Apple Silicon Mac detection (M1, M2, M3, M4+)
+                  else if (/macintosh|mac os x/i.test(ua)) {
+                    // Check for Apple Silicon via high core count or WebGL
+                    let isAppleSilicon = cores >= 8;
+                    try {
+                      const canvas = document.createElement('canvas');
+                      const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+                      if (gl) {
+                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                        if (debugInfo) {
+                          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
+                          if (renderer.includes('apple') && (renderer.includes('gpu') || /m[1-9]/.test(renderer))) {
+                            isAppleSilicon = true;
+                            root.classList.add('apple-silicon');
+                            console.log('🍎 Apple Silicon Mac detected:', renderer);
+                          }
+                        }
+                      }
+                    } catch (e) {}
+                    
+                    if (isAppleSilicon) {
+                      nativeHz = 120; // ProMotion on MacBook Pro 14"/16"
+                      root.classList.add('desktop-optimized', 'high-performance');
+                    }
                   }
                   // Samsung Galaxy S/Note/Ultra
                   else if (/samsung|sm-g|sm-n|sm-s/i.test(ua) && dpr >= 2.5) {
@@ -189,9 +216,33 @@ export default function RootLayout({
                   else if (/pixel.*pro/i.test(ua)) {
                     nativeHz = 90;
                   }
-                  // Desktop gaming monitors (1440p+)
-                  else if (w >= 2560 && !(/mobi|android|iphone|ipad/i.test(ua))) {
-                    nativeHz = 120;
+                  // ENHANCED: High-spec Windows/Linux desktops
+                  else if (!(/mobi|android|iphone|ipad/i.test(ua))) {
+                    // Check for discrete GPU
+                    let hasDiscreteGPU = false;
+                    try {
+                      const canvas = document.createElement('canvas');
+                      const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+                      if (gl) {
+                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                        if (debugInfo) {
+                          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
+                          hasDiscreteGPU = renderer.includes('nvidia') || renderer.includes('geforce') || 
+                                           renderer.includes('radeon') || renderer.includes('amd') ||
+                                           renderer.includes('rtx') || renderer.includes('gtx');
+                          if (hasDiscreteGPU) {
+                            root.classList.add('discrete-gpu');
+                          }
+                        }
+                      }
+                    } catch (e) {}
+                    
+                    // High-spec desktop with likely high-refresh monitor
+                    if (w >= 2560 || (hasDiscreteGPU && memory >= 8) || (memory >= 16 && cores >= 8)) {
+                      nativeHz = 120;
+                      root.classList.add('desktop-optimized', 'high-performance');
+                      console.log('🖥️ High-performance desktop detected');
+                    }
                   }
                 }
                 

@@ -85,6 +85,30 @@ export {
 } from '@/hooks/usePerformanceInit';
 
 // ============================================================================
+// DESKTOP OPTIMIZATIONS (Apple Silicon M1+, High-refresh desktops)
+// ============================================================================
+export {
+  detectDesktopCapabilities,
+  useDesktopCapabilities,
+  useDesktopOptimizations,
+  useOptimizedRAF,
+  getOptimalSpringConfig,
+  getOptimalDuration,
+  initDesktopOptimizations,
+} from '@/lib/desktopOptimizations';
+
+export type { DesktopCapabilities } from '@/lib/desktopOptimizations';
+
+// ============================================================================
+// DEVICE DETECTION (Mobile + Desktop)
+// ============================================================================
+export {
+  useDeviceDetection,
+} from '@/lib/mobileOptimizations';
+
+export type { DeviceInfo } from '@/lib/mobileOptimizations';
+
+// ============================================================================
 // PROVIDERS
 // ============================================================================
 export {
