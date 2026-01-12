@@ -47,14 +47,24 @@ export const MobileStaticHelper = () => {
           duration: 0.35,
           ease: [0.34, 1.56, 0.64, 1]
         }}
-        className="mx-auto w-fit max-w-[90%] px-3 py-2 rounded-xl bg-black/80 backdrop-blur-xl gpu-accelerated"
+        className="relative mx-auto w-fit max-w-[90%] px-3 py-2 rounded-xl bg-black/80 backdrop-blur-xl gpu-accelerated overflow-hidden"
         style={{
-          border: '1px solid var(--theme-accent-border, rgba(59, 130, 246, 0.5))',
-          boxShadow: `0 0 30px var(--theme-accent-glow, rgba(59, 130, 246, 0.3)), inset 0 0 15px var(--theme-accent-subtle, rgba(59, 130, 246, 0.1))`
+          border: '1px solid rgba(59, 130, 246, 0.5)',
+          boxShadow: '0 0 30px rgba(59, 130, 246, 0.3), inset 0 0 15px rgba(59, 130, 246, 0.1)'
         }}
       >
+        {/* Shimmer Background - Left to Right Gradient */}
         <motion.div 
-          className="flex items-center gap-2.5 justify-center"
+          animate={{ x: ['0%', '200%'] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-y-0 left-[-100%] w-[100%] z-0"
+          style={{
+            background: 'linear-gradient(to right, transparent, rgba(59, 130, 246, 0.3), transparent)'
+          }}
+        />
+        
+        <motion.div 
+          className="flex items-center gap-2.5 justify-center relative z-10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1, duration: 0.2 }}
@@ -68,11 +78,11 @@ export const MobileStaticHelper = () => {
           >
             <span 
               className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" 
-              style={{ backgroundColor: accentColor }}
+              style={{ backgroundColor: '#3b82f6' }}
             />
             <span 
               className="relative inline-flex rounded-full h-1.5 w-1.5" 
-              style={{ backgroundColor: accentColor }}
+              style={{ backgroundColor: '#3b82f6' }}
             />
           </motion.div>
           
@@ -88,7 +98,7 @@ export const MobileStaticHelper = () => {
                 ease: [0.34, 1.56, 0.64, 1]
               }}
               className="text-[10px] tracking-wide font-medium text-center"
-              style={{ color: `color-mix(in srgb, ${accentColor} 80%, white)` }}
+              style={{ color: '#93c5fd' }}
             >
               {MOBILE_HELPER_TIPS[tipIndex]}
             </motion.span>

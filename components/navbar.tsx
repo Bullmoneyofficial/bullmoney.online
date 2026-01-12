@@ -186,7 +186,7 @@ export const Navbar = () => {
         }
         isFirst = false;
       }, 300);
-    }, 5000);
+    }, 10000);
     
     return () => clearInterval(interval);
   }, [mounted]);

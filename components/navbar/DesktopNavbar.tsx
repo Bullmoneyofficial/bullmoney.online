@@ -61,18 +61,18 @@ export const DesktopNavbar = React.forwardRef<HTMLDivElement, DesktopNavbarProps
     const safeLoyaltyIcon = hasReward ? (
       <IconCreditCard className="h-6 w-6 text-blue-400 animate-pulse" stroke={1.5} />
     ) : (
-      <IconCreditCard className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />
+      <IconCreditCard className="h-6 w-6 text-blue-400" stroke={1.5} />
     );
 
     const desktopNavItems = [
       {
-        icon: <IconBuildingStore className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
+        icon: <IconBuildingStore className="h-6 w-6 text-blue-400" stroke={1.5} />,
         label: "Home",
         tips: ["Welcome to BullMoney!", "Explore our platform", "Check what's new"],
         href: "/",
       },
       {
-        icon: <IconSparkles className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
+        icon: <IconSparkles className="h-6 w-6 text-blue-400" stroke={1.5} />,
         label: "Setups",
         tips: ["Daily Trading Setups", "Crypto & Forex Analysis", "Premium Alerts"],
         triggerComponent: <div className="w-full h-full flex items-center justify-center pointer-events-auto"><ServicesModal /></div>,
@@ -80,14 +80,14 @@ export const DesktopNavbar = React.forwardRef<HTMLDivElement, DesktopNavbarProps
       {
         icon: isXMUser 
           ? <IconUsersGroup className="h-6 w-6 text-red-400" stroke={1.5} />
-          : <IconUsersGroup className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
+          : <IconUsersGroup className="h-6 w-6 text-blue-400" stroke={1.5} />,
         label: "Affiliates",
         tips: ["Join our affiliate program", "Earn commissions", "Grow with us"],
         onClick: onAffiliateClick,
         isXMHighlight: isXMUser,
       },
       {
-        icon: <IconHelp className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
+        icon: <IconHelp className="h-6 w-6 text-blue-400" stroke={1.5} />,
         label: "FAQ",
         tips: ["Got questions?", "Find your answers here", "Support center"],
         onClick: onFaqClick,
@@ -100,7 +100,7 @@ export const DesktopNavbar = React.forwardRef<HTMLDivElement, DesktopNavbarProps
         showShine: hasReward,
       },
       {
-        icon: <IconCalendarTime className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
+        icon: <IconCalendarTime className="h-6 w-6 text-blue-400" stroke={1.5} />,
         label: "Products",
         tips: ["Browse our products", "Find the best tools for you", "Check out our latest offers"],
         href: "/products",

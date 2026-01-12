@@ -62,7 +62,7 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -15, scale: 0.92 }}
           transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
-          className="lg:hidden fixed top-28 sm:top-32 left-3 right-3 z-[9999] rounded-2xl bg-black/90 p-5 sm:p-6 backdrop-blur-2xl menu-glass"
+          className="lg:hidden fixed top-28 sm:top-32 left-3 right-3 z-[9999] rounded-2xl bg-black/90 p-5 sm:p-6 backdrop-blur-2xl menu-glass overflow-hidden"
           style={{ 
             touchAction: 'auto',
             pointerEvents: 'auto',
@@ -70,20 +70,32 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
             transition: 'filter 0.5s ease-in-out',
             border: isXMUser 
               ? '2px solid rgba(239, 68, 68, 0.5)' 
-              : `2px solid var(--theme-accent-border, rgba(59, 130, 246, 0.5))`,
+              : '2px solid rgba(59, 130, 246, 0.5)',
             boxShadow: isXMUser
               ? '0 0 50px rgba(239, 68, 68, 0.4), inset 0 0 30px rgba(239, 68, 68, 0.08)'
-              : `0 0 50px var(--theme-accent-glow, rgba(59, 130, 246, 0.4)), inset 0 0 30px var(--theme-accent-subtle, rgba(59, 130, 246, 0.08))`
+              : '0 0 50px rgba(59, 130, 246, 0.4), inset 0 0 30px rgba(59, 130, 246, 0.08)'
           }}
         >
+          {/* Shimmer Background - Left to Right Gradient */}
           <motion.div 
-            className="flex flex-col gap-2.5 w-full"
+            animate={{ x: ['0%', '200%'] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-y-0 left-[-100%] w-[100%] z-0"
+            style={{
+              background: isXMUser 
+                ? 'linear-gradient(to right, transparent, rgba(239, 68, 68, 0.3), transparent)'
+                : 'linear-gradient(to right, transparent, rgba(59, 130, 246, 0.3), transparent)'
+            }}
+          />
+          
+          <motion.div 
+            className="flex flex-col gap-2.5 w-full relative z-10"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.3 }}
           >
             {/* Home */}
-            <ThemedMenuItem delay={0.12} href="/" onClick={onClose} icon={<IconBuildingStore className="h-5 w-5" stroke={1.5} />} label="Home" accentColor={accentColor} />
+            <ThemedMenuItem delay={0.12} href="/" onClick={onClose} icon={<IconBuildingStore className="h-5 w-5" stroke={1.5} />} label="Home" />
 
             {/* Setups */}
             <motion.div
@@ -100,12 +112,12 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
                 onTouchStart={() => SoundEffects.click()}
                 className="relative flex items-center justify-center gap-3 w-full text-sm sm:text-base font-semibold hover:text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl cursor-pointer transition-all duration-200"
                 style={{
-                  color: `color-mix(in srgb, ${accentColor} 80%, white)`,
-                  backgroundColor: `color-mix(in srgb, ${accentColor} 8%, transparent)`,
-                  border: `1px solid color-mix(in srgb, ${accentColor} 30%, transparent)`
+                  color: '#93c5fd',
+                  backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)'
                 }}
               >
-                <IconSparkles className="h-5 w-5" stroke={1.5} style={{ color: accentColor }} />
+                <IconSparkles className="h-5 w-5" stroke={1.5} style={{ color: '#60a5fa' }} />
                 Setups
                 <div className="absolute inset-0 opacity-0"><ServicesModal /></div>
               </motion.button>
@@ -125,14 +137,14 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
                 onTouchStart={() => SoundEffects.click()}
                 className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold cursor-pointer px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200"
                 style={{
-                  color: isXMUser ? 'rgb(252, 165, 165)' : `color-mix(in srgb, ${accentColor} 80%, white)`,
-                  backgroundColor: isXMUser ? 'rgba(239, 68, 68, 0.08)' : `color-mix(in srgb, ${accentColor} 8%, transparent)`,
-                  border: isXMUser ? '1px solid rgba(239, 68, 68, 0.3)' : `1px solid color-mix(in srgb, ${accentColor} 30%, transparent)`,
+                  color: isXMUser ? 'rgb(252, 165, 165)' : '#93c5fd',
+                  backgroundColor: isXMUser ? 'rgba(239, 68, 68, 0.08)' : 'rgba(59, 130, 246, 0.08)',
+                  border: isXMUser ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(59, 130, 246, 0.3)',
                   fontWeight: isXMUser ? 'bold' : 'semibold'
                 }}
                 onClick={() => { SoundEffects.click(); onAffiliateClick(); onClose(); }}
               >
-                <IconUsersGroup className="h-5 w-5" stroke={1.5} style={{ color: isXMUser ? '#f87171' : accentColor }} />
+                <IconUsersGroup className="h-5 w-5" stroke={1.5} style={{ color: isXMUser ? '#f87171' : '#60a5fa' }} />
                 Affiliates
                 {isXMUser && (
                   <motion.span
@@ -158,13 +170,13 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
                 onTouchStart={() => SoundEffects.click()}
                 className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold hover:text-white cursor-pointer px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200"
                 style={{
-                  color: `color-mix(in srgb, ${accentColor} 80%, white)`,
-                  backgroundColor: `color-mix(in srgb, ${accentColor} 8%, transparent)`,
-                  border: `1px solid color-mix(in srgb, ${accentColor} 30%, transparent)`
+                  color: '#93c5fd',
+                  backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)'
                 }}
                 onClick={() => { SoundEffects.click(); onFaqClick(); onClose(); }}
               >
-                <IconHelp className="h-5 w-5" stroke={1.5} style={{ color: accentColor }} />
+                <IconHelp className="h-5 w-5" stroke={1.5} style={{ color: '#60a5fa' }} />
                 FAQ
               </motion.button>
             </motion.div>
@@ -184,13 +196,13 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
                 onClick={() => { SoundEffects.click(); onClose(); }}
                 className="relative w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200"
                 style={{
-                  color: hasReward ? accentColor : `color-mix(in srgb, ${accentColor} 80%, white)`,
-                  backgroundColor: hasReward ? `color-mix(in srgb, ${accentColor} 20%, transparent)` : `color-mix(in srgb, ${accentColor} 8%, transparent)`,
-                  border: hasReward ? `1px solid color-mix(in srgb, ${accentColor} 60%, transparent)` : `1px solid color-mix(in srgb, ${accentColor} 30%, transparent)`,
+                  color: hasReward ? '#60a5fa' : '#93c5fd',
+                  backgroundColor: hasReward ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.08)',
+                  border: hasReward ? '1px solid rgba(59, 130, 246, 0.6)' : '1px solid rgba(59, 130, 246, 0.3)',
                   fontWeight: hasReward ? 'bold' : 'normal'
                 }}
               >
-                <IconCreditCard className="h-5 w-5" stroke={1.5} style={{ color: accentColor }} />
+                <IconCreditCard className="h-5 w-5" stroke={1.5} style={{ color: '#60a5fa' }} />
                 {hasReward ? "Reward Unlocked!" : "Rewards Card"}
                 <div className="absolute inset-0 opacity-0"><LoyaltyModal /></div>
               </motion.button>
@@ -203,12 +215,12 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
               transition={{ delay: 0.22 }}
               className="h-px my-1"
               style={{
-                background: `linear-gradient(to right, transparent, color-mix(in srgb, ${accentColor} 30%, transparent), transparent)`
+                background: 'linear-gradient(to right, transparent, rgba(59, 130, 246, 0.3), transparent)'
               }}
             />
 
             {/* Products */}
-            <ThemedMenuItem delay={0.24} href="/products" onClick={onClose} icon={<IconBuildingStore className="h-5 w-5" stroke={1.5} />} label="Products" highlighted accentColor={accentColor} />
+            <ThemedMenuItem delay={0.24} href="/products" onClick={onClose} icon={<IconBuildingStore className="h-5 w-5" stroke={1.5} />} label="Products" highlighted />
 
             {/* Theme */}
             <motion.div
@@ -225,12 +237,12 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
                 onClick={() => { SoundEffects.click(); onClose(); onThemeClick(); }}
                 className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold hover:text-white transition-all duration-200 px-4 sm:px-6 py-3 sm:py-4 rounded-xl"
                 style={{
-                  color: `color-mix(in srgb, ${accentColor} 80%, white)`,
-                  backgroundColor: `color-mix(in srgb, ${accentColor} 8%, transparent)`,
-                  border: `1px solid color-mix(in srgb, ${accentColor} 30%, transparent)`
+                  color: '#93c5fd',
+                  backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)'
                 }}
               >
-                <IconPalette className="h-5 w-5" stroke={1.5} style={{ color: accentColor }} />
+                <IconPalette className="h-5 w-5" stroke={1.5} style={{ color: '#60a5fa' }} />
                 Theme
               </motion.button>
             </motion.div>
@@ -251,16 +263,16 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
                   onClick={() => { SoundEffects.click(); onClose(); onAdminClick(); }}
                   className="w-full flex items-center justify-center gap-3 text-xs sm:text-sm uppercase tracking-widest transition-all duration-200 py-2.5 sm:py-3 rounded-xl px-4 sm:px-6"
                   style={{
-                    color: isAdmin ? accentColor : `color-mix(in srgb, ${accentColor} 70%, white)`,
-                    backgroundColor: isAdmin ? `color-mix(in srgb, ${accentColor} 15%, transparent)` : `color-mix(in srgb, ${accentColor} 8%, transparent)`,
-                    border: isAdmin ? `1px solid color-mix(in srgb, ${accentColor} 40%, transparent)` : `1px solid color-mix(in srgb, ${accentColor} 30%, transparent)`,
+                    color: isAdmin ? '#60a5fa' : '#93c5fd',
+                    backgroundColor: isAdmin ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)',
+                    border: isAdmin ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid rgba(59, 130, 246, 0.3)',
                     fontWeight: isAdmin ? 'bold' : 'normal'
                   }}
                 >
                   {isAdmin ? (
-                    <><IconSettings className="h-5 w-5" stroke={1.5} style={{ color: accentColor }} /> Admin Dashboard</>
+                    <><IconSettings className="h-5 w-5" stroke={1.5} style={{ color: '#60a5fa' }} /> Admin Dashboard</>
                   ) : (
-                    <><IconLock className="h-5 w-5" stroke={1.5} style={{ color: accentColor }} /> Team Access</>
+                    <><IconLock className="h-5 w-5" stroke={1.5} style={{ color: '#60a5fa' }} /> Team Access</>
                   )}
                 </motion.button>
               </motion.div>
@@ -275,7 +287,7 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
 MobileDropdownMenu.displayName = 'MobileDropdownMenu';
 
 // Helper MenuItem component with theme support
-const ThemedMenuItem = ({ delay, href, onClick, icon, label, highlighted = false, accentColor }: any) => (
+const ThemedMenuItem = ({ delay, href, onClick, icon, label, highlighted = false }: any) => (
   <motion.div
     initial={{ opacity: 0, x: -10 }}
     animate={{ opacity: 1, x: 0 }}
@@ -293,15 +305,15 @@ const ThemedMenuItem = ({ delay, href, onClick, icon, label, highlighted = false
         onTouchStart={() => SoundEffects.click()}
         className="flex items-center justify-center gap-3 text-sm sm:text-base font-semibold w-full px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200"
         style={{
-          color: highlighted ? '#000000' : `color-mix(in srgb, ${accentColor} 80%, white)`,
-          backgroundColor: highlighted ? accentColor : `color-mix(in srgb, ${accentColor} 8%, transparent)`,
-          border: highlighted ? `1px solid color-mix(in srgb, ${accentColor} 60%, white)` : `1px solid color-mix(in srgb, ${accentColor} 30%, transparent)`,
-          boxShadow: highlighted ? `0 0 30px color-mix(in srgb, ${accentColor} 50%, transparent)` : 'none',
+          color: highlighted ? '#000000' : '#93c5fd',
+          backgroundColor: highlighted ? '#3b82f6' : 'rgba(59, 130, 246, 0.08)',
+          border: highlighted ? '1px solid rgba(59, 130, 246, 0.6)' : '1px solid rgba(59, 130, 246, 0.3)',
+          boxShadow: highlighted ? '0 0 30px rgba(59, 130, 246, 0.5)' : 'none',
           textShadow: highlighted ? '0 1px 2px rgba(0, 0, 0, 0.3)' : 'none'
         }}
       >
         <span style={{ 
-          color: highlighted ? '#000000' : accentColor,
+          color: highlighted ? '#000000' : '#60a5fa',
           filter: highlighted ? 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))' : 'none'
         }}>{icon}</span>
         {label}

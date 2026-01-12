@@ -30,24 +30,25 @@ export const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(
         )}
         style={{
           border: showShine 
-            ? `2px solid color-mix(in srgb, ${effectiveColor} 70%, transparent)` 
-            : `2px solid color-mix(in srgb, ${effectiveColor} 30%, transparent)`,
+            ? `2px solid rgba(59, 130, 246, 0.7)` 
+            : `2px solid rgba(59, 130, 246, 0.3)`,
           backgroundColor: showShine 
-            ? `color-mix(in srgb, ${effectiveColor} 20%, black)` 
-            : `color-mix(in srgb, ${effectiveColor} 10%, black)`
+            ? `rgba(59, 130, 246, 0.15)` 
+            : `rgba(59, 130, 246, 0.08)`
         }}
       >
-        {/* Shimmer Background - Left to Right Gradient */}
-        {showShine && (
-          <motion.div 
-            animate={{ x: ['0%', '200%'] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-y-0 left-[-100%] w-[100%] opacity-100 z-0"
-            style={{
-              background: `linear-gradient(to right, transparent, color-mix(in srgb, ${effectiveColor} 60%, transparent), transparent)`
-            }}
-          />
-        )}
+        {/* Shimmer Background - Left to Right Gradient - Always visible */}
+        <motion.div 
+          animate={{ x: ['0%', '200%'] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-y-0 left-[-100%] w-[100%] z-0"
+          style={{
+            background: showShine 
+              ? `linear-gradient(to right, transparent, rgba(59, 130, 246, 0.6), transparent)`
+              : `linear-gradient(to right, transparent, rgba(59, 130, 246, 0.3), transparent)`,
+            opacity: 1
+          }}
+        />
 
         {/* Gradient Overlay */}
         <motion.div
@@ -55,7 +56,7 @@ export const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(
           transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
           className="absolute inset-0 opacity-20 z-0 pointer-events-none"
           style={{
-            background: `linear-gradient(to right, color-mix(in srgb, ${effectiveColor} 30%, transparent), color-mix(in srgb, ${effectiveColor} 10%, transparent), transparent)`
+            background: `linear-gradient(to right, rgba(59, 130, 246, 0.3), rgba(59, 130, 246, 0.1), transparent)`
           }}
         />
 
@@ -65,7 +66,7 @@ export const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(
           whileHover={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
           className="absolute inset-0 rounded-2xl pointer-events-none blur-lg"
-          style={{ backgroundColor: `color-mix(in srgb, ${effectiveColor} 20%, transparent)` }}
+          style={{ backgroundColor: `rgba(59, 130, 246, 0.2)` }}
         />
 
         {/* Content Layer */}
@@ -75,6 +76,7 @@ export const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.05, type: "spring" }}
             className="flex-shrink-0 mb-1 z-10 pointer-events-none relative"
+            style={{ color: isXMUser ? '#f87171' : '#60a5fa' }}
           >
             {children}
             {/* Notification Dot if Shining */}
@@ -87,11 +89,11 @@ export const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(
               >
                 <span 
                   className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                  style={{ backgroundColor: effectiveColor }}
+                  style={{ backgroundColor: '#3b82f6' }}
                 />
                 <span 
                   className="relative inline-flex rounded-full h-2.5 w-2.5 shadow-lg"
-                  style={{ backgroundColor: effectiveColor }}
+                  style={{ backgroundColor: '#3b82f6' }}
                 />
               </motion.span>
             )}
@@ -103,9 +105,7 @@ export const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(
             transition={{ duration: 0.3 }}
             className="text-[9px] uppercase tracking-widest font-semibold z-10 pointer-events-none transition-colors"
             style={{ 
-              color: showShine 
-                ? `color-mix(in srgb, ${effectiveColor} 80%, white)` 
-                : `color-mix(in srgb, ${effectiveColor} 60%, white)`,
+              color: isXMUser ? '#fca5a5' : (showShine ? '#93c5fd' : '#60a5fa'),
               fontWeight: showShine ? 'bold' : 'normal'
             }}
           >

@@ -96,7 +96,7 @@ export const MovingTradingTip = ({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.05, duration: 0.2 }}
           className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px]" 
-          style={{ borderBottomColor: `color-mix(in srgb, ${accentColor} 50%, transparent)` }}
+          style={{ borderBottomColor: 'rgba(59, 130, 246, 0.5)' }}
         />
         
         {/* Tip container */}
@@ -104,13 +104,23 @@ export const MovingTradingTip = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.05, duration: 0.25 }}
-          className="px-4 py-2.5 rounded-xl bg-black/85 backdrop-blur-xl tooltip-optimized"
+          className="relative px-4 py-2.5 rounded-xl bg-black/85 backdrop-blur-xl tooltip-optimized overflow-hidden"
           style={{
-            border: '1px solid var(--theme-accent-border, rgba(59, 130, 246, 0.5))',
-            boxShadow: `0 0 40px var(--theme-accent-glow, rgba(59, 130, 246, 0.4)), inset 0 0 20px var(--theme-accent-subtle, rgba(59, 130, 246, 0.1))`
+            border: '1px solid rgba(59, 130, 246, 0.5)',
+            boxShadow: '0 0 40px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(59, 130, 246, 0.1)'
           }}
         >
-          <div className="flex items-center gap-3">
+          {/* Shimmer Background - Left to Right Gradient */}
+          <motion.div 
+            animate={{ x: ['0%', '200%'] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-y-0 left-[-100%] w-[100%] z-0"
+            style={{
+              background: 'linear-gradient(to right, transparent, rgba(59, 130, 246, 0.4), transparent)'
+            }}
+          />
+          
+          <div className="flex items-center gap-3 relative z-10">
             {/* Pulse indicator */}
             <motion.div 
               initial={{ scale: 0.5, opacity: 0 }}
@@ -120,11 +130,11 @@ export const MovingTradingTip = ({
             >
               <span 
                 className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" 
-                style={{ backgroundColor: accentColor }}
+                style={{ backgroundColor: '#3b82f6' }}
               />
               <span 
                 className="relative inline-flex rounded-full h-2 w-2 shadow-lg" 
-                style={{ backgroundColor: accentColor }}
+                style={{ backgroundColor: '#3b82f6' }}
               />
             </motion.div>
             
@@ -134,7 +144,7 @@ export const MovingTradingTip = ({
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.12, duration: 0.25 }}
               className="text-[10px] uppercase tracking-widest font-bold shrink-0"
-              style={{ color: accentColor }}
+              style={{ color: '#60a5fa' }}
             >
               {tip.target}
             </motion.span>
@@ -146,7 +156,7 @@ export const MovingTradingTip = ({
               transition={{ delay: 0.14, duration: 0.2 }}
               className="w-[1px] h-4 shrink-0 origin-center"
               style={{ 
-                background: `linear-gradient(to bottom, color-mix(in srgb, ${accentColor} 40%, transparent), color-mix(in srgb, ${accentColor} 20%, transparent), color-mix(in srgb, ${accentColor} 40%, transparent))` 
+                background: 'linear-gradient(to bottom, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.4))' 
               }}
             />
             
@@ -156,7 +166,7 @@ export const MovingTradingTip = ({
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.16, duration: 0.25 }}
               className="text-xs font-medium whitespace-nowrap"
-              style={{ color: `color-mix(in srgb, ${accentColor} 80%, white)` }}
+              style={{ color: '#93c5fd' }}
             >
               {tip.text}
             </motion.span>

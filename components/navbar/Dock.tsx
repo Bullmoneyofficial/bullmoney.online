@@ -80,7 +80,7 @@ const DockLabelInline = ({
   }, [isVisible]);
 
   // Use theme accent or fallback to XM red / default blue
-  const effectiveColor = isXMUser ? '#ef4444' : accentColor;
+  const effectiveColor = isXMUser ? '#ef4444' : '#3b82f6';
 
   return (
     <>
@@ -98,7 +98,7 @@ const DockLabelInline = ({
               opacity: { duration: 0.25 }
             }}
             className={cn(
-              "fixed w-max min-w-[160px] rounded-xl bg-black/75 backdrop-blur-2xl px-4 py-2.5 z-[150] pointer-events-none shadow-2xl tooltip-optimized",
+              "fixed w-max min-w-[160px] rounded-xl bg-black/75 backdrop-blur-2xl px-4 py-2.5 z-[150] pointer-events-none shadow-2xl tooltip-optimized overflow-hidden",
               className
             )}
             role="tooltip"
@@ -106,20 +106,33 @@ const DockLabelInline = ({
               left: `${position.x}px`,
               top: `${position.y}px`,
               transform: 'translateX(-50%)',
-              border: `1px solid color-mix(in srgb, ${effectiveColor} 50%, transparent)`,
-              boxShadow: `0 0 40px color-mix(in srgb, ${effectiveColor} 40%, transparent), inset 0 0 20px color-mix(in srgb, ${effectiveColor} 10%, transparent)`
+              border: isXMUser ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(59, 130, 246, 0.5)',
+              boxShadow: isXMUser 
+                ? '0 0 40px rgba(239, 68, 68, 0.4), inset 0 0 20px rgba(239, 68, 68, 0.1)'
+                : '0 0 40px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(59, 130, 246, 0.1)'
             }}
           >
+            {/* Shimmer Background - Left to Right Gradient */}
+            <motion.div 
+              animate={{ x: ['0%', '200%'] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-y-0 left-[-100%] w-[100%] z-0"
+              style={{
+                background: isXMUser 
+                  ? 'linear-gradient(to right, transparent, rgba(239, 68, 68, 0.4), transparent)'
+                  : 'linear-gradient(to right, transparent, rgba(59, 130, 246, 0.4), transparent)'
+              }}
+            />
             {/* Arrow pointing up */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1, duration: 0.2 }}
-              className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px]"
-              style={{ borderBottomColor: `color-mix(in srgb, ${effectiveColor} 50%, transparent)` }}
+              className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] z-10"
+              style={{ borderBottomColor: isXMUser ? 'rgba(239, 68, 68, 0.5)' : 'rgba(59, 130, 246, 0.5)' }}
             />
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 relative z-10">
               {/* Pulse indicator */}
               <motion.div 
                 initial={{ scale: 0.5, opacity: 0 }}
@@ -155,7 +168,9 @@ const DockLabelInline = ({
                 transition={{ delay: 0.12, duration: 0.2 }}
                 className="w-[1px] h-4 shrink-0"
                 style={{ 
-                  background: `linear-gradient(to bottom, color-mix(in srgb, ${effectiveColor} 40%, transparent), color-mix(in srgb, ${effectiveColor} 20%, transparent), color-mix(in srgb, ${effectiveColor} 40%, transparent))` 
+                  background: isXMUser 
+                    ? 'linear-gradient(to bottom, rgba(239, 68, 68, 0.4), rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.4))'
+                    : 'linear-gradient(to bottom, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.4))' 
                 }}
               />
               
@@ -173,7 +188,7 @@ const DockLabelInline = ({
                         ease: [0.34, 1.56, 0.64, 1]
                       }}
                       className="text-xs font-medium whitespace-nowrap block"
-                      style={{ color: `color-mix(in srgb, ${effectiveColor} 80%, white)` }}
+                      style={{ color: isXMUser ? '#fca5a5' : '#93c5fd' }}
                     >
                       {tips[currentIndex]}
                     </motion.span>
