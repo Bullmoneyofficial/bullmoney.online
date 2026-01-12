@@ -74,11 +74,39 @@
 
 html {
   scroll-behavior: smooth;
+  /* Enable smooth scrolling with GPU acceleration */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* GPU-accelerated scrolling for smooth performance */
+body {
+  overscroll-behavior-y: contain;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  
+  /* GPU acceleration utilities */
+  .gpu-accelerate {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  
+  .will-change-transform {
+    will-change: transform;
+  }
+  
+  .will-change-opacity {
+    will-change: opacity;
+  }
+  
+  /* Optimized transitions */
+  .transition-gpu {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
   }
 }
 

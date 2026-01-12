@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, memo, useCallback, useMemo } from "react";
 import { motion, useMotionValue, useMotionTemplate, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import createGlobe from "cobe";

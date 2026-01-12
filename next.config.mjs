@@ -10,20 +10,50 @@ const nextConfig = {
   // Optimize production builds
   productionBrowserSourceMaps: false,
 
-  // Optimize chunking for better caching
+  // Aggressive code splitting & tree-shaking
   experimental: {
-    optimizePackageImports: ['@splinetool/react-spline', 'lucide-react', 'react-youtube'],
+    optimizePackageImports: [
+      '@splinetool/react-spline',
+      '@splinetool/runtime',
+      'lucide-react',
+      'react-youtube',
+      'framer-motion',
+      '@tabler/icons-react',
+      'react-icons',
+      'three',
+      '@react-three/fiber',
+      '@react-three/drei',
+      'gsap',
+      'cobe',
+    ],
+    // Optimize CSS loading
+    optimizeCss: true,
+  },
+
+  // Modular imports for smaller bundles
+  modularizeImports: {
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
+    },
+    '@tabler/icons-react': {
+      transform: '@tabler/icons-react/dist/esm/icons/{{kebabCase member}}',
+    },
   },
 
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**", // This wild card allows ALL https domains
+        hostname: "**",
       },
     ],
     formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 60,
+    minimumCacheTTL: 31536000, // 1 year cache
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
   // Headers for better caching and mobile optimization

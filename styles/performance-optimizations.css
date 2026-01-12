@@ -1,23 +1,55 @@
-/* Performance Optimizations */
+/* Performance Optimizations - Butter Smooth & Lightweight */
 
-/* GPU Acceleration for animations */
+/* ===== CRITICAL: GPU Acceleration Layer ===== */
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Will-change for animated elements */
-.animated-element {
-  will-change: transform, opacity;
+/* Force hardware acceleration for root elements */
+html, body {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
-/* Containment for better rendering performance */
+/* ===== Will-change Optimization (Use Sparingly) ===== */
+.animated-element,
+.gpu-accelerate {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Auto-remove will-change after animation */
+.animate-once {
+  will-change: transform, opacity;
+  animation-fill-mode: forwards;
+}
+.animate-once:not(:hover):not(:focus) {
+  will-change: auto;
+}
+
+/* ===== Containment for Rendering Performance ===== */
 .card,
-.section {
+.section,
+article,
+aside {
   contain: layout style paint;
 }
 
-/* Reduce motion for accessibility */
+/* Strict containment for heavy sections */
+.contain-strict {
+  contain: strict;
+}
+
+/* Content-visibility for off-screen optimization */
+.lazy-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+/* ===== Reduce Motion for Accessibility ===== */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -25,20 +57,116 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .spline-container,
+  canvas {
+    display: none !important;
   }
 }
 
-/* Image loading optimization */
-img {
+/* ===== Image & Media Optimization ===== */
+img,
+video {
   content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
 }
 
-/* Smooth scrolling */
+img[loading="lazy"] {
+  background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ===== Smooth Scrolling with Performance ===== */
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 80px;
 }
 
-/* Font loading optimization */
+/* Optimize scroll performance */
+.scroll-container {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* ===== Font Optimization ===== */
 @font-face {
   font-display: swap;
+}
+
+/* ===== 60fps Animation Helpers ===== */
+.transition-smooth {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-fast {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* GPU-accelerated hover effects */
+.hover-lift {
+  transition: transform 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px) translateZ(0);
+}
+
+/* ===== Optimize Modals & Overlays ===== */
+.modal-backdrop {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  /* Use isolation to prevent repaints bubbling up */
+  isolation: isolate;
+}
+
+/* ===== Canvas/3D Performance ===== */
+canvas {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.spline-container {
+  isolation: isolate;
+  contain: strict;
+}
+
+/* ===== Button Interaction Optimization ===== */
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ===== Paint Containment for Cards ===== */
+.card-optimized {
+  contain: layout paint style;
+  isolation: isolate;
+}
+
+/* ===== Ticker/Marquee Optimization ===== */
+.ticker-optimized {
+  will-change: transform;
+  contain: layout style;
+  transform: translate3d(0, 0, 0);
+}
+
+/* ===== Minimize Layout Shifts ===== */
+.aspect-video { aspect-ratio: 16/9; }
+.aspect-square { aspect-ratio: 1/1; }
+.aspect-card { aspect-ratio: 3/4; }
+
+/* Reserve space for dynamic content */
+.min-h-skeleton {
+  min-height: 200px;
 }

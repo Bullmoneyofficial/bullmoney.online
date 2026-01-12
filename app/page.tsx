@@ -1,12 +1,8 @@
 "use client";
 
-import { Suspense, lazy, useState, useEffect, useRef } from "react";
+import { Suspense, lazy, useState, useEffect, useRef, memo, useCallback, useMemo } from "react";
 import Hero from "@/components/hero";
-import CTA from "@/components/Chartnews";
-import { Features } from "@/components/features";
-import { LiveMarketTicker } from "@/components/LiveMarketTicker";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
-import HiddenYoutubePlayer from "@/components/Mainpage/HiddenYoutubePlayer";
 import { ALL_THEMES } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 import Image from "next/image";
@@ -15,17 +11,20 @@ import Image from "next/image";
 import PageMode from "@/components/REGISTER USERS/pagemode";
 import MultiStepLoaderv2 from "@/components/MultiStepLoaderv2";
 
-// Lazy imports
+// Lazy imports with better chunking - delay heavy components
+const CTA = lazy(() => import('@/components/Chartnews'));
+const Features = lazy(() => import('@/components/features').then(mod => ({ default: mod.Features })));
+const LiveMarketTicker = lazy(() => import('@/components/LiveMarketTicker').then(mod => ({ default: mod.LiveMarketTicker })));
 const DraggableSplit = lazy(() => import('@/components/DraggableSplit'));
 const SplineScene = lazy(() => import('@/components/SplineScene'));
 const TestimonialsCarousel = lazy(() => import('@/components/Testimonial').then(mod => ({ default: mod.TestimonialsCarousel })));
+const HiddenYoutubePlayer = lazy(() => import('@/components/Mainpage/HiddenYoutubePlayer'));
 
 // --- SMART CONTAINER: Handles Preloading & FPS Saving ---
-function LazySplineContainer({ scene }: { scene: string }) {
+const LazySplineContainer = memo(function LazySplineContainer({ scene }: { scene: string }) {
   const [isInView, setIsInView] = useState(false);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [canRender, setCanRender] = useState(true);
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Check if device can handle 3D at mount
@@ -34,32 +33,14 @@ function LazySplineContainer({ scene }: { scene: string }) {
       const isSmallScreen = window.innerWidth < 480;
       const isMobile = window.innerWidth < 768;
       const memory = (navigator as any).deviceMemory || 4;
+      const hardwareConcurrency = navigator.hardwareConcurrency || 4;
       
-      // Disable on very small screens or low memory mobile devices
-      if (isSmallScreen || (isMobile && memory < 3)) {
+      // Disable on very small screens, low memory, or low CPU devices
+      if (isSmallScreen || (isMobile && (memory < 3 || hardwareConcurrency < 4))) {
         setCanRender(false);
       }
     };
     checkDevice();
-  }, []);
-
-  // Track container size to prevent layout shifts
-  useEffect(() => {
-    if (!containerRef.current) return;
-    
-    const updateSize = () => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        setContainerSize({ width: rect.width, height: rect.height });
-      }
-    };
-    
-    updateSize();
-    
-    const resizeObserver = new ResizeObserver(updateSize);
-    resizeObserver.observe(containerRef.current);
-    
-    return () => resizeObserver.disconnect();
   }, []);
 
   useEffect(() => {
@@ -75,8 +56,8 @@ function LazySplineContainer({ scene }: { scene: string }) {
         }
       },
       { 
-        // Load 600px before it hits the screen, Unload when 600px away
-        rootMargin: '600px' 
+        // Load 400px before it hits the screen, Unload when 400px away (reduced for performance)
+        rootMargin: '400px' 
       }
     );
 
@@ -156,7 +137,9 @@ function LazySplineContainer({ scene }: { scene: string }) {
       )}
     </div>
   );
-}
+});
+
+LazySplineContainer.displayName = 'LazySplineContainer';
 
 function HomeContent() {
   const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'content'>('pagemode');
@@ -167,17 +150,22 @@ function HomeContent() {
   // Use global theme context - syncs with hero.tsx and entire app
   const { activeThemeId, activeTheme, setAppLoading } = useGlobalTheme();
   
-  // Fallback theme lookup if context not ready
-  const theme = activeTheme || ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
+  // Memoize theme lookup
+  const theme = useMemo(() => 
+    activeTheme || ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0],
+    [activeTheme, activeThemeId]
+  );
+  
   useAudioEngine(!isMuted, 'MECHANICAL');
   
+  // Memoize callbacks to prevent re-renders
+  const handleAppLoadingChange = useCallback((loading: boolean) => {
+    setAppLoading(loading);
+  }, [setAppLoading]);
+  
   useEffect(() => {
-    if (currentView === 'content') {
-      setAppLoading(false);
-    } else {
-      setAppLoading(true);
-    }
-  }, [currentView, setAppLoading]);
+    handleAppLoadingChange(currentView !== 'content');
+  }, [currentView, handleAppLoadingChange]);
 
   // Load muted preference from localStorage
   useEffect(() => {
@@ -185,18 +173,22 @@ function HomeContent() {
     if (savedMuted === 'true') setIsMuted(true);
   }, []);
 
-  // 1. STEALTH PRE-LOADER
+  // 1. STEALTH PRE-LOADER - Use idle callback for non-blocking preload
   useEffect(() => {
-    const preloadSplineEngine = async () => {
-      try {
-        await import('@splinetool/runtime'); 
-        console.log("3D Engine pre-cached in background");
-      } catch (e) {
-        console.warn("Preload failed", e);
-      }
+    const preloadSplineEngine = () => {
+      import('@splinetool/runtime')
+        .then(() => console.log("3D Engine pre-cached"))
+        .catch(() => {});
     };
-    const t = setTimeout(preloadSplineEngine, 2000);
-    return () => clearTimeout(t);
+    
+    // Use idle callback if available, otherwise setTimeout
+    if ('requestIdleCallback' in window) {
+      const id = (window as any).requestIdleCallback(preloadSplineEngine, { timeout: 5000 });
+      return () => (window as any).cancelIdleCallback(id);
+    } else {
+      const t = setTimeout(preloadSplineEngine, 3000);
+      return () => clearTimeout(t);
+    }
   }, []);
 
   // 2. Session Check
@@ -210,19 +202,26 @@ function HomeContent() {
     setIsInitialized(true);
   }, []);
 
-  // 3. Mobile Check
+  // 3. Mobile Check - Debounced to prevent excessive re-renders
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    let timeoutId: NodeJS.Timeout;
+    const checkMobile = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => setIsMobile(window.innerWidth < 768), 150);
+    };
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener('resize', checkMobile, { passive: true });
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   // Theme is now applied by GlobalThemeProvider automatically
 
-  const handlePageModeUnlock = () => {
+  const handlePageModeUnlock = useCallback(() => {
     setCurrentView('loader');
-  };
+  }, []);
 
   useEffect(() => {
     if (currentView === 'loader') {
@@ -268,11 +267,18 @@ function HomeContent() {
         <>
           <main className="min-h-screen flex flex-col w-full overflow-x-hidden" data-allow-scroll data-scrollable>
             <Hero />
-            <CTA />
-            <Features />
+            
+            {/* Lazy load below-the-fold content */}
+            <Suspense fallback={<div className="min-h-[400px] bg-black/5" />}>
+              <CTA />
+            </Suspense>
+            
+            <Suspense fallback={<div className="min-h-[600px] bg-black/5" />}>
+              <Features />
+            </Suspense>
 
             {/* 3D Spline Section - Hidden on small screens, show Testimonials instead */}
-            <section className="w-full max-w-7xl mx-auto px-4 py-16 hidden md:block" data-allow-scroll style={{ touchAction: 'pan-y' }}>
+            <section className="w-full max-w-7xl mx-auto px-4 py-16 hidden md:block lazy-section" data-allow-scroll style={{ touchAction: 'pan-y' }}>
               <div className="w-full h-[800px]">
                 <Suspense fallback={<div className="w-full h-full bg-black/5 rounded-lg" />}>
                   <DraggableSplit>
@@ -285,21 +291,25 @@ function HomeContent() {
             </section>
 
             {/* Mobile-only Testimonials Section - Shows on small devices instead of heavy 3D */}
-            <section className="w-full max-w-5xl mx-auto px-4 py-12 md:hidden" data-allow-scroll style={{ touchAction: 'pan-y' }}>
+            <section className="w-full max-w-5xl mx-auto px-4 py-12 md:hidden lazy-section" data-allow-scroll style={{ touchAction: 'pan-y' }}>
               <Suspense fallback={<div className="w-full h-[320px] bg-neutral-900/60 rounded-3xl animate-pulse" />}>
                 <TestimonialsCarousel />
               </Suspense>
             </section>
 
-            <LiveMarketTicker />
+            <Suspense fallback={<div className="h-12 bg-black/5" />}>
+              <LiveMarketTicker />
+            </Suspense>
           </main>
 
           {theme.youtubeId && (
-            <HiddenYoutubePlayer
-              videoId={theme.youtubeId}
-              isPlaying={!isMuted}
-              volume={isMuted ? 0 : 15}
-            />
+            <Suspense fallback={null}>
+              <HiddenYoutubePlayer
+                videoId={theme.youtubeId}
+                isPlaying={!isMuted}
+                volume={isMuted ? 0 : 15}
+              />
+            </Suspense>
           )}
         </>
       )}

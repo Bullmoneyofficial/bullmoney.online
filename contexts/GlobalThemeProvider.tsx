@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { ALL_THEMES, Theme } from '@/constants/theme-data';
 import { userStorage } from '@/lib/smartStorage';
 
@@ -27,12 +27,19 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
   const [isAppLoading, setAppLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Track mobile state for responsive theme filters
+  // Track mobile state for responsive theme filters - debounced
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    let timeoutId: NodeJS.Timeout;
+    const checkMobile = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => setIsMobile(window.innerWidth < 768), 150);
+    };
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener('resize', checkMobile, { passive: true });
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   // Load theme and XM status from storage on mount
@@ -204,20 +211,21 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
     }
   }, [isInitialized, isXMUser]);
 
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    activeThemeId,
+    activeTheme,
+    accentColor,
+    setTheme,
+    isXMUser,
+    setIsXMUser,
+    isAppLoading,
+    setAppLoading,
+    isMobile,
+  }), [activeThemeId, activeTheme, accentColor, setTheme, isXMUser, setIsXMUser, isAppLoading, isMobile]);
+
   return (
-    <GlobalThemeContext.Provider
-      value={{
-        activeThemeId,
-        activeTheme,
-        accentColor,
-        setTheme,
-        isXMUser,
-        setIsXMUser,
-        isAppLoading,
-        setAppLoading,
-        isMobile,
-      }}
-    >
+    <GlobalThemeContext.Provider value={contextValue}>
       {children}
     </GlobalThemeContext.Provider>
   );

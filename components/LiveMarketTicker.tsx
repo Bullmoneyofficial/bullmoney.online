@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
 import { motion } from 'framer-motion';
 
 interface MarketData {
@@ -17,7 +17,7 @@ type CoinGeckoMarketResponse = {
   price_change_percentage_24h?: number;
 };
 
-const PRICE_REFRESH_INTERVAL = 15000;
+const PRICE_REFRESH_INTERVAL = 30000; // Increased to 30s to reduce API calls
 const FLASH_DURATION = 650;
 const COIN_ORDER = [
   { id: 'bitcoin', symbol: 'BTC' },
