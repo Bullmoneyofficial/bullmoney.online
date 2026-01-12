@@ -225,50 +225,77 @@ function DockLabel({ children, tips, className = "", isHovered, isXMUser = false
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ opacity: 0, y: 10, x: "-50%", scale: 0.9 }}
+          initial={{ opacity: 0, y: 15, x: "-50%", scale: 0.80 }}
           animate={{ opacity: 1, y: 20, x: "-50%", scale: 1 }}
-          exit={{ opacity: 0, y: 10, x: "-50%", scale: 0.95 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
+          exit={{ opacity: 0, y: 12, x: "-50%", scale: 0.9 }}
+          transition={{ 
+            duration: 0.35, 
+            ease: [0.34, 1.56, 0.64, 1], // cubic-bezier spring curve
+            opacity: { duration: 0.25 }
+          }}
           className={cn(
-            "absolute top-full left-1/2 -translate-x-1/2 w-max min-w-[160px] rounded-xl border bg-black/70 backdrop-blur-xl px-4 py-2.5 z-[150] pointer-events-none",
+            "absolute top-full left-1/2 -translate-x-1/2 w-max min-w-[160px] rounded-xl border bg-black/75 backdrop-blur-2xl px-4 py-2.5 z-[150] pointer-events-none shadow-2xl",
             isXMUser
-              ? "border-red-500/40 shadow-[0_0_25px_rgba(239,68,68,0.4)]"
-              : "border-blue-500/40 shadow-[0_0_25px_rgba(59,130,246,0.4)]",
+              ? "border-red-500/50 shadow-[0_0_40px_rgba(239,68,68,0.4),inset_0_0_20px_rgba(239,68,68,0.1)]"
+              : "border-blue-500/50 shadow-[0_0_40px_rgba(59,130,246,0.4),inset_0_0_20px_rgba(59,130,246,0.1)]",
             className
           )}
           role="tooltip"
         >
           {/* Arrow pointing up */}
-          <div className={cn(
-            "absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px]",
-            isXMUser ? "border-b-red-500/40" : "border-b-blue-500/40"
-          )} />
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.2 }}
+            className={cn(
+              "absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px]",
+              isXMUser ? "border-b-red-500/50" : "border-b-blue-500/50"
+            )} 
+          />
           
           <div className="flex items-center gap-3">
             {/* Pulse indicator */}
-            <div className="relative flex h-2 w-2 shrink-0">
+            <motion.div 
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.05, duration: 0.25 }}
+              className="relative flex h-2 w-2 shrink-0"
+            >
               <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", isXMUser ? "bg-red-400" : "bg-blue-400")} />
-              <span className={cn("relative inline-flex rounded-full h-2 w-2", isXMUser ? "bg-red-500" : "bg-blue-500")} />
-            </div>
+              <span className={cn("relative inline-flex rounded-full h-2 w-2 shadow-lg", isXMUser ? "bg-red-500" : "bg-blue-500")} />
+            </motion.div>
             
             {/* Label */}
-            <span className={cn("text-[10px] uppercase tracking-widest font-bold shrink-0", isXMUser ? "text-red-400" : "text-blue-400")}>
+            <motion.span 
+              initial={{ opacity: 0, x: -5 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1, duration: 0.25 }}
+              className={cn("text-[10px] uppercase tracking-widest font-bold shrink-0", isXMUser ? "text-red-400" : "text-blue-400")}
+            >
               {children}
-            </span>
+            </motion.span>
             
             {/* Divider */}
-            <div className={cn("w-[1px] h-4 shrink-0", isXMUser ? "bg-red-500/30" : "bg-blue-500/30")} />
+            <motion.div 
+              initial={{ opacity: 0, scaleY: 0 }}
+              animate={{ opacity: 1, scaleY: 1 }}
+              transition={{ delay: 0.12, duration: 0.2 }}
+              className={cn("w-[1px] h-4 shrink-0 bg-gradient-to-b", isXMUser ? "from-red-500/40 via-red-500/20 to-red-500/40" : "from-blue-500/40 via-blue-500/20 to-blue-500/40")}
+            />
             
             {/* Rotating tip text */}
             {tips && tips.length > 0 && (
-              <div className="relative overflow-hidden">
+              <div className="relative overflow-hidden min-w-fit">
                 <AnimatePresence mode="wait">
                   <motion.span
                     key={currentIndex}
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -5 }}
-                    transition={{ duration: 0.3 }}
+                    initial={{ opacity: 0, y: 8, x: 5 }}
+                    animate={{ opacity: 1, y: 0, x: 0 }}
+                    exit={{ opacity: 0, y: -8, x: -5 }}
+                    transition={{ 
+                      duration: 0.3,
+                      ease: [0.34, 1.56, 0.64, 1]
+                    }}
                     className={cn("text-xs font-medium whitespace-nowrap block", isXMUser ? "text-red-100/90" : "text-blue-100/90")}
                   >
                     {tips[currentIndex]}
@@ -285,48 +312,95 @@ function DockLabel({ children, tips, className = "", isHovered, isXMUser = false
 
 function DockIcon({ children, label, className = "", showShine = false, isXMUser = false }: any) {
   return (
-    <div
+    <motion.div
+      whileHover={{ y: -5, scale: 1.08 }}
+      whileTap={{ scale: 0.96 }}
+      transition={{ type: "spring", stiffness: 300, damping: 25 }}
       className={cn(
-        "flex flex-col h-full w-full items-center justify-center rounded-2xl bg-black/40 dark:bg-black/40 backdrop-blur-xl border-2 shadow-sm transition-all duration-200 hover:bg-black/50 dark:hover:bg-black/50 relative overflow-hidden group/icon",
+        "flex flex-col h-full w-full items-center justify-center rounded-2xl backdrop-blur-2xl border-2 shadow-lg transition-all duration-300 relative overflow-hidden group/icon icon-glass",
         showShine
-            ? (isXMUser ? "border-red-500/80 shadow-[0_0_20px_rgba(239,68,68,0.5)] dark:border-red-400/80" : "border-blue-500/80 shadow-[0_0_20px_rgba(59,130,246,0.5)] dark:border-blue-400/80")
-            : (isXMUser ? "border-red-500/30 dark:border-red-500/30 hover:border-red-400/60" : "border-blue-500/30 dark:border-blue-500/30 hover:border-blue-400/60"),
+            ? (isXMUser ? "border-red-500/70 bg-red-950/30" : "border-blue-500/70 bg-blue-950/20")
+            : (isXMUser ? "border-red-500/30 bg-red-950/10" : "border-blue-500/30 bg-blue-950/10"),
         className
       )}
     >
       {/* Shimmer Background - Dynamic based on XM Easter Egg */}
       {showShine && (
-        <span className={cn(
-          "absolute inset-[-100%] animate-[spin_3s_linear_infinite] opacity-100 z-0",
-          isXMUser 
-            ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]"
-            : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
-        )} />
+        <motion.span 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          className={cn(
+            "absolute inset-[-100%] opacity-100 z-0",
+            isXMUser 
+              ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]"
+              : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
+          )} 
+        />
       )}
+
+      {/* Gradient Overlay for shimmer effect */}
+      <motion.div
+        animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+        className={cn(
+          "absolute inset-0 opacity-20 z-0 pointer-events-none",
+          isXMUser
+            ? "bg-gradient-to-r from-red-500/30 via-red-500/10 to-transparent"
+            : "bg-gradient-to-r from-blue-500/30 via-blue-500/10 to-transparent"
+        )}
+      />
+
+      {/* Hover glow effect */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileHover={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className={cn(
+          "absolute inset-0 rounded-2xl pointer-events-none blur-lg",
+          isXMUser
+            ? "bg-red-500/20"
+            : "bg-blue-500/20"
+        )}
+      />
 
       {/* Content Layer */}
       <div className="relative z-10 flex flex-col h-full w-full items-center justify-center">
-        <div className="flex-shrink-0 mb-1 z-10 pointer-events-none relative">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.05, type: "spring" }}
+          className="flex-shrink-0 mb-1 z-10 pointer-events-none relative"
+        >
           {children}
           {/* Little Notification Dot if Shining */}
           {showShine && (
-              <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+              <motion.span 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.1, type: "spring", stiffness: 300 }}
+                className="absolute -top-1 -right-1 flex h-2.5 w-2.5"
+              >
                   <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", isXMUser ? "bg-red-400" : "bg-blue-400")}></span>
-                  <span className={cn("relative inline-flex rounded-full h-2.5 w-2.5", isXMUser ? "bg-red-500" : "bg-blue-500")}></span>
-              </span>
+                  <span className={cn("relative inline-flex rounded-full h-2.5 w-2.5 shadow-lg", isXMUser ? "bg-red-500" : "bg-blue-500")}></span>
+              </motion.span>
           )}
-        </div>
+        </motion.div>
         
-        <span className={cn(
-            "text-[9px] uppercase tracking-widest font-semibold opacity-60 z-10 pointer-events-none transition-colors group-hover/icon:opacity-100",
-            showShine 
-              ? (isXMUser ? "text-red-300 dark:text-red-300 font-bold" : "text-blue-300 dark:text-blue-300 font-bold")
-              : (isXMUser ? "text-red-200/80 dark:text-red-200/80" : "text-blue-200/80 dark:text-blue-200/80")
-        )}>
+        <motion.span 
+          initial={{ opacity: 0.6 }}
+          whileHover={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className={cn(
+              "text-[9px] uppercase tracking-widest font-semibold z-10 pointer-events-none transition-colors",
+              showShine 
+                ? (isXMUser ? "text-red-300 dark:text-red-300 font-bold" : "text-blue-300 dark:text-blue-300 font-bold")
+                : (isXMUser ? "text-red-200/80 dark:text-red-200/80" : "text-blue-200/80 dark:text-blue-200/80")
+          )}
+        >
           {label}
-        </span>
+        </motion.span>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -393,12 +467,18 @@ function Dock({
         onHoverChange?.(false);
         if (rafId.current) cancelAnimationFrame(rafId.current);
       }}
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
       className={cn(
-        "mx-auto flex h-24 items-center gap-5 rounded-3xl border-2 bg-black/40 dark:bg-black/40 px-6 shadow-2xl backdrop-blur-xl transition-all duration-300 transform translateZ-0",
-        "border-blue-500/30 dark:border-blue-500/30 hover:border-blue-400/60 hover:shadow-[0_0_30px_rgba(59,130,246,0.4)]",
+        "mx-auto flex h-24 items-center gap-5 rounded-3xl border-2 px-6 shadow-2xl backdrop-blur-3xl transition-all duration-300 transform translateZ-0 dock-glass",
+        "border-blue-500/40 dark:border-blue-500/40 hover:border-blue-500/70",
         className
       )}
-      style={{ transform: 'translateZ(0)' }}
+      style={{ 
+        transform: 'translateZ(0)',
+        background: 'rgba(0, 0, 0, 0.5)'
+      }}
     >
       {items.map((item, index) => {
         const content = (
@@ -505,19 +585,29 @@ const MovingTradingTip = ({
   return (
     <motion.div
       key={tip.buttonIndex}
-      initial={{ opacity: 0, scale: 0.85, y: position.y - 10 }}
+      initial={{ opacity: 0, scale: 0.75, y: position.y + 15 }}
       animate={{ 
         opacity: 1, 
         scale: 1,
         x: position.x - 120, // Center the tooltip (approx half width)
-        y: position.y
+        y: position.y,
+        transition: {
+          type: "spring",
+          stiffness: 380,
+          damping: 35,
+          mass: 0.5
+        }
       }}
-      exit={{ opacity: 0, scale: 0.85 }}
+      exit={{ opacity: 0, scale: 0.75, y: position.y + 15 }}
       transition={{ 
-        type: "spring",
-        stiffness: 350,
-        damping: 30,
-        opacity: { duration: 0.15 }
+        opacity: { duration: 0.2, ease: "easeOut" },
+        scale: { duration: 0.35, ease: [0.34, 1.56, 0.64, 1] },
+        default: {
+          type: "spring",
+          stiffness: 380,
+          damping: 35,
+          mass: 0.5
+        }
       }}
       className="fixed z-[100] pointer-events-none hidden lg:block"
       style={{ 
@@ -525,34 +615,69 @@ const MovingTradingTip = ({
         top: 0,
       }}
     >
-      <div className="relative">
+      <motion.div 
+        className="relative"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1, duration: 0.2 }}
+      >
         {/* Arrow pointing up */}
-        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-blue-500/40" />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.05, duration: 0.2 }}
+          className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-blue-500/50" 
+        />
         
         {/* Tip container */}
-        <div className="px-4 py-2.5 rounded-xl bg-black/70 backdrop-blur-xl border border-blue-500/40 shadow-[0_0_25px_rgba(59,130,246,0.4)]">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.05, duration: 0.25 }}
+          className="px-4 py-2.5 rounded-xl bg-black/85 backdrop-blur-2xl border border-blue-500/50 shadow-[0_0_40px_rgba(59,130,246,0.4),inset_0_0_20px_rgba(59,130,246,0.1)]"
+        >
           <div className="flex items-center gap-3">
             {/* Pulse indicator */}
-            <div className="relative flex h-2 w-2 shrink-0">
+            <motion.div 
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.25 }}
+              className="relative flex h-2 w-2 shrink-0"
+            >
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
-            </div>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500 shadow-lg" />
+            </motion.div>
             
             {/* Target label */}
-            <span className="text-[10px] uppercase tracking-widest font-bold text-blue-400 shrink-0">
+            <motion.span 
+              initial={{ opacity: 0, x: -5 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.12, duration: 0.25 }}
+              className="text-[10px] uppercase tracking-widest font-bold text-blue-400 shrink-0"
+            >
               {tip.target}
-            </span>
+            </motion.span>
             
             {/* Divider */}
-            <div className="w-[1px] h-4 bg-blue-500/30 shrink-0" />
+            <motion.div 
+              initial={{ opacity: 0, scaleY: 0.5 }}
+              animate={{ opacity: 1, scaleY: 1 }}
+              transition={{ delay: 0.14, duration: 0.2 }}
+              className="w-[1px] h-4 bg-gradient-to-b from-blue-500/40 via-blue-500/20 to-blue-500/40 shrink-0 origin-center"
+            />
             
             {/* Tip text */}
-            <span className="text-xs text-blue-100/90 font-medium whitespace-nowrap">
+            <motion.span 
+              initial={{ opacity: 0, x: 5 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.16, duration: 0.25 }}
+              className="text-xs text-blue-100/90 font-medium whitespace-nowrap"
+            >
               {tip.text}
-            </span>
+            </motion.span>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </motion.div>
   );
 };
@@ -596,8 +721,8 @@ const MobileStaticHelper = () => {
       setTimeout(() => {
         setTipIndex((prev) => (prev + 1) % MOBILE_HELPER_TIPS.length);
         setIsVisible(true);
-      }, 200);
-    }, 4000);
+      }, 250);
+    }, 4500);
     
     return () => clearInterval(interval);
   }, []);
@@ -608,23 +733,48 @@ const MobileStaticHelper = () => {
       style={{ top: 'calc(6.5rem + env(safe-area-inset-top, 0px))' }}
     >
       <motion.div 
-        initial={{ opacity: 0, y: -5 }}
-        animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : -3 }}
-        transition={{ duration: 0.2 }}
-        className="mx-auto w-fit max-w-[90%] px-3 py-2 rounded-xl bg-black/70 backdrop-blur-xl border border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+        initial={{ opacity: 0, y: -8, scale: 0.95 }}
+        animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : -8, scale: isVisible ? 1 : 0.95 }}
+        transition={{ 
+          duration: 0.35,
+          ease: [0.34, 1.56, 0.64, 1]
+        }}
+        className="mx-auto w-fit max-w-[90%] px-3 py-2 rounded-xl bg-black/80 backdrop-blur-2xl border border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.3),inset_0_0_15px_rgba(59,130,246,0.1)]"
       >
-        <div className="flex items-center gap-2.5 justify-center">
+        <motion.div 
+          className="flex items-center gap-2.5 justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.2 }}
+        >
           {/* Pulse indicator */}
-          <div className="relative flex h-1.5 w-1.5 shrink-0">
+          <motion.div 
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.05, duration: 0.25 }}
+            className="relative flex h-1.5 w-1.5 shrink-0"
+          >
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500" />
-          </div>
+          </motion.div>
           
           {/* Rotating tip text */}
-          <span className="text-[10px] tracking-wide font-medium text-blue-200/90 text-center">
-            {MOBILE_HELPER_TIPS[tipIndex]}
-          </span>
-        </div>
+          <AnimatePresence mode="wait">
+            <motion.span 
+              key={tipIndex}
+              initial={{ opacity: 0, y: 4, x: -8 }}
+              animate={{ opacity: 1, y: 0, x: 0 }}
+              exit={{ opacity: 0, y: -4, x: 8 }}
+              transition={{ 
+                duration: 0.3,
+                ease: [0.34, 1.56, 0.64, 1]
+              }}
+              className="text-[10px] tracking-wide font-medium text-blue-200/90 text-center"
+            >
+              {MOBILE_HELPER_TIPS[tipIndex]}
+            </motion.span>
+          </AnimatePresence>
+        </motion.div>
       </motion.div>
     </div>
   );
@@ -983,49 +1133,79 @@ export const Navbar = () => {
         </div>
 
         {/* 2. PREMIUM GLASS SHIMMER CONTROLS (RIGHT) */}
-        <div className="relative group rounded-full overflow-hidden shadow-lg z-50 h-12 sm:h-14 flex items-center flex-grow max-w-xs">
-            {/* Shimmer Background - Blue */}
-            <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-100" />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="relative group rounded-full overflow-hidden shadow-2xl z-50 h-12 sm:h-14 flex items-center flex-grow max-w-xs mobile-controls-glass shimmer-border"
+        >
+            {/* Gradient Shimmer Background Layer */}
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-[-100%] bg-gradient-to-r from-blue-600/0 via-blue-500/30 to-blue-600/0 opacity-100"
+            />
 
             {/* Inner Content Container - Black Glass */}
-            <div className="relative h-full w-full bg-black/40 dark:bg-black/40 backdrop-blur-3xl rounded-full p-[2px] flex items-center justify-center gap-1 px-2 sm:px-3 border-2 border-blue-500/30 dark:border-blue-500/30 hover:border-blue-400/60 transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(59,130,246,0.4)]">
+            <motion.div 
+              className="relative h-full w-full bg-black/40 dark:bg-black/40 backdrop-blur-3xl rounded-full p-[2px] flex items-center justify-center gap-1 px-2 sm:px-3 border border-blue-500/40 dark:border-blue-500/40 transition-all duration-300 group-hover:border-blue-400/70"
+              whileHover={{ boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)" }}
+            >
                 {/* Theme Selector Button - Centered */}
-                <button
+                <motion.button
                     onClick={() => { SoundEffects.click(); setIsThemeSelectorOpen(true); }}
                     onMouseEnter={() => SoundEffects.hover()}
                     onTouchStart={() => SoundEffects.click()}
+                    whileHover={{ scale: 1.1, backgroundColor: "rgba(59, 130, 246, 0.15)" }}
+                    whileTap={{ scale: 0.95 }}
                     className="p-1.5 rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
                     style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                     title="Theme Selector"
                 >
                     <IconPalette className="h-4 w-4 sm:h-5 sm:w-5" />
-                </button>
+                </motion.button>
 
                 {/* Divider */}
-                <div className="h-4 w-[1px] bg-blue-500/20 dark:bg-blue-500/20"></div>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="h-4 w-[1px] bg-gradient-to-b from-blue-500/20 via-blue-500/40 to-blue-500/20 dark:bg-blue-500/20"
+                />
 
                 {/* Menu Toggle Button - Centered */}
-                <button
+                <motion.button
                     onClick={() => { SoundEffects.click(); setOpen(!open); }}
                     onMouseEnter={() => SoundEffects.hover()}
                     onTouchStart={() => SoundEffects.click()}
+                    whileHover={{ scale: 1.1, backgroundColor: "rgba(59, 130, 246, 0.15)" }}
+                    whileTap={{ scale: 0.95 }}
                     className="p-1.5 rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
                     style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                     title={open ? 'Close menu' : 'Open menu'}
                 >
                     {/* If reward is unlocked, add a little dot to the menu icon */}
-                    <div className="relative flex items-center justify-center">
+                    <motion.div 
+                      className="relative flex items-center justify-center"
+                      whileHover={{ rotate: open ? 0 : -90 }}
+                      transition={{ duration: 0.3 }}
+                    >
                         {open ? <IconX className="h-4 w-4 sm:h-5 sm:w-5" /> : <IconMenu2 className="h-4 w-4 sm:h-5 sm:w-5" />}
                         {hasReward && !open && (
-                             <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+                             <motion.span 
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ delay: 0.1, type: "spring" }}
+                              className="absolute -top-0.5 -right-0.5 flex h-2 w-2"
+                            >
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                            </span>
+                            </motion.span>
                         )}
-                    </div>
-                </button>
-            </div>
-        </div>
+                    </motion.div>
+                </motion.button>
+            </motion.div>
+        </motion.div>
       </div>
     </motion.div>
     
@@ -1033,99 +1213,212 @@ export const Navbar = () => {
     <AnimatePresence>
       {open && (
         <motion.div
-          initial={{ opacity: 0, y: -20, scale: 0.95 }}
+          initial={{ opacity: 0, y: -15, scale: 0.92 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -20, scale: 0.95 }}
-          transition={{ duration: 0.2 }}
+          exit={{ opacity: 0, y: -15, scale: 0.92 }}
+          transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
           className={cn(
-            "lg:hidden fixed top-28 sm:top-32 left-2 sm:left-3 right-2 sm:right-3 z-[9999] rounded-2xl border-2 bg-black/95 p-4 shadow-2xl backdrop-blur-xl",
+            "lg:hidden fixed top-28 sm:top-32 left-3 right-3 z-[9999] rounded-2xl border-2 bg-black/90 p-5 sm:p-6 shadow-2xl backdrop-blur-2xl menu-glass",
             isXMUser
-              ? "border-red-500/40"
-              : "border-blue-500/40"
+              ? "border-red-500/50 shadow-[0_0_50px_rgba(239,68,68,0.4),inset_0_0_30px_rgba(239,68,68,0.08)]"
+              : "border-blue-500/50 shadow-[0_0_50px_rgba(59,130,246,0.4),inset_0_0_30px_rgba(59,130,246,0.08)]"
           )}
           style={{ 
             touchAction: 'auto',
             pointerEvents: 'auto'
           }}
         >
-          <div className="flex flex-col gap-3 items-center text-center">
-            <Link
-              href="/"
-              onClick={() => { SoundEffects.click(); setOpen(false); }}
-              className="text-base font-semibold text-blue-200 hover:text-white transition-colors w-full py-3 rounded-lg hover:bg-blue-500/20 active:bg-blue-500/30"
+          <motion.div 
+            className="flex flex-col gap-2.5 w-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.3 }}
+          >
+            {/* Home */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.12 }}
+              className="w-full"
             >
-              Home
-            </Link>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Link
+                  href="/"
+                  onClick={() => { SoundEffects.click(); setOpen(false); }}
+                  className="flex items-center justify-center gap-3 text-sm sm:text-base font-semibold text-blue-200 hover:text-white transition-all duration-200 w-full px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-blue-500/8 hover:bg-blue-500/20 active:bg-blue-500/35 border border-blue-500/30 hover:border-blue-500/60"
+                >
+                  <IconBuildingStore className="h-5 w-5 text-blue-400" stroke={1.5} />
+                  Home
+                </Link>
+              </motion.div>
+            </motion.div>
 
-            <button 
-              onClick={() => { SoundEffects.click(); setOpen(false); }}
-              className="relative w-full text-base font-semibold text-blue-200 hover:text-white py-3 rounded-lg hover:bg-blue-500/20 active:bg-blue-500/30 cursor-pointer transition-colors"
+            {/* Setups */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.14 }}
+              className="w-full"
             >
-              Setups
-              <div className="absolute inset-0 opacity-0"><ServicesModal /></div>
-            </button>
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => { SoundEffects.click(); setOpen(false); }}
+                className="relative flex items-center justify-center gap-3 w-full text-sm sm:text-base font-semibold text-blue-200 hover:text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-blue-500/8 hover:bg-blue-500/20 active:bg-blue-500/35 cursor-pointer transition-all duration-200 border border-blue-500/30 hover:border-blue-500/60"
+              >
+                <IconSparkles className="h-5 w-5 text-blue-400" stroke={1.5} />
+                Setups
+                <div className="absolute inset-0 opacity-0"><ServicesModal /></div>
+              </motion.button>
+            </motion.div>
 
-            <button 
-              className={cn(
-                "w-full text-base font-semibold cursor-pointer py-3 rounded-lg transition-colors",
-                isXMUser
-                  ? "text-red-300 hover:text-red-100 hover:bg-red-500/20 active:bg-red-500/30 font-bold"
-                  : "text-blue-200 hover:text-white hover:bg-blue-500/20 active:bg-blue-500/30"
-              )}
-              onClick={() => { SoundEffects.click(); setIsAffiliateOpen(true); setOpen(false); }}
+            {/* Affiliates */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.16 }}
+              className="w-full"
             >
-              Affiliates {isXMUser && "🔴"}
-            </button>
-
-            <button 
-              className="w-full text-base font-semibold text-blue-200 hover:text-white cursor-pointer py-3 rounded-lg hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors"
-              onClick={() => { SoundEffects.click(); setIsFaqOpen(true); setOpen(false); }}
-            >
-              FAQ
-            </button>
-
-            <button 
-              onClick={() => { SoundEffects.click(); setOpen(false); }}
-              className={cn(
-                "relative w-full text-base font-semibold flex items-center justify-center gap-2 py-3 rounded-lg transition-colors",
-                hasReward ? "text-blue-300 font-bold bg-blue-500/20" : "text-blue-200 hover:text-white hover:bg-blue-500/20 active:bg-blue-500/30"
-              )}
-            >
-              {hasReward ? "🎁 Reward Unlocked!" : "Rewards Card"}
-              <div className="absolute inset-0 opacity-0"><LoyaltyModal /></div>
-            </button>
-
-            <Link
-              href="/products"
-              onClick={() => { SoundEffects.click(); setOpen(false); }}
-              className="w-full rounded-lg bg-blue-500 text-white py-3 text-sm font-bold shadow-md hover:bg-blue-600 active:bg-blue-700 transition-all border-2 border-blue-400/30 flex items-center justify-center"
-            >
-              Products
-            </Link>
-
-            <button
-              onClick={() => { SoundEffects.click(); setOpen(false); setIsThemeSelectorOpen(true); }}
-              className="flex items-center justify-center gap-2 text-base font-semibold text-blue-200 hover:text-white transition-colors w-full py-3 rounded-lg hover:bg-blue-500/20 active:bg-blue-500/30"
-            >
-              <IconPalette size={18} /> Theme
-            </button>
-
-            {mounted && (!isAuthenticated || isAdmin) && (
-              <button
-                onClick={() => { SoundEffects.click(); setOpen(false); setIsAdminOpen(true); }}
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
                 className={cn(
-                  "flex items-center justify-center gap-2 text-xs uppercase tracking-widest transition-colors mt-2 py-3 rounded-lg w-full",
-                  isAdmin ? "text-blue-300 hover:bg-blue-500/20 font-bold" : "text-blue-200/60 hover:text-blue-300 hover:bg-blue-500/20"
+                  "w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold cursor-pointer px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200 border",
+                  isXMUser
+                    ? "text-red-300 hover:text-red-100 bg-red-500/8 hover:bg-red-500/20 active:bg-red-500/35 font-bold border-red-500/30 hover:border-red-500/60"
+                    : "text-blue-200 hover:text-white bg-blue-500/8 hover:bg-blue-500/20 active:bg-blue-500/35 border-blue-500/30 hover:border-blue-500/60"
+                )}
+                onClick={() => { SoundEffects.click(); setIsAffiliateOpen(true); setOpen(false); }}
+              >
+                <IconUsersGroup className={cn("h-5 w-5", isXMUser ? "text-red-400" : "text-blue-400")} stroke={1.5} />
+                Affiliates
+                {isXMUser && (
+                  <motion.span
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="inline-flex h-2.5 w-2.5 rounded-full bg-red-500"
+                  />
+                )}
+              </motion.button>
+            </motion.div>
+
+            {/* FAQ */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.18 }}
+              className="w-full"
+            >
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold text-blue-200 hover:text-white cursor-pointer px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-blue-500/8 hover:bg-blue-500/20 active:bg-blue-500/35 transition-all duration-200 border border-blue-500/30 hover:border-blue-500/60"
+                onClick={() => { SoundEffects.click(); setIsFaqOpen(true); setOpen(false); }}
+              >
+                <IconHelp className="h-5 w-5 text-blue-400" stroke={1.5} />
+                FAQ
+              </motion.button>
+            </motion.div>
+
+            {/* Rewards */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.20 }}
+              className="w-full"
+            >
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => { SoundEffects.click(); setOpen(false); }}
+                className={cn(
+                  "relative w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200 border",
+                  hasReward ? "text-blue-300 font-bold bg-blue-500/20 border-blue-500/60 hover:bg-blue-500/30" : "text-blue-200 hover:text-white bg-blue-500/8 hover:bg-blue-500/20 active:bg-blue-500/35 border-blue-500/30 hover:border-blue-500/60"
                 )}
               >
-                {isAdmin ? (
-                  <><IconSettings size={14} /> Admin Dashboard</>
-                ) : (
-                  <><IconLock size={14} /> Team Access</>
-                )}
-              </button>
+                <IconCreditCard className="h-5 w-5 text-blue-400" stroke={1.5} />
+                {hasReward ? "Reward Unlocked!" : "Rewards Card"}
+                <div className="absolute inset-0 opacity-0"><LoyaltyModal /></div>
+              </motion.button>
+            </motion.div>
+
+            {/* Divider */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.22 }}
+              className="h-px bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 my-1"
+            />
+
+            {/* Products - Highlighted Button */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.24 }}
+              className="w-full"
+            >
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Link
+                  href="/products"
+                  onClick={() => { SoundEffects.click(); setOpen(false); }}
+                  className="w-full flex items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-bold shadow-lg hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] transition-all duration-200 border-2 border-blue-400/40 hover:border-blue-300/60 hover:from-blue-500 hover:to-blue-400"
+                >
+                  <IconBuildingStore className="h-5 w-5" stroke={1.5} />
+                  Products
+                </Link>
+              </motion.div>
+            </motion.div>
+
+            {/* Theme */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.26 }}
+              className="w-full"
+            >
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => { SoundEffects.click(); setOpen(false); setIsThemeSelectorOpen(true); }}
+                className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold text-blue-200 hover:text-white transition-all duration-200 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-blue-500/8 hover:bg-blue-500/20 active:bg-blue-500/35 border border-blue-500/30 hover:border-blue-500/60"
+              >
+                <IconPalette className="h-5 w-5 text-blue-400" stroke={1.5} />
+                Theme
+              </motion.button>
+            </motion.div>
+
+            {/* Admin */}
+            {mounted && (!isAuthenticated || isAdmin) && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.28 }}
+                className="w-full"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => { SoundEffects.click(); setOpen(false); setIsAdminOpen(true); }}
+                  className={cn(
+                    "w-full flex items-center justify-center gap-3 text-xs sm:text-sm uppercase tracking-widest transition-all duration-200 py-2.5 sm:py-3 rounded-xl border px-4 sm:px-6",
+                    isAdmin ? "text-blue-300 hover:text-blue-100 font-bold bg-blue-500/15 border-blue-500/40 hover:bg-blue-500/25 hover:border-blue-500/60" : "text-blue-200/70 hover:text-blue-300 bg-blue-500/8 border-blue-500/30 hover:bg-blue-500/15 hover:border-blue-500/50"
+                  )}
+                >
+                  {isAdmin ? (
+                    <><IconSettings className="h-5 w-5 text-blue-400" stroke={1.5} /> Admin Dashboard</>
+                  ) : (
+                    <><IconLock className="h-5 w-5 text-blue-400" stroke={1.5} /> Team Access</>
+                  )}
+                </motion.button>
+              </motion.div>
             )}
-          </div>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>

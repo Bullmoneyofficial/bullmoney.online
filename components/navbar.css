@@ -115,6 +115,428 @@ body {
 }
 
 /* ============================================================================
+   TOOLTIP & TIP ANIMATIONS
+   Enhanced animations for navbar tips and helper tooltips
+   ============================================================================ */
+
+@keyframes tipSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px) translateX(-50%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateX(-50%);
+  }
+}
+
+@keyframes tipSlideDown {
+  from {
+    opacity: 1;
+    transform: translateY(0) translateX(-50%);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) translateX(-50%);
+  }
+}
+
+@keyframes tipPulseGlow {
+  0% {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2), inset 0 0 20px rgba(59, 130, 246, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.4), inset 0 0 30px rgba(59, 130, 246, 0.15);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2), inset 0 0 20px rgba(59, 130, 246, 0.1);
+  }
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes textFadeIn {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes shimmerWave {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Tooltip styling with glow animation */
+[role="tooltip"] {
+  animation: tipSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Mobile tip glow animation */
+.mobile-helper-tip {
+  animation: tipPulseGlow 3s ease-in-out infinite;
+}
+
+/* ============================================================================
+   DOCK ITEM HOVER EFFECTS
+   Enhanced visual feedback for dock items
+   ============================================================================ */
+
+.dock-item-base {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dock-item-base:hover {
+  transform: translateY(-4px);
+}
+
+.dock-icon-container {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dock-icon-container::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+  border-radius: 2rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.dock-icon-container:hover::before {
+  opacity: 1;
+}
+
+/* ============================================================================
+   PULSING INDICATOR ANIMATIONS
+   Better pulse effects for notification dots
+   ============================================================================ */
+
+.pulse-indicator {
+  position: relative;
+  display: flex;
+  height: 8px;
+  width: 8px;
+}
+
+.pulse-indicator-ring {
+  animation: dotPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.pulse-indicator-dot {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  border-radius: 50%;
+}
+
+/* ============================================================================
+   TEXT ROTATION ANIMATION
+   For rotating tips in tooltips
+   ============================================================================ */
+
+@keyframes rotateTextIn {
+  from {
+    opacity: 0;
+    transform: rotateX(-90deg) translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: rotateX(0) translateY(0);
+  }
+}
+
+@keyframes rotateTextOut {
+  from {
+    opacity: 1;
+    transform: rotateX(0) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: rotateX(90deg) translateY(-5px);
+  }
+}
+
+/* ============================================================================
+   ENHANCED BUTTON STATE ANIMATIONS
+   Better feedback for interactive elements
+   ============================================================================ */
+
+/* ============================================================================
+   ENHANCED BUTTON STATE ANIMATIONS
+   Better feedback for interactive elements
+   ============================================================================ */
+
+.nav-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.nav-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.1);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+  pointer-events: none;
+}
+
+.nav-button:hover::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* ============================================================================
+   GLASS MORPHISM EFFECTS
+   Premium glass effects for modern UI
+   ============================================================================ */
+
+.glass-effect {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-effect-heavy {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.glass-effect-light {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+/* ============================================================================
+   SHIMMER ANIMATIONS
+   High-quality shimmer effects for modern UI
+   ============================================================================ */
+
+@keyframes shimmerFlow {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes shimmerPulse {
+  0%, 100% {
+    opacity: 0.5;
+    background-position: -1000px 0;
+  }
+  50% {
+    opacity: 1;
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes gradientShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes borderShimmer {
+  0% {
+    border-color: rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
+  }
+  50% {
+    border-color: rgba(59, 130, 246, 0.6);
+    box-shadow: 0 0 35px rgba(59, 130, 246, 0.4);
+  }
+  100% {
+    border-color: rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
+  }
+}
+
+.shimmer-effect {
+  background: linear-gradient(
+    90deg,
+    rgba(59, 130, 246, 0.1) 0%,
+    rgba(59, 130, 246, 0.3) 50%,
+    rgba(59, 130, 246, 0.1) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmerFlow 3s infinite;
+}
+
+.shimmer-border {
+  animation: borderShimmer 3s ease-in-out infinite;
+}
+
+.shimmer-pulse {
+  animation: shimmerPulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.gradient-shimmer {
+  background: linear-gradient(
+    45deg,
+    rgba(59, 130, 246, 0.1),
+    rgba(59, 130, 246, 0.3),
+    rgba(59, 130, 246, 0.1)
+  );
+  background-size: 300% 300%;
+  animation: gradientShimmer 4s ease-in-out infinite;
+}
+
+/* ============================================================================
+   ENHANCED MOBILE CONTROLS GLASS STYLING
+   Premium mobile navbar styling
+   ============================================================================ */
+
+.mobile-controls-glass {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1.5px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.15),
+    inset 0 0 20px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.mobile-controls-glass:hover {
+  border-color: rgba(59, 130, 246, 0.6);
+  box-shadow: 
+    0 8px 40px 0 rgba(31, 38, 135, 0.25),
+    inset 0 0 30px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* ============================================================================
+   DESKTOP DOCK GLASS STYLING
+   Enhanced dock appearance with glass morphism
+   ============================================================================ */
+
+.dock-glass {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1.5px solid rgba(59, 130, 246, 0.3);
+  box-shadow:
+    0 8px 32px 0 rgba(31, 38, 135, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 20px rgba(59, 130, 246, 0.08);
+}
+
+.dock-glass:hover {
+  border-color: rgba(59, 130, 246, 0.6);
+  box-shadow:
+    0 8px 40px 0 rgba(31, 38, 135, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 0 30px rgba(59, 130, 246, 0.12);
+}
+
+/* ============================================================================
+   ICON GLASS CONTAINERS
+   Enhanced icon button styling
+   ============================================================================ */
+
+.icon-glass {
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.icon-glass:hover {
+  background: rgba(0, 0, 0, 0.55);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 25px rgba(59, 130, 246, 0.3);
+}
+
+/* ============================================================================
+   TOOLTIP GLASS STYLING
+   Enhanced tooltip appearance
+   ============================================================================ */
+
+.tooltip-glass {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  box-shadow:
+    0 8px 32px rgba(31, 38, 135, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 30px rgba(59, 130, 246, 0.3);
+}
+
+/* ============================================================================
+   MENU GLASS STYLING
+   Enhanced mobile menu styling
+   ============================================================================ */
+
+.menu-glass {
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(59, 130, 246, 0.35);
+  box-shadow:
+    0 12px 48px 0 rgba(31, 38, 135, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 30px rgba(59, 130, 246, 0.08);
+}
+
+/* ============================================================================
+   LOADING & ANIMATION STATES
+   ============================================================================ */
+
+.glass-loading {
+  animation: shimmerPulse 2s ease-in-out infinite;
+}
+
+.glass-active {
+  background: rgba(0, 0, 0, 0.6);
+  border-color: rgba(59, 130, 246, 0.7);
+  box-shadow: 0 0 40px rgba(59, 130, 246, 0.5);
+}
+
+/* ============================================================================
    MEDIA QUERIES
    Ensure proper z-index and filter behavior on different screen sizes
    ============================================================================ */
