@@ -544,7 +544,7 @@ export function UltimateControlPanel({
                           <div>
                             <span className="text-white/60">Resolution:</span>
                             <span className="text-white font-semibold ml-2">
-                              {deviceInfo.screen.width}×{deviceInfo.screen.height}
+                              {deviceInfo.screen.physicalWidth}×{deviceInfo.screen.physicalHeight}
                             </span>
                           </div>
                           <div>
@@ -737,7 +737,7 @@ export function UltimateControlPanel({
                           <div className="text-white/70">CPU: <span className="text-white font-semibold">{deviceInfo.performance.cpu.cores} cores</span></div>
                           <div className="text-white/70">Arch: <span className="text-white font-semibold">{deviceInfo.performance.cpu.architecture}</span></div>
                           <div className="text-white/70">Pixel Ratio: <span className="text-white font-semibold">{deviceInfo.screen.pixelRatio}x</span></div>
-                          <div className="text-white/70">Resolution: <span className="text-white font-semibold">{deviceInfo.screen.width}×{deviceInfo.screen.height}</span></div>
+                          <div className="text-white/70">Resolution: <span className="text-white font-semibold">{deviceInfo.screen.physicalWidth}×{deviceInfo.screen.physicalHeight}</span></div>
                           <div className="text-white/70">Touch: <span className="text-white font-semibold">{deviceInfo.screen.touchSupport ? 'Yes' : 'No'}</span></div>
                           <div className="text-white/70">Battery: <span className="text-white font-semibold">{deviceInfo.battery.level >= 0 ? `${deviceInfo.battery.level}%` : 'Unknown'}</span></div>
                         </div>

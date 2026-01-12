@@ -1053,7 +1053,7 @@ export function UltimateControlPanel({
                             <div>
                               <span className="text-blue-200/60">Screen:</span>
                               <span className="text-white font-semibold ml-2 drop-shadow-lg">
-                                {deviceInfo.screen.diagonal || '?'}" @ {deviceInfo.screen.refreshRate || 60}Hz
+                                {deviceInfo.screen.diagonal || '?'}&quot; @ {deviceInfo.screen.refreshRate || 60}Hz
                               </span>
                             </div>
                             <div>
