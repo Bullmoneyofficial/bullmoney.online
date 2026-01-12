@@ -65,9 +65,15 @@ export default function AudioWidget() {
     setMusicSource,
     isMusicPlaying,
     toggleMusic,
+
+    tipsMuted,
+    setTipsMuted,
   } = useAudioSettings();
 
   const [open, setOpen] = useState(false);
+  const [spotifyOpen, setSpotifyOpen] = useState(false);
+
+  const spotifyEmbedUrl = process.env.NEXT_PUBLIC_SPOTIFY_EMBED_URL;
 
   const musicIcon = useMemo(() => {
     if (!musicEnabled || musicVolume <= 0.001) return IconVolumeOff;
@@ -207,6 +213,49 @@ export default function AudioWidget() {
                   }}
                 />
 
+                <div className="flex items-center justify-between gap-3 pt-1">
+                  <div className="min-w-0">
+                    <div className="text-[11px] text-white/70">Navbar tips</div>
+                    <div className="text-[10px] text-white/45">Mute static + moving helpers</div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      SoundEffects.click();
+                      setTipsMuted(!tipsMuted);
+                    }}
+                    className={cn(
+                      "h-9 px-3 rounded-lg border text-[12px]",
+                      tipsMuted
+                        ? "bg-blue-500/15 border-blue-500/30 text-blue-100"
+                        : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10"
+                    )}
+                    title={tipsMuted ? "Tips muted" : "Tips audible"}
+                  >
+                    {tipsMuted ? "Muted" : "On"}
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <button
+                    onClick={() => {
+                      SoundEffects.click();
+                      // Avoid two music sources overlapping.
+                      setMusicEnabled(false);
+                      setSpotifyOpen(true);
+                    }}
+                    className={cn(
+                      "h-10 flex-1 rounded-lg border border-white/10 bg-white/5",
+                      "text-[12px] text-white/85 hover:bg-white/10"
+                    )}
+                    title="Open Spotify embed"
+                  >
+                    Spotify
+                  </button>
+                  <div className="h-10 w-10 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
+                    <IconVolume className="h-5 w-5 text-white/70" />
+                  </div>
+                </div>
+
                 <div className="text-[10px] text-white/50 leading-snug">
                   Interaction volume controls UI sounds (click/hover/etc).
                 </div>
@@ -215,6 +264,73 @@ export default function AudioWidget() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Spotify Embed Modal */}
+      <AnimatePresence>
+        {spotifyOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[80]"
+          >
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setSpotifyOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.98 }}
+              transition={{ duration: 0.2 }}
+              className={cn(
+                "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
+                "w-[92vw] max-w-[520px] rounded-2xl border border-white/10",
+                "bg-black/80 backdrop-blur-2xl shadow-2xl overflow-hidden"
+              )}
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                <div className="text-[13px] font-semibold text-white/90">Spotify</div>
+                <button
+                  onClick={() => {
+                    SoundEffects.click();
+                    setSpotifyOpen(false);
+                  }}
+                  className="h-9 px-3 rounded-lg border border-white/10 bg-white/5 text-[12px] text-white/80 hover:bg-white/10"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="p-4">
+                {!spotifyEmbedUrl ? (
+                  <div className="text-[12px] text-white/70 leading-relaxed">
+                    Set <span className="text-white/90 font-semibold">NEXT_PUBLIC_SPOTIFY_EMBED_URL</span> to a Spotify embed URL
+                    (track/album/playlist). Example format:
+                    <div className="mt-2 text-[11px] text-white/55 break-all">
+                      https://open.spotify.com/embed/playlist/&lt;id&gt;
+                    </div>
+                  </div>
+                ) : (
+                  <iframe
+                    title="Spotify player"
+                    src={spotifyEmbedUrl}
+                    width="100%"
+                    height="352"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"
+                    className="rounded-xl border border-white/10"
+                  />
+                )}
+
+                <div className="mt-3 text-[10px] text-white/45 leading-snug">
+                  Spotify playback and licensing are governed by Spotify’s terms. This embed does not grant you music rights.
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

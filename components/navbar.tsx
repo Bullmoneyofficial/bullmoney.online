@@ -39,6 +39,7 @@ import { MobileDropdownMenu } from "./navbar/MobileDropdownMenu";
 import { MovingTradingTip } from "./navbar/MovingTradingTip";
 import { ThemeSelectorModal } from "./navbar/ThemeSelectorModal";
 import { NAVBAR_TRADING_TIPS } from "./navbar/navbar.utils";
+import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 
 // --- IMPORT NAVBAR CSS ---
 import "./navbar.css";
@@ -127,6 +128,7 @@ const MobileMenuControls = ({
 export const Navbar = () => {
   // --- ALL HOOKS AT TOP LEVEL (REQUIRED BY REACT) ---
   const { isXMUser, activeTheme, isAppLoading, isMobile } = useGlobalTheme();
+  const { tipsMuted } = useAudioSettings();
   
   // Modal states
   const [open, setOpen] = useState(false);
@@ -186,7 +188,7 @@ export const Navbar = () => {
         setShowTip(true);
         // Play sound only after first render and prevent double play
         if (soundPlayedRef.current) {
-          SoundEffects.tipChange();
+          if (!tipsMuted) SoundEffects.tipChange();
         } else {
           soundPlayedRef.current = true;
         }
@@ -197,7 +199,7 @@ export const Navbar = () => {
       clearInterval(intervalId);
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [mounted]);
+  }, [mounted, tipsMuted]);
 
   // Early return if app is still loading
   if (isAppLoading) {

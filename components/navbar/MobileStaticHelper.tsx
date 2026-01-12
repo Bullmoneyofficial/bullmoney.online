@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MOBILE_HELPER_TIPS } from './navbar.utils';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
+import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
 
 export const MobileStaticHelper = memo(() => {
   const { activeTheme } = useGlobalTheme();
+  const { tipsMuted } = useAudioSettings();
   const [tipIndex, setTipIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const soundPlayedRef = useRef(false);
@@ -15,6 +17,8 @@ export const MobileStaticHelper = memo(() => {
   const themeFilter = useMemo(() => activeTheme?.mobileFilter || 'none', [activeTheme?.mobileFilter]);
   
   useEffect(() => {
+    if (tipsMuted) return;
+
     let intervalId: NodeJS.Timeout;
     let timeoutId: NodeJS.Timeout;
     
@@ -25,7 +29,7 @@ export const MobileStaticHelper = memo(() => {
         setIsVisible(true);
         // Play sound only after first render and prevent double play
         if (soundPlayedRef.current) {
-          SoundEffects.tipChange();
+          if (!tipsMuted) SoundEffects.tipChange();
         } else {
           soundPlayedRef.current = true;
         }
@@ -36,7 +40,9 @@ export const MobileStaticHelper = memo(() => {
       clearInterval(intervalId);
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, []);
+  }, [tipsMuted]);
+
+  if (tipsMuted) return null;
   
   return (
     <div

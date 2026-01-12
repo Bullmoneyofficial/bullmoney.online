@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, memo } from 'react';
 import { motion } from 'framer-motion';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
+import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
 
 interface MovingTradingTipProps {
   tip: { target: string; text: string; buttonIndex: number };
@@ -16,6 +17,7 @@ export const MovingTradingTip = memo(({
   isVisible 
 }: MovingTradingTipProps) => {
   const { activeTheme } = useGlobalTheme();
+  const { tipsMuted } = useAudioSettings();
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isReady, setIsReady] = useState(false);
   
@@ -47,7 +49,7 @@ export const MovingTradingTip = memo(({
     return () => window.removeEventListener('resize', updatePosition);
   }, [tip.buttonIndex, buttonRefs, dockRef]);
   
-  if (!isVisible || !isReady) return null;
+  if (tipsMuted || !isVisible || !isReady) return null;
   
   return (
     <motion.div

@@ -23,6 +23,9 @@ type AudioSettingsContextValue = {
   isMusicPlaying: boolean;
   toggleMusic: () => void;
 
+  tipsMuted: boolean;
+  setTipsMuted: (muted: boolean) => void;
+
   getResolvedMusicUrl: () => string | null;
 };
 
@@ -35,6 +38,7 @@ const STORAGE_KEYS = {
   musicVolume: "audio_music_volume_v1",
   sfxVolume: "audio_sfx_volume_v1",
   musicSource: "audio_music_source_v1",
+  tipsMuted: "audio_tips_muted_v1",
 } as const;
 
 const MUSIC_URLS: Record<Exclude<MusicSource, "THEME">, string> = {
@@ -55,6 +59,7 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
   const [sfxVolume, setSfxVolumeState] = useState(0.3);
   const [musicSource, setMusicSourceState] = useState<MusicSource>("THEME");
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const [tipsMuted, setTipsMutedState] = useState(false);
 
   // Cleanup audio resource on unmount.
   useEffect(() => {
@@ -130,6 +135,7 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
     const storedMusicVol = userStorage.get(STORAGE_KEYS.musicVolume);
     const storedSfxVol = userStorage.get(STORAGE_KEYS.sfxVolume);
     const storedSource = userStorage.get(STORAGE_KEYS.musicSource);
+    const storedTipsMuted = userStorage.get(STORAGE_KEYS.tipsMuted);
 
     if (storedEnabled !== null) setMusicEnabledState(storedEnabled === true || storedEnabled === "true");
 
@@ -150,6 +156,10 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
       if (["THEME", "BACKGROUND", "AMBIENT", "SHOP", "NEWS"].includes(asSource)) {
         setMusicSourceState(asSource);
       }
+    }
+
+    if (storedTipsMuted !== null) {
+      setTipsMutedState(storedTipsMuted === true || storedTipsMuted === "true");
     }
   }, []);
 
@@ -221,6 +231,10 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
     userStorage.set(STORAGE_KEYS.musicSource, musicSource);
   }, [musicSource]);
 
+  useEffect(() => {
+    userStorage.set(STORAGE_KEYS.tipsMuted, String(tipsMuted));
+  }, [tipsMuted]);
+
   const setMusicEnabled = useCallback((enabled: boolean) => {
     setMusicEnabledState(enabled);
     if (!enabled) {
@@ -261,6 +275,10 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
     }
   }, [ensureAudio, musicVolume]);
 
+  const setTipsMuted = useCallback((muted: boolean) => {
+    setTipsMutedState(muted);
+  }, []);
+
   const value = useMemo<AudioSettingsContextValue>(
     () => ({
       musicEnabled,
@@ -274,6 +292,9 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
       isMusicPlaying,
       toggleMusic,
       getResolvedMusicUrl,
+
+      tipsMuted,
+      setTipsMuted,
     }),
     [
       getResolvedMusicUrl,
@@ -287,6 +308,9 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
       setSfxVolume,
       sfxVolume,
       toggleMusic,
+
+      tipsMuted,
+      setTipsMuted,
     ]
   );
 
