@@ -198,9 +198,8 @@ export const Navbar = () => {
   
   // Get CSS filter for current theme - use actual theme filter from GlobalThemeProvider
   // This ensures navbar theme matches the rest of the app
-  const themeFilter = isMobile 
-    ? (activeTheme?.mobileFilter || 'none') 
-    : (activeTheme?.filter || 'none');
+  // Use mobileFilter for both mobile and desktop to ensure consistent theming
+  const themeFilter = activeTheme?.mobileFilter || 'none';
 
   // Check for reward
   const hasReward = (userProfile?.stamps || 0) >= 5;
