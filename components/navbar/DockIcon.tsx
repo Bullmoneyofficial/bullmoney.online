@@ -15,8 +15,8 @@ export const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(
   ({ children, label, className = "", showShine = false, isXMUser = false }, ref) => {
     const { accentColor } = useGlobalTheme();
     
-    // Use theme accent or fallback to XM red
-    const effectiveColor = isXMUser ? '#ef4444' : accentColor;
+    // Use theme accent or fallback to XM red, default to blue
+    const effectiveColor = isXMUser ? '#ef4444' : (accentColor || '#3b82f6');
     
     return (
       <motion.div
@@ -37,14 +37,14 @@ export const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(
             : `color-mix(in srgb, ${effectiveColor} 10%, black)`
         }}
       >
-        {/* Shimmer Background */}
+        {/* Shimmer Background - Left to Right Gradient */}
         {showShine && (
-          <motion.span 
-            animate={{ rotate: 360 }}
+          <motion.div 
+            animate={{ x: ['0%', '200%'] }}
             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-[-100%] opacity-100 z-0"
+            className="absolute inset-y-0 left-[-100%] w-[100%] opacity-100 z-0"
             style={{
-              background: `conic-gradient(from 90deg at 50% 50%, transparent 0%, ${effectiveColor} 50%, transparent 100%)`
+              background: `linear-gradient(to right, transparent, color-mix(in srgb, ${effectiveColor} 60%, transparent), transparent)`
             }}
           />
         )}

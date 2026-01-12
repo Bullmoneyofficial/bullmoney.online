@@ -11,9 +11,8 @@ export const MobileStaticHelper = () => {
   const isFirstRender = useRef(true);
   
   // Get theme filter for consistency with navbar
-  const themeFilter = isMobile 
-    ? (activeTheme?.mobileFilter || 'none') 
-    : (activeTheme?.filter || 'none');
+  // Use mobileFilter for both mobile and desktop to ensure consistent theming
+  const themeFilter = activeTheme?.mobileFilter || 'none';
   
   useEffect(() => {
     const interval = setInterval(() => {

@@ -361,8 +361,8 @@ export const Dock = React.forwardRef<HTMLDivElement, DockProps>(
         style={{ 
           transform: 'translateZ(0)',
           background: 'rgba(0, 0, 0, 0.5)',
-          border: `2px solid color-mix(in srgb, ${accentColor} 40%, transparent)`,
-          boxShadow: `0 0 40px color-mix(in srgb, ${accentColor} 20%, transparent)`
+          border: '2px solid rgba(59, 130, 246, 0.4)',
+          boxShadow: '0 0 40px rgba(59, 130, 246, 0.2)'
         }}
       >
         {items.map((item, index) => (

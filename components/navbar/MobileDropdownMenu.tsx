@@ -49,9 +49,8 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
     const { activeTheme, isMobile, accentColor } = useGlobalTheme();
     
     // Get theme filter for consistency with navbar
-    const themeFilter = isMobile 
-      ? (activeTheme?.mobileFilter || 'none') 
-      : (activeTheme?.filter || 'none');
+    // Use mobileFilter for both mobile and desktop to ensure consistent theming
+    const themeFilter = activeTheme?.mobileFilter || 'none';
     
     if (!open) return null;
 
@@ -294,13 +293,17 @@ const ThemedMenuItem = ({ delay, href, onClick, icon, label, highlighted = false
         onTouchStart={() => SoundEffects.click()}
         className="flex items-center justify-center gap-3 text-sm sm:text-base font-semibold w-full px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200"
         style={{
-          color: highlighted ? 'white' : `color-mix(in srgb, ${accentColor} 80%, white)`,
+          color: highlighted ? '#000000' : `color-mix(in srgb, ${accentColor} 80%, white)`,
           backgroundColor: highlighted ? accentColor : `color-mix(in srgb, ${accentColor} 8%, transparent)`,
           border: highlighted ? `1px solid color-mix(in srgb, ${accentColor} 60%, white)` : `1px solid color-mix(in srgb, ${accentColor} 30%, transparent)`,
-          boxShadow: highlighted ? `0 0 30px color-mix(in srgb, ${accentColor} 50%, transparent)` : 'none'
+          boxShadow: highlighted ? `0 0 30px color-mix(in srgb, ${accentColor} 50%, transparent)` : 'none',
+          textShadow: highlighted ? '0 1px 2px rgba(0, 0, 0, 0.3)' : 'none'
         }}
       >
-        <span style={{ color: highlighted ? 'white' : accentColor }}>{icon}</span>
+        <span style={{ 
+          color: highlighted ? '#000000' : accentColor,
+          filter: highlighted ? 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))' : 'none'
+        }}>{icon}</span>
         {label}
       </Link>
     </motion.div>

@@ -57,11 +57,11 @@ const MobileMenuControls = ({
     transition={{ duration: 0.5, delay: 0.2 }}
     className="relative group rounded-full overflow-hidden shadow-2xl z-50 h-12 sm:h-14 flex items-center flex-grow max-w-xs mobile-controls-glass shimmer-border"
   >
-    {/* Gradient Shimmer Background Layer */}
+    {/* Gradient Shimmer Background Layer - Left to Right */}
     <motion.div 
-      animate={{ rotate: 360 }}
-      transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-      className="absolute inset-[-100%] bg-gradient-to-r from-blue-600/0 via-blue-500/30 to-blue-600/0 opacity-100"
+      animate={{ x: ['0%', '200%'] }}
+      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+      className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/40 to-blue-600/0 opacity-100"
     />
 
     {/* Inner Content Container */}
