@@ -482,8 +482,8 @@ export default function RootLayout({
                     >
                       {children}
                       {modal}
-                      <Footer />
                     </div>
+                    <Footer />
                     {/* FPS Counter - only shows in development */}
                     <FPSCounter />
                   </PerformanceProvider>
