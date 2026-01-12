@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, memo } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
@@ -33,7 +33,7 @@ interface DockProps {
 }
 
 // --- DOCK LABEL COMPONENT (INLINE FOR PROPER HOVER STATE) ---
-const DockLabelInline = ({ 
+const DockLabelInline = memo(({ 
   children, 
   tips, 
   className = "", 
@@ -201,10 +201,12 @@ const DockLabelInline = ({
       </AnimatePresence>
     </>
   );
-};
+});
+
+DockLabelInline.displayName = 'DockLabelInline';
 
 // --- DOCK ITEM COMPONENT ---
-const DockItem = ({
+const DockItem = memo(({
   item,
   index,
   mouseX,
@@ -311,10 +313,12 @@ const DockItem = ({
   }
   
   return content;
-};
+});
+
+DockItem.displayName = 'DockItem';
 
 // --- MAIN DOCK COMPONENT ---
-export const Dock = React.forwardRef<HTMLDivElement, DockProps>(
+export const Dock = memo(React.forwardRef<HTMLDivElement, DockProps>(
   (
     {
       items,
@@ -396,6 +400,6 @@ export const Dock = React.forwardRef<HTMLDivElement, DockProps>(
       </motion.div>
     );
   }
-);
+));
 
 Dock.displayName = 'Dock';

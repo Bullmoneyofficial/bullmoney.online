@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -30,7 +30,7 @@ interface MobileDropdownMenuProps {
   onThemeClick: () => void;
 }
 
-export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdownMenuProps>(
+export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDropdownMenuProps>(
   (
     {
       open,
@@ -46,11 +46,40 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
     },
     ref
   ) => {
-    const { activeTheme, isMobile, accentColor } = useGlobalTheme();
+    const { activeTheme } = useGlobalTheme();
     
     // Get theme filter for consistency with navbar
     // Use mobileFilter for both mobile and desktop to ensure consistent theming
-    const themeFilter = activeTheme?.mobileFilter || 'none';
+    const themeFilter = useMemo(() => activeTheme?.mobileFilter || 'none', [activeTheme?.mobileFilter]);
+    
+    const handleClose = useCallback(() => {
+      SoundEffects.click();
+      onClose();
+    }, [onClose]);
+    
+    const handleAffiliateClick = useCallback(() => {
+      SoundEffects.click();
+      onAffiliateClick();
+      onClose();
+    }, [onAffiliateClick, onClose]);
+    
+    const handleFaqClick = useCallback(() => {
+      SoundEffects.click();
+      onFaqClick();
+      onClose();
+    }, [onFaqClick, onClose]);
+    
+    const handleAdminClick = useCallback(() => {
+      SoundEffects.click();
+      onAdminClick();
+      onClose();
+    }, [onAdminClick, onClose]);
+    
+    const handleThemeClick = useCallback(() => {
+      SoundEffects.click();
+      onClose();
+      onThemeClick();
+    }, [onClose, onThemeClick]);
     
     if (!open) return null;
 
@@ -95,7 +124,7 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
             transition={{ delay: 0.1, duration: 0.3 }}
           >
             {/* Home */}
-            <ThemedMenuItem delay={0.12} href="/" onClick={onClose} icon={<IconBuildingStore className="h-5 w-5" stroke={1.5} />} label="Home" />
+            <ThemedMenuItem delay={0.12} href="/" onClick={handleClose} icon={<IconBuildingStore className="h-5 w-5" stroke={1.5} />} label="Home" />
 
             {/* Setups */}
             <motion.div
@@ -108,7 +137,7 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
                 onHoverStart={() => SoundEffects.hover()}
-                onClick={() => { SoundEffects.click(); onClose(); }}
+                onClick={handleClose}
                 onTouchStart={() => SoundEffects.click()}
                 className="relative flex items-center justify-center gap-3 w-full text-sm sm:text-base font-semibold hover:text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl cursor-pointer transition-all duration-200"
                 style={{
@@ -142,7 +171,7 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
                   border: isXMUser ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(59, 130, 246, 0.3)',
                   fontWeight: isXMUser ? 'bold' : 'semibold'
                 }}
-                onClick={() => { SoundEffects.click(); onAffiliateClick(); onClose(); }}
+                onClick={handleAffiliateClick}
               >
                 <IconUsersGroup className="h-5 w-5" stroke={1.5} style={{ color: isXMUser ? '#f87171' : '#60a5fa' }} />
                 Affiliates
@@ -174,7 +203,7 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
                   backgroundColor: 'rgba(59, 130, 246, 0.08)',
                   border: '1px solid rgba(59, 130, 246, 0.3)'
                 }}
-                onClick={() => { SoundEffects.click(); onFaqClick(); onClose(); }}
+                onClick={handleFaqClick}
               >
                 <IconHelp className="h-5 w-5" stroke={1.5} style={{ color: '#60a5fa' }} />
                 FAQ
@@ -220,7 +249,7 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
             />
 
             {/* Products */}
-            <ThemedMenuItem delay={0.24} href="/products" onClick={onClose} icon={<IconBuildingStore className="h-5 w-5" stroke={1.5} />} label="Products" highlighted />
+            <ThemedMenuItem delay={0.24} href="/products" onClick={handleClose} icon={<IconBuildingStore className="h-5 w-5" stroke={1.5} />} label="Products" highlighted />
 
             {/* Theme */}
             <motion.div
@@ -234,7 +263,7 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
                 whileTap={{ scale: 0.98 }}
                 onHoverStart={() => SoundEffects.hover()}
                 onTouchStart={() => SoundEffects.click()}
-                onClick={() => { SoundEffects.click(); onClose(); onThemeClick(); }}
+                onClick={handleThemeClick}
                 className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold hover:text-white transition-all duration-200 px-4 sm:px-6 py-3 sm:py-4 rounded-xl"
                 style={{
                   color: '#93c5fd',
@@ -260,7 +289,7 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
                   whileTap={{ scale: 0.98 }}
                   onHoverStart={() => SoundEffects.hover()}
                   onTouchStart={() => SoundEffects.click()}
-                  onClick={() => { SoundEffects.click(); onClose(); onAdminClick(); }}
+                  onClick={handleAdminClick}
                   className="w-full flex items-center justify-center gap-3 text-xs sm:text-sm uppercase tracking-widest transition-all duration-200 py-2.5 sm:py-3 rounded-xl px-4 sm:px-6"
                   style={{
                     color: isAdmin ? '#60a5fa' : '#93c5fd',
@@ -281,13 +310,13 @@ export const MobileDropdownMenu = React.forwardRef<HTMLDivElement, MobileDropdow
         </motion.div>
       </AnimatePresence>
     );
-  }
+  })
 );
 
 MobileDropdownMenu.displayName = 'MobileDropdownMenu';
 
 // Helper MenuItem component with theme support
-const ThemedMenuItem = ({ delay, href, onClick, icon, label, highlighted = false }: any) => (
+const ThemedMenuItem = memo(({ delay, href, onClick, icon, label, highlighted = false }: any) => (
   <motion.div
     initial={{ opacity: 0, x: -10 }}
     animate={{ opacity: 1, x: 0 }}
@@ -320,4 +349,6 @@ const ThemedMenuItem = ({ delay, href, onClick, icon, label, highlighted = false
       </Link>
     </motion.div>
   </motion.div>
-);
+));
+
+ThemedMenuItem.displayName = 'ThemedMenuItem';

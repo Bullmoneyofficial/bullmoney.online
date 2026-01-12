@@ -170,25 +170,33 @@ export const Navbar = () => {
     setMounted(true);
   }, []);
 
-  // Rotate tips every 5 seconds
+  // Rotate tips every 10 seconds
+  const soundPlayedRef = useRef(false);
+  
   useEffect(() => {
     if (!mounted) return;
     
-    let isFirst = true;
-    const interval = setInterval(() => {
+    let intervalId: NodeJS.Timeout;
+    let timeoutId: NodeJS.Timeout;
+    
+    intervalId = setInterval(() => {
       setShowTip(false);
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         setCurrentTipIndex((prev) => (prev + 1) % NAVBAR_TRADING_TIPS.length);
         setShowTip(true);
-        // Play MT5 entry sound when tip changes (not on first render)
-        if (!isFirst) {
+        // Play sound only after first render and prevent double play
+        if (soundPlayedRef.current) {
           SoundEffects.tipChange();
+        } else {
+          soundPlayedRef.current = true;
         }
-        isFirst = false;
       }, 300);
     }, 10000);
     
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(intervalId);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [mounted]);
 
   // Early return if app is still loading

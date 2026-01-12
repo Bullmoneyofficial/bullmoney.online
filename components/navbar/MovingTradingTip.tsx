@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, memo } from 'react';
 import { motion } from 'framer-motion';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 
@@ -9,19 +9,19 @@ interface MovingTradingTipProps {
   isVisible: boolean;
 }
 
-export const MovingTradingTip = ({ 
+export const MovingTradingTip = memo(({ 
   tip, 
   buttonRefs,
   dockRef,
   isVisible 
 }: MovingTradingTipProps) => {
-  const { activeTheme, isMobile, accentColor } = useGlobalTheme();
+  const { activeTheme } = useGlobalTheme();
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isReady, setIsReady] = useState(false);
   
   // Get theme filter for consistency with navbar
   // Use mobileFilter for both mobile and desktop to ensure consistent theming
-  const themeFilter = activeTheme?.mobileFilter || 'none';
+  const themeFilter = useMemo(() => activeTheme?.mobileFilter || 'none', [activeTheme?.mobileFilter]);
   
   useEffect(() => {
     const updatePosition = () => {
@@ -175,4 +175,6 @@ export const MovingTradingTip = ({
       </motion.div>
     </motion.div>
   );
-};
+});
+
+MovingTradingTip.displayName = 'MovingTradingTip';

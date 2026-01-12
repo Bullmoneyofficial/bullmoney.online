@@ -1,34 +1,41 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOBILE_HELPER_TIPS } from './navbar.utils';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 
-export const MobileStaticHelper = () => {
-  const { activeTheme, isMobile, accentColor } = useGlobalTheme();
+export const MobileStaticHelper = memo(() => {
+  const { activeTheme } = useGlobalTheme();
   const [tipIndex, setTipIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
-  const isFirstRender = useRef(true);
+  const soundPlayedRef = useRef(false);
   
   // Get theme filter for consistency with navbar
   // Use mobileFilter for both mobile and desktop to ensure consistent theming
-  const themeFilter = activeTheme?.mobileFilter || 'none';
+  const themeFilter = useMemo(() => activeTheme?.mobileFilter || 'none', [activeTheme?.mobileFilter]);
   
   useEffect(() => {
-    const interval = setInterval(() => {
+    let intervalId: NodeJS.Timeout;
+    let timeoutId: NodeJS.Timeout;
+    
+    intervalId = setInterval(() => {
       setIsVisible(false);
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         setTipIndex((prev) => (prev + 1) % MOBILE_HELPER_TIPS.length);
         setIsVisible(true);
-        // Play MT5 entry sound when tip changes (not on first render)
-        if (!isFirstRender.current) {
+        // Play sound only after first render and prevent double play
+        if (soundPlayedRef.current) {
           SoundEffects.tipChange();
+        } else {
+          soundPlayedRef.current = true;
         }
-        isFirstRender.current = false;
       }, 250);
     }, 4500);
     
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(intervalId);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
   
   return (
@@ -107,4 +114,6 @@ export const MobileStaticHelper = () => {
       </motion.div>
     </div>
   );
-};
+});
+
+MobileStaticHelper.displayName = 'MobileStaticHelper';

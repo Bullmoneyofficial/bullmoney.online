@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -30,7 +30,7 @@ interface DesktopNavbarProps {
   mounted: boolean;
 }
 
-export const DesktopNavbar = React.forwardRef<HTMLDivElement, DesktopNavbarProps>(
+export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbarProps>(
   (
     {
       isXMUser,
@@ -149,6 +149,6 @@ export const DesktopNavbar = React.forwardRef<HTMLDivElement, DesktopNavbarProps
       </div>
     );
   }
-);
+));
 
 DesktopNavbar.displayName = 'DesktopNavbar';

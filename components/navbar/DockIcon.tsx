@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
@@ -11,7 +11,7 @@ interface DockIconProps {
   isXMUser?: boolean;
 }
 
-export const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(
+export const DockIcon = memo(React.forwardRef<HTMLDivElement, DockIconProps>(
   ({ children, label, className = "", showShine = false, isXMUser = false }, ref) => {
     const { accentColor } = useGlobalTheme();
     
@@ -115,6 +115,6 @@ export const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(
       </motion.div>
     );
   }
-);
+));
 
 DockIcon.displayName = 'DockIcon';
