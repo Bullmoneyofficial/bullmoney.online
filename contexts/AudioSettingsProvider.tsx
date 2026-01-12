@@ -5,7 +5,10 @@ import { userStorage } from "@/lib/smartStorage";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 
-export type MusicSource = "THEME" | "BACKGROUND" | "AMBIENT" | "SHOP" | "NEWS";
+export type MusicSource = "THEME" | "BACKGROUND" | "AMBIENT" | "SHOP" | "NEWS" | "SPOTIFY" | "APPLE_MUSIC" | "YOUTUBE";
+
+// Streaming sources that use iframe embeds instead of audio elements
+export const STREAMING_SOURCES: MusicSource[] = ["SPOTIFY", "APPLE_MUSIC", "YOUTUBE"];
 
 type AudioSettingsContextValue = {
   musicEnabled: boolean;
@@ -27,6 +30,10 @@ type AudioSettingsContextValue = {
   setTipsMuted: (muted: boolean) => void;
 
   getResolvedMusicUrl: () => string | null;
+  
+  // Streaming embed URLs
+  streamingEmbedUrl: string | null;
+  isStreamingSource: boolean;
 };
 
 const AudioSettingsContext = createContext<AudioSettingsContextValue | undefined>(undefined);
@@ -41,7 +48,7 @@ const STORAGE_KEYS = {
   tipsMuted: "audio_tips_muted_v1",
 } as const;
 
-const MUSIC_URLS: Record<Exclude<MusicSource, "THEME">, string> = {
+const MUSIC_URLS: Record<Exclude<MusicSource, "THEME" | "SPOTIFY" | "APPLE_MUSIC" | "YOUTUBE">, string> = {
   BACKGROUND: "/background.mp3",
   AMBIENT: "/ambient.mp3",
   SHOP: "/shop.mp3",
@@ -78,11 +85,16 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
   }, []);
 
   const resolvedMusicUrl = useMemo(() => {
+    // Streaming sources don't use the audio element
+    if (STREAMING_SOURCES.includes(musicSource)) {
+      return null;
+    }
+    
     if (musicSource === "THEME") {
       if (activeTheme?.bgMusicUrl) return activeTheme.bgMusicUrl;
 
-      // Fallback mapping so “Theme” music actually changes across themes
-      // even when a theme doesn’t define a specific bgMusicUrl.
+      // Fallback mapping so "Theme" music actually changes across themes
+      // even when a theme doesn't define a specific bgMusicUrl.
       const category = activeTheme?.category;
       if (category === "SEASONAL") return "/ambient.mp3";
       if (category === "CRYPTO") return "/news.mp3";
@@ -91,8 +103,62 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
       if (category === "OPTICS" || category === "GLITCH") return "/background.mp3";
       return "/background.mp3";
     }
-    return MUSIC_URLS[musicSource];
+    return MUSIC_URLS[musicSource as keyof typeof MUSIC_URLS];
   }, [activeTheme?.bgMusicUrl, activeTheme?.category, musicSource]);
+
+  // Get streaming embed URL based on source
+  const streamingEmbedUrl = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    
+    if (musicSource === "SPOTIFY") {
+      const baseUrl = process.env.NEXT_PUBLIC_SPOTIFY_EMBED_URL;
+      if (!baseUrl) return null;
+      try {
+        const url = new URL(baseUrl);
+        url.searchParams.set("theme", "0");
+        return url.toString();
+      } catch {
+        return baseUrl;
+      }
+    }
+    
+    if (musicSource === "APPLE_MUSIC") {
+      const baseUrl = process.env.NEXT_PUBLIC_APPLE_MUSIC_EMBED_URL;
+      if (!baseUrl) return null;
+      try {
+        const url = new URL(baseUrl);
+        url.searchParams.set("app", "music");
+        url.searchParams.set("theme", "auto");
+        return url.toString();
+      } catch {
+        return baseUrl;
+      }
+    }
+    
+    if (musicSource === "YOUTUBE") {
+      const baseUrl = process.env.NEXT_PUBLIC_YOUTUBE_MUSIC_EMBED_URL || process.env.NEXT_PUBLIC_YOUTUBE_EMBED_URL;
+      if (!baseUrl) return null;
+      try {
+        const url = new URL(baseUrl);
+        url.searchParams.set("autoplay", "1");
+        url.searchParams.set("loop", "1");
+        url.searchParams.set("rel", "0");
+        url.searchParams.set("modestbranding", "1");
+        // For seamless looping with playlist
+        const listId = url.searchParams.get("list");
+        if (listId) {
+          url.searchParams.set("playlist", listId);
+        }
+        return url.toString();
+      } catch {
+        return baseUrl;
+      }
+    }
+    
+    return null;
+  }, [musicSource]);
+
+  const isStreamingSource = STREAMING_SOURCES.includes(musicSource);
 
   const getResolvedMusicUrl = useCallback(() => resolvedMusicUrl, [resolvedMusicUrl]);
 
@@ -153,7 +219,7 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
 
     if (typeof storedSource === "string") {
       const asSource = storedSource.toUpperCase() as MusicSource;
-      if (["THEME", "BACKGROUND", "AMBIENT", "SHOP", "NEWS"].includes(asSource)) {
+      if (["THEME", "BACKGROUND", "AMBIENT", "SHOP", "NEWS", "SPOTIFY", "APPLE_MUSIC", "YOUTUBE"].includes(asSource)) {
         setMusicSourceState(asSource);
       }
     }
@@ -263,6 +329,13 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
   }, []);
 
   const toggleMusic = useCallback(() => {
+    // For streaming sources, just toggle the enabled state
+    if (isStreamingSource) {
+      setMusicEnabledState((prev) => !prev);
+      setIsMusicPlaying((prev) => !prev);
+      return;
+    }
+    
     const audio = ensureAudio();
     if (!audio) return;
 
@@ -273,7 +346,7 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
     } else {
       audio.pause();
     }
-  }, [ensureAudio, musicVolume]);
+  }, [ensureAudio, isStreamingSource, musicVolume]);
 
   const setTipsMuted = useCallback((muted: boolean) => {
     setTipsMutedState(muted);
@@ -295,6 +368,9 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
 
       tipsMuted,
       setTipsMuted,
+      
+      streamingEmbedUrl,
+      isStreamingSource,
     }),
     [
       getResolvedMusicUrl,
@@ -311,6 +387,9 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
 
       tipsMuted,
       setTipsMuted,
+      
+      streamingEmbedUrl,
+      isStreamingSource,
     ]
   );
 

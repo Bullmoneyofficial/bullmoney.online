@@ -8,6 +8,9 @@ import {
   IconBrandSpotify,
   IconBrandApple,
   IconBrandYoutube,
+  IconLogin,
+  IconLogout,
+  IconPlayerPlay,
 } from "@tabler/icons-react";
 
 import { cn } from "@/lib/utils";
@@ -25,6 +28,12 @@ const providerLabels: Record<MusicProvider, string> = {
   SPOTIFY: "Spotify",
   APPLE_MUSIC: "Apple Music",
   YOUTUBE: "YouTube",
+};
+
+const providerColors: Record<MusicProvider, { bg: string; border: string; text: string }> = {
+  SPOTIFY: { bg: "bg-green-500/20", border: "border-green-500/30", text: "text-green-300" },
+  APPLE_MUSIC: { bg: "bg-pink-500/20", border: "border-pink-500/30", text: "text-pink-300" },
+  YOUTUBE: { bg: "bg-red-500/20", border: "border-red-500/30", text: "text-red-300" },
 };
 
 function ProviderTab({
@@ -82,14 +91,47 @@ export function MusicEmbedModal({
   const [provider, setProvider] = useState<MusicProvider>(initialProvider);
   const [spotifyConnected, setSpotifyConnected] = useState<boolean | null>(null);
   const [spotifyExpiresAt, setSpotifyExpiresAt] = useState<number | null>(null);
+  const [isBackgroundMode, setIsBackgroundMode] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
-  const spotifyEmbedUrl = process.env.NEXT_PUBLIC_SPOTIFY_EMBED_URL;
-  const appleMusicEmbedUrl = process.env.NEXT_PUBLIC_APPLE_MUSIC_EMBED_URL;
-  const youtubeEmbedUrl =
+  // Get base embed URLs
+  const spotifyEmbedUrlBase = process.env.NEXT_PUBLIC_SPOTIFY_EMBED_URL;
+  const appleMusicEmbedUrlBase = process.env.NEXT_PUBLIC_APPLE_MUSIC_EMBED_URL;
+  const youtubeEmbedUrlBase =
     process.env.NEXT_PUBLIC_YOUTUBE_MUSIC_EMBED_URL ||
     process.env.NEXT_PUBLIC_YOUTUBE_EMBED_URL;
+
+  // Build enhanced embed URLs with seamless playback params
+  const spotifyEmbedUrl = useMemo(() => {
+    if (!spotifyEmbedUrlBase) return null;
+    const url = new URL(spotifyEmbedUrlBase);
+    url.searchParams.set("theme", "0"); // Dark theme
+    return url.toString();
+  }, [spotifyEmbedUrlBase]);
+
+  const appleMusicEmbedUrl = useMemo(() => {
+    if (!appleMusicEmbedUrlBase) return null;
+    const url = new URL(appleMusicEmbedUrlBase);
+    url.searchParams.set("app", "music");
+    url.searchParams.set("theme", "auto");
+    return url.toString();
+  }, [appleMusicEmbedUrlBase]);
+
+  const youtubeEmbedUrl = useMemo(() => {
+    if (!youtubeEmbedUrlBase) return null;
+    const url = new URL(youtubeEmbedUrlBase);
+    url.searchParams.set("autoplay", "1");
+    url.searchParams.set("loop", "1");
+    url.searchParams.set("rel", "0");
+    url.searchParams.set("modestbranding", "1");
+    url.searchParams.set("controls", "1");
+    // For seamless looping with playlist
+    if (url.searchParams.has("list")) {
+      url.searchParams.set("playlist", url.searchParams.get("list") || "");
+    }
+    return url.toString();
+  }, [youtubeEmbedUrlBase]);
 
   useEffect(() => {
     if (!open) return;
@@ -296,6 +338,36 @@ export function MusicEmbedModal({
               {/* Apple Music */}
               {provider === "APPLE_MUSIC" && (
                 <div className="grid gap-6">
+                  {/* Apple Music connection info */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-white/5 border border-white/10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 rounded-full bg-pink-400/40" />
+                      <span className="text-sm sm:text-base text-white/70">
+                        Play via Apple Music embed
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => {
+                          SoundEffects.click();
+                          // Open Apple Music in new tab for sign in
+                          window.open("https://music.apple.com", "_blank");
+                        }}
+                        className={cn(
+                          "h-11 sm:h-12 px-5 sm:px-6 rounded-xl text-sm font-medium transition-colors flex items-center gap-2",
+                          providerColors.APPLE_MUSIC.bg,
+                          providerColors.APPLE_MUSIC.border,
+                          providerColors.APPLE_MUSIC.text,
+                          "border hover:opacity-80"
+                        )}
+                        type="button"
+                      >
+                        <IconLogin className="w-4 h-4" />
+                        Open Apple Music
+                      </button>
+                    </div>
+                  </div>
+
                   {!appleMusicEmbedUrl ? (
                     <Hint
                       title="Set NEXT_PUBLIC_APPLE_MUSIC_EMBED_URL to an Apple Music embed URL"
@@ -315,7 +387,7 @@ export function MusicEmbedModal({
                   )}
 
                   <p className="text-xs sm:text-sm text-white/40 leading-relaxed">
-                    Playback via Apple Music&apos;s official embed. Subscription may be required.
+                    Playback via Apple Music&apos;s official embed. Sign in via the embed or open Apple Music to connect your account. Subscription may be required for full playback.
                   </p>
                 </div>
               )}
@@ -323,6 +395,36 @@ export function MusicEmbedModal({
               {/* YouTube */}
               {provider === "YOUTUBE" && (
                 <div className="grid gap-6">
+                  {/* YouTube connection info */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-white/5 border border-white/10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 rounded-full bg-red-400 shadow-[0_0_12px_rgba(248,113,113,0.6)]" />
+                      <span className="text-sm sm:text-base text-white/70">
+                        Seamless playlist looping enabled
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => {
+                          SoundEffects.click();
+                          // Open YouTube Music in new tab for sign in
+                          window.open("https://music.youtube.com", "_blank");
+                        }}
+                        className={cn(
+                          "h-11 sm:h-12 px-5 sm:px-6 rounded-xl text-sm font-medium transition-colors flex items-center gap-2",
+                          providerColors.YOUTUBE.bg,
+                          providerColors.YOUTUBE.border,
+                          providerColors.YOUTUBE.text,
+                          "border hover:opacity-80"
+                        )}
+                        type="button"
+                      >
+                        <IconLogin className="w-4 h-4" />
+                        Open YouTube Music
+                      </button>
+                    </div>
+                  </div>
+
                   {!youtubeEmbedUrl ? (
                     <Hint
                       title="Set NEXT_PUBLIC_YOUTUBE_MUSIC_EMBED_URL to a YouTube embed URL"
@@ -345,7 +447,7 @@ export function MusicEmbedModal({
                   )}
 
                   <p className="text-xs sm:text-sm text-white/40 leading-relaxed">
-                    Playback via YouTube&apos;s official embed. Governed by YouTube/Google terms.
+                    Playback via YouTube&apos;s official embed with autoplay and loop enabled. Sign in via YouTube for personalized recommendations. Music continues seamlessly in the background.
                   </p>
                 </div>
               )}
@@ -355,11 +457,20 @@ export function MusicEmbedModal({
             <div className="px-5 sm:px-8 py-4 sm:py-5 border-t border-white/10 shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "w-2 h-2 rounded-full animate-pulse",
+                    provider === "SPOTIFY" && "bg-green-400",
+                    provider === "APPLE_MUSIC" && "bg-pink-400",
+                    provider === "YOUTUBE" && "bg-red-400",
+                  )} />
                   {providerIcons[provider]}
                   <span className="text-sm sm:text-base text-white/60">Now playing on {providerLabels[provider]}</span>
                 </div>
-                <div className="text-xs sm:text-sm text-white/40">
-                  Provider terms apply
+                <div className="flex items-center gap-2">
+                  <IconPlayerPlay className="w-4 h-4 text-white/40" />
+                  <span className="text-xs sm:text-sm text-white/40">
+                    Seamless loop
+                  </span>
                 </div>
               </div>
             </div>

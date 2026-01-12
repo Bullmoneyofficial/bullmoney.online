@@ -10,10 +10,13 @@ import {
   IconVolume,
   IconVolumeOff,
   IconChevronUp,
+  IconBrandSpotify,
+  IconBrandApple,
+  IconBrandYoutube,
 } from "@tabler/icons-react";
 
 import { cn } from "@/lib/utils";
-import { useAudioSettings, type MusicSource } from "@/contexts/AudioSettingsProvider";
+import { useAudioSettings, type MusicSource, STREAMING_SOURCES } from "@/contexts/AudioSettingsProvider";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { MusicEmbedModal } from "@/components/MusicEmbedModal";
 
@@ -23,6 +26,15 @@ const sourceLabel: Record<MusicSource, string> = {
   AMBIENT: "Ambient",
   SHOP: "Shop",
   NEWS: "News",
+  SPOTIFY: "🎵 Spotify",
+  APPLE_MUSIC: "🍎 Apple Music",
+  YOUTUBE: "▶️ YouTube",
+};
+
+const sourceIcons: Partial<Record<MusicSource, React.ReactNode>> = {
+  SPOTIFY: <IconBrandSpotify className="w-4 h-4 text-green-400" />,
+  APPLE_MUSIC: <IconBrandApple className="w-4 h-4 text-pink-400" />,
+  YOUTUBE: <IconBrandYoutube className="w-4 h-4 text-red-400" />,
 };
 
 function Slider({
@@ -70,10 +82,14 @@ export default function AudioWidget() {
 
     tipsMuted,
     setTipsMuted,
+    
+    streamingEmbedUrl,
+    isStreamingSource,
   } = useAudioSettings();
 
   const [open, setOpen] = useState(false);
   const [musicEmbedOpen, setMusicEmbedOpen] = useState(false);
+  const [showBgPlayer, setShowBgPlayer] = useState(false);
 
   const musicIcon = useMemo(() => {
     if (!musicEnabled || musicVolume <= 0.001) return IconVolumeOff;
@@ -81,6 +97,14 @@ export default function AudioWidget() {
   }, [musicEnabled, musicVolume]);
 
   const MusicVolIcon = musicIcon;
+  
+  // Get icon for current streaming source
+  const currentStreamingIcon = useMemo(() => {
+    if (isStreamingSource && sourceIcons[musicSource]) {
+      return sourceIcons[musicSource];
+    }
+    return <IconMusic className="h-5 w-5 text-blue-200/90" />;
+  }, [isStreamingSource, musicSource]);
 
   return (
     <div className="fixed left-3 bottom-3 z-[60] pointer-events-auto">
@@ -117,13 +141,20 @@ export default function AudioWidget() {
 
           <div className={cn("flex items-center gap-2", open ? "flex-1" : "")}
           >
-            <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-white/5 border border-white/10">
-              <IconMusic className="h-5 w-5 text-blue-200/90" />
+            <div className={cn(
+              "h-11 w-11 rounded-xl flex items-center justify-center border",
+              isStreamingSource 
+                ? "bg-gradient-to-br from-white/10 to-white/5 border-white/20" 
+                : "bg-white/5 border-white/10"
+            )}>
+              {currentStreamingIcon}
             </div>
 
             {open && (
               <div className="min-w-0 flex-1">
-                <div className="text-[12px] font-semibold leading-tight">Audio</div>
+                <div className="text-[12px] font-semibold leading-tight">
+                  {isStreamingSource ? sourceLabel[musicSource] : "Audio"}
+                </div>
                 <div className="text-[11px] text-white/60 leading-tight">
                   Music + interactions
                 </div>
@@ -167,18 +198,31 @@ export default function AudioWidget() {
                   value={musicSource}
                   onChange={(e) => {
                     SoundEffects.click();
-                    setMusicSource(e.target.value as MusicSource);
+                    const newSource = e.target.value as MusicSource;
+                    setMusicSource(newSource);
+                    // Auto-show background player when selecting streaming source
+                    if (STREAMING_SOURCES.includes(newSource)) {
+                      setShowBgPlayer(true);
+                      setMusicEnabled(true);
+                    }
                   }}
                   className={cn(
                     "flex-1 bg-black/30 border border-white/10 rounded-lg",
                     "text-[12px] px-2 py-2 outline-none"
                   )}
                 >
-                  {Object.keys(sourceLabel).map((key) => (
-                    <option key={key} value={key}>
-                      {sourceLabel[key as MusicSource]}
-                    </option>
-                  ))}
+                  <optgroup label="Local Audio">
+                    <option value="THEME">Theme</option>
+                    <option value="BACKGROUND">Background</option>
+                    <option value="AMBIENT">Ambient</option>
+                    <option value="SHOP">Shop</option>
+                    <option value="NEWS">News</option>
+                  </optgroup>
+                  <optgroup label="🎧 Streaming Playlists">
+                    <option value="SPOTIFY">🎵 Spotify</option>
+                    <option value="APPLE_MUSIC">🍎 Apple Music</option>
+                    <option value="YOUTUBE">▶️ YouTube</option>
+                  </optgroup>
                 </select>
 
                 <button
@@ -235,6 +279,32 @@ export default function AudioWidget() {
                   </button>
                 </div>
 
+                {/* Streaming player toggle */}
+                {isStreamingSource && streamingEmbedUrl && (
+                  <div className="flex items-center justify-between gap-2 pt-2 pb-1">
+                    <div className="flex items-center gap-2">
+                      {sourceIcons[musicSource]}
+                      <span className="text-[11px] text-white/70">
+                        {showBgPlayer ? "Playing in background" : "Player hidden"}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        SoundEffects.click();
+                        setShowBgPlayer(!showBgPlayer);
+                      }}
+                      className={cn(
+                        "h-8 px-3 rounded-lg border text-[11px]",
+                        showBgPlayer
+                          ? "bg-green-500/15 border-green-500/30 text-green-300"
+                          : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
+                      )}
+                    >
+                      {showBgPlayer ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between gap-2 pt-1">
                   <button
                     onClick={() => {
@@ -251,7 +321,7 @@ export default function AudioWidget() {
                     )}
                     title="Open music embeds"
                   >
-                    Music
+                    Open Music Modal
                   </button>
                   <div className="h-10 w-10 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
                     <IconVolume className="h-5 w-5 text-white/70" />
@@ -259,13 +329,60 @@ export default function AudioWidget() {
                 </div>
 
                 <div className="text-[10px] text-white/50 leading-snug">
-                  Interaction volume controls UI sounds (click/hover/etc).
+                  {isStreamingSource 
+                    ? "Streaming from your selected playlist. Click play on the embed to start."
+                    : "Interaction volume controls UI sounds (click/hover/etc)."
+                  }
                 </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {/* Background streaming player - hidden but playing */}
+      {isStreamingSource && streamingEmbedUrl && musicEnabled && showBgPlayer && (
+        <div className="fixed bottom-20 left-3 z-[59] pointer-events-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className={cn(
+              "rounded-2xl border overflow-hidden shadow-2xl",
+              musicSource === "SPOTIFY" && "border-green-500/30 bg-black/90",
+              musicSource === "APPLE_MUSIC" && "border-pink-500/30 bg-black/90",
+              musicSource === "YOUTUBE" && "border-red-500/30 bg-black/90",
+            )}
+          >
+            <div className="flex items-center justify-between px-3 py-2 border-b border-white/10 bg-black/50">
+              <div className="flex items-center gap-2">
+                {sourceIcons[musicSource]}
+                <span className="text-[11px] text-white/70 font-medium">
+                  {sourceLabel[musicSource]} Player
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  SoundEffects.click();
+                  setShowBgPlayer(false);
+                }}
+                className="text-white/50 hover:text-white/80 text-[10px] px-2 py-1 rounded bg-white/5 hover:bg-white/10"
+              >
+                Minimize
+              </button>
+            </div>
+            <iframe
+              title={`${sourceLabel[musicSource]} background player`}
+              src={streamingEmbedUrl}
+              width={musicSource === "YOUTUBE" ? "320" : "300"}
+              height={musicSource === "YOUTUBE" ? "180" : "152"}
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; accelerometer; gyroscope; web-share"
+              loading="lazy"
+              className="block"
+            />
+          </motion.div>
+        </div>
+      )}
 
       {/* Music Modal - portaled to body for proper fullscreen overlay */}
       {typeof document !== "undefined" &&
