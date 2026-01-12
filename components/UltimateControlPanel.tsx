@@ -144,43 +144,46 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
       whileTap={{ scale: 0.98 }}
       className="relative p-3 rounded-xl overflow-hidden group isolate"
     >
-      {/* Glass background - matches navbar mobile controls */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
+      {/* Glass background - solid with subtle transparency, no blur */}
+      <div className="absolute inset-0 bg-slate-900/90 border border-blue-400/30 rounded-xl transition-all duration-300 group-hover:border-blue-300/50 shadow-lg shadow-blue-900/20" />
       
-      {/* Shimmer effect on hover - matches navbar gradient shimmer */}
+      {/* Inner highlight for depth */}
+      <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
+      
+      {/* Shimmer effect on hover */}
       <div 
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none overflow-hidden rounded-xl"
       >
         <motion.div 
           animate={{ x: ['0%', '200%'] }}
           transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/40 to-blue-600/0 opacity-100"
+          className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/30 to-blue-500/0"
         />
       </div>
       
       {/* Accent glow */}
       <div 
-        className="absolute inset-0 opacity-15 rounded-xl transition-opacity group-hover:opacity-30 pointer-events-none"
-        style={{ background: `radial-gradient(ellipse at top left, ${color}30 0%, transparent 70%)` }}
+        className="absolute inset-0 opacity-20 rounded-xl transition-opacity group-hover:opacity-35 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse at top left, ${color}40 0%, transparent 60%)` }}
       />
       
       {/* Content */}
       <div className="relative z-10 flex items-start gap-3">
         <div
-          className="p-2 rounded-lg backdrop-blur-sm border border-white/10"
-          style={{ backgroundColor: `${color}20` }}
+          className="p-2 rounded-lg border border-white/10"
+          style={{ backgroundColor: `${color}25` }}
         >
-          <Icon size={18} style={{ color }} />
+          <Icon size={18} style={{ color, filter: `drop-shadow(0 0 3px ${color}60)` }} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] text-blue-300/70 uppercase tracking-wider font-semibold">
+          <div className="text-[10px] text-blue-200/90 uppercase tracking-wider font-semibold">
             {label}
           </div>
-          <div className="text-sm font-bold text-white truncate mt-0.5 drop-shadow-lg">
+          <div className="text-sm font-bold text-white truncate mt-0.5">
             {value}
           </div>
           {sublabel && (
-            <div className="text-[10px] text-blue-200/50 mt-0.5">
+            <div className="text-[10px] text-blue-200/70 mt-0.5">
               {sublabel}
             </div>
           )}
@@ -195,49 +198,60 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
  */
 function PerformanceRing({ score, size = 120 }: { score: number; size?: number }) {
   const { grade, color, label } = getPerformanceGrade(score);
-  const radius = size / 2 - 10;
+  const padding = 8;
+  const strokeWidth = 8;
+  const radius = (size - padding * 2 - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
+  const center = size / 2;
 
   return (
     <div className="relative group isolate" style={{ width: size, height: size }}>
-      {/* Glass background - matches navbar */}
-      <div className="absolute inset-2 rounded-full bg-black/50 backdrop-blur-3xl border border-blue-500/30 transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
+      {/* Glass background - solid, no blur */}
+      <div className="absolute inset-0 rounded-full bg-slate-900/90 border border-blue-400/30 transition-all duration-300 group-hover:border-blue-300/50 shadow-lg shadow-blue-900/20" />
+      <div className="absolute inset-[1px] rounded-full bg-gradient-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
       
-      {/* Shimmer effect - matches navbar shimmer pattern */}
+      {/* Shimmer effect */}
       <div 
-        className="absolute inset-2 opacity-20 group-hover:opacity-35 transition-opacity pointer-events-none overflow-hidden rounded-full"
+        className="absolute inset-0 opacity-15 group-hover:opacity-25 transition-opacity pointer-events-none overflow-hidden rounded-full"
       >
         <motion.div 
           animate={{ rotate: 360 }}
-          transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-          className="absolute w-full h-full bg-gradient-to-r from-blue-600/0 via-blue-500/40 to-blue-600/0"
+          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+          className="absolute w-full h-full bg-gradient-to-r from-blue-600/0 via-blue-500/30 to-blue-600/0"
         />
       </div>
       
-      {/* SVG Ring */}
-      <svg className="absolute inset-0 -rotate-90 z-10">
+      {/* SVG Ring - properly centered */}
+      <svg 
+        className="absolute inset-0 -rotate-90 z-10" 
+        width={size} 
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+      >
+        {/* Background circle */}
         <circle
-          cx={size / 2}
-          cy={size / 2}
+          cx={center}
+          cy={center}
           r={radius}
           fill="none"
           stroke="rgba(59,130,246,0.15)"
-          strokeWidth="8"
+          strokeWidth={strokeWidth}
         />
+        {/* Progress circle */}
         <circle
-          cx={size / 2}
-          cy={size / 2}
+          cx={center}
+          cy={center}
           r={radius}
           fill="none"
           stroke={color}
-          strokeWidth="8"
+          strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"
           style={{
             transition: 'stroke-dashoffset 1s ease, stroke 0.3s ease',
-            filter: `drop-shadow(0 0 8px ${color}80)`
+            filter: `drop-shadow(0 0 6px ${color}80)`
           }}
         />
       </svg>
@@ -245,15 +259,15 @@ function PerformanceRing({ score, size = 120 }: { score: number; size?: number }
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
         <div
-          className="text-4xl font-black drop-shadow-lg"
-          style={{ color, textShadow: `0 0 20px ${color}60` }}
+          className="text-4xl font-black"
+          style={{ color, textShadow: `0 0 15px ${color}50` }}
         >
           {grade}
         </div>
-        <div className="text-xs text-blue-200/70 font-semibold">
+        <div className="text-xs text-blue-200/80 font-semibold">
           {label}
         </div>
-        <div className="text-[10px] text-blue-300/50 mt-1">
+        <div className="text-[10px] text-blue-300/60 mt-1">
           {score}/100
         </div>
       </div>
@@ -904,7 +918,9 @@ export function UltimateControlPanel({
 
               {/* Tabs */}
               <div className="px-6 pb-4 relative z-10">
-                <div className="relative flex gap-1 p-1.5 rounded-xl bg-black/50 backdrop-blur-3xl border border-blue-500/30 overflow-hidden isolate shadow-lg">
+                <div className="relative flex gap-1 p-1.5 rounded-xl bg-gradient-to-r from-blue-950/50 via-slate-900/60 to-blue-950/50 border border-blue-400/40 overflow-hidden isolate shadow-lg">
+                  {/* Inner highlight */}
+                  <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                   {/* Shimmer effect for tabs - matches navbar */}
                   <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
                     <motion.div 
@@ -1007,17 +1023,18 @@ export function UltimateControlPanel({
 
                       {/* Screen Info */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-purple-900/40 border border-blue-400/40 rounded-xl transition-all duration-300 group-hover:border-blue-300/60 shadow-lg shadow-blue-500/10" />
+                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/30 to-blue-600/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/40 to-blue-500/0 opacity-100"
                           />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl" />
                         <div className="relative z-10">
-                          <div className="text-xs text-blue-300/70 uppercase tracking-wider font-semibold mb-2">
+                          <div className="text-xs text-blue-200/80 uppercase tracking-wider font-semibold mb-2">
                             Display
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-sm">
@@ -1040,15 +1057,16 @@ export function UltimateControlPanel({
                       {/* Battery */}
                       {deviceInfo.battery.level >= 0 && (
                         <div className="relative p-4 rounded-xl overflow-hidden group">
-                          <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
+                          <div className="absolute inset-0 bg-gradient-to-br from-green-950/40 via-slate-900/50 to-blue-900/40 border border-green-400/40 rounded-xl transition-all duration-300 group-hover:border-green-300/60 shadow-lg shadow-green-500/10" />
+                          <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                             <motion.div 
                               animate={{ x: ['0%', '200%'] }}
                               transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                              className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-green-600/0 via-green-500/30 to-green-600/0 opacity-100"
+                              className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-green-500/0 via-green-400/40 to-green-500/0 opacity-100"
                             />
                           </div>
-                          <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-blue-500/5 rounded-xl" />
+                          <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl" />
                           <div className="relative z-10 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Battery size={18} className="text-green-400 drop-shadow-lg" />
@@ -1104,15 +1122,16 @@ export function UltimateControlPanel({
 
                       {/* Connection Type */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-cyan-900/40 border border-blue-400/40 rounded-xl transition-all duration-300 group-hover:border-blue-300/60 shadow-lg shadow-blue-500/10" />
+                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/30 to-blue-600/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/40 to-blue-500/0 opacity-100"
                           />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 rounded-xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl" />
                         <div className="relative z-10 flex items-center gap-3">
                           <Wifi size={24} className="text-blue-400 drop-shadow-lg" />
                           <div className="flex-1">
@@ -1133,12 +1152,13 @@ export function UltimateControlPanel({
                       </div>
 
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-blue-900/40 border border-blue-400/40 rounded-xl transition-all duration-300 group-hover:border-blue-300/60 shadow-lg shadow-blue-500/10" />
+                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/30 to-blue-600/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/40 to-blue-500/0 opacity-100"
                           />
                         </div>
                         <div className="relative z-10">
@@ -1167,15 +1187,16 @@ export function UltimateControlPanel({
 
                       {/* Location */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-950/40 via-slate-900/50 to-pink-900/40 border border-purple-400/40 rounded-xl transition-all duration-300 group-hover:border-purple-300/60 shadow-lg shadow-purple-500/10" />
+                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-purple-600/0 via-purple-500/30 to-purple-600/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-purple-500/0 via-purple-400/40 to-purple-500/0 opacity-100"
                           />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 rounded-xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl" />
                         <div className="relative z-10 flex items-start justify-between gap-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
@@ -1225,15 +1246,16 @@ export function UltimateControlPanel({
 
                       {/* FPS */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-green-950/40 via-slate-900/50 to-blue-900/40 border border-green-400/40 rounded-xl transition-all duration-300 group-hover:border-green-300/60 shadow-lg shadow-green-500/10" />
+                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-green-600/0 via-green-500/30 to-green-600/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-green-500/0 via-green-400/40 to-green-500/0 opacity-100"
                           />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-blue-500/5 rounded-xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl" />
                         <div className="relative z-10 flex items-center justify-between">
                           <div>
                             <div className="text-sm text-blue-200/60">Current FPS</div>
@@ -1261,15 +1283,16 @@ export function UltimateControlPanel({
                       />
 
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-blue-900/40 border border-blue-400/40 rounded-xl transition-all duration-300 group-hover:border-blue-300/60 shadow-lg shadow-blue-500/10" />
+                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/30 to-blue-600/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/40 to-blue-500/0 opacity-100"
                           />
                         </div>
-                        <div className="relative z-10 text-sm text-blue-200/70 mb-3">Device Snapshot</div>
+                        <div className="relative z-10 text-sm text-blue-200/80 mb-3">Device Snapshot</div>
                         <div className="relative z-10 grid grid-cols-2 gap-2 text-sm">
                           <div className="text-blue-200/60">CPU: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.performance.cpu.cores} cores</span></div>
                           <div className="text-blue-200/60">Arch: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.performance.cpu.architecture}</span></div>
@@ -1282,15 +1305,16 @@ export function UltimateControlPanel({
 
                       {/* Memory */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-purple-900/40 border border-blue-400/40 rounded-xl transition-all duration-300 group-hover:border-blue-300/60 shadow-lg shadow-blue-500/10" />
+                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-purple-500/30 to-purple-600/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-purple-400/40 to-purple-500/0 opacity-100"
                           />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl" />
                         <div className="relative z-10 flex items-center justify-between mb-3">
                           <span className="text-sm text-blue-200/60">Memory Usage</span>
                           <span className="text-sm font-semibold text-white drop-shadow-lg">
@@ -1311,15 +1335,16 @@ export function UltimateControlPanel({
 
                       {/* Queue Stats */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-orange-950/40 via-slate-900/50 to-red-900/40 border border-orange-400/40 rounded-xl transition-all duration-300 group-hover:border-orange-300/60 shadow-lg shadow-orange-500/10" />
+                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-orange-600/0 via-orange-500/30 to-orange-600/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-orange-500/0 via-orange-400/40 to-orange-500/0 opacity-100"
                           />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-red-500/5 rounded-xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-xl" />
                         <div className="relative z-10 text-sm text-blue-200/60 mb-2">Scene Loading</div>
                         <div className="relative z-10 grid grid-cols-2 gap-2 text-sm">
                           <div>
@@ -1354,15 +1379,16 @@ export function UltimateControlPanel({
                     >
                       {/* User Info */}
                       <div className="relative p-6 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-black/50 backdrop-blur-3xl border border-blue-500/30 rounded-xl transition-all duration-300 group-hover:border-blue-400/50 shadow-lg shadow-blue-900/10" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-purple-900/40 border border-blue-400/40 rounded-xl transition-all duration-300 group-hover:border-blue-300/60 shadow-lg shadow-blue-500/10" />
+                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-purple-500/30 to-purple-600/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-purple-400/40 to-purple-500/0 opacity-100"
                           />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl" />
                         <div className="relative z-10 flex items-center gap-4 mb-4">
                           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
                             <User size={32} className="text-white" />
