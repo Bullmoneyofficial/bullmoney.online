@@ -52,14 +52,22 @@ function getAvailableSections(): SectionId[] {
 function getCurrentSectionIndex(sectionIds: SectionId[]) {
   if (sectionIds.length === 0) return 0;
 
-  const viewportMid = window.scrollY + window.innerHeight * 0.33;
+  const scrollRoot =
+    (document.querySelector("[data-scrollable]") as HTMLElement | null) ||
+    (document.scrollingElement as HTMLElement | null) ||
+    (document.documentElement as HTMLElement);
+  const scrollTop = scrollRoot === document.documentElement ? window.scrollY : scrollRoot.scrollTop;
+  const viewportH = scrollRoot === document.documentElement ? window.innerHeight : scrollRoot.clientHeight;
+  const rootRectTop = scrollRoot === document.documentElement ? 0 : scrollRoot.getBoundingClientRect().top;
+
+  const viewportMid = scrollTop + viewportH * 0.33;
   let bestIndex = 0;
   let bestDistance = Number.POSITIVE_INFINITY;
 
   for (let i = 0; i < sectionIds.length; i++) {
     const element = document.getElementById(sectionIds[i]!);
     if (!element) continue;
-    const top = element.getBoundingClientRect().top + window.scrollY;
+    const top = element.getBoundingClientRect().top - rootRectTop + scrollTop;
     const distance = Math.abs(top - viewportMid);
     if (distance < bestDistance) {
       bestDistance = distance;
@@ -74,9 +82,21 @@ function scrollToSection(id: SectionId) {
   const element = document.getElementById(id);
   if (!element) return;
 
+  const scrollRoot =
+    (document.querySelector("[data-scrollable]") as HTMLElement | null) ||
+    (document.scrollingElement as HTMLElement | null) ||
+    (document.documentElement as HTMLElement);
+  const scrollTop = scrollRoot === document.documentElement ? window.scrollY : scrollRoot.scrollTop;
+  const rootRectTop = scrollRoot === document.documentElement ? 0 : scrollRoot.getBoundingClientRect().top;
+
   const rect = element.getBoundingClientRect();
-  const targetTop = rect.top + window.scrollY - 96;
-  window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+  const targetTop = rect.top - rootRectTop + scrollTop - 96;
+
+  if (scrollRoot === document.documentElement) {
+    window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+  } else {
+    scrollRoot.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+  }
 }
 
 export default function DesktopKeyNavigator() {
@@ -84,12 +104,14 @@ export default function DesktopKeyNavigator() {
   const [visible, setVisible] = useState(true);
   const [lastKey, setLastKey] = useState<string | null>(null);
 
-  const sectionIds = useMemo(() => SECTION_PRIORITY, []);
-
   useEffect(() => {
-    const finePointer = window.matchMedia?.("(pointer: fine)").matches;
-    const hover = window.matchMedia?.("(hover: hover)").matches;
-    setEnabled(Boolean(finePointer && hover));
+    const anyPointerCoarse = window.matchMedia?.("(any-pointer: coarse)")?.matches ?? false;
+    const pointerCoarse = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
+    const touchCapable = (navigator.maxTouchPoints || 0) > 0;
+    const wide = window.innerWidth >= 768;
+
+    // Enable on true desktops/laptops. (Trackpads still count as fine pointer.)
+    setEnabled(Boolean(wide && !touchCapable && !(anyPointerCoarse || pointerCoarse)));
 
     const t = window.setTimeout(() => setVisible(false), 6500);
     return () => window.clearTimeout(t);
@@ -155,9 +177,9 @@ export default function DesktopKeyNavigator() {
       }
     };
 
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [enabled, sectionIds]);
+    window.addEventListener("keydown", onKeyDown, { capture: true });
+    return () => window.removeEventListener("keydown", onKeyDown, { capture: true } as any);
+  }, [enabled]);
 
   if (!enabled || !visible) return null;
 

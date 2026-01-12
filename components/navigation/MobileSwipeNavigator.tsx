@@ -40,9 +40,48 @@ function isInteractiveTarget(target: EventTarget | null) {
 
   if (element.closest("a,button,[role='button'],[data-swipe-ignore]")) return true;
 
-  // If the user is inside an overflow scroll container, don't hijack gestures.
-  const scrollParent = element.closest("[data-swipe-scrollable],[data-lenis-prevent],.custom-scrollbar");
-  if (scrollParent) return true;
+  // If the user is inside a truly scrollable container, don't hijack gestures.
+  // (Avoid relying on class names like .custom-scrollbar which are used widely.)
+  let cur: HTMLElement | null = element;
+  while (cur && cur !== document.body) {
+    const style = window.getComputedStyle(cur);
+    const overflowY = style.overflowY;
+    const canScrollY =
+      (overflowY === "auto" || overflowY === "scroll") && cur.scrollHeight - cur.clientHeight > 4;
+    if (canScrollY) return true;
+    cur = cur.parentElement;
+  }
+
+  return false;
+}
+
+function isSwipeIgnoredTarget(target: EventTarget | null) {
+  const element = target as HTMLElement | null;
+  if (!element) return false;
+  return Boolean(element.closest("[data-swipe-ignore]"));
+}
+
+function isControlTarget(target: EventTarget | null) {
+  const element = target as HTMLElement | null;
+  if (!element) return false;
+  return Boolean(element.closest("a,button,[role='button']"));
+}
+
+function isInsideScrollableContainer(target: EventTarget | null) {
+  const element = target as HTMLElement | null;
+  if (!element) return false;
+
+  // If the user is inside a truly scrollable container, don't hijack gestures.
+  // (Avoid relying on class names like .custom-scrollbar which are used widely.)
+  let cur: HTMLElement | null = element;
+  while (cur && cur !== document.body) {
+    const style = window.getComputedStyle(cur);
+    const overflowY = style.overflowY;
+    const canScrollY =
+      (overflowY === "auto" || overflowY === "scroll") && cur.scrollHeight - cur.clientHeight > 4;
+    if (canScrollY) return true;
+    cur = cur.parentElement;
+  }
 
   return false;
 }
@@ -65,14 +104,22 @@ function getAvailableSections(): SectionId[] {
 function getCurrentSectionIndex(sectionIds: SectionId[]) {
   if (sectionIds.length === 0) return 0;
 
-  const viewportMid = window.scrollY + window.innerHeight * 0.33;
+  const scrollRoot =
+    (document.querySelector("[data-scrollable]") as HTMLElement | null) ||
+    (document.scrollingElement as HTMLElement | null) ||
+    (document.documentElement as HTMLElement);
+  const scrollTop = scrollRoot === document.documentElement ? window.scrollY : scrollRoot.scrollTop;
+  const viewportH = scrollRoot === document.documentElement ? window.innerHeight : scrollRoot.clientHeight;
+  const rootRectTop = scrollRoot === document.documentElement ? 0 : scrollRoot.getBoundingClientRect().top;
+
+  const viewportMid = scrollTop + viewportH * 0.33;
   let bestIndex = 0;
   let bestDistance = Number.POSITIVE_INFINITY;
 
   for (let i = 0; i < sectionIds.length; i++) {
     const element = document.getElementById(sectionIds[i]!);
     if (!element) continue;
-    const top = element.getBoundingClientRect().top + window.scrollY;
+    const top = element.getBoundingClientRect().top - rootRectTop + scrollTop;
     const distance = Math.abs(top - viewportMid);
     if (distance < bestDistance) {
       bestDistance = distance;
@@ -87,10 +134,21 @@ function scrollToSection(id: SectionId) {
   const element = document.getElementById(id);
   if (!element) return;
 
-  const rect = element.getBoundingClientRect();
-  const targetTop = rect.top + window.scrollY - 96;
+  const scrollRoot =
+    (document.querySelector("[data-scrollable]") as HTMLElement | null) ||
+    (document.scrollingElement as HTMLElement | null) ||
+    (document.documentElement as HTMLElement);
+  const scrollTop = scrollRoot === document.documentElement ? window.scrollY : scrollRoot.scrollTop;
+  const rootRectTop = scrollRoot === document.documentElement ? 0 : scrollRoot.getBoundingClientRect().top;
 
-  window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+  const rect = element.getBoundingClientRect();
+  const targetTop = rect.top - rootRectTop + scrollTop - 96;
+
+  if (scrollRoot === document.documentElement) {
+    window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+  } else {
+    scrollRoot.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+  }
 }
 
 function highlightNavbar() {
@@ -111,8 +169,10 @@ export default function MobileSwipeNavigator() {
     startY: 0,
     lastX: 0,
     lastY: 0,
+    startT: 0,
     isDown: false,
     activeTarget: null as EventTarget | null,
+    startedInBottomHalf: false,
   });
 
   useEffect(() => {
@@ -124,21 +184,43 @@ export default function MobileSwipeNavigator() {
   useEffect(() => {
     if (!enabled) return;
 
-    const thresholdPx = 60;
-    const dominancePx = 12;
+    // Make it easier to trigger, especially with fast flicks.
+    const thresholdPx = 44;
+    const dominancePx = 10;
+    const minVelocityPxPerMs = 0.6; // ~600px/s flick
+
+    const isBottomHalf = (clientY: number) => clientY >= window.innerHeight * 0.5;
 
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
-      if (isEditableTarget(e.target) || isInteractiveTarget(e.target)) return;
+      if (isEditableTarget(e.target)) return;
 
       const t = e.touches[0]!;
+      const startedInBottomHalf = isBottomHalf(t.clientY);
+
+      // Always respect explicit opt-out.
+      if (isSwipeIgnoredTarget(e.target)) return;
+
+      // For the top half, avoid hijacking taps on controls.
+      // For the bottom half, allow starting on controls so swipes work reliably.
+      if (!startedInBottomHalf && isControlTarget(e.target)) return;
+
+      // Old behavior: don't capture gestures inside scrollable containers.
+      // Improvement: allow swipes from the bottom half even over scroll areas.
+      if (!startedInBottomHalf && isInsideScrollableContainer(e.target)) return;
+
+      // Keep backward compatibility with any other heuristics.
+      if (!startedInBottomHalf && isInteractiveTarget(e.target)) return;
+
       swipeStateRef.current = {
         startX: t.clientX,
         startY: t.clientY,
         lastX: t.clientX,
         lastY: t.clientY,
+        startT: performance.now(),
         isDown: true,
         activeTarget: e.target,
+        startedInBottomHalf,
       };
     };
 
@@ -164,11 +246,22 @@ export default function MobileSwipeNavigator() {
 
       const deltaX = swipeStateRef.current.lastX - swipeStateRef.current.startX;
       const deltaY = swipeStateRef.current.lastY - swipeStateRef.current.startY;
+      const dt = Math.max(1, performance.now() - swipeStateRef.current.startT);
       swipeStateRef.current.isDown = false;
 
       const absX = Math.abs(deltaX);
       const absY = Math.abs(deltaY);
-      if (absX < thresholdPx && absY < thresholdPx) return;
+
+      const velX = absX / dt;
+      const velY = absY / dt;
+
+      // Require dominance, then accept either distance or velocity.
+      const isHorizontal = absX > absY + dominancePx;
+      const isVertical = absY > absX + dominancePx;
+      const horizontalSwipe = isHorizontal && (absX >= thresholdPx || velX >= minVelocityPxPerMs);
+      const verticalSwipe = isVertical && (absY >= thresholdPx || velY >= minVelocityPxPerMs);
+
+      if (!horizontalSwipe && !verticalSwipe) return;
 
       const ids = getAvailableSections();
       const currentIndex = getCurrentSectionIndex(ids);
@@ -192,16 +285,19 @@ export default function MobileSwipeNavigator() {
 
       const navBarMove = () => {
         highlightNavbar();
-        if (window.scrollY > 120) {
-          scrollToSection("top");
-        }
+        const scrollRoot =
+          (document.querySelector("[data-scrollable]") as HTMLElement | null) ||
+          (document.scrollingElement as HTMLElement | null) ||
+          (document.documentElement as HTMLElement);
+        const scrollTop = scrollRoot === document.documentElement ? window.scrollY : scrollRoot.scrollTop;
+        if (scrollTop > 120) scrollToSection("top");
         setLastAction("Swiped ↑ (NAVBAR)");
       };
 
       // Requested mapping:
       // left => go up, right => go down
       // up => move navbar, down => footer
-      if (absX > absY) {
+      if (horizontalSwipe) {
         if (deltaX < 0) goPrev();
         else goNext();
       } else {
@@ -217,14 +313,20 @@ export default function MobileSwipeNavigator() {
       window.setTimeout(() => setLastAction(null), 1200);
     };
 
+    const onTouchCancel = () => {
+      swipeStateRef.current.isDown = false;
+    };
+
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("touchcancel", onTouchCancel, { passive: true });
 
     return () => {
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchCancel);
     };
   }, [enabled]);
 
