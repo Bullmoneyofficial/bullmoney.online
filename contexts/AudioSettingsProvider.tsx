@@ -5,7 +5,7 @@ import { userStorage } from "@/lib/smartStorage";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 
-export type MusicSource = "THEME" | "BACKGROUND" | "AMBIENT" | "SHOP" | "NEWS" | "SPOTIFY" | "APPLE_MUSIC" | "YOUTUBE";
+export type MusicSource = "THEME" | "SPOTIFY" | "APPLE_MUSIC" | "YOUTUBE";
 
 // Streaming sources that use iframe embeds instead of audio elements
 export const STREAMING_SOURCES: MusicSource[] = ["SPOTIFY", "APPLE_MUSIC", "YOUTUBE"];
@@ -49,10 +49,7 @@ const STORAGE_KEYS = {
 } as const;
 
 const MUSIC_URLS: Record<Exclude<MusicSource, "THEME" | "SPOTIFY" | "APPLE_MUSIC" | "YOUTUBE">, string> = {
-  BACKGROUND: "/background.mp3",
-  AMBIENT: "/ambient.mp3",
-  SHOP: "/shop.mp3",
-  NEWS: "/news.mp3",
+  // MP3 files disabled - only streaming sources allowed
 };
 
 export function AudioSettingsProvider({ children }: { children: React.ReactNode }) {
@@ -91,22 +88,14 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
     }
     
     if (musicSource === "THEME") {
-      if (activeTheme?.bgMusicUrl) return activeTheme.bgMusicUrl;
-
-      // Fallback mapping so "Theme" music actually changes across themes
-      // even when a theme doesn't define a specific bgMusicUrl.
-      const category = activeTheme?.category;
-      if (category === "SEASONAL") return "/ambient.mp3";
-      if (category === "CRYPTO") return "/news.mp3";
-      if (category === "SPECIAL") return "/background.mp3";
-      if (category === "SENTIMENT") return "/ambient.mp3";
-      if (category === "OPTICS" || category === "GLITCH") return "/background.mp3";
-      return "/background.mp3";
+      // Default to null for THEME since no MP3s available
+      return activeTheme?.bgMusicUrl || null;
     }
     return MUSIC_URLS[musicSource as keyof typeof MUSIC_URLS];
   }, [activeTheme?.bgMusicUrl, activeTheme?.category, musicSource]);
 
   // Get streaming embed URL based on source - with autoplay enabled
+  // These work because the iframe is loaded immediately after a user click (selecting from dropdown)
   const streamingEmbedUrl = useMemo(() => {
     if (typeof window === "undefined") return null;
     
@@ -116,8 +105,8 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
       try {
         const url = new URL(baseUrl);
         url.searchParams.set("theme", "0");
-        // Spotify doesn't have true autoplay but we set utm params
         url.searchParams.set("utm_source", "generator");
+        // Spotify doesn't truly autoplay but this helps with engagement
         return url.toString();
       } catch {
         return baseUrl;
@@ -143,15 +132,15 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
       if (!baseUrl) return null;
       try {
         const url = new URL(baseUrl);
-        // Force autoplay and loop for seamless background music
+        // YouTube autoplay works when triggered by user interaction!
         url.searchParams.set("autoplay", "1");
         url.searchParams.set("loop", "1");
         url.searchParams.set("rel", "0");
         url.searchParams.set("modestbranding", "1");
-        url.searchParams.set("mute", "0"); // Ensure not muted
-        url.searchParams.set("enablejsapi", "1");
         url.searchParams.set("playsinline", "1");
-        // For seamless looping with playlist - set playlist param to loop the entire playlist
+        url.searchParams.set("enablejsapi", "1");
+        url.searchParams.set("origin", typeof window !== "undefined" ? window.location.origin : "");
+        // For seamless looping - playlist param is needed for loop to work
         const listId = url.searchParams.get("list");
         if (listId) {
           url.searchParams.set("playlist", listId);
@@ -226,7 +215,7 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
 
     if (typeof storedSource === "string") {
       const asSource = storedSource.toUpperCase() as MusicSource;
-      if (["THEME", "BACKGROUND", "AMBIENT", "SHOP", "NEWS", "SPOTIFY", "APPLE_MUSIC", "YOUTUBE"].includes(asSource)) {
+      if (["THEME", "SPOTIFY", "APPLE_MUSIC", "YOUTUBE"].includes(asSource)) {
         setMusicSourceState(asSource);
       }
     }
