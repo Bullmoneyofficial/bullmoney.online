@@ -20,6 +20,25 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
+## Music embeds (Spotify / Apple Music / YouTube)
+
+The in-app Audio widget includes a **Music** modal that plays via each platform’s **official embed player (iframe)**.
+
+Configure embeds via environment variables:
+
+- `NEXT_PUBLIC_SPOTIFY_EMBED_URL` (example: `https://open.spotify.com/embed/playlist/<id>`)
+- `NEXT_PUBLIC_APPLE_MUSIC_EMBED_URL` (example: `https://embed.music.apple.com/us/playlist/<id>`)
+- `NEXT_PUBLIC_YOUTUBE_MUSIC_EMBED_URL` (or `NEXT_PUBLIC_YOUTUBE_EMBED_URL`) (example: `https://www.youtube.com/embed/<videoId>`)
+
+### Optional: Spotify connect/login (OAuth PKCE)
+
+There is an optional Spotify connect flow at `/api/spotify/login` (PKCE) that stores tokens in HTTP-only cookies.
+
+Required env vars:
+
+- `SPOTIFY_CLIENT_ID`
+- `NEXT_PUBLIC_BASE_URL` (recommended in production; used to build the OAuth callback URL)
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
