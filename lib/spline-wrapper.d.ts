@@ -7,6 +7,10 @@ declare module '@/lib/spline-wrapper' {
     className?: string;
     onLoad?: () => void;
     onError?: (error: Error) => void;
+    /** Set true for hero/above-fold content - enables instant loading */
+    priority?: boolean;
+    /** Alias for priority - optimizes for hero section with 200ms load target */
+    isHero?: boolean;
   }
   
   const SplineWrapper: ComponentType<SplineWrapperProps>;

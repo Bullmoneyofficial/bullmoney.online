@@ -935,7 +935,9 @@ const HeroParallax = () => {
             <Spline 
               scene="/scene1.splinecode" 
               placeholder={undefined} 
-              className="!w-full !h-full pointer-events-none md:pointer-events-auto" 
+              className="!w-full !h-full pointer-events-none md:pointer-events-auto"
+              priority={true}
+              isHero={true}
             />
           </div>
         </div>

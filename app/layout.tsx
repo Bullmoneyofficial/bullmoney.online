@@ -108,6 +108,9 @@ export default function RootLayout({
 
         {/* PERFORMANCE: Preload critical assets with proper priorities */}
         <link rel="preload" href="/BULL.svg" as="image" fetchPriority="high" />
+        
+        {/* ULTRA-FAST: Preload hero Spline scene for 200ms load target */}
+        <link rel="preload" href="/scene1.splinecode" as="fetch" crossOrigin="anonymous" fetchPriority="high" />
 
         {/* Prefetch Spline scenes with lower priority - load on demand */}
         <link rel="prefetch" href="/scene3.splinecode" as="fetch" crossOrigin="anonymous" />
@@ -148,6 +151,19 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              // ULTRA-FAST: Preload Spline runtime by triggering dynamic import early
+              (function preloadSpline() {
+                // Prefetch the hero scene immediately
+                const sceneLink = document.createElement('link');
+                sceneLink.rel = 'preload';
+                sceneLink.href = '/scene1.splinecode';
+                sceneLink.as = 'fetch';
+                sceneLink.crossOrigin = 'anonymous';
+                document.head.appendChild(sceneLink);
+                
+                console.log('⚡ Spline scene preload initiated');
+              })();
+              
               // 120Hz Display Detection & Optimization - Ultra Mode
               (function detect120Hz() {
                 const root = document.documentElement;
