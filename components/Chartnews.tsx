@@ -776,10 +776,8 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
             </div>
 
             <div
-                className="flex-1 min-h-0 overflow-y-auto bg-black/90 custom-scrollbar overscroll-contain"
+                className="flex-1 min-h-0 overflow-y-auto bg-black/90 custom-scrollbar overscroll-contain md:overscroll-auto"
                 data-lenis-prevent
-                onWheel={(e) => e.stopPropagation()}
-                onTouchMove={(e) => e.stopPropagation()}
             >
                 {/* Error State */}
                 {error && !loading && (

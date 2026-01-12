@@ -703,7 +703,7 @@ export function Footer() {
       {/* Inject keyframes once */}
       <FooterStyles />
     
-      <footer className="relative w-full overflow-hidden" data-allow-scroll style={{ touchAction: 'pan-y' }}>
+      <footer id="footer" className="relative w-full overflow-hidden" data-allow-scroll style={{ touchAction: 'pan-y' }}>
         {/* === FULL GLASS SHIMMER CONTAINER - Like Navbar === */}
         <div className="relative group">
           

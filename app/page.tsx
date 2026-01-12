@@ -55,6 +55,9 @@ import { ALL_THEMES } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 import Image from "next/image";
 
+import MobileSwipeNavigator from "@/components/navigation/MobileSwipeNavigator";
+import DesktopKeyNavigator from "@/components/navigation/DesktopKeyNavigator";
+
 // Import loaders
 import PageMode from "@/components/REGISTER USERS/pagemode";
 import MultiStepLoaderv2 from "@/components/MultiStepLoaderv2";
@@ -360,12 +363,22 @@ function HomeContent() {
       {currentView === 'content' && (
         <>
           <main className="min-h-screen flex flex-col w-full overflow-x-hidden" data-allow-scroll data-scrollable>
-            <Hero />
-            <CTA />
-            <Features />
+            <div id="top" />
+
+            <section id="hero" className="w-full" data-allow-scroll>
+              <Hero />
+            </section>
+
+            <section id="cta" className="w-full" data-allow-scroll>
+              <CTA />
+            </section>
+
+            <section id="features" className="w-full" data-allow-scroll>
+              <Features />
+            </section>
 
             {/* 3D Spline Section - Hidden on small screens, show Testimonials instead */}
-            <section className="w-full max-w-7xl mx-auto px-4 py-16 hidden md:block" data-allow-scroll style={{ touchAction: 'pan-y' }}>
+            <section id="experience" className="w-full max-w-7xl mx-auto px-4 py-16 hidden md:block" data-allow-scroll style={{ touchAction: 'pan-y' }}>
               {/* Section Header */}
               <div className="relative text-center mb-8">
                 <h2 className="text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-400 to-white drop-shadow-[0_0_20px_rgba(59,130,246,0.5)]">
@@ -401,7 +414,7 @@ function HomeContent() {
             </section>
 
             {/* Mobile-only Testimonials Section - Shows on small devices instead of heavy 3D */}
-            <section className="w-full max-w-5xl mx-auto px-4 py-12 md:hidden" data-allow-scroll style={{ touchAction: 'pan-y' }}>
+            <section id="testimonials" className="w-full max-w-5xl mx-auto px-4 py-12 md:hidden" data-allow-scroll style={{ touchAction: 'pan-y' }}>
               {/* Section Header */}
               <div className="relative text-center mb-6">
                 <h2 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-400 to-white drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
@@ -433,8 +446,13 @@ function HomeContent() {
               </div>
             </section>
 
-            <LiveMarketTicker />
+            <section id="ticker" className="w-full" data-allow-scroll>
+              <LiveMarketTicker />
+            </section>
           </main>
+
+          <MobileSwipeNavigator />
+          <DesktopKeyNavigator />
 
           {theme.youtubeId && (
             <HiddenYoutubePlayer
