@@ -187,7 +187,10 @@ export default function MobileSwipeNavigator() {
 
     const onTouchMove = (e: TouchEvent) => {
       if (!swipeRef.current.tracking) return;
-      if (e.touches.length !== 1) return;
+      if (e.touches.length !== 1) {
+        swipeRef.current.tracking = false;
+        return;
+      }
 
       const touch = e.touches[0];
       const deltaX = touch.clientX - swipeRef.current.startX;
@@ -195,7 +198,7 @@ export default function MobileSwipeNavigator() {
 
       // Only prevent vertical scroll if horizontal swipe is clearly dominant
       // This prevents blocking legitimate vertical scrolling
-      if (Math.abs(deltaX) > Math.abs(deltaY) * 1.5 && Math.abs(deltaX) > 20) {
+      if (Math.abs(deltaX) > Math.abs(deltaY) * 1.5 && Math.abs(deltaX) > 10) {
         e.preventDefault();
       }
     };
@@ -217,27 +220,34 @@ export default function MobileSwipeNavigator() {
       const velocityY = absY / deltaTime;
 
       // Determine if it's a valid swipe
-      const isHorizontalSwipe = absX > absY && (absX >= SWIPE_THRESHOLD || velocityX >= VELOCITY_THRESHOLD);
-      const isVerticalSwipe = absY > absX && (absY >= SWIPE_THRESHOLD || velocityY >= VELOCITY_THRESHOLD);
+      // Lower threshold: 30px or velocity > 0.25 for horizontal, 50px or velocity > 0.3 for vertical
+      const isHorizontalSwipe = absX > absY && (absX >= 30 || velocityX >= 0.25);
+      const isVerticalSwipe = absY > absX * 1.5 && (absY >= 50 || velocityY >= 0.3);
 
       if (!isHorizontalSwipe && !isVerticalSwipe) return;
 
       const sections = getVisibleSections();
+      if (sections.length === 0) return;
+      
       const currentIdx = getCurrentIndex(sections);
 
       if (isHorizontalSwipe) {
         if (deltaX < 0) {
           // Swipe LEFT → Next section
           const newIdx = Math.min(sections.length - 1, currentIdx + 1);
-          const target = sections[newIdx] || "footer";
-          scrollToSection(target);
-          showAction("→", target);
+          const target = sections[newIdx];
+          if (target) {
+            scrollToSection(target);
+            showAction("→", target);
+          }
         } else {
           // Swipe RIGHT → Previous section
           const newIdx = Math.max(0, currentIdx - 1);
-          const target = sections[newIdx] || "hero";
-          scrollToSection(target);
-          showAction("←", target);
+          const target = sections[newIdx];
+          if (target) {
+            scrollToSection(target);
+            showAction("←", target);
+          }
         }
       } else if (isVerticalSwipe) {
         if (deltaY < 0) {
@@ -257,17 +267,17 @@ export default function MobileSwipeNavigator() {
     };
 
     // Add event listeners with consistent passive flags
-    window.addEventListener("touchstart", onTouchStart, { passive: true, capture: false });
-    window.addEventListener("touchmove", onTouchMove, { passive: false, capture: false });
-    window.addEventListener("touchend", onTouchEnd, { passive: true, capture: false });
-    window.addEventListener("touchcancel", onTouchCancel, { passive: true, capture: false });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("touchcancel", onTouchCancel, { passive: true });
 
     return () => {
-      // Clean up all event listeners
-      window.removeEventListener("touchstart", onTouchStart, { capture: false } as EventListenerOptions);
-      window.removeEventListener("touchmove", onTouchMove, { capture: false } as EventListenerOptions);
-      window.removeEventListener("touchend", onTouchEnd, { capture: false } as EventListenerOptions);
-      window.removeEventListener("touchcancel", onTouchCancel, { capture: false } as EventListenerOptions);
+      // Clean up all event listeners - must match the addEventListener options
+      window.removeEventListener("touchstart", onTouchStart, { passive: true } as any);
+      window.removeEventListener("touchmove", onTouchMove, { passive: false } as any);
+      window.removeEventListener("touchend", onTouchEnd, { passive: true } as any);
+      window.removeEventListener("touchcancel", onTouchCancel, { passive: true } as any);
       
       // Clean up action timer if component unmounts
       if (actionTimerRef.current) {
