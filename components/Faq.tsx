@@ -664,8 +664,12 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
     };
+    // Only disable scroll on mobile when FAQ is open
+    const isMobileViewport = window.innerWidth < 768;
     if (isOpen) {
-        document.body.style.overflow = 'hidden';
+        if (isMobileViewport) {
+            document.body.style.overflow = 'hidden';
+        }
         window.addEventListener('keydown', handleKeyDown);
     } else {
         document.body.style.overflow = 'auto';

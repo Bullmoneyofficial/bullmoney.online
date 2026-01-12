@@ -337,7 +337,9 @@ const HeroParallax = () => {
   }
 
   useEffect(() => {
-    if (activeProduct) {
+    // Only disable scroll on mobile when a product modal is open
+    const isMobileViewport = window.innerWidth < 768;
+    if (isMobileViewport && activeProduct) {
         document.body.style.overflow = "hidden";
     } else {
         document.body.style.overflow = "auto";

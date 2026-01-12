@@ -338,7 +338,9 @@ export default function ProductsSection() {
   };
 
   useEffect(() => {
-    if (expandedId) {
+    // Only disable scroll on mobile when a product is expanded
+    const isMobileViewport = window.innerWidth < 768;
+    if (isMobileViewport && expandedId) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";

@@ -552,7 +552,10 @@ const HeroParallax = () => {
   };
 
   useEffect(() => {
-    if (activeProject || isAdminOpen || isContactModalOpen || isServicesModalOpen || isThemeModalOpen) {
+    // Only disable scroll on mobile/tablet when a modal is open
+    // On desktop, keep scroll enabled so user can see content behind modal
+    const isMobileViewport = window.innerWidth < 768;
+    if (isMobileViewport && (activeProject || isAdminOpen || isContactModalOpen || isServicesModalOpen || isThemeModalOpen)) {
         document.body.style.overflow = "hidden";
     } else {
         document.body.style.overflow = "auto";
@@ -704,7 +707,7 @@ const HeroParallax = () => {
         >
           <motion.div
             layoutId={activeLayoutId} 
-            className="relative w-full max-w-5xl bg-white dark:bg-neutral-900 rounded-none md:rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[100dvh] md:h-[85vh] md:max-h-[800px] safari-fix-layer"
+            className="relative w-full max-w-5xl bg-white dark:bg-neutral-900 rounded-none md:rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[90vh] md:h-[85vh] md:max-h-[800px] safari-fix-layer"
             onClick={(e) => e.stopPropagation()} 
           >
             <button
@@ -915,12 +918,10 @@ const HeroParallax = () => {
             isolation: 'isolate',
             willChange: 'transform',
             touchAction: 'pan-y',
-            maxWidth: '100vw',
-            maxHeight: '100vh'
           }}
         >
           <div 
-            className="w-full h-full pointer-events-none md:pointer-events-auto overflow-hidden"
+            className="w-full h-full pointer-events-none md:pointer-events-auto overflow-hidden relative"
             style={{
               position: 'absolute',
               top: 0,
@@ -929,14 +930,12 @@ const HeroParallax = () => {
               bottom: 0,
               contain: 'strict',
               touchAction: 'pan-y',
-              maxWidth: '100%',
-              maxHeight: '100%'
             }}
           >
             <Spline 
               scene="/scene1.splinecode" 
               placeholder={undefined} 
-              className="w-full h-full pointer-events-none md:pointer-events-auto max-w-full max-h-full" 
+              className="!w-full !h-full pointer-events-none md:pointer-events-auto" 
             />
           </div>
         </div>
