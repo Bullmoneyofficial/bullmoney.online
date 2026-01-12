@@ -106,7 +106,8 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
         const url = new URL(baseUrl);
         url.searchParams.set("theme", "0");
         url.searchParams.set("utm_source", "generator");
-        // Spotify doesn't truly autoplay but this helps with engagement
+        // Spotify parameters to help with autoplay/engagement
+        url.searchParams.set("view", "list");
         return url.toString();
       } catch {
         return baseUrl;
@@ -121,6 +122,8 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
         url.searchParams.set("app", "music");
         url.searchParams.set("theme", "auto");
         url.searchParams.set("l", "en");
+        // Force embedded player mode
+        url.searchParams.set("sdk", "true");
         return url.toString();
       } catch {
         return baseUrl;
