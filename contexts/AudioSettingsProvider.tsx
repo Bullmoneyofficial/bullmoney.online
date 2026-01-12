@@ -106,7 +106,7 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
     return MUSIC_URLS[musicSource as keyof typeof MUSIC_URLS];
   }, [activeTheme?.bgMusicUrl, activeTheme?.category, musicSource]);
 
-  // Get streaming embed URL based on source
+  // Get streaming embed URL based on source - with autoplay enabled
   const streamingEmbedUrl = useMemo(() => {
     if (typeof window === "undefined") return null;
     
@@ -116,6 +116,8 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
       try {
         const url = new URL(baseUrl);
         url.searchParams.set("theme", "0");
+        // Spotify doesn't have true autoplay but we set utm params
+        url.searchParams.set("utm_source", "generator");
         return url.toString();
       } catch {
         return baseUrl;
@@ -129,6 +131,7 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
         const url = new URL(baseUrl);
         url.searchParams.set("app", "music");
         url.searchParams.set("theme", "auto");
+        url.searchParams.set("l", "en");
         return url.toString();
       } catch {
         return baseUrl;
@@ -140,11 +143,15 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
       if (!baseUrl) return null;
       try {
         const url = new URL(baseUrl);
+        // Force autoplay and loop for seamless background music
         url.searchParams.set("autoplay", "1");
         url.searchParams.set("loop", "1");
         url.searchParams.set("rel", "0");
         url.searchParams.set("modestbranding", "1");
-        // For seamless looping with playlist
+        url.searchParams.set("mute", "0"); // Ensure not muted
+        url.searchParams.set("enablejsapi", "1");
+        url.searchParams.set("playsinline", "1");
+        // For seamless looping with playlist - set playlist param to loop the entire playlist
         const listId = url.searchParams.get("list");
         if (listId) {
           url.searchParams.set("playlist", listId);
