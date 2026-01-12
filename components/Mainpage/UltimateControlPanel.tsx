@@ -350,6 +350,7 @@ export function UltimateControlPanel({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               onClick={() => onOpenChange(false)}
               onTouchStart={(e) => {
                 e.stopPropagation();
@@ -358,7 +359,7 @@ export function UltimateControlPanel({
                 e.stopPropagation();
                 onOpenChange(false);
               }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[249999]"
+              className="fixed inset-0 bg-black/50 backdrop-blur-md z-[249999]"
               style={{ touchAction: 'manipulation' }}
             />
 
@@ -373,7 +374,7 @@ export function UltimateControlPanel({
               dragElastic={0.1}
               onDragEnd={handleDragEnd}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-[250000] max-h-[85vh] overflow-hidden rounded-t-3xl bg-gradient-to-b from-gray-900/98 to-black/98 backdrop-blur-2xl border-t border-white/10 shadow-2xl"
+              className="fixed bottom-0 left-0 right-0 z-[250000] max-h-[85vh] overflow-hidden rounded-t-3xl bg-gradient-to-b from-gray-900/95 to-black/95 backdrop-blur-xl border-t border-white/10 shadow-2xl"
               style={{
                 paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)'
               }}

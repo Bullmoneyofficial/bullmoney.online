@@ -645,7 +645,7 @@ const ThemeSelectorModal = ({
         onClick={onClose}
       >
         {/* Backdrop */}
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-black/80" />
         
         {/* Modal container */}
         <motion.div
