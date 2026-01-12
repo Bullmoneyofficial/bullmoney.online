@@ -322,11 +322,18 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
     
     setIsClient(true);
     
-    // Check if user has already completed registration
-    const hasCompletedRecruit = typeof window !== 'undefined' ? sessionStorage.getItem('affiliate_recruit_complete') : null;
-    if (hasCompletedRecruit) {
+    // Check if user has already completed registration (use localStorage for persistence)
+    const hasCompletedRecruit = typeof window !== 'undefined' ? localStorage.getItem('affiliate_recruit_complete') : null;
+    const hasUnlocked = typeof window !== 'undefined' ? localStorage.getItem('affiliate_unlock_complete') : null;
+    
+    if (hasUnlocked) {
+      // User has fully unlocked - go straight to content
+      setCurrentStage("content");
+    } else if (hasCompletedRecruit) {
+      // User registered but hasn't unlocked yet
       setCurrentStage("affiliate");
     } else {
+      // New user - show registration
       setCurrentStage("recruit");
     }
     
@@ -352,9 +359,18 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
   // Handle recruit completion -> move to affiliate loader
   const handleRecruitComplete = useCallback(() => {
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('affiliate_recruit_complete', 'true');
+      localStorage.setItem('affiliate_recruit_complete', 'true');
     }
     setCurrentStage("affiliate");
+  }, []);
+
+  // Handle logout - clear all stored data and reset to recruit
+  const handleLogout = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('affiliate_recruit_complete');
+      localStorage.removeItem('affiliate_unlock_complete');
+    }
+    setCurrentStage("recruit");
   }, []);
 
   // --- LOGIC: Affiliate -> V2 (Returning) OR Hold (1st Load) ---
@@ -362,7 +378,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
     if (!isOpen) return;
     if (currentStage === "affiliate") {
         const timer = setTimeout(() => {
-            const hasVisited = typeof window !== 'undefined' ? sessionStorage.getItem('affiliate_unlock_complete') : null;
+            const hasVisited = typeof window !== 'undefined' ? localStorage.getItem('affiliate_unlock_complete') : null;
             if (hasVisited) {
                 setCurrentStage("v2");
             } else {
@@ -483,7 +499,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
   const handleHoldComplete = useCallback(() => {
       if (typeof window !== 'undefined') {
-          sessionStorage.setItem('affiliate_unlock_complete', 'true');
+          localStorage.setItem('affiliate_unlock_complete', 'true');
       }
       setCurrentStage("content");
       safePlay(); 
@@ -491,7 +507,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
   const handleClose = useCallback(() => {
     safePause();
-    setCurrentStage("affiliate");
+    // Don't reset stage - preserve state for when modal reopens
     onClose();
   }, [safePause, onClose]);
 
@@ -540,6 +556,17 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         >
           <X size={18} className="sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform duration-300" />
         </button>
+
+        {/* LOGOUT BUTTON - Shows when user is registered */}
+        {currentStage === 'content' && (
+          <button 
+            onClick={handleLogout}
+            className="absolute top-3 left-3 sm:top-4 sm:left-4 z-[9999999] px-3 py-2 rounded-full bg-red-500/20 backdrop-blur-xl border border-red-500/30 text-red-400 hover:text-white hover:bg-red-500/40 hover:border-red-500/50 transition-all duration-300 text-xs sm:text-sm font-medium"
+            aria-label="Logout"
+          >
+            Logout
+          </button>
+        )}
 
         {/* AUDIO SYSTEM */}
         {isClient && (
