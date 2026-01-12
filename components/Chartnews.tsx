@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo, memo, ReactNode } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef, memo, ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { IconExternalLink, IconRefresh } from "@tabler/icons-react";
 import { ChevronDown, ChartBar, Newspaper, X, ArrowRight } from "lucide-react";
@@ -642,10 +643,13 @@ NewsFeedContent.displayName = "NewsFeedContent";
 /* --------------------------- NEWS FEED MODAL WRAPPER --------------------------- */
 function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTip?: boolean }) {
     const [isOpen, setIsOpen] = useState(false);
+    const [mounted, setMounted] = useState(false);
+    const triggerRef = useRef<HTMLButtonElement | null>(null);
+    const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+    const modalRef = useRef<HTMLDivElement | null>(null);
+    const prevBodyOverflowRef = useRef<string>("");
 
-    const handleOpenModal = useCallback((e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
+    const handleOpenModal = useCallback(() => {
         setIsOpen(true);
     }, []);
 
@@ -654,50 +658,108 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
     }, []);
 
     useEffect(() => {
-        const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
-                e.preventDefault();
-                setIsOpen(false);
-            }
-        };
-        window.addEventListener("keydown", handleEsc);
-        return () => window.removeEventListener("keydown", handleEsc);
+        setMounted(true);
     }, []);
 
     useEffect(() => {
-        document.body.style.overflow = isOpen ? "hidden" : "unset";
-        return () => { document.body.style.overflow = "unset"; };
+        if (!isOpen) return;
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                handleCloseModal();
+            }
+        };
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [isOpen, handleCloseModal]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        prevBodyOverflowRef.current = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.body.style.overflow = prevBodyOverflowRef.current;
+        };
     }, [isOpen]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const raf = requestAnimationFrame(() => {
+            closeButtonRef.current?.focus();
+        });
+        return () => {
+            cancelAnimationFrame(raf);
+            triggerRef.current?.focus();
+        };
+    }, [isOpen]);
+
+    const handleModalKeyDown = useCallback((e: React.KeyboardEvent) => {
+        if (e.key !== "Tab") return;
+        const root = modalRef.current;
+        if (!root) return;
+
+        const focusableSelectors = [
+            'a[href]',
+            'button:not([disabled])',
+            'textarea:not([disabled])',
+            'input:not([disabled])',
+            'select:not([disabled])',
+            '[tabindex]:not([tabindex="-1"])',
+        ].join(",");
+
+        const focusables = Array.from(root.querySelectorAll<HTMLElement>(focusableSelectors)).filter(
+            (el) => el.getAttribute("aria-hidden") !== "true"
+        );
+
+        if (focusables.length === 0) {
+            e.preventDefault();
+            closeButtonRef.current?.focus();
+            return;
+        }
+
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const active = document.activeElement as HTMLElement | null;
+
+        if (e.shiftKey) {
+            if (!active || active === first) {
+                e.preventDefault();
+                last.focus();
+            }
+        } else {
+            if (active === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        }
+    }, []);
 
     return (
         <>
             <div className="w-full flex justify-center relative">
-                {/* HELPER TIP FOR NEWS */}
                 <AnimatePresence>
-                    {showTip && (
-                        <HelperTip label="Latest News" className="-top-12" />
-                    )}
+                    {showTip && <HelperTip label="Latest News" className="-top-12" />}
                 </AnimatePresence>
 
-                {/* Simplified button structure - no ShimmerBorder wrapper to avoid click issues */}
-                <div 
+                <button
+                    ref={triggerRef}
+                    type="button"
                     onClick={handleOpenModal}
-                    className="relative w-full max-w-xl cursor-pointer group"
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === 'Enter' && handleOpenModal(e as any)}
+                    aria-haspopup="dialog"
+                    aria-expanded={isOpen}
+                    className="relative w-full max-w-xl cursor-pointer group focus:outline-none focus:ring-2 focus:ring-sky-500/50 rounded-xl"
                 >
                     {/* Shimmer border effect - purely decorative */}
                     <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
                         <motion.div
-                            className="absolute inset-[-100%]" 
+                            className="absolute inset-[-100%]"
                             animate={{ rotate: 360 }}
                             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                             style={{ background: shimmerGradient }}
                         />
                         <div className="absolute inset-[2px] bg-neutral-950 rounded-xl" />
                     </div>
-                    
+
                     {/* Button content */}
                     <div className="relative z-10 overflow-hidden rounded-xl bg-[#0a0a0a] p-1 transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-sky-500/10 group-hover:-translate-y-1">
                         <div className="relative flex items-center justify-between rounded-[9px] bg-[#0a0a0a] px-4 py-3 md:px-6 md:py-4">
@@ -706,14 +768,9 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                                     <Newspaper className="h-5 w-5" />
                                 </div>
                                 <div className="text-left truncate">
-                                    <h4 className="text-lg font-black text-white truncate animate-text-shimmer">
-                                        Open News Feed
-                                    </h4>
+                                    <h4 className="text-lg font-black text-white truncate animate-text-shimmer">Open News Feed</h4>
                                     <p className="text-xs text-neutral-500 truncate max-w-[200px] sm:max-w-none font-mono uppercase tracking-wide">
-                                        {activeMarket !== 'all' 
-                                            ? `LIVE ${activeMarket} HEADLINES`
-                                            : "GLOBAL MARKET INTELLIGENCE"
-                                        }
+                                        {activeMarket !== "all" ? `LIVE ${activeMarket} HEADLINES` : "GLOBAL MARKET INTELLIGENCE"}
                                     </p>
                                 </div>
                             </div>
@@ -722,59 +779,79 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                             </div>
                         </div>
                     </div>
-                </div>
+                </button>
             </div>
 
-            <AnimatePresence>
-                {isOpen && (
-                    <div 
-                        className="fixed inset-0 z-[9999999] flex items-center justify-center p-3 md:p-6 overflow-hidden"
-                        style={{ pointerEvents: 'auto' }}
-                    >
-                        {/* Backdrop */}
-                        <motion.div
-                            initial={{ opacity: 0 }} 
-                            animate={{ opacity: 1 }} 
-                            exit={{ opacity: 0 }}
-                            onClick={handleCloseModal}
-                            className="absolute inset-0 bg-black/95 backdrop-blur-md cursor-pointer"
-                            style={{ pointerEvents: 'auto' }}
-                        />
-                        
-                        {/* Modal Container */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="relative z-10 w-full max-w-6xl h-[90vh] md:h-[85vh]"
-                            style={{ pointerEvents: 'auto' }}
-                        >
-                            {/* Shimmer border - decorative */}
-                            <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
-                                <motion.div
-                                    className="absolute inset-[-100%]" 
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-                                    style={{ background: shimmerGradient }}
-                                />
-                                <div className="absolute inset-[2px] bg-black rounded-3xl" />
-                            </div>
-                            
-                            {/* Modal content */}
-                            <div 
-                                role="dialog"
-                                aria-modal="true"
-                                className="relative z-20 w-full h-full overflow-hidden rounded-3xl border border-sky-500/20 bg-black shadow-2xl"
-                                style={{ pointerEvents: 'auto' }}
+            {mounted &&
+                createPortal(
+                    <AnimatePresence>
+                        {isOpen && (
+                            <motion.div
+                                key="news-modal-root"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="fixed inset-0 z-[9999999] flex items-center justify-center p-3 md:p-6"
                             >
-                                <NewsFeedContent activeMarket={activeMarket as MarketFilter} onClose={handleCloseModal} />
-                            </div>
-                        </motion.div>
-                    </div>
+                                {/* Backdrop */}
+                                <motion.div
+                                    key="news-modal-backdrop"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.18 }}
+                                    onPointerDown={handleCloseModal}
+                                    aria-hidden="true"
+                                    className="absolute inset-0 bg-black/95 backdrop-blur-md"
+                                />
+
+                                {/* Modal */}
+                                <motion.div
+                                    key="news-modal-dialog"
+                                    ref={modalRef}
+                                    role="dialog"
+                                    aria-modal="true"
+                                    tabIndex={-1}
+                                    onKeyDown={handleModalKeyDown}
+                                    initial={{ opacity: 0, scale: 0.96, y: 18 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.96, y: 18 }}
+                                    transition={{ type: "spring", bounce: 0, duration: 0.45 }}
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                    className="relative z-10 w-full max-w-6xl h-[90vh] md:h-[85vh]"
+                                >
+                                    {/* Shimmer border - decorative */}
+                                    <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+                                        <motion.div
+                                            className="absolute inset-[-100%]"
+                                            animate={{ rotate: 360 }}
+                                            transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+                                            style={{ background: shimmerGradient }}
+                                        />
+                                        <div className="absolute inset-[2px] bg-black rounded-3xl" />
+                                    </div>
+
+                                    {/* Close button */}
+                                    <button
+                                        ref={closeButtonRef}
+                                        type="button"
+                                        onClick={handleCloseModal}
+                                        className="absolute right-3 top-3 z-30 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white ring-1 ring-white/10 backdrop-blur-md transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                                        aria-label="Close news modal"
+                                    >
+                                        <X className="h-5 w-5" />
+                                    </button>
+
+                                    {/* Modal content */}
+                                    <div className="relative z-20 w-full h-full overflow-hidden rounded-3xl border border-sky-500/20 bg-black shadow-2xl">
+                                        <NewsFeedContent activeMarket={activeMarket as MarketFilter} onClose={handleCloseModal} />
+                                    </div>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>,
+                    document.body
                 )}
-            </AnimatePresence>
         </>
     );
 }
