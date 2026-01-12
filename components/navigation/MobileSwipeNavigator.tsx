@@ -8,14 +8,13 @@ import { useLenis } from "@/lib/smoothScroll";
 // Touch gestures: Swipe left/right for sections, up for top, down for bottom
 // ============================================================================
 
-type SectionId = "top" | "hero" | "cta" | "features" | "experience" | "testimonials" | "ticker" | "footer";
+type SectionId = "hero" | "cta" | "features" | "experience" | "testimonials" | "ticker" | "footer";
 
-// Sections matching app/page.tsx structure  
-const SECTIONS: SectionId[] = ["top", "hero", "cta", "features", "experience", "testimonials", "ticker", "footer"];
+// Sections matching app/page.tsx structure (excluding 'top' which is same position as 'hero')
+const SECTIONS: SectionId[] = ["hero", "cta", "features", "experience", "testimonials", "ticker", "footer"];
 
 // Section labels for display
 const SECTION_LABELS: Record<SectionId, string> = {
-  top: "Top",
   hero: "Hero",
   cta: "Charts",
   features: "Features",
@@ -227,15 +226,15 @@ export default function MobileSwipeNavigator() {
         } else {
           // Swipe RIGHT → Previous section
           const newIdx = Math.max(0, currentIdx - 1);
-          const target = sections[newIdx] || "top";
+          const target = sections[newIdx] || "hero";
           scrollToSection(target);
           showAction("←", target);
         }
       } else if (isVerticalSwipe) {
         if (deltaY < 0) {
-          // Swipe UP → Go to top
-          scrollToSection("top");
-          showAction("↑", "top");
+          // Swipe UP → Go to hero/top
+          scrollToSection("hero");
+          showAction("↑", "hero");
         } else {
           // Swipe DOWN → Go to footer
           scrollToSection("footer");

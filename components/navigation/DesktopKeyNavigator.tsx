@@ -8,14 +8,13 @@ import { useLenis } from "@/lib/smoothScroll";
 // Supports: Arrow keys, WASD, Vim keys (HJKL), number keys, Home/End
 // ============================================================================
 
-type SectionId = "top" | "hero" | "cta" | "features" | "experience" | "testimonials" | "ticker" | "footer";
+type SectionId = "hero" | "cta" | "features" | "experience" | "testimonials" | "ticker" | "footer";
 
-// Sections matching app/page.tsx structure
-const SECTIONS: SectionId[] = ["top", "hero", "cta", "features", "experience", "testimonials", "ticker", "footer"];
+// Sections matching app/page.tsx structure (excluding 'top' which is same position as 'hero')
+const SECTIONS: SectionId[] = ["hero", "cta", "features", "experience", "testimonials", "ticker", "footer"];
 
 // Section labels for display
 const SECTION_LABELS: Record<SectionId, string> = {
-  top: "Top",
   hero: "Hero",
   cta: "Charts",
   features: "Features",
@@ -37,20 +36,38 @@ export default function DesktopKeyNavigator() {
   const [visible, setVisible] = useState(false);
   const [lastKey, setLastKey] = useState<string | null>(null);
   const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasShownInitialRef = useRef(false);
 
-  // Check if we're on desktop (no touch, wide screen)
+  // Check if we're on desktop (has fine pointer - mouse/trackpad)
   useEffect(() => {
     const check = () => {
-      const hasKeyboard = window.matchMedia("(pointer: fine)").matches;
+      // Enable if device has a fine pointer (mouse/trackpad) regardless of touch capability
+      // This allows laptops with touchscreens to still use keyboard nav
+      const hasFinePointer = window.matchMedia("(pointer: fine)").matches;
       const wide = window.innerWidth >= 768;
-      const noTouch = !("ontouchstart" in window) || navigator.maxTouchPoints === 0;
-      setEnabled(hasKeyboard && wide && noTouch);
+      setEnabled(hasFinePointer && wide);
     };
     
     check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
+
+  // Show initial hint on first load for desktop users
+  useEffect(() => {
+    if (enabled && !hasShownInitialRef.current) {
+      hasShownInitialRef.current = true;
+      // Show hint briefly on load
+      const showTimer = setTimeout(() => {
+        setVisible(true);
+        // Auto-hide after 4 seconds
+        hideTimerRef.current = setTimeout(() => {
+          setVisible(false);
+        }, 4000);
+      }, 1500);
+      return () => clearTimeout(showTimer);
+    }
+  }, [enabled]);
 
   // Get visible sections
   const getVisibleSections = useCallback((): SectionId[] => {
@@ -86,19 +103,33 @@ export default function DesktopKeyNavigator() {
     return bestIdx;
   }, []);
 
-  // Scroll to a section with smooth animation
+  // Scroll to section - keyboard triggered only, doesn't affect mouse scroll
   const scrollToSection = useCallback((id: SectionId) => {
     const el = document.getElementById(id);
     if (!el) return;
 
-    // Use Lenis if available, otherwise native smooth scroll
+    // Calculate target position with navbar offset
+    const targetTop = el.getBoundingClientRect().top + window.scrollY - 96;
+    const finalTop = Math.max(0, targetTop);
+    
+    // Use Lenis for smooth scroll if available, otherwise native
     if (lenis) {
-      lenisScrollTo(el, { offset: -96, duration: 0.9 });
+      // Stop any ongoing scroll and go to target
+      lenis.stop();
+      lenis.scrollTo(finalTop, { 
+        duration: 0.6,
+        easing: (t: number) => 1 - Math.pow(1 - t, 3) // easeOutCubic
+      });
+      // Resume Lenis after animation
+      setTimeout(() => lenis.start(), 650);
     } else {
-      const top = el.getBoundingClientRect().top + window.scrollY - 96;
-      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+      // Native smooth scroll fallback
+      window.scrollTo({
+        top: finalTop,
+        behavior: "smooth"
+      });
     }
-  }, [lenis, lenisScrollTo]);
+  }, [lenis]);
 
   // Current section tracking
   const [currentSection, setCurrentSection] = useState<SectionId | null>(null);
@@ -150,19 +181,19 @@ export default function DesktopKeyNavigator() {
         return;
       }
 
-      // G key alone = go to top (vim style)
-      if (key === "g" && !e.shiftKey) {
-        e.preventDefault();
-        scrollToSection("top");
-        showKey("⏫", "top");
-        return;
-      }
-
-      // Shift+G = go to bottom (vim style)
-      if (key === "g" && e.shiftKey) {
+      // Shift+G = go to bottom (vim style) - CHECK FIRST before lowercase g
+      if ((key === "g" && e.shiftKey) || e.key === "G") {
         e.preventDefault();
         scrollToSection("footer");
         showKey("⏬", "footer");
+        return;
+      }
+
+      // G key alone = go to top/hero (vim style)
+      if (key === "g" && !e.shiftKey) {
+        e.preventDefault();
+        scrollToSection("hero");
+        showKey("⏫", "hero");
         return;
       }
 
@@ -170,7 +201,7 @@ export default function DesktopKeyNavigator() {
       if (PREV_KEYS.has(key)) {
         e.preventDefault();
         const newIdx = Math.max(0, currentIdx - 1);
-        const target = sections[newIdx] || "top";
+        const target = sections[newIdx] || "hero";
         scrollToSection(target);
         showKey("↑", target);
         return;
@@ -186,11 +217,11 @@ export default function DesktopKeyNavigator() {
         return;
       }
 
-      // Jump to top
+      // Jump to top (Home key)
       if (TOP_KEYS.has(key)) {
         e.preventDefault();
-        scrollToSection("top");
-        showKey("⏫", "top");
+        scrollToSection("hero");
+        showKey("⏫", "hero");
         return;
       }
 
@@ -202,8 +233,9 @@ export default function DesktopKeyNavigator() {
         return;
       }
 
-      // Toggle hint visibility
-      if (key === "?" || key === "/") {
+      // Toggle hint visibility with ? or /
+      if (e.key === "?" || (key === "/" && !e.shiftKey)) {
+        e.preventDefault();
         setVisible((v) => !v);
         return;
       }
