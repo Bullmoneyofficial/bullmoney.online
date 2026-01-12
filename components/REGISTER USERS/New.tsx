@@ -727,14 +727,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       )}>
 
         {/* Existing background elements */}
-        <div className={cn(
-          "absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-50 transition-colors duration-500",
-          isVantage ? "via-purple-900" : "via-blue-900"
-        )} />
-        <div className={cn(
-          "absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel",
-          isVantage ? "bg-purple-900/10" : "bg-blue-900/10"
-        )} />
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel bg-blue-900/10" />
 
         <div className="mb-6 md:mb-8 text-center">
            <h1 className="text-xl md:text-2xl font-black text-blue-300/50 tracking-tight">
@@ -1266,7 +1260,7 @@ function CardPattern({ mouseX, mouseY, randomString }: any) {
   );
 };
 
-// --- Vantage Card (Red/Purple) ---
+// --- Vantage Card (Blue/Cyan) ---
 export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -1299,9 +1293,9 @@ function CardPatternRed({ mouseX, mouseY, randomString }: any) {
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-600 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
       <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
-        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-violet-100/90 font-mono font-bold transition duration-500">{randomString}</p>
+        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-blue-100/90 font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>
     </div>
   );

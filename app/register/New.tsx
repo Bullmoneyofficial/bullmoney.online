@@ -14,7 +14,7 @@ import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "fram
 import { cn } from "@/lib/utils";
 
 // --- IMPORT SEPARATE LOADER COMPONENT ---
-import { MultiStepLoader } from "@/components/Mainpage/MultiStepLoader";
+import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader"; 
 
 // --- 1. SUPABASE SETUP ---
 const TELEGRAM_GROUP_LINK = "https://t.me/addlist/uswKuwT2JUQ4YWI8";
@@ -322,6 +322,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const [copied, setCopied] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false); 
+  const [savedSessionData, setSavedSessionData] = useState<{id: string; email: string} | null>(null);
+  const [isAffiliateFlow, setIsAffiliateFlow] = useState(false); // Track if user is using saved account for affiliate
 
   const [formData, setFormData] = useState({
     email: '',
@@ -365,12 +367,14 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           // Verify ID exists in Supabase (async)
           const { data, error } = await supabase
             .from("recruits")
-            .select("id")
+            .select("id, email")
             .eq("id", session.id)
             .maybeSingle();
 
           if (!error && data && mounted) {
              console.log("Session valid, auto-unlocking...");
+             // Store session data for potential affiliate flow
+             setSavedSessionData({ id: data.id, email: session.email || data.email });
              // Clear any old drafts since we are logged in
              localStorage.removeItem("bullmoney_draft");
              
@@ -380,6 +384,11 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
              }, 2500); 
              return; 
           } 
+          
+          // Session exists but not verified - still store for affiliate pre-fill
+          if (session.email && mounted) {
+            setSavedSessionData({ id: session.id, email: session.email });
+          }
           
           if(error || !data) {
              localStorage.removeItem("bullmoney_session");
@@ -439,6 +448,32 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     setActiveBroker(newBroker);
   };
 
+  // --- HANDLER: Skip with saved account for faster affiliate signup ---
+  const handleSkipWithSavedAccount = () => {
+    setSubmitError(null);
+    
+    // Check for saved session to pre-fill email
+    const savedSession = localStorage.getItem("bullmoney_session");
+    if (savedSession) {
+      try {
+        const session = JSON.parse(savedSession);
+        if (session.email) {
+          // Pre-fill email from saved session
+          setFormData(prev => ({ ...prev, email: session.email }));
+          setIsAffiliateFlow(true);
+          // Skip directly to MT5 verification step
+          setStep(2);
+          return;
+        }
+      } catch (e) {
+        console.log("Could not parse saved session");
+      }
+    }
+    
+    // No saved session found - proceed normally to step 2
+    setStep(2);
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (name === 'mt5Number' && !/^\d*$/.test(value)) return;
@@ -462,14 +497,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     else if (step === 1) {
       setStep(2);
     }
-    // STEP 2 -> STEP 3
+    // STEP 2 -> STEP 3 (or direct submit for affiliate flow)
     else if (step === 2) {
       if (!isValidMT5(formData.mt5Number)) {
-        setSubmitError("Please enter a valid MT5 ID (min 5 digits).");
-        return;
-      }
-      setStep(3);
-    }
+        setSubmitError(\"Please enter a valid MT5 ID (min 5 digits).\");\n        return;\n      }\n      \n      // If affiliate flow with saved account, submit directly with MT5 verification\n      if (isAffiliateFlow && savedSessionData) {\n        handleAffiliateSubmit();\n        return;\n      }\n      \n      setStep(3);\n    }
     // STEP 3 -> SUBMIT
     else if (step === 3) {
       if (!isValidEmail(formData.email)) {
@@ -520,6 +551,47 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const handleBrokerClick = () => {
     const link = activeBroker === 'Vantage' ? "https://vigco.co/iQbe2u" : "https://affs.click/t5wni";
     window.open(link, '_blank');
+  };
+
+  // --- HANDLER: Affiliate Submit (for users with saved accounts) ---
+  const handleAffiliateSubmit = async () => {
+    setStep(4); // Loading
+    setSubmitError(null);
+
+    try {
+      if (!savedSessionData) {
+        throw new Error("No saved session found. Please register normally.");
+      }
+
+      // Update the existing user's MT5 ID
+      const { error } = await supabase
+        .from("recruits")
+        .update({ 
+          mt5_id: formData.mt5Number,
+          used_code: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", savedSessionData.id);
+
+      if (error) throw error;
+
+      // Update the saved session with MT5 info
+      localStorage.setItem("bullmoney_session", JSON.stringify({
+        id: savedSessionData.id,
+        email: savedSessionData.email,
+        mt5_id: formData.mt5Number,
+        timestamp: Date.now()
+      }));
+
+      setTimeout(() => {
+        setStep(5); // Success
+      }, 1000);
+
+    } catch (err: any) {
+      console.error("Affiliate Submit Error:", err);
+      setSubmitError(err.message || "Failed to update account. Please try again.");
+      setStep(2); // Go back to MT5 step
+    }
   };
 
   const handleRegisterSubmit = async () => {
@@ -727,14 +799,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       )}>
 
         {/* Existing background elements */}
-        <div className={cn(
-          "absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-50 transition-colors duration-500",
-          isVantage ? "via-purple-900" : "via-blue-900"
-        )} />
-        <div className={cn(
-          "absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel",
-          isVantage ? "bg-purple-900/10" : "bg-blue-900/10"
-        )} />
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel bg-blue-900/10" />
 
         <div className="mb-6 md:mb-8 text-center">
            <h1 className="text-xl md:text-2xl font-black text-blue-300/50 tracking-tight">
@@ -964,10 +1030,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         
                         {/* DYNAMIC SECONDARY BUTTON FOR "ALREADY HAVE ACCOUNT" */}
                         <button 
-                            onClick={handleNext}
+                            onClick={handleSkipWithSavedAccount}
                             className="w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border-2 mt-1 border-blue-500/30 text-blue-300 bg-black/60 hover:bg-blue-950/30 hover:border-blue-500/50"
                         >
-                            I already have an account
+                            {savedSessionData ? `Continue as ${savedSessionData.email.split('@')[0]}...` : 'I already have an account'}
                         </button>
                       </div>
                     }
@@ -1266,7 +1332,7 @@ function CardPattern({ mouseX, mouseY, randomString }: any) {
   );
 };
 
-// --- Vantage Card (Red/Purple) ---
+// --- Vantage Card (Blue/Cyan) ---
 export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -1299,9 +1365,9 @@ function CardPatternRed({ mouseX, mouseY, randomString }: any) {
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-600 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
       <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
-        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-violet-100/90 font-mono font-bold transition duration-500">{randomString}</p>
+        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-blue-100/90 font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>
     </div>
   );

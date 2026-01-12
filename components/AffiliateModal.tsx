@@ -399,6 +399,7 @@ export const EvervaultCard = memo(({ text }: { text?: string }) => {
         <div className="relative z-10">
           <div className="relative h-32 w-32 rounded-full flex items-center justify-center">
             <div className="absolute inset-0 rounded-full bg-white/10 blur-md" />
+            <span className="relative z-20 font-extrabold text-2xl md:text-3xl text-white select-none">{text}</span>
           </div>
         </div>
       </div>
@@ -438,6 +439,7 @@ export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
         <div className="relative z-10">
           <div className="relative h-32 w-32 rounded-full flex items-center justify-center">
             <div className="absolute inset-0 rounded-full bg-white/10 blur-md" />
+            <span className="relative z-20 font-extrabold text-2xl md:text-3xl text-white select-none">{text}</span>
           </div>
         </div>
       </div>
@@ -451,9 +453,9 @@ function CardPatternRed({ mouseX, mouseY, randomString }: any) {
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-600 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
       <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
-        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-violet-100/90 font-mono font-bold transition duration-500">{randomString}</p>
+        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-blue-100/90 font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>
     </div>
   );
