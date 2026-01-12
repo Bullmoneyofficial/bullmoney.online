@@ -1,370 +1,254 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useLenis } from "@/lib/smoothScroll";
 
-type SectionId =
-  | "top"
-  | "hero"
-  | "cta"
-  | "features"
-  | "experience"
-  | "testimonials"
-  | "ticker"
-  | "footer";
+// ============================================================================
+// MOBILE SWIPE NAVIGATOR - 2026 Best Practices
+// Touch gestures: Swipe left/right for sections, up for top, down for bottom
+// ============================================================================
 
-const SECTION_PRIORITY: SectionId[] = [
-  "top",
-  "hero",
-  "cta",
-  "features",
-  "experience",
-  "testimonials",
-  "ticker",
-  "footer",
-];
+type SectionId = "top" | "hero" | "cta" | "features" | "experience" | "testimonials" | "ticker" | "footer";
 
-function isEditableTarget(target: EventTarget | null) {
-  const element = target as HTMLElement | null;
-  if (!element) return false;
+// Sections matching app/page.tsx structure  
+const SECTIONS: SectionId[] = ["top", "hero", "cta", "features", "experience", "testimonials", "ticker", "footer"];
 
-  const tag = element.tagName?.toLowerCase();
-  if (tag === "input" || tag === "textarea" || tag === "select") return true;
-  if (element.isContentEditable) return true;
+// Section labels for display
+const SECTION_LABELS: Record<SectionId, string> = {
+  top: "Top",
+  hero: "Hero",
+  cta: "Charts",
+  features: "Features",
+  experience: "3D Experience",
+  testimonials: "Testimonials",
+  ticker: "Market Ticker",
+  footer: "Footer",
+};
 
-  return Boolean(element.closest("[contenteditable='true']"));
-}
+// Swipe configuration - optimized for 2026 touch screens
+const SWIPE_THRESHOLD = 40; // Reduced for better responsiveness
+const VELOCITY_THRESHOLD = 0.25; // Lower threshold for quick flicks
 
-function isInteractiveTarget(target: EventTarget | null) {
-  const element = target as HTMLElement | null;
-  if (!element) return false;
-
-  if (element.closest("a,button,[role='button'],[data-swipe-ignore]")) return true;
-
-  // If the user is inside a truly scrollable container, don't hijack gestures.
-  // (Avoid relying on class names like .custom-scrollbar which are used widely.)
-  let cur: HTMLElement | null = element;
-  while (cur && cur !== document.body) {
-    const style = window.getComputedStyle(cur);
-    const overflowY = style.overflowY;
-    const canScrollY =
-      (overflowY === "auto" || overflowY === "scroll") && cur.scrollHeight - cur.clientHeight > 4;
-    if (canScrollY) return true;
-    cur = cur.parentElement;
-  }
-
-  return false;
-}
-
-function isSwipeIgnoredTarget(target: EventTarget | null) {
-  const element = target as HTMLElement | null;
-  if (!element) return false;
-  return Boolean(element.closest("[data-swipe-ignore]"));
-}
-
-function isControlTarget(target: EventTarget | null) {
-  const element = target as HTMLElement | null;
-  if (!element) return false;
-  return Boolean(element.closest("a,button,[role='button']"));
-}
-
-function isInsideScrollableContainer(target: EventTarget | null) {
-  const element = target as HTMLElement | null;
-  if (!element) return false;
-
-  // If the user is inside a truly scrollable container, don't hijack gestures.
-  // (Avoid relying on class names like .custom-scrollbar which are used widely.)
-  let cur: HTMLElement | null = element;
-  while (cur && cur !== document.body) {
-    const style = window.getComputedStyle(cur);
-    const overflowY = style.overflowY;
-    const canScrollY =
-      (overflowY === "auto" || overflowY === "scroll") && cur.scrollHeight - cur.clientHeight > 4;
-    if (canScrollY) return true;
-    cur = cur.parentElement;
-  }
-
-  return false;
-}
-
-function getAvailableSections(): SectionId[] {
-  const isVisible = (el: HTMLElement) => {
-    const style = window.getComputedStyle(el);
-    if (style.display === "none" || style.visibility === "hidden") return false;
-    if (el.getClientRects().length === 0) return false;
-    return true;
-  };
-
-  return SECTION_PRIORITY.filter((id) => {
-    const el = document.getElementById(id);
-    if (!el) return false;
-    return isVisible(el);
-  }).filter((id, index, arr) => arr.indexOf(id) === index);
-}
-
-function getCurrentSectionIndex(sectionIds: SectionId[]) {
-  if (sectionIds.length === 0) return 0;
-
-  const getScrollRoot = () => {
-    const candidate = document.querySelector<HTMLElement>("[data-scrollable]");
-    if (candidate) {
-      const style = window.getComputedStyle(candidate);
-      const overflowY = style.overflowY;
-      const canScrollY =
-        (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
-        candidate.scrollHeight - candidate.clientHeight > 4;
-      if (canScrollY) return candidate;
-    }
-    return (
-      (document.scrollingElement as HTMLElement | null) ||
-      (document.documentElement as HTMLElement)
-    );
-  };
-
-  const scrollRoot = getScrollRoot();
-  const scrollTop = scrollRoot === document.documentElement ? window.scrollY : scrollRoot.scrollTop;
-  const viewportH = scrollRoot === document.documentElement ? window.innerHeight : scrollRoot.clientHeight;
-  const rootRectTop = scrollRoot === document.documentElement ? 0 : scrollRoot.getBoundingClientRect().top;
-
-  const viewportMid = scrollTop + viewportH * 0.33;
-  let bestIndex = 0;
-  let bestDistance = Number.POSITIVE_INFINITY;
-
-  for (let i = 0; i < sectionIds.length; i++) {
-    const element = document.getElementById(sectionIds[i]!);
-    if (!element) continue;
-    const top = element.getBoundingClientRect().top - rootRectTop + scrollTop;
-    const distance = Math.abs(top - viewportMid);
-    if (distance < bestDistance) {
-      bestDistance = distance;
-      bestIndex = i;
-    }
-  }
-
-  return bestIndex;
-}
-
-function scrollToSection(id: SectionId) {
-  const element = document.getElementById(id);
-  if (!element) return;
-
-  const candidate = document.querySelector<HTMLElement>("[data-scrollable]");
-  const scrollRoot = (() => {
-    if (candidate) {
-      const style = window.getComputedStyle(candidate);
-      const overflowY = style.overflowY;
-      const canScrollY =
-        (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
-        candidate.scrollHeight - candidate.clientHeight > 4;
-      if (canScrollY) return candidate;
-    }
-    return (
-      (document.scrollingElement as HTMLElement | null) ||
-      (document.documentElement as HTMLElement)
-    );
-  })();
-  const scrollTop = scrollRoot === document.documentElement ? window.scrollY : scrollRoot.scrollTop;
-  const rootRectTop = scrollRoot === document.documentElement ? 0 : scrollRoot.getBoundingClientRect().top;
-
-  const rect = element.getBoundingClientRect();
-  const targetTop = rect.top - rootRectTop + scrollTop - 96;
-
-  if (scrollRoot === document.documentElement) {
-    window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
-  } else {
-    scrollRoot.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
-  }
-}
-
-function highlightNavbar() {
-  const navbar = document.querySelector<HTMLElement>("[data-navbar-container]");
-  if (!navbar) return;
-
-  navbar.classList.add("navbar-attention");
-  window.setTimeout(() => navbar.classList.remove("navbar-attention"), 900);
+interface SwipeState {
+  startX: number;
+  startY: number;
+  startTime: number;
+  tracking: boolean;
 }
 
 export default function MobileSwipeNavigator() {
-  const { scrollTo: lenisScrollTo } = useLenis();
+  const { scrollTo: lenisScrollTo, lenis } = useLenis();
   const [enabled, setEnabled] = useState(false);
   const [showHint, setShowHint] = useState(true);
   const [lastAction, setLastAction] = useState<string | null>(null);
+  const [currentSection, setCurrentSection] = useState<SectionId | null>(null);
+  const [actionIcon, setActionIcon] = useState<string | null>(null);
+  const swipeRef = useRef<SwipeState>({ startX: 0, startY: 0, startTime: 0, tracking: false });
+  const actionTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const swipeStateRef = useRef({
-    startX: 0,
-    startY: 0,
-    lastX: 0,
-    lastY: 0,
-    startT: 0,
-    isDown: false,
-    activeTarget: null as EventTarget | null,
-    startedInBottomHalf: false,
-  });
-
+  // Check if we're on a touch device
   useEffect(() => {
-    const coarsePointer = window.matchMedia?.("(pointer: coarse)").matches;
-    const touchCapable = (navigator.maxTouchPoints || 0) > 0;
-    setEnabled(coarsePointer || touchCapable);
+    const check = () => {
+      const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+      const isMobile = window.innerWidth < 1024 || window.matchMedia("(pointer: coarse)").matches;
+      setEnabled(isTouchDevice && isMobile);
+    };
+    
+    check();
+    window.addEventListener("resize", check);
+    
+    // Hide hint after 5 seconds
+    const hintTimer = setTimeout(() => setShowHint(false), 5000);
+    
+    return () => {
+      window.removeEventListener("resize", check);
+      clearTimeout(hintTimer);
+    };
   }, []);
 
+  // Get visible sections
+  const getVisibleSections = useCallback((): SectionId[] => {
+    return SECTIONS.filter((id) => {
+      const el = document.getElementById(id);
+      if (!el) return false;
+      const style = window.getComputedStyle(el);
+      return style.display !== "none" && style.visibility !== "hidden";
+    });
+  }, []);
+
+  // Get current section index
+  const getCurrentIndex = useCallback((sections: SectionId[]): number => {
+    if (sections.length === 0) return 0;
+    
+    const scrollY = window.scrollY;
+    const viewportMid = scrollY + window.innerHeight * 0.4;
+    
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    
+    for (let i = 0; i < sections.length; i++) {
+      const el = document.getElementById(sections[i]);
+      if (!el) continue;
+      const top = el.getBoundingClientRect().top + scrollY;
+      const dist = Math.abs(top - viewportMid);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
+    }
+    
+    return bestIdx;
+  }, []);
+
+  // Scroll to section
+  const scrollToSection = useCallback((id: SectionId) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    if (lenis) {
+      lenisScrollTo(el, { offset: -96, duration: 0.9 });
+    } else {
+      const top = el.getBoundingClientRect().top + window.scrollY - 96;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    }
+  }, [lenis, lenisScrollTo]);
+
+  // Show action feedback with section info
+  const showAction = useCallback((icon: string, section: SectionId) => {
+    setActionIcon(icon);
+    setCurrentSection(section);
+    setLastAction(SECTION_LABELS[section]);
+    setShowHint(false); // Hide hint after first interaction
+    
+    // Enhanced haptic feedback pattern
+    if (navigator.vibrate) {
+      navigator.vibrate([10, 30, 10]); // Short-pause-short pattern
+    }
+    
+    if (actionTimerRef.current) clearTimeout(actionTimerRef.current);
+    actionTimerRef.current = setTimeout(() => {
+      setLastAction(null);
+      setActionIcon(null);
+      setCurrentSection(null);
+    }, 2000);
+  }, []);
+
+  // Check if touch started on an interactive element
+  const isInteractiveElement = useCallback((target: EventTarget | null): boolean => {
+    const el = target as HTMLElement | null;
+    if (!el) return false;
+
+    // Check if it's an input/textarea/select
+    const tag = el.tagName.toLowerCase();
+    if (tag === "input" || tag === "textarea" || tag === "select") return true;
+    if (el.isContentEditable) return true;
+
+    // Check if it's inside a button/link or has data-swipe-ignore
+    if (el.closest("button, a, [role='button'], [data-swipe-ignore]")) return true;
+
+    // Check if inside a scrollable container (let it scroll naturally)
+    let parent: HTMLElement | null = el;
+    while (parent && parent !== document.body) {
+      const style = window.getComputedStyle(parent);
+      const overflowY = style.overflowY;
+      if ((overflowY === "auto" || overflowY === "scroll") && 
+          parent.scrollHeight > parent.clientHeight + 10) {
+        return true;
+      }
+      parent = parent.parentElement;
+    }
+
+    return false;
+  }, []);
+
+  // Touch event handlers
   useEffect(() => {
     if (!enabled) return;
 
-    // Make it easier to trigger, especially with fast flicks.
-    const thresholdPx = 32;
-    const dominancePx = 8;
-    const minVelocityPxPerMs = 0.35; // ~350px/s flick
-
-    const isBottomHalf = (clientY: number) => clientY >= window.innerHeight * 0.5;
-
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
-      if (isEditableTarget(e.target)) return;
+      if (isInteractiveElement(e.target)) return;
 
-      const t = e.touches[0]!;
-      const startedInBottomHalf = isBottomHalf(t.clientY);
-
-      // Always respect explicit opt-out.
-      if (isSwipeIgnoredTarget(e.target)) return;
-
-      // For the top half, avoid hijacking taps on controls.
-      // For the bottom half, allow starting on controls so swipes work reliably.
-      if (!startedInBottomHalf && isControlTarget(e.target)) return;
-
-      // Old behavior: don't capture gestures inside scrollable containers.
-      // Improvement: allow swipes from the bottom half even over scroll areas.
-      if (!startedInBottomHalf && isInsideScrollableContainer(e.target)) return;
-
-      // Keep backward compatibility with any other heuristics.
-      if (!startedInBottomHalf && isInteractiveTarget(e.target)) return;
-
-      swipeStateRef.current = {
-        startX: t.clientX,
-        startY: t.clientY,
-        lastX: t.clientX,
-        lastY: t.clientY,
-        startT: performance.now(),
-        isDown: true,
-        activeTarget: e.target,
-        startedInBottomHalf,
+      const touch = e.touches[0];
+      swipeRef.current = {
+        startX: touch.clientX,
+        startY: touch.clientY,
+        startTime: performance.now(),
+        tracking: true,
       };
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (!swipeStateRef.current.isDown) return;
+      if (!swipeRef.current.tracking) return;
       if (e.touches.length !== 1) return;
 
-      const t = e.touches[0]!;
-      swipeStateRef.current.lastX = t.clientX;
-      swipeStateRef.current.lastY = t.clientY;
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - swipeRef.current.startX;
+      const deltaY = touch.clientY - swipeRef.current.startY;
 
-      const deltaX = t.clientX - swipeStateRef.current.startX;
-      const deltaY = t.clientY - swipeStateRef.current.startY;
-
-      // Only suppress scroll when it's clearly a horizontal swipe.
-      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > dominancePx) {
+      // If horizontal swipe is dominant, prevent page scroll
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 15) {
         e.preventDefault();
       }
     };
 
-    const onTouchEnd = () => {
-      if (!swipeStateRef.current.isDown) return;
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!swipeRef.current.tracking) return;
+      swipeRef.current.tracking = false;
 
-      const deltaX = swipeStateRef.current.lastX - swipeStateRef.current.startX;
-      const deltaY = swipeStateRef.current.lastY - swipeStateRef.current.startY;
-      const dt = Math.max(1, performance.now() - swipeStateRef.current.startT);
-      swipeStateRef.current.isDown = false;
+      const touch = e.changedTouches[0];
+      if (!touch) return;
 
+      const deltaX = touch.clientX - swipeRef.current.startX;
+      const deltaY = touch.clientY - swipeRef.current.startY;
+      const deltaTime = performance.now() - swipeRef.current.startTime;
+      
       const absX = Math.abs(deltaX);
       const absY = Math.abs(deltaY);
+      const velocityX = absX / deltaTime;
+      const velocityY = absY / deltaTime;
 
-      const velX = absX / dt;
-      const velY = absY / dt;
+      // Determine if it's a valid swipe
+      const isHorizontalSwipe = absX > absY && (absX >= SWIPE_THRESHOLD || velocityX >= VELOCITY_THRESHOLD);
+      const isVerticalSwipe = absY > absX && (absY >= SWIPE_THRESHOLD || velocityY >= VELOCITY_THRESHOLD);
 
-      // Require dominance, then accept either distance or velocity.
-      const isHorizontal = absX > absY + dominancePx;
-      const isVertical = absY > absX + dominancePx;
-      const horizontalSwipe = isHorizontal && (absX >= thresholdPx || velX >= minVelocityPxPerMs);
-      const verticalSwipe = isVertical && (absY >= thresholdPx || velY >= minVelocityPxPerMs);
+      if (!isHorizontalSwipe && !isVerticalSwipe) return;
 
-      if (!horizontalSwipe && !verticalSwipe) return;
+      const sections = getVisibleSections();
+      const currentIdx = getCurrentIndex(sections);
 
-      const ids = getAvailableSections();
-      const currentIndex = getCurrentSectionIndex(ids);
-
-      const scrollToSectionAnimated = (id: SectionId) => {
-        const element = document.getElementById(id);
-        if (!element) return;
-
-        // Prefer Lenis if provider is active (works via ref even if instance is still initializing).
-        lenisScrollTo(element, { offset: -96, duration: 1.05 });
-
-        // Fallback for cases where Lenis is disabled.
-        scrollToSection(id);
-      };
-
-      const goPrev = () => {
-        const target = ids[Math.max(0, currentIndex - 1)] || "top";
-        scrollToSectionAnimated(target);
-        setLastAction("Swiped ← (UP)");
-      };
-
-      const goNext = () => {
-        const target = ids[Math.min(ids.length - 1, currentIndex + 1)] || "footer";
-        scrollToSectionAnimated(target);
-        setLastAction("Swiped → (DOWN)");
-      };
-
-      const goFooter = () => {
-        scrollToSectionAnimated("footer");
-        setLastAction("Swiped ↓ (FOOTER)");
-      };
-
-      const navBarMove = () => {
-        highlightNavbar();
-        const candidate = document.querySelector<HTMLElement>("[data-scrollable]");
-        const scrollRoot = (() => {
-          if (candidate) {
-            const style = window.getComputedStyle(candidate);
-            const overflowY = style.overflowY;
-            const canScrollY =
-              (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
-              candidate.scrollHeight - candidate.clientHeight > 4;
-            if (canScrollY) return candidate;
-          }
-          return (
-            (document.scrollingElement as HTMLElement | null) ||
-            (document.documentElement as HTMLElement)
-          );
-        })();
-        const scrollTop = scrollRoot === document.documentElement ? window.scrollY : scrollRoot.scrollTop;
-        if (scrollTop > 120) scrollToSectionAnimated("top");
-        setLastAction("Swiped ↑ (NAVBAR)");
-      };
-
-      // Requested mapping:
-      // left => go up, right => go down
-      // up => move navbar, down => footer
-      if (horizontalSwipe) {
-        if (deltaX < 0) goPrev();
-        else goNext();
-      } else {
-        if (deltaY < 0) navBarMove();
-        else goFooter();
+      if (isHorizontalSwipe) {
+        if (deltaX < 0) {
+          // Swipe LEFT → Next section
+          const newIdx = Math.min(sections.length - 1, currentIdx + 1);
+          const target = sections[newIdx] || "footer";
+          scrollToSection(target);
+          showAction("→", target);
+        } else {
+          // Swipe RIGHT → Previous section
+          const newIdx = Math.max(0, currentIdx - 1);
+          const target = sections[newIdx] || "top";
+          scrollToSection(target);
+          showAction("←", target);
+        }
+      } else if (isVerticalSwipe) {
+        if (deltaY < 0) {
+          // Swipe UP → Go to top
+          scrollToSection("top");
+          showAction("↑", "top");
+        } else {
+          // Swipe DOWN → Go to footer
+          scrollToSection("footer");
+          showAction("↓", "footer");
+        }
       }
-
-      if (navigator.vibrate) navigator.vibrate(10);
-
-      // Auto-hide the hint after first interaction.
-      setShowHint(false);
-
-      window.setTimeout(() => setLastAction(null), 1200);
     };
 
     const onTouchCancel = () => {
-      swipeStateRef.current.isDown = false;
+      swipeRef.current.tracking = false;
     };
 
+    // Add event listeners
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("touchend", onTouchEnd, { passive: true });
@@ -376,54 +260,120 @@ export default function MobileSwipeNavigator() {
       window.removeEventListener("touchend", onTouchEnd);
       window.removeEventListener("touchcancel", onTouchCancel);
     };
-  }, [enabled, lenisScrollTo]);
+  }, [enabled, isInteractiveElement, getVisibleSections, getCurrentIndex, scrollToSection, showAction]);
 
+  // Don't render on desktop
   if (!enabled) return null;
+
+  // Only show UI if there's something to display
+  if (!showHint && !lastAction) return null;
 
   return (
     <>
       <style jsx global>{`
-        @keyframes swipe-nav-shimmer {
+        @keyframes swipe-fade-in {
+          from { opacity: 0; transform: translateY(16px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes swipe-fade-out {
+          from { opacity: 1; transform: translateY(0) scale(1); }
+          to { opacity: 0; transform: translateY(16px) scale(0.95); }
+        }
+        @keyframes swipe-shimmer {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(200%); }
         }
-        @keyframes swipe-nav-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+        @keyframes swipe-pulse {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 1; }
         }
-        .swipe-nav-spin { animation: swipe-nav-spin 6s linear infinite; }
-        [data-navbar-container].navbar-attention {
-          filter: var(--theme-filter, none) drop-shadow(0 0 18px rgba(59,130,246,0.55));
+        @keyframes swipe-glow {
+          0%, 100% { box-shadow: 0 0 20px rgba(59,130,246,0.3), 0 4px 30px rgba(0,0,0,0.5); }
+          50% { box-shadow: 0 0 35px rgba(59,130,246,0.5), 0 4px 30px rgba(0,0,0,0.5); }
+        }
+        .swipe-animate {
+          animation: swipe-fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .swipe-glow {
+          animation: swipe-glow 2s ease-in-out infinite;
+        }
+        .swipe-pulse {
+          animation: swipe-pulse 1.5s ease-in-out infinite;
         }
       `}</style>
 
-      {(showHint || lastAction) && (
-        <div className="fixed inset-x-0 bottom-4 z-[99998] flex justify-center px-4 pointer-events-none">
-          <div className="relative w-full max-w-md overflow-hidden rounded-2xl">
-            {/* Spinning conic shimmer border */}
-            <span className="absolute inset-[-2px] swipe-nav-spin bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#60a5fa_50%,#3b82f6_75%,#00000000_100%)] opacity-40 rounded-2xl" />
-
-            <div className="relative m-[1px] rounded-2xl bg-black/70 backdrop-blur-xl border border-blue-500/25 overflow-hidden">
-              {/* shimmer line */}
-              <div className="absolute inset-x-0 top-0 h-[2px] overflow-hidden">
-                <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/60 to-transparent opacity-80" style={{ animation: "swipe-nav-shimmer 2.8s linear infinite" }} />
-              </div>
-
-              <div className="px-4 py-3 text-center">
-                <div className="text-[10px] uppercase tracking-[0.3em] font-black text-blue-200/70">
-                  Mobile Navigation
-                </div>
-                <div className="mt-1 text-xs font-semibold text-white/90">
-                  Swipe left = up • right = down • up = navbar • down = footer
-                </div>
-                {lastAction && (
-                  <div className="mt-1 text-[11px] font-mono text-blue-300/80">{lastAction}</div>
-                )}
-              </div>
+      <div className="fixed inset-x-0 bottom-6 z-[99998] flex justify-center px-6 pointer-events-none swipe-animate">
+        <div className="relative overflow-hidden rounded-3xl shadow-2xl max-w-xs w-full swipe-glow">
+          <div className="relative bg-black/95 backdrop-blur-2xl border border-blue-500/40 rounded-3xl overflow-hidden">
+            {/* Shimmer effect */}
+            <div className="absolute inset-x-0 top-0 h-[2px] overflow-hidden">
+              <div 
+                className="absolute inset-y-0 left-[-100%] w-full bg-gradient-to-r from-transparent via-blue-400/80 to-transparent"
+                style={{ animation: "swipe-shimmer 2s linear infinite" }} 
+              />
             </div>
+
+            {/* Hint Mode */}
+            {showHint && !lastAction && (
+              <div className="px-5 py-4">
+                <div className="text-[10px] uppercase tracking-[0.3em] font-bold text-blue-300/70 mb-3 text-center flex items-center justify-center gap-2">
+                  <span className="text-base">👆</span> Swipe to Navigate
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 text-center">
+                  <div className="bg-blue-500/10 rounded-xl p-2.5 border border-blue-500/20">
+                    <div className="text-xl mb-1">← →</div>
+                    <div className="text-[10px] text-white/60 uppercase tracking-wider">Sections</div>
+                  </div>
+                  <div className="bg-blue-500/10 rounded-xl p-2.5 border border-blue-500/20">
+                    <div className="text-xl mb-1">↑ ↓</div>
+                    <div className="text-[10px] text-white/60 uppercase tracking-wider">Top / End</div>
+                  </div>
+                </div>
+                
+                <div className="mt-3 flex justify-center">
+                  <div className="flex gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 swipe-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400/60 swipe-pulse" style={{ animationDelay: '0.2s' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400/40 swipe-pulse" style={{ animationDelay: '0.4s' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action Feedback Mode */}
+            {lastAction && currentSection && (
+              <div className="px-5 py-4">
+                <div className="flex items-center justify-center gap-4">
+                  <span className="text-3xl">{actionIcon}</span>
+                  <div className="text-left">
+                    <div className="text-base font-bold text-white">
+                      {lastAction}
+                    </div>
+                    <div className="text-[10px] text-blue-300/60 uppercase tracking-wider">
+                      Section {SECTIONS.indexOf(currentSection) + 1} of {SECTIONS.length}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Progress dots */}
+                <div className="mt-3 flex justify-center gap-1.5">
+                  {SECTIONS.map((s, i) => (
+                    <span 
+                      key={s}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        s === currentSection 
+                          ? 'bg-blue-400 scale-125' 
+                          : 'bg-white/20'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </>
   );
 }

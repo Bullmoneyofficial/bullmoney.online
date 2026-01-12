@@ -1,315 +1,321 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useLenis } from "@/lib/smoothScroll";
 
-type SectionId =
-  | "top"
-  | "hero"
-  | "cta"
-  | "features"
-  | "experience"
-  | "testimonials"
-  | "ticker"
-  | "footer";
+// ============================================================================
+// DESKTOP KEYBOARD NAVIGATOR - 2026 Best Practices
+// Supports: Arrow keys, WASD, Vim keys (HJKL), number keys, Home/End
+// ============================================================================
 
-const SECTION_PRIORITY: SectionId[] = [
-  "top",
-  "hero",
-  "cta",
-  "features",
-  "experience",
-  "testimonials",
-  "ticker",
-  "footer",
-];
+type SectionId = "top" | "hero" | "cta" | "features" | "experience" | "testimonials" | "ticker" | "footer";
 
-function isEditableActiveElement() {
-  const active = document.activeElement as HTMLElement | null;
-  if (!active) return false;
+// Sections matching app/page.tsx structure
+const SECTIONS: SectionId[] = ["top", "hero", "cta", "features", "experience", "testimonials", "ticker", "footer"];
 
-  const tag = active.tagName?.toLowerCase();
-  if (tag === "input" || tag === "textarea" || tag === "select") return true;
-  if (active.isContentEditable) return true;
+// Section labels for display
+const SECTION_LABELS: Record<SectionId, string> = {
+  top: "Top",
+  hero: "Hero",
+  cta: "Charts",
+  features: "Features",
+  experience: "3D Experience",
+  testimonials: "Testimonials",
+  ticker: "Market Ticker",
+  footer: "Footer",
+};
 
-  return false;
-}
-
-function getAvailableSections(): SectionId[] {
-  const isVisible = (el: HTMLElement) => {
-    const style = window.getComputedStyle(el);
-    if (style.display === "none" || style.visibility === "hidden") return false;
-    if (el.getClientRects().length === 0) return false;
-    return true;
-  };
-
-  return SECTION_PRIORITY.filter((id) => {
-    const el = document.getElementById(id);
-    if (!el) return false;
-    return isVisible(el);
-  }).filter((id, index, arr) => arr.indexOf(id) === index);
-}
-
-function getCurrentSectionIndex(sectionIds: SectionId[]) {
-  if (sectionIds.length === 0) return 0;
-
-  const candidate = document.querySelector<HTMLElement>("[data-scrollable]");
-  const scrollRoot = (() => {
-    if (candidate) {
-      const style = window.getComputedStyle(candidate);
-      const overflowY = style.overflowY;
-      const canScrollY =
-        (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
-        candidate.scrollHeight - candidate.clientHeight > 4;
-      if (canScrollY) return candidate;
-    }
-    return (
-      (document.scrollingElement as HTMLElement | null) ||
-      (document.documentElement as HTMLElement)
-    );
-  })();
-  const scrollTop = scrollRoot === document.documentElement ? window.scrollY : scrollRoot.scrollTop;
-  const viewportH = scrollRoot === document.documentElement ? window.innerHeight : scrollRoot.clientHeight;
-  const rootRectTop = scrollRoot === document.documentElement ? 0 : scrollRoot.getBoundingClientRect().top;
-
-  const viewportMid = scrollTop + viewportH * 0.33;
-  let bestIndex = 0;
-  let bestDistance = Number.POSITIVE_INFINITY;
-
-  for (let i = 0; i < sectionIds.length; i++) {
-    const element = document.getElementById(sectionIds[i]!);
-    if (!element) continue;
-    const top = element.getBoundingClientRect().top - rootRectTop + scrollTop;
-    const distance = Math.abs(top - viewportMid);
-    if (distance < bestDistance) {
-      bestDistance = distance;
-      bestIndex = i;
-    }
-  }
-
-  return bestIndex;
-}
-
-function scrollToSection(id: SectionId) {
-  const element = document.getElementById(id);
-  if (!element) return;
-
-  const candidate = document.querySelector<HTMLElement>("[data-scrollable]");
-  const scrollRoot = (() => {
-    if (candidate) {
-      const style = window.getComputedStyle(candidate);
-      const overflowY = style.overflowY;
-      const canScrollY =
-        (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
-        candidate.scrollHeight - candidate.clientHeight > 4;
-      if (canScrollY) return candidate;
-    }
-    return (
-      (document.scrollingElement as HTMLElement | null) ||
-      (document.documentElement as HTMLElement)
-    );
-  })();
-  const scrollTop = scrollRoot === document.documentElement ? window.scrollY : scrollRoot.scrollTop;
-  const rootRectTop = scrollRoot === document.documentElement ? 0 : scrollRoot.getBoundingClientRect().top;
-
-  const rect = element.getBoundingClientRect();
-  const targetTop = rect.top - rootRectTop + scrollTop - 96;
-
-  if (scrollRoot === document.documentElement) {
-    window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
-  } else {
-    scrollRoot.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
-  }
-}
+// Key mappings - all lowercase for easy comparison
+const PREV_KEYS = new Set(["arrowup", "arrowleft", "pageup", "w", "k", "h"]);
+const NEXT_KEYS = new Set(["arrowdown", "arrowright", "pagedown", "s", "j", "l", " ", "enter"]);
+const TOP_KEYS = new Set(["home"]);
+const BOTTOM_KEYS = new Set(["end"]);
 
 export default function DesktopKeyNavigator() {
-  const { scrollTo: lenisScrollTo } = useLenis();
+  const { scrollTo: lenisScrollTo, lenis } = useLenis();
   const [enabled, setEnabled] = useState(false);
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
   const [lastKey, setLastKey] = useState<string | null>(null);
+  const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Check if we're on desktop (no touch, wide screen)
   useEffect(() => {
-    const anyPointerCoarse = window.matchMedia?.("(any-pointer: coarse)")?.matches ?? false;
-    const pointerCoarse = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
-    const touchCapable = (navigator.maxTouchPoints || 0) > 0;
-    const wide = window.innerWidth >= 768;
-
-    // Enable on true desktops/laptops. (Trackpads still count as fine pointer.)
-    setEnabled(Boolean(wide && !touchCapable && !(anyPointerCoarse || pointerCoarse)));
-
-    const t = window.setTimeout(() => setVisible(false), 6500);
-    return () => window.clearTimeout(t);
+    const check = () => {
+      const hasKeyboard = window.matchMedia("(pointer: fine)").matches;
+      const wide = window.innerWidth >= 768;
+      const noTouch = !("ontouchstart" in window) || navigator.maxTouchPoints === 0;
+      setEnabled(hasKeyboard && wide && noTouch);
+    };
+    
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
 
+  // Get visible sections
+  const getVisibleSections = useCallback((): SectionId[] => {
+    return SECTIONS.filter((id) => {
+      const el = document.getElementById(id);
+      if (!el) return false;
+      const style = window.getComputedStyle(el);
+      return style.display !== "none" && style.visibility !== "hidden";
+    });
+  }, []);
+
+  // Get current section index based on scroll position
+  const getCurrentIndex = useCallback((sections: SectionId[]): number => {
+    if (sections.length === 0) return 0;
+    
+    const scrollY = window.scrollY;
+    const viewportMid = scrollY + window.innerHeight * 0.35;
+    
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    
+    for (let i = 0; i < sections.length; i++) {
+      const el = document.getElementById(sections[i]);
+      if (!el) continue;
+      const top = el.getBoundingClientRect().top + scrollY;
+      const dist = Math.abs(top - viewportMid);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
+    }
+    
+    return bestIdx;
+  }, []);
+
+  // Scroll to a section with smooth animation
+  const scrollToSection = useCallback((id: SectionId) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    // Use Lenis if available, otherwise native smooth scroll
+    if (lenis) {
+      lenisScrollTo(el, { offset: -96, duration: 0.9 });
+    } else {
+      const top = el.getBoundingClientRect().top + window.scrollY - 96;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    }
+  }, [lenis, lenisScrollTo]);
+
+  // Current section tracking
+  const [currentSection, setCurrentSection] = useState<SectionId | null>(null);
+
+  // Show key indicator
+  const showKey = useCallback((key: string, section?: SectionId) => {
+    setVisible(true);
+    setLastKey(key);
+    if (section) setCurrentSection(section);
+    
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    hideTimerRef.current = setTimeout(() => {
+      setLastKey(null);
+      setVisible(false);
+    }, 3000);
+  }, []);
+
+  // Check if user is typing in an input
+  const isTyping = useCallback((): boolean => {
+    const active = document.activeElement;
+    if (!active) return false;
+    const tag = active.tagName.toLowerCase();
+    return tag === "input" || tag === "textarea" || tag === "select" || 
+           (active as HTMLElement).isContentEditable;
+  }, []);
+
+  // Keyboard event handler
   useEffect(() => {
     if (!enabled) return;
 
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (isEditableActiveElement()) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't interfere with typing or modified keys
+      if (isTyping()) return;
       if (e.altKey || e.metaKey || e.ctrlKey) return;
 
-      const ids = getAvailableSections();
-      const currentIndex = getCurrentSectionIndex(ids);
+      const key = e.key.toLowerCase();
+      const sections = getVisibleSections();
+      const currentIdx = getCurrentIndex(sections);
 
-      const scrollToSectionAnimated = (id: SectionId) => {
-        const element = document.getElementById(id);
-        if (!element) return;
-
-        // Prefer Lenis if available, but always keep a native fallback.
-        lenisScrollTo(element, { offset: -96, duration: 1.0 });
-        scrollToSection(id);
-      };
-
-      const goPrev = () => {
-        const target = ids[Math.max(0, currentIndex - 1)] || "top";
-        scrollToSectionAnimated(target);
-      };
-
-      const goNext = () => {
-        const target = ids[Math.min(ids.length - 1, currentIndex + 1)] || "footer";
-        scrollToSectionAnimated(target);
-      };
-
-      const show = (label: string) => {
-        setVisible(true);
-        setLastKey(label);
-        window.setTimeout(() => setLastKey(null), 900);
-      };
-
-      // Expanded keymap (desktop-friendly):
-      // Prev: ↑/←, PgUp, W/K, H
-      // Next: ↓/→, PgDn, S/J, L, Space/Enter
-      // Top: Home, G
-      // Footer: End, Shift+G
-      // Toggle hint: ?
-      // Hide hint: Esc
-      const key = e.key;
-
-      // Section jumps (1-9) map to visible sections.
-      if (/^[1-9]$/.test(key)) {
-        const index = Math.min(ids.length - 1, Math.max(0, Number(key) - 1));
-        const target = ids[index];
+      // Number keys 1-9 jump to sections
+      if (/^[1-9]$/.test(e.key)) {
+        const idx = Math.min(sections.length - 1, parseInt(e.key) - 1);
+        const target = sections[idx];
         if (target) {
           e.preventDefault();
-          scrollToSectionAnimated(target);
-          show(`#${key}`);
+          scrollToSection(target);
+          showKey(`${e.key}`, target);
         }
         return;
       }
 
-      const isPrev =
-        key === "ArrowUp" ||
-        key === "ArrowLeft" ||
-        key === "PageUp" ||
-        key === "w" ||
-        key === "W" ||
-        key === "k" ||
-        key === "K" ||
-        key === "h" ||
-        key === "H";
-
-      const isNext =
-        key === "ArrowDown" ||
-        key === "ArrowRight" ||
-        key === "PageDown" ||
-        key === "s" ||
-        key === "S" ||
-        key === "j" ||
-        key === "J" ||
-        key === "l" ||
-        key === "L" ||
-        key === " " ||
-        key === "Enter";
-
-      if (isPrev) {
+      // G key alone = go to top (vim style)
+      if (key === "g" && !e.shiftKey) {
         e.preventDefault();
-        goPrev();
-        show(key);
+        scrollToSection("top");
+        showKey("⏫", "top");
         return;
       }
 
-      if (isNext) {
+      // Shift+G = go to bottom (vim style)
+      if (key === "g" && e.shiftKey) {
         e.preventDefault();
-        goNext();
-        show(key === " " ? "Space" : key);
+        scrollToSection("footer");
+        showKey("⏬", "footer");
         return;
       }
 
-      if (key === "Home" || key === "g") {
+      // Previous section
+      if (PREV_KEYS.has(key)) {
         e.preventDefault();
-        scrollToSectionAnimated("top");
-        show(key === "g" ? "g" : "Home");
+        const newIdx = Math.max(0, currentIdx - 1);
+        const target = sections[newIdx] || "top";
+        scrollToSection(target);
+        showKey("↑", target);
         return;
       }
 
-      if (key === "End" || key === "G") {
+      // Next section
+      if (NEXT_KEYS.has(key)) {
         e.preventDefault();
-        scrollToSectionAnimated("footer");
-        show(key === "G" ? "G" : "End");
+        const newIdx = Math.min(sections.length - 1, currentIdx + 1);
+        const target = sections[newIdx] || "footer";
+        scrollToSection(target);
+        showKey("↓", target);
         return;
       }
 
-      if (key === "?") {
+      // Jump to top
+      if (TOP_KEYS.has(key)) {
+        e.preventDefault();
+        scrollToSection("top");
+        showKey("⏫", "top");
+        return;
+      }
+
+      // Jump to bottom
+      if (BOTTOM_KEYS.has(key)) {
+        e.preventDefault();
+        scrollToSection("footer");
+        showKey("⏬", "footer");
+        return;
+      }
+
+      // Toggle hint visibility
+      if (key === "?" || key === "/") {
         setVisible((v) => !v);
         return;
       }
 
-      if (key === "Escape") {
+      // Hide hint
+      if (key === "escape") {
         setVisible(false);
         return;
       }
     };
 
-    window.addEventListener("keydown", onKeyDown, { capture: true });
-    return () => window.removeEventListener("keydown", onKeyDown, { capture: true } as any);
-  }, [enabled, lenisScrollTo]);
+    window.addEventListener("keydown", handleKeyDown, { capture: true });
+    return () => window.removeEventListener("keydown", handleKeyDown, { capture: true });
+  }, [enabled, isTyping, getVisibleSections, getCurrentIndex, scrollToSection, showKey]);
 
-  if (!enabled || !visible) return null;
+  // Don't render on mobile/touch devices
+  if (!enabled) return null;
 
   return (
     <>
       <style jsx global>{`
-        @keyframes key-nav-shimmer {
+        @keyframes keynav-fade-in {
+          from { opacity: 0; transform: translateY(8px) scale(0.96); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes keynav-shimmer {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(200%); }
         }
-        @keyframes key-nav-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+        @keyframes keynav-glow {
+          0%, 100% { box-shadow: 0 0 20px rgba(59,130,246,0.2); }
+          50% { box-shadow: 0 0 30px rgba(59,130,246,0.4); }
         }
-        .key-nav-spin { animation: key-nav-spin 5s linear infinite; }
+        .keynav-animate {
+          animation: keynav-fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .keynav-glow {
+          animation: keynav-glow 2s ease-in-out infinite;
+        }
       `}</style>
 
-      <div className="fixed bottom-6 right-6 z-[99998] pointer-events-none">
-        <div className="relative w-[320px] max-w-[80vw] overflow-hidden rounded-2xl">
-          <span className="absolute inset-[-2px] key-nav-spin bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#60a5fa_50%,#3b82f6_75%,#00000000_100%)] opacity-25 rounded-2xl" />
+      {visible && (
+        <div className="fixed bottom-6 right-6 z-[99998] pointer-events-none keynav-animate">
+          <div className="relative overflow-hidden rounded-2xl shadow-2xl shadow-blue-500/20 keynav-glow">
+            <div className="relative bg-black/90 backdrop-blur-2xl border border-blue-500/40 rounded-2xl overflow-hidden">
+              {/* Shimmer effect */}
+              <div className="absolute inset-x-0 top-0 h-[2px] overflow-hidden">
+                <div 
+                  className="absolute inset-y-0 left-[-100%] w-full bg-gradient-to-r from-transparent via-blue-400/80 to-transparent"
+                  style={{ animation: "keynav-shimmer 2s linear infinite" }} 
+                />
+              </div>
 
-          <div className="relative m-[1px] rounded-2xl bg-black/70 backdrop-blur-xl border border-blue-500/20 overflow-hidden">
-            <div className="absolute inset-x-0 top-0 h-[2px] overflow-hidden">
-              <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/55 to-transparent opacity-75" style={{ animation: "key-nav-shimmer 2.6s linear infinite" }} />
-            </div>
+              <div className="px-5 py-4 min-w-[300px]">
+                {/* Current Section Display */}
+                {currentSection && lastKey && (
+                  <div className="mb-3 pb-3 border-b border-blue-500/20">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{lastKey}</span>
+                      <div>
+                        <div className="text-sm font-bold text-white">
+                          {SECTION_LABELS[currentSection]}
+                        </div>
+                        <div className="text-[10px] text-blue-300/60 uppercase tracking-wider">
+                          Section {SECTIONS.indexOf(currentSection) + 1} of {SECTIONS.length}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-            <div className="px-4 py-3">
-              <div className="text-[10px] uppercase tracking-[0.3em] font-black text-blue-200/70">
-                Keyboard Navigation
+                {/* Help Content */}
+                {!lastKey && (
+                  <>
+                    <div className="text-[10px] uppercase tracking-[0.25em] font-bold text-blue-300/80 mb-3 flex items-center gap-2">
+                      <span className="text-base">⌨️</span> Keyboard Navigation
+                    </div>
+                    
+                    <div className="space-y-2 text-[11px]">
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-1">
+                          <kbd className="px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-300 font-mono">↑</kbd>
+                          <kbd className="px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-300 font-mono">↓</kbd>
+                        </div>
+                        <span className="text-white/40">or</span>
+                        <kbd className="px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-300 font-mono">W/S</kbd>
+                        <span className="text-white/50">navigate sections</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <kbd className="px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-300 font-mono">1-8</kbd>
+                        <span className="text-white/50">jump to section</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <kbd className="px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-300 font-mono">G</kbd>
+                        <span className="text-white/40">/</span>
+                        <kbd className="px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-300 font-mono">⇧G</kbd>
+                        <span className="text-white/50">top / bottom</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-blue-500/10 text-[10px] text-blue-200/40">
+                      <kbd className="px-1 bg-blue-500/10 rounded">?</kbd> toggle • <kbd className="px-1 bg-blue-500/10 rounded">Esc</kbd> hide
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="mt-1 text-[12px] text-white/90">
-                <span className="font-mono text-blue-300">↑/↓/←/→</span> sections •{" "}
-                <span className="font-mono text-blue-300">W/S</span> or <span className="font-mono text-blue-300">H/J/K/L</span> •{" "}
-                <span className="font-mono text-blue-300">Space/Enter</span> next •{" "}
-                <span className="font-mono text-blue-300">Home/End</span> •{" "}
-                <span className="font-mono text-blue-300">1-9</span> jump
-              </div>
-              <div className="mt-1 text-[10px] text-blue-200/60">
-                Press <span className="font-mono">K</span> to toggle this hint
-              </div>
-              {lastKey && (
-                <div className="mt-1 text-[11px] font-mono text-blue-300/80">{lastKey}</div>
-              )}
             </div>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 }
