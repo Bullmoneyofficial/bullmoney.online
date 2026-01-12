@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, memo } from 'react';
 import dynamic from 'next/dynamic';
+import { detectRefreshRate } from '@/lib/use120Hz';
 
 interface Props {
   scene: string;
@@ -10,15 +11,21 @@ interface Props {
   priority?: boolean; // Load immediately without intersection observer
 }
 
-// Lightweight device detection
+// Lightweight device detection with 120Hz support
 const shouldLoadSpline = () => {
   if (typeof window === 'undefined') return true;
   
   const memory = (navigator as any).deviceMemory || 4;
   const connection = (navigator as any).connection;
   const effectiveType = connection?.effectiveType || '4g';
+  const refreshRate = detectRefreshRate();
   
-  // Skip spline on very low-end devices
+  // Skip spline on very low-end devices (unless they have ProMotion - indicates high-end)
+  if (refreshRate >= 120) {
+    // ProMotion device - likely high-end, allow loading
+    return true;
+  }
+  
   if (memory < 2 || effectiveType === 'slow-2g' || effectiveType === '2g') {
     return false;
   }

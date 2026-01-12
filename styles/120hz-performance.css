@@ -1,0 +1,299 @@
+/* ============================================================================
+   120Hz ULTRA PERFORMANCE - Luxury Dashboard Optimization
+   ============================================================================
+   
+   This CSS file provides critical performance optimizations for 120Hz displays
+   on Apple Silicon devices. It follows the "Glass Engine" rule and ensures
+   smooth scrolling and GPU compositing.
+   
+   ============================================================================ */
+
+/* ============================================================================
+   CRITICAL: SCROLL FIX - Make page scrollable at 120Hz
+   ============================================================================ */
+html {
+  /* Native scrolling - do NOT use scroll-behavior: smooth, it causes jank */
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+  /* Touch scrolling for iOS */
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+  /* Prevent body from being fixed */
+  position: relative !important;
+  height: auto !important;
+  min-height: 100vh;
+}
+
+/* Override Lenis if it's blocking scroll */
+html.lenis,
+html.lenis-smooth,
+html.has-scroll-smooth {
+  overflow: auto !important;
+}
+
+html.lenis body,
+html.lenis-smooth body,
+html.has-scroll-smooth body {
+  overflow: visible !important;
+}
+
+/* ============================================================================
+   CSS CONTAINMENT - Critical for 120Hz Performance
+   ============================================================================ */
+
+/* Main scrollable containers */
+main,
+[data-allow-scroll],
+[data-scrollable] {
+  contain: layout style;
+  touch-action: pan-y pan-x;
+  overscroll-behavior: contain;
+}
+
+/* Sections that don't affect siblings */
+section {
+  contain: layout style;
+}
+
+/* Cards and contained UI elements */
+.card,
+[data-card],
+.modal-content {
+  contain: layout paint style;
+}
+
+/* Strict containment for heavy components */
+.spline-container,
+[data-spline-scene],
+canvas {
+  contain: strict;
+  touch-action: pan-y;
+}
+
+/* ============================================================================
+   GLASS ENGINE RULE - GPU Compositing for Glassmorphism
+   ============================================================================ */
+
+/* All translucent/blur elements MUST have GPU layer */
+.backdrop-blur-sm,
+.backdrop-blur,
+.backdrop-blur-md,
+.backdrop-blur-lg,
+.backdrop-blur-xl,
+.backdrop-blur-2xl,
+.backdrop-blur-3xl,
+[class*="backdrop-blur"] {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  isolation: isolate;
+  /* Optimize blur compositing - standard + prefixed */
+  backdrop-filter: blur(var(--tw-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--tw-backdrop-blur));
+  will-change: auto; /* Only promote when needed */
+}
+
+/* Glass surfaces - optimized for 120Hz */
+.glass-surface,
+.glass-panel,
+[data-glass] {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* Use hardware-accelerated blur */
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(16px) saturate(180%);
+  /* Prevent paint thrashing */
+  contain: paint layout;
+}
+
+/* ============================================================================
+   ANIMATION PERFORMANCE - Only animate compositor properties
+   ============================================================================ */
+
+/* Allowed animation properties (GPU accelerated) */
+.animate-gpu {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+/* Force GPU for common animations */
+@keyframes gpu-pulse {
+  0%, 100% { opacity: 1; transform: translateZ(0) scale(1); }
+  50% { opacity: 0.7; transform: translateZ(0) scale(1.02); }
+}
+
+@keyframes gpu-spin {
+  from { transform: translateZ(0) rotate(0deg); }
+  to { transform: translateZ(0) rotate(360deg); }
+}
+
+@keyframes gpu-bounce {
+  0%, 100% { transform: translateZ(0) translateY(0); }
+  50% { transform: translateZ(0) translateY(-10px); }
+}
+
+/* Replace default animations with GPU versions */
+.animate-pulse-gpu { animation: gpu-pulse 2s ease-in-out infinite; }
+.animate-spin-gpu { animation: gpu-spin 1s linear infinite; }
+.animate-bounce-gpu { animation: gpu-bounce 1s ease-in-out infinite; }
+
+/* ============================================================================
+   TICKER OPTIMIZATION - CSS-only marquee for 120Hz
+   ============================================================================ */
+
+.ticker-container {
+  contain: strict;
+  overflow: hidden;
+  transform: translateZ(0);
+}
+
+.ticker-track {
+  display: flex;
+  animation: ticker-scroll 40s linear infinite;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+@keyframes ticker-scroll {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+/* Pause on hover without re-render */
+.ticker-container:hover .ticker-track {
+  animation-play-state: paused;
+}
+
+/* ============================================================================
+   FIXED ELEMENTS - Navbar, Footer, Modals
+   ============================================================================ */
+
+/* Fixed elements need GPU layer to prevent scroll jank */
+nav[class*="fixed"],
+.fixed-header,
+.fixed-footer,
+[class*="fixed"][class*="bottom"],
+[class*="fixed"][class*="top"] {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  contain: layout paint;
+}
+
+/* Modal backdrops */
+.modal-backdrop,
+[data-backdrop],
+.overlay {
+  transform: translateZ(0);
+  contain: paint;
+}
+
+/* ============================================================================
+   SPLINE & CANVAS - 120Hz WebGL Optimization  
+   ============================================================================ */
+
+canvas {
+  transform: translateZ(0);
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  /* Allow scroll passthrough */
+  touch-action: pan-y;
+  pointer-events: auto;
+}
+
+/* Spline scene wrapper - isolate from UI */
+.spline-wrapper,
+[data-spline],
+[data-spline-scene] {
+  contain: strict;
+  isolation: isolate;
+  transform: translate3d(0, 0, 0);
+  /* Prevent Spline from blocking scroll */
+  touch-action: pan-y;
+}
+
+/* ============================================================================
+   REDUCE MOTION - Respect user preference
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .ticker-track {
+    animation: none !important;
+  }
+}
+
+/* ============================================================================
+   120Hz DISPLAY SPECIFIC OPTIMIZATIONS
+   ============================================================================ */
+
+/* ProMotion and high-refresh displays */
+@media screen and (min-resolution: 2dppx) {
+  .display-120hz,
+  .fps-120 {
+    /* Smoother curves for 120Hz */
+    --spring-smooth: cubic-bezier(0.2, 0, 0.2, 1);
+    --transition-fast: 0.1s;
+    --transition-normal: 0.2s;
+  }
+  
+  /* Faster transitions look better at 120Hz */
+  .display-120hz .transition-all {
+    transition-duration: var(--transition-fast);
+  }
+}
+
+/* ============================================================================
+   LAYER MANAGEMENT - Prevent layer explosion
+   ============================================================================ */
+
+/* Only promote actively animating elements */
+.animating {
+  will-change: transform, opacity;
+}
+
+/* Remove will-change after animation ends */
+.animation-complete {
+  will-change: auto;
+}
+
+/* Limit backdrop-blur on mobile for performance */
+@media (max-width: 768px) {
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl,
+  .backdrop-blur-3xl {
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+}
+
+/* ============================================================================
+   SCROLL SNAP - Optional smooth scroll sections
+   ============================================================================ */
+
+.scroll-snap-container {
+  scroll-snap-type: y proximity;
+  overscroll-behavior-y: contain;
+}
+
+.scroll-snap-section {
+  scroll-snap-align: start;
+}

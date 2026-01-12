@@ -14,7 +14,7 @@ export interface SplineQualityConfig {
   textureResolution: "4k" | "2k" | "1k" | "512";
   useInstancing: boolean;
   enablePhysics: boolean;
-  animationFrameRate: 30 | 60;
+  animationFrameRate: 30 | 60 | 90 | 120;
 }
 
 export class MobileSplineOptimizer {
@@ -42,8 +42,14 @@ export class MobileSplineOptimizer {
     const hasGPU = info.performance.gpu.tier === "high";
     const fps = info.live.fps;
 
-    // Mobile devices - aggressive optimization
+    // Get native refresh rate (ProMotion iPhones/iPads support 120Hz)
+    const nativeHz = typeof window !== 'undefined' 
+      ? Math.min((window.screen as any)?.refreshRate || 120, 120) 
+      : 60;
+    
+    // Mobile devices - optimized for high refresh rate displays
     if (isMobile) {
+      // High-end mobile (iPhone Pro, iPad Pro, flagship Android)
       if (hasHighMemory && hasGPU && fps >= 50) {
         return {
           quality: "high",
@@ -51,9 +57,10 @@ export class MobileSplineOptimizer {
           textureResolution: "2k",
           useInstancing: true,
           enablePhysics: true,
-          animationFrameRate: 60,
+          animationFrameRate: nativeHz as 60 | 90 | 120, // Up to 120Hz on ProMotion
         };
       }
+      // Mid-range mobile
       if (hasHighMemory || (hasGPU && fps >= 40)) {
         return {
           quality: "medium",
@@ -61,7 +68,7 @@ export class MobileSplineOptimizer {
           textureResolution: "1k",
           useInstancing: true,
           enablePhysics: false,
-          animationFrameRate: 30,
+          animationFrameRate: Math.min(nativeHz, 60) as 30 | 60, // Up to 60Hz
         };
       }
       // Low-end mobile
@@ -75,7 +82,12 @@ export class MobileSplineOptimizer {
       };
     }
 
-    // Desktop - use high quality
+    // Get native refresh rate for desktop (gaming monitors can be 144Hz+)
+    const desktopHz = typeof window !== 'undefined' 
+      ? Math.min((window.screen as any)?.refreshRate || 120, 120) 
+      : 60;
+    
+    // Desktop - use high quality with 120Hz support
     if (hasGPU && fps >= 55) {
       return {
         quality: "high",
@@ -83,7 +95,7 @@ export class MobileSplineOptimizer {
         textureResolution: "4k",
         useInstancing: true,
         enablePhysics: true,
-        animationFrameRate: 60,
+        animationFrameRate: desktopHz as 60 | 90 | 120, // Up to 120Hz
       };
     }
 
@@ -93,7 +105,7 @@ export class MobileSplineOptimizer {
       textureResolution: "2k",
       useInstancing: true,
       enablePhysics: true,
-      animationFrameRate: 60,
+      animationFrameRate: Math.min(desktopHz, 90) as 60 | 90, // Up to 90Hz for medium
     };
   }
 

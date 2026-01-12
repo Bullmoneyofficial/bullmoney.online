@@ -29,6 +29,7 @@ import React, {
   useRef,
   useState,
   isValidElement,
+  useCallback,
 } from "react";
 
 import { useCalEmbed } from "@/app/hooks/useCalEmbed";
@@ -141,6 +142,7 @@ function DockItem({
     if (itemRef) itemRef(el);
   };
 
+  // PERFORMANCE: Throttle mouse distance calculation
   const mouseDistance = useTransform(mouseX, (val: number) => {
     const rect = ref.current?.getBoundingClientRect() ?? {
       x: 0,
@@ -154,7 +156,15 @@ function DockItem({
     [-distance, 0, distance],
     [baseItemSize, magnification, baseItemSize]
   );
-  const size = useSpring(targetSize, spring);
+  
+  // PERFORMANCE: Use stiffer spring with higher damping for 120Hz
+  const size = useSpring(targetSize, {
+    ...spring,
+    // Higher stiffness = faster response, higher damping = less overshoot
+    stiffness: 300,
+    damping: 25,
+    mass: 0.1,
+  });
 
   return (
     <motion.div
@@ -162,6 +172,8 @@ function DockItem({
       style={{
         width: size,
         height: size,
+        // GPU acceleration hint
+        transform: 'translateZ(0)',
       }}
       onHoverStart={() => isHovered.set(1)}
       onHoverEnd={() => isHovered.set(0)}
@@ -178,7 +190,7 @@ function DockItem({
         SoundEffects.click();
       }}
       className={cn(
-        "relative flex flex-col items-center justify-center cursor-pointer mb-2",
+        "relative flex flex-col items-center justify-center cursor-pointer mb-2 will-animate",
         className
       )}
       tabIndex={0}
@@ -341,14 +353,37 @@ function Dock({
 }: DockWithRefsProps) {
   const mouseX = useMotionValue(Infinity);
   const isHovered = useMotionValue(0);
+  const lastMouseX = useRef(0);
+  const rafId = useRef<number | null>(null);
+
+  // PERFORMANCE: Throttle mouse move using RAF for 120Hz
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const pageX = e.pageX;
+    
+    // Only update if position changed significantly (2px threshold)
+    if (Math.abs(pageX - lastMouseX.current) < 2) return;
+    lastMouseX.current = pageX;
+    
+    // Cancel pending RAF to avoid queuing
+    if (rafId.current) cancelAnimationFrame(rafId.current);
+    
+    rafId.current = requestAnimationFrame(() => {
+      isHovered.set(1);
+      mouseX.set(pageX);
+    });
+  }, [mouseX, isHovered]);
+
+  // Cleanup RAF on unmount
+  useEffect(() => {
+    return () => {
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+    };
+  }, []);
 
   return (
     <motion.div
       ref={dockRef}
-      onMouseMove={({ pageX }) => {
-        isHovered.set(1);
-        mouseX.set(pageX);
-      }}
+      onMouseMove={handleMouseMove}
       onMouseEnter={() => {
         onHoverChange?.(true);
       }}
@@ -356,12 +391,14 @@ function Dock({
         isHovered.set(0);
         mouseX.set(Infinity);
         onHoverChange?.(false);
+        if (rafId.current) cancelAnimationFrame(rafId.current);
       }}
       className={cn(
-        "mx-auto flex h-24 items-center gap-5 rounded-3xl border-2 bg-black/40 dark:bg-black/40 px-6 shadow-2xl backdrop-blur-xl transition-all duration-300",
+        "mx-auto flex h-24 items-center gap-5 rounded-3xl border-2 bg-black/40 dark:bg-black/40 px-6 shadow-2xl backdrop-blur-xl transition-all duration-300 transform translateZ-0",
         "border-blue-500/30 dark:border-blue-500/30 hover:border-blue-400/60 hover:shadow-[0_0_30px_rgba(59,130,246,0.4)]",
         className
       )}
+      style={{ transform: 'translateZ(0)' }}
     >
       {items.map((item, index) => {
         const content = (
@@ -989,111 +1026,109 @@ export const Navbar = () => {
                 </button>
             </div>
         </div>
-
-        {/* 3. MOBILE DROPDOWN MENU - Premium Glass Style */}
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className={cn(
-                "absolute top-20 sm:top-24 left-2 sm:left-3 right-2 sm:right-3 z-40 rounded-2xl border-2 bg-black/40 dark:bg-black/40 p-3 sm:p-4 shadow-2xl backdrop-blur-xl transition-all",
-                isXMUser
-                  ? "border-red-500/30 dark:border-red-500/30 hover:border-red-400/60"
-                  : "border-blue-500/30 dark:border-blue-500/30 hover:border-blue-400/60"
-              )}
-            >
-              <div className="flex flex-col gap-2 sm:gap-3 items-center text-center">
-                <Link
-                  href="/"
-                  onClick={() => { SoundEffects.click(); setOpen(false); }}
-                  onMouseEnter={() => SoundEffects.hover()}
-                  onTouchStart={() => SoundEffects.click()}
-                  className="text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors w-full py-2 rounded-lg hover:bg-blue-500/10"
-                >
-                  Home
-                </Link>
-
-                <div className="relative w-full" onMouseEnter={() => SoundEffects.hover()} onTouchStart={() => SoundEffects.click()}>
-                    <span className="text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 pointer-events-none block py-2 rounded-lg hover:bg-blue-500/10 cursor-pointer transition-colors">Setups</span>
-                    <div className="absolute inset-0 opacity-0"><ServicesModal /></div>
-                </div>
-
-                {/* 🎉 AFFILIATES BUTTON - RED WHEN XM USER */}
-                <div 
-                  className="relative w-full" 
-                  onClick={() => { SoundEffects.click(); setIsAffiliateOpen(true); setOpen(false); }} 
-                  onMouseEnter={() => SoundEffects.hover()} 
-                  onTouchStart={() => SoundEffects.click()}
-                >
-                    <span className={cn(
-                      "text-sm sm:text-base font-semibold cursor-pointer block py-2 rounded-lg transition-colors",
-                      isXMUser
-                        ? "text-red-300 hover:text-red-200 hover:bg-red-500/10 font-bold"
-                        : "text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 hover:bg-blue-500/10"
-                    )}>Affiliates {isXMUser && "🔴"}</span>
-                </div>
-
-                <div className="relative w-full" onClick={() => { SoundEffects.click(); setIsFaqOpen(true); setOpen(false); }} onMouseEnter={() => SoundEffects.hover()} onTouchStart={() => SoundEffects.click()}>
-                    <span className="text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 cursor-pointer block py-2 rounded-lg hover:bg-blue-500/10 transition-colors">FAQ</span>
-                </div>
-
-                <div className="relative w-full" onMouseEnter={() => SoundEffects.hover()} onTouchStart={() => SoundEffects.click()}>
-                    <span className={cn(
-                        "text-sm sm:text-base font-semibold pointer-events-none flex items-center justify-center gap-2 py-2 rounded-lg transition-colors",
-                        hasReward ? "text-blue-300 font-bold animate-pulse bg-blue-500/10" : "text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 hover:bg-blue-500/10"
-                    )}>
-                        {hasReward ? "🎁 Reward Unlocked!" : "Rewards Card"}
-                    </span>
-                    <div className="absolute inset-0 opacity-0"><LoyaltyModal /></div>
-                </div>
-
-                <Link
-                  href="/products"
-                  onClick={() => { SoundEffects.click(); setOpen(false); }}
-                  onMouseEnter={() => SoundEffects.hover()}
-                  onTouchStart={() => SoundEffects.click()}
-                  className="w-full rounded-lg bg-blue-500 text-white px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold shadow-md hover:bg-blue-600 transition-all transform hover:scale-105 border-2 border-blue-400/30 hover:border-blue-300/60 flex items-center justify-center min-h-[40px]"
-                >
-                  Products
-                </Link>
-
-                {/* Theme Selector Button for Mobile */}
-                <button
-                  onClick={() => { SoundEffects.click(); setOpen(false); setIsThemeSelectorOpen(true); }}
-                  onMouseEnter={() => SoundEffects.hover()}
-                  onTouchStart={() => SoundEffects.click()}
-                  className="flex items-center justify-center gap-2 text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors w-full py-2 rounded-lg hover:bg-blue-500/10"
-                >
-                  <IconPalette size={16} /> Theme
-                </button>
-
-                {mounted && (!isAuthenticated || isAdmin) && (
-                    <button
-                      onClick={() => { SoundEffects.click(); setOpen(false); setIsAdminOpen(true); }}
-                      onMouseEnter={() => SoundEffects.hover()}
-                      onTouchStart={() => SoundEffects.click()}
-                      className={cn(
-                        "flex items-center justify-center gap-2 text-[10px] sm:text-xs uppercase tracking-widest transition-colors mt-1 py-2 rounded-lg w-full",
-                        isAdmin ? "text-blue-300 hover:text-blue-200 hover:bg-blue-500/10 font-bold" : "text-blue-200/60 hover:text-blue-300 hover:bg-blue-500/10"
-                      )}
-                    >
-                       {isAdmin ? (
-                           <><IconSettings size={12} /> Admin Dashboard</>
-                       ) : (
-                           <><IconLock size={12} /> Team Access</>
-                       )}
-                    </button>
-                )}
-
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </motion.div>
+    
+    {/* MOBILE DROPDOWN MENU - Rendered OUTSIDE the pointer-events-none container */}
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0, y: -20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -20, scale: 0.95 }}
+          transition={{ duration: 0.2 }}
+          className={cn(
+            "lg:hidden fixed top-28 sm:top-32 left-2 sm:left-3 right-2 sm:right-3 z-[9999] rounded-2xl border-2 bg-black/95 p-4 shadow-2xl backdrop-blur-xl",
+            isXMUser
+              ? "border-red-500/40"
+              : "border-blue-500/40"
+          )}
+          style={{ 
+            touchAction: 'auto',
+            pointerEvents: 'auto'
+          }}
+        >
+          <div className="flex flex-col gap-3 items-center text-center">
+            <Link
+              href="/"
+              onClick={() => { SoundEffects.click(); setOpen(false); }}
+              className="text-base font-semibold text-blue-200 hover:text-white transition-colors w-full py-3 rounded-lg hover:bg-blue-500/20 active:bg-blue-500/30"
+            >
+              Home
+            </Link>
+
+            <button 
+              onClick={() => { SoundEffects.click(); setOpen(false); }}
+              className="relative w-full text-base font-semibold text-blue-200 hover:text-white py-3 rounded-lg hover:bg-blue-500/20 active:bg-blue-500/30 cursor-pointer transition-colors"
+            >
+              Setups
+              <div className="absolute inset-0 opacity-0"><ServicesModal /></div>
+            </button>
+
+            <button 
+              className={cn(
+                "w-full text-base font-semibold cursor-pointer py-3 rounded-lg transition-colors",
+                isXMUser
+                  ? "text-red-300 hover:text-red-100 hover:bg-red-500/20 active:bg-red-500/30 font-bold"
+                  : "text-blue-200 hover:text-white hover:bg-blue-500/20 active:bg-blue-500/30"
+              )}
+              onClick={() => { SoundEffects.click(); setIsAffiliateOpen(true); setOpen(false); }}
+            >
+              Affiliates {isXMUser && "🔴"}
+            </button>
+
+            <button 
+              className="w-full text-base font-semibold text-blue-200 hover:text-white cursor-pointer py-3 rounded-lg hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors"
+              onClick={() => { SoundEffects.click(); setIsFaqOpen(true); setOpen(false); }}
+            >
+              FAQ
+            </button>
+
+            <button 
+              onClick={() => { SoundEffects.click(); setOpen(false); }}
+              className={cn(
+                "relative w-full text-base font-semibold flex items-center justify-center gap-2 py-3 rounded-lg transition-colors",
+                hasReward ? "text-blue-300 font-bold bg-blue-500/20" : "text-blue-200 hover:text-white hover:bg-blue-500/20 active:bg-blue-500/30"
+              )}
+            >
+              {hasReward ? "🎁 Reward Unlocked!" : "Rewards Card"}
+              <div className="absolute inset-0 opacity-0"><LoyaltyModal /></div>
+            </button>
+
+            <Link
+              href="/products"
+              onClick={() => { SoundEffects.click(); setOpen(false); }}
+              className="w-full rounded-lg bg-blue-500 text-white py-3 text-sm font-bold shadow-md hover:bg-blue-600 active:bg-blue-700 transition-all border-2 border-blue-400/30 flex items-center justify-center"
+            >
+              Products
+            </Link>
+
+            <button
+              onClick={() => { SoundEffects.click(); setOpen(false); setIsThemeSelectorOpen(true); }}
+              className="flex items-center justify-center gap-2 text-base font-semibold text-blue-200 hover:text-white transition-colors w-full py-3 rounded-lg hover:bg-blue-500/20 active:bg-blue-500/30"
+            >
+              <IconPalette size={18} /> Theme
+            </button>
+
+            {mounted && (!isAuthenticated || isAdmin) && (
+              <button
+                onClick={() => { SoundEffects.click(); setOpen(false); setIsAdminOpen(true); }}
+                className={cn(
+                  "flex items-center justify-center gap-2 text-xs uppercase tracking-widest transition-colors mt-2 py-3 rounded-lg w-full",
+                  isAdmin ? "text-blue-300 hover:bg-blue-500/20 font-bold" : "text-blue-200/60 hover:text-blue-300 hover:bg-blue-500/20"
+                )}
+              >
+                {isAdmin ? (
+                  <><IconSettings size={14} /> Admin Dashboard</>
+                ) : (
+                  <><IconLock size={14} /> Team Access</>
+                )}
+              </button>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
     </>
   );
 };

@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import "../styles/performance-optimizations.css";
+import "../styles/gpu-animations.css";
+import "../styles/120hz-performance.css"; // Critical 120Hz optimizations
 import { cn } from "@/lib/utils";
 
 import { ThemeProvider } from "@/context/providers";
@@ -11,6 +13,9 @@ import { GlobalThemeProvider } from "@/contexts/GlobalThemeProvider";
 
 // ✅ ADDED: Import the ShopProvider
 import { ShopProvider } from "@/components/ShopContext";
+
+// ✅ ADDED: Import the Performance Provider for 120Hz optimization
+import { PerformanceProvider, FPSCounter } from "@/components/PerformanceProvider";
 
 // Navigation and Footer components
 import { Navbar } from "@/components/navbar";
@@ -143,6 +148,91 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              // 120Hz Display Detection & Optimization - Ultra Mode
+              (function detect120Hz() {
+                const root = document.documentElement;
+                let nativeHz = 60;
+                let measured = false;
+                
+                // Modern Screen API (Chrome 110+)
+                if ('refreshRate' in screen) {
+                  nativeHz = Math.min(screen.refreshRate, 120);
+                  measured = true;
+                }
+                
+                // Detect ProMotion & high-refresh devices via UA + screen
+                if (!measured) {
+                  const ua = navigator.userAgent.toLowerCase();
+                  const w = screen.width;
+                  const h = screen.height;
+                  const dpr = window.devicePixelRatio;
+                  
+                  // iPhone Pro (13/14/15/16 Pro/Pro Max)
+                  if (/iphone/.test(ua) && dpr >= 3) {
+                    if (w === 393 || w === 430 || w === 390 || w === 428 || w === 402 || w === 440 || h >= 844) {
+                      nativeHz = 120;
+                    }
+                  }
+                  // iPad Pro (all support ProMotion)
+                  else if (/ipad/.test(ua) && dpr >= 2 && w >= 1024) {
+                    nativeHz = 120;
+                  }
+                  // Samsung Galaxy S/Note/Ultra
+                  else if (/samsung|sm-g|sm-n|sm-s/i.test(ua) && dpr >= 2.5) {
+                    nativeHz = 120;
+                  }
+                  // OnePlus, Xiaomi, high-end Android
+                  else if (/oneplus|xiaomi|redmi|poco|oppo|realme|vivo/i.test(ua) && dpr >= 2.5) {
+                    nativeHz = 120;
+                  }
+                  // Google Pixel Pro (90Hz+)
+                  else if (/pixel.*pro/i.test(ua)) {
+                    nativeHz = 90;
+                  }
+                  // Desktop gaming monitors (1440p+)
+                  else if (w >= 2560 && !(/mobi|android|iphone|ipad/i.test(ua))) {
+                    nativeHz = 120;
+                  }
+                }
+                
+                // Measure actual FPS capability
+                let frames = 0, startTime = performance.now();
+                function measureFps(timestamp) {
+                  frames++;
+                  if (frames < 20) {
+                    requestAnimationFrame(measureFps);
+                  } else {
+                    const elapsed = timestamp - startTime;
+                    const fps = Math.round((frames / elapsed) * 1000);
+                    const actualHz = fps >= 110 ? 120 : fps >= 80 ? 90 : 60;
+                    const finalHz = Math.min(nativeHz, actualHz);
+                    
+                    root.style.setProperty('--measured-fps', actualHz);
+                    root.style.setProperty('--actual-target-fps', finalHz);
+                    
+                    if (actualHz >= 110) {
+                      root.classList.add('fps-120');
+                      console.log('⚡ 120Hz CONFIRMED: ' + fps + 'fps measured');
+                    } else if (actualHz >= 80) {
+                      root.classList.add('fps-90');
+                      console.log('⚡ 90Hz CONFIRMED: ' + fps + 'fps measured');
+                    }
+                  }
+                }
+                requestAnimationFrame(measureFps);
+                
+                const targetHz = Math.min(nativeHz, 120);
+                root.style.setProperty('--native-refresh-rate', nativeHz);
+                root.style.setProperty('--target-fps', targetHz);
+                root.style.setProperty('--frame-duration', (1000 / targetHz) + 'ms');
+                root.style.setProperty('--frame-budget', (1000 / targetHz * 0.9) + 'ms');
+                
+                if (nativeHz >= 120) root.classList.add('display-120hz');
+                else if (nativeHz >= 90) root.classList.add('display-90hz');
+                
+                console.log('🖥️ Display: ' + nativeHz + 'Hz detected, targeting ' + targetHz + 'fps');
+              })();
+              
               // Service Worker Registration
               const __BM_SW_ENABLED__ = ${swEnabled ? "true" : "false"};
               if (__BM_SW_ENABLED__ && 'serviceWorker' in navigator) {
@@ -325,22 +415,27 @@ export default function RootLayout({
               <StudioProvider>
                 {/* ✅ ADDED: ShopProvider starts here */}
                 <ShopProvider>
-                  {/* Custom Cursor for Desktop */}
-                  <ClientCursor />
-                  {/* Navbar rendered outside filter wrapper to preserve fixed positioning */}
-                  <Navbar />
-                  {/* Theme filter wrapper - applies filter only to main content */}
-                  <div 
-                    className="theme-filter-wrapper min-h-screen"
-                    style={{ 
-                      filter: 'var(--theme-filter, none)',
-                      transition: 'filter 0.5s ease-in-out'
-                    }}
-                  >
-                    {children}
-                    {modal}
-                    <Footer />
-                  </div>
+                  {/* ✅ Performance Provider for 120Hz optimization & smooth scroll */}
+                  <PerformanceProvider enableSmoothScroll={true}>
+                    {/* Custom Cursor for Desktop */}
+                    <ClientCursor />
+                    {/* Navbar rendered outside filter wrapper to preserve fixed positioning */}
+                    <Navbar />
+                    {/* Theme filter wrapper - applies filter only to main content */}
+                    <div 
+                      className="theme-filter-wrapper min-h-screen"
+                      style={{ 
+                        filter: 'var(--theme-filter, none)',
+                        transition: 'filter 0.5s ease-in-out'
+                      }}
+                    >
+                      {children}
+                      {modal}
+                      <Footer />
+                    </div>
+                    {/* FPS Counter - only shows in development */}
+                    <FPSCounter />
+                  </PerformanceProvider>
                 </ShopProvider>
                 {/* ✅ ADDED: ShopProvider ends here */}
               </StudioProvider>

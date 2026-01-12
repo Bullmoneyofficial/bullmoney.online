@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { Suspense, useState, useEffect, memo } from 'react';
+import { detectRefreshRate } from '@/lib/use120Hz';
 
 interface SplineWrapperProps {
   scene: string;
@@ -11,6 +12,7 @@ interface SplineWrapperProps {
   onError?: (error: Error) => void;
   withSparkles?: boolean;
   optimizeForMobile?: boolean;
+  targetFPS?: number; // New: Allow custom FPS target (up to 120)
 }
 
 // Dynamic import for the heavy Spline runtime - ultra lightweight
@@ -25,7 +27,7 @@ const Sparkle = dynamic(() => import('react-sparkle'), {
   loading: () => null
 });
 
-// Device tier detection (enhanced for crash prevention)
+// Device tier detection (enhanced for 120Hz support)
 const getDeviceTier = (): 'high' | 'medium' | 'low' => {
   if (typeof window === 'undefined') return 'high';
   
@@ -35,10 +37,19 @@ const getDeviceTier = (): 'high' | 'medium' | 'low' => {
   const isSmallScreen = window.innerWidth < 480;
   const isVeryLowMemory = memory < 4;
   const isLowCores = cores < 4;
+  const refreshRate = detectRefreshRate();
+  
+  // High-refresh mobile devices (iPhone Pro, iPad Pro) get tier upgrade
+  const isHighRefreshMobile = isMobile && refreshRate >= 120;
   
   // Force low tier for very small screens or low specs to prevent crashes
-  if (isSmallScreen || (isMobile && (isVeryLowMemory || isLowCores))) {
+  if (isSmallScreen || (isMobile && !isHighRefreshMobile && (isVeryLowMemory || isLowCores))) {
     return 'low';
+  }
+  
+  // ProMotion devices get medium or high based on specs
+  if (isHighRefreshMobile) {
+    return memory >= 4 && cores >= 4 ? 'high' : 'medium';
   }
   
   if (isMobile) {

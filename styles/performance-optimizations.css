@@ -1,23 +1,164 @@
-/* Performance Optimizations */
+/* Performance Optimizations - 120Hz Ultra Mode */
 
-/* GPU Acceleration for animations */
+/* ============================================================================
+   GLOBAL GPU ACCELERATION
+   ============================================================================ */
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Will-change for animated elements */
-.animated-element {
-  will-change: transform, opacity;
+/* ============================================================================
+   120Hz REFRESH RATE OPTIMIZATIONS
+   ============================================================================ */
+html {
+  scroll-behavior: smooth;
+  /* Enable high refresh rate scrolling on iOS Safari */
+  -webkit-overflow-scrolling: touch;
+  /* Note: Do NOT use contain on html - it breaks scrolling */
 }
 
-/* Containment for better rendering performance */
-.card,
-.section {
+body {
+  /* Allow scrolling */
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Force GPU layer creation for smoother 120Hz rendering */
+html.display-120hz body,
+html.display-90hz body {
+  /* Create compositing layer - but don't use will-change scroll-position as it can break scrolling */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Optimize animations for high refresh rate displays */
+@supports (animation-timeline: auto) {
+  :root {
+    /* Signal to browser we support high refresh rates */
+    --animation-timing: cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+}
+
+/* ============================================================================
+   ANIMATION & TRANSITION OPTIMIZATIONS
+   ============================================================================ */
+   
+/* Will-change for explicitly animated elements only */
+.animated-element {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* GPU acceleration for keyframe animations only */
+[class*="animate-spin"],
+[class*="animate-pulse"],
+[class*="animate-bounce"],
+[class*="animate-ping"] {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* Ultra-smooth transitions for 120Hz */
+.display-120hz .transition-all,
+.display-120hz .transition-transform,
+.display-120hz .transition-opacity {
+  /* Faster transitions look better at 120Hz */
+  transition-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+/* ============================================================================
+   CANVAS & WEBGL OPTIMIZATIONS (SPLINE)
+   ============================================================================ */
+canvas {
+  /* Enable GPU compositing */
+  transform: translateZ(0);
+  /* Optimize for retina + high refresh rate */
+  image-rendering: -webkit-optimize-contrast;
+  /* Allow touch scrolling to pass through */
+  touch-action: pan-y;
+  /* Force new stacking context */
+  isolation: isolate;
+}
+
+/* Spline scene container optimizations for 120Hz */
+[data-spline-scene],
+[data-spline] {
+  transform: translate3d(0, 0, 0);
+  /* Allow touch scrolling */
+  touch-action: pan-y;
+  /* Prevent repaints from affecting other elements */
+  isolation: isolate;
+}
+
+/* Force 120Hz on Spline canvas */
+.display-120hz canvas,
+.display-90hz canvas {
+  /* Request high refresh rate rendering */
+  will-change: contents;
+}
+
+/* ============================================================================
+   LAYOUT CONTAINMENT FOR PERFORMANCE
+   ============================================================================ */
+/* Apply containment only to specific performance-critical components */
+.perf-contain {
   contain: layout style paint;
 }
 
-/* Reduce motion for accessibility */
+/* Strict containment only where explicitly needed */
+.perf-contain-strict {
+  contain: strict;
+}
+
+/* ============================================================================
+   HIGH-DPI & RETINA OPTIMIZATIONS
+   ============================================================================ */
+@media screen and (min-resolution: 2dppx) {
+  /* High DPI displays often support 120Hz */
+  .animated-element,
+  .transition-all,
+  [class*="hover:"] {
+    /* Use compositor-only properties for smooth 120Hz */
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+  }
+  
+  /* Optimize images for Retina + 120Hz */
+  img {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+/* ============================================================================
+   TOUCH DEVICE 120Hz OPTIMIZATIONS
+   ============================================================================ */
+@media (hover: none) and (pointer: coarse) {
+  /* IMPORTANT: Don't use touch-action: manipulation globally as it breaks scroll */
+  
+  /* Optimize scroll containers for ProMotion */
+  .overflow-auto,
+  .overflow-scroll,
+  .overflow-y-auto,
+  .overflow-x-auto,
+  [class*="scroll"] {
+    -webkit-overflow-scrolling: touch;
+    /* Do NOT use scroll-behavior: smooth - it causes jank */
+    scroll-behavior: auto;
+    overscroll-behavior: contain;
+  }
+  
+  /* Prevent janky tap highlights */
+  button, a, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY - REDUCED MOTION
+   ============================================================================ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -25,20 +166,65 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-/* Image loading optimization */
+/* ============================================================================
+   CONTENT VISIBILITY & LAZY LOADING
+   ============================================================================ */
 img {
   content-visibility: auto;
+  contain-intrinsic-size: 300px 200px;
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+/* Lazy render off-screen sections */
+section,
+[data-section] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
 }
 
 /* Font loading optimization */
 @font-face {
   font-display: swap;
+}
+
+/* ============================================================================
+   VIDEO & MEDIA OPTIMIZATIONS
+   ============================================================================ */
+video,
+canvas,
+iframe {
+  /* Optimize for high refresh rate displays */
+  will-change: transform;
+  transform: translateZ(0);
+  /* Contain to prevent layout shifts */
+  contain: layout paint;
+}
+
+/* ============================================================================
+   120Hz-SPECIFIC ENHANCEMENTS
+   ============================================================================ */
+.display-120hz {
+  /* Enable all 120Hz optimizations */
+  --frame-budget: 8.33ms;
+  --vsync-interval: 8.33ms;
+}
+
+.display-90hz {
+  --frame-budget: 11.11ms;
+  --vsync-interval: 11.11ms;
+}
+
+/* CRITICAL: Do NOT use scroll-behavior: smooth for 120Hz - use native scroll */
+.display-120hz,
+.display-90hz {
+  scroll-behavior: auto;
+}
+
+.display-120hz *,
+.display-90hz * {
+  /* Optimize all animations for high refresh */
+  animation-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
 }

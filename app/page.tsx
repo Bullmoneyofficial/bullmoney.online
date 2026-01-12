@@ -4,7 +4,8 @@ import { Suspense, lazy, useState, useEffect, useRef } from "react";
 import Hero from "@/components/hero";
 import CTA from "@/components/Chartnews";
 import { Features } from "@/components/features";
-import { LiveMarketTicker } from "@/components/LiveMarketTicker";
+// Use optimized ticker for 120Hz performance
+import { LiveMarketTickerOptimized as LiveMarketTicker } from "@/components/LiveMarketTickerOptimized";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import HiddenYoutubePlayer from "@/components/Mainpage/HiddenYoutubePlayer";
 import { ALL_THEMES } from "@/constants/theme-data";

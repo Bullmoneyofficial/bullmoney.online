@@ -47,6 +47,11 @@
   --theme-name: 'Default';
   --theme-accent-light: rgba(59, 130, 246, 0.25);
   --theme-accent-dark: rgba(59, 130, 246, 0.5);
+  
+  /* 120Hz Display Optimization Variables */
+  --native-refresh-rate: 60;
+  --target-fps: 60;
+  --frame-duration: 16.67ms;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -73,7 +78,50 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  /* CRITICAL: Use native scroll for 120Hz - do NOT use scroll-behavior: smooth */
+  scroll-behavior: auto;
+  /* Enable high refresh rate scrolling */
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* 120Hz ProMotion Display Optimizations */
+.display-120hz {
+  /* Hint to browser for smoother 120Hz animations */
+  --animation-smoothing: 0.5;
+}
+
+.display-90hz {
+  --animation-smoothing: 0.65;
+}
+
+/* FPS Confirmed Classes */
+.fps-120 {
+  --confirmed-fps: 120;
+}
+
+.fps-90 {
+  --confirmed-fps: 90;
+}
+
+/* High refresh rate canvas and 3D scene optimizations */
+.display-120hz canvas,
+.display-90hz canvas,
+.fps-120 canvas,
+.fps-90 canvas {
+  /* Force GPU compositing for smooth 120Hz rendering */
+  transform: translateZ(0);
+  will-change: contents;
+}
+
+/* Spline scenes at 120Hz */
+.display-120hz [data-spline],
+.display-90hz [data-spline],
+.fps-120 [data-spline],
+.fps-90 [data-spline] {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 @layer utilities {

@@ -505,14 +505,13 @@ export function UltimateControlPanel({
         {!isOpen && (
           <motion.div
             key="fps-action-button"
-            initial={{ x: 100, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 100, opacity: 0 }}
+            initial={{ x: 100, opacity: 0, y: '-50%' }}
+            animate={{ x: 0, opacity: 1, y: '-50%' }}
+            exit={{ x: 100, opacity: 0, y: '-50%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className="fixed right-0 z-[250000] pointer-events-none"
             style={{
               top: '50%',
-              transform: 'translateY(-50%)',
               paddingRight: 'calc(env(safe-area-inset-right, 0px) + 8px)'
             }}
           >

@@ -850,8 +850,8 @@ const HeroParallax = () => {
           style={{ 
             contain: 'strict',
             isolation: 'isolate',
-            willChange: 'auto',
-            touchAction: 'pan-y', // Allow vertical scrolling on touch devices
+            willChange: 'transform',
+            touchAction: 'pan-y',
             maxWidth: '100vw',
             maxHeight: '100vh'
           }}
@@ -865,7 +865,7 @@ const HeroParallax = () => {
               right: 0,
               bottom: 0,
               contain: 'strict',
-              touchAction: 'pan-y', // Ensure touch scrolling passes through
+              touchAction: 'pan-y',
               maxWidth: '100%',
               maxHeight: '100%'
             }}
