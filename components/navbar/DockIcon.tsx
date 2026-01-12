@@ -1,6 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 
 interface DockIconProps {
   children: React.ReactNode;
@@ -12,6 +13,11 @@ interface DockIconProps {
 
 export const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(
   ({ children, label, className = "", showShine = false, isXMUser = false }, ref) => {
+    const { accentColor } = useGlobalTheme();
+    
+    // Use theme accent or fallback to XM red
+    const effectiveColor = isXMUser ? '#ef4444' : accentColor;
+    
     return (
       <motion.div
         ref={ref}
@@ -19,24 +25,27 @@ export const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(
         whileTap={{ scale: 0.96 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         className={cn(
-          "flex flex-col h-full w-full items-center justify-center rounded-2xl backdrop-blur-2xl border-2 shadow-lg transition-all duration-300 relative overflow-hidden group/icon icon-glass",
-          showShine
-            ? (isXMUser ? "border-red-500/70 bg-red-950/30" : "border-blue-500/70 bg-blue-950/20")
-            : (isXMUser ? "border-red-500/30 bg-red-950/10" : "border-blue-500/30 bg-blue-950/10"),
+          "flex flex-col h-full w-full items-center justify-center rounded-2xl backdrop-blur-2xl shadow-lg transition-all duration-300 relative overflow-hidden group/icon icon-glass",
           className
         )}
+        style={{
+          border: showShine 
+            ? `2px solid color-mix(in srgb, ${effectiveColor} 70%, transparent)` 
+            : `2px solid color-mix(in srgb, ${effectiveColor} 30%, transparent)`,
+          backgroundColor: showShine 
+            ? `color-mix(in srgb, ${effectiveColor} 20%, black)` 
+            : `color-mix(in srgb, ${effectiveColor} 10%, black)`
+        }}
       >
         {/* Shimmer Background */}
         {showShine && (
           <motion.span 
             animate={{ rotate: 360 }}
             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            className={cn(
-              "absolute inset-[-100%] opacity-100 z-0",
-              isXMUser 
-                ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]"
-                : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
-            )} 
+            className="absolute inset-[-100%] opacity-100 z-0"
+            style={{
+              background: `conic-gradient(from 90deg at 50% 50%, transparent 0%, ${effectiveColor} 50%, transparent 100%)`
+            }}
           />
         )}
 
@@ -44,12 +53,10 @@ export const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(
         <motion.div
           animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
           transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-          className={cn(
-            "absolute inset-0 opacity-20 z-0 pointer-events-none",
-            isXMUser
-              ? "bg-gradient-to-r from-red-500/30 via-red-500/10 to-transparent"
-              : "bg-gradient-to-r from-blue-500/30 via-blue-500/10 to-transparent"
-          )}
+          className="absolute inset-0 opacity-20 z-0 pointer-events-none"
+          style={{
+            background: `linear-gradient(to right, color-mix(in srgb, ${effectiveColor} 30%, transparent), color-mix(in srgb, ${effectiveColor} 10%, transparent), transparent)`
+          }}
         />
 
         {/* Hover glow effect */}
@@ -57,10 +64,8 @@ export const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(
           initial={{ opacity: 0 }}
           whileHover={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className={cn(
-            "absolute inset-0 rounded-2xl pointer-events-none blur-lg",
-            isXMUser ? "bg-red-500/20" : "bg-blue-500/20"
-          )}
+          className="absolute inset-0 rounded-2xl pointer-events-none blur-lg"
+          style={{ backgroundColor: `color-mix(in srgb, ${effectiveColor} 20%, transparent)` }}
         />
 
         {/* Content Layer */}
@@ -80,8 +85,14 @@ export const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(
                 transition={{ delay: 0.1, type: "spring", stiffness: 300 }}
                 className="absolute -top-1 -right-1 flex h-2.5 w-2.5"
               >
-                <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", isXMUser ? "bg-red-400" : "bg-blue-400")}></span>
-                <span className={cn("relative inline-flex rounded-full h-2.5 w-2.5 shadow-lg", isXMUser ? "bg-red-500" : "bg-blue-500")}></span>
+                <span 
+                  className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                  style={{ backgroundColor: effectiveColor }}
+                />
+                <span 
+                  className="relative inline-flex rounded-full h-2.5 w-2.5 shadow-lg"
+                  style={{ backgroundColor: effectiveColor }}
+                />
               </motion.span>
             )}
           </motion.div>
@@ -90,12 +101,13 @@ export const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(
             initial={{ opacity: 0.6 }}
             whileHover={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className={cn(
-              "text-[9px] uppercase tracking-widest font-semibold z-10 pointer-events-none transition-colors",
-              showShine 
-                ? (isXMUser ? "text-red-300 dark:text-red-300 font-bold" : "text-blue-300 dark:text-blue-300 font-bold")
-                : (isXMUser ? "text-red-200/80 dark:text-red-200/80" : "text-blue-200/80 dark:text-blue-200/80")
-            )}
+            className="text-[9px] uppercase tracking-widest font-semibold z-10 pointer-events-none transition-colors"
+            style={{ 
+              color: showShine 
+                ? `color-mix(in srgb, ${effectiveColor} 80%, white)` 
+                : `color-mix(in srgb, ${effectiveColor} 60%, white)`,
+              fontWeight: showShine ? 'bold' : 'normal'
+            }}
           >
             {label}
           </motion.span>

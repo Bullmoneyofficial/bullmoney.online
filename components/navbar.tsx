@@ -38,7 +38,7 @@ import { MobileStaticHelper } from "./navbar/MobileStaticHelper";
 import { MobileDropdownMenu } from "./navbar/MobileDropdownMenu";
 import { MovingTradingTip } from "./navbar/MovingTradingTip";
 import { ThemeSelectorModal } from "./navbar/ThemeSelectorModal";
-import { NAVBAR_THEME_FILTER_MAP, NAVBAR_TRADING_TIPS } from "./navbar/navbar.utils";
+import { NAVBAR_TRADING_TIPS } from "./navbar/navbar.utils";
 
 // --- IMPORT NAVBAR CSS ---
 import "./navbar.css";
@@ -126,7 +126,7 @@ const MobileMenuControls = ({
 // --- MAIN NAVBAR COMPONENT ---
 export const Navbar = () => {
   // --- ALL HOOKS AT TOP LEVEL (REQUIRED BY REACT) ---
-  const { isXMUser, activeThemeId, isAppLoading } = useGlobalTheme();
+  const { isXMUser, activeTheme, isAppLoading, isMobile } = useGlobalTheme();
   
   // Modal states
   const [open, setOpen] = useState(false);
@@ -174,11 +174,17 @@ export const Navbar = () => {
   useEffect(() => {
     if (!mounted) return;
     
+    let isFirst = true;
     const interval = setInterval(() => {
       setShowTip(false);
       setTimeout(() => {
         setCurrentTipIndex((prev) => (prev + 1) % NAVBAR_TRADING_TIPS.length);
         setShowTip(true);
+        // Play MT5 entry sound when tip changes (not on first render)
+        if (!isFirst) {
+          SoundEffects.tipChange();
+        }
+        isFirst = false;
       }, 300);
     }, 5000);
     
@@ -190,8 +196,11 @@ export const Navbar = () => {
     return null;
   }
   
-  // Get CSS filter for current theme
-  const themeFilter = NAVBAR_THEME_FILTER_MAP[activeThemeId || 'DEFAULT'] || NAVBAR_THEME_FILTER_MAP['DEFAULT'];
+  // Get CSS filter for current theme - use actual theme filter from GlobalThemeProvider
+  // This ensures navbar theme matches the rest of the app
+  const themeFilter = isMobile 
+    ? (activeTheme?.mobileFilter || 'none') 
+    : (activeTheme?.filter || 'none');
 
   // Check for reward
   const hasReward = (userProfile?.stamps || 0) >= 5;

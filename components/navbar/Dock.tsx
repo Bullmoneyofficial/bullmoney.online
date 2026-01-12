@@ -6,6 +6,7 @@ import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { DockIcon } from './DockIcon';
 import { useRotatingIndex } from './navbar.utils';
+import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 
 interface DockItemData {
   icon: React.ReactNode;
@@ -45,6 +46,7 @@ const DockLabelInline = ({
   isHovered: any;
   isXMUser?: boolean;
 }) => {
+  const { accentColor } = useGlobalTheme();
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -77,6 +79,9 @@ const DockLabelInline = ({
     return () => window.removeEventListener('resize', updatePosition);
   }, [isVisible]);
 
+  // Use theme accent or fallback to XM red / default blue
+  const effectiveColor = isXMUser ? '#ef4444' : accentColor;
+
   return (
     <>
       <div ref={parentRef} className="absolute inset-0" />
@@ -93,10 +98,7 @@ const DockLabelInline = ({
               opacity: { duration: 0.25 }
             }}
             className={cn(
-              "fixed w-max min-w-[160px] rounded-xl border bg-black/75 backdrop-blur-2xl px-4 py-2.5 z-[150] pointer-events-none shadow-2xl",
-              isXMUser
-                ? "border-red-500/50 shadow-[0_0_40px_rgba(239,68,68,0.4),inset_0_0_20px_rgba(239,68,68,0.1)]"
-                : "border-blue-500/50 shadow-[0_0_40px_rgba(59,130,246,0.4),inset_0_0_20px_rgba(59,130,246,0.1)]",
+              "fixed w-max min-w-[160px] rounded-xl bg-black/75 backdrop-blur-2xl px-4 py-2.5 z-[150] pointer-events-none shadow-2xl tooltip-optimized",
               className
             )}
             role="tooltip"
@@ -104,6 +106,8 @@ const DockLabelInline = ({
               left: `${position.x}px`,
               top: `${position.y}px`,
               transform: 'translateX(-50%)',
+              border: `1px solid color-mix(in srgb, ${effectiveColor} 50%, transparent)`,
+              boxShadow: `0 0 40px color-mix(in srgb, ${effectiveColor} 40%, transparent), inset 0 0 20px color-mix(in srgb, ${effectiveColor} 10%, transparent)`
             }}
           >
             {/* Arrow pointing up */}
@@ -111,10 +115,8 @@ const DockLabelInline = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1, duration: 0.2 }}
-              className={cn(
-                "absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px]",
-                isXMUser ? "border-b-red-500/50" : "border-b-blue-500/50"
-              )} 
+              className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px]"
+              style={{ borderBottomColor: `color-mix(in srgb, ${effectiveColor} 50%, transparent)` }}
             />
             
             <div className="flex items-center gap-3">
@@ -125,8 +127,14 @@ const DockLabelInline = ({
                 transition={{ delay: 0.05, duration: 0.25 }}
                 className="relative flex h-2 w-2 shrink-0"
               >
-                <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", isXMUser ? "bg-red-400" : "bg-blue-400")} />
-                <span className={cn("relative inline-flex rounded-full h-2 w-2 shadow-lg", isXMUser ? "bg-red-500" : "bg-blue-500")} />
+                <span 
+                  className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" 
+                  style={{ backgroundColor: effectiveColor }}
+                />
+                <span 
+                  className="relative inline-flex rounded-full h-2 w-2 shadow-lg" 
+                  style={{ backgroundColor: effectiveColor }}
+                />
               </motion.div>
               
               {/* Label */}
@@ -134,7 +142,8 @@ const DockLabelInline = ({
                 initial={{ opacity: 0, x: -5 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1, duration: 0.25 }}
-                className={cn("text-[10px] uppercase tracking-widest font-bold shrink-0", isXMUser ? "text-red-400" : "text-blue-400")}
+                className="text-[10px] uppercase tracking-widest font-bold shrink-0"
+                style={{ color: effectiveColor }}
               >
                 {children}
               </motion.span>
@@ -144,7 +153,10 @@ const DockLabelInline = ({
                 initial={{ opacity: 0, scaleY: 0 }}
                 animate={{ opacity: 1, scaleY: 1 }}
                 transition={{ delay: 0.12, duration: 0.2 }}
-                className={cn("w-[1px] h-4 shrink-0 bg-gradient-to-b", isXMUser ? "from-red-500/40 via-red-500/20 to-red-500/40" : "from-blue-500/40 via-blue-500/20 to-blue-500/40")}
+                className="w-[1px] h-4 shrink-0"
+                style={{ 
+                  background: `linear-gradient(to bottom, color-mix(in srgb, ${effectiveColor} 40%, transparent), color-mix(in srgb, ${effectiveColor} 20%, transparent), color-mix(in srgb, ${effectiveColor} 40%, transparent))` 
+                }}
               />
               
               {/* Rotating tip text */}
@@ -160,7 +172,8 @@ const DockLabelInline = ({
                         duration: 0.3,
                         ease: [0.34, 1.56, 0.64, 1]
                       }}
-                      className={cn("text-xs font-medium whitespace-nowrap block", isXMUser ? "text-red-100/90" : "text-blue-100/90")}
+                      className="text-xs font-medium whitespace-nowrap block"
+                      style={{ color: `color-mix(in srgb, ${effectiveColor} 80%, white)` }}
                     >
                       {tips[currentIndex]}
                     </motion.span>
@@ -249,7 +262,7 @@ const DockItem = ({
         SoundEffects.click();
       }}
       className={cn(
-        "relative flex flex-col items-center justify-center cursor-pointer mb-2 will-animate",
+        "relative flex flex-col items-center justify-center cursor-pointer mb-2 dock-item-optimized",
       )}
       tabIndex={0}
       role="button"
@@ -302,6 +315,7 @@ export const Dock = React.forwardRef<HTMLDivElement, DockProps>(
     },
     ref
   ) => {
+    const { accentColor } = useGlobalTheme();
     const mouseX = useMotionValue(Infinity);
     const lastMouseX = useRef(0);
     const rafId = useRef<number | null>(null);
@@ -341,13 +355,14 @@ export const Dock = React.forwardRef<HTMLDivElement, DockProps>(
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         className={cn(
-          "mx-auto flex h-24 items-center gap-5 rounded-3xl border-2 px-6 shadow-2xl backdrop-blur-3xl transition-all duration-300 transform translateZ-0 dock-glass",
-          "border-blue-500/40 dark:border-blue-500/40 hover:border-blue-500/70",
+          "mx-auto flex h-24 items-center gap-5 rounded-3xl px-6 shadow-2xl backdrop-blur-3xl transition-all duration-300 transform translateZ-0 dock-glass",
           className
         )}
         style={{ 
           transform: 'translateZ(0)',
-          background: 'rgba(0, 0, 0, 0.5)'
+          background: 'rgba(0, 0, 0, 0.5)',
+          border: `2px solid color-mix(in srgb, ${accentColor} 40%, transparent)`,
+          boxShadow: `0 0 40px color-mix(in srgb, ${accentColor} 20%, transparent)`
         }}
       >
         {items.map((item, index) => (

@@ -572,3 +572,72 @@ body {
     transition: none;
   }
 }
+
+/* ============================================================================
+   PERFORMANCE OPTIMIZATIONS
+   CSS containment, will-change, and GPU acceleration hints
+   ============================================================================ */
+
+/* Containment for dock items - isolates layout/paint */
+.dock-item-optimized {
+  contain: layout style;
+  will-change: transform, width, height;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Navbar container containment */
+.navbar-themed {
+  contain: layout style;
+  will-change: filter, opacity;
+}
+
+/* Optimize tooltips */
+.tooltip-optimized {
+  contain: layout paint style;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* Reduce animation cost for mobile tips */
+.mobile-helper-optimized {
+  contain: layout paint style;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* GPU-accelerated animations */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Disable expensive effects on low-end devices */
+@media (max-width: 768px) {
+  .dock-glass {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  
+  .menu-glass {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
+
+/* Reduce animations when battery saver is on */
+@media (prefers-reduced-motion: reduce) {
+  .dock-item-optimized {
+    will-change: auto;
+    transition: none !important;
+  }
+  
+  .animate-ping {
+    animation: none !important;
+  }
+  
+  .mobile-helper-optimized {
+    animation: none !important;
+  }
+}

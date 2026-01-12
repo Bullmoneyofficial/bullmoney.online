@@ -1,10 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOBILE_HELPER_TIPS } from './navbar.utils';
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
+import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 
 export const MobileStaticHelper = () => {
+  const { activeTheme, isMobile, accentColor } = useGlobalTheme();
   const [tipIndex, setTipIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
+  const isFirstRender = useRef(true);
+  
+  // Get theme filter for consistency with navbar
+  const themeFilter = isMobile 
+    ? (activeTheme?.mobileFilter || 'none') 
+    : (activeTheme?.filter || 'none');
   
   useEffect(() => {
     const interval = setInterval(() => {
@@ -12,6 +21,11 @@ export const MobileStaticHelper = () => {
       setTimeout(() => {
         setTipIndex((prev) => (prev + 1) % MOBILE_HELPER_TIPS.length);
         setIsVisible(true);
+        // Play MT5 entry sound when tip changes (not on first render)
+        if (!isFirstRender.current) {
+          SoundEffects.tipChange();
+        }
+        isFirstRender.current = false;
       }, 250);
     }, 4500);
     
@@ -20,8 +34,12 @@ export const MobileStaticHelper = () => {
   
   return (
     <div
-      className="fixed right-3 left-3 z-[100] pointer-events-none lg:hidden"
-      style={{ top: 'calc(6.5rem + env(safe-area-inset-top, 0px))' }}
+      className="fixed right-3 left-3 z-30 pointer-events-none lg:hidden mobile-helper-optimized"
+      style={{ 
+        top: 'calc(6.5rem + env(safe-area-inset-top, 0px))',
+        filter: themeFilter,
+        transition: 'filter 0.5s ease-in-out'
+      }}
     >
       <motion.div 
         initial={{ opacity: 0, y: -8, scale: 0.95 }}
@@ -30,7 +48,11 @@ export const MobileStaticHelper = () => {
           duration: 0.35,
           ease: [0.34, 1.56, 0.64, 1]
         }}
-        className="mx-auto w-fit max-w-[90%] px-3 py-2 rounded-xl bg-black/80 backdrop-blur-2xl border border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.3),inset_0_0_15px_rgba(59,130,246,0.1)]"
+        className="mx-auto w-fit max-w-[90%] px-3 py-2 rounded-xl bg-black/80 backdrop-blur-xl gpu-accelerated"
+        style={{
+          border: '1px solid var(--theme-accent-border, rgba(59, 130, 246, 0.5))',
+          boxShadow: `0 0 30px var(--theme-accent-glow, rgba(59, 130, 246, 0.3)), inset 0 0 15px var(--theme-accent-subtle, rgba(59, 130, 246, 0.1))`
+        }}
       >
         <motion.div 
           className="flex items-center gap-2.5 justify-center"
@@ -45,8 +67,14 @@ export const MobileStaticHelper = () => {
             transition={{ delay: 0.05, duration: 0.25 }}
             className="relative flex h-1.5 w-1.5 shrink-0"
           >
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500" />
+            <span 
+              className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" 
+              style={{ backgroundColor: accentColor }}
+            />
+            <span 
+              className="relative inline-flex rounded-full h-1.5 w-1.5" 
+              style={{ backgroundColor: accentColor }}
+            />
           </motion.div>
           
           {/* Rotating tip text */}
@@ -60,7 +88,8 @@ export const MobileStaticHelper = () => {
                 duration: 0.3,
                 ease: [0.34, 1.56, 0.64, 1]
               }}
-              className="text-[10px] tracking-wide font-medium text-blue-200/90 text-center"
+              className="text-[10px] tracking-wide font-medium text-center"
+              style={{ color: `color-mix(in srgb, ${accentColor} 80%, white)` }}
             >
               {MOBILE_HELPER_TIPS[tipIndex]}
             </motion.span>
