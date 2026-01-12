@@ -14,7 +14,7 @@ import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "fram
 import { cn } from "@/lib/utils";
 
 // --- IMPORT SEPARATE LOADER COMPONENT ---
-import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader"; 
+import { MultiStepLoader } from "@/components/Mainpage/MultiStepLoader";
 
 // --- 1. SUPABASE SETUP ---
 const TELEGRAM_GROUP_LINK = "https://t.me/addlist/uswKuwT2JUQ4YWI8";
