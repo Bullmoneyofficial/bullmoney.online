@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/context/providers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StudioProvider } from "@/context/StudioContext";
 import { GlobalThemeProvider } from "@/contexts/GlobalThemeProvider";
+import { AudioSettingsProvider } from "@/contexts/AudioSettingsProvider";
 
 // ✅ ADDED: Import the ShopProvider
 import { ShopProvider } from "@/components/ShopContext";
@@ -23,6 +24,7 @@ import { Footer } from "@/components/Mainpage/footer";
 
 // Client-side cursor component for desktop
 import ClientCursor from "@/components/ClientCursor";
+import AudioWidget from "@/components/AudioWidget";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
@@ -440,36 +442,40 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <GlobalThemeProvider>
-              <StudioProvider>
-                {/* ✅ ADDED: ShopProvider starts here */}
-                <ShopProvider>
-                  {/* ✅ Performance Provider for 120Hz optimization & smooth scroll */}
-                  <PerformanceProvider enableSmoothScroll={true}>
-                    {/* Custom Cursor for Desktop */}
-                    <ClientCursor />
-                    {/* Navbar rendered outside filter wrapper to preserve fixed positioning */}
-                    <Navbar />
-                    {/* Theme filter wrapper - applies filter only to main content */}
-                    <main 
-                      className="theme-filter-wrapper min-h-screen"
-                      style={{ 
-                        filter: 'var(--theme-filter, none)',
-                        transition: 'filter 0.5s ease-in-out',
-                        touchAction: 'pan-y',
-                        overflowY: 'visible'
-                      }}
-                      data-allow-scroll
-                    >
-                      {children}
-                      {modal}
-                    </main>
-                    <Footer />
-                    {/* FPS Counter - only shows in development */}
-                    <FPSCounter />
-                  </PerformanceProvider>
-                </ShopProvider>
-                {/* ✅ ADDED: ShopProvider ends here */}
-              </StudioProvider>
+              <AudioSettingsProvider>
+                <StudioProvider>
+                  {/* ✅ ADDED: ShopProvider starts here */}
+                  <ShopProvider>
+                    {/* ✅ Performance Provider for 120Hz optimization & smooth scroll */}
+                    <PerformanceProvider enableSmoothScroll={true}>
+                      {/* Custom Cursor for Desktop */}
+                      <ClientCursor />
+                      {/* Navbar rendered outside filter wrapper to preserve fixed positioning */}
+                      <Navbar />
+                      {/* Bottom-left audio widget (not in navbar) */}
+                      <AudioWidget />
+                      {/* Theme filter wrapper - applies filter only to main content */}
+                      <main 
+                        className="theme-filter-wrapper min-h-screen"
+                        style={{ 
+                          filter: 'var(--theme-filter, none)',
+                          transition: 'filter 0.5s ease-in-out',
+                          touchAction: 'pan-y',
+                          overflowY: 'visible'
+                        }}
+                        data-allow-scroll
+                      >
+                        {children}
+                        {modal}
+                      </main>
+                      <Footer />
+                      {/* FPS Counter - only shows in development */}
+                      <FPSCounter />
+                    </PerformanceProvider>
+                  </ShopProvider>
+                  {/* ✅ ADDED: ShopProvider ends here */}
+                </StudioProvider>
+              </AudioSettingsProvider>
             </GlobalThemeProvider>
           </ThemeProvider>
         </ErrorBoundary>

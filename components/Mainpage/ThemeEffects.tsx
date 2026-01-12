@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Theme } from '@/constants/theme-data'
+import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
 
 interface ThemeEffectsProps {
   theme: Theme;
@@ -8,15 +9,16 @@ interface ThemeEffectsProps {
 
 export const ThemeEffects = ({ theme, children }: ThemeEffectsProps) => {
   const [isMobile, setIsMobile] = useState(false);
+  const { sfxVolume } = useAudioSettings();
   
   // 1. Handle Audio on Theme Change
   useEffect(() => {
     if (theme.audioUrl) {
       const audio = new Audio(theme.audioUrl);
-      audio.volume = 0.4; // Keep it subtle
+      audio.volume = Math.min(1, Math.max(0, sfxVolume * 0.4)); // Keep it subtle
       audio.play().catch(() => console.log("Audio play failed (user interaction required first)"));
     }
-  }, [theme.id]); // Only play when ID changes
+  }, [theme.id, theme.audioUrl, sfxVolume]); // Only play when ID changes
 
   // 2. Detect Mobile for optimized filters
   useEffect(() => {

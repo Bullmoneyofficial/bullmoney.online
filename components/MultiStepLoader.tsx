@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 // ADJUST THIS PATH IF NEEDED:
 import GhostLoaderCursor from "@/components/Mainpage/GhostCursor";
+import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 
 // --- GLOBAL ASSET CONFIGURATION ---
 const ASSETS = {
@@ -340,6 +341,7 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [selectedAsset, setSelectedAsset] = useState<AssetKey>("BTC");
+  const { sfxVolume } = useAudioSettings();
   
   // Scroll Lock
   useEffect(() => {
@@ -353,7 +355,7 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
   useEffect(() => {
     if (loading) {
       audioRef.current = new Audio("/modals.mp3");
-      audioRef.current.volume = 1.0;
+      audioRef.current.volume = Math.min(1, Math.max(0, sfxVolume));
       audioRef.current.play().catch(() => {}); // Autoplay handling
       const timer = setTimeout(() => {
         if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
@@ -363,7 +365,7 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
       if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
       return undefined;
     }
-  }, [loading]);
+  }, [loading, sfxVolume]);
 
   // Loader Logic
   useEffect(() => {
