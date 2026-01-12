@@ -11,6 +11,8 @@ interface GlobalThemeContextType {
   setTheme: (themeId: string) => void;
   isXMUser: boolean;
   setIsXMUser: (value: boolean) => void;
+  isAppLoading: boolean;
+  setAppLoading: (isLoading: boolean) => void;
   isMobile: boolean;
 }
 
@@ -22,6 +24,7 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
   const [accentColor, setAccentColor] = useState<string>('#3b82f6');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isXMUser, setIsXMUserState] = useState(false);
+  const [isAppLoading, setAppLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
   // Track mobile state for responsive theme filters
@@ -210,6 +213,8 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
         setTheme,
         isXMUser,
         setIsXMUser,
+        isAppLoading,
+        setAppLoading,
         isMobile,
       }}
     >

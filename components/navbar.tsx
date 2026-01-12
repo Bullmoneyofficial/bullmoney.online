@@ -696,19 +696,19 @@ const ThemeSelectorModal = ({
 };
 
 export const Navbar = () => {
+  // --- ALL HOOKS AT TOP LEVEL (REQUIRED BY REACT) ---
+  // 🎉 XM EASTER EGG: Get XM user status from global theme
+  const { isXMUser, activeThemeId, isAppLoading } = useGlobalTheme();
+  
+  // Modal states
   const [open, setOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isFaqOpen, setIsFaqOpen] = useState(false);
   const [isAffiliateOpen, setIsAffiliateOpen] = useState(false);
   const [isThemeSelectorOpen, setIsThemeSelectorOpen] = useState(false);
+  
   // 👇 STATE TO PREVENT HYDRATION MISMATCH
   const [mounted, setMounted] = useState(false);
-  
-  // 🎉 XM EASTER EGG: Get XM user status from global theme
-  const { isXMUser, activeThemeId } = useGlobalTheme();
-  
-  // Get CSS filter for current theme to apply to navbar
-  const themeFilter = NAVBAR_THEME_FILTER_MAP[activeThemeId || 'DEFAULT'] || NAVBAR_THEME_FILTER_MAP['DEFAULT'];
   
   // Rotating tips state
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
@@ -721,6 +721,23 @@ export const Navbar = () => {
   const dockRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  // --- USE STUDIO TO CHECK IF REAL ADMIN & STAMPS ---
+  const { state } = useStudio();
+  const { isAdmin, isAuthenticated, userProfile } = state;
+
+  // Cal embed hook
+  const calOptions = useCalEmbed({
+    namespace: CONSTANTS.CALCOM_NAMESPACE,
+    styles: {
+      branding: {
+        brandColor: CONSTANTS.CALCOM_BRAND_COLOR,
+      },
+    },
+    hideEventTypeDetails: CONSTANTS.CALCOM_HIDE_EVENT_TYPE_DETAILS,
+    layout: CONSTANTS.CALCOM_LAYOUT,
+  });
+
+  // Mount effect
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -740,23 +757,16 @@ export const Navbar = () => {
     return () => clearInterval(interval);
   }, [mounted]);
 
-  // --- USE STUDIO TO CHECK IF REAL ADMIN & STAMPS ---
-  const { state } = useStudio();
-  const { isAdmin, isAuthenticated, userProfile } = state;
+  // Early return if app is still loading (AFTER ALL HOOKS)
+  if (isAppLoading) {
+    return null;
+  }
+  
+  // Get CSS filter for current theme to apply to navbar
+  const themeFilter = NAVBAR_THEME_FILTER_MAP[activeThemeId || 'DEFAULT'] || NAVBAR_THEME_FILTER_MAP['DEFAULT'];
 
   // CHECK FOR REWARD (5 stamps)
   const hasReward = (userProfile?.stamps || 0) >= 5;
-
-  const calOptions = useCalEmbed({
-    namespace: CONSTANTS.CALCOM_NAMESPACE,
-    styles: {
-      branding: {
-        brandColor: CONSTANTS.CALCOM_BRAND_COLOR,
-      },
-    },
-    hideEventTypeDetails: CONSTANTS.CALCOM_HIDE_EVENT_TYPE_DETAILS,
-    layout: CONSTANTS.CALCOM_LAYOUT,
-  });
 
   // --- SAFE ICONS (Resolve hydration issue) ---
 
@@ -875,7 +885,10 @@ export const Navbar = () => {
     {/* Mobile Static Helper - small and always visible */}
     {mounted && <MobileStaticHelper />}
 
-    <div 
+    <motion.div 
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: mounted ? 1 : 0, y: mounted ? 0 : -20 }}
+      transition={{ duration: 0.5 }}
       className="fixed top-8 inset-x-0 z-40 w-full px-4 pointer-events-none navbar-themed"
       style={{
         filter: themeFilter,
@@ -1080,7 +1093,7 @@ export const Navbar = () => {
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
     </>
   );
 };

@@ -165,12 +165,20 @@ function HomeContent() {
   const [isMuted, setIsMuted] = useState(false);
   
   // Use global theme context - syncs with hero.tsx and entire app
-  const { activeThemeId, activeTheme } = useGlobalTheme();
+  const { activeThemeId, activeTheme, setAppLoading } = useGlobalTheme();
   
   // Fallback theme lookup if context not ready
   const theme = activeTheme || ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   useAudioEngine(!isMuted, 'MECHANICAL');
   
+  useEffect(() => {
+    if (currentView === 'content') {
+      setAppLoading(false);
+    } else {
+      setAppLoading(true);
+    }
+  }, [currentView, setAppLoading]);
+
   // Load muted preference from localStorage
   useEffect(() => {
     const savedMuted = localStorage.getItem('bullmoney_muted');
@@ -242,16 +250,7 @@ function HomeContent() {
 
   return (
     <>
-      {/* Hide navbar/content during loading phases */}
-      {(currentView === 'pagemode' || currentView === 'loader') && (
-        <style jsx global>{`
-          /* Hide navbar and footer during loading */
-          nav, footer, header {
-            opacity: 0 !important;
-            pointer-events: none !important;
-          }
-        `}</style>
-      )}
+
 
       {currentView === 'pagemode' && (
         <div className="fixed inset-0 z-[99999] bg-black">
