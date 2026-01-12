@@ -39,6 +39,14 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  
+  /* Theme Overlay Variables - Set by GlobalThemeProvider */
+  --accent-color: #3b82f6;
+  --accent-rgb: 59, 130, 246;
+  --theme-id: 't01';
+  --theme-name: 'Default';
+  --theme-accent-light: rgba(59, 130, 246, 0.25);
+  --theme-accent-dark: rgba(59, 130, 246, 0.5);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -198,4 +206,334 @@ canvas {
   position: relative; /* Needed for absolutely positioned children */
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================
+   GLOBAL THEME OVERLAY SYSTEM
+   These styles use CSS variables set by GlobalThemeProvider
+   to apply theme colors across the entire app
+   ============================================ */
+
+/* 
+   IMPORTANT: Do NOT apply filter to html/body as it breaks position:fixed
+   Instead, use .theme-filter-wrapper for content that should be filtered
+*/
+html, body {
+  transition: background 0.5s ease-in-out;
+  /* Explicitly ensure no filter on html/body */
+  filter: none !important;
+}
+
+/* Theme filter wrapper - applies filter only to main content, preserving fixed elements */
+.theme-filter-wrapper {
+  filter: var(--theme-filter, none);
+  transition: filter 0.5s ease-in-out;
+  /* Ensure proper stacking context */
+  position: relative;
+  z-index: 0;
+}
+
+/* Theme filter overlay - applies to entire viewport */
+html[data-active-theme] {
+  /* CSS variables are applied via JS for dynamic control */
+  isolation: isolate;
+}
+
+/* Theme background overlay when theme has bgImage */
+body[data-theme]::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--theme-bg-image, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: var(--theme-bg-opacity, 0);
+  mix-blend-mode: var(--theme-bg-blend, overlay);
+  pointer-events: none;
+  transition: opacity 0.5s ease-in-out;
+}
+
+/* ============================================
+   THEME-AWARE UTILITY CLASSES
+   Use these classes throughout the app for automatic theme adaptation
+   ============================================ */
+
+/* Theme-aware accent colors */
+.theme-accent {
+  color: var(--accent-color, #3b82f6);
+}
+
+.theme-accent-bg {
+  background-color: var(--accent-color, #3b82f6);
+}
+
+.theme-accent-border {
+  border-color: var(--accent-color, #3b82f6);
+}
+
+.theme-accent-glow {
+  box-shadow: 0 0 20px var(--theme-accent-light, rgba(59, 130, 246, 0.25)),
+              0 0 40px var(--theme-accent-glow, rgba(59, 130, 246, 0.15));
+}
+
+/* Theme-aware text with accent */
+.theme-text-accent {
+  color: var(--accent-color, #3b82f6);
+  text-shadow: 0 0 10px var(--theme-accent-light, rgba(59, 130, 246, 0.25));
+}
+
+/* Theme-aware gradients */
+.theme-gradient {
+  background: linear-gradient(135deg, 
+    var(--theme-accent-dark, rgba(59, 130, 246, 0.5)) 0%, 
+    transparent 50%,
+    var(--theme-accent-light, rgba(59, 130, 246, 0.25)) 100%);
+}
+
+/* Theme gradient overlays */
+.theme-gradient-overlay {
+  position: relative;
+}
+
+.theme-gradient-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    var(--theme-accent-subtle, rgba(59, 130, 246, 0.1)) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Theme-aware borders with glow */
+.theme-border-glow {
+  border: 1px solid var(--theme-accent-border, rgba(59, 130, 246, 0.3));
+  box-shadow: 0 0 15px var(--theme-accent-subtle, rgba(59, 130, 246, 0.1)),
+              inset 0 0 15px var(--theme-accent-subtle, rgba(59, 130, 246, 0.05));
+}
+
+/* Theme-aware button hover states */
+.theme-button {
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.1);
+  border: 1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.2);
+  color: var(--accent-color, #3b82f6);
+  transition: all 0.3s ease;
+}
+
+.theme-button:hover {
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.2);
+  border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.5);
+  box-shadow: 0 0 20px var(--theme-accent-glow, rgba(59, 130, 246, 0.3));
+}
+
+/* Theme-aware cards */
+.theme-card {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--theme-accent-border, rgba(59, 130, 246, 0.2));
+  backdrop-filter: blur(10px);
+}
+
+.theme-card:hover {
+  border-color: var(--theme-accent-border, rgba(59, 130, 246, 0.4));
+  box-shadow: 0 0 30px var(--theme-accent-subtle, rgba(59, 130, 246, 0.1));
+}
+
+/* Theme-aware inputs */
+.theme-input {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.2);
+  color: white;
+}
+
+.theme-input:focus {
+  border-color: var(--accent-color, #3b82f6);
+  box-shadow: 0 0 0 2px var(--theme-accent-subtle, rgba(59, 130, 246, 0.2));
+  outline: none;
+}
+
+/* Theme-aware links */
+.theme-link {
+  color: var(--accent-color, #3b82f6);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.theme-link:hover {
+  text-shadow: 0 0 10px var(--theme-accent-glow, rgba(59, 130, 246, 0.5));
+}
+
+/* ============================================
+   ILLUSION EFFECTS (Applied based on theme illusion type)
+   ============================================ */
+
+/* Scanlines effect */
+[data-theme-illusion="SCANLINES"]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.1) 0px,
+    rgba(0, 0, 0, 0.1) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  opacity: 0.3;
+}
+
+/* Vignette effect */
+[data-theme-illusion="VIGNETTE"]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+}
+
+/* Noise effect */
+[data-theme-illusion="NOISE"]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* CRT effect */
+[data-theme-illusion="CRT"]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.15) 0px,
+      rgba(0, 0, 0, 0.15) 1px,
+      transparent 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      ellipse at center,
+      transparent 50%,
+      rgba(0, 0, 0, 0.3) 100%
+    );
+  animation: crt-flicker 0.15s infinite;
+}
+
+@keyframes crt-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.97; }
+}
+
+/* Glitch effect */
+[data-theme-illusion="GLITCH"]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: transparent;
+  animation: glitch-overlay 5s infinite;
+}
+
+@keyframes glitch-overlay {
+  0%, 90%, 100% { 
+    clip-path: none;
+    transform: none;
+  }
+  92% {
+    clip-path: inset(20% 0 60% 0);
+    transform: translateX(-2px);
+  }
+  94% {
+    clip-path: inset(50% 0 30% 0);
+    transform: translateX(2px);
+  }
+  96% {
+    clip-path: inset(10% 0 70% 0);
+    transform: translateX(-1px);
+  }
+}
+
+/* ============================================
+   CATEGORY-SPECIFIC THEME OVERRIDES
+   ============================================ */
+
+/* Crypto category - add subtle animation */
+[data-theme-category="CRYPTO"] .theme-accent-glow {
+  animation: crypto-pulse 2s ease-in-out infinite;
+}
+
+@keyframes crypto-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Sentiment category - emotional color shifts */
+[data-theme-category="SENTIMENT"] {
+  transition: filter 0.8s ease-in-out;
+}
+
+/* Glitch category - add jitter */
+[data-theme-category="GLITCH"] .theme-text-accent {
+  animation: text-jitter 0.3s infinite;
+}
+
+@keyframes text-jitter {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-1px); }
+  75% { transform: translateX(1px); }
+}
+
+/* Light theme adjustments */
+html[data-active-theme] {
+  --theme-text-primary: white;
+  --theme-text-secondary: rgba(255, 255, 255, 0.7);
+}
+
+/* ============================================
+   SHIMMER TEXT EFFECT (Used in theme UI)
+   ============================================ */
+
+.text-shimmer-effect {
+  background: linear-gradient(
+    90deg,
+    var(--accent-color, #3b82f6) 0%,
+    white 50%,
+    var(--accent-color, #3b82f6) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-text 3s linear infinite;
+}
+
+@keyframes shimmer-text {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Text glow effect for active theme elements */
+.text-glow {
+  text-shadow: 
+    0 0 5px var(--accent-color, #3b82f6),
+    0 0 10px var(--theme-accent-light, rgba(59, 130, 246, 0.5)),
+    0 0 20px var(--theme-accent-subtle, rgba(59, 130, 246, 0.3));
 }

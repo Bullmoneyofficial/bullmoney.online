@@ -5,7 +5,7 @@ import Hero from "@/components/hero";
 import CTA from "@/components/Chartnews";
 import { Features } from "@/components/features";
 import { LiveMarketTicker } from "@/components/LiveMarketTicker";
-import { GlobalThemeProvider } from "@/contexts/GlobalThemeProvider";
+import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import HiddenYoutubePlayer from "@/components/Mainpage/HiddenYoutubePlayer";
 import { ALL_THEMES } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
@@ -161,13 +161,21 @@ function LazySplineContainer({ scene }: { scene: string }) {
 function HomeContent() {
   const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'content'>('pagemode');
   const [isInitialized, setIsInitialized] = useState(false);
-  const [activeThemeId, setActiveThemeId] = useState('t01'); // Ensure this matches your theme logic
   const [isMobile, setIsMobile] = useState(false);
-  const [isMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   
-  // Theme & Audio setup
-  const theme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
+  // Use global theme context - syncs with hero.tsx and entire app
+  const { activeThemeId, activeTheme } = useGlobalTheme();
+  
+  // Fallback theme lookup if context not ready
+  const theme = activeTheme || ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   useAudioEngine(!isMuted, 'MECHANICAL');
+  
+  // Load muted preference from localStorage
+  useEffect(() => {
+    const savedMuted = localStorage.getItem('bullmoney_muted');
+    if (savedMuted === 'true') setIsMuted(true);
+  }, []);
 
   // 1. STEALTH PRE-LOADER
   useEffect(() => {
@@ -202,14 +210,7 @@ function HomeContent() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // 4. Theme Application
-  useEffect(() => {
-    if (typeof document !== 'undefined') {
-      const root = document.documentElement;
-      root.style.filter = isMobile ? theme.mobileFilter : theme.filter;
-      root.style.setProperty('--accent-color', theme.accentColor || '#3b82f6');
-    }
-  }, [theme, isMobile]);
+  // Theme is now applied by GlobalThemeProvider automatically
 
   const handlePageModeUnlock = () => {
     setCurrentView('loader');
@@ -307,10 +308,7 @@ function HomeContent() {
   );
 }
 
+// Removed duplicate GlobalThemeProvider - already wrapped in layout.tsx
 export default function Home() {
-  return (
-    <GlobalThemeProvider>
-      <HomeContent />
-    </GlobalThemeProvider>
-  );
+  return <HomeContent />;
 }

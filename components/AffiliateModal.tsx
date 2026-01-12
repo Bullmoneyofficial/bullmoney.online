@@ -24,6 +24,9 @@ import RecruitPage from "@/app/register/New";
 import RegisterPage from "@/app/recruit/RecruitPage";
 import Socials from "@/components/Mainpage/Socialsfooter";
 
+// --- GLOBAL THEME CONTEXT (for XM easter egg) ---
+import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
+
 // --- SUPABASE SETUP ---
 const TELEGRAM_GROUP_LINK = "https://t.me/addlist/uswKuwT2JUQ4YWI8";
 
@@ -331,30 +334,39 @@ interface FormData {
 }
 
 // --- StepCard Component ---
-const StepCard = memo(({ number, number2, title, children, actions, className }: any) => {
+const StepCard = memo(({ number, number2, title, children, actions, className, isXM = false }: any) => {
   const useRed = typeof number2 === "number";
   const n = useRed ? number2 : number;
+  const ringColor = isXM ? 'ring-red-500/30' : 'ring-blue-500/30';
+  const shadowColor = isXM ? 'shadow-[0_0_40px_rgba(239,68,68,0.2)]' : 'shadow-[0_0_40px_rgba(59,130,246,0.2)]';
+  const gradientColor = isXM ? 'bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]' : 'bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]';
+  const glowColor = isXM ? 'from-red-500/20 via-red-500/10' : 'from-blue-500/20 via-blue-500/10';
+  const textColor = isXM ? 'text-red-300/90' : 'text-blue-300/90';
+  const borderColor = isXM ? 'border-red-500/20' : 'border-blue-500/20';
+  const innerRing = isXM ? 'ring-red-500/10' : 'ring-blue-500/10';
+  
   return (
     <div className={cn(
       "group relative overflow-hidden rounded-2xl p-6 md:p-8",
-      "bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl",
-      "shadow-[0_0_40px_rgba(59,130,246,0.2)]",
+      "bg-black/80 ring-2 backdrop-blur-xl",
+      ringColor,
+      shadowColor,
       className
     )}>
       <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
-        <span className="absolute inset-[-100%] animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-10" />
+        <span className={cn("absolute inset-[-100%] animate-[spin_8s_linear_infinite] opacity-10", gradientColor)} />
       </div>
       
-      <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l blur-2xl from-blue-500/20 via-blue-500/10 to-transparent" />
-      <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-blue-500/10" />
+      <div className={cn("pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l blur-2xl to-transparent", glowColor)} />
+      <div className={cn("pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset", innerRing)} />
       <div className="flex items-center justify-between mb-4 md:mb-6">
-        <span className="inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md ring-2 text-blue-300/90 ring-blue-500/30 bg-black/60">
+        <span className={cn("inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md ring-2 bg-black/60", textColor, ringColor)}>
           Step {n} of 3
         </span>
       </div>
       <h3 className="text-xl md:text-2xl font-extrabold text-white mb-4">{title}</h3>
       <div className="flex-1">{children}</div>
-      {actions && <div className="mt-6 md:mt-8 pt-6 border-t border-blue-500/20">{actions}</div>}
+      {actions && <div className={cn("mt-6 md:mt-8 pt-6 border-t", borderColor)}>{actions}</div>}
     </div>
   );
 });
@@ -453,9 +465,9 @@ function CardPatternRed({ mouseX, mouseY, randomString }: any) {
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
       <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
-        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-blue-100/90 font-mono font-bold transition duration-500">{randomString}</p>
+        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-red-100/90 font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>
     </div>
   );
@@ -473,6 +485,9 @@ interface AffiliateModalProps {
 export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
+  // Global theme context for XM easter egg
+  const { setIsXMUser } = useGlobalTheme();
+  
   // Form state
   const [step, setStep] = useState(0);
   const [activeBroker, setActiveBroker] = useState<'Vantage' | 'XM'>('Vantage');
@@ -488,8 +503,37 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
     referralCode: ''
   });
 
+  // Saved session state for skip feature
+  const [savedSession, setSavedSession] = useState<{ id: string; email: string; mt5_id?: string } | null>(null);
+  const [isReturningUser, setIsReturningUser] = useState(false);
+  const [isVerifyingMT5, setIsVerifyingMT5] = useState(false);
+  const [mt5Verified, setMt5Verified] = useState(false);
+
   const isVantage = activeBroker === 'Vantage';
+  const isXM = activeBroker === 'XM';
   const brokerCode = isVantage ? "BULLMONEY" : "X3R7P";
+
+  // Dynamic color classes based on broker
+  const themeColors = useMemo(() => ({
+    ring: isXM ? 'ring-red-500/30' : 'ring-blue-500/30',
+    shadow: isXM ? 'shadow-[0_0_40px_rgba(239,68,68,0.2)]' : 'shadow-[0_0_40px_rgba(59,130,246,0.2)]',
+    gradient: isXM ? 'bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]' : 'bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]',
+    glow: isXM ? 'from-red-500/20 via-red-500/10' : 'from-blue-500/20 via-blue-500/10',
+    text: isXM ? 'text-red-300' : 'text-blue-300',
+    textMuted: isXM ? 'text-red-200/70' : 'text-blue-200/70',
+    textFaint: isXM ? 'text-red-300/40' : 'text-blue-300/40',
+    border: isXM ? 'border-red-500/60' : 'border-blue-500/60',
+    borderMuted: isXM ? 'border-red-500/30' : 'border-blue-500/30',
+    borderHover: isXM ? 'hover:border-red-400' : 'hover:border-blue-400',
+    icon: isXM ? 'text-red-400' : 'text-blue-400',
+    iconMuted: isXM ? 'text-red-400/50' : 'text-blue-400/50',
+    shadowGlow: isXM ? 'shadow-[0_0_25px_rgba(239,68,68,0.4)]' : 'shadow-[0_0_25px_rgba(59,130,246,0.4)]',
+    shadowGlowHover: isXM ? 'hover:shadow-[0_0_35px_rgba(239,68,68,0.6)]' : 'hover:shadow-[0_0_35px_rgba(59,130,246,0.6)]',
+    shadowSmall: isXM ? 'shadow-[0_0_20px_rgba(239,68,68,0.3)]' : 'shadow-[0_0_20px_rgba(59,130,246,0.3)]',
+    focusShadow: isXM ? 'focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]',
+    bg: isXM ? 'bg-red-600' : 'bg-blue-600',
+    bgHover: isXM ? 'hover:bg-red-950/30' : 'hover:bg-blue-950/30',
+  }), [isXM]);
 
   // Theme/audio state
   const [isClient, setIsClient] = useState(false);
@@ -520,6 +564,20 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
     if (storedMute !== null) setIsMuted(storedMute === 'true');
     if (storedVol) setVolume(parseInt(storedVol));
     
+    // Check for existing saved session for skip feature
+    try {
+      const savedSessionStr = localStorage.getItem('bullmoney_session');
+      if (savedSessionStr) {
+        const session = JSON.parse(savedSessionStr);
+        if (session && session.email && session.id) {
+          setSavedSession({ id: session.id, email: session.email });
+          setFormData(prev => ({ ...prev, email: session.email }));
+        }
+      }
+    } catch (e) {
+      console.error('Error reading saved session:', e);
+    }
+    
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0;
     }
@@ -541,7 +599,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
   const isValidPassword = (pass: string) => pass.length >= 6;
   const isValidMT5 = (id: string) => id.length >= 5;
 
-  const handleNext = (e?: React.SyntheticEvent) => {
+  const handleNext = async (e?: React.SyntheticEvent) => {
     if (e) e.preventDefault();
     setSubmitError(null);
 
@@ -554,7 +612,8 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         setSubmitError("Please enter a valid MT5 ID (min 5 digits).");
         return;
       }
-      setStep(3);
+      // Verify MT5 ID
+      await verifyMT5Id();
     } else if (step === 3) {
       if (!isValidEmail(formData.email)) {
         setSubmitError("Please enter a valid email address.");
@@ -577,6 +636,126 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
       setStep(step - 1);
       setSubmitError(null);
     }
+  };
+
+  // Skip to MT5 verification for returning users
+  const handleSkipWithExistingAccount = () => {
+    if (savedSession) {
+      setIsReturningUser(true);
+      setFormData(prev => ({ ...prev, email: savedSession.email }));
+      setStep(2); // Skip directly to MT5 ID verification
+    }
+  };
+
+  // Verify MT5 ID against database
+  const verifyMT5Id = async () => {
+    setIsVerifyingMT5(true);
+    setSubmitError(null);
+    
+    try {
+      // Check if this MT5 ID already exists in the recruits table
+      const { data: existingMT5, error: mt5Error } = await supabase
+        .from("recruits")
+        .select("id, email, mt5_id")
+        .eq("mt5_id", formData.mt5Number)
+        .maybeSingle();
+      
+      if (mt5Error) {
+        console.error("MT5 verification error:", mt5Error);
+        // If there's an error, we'll allow them to proceed (new account)
+      }
+      
+      if (existingMT5) {
+        // MT5 ID exists - check if it matches the returning user
+        if (isReturningUser && savedSession) {
+          if (existingMT5.email === savedSession.email) {
+            // Correct MT5 for this user - update session and proceed to success
+            setMt5Verified(true);
+            localStorage.setItem("bullmoney_session", JSON.stringify({
+              id: existingMT5.id,
+              email: existingMT5.email,
+              mt5_id: existingMT5.mt5_id,
+              timestamp: Date.now(),
+              broker: activeBroker
+            }));
+            // 🎉 XM EASTER EGG: Activate for returning XM users too!
+            if (isXM) {
+              setIsXMUser(true);
+              console.log("🔴 XM Easter Egg Activated! Welcome back to the red side.");
+            }
+            setStep(5); // Skip to success
+            return;
+          } else {
+            // MT5 ID belongs to a different account
+            setSubmitError("This MT5 ID is registered to a different account.");
+            setIsVerifyingMT5(false);
+            return;
+          }
+        } else {
+          // MT5 ID already registered - auto-login the user with their existing account
+          setMt5Verified(true);
+          setSavedSession({
+            id: existingMT5.id,
+            email: existingMT5.email,
+            mt5_id: existingMT5.mt5_id
+          });
+          setIsReturningUser(true);
+          localStorage.setItem("bullmoney_session", JSON.stringify({
+            id: existingMT5.id,
+            email: existingMT5.email,
+            mt5_id: existingMT5.mt5_id,
+            timestamp: Date.now(),
+            broker: activeBroker
+          }));
+          // 🎉 XM EASTER EGG: Activate for auto-logged-in XM users!
+          if (isXM) {
+            setIsXMUser(true);
+            console.log("🔴 XM Easter Egg Activated! Auto-login on the red side.");
+          }
+          setStep(5); // Skip to success - welcome them back
+          return;
+        }
+      }
+      
+      // MT5 ID is new or not found - proceed to registration
+      setMt5Verified(true);
+      setStep(3);
+    } catch (err: any) {
+      console.error("MT5 verification error:", err);
+      setSubmitError("Verification failed. Please try again.");
+    } finally {
+      setIsVerifyingMT5(false);
+    }
+  };
+
+  // Handle keyboard submit for forms
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleNext();
+    }
+  };
+
+  // Handle logout - clear session and reset state
+  const handleLogout = () => {
+    // Clear localStorage session
+    localStorage.removeItem('bullmoney_session');
+    
+    // Reset all form state
+    setFormData({
+      email: '',
+      mt5Number: '',
+      password: '',
+      referralCode: ''
+    });
+    setSavedSession(null);
+    setIsReturningUser(false);
+    setMt5Verified(false);
+    setAcceptedTerms(false);
+    setSubmitError(null);
+    
+    // Go back to step 0
+    setStep(0);
   };
 
   const copyCode = async (code: string) => {
@@ -627,8 +806,15 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         localStorage.setItem("bullmoney_session", JSON.stringify({
           id: newUser.id,
           email: formData.email,
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          broker: activeBroker // Save the broker choice
         }));
+        
+        // 🎉 XM EASTER EGG: If user registered with XM, activate red theme site-wide!
+        if (isXM) {
+          setIsXMUser(true);
+          console.log("🔴 XM Easter Egg Activated! Welcome to the red side.");
+        }
       }
 
       setTimeout(() => {
@@ -647,7 +833,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
   };
 
   const getStepProps = (currentStep: number) => {
-    return isVantage ? { number2: currentStep } : { number: currentStep };
+    return isVantage ? { number2: currentStep, isXM: false } : { number: currentStep, isXM: true };
   };
 
   const handleClose = useCallback(() => {
@@ -663,24 +849,35 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         <CursorStyles />
         <TargetCursor />
         
-        <div className="bg-black/80 border-2 border-blue-500/40 backdrop-blur-xl p-6 md:p-8 rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.3)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
+        <div className={cn(
+          "bg-black/80 border-2 backdrop-blur-xl p-6 md:p-8 rounded-2xl text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500",
+          isXM ? "border-red-500/40 shadow-[0_0_50px_rgba(239,68,68,0.3)]" : "border-blue-500/40 shadow-[0_0_50px_rgba(59,130,246,0.3)]"
+        )}>
           <div className="mx-auto w-24 h-24 relative mb-6">
-            <div className="absolute inset-0 rounded-full border-2 border-blue-500/50 animate-[spin_3s_linear_infinite]" />
-            <div className="absolute inset-0 bg-blue-500 rounded-full scale-0 animate-[scale-up_0.5s_ease-out_forwards_0.2s] flex items-center justify-center">
+            <div className={cn("absolute inset-0 rounded-full border-2 animate-[spin_3s_linear_infinite]", isXM ? "border-red-500/50" : "border-blue-500/50")} />
+            <div className={cn("absolute inset-0 rounded-full scale-0 animate-[scale-up_0.5s_ease-out_forwards_0.2s] flex items-center justify-center", isXM ? "bg-red-500" : "bg-blue-500")}>
               <Check className="w-12 h-12 text-white stroke-[3] opacity-0 animate-[fade-in_0.3s_ease-out_forwards_0.6s]" />
             </div>
           </div>
           
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">You&apos;re In 🚀</h2>
-          <p className="text-blue-200/70 mb-8 text-sm md:text-base">
+          <p className={cn("mb-8 text-sm md:text-base", isXM ? "text-red-200/70" : "text-blue-200/70")}>
             Your free BullMoney access is now active.<br/>
           </p>
           
           <button 
-            onClick={handleClose}
-            className="w-full py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold tracking-wide transition-all shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] group flex items-center justify-center mb-4 cursor-target relative overflow-hidden"
+            onClick={() => setStep(6)}
+            className={cn(
+              "w-full py-4 bg-black border-2 rounded-xl font-bold tracking-wide transition-all group flex items-center justify-center mb-4 cursor-target relative overflow-hidden",
+              isXM 
+                ? "border-red-500/60 hover:border-red-400 text-red-400 shadow-[0_0_25px_rgba(239,68,68,0.4)] hover:shadow-[0_0_35px_rgba(239,68,68,0.6)]"
+                : "border-blue-500/60 hover:border-blue-400 text-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)]"
+            )}
           >
-            <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-30 z-0" />
+            <span className={cn(
+              "absolute inset-[-100%] animate-[spin_3s_linear_infinite] opacity-30 z-0",
+              isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
+            )} />
             <span className="relative z-10 flex items-center">
               Go to Dashboard  
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -689,7 +886,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
           <button 
             onClick={() => window.open(TELEGRAM_GROUP_LINK, '_blank')}
-            className="text-sm text-blue-400/60 hover:text-blue-300 transition-colors flex items-center justify-center gap-2 mx-auto cursor-target"
+            className={cn("text-sm transition-colors flex items-center justify-center gap-2 mx-auto cursor-target", isXM ? "text-red-400/60 hover:text-red-300" : "text-blue-400/60 hover:text-blue-300")}
           >
             <FolderPlus className="w-4 h-4" /> Join Free Telegram
           </button>
@@ -708,11 +905,65 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
       <div className="fixed inset-0 z-[999999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
         <div className="min-h-screen bg-black flex flex-col items-center justify-center relative">
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <span className="absolute inset-[-100%] animate-[spin_6s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-10" />
+            <span className={cn(
+              "absolute inset-[-100%] animate-[spin_6s_linear_infinite] opacity-10",
+              isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
+            )} />
           </div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/10 rounded-full blur-[60px] pointer-events-none" />
-          <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-4" />
-          <h2 className="text-xl font-bold text-blue-300">Unlocking Platform...</h2>
+          <div className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-[60px] pointer-events-none", isXM ? "bg-red-500/10" : "bg-blue-500/10")} />
+          <Loader2 className={cn("w-16 h-16 animate-spin mb-4", isXM ? "text-red-500" : "text-blue-500")} />
+          <h2 className={cn("text-xl font-bold", isXM ? "text-red-300" : "text-blue-300")}>Unlocking Platform...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  // DASHBOARD SCREEN (Step 6) - Shows the affiliate dashboard in modal
+  if (step === 6) {
+    return (
+      <div className="fixed inset-0 z-[999999] bg-black/95 backdrop-blur-sm flex flex-col">
+        <CursorStyles />
+        <TargetCursor />
+        
+        {/* Header with logout and close buttons */}
+        <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black/80 backdrop-blur-xl">
+          <div className="flex items-center gap-3">
+            <h1 className={cn("text-lg font-bold", isXM ? "text-red-400" : "text-blue-400")}>
+              BullMoney Dashboard
+            </h1>
+            {savedSession && (
+              <span className="text-xs text-white/40 hidden sm:inline">
+                {savedSession.email}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleLogout}
+              className={cn(
+                "px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5 cursor-target",
+                isXM 
+                  ? "bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50"
+                  : "bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/50"
+              )}
+              aria-label="Logout"
+            >
+              <Lock size={14} />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+            <button 
+              onClick={handleClose}
+              className="p-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white/70 hover:text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300 group"
+              aria-label="Close modal"
+            >
+              <X size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Dashboard content */}
+        <div className="flex-1 overflow-y-auto">
+          <AffiliateRecruitsDashboard onBack={() => setStep(5)} />
         </div>
       </div>
     );
@@ -748,20 +999,26 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
               <div className="flex justify-center gap-3 mb-8 w-full">
                 {(["Vantage", "XM"] as const).map((partner) => {
                   const isActive = activeBroker === partner;
+                  const isXMPartner = partner === 'XM';
                   return (
                     <button
                       key={partner}
                       onClick={() => handleBrokerSwitch(partner)}
                       className={cn(
                         "relative px-6 py-2 rounded-full font-semibold transition-all duration-300 z-20 cursor-target text-sm md:text-base",
-                        isActive ? "text-blue-300" : "bg-black/60 border-2 border-blue-500/20 text-blue-300/60 hover:border-blue-500/40"
+                        isActive 
+                          ? (isXM ? "text-red-300" : "text-blue-300") 
+                          : (isXM ? "bg-black/60 border-2 border-red-500/20 text-red-300/60 hover:border-red-500/40" : "bg-black/60 border-2 border-blue-500/20 text-blue-300/60 hover:border-blue-500/40")
                       )}
                     >
                       {partner}
                       {isActive && (
                         <motion.span
                           layoutId="tab-pill"
-                          className="absolute inset-0 -z-10 rounded-full bg-black border-2 border-blue-500/60 shadow-[0_0_25px_rgba(59,130,246,0.4)]"
+                          className={cn(
+                            "absolute inset-0 -z-10 rounded-full bg-black border-2",
+                            isXM ? "border-red-500/60 shadow-[0_0_25px_rgba(239,68,68,0.4)]" : "border-blue-500/60 shadow-[0_0_25px_rgba(59,130,246,0.4)]"
+                          )}
                           transition={{ type: "spring", stiffness: 400, damping: 28 }}
                         />
                       )}
@@ -783,41 +1040,109 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <div className="bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl p-6 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.2)] relative overflow-hidden text-center">
+                    <div className={cn(
+                      "bg-black/80 ring-2 backdrop-blur-xl p-6 md:p-8 rounded-2xl relative overflow-hidden text-center",
+                      isXM ? "ring-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.2)]" : "ring-blue-500/30 shadow-[0_0_40px_rgba(59,130,246,0.2)]"
+                    )}>
                       <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
-                        <span className="absolute inset-[-100%] animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-10" />
+                        <span className={cn(
+                          "absolute inset-[-100%] animate-[spin_8s_linear_infinite] opacity-10",
+                          isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
+                        )} />
                       </div>
                       
                       <div className="absolute top-0 right-0 p-4 opacity-5">
-                        <Lock className="w-32 h-32 text-blue-400" />
+                        <Lock className={cn("w-32 h-32", isXM ? "text-red-400" : "text-blue-400")} />
                       </div>
 
                       <div className="mb-6 flex justify-center">
-                        <div className="h-16 w-16 rounded-full bg-black flex items-center justify-center border-2 border-blue-500/40 shadow-[0_0_30px_rgba(59,130,246,0.3)]">
-                          <ShieldCheck className="w-8 h-8 text-blue-400" />
+                        <div className={cn(
+                          "h-16 w-16 rounded-full bg-black flex items-center justify-center border-2",
+                          isXM ? "border-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.3)]" : "border-blue-500/40 shadow-[0_0_30px_rgba(59,130,246,0.3)]"
+                        )}>
+                          <ShieldCheck className={cn("w-8 h-8", isXM ? "text-red-400" : "text-blue-400")} />
                         </div>
                       </div>
 
                       <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-3">Unlock Free BullMoney Access</h2>
-                      <p className="text-blue-200/70 text-sm md:text-base mb-8 max-w-sm mx-auto leading-relaxed">
+                      <p className={cn("text-sm md:text-base mb-8 max-w-sm mx-auto leading-relaxed", isXM ? "text-red-200/70" : "text-blue-200/70")}>
                         Get free trading setups and community access. <br/>
-                        <span className="text-blue-300/40">No payment. Takes about 2 minutes.</span>
+                        <span className={cn("text-blue-300/40", isXM && "text-red-300/40")}>No payment. Takes about 2 minutes.</span>
                       </p>
 
                       <motion.button 
                         onClick={handleNext}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-3.5 md:py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold text-base md:text-lg tracking-wide transition-all shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] flex items-center justify-center cursor-target relative overflow-hidden"
+                        className={cn(
+                          "w-full py-3.5 md:py-4 bg-black border-2 rounded-xl font-bold text-base md:text-lg tracking-wide transition-all flex items-center justify-center cursor-target relative overflow-hidden",
+                          isXM 
+                            ? "border-red-500/60 hover:border-red-400 text-red-400 shadow-[0_0_25px_rgba(239,68,68,0.4)] hover:shadow-[0_0_35px_rgba(239,68,68,0.6)]"
+                            : "border-blue-500/60 hover:border-blue-400 text-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)]"
+                        )}
                       >
-                        <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-40 z-0" />
+                        <span className={cn(
+                          "absolute inset-[-100%] animate-[spin_3s_linear_infinite] opacity-40 z-0",
+                          isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
+                        )} />
                         <span className="relative z-10 flex items-center">
-                          Start Free Access <ArrowRight className="w-5 h-5 ml-2" />
+                          {savedSession ? "New Account" : "Start Free Access"} <ArrowRight className="w-5 h-5 ml-2" />
                         </span>
                       </motion.button>
                       
+                      {/* Skip button for returning users with saved session */}
+                      {savedSession && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2, duration: 0.4 }}
+                          className="mt-4"
+                        >
+                          <div className="relative">
+                            <div className={cn(
+                              "absolute inset-0 rounded-xl blur-md",
+                              isXM ? "bg-gradient-to-r from-red-500/20 via-orange-500/20 to-red-500/20" : "bg-gradient-to-r from-blue-500/20 via-cyan-500/20 to-blue-500/20"
+                            )} />
+                            <motion.button 
+                              onClick={handleSkipWithExistingAccount}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              className={cn(
+                                "relative w-full py-3.5 border-2 text-white rounded-xl font-bold text-base transition-all flex items-center justify-center cursor-target gap-3 overflow-hidden",
+                                isXM 
+                                  ? "bg-gradient-to-r from-red-950/80 to-orange-950/80 border-red-400/50 hover:border-red-400 shadow-[0_0_30px_rgba(239,68,68,0.3)] hover:shadow-[0_0_40px_rgba(239,68,68,0.5)]"
+                                  : "bg-gradient-to-r from-blue-950/80 to-cyan-950/80 border-blue-400/50 hover:border-blue-400 shadow-[0_0_30px_rgba(59,130,246,0.3)] hover:shadow-[0_0_40px_rgba(59,130,246,0.5)]"
+                              )}
+                            >
+                              <span className={cn(
+                                "absolute inset-[-100%] animate-[spin_4s_linear_infinite] opacity-20 z-0",
+                                isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#f97316_25%,#ef4444_50%,#f97316_75%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#22d3ee_25%,#3b82f6_50%,#22d3ee_75%,#00000000_100%)]"
+                              )} />
+                              <div className="relative z-10 flex items-center gap-3">
+                                <div className={cn(
+                                  "w-8 h-8 rounded-full border flex items-center justify-center",
+                                  isXM ? "bg-red-500/30 border-red-400/50" : "bg-blue-500/30 border-blue-400/50"
+                                )}>
+                                  <User className={cn("w-4 h-4", isXM ? "text-red-300" : "text-blue-300")} />
+                                </div>
+                                <div className="flex flex-col items-start">
+                                  <span className={cn("text-xs font-normal", isXM ? "text-red-300/60" : "text-blue-300/60")}>Welcome back</span>
+                                  <span className="text-sm font-semibold text-white truncate max-w-[180px]">
+                                    {savedSession.email}
+                                  </span>
+                                </div>
+                                <ArrowRight className={cn("w-5 h-5 ml-auto", isXM ? "text-red-400" : "text-blue-400")} />
+                              </div>
+                            </motion.button>
+                          </div>
+                          <p className={cn("text-center text-[10px] mt-2", isXM ? "text-red-400/40" : "text-blue-400/40")}>
+                            Just verify your MT5 ID to continue
+                          </p>
+                        </motion.div>
+                      )}
+                      
                       <div className="mt-4 space-y-3">
-                        <div className="flex items-center justify-center gap-2 text-xs text-blue-400/40">
+                        <div className={cn("flex items-center justify-center gap-2 text-xs", isXM ? "text-red-400/40" : "text-blue-400/40")}>
                           <Lock className="w-3 h-3" /> No credit card required
                         </div>
                       </div>
@@ -840,14 +1165,17 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                       className="bg-black/80"
                       actions={
                         <div className="flex flex-col gap-3 md:gap-4">
-                          <p className="text-xs text-center text-blue-300/50 flex items-center justify-center gap-1">
+                          <p className={cn("text-xs text-center flex items-center justify-center gap-1", isXM ? "text-red-300/50" : "text-blue-300/50")}>
                             <Clock className="w-3 h-3" /> Takes about 1 minute • No deposit required
                           </p>
                           
                           <div className="flex flex-col items-center justify-center gap-3">
                             <button
                               onClick={() => copyCode(brokerCode)}
-                              className="inline-flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold ring-2 ring-inset transition cursor-target w-full justify-center mb-1 text-blue-300 ring-blue-500/40 hover:bg-blue-500/10"
+                              className={cn(
+                                "inline-flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold ring-2 ring-inset transition cursor-target w-full justify-center mb-1",
+                                isXM ? "text-red-300 ring-red-500/40 hover:bg-red-500/10" : "text-blue-300 ring-blue-500/40 hover:bg-blue-500/10"
+                              )}
                             >
                               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                               {copied ? "Copied" : `Copy Code: ${brokerCode}`}
@@ -855,9 +1183,17 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
                             <button
                               onClick={handleBrokerClick}
-                              className="w-full py-3.5 rounded-xl font-bold text-blue-400 shadow transition flex items-center justify-center gap-2 cursor-target text-base bg-black border-2 border-blue-500/60 hover:border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] relative overflow-hidden"
+                              className={cn(
+                                "w-full py-3.5 rounded-xl font-bold shadow transition flex items-center justify-center gap-2 cursor-target text-base bg-black border-2 relative overflow-hidden",
+                                isXM 
+                                  ? "text-red-400 border-red-500/60 hover:border-red-400 shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)]"
+                                  : "text-blue-400 border-blue-500/60 hover:border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
+                              )}
                             >
-                              <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-30 z-0" />
+                              <span className={cn(
+                                "absolute inset-[-100%] animate-[spin_3s_linear_infinite] opacity-30 z-0",
+                                isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
+                              )} />
                               <span className="relative z-10 flex items-center gap-2">
                                 Open Free Account
                                 <ExternalLink className="h-4 w-4" />
@@ -867,14 +1203,60 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                           
                           <button 
                             onClick={handleNext}
-                            className="w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border-2 mt-1 border-blue-500/30 text-blue-300 bg-black/60 hover:bg-blue-950/30 hover:border-blue-500/50 cursor-target"
+                            className={cn(
+                              "w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border-2 mt-1 bg-black/60 cursor-target",
+                              isXM ? "border-red-500/30 text-red-300 hover:bg-red-950/30 hover:border-red-500/50" : "border-blue-500/30 text-blue-300 hover:bg-blue-950/30 hover:border-blue-500/50"
+                            )}
                           >
                             I already have an account
                           </button>
+                          
+                          {/* Quick continue for returning users */}
+                          {savedSession && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.1 }}
+                              className="mt-2"
+                            >
+                              <div className="relative">
+                                <div className={cn(
+                                  "absolute inset-0 rounded-xl blur-md",
+                                  isXM ? "bg-gradient-to-r from-red-500/20 via-orange-500/20 to-red-500/20" : "bg-gradient-to-r from-blue-500/20 via-cyan-500/20 to-blue-500/20"
+                                )} />
+                                <motion.button 
+                                  onClick={handleSkipWithExistingAccount}
+                                  whileHover={{ scale: 1.01 }}
+                                  whileTap={{ scale: 0.99 }}
+                                  className={cn(
+                                    "relative w-full py-3 border-2 rounded-xl font-semibold text-sm transition-all flex items-center justify-center cursor-target gap-2 overflow-hidden",
+                                    isXM 
+                                      ? "bg-gradient-to-r from-red-950/80 to-orange-950/80 border-red-400/50 hover:border-red-400 text-white shadow-[0_0_25px_rgba(239,68,68,0.3)]"
+                                      : "bg-gradient-to-r from-blue-950/80 to-cyan-950/80 border-blue-400/50 hover:border-blue-400 text-white shadow-[0_0_25px_rgba(59,130,246,0.3)]"
+                                  )}
+                                >
+                                  <span className={cn(
+                                    "absolute inset-[-100%] animate-[spin_4s_linear_infinite] opacity-20 z-0",
+                                    isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#f97316_25%,#ef4444_50%,#f97316_75%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#22d3ee_25%,#3b82f6_50%,#22d3ee_75%,#00000000_100%)]"
+                                  )} />
+                                  <div className="relative z-10 flex items-center gap-2">
+                                    <div className={cn(
+                                      "w-6 h-6 rounded-full border flex items-center justify-center",
+                                      isXM ? "bg-red-500/30 border-red-400/50" : "bg-blue-500/30 border-blue-400/50"
+                                    )}>
+                                      <User className={cn("w-3 h-3", isXM ? "text-red-300" : "text-blue-300")} />
+                                    </div>
+                                    <span className="truncate max-w-[150px]">{savedSession.email.split('@')[0]}</span>
+                                    <ArrowRight className={cn("w-4 h-4 ml-1", isXM ? "text-red-400" : "text-blue-400")} />
+                                  </div>
+                                </motion.button>
+                              </div>
+                            </motion.div>
+                          )}
                         </div>
                       }
                     >
-                      <p className="text-sm md:text-[15px] leading-relaxed text-blue-200/70 mb-4 text-center">
+                      <p className={cn("text-sm md:text-[15px] leading-relaxed mb-4 text-center", isXM ? "text-red-200/70" : "text-blue-200/70")}>
                         BullMoney works with regulated brokers. <br className="hidden md:block" />
                         This free account lets us verify your access.
                       </p>
@@ -882,7 +1264,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                       <div className="relative mx-auto w-full max-w-[280px] h-32 md:h-40 rounded-3xl border border-white/10 overflow-hidden shadow-2xl mb-2 opacity-80 hover:opacity-100 transition-opacity">
                         <IconPlusCorners />
                         <div className="absolute inset-0 p-2">
-                          {isVantage ? <EvervaultCardRed text="VANTAGE" /> : <EvervaultCard text="X3R7P" />}
+                          {isXM ? <EvervaultCardRed text="X3R7P" /> : <EvervaultCard text="VANTAGE" />}
                         </div>
                       </div>
                     </StepCard>
@@ -900,46 +1282,89 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                   >
                     <StepCard
                       {...getStepProps(2)}
-                      title="Confirm Your Account ID"
+                      title={isReturningUser ? "Verify Your MT5 ID" : "Confirm Your Account ID"}
                       actions={
                         <button
                           onClick={handleNext}
-                          disabled={!formData.mt5Number}
+                          disabled={!formData.mt5Number || isVerifyingMT5}
                           className={cn(
                             "w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
-                            !formData.mt5Number 
-                              ? "opacity-50 cursor-not-allowed bg-black/60 border-2 border-blue-500/20 text-blue-300/50" 
-                              : "bg-black border-2 border-blue-500/60 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:border-blue-400 hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
+                            (!formData.mt5Number || isVerifyingMT5)
+                              ? cn("opacity-50 cursor-not-allowed bg-black/60 border-2", isXM ? "border-red-500/20 text-red-300/50" : "border-blue-500/20 text-blue-300/50")
+                              : cn("bg-black border-2", isXM 
+                                  ? "border-red-500/60 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:border-red-400 hover:shadow-[0_0_30px_rgba(239,68,68,0.5)]"
+                                  : "border-blue-500/60 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:border-blue-400 hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]")
                           )}
                         >
-                          {formData.mt5Number && <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-30 z-0" />}
+                          {(formData.mt5Number && !isVerifyingMT5) && <span className={cn(
+                            "absolute inset-[-100%] animate-[spin_3s_linear_infinite] opacity-30 z-0",
+                            isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
+                          )} />}
                           <span className="relative z-10 flex items-center gap-2">
-                            Continue <ArrowRight className="w-4 h-4" />
+                            {isVerifyingMT5 ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Verifying...
+                              </>
+                            ) : (
+                              <>
+                                {isReturningUser ? "Verify & Continue" : "Continue"} <ArrowRight className="w-4 h-4" />
+                              </>
+                            )}
                           </span>
                         </button>
                       }
                     >
                       <div className="space-y-4 pt-2">
+                        {isReturningUser && savedSession && (
+                          <div className={cn("p-3 rounded-lg border-2", isXM ? "bg-red-950/20 border-red-500/30" : "bg-blue-950/20 border-blue-500/30")}>
+                            <p className={cn("text-xs", isXM ? "text-red-200/70" : "text-blue-200/70")}>
+                              Welcome back, <span className={cn("font-medium", isXM ? "text-red-300" : "text-blue-300")}>{savedSession.email}</span>
+                            </p>
+                            <p className={cn("text-xs mt-1", isXM ? "text-red-300/50" : "text-blue-300/50")}>
+                              Please verify your MT5 ID to continue.
+                            </p>
+                          </div>
+                        )}
                         <div className="flex items-center justify-between">
-                          <p className="text-slate-300 text-sm">After opening your account, you&apos;ll receive an email with your trading ID (MT5 ID).</p>
+                          <p className="text-slate-300 text-sm">
+                            {isReturningUser 
+                              ? "Enter your MetaTrader 5 ID to verify your account." 
+                              : "After opening your account, you'll receive an email with your trading ID (MT5 ID)."}
+                          </p>
                         </div>
                         
                         <div className="relative group">
-                          <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-white transition-colors" />
+                          <Hash className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-slate-500 group-focus-within:text-white")} />
                           <input
                             autoFocus
                             type="tel"
                             name="mt5Number"
                             value={formData.mt5Number}
                             onChange={handleChange}
+                            onKeyDown={handleKeyDown}
                             placeholder="Enter MT5 ID (numbers only)"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target text-base"
+                            disabled={isVerifyingMT5}
+                            className={cn(
+                              "w-full rounded-lg pl-10 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none transition-all cursor-target text-base",
+                              isXM 
+                                ? "bg-black/60 border-2 border-red-500/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                                : "bg-black/20 border border-white/10 focus:border-white/30 focus:bg-black/40",
+                              isVerifyingMT5 && "opacity-50 cursor-not-allowed"
+                            )}
                           />
                         </div>
                         <p className="text-xs text-slate-500 flex items-center gap-1"><Lock className="w-3 h-3"/> Used only to verify access</p>
+                        
+                        {submitError && (
+                          <div className="flex items-center gap-2 text-red-400 bg-red-950/20 p-3 rounded-lg border border-red-900/50 animate-in slide-in-from-top-2">
+                            <AlertCircle className="w-4 h-4 shrink-0" />
+                            <span className="text-xs font-medium">{submitError}</span>
+                          </div>
+                        )}
                       </div>
                     </StepCard>
-                    <button onClick={handleBack} className="mt-4 flex items-center text-slate-500 hover:text-slate-300 text-sm mx-auto transition-colors cursor-target">
+                    <button onClick={handleBack} className={cn("mt-4 flex items-center text-sm mx-auto transition-colors cursor-target", isXM ? "text-red-300/50 hover:text-red-300" : "text-slate-500 hover:text-slate-300")}>
                       <ChevronLeft className="w-4 h-4 mr-1" /> Back
                     </button>
                   </motion.div>
@@ -956,7 +1381,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                   >
                     <StepCard
                       {...getStepProps(3)}
-                      title="Create BullMoney Login"
+                      title={isReturningUser ? "Confirm Your Details" : "Create BullMoney Login"}
                       actions={
                         <button
                           onClick={handleNext}
@@ -964,88 +1389,125 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                           className={cn(
                             "w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
                             (!formData.email || !formData.password || !acceptedTerms) 
-                              ? "opacity-50 cursor-not-allowed bg-black/60 border-2 border-blue-500/20 text-blue-300/50" 
-                              : "bg-black border-2 border-blue-500/60 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:border-blue-400 hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
+                              ? cn("opacity-50 cursor-not-allowed bg-black/60 border-2", isXM ? "border-red-500/20 text-red-300/50" : "border-blue-500/20 text-blue-300/50")
+                              : cn("bg-black border-2", isXM 
+                                  ? "border-red-500/60 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:border-red-400 hover:shadow-[0_0_30px_rgba(239,68,68,0.5)]"
+                                  : "border-blue-500/60 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:border-blue-400 hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]")
                           )}
                         >
-                          {(formData.email && formData.password && acceptedTerms) && <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-30 z-0" />}
+                          {(formData.email && formData.password && acceptedTerms) && <span className={cn(
+                            "absolute inset-[-100%] animate-[spin_3s_linear_infinite] opacity-30 z-0",
+                            isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
+                          )} />}
                           <span className="relative z-10 flex items-center gap-2">
-                            Unlock My Access <ArrowRight className="w-4 h-4" />
+                            {isReturningUser ? "Update & Continue" : "Unlock My Access"} <ArrowRight className="w-4 h-4" />
                           </span>
                         </button>
                       }
                     >
-                      <p className="text-blue-200/60 text-xs md:text-sm mb-4">This lets you access <span className="text-blue-300 font-medium">setups</span>, tools, and the community.</p>
+                      <p className={cn("text-xs md:text-sm mb-4", isXM ? "text-red-200/60" : "text-blue-200/60")}>
+                        {isReturningUser 
+                          ? <>Verify your details to continue as <span className={cn("font-medium", isXM ? "text-red-300" : "text-blue-300")}>{savedSession?.email}</span></>
+                          : <>This lets you access <span className={cn("font-medium", isXM ? "text-red-300" : "text-blue-300")}>setups</span>, tools, and the community.</>
+                        }
+                      </p>
                       <div className="space-y-4 pt-1">
                         <div>
                           <div className="relative group">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400/50 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
+                            <Mail className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-blue-400/50 group-focus-within:text-blue-400")} />
                             <input
-                              autoFocus
+                              autoFocus={!isReturningUser}
                               type="email"
                               name="email"
                               autoComplete="username"
                               value={formData.email}
                               onChange={handleChange}
+                              onKeyDown={handleKeyDown}
                               placeholder="Email address"
-                              className="w-full bg-black/60 border-2 border-blue-500/30 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-blue-300/30 focus:outline-none focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all cursor-target text-base"
+                              disabled={isReturningUser}
+                              className={cn(
+                                "w-full rounded-lg pl-10 pr-4 py-3.5 text-white focus:outline-none transition-all cursor-target text-base",
+                                isReturningUser ? "bg-black/40 border-2 border-white/10 text-white/70" : "",
+                                !isReturningUser && (isXM 
+                                  ? "bg-black/60 border-2 border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                                  : "bg-black/60 border-2 border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]")
+                              )}
                             />
                           </div>
-                          <p className="text-[10px] text-blue-300/40 mt-1 ml-1">We&apos;ll send your login details here.</p>
+                          <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40" : "text-blue-300/40")}>
+                            {isReturningUser ? "Using your saved email address." : "We'll send your login details here."}
+                          </p>
                         </div>
 
                         <div>
                           <div className="relative group">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400/50 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
+                            <Lock className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-blue-400/50 group-focus-within:text-blue-400")} />
                             <input
+                              autoFocus={isReturningUser}
                               type={showPassword ? "text" : "password"}
                               name="password"
                               autoComplete="new-password"
                               value={formData.password}
                               onChange={handleChange}
-                              placeholder="Create password (min 6 chars)"
-                              className="w-full bg-black/60 border-2 border-blue-500/30 rounded-lg pl-10 pr-12 py-3.5 text-white placeholder-blue-300/30 focus:outline-none focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all cursor-target text-base"
+                              onKeyDown={handleKeyDown}
+                              placeholder={isReturningUser ? "Enter your password" : "Create password (min 6 chars)"}
+                              className={cn(
+                                "w-full rounded-lg pl-10 pr-12 py-3.5 text-white focus:outline-none transition-all cursor-target text-base",
+                                isXM 
+                                  ? "bg-black/60 border-2 border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                                  : "bg-black/60 border-2 border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+                              )}
                             />
                             <button 
                               type="button" 
                               onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400/50 hover:text-blue-400 transition-colors cursor-target"
+                              className={cn("absolute right-3 top-1/2 -translate-y-1/2 transition-colors cursor-target", isXM ? "text-red-400/50 hover:text-red-400" : "text-blue-400/50 hover:text-blue-400")}
                             >
                               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                           </div>
-                          <p className="text-[10px] text-blue-300/40 mt-1 ml-1">Must be at least 6 characters.</p>
+                          <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40" : "text-blue-300/40")}>Must be at least 6 characters.</p>
                         </div>
 
-                        <div>
-                          <div className="relative group">
-                            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400/50 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
-                            <input
-                              type="text"
-                              name="referralCode"
-                              value={formData.referralCode}
-                              onChange={handleChange}
-                              placeholder="Referral Code (Optional)"
-                              className="w-full bg-black/60 border-2 border-blue-500/30 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-blue-300/30 focus:outline-none focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all cursor-target text-base"
-                            />
+                        {!isReturningUser && (
+                          <div>
+                            <div className="relative group">
+                              <User className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-blue-400/50 group-focus-within:text-blue-400")} />
+                              <input
+                                type="text"
+                                name="referralCode"
+                                value={formData.referralCode}
+                                onChange={handleChange}
+                                placeholder="Referral Code (Optional)"
+                                className={cn(
+                                  "w-full rounded-lg pl-10 pr-4 py-3.5 text-white focus:outline-none transition-all cursor-target text-base",
+                                  isXM 
+                                    ? "bg-black/60 border-2 border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                                    : "bg-black/60 border-2 border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+                                )}
+                              />
+                            </div>
+                            <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40" : "text-blue-300/40")}>Leave blank if you don&apos;t have one.</p>
                           </div>
-                          <p className="text-[10px] text-blue-300/40 mt-1 ml-1">Leave blank if you don&apos;t have one.</p>
-                        </div>
+                        )}
 
                         <div 
                           onClick={() => setAcceptedTerms(!acceptedTerms)}
-                          className="flex items-start gap-3 p-3 rounded-lg border-2 border-blue-500/20 bg-black/60 cursor-pointer hover:bg-blue-950/30 hover:border-blue-500/30 transition-colors cursor-target"
+                          className={cn(
+                            "flex items-start gap-3 p-3 rounded-lg border-2 bg-black/60 cursor-pointer transition-colors cursor-target",
+                            isXM ? "border-red-500/20 hover:bg-red-950/30 hover:border-red-500/30" : "border-blue-500/20 hover:bg-blue-950/30 hover:border-blue-500/30"
+                          )}
                         >
                           <div className={cn(
                             "w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 transition-colors shrink-0",
                             acceptedTerms 
-                              ? "bg-blue-600 border-blue-600" 
-                              : "border-blue-500/40"
+                              ? (isXM ? "bg-red-600 border-red-600" : "bg-blue-600 border-blue-600")
+                              : (isXM ? "border-red-500/40" : "border-blue-500/40")
                           )}>
                             {acceptedTerms && <Check className="w-3.5 h-3.5 text-white" />}
                           </div>
                           <div className="flex-1">
-                            <p className="text-xs text-blue-200/70 leading-tight">
+                            <p className={cn("text-xs leading-tight", isXM ? "text-red-200/70" : "text-blue-200/70")}>
                               I agree to the Terms of Service and understand this is educational content.
                             </p>
                           </div>
@@ -1060,7 +1522,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                       )}
                     </StepCard>
 
-                    <button onClick={handleBack} className="mt-4 flex items-center text-blue-300/50 hover:text-blue-300 text-sm mx-auto transition-colors cursor-target">
+                    <button onClick={handleBack} className={cn("mt-4 flex items-center text-sm mx-auto transition-colors cursor-target", isXM ? "text-red-300/50 hover:text-red-300" : "text-blue-300/50 hover:text-blue-300")}>
                       <ChevronLeft className="w-4 h-4 mr-1" /> Back
                     </button>
                   </motion.div>

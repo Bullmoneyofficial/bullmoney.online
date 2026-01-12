@@ -36,6 +36,7 @@ import { CONSTANTS } from "@/constants/links";
 
 // --- IMPORT CONTEXT ---
 import { useStudio } from "@/context/StudioContext";
+import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 
 // --- IMPORT MODAL COMPONENTS ---
 import SocialsModal from "@/components/ui/Socials";
@@ -51,6 +52,43 @@ import { ThemeCategory, SoundProfile } from "@/constants/theme-data";
 
 // --- IMPORT SOUND EFFECTS ---
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
+
+// --- IMPORT NAVBAR CSS ---
+import "./navbar.css";
+
+// --- THEME CSS FILTER MAP ---
+/**
+ * Map theme IDs to CSS filter values for navbar color transformation
+ */
+const NAVBAR_THEME_FILTER_MAP: Record<string, string> = {
+  // CRYPTO THEMES
+  'BITCOIN': 'hue-rotate(0deg) saturate(1) brightness(1)',
+  'ETHEREUM': 'hue-rotate(-30deg) saturate(1.2) brightness(1.05)',
+  'RIPPLE': 'hue-rotate(200deg) saturate(1.1) brightness(0.95)',
+  'DOGE': 'hue-rotate(45deg) saturate(1.15) brightness(1.1)',
+  'CARDANO': 'hue-rotate(270deg) saturate(1.1) brightness(0.98)',
+  'SOLANA': 'hue-rotate(-20deg) saturate(1.3) brightness(1.08)',
+  'POLKADOT': 'hue-rotate(280deg) saturate(1.2) brightness(1.02)',
+  'STELLAR': 'hue-rotate(190deg) saturate(1.15) brightness(0.97)',
+  
+  // MARKET THEMES
+  'BULLISH': 'hue-rotate(100deg) saturate(1.3) brightness(1.15)',
+  'BEARISH': 'hue-rotate(0deg) saturate(1.2) brightness(0.9)',
+  'NEUTRAL': 'hue-rotate(0deg) saturate(0.8) brightness(1)',
+  'VOLATILE': 'hue-rotate(-40deg) saturate(1.4) brightness(1.2)',
+  
+  // SPECIAL THEMES
+  'MIDNIGHT': 'hue-rotate(0deg) saturate(0.7) brightness(0.85)',
+  'NEON': 'hue-rotate(0deg) saturate(1.5) brightness(1.3)',
+  'RETRO': 'hue-rotate(30deg) saturate(1.1) brightness(1.05)',
+  'CYBERPUNK': 'hue-rotate(-50deg) saturate(1.8) brightness(1.25)',
+  'MATRIX': 'hue-rotate(120deg) saturate(1.2) brightness(0.95)',
+  'OCEAN': 'hue-rotate(200deg) saturate(1.1) brightness(1)',
+  'DESERT': 'hue-rotate(40deg) saturate(1.15) brightness(1.1)',
+  
+  // DEFAULT
+  'DEFAULT': 'hue-rotate(0deg) saturate(1) brightness(1)',
+};
 
 // --- HELPER HOOK FOR ROTATING TIPS ---
 function useRotatingIndex(length: number, interval: number = 5000) {
@@ -76,6 +114,7 @@ interface DockProps {
     href?: string;
     triggerComponent?: React.ReactNode;
     showShine?: boolean; // Added prop for shine effect
+    isXMHighlight?: boolean; // 🎉 XM Easter Egg - individual button highlight
   }[];
   className?: string;
   baseItemSize?: number;
@@ -158,7 +197,7 @@ function DockItem({
   );
 }
 
-function DockLabel({ children, tips, className = "", isHovered, ...rest }: any) {
+function DockLabel({ children, tips, className = "", isHovered, isXMUser = false, ...rest }: any) {
   const [isVisible, setIsVisible] = useState(false);
   const currentIndex = useRotatingIndex(tips?.length || 0);
 
@@ -179,28 +218,34 @@ function DockLabel({ children, tips, className = "", isHovered, ...rest }: any) 
           exit={{ opacity: 0, y: 10, x: "-50%", scale: 0.95 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
           className={cn(
-            "absolute top-full left-1/2 -translate-x-1/2 w-max min-w-[160px] rounded-xl border border-blue-500/40 bg-black/70 backdrop-blur-xl px-4 py-2.5 shadow-[0_0_25px_rgba(59,130,246,0.4)] z-[150] pointer-events-none",
+            "absolute top-full left-1/2 -translate-x-1/2 w-max min-w-[160px] rounded-xl border bg-black/70 backdrop-blur-xl px-4 py-2.5 z-[150] pointer-events-none",
+            isXMUser
+              ? "border-red-500/40 shadow-[0_0_25px_rgba(239,68,68,0.4)]"
+              : "border-blue-500/40 shadow-[0_0_25px_rgba(59,130,246,0.4)]",
             className
           )}
           role="tooltip"
         >
           {/* Arrow pointing up */}
-          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-blue-500/40" />
+          <div className={cn(
+            "absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px]",
+            isXMUser ? "border-b-red-500/40" : "border-b-blue-500/40"
+          )} />
           
           <div className="flex items-center gap-3">
             {/* Pulse indicator */}
             <div className="relative flex h-2 w-2 shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+              <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", isXMUser ? "bg-red-400" : "bg-blue-400")} />
+              <span className={cn("relative inline-flex rounded-full h-2 w-2", isXMUser ? "bg-red-500" : "bg-blue-500")} />
             </div>
             
             {/* Label */}
-            <span className="text-[10px] uppercase tracking-widest font-bold text-blue-400 shrink-0">
+            <span className={cn("text-[10px] uppercase tracking-widest font-bold shrink-0", isXMUser ? "text-red-400" : "text-blue-400")}>
               {children}
             </span>
             
             {/* Divider */}
-            <div className="w-[1px] h-4 bg-blue-500/30 shrink-0" />
+            <div className={cn("w-[1px] h-4 shrink-0", isXMUser ? "bg-red-500/30" : "bg-blue-500/30")} />
             
             {/* Rotating tip text */}
             {tips && tips.length > 0 && (
@@ -212,7 +257,7 @@ function DockLabel({ children, tips, className = "", isHovered, ...rest }: any) 
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -5 }}
                     transition={{ duration: 0.3 }}
-                    className="text-xs text-blue-100/90 font-medium whitespace-nowrap block"
+                    className={cn("text-xs font-medium whitespace-nowrap block", isXMUser ? "text-red-100/90" : "text-blue-100/90")}
                   >
                     {tips[currentIndex]}
                   </motion.span>
@@ -226,20 +271,25 @@ function DockLabel({ children, tips, className = "", isHovered, ...rest }: any) 
   );
 }
 
-function DockIcon({ children, label, className = "", showShine = false }: any) {
+function DockIcon({ children, label, className = "", showShine = false, isXMUser = false }: any) {
   return (
     <div
       className={cn(
         "flex flex-col h-full w-full items-center justify-center rounded-2xl bg-black/40 dark:bg-black/40 backdrop-blur-xl border-2 shadow-sm transition-all duration-200 hover:bg-black/50 dark:hover:bg-black/50 relative overflow-hidden group/icon",
         showShine
-            ? "border-blue-500/80 shadow-[0_0_20px_rgba(59,130,246,0.5)] dark:border-blue-400/80"
-            : "border-blue-500/30 dark:border-blue-500/30 hover:border-blue-400/60",
+            ? (isXMUser ? "border-red-500/80 shadow-[0_0_20px_rgba(239,68,68,0.5)] dark:border-red-400/80" : "border-blue-500/80 shadow-[0_0_20px_rgba(59,130,246,0.5)] dark:border-blue-400/80")
+            : (isXMUser ? "border-red-500/30 dark:border-red-500/30 hover:border-red-400/60" : "border-blue-500/30 dark:border-blue-500/30 hover:border-blue-400/60"),
         className
       )}
     >
-      {/* Blue Shimmer Background - Like FPS Button */}
+      {/* Shimmer Background - Dynamic based on XM Easter Egg */}
       {showShine && (
-        <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-100 z-0" />
+        <span className={cn(
+          "absolute inset-[-100%] animate-[spin_3s_linear_infinite] opacity-100 z-0",
+          isXMUser 
+            ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]"
+            : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
+        )} />
       )}
 
       {/* Content Layer */}
@@ -249,15 +299,17 @@ function DockIcon({ children, label, className = "", showShine = false }: any) {
           {/* Little Notification Dot if Shining */}
           {showShine && (
               <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
+                  <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", isXMUser ? "bg-red-400" : "bg-blue-400")}></span>
+                  <span className={cn("relative inline-flex rounded-full h-2.5 w-2.5", isXMUser ? "bg-red-500" : "bg-blue-500")}></span>
               </span>
           )}
         </div>
         
         <span className={cn(
             "text-[9px] uppercase tracking-widest font-semibold opacity-60 z-10 pointer-events-none transition-colors group-hover/icon:opacity-100",
-            showShine ? "text-blue-300 dark:text-blue-300 font-bold" : "text-blue-200/80 dark:text-blue-200/80"
+            showShine 
+              ? (isXMUser ? "text-red-300 dark:text-red-300 font-bold" : "text-blue-300 dark:text-blue-300 font-bold")
+              : (isXMUser ? "text-red-200/80 dark:text-red-200/80" : "text-blue-200/80 dark:text-blue-200/80")
         )}>
           {label}
         </span>
@@ -272,6 +324,7 @@ interface DockWithRefsProps extends DockProps {
   dockRef?: React.RefObject<HTMLDivElement>;
   buttonRefs?: React.RefObject<(HTMLDivElement | null)[]>;
   onHoverChange?: (isHovered: boolean) => void;
+  isXMUser?: boolean; // 🎉 XM Easter Egg prop
 }
 
 function Dock({
@@ -284,6 +337,7 @@ function Dock({
   dockRef,
   buttonRefs,
   onHoverChange,
+  isXMUser = false, // 🎉 XM Easter Egg
 }: DockWithRefsProps) {
   const mouseX = useMotionValue(Infinity);
   const isHovered = useMotionValue(0);
@@ -304,8 +358,8 @@ function Dock({
         onHoverChange?.(false);
       }}
       className={cn(
-        "mx-auto flex h-24 items-center gap-5 rounded-3xl border-2 border-blue-500/30 bg-black/40 dark:bg-black/40 px-6 shadow-2xl backdrop-blur-xl dark:border-blue-500/30 hover:border-blue-400/60 transition-all duration-300",
-        "hover:shadow-[0_0_30px_rgba(59,130,246,0.4)]",
+        "mx-auto flex h-24 items-center gap-5 rounded-3xl border-2 bg-black/40 dark:bg-black/40 px-6 shadow-2xl backdrop-blur-xl transition-all duration-300",
+        "border-blue-500/30 dark:border-blue-500/30 hover:border-blue-400/60 hover:shadow-[0_0_30px_rgba(59,130,246,0.4)]",
         className
       )}
     >
@@ -325,11 +379,11 @@ function Dock({
               }
             }}
           >
-            {/* Pass showShine to DockIcon */}
-            <DockIcon label={item.label} showShine={item.showShine}>
+            {/* Pass showShine and isXMHighlight to DockIcon */}
+            <DockIcon label={item.label} showShine={item.showShine} isXMUser={item.isXMHighlight}>
                 {item.icon}
             </DockIcon>
-            <DockLabel tips={item.tips}>{item.label}</DockLabel>
+            <DockLabel tips={item.tips} isXMUser={item.isXMHighlight}>{item.label}</DockLabel>
 
             {/* INVISIBLE OVERLAY TRIGGER FOR MODALS */}
             {item.triggerComponent && (
@@ -547,27 +601,34 @@ const ThemeSelectorModal = ({
   isOpen: boolean; 
   onClose: () => void 
 }) => {
-  const [activeThemeId, setActiveThemeId] = useState('BITCOIN');
+  // Use global theme context for proper theme application
+  const { activeThemeId: globalThemeId, setTheme } = useGlobalTheme();
+  
+  const [activeThemeId, setActiveThemeId] = useState(globalThemeId || 'BITCOIN');
   const [activeCategory, setActiveCategory] = useState<ThemeCategory>('CRYPTO');
   const [currentSound, setCurrentSound] = useState<SoundProfile>('SILENT');
   const [isMuted, setIsMuted] = useState(true);
   const [previewThemeId, setPreviewThemeId] = useState<string | null>(null);
 
+  // Sync with global theme on mount
+  useEffect(() => {
+    if (globalThemeId) {
+      setActiveThemeId(globalThemeId);
+    }
+  }, [globalThemeId, isOpen]);
+
   const handleSave = (themeId: string) => {
-    // Save theme preference to all storage locations
+    // Use global theme context - applies CSS overlay across entire app
+    setTheme(themeId);
+    
+    // Save theme preference to all storage locations (backup)
     localStorage.setItem('bullmoney-theme', themeId);
     localStorage.setItem('user_theme_id', themeId);
     
-    // Try to use global theme context if available
-    try {
-      // Force a re-render by dispatching storage event
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'user_theme_id',
-        newValue: themeId,
-      }));
-    } catch (e) {
-      // Silent fail if context not available
-    }
+    // Dispatch custom event for components that need to react
+    window.dispatchEvent(new CustomEvent('bullmoney-theme-change', { 
+      detail: { themeId } 
+    }));
     
     onClose();
   };
@@ -642,6 +703,12 @@ export const Navbar = () => {
   const [isThemeSelectorOpen, setIsThemeSelectorOpen] = useState(false);
   // 👇 STATE TO PREVENT HYDRATION MISMATCH
   const [mounted, setMounted] = useState(false);
+  
+  // 🎉 XM EASTER EGG: Get XM user status from global theme
+  const { isXMUser, activeThemeId } = useGlobalTheme();
+  
+  // Get CSS filter for current theme to apply to navbar
+  const themeFilter = NAVBAR_THEME_FILTER_MAP[activeThemeId || 'DEFAULT'] || NAVBAR_THEME_FILTER_MAP['DEFAULT'];
   
   // Rotating tips state
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
@@ -727,10 +794,13 @@ export const Navbar = () => {
       triggerComponent: <div className="w-full h-full flex items-center justify-center pointer-events-auto"><ServicesModal /></div>,
     },
     {
-        icon: <IconUsersGroup className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
+        icon: isXMUser 
+          ? <IconUsersGroup className="h-6 w-6 text-red-400" stroke={1.5} />
+          : <IconUsersGroup className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
         label: "Affiliates",
         tips: ["Join our affiliate program", "Earn commissions", "Grow with us"],
-      onClick: () => setIsAffiliateOpen(true),
+        onClick: () => setIsAffiliateOpen(true),
+        isXMHighlight: isXMUser, // 🎉 XM Easter Egg - only this button turns red
     },
     {
         icon: <IconHelp className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
@@ -805,7 +875,14 @@ export const Navbar = () => {
     {/* Mobile Static Helper - small and always visible */}
     {mounted && <MobileStaticHelper />}
 
-    <div className="fixed top-8 inset-x-0 z-50 w-full px-4 pointer-events-none">
+    <div 
+      className="fixed top-8 inset-x-0 z-40 w-full px-4 pointer-events-none navbar-themed"
+      style={{
+        filter: themeFilter,
+        transition: 'filter 0.5s ease-in-out, opacity 0.3s ease-in-out'
+      }}
+      data-navbar-container
+    >
        {/* Hidden trigger for Cal.com modal */}
       <button
         id="cal-trigger-btn"
@@ -834,6 +911,7 @@ export const Navbar = () => {
             dockRef={dockRef}
             buttonRefs={buttonRefs}
             onHoverChange={setIsDockHovered}
+            isXMUser={isXMUser}
           />
         </div>
       </div>
@@ -856,7 +934,7 @@ export const Navbar = () => {
 
         {/* 2. PREMIUM GLASS SHIMMER CONTROLS (RIGHT) */}
         <div className="relative group rounded-full overflow-hidden shadow-lg z-50 h-12 sm:h-14 flex items-center flex-grow max-w-xs">
-            {/* Shimmer Background - Blue like FPS button */}
+            {/* Shimmer Background - Blue */}
             <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-100" />
 
             {/* Inner Content Container - Black Glass */}
@@ -907,7 +985,12 @@ export const Navbar = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="absolute top-20 sm:top-24 left-2 sm:left-3 right-2 sm:right-3 z-40 rounded-2xl border-2 border-blue-500/30 bg-black/40 dark:bg-black/40 p-3 sm:p-4 shadow-2xl backdrop-blur-xl dark:border-blue-500/30 hover:border-blue-400/60 transition-all"
+              className={cn(
+                "absolute top-20 sm:top-24 left-2 sm:left-3 right-2 sm:right-3 z-40 rounded-2xl border-2 bg-black/40 dark:bg-black/40 p-3 sm:p-4 shadow-2xl backdrop-blur-xl transition-all",
+                isXMUser
+                  ? "border-red-500/30 dark:border-red-500/30 hover:border-red-400/60"
+                  : "border-blue-500/30 dark:border-blue-500/30 hover:border-blue-400/60"
+              )}
             >
               <div className="flex flex-col gap-2 sm:gap-3 items-center text-center">
                 <Link
@@ -925,13 +1008,19 @@ export const Navbar = () => {
                     <div className="absolute inset-0 opacity-0"><ServicesModal /></div>
                 </div>
 
+                {/* 🎉 AFFILIATES BUTTON - RED WHEN XM USER */}
                 <div 
                   className="relative w-full" 
                   onClick={() => { SoundEffects.click(); setIsAffiliateOpen(true); setOpen(false); }} 
                   onMouseEnter={() => SoundEffects.hover()} 
                   onTouchStart={() => SoundEffects.click()}
                 >
-                    <span className="text-sm sm:text-base font-semibold text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 cursor-pointer block py-2 rounded-lg hover:bg-blue-500/10 transition-colors">Affiliates</span>
+                    <span className={cn(
+                      "text-sm sm:text-base font-semibold cursor-pointer block py-2 rounded-lg transition-colors",
+                      isXMUser
+                        ? "text-red-300 hover:text-red-200 hover:bg-red-500/10 font-bold"
+                        : "text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 hover:bg-blue-500/10"
+                    )}>Affiliates {isXMUser && "🔴"}</span>
                 </div>
 
                 <div className="relative w-full" onClick={() => { SoundEffects.click(); setIsFaqOpen(true); setOpen(false); }} onMouseEnter={() => SoundEffects.hover()} onTouchStart={() => SoundEffects.click()}>

@@ -31,6 +31,7 @@ import { ThemeConfigModal } from "@/components/Mainpage/ThemeConfigModal";
 import { ALL_THEMES, type ThemeCategory } from "@/constants/theme-data";
 import type { SoundProfile } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
+import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 
 const DynamicUltimateControlPanel = dynamic(() => import('./UltimateControlPanel').then(mod => mod.UltimateControlPanel), {
   ssr: false,
@@ -249,8 +250,10 @@ const HeroParallax = () => {
 
   const buttonText = hero?.button_text || "View Trading Setups";
 
-  // Theme state
-  const [activeThemeId, setActiveThemeId] = useState('t01');
+  // Global Theme Context - syncs across entire app
+  const { activeThemeId, setTheme, accentColor } = useGlobalTheme();
+  
+  // Local UI state for theme modal
   const [activeCategory, setActiveCategory] = useState<'SPECIAL' | 'SENTIMENT' | 'ASSETS' | 'CRYPTO' | 'HISTORICAL' | 'OPTICS' | 'GLITCH' | 'EXOTIC' | 'LOCATION' | 'ELEMENTAL' | 'CONCEPTS' | 'MEME' | 'SEASONAL'>('SPECIAL');
   const [currentSound, setCurrentSound] = useState<SoundProfile>('MECHANICAL');
   const [isMuted, setIsMuted] = useState(false);
@@ -266,21 +269,13 @@ const HeroParallax = () => {
   const [isReflectiveCardOpen, setIsReflectiveCardOpen] = useState(false);
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
 
+  // Load saved sound preferences from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('user_theme_id');
-    if (saved) {
-      setActiveThemeId(saved);
-    }
+    const savedSound = localStorage.getItem('bullmoney_sound_profile') as SoundProfile | null;
+    const savedMuted = localStorage.getItem('bullmoney_muted');
+    if (savedSound) setCurrentSound(savedSound);
+    if (savedMuted === 'true') setIsMuted(true);
   }, []);
-
-  useEffect(() => {
-    const theme = ALL_THEMES.find(t => t.id === activeThemeId);
-    if (theme && typeof document !== 'undefined') {
-      const root = document.documentElement;
-      root.style.filter = isMobile ? theme.mobileFilter : theme.filter;
-      root.style.setProperty('--accent-color', theme.accentColor || '#3b82f6');
-    }
-  }, [activeThemeId, isMobile]);
 
   const currentTheme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   const displayTheme = hoverThemeId ? ALL_THEMES.find(t => t.id === hoverThemeId) : currentTheme;
@@ -563,10 +558,44 @@ const HeroParallax = () => {
       isOpen={isThemeModalOpen}
       onClose={() => setIsThemeModalOpen(false)}
       onSave={(themeId, sound, muted) => {
-        setActiveThemeId(themeId);
+        // Use global theme context - applies CSS overlay across entire app
+        setTheme(themeId);
         setCurrentSound(sound);
         setIsMuted(muted);
-        localStorage.setItem('user_theme_id', themeId);
+        
+        // Get full theme data for comprehensive storage
+        const selectedTheme = ALL_THEMES.find(t => t.id === themeId);
+        
+        // Persist sound preferences locally
+        localStorage.setItem('bullmoney_sound_profile', sound);
+        localStorage.setItem('bullmoney_muted', String(muted));
+        
+        // Save comprehensive theme settings as JSON for CSS overlay persistence
+        if (selectedTheme) {
+          const themeSettings = {
+            id: themeId,
+            name: selectedTheme.name,
+            category: selectedTheme.category,
+            accentColor: selectedTheme.accentColor,
+            filter: selectedTheme.filter,
+            mobileFilter: selectedTheme.mobileFilter,
+            illusion: selectedTheme.illusion,
+            overlay: selectedTheme.overlay,
+            bgImage: selectedTheme.bgImage,
+            bgBlendMode: selectedTheme.bgBlendMode,
+            bgOpacity: selectedTheme.bgOpacity,
+            youtubeId: selectedTheme.youtubeId,
+            soundProfile: sound,
+            isMuted: muted,
+            savedAt: Date.now()
+          };
+          localStorage.setItem('bullmoney_theme_settings', JSON.stringify(themeSettings));
+          
+          // Dispatch event so other components can react
+          window.dispatchEvent(new CustomEvent('bullmoney-theme-saved', { 
+            detail: themeSettings 
+          }));
+        }
       }}
       initialThemeId={activeThemeId}
       initialCategory={activeCategory}

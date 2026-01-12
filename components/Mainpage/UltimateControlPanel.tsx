@@ -11,9 +11,11 @@
  * - 3D performance calculator
  * - Smooth animations
  * - Beautiful aesthetics
+ * - Uses createPortal for proper fixed positioning
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import {
   Activity,
@@ -290,7 +292,7 @@ export function UltimateControlPanel({
   const reportedDownlink = deviceInfo.network.downlink || 0;
   const measuredType = (deviceInfo.network.effectiveType || '4g').toUpperCase();
 
-  return (
+  const panelContent = (
     <>
       {/* Handle (visible when closed) */}
       <AnimatePresence>
@@ -886,6 +888,14 @@ export function UltimateControlPanel({
       </AnimatePresence>
     </>
   );
+
+  // Use createPortal to render to document.body to preserve fixed positioning
+  // This ensures the panel stays fixed during scroll regardless of parent transforms/filters
+  if (typeof document !== 'undefined') {
+    return createPortal(panelContent, document.body);
+  }
+  
+  return panelContent;
 }
 
 export default UltimateControlPanel;

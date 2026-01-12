@@ -1,0 +1,152 @@
+/**
+ * Navbar Theme Filters & Z-Index Configuration
+ * Ensures navbar applies theme CSS filters and sits below loaders
+ */
+
+/* ============================================================================
+   THEME FILTER MAPPINGS
+   Maps theme IDs to CSS filter values for color transformation
+   ============================================================================ */
+
+:root {
+  /* Default filters (no transformation) */
+  --navbar-filter-default: hue-rotate(0deg) saturate(1) brightness(1);
+  
+  /* CRYPTO THEMES */
+  --navbar-filter-bitcoin: hue-rotate(0deg) saturate(1) brightness(1);
+  --navbar-filter-ethereum: hue-rotate(-30deg) saturate(1.2) brightness(1.05);
+  --navbar-filter-ripple: hue-rotate(200deg) saturate(1.1) brightness(0.95);
+  --navbar-filter-doge: hue-rotate(45deg) saturate(1.15) brightness(1.1);
+  --navbar-filter-cardano: hue-rotate(270deg) saturate(1.1) brightness(0.98);
+  --navbar-filter-solana: hue-rotate(-20deg) saturate(1.3) brightness(1.08);
+  --navbar-filter-polkadot: hue-rotate(280deg) saturate(1.2) brightness(1.02);
+  --navbar-filter-stellar: hue-rotate(190deg) saturate(1.15) brightness(0.97);
+  
+  /* MARKET THEMES */
+  --navbar-filter-bullish: hue-rotate(100deg) saturate(1.3) brightness(1.15);
+  --navbar-filter-bearish: hue-rotate(0deg) saturate(1.2) brightness(0.9);
+  --navbar-filter-neutral: hue-rotate(0deg) saturate(0.8) brightness(1);
+  --navbar-filter-volatile: hue-rotate(-40deg) saturate(1.4) brightness(1.2);
+  
+  /* SPECIAL THEMES */
+  --navbar-filter-midnight: hue-rotate(0deg) saturate(0.7) brightness(0.85);
+  --navbar-filter-neon: hue-rotate(0deg) saturate(1.5) brightness(1.3);
+  --navbar-filter-retro: hue-rotate(30deg) saturate(1.1) brightness(1.05);
+  --navbar-filter-cyberpunk: hue-rotate(-50deg) saturate(1.8) brightness(1.25);
+  --navbar-filter-matrix: hue-rotate(120deg) saturate(1.2) brightness(0.95);
+  --navbar-filter-ocean: hue-rotate(200deg) saturate(1.1) brightness(1);
+  --navbar-filter-desert: hue-rotate(40deg) saturate(1.15) brightness(1.1);
+}
+
+/* ============================================================================
+   NAVBAR CONTAINER - Z-INDEX & FILTER APPLICATION
+   z-40: Below loaders (z-50) but above page content
+   ============================================================================ */
+
+.navbar-themed {
+  z-index: 40;
+  filter: var(--theme-filter, none);
+  transition: filter 0.5s ease-in-out, opacity 0.3s ease-in-out;
+  position: fixed;
+  top: 8px;
+  left: 0;
+  right: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   Z-INDEX STACKING CONTEXT
+   Ensures proper layering across the application
+   ============================================================================ */
+
+/* Lowest layer - Page content */
+body {
+  z-index: 1;
+}
+
+/* Navbar - Below loaders */
+[data-navbar-container],
+.navbar-themed {
+  z-index: 40;
+}
+
+/* Loaders & Modals - Above navbar */
+.multi-step-loader,
+[role="dialog"],
+.modal,
+.loader {
+  z-index: 50;
+}
+
+/* Fixed overlays and high-priority elements */
+.fixed-overlay,
+.backdrop,
+[class*="backdrop"] {
+  z-index: 45;
+}
+
+/* Top-level UI elements */
+.tooltip,
+.popover,
+.dropdown {
+  z-index: 55;
+}
+
+/* Control panel - Highest priority */
+.control-panel-themed {
+  z-index: 60;
+}
+
+/* ============================================================================
+   SMOOTH TRANSITIONS
+   Filter and opacity transitions for theme changes
+   ============================================================================ */
+
+.navbar-themed,
+[data-navbar-container],
+.control-panel-themed {
+  transition: 
+    filter 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* ============================================================================
+   MEDIA QUERIES
+   Ensure proper z-index and filter behavior on different screen sizes
+   ============================================================================ */
+
+@media (max-width: 1024px) {
+  .navbar-themed {
+    z-index: 40;
+  }
+}
+
+@media (max-width: 640px) {
+  .navbar-themed {
+    z-index: 40;
+    filter: var(--theme-filter, none);
+  }
+}
+
+/* ============================================================================
+   ANIMATION STATES
+   Ensure filters apply during animations
+   ============================================================================ */
+
+.navbar-themed[data-animating="true"] {
+  filter: var(--theme-filter, none);
+  z-index: 40;
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .navbar-themed,
+  [data-navbar-container],
+  .control-panel-themed {
+    transition: none;
+  }
+}

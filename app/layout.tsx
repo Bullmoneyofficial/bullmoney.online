@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/context/providers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StudioProvider } from "@/context/StudioContext";
+import { GlobalThemeProvider } from "@/contexts/GlobalThemeProvider";
 
 // ✅ ADDED: Import the ShopProvider
 import { ShopProvider } from "@/components/ShopContext";
@@ -320,19 +321,30 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <StudioProvider>
-              {/* ✅ ADDED: ShopProvider starts here */}
-              <ShopProvider>
-                {/* Custom Cursor for Desktop */}
-                <ClientCursor />
-                <Navbar />
-                {children}
-                {modal}
-                <Footer />
-              </ShopProvider>
-              {/* ✅ ADDED: ShopProvider ends here */}
-            </StudioProvider>
-
+            <GlobalThemeProvider>
+              <StudioProvider>
+                {/* ✅ ADDED: ShopProvider starts here */}
+                <ShopProvider>
+                  {/* Custom Cursor for Desktop */}
+                  <ClientCursor />
+                  {/* Navbar rendered outside filter wrapper to preserve fixed positioning */}
+                  <Navbar />
+                  {/* Theme filter wrapper - applies filter only to main content */}
+                  <div 
+                    className="theme-filter-wrapper min-h-screen"
+                    style={{ 
+                      filter: 'var(--theme-filter, none)',
+                      transition: 'filter 0.5s ease-in-out'
+                    }}
+                  >
+                    {children}
+                    {modal}
+                    <Footer />
+                  </div>
+                </ShopProvider>
+                {/* ✅ ADDED: ShopProvider ends here */}
+              </StudioProvider>
+            </GlobalThemeProvider>
           </ThemeProvider>
         </ErrorBoundary>
       </body>

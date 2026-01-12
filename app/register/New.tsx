@@ -500,7 +500,18 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     // STEP 2 -> STEP 3 (or direct submit for affiliate flow)
     else if (step === 2) {
       if (!isValidMT5(formData.mt5Number)) {
-        setSubmitError(\"Please enter a valid MT5 ID (min 5 digits).\");\n        return;\n      }\n      \n      // If affiliate flow with saved account, submit directly with MT5 verification\n      if (isAffiliateFlow && savedSessionData) {\n        handleAffiliateSubmit();\n        return;\n      }\n      \n      setStep(3);\n    }
+        setSubmitError("Please enter a valid MT5 ID (min 5 digits).");
+        return;
+      }
+      
+      // If affiliate flow with saved account, submit directly with MT5 verification
+      if (isAffiliateFlow && savedSessionData) {
+        handleAffiliateSubmit();
+        return;
+      }
+      
+      setStep(3);
+    }
     // STEP 3 -> SUBMIT
     else if (step === 3) {
       if (!isValidEmail(formData.email)) {
@@ -885,10 +896,22 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     </button>
                 </form>
 
-                <div className="mt-6 text-center border-t border-blue-500/20 pt-4">
+                <div className="mt-6 text-center border-t border-blue-500/20 pt-4 space-y-3">
                   <button onClick={toggleViewMode} className="text-sm text-blue-300/60 hover:text-blue-300 transition-colors cursor-target">
                     Don&apos;t have a password? <span className="underline text-blue-400">Register Now</span>
                   </button>
+                  
+                  {/* CONTINUE AS BUTTON FOR RETURNING USERS */}
+                  {savedSessionData && (
+                    <motion.button 
+                      onClick={handleSkipWithSavedAccount}
+                      whileHover={{ scale: 1.01 }}
+                      className="w-full py-3 rounded-lg text-sm font-semibold transition-all border-2 border-blue-500/30 bg-black/60 text-blue-300/80 hover:bg-blue-950/30 hover:border-blue-500/50 flex items-center justify-center gap-2"
+                    >
+                      <User className="w-4 h-4" />
+                      Continue as {savedSessionData.email.split('@')[0]}...
+                    </motion.button>
+                  )}
                 </div>
              </div>
           </motion.div>

@@ -11,6 +11,7 @@
  * - 3D performance calculator
  * - Smooth animations
  * - Beautiful aesthetics
+ * - Theme-aware styling via GlobalThemeProvider
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -44,6 +45,7 @@ import {
 import { deviceMonitor, type DeviceInfo } from '@/lib/deviceMonitor';
 import { queueManager } from '@/lib/splineQueueManager';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
+import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 
 // ============================================================================
 // TYPES
@@ -277,7 +279,7 @@ export function UltimateControlPanel({
   onOpenChange,
   userEmail,
   userName,
-  accentColor = '#3b82f6',
+  accentColor: propAccentColor,
   onServicesClick,
   onContactClick,
   onThemeClick,
@@ -291,6 +293,10 @@ export function UltimateControlPanel({
   showAdminButton = true,
   showIdentityButton = true,
 }: UltimateControlPanelProps) {
+  // Use global theme context for accent color (fallback to prop or default)
+  const { accentColor: themeAccentColor, activeTheme } = useGlobalTheme();
+  const accentColor = propAccentColor || themeAccentColor || '#3b82f6';
+  
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'network' | 'performance' | 'account'>('overview');
   const [isRefreshing, setIsRefreshing] = useState(false);
