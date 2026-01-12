@@ -527,6 +527,15 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
     const featured = top5[0];
     const secondaryTop = top5.slice(1);
 
+    const isBreaking = useMemo(() => {
+        if (!featured) return false;
+        const t = featured.published_at ? Date.parse(featured.published_at) : NaN;
+        const isRecent = Number.isFinite(t) ? Date.now() - t < 1000 * 60 * 60 : false; // < 1h
+        const title = (featured.title || "").toLowerCase();
+        const isUrgentWord = /breaking|urgent|alert|flash/.test(title);
+        return isRecent || isUrgentWord;
+    }, [featured]);
+
     const tickerItems = useMemo(() => {
         const merged = [...top5, ...rest];
         const uniq: NewsItem[] = [];
@@ -619,7 +628,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
     const activePreview = previewUrl ? previews[previewUrl] : undefined;
 
     return (
-        <div className="relative flex h-full max-h-full flex-col overflow-hidden rounded-2xl bg-black">
+        <div className="relative flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-black" data-lenis-prevent>
             {/* Masthead (mini news site header) */}
             <div className="shrink-0 border-b border-white/10 bg-black/50 backdrop-blur-md">
                 <div className="flex items-center justify-between px-4 md:px-6 py-4">
@@ -697,12 +706,50 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                     </div>
                 </div>
 
+                {/* Breaking banner */}
+                {!error && featured && isBreaking && (
+                    <div className="px-4 md:px-6 pb-3">
+                        <div className="relative overflow-hidden rounded-xl border border-red-500/20 bg-gradient-to-r from-red-600/25 via-black/40 to-black/40">
+                            <div className="absolute inset-0 opacity-40 [background:linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:18px_18px]" />
+                            <div className="relative flex items-center gap-3 px-3 py-2">
+                                <span className="relative inline-flex h-2.5 w-2.5">
+                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-50" />
+                                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_14px_rgba(239,68,68,.65)]" />
+                                </span>
+                                <span className="shrink-0 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-white">Breaking</span>
+                                <a
+                                    href={featured.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="min-w-0 flex-1 truncate text-xs font-semibold text-white/90 hover:text-white"
+                                >
+                                    {featured.title}
+                                </a>
+                                <span className="hidden sm:inline text-[10px] font-mono uppercase tracking-widest text-red-200/70">
+                                    {timeAgo(featured.published_at) || "NOW"}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setPreviewUrl(featured.link);
+                                    }}
+                                    className="shrink-0 rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white ring-1 ring-white/20 hover:bg-white/15"
+                                >
+                                    Preview
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Ticker */}
                 {!error && (
                     <div className="border-t border-white/5 bg-black/60">
                         <div className="flex items-center gap-3 px-4 md:px-6 py-2">
-                            <span className="shrink-0 text-[10px] font-black uppercase tracking-widest text-neutral-500">Ticker</span>
-                            <div className="h-px flex-1 bg-gradient-to-r from-sky-500/20 to-transparent" />
+                            <span className="shrink-0 text-[10px] font-black uppercase tracking-widest text-red-300">Urgent Wire</span>
+                            <div className="h-px flex-1 bg-gradient-to-r from-red-500/30 via-sky-500/10 to-transparent" />
                         </div>
                         <div className="overflow-hidden px-4 md:px-6 pb-3">
                             <div className="whitespace-nowrap text-xs text-neutral-300">
@@ -715,9 +762,9 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                             href={n.link}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="mr-4 inline-flex items-center gap-2 rounded-full bg-white/[0.03] px-3 py-1 ring-1 ring-white/10 hover:ring-sky-500/30 hover:text-white transition"
+                                            className="mr-4 inline-flex items-center gap-2 rounded-full bg-red-500/[0.08] px-3 py-1 ring-1 ring-red-500/20 hover:ring-red-400/40 hover:text-white transition"
                                         >
-                                            <span className="text-[10px] font-mono text-neutral-500">{timeAgo(n.published_at) || "NOW"}</span>
+                                            <span className="text-[10px] font-mono text-red-200/70">{timeAgo(n.published_at) || "NOW"}</span>
                                             <span className="max-w-[40ch] truncate">{n.title}</span>
                                         </a>
                                     ))
@@ -728,7 +775,12 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                 )}
             </div>
 
-            <div className="flex-1 overflow-y-auto bg-black/90 scrollbar-hide">
+            <div
+                className="flex-1 min-h-0 overflow-y-auto bg-black/90 custom-scrollbar overscroll-contain"
+                data-lenis-prevent
+                onWheel={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
+            >
                 {/* Error State */}
                 {error && !loading && (
                     <div className="flex flex-col items-center justify-center p-10 text-center">
@@ -1064,6 +1116,9 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                             exit={{ x: 40, opacity: 0 }}
                             transition={{ type: "spring", bounce: 0, duration: 0.35 }}
                             className="absolute right-0 top-0 h-full w-full md:w-[48%] bg-black border-l border-white/10"
+                            data-lenis-prevent
+                            onWheel={(e) => e.stopPropagation()}
+                            onTouchMove={(e) => e.stopPropagation()}
                         >
                             <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10 bg-black/60 backdrop-blur">
                                 <div className="min-w-0">
@@ -1293,7 +1348,8 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                                     exit={{ opacity: 0, scale: 0.96, y: 18 }}
                                     transition={{ type: "spring", bounce: 0, duration: 0.45 }}
                                     onPointerDown={(e) => e.stopPropagation()}
-                                    className="relative z-10 w-full max-w-6xl h-[90vh] md:h-[85vh]"
+                                    className="relative z-10 w-full max-w-6xl h-[90vh] md:h-[85vh] min-h-0"
+                                    data-lenis-prevent
                                 >
                                     {/* Shimmer border - decorative */}
                                     <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
@@ -1318,7 +1374,7 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                                     </button>
 
                                     {/* Modal content */}
-                                    <div className="relative z-20 w-full h-full overflow-hidden rounded-3xl border border-sky-500/20 bg-black shadow-2xl">
+                                    <div className="relative z-20 w-full h-full min-h-0 overflow-hidden rounded-3xl border border-sky-500/20 bg-black shadow-2xl" data-lenis-prevent>
                                         <NewsFeedContent activeMarket={activeMarket as MarketFilter} onClose={handleCloseModal} />
                                     </div>
                                 </motion.div>
