@@ -120,8 +120,8 @@ export function PerformanceProvider({
   }, []);
 
   // Wrap with Lenis if smooth scroll is enabled.
-  // We allow mobile Lenis too (for "butter" scrolling) but keep an escape hatch.
-  const shouldUseSmoothScroll = enableSmoothScroll && (!isMobile || enableMobileSmoothScroll);
+  // IMPORTANT: Disable Lenis on mobile - use native scroll for best touch experience
+  const shouldUseSmoothScroll = enableSmoothScroll && !isMobile;
   
   if (shouldUseSmoothScroll) {
     return (

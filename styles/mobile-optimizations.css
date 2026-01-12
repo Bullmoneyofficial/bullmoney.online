@@ -59,10 +59,14 @@ html {
 body {
   min-height: 100%;
   min-height: calc(var(--vh, 1vh) * 100);
-  /* Prevent mobile browser bars from causing layout shifts */
-  position: fixed;
+  /* FIXED: Remove position:fixed and overflow:hidden - they block scrolling! */
+  /* Use standard positioning to allow page scroll */
   width: 100%;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Enable touch scrolling */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   /* Font rendering optimization */
   font-synthesis: none;
   text-rendering: optimizeLegibility;

@@ -908,20 +908,21 @@ const HeroParallax = () => {
 
     <div
         ref={ref}
-        className="h-screen pt-10 pb-0 overflow-hidden antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d]"
-        style={{ contain: 'layout size' }}
+        className="h-screen pt-10 pb-0 antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d]"
+        style={{ contain: 'layout', touchAction: 'pan-y' }}
+        data-allow-scroll
     >
         <div 
-          className="absolute inset-0 w-full h-full z-0 bg-black/5 pointer-events-none md:pointer-events-auto overflow-hidden"
+          className="absolute inset-0 w-full h-full z-0 bg-black/5 pointer-events-none"
           style={{ 
             contain: 'strict',
             isolation: 'isolate',
-            willChange: 'transform',
             touchAction: 'pan-y',
           }}
+          data-allow-scroll
         >
           <div 
-            className="w-full h-full pointer-events-none md:pointer-events-auto overflow-hidden relative"
+            className="w-full h-full pointer-events-none relative"
             style={{
               position: 'absolute',
               top: 0,
@@ -935,7 +936,7 @@ const HeroParallax = () => {
             <Spline 
               scene="/scene1.splinecode" 
               placeholder={undefined} 
-              className="!w-full !h-full pointer-events-none md:pointer-events-auto"
+              className="!w-full !h-full pointer-events-none"
               priority={true}
               isHero={true}
             />

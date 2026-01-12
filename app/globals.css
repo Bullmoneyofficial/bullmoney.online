@@ -293,41 +293,76 @@ html {
 html {
   -webkit-overflow-scrolling: touch;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: auto !important;
+  touch-action: pan-y;
 }
 
 body {
   -webkit-overflow-scrolling: touch;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: auto !important;
+  touch-action: pan-y;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* Allow scrolling in main content and sections */
 main, section, [data-allow-scroll], [data-scrollable] {
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  touch-action: pan-y !important;
   overscroll-behavior-y: contain;
 }
 
-/* Ensure canvas and interactive elements don't block scrolling */
+/* CRITICAL: Ensure canvas and 3D elements don't block scrolling on mobile */
 canvas {
-  touch-action: pan-y;
+  touch-action: pan-y !important;
+  pointer-events: none;
+}
+
+/* Allow pointer events on desktop only */
+@media (min-width: 769px) and (hover: hover) {
+  canvas {
+    pointer-events: auto;
+    touch-action: none;
+  }
 }
 
 /* Fix for iOS Safari */
 @supports (-webkit-touch-callout: none) {
   body {
-    height: 100vh;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  
+  html {
     height: -webkit-fill-available;
   }
 }
 
+/* Spline container - ensure scroll passthrough */
 .spline-container {
-  height: 100%; /* Make it fill its parent's height */
-  width: 100%; /* Make it fill its parent's width */
-  position: relative; /* Needed for absolutely positioned children */
-  touch-action: pan-y;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  touch-action: pan-y !important;
   -webkit-overflow-scrolling: touch;
+  pointer-events: none;
+}
+
+@media (min-width: 769px) and (hover: hover) {
+  .spline-container {
+    pointer-events: auto;
+  }
+}
+
+/* Fixed elements should not block scrolling */
+.fixed, [style*="position: fixed"] {
+  touch-action: none;
+}
+
+/* Ensure hero section doesn't block scroll */
+.h-screen {
+  touch-action: pan-y !important;
 }
 
 /* ============================================

@@ -54,23 +54,27 @@ export const GLOBAL_STYLES = `
   }
 
   /* --- MOBILE SCROLL FIXES START --- */
-  // FIX #1: Remove fixed positioning that causes scroll issues
+  // FIX #1: Allow scrolling on mobile and desktop
   html, body {
     background-color: black;
-    overflow: hidden; /* Prevent native window scroll */
+    overflow-x: hidden; /* Only hide horizontal overflow */
+    overflow-y: auto; /* Allow vertical scrolling */
     overscroll-behavior-y: none; /* Kill rubber-banding vertically */
     width: 100%;
-    height: 100%;
+    min-height: 100%;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
 
-  // FIX #1: Remove snap-scroll on mobile for smooth Instagram/TikTok-like scrolling
+  // FIX #1: Smooth scrolling container for mobile
   .mobile-scroll {
     overflow-y: auto;
     overflow-x: hidden;
-    height: 100dvh; /* Dynamic viewport height */
+    min-height: 100dvh; /* Dynamic viewport height */
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: none; /* Changed from 'contain' */
+    overscroll-behavior-y: none;
+    touch-action: pan-y;
   }
 
   /* Remove scrollbars but keep functionality */
@@ -82,8 +86,8 @@ export const GLOBAL_STYLES = `
     width: 100%;
     min-height: 100dvh; /* Changed from fixed height */
     position: relative;
-    overflow: hidden;
     will-change: transform;
+    touch-action: pan-y;
   }
 
   /* Desktop only: Enable snap scrolling */
