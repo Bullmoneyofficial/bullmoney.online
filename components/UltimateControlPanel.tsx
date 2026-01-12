@@ -1008,15 +1008,15 @@ export function UltimateControlPanel({
                         <StatCard
                           icon={Cpu}
                           label="CPU"
-                          value={`${deviceInfo.performance.cpu.cores} Cores`}
-                          sublabel={deviceInfo.performance.cpu.architecture}
+                          value={deviceInfo.performance.cpu.name || `${deviceInfo.performance.cpu.cores} Cores`}
+                          sublabel={`${deviceInfo.performance.cpu.cores}C/${deviceInfo.performance.cpu.threads}T • ${deviceInfo.performance.cpu.architecture}`}
                           color="#22c55e"
                         />
                         <StatCard
                           icon={HardDrive}
                           label="RAM"
                           value={`${deviceInfo.performance.memory.total}GB`}
-                          sublabel={`${deviceInfo.performance.memory.percentage}% used`}
+                          sublabel={deviceInfo.performance.memory.type || `${deviceInfo.performance.memory.percentage}% used`}
                           color="#f59e0b"
                         />
                       </div>
@@ -1039,15 +1039,27 @@ export function UltimateControlPanel({
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-sm">
                             <div>
-                              <span className="text-blue-200/60">Resolution:</span>
+                              <span className="text-blue-200/60">Display:</span>
                               <span className="text-white font-semibold ml-2 drop-shadow-lg">
-                                {deviceInfo.screen.width}×{deviceInfo.screen.height}
+                                {deviceInfo.screen.physicalWidth}×{deviceInfo.screen.physicalHeight}
                               </span>
                             </div>
                             <div>
-                              <span className="text-blue-200/60">Pixel Ratio:</span>
+                              <span className="text-blue-200/60">PPI:</span>
                               <span className="text-white font-semibold ml-2 drop-shadow-lg">
-                                {deviceInfo.screen.pixelRatio}x
+                                {deviceInfo.screen.ppi || Math.round(deviceInfo.screen.physicalWidth / 6)} ppi
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-blue-200/60">Screen:</span>
+                              <span className="text-white font-semibold ml-2 drop-shadow-lg">
+                                {deviceInfo.screen.diagonal || '?'}" @ {deviceInfo.screen.refreshRate || 60}Hz
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-blue-200/60">HDR:</span>
+                              <span className="text-white font-semibold ml-2 drop-shadow-lg">
+                                {deviceInfo.screen.hdr ? 'Yes' : 'No'}
                               </span>
                             </div>
                           </div>
@@ -1294,12 +1306,14 @@ export function UltimateControlPanel({
                         </div>
                         <div className="relative z-10 text-sm text-blue-200/80 mb-3">Device Snapshot</div>
                         <div className="relative z-10 grid grid-cols-2 gap-2 text-sm">
-                          <div className="text-blue-200/60">CPU: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.performance.cpu.cores} cores</span></div>
-                          <div className="text-blue-200/60">Arch: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.performance.cpu.architecture}</span></div>
-                          <div className="text-blue-200/60">Pixel Ratio: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.screen.pixelRatio}x</span></div>
-                          <div className="text-blue-200/60">Resolution: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.screen.width}×{deviceInfo.screen.height}</span></div>
-                          <div className="text-blue-200/60">Touch: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.screen.touchSupport ? 'Yes' : 'No'}</span></div>
-                          <div className="text-blue-200/60">Battery: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.battery.level >= 0 ? `${deviceInfo.battery.level}%` : 'Unknown'}</span></div>
+                          <div className="text-blue-200/60">CPU: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.performance.cpu.name || `${deviceInfo.performance.cpu.cores} cores`}</span></div>
+                          <div className="text-blue-200/60">Threads: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.performance.cpu.threads}</span></div>
+                          <div className="text-blue-200/60">RAM: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.performance.memory.total}GB {deviceInfo.performance.memory.type || ''}</span></div>
+                          <div className="text-blue-200/60">VRAM: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.performance.gpu.vram ? `${deviceInfo.performance.gpu.vram}GB` : 'Unknown'}</span></div>
+                          <div className="text-blue-200/60">Display: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.screen.physicalWidth}×{deviceInfo.screen.physicalHeight}</span></div>
+                          <div className="text-blue-200/60">Refresh: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.screen.refreshRate || 60}Hz</span></div>
+                          <div className="text-blue-200/60">Storage: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.performance.storage ? `${deviceInfo.performance.storage.available}/${deviceInfo.performance.storage.total}GB` : 'Unknown'}</span></div>
+                          <div className="text-blue-200/60">Battery: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.battery.level >= 0 ? `${deviceInfo.battery.level}%` : 'N/A'}</span></div>
                         </div>
                       </div>
 
