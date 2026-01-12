@@ -98,16 +98,12 @@ export default function AudioWidget() {
 
   // When user selects a streaming source, activate it (the click is the user interaction!)
   const handleStreamingSelect = (newSource: MusicSource) => {
+    // Set all state in one batch to ensure autoplay happens from user click
     setMusicSource(newSource);
-    if (STREAMING_SOURCES.includes(newSource)) {
-      // This click IS the user interaction that enables autoplay
-      setStreamingActive(true);
-      setMusicEnabled(true);
-      // Force iframe reload with fresh autoplay
-      setIframeKey((k) => k + 1);
-    } else {
-      setStreamingActive(false);
-    }
+    setStreamingActive(true);
+    setMusicEnabled(true);
+    // Force iframe reload with fresh autoplay key - this is the trick!
+    setIframeKey((k) => k + 1);
   };
 
   // Also activate when musicEnabled is toggled on for streaming source
