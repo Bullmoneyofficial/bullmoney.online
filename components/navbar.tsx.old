@@ -1,0 +1,1444 @@
+"use client";
+import { cn } from "@/lib/utils";
+import {
+  IconMenu2,
+  IconX,
+  IconPalette,
+} from "@tabler/icons-react";
+import {
+  motion,
+  AnimatePresence,
+} from "framer-motion";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
+import { useCalEmbed } from "@/app/hooks/useCalEmbed";
+import { CONSTANTS } from "@/constants/links";
+
+// --- IMPORT CONTEXT ---
+import { useStudio } from "@/context/StudioContext";
+import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
+
+// --- IMPORT MODAL COMPONENTS ---
+import AdminModal from "@/components/AdminModal";
+import BullMoneyModal from "@/components/Faq";
+import AffiliateModal from "@/components/AffiliateModal";
+
+// --- IMPORT SOUND EFFECTS ---
+import { SoundEffects } from "@/app/hooks/useSoundEffects";
+
+// --- IMPORT MODULAR NAVBAR COMPONENTS ---
+import { DesktopNavbar } from "./navbar/DesktopNavbar";
+import { MobileStaticHelper } from "./navbar/MobileStaticHelper";
+import { MobileDropdownMenu } from "./navbar/MobileDropdownMenu";
+import { MovingTradingTip } from "./navbar/MovingTradingTip";
+import { ThemeSelectorModal } from "./navbar/ThemeSelectorModal";
+import { NAVBAR_THEME_FILTER_MAP, NAVBAR_TRADING_TIPS } from "./navbar/navbar.utils";
+
+// --- IMPORT NAVBAR CSS ---
+import "./navbar.css";
+
+// --- THEME CSS FILTER MAP ---
+/**
+ * Map theme IDs to CSS filter values for navbar color transformation
+ */
+const NAVBAR_THEME_FILTER_MAP: Record<string, string> = {
+  // CRYPTO THEMES
+  'BITCOIN': 'hue-rotate(0deg) saturate(1) brightness(1)',
+  'ETHEREUM': 'hue-rotate(-30deg) saturate(1.2) brightness(1.05)',
+  'RIPPLE': 'hue-rotate(200deg) saturate(1.1) brightness(0.95)',
+  'DOGE': 'hue-rotate(45deg) saturate(1.15) brightness(1.1)',
+  'CARDANO': 'hue-rotate(270deg) saturate(1.1) brightness(0.98)',
+  'SOLANA': 'hue-rotate(-20deg) saturate(1.3) brightness(1.08)',
+  'POLKADOT': 'hue-rotate(280deg) saturate(1.2) brightness(1.02)',
+  'STELLAR': 'hue-rotate(190deg) saturate(1.15) brightness(0.97)',
+  
+  // MARKET THEMES
+  'BULLISH': 'hue-rotate(100deg) saturate(1.3) brightness(1.15)',
+  'BEARISH': 'hue-rotate(0deg) saturate(1.2) brightness(0.9)',
+  'NEUTRAL': 'hue-rotate(0deg) saturate(0.8) brightness(1)',
+  'VOLATILE': 'hue-rotate(-40deg) saturate(1.4) brightness(1.2)',
+  
+  // SPECIAL THEMES
+  'MIDNIGHT': 'hue-rotate(0deg) saturate(0.7) brightness(0.85)',
+  'NEON': 'hue-rotate(0deg) saturate(1.5) brightness(1.3)',
+  'RETRO': 'hue-rotate(30deg) saturate(1.1) brightness(1.05)',
+  'CYBERPUNK': 'hue-rotate(-50deg) saturate(1.8) brightness(1.25)',
+  'MATRIX': 'hue-rotate(120deg) saturate(1.2) brightness(0.95)',
+  'OCEAN': 'hue-rotate(200deg) saturate(1.1) brightness(1)',
+  'DESERT': 'hue-rotate(40deg) saturate(1.15) brightness(1.1)',
+  
+  // DEFAULT
+  'DEFAULT': 'hue-rotate(0deg) saturate(1) brightness(1)',
+};
+
+// --- HELPER HOOK FOR ROTATING TIPS ---
+function useRotatingIndex(length: number, interval: number = 5000) {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    if (!length || length <= 1) return;
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % length);
+    }, interval);
+    return () => clearInterval(timer);
+  }, [length, interval]);
+  return index;
+}
+
+// --- DOCK COMPONENTS ---
+
+interface DockProps {
+  items: {
+    icon: React.ReactNode;
+    label: string;
+    tips?: string[];
+    onClick?: () => void;
+    href?: string;
+    triggerComponent?: React.ReactNode;
+    showShine?: boolean; // Added prop for shine effect
+    isXMHighlight?: boolean; // 🎉 XM Easter Egg - individual button highlight
+  }[];
+  className?: string;
+  baseItemSize?: number;
+  magnification?: number;
+}
+
+function DockItem({
+  children,
+  className = "",
+  onClick,
+  mouseX,
+  spring,
+  distance,
+  magnification,
+  baseItemSize,
+  itemRef,
+}: any) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isHovered = useMotionValue(0);
+
+  // Combine refs - internal ref and external itemRef
+  const setRefs = (el: HTMLDivElement | null) => {
+    (ref as React.MutableRefObject<HTMLDivElement | null>).current = el;
+    if (itemRef) itemRef(el);
+  };
+
+  // PERFORMANCE: Throttle mouse distance calculation
+  const mouseDistance = useTransform(mouseX, (val: number) => {
+    const rect = ref.current?.getBoundingClientRect() ?? {
+      x: 0,
+      width: baseItemSize,
+    };
+    return val - rect.x - baseItemSize / 2;
+  });
+
+  const targetSize = useTransform(
+    mouseDistance,
+    [-distance, 0, distance],
+    [baseItemSize, magnification, baseItemSize]
+  );
+  
+  // PERFORMANCE: Use stiffer spring with higher damping for 120Hz
+  const size = useSpring(targetSize, {
+    ...spring,
+    // Higher stiffness = faster response, higher damping = less overshoot
+    stiffness: 300,
+    damping: 25,
+    mass: 0.1,
+  });
+
+  return (
+    <motion.div
+      ref={setRefs}
+      style={{
+        width: size,
+        height: size,
+        // GPU acceleration hint
+        transform: 'translateZ(0)',
+      }}
+      onHoverStart={() => isHovered.set(1)}
+      onHoverEnd={() => isHovered.set(0)}
+      onFocus={() => isHovered.set(1)}
+      onBlur={() => isHovered.set(0)}
+      onClick={onClick}
+      onMouseEnter={() => {
+        SoundEffects.hover();
+      }}
+      onMouseDown={() => {
+        SoundEffects.click();
+      }}
+      onTouchStart={() => {
+        SoundEffects.click();
+      }}
+      className={cn(
+        "relative flex flex-col items-center justify-center cursor-pointer mb-2 will-animate",
+        className
+      )}
+      tabIndex={0}
+      role="button"
+      aria-haspopup="true"
+    >
+      {Children.map(children, (child) => {
+        if (isValidElement(child)) {
+          return cloneElement(child as React.ReactElement<any>, {
+            ...(child.type === DockLabel ? { isHovered } : {}),
+          });
+        }
+        return child;
+      })}
+    </motion.div>
+  );
+}
+
+function DockLabel({ children, tips, className = "", isHovered, isXMUser = false, ...rest }: any) {
+  const [isVisible, setIsVisible] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const parentRef = useRef<HTMLDivElement>(null);
+  const currentIndex = useRotatingIndex(tips?.length || 0);
+
+  useEffect(() => {
+    if (!isHovered) return;
+    const unsubscribe = isHovered.on("change", (latest: number) => {
+      setIsVisible(latest === 1);
+    });
+    return () => unsubscribe();
+  }, [isHovered]);
+
+  useEffect(() => {
+    if (!isVisible || !parentRef.current || !tooltipRef.current) return;
+
+    const updatePosition = () => {
+      const parentRect = parentRef.current?.getBoundingClientRect();
+      if (parentRect) {
+        setPosition({
+          x: parentRect.left + parentRect.width / 2,
+          y: parentRect.bottom + 8,
+        });
+      }
+    };
+
+    // Initial position
+    updatePosition();
+    
+    // Update on resize
+    window.addEventListener('resize', updatePosition);
+    return () => window.removeEventListener('resize', updatePosition);
+  }, [isVisible]);
+
+  return (
+    <>
+      <div ref={parentRef} className="absolute inset-0" />
+      <AnimatePresence>
+        {isVisible && (
+          <motion.div
+            ref={tooltipRef}
+            initial={{ opacity: 0, scale: 0.80 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ 
+              duration: 0.35, 
+              ease: [0.34, 1.56, 0.64, 1], // cubic-bezier spring curve
+              opacity: { duration: 0.25 }
+            }}
+            className={cn(
+              "fixed w-max min-w-[160px] rounded-xl border bg-black/75 backdrop-blur-2xl px-4 py-2.5 z-[150] pointer-events-none shadow-2xl",
+              isXMUser
+                ? "border-red-500/50 shadow-[0_0_40px_rgba(239,68,68,0.4),inset_0_0_20px_rgba(239,68,68,0.1)]"
+                : "border-blue-500/50 shadow-[0_0_40px_rgba(59,130,246,0.4),inset_0_0_20px_rgba(59,130,246,0.1)]",
+              className
+            )}
+            role="tooltip"
+            style={{
+              left: `${position.x}px`,
+              top: `${position.y}px`,
+              transform: 'translateX(-50%)',
+            }}
+          >
+          {/* Arrow pointing up */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.2 }}
+            className={cn(
+              "absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px]",
+              isXMUser ? "border-b-red-500/50" : "border-b-blue-500/50"
+            )} 
+          />
+          
+          <div className="flex items-center gap-3">
+            {/* Pulse indicator */}
+            <motion.div 
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.05, duration: 0.25 }}
+              className="relative flex h-2 w-2 shrink-0"
+            >
+              <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", isXMUser ? "bg-red-400" : "bg-blue-400")} />
+              <span className={cn("relative inline-flex rounded-full h-2 w-2 shadow-lg", isXMUser ? "bg-red-500" : "bg-blue-500")} />
+            </motion.div>
+            
+            {/* Label */}
+            <motion.span 
+              initial={{ opacity: 0, x: -5 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1, duration: 0.25 }}
+              className={cn("text-[10px] uppercase tracking-widest font-bold shrink-0", isXMUser ? "text-red-400" : "text-blue-400")}
+            >
+              {children}
+            </motion.span>
+            
+            {/* Divider */}
+            <motion.div 
+              initial={{ opacity: 0, scaleY: 0 }}
+              animate={{ opacity: 1, scaleY: 1 }}
+              transition={{ delay: 0.12, duration: 0.2 }}
+              className={cn("w-[1px] h-4 shrink-0 bg-gradient-to-b", isXMUser ? "from-red-500/40 via-red-500/20 to-red-500/40" : "from-blue-500/40 via-blue-500/20 to-blue-500/40")}
+            />
+            
+            {/* Rotating tip text */}
+            {tips && tips.length > 0 && (
+              <div className="relative overflow-hidden min-w-fit">
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={currentIndex}
+                    initial={{ opacity: 0, y: 8, x: 5 }}
+                    animate={{ opacity: 1, y: 0, x: 0 }}
+                    exit={{ opacity: 0, y: -8, x: -5 }}
+                    transition={{ 
+                      duration: 0.3,
+                      ease: [0.34, 1.56, 0.64, 1]
+                    }}
+                    className={cn("text-xs font-medium whitespace-nowrap block", isXMUser ? "text-red-100/90" : "text-blue-100/90")}
+                  >
+                    {tips[currentIndex]}
+                  </motion.span>
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
+  );
+}
+
+function DockIcon({ children, label, className = "", showShine = false, isXMUser = false }: any) {
+  return (
+    <motion.div
+      whileHover={{ y: -5, scale: 1.08 }}
+      whileTap={{ scale: 0.96 }}
+      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      className={cn(
+        "flex flex-col h-full w-full items-center justify-center rounded-2xl backdrop-blur-2xl border-2 shadow-lg transition-all duration-300 relative overflow-hidden group/icon icon-glass",
+        showShine
+            ? (isXMUser ? "border-red-500/70 bg-red-950/30" : "border-blue-500/70 bg-blue-950/20")
+            : (isXMUser ? "border-red-500/30 bg-red-950/10" : "border-blue-500/30 bg-blue-950/10"),
+        className
+      )}
+    >
+      {/* Shimmer Background - Dynamic based on XM Easter Egg */}
+      {showShine && (
+        <motion.span 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          className={cn(
+            "absolute inset-[-100%] opacity-100 z-0",
+            isXMUser 
+              ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]"
+              : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
+          )} 
+        />
+      )}
+
+      {/* Gradient Overlay for shimmer effect */}
+      <motion.div
+        animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+        className={cn(
+          "absolute inset-0 opacity-20 z-0 pointer-events-none",
+          isXMUser
+            ? "bg-gradient-to-r from-red-500/30 via-red-500/10 to-transparent"
+            : "bg-gradient-to-r from-blue-500/30 via-blue-500/10 to-transparent"
+        )}
+      />
+
+      {/* Hover glow effect */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileHover={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className={cn(
+          "absolute inset-0 rounded-2xl pointer-events-none blur-lg",
+          isXMUser
+            ? "bg-red-500/20"
+            : "bg-blue-500/20"
+        )}
+      />
+
+      {/* Content Layer */}
+      <div className="relative z-10 flex flex-col h-full w-full items-center justify-center">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.05, type: "spring" }}
+          className="flex-shrink-0 mb-1 z-10 pointer-events-none relative"
+        >
+          {children}
+          {/* Little Notification Dot if Shining */}
+          {showShine && (
+              <motion.span 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.1, type: "spring", stiffness: 300 }}
+                className="absolute -top-1 -right-1 flex h-2.5 w-2.5"
+              >
+                  <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", isXMUser ? "bg-red-400" : "bg-blue-400")}></span>
+                  <span className={cn("relative inline-flex rounded-full h-2.5 w-2.5 shadow-lg", isXMUser ? "bg-red-500" : "bg-blue-500")}></span>
+              </motion.span>
+          )}
+        </motion.div>
+        
+        <motion.span 
+          initial={{ opacity: 0.6 }}
+          whileHover={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className={cn(
+              "text-[9px] uppercase tracking-widest font-semibold z-10 pointer-events-none transition-colors",
+              showShine 
+                ? (isXMUser ? "text-red-300 dark:text-red-300 font-bold" : "text-blue-300 dark:text-blue-300 font-bold")
+                : (isXMUser ? "text-red-200/80 dark:text-red-200/80" : "text-blue-200/80 dark:text-blue-200/80")
+          )}
+        >
+          {label}
+        </motion.span>
+      </div>
+    </motion.div>
+  );
+}
+
+interface DockWithRefsProps extends DockProps {
+  spring?: any;
+  distance?: number;
+  dockRef?: React.RefObject<HTMLDivElement>;
+  buttonRefs?: React.RefObject<(HTMLDivElement | null)[]>;
+  onHoverChange?: (isHovered: boolean) => void;
+  isXMUser?: boolean; // 🎉 XM Easter Egg prop
+}
+
+function Dock({
+  items,
+  className = "",
+  spring = { mass: 0.1, stiffness: 150, damping: 12 },
+  magnification = 100,
+  distance = 150,
+  baseItemSize = 70,
+  dockRef,
+  buttonRefs,
+  onHoverChange,
+  isXMUser = false, // 🎉 XM Easter Egg
+}: DockWithRefsProps) {
+  const mouseX = useMotionValue(Infinity);
+  const isHovered = useMotionValue(0);
+  const lastMouseX = useRef(0);
+  const rafId = useRef<number | null>(null);
+
+  // PERFORMANCE: Throttle mouse move using RAF for 120Hz
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const pageX = e.pageX;
+    
+    // Only update if position changed significantly (2px threshold)
+    if (Math.abs(pageX - lastMouseX.current) < 2) return;
+    lastMouseX.current = pageX;
+    
+    // Cancel pending RAF to avoid queuing
+    if (rafId.current) cancelAnimationFrame(rafId.current);
+    
+    rafId.current = requestAnimationFrame(() => {
+      isHovered.set(1);
+      mouseX.set(pageX);
+    });
+  }, [mouseX, isHovered]);
+
+  // Cleanup RAF on unmount
+  useEffect(() => {
+    return () => {
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+    };
+  }, []);
+
+  return (
+    <motion.div
+      ref={dockRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => {
+        onHoverChange?.(true);
+      }}
+      onMouseLeave={() => {
+        isHovered.set(0);
+        mouseX.set(Infinity);
+        onHoverChange?.(false);
+        if (rafId.current) cancelAnimationFrame(rafId.current);
+      }}
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className={cn(
+        "mx-auto flex h-24 items-center gap-5 rounded-3xl border-2 px-6 shadow-2xl backdrop-blur-3xl transition-all duration-300 transform translateZ-0 dock-glass",
+        "border-blue-500/40 dark:border-blue-500/40 hover:border-blue-500/70",
+        className
+      )}
+      style={{ 
+        transform: 'translateZ(0)',
+        background: 'rgba(0, 0, 0, 0.5)'
+      }}
+    >
+      {items.map((item, index) => {
+        const content = (
+          <DockItem
+            key={index}
+            onClick={item.onClick}
+            mouseX={mouseX}
+            spring={spring}
+            distance={distance}
+            magnification={magnification}
+            baseItemSize={baseItemSize}
+            itemRef={(el: HTMLDivElement | null) => {
+              if (buttonRefs?.current) {
+                buttonRefs.current[index] = el;
+              }
+            }}
+          >
+            {/* Pass showShine and isXMHighlight to DockIcon */}
+            <DockIcon label={item.label} showShine={item.showShine} isXMUser={item.isXMHighlight}>
+                {item.icon}
+            </DockIcon>
+            <DockLabel tips={item.tips} isXMUser={item.isXMHighlight}>{item.label}</DockLabel>
+
+            {/* INVISIBLE OVERLAY TRIGGER FOR MODALS */}
+            {item.triggerComponent && (
+                <div className="absolute inset-0 z-20 opacity-0 cursor-pointer">
+                    {item.triggerComponent}
+                </div>
+            )}
+          </DockItem>
+        );
+
+        if (item.href) {
+          return (
+            <Link key={index} href={item.href}>
+              {content}
+            </Link>
+          );
+        }
+        return <React.Fragment key={index}>{content}</React.Fragment>;
+      })}
+    </motion.div>
+  );
+}
+
+// --- MAIN NAVBAR ---
+
+// Trading tips for rotating helper - each maps to a button index
+const NAVBAR_TRADING_TIPS = [
+  { target: 'Home', text: 'Market overview & latest updates', buttonIndex: 0 },
+  { target: 'Setups', text: 'Daily signals & chart analysis', buttonIndex: 1 },
+  { target: 'Affiliates', text: 'Join our affiliate program', buttonIndex: 2 },
+  { target: 'FAQ', text: 'Trading guides & support', buttonIndex: 3 },
+  { target: 'Rewards', text: 'Earn points on every trade', buttonIndex: 4 },
+  { target: 'Products', text: 'Pro tools & indicators', buttonIndex: 5 },
+  { target: 'Theme', text: 'Customize your interface', buttonIndex: 6 },
+];
+
+// Animated floating tip that moves between button positions (Desktop only)
+const MovingTradingTip = ({ 
+  tip, 
+  buttonRefs,
+  dockRef,
+  isVisible 
+}: { 
+  tip: { target: string; text: string; buttonIndex: number }; 
+  buttonRefs: React.RefObject<(HTMLDivElement | null)[]>;
+  dockRef: React.RefObject<HTMLDivElement>;
+  isVisible: boolean;
+}) => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isReady, setIsReady] = useState(false);
+  
+  useEffect(() => {
+    const updatePosition = () => {
+      if (!buttonRefs.current || !dockRef.current) return;
+      
+      const button = buttonRefs.current[tip.buttonIndex];
+      const dock = dockRef.current;
+      
+      if (button && dock) {
+        const buttonRect = button.getBoundingClientRect();
+        const dockRect = dock.getBoundingClientRect();
+        
+        // Position below the button, centered
+        setPosition({
+          x: buttonRect.left + buttonRect.width / 2,
+          y: dockRect.bottom + 16
+        });
+        setIsReady(true);
+      }
+    };
+    
+    // Initial position
+    updatePosition();
+    
+    // Update on resize
+    window.addEventListener('resize', updatePosition);
+    return () => window.removeEventListener('resize', updatePosition);
+  }, [tip.buttonIndex, buttonRefs, dockRef]);
+  
+  if (!isVisible || !isReady) return null;
+  
+  return (
+    <motion.div
+      key={tip.buttonIndex}
+      initial={{ opacity: 0, scale: 0.75, y: position.y + 15 }}
+      animate={{ 
+        opacity: 1, 
+        scale: 1,
+        x: position.x - 120, // Center the tooltip (approx half width)
+        y: position.y,
+        transition: {
+          type: "spring",
+          stiffness: 380,
+          damping: 35,
+          mass: 0.5
+        }
+      }}
+      exit={{ opacity: 0, scale: 0.75, y: position.y + 15 }}
+      transition={{ 
+        opacity: { duration: 0.2, ease: "easeOut" },
+        scale: { duration: 0.35, ease: [0.34, 1.56, 0.64, 1] },
+        default: {
+          type: "spring",
+          stiffness: 380,
+          damping: 35,
+          mass: 0.5
+        }
+      }}
+      className="fixed z-[100] pointer-events-none hidden lg:block"
+      style={{ 
+        left: 0,
+        top: 0,
+      }}
+    >
+      <motion.div 
+        className="relative"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1, duration: 0.2 }}
+      >
+        {/* Arrow pointing up */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.05, duration: 0.2 }}
+          className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-blue-500/50" 
+        />
+        
+        {/* Tip container */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.05, duration: 0.25 }}
+          className="px-4 py-2.5 rounded-xl bg-black/85 backdrop-blur-2xl border border-blue-500/50 shadow-[0_0_40px_rgba(59,130,246,0.4),inset_0_0_20px_rgba(59,130,246,0.1)]"
+        >
+          <div className="flex items-center gap-3">
+            {/* Pulse indicator */}
+            <motion.div 
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.25 }}
+              className="relative flex h-2 w-2 shrink-0"
+            >
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500 shadow-lg" />
+            </motion.div>
+            
+            {/* Target label */}
+            <motion.span 
+              initial={{ opacity: 0, x: -5 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.12, duration: 0.25 }}
+              className="text-[10px] uppercase tracking-widest font-bold text-blue-400 shrink-0"
+            >
+              {tip.target}
+            </motion.span>
+            
+            {/* Divider */}
+            <motion.div 
+              initial={{ opacity: 0, scaleY: 0.5 }}
+              animate={{ opacity: 1, scaleY: 1 }}
+              transition={{ delay: 0.14, duration: 0.2 }}
+              className="w-[1px] h-4 bg-gradient-to-b from-blue-500/40 via-blue-500/20 to-blue-500/40 shrink-0 origin-center"
+            />
+            
+            {/* Tip text */}
+            <motion.span 
+              initial={{ opacity: 0, x: 5 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.16, duration: 0.25 }}
+              className="text-xs text-blue-100/90 font-medium whitespace-nowrap"
+            >
+              {tip.text}
+            </motion.span>
+          </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// Mobile helper tips - trading facts, button info, and BullMoney facts
+const MOBILE_HELPER_TIPS = [
+  // Button info
+  "Home: Market overview & updates",
+  "Setups: Daily trading signals",
+  "Socials: Join 10k+ traders",
+  "FAQ: Trading guides & help",
+  "Rewards: Earn points on trades",
+  "Products: Pro tools & indicators",
+  "Theme: Customize your view",
+  // Trading facts
+  "90% of traders fail - be the 10%",
+  "Risk only 1-2% per trade",
+  "The trend is your friend",
+  "Cut losses, let winners run",
+  "Always use stop losses",
+  "Paper trade before going live",
+  "Patience beats impulse trading",
+  "Volume confirms price action",
+  // BullMoney facts
+  "BullMoney: Elite trading community",
+  "10k+ active traders worldwide",
+  "Daily setups for Crypto & Forex",
+  "Join our Discord community",
+  "Premium signals available 24/7",
+  "Learn from pro traders daily",
+];
+
+// Mobile static helper with rotating tips
+const MobileStaticHelper = () => {
+  const [tipIndex, setTipIndex] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsVisible(false);
+      setTimeout(() => {
+        setTipIndex((prev) => (prev + 1) % MOBILE_HELPER_TIPS.length);
+        setIsVisible(true);
+      }, 250);
+    }, 4500);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  return (
+    <div
+      className="fixed right-3 left-3 z-[100] pointer-events-none lg:hidden"
+      style={{ top: 'calc(6.5rem + env(safe-area-inset-top, 0px))' }}
+    >
+      <motion.div 
+        initial={{ opacity: 0, y: -8, scale: 0.95 }}
+        animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : -8, scale: isVisible ? 1 : 0.95 }}
+        transition={{ 
+          duration: 0.35,
+          ease: [0.34, 1.56, 0.64, 1]
+        }}
+        className="mx-auto w-fit max-w-[90%] px-3 py-2 rounded-xl bg-black/80 backdrop-blur-2xl border border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.3),inset_0_0_15px_rgba(59,130,246,0.1)]"
+      >
+        <motion.div 
+          className="flex items-center gap-2.5 justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.2 }}
+        >
+          {/* Pulse indicator */}
+          <motion.div 
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.05, duration: 0.25 }}
+            className="relative flex h-1.5 w-1.5 shrink-0"
+          >
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500" />
+          </motion.div>
+          
+          {/* Rotating tip text */}
+          <AnimatePresence mode="wait">
+            <motion.span 
+              key={tipIndex}
+              initial={{ opacity: 0, y: 4, x: -8 }}
+              animate={{ opacity: 1, y: 0, x: 0 }}
+              exit={{ opacity: 0, y: -4, x: 8 }}
+              transition={{ 
+                duration: 0.3,
+                ease: [0.34, 1.56, 0.64, 1]
+              }}
+              className="text-[10px] tracking-wide font-medium text-blue-200/90 text-center"
+            >
+              {MOBILE_HELPER_TIPS[tipIndex]}
+            </motion.span>
+          </AnimatePresence>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+};
+
+// Theme Selector Modal Component
+const ThemeSelectorModal = ({ 
+  isOpen, 
+  onClose 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void 
+}) => {
+  // Use global theme context for proper theme application
+  const { activeThemeId: globalThemeId, setTheme } = useGlobalTheme();
+  
+  const [activeThemeId, setActiveThemeId] = useState(globalThemeId || 'BITCOIN');
+  const [activeCategory, setActiveCategory] = useState<ThemeCategory>('CRYPTO');
+  const [currentSound, setCurrentSound] = useState<SoundProfile>('SILENT');
+  const [isMuted, setIsMuted] = useState(true);
+  const [previewThemeId, setPreviewThemeId] = useState<string | null>(null);
+
+  // Sync with global theme on mount
+  useEffect(() => {
+    if (globalThemeId) {
+      setActiveThemeId(globalThemeId);
+    }
+  }, [globalThemeId, isOpen]);
+
+  const handleSave = (themeId: string) => {
+    // Use global theme context - applies CSS overlay across entire app
+    setTheme(themeId);
+    
+    // Save theme preference to all storage locations (backup)
+    localStorage.setItem('bullmoney-theme', themeId);
+    localStorage.setItem('user_theme_id', themeId);
+    
+    // Dispatch custom event for components that need to react
+    window.dispatchEvent(new CustomEvent('bullmoney-theme-change', { 
+      detail: { themeId } 
+    }));
+    
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        {/* Backdrop */}
+        <div className="absolute inset-0 bg-black/80" />
+        
+        {/* Modal container */}
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          transition={{ type: "spring", duration: 0.5 }}
+          onClick={(e) => e.stopPropagation()}
+          className="relative w-full max-w-4xl max-h-[85vh] rounded-2xl overflow-hidden border border-blue-500/30 shadow-[0_0_60px_rgba(59,130,246,0.3)]"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 bg-black/90 border-b border-blue-500/30">
+            <div className="flex items-center gap-3">
+              <IconPalette className="w-5 h-5 text-blue-400" />
+              <span className="text-sm font-bold uppercase tracking-widest text-blue-400">
+                Theme Selector
+              </span>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
+            >
+              <IconX className="w-5 h-5 text-gray-400" />
+            </button>
+          </div>
+          
+          {/* Theme Selector Content */}
+          <div className="h-[70vh] overflow-auto">
+            <ThemeSelector
+              activeThemeId={activeThemeId}
+              setActiveThemeId={setActiveThemeId}
+              activeCategory={activeCategory}
+              setActiveCategory={setActiveCategory}
+              isMobile={false}
+              currentSound={currentSound}
+              setCurrentSound={setCurrentSound}
+              isMuted={isMuted}
+              setIsMuted={setIsMuted}
+              onSave={handleSave}
+              onExit={onClose}
+              onHover={setPreviewThemeId}
+            />
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+export const Navbar = () => {
+  // --- ALL HOOKS AT TOP LEVEL (REQUIRED BY REACT) ---
+  // 🎉 XM EASTER EGG: Get XM user status from global theme
+  const { isXMUser, activeThemeId, isAppLoading } = useGlobalTheme();
+  
+  // Modal states
+  const [open, setOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isFaqOpen, setIsFaqOpen] = useState(false);
+  const [isAffiliateOpen, setIsAffiliateOpen] = useState(false);
+  const [isThemeSelectorOpen, setIsThemeSelectorOpen] = useState(false);
+  
+  // 👇 STATE TO PREVENT HYDRATION MISMATCH
+  const [mounted, setMounted] = useState(false);
+  
+  // Rotating tips state
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
+  const [showTip, setShowTip] = useState(true);
+  
+  // Track if dock is being hovered (to hide 5-second tip)
+  const [isDockHovered, setIsDockHovered] = useState(false);
+  
+  // Refs for tracking button positions
+  const dockRef = useRef<HTMLDivElement>(null);
+  const buttonRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // --- USE STUDIO TO CHECK IF REAL ADMIN & STAMPS ---
+  const { state } = useStudio();
+  const { isAdmin, isAuthenticated, userProfile } = state;
+
+  // Cal embed hook
+  const calOptions = useCalEmbed({
+    namespace: CONSTANTS.CALCOM_NAMESPACE,
+    styles: {
+      branding: {
+        brandColor: CONSTANTS.CALCOM_BRAND_COLOR,
+      },
+    },
+    hideEventTypeDetails: CONSTANTS.CALCOM_HIDE_EVENT_TYPE_DETAILS,
+    layout: CONSTANTS.CALCOM_LAYOUT,
+  });
+
+  // Mount effect
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Rotate tips every 5 seconds
+  useEffect(() => {
+    if (!mounted) return;
+    
+    const interval = setInterval(() => {
+      setShowTip(false);
+      setTimeout(() => {
+        setCurrentTipIndex((prev) => (prev + 1) % NAVBAR_TRADING_TIPS.length);
+        setShowTip(true);
+      }, 300);
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [mounted]);
+
+  // Early return if app is still loading (AFTER ALL HOOKS)
+  if (isAppLoading) {
+    return null;
+  }
+  
+  // Get CSS filter for current theme to apply to navbar
+  const themeFilter = NAVBAR_THEME_FILTER_MAP[activeThemeId || 'DEFAULT'] || NAVBAR_THEME_FILTER_MAP['DEFAULT'];
+
+  // CHECK FOR REWARD (5 stamps)
+  const hasReward = (userProfile?.stamps || 0) >= 5;
+
+  // --- SAFE ICONS (Resolve hydration issue) ---
+
+  // 1. Theme Icon - Now uses palette icon for theme selector
+  const safeThemeIcon = (
+    <IconSparkles className="h-6 w-6 text-blue-400" stroke={1.5} />
+  );
+
+  // 2. Admin Icon
+  const safeAdminIcon = isAdmin ? (
+      <IconSettings className="h-5 w-5 text-#3b82f6" stroke={1.5} />
+  ) : (
+      <IconLock className="h-5 w-5 text-neutral-400 dark:text-neutral-500" stroke={1.5} />
+  );
+
+  // 3. Loyalty Icon (Dynamic color if reward)
+  const safeLoyaltyIcon = hasReward ? (
+      <IconCreditCard className="h-6 w-6 text-#3b82f6 animate-pulse" stroke={1.5} />
+  ) : (
+      <IconCreditCard className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />
+  );
+
+
+  const desktopNavItems = [
+    {
+      icon: <IconBuildingStore className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
+      label: "Home",
+      tips: ["Welcome to BullMoney!", "Explore our platform", "Check what's new"],
+      href: "/",
+    },
+    {
+      icon: <IconSparkles className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
+      label: "Setups",
+      tips: ["Daily Trading Setups", "Crypto & Forex Analysis", "Premium Alerts"],
+      triggerComponent: <div className="w-full h-full flex items-center justify-center pointer-events-auto"><ServicesModal /></div>,
+    },
+    {
+        icon: isXMUser 
+          ? <IconUsersGroup className="h-6 w-6 text-red-400" stroke={1.5} />
+          : <IconUsersGroup className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
+        label: "Affiliates",
+        tips: ["Join our affiliate program", "Earn commissions", "Grow with us"],
+        onClick: () => setIsAffiliateOpen(true),
+        isXMHighlight: isXMUser, // 🎉 XM Easter Egg - only this button turns red
+    },
+    {
+        icon: <IconHelp className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
+        label: "FAQ",
+        tips: ["Got questions?", "Find your answers here", "Support center"],
+        onClick: () => setIsFaqOpen(true),
+    },
+    {
+        icon: safeLoyaltyIcon,
+        label: hasReward ? "REWARD!" : "Rewards",
+        tips: hasReward ? ["REWARD UNLOCKED!", "Click to redeem", "10% OFF"] : ["Digital rewards card", "Earn points", "Get exclusive perks"],
+        triggerComponent: <div className="w-full h-full flex items-center justify-center pointer-events-auto"><LoyaltyModal /></div>,
+        showShine: hasReward, // <--- TRIGGERS THE SHINE EFFECT
+    },
+    {
+      icon: <IconCalendarTime className="h-6 w-6 text-neutral-700 dark:text-neutral-200" stroke={1.5} />,
+      label: "Products",
+      tips: ["Browse our products", "Find the best tools for you", "Check out our latest offers"],
+      href: "/products",
+    },
+    {
+      icon: safeThemeIcon,
+      label: "Theme",
+      tips: ["Customize your interface", "Multiple themes available", "Save your preferences"],
+      onClick: () => setIsThemeSelectorOpen(true),
+    },
+  ];
+
+  // --- CONDITIONAL ADMIN BUTTON (DESKTOP) ---
+  if (mounted && (!isAuthenticated || isAdmin)) {
+    desktopNavItems.push({
+      icon: safeAdminIcon,
+      label: isAdmin ? "Dashboard" : "Admin",
+      tips: isAdmin ? ["Manage Site", "Logout", "View Orders"] : ["Team Access", "Admin Login"],
+      onClick: () => setIsAdminOpen(true),
+      triggerComponent: undefined,
+      href: undefined
+    });
+  }
+
+
+  return (
+    <>
+    <style jsx global>{`
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes shimmer {
+            100% { transform: translateX(150%); }
+        }
+    `}</style>
+
+    <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
+    <BullMoneyModal isOpen={isFaqOpen} onClose={() => setIsFaqOpen(false)} />
+    <AffiliateModal isOpen={isAffiliateOpen} onClose={() => setIsAffiliateOpen(false)} />
+    <ThemeSelectorModal isOpen={isThemeSelectorOpen} onClose={() => setIsThemeSelectorOpen(false)} />
+    
+    {/* Desktop Moving Trading Tips - follows buttons, hidden when hovering dock */}
+    <AnimatePresence mode="wait">
+      {mounted && showTip && !isDockHovered && (
+        <MovingTradingTip 
+          key={`desktop-tip-${currentTipIndex}`}
+          tip={NAVBAR_TRADING_TIPS[currentTipIndex]} 
+          buttonRefs={buttonRefs}
+          dockRef={dockRef}
+          isVisible={showTip} 
+        />
+      )}
+    </AnimatePresence>
+    
+    {/* Mobile Static Helper - small and always visible */}
+    {mounted && <MobileStaticHelper />}
+
+    <motion.div 
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: mounted ? 1 : 0, y: mounted ? 0 : -20 }}
+      transition={{ duration: 0.5 }}
+      className="fixed top-8 inset-x-0 z-40 w-full px-4 pointer-events-none navbar-themed"
+      style={{
+        filter: themeFilter,
+        transition: 'filter 0.5s ease-in-out, opacity 0.3s ease-in-out'
+      }}
+      data-navbar-container
+    >
+       {/* Hidden trigger for Cal.com modal */}
+      <button
+        id="cal-trigger-btn"
+        className="hidden pointer-events-auto"
+        data-cal-namespace={calOptions.namespace}
+        data-cal-link={CONSTANTS.CALCOM_LINK}
+        data-cal-config={`{"layout":"${calOptions.layout}"}`}
+      />
+
+      {/* DESKTOP LAYOUT */}
+      <div className="hidden lg:flex w-full max-w-7xl mx-auto items-center h-24 relative">
+        <div className="pointer-events-auto z-50 flex items-center justify-center h-23 w-23 overflow-hidden relative">
+             <Link href="/" className="relative w-full h-full block">
+                <Image
+                  src="/BULL.svg"
+                  alt="BullMoney"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+             </Link>
+        </div>
+        <div className="absolute left-1/2 -translate-x-1/2 pointer-events-auto z-40">
+          <Dock 
+            items={desktopNavItems} 
+            dockRef={dockRef}
+            buttonRefs={buttonRefs}
+            onHoverChange={setIsDockHovered}
+            isXMUser={isXMUser}
+          />
+        </div>
+      </div>
+
+      {/* --- MOBILE NAVBAR (SPLIT LAYOUT) --- */}
+      <div className="lg:hidden flex flex-row items-center justify-between w-full px-2 sm:px-4 pointer-events-auto gap-2">
+
+        {/* 1. LOGO (LEFT) */}
+        <div className="relative flex items-center justify-center overflow-hidden h-16 w-16 sm:h-20 sm:w-20 z-50 flex-shrink-0">
+             <Link href="/" className="relative w-full h-full block">
+                <Image
+                  src="/BULL.svg"
+                  alt="BullMoney"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+             </Link>
+        </div>
+
+        {/* 2. PREMIUM GLASS SHIMMER CONTROLS (RIGHT) */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="relative group rounded-full overflow-hidden shadow-2xl z-50 h-12 sm:h-14 flex items-center flex-grow max-w-xs mobile-controls-glass shimmer-border"
+        >
+            {/* Gradient Shimmer Background Layer */}
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-[-100%] bg-gradient-to-r from-blue-600/0 via-blue-500/30 to-blue-600/0 opacity-100"
+            />
+
+            {/* Inner Content Container - Black Glass */}
+            <motion.div 
+              className="relative h-full w-full bg-black/40 dark:bg-black/40 backdrop-blur-3xl rounded-full p-[2px] flex items-center justify-center gap-1 px-2 sm:px-3 border border-blue-500/40 dark:border-blue-500/40 transition-all duration-300 group-hover:border-blue-400/70"
+              whileHover={{ boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)" }}
+            >
+                {/* Theme Selector Button - Centered */}
+                <motion.button
+                    onClick={() => { SoundEffects.click(); setIsThemeSelectorOpen(true); }}
+                    onMouseEnter={() => SoundEffects.hover()}
+                    onTouchStart={() => SoundEffects.click()}
+                    whileHover={{ scale: 1.1, backgroundColor: "rgba(59, 130, 246, 0.15)" }}
+                    whileTap={{ scale: 0.95 }}
+                    className="p-1.5 rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
+                    style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+                    title="Theme Selector"
+                >
+                    <IconPalette className="h-4 w-4 sm:h-5 sm:w-5" />
+                </motion.button>
+
+                {/* Divider */}
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="h-4 w-[1px] bg-gradient-to-b from-blue-500/20 via-blue-500/40 to-blue-500/20 dark:bg-blue-500/20"
+                />
+
+                {/* Menu Toggle Button - Centered */}
+                <motion.button
+                    onClick={() => { SoundEffects.click(); setOpen(!open); }}
+                    onMouseEnter={() => SoundEffects.hover()}
+                    onTouchStart={() => SoundEffects.click()}
+                    whileHover={{ scale: 1.1, backgroundColor: "rgba(59, 130, 246, 0.15)" }}
+                    whileTap={{ scale: 0.95 }}
+                    className="p-1.5 rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
+                    style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+                    title={open ? 'Close menu' : 'Open menu'}
+                >
+                    {/* If reward is unlocked, add a little dot to the menu icon */}
+                    <motion.div 
+                      className="relative flex items-center justify-center"
+                      whileHover={{ rotate: open ? 0 : -90 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                        {open ? <IconX className="h-4 w-4 sm:h-5 sm:w-5" /> : <IconMenu2 className="h-4 w-4 sm:h-5 sm:w-5" />}
+                        {hasReward && !open && (
+                             <motion.span 
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ delay: 0.1, type: "spring" }}
+                              className="absolute -top-0.5 -right-0.5 flex h-2 w-2"
+                            >
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                            </motion.span>
+                        )}
+                    </motion.div>
+                </motion.button>
+            </motion.div>
+        </motion.div>
+      </div>
+    </motion.div>
+    
+    {/* MOBILE DROPDOWN MENU - Rendered OUTSIDE the pointer-events-none container */}
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0, y: -15, scale: 0.92 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -15, scale: 0.92 }}
+          transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+          className={cn(
+            "lg:hidden fixed top-28 sm:top-32 left-3 right-3 z-[9999] rounded-2xl border-2 bg-black/90 p-5 sm:p-6 shadow-2xl backdrop-blur-2xl menu-glass",
+            isXMUser
+              ? "border-red-500/50 shadow-[0_0_50px_rgba(239,68,68,0.4),inset_0_0_30px_rgba(239,68,68,0.08)]"
+              : "border-blue-500/50 shadow-[0_0_50px_rgba(59,130,246,0.4),inset_0_0_30px_rgba(59,130,246,0.08)]"
+          )}
+          style={{ 
+            touchAction: 'auto',
+            pointerEvents: 'auto'
+          }}
+        >
+          <motion.div 
+            className="flex flex-col gap-2.5 w-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.3 }}
+          >
+            {/* Home */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.12 }}
+              className="w-full"
+            >
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Link
+                  href="/"
+                  onClick={() => { SoundEffects.click(); setOpen(false); }}
+                  className="flex items-center justify-center gap-3 text-sm sm:text-base font-semibold text-blue-200 hover:text-white transition-all duration-200 w-full px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-blue-500/8 hover:bg-blue-500/20 active:bg-blue-500/35 border border-blue-500/30 hover:border-blue-500/60"
+                >
+                  <IconBuildingStore className="h-5 w-5 text-blue-400" stroke={1.5} />
+                  Home
+                </Link>
+              </motion.div>
+            </motion.div>
+
+            {/* Setups */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.14 }}
+              className="w-full"
+            >
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => { SoundEffects.click(); setOpen(false); }}
+                className="relative flex items-center justify-center gap-3 w-full text-sm sm:text-base font-semibold text-blue-200 hover:text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-blue-500/8 hover:bg-blue-500/20 active:bg-blue-500/35 cursor-pointer transition-all duration-200 border border-blue-500/30 hover:border-blue-500/60"
+              >
+                <IconSparkles className="h-5 w-5 text-blue-400" stroke={1.5} />
+                Setups
+                <div className="absolute inset-0 opacity-0"><ServicesModal /></div>
+              </motion.button>
+            </motion.div>
+
+            {/* Affiliates */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.16 }}
+              className="w-full"
+            >
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                className={cn(
+                  "w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold cursor-pointer px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200 border",
+                  isXMUser
+                    ? "text-red-300 hover:text-red-100 bg-red-500/8 hover:bg-red-500/20 active:bg-red-500/35 font-bold border-red-500/30 hover:border-red-500/60"
+                    : "text-blue-200 hover:text-white bg-blue-500/8 hover:bg-blue-500/20 active:bg-blue-500/35 border-blue-500/30 hover:border-blue-500/60"
+                )}
+                onClick={() => { SoundEffects.click(); setIsAffiliateOpen(true); setOpen(false); }}
+              >
+                <IconUsersGroup className={cn("h-5 w-5", isXMUser ? "text-red-400" : "text-blue-400")} stroke={1.5} />
+                Affiliates
+                {isXMUser && (
+                  <motion.span
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="inline-flex h-2.5 w-2.5 rounded-full bg-red-500"
+                  />
+                )}
+              </motion.button>
+            </motion.div>
+
+            {/* FAQ */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.18 }}
+              className="w-full"
+            >
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold text-blue-200 hover:text-white cursor-pointer px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-blue-500/8 hover:bg-blue-500/20 active:bg-blue-500/35 transition-all duration-200 border border-blue-500/30 hover:border-blue-500/60"
+                onClick={() => { SoundEffects.click(); setIsFaqOpen(true); setOpen(false); }}
+              >
+                <IconHelp className="h-5 w-5 text-blue-400" stroke={1.5} />
+                FAQ
+              </motion.button>
+            </motion.div>
+
+            {/* Rewards */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.20 }}
+              className="w-full"
+            >
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => { SoundEffects.click(); setOpen(false); }}
+                className={cn(
+                  "relative w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200 border",
+                  hasReward ? "text-blue-300 font-bold bg-blue-500/20 border-blue-500/60 hover:bg-blue-500/30" : "text-blue-200 hover:text-white bg-blue-500/8 hover:bg-blue-500/20 active:bg-blue-500/35 border-blue-500/30 hover:border-blue-500/60"
+                )}
+              >
+                <IconCreditCard className="h-5 w-5 text-blue-400" stroke={1.5} />
+                {hasReward ? "Reward Unlocked!" : "Rewards Card"}
+                <div className="absolute inset-0 opacity-0"><LoyaltyModal /></div>
+              </motion.button>
+            </motion.div>
+
+            {/* Divider */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.22 }}
+              className="h-px bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 my-1"
+            />
+
+            {/* Products - Highlighted Button */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.24 }}
+              className="w-full"
+            >
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Link
+                  href="/products"
+                  onClick={() => { SoundEffects.click(); setOpen(false); }}
+                  className="w-full flex items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-bold shadow-lg hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] transition-all duration-200 border-2 border-blue-400/40 hover:border-blue-300/60 hover:from-blue-500 hover:to-blue-400"
+                >
+                  <IconBuildingStore className="h-5 w-5" stroke={1.5} />
+                  Products
+                </Link>
+              </motion.div>
+            </motion.div>
+
+            {/* Theme */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.26 }}
+              className="w-full"
+            >
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => { SoundEffects.click(); setOpen(false); setIsThemeSelectorOpen(true); }}
+                className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold text-blue-200 hover:text-white transition-all duration-200 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-blue-500/8 hover:bg-blue-500/20 active:bg-blue-500/35 border border-blue-500/30 hover:border-blue-500/60"
+              >
+                <IconPalette className="h-5 w-5 text-blue-400" stroke={1.5} />
+                Theme
+              </motion.button>
+            </motion.div>
+
+            {/* Admin */}
+            {mounted && (!isAuthenticated || isAdmin) && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.28 }}
+                className="w-full"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => { SoundEffects.click(); setOpen(false); setIsAdminOpen(true); }}
+                  className={cn(
+                    "w-full flex items-center justify-center gap-3 text-xs sm:text-sm uppercase tracking-widest transition-all duration-200 py-2.5 sm:py-3 rounded-xl border px-4 sm:px-6",
+                    isAdmin ? "text-blue-300 hover:text-blue-100 font-bold bg-blue-500/15 border-blue-500/40 hover:bg-blue-500/25 hover:border-blue-500/60" : "text-blue-200/70 hover:text-blue-300 bg-blue-500/8 border-blue-500/30 hover:bg-blue-500/15 hover:border-blue-500/50"
+                  )}
+                >
+                  {isAdmin ? (
+                    <><IconSettings className="h-5 w-5 text-blue-400" stroke={1.5} /> Admin Dashboard</>
+                  ) : (
+                    <><IconLock className="h-5 w-5 text-blue-400" stroke={1.5} /> Team Access</>
+                  )}
+                </motion.button>
+              </motion.div>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
+  );
+};
