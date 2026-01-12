@@ -325,6 +325,11 @@ export default function RootLayout({
               <StudioProvider>
                 {/* ✅ ADDED: ShopProvider starts here */}
                 <ShopProvider>
+                  {/* Custom Cursor for Desktop */}
+                  <ClientCursor />
+                  {/* Navbar rendered outside filter wrapper to preserve fixed positioning */}
+                  <Navbar />
+                  {/* Theme filter wrapper - applies filter only to main content */}
                   <div 
                     className="theme-filter-wrapper min-h-screen"
                     style={{ 
@@ -332,10 +337,6 @@ export default function RootLayout({
                       transition: 'filter 0.5s ease-in-out'
                     }}
                   >
-                    {/* Custom Cursor for Desktop */}
-                  <ClientCursor />
-                  {/* Navbar rendered outside filter wrapper to preserve fixed positioning */}
-                  <Navbar />
                     {children}
                     {modal}
                     <Footer />
