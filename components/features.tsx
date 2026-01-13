@@ -589,34 +589,28 @@ export const SkeletonTwo = () => {
 
 export const Globe = ({ className }: { className?: string }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [shouldRender, setShouldRender] = useState(true);
   const [showFallback, setShowFallback] = useState(false);
 
   useEffect(() => {
-    // Check if browser can handle WebGL
-    const browserInfo = detectBrowser();
-    if (browserInfo.isInAppBrowser || !browserInfo.canHandleWebGL || browserInfo.isVeryLowMemoryDevice) {
-      console.log('[Globe] Disabled for:', browserInfo.browserName);
-      setShouldRender(false);
-      setShowFallback(true);
-      return;
-    }
-    
     let phi = 0;
     if (!canvasRef.current) return;
 
     let globe: ReturnType<typeof createGlobe> | null = null;
     
+    // Get browser info for optimizations only (not for blocking)
+    const browserInfo = detectBrowser();
+    const isLowEnd = browserInfo.isLowMemoryDevice || browserInfo.isVeryLowMemoryDevice;
+    
     try {
       globe = createGlobe(canvasRef.current, {
-        devicePixelRatio: Math.min(window.devicePixelRatio, 2), // Cap DPR for performance
+        devicePixelRatio: Math.min(window.devicePixelRatio, isLowEnd ? 1 : 2), // Cap DPR for performance
         width: 600 * 2,
         height: 600 * 2,
         phi: 0,
         theta: 0,
         dark: 1,
         diffuse: 1.2,
-        mapSamples: browserInfo.isLowMemoryDevice ? 8000 : 16000, // Reduce for low-end devices
+        mapSamples: isLowEnd ? 6000 : 16000, // Reduce for low-end devices
         mapBrightness: 6,
         baseColor: [0.85, 0.78, 0.55], // ~ #D9BD6A
         markerColor: [0.72, 0.60, 0.23], // ~ #B8983A
@@ -630,6 +624,7 @@ export const Globe = ({ className }: { className?: string }) => {
           phi += 0.01;
         },
       });
+      console.log('[Globe] Created successfully');
     } catch (e) {
       console.error('[Globe] Failed to create globe:', e);
       setShowFallback(true);
@@ -647,8 +642,8 @@ export const Globe = ({ className }: { className?: string }) => {
     };
   }, []);
 
-  // Fallback for browsers that can't handle WebGL
-  if (showFallback || !shouldRender) {
+  // Fallback only shown if WebGL creation actually failed
+  if (showFallback) {
     return (
       <div 
         className={cn("pointer-events-none flex items-center justify-center bg-gradient-to-br from-neutral-900 to-black rounded-full", className)}
