@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { Suspense, useState, useEffect, memo } from 'react';
 import { detectRefreshRate } from '@/lib/use120Hz';
+import { detectBrowser } from '@/lib/browserDetection';
 
 interface SplineWrapperProps {
   scene: string;
@@ -28,8 +29,19 @@ const Sparkle = dynamic(() => import('react-sparkle'), {
 });
 
 // Device tier detection (enhanced for 120Hz support on ALL devices)
-const getDeviceTier = (): 'ultra' | 'high' | 'medium' | 'low' => {
+const getDeviceTier = (): 'ultra' | 'high' | 'medium' | 'low' | 'disabled' => {
   if (typeof window === 'undefined') return 'high';
+  
+  // Check browser capabilities first - disable for in-app browsers
+  const browserInfo = detectBrowser();
+  if (browserInfo.isInAppBrowser || !browserInfo.canHandle3D) {
+    console.log('[SplineScene] 🔒 Disabled for:', browserInfo.browserName);
+    return 'disabled';
+  }
+  
+  if (browserInfo.isVeryLowMemoryDevice) {
+    return 'low';
+  }
   
   const memory = (navigator as any).deviceMemory || 4;
   const cores = navigator.hardwareConcurrency || 4;
@@ -125,6 +137,12 @@ const getDeviceTier = (): 'ultra' | 'high' | 'medium' | 'low' => {
 const canRender3D = (): boolean => {
   if (typeof window === 'undefined') return true;
   
+  // Check browser capabilities
+  const browserInfo = detectBrowser();
+  if (browserInfo.isInAppBrowser || !browserInfo.canHandle3D) {
+    return false;
+  }
+  
   const memory = (navigator as any).deviceMemory || 4;
   const isSmallScreen = window.innerWidth < 480;
   const isMobile = window.innerWidth < 768;
@@ -148,7 +166,7 @@ function SplineSceneComponent({
   
   const [isInteractive, setIsInteractive] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [deviceTier, setDeviceTier] = useState<'ultra' | 'high' | 'medium' | 'low'>('medium');
+  const [deviceTier, setDeviceTier] = useState<'ultra' | 'high' | 'medium' | 'low' | 'disabled'>('medium');
   const [isVisible, setIsVisible] = useState(false);
   const [shouldRender, setShouldRender] = useState(true);
 
@@ -157,13 +175,12 @@ function SplineSceneComponent({
     const tier = getDeviceTier();
     setDeviceTier(tier);
     
-    // Skip 3D rendering only on LOW tier devices
-    // ENHANCED: Ultra and High tier always render
+    // Skip 3D rendering for disabled or low tier devices
     const canRender = canRender3D();
-    setShouldRender(canRender && tier !== 'low');
+    setShouldRender(canRender && tier !== 'low' && tier !== 'disabled');
     
-    if (!canRender || tier === 'low') {
-      console.log('🔒 3D scenes disabled for device protection');
+    if (!canRender || tier === 'low' || tier === 'disabled') {
+      console.log('🔒 3D scenes disabled for device protection - tier:', tier);
     } else {
       console.log(`✅ 3D scenes enabled - Device tier: ${tier.toUpperCase()}`);
     }

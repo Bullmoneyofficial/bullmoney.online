@@ -2,6 +2,7 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
+import { detectBrowser } from '@/lib/browserDetection';
 
 const Spline = dynamic(() => import('@/lib/spline-wrapper'), { ssr: false });
 import {
@@ -59,13 +60,15 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Enhanced device detection hook - includes desktop tier
+// Enhanced device detection hook - includes desktop tier and in-app browser check
 const useDeviceInfo = () => {
     const [deviceInfo, setDeviceInfo] = useState({
         isMobile: false,
         isDesktop: true,
         isHighEndDesktop: true,
         isAppleSilicon: false,
+        isInAppBrowser: false,
+        canHandle3D: true,
     });
     
     useEffect(() => {
@@ -74,6 +77,9 @@ const useDeviceInfo = () => {
         const memory = (navigator as any).deviceMemory || 8;
         const cores = navigator.hardwareConcurrency || 4;
         const isMac = /macintosh|mac os x/i.test(ua);
+        
+        // Check for in-app browsers
+        const browserInfo = detectBrowser();
         
         // Detect Apple Silicon
         let isAppleSilicon = false;
@@ -103,8 +109,10 @@ const useDeviceInfo = () => {
         setDeviceInfo({
             isMobile,
             isDesktop: !isMobile,
-            isHighEndDesktop,
+            isHighEndDesktop: browserInfo.isInAppBrowser ? false : isHighEndDesktop,
             isAppleSilicon,
+            isInAppBrowser: browserInfo.isInAppBrowser,
+            canHandle3D: browserInfo.canHandle3D,
         });
         
         const handleResize = () => {

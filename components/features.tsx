@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useMotionTemplate, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import createGlobe from "cobe";
+import { detectBrowser } from "@/lib/browserDetection";
 
 // --- THEME CONSTANTS ---
 const GOLD_SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #D9BD6A 50%, #00000000 100%)";
@@ -588,36 +589,77 @@ export const SkeletonTwo = () => {
 
 export const Globe = ({ className }: { className?: string }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [shouldRender, setShouldRender] = useState(true);
+  const [showFallback, setShowFallback] = useState(false);
 
   useEffect(() => {
+    // Check if browser can handle WebGL
+    const browserInfo = detectBrowser();
+    if (browserInfo.isInAppBrowser || !browserInfo.canHandleWebGL || browserInfo.isVeryLowMemoryDevice) {
+      console.log('[Globe] Disabled for:', browserInfo.browserName);
+      setShouldRender(false);
+      setShowFallback(true);
+      return;
+    }
+    
     let phi = 0;
     if (!canvasRef.current) return;
 
-    const globe = createGlobe(canvasRef.current, {
-      devicePixelRatio: 2,
-      width: 600 * 2,
-      height: 600 * 2,
-      phi: 0,
-      theta: 0,
-      dark: 1,
-      diffuse: 1.2,
-      mapSamples: 16000,
-      mapBrightness: 6,
-      baseColor: [0.85, 0.78, 0.55], // ~ #D9BD6A
-      markerColor: [0.72, 0.60, 0.23], // ~ #B8983A
-      glowColor: [1, 1, 1],
-      markers: [
-        { location: [37.7595, -122.4367], size: 0.03 },
-        { location: [40.7128, -74.006], size: 0.1 },
-      ],
-      onRender: (state) => {
-        state.phi = phi;
-        phi += 0.01;
-      },
-    });
+    let globe: ReturnType<typeof createGlobe> | null = null;
+    
+    try {
+      globe = createGlobe(canvasRef.current, {
+        devicePixelRatio: Math.min(window.devicePixelRatio, 2), // Cap DPR for performance
+        width: 600 * 2,
+        height: 600 * 2,
+        phi: 0,
+        theta: 0,
+        dark: 1,
+        diffuse: 1.2,
+        mapSamples: browserInfo.isLowMemoryDevice ? 8000 : 16000, // Reduce for low-end devices
+        mapBrightness: 6,
+        baseColor: [0.85, 0.78, 0.55], // ~ #D9BD6A
+        markerColor: [0.72, 0.60, 0.23], // ~ #B8983A
+        glowColor: [1, 1, 1],
+        markers: [
+          { location: [37.7595, -122.4367], size: 0.03 },
+          { location: [40.7128, -74.006], size: 0.1 },
+        ],
+        onRender: (state) => {
+          state.phi = phi;
+          phi += 0.01;
+        },
+      });
+    } catch (e) {
+      console.error('[Globe] Failed to create globe:', e);
+      setShowFallback(true);
+      return;
+    }
 
-    return () => globe.destroy();
+    return () => {
+      if (globe) {
+        try {
+          globe.destroy();
+        } catch (e) {
+          // Ignore destroy errors
+        }
+      }
+    };
   }, []);
+
+  // Fallback for browsers that can't handle WebGL
+  if (showFallback || !shouldRender) {
+    return (
+      <div 
+        className={cn("pointer-events-none flex items-center justify-center bg-gradient-to-br from-neutral-900 to-black rounded-full", className)}
+        style={{ width: 600, height: 600, maxWidth: "100%", aspectRatio: 1 }}
+      >
+        <div className="w-48 h-48 rounded-full bg-gradient-to-br from-[#D9BD6A]/30 to-[#B8983A]/20 border border-[#B8983A]/40 flex items-center justify-center">
+          <span className="text-[#D9BD6A] text-4xl">🌍</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <canvas

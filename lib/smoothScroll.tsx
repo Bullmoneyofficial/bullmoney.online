@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback, createContext, useContext, ReactNode, useState } from 'react';
 import Lenis from 'lenis';
 import { usePerformanceStore } from '@/stores/performanceStore';
+import { detectBrowser } from '@/lib/browserDetection';
 
 // ============================================================================
 // LENIS SMOOTH SCROLL CONTEXT - Luxury 120Hz Scrolling
@@ -56,6 +57,13 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    // Check for in-app browsers - disable Lenis entirely
+    const browserInfo = detectBrowser();
+    if (browserInfo.isInAppBrowser) {
+      console.log('[Lenis] Disabled for in-app browser:', browserInfo.browserName);
+      return;
+    }
+
     const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
     if (prefersReducedMotion) {
       console.log('[Lenis] Disabled due to prefers-reduced-motion');
@@ -63,6 +71,12 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
     }
 
     const isMobile = window.innerWidth < 768;
+    
+    // Disable Lenis on mobile to prevent scroll conflicts
+    if (isMobile) {
+      console.log('[Lenis] Disabled on mobile for native scroll performance');
+      return;
+    }
     
     // ENHANCED: Detect high-end desktop for optimal settings
     const ua = navigator.userAgent.toLowerCase();

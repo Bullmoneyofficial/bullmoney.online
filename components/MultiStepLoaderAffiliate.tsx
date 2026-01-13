@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 // ADJUST THIS PATH IF NEEDED:
 import GhostLoaderCursor from "@/components/Mainpage/GhostCursor";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
+import { detectBrowser } from "@/lib/browserDetection";
 
 // --- GLOBAL ASSET CONFIGURATION ---
 const ASSETS = {
@@ -60,22 +61,65 @@ const useLivePrice = (assetKey: AssetKey) => {
     const symbol = symbolParts[1]?.toLowerCase();
     if (!symbol) return;
 
-    ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@trade`);
-    ws.onmessage = (event) => {
-      const now = Date.now();
-      // OPTIMIZATION: Throttle to 500ms
-      if (now - lastUpdateRef.current > 500) {
-        const data = JSON.parse(event.data);
-        const currentPrice = parseFloat(data.p);
-        setPrevPrice(lastPriceRef.current);
-        setPrice(currentPrice);
-        lastPriceRef.current = currentPrice;
-        lastUpdateRef.current = now;
-      }
-    };
+    // Check if browser can handle WebSocket (in-app browsers often can't)
+    const browserInfo = detectBrowser();
+    if (!browserInfo.canHandleWebSocket) {
+      console.log('[LivePrice] WebSocket disabled for:', browserInfo.browserName);
+      // Use fallback static price for in-app browsers
+      const fallbackPrices: Record<AssetKey, number> = {
+        BTC: 67500,
+        ETH: 3450,
+        SOL: 145,
+      };
+      setPrice(fallbackPrices[assetKey] || 0);
+      return;
+    }
+
+    try {
+      ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@trade`);
+      ws.onmessage = (event) => {
+        const now = Date.now();
+        // OPTIMIZATION: Throttle to 500ms
+        if (now - lastUpdateRef.current > 500) {
+          try {
+            const data = JSON.parse(event.data);
+            const currentPrice = parseFloat(data.p);
+            setPrevPrice(lastPriceRef.current);
+            setPrice(currentPrice);
+            lastPriceRef.current = currentPrice;
+            lastUpdateRef.current = now;
+          } catch (e) {
+            // Silent fail on parse error
+          }
+        }
+      };
+      ws.onerror = () => {
+        // Silent fail - use fallback
+        const fallbackPrices: Record<AssetKey, number> = {
+          BTC: 67500,
+          ETH: 3450,
+          SOL: 145,
+        };
+        setPrice(fallbackPrices[assetKey] || 0);
+      };
+    } catch (e) {
+      // WebSocket creation failed - use fallback
+      const fallbackPrices: Record<AssetKey, number> = {
+        BTC: 67500,
+        ETH: 3450,
+        SOL: 145,
+      };
+      setPrice(fallbackPrices[assetKey] || 0);
+    }
     
     return () => {
-      if (ws) ws.close();
+      if (ws) {
+        try {
+          ws.close();
+        } catch (e) {
+          // Silent fail
+        }
+      }
     };
   }, [assetKey]); 
 

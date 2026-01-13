@@ -4,6 +4,7 @@ import { Suspense, lazy, useState, useEffect, useRef } from "react";
 import Hero from "@/components/hero";
 import CTA from "@/components/Chartnews";
 import { Features } from "@/components/features";
+import { detectBrowser } from "@/lib/browserDetection";
 
 // ==========================================
 // KEYFRAMES STYLES (Injected once)
@@ -45,6 +46,27 @@ const PageStyles = () => (
     .page-float {
       animation: page-float 3s ease-in-out infinite;
     }
+    
+    /* Respect user preference for reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .page-shimmer-ltr,
+      .page-spin,
+      .page-pulse-glow,
+      .page-dot-pulse,
+      .page-float {
+        animation: none;
+      }
+    }
+    
+    /* Reduce animations on mobile to save battery and prevent jank */
+    @media (max-width: 768px) {
+      .page-shimmer-ltr {
+        animation-duration: 6s;
+      }
+      .page-spin {
+        animation-duration: 8s;
+      }
+    }
   `}</style>
 );
 // Use optimized ticker for 120Hz performance
@@ -73,11 +95,21 @@ function LazySplineContainer({ scene }: { scene: string }) {
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [canRender, setCanRender] = useState(true);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const [showFallback, setShowFallback] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Check if device can handle 3D at mount
   useEffect(() => {
     const checkDevice = () => {
+      // Check browser capabilities first
+      const browserInfo = detectBrowser();
+      if (browserInfo.isInAppBrowser || !browserInfo.canHandle3D) {
+        console.log('[LazySpline] Disabled for:', browserInfo.browserName);
+        setCanRender(false);
+        setShowFallback(true);
+        return;
+      }
+      
       const isSmallScreen = window.innerWidth < 480;
       const isMobile = window.innerWidth < 768;
       const memory = (navigator as any).deviceMemory || 4;
@@ -85,6 +117,7 @@ function LazySplineContainer({ scene }: { scene: string }) {
       // Disable on very small screens or low memory mobile devices
       if (isSmallScreen || (isMobile && memory < 3)) {
         setCanRender(false);
+        setShowFallback(true);
       }
     };
     checkDevice();

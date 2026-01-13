@@ -40,7 +40,7 @@ const ASSETS: Record<AssetKey, { id: string; symbol: string; icon: string; color
   SOL: { id: "SOL", symbol: "BINANCE:SOLUSDT", icon: "◎", color: "#14F195" },
 };
 
-// --- LIVE PRICE HOOK ---
+// --- LIVE PRICE HOOK (WITH IN-APP BROWSER FALLBACK) ---
 const useLivePrice = (assetKey: AssetKey) => {
   const [price, setPrice] = useState<number>(0);
   const lastUpdateRef = useRef<number>(0);
@@ -51,60 +51,99 @@ const useLivePrice = (assetKey: AssetKey) => {
     const controller = new AbortController();
     let pollId: ReturnType<typeof setInterval> | null = null;
     
-    try {
-      const symbolParts = ASSETS[assetKey].symbol.split(":");
-      const symbol = symbolParts[1]?.toLowerCase();
-      const symbolUpper = symbolParts[1]?.toUpperCase();
-      if (!symbol || !symbolUpper) return;
+    // Import browser detection dynamically to avoid SSR issues
+    const initPriceUpdates = async () => {
+      try {
+        const { detectBrowser } = await import('@/lib/browserDetection');
+        const browserInfo = detectBrowser();
+        
+        const symbolParts = ASSETS[assetKey].symbol.split(":");
+        const symbol = symbolParts[1]?.toLowerCase();
+        const symbolUpper = symbolParts[1]?.toUpperCase();
+        if (!symbol || !symbolUpper) return;
 
-      const fetchTicker = async () => {
-        try {
-          const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbolUpper}`, { signal: controller.signal });
-          if (!res.ok) return;
-          const data = await res.json();
-          const p = parseFloat(data.price);
-          if (!Number.isNaN(p)) {
-            lastPriceRef.current = p;
-            setPrice(p);
+        const fetchTicker = async () => {
+          try {
+            const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbolUpper}`, { signal: controller.signal });
+            if (!res.ok) return;
+            const data = await res.json();
+            const p = parseFloat(data.price);
+            if (!Number.isNaN(p)) {
+              lastPriceRef.current = p;
+              setPrice(p);
+            }
+          } catch (err) {
+            if (!controller.signal.aborted) {
+              console.error("Initial price fetch failed", err);
+            }
           }
-        } catch (err) {
-          if (!controller.signal.aborted) {
-            console.error("Initial price fetch failed", err);
+        };
+
+        // Initial fetch
+        await fetchTicker();
+        
+        // Poll every 2 seconds as fallback
+        pollId = setInterval(fetchTicker, 2000);
+
+        // Only use WebSocket if browser supports it (skip in-app browsers)
+        if (browserInfo.canHandleWebSocket && !browserInfo.isInAppBrowser) {
+          try {
+            ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@trade`);
+            
+            ws.onerror = () => {
+              console.log('[Price] WebSocket error, falling back to polling');
+              if (ws) {
+                ws.close();
+                ws = null;
+              }
+            };
+            
+            ws.onmessage = (event) => {
+              const now = Date.now();
+              if (now - lastUpdateRef.current > 100) {
+                try {
+                  const data = JSON.parse(event.data);
+                  const nextPrice = parseFloat(data.p);
+                  if (!Number.isNaN(nextPrice)) {
+                    lastPriceRef.current = nextPrice;
+                    setPrice(nextPrice);
+                    lastUpdateRef.current = now;
+                  }
+                } catch (e) {
+                  // Ignore parse errors
+                }
+              }
+            };
+          } catch (e) {
+            console.log('[Price] WebSocket not available, using polling only');
           }
+        } else {
+          console.log('[Price] WebSocket disabled for:', browserInfo.browserName);
         }
-      };
-
-      fetchTicker();
-      pollId = setInterval(fetchTicker, 2000);
-
-      ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@trade`);
-      ws.onmessage = (event) => {
-        const now = Date.now();
-        if (now - lastUpdateRef.current > 100) {
-          const data = JSON.parse(event.data);
-          const nextPrice = parseFloat(data.p);
-          if (!Number.isNaN(nextPrice)) {
-            lastPriceRef.current = nextPrice;
-            setPrice(nextPrice);
-            lastUpdateRef.current = now;
-          }
-        }
-      };
-    } catch (e) {
-      console.error(e);
-    }
+      } catch (e) {
+        console.error('[Price] Init failed:', e);
+      }
+    };
+    
+    initPriceUpdates();
     
     return () => {
       controller.abort();
       if (pollId) clearInterval(pollId);
-      if (ws) ws.close();
+      if (ws) {
+        try {
+          ws.close();
+        } catch (e) {
+          // Ignore close errors
+        }
+      }
     };
   }, [assetKey]);
 
   return { price };
 };
 
-// --- AUDIO ENGINE (CINEMATIC V2 - GLITCH-FREE) ---
+// --- AUDIO ENGINE (CINEMATIC V2 - GLITCH-FREE WITH IN-APP BROWSER SAFETY) ---
 const useAudioEngine = () => {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const oscillatorRef = useRef<OscillatorNode | null>(null);
@@ -114,21 +153,51 @@ const useAudioEngine = () => {
   const filterRef = useRef<BiquadFilterNode | null>(null);
   const isPlayingRef = useRef(false);
   const lastStartTimeRef = useRef(0);
+  const isDisabledRef = useRef(false);
+
+  // Check if audio is disabled for this browser
+  useEffect(() => {
+    const checkAudioSupport = async () => {
+      try {
+        const { detectBrowser } = await import('@/lib/browserDetection');
+        const browserInfo = detectBrowser();
+        if (!browserInfo.canHandleAudio || browserInfo.isInAppBrowser) {
+          isDisabledRef.current = true;
+          console.log('[Audio] Disabled for:', browserInfo.browserName);
+        }
+      } catch (e) {
+        // If detection fails, try to use audio anyway
+      }
+    };
+    checkAudioSupport();
+  }, []);
 
   const initAudio = useCallback(() => {
+    // Skip if disabled
+    if (isDisabledRef.current) return null;
+    
     if (!audioCtxRef.current) {
-      const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
-      audioCtxRef.current = AudioContextClass ? new AudioContextClass() : null;
+      try {
+        const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+        audioCtxRef.current = AudioContextClass ? new AudioContextClass() : null;
+      } catch (e) {
+        console.log('[Audio] AudioContext creation failed');
+        isDisabledRef.current = true;
+        return null;
+      }
     }
     const ctx = audioCtxRef.current;
     if (!ctx) return null;
     if (ctx.state === "suspended") {
-      ctx.resume();
+      ctx.resume().catch(() => {});
     }
     return ctx;
   }, []);
 
   const startEngine = useCallback(() => {
+    // Skip if disabled
+    if (isDisabledRef.current) return;
+    
     // Prevent rapid restart glitches - minimum 100ms between starts
     const now = Date.now();
     if (now - lastStartTimeRef.current < 100) return;
@@ -142,66 +211,70 @@ const useAudioEngine = () => {
 
     isPlayingRef.current = true;
 
-    if (!oscillatorRef.current) {
-      // Main engine oscillator - richer tone
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const filter = ctx.createBiquadFilter();
+    try {
+      if (!oscillatorRef.current) {
+        // Main engine oscillator - richer tone
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
 
-      filter.type = "lowpass";
-      filter.frequency.value = 800;
-      filter.Q.value = 2;
+        filter.type = "lowpass";
+        filter.frequency.value = 800;
+        filter.Q.value = 2;
 
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(80, ctx.currentTime);
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(80, ctx.currentTime);
 
-      gain.gain.setValueAtTime(0, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 0.15);
 
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
 
-      osc.start();
+        osc.start();
 
-      oscillatorRef.current = osc;
-      gainNodeRef.current = gain;
-      filterRef.current = filter;
+        oscillatorRef.current = osc;
+        gainNodeRef.current = gain;
+        filterRef.current = filter;
 
-      // Sub-bass oscillator for depth
-      const subOsc = ctx.createOscillator();
-      const subGain = ctx.createGain();
+        // Sub-bass oscillator for depth
+        const subOsc = ctx.createOscillator();
+        const subGain = ctx.createGain();
 
-      subOsc.type = "sine";
-      subOsc.frequency.setValueAtTime(40, ctx.currentTime);
+        subOsc.type = "sine";
+        subOsc.frequency.setValueAtTime(40, ctx.currentTime);
 
-      subGain.gain.setValueAtTime(0, ctx.currentTime);
-      subGain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.2);
+        subGain.gain.setValueAtTime(0, ctx.currentTime);
+        subGain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.2);
 
-      subOsc.connect(subGain);
-      subGain.connect(ctx.destination);
+        subOsc.connect(subGain);
+        subGain.connect(ctx.destination);
 
-      subOsc.start();
+        subOsc.start();
 
-      subOscRef.current = subOsc;
-      subGainRef.current = subGain;
+        subOscRef.current = subOsc;
+        subGainRef.current = subGain;
 
-      // Quick boot-up blip (shorter, snappier)
-      const bootOsc = ctx.createOscillator();
-      const bootGain = ctx.createGain();
+        // Quick boot-up blip (shorter, snappier)
+        const bootOsc = ctx.createOscillator();
+        const bootGain = ctx.createGain();
 
-      bootOsc.type = "square";
-      bootOsc.frequency.setValueAtTime(400, ctx.currentTime);
-      bootOsc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1);
+        bootOsc.type = "square";
+        bootOsc.frequency.setValueAtTime(400, ctx.currentTime);
+        bootOsc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1);
 
-      bootGain.gain.setValueAtTime(0.08, ctx.currentTime);
-      bootGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        bootGain.gain.setValueAtTime(0.08, ctx.currentTime);
+        bootGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
 
-      bootOsc.connect(bootGain);
-      bootGain.connect(ctx.destination);
+        bootOsc.connect(bootGain);
+        bootGain.connect(ctx.destination);
 
-      bootOsc.start();
-      bootOsc.stop(ctx.currentTime + 0.15);
+        bootOsc.start();
+        bootOsc.stop(ctx.currentTime + 0.15);
+      }
+    } catch (e) {
+      console.log('[Audio] Start engine failed:', e);
     }
   }, [initAudio]);
 

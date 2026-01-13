@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Wifi, WifiOff, ArrowUpRight, ArrowDownRight, Activity } from 'lucide-react';
+import { detectBrowser } from '@/lib/browserDetection';
 
 // --- 1. SMART ASSET DETECTION SYSTEM ---
 
@@ -113,17 +114,48 @@ const useMarketStream = (themeName: string, isUnavailable: boolean) => {
              });
         };
 
-        if (asset.type === 'CRYPTO') {
+        // Check browser capabilities for WebSocket
+        const browserInfo = detectBrowser();
+        const canUseWebSocket = browserInfo.canHandleWebSocket;
+
+        if (asset.type === 'CRYPTO' && canUseWebSocket) {
             // Real Binance Stream
-            ws = new WebSocket(`wss://stream.binance.com:9443/ws/${asset.symbol.toLowerCase()}@trade`);
-            ws.onopen = () => setConnected(true);
-            ws.onclose = () => setConnected(false);
-            ws.onmessage = (e) => {
-                const data = JSON.parse(e.data);
-                updateData(parseFloat(data.p));
-            };
+            try {
+                ws = new WebSocket(`wss://stream.binance.com:9443/ws/${asset.symbol.toLowerCase()}@trade`);
+                ws.onopen = () => setConnected(true);
+                ws.onclose = () => setConnected(false);
+                ws.onerror = () => {
+                    setConnected(false);
+                    // Fall back to simulation on WebSocket error
+                    interval = setInterval(() => {
+                        const volatility = 0.0003;
+                        const change = currentPrice * volatility * (Math.random() - 0.5);
+                        currentPrice += change;
+                        updateData(currentPrice);
+                    }, 1000);
+                };
+                ws.onmessage = (e) => {
+                    try {
+                        const data = JSON.parse(e.data);
+                        updateData(parseFloat(data.p));
+                    } catch (err) {
+                        // Silent fail on parse error
+                    }
+                };
+            } catch (e) {
+                // WebSocket creation failed - use simulation
+                console.log('[LiveMiniPreview] WebSocket unavailable, using simulation');
+                setConnected(true);
+                updateData(currentPrice);
+                interval = setInterval(() => {
+                    const volatility = 0.0003;
+                    const change = currentPrice * volatility * (Math.random() - 0.5);
+                    currentPrice += change;
+                    updateData(currentPrice);
+                }, 1000);
+            }
         } else {
-            // Simulated Data (Stocks/Metals)
+            // Simulated Data (Stocks/Metals or in-app browsers)
             setConnected(true);
             updateData(currentPrice);
 
@@ -136,7 +168,13 @@ const useMarketStream = (themeName: string, isUnavailable: boolean) => {
         }
 
         return () => {
-            if (ws) ws.close();
+            if (ws) {
+                try {
+                    ws.close();
+                } catch (e) {
+                    // Silent fail
+                }
+            }
             if (interval) clearInterval(interval);
         };
     }, [asset.symbol, asset.type, asset.base, isUnavailable]);

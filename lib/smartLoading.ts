@@ -3,6 +3,8 @@
  * Makes the app feel instant with progressive enhancement
  */
 
+import { detectBrowser } from './browserDetection';
+
 interface ConnectionInfo {
   effectiveType: '4g' | '3g' | '2g' | 'slow-2g';
   saveData: boolean;
@@ -14,7 +16,8 @@ interface DeviceCapability {
   cores: number;
   isMobile: boolean;
   isLowEnd: boolean;
-  quality: 'high' | 'medium' | 'low';
+  isInAppBrowser: boolean;
+  quality: 'high' | 'medium' | 'low' | 'disabled';
 }
 
 class SmartLoadingManager {
@@ -48,6 +51,7 @@ class SmartLoadingManager {
         cores: 4,
         isMobile: false,
         isLowEnd: false,
+        isInAppBrowser: false,
         quality: 'high',
       };
     }
@@ -55,23 +59,30 @@ class SmartLoadingManager {
     const memory = (navigator as any).deviceMemory || 4;
     const cores = navigator.hardwareConcurrency || 4;
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+    
+    // Check for in-app browsers that can't handle heavy content
+    const browserInfo = detectBrowser();
+    const isInAppBrowser = browserInfo.isInAppBrowser;
 
     const isLowEnd = memory < 4 || cores < 4 || this.connection.effectiveType === '2g' || this.connection.effectiveType === 'slow-2g';
 
-    let quality: 'high' | 'medium' | 'low' = 'high';
-    if (isLowEnd || this.connection.saveData) {
+    // Determine quality level - 'disabled' for in-app browsers
+    let quality: 'high' | 'medium' | 'low' | 'disabled' = 'high';
+    if (isInAppBrowser || !browserInfo.canHandle3D) {
+      quality = 'disabled';
+    } else if (isLowEnd || this.connection.saveData) {
       quality = 'low';
     } else if (isMobile || this.connection.effectiveType === '3g' || memory < 6) {
       quality = 'medium';
     }
 
-    return { memory, cores, isMobile, isLowEnd, quality };
+    return { memory, cores, isMobile, isLowEnd, isInAppBrowser, quality };
   }
 
   /**
    * Get recommended quality for Spline scenes
    */
-  getSplineQuality(): 'high' | 'medium' | 'low' {
+  getSplineQuality(): 'high' | 'medium' | 'low' | 'disabled' {
     return this.device.quality;
   }
 
@@ -79,6 +90,7 @@ class SmartLoadingManager {
    * Should load full Spline or use static preview?
    */
   shouldLoadSpline(): boolean {
+    if (this.device.isInAppBrowser || this.device.quality === 'disabled') return false;
     if (this.connection.saveData) return false;
     if (this.device.quality === 'low') return false;
     return true;
@@ -197,6 +209,7 @@ export function useSmartLoading() {
       shouldPreload: false,
       isMobile: false,
       isLowEnd: false,
+      isInAppBrowser: false,
     };
   }
 
@@ -209,6 +222,7 @@ export function useSmartLoading() {
     shouldPreload: smartLoader.shouldPreload(),
     isMobile: info.isMobile,
     isLowEnd: info.isLowEnd,
+    isInAppBrowser: info.isInAppBrowser,
     connection: conn.effectiveType,
     saveData: conn.saveData,
   };

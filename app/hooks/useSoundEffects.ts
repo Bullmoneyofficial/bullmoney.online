@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useCallback } from 'react';
+import { detectBrowser } from '@/lib/browserDetection';
 
 /**
  * Simple, lightweight sound effects using Web Audio API
@@ -12,6 +13,20 @@ type SoundType = 'click' | 'clickSoft' | 'hover' | 'hoverSoft' | 'confirm' | 'su
 // Web Audio API context singleton
 let audioContext: AudioContext | null = null;
 let hasUserInteracted = false;
+let isAudioDisabled = false;
+
+// Check if audio should be disabled (in-app browsers have restricted audio)
+if (typeof window !== 'undefined') {
+  try {
+    const browserInfo = detectBrowser();
+    isAudioDisabled = !browserInfo.canHandleAudio;
+    if (isAudioDisabled) {
+      console.log('[SoundEffects] Disabled for:', browserInfo.browserName);
+    }
+  } catch (e) {
+    // Silent fail - audio will remain enabled
+  }
+}
 
 // Track user interaction for autoplay policy
 if (typeof window !== 'undefined') {
@@ -29,6 +44,9 @@ if (typeof window !== 'undefined') {
 // Initialize or get audio context
 const getAudioContext = (): AudioContext | null => {
   if (typeof window === 'undefined') return null;
+  
+  // Skip audio entirely for in-app browsers
+  if (isAudioDisabled) return null;
   
   try {
     if (!audioContext) {

@@ -12,6 +12,7 @@ import {
 
 import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { detectBrowser } from "@/lib/browserDetection";
 
 // --- IMPORT SEPARATE LOADER COMPONENT ---
 import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader"; 
@@ -36,7 +37,12 @@ const useIsMobile = () => {
       const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
       const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
-      setIsMobile(isTouch && (window.innerWidth <= 768 || isMobileUA));
+      
+      // Also check for in-app browsers that can't handle GSAP animations well
+      const browserInfo = detectBrowser();
+      const isInAppBrowser = browserInfo.isInAppBrowser;
+      
+      setIsMobile(isInAppBrowser || (isTouch && (window.innerWidth <= 768 || isMobileUA)));
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);

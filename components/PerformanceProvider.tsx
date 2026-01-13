@@ -3,6 +3,7 @@
 import React, { ReactNode, useEffect } from 'react';
 import { LenisProvider } from '@/lib/smoothScroll';
 import { usePerformanceInit, usePerformanceCSSSync } from '@/hooks/usePerformanceInit';
+import { detectBrowser } from '@/lib/browserDetection';
 
 // ============================================================================
 // PERFORMANCE PROVIDER - Wraps App with 120Hz Optimizations
@@ -45,12 +46,24 @@ export function PerformanceProvider({
 }: PerformanceProviderProps) {
   const [isMobile, setIsMobile] = React.useState(false);
   const [isHighEndDesktop, setIsHighEndDesktop] = React.useState(true);
+  const [isInAppBrowser, setIsInAppBrowser] = React.useState(false);
   
   // Detect device type and capabilities on mount
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
+      
+      // Check for in-app browsers - disable heavy features
+      const browserInfo = detectBrowser();
+      setIsInAppBrowser(browserInfo.isInAppBrowser);
+      
+      if (browserInfo.isInAppBrowser) {
+        console.log('[PerformanceProvider] In-app browser detected:', browserInfo.browserName);
+        console.log('[PerformanceProvider] Disabling heavy features for stability');
+        setIsHighEndDesktop(false);
+        return;
+      }
       
       // Detect high-end desktop (Apple Silicon, high-spec PCs)
       if (!mobile) {
@@ -120,8 +133,8 @@ export function PerformanceProvider({
   }, []);
 
   // Wrap with Lenis if smooth scroll is enabled.
-  // IMPORTANT: Disable Lenis on mobile - use native scroll for best touch experience
-  const shouldUseSmoothScroll = enableSmoothScroll && !isMobile;
+  // IMPORTANT: Disable Lenis on mobile and in-app browsers - use native scroll for best touch experience
+  const shouldUseSmoothScroll = enableSmoothScroll && !isMobile && !isInAppBrowser;
   
   if (shouldUseSmoothScroll) {
     return (
