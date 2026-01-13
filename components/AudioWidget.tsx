@@ -356,6 +356,9 @@ const AudioWidget = React.memo(function AudioWidget() {
   const [hasInteracted, setHasInteracted] = useState(false);
   const [wanderPosition, setWanderPosition] = useState({ x: 0, y: 0 });
   const [morphPhase, setMorphPhase] = useState<'idle' | 'morphing-out' | 'moving' | 'morphing-in'>('idle');
+  const [isHovering, setIsHovering] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isNearPlayer, setIsNearPlayer] = useState(false);
   
   // Refs
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
@@ -381,6 +384,41 @@ const AudioWidget = React.memo(function AudioWidget() {
     }
   }, [widgetX]);
 
+  // Detect mobile/touch device
+  useEffect(() => {
+    const checkMobile = () => {
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isSmallScreen = window.innerWidth < 768;
+      setIsMobile(isTouchDevice || isSmallScreen);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Track mouse proximity to player for desktop
+  useEffect(() => {
+    if (isMobile || !isWandering) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!miniPlayerRef.current) return;
+      
+      const rect = miniPlayerRef.current.getBoundingClientRect();
+      const padding = 80; // Detection radius around the player
+      
+      const isNear = 
+        e.clientX >= rect.left - padding &&
+        e.clientX <= rect.right + padding &&
+        e.clientY >= rect.top - padding &&
+        e.clientY <= rect.bottom + padding;
+      
+      setIsNearPlayer(isNear);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [isMobile, isWandering]);
+
   // Check localStorage for tutorial completion and saved preference
   useEffect(() => {
     // Tutorial Check
@@ -391,7 +429,6 @@ const AudioWidget = React.memo(function AudioWidget() {
 
       // Persistence Check for returning users
       const savedSource = localStorage.getItem('audioWidgetSavedSource');
-      const savedInteracted = localStorage.getItem('audioWidgetHasInteracted');
       
       if (savedSource && ['SPOTIFY', 'APPLE_MUSIC', 'YOUTUBE'].includes(savedSource)) {
         // Restore their preferred source
@@ -400,14 +437,9 @@ const AudioWidget = React.memo(function AudioWidget() {
         setMusicEnabled(true);
         setPlayerHidden(false);
         
-        // If user hasn't interacted before, start wandering animation
-        if (savedInteracted !== 'true') {
-          setIsWandering(true);
-          setShowReturnUserHint(true);
-        } else {
-          setHasInteracted(true);
-          setPlayerHidden(true); // Start hidden for returning users who've interacted
-        }
+        // Always start wandering on reload - genie effect every time!
+        setIsWandering(true);
+        setShowReturnUserHint(true);
         
         // Auto-hide the return user hint after 10s
         setTimeout(() => setShowReturnUserHint(false), 10000);
@@ -415,7 +447,8 @@ const AudioWidget = React.memo(function AudioWidget() {
     }
   }, [setMusicSource, setMusicEnabled]);
 
-  // Wandering animation - player floats around with genie morph effect until user interacts or 15 seconds pass
+  // Wandering animation - player floats around with genie morph effect until user interacts
+  // Pauses when user hovers over OR is near the player (desktop) or shorter duration on mobile
   useEffect(() => {
     if (!isWandering || hasInteracted) {
       if (wanderIntervalRef.current) {
@@ -427,46 +460,73 @@ const AudioWidget = React.memo(function AudioWidget() {
       return;
     }
 
+    // Combined pause condition: hovering OR near player (desktop only)
+    const shouldPause = isHovering || (!isMobile && isNearPlayer);
+
+    // If paused, stop animation but keep wandering state
+    if (shouldPause) {
+      if (wanderIntervalRef.current) {
+        clearInterval(wanderIntervalRef.current);
+        wanderIntervalRef.current = null;
+      }
+      // Smoothly return to home position and reset appearance
+      setWanderPosition({ x: 0, y: 0 });
+      setMorphPhase('idle');
+      return;
+    }
+
     const getRandomPosition = () => {
-      // Move right (positive X) and up (negative Y since bottom-positioned)
+      // Smaller movement on mobile for less intrusive effect
+      const maxX = isMobile ? 100 : 180;
+      const maxY = isMobile ? 60 : 120;
       return {
-        x: 80 + Math.random() * 180, // Move 80-260px to the right
-        y: -(60 + Math.random() * 120), // Move 60-180px up
+        x: (isMobile ? 40 : 80) + Math.random() * maxX,
+        y: -((isMobile ? 30 : 60) + Math.random() * maxY),
       };
     };
 
     // Genie animation sequence
     const runGenieSequence = () => {
+      if (isHovering || isNearPlayer) return;
+      
       // Phase 1: Morph out (squish and swirl)
       setMorphPhase('morphing-out');
       
       setTimeout(() => {
+        if (isHovering || isNearPlayer) return;
         // Phase 2: Move to new position
         setMorphPhase('moving');
         setWanderPosition(getRandomPosition());
         
         setTimeout(() => {
+          if (isHovering || isNearPlayer) return;
           // Phase 3: Morph back in (expand and settle)
           setMorphPhase('morphing-in');
           
           setTimeout(() => {
+            if (isHovering || isNearPlayer) return;
             // Phase 4: Idle wobble
             setMorphPhase('idle');
-          }, 600);
-        }, 800);
-      }, 500);
+          }, isMobile ? 400 : 600);
+        }, isMobile ? 500 : 800);
+      }, isMobile ? 350 : 500);
     };
 
     // Initial genie sequence
     runGenieSequence();
 
-    // Run genie sequence every 3 seconds for dramatic effect
+    // Run genie sequence - faster on mobile
+    const intervalTime = isMobile ? 2500 : 3500;
     wanderIntervalRef.current = setInterval(() => {
-      runGenieSequence();
-    }, 3500);
+      if (!isHovering && !isNearPlayer) {
+        runGenieSequence();
+      }
+    }, intervalTime);
 
-    // Auto-stop after 15 seconds and smoothly return to home position
+    // Auto-stop - shorter on mobile (8s) vs desktop (15s)
+    const autoStopTime = isMobile ? 8000 : 15000;
     const autoStopTimer = setTimeout(() => {
+      if (isHovering || isNearPlayer) return;
       // Final morph back home
       setMorphPhase('morphing-out');
       setTimeout(() => {
@@ -476,10 +536,9 @@ const AudioWidget = React.memo(function AudioWidget() {
           setIsWandering(false);
           setHasInteracted(true);
           setMorphPhase('idle');
-          localStorage.setItem('audioWidgetHasInteracted', 'true');
         }, 600);
       }, 500);
-    }, 15000);
+    }, autoStopTime);
 
     return () => {
       if (wanderIntervalRef.current) {
@@ -487,14 +546,15 @@ const AudioWidget = React.memo(function AudioWidget() {
       }
       clearTimeout(autoStopTimer);
     };
-  }, [isWandering, hasInteracted]);
+  }, [isWandering, hasInteracted, isHovering, isNearPlayer, isMobile]);
 
-  // Stop wandering when user interacts
+  // Stop wandering when user interacts (clicks)
   const handlePlayerInteraction = useCallback(() => {
     if (isWandering) {
       setIsWandering(false);
       setHasInteracted(true);
-      localStorage.setItem('audioWidgetHasInteracted', 'true');
+      setMorphPhase('idle');
+      setWanderPosition({ x: 0, y: 0 });
     }
   }, [isWandering]);
 
@@ -513,14 +573,15 @@ const AudioWidget = React.memo(function AudioWidget() {
 
   // Trigger wandering when menu closes with active streaming (to grab attention)
   useEffect(() => {
-    if (!open && streamingActive && !hasInteracted && !playerHidden) {
+    if (!open && streamingActive && !playerHidden && !isWandering) {
       // Small delay to let the menu close animation finish
       const timer = setTimeout(() => {
+        setHasInteracted(false); // Reset so genie can play
         setIsWandering(true);
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [open, streamingActive, hasInteracted, playerHidden]);
+  }, [open, streamingActive, playerHidden, isWandering]);
 
   const handleTutorialNext = useCallback(() => {
     if (tutorialStep >= 4) {
@@ -1095,23 +1156,23 @@ const AudioWidget = React.memo(function AudioWidget() {
                   ref={miniPlayerRef}
                   initial={{ x: -280 }}
                   animate={{ 
-                    x: open ? -280 : (playerHidden ? -280 : wanderPosition.x),
-                    y: isWandering ? wanderPosition.y : 0,
+                    x: open ? -280 : (playerHidden ? -280 : ((isHovering || isNearPlayer) ? 0 : wanderPosition.x)),
+                    y: (isWandering && !isHovering && !isNearPlayer) ? wanderPosition.y : 0,
                     opacity: open ? 0 : 1,
-                    // Genie morph effects based on phase
-                    scaleX: morphPhase === 'morphing-out' ? 0.3 : morphPhase === 'moving' ? 0.6 : morphPhase === 'morphing-in' ? 1.1 : 1,
-                    scaleY: morphPhase === 'morphing-out' ? 1.5 : morphPhase === 'moving' ? 0.8 : morphPhase === 'morphing-in' ? 0.95 : 1,
-                    rotate: morphPhase === 'morphing-out' ? 8 : morphPhase === 'moving' ? -5 : morphPhase === 'morphing-in' ? 3 : (isWandering ? [0, 2, -2, 0] : 0),
-                    skewX: morphPhase === 'morphing-out' ? 15 : morphPhase === 'moving' ? -8 : morphPhase === 'morphing-in' ? 5 : 0,
-                    skewY: morphPhase === 'morphing-out' ? -5 : morphPhase === 'moving' ? 3 : 0,
-                    borderRadius: morphPhase === 'morphing-out' ? '50% 12px 50% 12px' : morphPhase === 'moving' ? '30% 12px 30% 12px' : '0 12px 12px 0',
+                    // Genie morph effects based on phase - reset to normal when hovering/near
+                    scaleX: (isHovering || isNearPlayer) ? 1 : (morphPhase === 'morphing-out' ? 0.3 : morphPhase === 'moving' ? 0.6 : morphPhase === 'morphing-in' ? 1.1 : 1),
+                    scaleY: (isHovering || isNearPlayer) ? 1 : (morphPhase === 'morphing-out' ? 1.5 : morphPhase === 'moving' ? 0.8 : morphPhase === 'morphing-in' ? 0.95 : 1),
+                    rotate: (isHovering || isNearPlayer) ? 0 : (morphPhase === 'morphing-out' ? 8 : morphPhase === 'moving' ? -5 : morphPhase === 'morphing-in' ? 3 : (isWandering ? [0, 2, -2, 0] : 0)),
+                    skewX: (isHovering || isNearPlayer) ? 0 : (morphPhase === 'morphing-out' ? 15 : morphPhase === 'moving' ? -8 : morphPhase === 'morphing-in' ? 5 : 0),
+                    skewY: (isHovering || isNearPlayer) ? 0 : (morphPhase === 'morphing-out' ? -5 : morphPhase === 'moving' ? 3 : 0),
+                    borderRadius: (isHovering || isNearPlayer) ? '0 12px 12px 0' : (morphPhase === 'morphing-out' ? '50% 12px 50% 12px' : morphPhase === 'moving' ? '30% 12px 30% 12px' : '0 12px 12px 0'),
                   }}
                   exit={{ x: -280, opacity: 0, scale: 0.5, rotate: -20 }}
                   transition={{ 
                     type: "spring", 
-                    damping: morphPhase === 'moving' ? 12 : 20, 
-                    stiffness: morphPhase === 'moving' ? 80 : 200,
-                    rotate: { duration: isWandering && morphPhase === 'idle' ? 2 : 0.4, repeat: isWandering && morphPhase === 'idle' ? Infinity : 0 },
+                    damping: (isHovering || isNearPlayer) ? 25 : (morphPhase === 'moving' ? 12 : 20), 
+                    stiffness: (isHovering || isNearPlayer) ? 300 : (morphPhase === 'moving' ? 80 : 200),
+                    rotate: { duration: (isWandering && morphPhase === 'idle' && !isHovering && !isNearPlayer) ? 2 : 0.4, repeat: (isWandering && morphPhase === 'idle' && !isHovering && !isNearPlayer) ? Infinity : 0 },
                   }}
                   className="fixed z-[9999] pointer-events-auto"
                   style={{ 
@@ -1121,6 +1182,14 @@ const AudioWidget = React.memo(function AudioWidget() {
                     transformOrigin: 'left center',
                   }}
                   onClick={handlePlayerInteraction}
+                  onTouchStart={() => {
+                    // On mobile, any touch immediately pins the player
+                    if (isMobile && isWandering) {
+                      handlePlayerInteraction();
+                    }
+                  }}
+                  onMouseEnter={() => setIsHovering(true)}
+                  onMouseLeave={() => setIsHovering(false)}
                 >
                   <div className={cn(
                     "relative rounded-r-xl border-r border-y backdrop-blur-md shadow-xl overflow-hidden flex",
@@ -1130,10 +1199,11 @@ const AudioWidget = React.memo(function AudioWidget() {
                       : musicSource === 'APPLE_MUSIC'
                       ? "border-pink-500/30"
                       : "border-red-500/30",
-                    isWandering && morphPhase === 'idle' && "ring-2 ring-blue-400/50 ring-offset-2 ring-offset-transparent",
-                    isWandering && morphPhase === 'morphing-out' && "ring-4 ring-purple-400/70",
-                    isWandering && morphPhase === 'moving' && "ring-2 ring-cyan-400/40",
-                    isWandering && morphPhase === 'morphing-in' && "ring-3 ring-blue-300/60"
+                    isWandering && !isHovering && !isNearPlayer && morphPhase === 'idle' && "ring-2 ring-blue-400/50 ring-offset-2 ring-offset-transparent",
+                    isWandering && !isHovering && !isNearPlayer && morphPhase === 'morphing-out' && "ring-4 ring-purple-400/70",
+                    isWandering && !isHovering && !isNearPlayer && morphPhase === 'moving' && "ring-2 ring-cyan-400/40",
+                    isWandering && !isHovering && !isNearPlayer && morphPhase === 'morphing-in' && "ring-3 ring-blue-300/60",
+                    isWandering && (isHovering || isNearPlayer) && "ring-2 ring-green-400/60 ring-offset-2 ring-offset-transparent"
                   )}>
                     {/* Glow effect */}
                     <div className={cn(
@@ -1148,8 +1218,8 @@ const AudioWidget = React.memo(function AudioWidget() {
                     {/* Wandering attention grabber with genie sparkles */}
                     {isWandering && (
                       <>
-                        {/* Sparkle particles during morph */}
-                        {(morphPhase === 'morphing-out' || morphPhase === 'morphing-in') && (
+                        {/* Sparkle particles during morph - not when paused */}
+                        {!isHovering && !isNearPlayer && (morphPhase === 'morphing-out' || morphPhase === 'morphing-in') && (
                           <>
                             <motion.div
                               className="absolute -top-2 -right-2 w-2 h-2 rounded-full bg-blue-400"
@@ -1172,30 +1242,40 @@ const AudioWidget = React.memo(function AudioWidget() {
                           </>
                         )}
                         
-                        {/* Main label */}
+                        {/* Main label - changes when paused */}
                         <motion.div
                           className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap z-10"
                           animate={{ 
-                            y: morphPhase === 'idle' ? [0, -5, 0] : 0,
-                            scale: morphPhase === 'morphing-out' ? 0.8 : morphPhase === 'morphing-in' ? 1.1 : 1,
+                            y: (morphPhase === 'idle' && !isHovering && !isNearPlayer) ? [0, -5, 0] : 0,
+                            scale: (isHovering || isNearPlayer) ? 1.1 : (morphPhase === 'morphing-out' ? 0.8 : morphPhase === 'morphing-in' ? 1.1 : 1),
                             opacity: morphPhase === 'moving' ? 0.5 : 1,
                           }}
-                          transition={{ duration: 1.5, repeat: morphPhase === 'idle' ? Infinity : 0 }}
+                          transition={{ duration: 1.5, repeat: (morphPhase === 'idle' && !isHovering && !isNearPlayer) ? Infinity : 0 }}
                         >
-                          <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/90 via-purple-500/90 to-blue-500/90 text-white text-[10px] font-bold shadow-lg flex items-center gap-1.5 border border-white/20">
+                          <div className={cn(
+                            "px-3 py-1.5 rounded-full text-white text-[10px] font-bold shadow-lg flex items-center gap-1.5 border border-white/20",
+                            (isHovering || isNearPlayer)
+                              ? "bg-gradient-to-r from-green-500/90 via-emerald-500/90 to-green-500/90"
+                              : "bg-gradient-to-r from-blue-500/90 via-purple-500/90 to-blue-500/90"
+                          )}>
                             <motion.span
                               animate={{ 
-                                scale: [1, 1.3, 1],
-                                rotate: morphPhase !== 'idle' ? [0, 360] : 0,
+                                scale: (isHovering || isNearPlayer) ? 1 : [1, 1.3, 1],
+                                rotate: (!(isHovering || isNearPlayer) && morphPhase !== 'idle') ? [0, 360] : 0,
                               }}
                               transition={{ 
-                                scale: { duration: 0.5, repeat: Infinity },
+                                scale: { duration: 0.5, repeat: (isHovering || isNearPlayer) ? 0 : Infinity },
                                 rotate: { duration: 0.5 },
                               }}
                             >
-                              ✨
+                              {(isHovering || isNearPlayer) ? '🎵' : '✨'}
                             </motion.span>
-                            {morphPhase === 'idle' ? 'Click to pin!' : morphPhase === 'moving' ? '~whoosh~' : '✧･ﾟ'}
+                            {(isHovering || isNearPlayer) 
+                              ? 'Press play!' 
+                              : isMobile 
+                                ? 'Tap to pin!' 
+                                : (morphPhase === 'idle' ? 'Click to pin!' : morphPhase === 'moving' ? '~whoosh~' : '✧･ﾟ')
+                            }
                           </div>
                         </motion.div>
                       </>
