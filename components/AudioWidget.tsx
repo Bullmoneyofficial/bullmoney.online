@@ -1068,11 +1068,25 @@ const AudioWidget = React.memo(function AudioWidget() {
                       maybeShowCatchGameTutorial();
                     }
                   }}
-                  onMouseLeave={() => {
+                  onMouseLeave={(e) => {
+                    // Expanded hover area - only dismiss if mouse is far from player
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const mouseX = e.clientX;
+                    const mouseY = e.clientY;
+                    
+                    // Give 80px padding around the player for hover detection
+                    const padding = 80;
+                    const isNearby = (
+                      mouseX >= rect.left - padding &&
+                      mouseX <= rect.right + padding &&
+                      mouseY >= rect.top - padding &&
+                      mouseY <= rect.bottom + padding
+                    );
+                    
                     setIsHovering(false);
                     // If the user has never played, keep it hover-based (not sticky).
-                    // But don't dismiss if they're hovering the tutorial itself.
-                    if (gameStats.gamesPlayed === 0 && !hasStartedCatchGame && !isTutorialHovered) {
+                    // But don't dismiss if they're still nearby or hovering the tutorial.
+                    if (gameStats.gamesPlayed === 0 && !hasStartedCatchGame && !isTutorialHovered && !isNearby) {
                       dismissCatchGameTutorial();
                     }
                   }}

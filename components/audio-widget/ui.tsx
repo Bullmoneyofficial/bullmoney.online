@@ -172,9 +172,10 @@ export const QuickGameTutorial = React.memo(function QuickGameTutorial({
           exit={{ opacity: 0, y: 8, scale: 0.98 }}
           transition={{ type: "spring", stiffness: 300, damping: 22 }}
           className={cn(
-            "fixed left-3 bottom-[250px] z-[10002] w-[280px] pointer-events-auto",
+            "fixed left-0 bottom-[200px] z-[10002] w-[300px] pointer-events-auto",
             className
           )}
+          style={{ paddingLeft: '12px', paddingBottom: '20px' }}
           onMouseEnter={() => onHoverChange?.(true)}
           onMouseLeave={() => onHoverChange?.(false)}
         >
