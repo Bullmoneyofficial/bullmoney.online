@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { useAudioSettings, type MusicSource, STREAMING_SOURCES } from "@/contexts/AudioSettingsProvider";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { MusicEmbedModal } from "@/components/MusicEmbedModal";
-import { BlueShimmer, Slider, GameHUD, TouchIndicator, GameOverScreen, EnergyBar } from "@/components/audio-widget/ui";
+import { BlueShimmer, Slider, GameHUD, TouchIndicator, GameOverScreen, EnergyBar, CompactGameHUD, BoredPopup, GameControls, GameShimmer, SparkleBurst, FloatingParticles, PulseRing, ConfettiBurst, BounceDots, StatusBadge } from "@/components/audio-widget/ui";
 import { useWanderingGame } from "@/components/audio-widget/useWanderingGame";
 
 const sourceLabel: Record<MusicSource, string> = {
@@ -108,6 +108,12 @@ const AudioWidget = React.memo(function AudioWidget() {
   
   // Game over modal state
   const [showGameOver, setShowGameOver] = useState(false);
+  // Bored popup state - shows first time game starts to educate users
+  const [showBoredPopup, setShowBoredPopup] = useState(false);
+  const [hasSeenBoredPopup, setHasSeenBoredPopup] = useState(false);
+  // Sparkle trigger for catch animation
+  const [showCatchSparkle, setShowCatchSparkle] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   
   // Refs
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
@@ -198,12 +204,57 @@ const AudioWidget = React.memo(function AudioWidget() {
     }
   }, [open, streamingActive, playerHidden, isWandering, startGame, setHasInteracted]);
 
+  // Show bored popup when game starts to educate users
+  useEffect(() => {
+    if (isWandering && !hasSeenBoredPopup) {
+      // Show popup after a short delay
+      const timer = setTimeout(() => {
+        setShowBoredPopup(true);
+        setHasSeenBoredPopup(true);
+        // Auto-hide after 5 seconds
+        setTimeout(() => setShowBoredPopup(false), 5000);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [isWandering, hasSeenBoredPopup]);
+
+  // Check localStorage for seen bored popup
+  useEffect(() => {
+    const seen = localStorage.getItem('audioWidgetSeenBoredPopup');
+    if (seen === 'true') {
+      setHasSeenBoredPopup(true);
+    }
+  }, []);
+
+  // Save seen bored popup to localStorage
+  useEffect(() => {
+    if (hasSeenBoredPopup) {
+      localStorage.setItem('audioWidgetSeenBoredPopup', 'true');
+    }
+  }, [hasSeenBoredPopup]);
+
   // Show game over modal when game ends
   useEffect(() => {
     if (gameState === "caught" || gameState === "escaped") {
       setShowGameOver(true);
+      // Trigger sparkle and confetti on catch
+      if (gameState === "caught") {
+        setShowCatchSparkle(true);
+        setShowConfetti(true);
+        setTimeout(() => {
+          setShowCatchSparkle(false);
+          setShowConfetti(false);
+        }, 600);
+      }
     }
   }, [gameState]);
+
+  // Handle stopping the game manually
+  const handleStopGame = useCallback(() => {
+    if (isWandering) {
+      handlePlayerInteraction();
+    }
+  }, [isWandering, handlePlayerInteraction]);
 
   const handleTutorialNext = useCallback(() => {
     if (tutorialStep >= 4) {
@@ -737,33 +788,67 @@ const AudioWidget = React.memo(function AudioWidget() {
 
                     {/* Game Stats Section - Shows high score and catch count */}
                     {gameStats.gamesPlayed > 0 && (
-                      <div className="mb-2 p-2 rounded-lg bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-400/20">
+                      <div className="mb-2 p-2 rounded-lg bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-400/20 relative overflow-hidden">
+                        <GameShimmer color="purple" />
                         <div className="flex items-center justify-between text-[10px] mb-1.5">
-                          <span className="text-white/60 font-medium">🎮 Catch Game Stats</span>
-                          {gameStats.currentScore > 0 && gameStats.currentScore >= gameStats.highScore && (
-                            <motion.span 
-                              animate={{ scale: [1, 1.1, 1] }}
-                              transition={{ duration: 1, repeat: Infinity }}
-                              className="text-yellow-400 font-bold"
-                            >
-                              🏆 New Best!
-                            </motion.span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <span className="text-white/60 font-medium">🎮 Catch Game</span>
+                            {isWandering && <BounceDots active={true} color="purple" />}
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            {gameStats.currentScore > 0 && gameStats.currentScore >= gameStats.highScore && (
+                              <motion.span 
+                                animate={{ scale: [1, 1.1, 1] }}
+                                transition={{ duration: 1, repeat: Infinity }}
+                                className="text-yellow-400 font-bold text-[9px]"
+                              >
+                                🏆 Best!
+                              </motion.span>
+                            )}
+                            <StatusBadge 
+                              status={isWandering ? "playing" : gameState === "caught" ? "caught" : gameState === "escaped" ? "escaped" : "idle"} 
+                              animate={isWandering}
+                            />
+                          </div>
                         </div>
                         <div className="grid grid-cols-3 gap-1.5">
-                          <div className="text-center p-1.5 rounded bg-white/5">
+                          <div className="text-center p-1.5 rounded bg-white/5 relative overflow-hidden">
+                            <GameShimmer color="blue" speed="slow" />
                             <div className="text-[9px] text-white/40">High Score</div>
                             <div className="text-sm font-bold text-yellow-400 tabular-nums">{gameStats.highScore}</div>
                           </div>
-                          <div className="text-center p-1.5 rounded bg-white/5">
+                          <div className="text-center p-1.5 rounded bg-white/5 relative overflow-hidden">
+                            <GameShimmer color="red" speed="slow" />
                             <div className="text-[9px] text-white/40">Catches</div>
                             <div className="text-sm font-bold text-green-400 tabular-nums">{gameStats.totalCatches}</div>
                           </div>
-                          <div className="text-center p-1.5 rounded bg-white/5">
+                          <div className="text-center p-1.5 rounded bg-white/5 relative overflow-hidden">
+                            <GameShimmer color="purple" speed="slow" />
                             <div className="text-[9px] text-white/40">Games</div>
                             <div className="text-sm font-bold text-blue-400 tabular-nums">{gameStats.gamesPlayed}</div>
                           </div>
                         </div>
+                        
+                        {/* Game Controls */}
+                        <GameControls
+                          isPlaying={isWandering}
+                          onStart={startGame}
+                          onStop={handleStopGame}
+                          className="mt-2"
+                        />
+                      </div>
+                    )}
+
+                    {/* Quick game start if no games played yet */}
+                    {gameStats.gamesPlayed === 0 && streamingActive && (
+                      <div className="mb-2 p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-400/20 relative overflow-hidden">
+                        <GameShimmer color="blue" />
+                        <div className="text-[10px] text-white/60 mb-1.5 text-center">🎮 Try the Catch Game!</div>
+                        <GameControls
+                          isPlaying={isWandering}
+                          onStart={startGame}
+                          onStop={handleStopGame}
+                        />
                       </div>
                     )}
 
@@ -1266,6 +1351,33 @@ const AudioWidget = React.memo(function AudioWidget() {
                       <IconGripVertical className="w-3.5 h-3.5 text-white/40" />
                     </motion.button>
                   </div>
+                  
+                  {/* Compact Game HUD positioned below player */}
+                  {isWandering && !isHovering && !isNearPlayer && (
+                    <CompactGameHUD
+                      score={gameStats.currentScore}
+                      highScore={gameStats.highScore}
+                      energy={energy}
+                      combo={gameStats.combo}
+                      isVisible={true}
+                    />
+                  )}
+
+                  {/* Bored Popup - educational popup */}
+                  <BoredPopup
+                    show={showBoredPopup}
+                    onDismiss={() => setShowBoredPopup(false)}
+                  />
+
+                  {/* Catch effects - sparkle and confetti burst */}
+                  <SparkleBurst trigger={showCatchSparkle} />
+                  <ConfettiBurst trigger={showConfetti} />
+                  
+                  {/* Pulse ring when hovering/near player */}
+                  <PulseRing 
+                    active={isHovering || isNearPlayer} 
+                    color={isHovering ? "purple" : "blue"} 
+                  />
                 </motion.div>
               </>
             )}

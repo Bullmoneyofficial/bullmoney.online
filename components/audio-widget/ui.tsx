@@ -1,9 +1,58 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { IconHandFinger, IconArrowLeft, IconArrowRight, IconPlayerPlay, IconInfoCircle, IconVolume, IconChevronUp, IconMusic, IconTrophy, IconFlame, IconBolt, IconZzz } from "@tabler/icons-react";
+import { IconHandFinger, IconArrowLeft, IconArrowRight, IconPlayerPlay, IconInfoCircle, IconVolume, IconChevronUp, IconMusic, IconTrophy, IconFlame, IconBolt, IconZzz, IconPlayerPause, IconPlayerStop, IconX } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
+
+// Game color palette - blue, red, purple only
+const GAME_COLORS = {
+  primary: "from-blue-500 via-purple-500 to-blue-600",
+  secondary: "from-purple-500 via-red-500 to-purple-600",
+  accent: "from-red-500 via-purple-500 to-blue-500",
+  shimmer: "from-transparent via-purple-400/30 to-transparent",
+};
+
+// Optimized shimmer effect - uses CSS animation for better performance
+export const GameShimmer = React.memo(function GameShimmer({ 
+  className = "",
+  speed = "normal",
+  colors = "purple"
+}: { 
+  className?: string;
+  speed?: "slow" | "normal" | "fast";
+  colors?: "blue" | "purple" | "red" | "rainbow";
+}) {
+  const colorMap = {
+    blue: "via-blue-400/25",
+    purple: "via-purple-400/25",
+    red: "via-red-400/25",
+    rainbow: "via-purple-400/25",
+  };
+  
+  const speedMap = {
+    slow: 3,
+    normal: 2,
+    fast: 1.2,
+  };
+
+  return (
+    <motion.div
+      className={cn("absolute inset-0 overflow-hidden rounded-xl pointer-events-none", className)}
+    >
+      <motion.div
+        className={cn("absolute inset-0 bg-gradient-to-r from-transparent to-transparent", colorMap[colors])}
+        animate={{ x: ["-100%", "200%"] }}
+        transition={{ 
+          duration: speedMap[speed], 
+          repeat: Infinity, 
+          ease: "linear", 
+          repeatDelay: 0.5 
+        }}
+      />
+    </motion.div>
+  );
+});
 
 // Blue shimmer border effect
 export const BlueShimmer = React.memo(function BlueShimmer({ className = "" }: { className?: string }) {
@@ -19,6 +68,691 @@ export const BlueShimmer = React.memo(function BlueShimmer({ className = "" }: {
         transition={{ duration: 2, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
       />
     </motion.div>
+  );
+});
+
+// "I'm Bored" popup that educates users about the game
+export const BoredPopup = React.memo(function BoredPopup({
+  show,
+  onDismiss,
+  onStartGame,
+}: {
+  show: boolean;
+  onDismiss: () => void;
+  onStartGame?: () => void;
+}) {
+  if (!show) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.5, y: 20, rotate: -5 }}
+      animate={{ 
+        opacity: 1, 
+        scale: 1, 
+        y: 0, 
+        rotate: [0, 2, -2, 0],
+      }}
+      exit={{ opacity: 0, scale: 0.8, y: -10 }}
+      transition={{ 
+        type: "spring", 
+        stiffness: 400, 
+        damping: 15,
+        rotate: { duration: 2, repeat: Infinity, repeatDelay: 1 }
+      }}
+      className="absolute -top-16 left-0 right-0 mx-auto w-max z-20 pointer-events-auto"
+    >
+      <div className="relative">
+        {/* Main bubble */}
+        <div className="relative px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600/95 via-blue-600/95 to-purple-600/95 border border-purple-400/50 shadow-xl shadow-purple-500/30 backdrop-blur-sm">
+          {/* Shimmer */}
+          <GameShimmer colors="rainbow" speed="fast" />
+          
+          {/* Content */}
+          <div className="relative flex items-center gap-3">
+            <motion.span 
+              className="text-2xl"
+              animate={{ 
+                rotate: [0, -10, 10, -5, 5, 0],
+                scale: [1, 1.1, 1],
+              }}
+              transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
+            >
+              😴
+            </motion.span>
+            <div>
+              <p className="text-[11px] font-bold text-white">I'm bored... catch me!</p>
+              <p className="text-[9px] text-purple-200/80">This is a mini-game! Chase me around</p>
+            </div>
+            <button
+              onClick={onDismiss}
+              className="ml-2 p-1 rounded-full hover:bg-white/10 transition-colors"
+            >
+              <IconX className="w-3 h-3 text-white/60" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Speech bubble tail */}
+        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-gradient-to-br from-purple-600/95 to-blue-600/95 rotate-45 border-r border-b border-purple-400/50" />
+      </div>
+    </motion.div>
+  );
+});
+
+// Compact Game HUD that stays near the player
+export const CompactGameHUD = React.memo(function CompactGameHUD({
+  energy = 100,
+  score = 0,
+  combo = 0,
+  highScore = 0,
+  isFleeing = false,
+  isReturning = false,
+  tirednessLevel = "fresh",
+  isPlaying = true,
+  isVisible = true,
+  onPause,
+  onStop,
+}: {
+  energy?: number;
+  score?: number;
+  combo?: number;
+  highScore?: number;
+  isFleeing?: boolean;
+  isReturning?: boolean;
+  tirednessLevel?: "fresh" | "active" | "tired" | "exhausted";
+  isPlaying?: boolean;
+  isVisible?: boolean;
+  onPause?: () => void;
+  onStop?: () => void;
+}) {
+  const getEnergyGradient = useCallback(() => {
+    if (energy > 70) return "from-blue-400 to-purple-500";
+    if (energy > 40) return "from-purple-400 to-red-500";
+    return "from-red-400 to-red-600";
+  }, [energy]);
+
+  if (!isVisible) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 5, scale: 0.95 }}
+      className="relative overflow-hidden rounded-xl bg-black/80 border border-purple-500/30 backdrop-blur-sm shadow-lg"
+    >
+      {/* Shimmer overlay */}
+      <GameShimmer colors="purple" speed="normal" />
+      
+      <div className="relative p-2 space-y-1.5">
+        {/* Top row - score and controls */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            {/* Score */}
+            <div className="flex items-center gap-1">
+              <span className="text-[9px] text-purple-300/70">Score</span>
+              <motion.span 
+                key={score}
+                initial={{ scale: 1.2, color: "#c084fc" }}
+                animate={{ scale: 1, color: "#ffffff" }}
+                className="text-sm font-bold tabular-nums"
+              >
+                {score}
+              </motion.span>
+            </div>
+            
+            {/* Combo */}
+            {combo > 0 && (
+              <motion.div
+                initial={{ scale: 0, rotate: -10 }}
+                animate={{ scale: 1, rotate: 0 }}
+                className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-red-500/30 border border-red-400/40"
+              >
+                <IconFlame className="w-3 h-3 text-red-400" />
+                <span className="text-[10px] font-bold text-red-300">x{combo}</span>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center gap-1">
+            {score >= highScore && score > 0 && (
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
+                transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
+              >
+                <IconTrophy className="w-3.5 h-3.5 text-yellow-400" />
+              </motion.div>
+            )}
+            {onStop && (
+              <button
+                onClick={onStop}
+                className="p-1 rounded hover:bg-red-500/30 transition-colors group"
+                title="Stop game"
+              >
+                <IconPlayerStop className="w-3 h-3 text-red-400/70 group-hover:text-red-300" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Energy bar */}
+        <div className="relative h-1.5 rounded-full bg-black/50 overflow-hidden">
+          <motion.div
+            className={cn("h-full rounded-full bg-gradient-to-r", getEnergyGradient())}
+            animate={{ width: `${energy}%` }}
+            transition={{ type: "spring", stiffness: 100, damping: 20 }}
+          />
+          {/* Shimmer on energy bar */}
+          {energy > 50 && (
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+              animate={{ x: ["-100%", "200%"] }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear", repeatDelay: 2 }}
+            />
+          )}
+        </div>
+
+        {/* Status indicator */}
+        <div className="flex items-center justify-between text-[8px]">
+          <span className={cn(
+            "font-medium",
+            isFleeing ? "text-red-400" :
+            isReturning ? "text-purple-400" :
+            tirednessLevel === "exhausted" ? "text-red-400/70" :
+            tirednessLevel === "tired" ? "text-yellow-400/70" : "text-blue-400/70"
+          )}>
+            {isFleeing ? "💨 Fleeing!" :
+             isReturning ? "↩️ Returning..." :
+             tirednessLevel === "exhausted" ? "😴 So sleepy..." :
+             tirednessLevel === "tired" ? "😓 Getting tired" :
+             "🎮 Catch me!"}
+          </span>
+          <span className="text-white/40 tabular-nums">{Math.round(energy)}%</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+});
+
+// Game control buttons for the widget
+export const GameControls = React.memo(function GameControls({
+  isPlaying,
+  onStart,
+  onStop,
+  disabled = false,
+  className = "",
+}: {
+  isPlaying: boolean;
+  onStart: () => void;
+  onStop: () => void;
+  disabled?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex items-center gap-1.5", className)}>
+      {isPlaying ? (
+        <motion.button
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
+          onClick={onStop}
+          disabled={disabled}
+          className={cn(
+            "relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg overflow-hidden",
+            "bg-gradient-to-r from-red-500/20 to-purple-500/20",
+            "border border-red-400/30 hover:border-red-400/50",
+            "text-[10px] font-medium text-red-300 hover:text-red-200",
+            "transition-all duration-200",
+            disabled && "opacity-50 cursor-not-allowed"
+          )}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <GameShimmer colors="red" speed="fast" />
+          <IconPlayerStop className="w-3 h-3" />
+          <span>Stop Game</span>
+        </motion.button>
+      ) : (
+        <motion.button
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
+          onClick={onStart}
+          disabled={disabled}
+          className={cn(
+            "relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg overflow-hidden",
+            "bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20",
+            "border border-purple-400/30 hover:border-purple-400/50",
+            "text-[10px] font-medium text-purple-300 hover:text-purple-200",
+            "transition-all duration-200",
+            disabled && "opacity-50 cursor-not-allowed"
+          )}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <GameShimmer colors="purple" speed="normal" />
+          <IconPlayerPlay className="w-3 h-3" />
+          <span>Play Game</span>
+        </motion.button>
+      )}
+    </div>
+  );
+});
+
+// Sparkle burst animation - lightweight version
+export const SparkleBurst = React.memo(function SparkleBurst({
+  trigger,
+  colors = ["#8b5cf6", "#3b82f6", "#ef4444"],
+}: {
+  trigger: boolean;
+  colors?: string[];
+}) {
+  if (!trigger) return null;
+  
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-visible">
+      {[...Array(6)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-1.5 h-1.5 rounded-full"
+          style={{ 
+            backgroundColor: colors[i % colors.length],
+            left: '50%',
+            top: '50%',
+          }}
+          initial={{ scale: 0, x: 0, y: 0, opacity: 1 }}
+          animate={{ 
+            scale: [0, 1, 0],
+            x: Math.cos((i * 60) * Math.PI / 180) * 30,
+            y: Math.sin((i * 60) * Math.PI / 180) * 30,
+            opacity: [1, 1, 0],
+          }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        />
+      ))}
+    </div>
+  );
+});
+
+// Floating particles background - very lightweight
+export const FloatingParticles = React.memo(function FloatingParticles({
+  count = 3,
+  color = "purple",
+}: {
+  count?: number;
+  color?: "blue" | "purple" | "red";
+}) {
+  const colorClass = {
+    blue: "bg-blue-400/30",
+    purple: "bg-purple-400/30",
+    red: "bg-red-400/30",
+  };
+
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {[...Array(count)].map((_, i) => (
+        <motion.div
+          key={i}
+          className={cn("absolute w-1 h-1 rounded-full", colorClass[color])}
+          style={{
+            left: `${20 + i * 30}%`,
+            top: `${30 + (i % 2) * 40}%`,
+          }}
+          animate={{
+            y: [-5, 5, -5],
+            x: [-3, 3, -3],
+            opacity: [0.3, 0.6, 0.3],
+          }}
+          transition={{
+            duration: 2 + i * 0.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: i * 0.3,
+          }}
+        />
+      ))}
+    </div>
+  );
+});
+
+// ============================================
+// Additional Game Animations (5-10 new ideas)
+// ============================================
+
+// 1. Pulse Ring Animation - expanding rings effect
+export const PulseRing = React.memo(function PulseRing({
+  active = false,
+  color = "purple",
+  size = "md",
+}: {
+  active?: boolean;
+  color?: "blue" | "purple" | "red";
+  size?: "sm" | "md" | "lg";
+}) {
+  if (!active) return null;
+  
+  const colorMap = {
+    blue: "border-blue-400",
+    purple: "border-purple-400",
+    red: "border-red-400",
+  };
+  
+  const sizeMap = {
+    sm: "w-8 h-8",
+    md: "w-12 h-12",
+    lg: "w-16 h-16",
+  };
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      {[0, 1, 2].map((i) => (
+        <motion.div
+          key={i}
+          className={cn("absolute rounded-full border-2", colorMap[color], sizeMap[size])}
+          initial={{ scale: 0.5, opacity: 0.8 }}
+          animate={{ scale: 2.5, opacity: 0 }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            delay: i * 0.4,
+            ease: "easeOut",
+          }}
+        />
+      ))}
+    </div>
+  );
+});
+
+// 2. Trail Effect - motion blur trail behind moving objects
+export const MotionTrail = React.memo(function MotionTrail({
+  show = false,
+  direction = 1, // 1 for right, -1 for left
+  color = "purple",
+}: {
+  show?: boolean;
+  direction?: number;
+  color?: "blue" | "purple" | "red";
+}) {
+  if (!show) return null;
+  
+  const colorMap = {
+    blue: "from-blue-400/60 to-transparent",
+    purple: "from-purple-400/60 to-transparent",
+    red: "from-red-400/60 to-transparent",
+  };
+
+  return (
+    <motion.div
+      className={cn(
+        "absolute inset-y-0 w-16 bg-gradient-to-r pointer-events-none",
+        colorMap[color],
+        direction > 0 ? "-left-16" : "-right-16"
+      )}
+      style={{ transform: direction > 0 ? "scaleX(1)" : "scaleX(-1)" }}
+      initial={{ opacity: 0, scaleX: 0 }}
+      animate={{ opacity: [0.8, 0], scaleX: [0, 1] }}
+      transition={{ duration: 0.3, repeat: Infinity }}
+    />
+  );
+});
+
+// 3. Bounce Dot Indicator - shows game activity
+export const BounceDots = React.memo(function BounceDots({
+  active = false,
+  color = "purple",
+}: {
+  active?: boolean;
+  color?: "blue" | "purple" | "red";
+}) {
+  if (!active) return null;
+  
+  const colorMap = {
+    blue: "bg-blue-400",
+    purple: "bg-purple-400",
+    red: "bg-red-400",
+  };
+
+  return (
+    <div className="flex items-center gap-1">
+      {[0, 1, 2].map((i) => (
+        <motion.div
+          key={i}
+          className={cn("w-1.5 h-1.5 rounded-full", colorMap[color])}
+          animate={{ y: [0, -4, 0] }}
+          transition={{
+            duration: 0.6,
+            repeat: Infinity,
+            delay: i * 0.1,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  );
+});
+
+// 4. Score Pop Animation - shows when score increases
+export const ScorePop = React.memo(function ScorePop({
+  show = false,
+  value = "+1",
+  color = "purple",
+}: {
+  show?: boolean;
+  value?: string;
+  color?: "blue" | "purple" | "red";
+}) {
+  const colorMap = {
+    blue: "text-blue-400",
+    purple: "text-purple-400",
+    red: "text-red-400",
+  };
+
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.span
+          className={cn("absolute -top-4 left-1/2 font-bold text-sm", colorMap[color])}
+          initial={{ opacity: 1, y: 0, x: "-50%", scale: 0.5 }}
+          animate={{ opacity: 0, y: -20, scale: 1.5 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
+          {value}
+        </motion.span>
+      )}
+    </AnimatePresence>
+  );
+});
+
+// 5. Glitch Effect - quick visual glitch for impacts
+export const GlitchEffect = React.memo(function GlitchEffect({
+  trigger = false,
+}: {
+  trigger?: boolean;
+}) {
+  if (!trigger) return null;
+
+  return (
+    <motion.div
+      className="absolute inset-0 pointer-events-none overflow-hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: [0, 1, 0, 1, 0] }}
+      transition={{ duration: 0.2 }}
+    >
+      <motion.div
+        className="absolute inset-0 bg-red-500/20"
+        animate={{ x: [-2, 2, -2, 0], scaleY: [1, 1.02, 0.98, 1] }}
+        transition={{ duration: 0.15 }}
+      />
+      <motion.div
+        className="absolute inset-0 bg-blue-500/20"
+        animate={{ x: [2, -2, 2, 0], scaleY: [0.98, 1.02, 1, 1] }}
+        transition={{ duration: 0.15, delay: 0.05 }}
+      />
+    </motion.div>
+  );
+});
+
+// 6. Energy Wave - ripple effect from center
+export const EnergyWave = React.memo(function EnergyWave({
+  active = false,
+  color = "purple",
+}: {
+  active?: boolean;
+  color?: "blue" | "purple" | "red";
+}) {
+  if (!active) return null;
+  
+  const colorMap = {
+    blue: "bg-blue-400/30",
+    purple: "bg-purple-400/30",
+    red: "bg-red-400/30",
+  };
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+      <motion.div
+        className={cn("absolute w-full h-full rounded-full", colorMap[color])}
+        initial={{ scale: 0.5, opacity: 0.6 }}
+        animate={{ scale: 3, opacity: 0 }}
+        transition={{ duration: 1.2, repeat: Infinity, ease: "easeOut" }}
+      />
+    </div>
+  );
+});
+
+// 7. Confetti Burst - celebration effect
+export const ConfettiBurst = React.memo(function ConfettiBurst({
+  trigger = false,
+}: {
+  trigger?: boolean;
+}) {
+  if (!trigger) return null;
+
+  const colors = ["#8b5cf6", "#3b82f6", "#ef4444", "#a855f7", "#6366f1"];
+  
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-visible">
+      {[...Array(12)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-2 h-2"
+          style={{
+            backgroundColor: colors[i % colors.length],
+            left: "50%",
+            top: "50%",
+            borderRadius: i % 2 === 0 ? "50%" : "2px",
+          }}
+          initial={{ scale: 0, x: 0, y: 0, rotate: 0 }}
+          animate={{
+            scale: [0, 1, 0.5],
+            x: Math.cos((i * 30) * Math.PI / 180) * (40 + Math.random() * 20),
+            y: Math.sin((i * 30) * Math.PI / 180) * (40 + Math.random() * 20) - 20,
+            rotate: Math.random() * 360,
+            opacity: [1, 1, 0],
+          }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        />
+      ))}
+    </div>
+  );
+});
+
+// 8. Loading Spinner with game colors
+export const GameSpinner = React.memo(function GameSpinner({
+  size = "md",
+}: {
+  size?: "sm" | "md" | "lg";
+}) {
+  const sizeMap = {
+    sm: "w-4 h-4",
+    md: "w-6 h-6",
+    lg: "w-8 h-8",
+  };
+
+  return (
+    <motion.div
+      className={cn(
+        "rounded-full border-2 border-transparent border-t-purple-500 border-r-blue-500",
+        sizeMap[size]
+      )}
+      animate={{ rotate: 360 }}
+      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+    />
+  );
+});
+
+// 9. Status Badge - shows game state
+export const StatusBadge = React.memo(function StatusBadge({
+  status,
+  animate = true,
+}: {
+  status: "playing" | "paused" | "idle" | "caught" | "escaped";
+  animate?: boolean;
+}) {
+  const statusConfig = {
+    playing: { color: "bg-purple-500", text: "Playing", icon: "🎮" },
+    paused: { color: "bg-blue-500", text: "Paused", icon: "⏸️" },
+    idle: { color: "bg-gray-500", text: "Idle", icon: "💤" },
+    caught: { color: "bg-green-500", text: "Caught!", icon: "🎯" },
+    escaped: { color: "bg-red-500", text: "Escaped", icon: "💨" },
+  };
+
+  const config = statusConfig[status];
+
+  return (
+    <motion.div
+      className={cn(
+        "flex items-center gap-1.5 px-2 py-1 rounded-full text-[9px] font-medium text-white",
+        config.color
+      )}
+      animate={animate ? { scale: [1, 1.05, 1] } : {}}
+      transition={{ duration: 2, repeat: Infinity }}
+    >
+      <span>{config.icon}</span>
+      <span>{config.text}</span>
+    </motion.div>
+  );
+});
+
+// 10. Orbit Animation - particles orbiting around element
+export const OrbitParticles = React.memo(function OrbitParticles({
+  active = false,
+  count = 3,
+}: {
+  active?: boolean;
+  count?: number;
+}) {
+  if (!active) return null;
+
+  const colors = ["bg-blue-400", "bg-purple-400", "bg-red-400"];
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      {[...Array(count)].map((_, i) => (
+        <motion.div
+          key={i}
+          className={cn("absolute w-1.5 h-1.5 rounded-full", colors[i % colors.length])}
+          animate={{
+            rotate: 360,
+          }}
+          transition={{
+            duration: 2 + i * 0.5,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+          style={{
+            transformOrigin: "center center",
+            left: "calc(50% - 3px)",
+            top: `calc(50% - ${12 + i * 8}px)`,
+          }}
+        >
+          <motion.div
+            className={cn("w-1.5 h-1.5 rounded-full", colors[i % colors.length])}
+            animate={{ scale: [1, 1.3, 1] }}
+            transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.2 }}
+          />
+        </motion.div>
+      ))}
+    </div>
   );
 });
 
