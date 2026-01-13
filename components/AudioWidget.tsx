@@ -32,10 +32,10 @@ const sourceLabel: Record<MusicSource, string> = {
 };
 
 // Only show streaming options in the dropdown
-const streamingOptions: { value: MusicSource; label: string; icon: React.ReactNode; color: string }[] = [
+const streamingOptions: { value: MusicSource; label: string; icon: React.ReactNode; color: string; recommended?: boolean }[] = [
   { value: "SPOTIFY", label: "Spotify", icon: <IconBrandSpotify className="w-5 h-5" />, color: "green" },
   { value: "APPLE_MUSIC", label: "Apple", icon: <IconBrandApple className="w-5 h-5" />, color: "pink" },
-  { value: "YOUTUBE", label: "YouTube", icon: <IconBrandYoutube className="w-5 h-5" />, color: "red" },
+  { value: "YOUTUBE", label: "YouTube", icon: <IconBrandYoutube className="w-5 h-5" />, color: "red", recommended: true },
 ];
 
 const sourceIcons: Partial<Record<MusicSource, React.ReactNode>> = {
@@ -848,6 +848,15 @@ const AudioWidget = React.memo(function AudioWidget() {
                           {opt.icon}
                         </motion.div>
                         <span>{opt.label}</span>
+                        {opt.recommended && !isActive && (
+                          <motion.div
+                            className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full bg-yellow-500/90 text-[7px] font-bold text-black shadow-lg"
+                            animate={{ scale: [1, 1.05, 1] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                          >
+                            ★ BEST
+                          </motion.div>
+                        )}
                         {isActive && (
                           <motion.div
                             className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-current"
@@ -917,7 +926,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                 
                 <Slider
                   label="🎵 Music"
-                  hint={musicSource === 'YOUTUBE' ? "Adjusts player volume" : "Attempts to adjust embed volume"}
+                  hint={musicSource === 'YOUTUBE' ? "Full volume control ✓" : "Limited - use YouTube for best control"}
                   value={musicVolume}
                   onChange={(v) => {
                      setMusicVolume(v);
@@ -1172,6 +1181,38 @@ const AudioWidget = React.memo(function AudioWidget() {
                           </button>
                       </div>
                       
+                      {/* Volume control bar */}
+                      <div className="px-3 py-1.5 border-b border-white/5 flex items-center gap-2">
+                        <MusicVolIcon className="w-3 h-3 text-white/50" />
+                        <input
+                          aria-label="Stream volume"
+                          type="range"
+                          min={0}
+                          max={1}
+                          step={0.01}
+                          value={musicVolume}
+                          onChange={(e) => {
+                            setMusicVolume(Number(e.target.value));
+                            // Send volume command to iframe
+                            if (iframeRef.current?.contentWindow && musicSource === 'YOUTUBE') {
+                              iframeRef.current.contentWindow.postMessage(JSON.stringify({
+                                event: 'command',
+                                func: 'setVolume',
+                                args: [Math.floor(Number(e.target.value) * 100)]
+                              }), '*');
+                            }
+                          }}
+                          className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer bg-white/10 
+                                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 
+                                     [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-400 
+                                     [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-blue-500/30"
+                          style={{
+                            background: `linear-gradient(to right, rgba(59, 130, 246, 0.5) 0%, rgba(59, 130, 246, 0.5) ${Math.round(musicVolume * 100)}%, rgba(255,255,255,0.1) ${Math.round(musicVolume * 100)}%, rgba(255,255,255,0.1) 100%)`
+                          }}
+                        />
+                        <span className="text-[9px] text-white/50 w-8 text-right tabular-nums">{Math.round(musicVolume * 100)}%</span>
+                      </div>
+
                       {/* Embed player - Scale down slightly for less intrusion */}
                       <div className="relative origin-top-left transition-transform duration-300 scale-95 hover:scale-100" style={{ width: '260px', height: musicSource === 'YOUTUBE' ? '146px' : '140px' }}>
                         <iframe

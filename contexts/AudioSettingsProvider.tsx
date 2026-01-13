@@ -59,7 +59,7 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
   const unlockedRef = useRef(false);
 
   const [musicEnabled, setMusicEnabledState] = useState(true);
-  const [musicVolume, setMusicVolumeState] = useState(0.15);
+  const [musicVolume, setMusicVolumeState] = useState(0.08); // Lower default for streaming
   const [sfxVolume, setSfxVolumeState] = useState(0.3);
   const [musicSource, setMusicSourceState] = useState<MusicSource>("THEME");
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
