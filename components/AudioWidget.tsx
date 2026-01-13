@@ -475,12 +475,10 @@ const AudioWidget = React.memo(function AudioWidget() {
   // When user selects a streaming source, activate it
   const handleStreamingSelect = useCallback((newSource: MusicSource) => {
     // Only change key if source changes (to preserve playback)
-    setMusicSource((prevSource) => {
-       if (newSource !== prevSource) {
-         setIframeKey((k) => k + 1);
-       }
-       return newSource;
-    });
+    if (newSource !== musicSource) {
+      setIframeKey((k) => k + 1);
+      setMusicSource(newSource);
+    }
     
     setStreamingActive(true);
     setMusicEnabled(true);
@@ -489,7 +487,7 @@ const AudioWidget = React.memo(function AudioWidget() {
     
     // Save preference
     localStorage.setItem('audioWidgetSavedSource', newSource);
-  }, [setMusicSource, setMusicEnabled]);
+  }, [musicSource, setMusicSource, setMusicEnabled]);
 
   // Handle drag end - detect swipe to hide
   const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {

@@ -25,8 +25,10 @@ const SECTION_LABELS: Record<SectionId, string> = {
 };
 
 // Key mappings - all lowercase for easy comparison
-const PREV_KEYS = new Set(["arrowup", "arrowleft", "pageup", "w", "k", "h"]);
-const NEXT_KEYS = new Set(["arrowdown", "arrowright", "pagedown", "s", "j", "l", " ", "enter"]);
+// IMPORTANT: Arrow keys, Space, PageUp/PageDown removed to allow normal scroll behavior
+// Only vim-style keys (with explicit user action) are kept
+const PREV_KEYS = new Set<string>([]); // Disabled - let browser handle scroll
+const NEXT_KEYS = new Set<string>([]); // Disabled - let browser handle scroll
 const TOP_KEYS = new Set(["home"]);
 const BOTTOM_KEYS = new Set(["end"]);
 
@@ -312,18 +314,12 @@ export default function DesktopKeyNavigator() {
                 {!lastKey && (
                   <>
                     <div className="text-[10px] uppercase tracking-[0.25em] font-bold text-blue-300/80 mb-3 flex items-center gap-2">
-                      <span className="text-base">⌨️</span> Keyboard Navigation
+                      <span className="text-base">⌨️</span> Quick Navigation
                     </div>
                     
                     <div className="space-y-2 text-[11px]">
                       <div className="flex items-center gap-2">
-                        <div className="flex gap-1">
-                          <kbd className="px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-300 font-mono">↑</kbd>
-                          <kbd className="px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-300 font-mono">↓</kbd>
-                        </div>
-                        <span className="text-white/40">or</span>
-                        <kbd className="px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-300 font-mono">W/S</kbd>
-                        <span className="text-white/50">navigate sections</span>
+                        <span className="text-white/50">Normal scrolling works</span>
                       </div>
                       
                       <div className="flex items-center gap-2">
@@ -335,6 +331,13 @@ export default function DesktopKeyNavigator() {
                         <kbd className="px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-300 font-mono">G</kbd>
                         <span className="text-white/40">/</span>
                         <kbd className="px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-300 font-mono">⇧G</kbd>
+                        <span className="text-white/50">top / bottom</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <kbd className="px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-300 font-mono">Home</kbd>
+                        <span className="text-white/40">/</span>
+                        <kbd className="px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-300 font-mono">End</kbd>
                         <span className="text-white/50">top / bottom</span>
                       </div>
                     </div>

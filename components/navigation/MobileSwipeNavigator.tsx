@@ -208,9 +208,12 @@ export default function MobileSwipeNavigator() {
 
       const deltaX = swipeRef.current.currentX - swipeRef.current.startX;
       const deltaY = swipeRef.current.currentY - swipeRef.current.startY;
+      const absDeltaX = Math.abs(deltaX);
+      const absDeltaY = Math.abs(deltaY);
 
-      // If significant horizontal movement, prevent default
-      if (Math.abs(deltaX) > 5) {
+      // ONLY prevent default for strong horizontal swipes (navigation gesture)
+      // Allow normal vertical scrolling to work
+      if (absDeltaX > 40 && absDeltaX > absDeltaY * 1.8) {
         e.preventDefault();
       }
     };
@@ -271,19 +274,10 @@ export default function MobileSwipeNavigator() {
             swiped = true;
           }
         }
-      } else if (isVertical && (absDeltaY >= MIN_SWIPE_DISTANCE * 1.5 || velocityY >= MIN_SWIPE_VELOCITY)) {
-        if (deltaY < 0) {
-          // UP swipe - to top
-          scrollToSection("hero");
-          showAction("↑", "hero");
-          swiped = true;
-        } else {
-          // DOWN swipe - to bottom
-          scrollToSection("footer");
-          showAction("↓", "footer");
-          swiped = true;
-        }
       }
+      // DISABLED: Vertical swipe navigation was interfering with normal scrolling
+      // Users can use the horizontal swipe left/right for section navigation instead
+      // or tap the navbar menu to jump to sections
 
       if (debugRef.current) console.log('[SWIPE] Swiped:', swiped);
     };
@@ -359,21 +353,21 @@ export default function MobileSwipeNavigator() {
             {showHint && !lastAction && (
               <div className="px-5 py-4">
                 <div className="text-[10px] uppercase tracking-[0.3em] font-bold text-blue-300/70 mb-3 text-center flex items-center justify-center gap-2">
-                  <span className="text-base">👆</span> Swipe to Navigate
+                  <span className="text-base">👆</span> Quick Navigation
                 </div>
                 
-                <div className="grid grid-cols-2 gap-3 text-center">
-                  <div className="bg-blue-500/10 rounded-xl p-2.5 border border-blue-500/20">
+                <div className="flex justify-center">
+                  <div className="bg-blue-500/10 rounded-xl p-3 border border-blue-500/20 text-center">
                     <div className="text-xl mb-1">← →</div>
-                    <div className="text-[10px] text-white/60 uppercase tracking-wider">Sections</div>
-                  </div>
-                  <div className="bg-blue-500/10 rounded-xl p-2.5 border border-blue-500/20">
-                    <div className="text-xl mb-1">↑ ↓</div>
-                    <div className="text-[10px] text-white/60 uppercase tracking-wider">Top / End</div>
+                    <div className="text-[10px] text-white/60 uppercase tracking-wider">Swipe to Jump Sections</div>
                   </div>
                 </div>
                 
-                <div className="mt-3 flex justify-center">
+                <div className="mt-3 text-center text-[9px] text-white/40">
+                  Scroll normally • Swipe left/right for sections
+                </div>
+                
+                <div className="mt-2 flex justify-center">
                   <div className="flex gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 swipe-pulse" />
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-400/60 swipe-pulse" style={{ animationDelay: '0.2s' }} />
