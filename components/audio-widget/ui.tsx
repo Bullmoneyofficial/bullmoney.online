@@ -110,16 +110,14 @@ export const BoredPopup = React.memo(function BoredPopup({
           
           {/* Content */}
           <div className="relative flex items-center gap-3">
-            <motion.span 
-              className="text-2xl"
-              animate={{ 
-                rotate: [0, -10, 10, -5, 5, 0],
-                scale: [1, 1.1, 1],
-              }}
-              transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
+            <motion.div
+              className="p-1.5 rounded-xl bg-white/5 border border-white/10"
+              animate={{ opacity: [0.85, 1, 0.85] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              aria-hidden
             >
-              😴
-            </motion.span>
+              <IconZzz className="w-6 h-6 text-sky-200" />
+            </motion.div>
             <div>
               <p className="text-[11px] font-bold text-white">I'm bored... catch me!</p>
               <p className="text-[9px] text-sky-100/80">This is a mini-game! Chase me around</p>
@@ -137,6 +135,99 @@ export const BoredPopup = React.memo(function BoredPopup({
         <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-gradient-to-br from-blue-700/95 to-sky-600/95 rotate-45 border-r border-b border-sky-400/50" />
       </div>
     </motion.div>
+  );
+});
+
+// Quick 5–10s tutorial bubble (shown on first hover)
+export const QuickGameTutorial = React.memo(function QuickGameTutorial({
+  show,
+  onDone,
+  durationMs = 7500,
+  className = "",
+}: {
+  show: boolean;
+  onDone: () => void;
+  durationMs?: number;
+  className?: string;
+}) {
+  React.useEffect(() => {
+    if (!show) return;
+    const t = window.setTimeout(onDone, durationMs);
+    return () => window.clearTimeout(t);
+  }, [show, durationMs, onDone]);
+
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 0, y: 12, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 8, scale: 0.98 }}
+          transition={{ type: "spring", stiffness: 300, damping: 22 }}
+          className={cn(
+            "fixed left-3 bottom-[250px] z-[10002] w-[280px] pointer-events-auto",
+            className
+          )}
+        >
+          <div className="relative overflow-hidden rounded-2xl border border-sky-400/25 bg-gradient-to-br from-blue-950/92 via-slate-900/95 to-blue-950/92 backdrop-blur-xl shadow-2xl">
+            <GameShimmer colors="blue" speed="fast" />
+
+            <button
+              onClick={onDone}
+              className="absolute top-2 right-2 p-1.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+              aria-label="Dismiss tutorial"
+              type="button"
+            >
+              <IconX className="w-3.5 h-3.5 text-white/60" />
+            </button>
+
+            <div className="relative p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 rounded-xl bg-sky-500/10 border border-sky-300/15">
+                  <IconInfoCircle className="w-4 h-4 text-sky-200" />
+                </div>
+                <div>
+                  <div className="text-[11px] font-semibold text-white">How to play</div>
+                  <div className="text-[9px] text-white/55">Quick demo (auto closes)</div>
+                </div>
+              </div>
+
+              <div className="space-y-1.5 text-[10px] text-white/75">
+                <div className="flex items-start gap-2">
+                  <span className="mt-[3px] inline-block w-1.5 h-1.5 rounded-full bg-sky-200/80" />
+                  <span>Press Play in the menu to start.</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="mt-[3px] inline-block w-1.5 h-1.5 rounded-full bg-sky-200/80" />
+                  <span>Move your cursor near it to make it run.</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="mt-[3px] inline-block w-1.5 h-1.5 rounded-full bg-sky-200/80" />
+                  <span>Click it to catch and score.</span>
+                </div>
+              </div>
+
+              {/* Tiny simulated chase bar */}
+              <div className="mt-3 relative h-8 rounded-xl bg-black/40 border border-white/10 overflow-hidden">
+                <motion.div
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white/60"
+                  animate={{ x: [0, 210, 40, 210] }}
+                  transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+                  aria-hidden
+                />
+                <motion.div
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-sky-300"
+                  animate={{ x: [30, 150, 10, 170] }}
+                  transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: 0.15 }}
+                  aria-hidden
+                />
+                <div className="absolute inset-x-2 bottom-1 text-[9px] text-white/45">Try to catch it before it escapes</div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 });
 
@@ -277,11 +368,11 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
             animate={isFleeing ? { scale: [1, 1.06, 1] } : {}}
             transition={isFleeing ? { duration: 0.8, repeat: Infinity } : { duration: 0 }}
           >
-            {isFleeing ? "💨 Fleeing!" :
-             isReturning ? "↩️ Returning..." :
-             tirednessLevel === "exhausted" ? "😴 So sleepy..." :
-             tirednessLevel === "tired" ? "😓 Getting tired" :
-             "🎮 Catch me!"}
+            {isFleeing ? "Fleeing" :
+             isReturning ? "Returning" :
+             tirednessLevel === "exhausted" ? "Too sleepy" :
+             tirednessLevel === "tired" ? "Getting tired" :
+             "Catch me"}
           </motion.span>
           <span className="text-white/40 tabular-nums">{Math.round(energy)}%</span>
         </div>
@@ -705,11 +796,11 @@ export const StatusBadge = React.memo(function StatusBadge({
   animate?: boolean;
 }) {
   const statusConfig = {
-    playing: { color: "bg-blue-500", text: "Playing", icon: "🎮" },
-    paused: { color: "bg-blue-600", text: "Paused", icon: "⏸️" },
-    idle: { color: "bg-blue-950/60", text: "Idle", icon: "💤" },
-    caught: { color: "bg-sky-500", text: "Caught!", icon: "🎯" },
-    escaped: { color: "bg-sky-600", text: "Escaped", icon: "💨" },
+    playing: { color: "bg-blue-600", text: "Playing" },
+    paused: { color: "bg-blue-700", text: "Paused" },
+    idle: { color: "bg-blue-950/60", text: "Idle" },
+    caught: { color: "bg-sky-600", text: "Caught" },
+    escaped: { color: "bg-blue-600", text: "Escaped" },
   };
 
   const config = statusConfig[status];
@@ -717,13 +808,22 @@ export const StatusBadge = React.memo(function StatusBadge({
   return (
     <motion.div
       className={cn(
-        "flex items-center gap-1.5 px-2 py-1 rounded-full text-[9px] font-medium text-white",
-        config.color
+        "relative overflow-hidden flex items-center gap-1.5 px-2 py-1 rounded-full text-[9px] font-medium text-white",
+        config.color,
+        status === "escaped" && "ring-1 ring-sky-300/40"
       )}
       animate={animate ? { scale: [1, 1.05, 1] } : {}}
       transition={{ duration: 2, repeat: Infinity }}
     >
-      <span>{config.icon}</span>
+      {status === "escaped" && (
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent"
+          animate={{ x: ["-120%", "220%"] }}
+          transition={{ duration: 1.6, repeat: Infinity, ease: "linear", repeatDelay: 0.6 }}
+          aria-hidden
+        />
+      )}
+      <span className="relative inline-block w-1.5 h-1.5 rounded-full bg-white/80" aria-hidden />
       <span>{config.text}</span>
     </motion.div>
   );
@@ -1186,7 +1286,7 @@ export const GameStats = React.memo(function GameStats({
               transition={{ duration: 0.5, repeat: Infinity }}
               className="text-[11px] font-bold text-sky-200"
             >
-              🎉 NEW HIGH SCORE! 🎉
+              NEW HIGH SCORE
             </motion.span>
           </motion.div>
         )}
@@ -1239,11 +1339,6 @@ export const GameHUD = React.memo(function GameHUD({
   tirednessLevel: "fresh" | "active" | "tired" | "exhausted";
   isMobile: boolean;
 }) {
-  const statusEmoji = isFleeing ? "💨" : isReturning ? "🔄" : 
-    tirednessLevel === "fresh" ? "⚡" :
-    tirednessLevel === "active" ? "🏃" :
-    tirednessLevel === "tired" ? "😓" : "😴";
-
   const statusText = isFleeing ? "Fleeing!" : isReturning ? "Coming back..." :
     tirednessLevel === "fresh" ? "Full energy!" :
     tirednessLevel === "active" ? "Active" :
@@ -1269,12 +1364,14 @@ export const GameHUD = React.memo(function GameHUD({
           {/* Status */}
           <div className="flex items-center gap-2">
             <motion.span
-              animate={isFleeing || isReturning ? { scale: [1, 1.2, 1] } : {}}
-              transition={{ duration: 0.3, repeat: isFleeing || isReturning ? Infinity : 0 }}
-              className="text-lg"
-            >
-              {statusEmoji}
-            </motion.span>
+              className={cn(
+                "inline-block w-2 h-2 rounded-full",
+                isFleeing ? "bg-sky-300" : isReturning ? "bg-cyan-300" : "bg-white/40"
+              )}
+              animate={isFleeing || isReturning ? { opacity: [0.5, 1, 0.5] } : {}}
+              transition={{ duration: 1, repeat: isFleeing || isReturning ? Infinity : 0 }}
+              aria-hidden
+            />
             <span className={cn(
               "text-[11px] font-medium",
               isFleeing ? "text-sky-200" :
@@ -1406,8 +1503,13 @@ export const GameOverScreen = React.memo(function GameOverScreen({
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 10 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-[280px] p-6 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 border border-white/10 shadow-2xl"
+        className={cn(
+          "relative w-[280px] p-6 rounded-2xl border shadow-2xl overflow-hidden",
+          "bg-gradient-to-br from-blue-950/90 via-slate-900/95 to-blue-950/90",
+          wasCaught ? "border-white/10" : "border-sky-400/25"
+        )}
       >
+        {!wasCaught && <GameShimmer colors="blue" speed="fast" />}
         {/* Confetti for high score */}
         {isNewHighScore && (
           <>
@@ -1447,9 +1549,18 @@ export const GameOverScreen = React.memo(function GameOverScreen({
           <motion.div
             animate={wasCaught ? { rotate: [0, 10, -10, 0] } : {}}
             transition={{ duration: 0.5 }}
-            className="text-4xl mb-2"
+            className="mb-2 flex items-center justify-center"
           >
-            {wasCaught ? "🎯" : "💨"}
+            <div className={cn(
+              "p-3 rounded-2xl border",
+              wasCaught ? "bg-white/5 border-white/10" : "bg-sky-500/10 border-sky-300/20"
+            )}>
+              {wasCaught ? (
+                <IconHandFinger className="w-8 h-8 text-white/80" />
+              ) : (
+                <IconZzz className="w-8 h-8 text-sky-200" />
+              )}
+            </div>
           </motion.div>
           <h3 className="text-xl font-bold text-white">
             {wasCaught ? "Caught!" : "Escaped!"}

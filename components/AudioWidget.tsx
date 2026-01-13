@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { useAudioSettings, type MusicSource, STREAMING_SOURCES } from "@/contexts/AudioSettingsProvider";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { MusicEmbedModal } from "@/components/MusicEmbedModal";
-import { BlueShimmer, Slider, TouchIndicator, GameOverScreen, EnergyBar, CompactGameHUD, BoredPopup, GameControls, GameShimmer, SparkleBurst, FloatingParticles, PulseRing, ConfettiBurst, BounceDots, StatusBadge } from "@/components/audio-widget/ui";
+import { BlueShimmer, Slider, TouchIndicator, GameOverScreen, EnergyBar, CompactGameHUD, BoredPopup, GameControls, GameShimmer, SparkleBurst, FloatingParticles, PulseRing, ConfettiBurst, BounceDots, StatusBadge, QuickGameTutorial } from "@/components/audio-widget/ui";
 import { useWanderingGame } from "@/components/audio-widget/useWanderingGame";
 
 const sourceLabel: Record<MusicSource, string> = {
@@ -48,6 +48,9 @@ const sourceIcons: Partial<Record<MusicSource, React.ReactNode>> = {
 
 const AudioWidget = React.memo(function AudioWidget() {
   const prefersReducedMotion = useReducedMotion();
+  const [hasStartedCatchGame, setHasStartedCatchGame] = useState(false);
+  const [showCatchGameTutorial, setShowCatchGameTutorial] = useState(false);
+  const catchGameTutorialTimerRef = useRef<number | null>(null);
   const {
     musicEnabled,
     setMusicEnabled,
@@ -168,9 +171,8 @@ const AudioWidget = React.memo(function AudioWidget() {
         setStreamingActive(true);
         setMusicEnabled(true);
         setPlayerHidden(false);
-        
-        // Always start wandering on reload - genie effect every time!
-        setIsWandering(true);
+
+        // Do not auto-start the catch game; require explicit Play.
         setShowReturnUserHint(true);
         
         // Auto-hide the return user hint after 10s
@@ -193,17 +195,43 @@ const AudioWidget = React.memo(function AudioWidget() {
     }
   }, [open, hasCompletedTutorial, tutorialStep]);
 
-  // Trigger wandering when menu closes with active streaming (to grab attention)
-  useEffect(() => {
-    if (!open && streamingActive && !playerHidden && !isWandering) {
-      // Small delay to let the menu close animation finish
-      const timer = setTimeout(() => {
-        setHasInteracted(false); // Reset so genie can play
-        startGame(); // Use startGame instead of just setIsWandering
-      }, 300);
-      return () => clearTimeout(timer);
+  // Catch game starts only via explicit Play
+  const handleStartCatchGame = useCallback(() => {
+    setHasStartedCatchGame(true);
+    setHasInteracted(false);
+    startGame();
+  }, [startGame, setHasInteracted]);
+
+  const dismissCatchGameTutorial = useCallback(() => {
+    setShowCatchGameTutorial(false);
+    if (catchGameTutorialTimerRef.current != null) {
+      window.clearTimeout(catchGameTutorialTimerRef.current);
+      catchGameTutorialTimerRef.current = null;
     }
-  }, [open, streamingActive, playerHidden, isWandering, startGame, setHasInteracted]);
+  }, []);
+
+  const maybeShowCatchGameTutorial = useCallback(() => {
+    if (typeof window === "undefined") return;
+    if (localStorage.getItem("audioWidgetCatchGameTutorialSeen") === "true") return;
+    localStorage.setItem("audioWidgetCatchGameTutorialSeen", "true");
+    setShowCatchGameTutorial(true);
+    if (catchGameTutorialTimerRef.current != null) {
+      window.clearTimeout(catchGameTutorialTimerRef.current);
+    }
+    // 5–10 seconds
+    catchGameTutorialTimerRef.current = window.setTimeout(() => {
+      setShowCatchGameTutorial(false);
+      catchGameTutorialTimerRef.current = null;
+    }, 7500);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (catchGameTutorialTimerRef.current != null) {
+        window.clearTimeout(catchGameTutorialTimerRef.current);
+      }
+    };
+  }, []);
 
   // Show bored popup when game starts to educate users
   useEffect(() => {
@@ -399,6 +427,12 @@ const AudioWidget = React.memo(function AudioWidget() {
         )}
       </AnimatePresence>
 
+      {/* One-time catch game tutorial (first hover) */}
+      <QuickGameTutorial
+        show={showCatchGameTutorial && !open && !playerHidden}
+        onDone={dismissCatchGameTutorial}
+      />
+
       {/* Game Over Modal */}
       <AnimatePresence>
         {showGameOver && (
@@ -409,7 +443,7 @@ const AudioWidget = React.memo(function AudioWidget() {
             wasCaught={gameState === "caught"}
             onPlayAgain={() => {
               setShowGameOver(false);
-              startGame();
+              handleStartCatchGame();
             }}
             onClose={() => setShowGameOver(false)}
           />
@@ -813,7 +847,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                         {/* Game Controls */}
                         <GameControls
                           isPlaying={isWandering}
-                          onStart={startGame}
+                          onStart={handleStartCatchGame}
                           onStop={handleStopGame}
                           className="mt-2"
                         />
@@ -824,10 +858,10 @@ const AudioWidget = React.memo(function AudioWidget() {
                     {gameStats.gamesPlayed === 0 && streamingActive && (
                       <div className="mb-2 p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-400/20 relative overflow-hidden">
                         <GameShimmer colors="blue" />
-                        <div className="text-[10px] text-white/60 mb-1.5 text-center">🎮 Try the Catch Game!</div>
+                        <div className="text-[10px] text-white/60 mb-1.5 text-center">Try the catch game</div>
                         <GameControls
                           isPlaying={isWandering}
-                          onStart={startGame}
+                          onStart={handleStartCatchGame}
                           onStop={handleStopGame}
                         />
                       </div>
@@ -992,7 +1026,13 @@ const AudioWidget = React.memo(function AudioWidget() {
                       handlePlayerInteraction();
                     }
                   }}
-                  onMouseEnter={() => setIsHovering(true)}
+                  onMouseEnter={() => {
+                    setIsHovering(true);
+                    // First hover: educate, and do not auto-start movement.
+                    if (!hasStartedCatchGame) {
+                      maybeShowCatchGameTutorial();
+                    }
+                  }}
                   onMouseLeave={() => setIsHovering(false)}
                 >
                   <div className={cn(
