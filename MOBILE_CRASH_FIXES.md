@@ -1,4 +1,4 @@
-# Mobile Crash Fixes - In-App Browser Compatibility
+fix # Mobile Crash Fixes - In-App Browser Compatibility
 
 ## Summary
 This document describes the comprehensive fixes implemented to prevent mobile crashes in Instagram, TikTok, Safari, and other in-app browsers when scrolling or viewing the app.
