@@ -5,12 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { IconHandFinger, IconArrowLeft, IconArrowRight, IconPlayerPlay, IconInfoCircle, IconVolume, IconChevronUp, IconMusic, IconTrophy, IconFlame, IconBolt, IconZzz, IconPlayerPause, IconPlayerStop, IconX } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 
-// Game color palette - blue, red, purple only
+// Game color palette - BLUE ONLY (per design requirement)
 const GAME_COLORS = {
-  primary: "from-blue-500 via-purple-500 to-blue-600",
-  secondary: "from-purple-500 via-red-500 to-purple-600",
-  accent: "from-red-500 via-purple-500 to-blue-500",
-  shimmer: "from-transparent via-purple-400/30 to-transparent",
+  primary: "from-blue-500 via-cyan-400 to-blue-600",
+  secondary: "from-blue-600 via-sky-400 to-blue-700",
+  accent: "from-cyan-400 via-blue-500 to-sky-400",
+  shimmer: "from-transparent via-sky-400/30 to-transparent",
 };
 
 // Optimized shimmer effect - uses CSS animation for better performance
@@ -24,10 +24,11 @@ export const GameShimmer = React.memo(function GameShimmer({
   colors?: "blue" | "purple" | "red" | "rainbow";
 }) {
   const colorMap = {
-    blue: "via-blue-400/25",
-    purple: "via-purple-400/25",
-    red: "via-red-400/25",
-    rainbow: "via-purple-400/25",
+    blue: "via-sky-400/25",
+    // Force legacy variants to blue so callsites stay simple
+    purple: "via-sky-400/25",
+    red: "via-sky-400/25",
+    rainbow: "via-sky-400/25",
   };
   
   const speedMap = {
@@ -103,7 +104,7 @@ export const BoredPopup = React.memo(function BoredPopup({
     >
       <div className="relative">
         {/* Main bubble */}
-        <div className="relative px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600/95 via-blue-600/95 to-purple-600/95 border border-purple-400/50 shadow-xl shadow-purple-500/30 backdrop-blur-sm">
+        <div className="relative px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-700/95 via-sky-500/95 to-blue-700/95 border border-sky-400/50 shadow-xl shadow-sky-500/30 backdrop-blur-sm">
           {/* Shimmer */}
           <GameShimmer colors="rainbow" speed="fast" />
           
@@ -121,7 +122,7 @@ export const BoredPopup = React.memo(function BoredPopup({
             </motion.span>
             <div>
               <p className="text-[11px] font-bold text-white">I'm bored... catch me!</p>
-              <p className="text-[9px] text-purple-200/80">This is a mini-game! Chase me around</p>
+              <p className="text-[9px] text-sky-100/80">This is a mini-game! Chase me around</p>
             </div>
             <button
               onClick={onDismiss}
@@ -133,7 +134,7 @@ export const BoredPopup = React.memo(function BoredPopup({
         </div>
         
         {/* Speech bubble tail */}
-        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-gradient-to-br from-purple-600/95 to-blue-600/95 rotate-45 border-r border-b border-purple-400/50" />
+        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-gradient-to-br from-blue-700/95 to-sky-600/95 rotate-45 border-r border-b border-sky-400/50" />
       </div>
     </motion.div>
   );
@@ -168,9 +169,10 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
   variant?: "panel" | "attached";
 }) {
   const getEnergyGradient = useCallback(() => {
-    if (energy > 70) return "from-blue-400 to-purple-500";
-    if (energy > 40) return "from-purple-400 to-red-500";
-    return "from-red-400 to-red-600";
+    // Blue-only gradient: energy just shifts brightness
+    if (energy > 70) return "from-sky-300 to-blue-500";
+    if (energy > 40) return "from-sky-400 to-blue-600";
+    return "from-blue-500 to-blue-700";
   }, [energy]);
 
   if (!isVisible) return null;
@@ -181,14 +183,17 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 5, scale: 0.95 }}
       className={cn(
-        "relative overflow-hidden rounded-xl border backdrop-blur-sm shadow-lg",
-        variant === "attached"
-          ? "bg-black/85 border-white/15 shadow-2xl"
-          : "bg-black/80 border-purple-500/30"
+        "relative overflow-hidden rounded-xl border backdrop-blur-md shadow-lg",
+        "bg-black/80 border-blue-400/30",
+        variant === "attached" && "bg-black/85 border-blue-300/35 shadow-2xl",
+        isFleeing && "border-sky-300/70 shadow-[0_0_32px_rgba(56,189,248,0.45)]",
+        isReturning && "border-blue-300/60 shadow-[0_0_22px_rgba(59,130,246,0.28)]"
       )}
     >
       {/* Shimmer overlay */}
-      {variant !== "attached" && <GameShimmer colors="purple" speed="normal" />}
+      <GameShimmer colors="blue" speed={variant === "attached" ? "fast" : "normal"} />
+      {/* Extra border shimmer for attached mode */}
+      {variant === "attached" && <BlueShimmer className={cn(isFleeing ? "opacity-100" : "opacity-70")} />}
       
       <div className={cn("relative space-y-1.5", variant === "attached" ? "p-2" : "p-2")}>
         {/* Top row - score and controls */}
@@ -196,11 +201,11 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
           <div className="flex items-center gap-2">
             {/* Score */}
             <div className="flex items-center gap-1">
-              <span className="text-[9px] text-purple-300/70">Score</span>
+              <span className="text-[9px] text-sky-200/75">Score</span>
               <motion.span 
                 key={score}
-                initial={{ scale: 1.2, color: "#c084fc" }}
-                animate={{ scale: 1, color: "#ffffff" }}
+                initial={{ scale: 1.15, color: "#38bdf8" }}
+                animate={{ scale: 1, color: "#e0f2fe" }}
                 className="text-sm font-bold tabular-nums"
               >
                 {score}
@@ -212,10 +217,10 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
               <motion.div
                 initial={{ scale: 0, rotate: -10 }}
                 animate={{ scale: 1, rotate: 0 }}
-                className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-red-500/30 border border-red-400/40"
+                className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-blue-500/25 border border-sky-300/40"
               >
-                <IconFlame className="w-3 h-3 text-red-400" />
-                <span className="text-[10px] font-bold text-red-300">x{combo}</span>
+                <IconFlame className="w-3 h-3 text-sky-300" />
+                <span className="text-[10px] font-bold text-sky-200">x{combo}</span>
               </motion.div>
             )}
           </div>
@@ -227,16 +232,16 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
                 animate={variant === "attached" ? {} : { rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
                 transition={variant === "attached" ? { duration: 0 } : { duration: 1, repeat: Infinity, repeatDelay: 2 }}
               >
-                <IconTrophy className="w-3.5 h-3.5 text-yellow-400" />
+                <IconTrophy className="w-3.5 h-3.5 text-sky-200" />
               </motion.div>
             )}
             {onStop && (
               <button
                 onClick={onStop}
-                className="p-1 rounded hover:bg-red-500/30 transition-colors group"
+                className="p-1 rounded hover:bg-blue-500/25 transition-colors group"
                 title="Stop game"
               >
-                <IconPlayerStop className="w-3 h-3 text-red-400/70 group-hover:text-red-300" />
+                <IconPlayerStop className="w-3 h-3 text-sky-200/70 group-hover:text-sky-200" />
               </button>
             )}
           </div>
@@ -261,19 +266,23 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
 
         {/* Status indicator */}
         <div className="flex items-center justify-between text-[8px]">
-          <span className={cn(
-            "font-medium",
-            isFleeing ? "text-red-400" :
-            isReturning ? "text-purple-400" :
-            tirednessLevel === "exhausted" ? "text-red-400/70" :
-            tirednessLevel === "tired" ? "text-yellow-400/70" : "text-blue-400/70"
-          )}>
+          <motion.span
+            className={cn(
+              "font-semibold tracking-wide",
+              isFleeing ? "text-sky-200 drop-shadow-[0_0_10px_rgba(56,189,248,0.6)]" :
+              isReturning ? "text-blue-200" :
+              tirednessLevel === "exhausted" ? "text-blue-200/75" :
+              tirednessLevel === "tired" ? "text-sky-200/75" : "text-sky-200/70"
+            )}
+            animate={isFleeing ? { scale: [1, 1.06, 1] } : {}}
+            transition={isFleeing ? { duration: 0.8, repeat: Infinity } : { duration: 0 }}
+          >
             {isFleeing ? "💨 Fleeing!" :
              isReturning ? "↩️ Returning..." :
              tirednessLevel === "exhausted" ? "😴 So sleepy..." :
              tirednessLevel === "tired" ? "😓 Getting tired" :
              "🎮 Catch me!"}
-          </span>
+          </motion.span>
           <span className="text-white/40 tabular-nums">{Math.round(energy)}%</span>
         </div>
       </div>
@@ -305,16 +314,16 @@ export const GameControls = React.memo(function GameControls({
           disabled={disabled}
           className={cn(
             "relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg overflow-hidden",
-            "bg-gradient-to-r from-red-500/20 to-purple-500/20",
-            "border border-red-400/30 hover:border-red-400/50",
-            "text-[10px] font-medium text-red-300 hover:text-red-200",
+            "bg-gradient-to-r from-blue-500/20 via-sky-500/15 to-blue-600/20",
+            "border border-blue-400/30 hover:border-sky-300/60",
+            "text-[10px] font-medium text-sky-200 hover:text-sky-100",
             "transition-all duration-200",
             disabled && "opacity-50 cursor-not-allowed"
           )}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <GameShimmer colors="red" speed="fast" />
+          <GameShimmer colors="blue" speed="fast" />
           <IconPlayerStop className="w-3 h-3" />
           <span>Stop Game</span>
         </motion.button>
@@ -326,16 +335,16 @@ export const GameControls = React.memo(function GameControls({
           disabled={disabled}
           className={cn(
             "relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg overflow-hidden",
-            "bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20",
-            "border border-purple-400/30 hover:border-purple-400/50",
-            "text-[10px] font-medium text-purple-300 hover:text-purple-200",
+            "bg-gradient-to-r from-blue-500/20 via-sky-500/15 to-blue-500/20",
+            "border border-blue-400/30 hover:border-sky-300/60",
+            "text-[10px] font-medium text-sky-200 hover:text-sky-100",
             "transition-all duration-200",
             disabled && "opacity-50 cursor-not-allowed"
           )}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <GameShimmer colors="purple" speed="normal" />
+          <GameShimmer colors="blue" speed="normal" />
           <IconPlayerPlay className="w-3 h-3" />
           <span>Play Game</span>
         </motion.button>
@@ -388,9 +397,9 @@ export const FloatingParticles = React.memo(function FloatingParticles({
   color?: "blue" | "purple" | "red";
 }) {
   const colorClass = {
-    blue: "bg-blue-400/30",
-    purple: "bg-purple-400/30",
-    red: "bg-red-400/30",
+    blue: "bg-sky-400/30",
+    purple: "bg-sky-400/30",
+    red: "bg-sky-400/30",
   };
 
   return (
@@ -437,9 +446,9 @@ export const PulseRing = React.memo(function PulseRing({
   if (!active) return null;
   
   const colorMap = {
-    blue: "border-blue-400",
-    purple: "border-purple-400",
-    red: "border-red-400",
+    blue: "border-sky-300",
+    purple: "border-sky-300",
+    red: "border-sky-300",
   };
   
   const sizeMap = {
@@ -481,9 +490,9 @@ export const MotionTrail = React.memo(function MotionTrail({
   if (!show) return null;
   
   const colorMap = {
-    blue: "from-blue-400/60 to-transparent",
-    purple: "from-purple-400/60 to-transparent",
-    red: "from-red-400/60 to-transparent",
+    blue: "from-sky-300/60 to-transparent",
+    purple: "from-sky-300/60 to-transparent",
+    red: "from-sky-300/60 to-transparent",
   };
 
   return (
@@ -512,9 +521,9 @@ export const BounceDots = React.memo(function BounceDots({
   if (!active) return null;
   
   const colorMap = {
-    blue: "bg-blue-400",
-    purple: "bg-purple-400",
-    red: "bg-red-400",
+    blue: "bg-sky-300",
+    purple: "bg-sky-300",
+    red: "bg-sky-300",
   };
 
   return (
@@ -547,9 +556,9 @@ export const ScorePop = React.memo(function ScorePop({
   color?: "blue" | "purple" | "red";
 }) {
   const colorMap = {
-    blue: "text-blue-400",
-    purple: "text-purple-400",
-    red: "text-red-400",
+    blue: "text-sky-300",
+    purple: "text-sky-300",
+    red: "text-sky-300",
   };
 
   return (
@@ -585,7 +594,7 @@ export const GlitchEffect = React.memo(function GlitchEffect({
       transition={{ duration: 0.2 }}
     >
       <motion.div
-        className="absolute inset-0 bg-red-500/20"
+        className="absolute inset-0 bg-sky-500/20"
         animate={{ x: [-2, 2, -2, 0], scaleY: [1, 1.02, 0.98, 1] }}
         transition={{ duration: 0.15 }}
       />
@@ -609,9 +618,9 @@ export const EnergyWave = React.memo(function EnergyWave({
   if (!active) return null;
   
   const colorMap = {
-    blue: "bg-blue-400/30",
-    purple: "bg-purple-400/30",
-    red: "bg-red-400/30",
+    blue: "bg-sky-400/30",
+    purple: "bg-sky-400/30",
+    red: "bg-sky-400/30",
   };
 
   return (
@@ -634,7 +643,7 @@ export const ConfettiBurst = React.memo(function ConfettiBurst({
 }) {
   if (!trigger) return null;
 
-  const colors = ["#8b5cf6", "#3b82f6", "#ef4444", "#a855f7", "#6366f1"];
+  const colors = ["#38bdf8", "#60a5fa", "#0ea5e9", "#3b82f6", "#93c5fd"];
   
   return (
     <div className="absolute inset-0 pointer-events-none overflow-visible">
@@ -678,7 +687,7 @@ export const GameSpinner = React.memo(function GameSpinner({
   return (
     <motion.div
       className={cn(
-        "rounded-full border-2 border-transparent border-t-purple-500 border-r-blue-500",
+        "rounded-full border-2 border-transparent border-t-sky-400 border-r-blue-500",
         sizeMap[size]
       )}
       animate={{ rotate: 360 }}
@@ -696,11 +705,11 @@ export const StatusBadge = React.memo(function StatusBadge({
   animate?: boolean;
 }) {
   const statusConfig = {
-    playing: { color: "bg-purple-500", text: "Playing", icon: "🎮" },
-    paused: { color: "bg-blue-500", text: "Paused", icon: "⏸️" },
-    idle: { color: "bg-gray-500", text: "Idle", icon: "💤" },
-    caught: { color: "bg-green-500", text: "Caught!", icon: "🎯" },
-    escaped: { color: "bg-red-500", text: "Escaped", icon: "💨" },
+    playing: { color: "bg-blue-500", text: "Playing", icon: "🎮" },
+    paused: { color: "bg-blue-600", text: "Paused", icon: "⏸️" },
+    idle: { color: "bg-blue-950/60", text: "Idle", icon: "💤" },
+    caught: { color: "bg-sky-500", text: "Caught!", icon: "🎯" },
+    escaped: { color: "bg-sky-600", text: "Escaped", icon: "💨" },
   };
 
   const config = statusConfig[status];
@@ -730,7 +739,7 @@ export const OrbitParticles = React.memo(function OrbitParticles({
 }) {
   if (!active) return null;
 
-  const colors = ["bg-blue-400", "bg-purple-400", "bg-red-400"];
+  const colors = ["bg-sky-300", "bg-blue-300", "bg-cyan-300"];
 
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -795,9 +804,9 @@ export const AnimatedTip = React.memo(function AnimatedTip({
 
   const variants = {
     default: "bg-blue-500/15 border-blue-400/30 text-blue-200",
-    success: "bg-green-500/15 border-green-400/30 text-green-200",
-    warning: "bg-amber-500/15 border-amber-400/30 text-amber-200",
-    numbered: "bg-purple-500/15 border-purple-400/30 text-purple-200",
+    success: "bg-blue-500/15 border-blue-400/30 text-blue-200",
+    warning: "bg-blue-500/15 border-blue-400/30 text-blue-200",
+    numbered: "bg-blue-500/15 border-blue-400/30 text-blue-200",
   } as const;
 
   if (!show) return null;
@@ -859,7 +868,7 @@ export const StepGuide = React.memo(function StepGuide({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="relative p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/10 border border-blue-400/30 overflow-hidden"
+      className="relative p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border border-blue-400/30 overflow-hidden"
     >
       <motion.div
         className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/10 to-transparent"
@@ -1036,10 +1045,10 @@ export const EnergyBar = React.memo(function EnergyBar({
   const percentage = Math.max(0, Math.min(100, (energy / maxEnergy) * 100));
   
   const getEnergyColor = () => {
-    if (percentage > 70) return "from-green-400 to-emerald-500";
-    if (percentage > 40) return "from-yellow-400 to-orange-500";
-    if (percentage > 20) return "from-orange-400 to-red-500";
-    return "from-red-500 to-red-700";
+    if (percentage > 70) return "from-sky-400 to-cyan-500";
+    if (percentage > 40) return "from-blue-400 to-sky-500";
+    if (percentage > 20) return "from-blue-500 to-blue-600";
+    return "from-blue-600 to-blue-800";
   };
 
   const getEnergyIcon = () => {
@@ -1064,9 +1073,9 @@ export const EnergyBar = React.memo(function EnergyBar({
           </div>
           <span className={cn(
             "tabular-nums font-bold",
-            percentage > 70 ? "text-green-400" :
-            percentage > 40 ? "text-yellow-400" :
-            percentage > 20 ? "text-orange-400" : "text-red-400"
+            percentage > 70 ? "text-cyan-300" :
+            percentage > 40 ? "text-sky-300" :
+            percentage > 20 ? "text-blue-300" : "text-blue-200"
           )}>
             {Math.round(percentage)}%
           </span>
@@ -1094,7 +1103,7 @@ export const EnergyBar = React.memo(function EnergyBar({
         {/* Pulse when low energy */}
         {percentage <= 20 && (
           <motion.div
-            className="absolute inset-0 bg-red-500/20"
+            className="absolute inset-0 bg-blue-500/20"
             animate={{ opacity: [0, 0.5, 0] }}
             transition={{ duration: 0.8, repeat: Infinity }}
           />
@@ -1126,9 +1135,9 @@ export const GameStats = React.memo(function GameStats({
     return (
       <div className="flex items-center gap-3 text-[9px]">
         <div className="flex items-center gap-1">
-          <IconTrophy className="w-3 h-3 text-yellow-400" />
+          <IconTrophy className="w-3 h-3 text-sky-300" />
           <span className="text-white/60">Best:</span>
-          <span className="font-bold text-yellow-400 tabular-nums">{highScore}</span>
+          <span className="font-bold text-sky-300 tabular-nums">{highScore}</span>
         </div>
         {combo > 0 && (
           <motion.div
@@ -1136,8 +1145,8 @@ export const GameStats = React.memo(function GameStats({
             animate={{ scale: 1, opacity: 1 }}
             className="flex items-center gap-1"
           >
-            <IconFlame className="w-3 h-3 text-orange-400" />
-            <span className="font-bold text-orange-400">x{combo}</span>
+            <IconFlame className="w-3 h-3 text-cyan-300" />
+            <span className="font-bold text-cyan-300">x{combo}</span>
           </motion.div>
         )}
       </div>
@@ -1148,7 +1157,7 @@ export const GameStats = React.memo(function GameStats({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-3 rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-400/20 backdrop-blur-sm"
+      className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-400/20 backdrop-blur-sm"
     >
       {/* Current Score with animation */}
       <div className="flex items-center justify-between mb-3">
@@ -1156,7 +1165,7 @@ export const GameStats = React.memo(function GameStats({
         <motion.div
           key={currentScore}
           initial={{ scale: 1.2, color: "#60a5fa" }}
-          animate={{ scale: 1, color: isNewHighScore ? "#fbbf24" : "#ffffff" }}
+          animate={{ scale: 1, color: isNewHighScore ? "#7dd3fc" : "#ffffff" }}
           className="text-xl font-bold tabular-nums"
         >
           {currentScore}
@@ -1170,12 +1179,12 @@ export const GameStats = React.memo(function GameStats({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="mb-3 py-2 px-3 rounded-lg bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/30 text-center"
+            className="mb-3 py-2 px-3 rounded-lg bg-gradient-to-r from-sky-500/20 to-cyan-500/20 border border-sky-400/30 text-center"
           >
             <motion.span
               animate={{ scale: [1, 1.1, 1] }}
               transition={{ duration: 0.5, repeat: Infinity }}
-              className="text-[11px] font-bold text-yellow-300"
+              className="text-[11px] font-bold text-sky-200"
             >
               🎉 NEW HIGH SCORE! 🎉
             </motion.span>
@@ -1186,19 +1195,19 @@ export const GameStats = React.memo(function GameStats({
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-2">
         <div className="p-2 rounded-lg bg-white/5 text-center">
-          <IconTrophy className="w-4 h-4 mx-auto mb-1 text-yellow-400" />
+          <IconTrophy className="w-4 h-4 mx-auto mb-1 text-sky-300" />
           <div className="text-[9px] text-white/50">Best</div>
-          <div className="text-sm font-bold text-yellow-400 tabular-nums">{highScore}</div>
+          <div className="text-sm font-bold text-sky-300 tabular-nums">{highScore}</div>
         </div>
         <div className="p-2 rounded-lg bg-white/5 text-center">
-          <IconHandFinger className="w-4 h-4 mx-auto mb-1 text-green-400" />
+          <IconHandFinger className="w-4 h-4 mx-auto mb-1 text-blue-300" />
           <div className="text-[9px] text-white/50">Catches</div>
-          <div className="text-sm font-bold text-green-400 tabular-nums">{totalCatches}</div>
+          <div className="text-sm font-bold text-blue-300 tabular-nums">{totalCatches}</div>
         </div>
         <div className="p-2 rounded-lg bg-white/5 text-center">
-          <IconFlame className="w-4 h-4 mx-auto mb-1 text-orange-400" />
+          <IconFlame className="w-4 h-4 mx-auto mb-1 text-cyan-300" />
           <div className="text-[9px] text-white/50">Combo</div>
-          <div className="text-sm font-bold text-orange-400 tabular-nums">x{combo}</div>
+          <div className="text-sm font-bold text-cyan-300 tabular-nums">x{combo}</div>
         </div>
       </div>
 
@@ -1252,8 +1261,8 @@ export const GameHUD = React.memo(function GameHUD({
     >
       <div className={cn(
         "backdrop-blur-xl rounded-2xl border shadow-2xl overflow-hidden",
-        isFleeing ? "bg-orange-500/20 border-orange-400/40" :
-        isReturning ? "bg-purple-500/20 border-purple-400/40" :
+        isFleeing ? "bg-blue-500/20 border-blue-400/40" :
+        isReturning ? "bg-sky-500/20 border-sky-400/40" :
         "bg-black/70 border-white/20"
       )}>
         <div className={cn("p-3", isMobile ? "flex flex-col gap-2" : "flex items-center gap-4 px-4")}>
@@ -1268,8 +1277,8 @@ export const GameHUD = React.memo(function GameHUD({
             </motion.span>
             <span className={cn(
               "text-[11px] font-medium",
-              isFleeing ? "text-orange-300" :
-              isReturning ? "text-purple-300" : "text-white/70"
+              isFleeing ? "text-sky-200" :
+              isReturning ? "text-cyan-200" : "text-white/70"
             )}>
               {statusText}
             </span>
@@ -1298,9 +1307,9 @@ export const GameHUD = React.memo(function GameHUD({
               <motion.div
                 initial={{ scale: 0, rotate: -10 }}
                 animate={{ scale: 1, rotate: 0 }}
-                className="px-2 py-1 rounded-lg bg-orange-500/30 border border-orange-400/40"
+                className="px-2 py-1 rounded-lg bg-blue-500/30 border border-blue-400/40"
               >
-                <span className="text-[10px] font-bold text-orange-300">x{combo}</span>
+                <span className="text-[10px] font-bold text-sky-200">x{combo}</span>
               </motion.div>
             )}
 
@@ -1309,7 +1318,7 @@ export const GameHUD = React.memo(function GameHUD({
                 animate={{ rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
               >
-                <IconTrophy className="w-4 h-4 text-yellow-400" />
+                <IconTrophy className="w-4 h-4 text-sky-300" />
               </motion.div>
             )}
           </div>
@@ -1320,9 +1329,9 @@ export const GameHUD = React.memo(function GameHUD({
           <motion.div
             className={cn(
               "h-full",
-              energy > 70 ? "bg-green-400" :
-              energy > 40 ? "bg-yellow-400" :
-              energy > 20 ? "bg-orange-400" : "bg-red-400"
+              energy > 70 ? "bg-cyan-400" :
+              energy > 40 ? "bg-sky-400" :
+              energy > 20 ? "bg-blue-400" : "bg-blue-600"
             )}
             animate={{ width: `${energy}%` }}
             transition={{ type: "spring", stiffness: 100 }}
@@ -1407,9 +1416,9 @@ export const GameOverScreen = React.memo(function GameOverScreen({
                 key={i}
                 className={cn(
                   "absolute w-2 h-2 rounded-full",
-                  i % 4 === 0 ? "bg-yellow-400" :
-                  i % 4 === 1 ? "bg-blue-400" :
-                  i % 4 === 2 ? "bg-green-400" : "bg-pink-400"
+                  i % 4 === 0 ? "bg-sky-300" :
+                  i % 4 === 1 ? "bg-blue-300" :
+                  i % 4 === 2 ? "bg-cyan-300" : "bg-sky-400"
                 )}
                 initial={{ 
                   x: 140,
@@ -1458,7 +1467,7 @@ export const GameOverScreen = React.memo(function GameOverScreen({
             animate={{ scale: 1 }}
             className={cn(
               "text-4xl font-bold tabular-nums",
-              isNewHighScore ? "text-yellow-400" : "text-white"
+              isNewHighScore ? "text-sky-300" : "text-white"
             )}
           >
             {score}
@@ -1471,14 +1480,14 @@ export const GameOverScreen = React.memo(function GameOverScreen({
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-4 py-2 px-4 rounded-xl bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/30 text-center"
+              className="mb-4 py-2 px-4 rounded-xl bg-gradient-to-r from-sky-500/20 to-cyan-500/20 border border-sky-400/30 text-center"
             >
               <motion.div
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ duration: 1, repeat: Infinity }}
               >
-                <IconTrophy className="w-5 h-5 mx-auto mb-1 text-yellow-400" />
-                <span className="text-sm font-bold text-yellow-300">New High Score!</span>
+                <IconTrophy className="w-5 h-5 mx-auto mb-1 text-sky-300" />
+                <span className="text-sm font-bold text-sky-200">New High Score!</span>
               </motion.div>
             </motion.div>
           )}
@@ -1487,7 +1496,7 @@ export const GameOverScreen = React.memo(function GameOverScreen({
         {/* Previous high score */}
         {!isNewHighScore && (
           <div className="mb-4 text-center text-[11px] text-white/50">
-            High Score: <span className="text-yellow-400 font-bold">{highScore}</span>
+            High Score: <span className="text-sky-300 font-bold">{highScore}</span>
           </div>
         )}
 
@@ -1497,7 +1506,7 @@ export const GameOverScreen = React.memo(function GameOverScreen({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onPlayAgain}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold text-sm hover:from-blue-400 hover:to-purple-400 transition-all"
+            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold text-sm hover:from-blue-400 hover:to-cyan-400 transition-all"
           >
             Play Again
           </motion.button>

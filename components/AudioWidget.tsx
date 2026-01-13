@@ -34,15 +34,15 @@ const sourceLabel: Record<MusicSource, string> = {
 
 // Only show streaming options in the dropdown
 const streamingOptions: { value: MusicSource; label: string; icon: React.ReactNode; color: string; recommended?: boolean }[] = [
-  { value: "SPOTIFY", label: "Spotify", icon: <IconBrandSpotify className="w-5 h-5" />, color: "green" },
-  { value: "APPLE_MUSIC", label: "Apple", icon: <IconBrandApple className="w-5 h-5" />, color: "pink" },
-  { value: "YOUTUBE", label: "YouTube", icon: <IconBrandYoutube className="w-5 h-5" />, color: "red", recommended: true },
+  { value: "SPOTIFY", label: "Spotify", icon: <IconBrandSpotify className="w-5 h-5" />, color: "blue" },
+  { value: "APPLE_MUSIC", label: "Apple", icon: <IconBrandApple className="w-5 h-5" />, color: "blue" },
+  { value: "YOUTUBE", label: "YouTube", icon: <IconBrandYoutube className="w-5 h-5" />, color: "blue", recommended: true },
 ];
 
 const sourceIcons: Partial<Record<MusicSource, React.ReactNode>> = {
-  SPOTIFY: <IconBrandSpotify className="w-5 h-5 text-green-400" />,
-  APPLE_MUSIC: <IconBrandApple className="w-5 h-5 text-pink-400" />,
-  YOUTUBE: <IconBrandYoutube className="w-5 h-5 text-red-400" />,
+  SPOTIFY: <IconBrandSpotify className="w-5 h-5 text-sky-300" />,
+  APPLE_MUSIC: <IconBrandApple className="w-5 h-5 text-sky-300" />,
+  YOUTUBE: <IconBrandYoutube className="w-5 h-5 text-sky-300" />,
 };
 
 
@@ -466,7 +466,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                 </div>
               ) : (
                 <div className="space-y-1.5">
-                  <p className="text-[10px] text-green-300">✅ Music service active!</p>
+                  <p className="text-[10px] text-blue-300">✅ Music service active!</p>
                   <p className="text-[10px] text-white/60">← Swipe left to hide widget</p>
                   <p className="text-[10px] text-white/60">🎵 Music plays when hidden</p>
                 </div>
@@ -570,7 +570,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                     className={cn(
                       "relative h-10 w-10 rounded-xl flex items-center justify-center border",
                       isStreamingSource && streamingActive
-                        ? "bg-gradient-to-br from-blue-500/20 to-purple-500/20 border-blue-400/40" 
+                        ? "bg-gradient-to-br from-blue-500/20 to-cyan-500/15 border-blue-400/40" 
                         : "bg-white/5 border-white/10"
                     )}
                     animate={isStreamingSource && streamingActive ? { 
@@ -635,11 +635,11 @@ const AudioWidget = React.memo(function AudioWidget() {
                         SoundEffects.click();
                         setOpen(false);
                       }}
-                      className="h-10 w-10 rounded-xl flex items-center justify-center bg-red-500/20 hover:bg-red-500/30 border border-red-400/30 transition-all"
+                      className="h-10 w-10 rounded-xl flex items-center justify-center bg-blue-500/20 hover:bg-blue-500/30 border border-blue-400/30 transition-all"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <IconX className="h-4 w-4 text-red-300" />
+                      <IconX className="h-4 w-4 text-sky-200" />
                     </motion.button>
                   )}
                 </div>
@@ -676,7 +676,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                             setStreamingActive(false);
                             setMusicEnabled(false);
                           }}
-                          className="text-[9px] text-red-300 hover:text-red-200"
+                          className="text-[9px] text-sky-200 hover:text-sky-100"
                         >
                           Stop
                         </button>
@@ -705,11 +705,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                               className={cn(
                                 "relative h-12 rounded-lg flex flex-col items-center justify-center gap-1 text-[9px] font-medium transition-all overflow-hidden",
                                 isActive
-                                  ? opt.color === "green" 
-                                    ? "bg-gradient-to-br from-green-500/30 to-green-600/20 border-green-400/50 text-green-200 border"
-                                    : opt.color === "pink"
-                                    ? "bg-gradient-to-br from-pink-500/30 to-pink-600/20 border-pink-400/50 text-pink-200 border"
-                                    : "bg-gradient-to-br from-red-500/30 to-red-600/20 border-red-400/50 text-red-200 border"
+                                  ? "bg-gradient-to-br from-blue-500/25 via-sky-500/20 to-blue-600/25 border-blue-400/50 text-sky-100 border"
                                   : "bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
                               )}
                               whileTap={{ scale: 0.95 }}
@@ -773,19 +769,19 @@ const AudioWidget = React.memo(function AudioWidget() {
 
                     {/* Game Stats Section - Shows high score and catch count */}
                     {gameStats.gamesPlayed > 0 && (
-                      <div className="mb-2 p-2 rounded-lg bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-400/20 relative overflow-hidden">
-                        <GameShimmer colors="purple" />
+                      <div className="mb-2 p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-400/20 relative overflow-hidden">
+                        <GameShimmer colors="blue" />
                         <div className="flex items-center justify-between text-[10px] mb-1.5">
                           <div className="flex items-center gap-2">
                             <span className="text-white/60 font-medium">🎮 Catch Game</span>
-                            {isWandering && <BounceDots active={true} color="purple" />}
+                            {isWandering && <BounceDots active={true} color="blue" />}
                           </div>
                           <div className="flex items-center gap-1.5">
                             {gameStats.currentScore > 0 && gameStats.currentScore >= gameStats.highScore && (
                               <motion.span 
                                 animate={{ scale: [1, 1.1, 1] }}
                                 transition={{ duration: 1, repeat: Infinity }}
-                                className="text-yellow-400 font-bold text-[9px]"
+                                className="text-sky-300 font-bold text-[9px]"
                               >
                                 🏆 Best!
                               </motion.span>
@@ -800,15 +796,15 @@ const AudioWidget = React.memo(function AudioWidget() {
                           <div className="text-center p-1.5 rounded bg-white/5 relative overflow-hidden">
                             <GameShimmer colors="blue" speed="slow" />
                             <div className="text-[9px] text-white/40">High Score</div>
-                            <div className="text-sm font-bold text-yellow-400 tabular-nums">{gameStats.highScore}</div>
+                            <div className="text-sm font-bold text-sky-300 tabular-nums">{gameStats.highScore}</div>
                           </div>
                           <div className="text-center p-1.5 rounded bg-white/5 relative overflow-hidden">
-                            <GameShimmer colors="red" speed="slow" />
+                            <GameShimmer colors="blue" speed="slow" />
                             <div className="text-[9px] text-white/40">Catches</div>
-                            <div className="text-sm font-bold text-green-400 tabular-nums">{gameStats.totalCatches}</div>
+                            <div className="text-sm font-bold text-blue-300 tabular-nums">{gameStats.totalCatches}</div>
                           </div>
                           <div className="text-center p-1.5 rounded bg-white/5 relative overflow-hidden">
-                            <GameShimmer colors="purple" speed="slow" />
+                            <GameShimmer colors="blue" speed="slow" />
                             <div className="text-[9px] text-white/40">Games</div>
                             <div className="text-sm font-bold text-blue-400 tabular-nums">{gameStats.gamesPlayed}</div>
                           </div>
@@ -826,7 +822,7 @@ const AudioWidget = React.memo(function AudioWidget() {
 
                     {/* Quick game start if no games played yet */}
                     {gameStats.gamesPlayed === 0 && streamingActive && (
-                      <div className="mb-2 p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-400/20 relative overflow-hidden">
+                      <div className="mb-2 p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-400/20 relative overflow-hidden">
                         <GameShimmer colors="blue" />
                         <div className="text-[10px] text-white/60 mb-1.5 text-center">🎮 Try the Catch Game!</div>
                         <GameControls
@@ -898,11 +894,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                     }}
                     className={cn(
                       "fixed z-[9998] left-0 flex items-center py-6 pl-0.5 pr-2 rounded-r-lg backdrop-blur-sm transition-colors",
-                      musicSource === 'SPOTIFY' 
-                        ? "bg-green-500/20 hover:bg-green-500/30 border-r border-y border-green-400/30"
-                        : musicSource === 'APPLE_MUSIC'
-                        ? "bg-pink-500/20 hover:bg-pink-500/30 border-r border-y border-pink-400/30"
-                        : "bg-red-500/20 hover:bg-red-500/30 border-r border-y border-red-400/30"
+                      "bg-blue-500/20 hover:bg-blue-500/30 border-r border-y border-blue-400/30"
                     )}
                     style={{ bottom: 220 }}
                   >
@@ -1006,24 +998,20 @@ const AudioWidget = React.memo(function AudioWidget() {
                   <div className={cn(
                     "relative rounded-r-xl border-r border-y backdrop-blur-md shadow-xl overflow-hidden flex",
                     "bg-black/85",
-                    musicSource === 'SPOTIFY' 
-                      ? "border-green-500/30"
-                      : musicSource === 'APPLE_MUSIC'
-                      ? "border-pink-500/30"
-                      : "border-red-500/30",
+                    "border-blue-400/30",
                     // Enhanced ring effects for game states
-                    isFleeing && "ring-4 ring-orange-400/80 ring-offset-2 ring-offset-transparent shadow-lg shadow-orange-500/40",
-                    isReturning && "ring-3 ring-purple-400/70 ring-offset-2 ring-offset-transparent shadow-lg shadow-purple-500/30",
+                    isFleeing && "ring-4 ring-sky-300/95 ring-offset-2 ring-offset-transparent shadow-[0_0_45px_rgba(56,189,248,0.55)]",
+                    isReturning && "ring-3 ring-blue-300/80 ring-offset-2 ring-offset-transparent shadow-[0_0_28px_rgba(59,130,246,0.35)]",
                     !isFleeing && !isReturning && isWandering && !isHovering && !isNearPlayer && morphPhase === 'idle' && (
-                      energy > 70 ? "ring-2 ring-green-400/50 ring-offset-2 ring-offset-transparent" :
-                      energy > 40 ? "ring-2 ring-yellow-400/50 ring-offset-2 ring-offset-transparent" :
-                      energy > 20 ? "ring-2 ring-orange-400/60 ring-offset-2 ring-offset-transparent" :
-                      "ring-1 ring-red-400/40"
+                      energy > 70 ? "ring-2 ring-sky-300/55 ring-offset-2 ring-offset-transparent" :
+                      energy > 40 ? "ring-2 ring-sky-300/45 ring-offset-2 ring-offset-transparent" :
+                      energy > 20 ? "ring-2 ring-blue-300/40 ring-offset-2 ring-offset-transparent" :
+                      "ring-1 ring-blue-300/30"
                     ),
-                    !isFleeing && !isReturning && isWandering && !isHovering && !isNearPlayer && morphPhase === 'morphing-out' && (movementStyle === 'dash' ? "ring-4 ring-yellow-400/80" : "ring-4 ring-purple-400/70"),
-                    !isFleeing && !isReturning && isWandering && !isHovering && !isNearPlayer && morphPhase === 'moving' && (movementStyle === 'dash' ? "ring-3 ring-red-400/60" : movementStyle === 'spiral' ? "ring-3 ring-pink-400/50" : "ring-2 ring-cyan-400/40"),
+                    !isFleeing && !isReturning && isWandering && !isHovering && !isNearPlayer && morphPhase === 'morphing-out' && "ring-4 ring-sky-300/60",
+                    !isFleeing && !isReturning && isWandering && !isHovering && !isNearPlayer && morphPhase === 'moving' && "ring-3 ring-sky-300/45",
                     !isFleeing && !isReturning && isWandering && !isHovering && !isNearPlayer && morphPhase === 'morphing-in' && "ring-3 ring-blue-300/60",
-                    isWandering && (isHovering || isNearPlayer) && "ring-4 ring-green-400/80 ring-offset-2 ring-offset-transparent shadow-lg shadow-green-500/30"
+                    isWandering && (isHovering || isNearPlayer) && "ring-4 ring-sky-300/80 ring-offset-2 ring-offset-transparent shadow-[0_0_32px_rgba(56,189,248,0.35)]"
                   )}>
                     {/* Attached HUD so game UI stays near the wandering player (not on the navbar) */}
                     {isWandering && !open && !playerHidden && (
@@ -1046,11 +1034,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                     <div className={cn(
                       "absolute inset-0 pointer-events-none transition-opacity duration-300",
                       energy > 70 ? "opacity-15" : energy > 40 ? "opacity-10" : "opacity-5",
-                      musicSource === 'SPOTIFY' 
-                        ? "bg-green-500"
-                        : musicSource === 'APPLE_MUSIC'
-                        ? "bg-pink-500"
-                        : "bg-red-500"
+                      "bg-blue-500"
                     )} />
 
                     {/* Wandering attention grabber with genie sparkles */}
@@ -1064,7 +1048,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                                 key={`flee-${i}`}
                                 className={cn(
                                   "absolute rounded-full",
-                                  i % 3 === 0 ? "bg-orange-400" : i % 3 === 1 ? "bg-yellow-400" : "bg-red-400"
+                                  i % 3 === 0 ? "bg-sky-300" : i % 3 === 1 ? "bg-blue-300" : "bg-cyan-300"
                                 )}
                                 style={{
                                   width: 4 - (i * 0.3),
@@ -1095,7 +1079,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                             {[...Array(6)].map((_, i) => (
                               <motion.div
                                 key={`return-${i}`}
-                                className="absolute w-2 h-2 rounded-full bg-purple-400"
+                                className="absolute w-2 h-2 rounded-full bg-sky-300"
                                 style={{
                                   top: '50%',
                                   left: '50%',
@@ -1165,19 +1149,19 @@ const AudioWidget = React.memo(function AudioWidget() {
                         {!isHovering && !isNearPlayer && !isFleeing && !isReturning && (morphPhase === 'morphing-out' || morphPhase === 'morphing-in' || (morphPhase === 'moving' && movementStyle === 'dash')) && (
                           <>
                             <motion.div
-                              className={cn("absolute -top-2 -right-2 w-2 h-2 rounded-full", movementStyle === 'dash' ? "bg-yellow-400" : "bg-blue-400")}
+                              className={cn("absolute -top-2 -right-2 w-2 h-2 rounded-full", movementStyle === 'dash' ? "bg-sky-400" : "bg-blue-400")}
                               initial={{ opacity: 0, scale: 0 }}
                               animate={{ opacity: [0, 1, 0], scale: [0, 1.5 * speedMultiplier, 0], x: [0, 20 * fleeDirection.x, 40 * fleeDirection.x], y: [0, -15, -30] }}
                               transition={{ duration: 0.6 / speedMultiplier }}
                             />
                             <motion.div
-                              className={cn("absolute -top-1 left-1/4 w-1.5 h-1.5 rounded-full", movementStyle === 'spiral' ? "bg-pink-400" : "bg-purple-400")}
+                              className={cn("absolute -top-1 left-1/4 w-1.5 h-1.5 rounded-full", movementStyle === 'spiral' ? "bg-cyan-400" : "bg-sky-400")}
                               initial={{ opacity: 0, scale: 0 }}
                               animate={{ opacity: [0, 1, 0], scale: [0, 1.2 * speedMultiplier, 0], x: [0, -10 * fleeDirection.x, -20 * fleeDirection.x], y: [0, -20, -35] }}
                               transition={{ duration: 0.5 / speedMultiplier, delay: 0.05 }}
                             />
                             <motion.div
-                              className={cn("absolute bottom-0 right-1/4 w-1 h-1 rounded-full", movementStyle === 'bounce' ? "bg-green-400" : "bg-cyan-400")}
+                              className={cn("absolute bottom-0 right-1/4 w-1 h-1 rounded-full", movementStyle === 'bounce' ? "bg-blue-400" : "bg-cyan-400")}
                               initial={{ opacity: 0, scale: 0 }}
                               animate={{ opacity: [0, 1, 0], scale: [0, 1, 0], x: [0, 15 * fleeDirection.x, 25 * fleeDirection.x], y: [0, 10, 20] }}
                               transition={{ duration: 0.4 / speedMultiplier, delay: 0.1 }}
@@ -1186,13 +1170,13 @@ const AudioWidget = React.memo(function AudioWidget() {
                             {movementStyle === 'dash' && (
                               <>
                                 <motion.div
-                                  className="absolute top-1/2 -right-1 w-3 h-1 rounded-full bg-orange-400"
+                                  className="absolute top-1/2 -right-1 w-3 h-1 rounded-full bg-sky-400"
                                   initial={{ opacity: 0, scaleX: 0 }}
                                   animate={{ opacity: [0, 1, 0], scaleX: [0, 3, 0], x: [0, 30, 60] }}
                                   transition={{ duration: 0.4 }}
                                 />
                                 <motion.div
-                                  className="absolute top-1/3 -right-1 w-2 h-0.5 rounded-full bg-red-400"
+                                  className="absolute top-1/3 -right-1 w-2 h-0.5 rounded-full bg-blue-400"
                                   initial={{ opacity: 0 }}
                                   animate={{ opacity: [0, 1, 0], x: [0, 40, 80] }}
                                   transition={{ duration: 0.35, delay: 0.05 }}
@@ -1216,16 +1200,16 @@ const AudioWidget = React.memo(function AudioWidget() {
                           <div className={cn(
                             "px-3 py-1.5 rounded-full text-white text-[10px] font-bold shadow-lg flex items-center gap-1.5 border border-white/20",
                             (isHovering || isNearPlayer)
-                              ? "bg-gradient-to-r from-green-500/90 via-emerald-500/90 to-green-500/90"
+                              ? "bg-gradient-to-r from-sky-500/90 via-cyan-500/90 to-sky-500/90"
                               : isFleeing
-                              ? "bg-gradient-to-r from-orange-500/90 via-red-500/90 to-orange-500/90"
+                              ? "bg-gradient-to-r from-blue-600/90 via-sky-500/90 to-blue-600/90"
                               : isReturning
-                              ? "bg-gradient-to-r from-purple-500/90 via-indigo-500/90 to-purple-500/90"
+                              ? "bg-gradient-to-r from-blue-600/90 via-cyan-500/90 to-blue-600/90"
                               : energy <= 20
-                              ? "bg-gradient-to-r from-gray-600/90 via-gray-500/90 to-gray-600/90"
+                              ? "bg-gradient-to-r from-slate-700/90 via-slate-600/90 to-slate-700/90"
                               : energy <= 40
-                              ? "bg-gradient-to-r from-yellow-600/90 via-orange-500/90 to-yellow-600/90"
-                              : "bg-gradient-to-r from-blue-500/90 via-purple-500/90 to-blue-500/90"
+                              ? "bg-gradient-to-r from-blue-700/90 via-sky-600/90 to-blue-700/90"
+                              : "bg-gradient-to-r from-blue-600/90 via-cyan-500/90 to-blue-600/90"
                           )}>
                             <motion.span
                               animate={{ 
@@ -1264,7 +1248,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                             {[...Array(5)].map((_, i) => (
                               <motion.div
                                 key={i}
-                                className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-orange-400/60"
+                                className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-sky-400/60"
                                 initial={{ opacity: 0, x: 0 }}
                                 animate={{ 
                                   opacity: [0.8, 0],
@@ -1281,7 +1265,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                         {/* Return glow effect */}
                         {isReturning && (
                           <motion.div
-                            className="absolute inset-0 rounded-xl bg-purple-400/20 pointer-events-none"
+                            className="absolute inset-0 rounded-xl bg-sky-400/20 pointer-events-none"
                             animate={{ opacity: [0, 0.5, 0] }}
                             transition={{ duration: 0.5, repeat: Infinity }}
                           />
@@ -1290,7 +1274,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                         {/* Energy low warning pulse */}
                         {energy <= 25 && !isFleeing && !isReturning && (
                           <motion.div
-                            className="absolute inset-0 rounded-xl bg-red-500/10 pointer-events-none"
+                            className="absolute inset-0 rounded-xl bg-blue-500/10 pointer-events-none"
                             animate={{ opacity: [0, 0.3, 0] }}
                             transition={{ duration: 1.5, repeat: Infinity }}
                           />
@@ -1318,7 +1302,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                             setStreamingActive(false);
                             setMusicEnabled(false);
                           }}
-                          className="w-5 h-5 flex items-center justify-center rounded bg-red-500/20 hover:bg-red-500/30 text-red-300 transition-colors"
+                          className="w-5 h-5 flex items-center justify-center rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 transition-colors"
                         >
                           <IconX className="w-3 h-3" />
                         </button>
@@ -1367,7 +1351,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                   {/* Pulse ring when hovering/near player */}
                   <PulseRing 
                     active={isHovering || isNearPlayer} 
-                    color={isHovering ? "purple" : "blue"} 
+                    color="blue" 
                   />
                 </motion.div>
               </>
