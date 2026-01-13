@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { useAudioSettings, type MusicSource, STREAMING_SOURCES } from "@/contexts/AudioSettingsProvider";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { MusicEmbedModal } from "@/components/MusicEmbedModal";
-import { BlueShimmer, Slider, TouchIndicator, GameOverScreen, EnergyBar, CompactGameHUD, BoredPopup, GameControls, GameShimmer, SparkleBurst, FloatingParticles, PulseRing, ConfettiBurst, BounceDots, StatusBadge, QuickGameTutorial } from "@/components/audio-widget/ui";
+import { BlueShimmer, Slider, TouchIndicator, GameOverScreen, EnergyBar, CompactGameHUD, BoredPopup, GameControls, GameShimmer, SparkleBurst, FloatingParticles, PulseRing, ConfettiBurst, BounceDots, StatusBadge, QuickGameTutorial, QuickGameTutorialDemo } from "@/components/audio-widget/ui";
 import { useWanderingGame } from "@/components/audio-widget/useWanderingGame";
 
 const sourceLabel: Record<MusicSource, string> = {
@@ -50,6 +50,8 @@ const AudioWidget = React.memo(function AudioWidget() {
   const prefersReducedMotion = useReducedMotion();
   const [hasStartedCatchGame, setHasStartedCatchGame] = useState(false);
   const [showCatchGameTutorial, setShowCatchGameTutorial] = useState(false);
+  const [showCatchGameDemo, setShowCatchGameDemo] = useState(false);
+  const [isTutorialHovered, setIsTutorialHovered] = useState(false);
   const catchGameTutorialTimerRef = useRef<number | null>(null);
   const {
     musicEnabled,
@@ -210,8 +212,25 @@ const AudioWidget = React.memo(function AudioWidget() {
     }
   }, []);
 
+  const dismissCatchGameDemo = useCallback(() => {
+    setShowCatchGameDemo(false);
+  }, []);
+
+  const handleWatchCatchGameDemo = useCallback(() => {
+    // Close the small tooltip and open the full visual demo
+    dismissCatchGameTutorial();
+    setShowCatchGameDemo(true);
+  }, [dismissCatchGameTutorial]);
+
   const maybeShowCatchGameTutorial = useCallback(() => {
     if (typeof window === "undefined") return;
+
+    // If no games have been played, show on hover every time (until the user starts the game).
+    if (gameStats.gamesPlayed === 0 && !hasStartedCatchGame) {
+      setShowCatchGameTutorial(true);
+      return;
+    }
+
     if (localStorage.getItem("audioWidgetCatchGameTutorialSeen") === "true") return;
     localStorage.setItem("audioWidgetCatchGameTutorialSeen", "true");
     setShowCatchGameTutorial(true);
@@ -223,7 +242,7 @@ const AudioWidget = React.memo(function AudioWidget() {
       setShowCatchGameTutorial(false);
       catchGameTutorialTimerRef.current = null;
     }, 7500);
-  }, []);
+  }, [gameStats.gamesPlayed, hasStartedCatchGame]);
 
   useEffect(() => {
     return () => {
@@ -431,6 +450,22 @@ const AudioWidget = React.memo(function AudioWidget() {
       <QuickGameTutorial
         show={showCatchGameTutorial && !open && !playerHidden}
         onDone={dismissCatchGameTutorial}
+        durationMs={gameStats.gamesPlayed === 0 && !hasStartedCatchGame ? 0 : 7500}
+        onStart={() => {
+          dismissCatchGameTutorial();
+          handleStartCatchGame();
+        }}
+        onWatchDemo={handleWatchCatchGameDemo}
+        onHoverChange={setIsTutorialHovered}
+      />
+
+      <QuickGameTutorialDemo
+        show={showCatchGameDemo}
+        onDone={dismissCatchGameDemo}
+        onStart={() => {
+          dismissCatchGameDemo();
+          handleStartCatchGame();
+        }}
       />
 
       {/* Game Over Modal */}
@@ -1033,7 +1068,14 @@ const AudioWidget = React.memo(function AudioWidget() {
                       maybeShowCatchGameTutorial();
                     }
                   }}
-                  onMouseLeave={() => setIsHovering(false)}
+                  onMouseLeave={() => {
+                    setIsHovering(false);
+                    // If the user has never played, keep it hover-based (not sticky).
+                    // But don't dismiss if they're hovering the tutorial itself.
+                    if (gameStats.gamesPlayed === 0 && !hasStartedCatchGame && !isTutorialHovered) {
+                      dismissCatchGameTutorial();
+                    }
+                  }}
                 >
                   <div className={cn(
                     "relative rounded-r-xl border-r border-y backdrop-blur-md shadow-xl overflow-hidden flex",

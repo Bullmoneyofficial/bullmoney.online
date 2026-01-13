@@ -119,7 +119,7 @@ export const BoredPopup = React.memo(function BoredPopup({
               <IconZzz className="w-6 h-6 text-sky-200" />
             </motion.div>
             <div>
-              <p className="text-[11px] font-bold text-white">I'm bored... catch me!</p>
+              <p className="text-[11px] font-bold text-white">I&apos;m bored... catch me!</p>
               <p className="text-[9px] text-sky-100/80">This is a mini-game! Chase me around</p>
             </div>
             <button
@@ -142,16 +142,23 @@ export const BoredPopup = React.memo(function BoredPopup({
 export const QuickGameTutorial = React.memo(function QuickGameTutorial({
   show,
   onDone,
+  onStart,
+  onWatchDemo,
   durationMs = 7500,
   className = "",
+  onHoverChange,
 }: {
   show: boolean;
   onDone: () => void;
+  onStart?: () => void;
+  onWatchDemo?: () => void;
   durationMs?: number;
   className?: string;
+  onHoverChange?: (isHovering: boolean) => void;
 }) {
   React.useEffect(() => {
     if (!show) return;
+    if (durationMs <= 0) return;
     const t = window.setTimeout(onDone, durationMs);
     return () => window.clearTimeout(t);
   }, [show, durationMs, onDone]);
@@ -168,6 +175,8 @@ export const QuickGameTutorial = React.memo(function QuickGameTutorial({
             "fixed left-3 bottom-[250px] z-[10002] w-[280px] pointer-events-auto",
             className
           )}
+          onMouseEnter={() => onHoverChange?.(true)}
+          onMouseLeave={() => onHoverChange?.(false)}
         >
           <div className="relative overflow-hidden rounded-2xl border border-sky-400/25 bg-gradient-to-br from-blue-950/92 via-slate-900/95 to-blue-950/92 backdrop-blur-xl shadow-2xl">
             <GameShimmer colors="blue" speed="fast" />
@@ -188,14 +197,14 @@ export const QuickGameTutorial = React.memo(function QuickGameTutorial({
                 </div>
                 <div>
                   <div className="text-[11px] font-semibold text-white">How to play</div>
-                  <div className="text-[9px] text-white/55">Quick demo (auto closes)</div>
+                  <div className="text-[9px] text-white/55">Catch it before it escapes</div>
                 </div>
               </div>
 
               <div className="space-y-1.5 text-[10px] text-white/75">
                 <div className="flex items-start gap-2">
                   <span className="mt-[3px] inline-block w-1.5 h-1.5 rounded-full bg-sky-200/80" />
-                  <span>Press Play in the menu to start.</span>
+                  <span>Press Start to begin.</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="mt-[3px] inline-block w-1.5 h-1.5 rounded-full bg-sky-200/80" />
@@ -206,6 +215,39 @@ export const QuickGameTutorial = React.memo(function QuickGameTutorial({
                   <span>Click it to catch and score.</span>
                 </div>
               </div>
+
+              {(onStart || onWatchDemo) && (
+                <div className="mt-3 flex items-center gap-2">
+                  {onStart && (
+                    <button
+                      type="button"
+                      onClick={onStart}
+                      className={cn(
+                        "flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl",
+                        "bg-sky-500/15 hover:bg-sky-500/20 border border-sky-300/25 hover:border-sky-300/40",
+                        "text-[10px] font-semibold text-sky-100 transition-colors"
+                      )}
+                    >
+                      <IconPlayerPlay className="w-4 h-4" />
+                      Start
+                    </button>
+                  )}
+                  {onWatchDemo && (
+                    <button
+                      type="button"
+                      onClick={onWatchDemo}
+                      className={cn(
+                        "flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl",
+                        "bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/15",
+                        "text-[10px] font-semibold text-white/80 transition-colors"
+                      )}
+                    >
+                      <IconInfoCircle className="w-4 h-4" />
+                      Watch demo
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Tiny simulated chase bar */}
               <div className="mt-3 relative h-8 rounded-xl bg-black/40 border border-white/10 overflow-hidden">
@@ -225,6 +267,128 @@ export const QuickGameTutorial = React.memo(function QuickGameTutorial({
               </div>
             </div>
           </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+});
+
+export const QuickGameTutorialDemo = React.memo(function QuickGameTutorialDemo({
+  show,
+  onDone,
+  onStart,
+  durationMs = 8000,
+}: {
+  show: boolean;
+  onDone: () => void;
+  onStart?: () => void;
+  durationMs?: number;
+}) {
+  React.useEffect(() => {
+    if (!show) return;
+    const t = window.setTimeout(onDone, durationMs);
+    return () => window.clearTimeout(t);
+  }, [show, durationMs, onDone]);
+
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[10003] bg-black/55 backdrop-blur-sm pointer-events-auto"
+          onClick={onDone}
+        >
+          <motion.div
+            initial={{ y: 16, scale: 0.98, opacity: 0 }}
+            animate={{ y: 0, scale: 1, opacity: 1 }}
+            exit={{ y: 10, scale: 0.98, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            onClick={(e) => e.stopPropagation()}
+            className={cn(
+              "relative w-[320px] max-w-[92vw] rounded-2xl overflow-hidden",
+              "bg-gradient-to-br from-blue-950/92 via-slate-900/95 to-blue-950/92",
+              "border border-sky-400/25 shadow-2xl"
+            )}
+          >
+            <GameShimmer colors="blue" speed="fast" />
+
+            <button
+              onClick={onDone}
+              className="absolute top-2 right-2 p-1.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+              aria-label="Close demo"
+              type="button"
+            >
+              <IconX className="w-4 h-4 text-white/60" />
+            </button>
+
+            <div className="relative p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-2 rounded-xl bg-sky-500/10 border border-sky-300/15">
+                  <IconInfoCircle className="w-4 h-4 text-sky-200" />
+                </div>
+                <div>
+                  <div className="text-[12px] font-semibold text-white">Quick visual demo</div>
+                  <div className="text-[10px] text-white/55">Start → chase → click to catch</div>
+                </div>
+              </div>
+
+              {/* Simulated scene */}
+              <div className="relative h-28 rounded-2xl bg-black/40 border border-white/10 overflow-hidden">
+                {/* Target */}
+                <motion.div
+                  className="absolute top-6 left-6 w-4 h-4 rounded-full bg-sky-300 shadow-[0_0_18px_rgba(56,189,248,0.45)]"
+                  animate={{ x: [0, 220, 80, 240], y: [0, 10, 40, 20] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  aria-hidden
+                />
+
+                {/* Cursor */}
+                <motion.div
+                  className="absolute top-14 left-10 w-3 h-3 rounded-full bg-white/75"
+                  animate={{ x: [0, 170, 110, 200], y: [0, -10, 20, -5] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.15 }}
+                  aria-hidden
+                />
+
+                {/* Click pulse */}
+                <motion.div
+                  className="absolute top-14 left-10 w-10 h-10 rounded-full border border-white/25"
+                  animate={{ opacity: [0, 0, 0.8, 0], scale: [0.8, 0.8, 1.6, 2.1] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeOut", times: [0, 0.55, 0.7, 1] }}
+                  aria-hidden
+                />
+
+                <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 text-[10px] text-white/60">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-sky-300" />
+                  Target
+                </div>
+                <div className="absolute left-3 top-8 inline-flex items-center gap-1.5 text-[10px] text-white/60">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/70" />
+                  Cursor
+                </div>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between">
+                <div className="text-[10px] text-white/60">Then click to catch and score</div>
+                {onStart && (
+                  <button
+                    type="button"
+                    onClick={onStart}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl",
+                      "bg-sky-500/15 hover:bg-sky-500/20 border border-sky-300/25 hover:border-sky-300/40",
+                      "text-[10px] font-semibold text-sky-100 transition-colors"
+                    )}
+                  >
+                    <IconPlayerPlay className="w-4 h-4" />
+                    Start
+                  </button>
+                )}
+              </div>
+            </div>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
