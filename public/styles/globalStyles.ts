@@ -53,41 +53,46 @@ export const GLOBAL_STYLES = `
     opacity: 1;
   }
 
-  /* --- MOBILE SCROLL FIXES START --- */
-  // FIX #1: Remove fixed positioning that causes scroll issues
+  /* --- SCROLL FIXES START --- */
+  // Allow normal scrolling on both mobile and desktop
   html, body {
     background-color: black;
-    overflow: hidden; /* Prevent native window scroll */
+    overflow-x: hidden; /* Only hide horizontal overflow */
+    overflow-y: auto !important; /* Allow vertical scrolling */
     overscroll-behavior-y: none; /* Kill rubber-banding vertically */
     width: 100%;
-    height: 100%;
+    min-height: 100%;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
 
-  // FIX #1: Remove snap-scroll on mobile for smooth Instagram/TikTok-like scrolling
+  // Smooth scrolling container
   .mobile-scroll {
     overflow-y: auto;
     overflow-x: hidden;
-    height: 100dvh; /* Dynamic viewport height */
+    min-height: 100dvh; /* Dynamic viewport height */
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: none; /* Changed from 'contain' */
+    overscroll-behavior-y: none;
+    touch-action: pan-y;
   }
 
   /* Remove scrollbars but keep functionality */
   .mobile-scroll::-webkit-scrollbar { display: none; }
   .mobile-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 
-  // FIX #5: Use min-height for flexibility instead of fixed height
+  // Sections should not block scrolling
   section {
     width: 100%;
-    min-height: 100dvh; /* Changed from fixed height */
+    min-height: auto; /* Allow natural height */
     position: relative;
-    overflow: hidden;
-    will-change: transform;
+    overflow: visible; /* Allow content to be visible */
+    touch-action: pan-y;
   }
 
-  /* Desktop only: Enable snap scrolling */
+  /* Desktop: Optional snap scrolling (disabled by default for normal scroll) */
   @media (min-width: 769px) {
+    /* Snap scrolling disabled to allow normal mouse wheel scroll
     .mobile-scroll {
       scroll-snap-type: y mandatory;
     }
@@ -96,8 +101,9 @@ export const GLOBAL_STYLES = `
       scroll-snap-stop: always;
       height: 100dvh;
     }
+    */
   }
-  /* --- MOBILE SCROLL FIXES END --- */
+  /* --- SCROLL FIXES END --- */
 
   @keyframes spin-border {
     0% { --bg-angle: 0deg; }
