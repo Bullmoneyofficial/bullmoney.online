@@ -45,7 +45,7 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-// --- 2. INTERNAL CSS FOR SCROLL LOCK ---
+// --- 2. INTERNAL CSS FOR SCROLL LOCK & SHIMMER ANIMATION ---
 const GlobalStyles = () => (
   <style jsx global>{`
     /* Input autofill styling override */
@@ -61,8 +61,122 @@ const GlobalStyles = () => (
     /* === ADDED GLOBAL SCROLL LOCK CLASS === */
     body.loader-lock {
         overflow: hidden !important;
-        height: 100vh !important; /* Locks height to viewport */
+        height: 100vh !important;
+        height: 100dvh !important; /* Dynamic viewport height for mobile Safari */
         width: 100vw !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+    }
+
+    /* === BLUE SHIMMER LEFT-TO-RIGHT ANIMATION === */
+    @keyframes shimmer-ltr {
+      0% {
+        transform: translateX(-100%);
+      }
+      100% {
+        transform: translateX(100%);
+      }
+    }
+
+    @keyframes shimmer-text {
+      0% {
+        background-position: -200% center;
+      }
+      100% {
+        background-position: 200% center;
+      }
+    }
+
+    .shimmer-ltr {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .shimmer-ltr::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(59, 130, 246, 0.15) 25%,
+        rgba(59, 130, 246, 0.3) 50%,
+        rgba(59, 130, 246, 0.15) 75%,
+        transparent 100%
+      );
+      animation: shimmer-ltr 2.5s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .shimmer-text {
+      background: linear-gradient(
+        90deg,
+        #60a5fa 0%,
+        #93c5fd 25%,
+        #dbeafe 50%,
+        #93c5fd 75%,
+        #60a5fa 100%
+      );
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer-text 3s ease-in-out infinite;
+    }
+
+    /* === MOBILE VIEWPORT FIXES FOR SAFARI & IN-APP BROWSERS === */
+    .register-container {
+      min-height: 100vh;
+      min-height: 100dvh; /* Dynamic viewport for iOS Safari */
+      min-height: -webkit-fill-available;
+      height: auto;
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    /* Fix for iOS Safari address bar */
+    @supports (-webkit-touch-callout: none) {
+      .register-container {
+        min-height: -webkit-fill-available;
+      }
+    }
+
+    /* Safe area insets for notched devices */
+    .register-container {
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
+    }
+
+    /* Fix viewport units on mobile */
+    @supports (height: 100dvh) {
+      .register-container {
+        min-height: 100dvh;
+      }
+    }
+
+    /* In-app browser fixes */
+    .register-card {
+      max-height: calc(100vh - 60px);
+      max-height: calc(100dvh - 60px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Prevent zoom on input focus in iOS */
+    @media screen and (max-width: 768px) {
+      input, select, textarea {
+        font-size: 16px !important;
+      }
     }
   `}</style>
 );
@@ -392,36 +506,34 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // --- RENDER: SUCCESS (SCREEN 5) ---
   if (step === 5 && viewMode === 'register') {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4 relative">
+      <div className="register-container bg-black flex items-center justify-center p-4 relative">
         <GlobalStyles />
         
-        {/* Blue shimmer background like navbar */}
+        {/* Blue shimmer background - left to right */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <span className="absolute inset-[-100%] animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-10" />
+          <div className="absolute inset-0 shimmer-ltr opacity-20" />
         </div>
         
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black gpu-accel" />
         
-        <div className="bg-black/80 border-2 border-blue-500/40 backdrop-blur-xl p-6 md:p-8 rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.3)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
-          <div className="mx-auto w-24 h-24 relative mb-6">
+        <div className="register-card shimmer-ltr bg-black/80 border-2 border-blue-500/40 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.3)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
+          <div className="mx-auto w-20 h-20 md:w-24 md:h-24 relative mb-5 md:mb-6">
             <div className="absolute inset-0 rounded-full border-2 border-blue-500/50 animate-[spin_3s_linear_infinite]" />
             <div className="absolute inset-0 bg-blue-500 rounded-full scale-0 animate-[scale-up_0.5s_ease-out_forwards_0.2s] flex items-center justify-center">
-              <Check className="w-12 h-12 text-white stroke-[3] opacity-0 animate-[fade-in_0.3s_ease-out_forwards_0.6s]" />
+              <Check className="w-10 h-10 md:w-12 md:h-12 text-white stroke-[3] opacity-0 animate-[fade-in_0.3s_ease-out_forwards_0.6s]" />
             </div>
           </div>
           
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">You&apos;re In 🚀</h2>
-          <p className="text-blue-200/70 mb-8 text-sm md:text-base">
+          <h2 className="text-xl md:text-3xl font-bold shimmer-text mb-2">You&apos;re In 🚀</h2>
+          <p className="text-blue-200/70 mb-6 md:mb-8 text-sm md:text-base">
             Your free BullMoney access is now active.<br/>
           </p>
           
           <button 
             onClick={onUnlock}
-            className="w-full py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold tracking-wide transition-all shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] group flex items-center justify-center mb-4 cursor-target relative overflow-hidden"
+            className="shimmer-ltr w-full py-3.5 md:py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold tracking-wide transition-all shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] group flex items-center justify-center mb-4 cursor-target relative overflow-hidden"
           >
-            {/* Blue shimmer on button */}
-            <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-30 z-0" />
-            <span className="relative z-10 flex items-center">
+            <span className="relative z-10 flex items-center shimmer-text">
               Go to Dashboard  
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </span>
@@ -445,26 +557,27 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // --- RENDER: LOADING (SCREEN 4 AFTER SUBMIT) ---
   if (step === 4) {
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center relative">
-        {/* Blue shimmer background */}
+      <div className="register-container bg-black flex flex-col items-center justify-center relative">
+        <GlobalStyles />
+        {/* Blue shimmer background - left to right */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <span className="absolute inset-[-100%] animate-[spin_6s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-10" />
+          <div className="absolute inset-0 shimmer-ltr opacity-30" />
         </div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/10 rounded-full blur-[60px] pointer-events-none" />
-        <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-4" />
-        <h2 className="text-xl font-bold text-blue-300">Unlocking Platform...</h2>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 md:w-96 h-72 md:h-96 bg-blue-500/10 rounded-full blur-[60px] pointer-events-none" />
+        <Loader2 className="w-14 h-14 md:w-16 md:h-16 text-blue-500 animate-spin mb-4" />
+        <h2 className="text-lg md:text-xl font-bold shimmer-text">Unlocking Platform...</h2>
       </div>
     );
   }
 
   // --- RENDER: MAIN INTERFACE ---
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
+    <div className="register-container bg-black flex flex-col items-center justify-center px-4 py-6 md:p-4 relative overflow-x-hidden font-sans">
       <GlobalStyles />
       
-      {/* Blue shimmer background like navbar */}
+      {/* Blue shimmer background - left to right */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <span className="absolute inset-[-100%] animate-[spin_10s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-5" />
+        <div className="absolute inset-0 shimmer-ltr opacity-10" />
       </div>
       
       {/* === FIX: HIGH Z-INDEX WRAPPER FOR LOADER === */}
@@ -472,7 +585,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       {loading && (
           <div 
              // CRITICAL: Fixed, full coverage, max z-index to overlay native browser UI
-             className="fixed inset-0 z-[99999999] w-screen h-screen bg-black"
+             className="fixed inset-0 z-[99999999] w-screen bg-black"
+             style={{ height: '100dvh', minHeight: '-webkit-fill-available' }}
              // We render the loader component inside this wrapper
           >
             <MultiStepLoader loadingStates={loadingStates} loading={loading}  />
@@ -493,12 +607,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           isVantage ? "via-purple-900" : "via-blue-900"
         )} />
         <div className={cn(
-          "absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel",
+          "absolute bottom-0 right-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel",
           isVantage ? "bg-purple-900/10" : "bg-blue-900/10"
         )} />
 
-        <div className="mb-6 md:mb-8 text-center">
-           <h1 className="text-xl md:text-2xl font-black text-blue-300/50 tracking-tight">
+        <div className="mb-5 md:mb-8 text-center">
+           <h1 className="text-lg md:text-2xl font-black shimmer-text tracking-tight">
             BULLMONEY <span className="text-blue-500">FREE</span>
           </h1>
         </div>
@@ -510,18 +624,14 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             animate={{ opacity: 1, scale: 1 }}
             className="w-full"
           >
-             <div className="bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl p-6 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.2)] relative overflow-hidden">
-                {/* Blue shimmer overlay */}
-                <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
-                  <span className="absolute inset-[-100%] animate-[spin_6s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-10" />
+             <div className="register-card shimmer-ltr bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.2)] relative overflow-hidden">
+                
+                <div className="absolute top-0 right-0 p-3 md:p-4 opacity-10">
+                    <Lock className="w-24 h-24 md:w-32 md:h-32 text-blue-400" />
                 </div>
                 
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                    <Lock className="w-32 h-32 text-blue-400" />
-                </div>
-                
-                <h2 className="text-2xl font-bold text-white mb-2 relative z-10">Member Login</h2>
-                <p className="text-blue-200/60 mb-6 relative z-10 text-sm md:text-base">Sign in to access the platform.</p>
+                <h2 className="text-xl md:text-2xl font-bold shimmer-text mb-2 relative z-10">Member Login</h2>
+                <p className="text-blue-200/60 mb-5 md:mb-6 relative z-10 text-sm md:text-base">Sign in to access the platform.</p>
 
                 <form onSubmit={handleLoginSubmit} className="space-y-4 relative z-10" autoComplete="on">
                    <div className="relative group">
@@ -535,7 +645,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
                         placeholder="Email Address"
-                        className="w-full bg-black/60 border-2 border-blue-500/30 rounded-xl pl-10 pr-4 py-3.5 md:py-4 text-white placeholder-blue-300/30 focus:outline-none focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all cursor-target text-base"
+                        className="w-full bg-black/60 border-2 border-blue-500/30 rounded-xl pl-10 pr-4 py-3 md:py-4 text-white placeholder-blue-300/30 focus:outline-none focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all cursor-target text-base"
                       />
                     </div>
 
@@ -549,7 +659,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         placeholder="Password"
-                        className="w-full bg-black/60 border-2 border-blue-500/30 rounded-xl pl-10 pr-12 py-3.5 md:py-4 text-white placeholder-blue-300/30 focus:outline-none focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all cursor-target text-base"
+                        className="w-full bg-black/60 border-2 border-blue-500/30 rounded-xl pl-10 pr-12 py-3 md:py-4 text-white placeholder-blue-300/30 focus:outline-none focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all cursor-target text-base"
                       />
                       <button 
                         type="button" 
@@ -562,25 +672,23 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     
                     {submitError && (
                       <div className="text-red-400 text-sm bg-red-950/30 p-3 rounded-lg flex items-center gap-2 border border-red-500/20">
-                        <AlertCircle className="w-4 h-4" /> {submitError}
+                        <AlertCircle className="w-4 h-4 shrink-0" /> {submitError}
                       </div>
                     )}
 
                     <button
                       type="submit"
                       disabled={!loginEmail || !loginPassword}
-                      className="w-full py-3.5 md:py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-target text-base relative overflow-hidden"
+                      className="shimmer-ltr w-full py-3 md:py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-target text-base relative overflow-hidden"
                     >
-                      {/* Blue shimmer */}
-                      <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-30 z-0" />
-                      <span className="relative z-10 flex items-center gap-2">
+                      <span className="relative z-10 flex items-center gap-2 shimmer-text">
                         LOGIN
                         <ArrowRight className="w-4 h-4" />
                       </span>
                     </button>
                 </form>
 
-                <div className="mt-6 text-center border-t border-blue-500/20 pt-4">
+                <div className="mt-5 md:mt-6 text-center border-t border-blue-500/20 pt-4">
                   <button onClick={toggleViewMode} className="text-sm text-blue-300/60 hover:text-blue-300 transition-colors cursor-target">
                     Don&apos;t have a password? <span className="underline text-blue-400">Register Now</span>
                   </button>
@@ -591,7 +699,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           /* ================= UNLOCK FLOW VIEW ================= */
           <>
             {step === 1 && (
-              <div className="flex justify-center gap-3 mb-8">
+              <div className="flex justify-center gap-2 md:gap-3 mb-6 md:mb-8">
                 {(["Vantage", "XM"] as const).map((partner) => {
                   const isActive = activeBroker === partner;
                   return (
@@ -599,8 +707,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       key={partner}
                       onClick={() => handleBrokerSwitch(partner)}
                       className={cn(
-                        "relative px-6 py-2 rounded-full font-semibold transition-all duration-300 z-20 cursor-target text-sm md:text-base",
-                        isActive ? "text-blue-300" : "bg-black/60 border-2 border-blue-500/20 text-blue-300/60 hover:border-blue-500/40"
+                        "shimmer-ltr relative px-5 md:px-6 py-2 rounded-full font-semibold transition-all duration-300 z-20 cursor-target text-sm md:text-base",
+                        isActive ? "shimmer-text" : "bg-black/60 border-2 border-blue-500/20 text-blue-300/60 hover:border-blue-500/40"
                       )}
                     >
                       {partner}
@@ -628,24 +736,20 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
                  >
-                   <div className="bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl p-6 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.2)] relative overflow-hidden text-center">
-                      {/* Blue shimmer overlay */}
-                      <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
-                        <span className="absolute inset-[-100%] animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-10" />
-                      </div>
+                   <div className="register-card shimmer-ltr bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.2)] relative overflow-hidden text-center">
                       
-                      <div className="absolute top-0 right-0 p-4 opacity-5">
-                        <Lock className="w-32 h-32 text-blue-400" />
+                      <div className="absolute top-0 right-0 p-3 md:p-4 opacity-5">
+                        <Lock className="w-24 h-24 md:w-32 md:h-32 text-blue-400" />
                       </div>
 
-                      <div className="mb-6 flex justify-center">
-                         <div className="h-16 w-16 rounded-full bg-black flex items-center justify-center border-2 border-blue-500/40 shadow-[0_0_30px_rgba(59,130,246,0.3)]">
-                            <ShieldCheck className="w-8 h-8 text-blue-400" />
+                      <div className="mb-5 md:mb-6 flex justify-center">
+                         <div className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-black flex items-center justify-center border-2 border-blue-500/40 shadow-[0_0_30px_rgba(59,130,246,0.3)]">
+                            <ShieldCheck className="w-7 h-7 md:w-8 md:h-8 text-blue-400" />
                          </div>
                       </div>
 
-                      <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-3">Unlock Free BullMoney Access</h2>
-                      <p className="text-blue-200/70 text-sm md:text-base mb-8 max-w-sm mx-auto leading-relaxed">
+                      <h2 className="text-xl md:text-3xl font-extrabold shimmer-text mb-3">Unlock Free BullMoney Access</h2>
+                      <p className="text-blue-200/70 text-sm md:text-base mb-6 md:mb-8 max-w-sm mx-auto leading-relaxed">
                         Get free trading setups and community access. <br/>
                         <span className="text-blue-300/40">No payment. Takes about 2 minutes.</span>
                       </p>
@@ -654,11 +758,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         onClick={handleNext}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-3.5 md:py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold text-base md:text-lg tracking-wide transition-all shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] flex items-center justify-center cursor-target relative overflow-hidden"
+                        className="shimmer-ltr w-full py-3 md:py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold text-base md:text-lg tracking-wide transition-all shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] flex items-center justify-center cursor-target relative overflow-hidden"
                       >
-                        {/* Blue shimmer on button */}
-                        <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-40 z-0" />
-                        <span className="relative z-10 flex items-center">
+                        <span className="relative z-10 flex items-center shimmer-text">
                           Start Free Access <ArrowRight className="w-5 h-5 ml-2" />
                         </span>
                       </motion.button>
@@ -672,7 +774,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                          <motion.button 
                            onClick={toggleViewMode}
                            whileHover={{ scale: 1.01 }}
-                           className="w-full py-3 rounded-lg text-sm font-semibold transition-all border-2 border-blue-500/20 mt-2 bg-black/60 text-blue-300/80 hover:bg-blue-950/30 hover:border-blue-500/40"
+                           className="shimmer-ltr w-full py-3 rounded-lg text-sm font-semibold transition-all border-2 border-blue-500/20 mt-2 bg-black/60 text-blue-300/80 hover:bg-blue-950/30 hover:border-blue-500/40"
                          >
                             Already a member? Login here
                          </motion.button>
@@ -693,30 +795,29 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   <StepCard
                     {...getStepProps(1)}
                     title="Open Free Account"
-                    className="bg-black/80"
+                    className="bg-black/80 register-card"
                     actions={
-                      <div className="flex flex-col gap-3 md:gap-4">
+                      <div className="flex flex-col gap-2 md:gap-4">
                         <p className="text-xs text-center text-blue-300/50 flex items-center justify-center gap-1">
                           <Clock className="w-3 h-3" /> Takes about 1 minute • No deposit required
                         </p>
                         
-                        <div className="flex flex-col items-center justify-center gap-3">
+                        <div className="flex flex-col items-center justify-center gap-2 md:gap-3">
                            {/* COPY CODE BUTTON */}
                           <button
                             onClick={() => copyCode(brokerCode)}
-                            className="inline-flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold ring-2 ring-inset transition cursor-target w-full justify-center mb-1 text-blue-300 ring-blue-500/40 hover:bg-blue-500/10"
+                            className="shimmer-ltr inline-flex items-center gap-2 rounded-lg px-3 py-2.5 md:py-3 text-sm font-semibold ring-2 ring-inset transition cursor-target w-full justify-center mb-1 text-blue-300 ring-blue-500/40 hover:bg-blue-500/10"
                           >
                             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                            {copied ? "Copied" : `Copy Code: ${brokerCode}`}
+                            <span className="shimmer-text">{copied ? "Copied" : `Copy Code: ${brokerCode}`}</span>
                           </button>
 
                            {/* EXTERNAL LINK BUTTON */}
                           <button
                             onClick={handleBrokerClick}
-                            className="w-full py-3.5 rounded-xl font-bold text-blue-400 shadow transition flex items-center justify-center gap-2 cursor-target text-base bg-black border-2 border-blue-500/60 hover:border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] relative overflow-hidden"
+                            className="shimmer-ltr w-full py-3 md:py-3.5 rounded-xl font-bold text-blue-400 shadow transition flex items-center justify-center gap-2 cursor-target text-base bg-black border-2 border-blue-500/60 hover:border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] relative overflow-hidden"
                           >
-                            <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-30 z-0" />
-                            <span className="relative z-10 flex items-center gap-2">
+                            <span className="relative z-10 flex items-center gap-2 shimmer-text">
                               Open Free Account
                               <ExternalLink className="h-4 w-4" />
                             </span>
@@ -726,7 +827,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         {/* DYNAMIC SECONDARY BUTTON FOR "ALREADY HAVE ACCOUNT" */}
                         <button 
                             onClick={handleNext}
-                            className="w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border-2 mt-1 border-blue-500/30 text-blue-300 bg-black/60 hover:bg-blue-950/30 hover:border-blue-500/50"
+                            className="shimmer-ltr w-full py-2.5 md:py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border-2 mt-1 border-blue-500/30 text-blue-300 bg-black/60 hover:bg-blue-950/30 hover:border-blue-500/50"
                         >
                             I already have an account
                         </button>
@@ -739,7 +840,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     </p>
                     
                     {/* VISUAL ELEMENT (CARD) */}
-                    <div className="relative mx-auto w-full max-w-[280px] h-32 md:h-40 rounded-3xl border border-white/10 overflow-hidden shadow-2xl mb-2 opacity-80 hover:opacity-100 transition-opacity">
+                    <div className="relative mx-auto w-full max-w-[240px] md:max-w-[280px] h-28 md:h-40 rounded-3xl border border-white/10 overflow-hidden shadow-2xl mb-2 opacity-80 hover:opacity-100 transition-opacity">
                       <IconPlusCorners />
                       <div className="absolute inset-0 p-2">
                         {isVantage ? <EvervaultCardRed text="VANTAGE" /> : <EvervaultCard text="X3R7P" />}
@@ -762,25 +863,25 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   <StepCard
                     {...getStepProps(2)}
                     title="Confirm Your Account ID"
+                    className="register-card"
                     actions={
                       <button
                         onClick={handleNext}
                         disabled={!formData.mt5Number}
                         className={cn(
-                          "w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
+                          "shimmer-ltr w-full py-3 md:py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
                           !formData.mt5Number 
                             ? "opacity-50 cursor-not-allowed bg-black/60 border-2 border-blue-500/20 text-blue-300/50" 
                             : "bg-black border-2 border-blue-500/60 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:border-blue-400 hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
                         )}
                       >
-                        {formData.mt5Number && <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-30 z-0" />}
-                        <span className="relative z-10 flex items-center gap-2">
+                        <span className={cn("relative z-10 flex items-center gap-2", formData.mt5Number && "shimmer-text")}>
                           Continue <ArrowRight className="w-4 h-4" />
                         </span>
                       </button>
                     }
                   >
-                    <div className="space-y-4 pt-2">
+                    <div className="space-y-3 md:space-y-4 pt-2">
                       <div className="flex items-center justify-between">
                           <p className="text-slate-300 text-sm">After opening your account, you’ll receive an email with your trading ID (MT5 ID).</p>
                       </div>
@@ -789,18 +890,18 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-white transition-colors" />
                         <input
                           autoFocus
-                          type="tel" // optimized for mobile number pad
+                          type="tel"
                           name="mt5Number"
                           value={formData.mt5Number}
                           onChange={handleChange}
                           placeholder="Enter MT5 ID (numbers only)"
-                          className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target text-base"
+                          className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3.5 md:py-4 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target text-base"
                         />
                       </div>
                       <p className="text-xs text-slate-500 flex items-center gap-1"><Lock className="w-3 h-3"/> Used only to verify access</p>
                     </div>
                   </StepCard>
-                  <button onClick={handleBack} className="mt-4 flex items-center text-slate-500 hover:text-slate-300 text-sm mx-auto transition-colors cursor-target">
+                  <button onClick={handleBack} className="mt-3 md:mt-4 flex items-center text-slate-500 hover:text-slate-300 text-sm mx-auto transition-colors cursor-target">
                     <ChevronLeft className="w-4 h-4 mr-1" /> Back
                   </button>
                 </motion.div>
@@ -818,26 +919,26 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   <StepCard
                     {...getStepProps(3)}
                     title="Create BullMoney Login"
+                    className="register-card"
                     actions={
                       <button
                         onClick={handleNext}
                         disabled={!formData.email || !formData.password || !acceptedTerms}
                         className={cn(
-                          "w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
+                          "shimmer-ltr w-full py-3 md:py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
                           (!formData.email || !formData.password || !acceptedTerms) 
                             ? "opacity-50 cursor-not-allowed bg-black/60 border-2 border-blue-500/20 text-blue-300/50" 
                             : "bg-black border-2 border-blue-500/60 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:border-blue-400 hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
                         )}
                       >
-                        {(formData.email && formData.password && acceptedTerms) && <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-30 z-0" />}
-                        <span className="relative z-10 flex items-center gap-2">
+                        <span className={cn("relative z-10 flex items-center gap-2", (formData.email && formData.password && acceptedTerms) && "shimmer-text")}>
                           Unlock My Access <ArrowRight className="w-4 h-4" />
                         </span>
                       </button>
                     }
                   >
-                     <p className="text-blue-200/60 text-xs md:text-sm mb-4">This lets you access <span className="text-blue-300 font-medium">setups</span>, tools, and the community.</p>
-                    <div className="space-y-4 pt-1">
+                     <p className="text-blue-200/60 text-xs md:text-sm mb-3 md:mb-4">This lets you access <span className="shimmer-text font-medium">setups</span>, tools, and the community.</p>
+                    <div className="space-y-3 md:space-y-4 pt-1">
                       <div>
                         <div className="relative group">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400/50 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
@@ -921,7 +1022,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     )}
                   </StepCard>
 
-                  <button onClick={handleBack} className="mt-4 flex items-center text-blue-300/50 hover:text-blue-300 text-sm mx-auto transition-colors cursor-target">
+                  <button onClick={handleBack} className="mt-3 md:mt-4 flex items-center text-blue-300/50 hover:text-blue-300 text-sm mx-auto transition-colors cursor-target">
                     <ChevronLeft className="w-4 h-4 mr-1" /> Back
                   </button>
                 </motion.div>
@@ -941,26 +1042,22 @@ const StepCard = memo(({ number, number2, title, children, actions, className }:
   const n = useRed ? number2 : number;
   return (
     <div className={cn(
-      "group relative overflow-hidden rounded-2xl p-6 md:p-8",
+      "shimmer-ltr group relative overflow-hidden rounded-2xl p-5 md:p-8",
       "bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl",
       "shadow-[0_0_40px_rgba(59,130,246,0.2)]",
       className
     )}>
-      {/* Blue shimmer overlay */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
-        <span className="absolute inset-[-100%] animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-10" />
-      </div>
       
       <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l blur-2xl from-blue-500/20 via-blue-500/10 to-transparent" />
       <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-blue-500/10" />
-      <div className="flex items-center justify-between mb-4 md:mb-6">
-        <span className="inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md ring-2 text-blue-300/90 ring-blue-500/30 bg-black/60">
-          Step {n} of 3
+      <div className="flex items-center justify-between mb-3 md:mb-6">
+        <span className="shimmer-ltr inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md ring-2 text-blue-300/90 ring-blue-500/30 bg-black/60">
+          <span className="shimmer-text">Step {n} of 3</span>
         </span>
       </div>
-      <h3 className="text-xl md:text-2xl font-extrabold text-white mb-4">{title}</h3>
+      <h3 className="text-lg md:text-2xl font-extrabold shimmer-text mb-3 md:mb-4">{title}</h3>
       <div className="flex-1">{children}</div>
-      {actions && <div className="mt-6 md:mt-8 pt-6 border-t border-blue-500/20">{actions}</div>}
+      {actions && <div className="mt-5 md:mt-8 pt-5 md:pt-6 border-t border-blue-500/20">{actions}</div>}
     </div>
   );
 });
