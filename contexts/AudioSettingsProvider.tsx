@@ -351,6 +351,64 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
     setTipsMutedState(muted);
   }, []);
 
+  // keep Media Session API in sync 
+  useEffect(() => {
+    if (typeof window !== "undefined" && "mediaSession" in navigator) {
+      if (musicSource === "THEME" && isMusicPlaying) {
+        navigator.mediaSession.playbackState = "playing";
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: "Ambient Theme",
+          artist: "BullMoney",
+          album: "Website Theme",
+          artwork: [
+            { src: "/logo.png", sizes: "96x96", type: "image/png" },
+            { src: "/logo.png", sizes: "128x128", type: "image/png" },
+          ],
+        });
+      } else {
+        // If paused or streaming source (handled by iframe usually)
+        if (musicSource === "THEME") {
+            navigator.mediaSession.playbackState = "paused";
+        }
+      }
+
+      // Set action handlers
+      const handlePlay = () => {
+        setMusicEnabled(true);
+        setIsMusicPlaying(true);
+        if (audioRef.current) audioRef.current.play();
+      };
+
+      const handlePause = () => {
+        setIsMusicPlaying(false);
+        if (audioRef.current) audioRef.current.pause();
+      };
+      
+      const handleStop = () => {
+        setMusicEnabled(false);
+        setIsMusicPlaying(false);
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
+      };
+
+      navigator.mediaSession.setActionHandler("play", handlePlay);
+      navigator.mediaSession.setActionHandler("pause", handlePause);
+      navigator.mediaSession.setActionHandler("stop", handleStop);
+      
+      return () => {
+        try {
+            navigator.mediaSession.setActionHandler("play", null);
+            navigator.mediaSession.setActionHandler("pause", null);
+            navigator.mediaSession.setActionHandler("stop", null);
+        } catch (e) {
+            // ignore
+        }
+      };
+    }
+  }, [musicSource, isMusicPlaying, setMusicEnabled]);
+
   const value = useMemo<AudioSettingsContextValue>(
     () => ({
       musicEnabled,

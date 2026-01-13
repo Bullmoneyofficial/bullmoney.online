@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, memo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useDragControls, PanInfo } from "framer-motion";
 import {
@@ -44,8 +44,8 @@ const sourceIcons: Partial<Record<MusicSource, React.ReactNode>> = {
   YOUTUBE: <IconBrandYoutube className="w-5 h-5 text-red-400" />,
 };
 
-// Blue shimmer animation component
-function BlueShimmer({ className = "" }: { className?: string }) {
+// Blue shimmer animation component - Memoized
+const BlueShimmer = React.memo(function BlueShimmer({ className = "" }: { className?: string }) {
   return (
     <motion.div
       className={cn("absolute inset-0 overflow-hidden rounded-xl pointer-events-none", className)}
@@ -59,10 +59,10 @@ function BlueShimmer({ className = "" }: { className?: string }) {
       />
     </motion.div>
   );
-}
+});
 
-// Animated helper tip component
-function AnimatedTip({ 
+// Animated helper tip component - Memoized
+const AnimatedTip = React.memo(function AnimatedTip({ 
   text, 
   icon = "tap",
   delay = 0,
@@ -77,7 +77,7 @@ function AnimatedTip({
   variant?: "default" | "success" | "warning" | "numbered";
   pulse?: boolean;
 }) {
-  const icons = {
+  const icons = useMemo(() => ({
     "tap": <IconHandFinger className="w-3.5 h-3.5" />,
     "swipe-left": <IconArrowLeft className="w-3.5 h-3.5" />,
     "swipe-right": <IconArrowRight className="w-3.5 h-3.5" />,
@@ -86,7 +86,7 @@ function AnimatedTip({
     "drag": <IconVolume className="w-3.5 h-3.5" />,
     "close": <IconChevronUp className="w-3.5 h-3.5 rotate-180" />,
     "step": <IconMusic className="w-3.5 h-3.5" />,
-  };
+  }), []);
 
   const variants = {
     default: "bg-blue-500/15 border-blue-400/30 text-blue-200",
@@ -120,7 +120,7 @@ function AnimatedTip({
           }}
           transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1 }}
         >
-          {icons[icon]}
+          {icons[icon as keyof typeof icons] || icons.tap}
         </motion.span>
         <span>{text}</span>
         {/* Blue shimmer effect */}
@@ -132,10 +132,10 @@ function AnimatedTip({
       </motion.div>
     </motion.div>
   );
-}
+});
 
-// Step-by-step tutorial overlay
-function StepGuide({ 
+// Step-by-step tutorial overlay - Memoized
+const StepGuide = React.memo(function StepGuide({ 
   step, 
   totalSteps,
   title,
@@ -216,10 +216,10 @@ function StepGuide({
       </div>
     </motion.div>
   );
-}
+});
 
-// Floating action hint that points to elements
-function ActionHint({ 
+// Floating action hint that points to elements - Memoized
+const ActionHint = React.memo(function ActionHint({ 
   text, 
   position = "bottom",
   show = true,
@@ -263,23 +263,25 @@ function ActionHint({
       </motion.div>
     </motion.div>
   );
-}
+});
 
-// Enhanced Slider with blue styling
-function Slider({
+// Enhanced Slider with blue styling - Memoized
+const Slider = React.memo(function Slider({
   value,
   onChange,
   label,
   hint,
+  disabled = false,
 }: {
   value: number;
   onChange: (next: number) => void;
   label: string;
   hint?: string;
+  disabled?: boolean;
 }) {
   const pct = Math.round(value * 100);
   return (
-    <div className="flex flex-col gap-1.5 group">
+    <div className={cn("flex flex-col gap-1.5 group", disabled && "opacity-50 pointer-events-none")}>
       <div className="flex items-center justify-between text-[11px]">
         <div className="flex items-center gap-2">
           <span className="text-white/80 font-medium">{label}</span>
@@ -300,6 +302,7 @@ function Slider({
           step={0.01}
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
+          disabled={disabled}
           className="w-full h-2 rounded-full appearance-none cursor-pointer bg-white/10 
                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
                      [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-400 
@@ -313,9 +316,9 @@ function Slider({
       </div>
     </div>
   );
-}
+});
 
-export default function AudioWidget() {
+const AudioWidget = React.memo(function AudioWidget() {
   const {
     musicEnabled,
     setMusicEnabled,
@@ -344,6 +347,9 @@ export default function AudioWidget() {
   const [tutorialStep, setTutorialStep] = useState(0); // 0 = not started, 1-4 = steps
   const [hasCompletedTutorial, setHasCompletedTutorial] = useState(false);
   const [showPlayerHint, setShowPlayerHint] = useState(true);
+  const [showReturnUserHint, setShowReturnUserHint] = useState(false);
+  
+  // Refs
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
   const miniPlayerRef = React.useRef<HTMLDivElement>(null);
   
@@ -351,14 +357,29 @@ export default function AudioWidget() {
   const [floatingPosition, setFloatingPosition] = useState({ x: 0, y: 0 });
   const dragControls = useDragControls();
 
-  // Check localStorage for tutorial completion
+  // Check localStorage for tutorial completion and saved preference
   useEffect(() => {
+    // Tutorial Check
     const completed = localStorage.getItem('audioWidgetTutorialComplete');
     if (completed === 'true') {
       setHasCompletedTutorial(true);
       setShowFirstTimeHelp(false);
+
+      // Persistence Check for returning users
+      const savedSource = localStorage.getItem('audioWidgetSavedSource');
+      if (savedSource && ['SPOTIFY', 'APPLE_MUSIC', 'YOUTUBE'].includes(savedSource)) {
+        // Restore their preferred source
+        setMusicSource(savedSource as MusicSource);
+        setStreamingActive(true);
+        setMusicEnabled(true);
+        setPlayerHidden(true); // Start hidden to be unobtrusive
+        setShowReturnUserHint(true); // Show the helper to say "Click Play"
+        
+        // Auto-hide the return user hint after 10s
+        setTimeout(() => setShowReturnUserHint(false), 10000);
+      }
     }
-  }, []);
+  }, [setMusicSource, setMusicEnabled]);
 
   // Hide first time help after 15 seconds
   useEffect(() => {
@@ -373,7 +394,7 @@ export default function AudioWidget() {
     }
   }, [open, hasCompletedTutorial, tutorialStep]);
 
-  const handleTutorialNext = () => {
+  const handleTutorialNext = useCallback(() => {
     if (tutorialStep >= 4) {
       setTutorialStep(0);
       setHasCompletedTutorial(true);
@@ -381,16 +402,16 @@ export default function AudioWidget() {
     } else {
       setTutorialStep(prev => prev + 1);
     }
-  };
+  }, [tutorialStep]);
 
-  const handleTutorialSkip = () => {
+  const handleTutorialSkip = useCallback(() => {
     setTutorialStep(0);
     setHasCompletedTutorial(true);
     localStorage.setItem('audioWidgetTutorialComplete', 'true');
-  };
+  }, []);
 
-  // Tutorial content
-  const tutorialSteps = [
+  // Tutorial content - Memoized
+  const tutorialSteps = useMemo(() => [
     {
       title: "🎧 Choose Your Music Service",
       description: "Tap Spotify, Apple Music, or YouTube to select where your music comes from. A player will appear so you can start playing.",
@@ -407,20 +428,68 @@ export default function AudioWidget() {
       title: "🔊 Adjust Your Experience",
       description: "Use the sliders to control music volume and interaction sounds. Toggle navbar tips on/off as needed.",
     },
-  ];
+  ], []);
+
+  // "The Room" Hack: Broadcast volume commands in every known protocol
+  // regarding the user's "imagining them in a room" metaphor - we treat the iframe 
+  // as a black box and send signals to it in every language we know.
+  useEffect(() => {
+    if (!iframeRef.current || !iframeRef.current.contentWindow) return;
+    
+    const win = iframeRef.current.contentWindow;
+    const vol0to100 = Math.floor(musicVolume * 100);
+    const vol0to1 = musicVolume;
+
+    // 1. YouTube Protocol
+    if (musicSource === 'YOUTUBE') {
+      win.postMessage(JSON.stringify({
+        event: 'command',
+        func: 'setVolume',
+        args: [vol0to100]
+      }), '*');
+    }
+
+    // 2. Spotify / SoundCloud / Generic Protocol 
+    // (Sending "setVolume" commands blindly to catch any listeners)
+    const messages = [
+      // Standard PlayerJS
+      { method: 'setVolume', value: vol0to1 },
+      { method: 'setVolume', value: vol0to100 },
+      // Spotify Legacy / SC
+      { command: 'set_volume', args: [vol0to100] },
+      { command: 'setVolume', value: vol0to100 },
+      // Apple Music Kit / Possible variations
+      { event: 'setVolume', volume: vol0to1 },
+      { type: 'setVolume', volume: vol0to1 },
+    ];
+
+    messages.forEach(msg => {
+      // Send as object
+      win.postMessage(msg, '*');
+      // Send as stringified (some parsers require this)
+      win.postMessage(JSON.stringify(msg), '*');
+    });
+
+  }, [musicVolume, musicSource, iframeKey]);
 
   // When user selects a streaming source, activate it
-  const handleStreamingSelect = (newSource: MusicSource) => {
+  const handleStreamingSelect = useCallback((newSource: MusicSource) => {
     // Only change key if source changes (to preserve playback)
-    if (newSource !== musicSource) {
-      setIframeKey((k) => k + 1);
-    }
-    setMusicSource(newSource);
+    setMusicSource((prevSource) => {
+       if (newSource !== prevSource) {
+         setIframeKey((k) => k + 1);
+       }
+       return newSource;
+    });
+    
     setStreamingActive(true);
     setMusicEnabled(true);
     setPlayerHidden(false);
     setShowFirstTimeHelp(false); // Hide help after first action
-  };
+    
+    // Save preference
+    localStorage.setItem('audioWidgetSavedSource', newSource);
+  }, [setMusicSource, setMusicEnabled]);
 
   // Handle drag end - detect swipe to hide
   const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
@@ -462,6 +531,35 @@ export default function AudioWidget() {
 
   return (
     <div className="fixed left-3 bottom-3 z-[60] pointer-events-auto">
+      {/* Return User "Click Play" Helper */}
+      <AnimatePresence>
+        {!open && showReturnUserHint && (
+           <motion.div
+             initial={{ opacity: 0, y: 20, scale: 0.8 }}
+             animate={{ opacity: 1, y: 0, scale: 1 }}
+             exit={{ opacity: 0, scale: 0.8 }}
+             className="absolute left-0 bottom-[calc(100%+12px)] z-50 pointer-events-none"
+           >
+             <div className="relative p-3 rounded-xl bg-gradient-to-br from-blue-600/90 to-blue-800/90 border border-blue-400/50 shadow-xl backdrop-blur-md">
+                <div className="absolute -bottom-2 left-6 w-4 h-4 bg-blue-700/90 rotate-45 border-b border-r border-blue-400/50" />
+                <div className="flex items-center gap-3 whitespace-nowrap">
+                   <motion.div 
+                     animate={{ scale: [1, 1.2, 1] }} 
+                     transition={{ repeat: Infinity, duration: 1.5 }}
+                     className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20"
+                   >
+                      <IconPlayerPlay className="w-5 h-5 text-white fill-white" />
+                   </motion.div>
+                   <div>
+                      <p className="text-sm font-bold text-white">Welcome back!</p>
+                      <p className="text-xs text-blue-100">Tap to resume your music</p>
+                   </div>
+                </div>
+             </div>
+           </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Main Widget Container */}
       <motion.div
         layout
@@ -636,81 +734,54 @@ export default function AudioWidget() {
               transition={{ duration: 0.25 }}
               className="px-3.5 pb-4 overflow-hidden"
             >
-              {/* Tutorial Guide */}
+              {/* Tutorial Guide - Mobile Overlay */}
               <AnimatePresence>
                 {tutorialStep > 0 && tutorialStep <= 4 && (
-                  <motion.div className="mb-4">
-                    <StepGuide
-                      step={tutorialStep}
-                      totalSteps={4}
-                      title={tutorialSteps[tutorialStep - 1].title}
-                      description={tutorialSteps[tutorialStep - 1].description}
-                      onNext={handleTutorialNext}
-                      onSkip={handleTutorialSkip}
-                    />
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="absolute inset-x-3.5 top-2 z-50 sm:hidden"
+                  >
+                    <div className="bg-black/80 backdrop-blur-xl rounded-xl shadow-2xl border border-blue-500/30 overflow-hidden">
+                       <StepGuide
+                        step={tutorialStep}
+                        totalSteps={4}
+                        title={tutorialSteps[tutorialStep - 1].title}
+                        description={tutorialSteps[tutorialStep - 1].description}
+                        onNext={handleTutorialNext}
+                        onSkip={handleTutorialSkip}
+                      />
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-              {/* STREAMING STATUS - Shows at top of menu when streaming is active */}
+              {/* STREAMING STATUS - Compact */}
               {isStreamingSource && streamingEmbedUrl && streamingActive && (
                 <motion.div 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mb-4 -mx-3.5 -mt-0"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mb-3 px-3 py-2 rounded-lg bg-white/5 border border-white/10 flex items-center justify-between"
                 >
-                  <div className={cn(
-                    "relative overflow-hidden border-b px-4 py-3 flex items-center justify-between",
-                    musicSource === 'SPOTIFY' 
-                      ? "bg-gradient-to-r from-green-500/15 to-green-500/5 border-green-500/25"
-                      : musicSource === 'APPLE_MUSIC'
-                      ? "bg-gradient-to-r from-pink-500/15 to-pink-500/5 border-pink-500/25"
-                      : "bg-gradient-to-r from-red-500/15 to-red-500/5 border-red-500/25"
-                  )}>
-                    {/* Shimmer effect */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
-                      animate={{ x: ["-100%", "200%"] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
-                    />
-                    <div className="relative flex items-center gap-2.5">
-                      {sourceIcons[musicSource]}
-                      <div>
-                        <div className="text-[12px] text-white/90 font-semibold flex items-center gap-2">
-                          {sourceLabel[musicSource]}
-                          <div className="flex gap-0.5">
-                            <motion.div 
-                              className="w-1 h-2 bg-current rounded-full opacity-60"
-                              animate={{ scaleY: [1, 1.5, 1] }}
-                              transition={{ duration: 0.5, repeat: Infinity, delay: 0 }}
-                            />
-                            <motion.div 
-                              className="w-1 h-3 bg-current rounded-full opacity-60"
-                              animate={{ scaleY: [1, 0.6, 1] }}
-                              transition={{ duration: 0.5, repeat: Infinity, delay: 0.15 }}
-                            />
-                            <motion.div 
-                              className="w-1 h-2 bg-current rounded-full opacity-60"
-                              animate={{ scaleY: [1, 1.3, 1] }}
-                              transition={{ duration: 0.5, repeat: Infinity, delay: 0.3 }}
-                            />
-                          </div>
+                    <div className="flex items-center gap-2">
+                       {/* Animated bars */}
+                        <div className="flex gap-0.5 h-3 items-end">
+                            <motion.div className="w-0.5 bg-blue-400" animate={{ height: [4, 12, 4] }} transition={{ duration: 0.5, repeat: Infinity }} />
+                            <motion.div className="w-0.5 bg-blue-400" animate={{ height: [10, 5, 10] }} transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }} />
+                            <motion.div className="w-0.5 bg-blue-400" animate={{ height: [6, 10, 6] }} transition={{ duration: 0.5, repeat: Infinity, delay: 0.2 }} />
                         </div>
-                        <div className="text-[10px] text-white/50">Playing • Close menu to see player</div>
-                      </div>
+                        <span className="text-[10px] text-white/80 font-medium">{sourceLabel[musicSource]} Active</span>
                     </div>
-                    <motion.button
+                    <button
                       onClick={() => {
                         SoundEffects.click();
                         setStreamingActive(false);
                         setMusicEnabled(false);
                       }}
-                      className="relative text-[10px] text-white/60 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/10 border border-white/15 font-medium"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      className="text-[9px] text-red-300 hover:text-red-200"
                     >
                       Stop
-                    </motion.button>
-                  </div>
+                    </button>
                 </motion.div>
               )}
 
@@ -818,95 +889,69 @@ export default function AudioWidget() {
                 </AnimatePresence>
               </div>
 
-              {/* Section: Volume Controls */}
+              {/* Section: Volume Controls & Tips */}
               <div className={cn("mb-4 space-y-3", tutorialStep === 4 && "ring-2 ring-blue-400/50 ring-offset-2 ring-offset-black/50 rounded-xl p-2 -m-2")}>
-                <div className="text-[12px] text-white/70 font-medium flex items-center gap-2 mb-2">
-                  <span>🔊</span>
-                  <span>Volume Controls</span>
-                  <motion.span 
-                    className="text-[9px] text-blue-400/70 ml-auto flex items-center gap-1"
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <IconHandFinger className="w-3 h-3" />
-                    Drag to adjust
-                  </motion.span>
-                </div>
-                <Slider
-                  label="🎵 Music"
-                  hint="Background audio level"
-                  value={musicVolume}
-                  onChange={(v) => setMusicVolume(v)}
-                />
-                <Slider
-                  label="✨ Interactions"
-                  hint="Click & hover sounds"
-                  value={sfxVolume}
-                  onChange={(v) => setSfxVolume(v)}
-                />
-                
-                {/* Volume explanation for new users */}
-                {!hasCompletedTutorial && (
-                  <motion.p 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-[9px] text-white/40 leading-relaxed pt-1"
-                  >
-                    💡 <strong>Music</strong> controls background playlist volume. 
-                    <strong>Interactions</strong> controls button click & hover sounds.
-                  </motion.p>
-                )}
-              </div>
-
-              {/* Section: Tips Toggle */}
-              <div className="mb-4 p-3 rounded-xl bg-white/5 border border-white/10">
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0">
-                    <div className="text-[12px] text-white/80 font-medium flex items-center gap-2">
-                      <span>💡</span>
-                      <span>Navbar Tips</span>
-                    </div>
-                    <div className="text-[10px] text-white/45 mt-0.5">Audio hints for navigation</div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-[12px] text-white/70 font-medium flex items-center gap-2">
+                    <span>🔊</span>
+                    <span>Audio & Tips</span>
                   </div>
-                  <motion.button
+                   {/* Navbar Tips Toggle - Merged into header */}
+                   <motion.button
                     onClick={() => {
                       SoundEffects.click();
                       setTipsMuted(!tipsMuted);
                     }}
                     className={cn(
-                      "relative h-10 px-4 rounded-xl border text-[11px] font-medium overflow-hidden",
-                      tipsMuted
-                        ? "bg-blue-500/20 border-blue-400/40 text-blue-200"
-                        : "bg-white/5 border-white/15 text-white/70 hover:bg-white/10"
+                      "flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[9px] font-medium transition-colors",
+                       tipsMuted
+                        ? "bg-white/5 border-white/10 text-white/40 hover:bg-white/10"
+                        : "bg-blue-500/20 border-blue-400/40 text-blue-200"
                     )}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    {!tipsMuted && <BlueShimmer />}
-                    {tipsMuted ? "Muted" : "On"}
+                    <span>Navbar Tips: {tipsMuted ? "OFF" : "ON"}</span>
                   </motion.button>
                 </div>
+                
+                <Slider
+                  label="🎵 Music"
+                  hint={musicSource === 'YOUTUBE' ? "Adjusts player volume" : "Attempts to adjust embed volume"}
+                  value={musicVolume}
+                  onChange={(v) => {
+                     setMusicVolume(v);
+                     // Unmute hack for all types
+                     if (iframeRef.current?.contentWindow) {
+                        const win = iframeRef.current.contentWindow;
+                        if (musicSource === 'YOUTUBE') {
+                          win.postMessage(JSON.stringify({ event: 'command', func: 'unMute' }), '*');
+                        }
+                        // Try generic unmutes
+                        win.postMessage({ method: 'play' }, '*');
+                        win.postMessage({ method: 'setVolume', value: 1 }, '*');
+                     }
+                  }}
+                />
+                <Slider
+                  label="✨ Interactions"
+                  hint="All site sounds (except active music)"
+                  value={sfxVolume}
+                  onChange={(v) => setSfxVolume(v)}
+                />
               </div>
 
-              {/* Section: Music Modal Button */}
-              <motion.button
+              {/* Music Library Link - Merged below volume */}
+               <motion.button
                 onClick={() => {
                   SoundEffects.click();
                   setMusicEnabled(false);
                   setMusicEmbedOpen(true);
                   setOpen(false);
                 }}
-                className={cn(
-                  "relative w-full h-12 rounded-xl flex items-center justify-center gap-2",
-                  "bg-gradient-to-r from-blue-500/15 to-purple-500/15",
-                  "border border-blue-400/25 text-[12px] text-white/80 font-medium",
-                  "hover:from-blue-500/20 hover:to-purple-500/20 transition-all overflow-hidden"
-                )}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                className="w-full py-2 flex items-center justify-center gap-1.5 text-[10px] text-blue-300/80 hover:text-blue-200 hover:bg-white/5 rounded-lg transition-colors border border-transparent hover:border-white/5"
               >
-                <BlueShimmer />
-                <IconMusic className="w-4 h-4 text-blue-300" />
+                <IconMusic className="w-3 h-3" />
                 <span>Open Full Music Library</span>
               </motion.button>
 
@@ -1026,6 +1071,27 @@ export default function AudioWidget() {
         </AnimatePresence>
       </motion.div>
 
+      {/* Side Tutorial Guide - Floating to the right of menu (Desktop Only) */}
+      <AnimatePresence>
+        {open && tutorialStep > 0 && tutorialStep <= 4 && (
+          <motion.div 
+            initial={{ opacity: 0, x: -20, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -20, scale: 0.95 }}
+            className="hidden sm:block absolute left-[calc(100%+16px)] top-0 w-[260px] z-[55]"
+          >
+            <StepGuide
+              step={tutorialStep}
+              totalSteps={4}
+              title={tutorialSteps[tutorialStep - 1].title}
+              description={tutorialSteps[tutorialStep - 1].description}
+              onNext={handleTutorialNext}
+              onSkip={handleTutorialSkip}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* FLOATING SWIPEABLE PLAYER - Always rendered when streaming (never destroyed to preserve playback) */}
       {typeof document !== "undefined" &&
         createPortal(
@@ -1037,109 +1103,77 @@ export default function AudioWidget() {
                   ref={miniPlayerRef}
                   initial={{ x: -320 }}
                   animate={{ 
-                    x: open ? -320 : (playerHidden ? -280 : 0),
-                    opacity: open ? 0 : 1,
+                    x: open ? -320 : (playerHidden ? -260 : 0),
+                    opacity: open ? 0 : 0.95,
                   }}
+                  whileHover={{ opacity: 1 }}
                   exit={{ x: -320, opacity: 0 }}
                   transition={{ type: "spring", damping: 25, stiffness: 300 }}
                   className="fixed z-[9999] pointer-events-auto"
                   style={{ 
                     left: 0, 
-                    bottom: 140,
+                    bottom: 110,
                     pointerEvents: open ? 'none' : 'auto',
                   }}
                 >
                   <div className={cn(
-                    "relative rounded-r-2xl border-r-2 border-y-2 backdrop-blur-2xl shadow-2xl overflow-hidden flex",
-                    "bg-gradient-to-br from-black/95 to-black/90",
+                    "relative rounded-r-xl border-r border-y backdrop-blur-md shadow-xl overflow-hidden flex",
+                    "bg-black/80",
                     musicSource === 'SPOTIFY' 
-                      ? "border-green-400/40"
+                      ? "border-green-500/30"
                       : musicSource === 'APPLE_MUSIC'
-                      ? "border-pink-400/40"
-                      : "border-red-400/40"
+                      ? "border-pink-500/30"
+                      : "border-red-500/30"
                   )}>
                     {/* Glow effect */}
                     <div className={cn(
-                      "absolute inset-0 opacity-30 pointer-events-none",
+                      "absolute inset-0 opacity-10 pointer-events-none",
                       musicSource === 'SPOTIFY' 
-                        ? "bg-gradient-to-r from-green-500/20 to-transparent"
+                        ? "bg-green-500"
                         : musicSource === 'APPLE_MUSIC'
-                        ? "bg-gradient-to-r from-pink-500/20 to-transparent"
-                        : "bg-gradient-to-r from-red-500/20 to-transparent"
+                        ? "bg-pink-500"
+                        : "bg-red-500"
                     )} />
 
                     {/* Main player content */}
                     <div className="flex-1 relative">
-                      {/* Header with enhanced styling */}
+                      {/* Header Compact */}
                       <div className={cn(
-                        "relative flex items-center justify-between px-3.5 py-2.5 border-b overflow-hidden",
-                        musicSource === 'SPOTIFY' 
-                          ? "bg-gradient-to-r from-green-500/20 to-green-500/5 border-green-500/25"
-                          : musicSource === 'APPLE_MUSIC'
-                          ? "bg-gradient-to-r from-pink-500/20 to-pink-500/5 border-pink-500/25"
-                          : "bg-gradient-to-r from-red-500/20 to-red-500/5 border-red-500/25"
+                        "relative flex items-center justify-between px-3 py-2 border-b border-white/5",
                       )}>
-                        {/* Shimmer effect */}
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
-                          animate={{ x: ["-100%", "200%"] }}
-                          transition={{ duration: 2.5, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
-                        />
-                        <div className="relative flex items-center gap-2.5">
+                        <div className="relative flex items-center gap-2">
                           <motion.div
                             animate={{ rotate: [0, 360] }}
-                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                            className="w-6 h-6 flex items-center justify-center"
+                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            className="w-4 h-4 flex items-center justify-center opacity-80"
                           >
                             {sourceIcons[musicSource]}
                           </motion.div>
-                          <div>
-                            <span className="text-[12px] text-white/90 font-semibold block">
-                              {sourceLabel[musicSource]}
-                            </span>
-                            <div className="flex items-center gap-1">
-                              <span className="text-[9px] text-white/50">Now Playing</span>
+                          
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-white/90 font-medium">{sourceLabel[musicSource]}</span>
                               <div className="flex gap-0.5 ml-1">
-                                <motion.div 
-                                  className="w-1 h-1.5 bg-current rounded-full opacity-60"
-                                  animate={{ scaleY: [1, 2, 1] }}
-                                  transition={{ duration: 0.4, repeat: Infinity, delay: 0 }}
-                                />
-                                <motion.div 
-                                  className="w-1 h-2.5 bg-current rounded-full opacity-60"
-                                  animate={{ scaleY: [1, 0.5, 1] }}
-                                  transition={{ duration: 0.4, repeat: Infinity, delay: 0.1 }}
-                                />
-                                <motion.div 
-                                  className="w-1 h-2 bg-current rounded-full opacity-60"
-                                  animate={{ scaleY: [1, 1.5, 1] }}
-                                  transition={{ duration: 0.4, repeat: Infinity, delay: 0.2 }}
-                                />
+                                <motion.div className="w-0.5 h-1.5 bg-blue-400 rounded-full" animate={{ scaleY: [1, 1.5, 1] }} transition={{ duration: 0.5, repeat: Infinity }} />
+                                <motion.div className="w-0.5 h-2 bg-blue-400 rounded-full" animate={{ scaleY: [1, 0.6, 1] }} transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }} />
                               </div>
                             </div>
-                          </div>
                         </div>
-                        <div className="relative flex items-center gap-1.5">
-                          {/* Stop button */}
-                          <motion.button
+                         {/* Stop button */}
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               SoundEffects.click();
                               setStreamingActive(false);
                               setMusicEnabled(false);
                             }}
-                            className="h-7 w-7 rounded-lg flex items-center justify-center text-white/50 hover:text-white hover:bg-white/15 border border-white/10"
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            title="Stop playback"
+                            className="w-5 h-5 flex items-center justify-center text-white/40 hover:text-white transition-colors"
                           >
-                            <span className="text-[11px]">✕</span>
-                          </motion.button>
-                        </div>
+                            <span className="text-[10px]">✕</span>
+                          </button>
                       </div>
                       
-                      {/* Embed player */}
-                      <div className="relative" style={{ width: '280px', height: musicSource === 'YOUTUBE' ? '158px' : '152px' }}>
+                      {/* Embed player - Scale down slightly for less intrusion */}
+                      <div className="relative origin-top-left transition-transform duration-300 scale-95 hover:scale-100" style={{ width: '260px', height: musicSource === 'YOUTUBE' ? '146px' : '140px' }}>
                         <iframe
                           ref={iframeRef}
                           key={`streaming-persistent-${musicSource}-${iframeKey}`}
@@ -1147,132 +1181,29 @@ export default function AudioWidget() {
                           src={streamingEmbedUrl}
                           width="100%"
                           height="100%"
-                          allow="autoplay; encrypted-media; fullscreen; picture-in-picture; clipboard-write"
                           loading="eager"
-                          style={{ 
-                            border: 0,
-                            display: 'block',
-                          }}
+                          style={{ border: 0, display: 'block' }}
                         />
-                        {/* First-time hint overlay - more helpful */}
-                        {!hasCompletedTutorial && (
-                          <motion.div
-                            initial={{ opacity: 1 }}
-                            animate={{ opacity: 0 }}
-                            transition={{ delay: 6, duration: 0.5 }}
-                            className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center bg-black/60"
-                          >
-                            <motion.div 
-                              className="relative flex flex-col items-center gap-2 text-center bg-black/80 px-4 py-3 rounded-xl border border-blue-400/40 overflow-hidden max-w-[90%]"
-                              animate={{ scale: [1, 1.02, 1] }}
-                              transition={{ duration: 2, repeat: Infinity }}
-                            >
-                              <BlueShimmer />
-                              <motion.div
-                                animate={{ y: [0, -5, 0] }}
-                                transition={{ duration: 1, repeat: Infinity }}
-                              >
-                                <IconHandFinger className="w-6 h-6 text-blue-300" />
-                              </motion.div>
-                              <div>
-                                <p className="text-[12px] text-white font-medium mb-0.5">Click play inside the player</p>
-                                <p className="text-[10px] text-white/50">The play button is in the embed above</p>
-                              </div>
-                            </motion.div>
-                          </motion.div>
-                        )}
-                      </div>
-                      
-                      {/* Footer with tips - more informative */}
-                      <div className="relative px-3 py-2.5 border-t border-white/5 bg-white/[0.02] overflow-hidden">
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/5 to-transparent"
-                          animate={{ x: ["-100%", "200%"] }}
-                          transition={{ duration: 3, repeat: Infinity, ease: "linear", repeatDelay: 2 }}
-                        />
-                        <div className="relative">
-                          {/* Main tip with animated arrow */}
-                          <div className="flex items-center justify-center gap-2 mb-1.5">
-                            <motion.div
-                              animate={{ x: [-3, 0, -3] }}
-                              transition={{ duration: 1, repeat: Infinity }}
-                              className="text-blue-300/70"
-                            >
-                              <IconArrowLeft className="w-3.5 h-3.5" />
-                            </motion.div>
-                            <span className="text-[10px] text-white/60 font-medium">Tap arrow to hide player</span>
-                          </div>
-                          {/* Sub tip */}
-                          <p className="text-[9px] text-white/40 text-center flex items-center justify-center gap-1.5">
-                            <span>🎵</span>
-                            <span>Your music keeps playing when hidden!</span>
-                          </p>
-                        </div>
+                         {/* Play hint overlay */}
+                         {!hasCompletedTutorial && <div className="absolute inset-0 pointer-events-none bg-transparent" /> }
                       </div>
                     </div>
 
-                    {/* Edge toggle button - always visible on the right side */}
+                    {/* Edge toggle button - Slim profile */}
                     <motion.button
                       onClick={() => {
                         SoundEffects.click();
                         setPlayerHidden(!playerHidden);
                       }}
-                      className={cn(
-                        "relative w-9 flex flex-col items-center justify-center gap-2 border-l transition-colors overflow-hidden",
-                        musicSource === 'SPOTIFY' 
-                          ? "bg-gradient-to-b from-green-500/25 to-green-500/10 border-green-500/25 hover:from-green-500/35 hover:to-green-500/20"
-                          : musicSource === 'APPLE_MUSIC'
-                          ? "bg-gradient-to-b from-pink-500/25 to-pink-500/10 border-pink-500/25 hover:from-pink-500/35 hover:to-pink-500/20"
-                          : "bg-gradient-to-b from-red-500/25 to-red-500/10 border-red-500/25 hover:from-red-500/35 hover:to-red-500/20"
-                      )}
-                      whileHover={{ width: 44 }}
-                      whileTap={{ scale: 0.95 }}
-                      title={playerHidden ? "Tap to show player" : "Tap to hide player"}
+                      className="relative w-6 flex flex-col items-center justify-center border-l border-white/5 hover:bg-white/5 transition-colors"
+                      title={playerHidden ? "Show" : "Hide"}
                     >
-                      {/* Shimmer */}
                       <motion.div
-                        className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-transparent"
-                        animate={{ y: ["-100%", "200%"] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
-                      />
-                      
-                      {/* Arrow with animation */}
-                      <motion.div
-                        animate={{ x: playerHidden ? [0, 4, 0] : [0, -4, 0] }}
-                        transition={{ duration: 0.8, repeat: Infinity }}
-                        className="text-[14px] text-white/90"
+                        animate={{ rotate: playerHidden ? 0 : 180 }}
+                        className="text-[10px] text-white/50"
                       >
-                        {playerHidden ? "▶" : "◀"}
+                         <IconChevronUp className="w-3 h-3 rotate-90" />
                       </motion.div>
-                      
-                      {/* Animated equalizer bars */}
-                      <div className="flex flex-col gap-0.5">
-                        <motion.div 
-                          className="w-1.5 h-2 bg-current rounded-full opacity-70"
-                          animate={{ scaleY: [1, 1.5, 1] }}
-                          transition={{ duration: 0.5, repeat: Infinity }}
-                        />
-                        <motion.div 
-                          className="w-1.5 h-3 bg-current rounded-full opacity-70"
-                          animate={{ scaleY: [1, 0.6, 1] }}
-                          transition={{ duration: 0.5, repeat: Infinity, delay: 0.15 }}
-                        />
-                        <motion.div 
-                          className="w-1.5 h-2 bg-current rounded-full opacity-70"
-                          animate={{ scaleY: [1, 1.3, 1] }}
-                          transition={{ duration: 0.5, repeat: Infinity, delay: 0.3 }}
-                        />
-                      </div>
-                      
-                      {/* Vertical label */}
-                      <motion.span 
-                        className="text-[9px] text-white/70 font-bold tracking-wider" 
-                        style={{ writingMode: 'vertical-rl' }}
-                        animate={{ opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        {playerHidden ? "TAP" : "HIDE"}
-                      </motion.span>
                     </motion.button>
                   </div>
                 </motion.div>
@@ -1296,4 +1227,6 @@ export default function AudioWidget() {
         )}
     </div>
   );
-}
+});
+
+export default AudioWidget;
