@@ -80,6 +80,13 @@ export function useWanderingGame({ isMobile }: WanderingGameOptions) {
   const energyIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const gameStartTimeRef = useRef<number>(0);
   const fleeStartTimeRef = useRef<number>(0);
+  const rafPointerRef = useRef<number | null>(null);
+  const latestPointerRef = useRef<{ x: number; y: number } | null>(null);
+  const isVisibleRef = useRef(true);
+  const wanderPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const energyRef = useRef(100);
+  const speedMultiplierRef = useRef(1);
+  const movementStyleRef = useRef<MovementStyle>("float");
 
   const [isWandering, setIsWandering] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -104,9 +111,45 @@ export function useWanderingGame({ isMobile }: WanderingGameOptions) {
   const [touchPosition, setTouchPosition] = useState<{ x: number; y: number } | null>(null);
   const [isTouching, setIsTouching] = useState(false);
 
+  // Pause work when tab is not visible
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const onVis = () => {
+      isVisibleRef.current = document.visibilityState === "visible";
+    };
+    onVis();
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
   // Load stats on mount
   useEffect(() => {
     setGameStats(loadStats());
+  }, []);
+
+  useEffect(() => {
+    wanderPositionRef.current = wanderPosition;
+  }, [wanderPosition]);
+
+  useEffect(() => {
+    energyRef.current = energy;
+  }, [energy]);
+
+  useEffect(() => {
+    speedMultiplierRef.current = speedMultiplier;
+  }, [speedMultiplier]);
+
+  useEffect(() => {
+    movementStyleRef.current = movementStyle;
+  }, [movementStyle]);
+
+  useEffect(() => {
+    return () => {
+      if (rafPointerRef.current != null && typeof window !== "undefined") {
+        window.cancelAnimationFrame(rafPointerRef.current);
+      }
+    };
   }, []);
 
   // Score tracking - increments while wandering
@@ -121,17 +164,22 @@ export function useWanderingGame({ isMobile }: WanderingGameOptions) {
 
     gameStartTimeRef.current = Date.now();
 
+    // 4fps score updates are plenty (cuts rerenders significantly)
     scoreIntervalRef.current = setInterval(() => {
+      if (!isVisibleRef.current) return;
       const elapsedSeconds = Math.floor((Date.now() - gameStartTimeRef.current) / 1000);
       const energyBonus = Math.max(0.5, energy / 100);
       const comboBonus = 1 + (combo * 0.1);
       const score = Math.floor(elapsedSeconds * energyBonus * comboBonus);
-      
-      setGameStats(prev => ({
-        ...prev,
-        currentScore: score,
-      }));
-    }, 100);
+
+      setGameStats(prev => {
+        if (prev.currentScore === score) return prev;
+        return {
+          ...prev,
+          currentScore: score,
+        };
+      });
+    }, 250);
 
     return () => {
       if (scoreIntervalRef.current) {
@@ -154,6 +202,7 @@ export function useWanderingGame({ isMobile }: WanderingGameOptions) {
     const depletionRate = isMobile ? 2 : 1;
     
     energyIntervalRef.current = setInterval(() => {
+      if (!isVisibleRef.current) return;
       setEnergy(prev => {
         const newEnergy = Math.max(5, prev - depletionRate);
         
@@ -238,6 +287,22 @@ export function useWanderingGame({ isMobile }: WanderingGameOptions) {
     if (isMobile || !isWandering || isFleeing || isReturning) return;
 
     const handleMouseMove = (e: MouseEvent) => {
+      if (!isVisibleRef.current) return;
+
+      latestPointerRef.current = { x: e.clientX, y: e.clientY };
+      if (rafPointerRef.current != null) return;
+
+      rafPointerRef.current = window.requestAnimationFrame(() => {
+        rafPointerRef.current = null;
+        const pt = latestPointerRef.current;
+        if (!pt) return;
+
+        // Store position for return behavior / touch indicator
+        setTouchPosition(prev => {
+          if (prev && Math.abs(prev.x - pt.x) < 2 && Math.abs(prev.y - pt.y) < 2) return prev;
+          return { x: pt.x, y: pt.y };
+        });
+
       const player = miniPlayerRef.current;
       if (!player) return;
 
@@ -255,31 +320,31 @@ export function useWanderingGame({ isMobile }: WanderingGameOptions) {
       const near = distance < nearPadding;
       const chasing = distance < chasePadding && distance >= nearPadding;
 
-      setIsNearPlayer(near);
+        setIsNearPlayer(prev => (prev === near ? prev : near));
 
       if (near && !isFleeing && energy > 20) {
         // Trigger flee when cursor gets too close
         const fleeX = dx > 0 ? -1 : 1;
         const fleeY = dy > 0 ? -1 : 1;
-        setFleeDirection({ x: fleeX, y: fleeY });
+        setFleeDirection(prev => (prev.x === fleeX && prev.y === fleeY ? prev : { x: fleeX, y: fleeY }));
         triggerFlee();
       } else if (chasing && !near) {
         const fleeX = dx > 0 ? -1 : 1;
         const fleeY = dy > 0 ? -1 : 1;
-        setFleeDirection({ x: fleeX, y: fleeY });
+        setFleeDirection(prev => (prev.x === fleeX && prev.y === fleeY ? prev : { x: fleeX, y: fleeY }));
         
         // Speed up based on proximity and energy
         const proximityFactor = 1 - (distance / chasePadding);
         const energyFactor = energy / 100;
-        setSpeedMultiplier(1 + proximityFactor * energyFactor);
+        const nextSpeed = 1 + proximityFactor * energyFactor;
+        setSpeedMultiplier(prev => (Math.abs(prev - nextSpeed) < 0.05 ? prev : nextSpeed));
       } else if (!near) {
         // Reset speed based on energy
         const baseSpeed = energy > 50 ? 1 : energy > 25 ? 0.6 : 0.4;
-        setSpeedMultiplier(baseSpeed);
+        setSpeedMultiplier(prev => (Math.abs(prev - baseSpeed) < 0.05 ? prev : baseSpeed));
       }
 
-      // Store position for return behavior
-      setTouchPosition({ x: e.clientX, y: e.clientY });
+      });
     };
 
     window.addEventListener("mousemove", handleMouseMove);
@@ -301,6 +366,8 @@ export function useWanderingGame({ isMobile }: WanderingGameOptions) {
     const handleTouchMove = (e: TouchEvent) => {
       const touch = e.touches[0];
       if (!touch) return;
+
+      if (!isVisibleRef.current) return;
       
       setTouchPosition({ x: touch.clientX, y: touch.clientY });
 
@@ -318,12 +385,12 @@ export function useWanderingGame({ isMobile }: WanderingGameOptions) {
       const nearPadding = energy > 50 ? 80 : energy > 25 ? 120 : 160;
       const near = distance < nearPadding;
 
-      setIsNearPlayer(near);
+      setIsNearPlayer(prev => (prev === near ? prev : near));
 
       if (near && !isFleeing && energy > 15) {
         const fleeX = dx > 0 ? -1 : 1;
         const fleeY = dy > 0 ? -1 : 1;
-        setFleeDirection({ x: fleeX, y: fleeY });
+        setFleeDirection(prev => (prev.x === fleeX && prev.y === fleeY ? prev : { x: fleeX, y: fleeY }));
         triggerFlee();
       }
     };
@@ -382,10 +449,10 @@ export function useWanderingGame({ isMobile }: WanderingGameOptions) {
       },
       zigzag: () => {
         const step = 80 + Math.random() * 60;
-        const prevX = wanderPosition.x || 100;
+        const prevX = wanderPositionRef.current.x || 100;
         return {
           x: prevX + (Math.random() > 0.5 ? step : -step) * fleeDirection.x,
-          y: wanderPosition.y + (Math.random() > 0.5 ? -40 : 40),
+          y: wanderPositionRef.current.y + (Math.random() > 0.5 ? -40 : 40),
         };
       },
       bounce: () => {
@@ -409,18 +476,18 @@ export function useWanderingGame({ isMobile }: WanderingGameOptions) {
       }),
       tired: () => ({
         // Slow, small movements when tired
-        x: wanderPosition.x + (Math.random() - 0.5) * 40,
-        y: wanderPosition.y + (Math.random() - 0.5) * 20,
+        x: wanderPositionRef.current.x + (Math.random() - 0.5) * 40,
+        y: wanderPositionRef.current.y + (Math.random() - 0.5) * 20,
       }),
       sleepy: () => ({
         // Barely moving, slight wobble
-        x: wanderPosition.x + (Math.random() - 0.5) * 15,
-        y: wanderPosition.y + (Math.random() - 0.5) * 10,
+        x: wanderPositionRef.current.x + (Math.random() - 0.5) * 15,
+        y: wanderPositionRef.current.y + (Math.random() - 0.5) * 10,
       }),
     };
 
     const getRandomPosition = () => {
-      const pos = movementPatterns[movementStyle]();
+      const pos = movementPatterns[movementStyleRef.current]();
       const clampedX = Math.max(0, Math.min(pos.x, window.innerWidth - 300));
       const clampedY = Math.max(-window.innerHeight + 300, Math.min(pos.y, 0));
       return { x: clampedX, y: clampedY };
@@ -428,11 +495,12 @@ export function useWanderingGame({ isMobile }: WanderingGameOptions) {
 
     const pickRandomStyle = (): MovementStyle => {
       // Style selection based on energy
-      if (energy <= 15) return "sleepy";
-      if (energy <= 35) return "tired";
+      const currentEnergy = energyRef.current;
+      if (currentEnergy <= 15) return "sleepy";
+      if (currentEnergy <= 35) return "tired";
       
       const styles: MovementStyle[] = ["float", "zigzag", "bounce", "spiral", "dash"];
-      if (speedMultiplier > 1.2) {
+      if (speedMultiplierRef.current > 1.2) {
         return Math.random() > 0.4 ? "dash" : styles[Math.floor(Math.random() * styles.length)];
       }
       return styles[Math.floor(Math.random() * styles.length)];
@@ -447,20 +515,20 @@ export function useWanderingGame({ isMobile }: WanderingGameOptions) {
 
       setMorphPhase("morphing-out");
 
-      const energyFactor = Math.max(0.3, energy / 100);
-      const morphOutTime = Math.max(200, 400 / (speedMultiplier * energyFactor));
+      const energyFactor = Math.max(0.3, energyRef.current / 100);
+      const morphOutTime = Math.max(200, 400 / (speedMultiplierRef.current * energyFactor));
       
       setTimeout(() => {
         if (isHovering || isNearPlayer || isFleeing || isReturning) return;
         setMorphPhase("moving");
         setWanderPosition(getRandomPosition());
 
-        const moveTime = Math.max(300, 700 / (speedMultiplier * energyFactor));
+        const moveTime = Math.max(300, 700 / (speedMultiplierRef.current * energyFactor));
         setTimeout(() => {
           if (isHovering || isNearPlayer || isFleeing || isReturning) return;
           setMorphPhase("morphing-in");
 
-          const morphInTime = Math.max(200, 500 / (speedMultiplier * energyFactor));
+          const morphInTime = Math.max(200, 500 / (speedMultiplierRef.current * energyFactor));
           setTimeout(() => {
             if (isHovering || isNearPlayer || isFleeing || isReturning) return;
             setMorphPhase("idle");
@@ -473,18 +541,20 @@ export function useWanderingGame({ isMobile }: WanderingGameOptions) {
 
     // Interval based on energy - tired = slower intervals
     const baseInterval = isMobile ? 2500 : 2800;
-    const energyFactor = Math.max(0.3, energy / 100);
-    const intervalTime = Math.max(800, baseInterval / (speedMultiplier * energyFactor));
+    const energyFactor = Math.max(0.3, energyRef.current / 100);
+    const intervalTime = Math.max(800, baseInterval / (speedMultiplierRef.current * energyFactor));
     
     wanderIntervalRef.current = setInterval(() => {
+      if (!isVisibleRef.current) return;
       if (!isHovering && !isNearPlayer && !isFleeing && !isReturning) {
         runGenieSequence();
       }
     }, intervalTime);
 
     // Auto-stop when energy is critically low
-    const autoStopTime = energy <= 15 ? 3000 : (isMobile ? 8000 : 25000);
+    const autoStopTime = energyRef.current <= 15 ? 3000 : (isMobile ? 8000 : 25000);
     const autoStopTimer = setTimeout(() => {
+      if (!isVisibleRef.current) return;
       if (isHovering || isNearPlayer) return;
       
       setMovementStyle("sleepy");
@@ -496,16 +566,17 @@ export function useWanderingGame({ isMobile }: WanderingGameOptions) {
         
         setTimeout(() => {
           // Game ended - update stats
-          const finalScore = gameStats.currentScore;
-          const newStats = {
-            ...gameStats,
-            highScore: Math.max(gameStats.highScore, finalScore),
-            gamesPlayed: gameStats.gamesPlayed + 1,
-            longestFlee: Math.max(gameStats.longestFlee, lastFleeTime),
-          };
-          
-          setGameStats(newStats);
-          saveStats(newStats);
+          setGameStats(prev => {
+            const finalScore = prev.currentScore;
+            const newStats = {
+              ...prev,
+              highScore: Math.max(prev.highScore, finalScore),
+              gamesPlayed: prev.gamesPlayed + 1,
+              longestFlee: Math.max(prev.longestFlee, lastFleeTime),
+            };
+            saveStats(newStats);
+            return newStats;
+          });
           
           setIsWandering(false);
           setHasInteracted(true);
@@ -522,9 +593,7 @@ export function useWanderingGame({ isMobile }: WanderingGameOptions) {
       clearTimeout(autoStopTimer);
     };
   }, [
-    energy,
     fleeDirection,
-    gameStats,
     hasInteracted,
     isFleeing,
     isHovering,
@@ -533,10 +602,6 @@ export function useWanderingGame({ isMobile }: WanderingGameOptions) {
     isReturning,
     isWandering,
     lastFleeTime,
-    movementStyle,
-    speedMultiplier,
-    wanderPosition.x,
-    wanderPosition.y,
   ]);
 
   // Handle catching the player

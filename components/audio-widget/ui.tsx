@@ -152,6 +152,7 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
   isVisible = true,
   onPause,
   onStop,
+  variant = "panel",
 }: {
   energy?: number;
   score?: number;
@@ -164,6 +165,7 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
   isVisible?: boolean;
   onPause?: () => void;
   onStop?: () => void;
+  variant?: "panel" | "attached";
 }) {
   const getEnergyGradient = useCallback(() => {
     if (energy > 70) return "from-blue-400 to-purple-500";
@@ -178,12 +180,17 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
       initial={{ opacity: 0, y: 10, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 5, scale: 0.95 }}
-      className="relative overflow-hidden rounded-xl bg-black/80 border border-purple-500/30 backdrop-blur-sm shadow-lg"
+      className={cn(
+        "relative overflow-hidden rounded-xl border backdrop-blur-sm shadow-lg",
+        variant === "attached"
+          ? "bg-black/85 border-white/15 shadow-2xl"
+          : "bg-black/80 border-purple-500/30"
+      )}
     >
       {/* Shimmer overlay */}
-      <GameShimmer colors="purple" speed="normal" />
+      {variant !== "attached" && <GameShimmer colors="purple" speed="normal" />}
       
-      <div className="relative p-2 space-y-1.5">
+      <div className={cn("relative space-y-1.5", variant === "attached" ? "p-2" : "p-2")}>
         {/* Top row - score and controls */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -217,8 +224,8 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
           <div className="flex items-center gap-1">
             {score >= highScore && score > 0 && (
               <motion.div
-                animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
-                transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
+                animate={variant === "attached" ? {} : { rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
+                transition={variant === "attached" ? { duration: 0 } : { duration: 1, repeat: Infinity, repeatDelay: 2 }}
               >
                 <IconTrophy className="w-3.5 h-3.5 text-yellow-400" />
               </motion.div>
@@ -243,7 +250,7 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
             transition={{ type: "spring", stiffness: 100, damping: 20 }}
           />
           {/* Shimmer on energy bar */}
-          {energy > 50 && (
+          {variant !== "attached" && energy > 50 && (
             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
               animate={{ x: ["-100%", "200%"] }}

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState, useCallback, memo, useRef } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence, useDragControls, PanInfo, useMotionValue, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useDragControls, PanInfo, useMotionValue, useTransform, useReducedMotion } from "framer-motion";
 import {
   IconMusic,
   IconPlayerPlay,
@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { useAudioSettings, type MusicSource, STREAMING_SOURCES } from "@/contexts/AudioSettingsProvider";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { MusicEmbedModal } from "@/components/MusicEmbedModal";
-import { BlueShimmer, Slider, GameHUD, TouchIndicator, GameOverScreen, EnergyBar, CompactGameHUD, BoredPopup, GameControls, GameShimmer, SparkleBurst, FloatingParticles, PulseRing, ConfettiBurst, BounceDots, StatusBadge } from "@/components/audio-widget/ui";
+import { BlueShimmer, Slider, TouchIndicator, GameOverScreen, EnergyBar, CompactGameHUD, BoredPopup, GameControls, GameShimmer, SparkleBurst, FloatingParticles, PulseRing, ConfettiBurst, BounceDots, StatusBadge } from "@/components/audio-widget/ui";
 import { useWanderingGame } from "@/components/audio-widget/useWanderingGame";
 
 const sourceLabel: Record<MusicSource, string> = {
@@ -47,6 +47,7 @@ const sourceIcons: Partial<Record<MusicSource, React.ReactNode>> = {
 
 
 const AudioWidget = React.memo(function AudioWidget() {
+  const prefersReducedMotion = useReducedMotion();
   const {
     musicEnabled,
     setMusicEnabled,
@@ -391,22 +392,6 @@ const AudioWidget = React.memo(function AudioWidget() {
 
   return (
     <>
-      {/* Game HUD - Shows during active wandering game */}
-      <AnimatePresence>
-        {isWandering && !open && (
-          <GameHUD
-            energy={energy}
-            score={gameStats.currentScore}
-            combo={combo}
-            highScore={gameStats.highScore}
-            isFleeing={isFleeing}
-            isReturning={isReturning}
-            tirednessLevel={getTirednessLevel()}
-            isMobile={isMobile}
-          />
-        )}
-      </AnimatePresence>
-
       {/* Mobile touch indicator */}
       <AnimatePresence>
         {isMobile && isWandering && !open && (
@@ -789,7 +774,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                     {/* Game Stats Section - Shows high score and catch count */}
                     {gameStats.gamesPlayed > 0 && (
                       <div className="mb-2 p-2 rounded-lg bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-400/20 relative overflow-hidden">
-                        <GameShimmer color="purple" />
+                        <GameShimmer colors="purple" />
                         <div className="flex items-center justify-between text-[10px] mb-1.5">
                           <div className="flex items-center gap-2">
                             <span className="text-white/60 font-medium">🎮 Catch Game</span>
@@ -813,17 +798,17 @@ const AudioWidget = React.memo(function AudioWidget() {
                         </div>
                         <div className="grid grid-cols-3 gap-1.5">
                           <div className="text-center p-1.5 rounded bg-white/5 relative overflow-hidden">
-                            <GameShimmer color="blue" speed="slow" />
+                            <GameShimmer colors="blue" speed="slow" />
                             <div className="text-[9px] text-white/40">High Score</div>
                             <div className="text-sm font-bold text-yellow-400 tabular-nums">{gameStats.highScore}</div>
                           </div>
                           <div className="text-center p-1.5 rounded bg-white/5 relative overflow-hidden">
-                            <GameShimmer color="red" speed="slow" />
+                            <GameShimmer colors="red" speed="slow" />
                             <div className="text-[9px] text-white/40">Catches</div>
                             <div className="text-sm font-bold text-green-400 tabular-nums">{gameStats.totalCatches}</div>
                           </div>
                           <div className="text-center p-1.5 rounded bg-white/5 relative overflow-hidden">
-                            <GameShimmer color="purple" speed="slow" />
+                            <GameShimmer colors="purple" speed="slow" />
                             <div className="text-[9px] text-white/40">Games</div>
                             <div className="text-sm font-bold text-blue-400 tabular-nums">{gameStats.gamesPlayed}</div>
                           </div>
@@ -842,7 +827,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                     {/* Quick game start if no games played yet */}
                     {gameStats.gamesPlayed === 0 && streamingActive && (
                       <div className="mb-2 p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-400/20 relative overflow-hidden">
-                        <GameShimmer color="blue" />
+                        <GameShimmer colors="blue" />
                         <div className="text-[10px] text-white/60 mb-1.5 text-center">🎮 Try the Catch Game!</div>
                         <GameControls
                           isPlaying={isWandering}
@@ -939,36 +924,36 @@ const AudioWidget = React.memo(function AudioWidget() {
                     y: isWandering ? wanderPosition.y : 0,
                     opacity: open ? 0 : 1,
                     // Enhanced game-style morph effects based on phase, movement style, and energy
-                    scaleX: (isHovering || isNearPlayer) ? 1 : (
-                      isFleeing ? 0.3 :
+                    scaleX: prefersReducedMotion ? 1 : (isHovering || isNearPlayer) ? 1 : (
+                      isFleeing ? 0.45 :
                       isReturning ? 1.1 :
                       morphPhase === 'morphing-out' ? (movementStyle === 'dash' ? 0.2 : movementStyle === 'tired' ? 0.7 : movementStyle === 'sleepy' ? 0.9 : 0.3) : 
                       morphPhase === 'moving' ? (movementStyle === 'dash' ? 1.4 : movementStyle === 'bounce' ? 0.9 : movementStyle === 'tired' ? 0.95 : movementStyle === 'sleepy' ? 0.98 : 0.6) : 
                       morphPhase === 'morphing-in' ? 1.1 : 1
                     ),
-                    scaleY: (isHovering || isNearPlayer) ? 1 : (
-                      isFleeing ? 1.6 :
+                    scaleY: prefersReducedMotion ? 1 : (isHovering || isNearPlayer) ? 1 : (
+                      isFleeing ? 1.35 :
                       isReturning ? 0.9 :
                       morphPhase === 'morphing-out' ? (movementStyle === 'dash' ? 0.6 : movementStyle === 'tired' ? 1.1 : movementStyle === 'sleepy' ? 1.02 : 1.5) : 
                       morphPhase === 'moving' ? (movementStyle === 'dash' ? 0.7 : movementStyle === 'bounce' ? 1.2 : movementStyle === 'tired' ? 1.02 : movementStyle === 'sleepy' ? 1.01 : 0.8) : 
                       morphPhase === 'morphing-in' ? 0.95 : 1
                     ),
-                    rotate: (isHovering || isNearPlayer) ? 0 : (
-                      isFleeing ? 25 * fleeDirection.x :
+                    rotate: prefersReducedMotion ? 0 : (isHovering || isNearPlayer) ? 0 : (
+                      isFleeing ? 14 * fleeDirection.x :
                       isReturning ? -10 * fleeDirection.x :
                       morphPhase === 'morphing-out' ? (movementStyle === 'spiral' ? 25 : movementStyle === 'tired' ? 3 : movementStyle === 'sleepy' ? 1 : 8) * fleeDirection.x : 
                       morphPhase === 'moving' ? (movementStyle === 'zigzag' ? 15 : movementStyle === 'spiral' ? -15 : movementStyle === 'tired' ? 2 : movementStyle === 'sleepy' ? 0.5 : -5) * fleeDirection.x : 
                       morphPhase === 'morphing-in' ? 3 : 
                       (isWandering && morphPhase === 'idle' ? [0, 3 * speedMultiplier, -3 * speedMultiplier, 0] : 0)
                     ),
-                    skewX: (isHovering || isNearPlayer) ? 0 : (
-                      isFleeing ? 30 * fleeDirection.x :
+                    skewX: prefersReducedMotion ? 0 : (isHovering || isNearPlayer) ? 0 : (
+                      isFleeing ? 16 * fleeDirection.x :
                       isReturning ? -5 * fleeDirection.x :
                       morphPhase === 'morphing-out' ? (movementStyle === 'dash' ? 25 : movementStyle === 'tired' ? 5 : movementStyle === 'sleepy' ? 1 : 15) * fleeDirection.x : 
                       morphPhase === 'moving' ? (movementStyle === 'dash' ? -15 : movementStyle === 'tired' ? -3 : movementStyle === 'sleepy' ? 0 : -8) * fleeDirection.x : 
                       morphPhase === 'morphing-in' ? 5 : 0
                     ),
-                    skewY: (isHovering || isNearPlayer) ? 0 : (
+                    skewY: prefersReducedMotion ? 0 : (isHovering || isNearPlayer) ? 0 : (
                       isFleeing ? -10 :
                       isReturning ? 5 :
                       morphPhase === 'morphing-out' ? -5 : morphPhase === 'moving' ? 3 : 0
@@ -981,7 +966,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                       '0 12px 12px 0'
                     ),
                     // Energy-based filter effect (gets darker/desaturated when tired)
-                    filter: energy > 50 ? 'none' : energy > 25 ? 'brightness(0.9) saturate(0.8)' : 'brightness(0.7) saturate(0.5)',
+                    filter: prefersReducedMotion ? 'none' : (energy > 50 ? 'none' : energy > 25 ? 'brightness(0.9) saturate(0.85)' : 'brightness(0.78) saturate(0.6)'),
                   }}
                   exit={{ x: -280, opacity: 0, scale: 0.5, rotate: -20 }}
                   transition={{ 
@@ -1040,6 +1025,23 @@ const AudioWidget = React.memo(function AudioWidget() {
                     !isFleeing && !isReturning && isWandering && !isHovering && !isNearPlayer && morphPhase === 'morphing-in' && "ring-3 ring-blue-300/60",
                     isWandering && (isHovering || isNearPlayer) && "ring-4 ring-green-400/80 ring-offset-2 ring-offset-transparent shadow-lg shadow-green-500/30"
                   )}>
+                    {/* Attached HUD so game UI stays near the wandering player (not on the navbar) */}
+                    {isWandering && !open && !playerHidden && (
+                      <div className="absolute left-2 -top-11 z-50 pointer-events-none">
+                        <CompactGameHUD
+                          score={gameStats.currentScore}
+                          highScore={gameStats.highScore}
+                          energy={energy}
+                          combo={combo}
+                          isFleeing={isFleeing}
+                          isReturning={isReturning}
+                          tirednessLevel={getTirednessLevel()}
+                          variant="attached"
+                          isVisible={true}
+                        />
+                      </div>
+                    )}
+
                     {/* Glow effect - color changes based on energy */}
                     <div className={cn(
                       "absolute inset-0 pointer-events-none transition-opacity duration-300",
@@ -1055,9 +1057,9 @@ const AudioWidget = React.memo(function AudioWidget() {
                     {isWandering && (
                       <>
                         {/* Flee particles - speed trails when fleeing */}
-                        {isFleeing && !isHovering && !isNearPlayer && (
+                        {isFleeing && !isHovering && !isNearPlayer && !prefersReducedMotion && (
                           <>
-                            {[...Array(8)].map((_, i) => (
+                            {[...Array(6)].map((_, i) => (
                               <motion.div
                                 key={`flee-${i}`}
                                 className={cn(
@@ -1067,14 +1069,14 @@ const AudioWidget = React.memo(function AudioWidget() {
                                 style={{
                                   width: 4 - (i * 0.3),
                                   height: 4 - (i * 0.3),
-                                  top: `${30 + Math.random() * 40}%`,
+                                  top: `${30 + ((i * 11) % 40)}%`,
                                   left: fleeDirection.x > 0 ? '100%' : '0%',
                                 }}
                                 initial={{ opacity: 0, x: 0 }}
                                 animate={{
                                   opacity: [0.9, 0],
                                   x: [0, -40 * fleeDirection.x * (i + 1) * 0.3],
-                                  y: [(Math.random() - 0.5) * 10, (Math.random() - 0.5) * 30],
+                                  y: [((i % 2 === 0) ? -6 : 6), (((i * 7) % 30) - 15)],
                                 }}
                                 transition={{
                                   duration: 0.3 + i * 0.05,
@@ -1352,17 +1354,6 @@ const AudioWidget = React.memo(function AudioWidget() {
                     </motion.button>
                   </div>
                   
-                  {/* Compact Game HUD positioned below player */}
-                  {isWandering && !isHovering && !isNearPlayer && (
-                    <CompactGameHUD
-                      score={gameStats.currentScore}
-                      highScore={gameStats.highScore}
-                      energy={energy}
-                      combo={gameStats.combo}
-                      isVisible={true}
-                    />
-                  )}
-
                   {/* Bored Popup - educational popup */}
                   <BoredPopup
                     show={showBoredPopup}
