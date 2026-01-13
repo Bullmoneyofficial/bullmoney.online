@@ -13,9 +13,6 @@ import {
   IconBrandSpotify,
   IconBrandApple,
   IconBrandYoutube,
-  IconHandFinger,
-  IconArrowLeft,
-  IconArrowRight,
   IconInfoCircle,
   IconX,
   IconGripVertical,
@@ -25,6 +22,8 @@ import { cn } from "@/lib/utils";
 import { useAudioSettings, type MusicSource, STREAMING_SOURCES } from "@/contexts/AudioSettingsProvider";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { MusicEmbedModal } from "@/components/MusicEmbedModal";
+import { BlueShimmer, Slider, GameHUD, TouchIndicator, GameOverScreen, EnergyBar } from "@/components/audio-widget/ui";
+import { useWanderingGame } from "@/components/audio-widget/useWanderingGame";
 
 const sourceLabel: Record<MusicSource, string> = {
   THEME: "Theme",
@@ -46,279 +45,6 @@ const sourceIcons: Partial<Record<MusicSource, React.ReactNode>> = {
   YOUTUBE: <IconBrandYoutube className="w-5 h-5 text-red-400" />,
 };
 
-// Blue shimmer animation component - Memoized
-const BlueShimmer = React.memo(function BlueShimmer({ className = "" }: { className?: string }) {
-  return (
-    <motion.div
-      className={cn("absolute inset-0 overflow-hidden rounded-xl pointer-events-none", className)}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent"
-        animate={{ x: ["-100%", "200%"] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
-      />
-    </motion.div>
-  );
-});
-
-// Animated helper tip component - Memoized
-const AnimatedTip = React.memo(function AnimatedTip({ 
-  text, 
-  icon = "tap",
-  delay = 0,
-  show = true,
-  variant = "default",
-  pulse = false,
-}: { 
-  text: string; 
-  icon?: "tap" | "swipe-left" | "swipe-right" | "play" | "info" | "drag" | "close" | "step";
-  delay?: number;
-  show?: boolean;
-  variant?: "default" | "success" | "warning" | "numbered";
-  pulse?: boolean;
-}) {
-  const icons = useMemo(() => ({
-    "tap": <IconHandFinger className="w-3.5 h-3.5" />,
-    "swipe-left": <IconArrowLeft className="w-3.5 h-3.5" />,
-    "swipe-right": <IconArrowRight className="w-3.5 h-3.5" />,
-    "play": <IconPlayerPlay className="w-3.5 h-3.5" />,
-    "info": <IconInfoCircle className="w-3.5 h-3.5" />,
-    "drag": <IconVolume className="w-3.5 h-3.5" />,
-    "close": <IconChevronUp className="w-3.5 h-3.5 rotate-180" />,
-    "step": <IconMusic className="w-3.5 h-3.5" />,
-  }), []);
-
-  const variants = {
-    default: "bg-blue-500/15 border-blue-400/30 text-blue-200",
-    success: "bg-green-500/15 border-green-400/30 text-green-200",
-    warning: "bg-amber-500/15 border-amber-400/30 text-amber-200",
-    numbered: "bg-purple-500/15 border-purple-400/30 text-purple-200",
-  };
-
-  if (!show) return null;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -5, scale: 0.95 }}
-      transition={{ delay, duration: 0.3, type: "spring", stiffness: 200 }}
-      className="relative overflow-hidden"
-    >
-      <motion.div 
-        className={cn(
-          "flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-[10px] font-medium",
-          variants[variant]
-        )}
-        animate={pulse ? { scale: [1, 1.02, 1] } : {}}
-        transition={pulse ? { duration: 2, repeat: Infinity } : {}}
-      >
-        <motion.span
-          animate={{ 
-            scale: [1, 1.15, 1],
-            rotate: icon === "tap" ? [0, -10, 10, 0] : 0,
-          }}
-          transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1 }}
-        >
-          {icons[icon as keyof typeof icons] || icons.tap}
-        </motion.span>
-        <span>{text}</span>
-        {/* Blue shimmer effect */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-300/10 to-transparent"
-          animate={{ x: ["-100%", "200%"] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear", repeatDelay: 3, delay }}
-        />
-      </motion.div>
-    </motion.div>
-  );
-});
-
-// Step-by-step tutorial overlay - Memoized
-const StepGuide = React.memo(function StepGuide({ 
-  step, 
-  totalSteps,
-  title,
-  description,
-  onNext,
-  onSkip,
-}: {
-  step: number;
-  totalSteps: number;
-  title: string;
-  description: string;
-  onNext: () => void;
-  onSkip: () => void;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      className="relative p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/10 border border-blue-400/30 overflow-hidden"
-    >
-      {/* Animated background */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/10 to-transparent"
-        animate={{ x: ["-100%", "200%"] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-      />
-      
-      {/* Step indicator */}
-      <div className="relative flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <motion.div 
-            className="w-6 h-6 rounded-full bg-blue-500/30 border border-blue-400/50 flex items-center justify-center text-[11px] font-bold text-blue-200"
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          >
-            {step}
-          </motion.div>
-          <span className="text-[10px] text-blue-300/70">of {totalSteps}</span>
-        </div>
-        <button
-          onClick={onSkip}
-          className="text-[9px] text-white/40 hover:text-white/70 transition-colors"
-        >
-          Skip tutorial
-        </button>
-      </div>
-      
-      {/* Content */}
-      <div className="relative">
-        <h4 className="text-[12px] font-semibold text-white mb-1">{title}</h4>
-        <p className="text-[10px] text-white/60 leading-relaxed mb-3">{description}</p>
-      </div>
-      
-      {/* Progress dots & Next button */}
-      <div className="relative flex items-center justify-between">
-        <div className="flex gap-1.5">
-          {Array.from({ length: totalSteps }).map((_, i) => (
-            <motion.div
-              key={i}
-              className={cn(
-                "w-2 h-2 rounded-full transition-colors",
-                i + 1 === step ? "bg-blue-400" : i + 1 < step ? "bg-blue-400/50" : "bg-white/20"
-              )}
-              animate={i + 1 === step ? { scale: [1, 1.3, 1] } : {}}
-              transition={{ duration: 1, repeat: Infinity }}
-            />
-          ))}
-        </div>
-        <motion.button
-          onClick={onNext}
-          className="px-3 py-1.5 rounded-lg bg-blue-500/30 border border-blue-400/40 text-[10px] font-medium text-blue-200 hover:bg-blue-500/40 transition-colors"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          {step === totalSteps ? "Got it!" : "Next →"}
-        </motion.button>
-      </div>
-    </motion.div>
-  );
-});
-
-// Floating action hint that points to elements - Memoized
-const ActionHint = React.memo(function ActionHint({ 
-  text, 
-  position = "bottom",
-  show = true,
-}: { 
-  text: string; 
-  position?: "top" | "bottom" | "left" | "right";
-  show?: boolean;
-}) {
-  if (!show) return null;
-  
-  const positionClasses = {
-    top: "bottom-full mb-2 left-1/2 -translate-x-1/2",
-    bottom: "top-full mt-2 left-1/2 -translate-x-1/2",
-    left: "right-full mr-2 top-1/2 -translate-y-1/2",
-    right: "left-full ml-2 top-1/2 -translate-y-1/2",
-  };
-  
-  const arrowClasses = {
-    top: "top-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-blue-400/30",
-    bottom: "bottom-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-blue-400/30",
-    left: "left-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-blue-400/30",
-    right: "right-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-blue-400/30",
-  };
-  
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className={cn("absolute z-50 pointer-events-none", positionClasses[position])}
-    >
-      <motion.div
-        animate={{ y: position === "top" || position === "bottom" ? [0, -3, 0] : 0, x: position === "left" || position === "right" ? [0, -3, 0] : 0 }}
-        transition={{ duration: 1.5, repeat: Infinity }}
-        className="relative"
-      >
-        <div className="px-2.5 py-1.5 rounded-lg bg-blue-500/20 border border-blue-400/30 backdrop-blur-sm text-[9px] text-blue-200 font-medium whitespace-nowrap">
-          {text}
-        </div>
-        <div className={cn("absolute w-0 h-0 border-4", arrowClasses[position])} />
-      </motion.div>
-    </motion.div>
-  );
-});
-
-// Enhanced Slider with blue styling - Memoized
-const Slider = React.memo(function Slider({
-  value,
-  onChange,
-  label,
-  hint,
-  disabled = false,
-}: {
-  value: number;
-  onChange: (next: number) => void;
-  label: string;
-  hint?: string;
-  disabled?: boolean;
-}) {
-  const pct = Math.round(value * 100);
-  return (
-    <div className={cn("flex flex-col gap-1.5 group", disabled && "opacity-50 pointer-events-none")}>
-      <div className="flex items-center justify-between text-[11px]">
-        <div className="flex items-center gap-2">
-          <span className="text-white/80 font-medium">{label}</span>
-          {hint && (
-            <span className="text-[9px] text-blue-400/60 opacity-0 group-hover:opacity-100 transition-opacity">
-              {hint}
-            </span>
-          )}
-        </div>
-        <span className="tabular-nums text-blue-300/80 font-medium">{pct}%</span>
-      </div>
-      <div className="relative">
-        <input
-          aria-label={label}
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          disabled={disabled}
-          className="w-full h-2 rounded-full appearance-none cursor-pointer bg-white/10 
-                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
-                     [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-400 
-                     [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-blue-500/30
-                     [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-300/50
-                     [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-110"
-          style={{
-            background: `linear-gradient(to right, rgba(59, 130, 246, 0.5) 0%, rgba(59, 130, 246, 0.5) ${pct}%, rgba(255,255,255,0.1) ${pct}%, rgba(255,255,255,0.1) 100%)`
-          }}
-        />
-      </div>
-    </div>
-  );
-});
 
 const AudioWidget = React.memo(function AudioWidget() {
   const {
@@ -352,19 +78,40 @@ const AudioWidget = React.memo(function AudioWidget() {
   const [showReturnUserHint, setShowReturnUserHint] = useState(false);
   const [showTipsOverlay, setShowTipsOverlay] = useState(false);
   const [widgetHidden, setWidgetHidden] = useState(false);
-  const [isWandering, setIsWandering] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
-  const [wanderPosition, setWanderPosition] = useState({ x: 0, y: 0 });
-  const [morphPhase, setMorphPhase] = useState<'idle' | 'morphing-out' | 'moving' | 'morphing-in'>('idle');
-  const [isHovering, setIsHovering] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isNearPlayer, setIsNearPlayer] = useState(false);
+  const {
+    miniPlayerRef,
+    isWandering,
+    setIsWandering,
+    setHasInteracted,
+    wanderPosition,
+    morphPhase,
+    isHovering,
+    setIsHovering,
+    isNearPlayer,
+    isFleeing,
+    isReturning,
+    movementStyle,
+    speedMultiplier,
+    fleeDirection,
+    handlePlayerInteraction,
+    // New game features
+    gameState,
+    gameStats,
+    energy,
+    combo,
+    isTouching,
+    touchPosition,
+    startGame,
+    getTirednessLevel,
+  } = useWanderingGame({ isMobile });
+  
+  // Game over modal state
+  const [showGameOver, setShowGameOver] = useState(false);
   
   // Refs
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
-  const miniPlayerRef = React.useRef<HTMLDivElement>(null);
   const widgetRef = useRef<HTMLDivElement>(null);
-  const wanderIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Motion values for swipe gesture on main widget
   const widgetX = useMotionValue(0);
@@ -396,28 +143,6 @@ const AudioWidget = React.memo(function AudioWidget() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Track mouse proximity to player for desktop
-  useEffect(() => {
-    if (isMobile || !isWandering) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!miniPlayerRef.current) return;
-      
-      const rect = miniPlayerRef.current.getBoundingClientRect();
-      const padding = 80; // Detection radius around the player
-      
-      const isNear = 
-        e.clientX >= rect.left - padding &&
-        e.clientX <= rect.right + padding &&
-        e.clientY >= rect.top - padding &&
-        e.clientY <= rect.bottom + padding;
-      
-      setIsNearPlayer(isNear);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [isMobile, isWandering]);
 
   // Check localStorage for tutorial completion and saved preference
   useEffect(() => {
@@ -447,116 +172,6 @@ const AudioWidget = React.memo(function AudioWidget() {
     }
   }, [setMusicSource, setMusicEnabled]);
 
-  // Wandering animation - player floats around with genie morph effect until user interacts
-  // Pauses when user hovers over OR is near the player (desktop) or shorter duration on mobile
-  useEffect(() => {
-    if (!isWandering || hasInteracted) {
-      if (wanderIntervalRef.current) {
-        clearInterval(wanderIntervalRef.current);
-        wanderIntervalRef.current = null;
-      }
-      setWanderPosition({ x: 0, y: 0 });
-      setMorphPhase('idle');
-      return;
-    }
-
-    // Combined pause condition: hovering OR near player (desktop only)
-    const shouldPause = isHovering || (!isMobile && isNearPlayer);
-
-    // If paused, stop animation but keep wandering state
-    if (shouldPause) {
-      if (wanderIntervalRef.current) {
-        clearInterval(wanderIntervalRef.current);
-        wanderIntervalRef.current = null;
-      }
-      // Smoothly return to home position and reset appearance
-      setWanderPosition({ x: 0, y: 0 });
-      setMorphPhase('idle');
-      return;
-    }
-
-    const getRandomPosition = () => {
-      // Smaller movement on mobile for less intrusive effect
-      const maxX = isMobile ? 100 : 180;
-      const maxY = isMobile ? 60 : 120;
-      return {
-        x: (isMobile ? 40 : 80) + Math.random() * maxX,
-        y: -((isMobile ? 30 : 60) + Math.random() * maxY),
-      };
-    };
-
-    // Genie animation sequence
-    const runGenieSequence = () => {
-      if (isHovering || isNearPlayer) return;
-      
-      // Phase 1: Morph out (squish and swirl)
-      setMorphPhase('morphing-out');
-      
-      setTimeout(() => {
-        if (isHovering || isNearPlayer) return;
-        // Phase 2: Move to new position
-        setMorphPhase('moving');
-        setWanderPosition(getRandomPosition());
-        
-        setTimeout(() => {
-          if (isHovering || isNearPlayer) return;
-          // Phase 3: Morph back in (expand and settle)
-          setMorphPhase('morphing-in');
-          
-          setTimeout(() => {
-            if (isHovering || isNearPlayer) return;
-            // Phase 4: Idle wobble
-            setMorphPhase('idle');
-          }, isMobile ? 400 : 600);
-        }, isMobile ? 500 : 800);
-      }, isMobile ? 350 : 500);
-    };
-
-    // Initial genie sequence
-    runGenieSequence();
-
-    // Run genie sequence - faster on mobile
-    const intervalTime = isMobile ? 2500 : 3500;
-    wanderIntervalRef.current = setInterval(() => {
-      if (!isHovering && !isNearPlayer) {
-        runGenieSequence();
-      }
-    }, intervalTime);
-
-    // Auto-stop - shorter on mobile (8s) vs desktop (15s)
-    const autoStopTime = isMobile ? 8000 : 15000;
-    const autoStopTimer = setTimeout(() => {
-      if (isHovering || isNearPlayer) return;
-      // Final morph back home
-      setMorphPhase('morphing-out');
-      setTimeout(() => {
-        setWanderPosition({ x: 0, y: 0 });
-        setMorphPhase('morphing-in');
-        setTimeout(() => {
-          setIsWandering(false);
-          setHasInteracted(true);
-          setMorphPhase('idle');
-        }, 600);
-      }, 500);
-    }, autoStopTime);
-
-    return () => {
-      if (wanderIntervalRef.current) {
-        clearInterval(wanderIntervalRef.current);
-      }
-      clearTimeout(autoStopTimer);
-    };
-  }, [isWandering, hasInteracted, isHovering, isNearPlayer, isMobile]);
-
-  // Stop wandering when user interacts (clicks)
-  const handlePlayerInteraction = useCallback(() => {
-    if (isWandering) {
-      setIsWandering(false);
-      setHasInteracted(true);
-      setMorphPhase('idle');
-      setWanderPosition({ x: 0, y: 0 });
-    }
-  }, [isWandering]);
 
   // Hide first time help after 15 seconds
   useEffect(() => {
@@ -577,11 +192,18 @@ const AudioWidget = React.memo(function AudioWidget() {
       // Small delay to let the menu close animation finish
       const timer = setTimeout(() => {
         setHasInteracted(false); // Reset so genie can play
-        setIsWandering(true);
+        startGame(); // Use startGame instead of just setIsWandering
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [open, streamingActive, playerHidden, isWandering]);
+  }, [open, streamingActive, playerHidden, isWandering, startGame, setHasInteracted]);
+
+  // Show game over modal when game ends
+  useEffect(() => {
+    if (gameState === "caught" || gameState === "escaped") {
+      setShowGameOver(true);
+    }
+  }, [gameState]);
 
   const handleTutorialNext = useCallback(() => {
     if (tutorialStep >= 4) {
@@ -718,6 +340,46 @@ const AudioWidget = React.memo(function AudioWidget() {
 
   return (
     <>
+      {/* Game HUD - Shows during active wandering game */}
+      <AnimatePresence>
+        {isWandering && !open && (
+          <GameHUD
+            energy={energy}
+            score={gameStats.currentScore}
+            combo={combo}
+            highScore={gameStats.highScore}
+            isFleeing={isFleeing}
+            isReturning={isReturning}
+            tirednessLevel={getTirednessLevel()}
+            isMobile={isMobile}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Mobile touch indicator */}
+      <AnimatePresence>
+        {isMobile && isWandering && !open && (
+          <TouchIndicator position={touchPosition} isActive={isTouching} />
+        )}
+      </AnimatePresence>
+
+      {/* Game Over Modal */}
+      <AnimatePresence>
+        {showGameOver && (
+          <GameOverScreen
+            score={gameStats.currentScore}
+            highScore={gameStats.highScore}
+            isNewHighScore={gameStats.currentScore >= gameStats.highScore && gameStats.currentScore > 0}
+            wasCaught={gameState === "caught"}
+            onPlayAgain={() => {
+              setShowGameOver(false);
+              startGame();
+            }}
+            onClose={() => setShowGameOver(false)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Pull tab to show widget when hidden */}
       <AnimatePresence>
         {widgetHidden && (
@@ -1073,6 +735,38 @@ const AudioWidget = React.memo(function AudioWidget() {
                       />
                     </div>
 
+                    {/* Game Stats Section - Shows high score and catch count */}
+                    {gameStats.gamesPlayed > 0 && (
+                      <div className="mb-2 p-2 rounded-lg bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-400/20">
+                        <div className="flex items-center justify-between text-[10px] mb-1.5">
+                          <span className="text-white/60 font-medium">🎮 Catch Game Stats</span>
+                          {gameStats.currentScore > 0 && gameStats.currentScore >= gameStats.highScore && (
+                            <motion.span 
+                              animate={{ scale: [1, 1.1, 1] }}
+                              transition={{ duration: 1, repeat: Infinity }}
+                              className="text-yellow-400 font-bold"
+                            >
+                              🏆 New Best!
+                            </motion.span>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          <div className="text-center p-1.5 rounded bg-white/5">
+                            <div className="text-[9px] text-white/40">High Score</div>
+                            <div className="text-sm font-bold text-yellow-400 tabular-nums">{gameStats.highScore}</div>
+                          </div>
+                          <div className="text-center p-1.5 rounded bg-white/5">
+                            <div className="text-[9px] text-white/40">Catches</div>
+                            <div className="text-sm font-bold text-green-400 tabular-nums">{gameStats.totalCatches}</div>
+                          </div>
+                          <div className="text-center p-1.5 rounded bg-white/5">
+                            <div className="text-[9px] text-white/40">Games</div>
+                            <div className="text-sm font-bold text-blue-400 tabular-nums">{gameStats.gamesPlayed}</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Bottom actions row */}
                     <div className="flex items-center justify-between pt-2 border-t border-white/5">
                       <button
@@ -1156,23 +850,71 @@ const AudioWidget = React.memo(function AudioWidget() {
                   ref={miniPlayerRef}
                   initial={{ x: -280 }}
                   animate={{ 
-                    x: open ? -280 : (playerHidden ? -280 : ((isHovering || isNearPlayer) ? 0 : wanderPosition.x)),
-                    y: (isWandering && !isHovering && !isNearPlayer) ? wanderPosition.y : 0,
+                    x: open ? -280 : (playerHidden ? -280 : wanderPosition.x),
+                    y: isWandering ? wanderPosition.y : 0,
                     opacity: open ? 0 : 1,
-                    // Genie morph effects based on phase - reset to normal when hovering/near
-                    scaleX: (isHovering || isNearPlayer) ? 1 : (morphPhase === 'morphing-out' ? 0.3 : morphPhase === 'moving' ? 0.6 : morphPhase === 'morphing-in' ? 1.1 : 1),
-                    scaleY: (isHovering || isNearPlayer) ? 1 : (morphPhase === 'morphing-out' ? 1.5 : morphPhase === 'moving' ? 0.8 : morphPhase === 'morphing-in' ? 0.95 : 1),
-                    rotate: (isHovering || isNearPlayer) ? 0 : (morphPhase === 'morphing-out' ? 8 : morphPhase === 'moving' ? -5 : morphPhase === 'morphing-in' ? 3 : (isWandering ? [0, 2, -2, 0] : 0)),
-                    skewX: (isHovering || isNearPlayer) ? 0 : (morphPhase === 'morphing-out' ? 15 : morphPhase === 'moving' ? -8 : morphPhase === 'morphing-in' ? 5 : 0),
-                    skewY: (isHovering || isNearPlayer) ? 0 : (morphPhase === 'morphing-out' ? -5 : morphPhase === 'moving' ? 3 : 0),
-                    borderRadius: (isHovering || isNearPlayer) ? '0 12px 12px 0' : (morphPhase === 'morphing-out' ? '50% 12px 50% 12px' : morphPhase === 'moving' ? '30% 12px 30% 12px' : '0 12px 12px 0'),
+                    // Enhanced game-style morph effects based on phase, movement style, and energy
+                    scaleX: (isHovering || isNearPlayer) ? 1 : (
+                      isFleeing ? 0.3 :
+                      isReturning ? 1.1 :
+                      morphPhase === 'morphing-out' ? (movementStyle === 'dash' ? 0.2 : movementStyle === 'tired' ? 0.7 : movementStyle === 'sleepy' ? 0.9 : 0.3) : 
+                      morphPhase === 'moving' ? (movementStyle === 'dash' ? 1.4 : movementStyle === 'bounce' ? 0.9 : movementStyle === 'tired' ? 0.95 : movementStyle === 'sleepy' ? 0.98 : 0.6) : 
+                      morphPhase === 'morphing-in' ? 1.1 : 1
+                    ),
+                    scaleY: (isHovering || isNearPlayer) ? 1 : (
+                      isFleeing ? 1.6 :
+                      isReturning ? 0.9 :
+                      morphPhase === 'morphing-out' ? (movementStyle === 'dash' ? 0.6 : movementStyle === 'tired' ? 1.1 : movementStyle === 'sleepy' ? 1.02 : 1.5) : 
+                      morphPhase === 'moving' ? (movementStyle === 'dash' ? 0.7 : movementStyle === 'bounce' ? 1.2 : movementStyle === 'tired' ? 1.02 : movementStyle === 'sleepy' ? 1.01 : 0.8) : 
+                      morphPhase === 'morphing-in' ? 0.95 : 1
+                    ),
+                    rotate: (isHovering || isNearPlayer) ? 0 : (
+                      isFleeing ? 25 * fleeDirection.x :
+                      isReturning ? -10 * fleeDirection.x :
+                      morphPhase === 'morphing-out' ? (movementStyle === 'spiral' ? 25 : movementStyle === 'tired' ? 3 : movementStyle === 'sleepy' ? 1 : 8) * fleeDirection.x : 
+                      morphPhase === 'moving' ? (movementStyle === 'zigzag' ? 15 : movementStyle === 'spiral' ? -15 : movementStyle === 'tired' ? 2 : movementStyle === 'sleepy' ? 0.5 : -5) * fleeDirection.x : 
+                      morphPhase === 'morphing-in' ? 3 : 
+                      (isWandering && morphPhase === 'idle' ? [0, 3 * speedMultiplier, -3 * speedMultiplier, 0] : 0)
+                    ),
+                    skewX: (isHovering || isNearPlayer) ? 0 : (
+                      isFleeing ? 30 * fleeDirection.x :
+                      isReturning ? -5 * fleeDirection.x :
+                      morphPhase === 'morphing-out' ? (movementStyle === 'dash' ? 25 : movementStyle === 'tired' ? 5 : movementStyle === 'sleepy' ? 1 : 15) * fleeDirection.x : 
+                      morphPhase === 'moving' ? (movementStyle === 'dash' ? -15 : movementStyle === 'tired' ? -3 : movementStyle === 'sleepy' ? 0 : -8) * fleeDirection.x : 
+                      morphPhase === 'morphing-in' ? 5 : 0
+                    ),
+                    skewY: (isHovering || isNearPlayer) ? 0 : (
+                      isFleeing ? -10 :
+                      isReturning ? 5 :
+                      morphPhase === 'morphing-out' ? -5 : morphPhase === 'moving' ? 3 : 0
+                    ),
+                    borderRadius: (isHovering || isNearPlayer) ? '0 12px 12px 0' : (
+                      isFleeing ? '60% 12px 60% 12px' :
+                      isReturning ? '20% 12px 20% 12px' :
+                      morphPhase === 'morphing-out' ? (movementStyle === 'spiral' ? '50%' : '50% 12px 50% 12px') : 
+                      morphPhase === 'moving' ? (movementStyle === 'dash' ? '8px' : '30% 12px 30% 12px') : 
+                      '0 12px 12px 0'
+                    ),
+                    // Energy-based filter effect (gets darker/desaturated when tired)
+                    filter: energy > 50 ? 'none' : energy > 25 ? 'brightness(0.9) saturate(0.8)' : 'brightness(0.7) saturate(0.5)',
                   }}
                   exit={{ x: -280, opacity: 0, scale: 0.5, rotate: -20 }}
                   transition={{ 
                     type: "spring", 
-                    damping: (isHovering || isNearPlayer) ? 25 : (morphPhase === 'moving' ? 12 : 20), 
-                    stiffness: (isHovering || isNearPlayer) ? 300 : (morphPhase === 'moving' ? 80 : 200),
-                    rotate: { duration: (isWandering && morphPhase === 'idle' && !isHovering && !isNearPlayer) ? 2 : 0.4, repeat: (isWandering && morphPhase === 'idle' && !isHovering && !isNearPlayer) ? Infinity : 0 },
+                    damping: (isHovering || isNearPlayer) ? 25 : (
+                      isFleeing ? 5 :
+                      isReturning ? 15 :
+                      morphPhase === 'moving' ? (movementStyle === 'dash' ? 8 : movementStyle === 'tired' ? 25 : movementStyle === 'sleepy' ? 30 : 12) : 20
+                    ), 
+                    stiffness: (isHovering || isNearPlayer) ? 300 : (
+                      isFleeing ? 200 :
+                      isReturning ? 100 :
+                      morphPhase === 'moving' ? (movementStyle === 'dash' ? 150 : movementStyle === 'tired' ? 40 : movementStyle === 'sleepy' ? 20 : 80) * speedMultiplier : 200
+                    ),
+                    rotate: { 
+                      duration: (isWandering && morphPhase === 'idle' && !isHovering && !isNearPlayer) ? 1.5 / speedMultiplier : 0.3, 
+                      repeat: (isWandering && morphPhase === 'idle' && !isHovering && !isNearPlayer) ? Infinity : 0 
+                    },
                   }}
                   className="fixed z-[9999] pointer-events-auto"
                   style={{ 
@@ -1199,15 +941,24 @@ const AudioWidget = React.memo(function AudioWidget() {
                       : musicSource === 'APPLE_MUSIC'
                       ? "border-pink-500/30"
                       : "border-red-500/30",
-                    isWandering && !isHovering && !isNearPlayer && morphPhase === 'idle' && "ring-2 ring-blue-400/50 ring-offset-2 ring-offset-transparent",
-                    isWandering && !isHovering && !isNearPlayer && morphPhase === 'morphing-out' && "ring-4 ring-purple-400/70",
-                    isWandering && !isHovering && !isNearPlayer && morphPhase === 'moving' && "ring-2 ring-cyan-400/40",
-                    isWandering && !isHovering && !isNearPlayer && morphPhase === 'morphing-in' && "ring-3 ring-blue-300/60",
-                    isWandering && (isHovering || isNearPlayer) && "ring-2 ring-green-400/60 ring-offset-2 ring-offset-transparent"
+                    // Enhanced ring effects for game states
+                    isFleeing && "ring-4 ring-orange-400/80 ring-offset-2 ring-offset-transparent shadow-lg shadow-orange-500/40",
+                    isReturning && "ring-3 ring-purple-400/70 ring-offset-2 ring-offset-transparent shadow-lg shadow-purple-500/30",
+                    !isFleeing && !isReturning && isWandering && !isHovering && !isNearPlayer && morphPhase === 'idle' && (
+                      energy > 70 ? "ring-2 ring-green-400/50 ring-offset-2 ring-offset-transparent" :
+                      energy > 40 ? "ring-2 ring-yellow-400/50 ring-offset-2 ring-offset-transparent" :
+                      energy > 20 ? "ring-2 ring-orange-400/60 ring-offset-2 ring-offset-transparent" :
+                      "ring-1 ring-red-400/40"
+                    ),
+                    !isFleeing && !isReturning && isWandering && !isHovering && !isNearPlayer && morphPhase === 'morphing-out' && (movementStyle === 'dash' ? "ring-4 ring-yellow-400/80" : "ring-4 ring-purple-400/70"),
+                    !isFleeing && !isReturning && isWandering && !isHovering && !isNearPlayer && morphPhase === 'moving' && (movementStyle === 'dash' ? "ring-3 ring-red-400/60" : movementStyle === 'spiral' ? "ring-3 ring-pink-400/50" : "ring-2 ring-cyan-400/40"),
+                    !isFleeing && !isReturning && isWandering && !isHovering && !isNearPlayer && morphPhase === 'morphing-in' && "ring-3 ring-blue-300/60",
+                    isWandering && (isHovering || isNearPlayer) && "ring-4 ring-green-400/80 ring-offset-2 ring-offset-transparent shadow-lg shadow-green-500/30"
                   )}>
-                    {/* Glow effect */}
+                    {/* Glow effect - color changes based on energy */}
                     <div className={cn(
-                      "absolute inset-0 opacity-10 pointer-events-none",
+                      "absolute inset-0 pointer-events-none transition-opacity duration-300",
+                      energy > 70 ? "opacity-15" : energy > 40 ? "opacity-10" : "opacity-5",
                       musicSource === 'SPOTIFY' 
                         ? "bg-green-500"
                         : musicSource === 'APPLE_MUSIC'
@@ -1218,66 +969,245 @@ const AudioWidget = React.memo(function AudioWidget() {
                     {/* Wandering attention grabber with genie sparkles */}
                     {isWandering && (
                       <>
-                        {/* Sparkle particles during morph - not when paused */}
-                        {!isHovering && !isNearPlayer && (morphPhase === 'morphing-out' || morphPhase === 'morphing-in') && (
+                        {/* Flee particles - speed trails when fleeing */}
+                        {isFleeing && !isHovering && !isNearPlayer && (
+                          <>
+                            {[...Array(8)].map((_, i) => (
+                              <motion.div
+                                key={`flee-${i}`}
+                                className={cn(
+                                  "absolute rounded-full",
+                                  i % 3 === 0 ? "bg-orange-400" : i % 3 === 1 ? "bg-yellow-400" : "bg-red-400"
+                                )}
+                                style={{
+                                  width: 4 - (i * 0.3),
+                                  height: 4 - (i * 0.3),
+                                  top: `${30 + Math.random() * 40}%`,
+                                  left: fleeDirection.x > 0 ? '100%' : '0%',
+                                }}
+                                initial={{ opacity: 0, x: 0 }}
+                                animate={{
+                                  opacity: [0.9, 0],
+                                  x: [0, -40 * fleeDirection.x * (i + 1) * 0.3],
+                                  y: [(Math.random() - 0.5) * 10, (Math.random() - 0.5) * 30],
+                                }}
+                                transition={{
+                                  duration: 0.3 + i * 0.05,
+                                  delay: i * 0.03,
+                                  repeat: Infinity,
+                                  repeatDelay: 0.1,
+                                }}
+                              />
+                            ))}
+                          </>
+                        )}
+
+                        {/* Return sparkles - welcoming effect when returning */}
+                        {isReturning && !isHovering && !isNearPlayer && (
+                          <>
+                            {[...Array(6)].map((_, i) => (
+                              <motion.div
+                                key={`return-${i}`}
+                                className="absolute w-2 h-2 rounded-full bg-purple-400"
+                                style={{
+                                  top: '50%',
+                                  left: '50%',
+                                }}
+                                initial={{ opacity: 0, scale: 0 }}
+                                animate={{
+                                  opacity: [0, 1, 0],
+                                  scale: [0, 1, 0],
+                                  x: Math.cos((i * 60) * Math.PI / 180) * 40,
+                                  y: Math.sin((i * 60) * Math.PI / 180) * 40,
+                                }}
+                                transition={{
+                                  duration: 0.6,
+                                  delay: i * 0.08,
+                                  repeat: Infinity,
+                                  repeatDelay: 0.3,
+                                }}
+                              />
+                            ))}
+                          </>
+                        )}
+
+                        {/* Tired particles - slow floating Zzz */}
+                        {(movementStyle === 'tired' || movementStyle === 'sleepy') && !isFleeing && !isReturning && (
                           <>
                             <motion.div
-                              className="absolute -top-2 -right-2 w-2 h-2 rounded-full bg-blue-400"
+                              className="absolute -top-4 right-2 text-[10px] text-blue-300/70"
+                              animate={{
+                                y: [-5, -15],
+                                x: [0, 10],
+                                opacity: [0.8, 0],
+                                scale: [0.8, 1.2],
+                              }}
+                              transition={{ duration: 2, repeat: Infinity, repeatDelay: 0.5 }}
+                            >
+                              z
+                            </motion.div>
+                            <motion.div
+                              className="absolute -top-6 right-4 text-[8px] text-blue-300/50"
+                              animate={{
+                                y: [-3, -12],
+                                x: [0, 8],
+                                opacity: [0.6, 0],
+                                scale: [0.6, 1],
+                              }}
+                              transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 0.8, delay: 0.5 }}
+                            >
+                              z
+                            </motion.div>
+                            {movementStyle === 'sleepy' && (
+                              <motion.div
+                                className="absolute -top-8 right-6 text-[6px] text-blue-300/30"
+                                animate={{
+                                  y: [-2, -10],
+                                  x: [0, 6],
+                                  opacity: [0.4, 0],
+                                }}
+                                transition={{ duration: 3, repeat: Infinity, repeatDelay: 1, delay: 1 }}
+                              >
+                                z
+                              </motion.div>
+                            )}
+                          </>
+                        )}
+
+                        {/* Sparkle particles during morph - enhanced for game feel */}
+                        {!isHovering && !isNearPlayer && !isFleeing && !isReturning && (morphPhase === 'morphing-out' || morphPhase === 'morphing-in' || (morphPhase === 'moving' && movementStyle === 'dash')) && (
+                          <>
+                            <motion.div
+                              className={cn("absolute -top-2 -right-2 w-2 h-2 rounded-full", movementStyle === 'dash' ? "bg-yellow-400" : "bg-blue-400")}
                               initial={{ opacity: 0, scale: 0 }}
-                              animate={{ opacity: [0, 1, 0], scale: [0, 1.5, 0], x: [0, 20, 40], y: [0, -15, -30] }}
-                              transition={{ duration: 0.8 }}
+                              animate={{ opacity: [0, 1, 0], scale: [0, 1.5 * speedMultiplier, 0], x: [0, 20 * fleeDirection.x, 40 * fleeDirection.x], y: [0, -15, -30] }}
+                              transition={{ duration: 0.6 / speedMultiplier }}
                             />
                             <motion.div
-                              className="absolute -top-1 left-1/4 w-1.5 h-1.5 rounded-full bg-purple-400"
+                              className={cn("absolute -top-1 left-1/4 w-1.5 h-1.5 rounded-full", movementStyle === 'spiral' ? "bg-pink-400" : "bg-purple-400")}
                               initial={{ opacity: 0, scale: 0 }}
-                              animate={{ opacity: [0, 1, 0], scale: [0, 1.2, 0], x: [0, -10, -20], y: [0, -20, -35] }}
-                              transition={{ duration: 0.7, delay: 0.1 }}
+                              animate={{ opacity: [0, 1, 0], scale: [0, 1.2 * speedMultiplier, 0], x: [0, -10 * fleeDirection.x, -20 * fleeDirection.x], y: [0, -20, -35] }}
+                              transition={{ duration: 0.5 / speedMultiplier, delay: 0.05 }}
                             />
                             <motion.div
-                              className="absolute bottom-0 right-1/4 w-1 h-1 rounded-full bg-cyan-400"
+                              className={cn("absolute bottom-0 right-1/4 w-1 h-1 rounded-full", movementStyle === 'bounce' ? "bg-green-400" : "bg-cyan-400")}
                               initial={{ opacity: 0, scale: 0 }}
-                              animate={{ opacity: [0, 1, 0], scale: [0, 1, 0], x: [0, 15, 25], y: [0, 10, 20] }}
-                              transition={{ duration: 0.6, delay: 0.2 }}
+                              animate={{ opacity: [0, 1, 0], scale: [0, 1, 0], x: [0, 15 * fleeDirection.x, 25 * fleeDirection.x], y: [0, 10, 20] }}
+                              transition={{ duration: 0.4 / speedMultiplier, delay: 0.1 }}
                             />
+                            {/* Extra particles when dashing */}
+                            {movementStyle === 'dash' && (
+                              <>
+                                <motion.div
+                                  className="absolute top-1/2 -right-1 w-3 h-1 rounded-full bg-orange-400"
+                                  initial={{ opacity: 0, scaleX: 0 }}
+                                  animate={{ opacity: [0, 1, 0], scaleX: [0, 3, 0], x: [0, 30, 60] }}
+                                  transition={{ duration: 0.4 }}
+                                />
+                                <motion.div
+                                  className="absolute top-1/3 -right-1 w-2 h-0.5 rounded-full bg-red-400"
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: [0, 1, 0], x: [0, 40, 80] }}
+                                  transition={{ duration: 0.35, delay: 0.05 }}
+                                />
+                              </>
+                            )}
                           </>
                         )}
                         
-                        {/* Main label - changes when paused */}
+                        {/* Main label - enhanced with energy and game states */}
                         <motion.div
                           className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap z-10"
                           animate={{ 
-                            y: (morphPhase === 'idle' && !isHovering && !isNearPlayer) ? [0, -5, 0] : 0,
-                            scale: (isHovering || isNearPlayer) ? 1.1 : (morphPhase === 'morphing-out' ? 0.8 : morphPhase === 'morphing-in' ? 1.1 : 1),
-                            opacity: morphPhase === 'moving' ? 0.5 : 1,
+                            y: (morphPhase === 'idle' && !isHovering && !isNearPlayer && !isFleeing && !isReturning) ? [0, -5, 0] : (isFleeing ? -10 : 0),
+                            scale: (isHovering || isNearPlayer) ? 1.1 : (isFleeing ? 1.2 : isReturning ? 0.9 : morphPhase === 'morphing-out' ? 0.8 : morphPhase === 'morphing-in' ? 1.1 : 1),
+                            opacity: morphPhase === 'moving' && !isFleeing && !isReturning ? 0.5 : 1,
+                            x: isFleeing ? 20 * fleeDirection.x : 0,
                           }}
-                          transition={{ duration: 1.5, repeat: (morphPhase === 'idle' && !isHovering && !isNearPlayer) ? Infinity : 0 }}
+                          transition={{ duration: isFleeing ? 0.2 : 1.5, repeat: (morphPhase === 'idle' && !isHovering && !isNearPlayer && !isFleeing && !isReturning) ? Infinity : 0 }}
                         >
                           <div className={cn(
                             "px-3 py-1.5 rounded-full text-white text-[10px] font-bold shadow-lg flex items-center gap-1.5 border border-white/20",
                             (isHovering || isNearPlayer)
                               ? "bg-gradient-to-r from-green-500/90 via-emerald-500/90 to-green-500/90"
+                              : isFleeing
+                              ? "bg-gradient-to-r from-orange-500/90 via-red-500/90 to-orange-500/90"
+                              : isReturning
+                              ? "bg-gradient-to-r from-purple-500/90 via-indigo-500/90 to-purple-500/90"
+                              : energy <= 20
+                              ? "bg-gradient-to-r from-gray-600/90 via-gray-500/90 to-gray-600/90"
+                              : energy <= 40
+                              ? "bg-gradient-to-r from-yellow-600/90 via-orange-500/90 to-yellow-600/90"
                               : "bg-gradient-to-r from-blue-500/90 via-purple-500/90 to-blue-500/90"
                           )}>
                             <motion.span
                               animate={{ 
-                                scale: (isHovering || isNearPlayer) ? 1 : [1, 1.3, 1],
-                                rotate: (!(isHovering || isNearPlayer) && morphPhase !== 'idle') ? [0, 360] : 0,
+                                scale: (isHovering || isNearPlayer) ? 1 : isFleeing ? [1, 1.5, 1] : [1, 1.3, 1],
+                                rotate: isFleeing ? [0, -20, 20, 0] : (!(isHovering || isNearPlayer) && morphPhase !== 'idle') ? [0, 360] : 0,
                               }}
                               transition={{ 
-                                scale: { duration: 0.5, repeat: (isHovering || isNearPlayer) ? 0 : Infinity },
-                                rotate: { duration: 0.5 },
+                                scale: { duration: isFleeing ? 0.3 : 0.5, repeat: (isHovering || isNearPlayer) ? 0 : Infinity },
+                                rotate: { duration: isFleeing ? 0.2 : 0.5 },
                               }}
                             >
-                              {(isHovering || isNearPlayer) ? '🎵' : '✨'}
+                              {(isHovering || isNearPlayer) ? '🎵' : isFleeing ? '💨' : isReturning ? '🔄' : energy <= 20 ? '😴' : energy <= 40 ? '😓' : '✨'}
                             </motion.span>
                             {(isHovering || isNearPlayer) 
-                              ? 'Press play!' 
+                              ? '🎯 Caught! Tap to play!' 
+                              : isFleeing
+                              ? 'Too fast!'
+                              : isReturning
+                              ? 'Coming back...'
                               : isMobile 
-                                ? 'Tap to pin!' 
-                                : (morphPhase === 'idle' ? 'Click to pin!' : morphPhase === 'moving' ? '~whoosh~' : '✧･ﾟ')
+                                ? (energy <= 20 ? '😴 So sleepy...' : energy <= 40 ? 'Getting tired...' : 'Tap to catch!')
+                                : energy <= 20 
+                                  ? '😴 Zzz... catch me now!'
+                                  : energy <= 40
+                                  ? '😓 Getting tired...'
+                                  : speedMultiplier > 1.3 
+                                    ? (movementStyle === 'dash' ? '💨 Zoom!' : movementStyle === 'zigzag' ? '⚡ Zig-zag!' : '🏃 Catch me!')
+                                    : (morphPhase === 'idle' ? '🎮 Catch me!' : morphPhase === 'moving' ? (movementStyle === 'spiral' ? '🌀 Whee!' : movementStyle === 'bounce' ? '🦘 Boing!' : '~whoosh~') : '✧･ﾟ')
                             }
                           </div>
                         </motion.div>
+
+                        {/* Flee trail effect */}
+                        {isFleeing && (
+                          <>
+                            {[...Array(5)].map((_, i) => (
+                              <motion.div
+                                key={i}
+                                className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-orange-400/60"
+                                initial={{ opacity: 0, x: 0 }}
+                                animate={{ 
+                                  opacity: [0.8, 0],
+                                  x: [-10 * (i + 1) * fleeDirection.x, -30 * (i + 1) * fleeDirection.x],
+                                  scale: [1, 0.3],
+                                }}
+                                transition={{ duration: 0.4, delay: i * 0.05 }}
+                                style={{ left: fleeDirection.x > 0 ? '100%' : 0 }}
+                              />
+                            ))}
+                          </>
+                        )}
+
+                        {/* Return glow effect */}
+                        {isReturning && (
+                          <motion.div
+                            className="absolute inset-0 rounded-xl bg-purple-400/20 pointer-events-none"
+                            animate={{ opacity: [0, 0.5, 0] }}
+                            transition={{ duration: 0.5, repeat: Infinity }}
+                          />
+                        )}
+
+                        {/* Energy low warning pulse */}
+                        {energy <= 25 && !isFleeing && !isReturning && (
+                          <motion.div
+                            className="absolute inset-0 rounded-xl bg-red-500/10 pointer-events-none"
+                            animate={{ opacity: [0, 0.3, 0] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                          />
+                        )}
                       </>
                     )}
 
