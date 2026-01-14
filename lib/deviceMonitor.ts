@@ -778,6 +778,9 @@ class DeviceMonitor {
   private networkTestIntervalId: number | null = null;
   private fpsRafId: number | null = null;
   private externalFpsLastUpdated = 0;
+  private liveNetworkIntervalId: number | null = null;
+  private liveProbeCounter = 0;
+  private networkListenersInstalled = false;
 
   constructor() {
     // Initialize minimal defaults so getInfo() is always safe/synchronous.
@@ -796,6 +799,12 @@ class DeviceMonitor {
       queueMicrotask(() => {
         void this.start('light');
       });
+      // Opportunistic Geo/IP fetch so network fields aren't stuck as "Unknown"
+      setTimeout(() => {
+        if (this.geoIpCache.ip === 'Unknown') {
+          void this.detectNetwork({ includeGeoIp: true, timeoutMs: 900 });
+        }
+      }, 1200);
     }
   }
 
@@ -821,6 +830,8 @@ class DeviceMonitor {
         await this.detectDevice();
         await this.detectPerformance();
         await this.detectNetwork({ includeGeoIp: false, timeoutMs: 0 });
+        this.startLiveNetworkProbe();
+        this.installNetworkListeners();
         this.detectScreen();
         this.initLevel = 'light';
       })().catch((err) => {
@@ -839,6 +850,8 @@ class DeviceMonitor {
         includeGeoIp: options.includeGeoIp ?? false,
         timeoutMs: options.geoIpTimeoutMs ?? 1200,
       });
+      this.startLiveNetworkProbe();
+      this.installNetworkListeners();
 
       if (options.enableInternalFpsMonitor) {
         this.startFPSMonitoring();
@@ -882,10 +895,85 @@ class DeviceMonitor {
   }
 
   private getPhysicalScreenPixels(): { width: number; height: number; pixelRatio: number } {
-    const pixelRatio = window.devicePixelRatio || 1;
+    const visualScale = (window as any).visualViewport?.scale || 1;
+    const pixelRatio = (window.devicePixelRatio || 1) * visualScale;
     const width = Math.round(Math.max(screen.width, screen.height) * pixelRatio);
     const height = Math.round(Math.min(screen.width, screen.height) * pixelRatio);
     return { width, height, pixelRatio };
+  }
+
+  /**
+   * Apply a network measurement to both network and live info objects.
+   */
+  private applyNetworkSample(sample: { downMbps?: number; uploadMbps?: number; latency?: number; jitter?: number; measured?: boolean }) {
+    const { downMbps, uploadMbps, latency, jitter, measured = true } = sample;
+
+    if (Number.isFinite(downMbps)) {
+      this.networkSpeed = downMbps!;
+    }
+    if (Number.isFinite(uploadMbps)) {
+      this.uploadSpeed = uploadMbps!;
+    }
+    if (Number.isFinite(latency)) {
+      this.latency = latency!;
+    }
+    if (Number.isFinite(jitter)) {
+      this.latencyJitter = jitter!;
+    }
+
+    if (!this.info.network) {
+      this.info.network = {
+        type: 'unknown',
+        effectiveType: '4g',
+        downlink: 0,
+        rtt: 0,
+        saveData: false,
+        ip: this.geoIpCache.ip,
+        location: this.geoIpCache.location,
+        isp: this.geoIpCache.isp,
+        measuredDownlink: 0,
+        measuredUpload: 0,
+        jitter: 0,
+        testTimestamp: Date.now()
+      };
+    }
+
+    const net = this.info.network!;
+    if (Number.isFinite(this.networkSpeed)) {
+      net.measuredDownlink = this.networkSpeed;
+      net.downlink = net.downlink || this.networkSpeed;
+      net.effectiveType = this.deriveEffectiveTypeFromSpeed(this.networkSpeed, net.effectiveType);
+    }
+    if (Number.isFinite(this.uploadSpeed)) {
+      net.measuredUpload = this.uploadSpeed;
+    }
+    if (Number.isFinite(this.latency)) {
+      net.rtt = this.latency;
+    }
+    if (Number.isFinite(this.latencyJitter)) {
+      net.jitter = this.latencyJitter;
+    }
+    if (measured) {
+      net.testTimestamp = Date.now();
+    }
+
+    if (!this.info.live) {
+      this.info.live = {
+        fps: this.fps,
+        frameTime: 1000 / Math.max(this.fps, 1),
+        networkSpeed: 0,
+        uploadSpeed: 0,
+        latency: 0,
+        jitter: 0,
+        timestamp: Date.now(),
+      };
+    }
+
+    this.info.live.networkSpeed = this.networkSpeed;
+    this.info.live.uploadSpeed = this.uploadSpeed;
+    this.info.live.latency = this.latency;
+    this.info.live.jitter = this.latencyJitter;
+    this.info.live.timestamp = Date.now();
   }
 
   private matchesScreen(specW: number, specH: number, w: number, h: number): boolean {
@@ -1584,7 +1672,7 @@ class DeviceMonitor {
 
     const type = connection.type || 'unknown';
     const effectiveType = connection.effectiveType || '4g';
-    const downlink = connection.downlink || 0;
+    const downlink = connection.downlink || connection.downlinkMax || this.networkSpeed || 0;
     const rtt = connection.rtt || 0;
     const saveData = connection.saveData || false;
 
@@ -1611,6 +1699,10 @@ class DeviceMonitor {
       await this.geoIpPromise;
     }
 
+    // Keep live stats in sync even when speed test isn't running.
+    this.networkSpeed = downlink || this.networkSpeed;
+    this.latency = rtt || this.latency;
+
     this.info.network = {
       type,
       effectiveType,
@@ -1625,6 +1717,94 @@ class DeviceMonitor {
       jitter: 0,
       testTimestamp: Date.now()
     };
+
+    this.applyNetworkSample({ downMbps: downlink || this.networkSpeed, uploadMbps: this.uploadSpeed, latency: this.latency, jitter: this.latencyJitter, measured: false });
+  }
+
+  /**
+   * Keep network info fresh when the connection changes or the tab comes online.
+   */
+  private installNetworkListeners(): void {
+    if (this.networkListenersInstalled || typeof window === 'undefined') return;
+    const connection = (navigator as any).connection;
+    const handler = () => {
+      void this.detectNetwork({ includeGeoIp: false, timeoutMs: 0 });
+    };
+    if (connection?.addEventListener) {
+      connection.addEventListener('change', handler);
+    }
+    window.addEventListener('online', handler);
+    window.addEventListener('offline', handler);
+    this.networkListenersInstalled = true;
+  }
+
+  /**
+   * Lightweight live network probe (tiny payload) every second.
+   * Keeps download/upload/latency fresh without heavy bandwidth use.
+   */
+  private startLiveNetworkProbe(intervalMs = 1000): void {
+    if (this.liveNetworkIntervalId !== null || typeof window === 'undefined') return;
+
+    const probe = async () => {
+      try {
+        if (this.info.network?.saveData) return;
+
+        const bytes = 16000; // 16KB - tiny payload for live sampling
+        const downUrl = `https://speed.cloudflare.com/__down?bytes=${bytes}&ts=${Date.now()}`;
+        const start = performance.now();
+        const response = await fetch(downUrl, { cache: 'no-store' });
+
+        let downloaded = 0;
+        if (response.body?.getReader) {
+          const reader = response.body.getReader();
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            downloaded += value?.length || 0;
+          }
+        } else {
+          const buf = await response.arrayBuffer();
+          downloaded = buf.byteLength || bytes;
+        }
+
+        const elapsed = Math.max(performance.now() - start, 1);
+        const downMbps = Math.round((((downloaded * 8) / (elapsed / 1000)) / 1_000_000) * 100) / 100;
+
+        // Quick latency probe (HEAD)
+        let latency = this.latency || 0;
+        try {
+          const latencyStart = performance.now();
+          await fetch('https://speed.cloudflare.com/__down?bytes=1', { method: 'HEAD', cache: 'no-store' });
+          latency = Math.round(performance.now() - latencyStart);
+        } catch (e) {
+          // Ignore latency failure
+        }
+
+        // Occasional small upload (every 5s) to keep upload current
+        let uploadMbps = this.uploadSpeed;
+        this.liveProbeCounter = (this.liveProbeCounter + 1) % 5;
+        if (this.liveProbeCounter === 0) {
+          const uploadBytes = 12000;
+          const upStart = performance.now();
+          await fetch(`https://speed.cloudflare.com/__up?ts=${Date.now()}`, {
+            method: 'POST',
+            cache: 'no-store',
+            mode: 'cors',
+            body: new Uint8Array(uploadBytes)
+          });
+          const upElapsed = Math.max(performance.now() - upStart, 1);
+          uploadMbps = Math.round((((uploadBytes * 8) / (upElapsed / 1000)) / 1_000_000) * 100) / 100;
+        }
+
+        const jitter = Math.abs(latency - (this.latency || latency));
+        this.applyNetworkSample({ downMbps, uploadMbps, latency, jitter, measured: true });
+      } catch (error) {
+        // keep silent; this is best-effort
+      }
+    };
+
+    void probe();
+    this.liveNetworkIntervalId = window.setInterval(probe, Math.max(500, intervalMs));
   }
 
   /**
@@ -1685,11 +1865,12 @@ class DeviceMonitor {
     // Browser viewport dimensions
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    const pixelRatio = window.devicePixelRatio || 1;
+    const visualScale = (window as any).visualViewport?.scale || 1;
+    const pixelRatio = (window.devicePixelRatio || 1) * visualScale;
     
     // Physical screen dimensions (using screen API with pixel ratio)
-    let physicalWidth = Math.round(screen.width * pixelRatio);
-    let physicalHeight = Math.round(screen.height * pixelRatio);
+    let physicalWidth = Math.round(Math.max(screen.width, screen.height) * pixelRatio);
+    let physicalHeight = Math.round(Math.min(screen.width, screen.height) * pixelRatio);
     
     // Also check screen.availWidth/availHeight for desktop
     const screenW = screen.width;
@@ -1795,13 +1976,18 @@ class DeviceMonitor {
     };
 
     // Update on resize (only viewport changes, physical stays same)
-    window.addEventListener('resize', () => {
+    const resizeHandler = () => {
       if (this.info.screen) {
         this.info.screen.viewportWidth = window.innerWidth;
         this.info.screen.viewportHeight = window.innerHeight;
         this.info.screen.orientation = this.info.screen.physicalWidth > this.info.screen.physicalHeight ? 'landscape' : 'portrait';
       }
-    });
+    };
+    window.addEventListener('resize', resizeHandler);
+    if ((window as any).visualViewport) {
+      (window as any).visualViewport.addEventListener('resize', resizeHandler);
+      (window as any).visualViewport.addEventListener('scroll', resizeHandler);
+    }
   }
 
   /**
@@ -1864,23 +2050,7 @@ class DeviceMonitor {
           uploadProbe
         ]);
 
-        this.networkSpeed = measuredSpeed;
-        this.uploadSpeed = measuredUpload;
-        this.latency = latency;
-        this.latencyJitter = jitter;
-
-        if (this.info.network) {
-          this.info.network.measuredDownlink = measuredSpeed;
-          this.info.network.measuredUpload = measuredUpload;
-          this.info.network.downlink = this.info.network.downlink || measuredSpeed;
-          this.info.network.rtt = latency;
-          this.info.network.jitter = jitter;
-          this.info.network.effectiveType = this.deriveEffectiveTypeFromSpeed(
-            measuredSpeed,
-            this.info.network.effectiveType
-          );
-          this.info.network.testTimestamp = Date.now();
-        }
+        this.applyNetworkSample({ downMbps: measuredSpeed, uploadMbps: measuredUpload, latency, jitter, measured: true });
       } catch (error) {
         console.warn('[DeviceMonitor] Network test failed', error);
         if (this.info.network) {
@@ -1893,6 +2063,35 @@ class DeviceMonitor {
 
     await test();
     this.networkTestIntervalId = window.setInterval(test, 60000);
+  }
+
+  /**
+   * Manual/quick speed test for UI triggers.
+   */
+  async runSpeedTest(options: { downloadBytes?: number; uploadBytes?: number; latencySamples?: number; quick?: boolean } = {}) {
+    const downloadBytes = options.downloadBytes ?? (options.quick ? 200_000 : 750_000);
+    const uploadBytes = options.uploadBytes ?? (options.quick ? 120_000 : 300_000);
+    const latencySamples = options.latencySamples ?? 3;
+
+    const pingUrl = 'https://speed.cloudflare.com/__down?bytes=64';
+    const downUrl = `https://speed.cloudflare.com/__down?bytes=${downloadBytes}&ts=${Date.now()}`;
+    const upUrl = `https://speed.cloudflare.com/__up?ts=${Date.now()}`;
+
+    const [{ latency, jitter }, downMbps, upMbps] = await Promise.all([
+      this.measureLatency(pingUrl, latencySamples),
+      this.measureDownloadSpeed(downUrl),
+      this.measureUploadSpeed(upUrl, uploadBytes)
+    ]);
+
+    this.applyNetworkSample({ downMbps, uploadMbps: upMbps, latency, jitter, measured: true });
+
+    return {
+      downMbps,
+      upMbps,
+      latency,
+      jitter,
+      timestamp: Date.now()
+    };
   }
 
   /**
@@ -2031,6 +2230,11 @@ class DeviceMonitor {
       location: 'Unknown',
       isp: 'Unknown'
     };
+
+    // If network info is still missing, kick off a geo/IP refresh in the background.
+    if (typeof window !== 'undefined' && network.ip === 'Unknown') {
+      void this.detectNetwork({ includeGeoIp: true, timeoutMs: 900 });
+    }
 
     // Ensure the latest latency is reflected in the network payload
     network.rtt = this.latency || network.rtt;

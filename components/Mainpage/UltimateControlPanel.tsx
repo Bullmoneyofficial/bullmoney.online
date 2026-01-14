@@ -266,6 +266,8 @@ export function UltimateControlPanel({
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'network' | 'performance' | 'account'>('overview');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSpeedTesting, setIsSpeedTesting] = useState(false);
+  const [speedTestResult, setSpeedTestResult] = useState<{ downMbps: number; upMbps: number; latency: number; jitter: number; timestamp: number } | null>(null);
   const [showSensitive, setShowSensitive] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const [dragProgress, setDragProgress] = useState(0);
@@ -327,6 +329,18 @@ export function UltimateControlPanel({
   const handleRefresh = () => {
     setIsRefreshing(true);
     window.location.reload();
+  };
+
+  const handleSpeedTest = async () => {
+    setIsSpeedTesting(true);
+    try {
+      const result = await deviceMonitor.runSpeedTest({ quick: true });
+      setSpeedTestResult(result);
+    } catch (error) {
+      console.warn('[UltimateControlPanel] Speed test failed', error);
+    } finally {
+      setIsSpeedTesting(false);
+    }
   };
 
   // Handle drag
@@ -731,6 +745,42 @@ export function UltimateControlPanel({
                             Jitter: <span className="text-white font-semibold">{Math.round(liveJitter)}ms</span>
                           </div>
                         </div>
+                      </div>
+
+                      {/* Manual Speed Test */}
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border border-white/10 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-sm text-white/60">Speed test</div>
+                            <div className="text-xs text-white/40">Runs a quick download/upload probe</div>
+                          </div>
+                          <button
+                            onClick={handleSpeedTest}
+                            disabled={isSpeedTesting}
+                            className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/10 transition-colors disabled:opacity-50"
+                          >
+                            {isSpeedTesting ? 'Testing…' : 'Run test'}
+                          </button>
+                        </div>
+                        {speedTestResult && (
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div className="text-white/70">
+                              Download: <span className="text-white font-semibold">{speedTestResult.downMbps.toFixed(2)} Mbps</span>
+                            </div>
+                            <div className="text-white/70">
+                              Upload: <span className="text-white font-semibold">{speedTestResult.upMbps.toFixed(2)} Mbps</span>
+                            </div>
+                            <div className="text-white/70">
+                              Latency: <span className="text-white font-semibold">{Math.round(speedTestResult.latency)}ms</span>
+                            </div>
+                            <div className="text-white/70">
+                              Jitter: <span className="text-white font-semibold">{Math.round(speedTestResult.jitter)}ms</span>
+                            </div>
+                            <div className="text-xs text-white/40 col-span-2">
+                              Tested at {new Date(speedTestResult.timestamp).toLocaleTimeString()}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Location */}

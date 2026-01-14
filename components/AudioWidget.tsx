@@ -511,7 +511,7 @@ const AudioWidget = React.memo(function AudioWidget() {
               SoundEffects.click();
               setWidgetHidden(false);
             }}
-            className="fixed left-0 bottom-16 z-[60] flex items-center gap-1 pl-1 pr-3 py-3 rounded-r-xl bg-blue-500/20 border border-l-0 border-blue-400/30 backdrop-blur-md hover:bg-blue-500/30 transition-colors group"
+            className="fixed left-0 bottom-16 z-[100200] flex items-center gap-1 pl-1 pr-3 py-3 rounded-r-xl bg-blue-500/20 border border-l-0 border-blue-400/30 backdrop-blur-md hover:bg-blue-500/30 transition-colors group pointer-events-auto"
           >
             <IconGripVertical className="w-4 h-4 text-blue-300/60 group-hover:text-blue-300" />
             <IconMusic className="w-4 h-4 text-blue-300" />
@@ -526,7 +526,7 @@ const AudioWidget = React.memo(function AudioWidget() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="fixed left-3 bottom-[280px] z-[65] w-[280px] sm:w-[320px] pointer-events-auto"
+            className="fixed left-3 bottom-[280px] z-[100210] w-[280px] sm:w-[320px] pointer-events-auto"
           >
             <div className="relative p-3 rounded-xl bg-black/90 border border-blue-400/30 backdrop-blur-xl shadow-2xl">
               {/* Close button */}
@@ -567,7 +567,7 @@ const AudioWidget = React.memo(function AudioWidget() {
             initial={{ x: 0 }}
             animate={{ x: 0 }}
             exit={{ x: -200, opacity: 0 }}
-            className="fixed left-3 bottom-14 z-[60] pointer-events-auto"
+            className="fixed left-3 bottom-14 z-[100200] pointer-events-auto"
             drag="x"
             dragConstraints={{ left: -150, right: 0 }}
             dragElastic={0.1}
@@ -971,7 +971,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                       setPlayerHidden(false);
                     }}
                     className={cn(
-                      "fixed z-[9998] left-0 flex items-center py-6 pl-0.5 pr-2 rounded-r-lg backdrop-blur-sm transition-colors",
+                      "fixed z-[100220] left-0 flex items-center py-6 pl-0.5 pr-2 rounded-r-lg backdrop-blur-sm transition-colors",
                       "bg-blue-500/20 hover:bg-blue-500/30 border-r border-y border-blue-400/30"
                     )}
                     style={{ bottom: 220 }}
@@ -1056,7 +1056,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                       repeat: (isWandering && morphPhase === 'idle' && !isHovering && !isNearPlayer) ? Infinity : 0 
                     },
                   }}
-                  className="fixed z-[9999] pointer-events-auto"
+                  className="fixed z-[100230] pointer-events-auto"
                   style={{ 
                     left: 0, 
                     bottom: 160,
