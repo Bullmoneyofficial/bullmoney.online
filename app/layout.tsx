@@ -624,6 +624,8 @@ export default function RootLayout({
                       <Navbar />
                       {/* Bottom-left audio widget (not in navbar) */}
                       <AudioWidget />
+                      {/* Route-level modals should not be inside the filter wrapper */}
+                      {modal}
                       {/* Theme filter wrapper - applies filter only to main content */}
                       <main 
                         className="theme-filter-wrapper min-h-screen"
@@ -636,7 +638,6 @@ export default function RootLayout({
                         data-allow-scroll
                       >
                         {children}
-                        {modal}
                       </main>
                       <Footer />
                       {/* FPS Counter - only shows in development */}

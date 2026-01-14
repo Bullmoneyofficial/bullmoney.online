@@ -723,13 +723,10 @@ html.shimmer-quality-disabled {
 
 html.shimmer-quality-disabled [class*="backdrop-blur"] {
   backdrop-filter: none !important;
-  background-color: rgba(0, 0, 0, 0.8) !important;
+  -webkit-backdrop-filter: none !important;
 }
 
-html.shimmer-quality-disabled canvas:not([data-essential="true"]) {
-  opacity: 0.5;
-  filter: blur(2px);
-}
+/* Never dim/blur canvases based on FPS quality; handle quality via DPR/FPS caps instead. */
 
 /* Text glow effect for active theme elements */
 .text-glow {

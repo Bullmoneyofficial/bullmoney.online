@@ -14,7 +14,23 @@
   }
 }
 
+/* Some parts of the app use a separate GPU spin keyframe. Disable that too. */
+@keyframes gpu-spin {
+  0%,
+  100% {
+    transform: none;
+    opacity: 0.55;
+  }
+  50% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
 .animate-spin {
   animation-timing-function: ease-in-out !important;
 }
 
+.animate-spin-gpu {
+  animation-timing-function: ease-in-out !important;
+}
