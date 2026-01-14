@@ -168,9 +168,9 @@ const ShimmerStyles = () => (
     
     /* =================================================================
        FPS-AWARE QUALITY CONTROL
-       Classes added by PerformanceProvider based on FPS
+       Classes added by UnifiedPerformanceSystem based on real FPS
        ================================================================= */
-    
+
     /* Medium quality - slow down animations */
     html.shimmer-quality-medium .shimmer-line { animation-duration: 5s; }
     html.shimmer-quality-medium .shimmer-spin { animation-duration: 6s; }
@@ -178,33 +178,104 @@ const ShimmerStyles = () => (
     html.shimmer-quality-medium .shimmer-pulse { animation-duration: 5s; }
     html.shimmer-quality-medium .shimmer-glow { animation-duration: 5s; }
     html.shimmer-quality-medium .shimmer-ping { animation-duration: 2s; }
-    
-    /* Low quality - minimal animations */
+
+    /* Low quality - slower animations but KEEP LEFT-TO-RIGHT effect */
     html.shimmer-quality-low .shimmer-line,
     html.shimmer-quality-low .shimmer-spin,
-    html.shimmer-quality-low .shimmer-ltr,
+    html.shimmer-quality-low .shimmer-ltr {
+      animation-duration: 9s !important;
+    }
+
     html.shimmer-quality-low .shimmer-glow,
-    html.shimmer-quality-low .shimmer-float,
+    html.shimmer-quality-low .shimmer-float {
+      animation-duration: 10s !important;
+    }
+
     html.shimmer-quality-low .shimmer-dot-pulse,
     html.shimmer-quality-low .shimmer-ping {
-      animation: none !important;
+      animation-duration: 4s !important;
     }
-    
+
     html.shimmer-quality-low .shimmer-pulse {
       animation-duration: 8s;
     }
-    
-    /* Disabled - no animations at all */
+
+    /* Disabled - VERY slow animations, keep left-to-right look */
     html.shimmer-quality-disabled .shimmer-line,
     html.shimmer-quality-disabled .shimmer-spin,
-    html.shimmer-quality-disabled .shimmer-ltr,
+    html.shimmer-quality-disabled .shimmer-ltr {
+      animation-duration: 15s !important;
+      opacity: 0.4;
+    }
+
     html.shimmer-quality-disabled .shimmer-pulse,
     html.shimmer-quality-disabled .shimmer-glow,
     html.shimmer-quality-disabled .shimmer-float,
     html.shimmer-quality-disabled .shimmer-dot-pulse,
     html.shimmer-quality-disabled .shimmer-ping {
-      animation: none !important;
-      opacity: 0.5;
+      animation-duration: 12s !important;
+      opacity: 0.3;
+    }
+
+    /* =================================================================
+       FPS-CLASS BASED EMERGENCY CONTROLS
+       These provide immediate CSS-level performance improvements
+       Applied by UnifiedPerformanceSystem based on real-time FPS
+       ================================================================= */
+
+    /* FPS MINIMAL (<30fps) - Very slow but KEEP left-to-right animation */
+    html.fps-minimal [class*="shimmer"] {
+      animation-duration: 14s !important;
+      opacity: 0.4 !important;
+      will-change: auto !important;
+    }
+
+    html.fps-minimal .shimmer-text {
+      animation-duration: 12s !important;
+    }
+
+    /* FPS LOW (30-35fps) - Slower shimmers, keep aesthetic */
+    html.fps-low [class*="shimmer"]:not(.shimmer-essential) {
+      animation-duration: 10s !important;
+      will-change: auto !important;
+    }
+
+    html.fps-low .shimmer-pulse,
+    html.fps-low .shimmer-glow {
+      animation-duration: 12s !important;
+    }
+
+    /* FPS MEDIUM (35-50fps) - Moderate speed reduction */
+    html.fps-medium .shimmer-line { animation-duration: 6s !important; }
+    html.fps-medium .shimmer-spin { animation-duration: 8s !important; }
+    html.fps-medium .shimmer-ltr { animation-duration: 6s !important; }
+    html.fps-medium .shimmer-pulse { animation-duration: 6s !important; }
+    html.fps-medium .shimmer-glow { animation-duration: 8s !important; }
+    html.fps-medium .shimmer-float { animation-duration: 6s !important; }
+
+    /* iOS/Safari specific - slower but keep animation */
+    html.is-ios [class*="shimmer"],
+    html.is-safari [class*="shimmer"] {
+      animation-duration: 7s !important;
+    }
+
+    html.is-ios.fps-medium [class*="shimmer"],
+    html.is-safari.fps-medium [class*="shimmer"] {
+      animation-duration: 10s !important;
+      opacity: 0.7 !important;
+    }
+
+    /* CRITICAL: Keep shimmers visible on iOS/Safari even at low FPS - just very slow */
+    html.is-ios.fps-low [class*="shimmer"],
+    html.is-safari.fps-low [class*="shimmer"] {
+      animation-duration: 12s !important;
+      opacity: 0.5 !important;
+    }
+
+    html.is-ios.fps-minimal [class*="shimmer"],
+    html.is-safari.fps-minimal [class*="shimmer"] {
+      animation-duration: 16s !important;
+      opacity: 0.35 !important;
     }
     
     /* =================================================================
@@ -241,8 +312,8 @@ const ShimmerStyles = () => (
       .shimmer-ltr { animation-duration: 5s; }
     }
     
-    /* Component visibility optimization - hide shimmers on inactive components */
-    /* When FPS optimizer detects component is unused, disable its shimmers to save performance */
+    /* Component visibility optimization - slow down shimmers on inactive components */
+    /* When FPS optimizer detects component is offscreen, slow down shimmers significantly */
     html.component-inactive-navbar .navbar-shimmer,
     html.component-inactive-navbar .shimmer-line.navbar-shimmer,
     html.component-inactive-footer .footer-shimmer,
@@ -253,9 +324,9 @@ const ShimmerStyles = () => (
     html.component-inactive-ultimatePanel .shimmer-line.panel-shimmer,
     html.component-inactive-staticTip .static-tip-shimmer,
     html.component-inactive-movingTip .moving-tip-shimmer {
-      animation: none !important;
-      opacity: 0 !important;
-      display: none !important;
+      animation-duration: 20s !important;
+      animation-play-state: paused !important;
+      opacity: 0.2 !important;
     }
     
     /* Performance hint for GPU compositing */

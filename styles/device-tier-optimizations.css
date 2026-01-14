@@ -124,49 +124,61 @@ html[data-device-tier="low"] {
   --spline-enabled: 0;
 }
 
-/* Disable complex animations */
+/* Slow down complex animations instead of disabling - keeps aesthetic */
 html.device-low .shimmer-spin,
 html.device-low .shimmer-glow,
 html.device-low .shimmer-float {
-  animation: none !important;
+  animation-duration: 12s !important;
 }
 
 /* Keep only essential animations but slow them down */
 html.device-low .shimmer-pulse {
-  animation-duration: 8s !important;
+  animation-duration: 10s !important;
 }
 
-/* Remove all backdrop blur (expensive on low-end) */
+/* Keep shimmer left-to-right animation with slow speed */
+html.device-low .shimmer-line,
+html.device-low .shimmer-ltr {
+  animation-duration: 10s !important;
+}
+
+/* Keep minimal blur for glass effects - 6px minimum maintains look */
 html.device-low .backdrop-blur-2xl,
 html.device-low .backdrop-blur-xl,
-html.device-low .backdrop-blur-lg,
-html.device-low .backdrop-blur-md,
-html.device-low .backdrop-blur {
-  backdrop-filter: none !important;
-  background-color: rgba(0, 0, 0, 0.85) !important;
+html.device-low .backdrop-blur-lg {
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
 }
 
-/* Simplify all shadows */
+html.device-low .backdrop-blur-md,
+html.device-low .backdrop-blur {
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Simplify all shadows but keep some depth */
 html.device-low [class*="shadow-"] {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* Hide decorative elements */
-html.device-low .shimmer-border,
-html.device-low .shimmer-glow,
+/* Slow down decorative elements instead of hiding */
+html.device-low .shimmer-border {
+  animation-duration: 14s !important;
+  opacity: 0.5 !important;
+}
+
 html.device-low .sparkles-container {
-  display: none !important;
+  opacity: 0.3 !important;
 }
 
-/* Disable 3D scenes */
-html.device-low .spline-container,
-html.device-low [data-spline] {
-  display: none !important;
-}
+/* Keep 3D scenes but at reduced quality via spline-wrapper.js */
+/* Don't hide them completely - let the wrapper handle quality */
 
-/* Reduce motion */
-html.device-low * {
-  transition-duration: 0.1s !important;
+/* Reduce motion speed */
+html.device-low *:not(canvas):not(video) {
+  transition-duration: 100ms !important;
 }
 
 /* =================================================================
@@ -176,49 +188,56 @@ html.device-low * {
 html.device-minimal,
 html[data-device-tier="minimal"] {
   --animation-quality: minimal;
-  --blur-amount: 0;
-  --shadow-quality: none;
+  --blur-amount: 4px;
+  --shadow-quality: minimal;
   --spline-quality: disabled;
   --spline-enabled: 0;
 }
 
-/* Disable ALL animations */
-html.device-minimal *,
-html.device-minimal *::before,
-html.device-minimal *::after {
-  animation: none !important;
-  animation-duration: 0s !important;
-  transition: none !important;
+/* Very slow animations - keeps aesthetic without CPU cost */
+html.device-minimal *:not(canvas):not(video) {
+  transition-duration: 0ms !important;
 }
 
-/* No blur at all */
-html.device-minimal [class*="blur"] {
-  backdrop-filter: none !important;
-  filter: none !important;
+/* Keep minimal blur for glass effects - 4px */
+html.device-minimal [class*="backdrop-blur"] {
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  background-color: rgba(0, 0, 0, 0.8) !important;
 }
 
-/* No shadows */
+html.device-minimal [class*="blur-"]:not([class*="backdrop-blur"]) {
+  filter: blur(2px) !important;
+}
+
+/* Minimal shadows - keep some depth */
 html.device-minimal [class*="shadow"] {
-  box-shadow: none !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
 }
 
-/* Hide all decorative elements */
+/* VERY slow shimmers - keeps left-to-right effect */
 html.device-minimal .shimmer-border,
 html.device-minimal .shimmer-line,
 html.device-minimal .shimmer-spin,
 html.device-minimal .shimmer-pulse,
 html.device-minimal .shimmer-glow,
-html.device-minimal .sparkles-container,
-html.device-minimal .spline-container {
-  display: none !important;
+html.device-minimal .shimmer-ltr {
+  animation-duration: 16s !important;
+  opacity: 0.3 !important;
 }
 
-/* Solid backgrounds only */
+html.device-minimal .sparkles-container {
+  opacity: 0.15 !important;
+}
+
+/* Spline containers handled by visibility CSS */
+
+/* Keep gradients but simplify */
 html.device-minimal .bg-gradient-to-r,
 html.device-minimal .bg-gradient-to-l,
 html.device-minimal .bg-gradient-to-b,
 html.device-minimal .bg-gradient-to-t {
-  background: #000 !important;
+  opacity: 0.8 !important;
 }
 
 /* =================================================================
@@ -226,19 +245,19 @@ html.device-minimal .bg-gradient-to-t {
    (Applied by PerformanceProvider based on measured FPS)
    ================================================================= */
 
-/* Already defined in UnifiedShimmer.tsx, reinforced here */
+/* Already defined in UnifiedShimmer.tsx - keep slow animations, don't disable */
 html.shimmer-quality-low .shimmer-spin,
 html.shimmer-quality-low .shimmer-glow,
 html.shimmer-quality-low .shimmer-float {
-  animation: none !important;
+  animation-duration: 12s !important;
 }
 
 html.shimmer-quality-disabled .shimmer-line,
 html.shimmer-quality-disabled .shimmer-spin,
 html.shimmer-quality-disabled .shimmer-pulse,
 html.shimmer-quality-disabled .shimmer-glow {
-  animation: none !important;
-  opacity: 0.5 !important;
+  animation-duration: 16s !important;
+  opacity: 0.35 !important;
 }
 
 /* =================================================================

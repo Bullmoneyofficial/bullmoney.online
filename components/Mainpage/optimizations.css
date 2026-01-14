@@ -26,10 +26,11 @@
     transition-duration: 0.3s !important;
   }
 
-  /* Disable expensive effects */
+  /* Reduce expensive effects but keep minimum blur for aesthetic */
   .mobile-no-blur {
-    filter: none !important;
-    backdrop-filter: none !important;
+    filter: blur(2px) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
   }
 
   /* Lower quality images */
@@ -47,14 +48,14 @@
 
 /* --- LOW-END DEVICE OPTIMIZATIONS --- */
 @media (max-width: 768px) and (max-resolution: 1.5dppx) {
-  /* Disable animations on low-end devices */
+  /* Slow down animations on low-end devices - keep aesthetic */
   .low-end-no-animate * {
-    animation: none !important;
-    transition: none !important;
+    animation-duration: 12s !important;
+    transition-duration: 100ms !important;
   }
 
   /* Reduce rendering complexity */
-  * {
+  *:not(canvas) {
     will-change: auto !important;
   }
 }
@@ -302,12 +303,12 @@
   -webkit-backdrop-filter: blur(10px);
 }
 
-/* Disable on mobile for performance */
+/* Reduce blur on mobile for performance but keep glass effect */
 @media (max-width: 768px) {
   .glass-morph-light {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    background: rgba(255, 255, 255, 0.08);
   }
 }
 

@@ -176,17 +176,62 @@ const COMPONENT_PRIORITIES: Record<TrackedComponent, number> = {
   multiStepLoader: 8, // High priority during load
 };
 
-// Quality thresholds
+// ============================================================================
+// GAME-LIKE FPS THRESHOLDS & ADAPTIVE QUALITY
+// Inspired by game engines: fast downgrade, slow upgrade, frame budget tracking
+// Optimized for M1 Macs and iPhones to achieve 60fps from 22fps baseline
+// ============================================================================
+
 const FPS_THRESHOLDS = {
-  critical: 15,
-  veryLow: 25,
-  low: 35,
-  medium: 50,
-  good: 55,
+  critical: 18,    // Emergency: disable almost everything (raised from 15)
+  veryLow: 25,     // Severe: disable shimmers, reduce quality aggressively (raised from 20)
+  low: 35,         // Bad: reduce quality, cap effects (raised from 30)
+  medium: 50,      // Acceptable: balanced quality (raised from 45)
+  good: 58,        // Good: full quality (raised from 55)
+  excellent: 72,   // Excellent: can try to upgrade (raised from 70)
 };
 
-const QUALITY_HYSTERESIS = 5; // Avoid flip-flop when FPS hovers near thresholds
-const FAST_DROP_FPS = 30; // Immediate downgrade trigger for jank bursts
+// Game-like hysteresis: FASTER downgrade, SLOWER upgrade for stability
+const QUALITY_HYSTERESIS = {
+  downgrade: 2,     // React faster to drops (was 3)
+  upgrade: 12,      // Much more conservative upgrade (was 8)
+};
+
+const FAST_DROP_FPS = 28; // Immediate emergency downgrade trigger (raised from 25)
+const RECOVERY_FPS = 55;  // FPS needed to start considering recovery (raised from 50)
+const FRAME_BUDGET_MS = 16.67; // Target frame time for 60fps
+const FRAME_BUDGET_JANK = 25; // Frame time that counts as jank (1.5x budget)
+
+// Quality level progression (for smooth transitions)
+// 5 levels: 0=emergency, 1=minimal, 2=low, 3=medium, 4=high
+type QualityLevel = 0 | 1 | 2 | 3 | 4;
+
+// Map quality levels to shimmer quality
+const QUALITY_LEVEL_MAP: Record<QualityLevel, ShimmerQuality> = {
+  0: 'disabled',
+  1: 'disabled',
+  2: 'low',
+  3: 'medium',
+  4: 'high',
+};
+
+// Map quality levels to spline quality - more aggressive reduction
+const SPLINE_QUALITY_MAP: Record<QualityLevel, SplineQuality> = {
+  0: 'low',
+  1: 'low',
+  2: 'low',
+  3: 'medium',
+  4: 'high',
+};
+
+// Map quality levels to FPS CSS classes for CSS-level optimizations
+const FPS_CLASS_MAP: Record<QualityLevel, string> = {
+  0: 'fps-minimal',
+  1: 'fps-minimal',
+  2: 'fps-low',
+  3: 'fps-medium',
+  4: 'fps-high',
+};
 
 // Default state
 const defaultState: UnifiedPerformanceState = {
@@ -233,27 +278,36 @@ const defaultState: UnifiedPerformanceState = {
 // ============================================================================
 
 /**
- * Single FPS Monitor - Only one RAF loop for the entire app
+ * Enhanced FPS Monitor - Game-like frame budget tracking
+ * Tracks: instant FPS, rolling average, frame time percentiles, jank detection
  */
 class FPSMonitor {
   private static instance: FPSMonitor;
-  private subscribers: Set<(fps: number, avg: number) => void> = new Set();
+  private subscribers: Set<(data: FPSData) => void> = new Set();
   private frameTimes: number[] = [];
+  private frameDeltas: number[] = []; // Track actual frame times for budget analysis
   private emaFps = 60;
   private longFps = 60;
   private lastNotify = 0;
+  private lastFrameTime = 0;
   private rafId: number | null = null;
   private isRunning = false;
   private lastVisibilityState: boolean | null = null;
-  
+
+  // Jank detection: count frames that exceeded budget
+  private jankFrames = 0;
+  private totalFrames = 0;
+  private consecutiveGoodFrames = 0;
+  private consecutiveBadFrames = 0;
+
   static getInstance(): FPSMonitor {
     if (!FPSMonitor.instance) {
       FPSMonitor.instance = new FPSMonitor();
     }
     return FPSMonitor.instance;
   }
-  
-  subscribe(callback: (fps: number, avg: number) => void): () => void {
+
+  subscribe(callback: (data: FPSData) => void): () => void {
     this.subscribers.add(callback);
     if (!this.isRunning && this.subscribers.size > 0) {
       this.start();
@@ -265,13 +319,14 @@ class FPSMonitor {
       }
     };
   }
-  
+
   private start() {
     if (this.isRunning || typeof window === 'undefined') return;
     this.isRunning = true;
+    this.lastFrameTime = performance.now();
     this.loop(performance.now());
   }
-  
+
   private stop() {
     if (this.rafId) {
       cancelAnimationFrame(this.rafId);
@@ -279,7 +334,7 @@ class FPSMonitor {
     }
     this.isRunning = false;
   }
-  
+
   private loop = (timestamp: number) => {
     // If tab is hidden, hold last values to avoid fake spikes/drops.
     const isHidden = typeof document !== 'undefined' ? document.hidden : false;
@@ -288,6 +343,10 @@ class FPSMonitor {
       // Reset window when coming back to avoid stale deltas.
       if (!isHidden) {
         this.frameTimes = [];
+        this.frameDeltas = [];
+        this.lastFrameTime = timestamp;
+        this.consecutiveGoodFrames = 0;
+        this.consecutiveBadFrames = 0;
       }
     }
     if (isHidden) {
@@ -295,9 +354,39 @@ class FPSMonitor {
       return;
     }
 
-    // Keep recent timestamps (last ~1.5s)
+    // Calculate frame delta for budget tracking
+    const frameDelta = timestamp - this.lastFrameTime;
+    this.lastFrameTime = timestamp;
+
+    // Skip unrealistic deltas (tab switch, debugger pause, etc.)
+    if (frameDelta > 500 || frameDelta < 1) {
+      this.rafId = requestAnimationFrame(this.loop);
+      return;
+    }
+
+    // Track frame deltas (last 30 frames for faster percentile analysis)
+    this.frameDeltas.push(frameDelta);
+    if (this.frameDeltas.length > 30) {
+      this.frameDeltas.shift();
+    }
+
+    // Jank detection: frame took more than budget (use FRAME_BUDGET_JANK = 25ms)
+    this.totalFrames++;
+    const isJankFrame = frameDelta > FRAME_BUDGET_JANK;
+    if (isJankFrame) {
+      this.jankFrames++;
+      this.consecutiveBadFrames++;
+      this.consecutiveGoodFrames = 0;
+    } else {
+      this.consecutiveGoodFrames++;
+      if (this.consecutiveGoodFrames > 8) { // Faster reset (was 10)
+        this.consecutiveBadFrames = 0;
+      }
+    }
+
+    // Keep recent timestamps (last ~1s for faster reaction)
     this.frameTimes.push(timestamp);
-    while (this.frameTimes.length > 2 && timestamp - this.frameTimes[0] > 1500) {
+    while (this.frameTimes.length > 2 && timestamp - this.frameTimes[0] > 1000) {
       this.frameTimes.shift();
     }
 
@@ -308,20 +397,66 @@ class FPSMonitor {
       ? Math.min(240, Math.round(((this.frameTimes.length - 1) * 1000) / span))
       : 60;
 
-    // Smooth with dual averages for better stability
-    this.emaFps = this.emaFps * 0.7 + instantFps * 0.3;
-    this.longFps = this.longFps * 0.9 + instantFps * 0.1;
+    // IMPROVED: Asymmetric smoothing - react FAST to drops, SLOW to recovery
+    // This prevents oscillation while maintaining responsiveness
+    const isDrop = instantFps < this.emaFps;
+    const dropWeight = isDrop ? 0.5 : 0.15; // 50% weight on drops, 15% on recovery
+    this.emaFps = this.emaFps * (1 - dropWeight) + instantFps * dropWeight;
 
-    // Notify more frequently (every ~400ms) for faster reactions to drops
-    if (timestamp - this.lastNotify >= 400) {
+    // Long average for stability assessment (even slower)
+    this.longFps = this.longFps * 0.95 + instantFps * 0.05;
+
+    // Notify every ~200ms for faster reactions to drops
+    if (timestamp - this.lastNotify >= 200) {
       const shortAvg = Math.max(1, Math.round(this.emaFps));
       const blendedAvg = Math.max(1, Math.round(this.emaFps * 0.6 + this.longFps * 0.4));
-      this.subscribers.forEach(cb => cb(shortAvg, blendedAvg));
+
+      // Calculate percentiles from frame deltas
+      const sortedDeltas = [...this.frameDeltas].sort((a, b) => a - b);
+      const p95Index = Math.floor(sortedDeltas.length * 0.95);
+      const p99Index = Math.floor(sortedDeltas.length * 0.99);
+
+      const data: FPSData = {
+        instant: instantFps,
+        average: blendedAvg,
+        shortAverage: shortAvg,
+        longAverage: Math.round(this.longFps),
+        frameTimeP95: sortedDeltas[p95Index] || FRAME_BUDGET_MS,
+        frameTimeP99: sortedDeltas[p99Index] || FRAME_BUDGET_MS,
+        jankRatio: this.totalFrames > 0 ? this.jankFrames / this.totalFrames : 0,
+        isRecovering: this.consecutiveGoodFrames > 20,
+        isInCrisis: this.consecutiveBadFrames > 5,
+        consecutiveGoodFrames: this.consecutiveGoodFrames,
+        consecutiveBadFrames: this.consecutiveBadFrames,
+      };
+
+      this.subscribers.forEach(cb => cb(data));
       this.lastNotify = timestamp;
+
+      // Reset jank counters periodically
+      if (this.totalFrames > 300) {
+        this.jankFrames = Math.floor(this.jankFrames / 2);
+        this.totalFrames = Math.floor(this.totalFrames / 2);
+      }
     }
 
     this.rafId = requestAnimationFrame(this.loop);
   };
+}
+
+// FPS data structure for subscribers
+interface FPSData {
+  instant: number;
+  average: number;
+  shortAverage: number;
+  longAverage: number;
+  frameTimeP95: number;
+  frameTimeP99: number;
+  jankRatio: number;
+  isRecovering: boolean;
+  isInCrisis: boolean;
+  consecutiveGoodFrames: number;
+  consecutiveBadFrames: number;
 }
 
 /**
@@ -775,6 +910,12 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
   const lastQualityUpdateRef = useRef(0);
   const lastIdleCheckRef = useRef(Date.now());
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Game-like quality tracking refs
+  const qualityLevelRef = useRef<QualityLevel>(4); // Start at high
+  const downgradeCountRef = useRef(0);
+  const upgradeCountRef = useRef(0);
+  const lastCrisisTimeRef = useRef(0);
   
   // Initialize device detection
   useEffect(() => {
@@ -847,84 +988,166 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
     };
   }, []);
   
-  // Subscribe to FPS monitor
+  // Subscribe to FPS monitor - ENHANCED with game-like quality management
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (device?.tier === 'minimal') return; // Skip on ultra low-end for battery/stability
-    
+
     const timeoutId = setTimeout(() => {
-      const unsubscribe = fpsMonitor.subscribe((fps, avg) => {
-        setCurrentFps(fps);
-        setAverageFps(avg);
+      const unsubscribe = fpsMonitor.subscribe((data: FPSData) => {
+        const { instant, average, shortAverage, isRecovering, isInCrisis, consecutiveGoodFrames, consecutiveBadFrames, frameTimeP95 } = data;
+
+        setCurrentFps(instant);
+        setAverageFps(average);
+
         // Feed FPS into DeviceMonitor (avoids a second RAF loop).
         try {
-          (window as any).deviceMonitor?.setExternalFps?.(fps, avg);
+          (window as any).deviceMonitor?.setExternalFps?.(instant, average);
         } catch {}
-        
-        // Spline quality control: prefer stable FPS over sharpness with hysteresis.
+
+        const now = performance.now();
         const tier = device?.tier ?? 'high';
-        const pickSplineQuality = (current: SplineQuality): SplineQuality => {
-          // Force low for minimal/low tiers
-          if (tier === 'minimal' || tier === 'low') return 'low';
+        const currentLevel = qualityLevelRef.current;
+        const isApple = device?.isAppleSilicon || device?.isIOS;
+        const isSafariBrowser = device?.isSafari;
 
-          // Aggressive downgrade on sudden drops
-          if (fps < FAST_DROP_FPS || avg < FPS_THRESHOLDS.low) return 'low';
-          if (fps < FPS_THRESHOLDS.medium || avg < FPS_THRESHOLDS.medium) return 'medium';
-
-          // Upgrade slowly to avoid oscillation
-          if (current === 'low' && avg < FPS_THRESHOLDS.medium + QUALITY_HYSTERESIS) return 'low';
-          if (current === 'medium' && avg < FPS_THRESHOLDS.good + QUALITY_HYSTERESIS) return 'medium';
-          return 'high';
+        // ============================================================
+        // DEVICE-AWARE THRESHOLD ADJUSTMENT
+        // Apple Silicon/iOS devices have different performance characteristics
+        // Safari has worse backdrop-filter performance than Chrome
+        // ============================================================
+        const thresholds = {
+          // Safari/iOS need more aggressive reduction due to backdrop-filter issues
+          critical: isSafariBrowser ? FPS_THRESHOLDS.critical + 5 : FPS_THRESHOLDS.critical,
+          veryLow: isSafariBrowser ? FPS_THRESHOLDS.veryLow + 5 : FPS_THRESHOLDS.veryLow,
+          low: isSafariBrowser ? FPS_THRESHOLDS.low + 5 : FPS_THRESHOLDS.low,
+          medium: FPS_THRESHOLDS.medium,
+          good: FPS_THRESHOLDS.good,
+          excellent: FPS_THRESHOLDS.excellent,
         };
 
-        const newSplineQuality = pickSplineQuality(splineQuality);
+        // ============================================================
+        // GAME-LIKE QUALITY MANAGEMENT v2
+        // FASTER downgrade, MUCH SLOWER upgrade for M1/iPhone stability
+        // Safari gets more aggressive downgrade due to backdrop-filter issues
+        // ============================================================
+
+        // EMERGENCY: Immediate drop to lowest on crisis OR very low instant FPS
+        const badFrameThreshold = isSafariBrowser ? 2 : 3; // Safari triggers faster
+        if (isInCrisis || instant < thresholds.critical || consecutiveBadFrames > badFrameThreshold) {
+          if (currentLevel > 0) {
+            qualityLevelRef.current = 0;
+            downgradeCountRef.current = 0;
+            upgradeCountRef.current = 0;
+            lastCrisisTimeRef.current = now;
+            console.log(`[Perf] EMERGENCY: Quality → 0 (FPS: ${instant}, bad frames: ${consecutiveBadFrames})`);
+          }
+        }
+        // SEVERE: Drop 2 levels at once if really struggling
+        else if (average < thresholds.veryLow || instant < FAST_DROP_FPS) {
+          downgradeCountRef.current += 2; // Count double for severe drops
+          upgradeCountRef.current = 0;
+
+          if (downgradeCountRef.current >= QUALITY_HYSTERESIS.downgrade && currentLevel > 0) {
+            // Drop 2 levels if possible when severely struggling
+            const dropAmount = average < 25 ? 2 : 1;
+            qualityLevelRef.current = Math.max(0, currentLevel - dropAmount) as QualityLevel;
+            downgradeCountRef.current = 0;
+            console.log(`[Perf] SEVERE Downgrade: ${currentLevel} → ${qualityLevelRef.current} (avg: ${average})`);
+          }
+        }
+        // FAST DOWNGRADE: Quick reaction to sustained drops below target
+        else if (average < thresholds.low) {
+          downgradeCountRef.current++;
+          upgradeCountRef.current = 0;
+
+          if (downgradeCountRef.current >= QUALITY_HYSTERESIS.downgrade && currentLevel > 0) {
+            qualityLevelRef.current = Math.max(0, currentLevel - 1) as QualityLevel;
+            downgradeCountRef.current = 0;
+            console.log(`[Perf] Downgrade: ${currentLevel} → ${qualityLevelRef.current} (avg: ${average})`);
+          }
+        }
+        // MEDIUM QUALITY ZONE: Gentle pressure to find stable level
+        else if (average < thresholds.medium) {
+          if (currentLevel > 2) {
+            downgradeCountRef.current++;
+            if (downgradeCountRef.current >= QUALITY_HYSTERESIS.downgrade + 1) {
+              qualityLevelRef.current = Math.max(2, currentLevel - 1) as QualityLevel;
+              downgradeCountRef.current = 0;
+              console.log(`[Perf] Minor downgrade: ${currentLevel} → ${qualityLevelRef.current}`);
+            }
+          } else {
+            downgradeCountRef.current = 0; // Reset if already at acceptable level
+          }
+          upgradeCountRef.current = 0;
+        }
+        // GOOD ZONE: Reset downgrade counter, allow slow upgrade consideration
+        else if (average >= thresholds.good) {
+          downgradeCountRef.current = 0;
+
+          // RECOVERY: VERY slow upgrade when FPS is stable and excellent
+          if (isRecovering && average >= RECOVERY_FPS && consecutiveGoodFrames > 50) {
+            const timeSinceCrisis = now - lastCrisisTimeRef.current;
+            // Wait 8s after crisis before considering upgrade (was 5s)
+            if (timeSinceCrisis > 8000) {
+              upgradeCountRef.current++;
+
+              // Require MANY good samples to upgrade (prevents oscillation)
+              if (upgradeCountRef.current >= QUALITY_HYSTERESIS.upgrade && currentLevel < 4) {
+                // Only upgrade if frame times are consistently excellent
+                if (frameTimeP95 < FRAME_BUDGET_MS * 1.1) {
+                  qualityLevelRef.current = Math.min(4, currentLevel + 1) as QualityLevel;
+                  upgradeCountRef.current = 0;
+                  console.log(`[Perf] Upgrade: ${currentLevel} → ${qualityLevelRef.current} (stable at ${average} FPS)`);
+                }
+              }
+            }
+          }
+        }
+
+        // Apply quality changes - FASTER application for downgrades (500ms), slower for upgrades
+        const throttleTime = qualityLevelRef.current < currentLevel ? 500 : 1500;
+        if (now - lastQualityUpdateRef.current < throttleTime) return;
+
+        const newLevel = qualityLevelRef.current;
+        const newShimmerQuality = QUALITY_LEVEL_MAP[newLevel];
+        const newSplineQuality = SPLINE_QUALITY_MAP[newLevel];
+        const newFpsClass = FPS_CLASS_MAP[newLevel];
+
+        const root = document.documentElement;
+
+        // ALWAYS apply FPS class immediately (CSS handles the heavy lifting)
+        root.classList.remove('fps-ultra', 'fps-high', 'fps-medium', 'fps-low', 'fps-minimal');
+        root.classList.add(newFpsClass);
+
+        // Apply Spline quality
         if (newSplineQuality !== splineQuality) {
           setSplineQuality(newSplineQuality);
-          const root = document.documentElement;
           root.classList.remove('spline-quality-high', 'spline-quality-medium', 'spline-quality-low');
           root.classList.add(`spline-quality-${newSplineQuality}`);
         }
-        
-        // Throttle quality updates to prevent thrashing
-        const now = performance.now();
-        if (now - lastQualityUpdateRef.current < 2000) return;
-        
-        // Dynamic quality adjustment
-        let newQuality: ShimmerQuality = 'high';
-        if (avg < FPS_THRESHOLDS.critical) {
-          newQuality = 'disabled';
-        } else if (avg < FPS_THRESHOLDS.veryLow) {
-          newQuality = 'disabled';
-        } else if (avg < FPS_THRESHOLDS.low) {
-          newQuality = 'low';
-        } else if (avg < FPS_THRESHOLDS.medium) {
-          newQuality = 'medium';
-        }
-        
-        if (newQuality !== shimmerQuality && !qualityOverride) {
-          setShimmerQuality(newQuality);
+
+        // Apply Shimmer quality
+        if (newShimmerQuality !== shimmerQuality && !qualityOverride) {
+          setShimmerQuality(newShimmerQuality);
           lastQualityUpdateRef.current = now;
-          
-          // Apply CSS classes
-          const root = document.documentElement;
+
           root.classList.remove('shimmer-quality-high', 'shimmer-quality-medium', 'shimmer-quality-low', 'shimmer-quality-disabled');
-          root.classList.add(`shimmer-quality-${newQuality}`);
-          
-          if (newQuality === 'disabled' || newQuality === 'low') {
+          root.classList.add(`shimmer-quality-${newShimmerQuality}`);
+
+          if (newShimmerQuality === 'disabled' || newShimmerQuality === 'low') {
             root.classList.add('reduce-animations');
           } else {
             root.classList.remove('reduce-animations');
           }
-          
-          console.log(`[UnifiedPerformance] Quality: ${newQuality} (avg FPS: ${avg})`);
         }
       });
-      
+
       return () => unsubscribe();
     }, startDelay);
-    
+
     return () => clearTimeout(timeoutId);
-  }, [device?.isMobile, fpsMonitor, shimmerQuality, qualityOverride, startDelay]);
+  }, [device?.tier, fpsMonitor, shimmerQuality, splineQuality, qualityOverride, startDelay]);
   
   // Scroll detection (pause animations during scroll)
   useEffect(() => {

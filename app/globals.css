@@ -730,8 +730,108 @@ html.shimmer-quality-disabled [class*="backdrop-blur"] {
 
 /* Text glow effect for active theme elements */
 .text-glow {
-  text-shadow: 
+  text-shadow:
     0 0 5px var(--accent-color, #3b82f6),
     0 0 10px var(--theme-accent-light, rgba(59, 130, 246, 0.5)),
     0 0 20px var(--theme-accent-subtle, rgba(59, 130, 246, 0.3));
+}
+
+/* =================================================================
+   GAME-ENGINE STYLE FPS-BASED QUALITY REDUCTION
+   These classes are applied by UnifiedPerformanceSystem based on real FPS
+   fps-ultra (70+), fps-high (55+), fps-medium (45+), fps-low (30+), fps-minimal (<30)
+
+   IMPORTANT: ONLY slow down animations - NEVER touch blur, shadows, or filters!
+   ================================================================= */
+
+/* FPS MINIMAL: EMERGENCY MODE - Very slow animations only */
+html.fps-minimal [class*="shimmer"] {
+  animation-duration: 14s !important;
+}
+
+html.fps-minimal [class*="glow"],
+html.fps-minimal [class*="pulse"] {
+  animation-duration: 12s !important;
+}
+
+html.fps-minimal .text-shimmer-effect {
+  animation-duration: 10s !important;
+}
+
+html.fps-minimal [data-theme-illusion="CRT"]::after,
+html.fps-minimal [data-theme-illusion="GLITCH"]::after {
+  animation-duration: 15s !important;
+}
+
+/* FPS LOW: Slow animations */
+html.fps-low [class*="shimmer"] {
+  animation-duration: 10s !important;
+}
+
+html.fps-low [class*="glow"],
+html.fps-low [class*="pulse"] {
+  animation-duration: 8s !important;
+}
+
+html.fps-low .text-shimmer-effect {
+  animation-duration: 8s !important;
+}
+
+html.fps-low [data-theme-illusion="CRT"]::after,
+html.fps-low [data-theme-illusion="GLITCH"]::after {
+  animation-duration: 12s !important;
+}
+
+/* FPS MEDIUM: Moderate animation slowdown */
+html.fps-medium [class*="shimmer"] {
+  animation-duration: 6s !important;
+}
+
+html.fps-medium [class*="glow"],
+html.fps-medium [class*="pulse"] {
+  animation-duration: 5s !important;
+}
+
+html.fps-medium .text-shimmer-effect {
+  animation-duration: 5s !important;
+}
+
+/* FPS HIGH: Slight animation slowdown */
+html.fps-high [class*="shimmer"] {
+  animation-duration: 4.5s !important;
+}
+
+/* FPS ULTRA: FULL QUALITY - No restrictions */
+html.fps-ultra [class*="shimmer"] {
+  animation-duration: 3s !important;
+}
+
+/* =================================================================
+   MOBILE OPTIMIZATIONS - Animation speed only
+   ================================================================= */
+html.is-mobile [class*="shimmer"] {
+  animation-duration: 6s !important;
+}
+
+html.is-mobile.fps-low [class*="shimmer"] {
+  animation-duration: 10s !important;
+}
+
+html.is-mobile.fps-minimal [class*="shimmer"] {
+  animation-duration: 14s !important;
+}
+
+/* =================================================================
+   SPLINE-SPECIFIC QUALITY CLASSES
+   Applied by spline-wrapper.js based on FPS readings
+   ================================================================= */
+html.spline-quality-low canvas {
+  /* Hint to browser that canvas can use less resources */
+  image-rendering: optimizeSpeed;
+}
+
+/* When Spline is paused (out of view), fully stop GPU work */
+.spline-paused canvas {
+  visibility: hidden !important;
+  pointer-events: none !important;
 }

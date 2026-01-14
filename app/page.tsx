@@ -43,67 +43,54 @@ const SplineScene = lazy(() => import('@/components/SplineScene'));
 const TestimonialsCarousel = lazy(() => import('@/components/Testimonial').then(mod => ({ default: mod.TestimonialsCarousel })));
 
 // --- SMART CONTAINER: Handles Preloading & FPS Saving ---
+// FIXED: Prevents constant reloading on small devices by:
+// 1. Using hasLoadedOnce to keep Spline mounted after first load
+// 2. Only using visibility for initial load trigger, not unmounting
+// 3. Using CSS visibility instead of conditional rendering for FPS savings
 function LazySplineContainer({ scene }: { scene: string }) {
   const [isInView, setIsInView] = useState(false);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [canRender, setCanRender] = useState(true);
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-  const [showFallback, setShowFallback] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  // Use unified observer pool instead of individual IntersectionObserver
-  const { observe, deviceTier } = useUnifiedPerformance();
+  const deviceCheckDone = useRef(false);
 
-  // Check if device can handle 3D at mount
+  // Use unified observer pool instead of individual IntersectionObserver
+  const { observe, deviceTier, averageFps } = useUnifiedPerformance();
+
+  // Check if device can handle 3D at mount - ONLY ONCE
   useEffect(() => {
+    if (deviceCheckDone.current) return;
+    deviceCheckDone.current = true;
+
     const checkDevice = () => {
       // Check browser capabilities first
       const browserInfo = detectBrowser();
       if (browserInfo.isInAppBrowser || !browserInfo.canHandle3D) {
         console.log('[LazySpline] Disabled for:', browserInfo.browserName);
         setCanRender(false);
-        setShowFallback(true);
         return;
       }
-      
+
       const isSmallScreen = window.innerWidth < 480;
       const isMobile = window.innerWidth < 768;
       const memory = (navigator as any).deviceMemory || 4;
-      
+
       // Disable on very small screens or low memory mobile devices
       if (isSmallScreen || (isMobile && memory < 3)) {
         setCanRender(false);
-        setShowFallback(true);
       }
     };
     checkDevice();
   }, []);
 
-  // Track container size to prevent layout shifts
-  useEffect(() => {
-    if (!containerRef.current) return;
-    
-    const updateSize = () => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        setContainerSize({ width: rect.width, height: rect.height });
-      }
-    };
-    
-    updateSize();
-    
-    const resizeObserver = new ResizeObserver(updateSize);
-    resizeObserver.observe(containerRef.current);
-    
-    return () => resizeObserver.disconnect();
-  }, []);
-
   // Use shared observer pool for visibility detection
+  // FIXED: Only triggers initial load, doesn't cause unmounting
   useEffect(() => {
     if (!containerRef.current || !canRender) return;
-    
+
     return observe(containerRef.current, (isIntersecting) => {
       setIsInView(isIntersecting);
+      // Once loaded, never unload - just pause rendering via CSS
       if (isIntersecting && !hasLoadedOnce) {
         setHasLoadedOnce(true);
       }
@@ -116,26 +103,26 @@ function LazySplineContainer({ scene }: { scene: string }) {
       <div className="w-full h-full min-h-[300px] relative bg-black rounded-2xl overflow-hidden group" style={{ touchAction: 'pan-y' }}>
         {/* Spinning Conic Gradient Shimmer Border */}
         <ShimmerBorder color="blue" intensity="medium" speed="normal" />
-        
+
         {/* Inner container */}
         <div className="relative z-10 h-full w-full bg-black rounded-2xl m-[1px] border border-blue-500/30 overflow-hidden">
           {/* Top Shimmer Line */}
           <ShimmerLine color="blue" />
-          
+
           {/* Radial Glow Effect */}
           <ShimmerRadialGlow color="blue" intensity="medium" />
-          
+
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
             {/* BullMoney logo with floating effect */}
             <ShimmerFloat className="relative w-20 h-20">
               {/* Spinning border ring */}
               <ShimmerBorder color="blue" intensity="medium" className="inset-[-3px] rounded-full" />
               <div className="relative w-full h-full rounded-full bg-neutral-900 border border-blue-500/40 flex items-center justify-center overflow-hidden">
-                <Image 
-                  src="/BULL.svg" 
-                  alt="BullMoney" 
-                  width={48} 
-                  height={48} 
+                <Image
+                  src="/BULL.svg"
+                  alt="BullMoney"
+                  width={48}
+                  height={48}
                   className="opacity-90 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
                   priority
                 />
@@ -143,7 +130,7 @@ function LazySplineContainer({ scene }: { scene: string }) {
             </ShimmerFloat>
             <p className="text-xs text-blue-400 font-bold tracking-wider drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">3D View</p>
             <p className="text-[10px] text-blue-400/60 font-medium">Optimized for your device</p>
-            
+
             {/* Decorative dots */}
             <div className="flex justify-center gap-1.5 mt-2">
               <ShimmerDot color="blue" delay={0} />
@@ -156,19 +143,36 @@ function LazySplineContainer({ scene }: { scene: string }) {
     );
   }
 
+  // FIXED: Once loaded, keep Spline mounted but use CSS to pause/hide when out of view
+  // This prevents the expensive reload cycle on small devices
+  const shouldShowSpline = hasLoadedOnce || isInView;
+  const isPaused = hasLoadedOnce && !isInView;
+
   return (
     // 'isolate' is crucial here so the Interaction Button in SplineScene works correctly with z-index
     // Use fixed height and contain:strict to prevent resize issues
-    <div 
-      ref={containerRef} 
+    <div
+      ref={containerRef}
       className="w-full h-full min-h-[300px] relative isolate overflow-hidden rounded-xl pointer-events-none md:pointer-events-auto"
-      style={{ 
+      style={{
         contain: 'strict',
         touchAction: 'pan-y', // Allow vertical scrolling on touch devices
         position: 'relative'
       }}
     >
-      {isInView ? (
+      {/* Loading placeholder - shown before first load */}
+      {!hasLoadedOnce && !isInView && (
+        <div className="absolute inset-0 bg-black rounded-xl overflow-hidden">
+          <ShimmerRadialGlow color="blue" intensity="low" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <ShimmerSpinner size={32} color="blue" speed="slow" />
+          </div>
+          <div className="absolute inset-0 rounded-xl border border-blue-500/20 pointer-events-none" />
+        </div>
+      )}
+
+      {/* Spline Scene - STAYS MOUNTED after first load, uses CSS to pause when out of view */}
+      {shouldShowSpline && (
         <Suspense fallback={
           <div className="absolute inset-0 flex items-center justify-center bg-black rounded-xl overflow-hidden">
             <ShimmerRadialGlow color="blue" intensity="medium" />
@@ -176,18 +180,29 @@ function LazySplineContainer({ scene }: { scene: string }) {
             <ShimmerSpinner size={40} color="blue" />
           </div>
         }>
-          <div className="absolute inset-0 pointer-events-none md:pointer-events-auto" style={{ touchAction: 'pan-y' }}>
+          <div
+            className="absolute inset-0 pointer-events-none md:pointer-events-auto transition-opacity duration-300"
+            style={{
+              touchAction: 'pan-y',
+              // When paused (out of view), reduce opacity and add will-change: auto to hint browser to free GPU memory
+              opacity: isPaused ? 0 : 1,
+              visibility: isPaused ? 'hidden' : 'visible',
+              // Tell browser this element won't change when hidden - helps free resources
+              willChange: isPaused ? 'auto' : 'transform',
+            }}
+          >
             <SplineScene scene={scene} />
           </div>
         </Suspense>
-      ) : (
-        // Placeholder when scrolled away (saves FPS by unmounting the heavy 3D canvas)
-        <div className={`absolute inset-0 bg-black rounded-xl transition-opacity duration-500 overflow-hidden ${hasLoadedOnce ? 'opacity-100' : 'opacity-0'}`}>
+      )}
+
+      {/* Paused overlay - shown when Spline is loaded but out of view */}
+      {isPaused && (
+        <div className="absolute inset-0 bg-black rounded-xl overflow-hidden">
           <ShimmerLine color="blue" speed="slow" intensity="low" />
           <div className="absolute inset-0 flex items-center justify-center">
             <ShimmerSpinner size={32} color="blue" speed="slow" />
           </div>
-          {/* Border */}
           <div className="absolute inset-0 rounded-xl border border-blue-500/20 pointer-events-none" />
         </div>
       )}
