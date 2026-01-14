@@ -175,14 +175,6 @@ body {
   }
 }
 
-@keyframes shimmerWave {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
 
 /* Tooltip styling with glow animation */
 [role="tooltip"] {
@@ -341,87 +333,6 @@ body {
   border: 1px solid rgba(59, 130, 246, 0.15);
 }
 
-/* ============================================================================
-   SHIMMER ANIMATIONS
-   High-quality shimmer effects for modern UI
-   ============================================================================ */
-
-@keyframes shimmerFlow {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-@keyframes shimmerPulse {
-  0%, 100% {
-    opacity: 0.5;
-    background-position: -1000px 0;
-  }
-  50% {
-    opacity: 1;
-    background-position: 1000px 0;
-  }
-}
-
-@keyframes gradientShimmer {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-@keyframes borderShimmer {
-  0% {
-    border-color: rgba(59, 130, 246, 0.2);
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
-  }
-  50% {
-    border-color: rgba(59, 130, 246, 0.6);
-    box-shadow: 0 0 35px rgba(59, 130, 246, 0.4);
-  }
-  100% {
-    border-color: rgba(59, 130, 246, 0.2);
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
-  }
-}
-
-.shimmer-effect {
-  background: linear-gradient(
-    90deg,
-    rgba(59, 130, 246, 0.1) 0%,
-    rgba(59, 130, 246, 0.3) 50%,
-    rgba(59, 130, 246, 0.1) 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmerFlow 3s infinite;
-}
-
-.shimmer-border {
-  animation: borderShimmer 3s ease-in-out infinite;
-}
-
-.shimmer-pulse {
-  animation: shimmerPulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.gradient-shimmer {
-  background: linear-gradient(
-    45deg,
-    rgba(59, 130, 246, 0.1),
-    rgba(59, 130, 246, 0.3),
-    rgba(59, 130, 246, 0.1)
-  );
-  background-size: 300% 300%;
-  animation: gradientShimmer 4s ease-in-out infinite;
-}
 
 /* ============================================================================
    ENHANCED MOBILE CONTROLS GLASS STYLING
@@ -520,14 +431,6 @@ body {
     0 12px 48px 0 rgba(31, 38, 135, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
     inset 0 0 30px rgba(59, 130, 246, 0.08);
-}
-
-/* ============================================================================
-   LOADING & ANIMATION STATES
-   ============================================================================ */
-
-.glass-loading {
-  animation: shimmerPulse 2s ease-in-out infinite;
 }
 
 .glass-active {

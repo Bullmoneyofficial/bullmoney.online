@@ -629,7 +629,7 @@ export function UltimateControlPanel({
                         FPS
                       </span>
                     </div>
-                    <Activity size={18} className="text-blue-400/80 animate-pulse" />
+                    <Activity size={18} className="text-blue-400/80 shimmer-pulse" />
                   </div>
                 </div>
 

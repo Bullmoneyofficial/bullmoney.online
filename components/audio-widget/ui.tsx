@@ -32,43 +32,33 @@ export const GameShimmer = React.memo(function GameShimmer({
   };
   
   const speedMap = {
-    slow: 3,
-    normal: 2,
-    fast: 1.2,
+    slow: "5s",
+    normal: "3s",
+    fast: "2s",
   };
 
   return (
-    <motion.div
-      className={cn("absolute inset-0 overflow-hidden rounded-xl pointer-events-none", className)}
-    >
-      <motion.div
-        className={cn("absolute inset-0 bg-gradient-to-r from-transparent to-transparent", colorMap[colors])}
-        animate={{ x: ["-100%", "200%"] }}
-        transition={{ 
-          duration: speedMap[speed], 
-          repeat: Infinity, 
-          ease: "linear", 
-          repeatDelay: 0.5 
-        }}
+    <div className={cn("absolute inset-0 overflow-hidden rounded-xl pointer-events-none", className)}>
+      <div
+        className={cn(
+          "shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent to-transparent",
+          colorMap[colors]
+        )}
+        style={{ animationDuration: speedMap[speed] }}
       />
-    </motion.div>
+    </div>
   );
 });
 
 // Blue shimmer border effect
 export const BlueShimmer = React.memo(function BlueShimmer({ className = "" }: { className?: string }) {
   return (
-    <motion.div
-      className={cn("absolute inset-0 overflow-hidden rounded-xl pointer-events-none", className)}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent"
-        animate={{ x: ["-100%", "200%"] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
+    <div className={cn("absolute inset-0 overflow-hidden rounded-xl pointer-events-none", className)}>
+      <div
+        className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-400/20 to-transparent"
+        style={{ animationDuration: "3s" }}
       />
-    </motion.div>
+    </div>
   );
 });
 
@@ -512,10 +502,9 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
           />
           {/* Shimmer on energy bar */}
           {variant !== "attached" && energy > 50 && (
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
-              animate={{ x: ["-100%", "200%"] }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear", repeatDelay: 2 }}
+            <div
+              className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-white/40 to-transparent"
+              style={{ animationDuration: "3s" }}
             />
           )}
         </div>
@@ -1102,10 +1091,9 @@ export const AnimatedTip = React.memo(function AnimatedTip({
           {icons[icon as keyof typeof icons] || icons.tap}
         </motion.span>
         <span>{text}</span>
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-300/10 to-transparent"
-          animate={{ x: ["-100%", "200%"] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear", repeatDelay: 3, delay }}
+        <div
+          className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-300/10 to-transparent"
+          style={{ animationDuration: "5s", animationDelay: `${delay}s` }}
         />
       </motion.div>
     </motion.div>
@@ -1135,10 +1123,9 @@ export const StepGuide = React.memo(function StepGuide({
       exit={{ opacity: 0, y: -10 }}
       className="relative p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border border-blue-400/30 overflow-hidden"
     >
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/10 to-transparent"
-        animate={{ x: ["-100%", "200%"] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+      <div
+        className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-400/10 to-transparent"
+        style={{ animationDuration: "5s" }}
       />
 
       <div className="relative flex items-center justify-between mb-2">
@@ -1359,10 +1346,9 @@ export const EnergyBar = React.memo(function EnergyBar({
         />
         {/* Shimmer effect when high energy */}
         {percentage > 70 && (
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-            animate={{ x: ["-100%", "200%"] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
+          <div
+            className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-white/30 to-transparent"
+            style={{ animationDuration: "3s" }}
           />
         )}
         {/* Pulse when low energy */}
