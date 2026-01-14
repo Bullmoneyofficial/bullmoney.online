@@ -185,6 +185,9 @@ const FPS_THRESHOLDS = {
   good: 55,
 };
 
+const QUALITY_HYSTERESIS = 5; // Avoid flip-flop when FPS hovers near thresholds
+const FAST_DROP_FPS = 30; // Immediate downgrade trigger for jank bursts
+
 // Default state
 const defaultState: UnifiedPerformanceState = {
   deviceTier: 'high',
@@ -235,11 +238,13 @@ const defaultState: UnifiedPerformanceState = {
 class FPSMonitor {
   private static instance: FPSMonitor;
   private subscribers: Set<(fps: number, avg: number) => void> = new Set();
-  private frameCount = 0;
-  private lastTime = 0;
-  private fpsHistory: number[] = [];
+  private frameTimes: number[] = [];
+  private emaFps = 60;
+  private longFps = 60;
+  private lastNotify = 0;
   private rafId: number | null = null;
   private isRunning = false;
+  private lastVisibilityState: boolean | null = null;
   
   static getInstance(): FPSMonitor {
     if (!FPSMonitor.instance) {
@@ -264,7 +269,6 @@ class FPSMonitor {
   private start() {
     if (this.isRunning || typeof window === 'undefined') return;
     this.isRunning = true;
-    this.lastTime = performance.now();
     this.loop(performance.now());
   }
   
@@ -277,25 +281,45 @@ class FPSMonitor {
   }
   
   private loop = (timestamp: number) => {
-    this.frameCount++;
-    const elapsed = timestamp - this.lastTime;
-    
-    // Update every second
-    if (elapsed >= 1000) {
-      const fps = Math.round((this.frameCount * 1000) / elapsed);
-      this.fpsHistory.push(fps);
-      if (this.fpsHistory.length > 10) {
-        this.fpsHistory.shift();
+    // If tab is hidden, hold last values to avoid fake spikes/drops.
+    const isHidden = typeof document !== 'undefined' ? document.hidden : false;
+    if (this.lastVisibilityState !== isHidden) {
+      this.lastVisibilityState = isHidden;
+      // Reset window when coming back to avoid stale deltas.
+      if (!isHidden) {
+        this.frameTimes = [];
       }
-      const avg = Math.round(this.fpsHistory.reduce((a, b) => a + b, 0) / this.fpsHistory.length);
-      
-      // Notify all subscribers
-      this.subscribers.forEach(cb => cb(fps, avg));
-      
-      this.frameCount = 0;
-      this.lastTime = timestamp;
     }
-    
+    if (isHidden) {
+      this.rafId = requestAnimationFrame(this.loop);
+      return;
+    }
+
+    // Keep recent timestamps (last ~1.5s)
+    this.frameTimes.push(timestamp);
+    while (this.frameTimes.length > 2 && timestamp - this.frameTimes[0] > 1500) {
+      this.frameTimes.shift();
+    }
+
+    const span = this.frameTimes.length > 1
+      ? this.frameTimes[this.frameTimes.length - 1] - this.frameTimes[0]
+      : 0;
+    const instantFps = span > 0
+      ? Math.min(240, Math.round(((this.frameTimes.length - 1) * 1000) / span))
+      : 60;
+
+    // Smooth with dual averages for better stability
+    this.emaFps = this.emaFps * 0.7 + instantFps * 0.3;
+    this.longFps = this.longFps * 0.9 + instantFps * 0.1;
+
+    // Notify more frequently (every ~400ms) for faster reactions to drops
+    if (timestamp - this.lastNotify >= 400) {
+      const shortAvg = Math.max(1, Math.round(this.emaFps));
+      const blendedAvg = Math.max(1, Math.round(this.emaFps * 0.6 + this.longFps * 0.4));
+      this.subscribers.forEach(cb => cb(shortAvg, blendedAvg));
+      this.lastNotify = timestamp;
+    }
+
     this.rafId = requestAnimationFrame(this.loop);
   };
 }
@@ -837,13 +861,23 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
           (window as any).deviceMonitor?.setExternalFps?.(fps, avg);
         } catch {}
         
-        // Spline quality control: prefer stable FPS over sharpness.
-        let newSplineQuality: SplineQuality = 'high';
-        if ((device?.tier ?? 'high') === 'minimal') newSplineQuality = 'low';
-        else if ((device?.tier ?? 'high') === 'low') newSplineQuality = 'low';
-        else if (avg < 35) newSplineQuality = 'low';
-        else if (avg < 50) newSplineQuality = 'medium';
-        
+        // Spline quality control: prefer stable FPS over sharpness with hysteresis.
+        const tier = device?.tier ?? 'high';
+        const pickSplineQuality = (current: SplineQuality): SplineQuality => {
+          // Force low for minimal/low tiers
+          if (tier === 'minimal' || tier === 'low') return 'low';
+
+          // Aggressive downgrade on sudden drops
+          if (fps < FAST_DROP_FPS || avg < FPS_THRESHOLDS.low) return 'low';
+          if (fps < FPS_THRESHOLDS.medium || avg < FPS_THRESHOLDS.medium) return 'medium';
+
+          // Upgrade slowly to avoid oscillation
+          if (current === 'low' && avg < FPS_THRESHOLDS.medium + QUALITY_HYSTERESIS) return 'low';
+          if (current === 'medium' && avg < FPS_THRESHOLDS.good + QUALITY_HYSTERESIS) return 'medium';
+          return 'high';
+        };
+
+        const newSplineQuality = pickSplineQuality(splineQuality);
         if (newSplineQuality !== splineQuality) {
           setSplineQuality(newSplineQuality);
           const root = document.documentElement;

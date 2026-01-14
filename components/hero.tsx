@@ -362,8 +362,9 @@ const HeroParallax = () => {
       const w = typeof window !== 'undefined' ? window.innerWidth : 1200;
       const h = typeof window !== 'undefined' ? window.innerHeight : 800;
       setHeroSize({
-        width: Math.max(320, Math.min(w, 1400)),
-        height: Math.max(260, Math.min(h * 0.7, 820)),
+        // Closer to full viewport while keeping a safe clamp on massive displays
+        width: Math.max(320, Math.min(w, 1600)),
+        height: Math.max(320, Math.min(h * 0.95, 1000)),
       });
     };
     calcSize();
@@ -965,8 +966,10 @@ const HeroParallax = () => {
               <div
                 className="w-full h-full"
                 style={{
-                  maxWidth: `${heroSize.width}px`,
-                  maxHeight: `${heroSize.height}px`,
+                  width: `${heroSize.width}px`,
+                  height: `${heroSize.height}px`,
+                  maxWidth: '100%',
+                  maxHeight: '100%',
                   minWidth: 320,
                   minHeight: 260,
                 }}
