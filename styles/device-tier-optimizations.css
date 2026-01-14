@@ -1,0 +1,357 @@
+/**
+ * Device Tier Optimizations
+ *
+ * CSS classes for device-tier-aware rendering.
+ * These are automatically applied by CacheManagerProvider based on device capabilities.
+ *
+ * Tiers:
+ * - ultra: Apple Silicon, discrete GPUs, 16GB+ RAM
+ * - high: 8GB+ RAM, 4+ cores
+ * - medium: 4GB+ RAM, basic GPU
+ * - low: 2-4GB RAM
+ * - minimal: <2GB RAM
+ */
+
+/* =================================================================
+   BASE PERFORMANCE VARIABLES
+   ================================================================= */
+
+:root {
+  /* Default animation speeds - modified by device tier */
+  --shimmer-speed: 3s;
+  --spin-speed: 4s;
+  --pulse-speed: 3s;
+  --glow-speed: 3s;
+
+  /* Animation quality */
+  --animation-quality: high;
+  --blur-amount: 20px;
+  --shadow-quality: full;
+
+  /* 3D quality */
+  --spline-quality: high;
+  --spline-enabled: 1;
+
+  /* FPS target (set by layout.tsx) */
+  --target-fps: 60;
+  --frame-duration: 16.67ms;
+}
+
+/* =================================================================
+   ULTRA TIER - Full quality, all effects enabled
+   ================================================================= */
+
+html.device-ultra,
+html[data-device-tier="ultra"] {
+  --shimmer-speed: 2.5s;
+  --spin-speed: 3s;
+  --animation-quality: ultra;
+  --spline-quality: ultra;
+}
+
+html.device-ultra .optimized-content.quality-ultra {
+  /* Full effects for ultra devices */
+}
+
+html.device-ultra .spline-container canvas {
+  image-rendering: high-quality;
+}
+
+/* =================================================================
+   HIGH TIER - Most effects, optimized animations
+   ================================================================= */
+
+html.device-high,
+html[data-device-tier="high"] {
+  --shimmer-speed: 3s;
+  --spin-speed: 4s;
+  --animation-quality: high;
+  --spline-quality: high;
+}
+
+html.device-high .optimized-content.quality-high {
+  /* Standard high quality */
+}
+
+/* =================================================================
+   MEDIUM TIER - Reduced animations, lighter effects
+   ================================================================= */
+
+html.device-medium,
+html[data-device-tier="medium"] {
+  --shimmer-speed: 4s;
+  --spin-speed: 5s;
+  --pulse-speed: 4s;
+  --glow-speed: 4s;
+  --animation-quality: medium;
+  --blur-amount: 12px;
+  --spline-quality: medium;
+}
+
+/* Slower animations */
+html.device-medium .shimmer-line,
+html.device-medium .shimmer-spin,
+html.device-medium .shimmer-pulse,
+html.device-medium .shimmer-glow {
+  animation-duration: var(--shimmer-speed) !important;
+}
+
+/* Reduced blur */
+html.device-medium .backdrop-blur-2xl,
+html.device-medium .backdrop-blur-xl {
+  backdrop-filter: blur(var(--blur-amount)) !important;
+}
+
+/* Simplify shadows */
+html.device-medium .shadow-2xl,
+html.device-medium .shadow-xl {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* =================================================================
+   LOW TIER - Minimal animations, simplified effects
+   ================================================================= */
+
+html.device-low,
+html[data-device-tier="low"] {
+  --shimmer-speed: 6s;
+  --spin-speed: 8s;
+  --pulse-speed: 6s;
+  --animation-quality: low;
+  --blur-amount: 8px;
+  --shadow-quality: reduced;
+  --spline-quality: low;
+  --spline-enabled: 0;
+}
+
+/* Disable complex animations */
+html.device-low .shimmer-spin,
+html.device-low .shimmer-glow,
+html.device-low .shimmer-float {
+  animation: none !important;
+}
+
+/* Keep only essential animations but slow them down */
+html.device-low .shimmer-pulse {
+  animation-duration: 8s !important;
+}
+
+/* Remove all backdrop blur (expensive on low-end) */
+html.device-low .backdrop-blur-2xl,
+html.device-low .backdrop-blur-xl,
+html.device-low .backdrop-blur-lg,
+html.device-low .backdrop-blur-md,
+html.device-low .backdrop-blur {
+  backdrop-filter: none !important;
+  background-color: rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Simplify all shadows */
+html.device-low [class*="shadow-"] {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Hide decorative elements */
+html.device-low .shimmer-border,
+html.device-low .shimmer-glow,
+html.device-low .sparkles-container {
+  display: none !important;
+}
+
+/* Disable 3D scenes */
+html.device-low .spline-container,
+html.device-low [data-spline] {
+  display: none !important;
+}
+
+/* Reduce motion */
+html.device-low * {
+  transition-duration: 0.1s !important;
+}
+
+/* =================================================================
+   MINIMAL TIER - Bare essentials only
+   ================================================================= */
+
+html.device-minimal,
+html[data-device-tier="minimal"] {
+  --animation-quality: minimal;
+  --blur-amount: 0;
+  --shadow-quality: none;
+  --spline-quality: disabled;
+  --spline-enabled: 0;
+}
+
+/* Disable ALL animations */
+html.device-minimal *,
+html.device-minimal *::before,
+html.device-minimal *::after {
+  animation: none !important;
+  animation-duration: 0s !important;
+  transition: none !important;
+}
+
+/* No blur at all */
+html.device-minimal [class*="blur"] {
+  backdrop-filter: none !important;
+  filter: none !important;
+}
+
+/* No shadows */
+html.device-minimal [class*="shadow"] {
+  box-shadow: none !important;
+}
+
+/* Hide all decorative elements */
+html.device-minimal .shimmer-border,
+html.device-minimal .shimmer-line,
+html.device-minimal .shimmer-spin,
+html.device-minimal .shimmer-pulse,
+html.device-minimal .shimmer-glow,
+html.device-minimal .sparkles-container,
+html.device-minimal .spline-container {
+  display: none !important;
+}
+
+/* Solid backgrounds only */
+html.device-minimal .bg-gradient-to-r,
+html.device-minimal .bg-gradient-to-l,
+html.device-minimal .bg-gradient-to-b,
+html.device-minimal .bg-gradient-to-t {
+  background: #000 !important;
+}
+
+/* =================================================================
+   FPS-BASED QUALITY ADJUSTMENTS
+   (Applied by PerformanceProvider based on measured FPS)
+   ================================================================= */
+
+/* Already defined in UnifiedShimmer.tsx, reinforced here */
+html.shimmer-quality-low .shimmer-spin,
+html.shimmer-quality-low .shimmer-glow,
+html.shimmer-quality-low .shimmer-float {
+  animation: none !important;
+}
+
+html.shimmer-quality-disabled .shimmer-line,
+html.shimmer-quality-disabled .shimmer-spin,
+html.shimmer-quality-disabled .shimmer-pulse,
+html.shimmer-quality-disabled .shimmer-glow {
+  animation: none !important;
+  opacity: 0.5 !important;
+}
+
+/* =================================================================
+   SCROLL PERFORMANCE
+   ================================================================= */
+
+html.is-scrolling .shimmer-line,
+html.is-scrolling .shimmer-spin,
+html.is-scrolling .shimmer-glow,
+html.is-scrolling .shimmer-float {
+  animation-play-state: paused !important;
+}
+
+html.is-scrolling canvas {
+  pointer-events: none;
+  filter: blur(1px);
+  opacity: 0.9;
+}
+
+/* =================================================================
+   PREFERS-REDUCED-MOTION
+   ================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .shimmer-line,
+  .shimmer-spin,
+  .shimmer-pulse,
+  .shimmer-glow,
+  .shimmer-float {
+    animation: none !important;
+  }
+}
+
+/* =================================================================
+   MOBILE OPTIMIZATIONS
+   ================================================================= */
+
+@media (max-width: 768px) {
+  /* Slower animations on mobile to save battery */
+  .shimmer-line { animation-duration: 5s !important; }
+  .shimmer-spin { animation-duration: 6s !important; }
+  .shimmer-pulse { animation-duration: 5s !important; }
+
+  /* Reduced blur on mobile */
+  .backdrop-blur-2xl,
+  .backdrop-blur-xl {
+    backdrop-filter: blur(12px) !important;
+  }
+
+  /* Simpler shadows */
+  .shadow-2xl,
+  .shadow-xl {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+  }
+}
+
+/* =================================================================
+   GPU ACCELERATION HINTS
+   ================================================================= */
+
+.gpu-accelerated,
+.shimmer-gpu,
+.spline-container,
+[data-spline] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* Don't use will-change for everything - only heavy animations */
+.shimmer-spin,
+.shimmer-line {
+  will-change: transform;
+}
+
+.shimmer-pulse,
+.shimmer-glow {
+  will-change: opacity;
+}
+
+/* =================================================================
+   LAYOUT SHIFT PREVENTION
+   ================================================================= */
+
+/* Reserve space for Spline scenes to prevent CLS */
+.spline-container,
+[data-spline] {
+  min-height: 300px;
+  contain: strict;
+}
+
+/* Shimmer placeholders maintain size */
+.shimmer-placeholder {
+  min-height: inherit;
+  background: linear-gradient(
+    90deg,
+    rgba(30, 30, 30, 0.8) 0%,
+    rgba(50, 50, 50, 0.8) 50%,
+    rgba(30, 30, 30, 0.8) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-placeholder 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer-placeholder {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

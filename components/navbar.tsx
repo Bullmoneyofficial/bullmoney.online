@@ -13,6 +13,7 @@ import React, {
   useEffect,
   useRef,
   useState,
+  memo,
 } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -23,6 +24,7 @@ import { CONSTANTS } from "@/constants/links";
 // --- IMPORT CONTEXT ---
 import { useStudio } from "@/context/StudioContext";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
+import { useCacheContext } from "@/components/CacheManagerProvider";
 
 // --- IMPORT MODAL COMPONENTS ---
 import AdminModal from "@/components/AdminModal";
@@ -41,34 +43,29 @@ import { ThemeSelectorModal } from "./navbar/ThemeSelectorModal";
 import { NAVBAR_TRADING_TIPS } from "./navbar/navbar.utils";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 
+// --- IMPORT UNIFIED SHIMMER SYSTEM ---
+import { ShimmerLine, ShimmerBorder } from "@/components/ui/UnifiedShimmer";
+
 // --- IMPORT NAVBAR CSS ---
 import "./navbar.css";
 
-// --- MOBILE MENU CONTROLS COMPONENT ---
-const MobileMenuControls = ({ 
+// --- MOBILE MENU CONTROLS COMPONENT (Optimized with Unified Shimmer) ---
+const MobileMenuControls = memo(({ 
   open, 
   onToggle, 
   onThemeClick, 
   hasReward,
   isXMUser
 }: any) => (
-  <motion.div 
-    initial={{ opacity: 0, scale: 0.95 }}
-    animate={{ opacity: 1, scale: 1 }}
-    transition={{ duration: 0.5, delay: 0.2 }}
-    className="relative group rounded-full overflow-hidden shadow-2xl z-50 h-12 sm:h-14 flex items-center flex-grow max-w-xs mobile-controls-glass shimmer-border"
+  <div 
+    className="relative group rounded-full overflow-hidden shadow-2xl z-50 h-12 sm:h-14 flex items-center flex-grow max-w-xs mobile-controls-glass"
   >
-    {/* Gradient Shimmer Background Layer - Left to Right */}
-    <motion.div 
-      animate={{ x: ['0%', '200%'] }}
-      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-      className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/40 to-blue-600/0 opacity-100"
-    />
+    {/* Unified Shimmer Border - GPU accelerated */}
+    <ShimmerBorder color="blue" intensity="medium" speed="normal" />
 
     {/* Inner Content Container */}
-    <motion.div 
-      className="relative h-full w-full bg-black/40 dark:bg-black/40 backdrop-blur-3xl rounded-full p-[2px] flex items-center justify-center gap-1 px-2 sm:px-3 border border-blue-500/40 dark:border-blue-500/40 transition-all duration-300 group-hover:border-blue-400/70"
-      whileHover={{ boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)" }}
+    <div 
+      className="relative h-full w-full bg-black/40 dark:bg-black/40 backdrop-blur-xl rounded-full p-[2px] flex items-center justify-center gap-1 px-2 sm:px-3 border border-blue-500/40 dark:border-blue-500/40 transition-all duration-300 group-hover:border-blue-400/70 group-hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] z-10"
     >
       {/* Theme Selector Button */}
       <motion.button
@@ -84,12 +81,7 @@ const MobileMenuControls = ({
       </motion.button>
 
       {/* Divider */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="h-4 w-[1px] bg-gradient-to-b from-blue-500/20 via-blue-500/40 to-blue-500/20 dark:bg-blue-500/20"
-      />
+      <div className="h-4 w-[1px] bg-gradient-to-b from-blue-500/20 via-blue-500/40 to-blue-500/20 dark:bg-blue-500/20" />
 
       {/* Menu Toggle Button */}
       <motion.button
@@ -101,34 +93,27 @@ const MobileMenuControls = ({
         className="p-1.5 rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
         title={open ? 'Close menu' : 'Open menu'}
       >
-        <motion.div 
-          className="relative flex items-center justify-center"
-          whileHover={{ rotate: open ? 0 : -90 }}
-          transition={{ duration: 0.3 }}
-        >
+        <div className="relative flex items-center justify-center">
           {open ? <IconX className="h-4 w-4 sm:h-5 sm:w-5" /> : <IconMenu2 className="h-4 w-4 sm:h-5 sm:w-5" />}
           {hasReward && !open && (
-            <motion.span 
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.1, type: "spring" }}
-              className="absolute -top-0.5 -right-0.5 flex h-2 w-2"
-            >
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+            <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+              <span className="shimmer-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-            </motion.span>
+            </span>
           )}
-        </motion.div>
+        </div>
       </motion.button>
-    </motion.div>
-  </motion.div>
-);
+    </div>
+  </div>
+));
+MobileMenuControls.displayName = 'MobileMenuControls';
 
 // --- MAIN NAVBAR COMPONENT ---
-export const Navbar = () => {
+export const Navbar = memo(() => {
   // --- ALL HOOKS AT TOP LEVEL (REQUIRED BY REACT) ---
   const { isXMUser, activeTheme, isAppLoading, isMobile } = useGlobalTheme();
   const { tipsMuted } = useAudioSettings();
+  const { deviceTier, isSafari } = useCacheContext();
   
   // Modal states
   const [open, setOpen] = useState(false);
@@ -327,4 +312,5 @@ export const Navbar = () => {
       />
     </>
   );
-};
+});
+Navbar.displayName = 'Navbar';

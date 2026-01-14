@@ -4,6 +4,8 @@ import "./globals.css";
 import "../styles/performance-optimizations.css";
 import "../styles/gpu-animations.css";
 import "../styles/120hz-performance.css"; // Critical 120Hz optimizations
+import "../styles/device-tier-optimizations.css"; // Device-tier aware CSS
+import "../styles/safari-optimizations.css"; // Safari-specific fixes
 import { cn } from "@/lib/utils";
 
 import { ThemeProvider } from "@/context/providers";
@@ -20,6 +22,9 @@ import { PerformanceProvider, FPSCounter } from "@/components/PerformanceProvide
 
 // ✅ ADDED: Import the Unified Shimmer Styles Provider
 import { ShimmerStylesProvider } from "@/components/ui/UnifiedShimmer";
+
+// ✅ ADDED: Import the Cache Manager Provider for version-based cache invalidation
+import { CacheManagerProvider } from "@/components/CacheManagerProvider";
 
 // Navigation and Footer components
 import { Navbar } from "@/components/navbar";
@@ -91,6 +96,148 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* CRITICAL: Safari detection and fixes - must run before anything else */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+(function() {
+  // Safari Detection and Early Fixes
+  var ua = navigator.userAgent;
+  var isSafari = /^((?!chrome|android|crios|fxios|opera|opr|edge|edg).)*safari/i.test(ua);
+  var isIOS = /iphone|ipad|ipod/i.test(ua);
+  var isIOSSafari = isIOS && isSafari;
+  
+  if (isSafari || isIOS) {
+    // Add Safari classes immediately for CSS fixes
+    document.documentElement.classList.add('is-safari');
+    if (isIOS) document.documentElement.classList.add('is-ios-safari');
+    
+    // Fix iOS Safari viewport height
+    var setVH = function() {
+      document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+      document.documentElement.style.setProperty('--svh', (window.innerHeight * 0.01) + 'px');
+    };
+    setVH();
+    window.addEventListener('resize', setVH);
+    window.addEventListener('orientationchange', setVH);
+    
+    // Safari-specific font smoothing
+    document.documentElement.style.setProperty('-webkit-font-smoothing', 'antialiased');
+    
+    console.log('[SafariFix] Safari detected, early fixes applied');
+  }
+})();
+            `,
+          }}
+        />
+        {/* CRITICAL: Auto-refresh on stale cache - runs BEFORE any other JS */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+(function() {
+  // App version for cache invalidation - MUST MATCH lib/appVersion.ts
+  var APP_VERSION = '3.0.0';
+  var storedVersion = localStorage.getItem('bullmoney_app_version');
+  
+  // Force cache clear on version mismatch
+  if (storedVersion && storedVersion !== APP_VERSION) {
+    console.log('[CacheBuster] Version mismatch:', storedVersion, '->', APP_VERSION);
+    
+    // Clear everything
+    if ('caches' in window) {
+      caches.keys().then(function(names) {
+        names.forEach(function(name) { caches.delete(name); });
+      });
+    }
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        regs.forEach(function(r) { r.unregister(); });
+      });
+    }
+    
+    // Clear storage except the version key
+    var keysToKeep = ['bullmoney_app_version'];
+    for (var i = localStorage.length - 1; i >= 0; i--) {
+      var key = localStorage.key(i);
+      if (key && key.startsWith('bullmoney') && !keysToKeep.includes(key)) {
+        localStorage.removeItem(key);
+      }
+    }
+    
+    // Set new version and reload
+    localStorage.setItem('bullmoney_app_version', APP_VERSION);
+    
+    if (!sessionStorage.getItem('_bm_version_reloaded')) {
+      sessionStorage.setItem('_bm_version_reloaded', '1');
+      window.location.reload();
+      return;
+    }
+  }
+  
+  // Track failed chunk loads
+  var failedLoads = 0;
+  var hasReloaded = sessionStorage.getItem('_bm_reloaded');
+
+  // Listen for resource load errors (404s on JS/CSS files)
+  window.addEventListener('error', function(e) {
+    var target = e.target || e.srcElement;
+    if (target && target.tagName) {
+      var tag = target.tagName.toLowerCase();
+      var src = target.src || target.href || '';
+
+      // Check if it's a Next.js chunk or CSS file that failed to load
+      if ((tag === 'script' || tag === 'link') &&
+          (src.includes('/_next/static/') || src.includes('.js') || src.includes('.css'))) {
+        failedLoads++;
+        console.error('[CacheBuster] Asset failed to load:', src);
+
+        // If we haven't already reloaded this session and we have failures (reduced threshold for Safari)
+        var isSafari = document.documentElement.classList.contains('is-safari');
+        var threshold = isSafari ? 1 : 2;
+        
+        if (!hasReloaded && failedLoads >= threshold) {
+          console.log('[CacheBuster] Stale cache detected, clearing and reloading...');
+
+          // Mark that we're reloading to prevent infinite loops
+          sessionStorage.setItem('_bm_reloaded', '1');
+
+          // Clear caches
+          if ('caches' in window) {
+            caches.keys().then(function(names) {
+              names.forEach(function(name) { caches.delete(name); });
+            });
+          }
+
+          // Unregister service workers
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+              regs.forEach(function(r) { r.unregister(); });
+            });
+          }
+
+          // Clear localStorage build ID to force fresh state
+          try { localStorage.removeItem('bullmoney_build_id'); } catch(e) {}
+
+          // Force hard reload (bypass cache)
+          setTimeout(function() {
+            window.location.href = window.location.href.split('?')[0] + '?_cache_bust=' + Date.now();
+          }, 100);
+        }
+      }
+    }
+  }, true);
+
+  // Clear the reload flag after successful load
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      sessionStorage.removeItem('_bm_reloaded');
+    }, 5000);
+  });
+})();
+            `,
+          }}
+        />
+
         {/* Mobile-Specific Meta Tags */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -440,6 +587,8 @@ export default function RootLayout({
         {/* Global Shimmer Styles - ensures all shimmers are synchronized */}
         <ShimmerStylesProvider />
         <ErrorBoundary>
+          {/* Cache Manager - Handles version-based cache invalidation */}
+          <CacheManagerProvider>
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"
@@ -483,6 +632,7 @@ export default function RootLayout({
               </AudioSettingsProvider>
             </GlobalThemeProvider>
           </ThemeProvider>
+          </CacheManagerProvider>
         </ErrorBoundary>
       </body>
     </html>

@@ -4,6 +4,7 @@ import React, { ReactNode, useEffect, useRef } from 'react';
 import { LenisProvider } from '@/lib/smoothScroll';
 import { usePerformanceInit, usePerformanceCSSSync } from '@/hooks/usePerformanceInit';
 import { detectBrowser } from '@/lib/browserDetection';
+import { detectSafari, applySafariCSSFixes, applySafariMemoryOptimizations } from '@/lib/safariOptimizations';
 
 // ============================================================================
 // PERFORMANCE PROVIDER - Wraps App with 120Hz Optimizations
@@ -202,6 +203,21 @@ export function PerformanceProvider({
       const browserInfo = detectBrowser();
       setIsInAppBrowser(browserInfo.isInAppBrowser);
       
+      // Initialize Safari-specific optimizations
+      const safariInfo = detectSafari();
+      if (safariInfo.isSafari) {
+        applySafariCSSFixes();
+        applySafariMemoryOptimizations();
+        console.log('[PerformanceProvider] Safari optimizations applied');
+        
+        // Safari on mobile needs extra careful handling
+        if (safariInfo.isMobileSafari) {
+          console.log('[PerformanceProvider] Mobile Safari detected - enabling conservative mode');
+          setIsHighEndDesktop(false);
+          return;
+        }
+      }
+      
       if (browserInfo.isInAppBrowser) {
         console.log('[PerformanceProvider] In-app browser detected:', browserInfo.browserName);
         console.log('[PerformanceProvider] Disabling heavy features for stability');
@@ -249,35 +265,8 @@ export function PerformanceProvider({
   // Sync performance state to CSS
   usePerformanceCSSSync();
 
-  // Desktop-only mouse scrolling - prevent keyboard scrolling
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (isMobile) return;
-    
-    const preventKeyScroll = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      const isInputField = target.tagName === 'INPUT' || 
-                          target.tagName === 'TEXTAREA' || 
-                          target.isContentEditable ||
-                          target.closest('[contenteditable="true"]');
-      
-      // Allow in input fields
-      if (isInputField) return;
-      
-      // Prevent scroll keys on desktop
-      const scrollKeys = ['ArrowUp', 'ArrowDown', 'Space', 'PageUp', 'PageDown', 'Home', 'End'];
-      
-      if (scrollKeys.includes(e.code) && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        e.preventDefault();
-      }
-    };
-    
-    window.addEventListener('keydown', preventKeyScroll, { passive: false });
-    
-    return () => {
-      window.removeEventListener('keydown', preventKeyScroll);
-    };
-  }, [isMobile]);
+  // NOTE: Keyboard scrolling is now ALLOWED on desktop
+  // Users should be able to use arrow keys, space, page up/down to scroll normally
 
   // Set up performance observers
   useEffect(() => {

@@ -1,9 +1,10 @@
 "use client";
 
 import dynamic from 'next/dynamic';
-import { Suspense, useState, useEffect, memo } from 'react';
+import { Suspense, useState, useEffect, memo, useCallback, useRef } from 'react';
 import { detectRefreshRate } from '@/lib/use120Hz';
 import { detectBrowser } from '@/lib/browserDetection';
+import { ShimmerSpinner, ShimmerRadialGlow, ShimmerBorder } from '@/components/ui/UnifiedShimmer';
 
 interface SplineWrapperProps {
   scene: string;
@@ -206,23 +207,21 @@ function SplineSceneComponent({
   if (hasError || !shouldRender) {
     return (
       <div className={`w-full h-full bg-gradient-to-br from-black via-blue-950/30 to-black rounded-xl overflow-hidden relative ${className}`}>
-        {/* Animated gradient background fallback */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-600/10 via-transparent to-transparent animate-pulse" />
-        
-        {/* Shimmer effect like navbar */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute inset-[-100%] animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#00000000_50%)] opacity-20" />
-        </div>
-        
+        {/* Unified Shimmer Border */}
+        <ShimmerBorder color="blue" intensity="low" speed="slow" />
+
+        {/* Radial glow background */}
+        <ShimmerRadialGlow color="blue" intensity="low" />
+
         {/* Center content */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10">
           <div className="w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
             <span className="text-2xl">🚀</span>
           </div>
           <p className="text-xs text-blue-300/60 text-center px-4">3D View</p>
           <p className="text-[10px] text-blue-400/40">Optimized for your device</p>
         </div>
-        
+
         {/* Border glow */}
         <div className="absolute inset-0 rounded-xl border border-blue-500/20" />
       </div>
@@ -255,8 +254,9 @@ function SplineSceneComponent({
         style={{ touchAction: isInteractive ? 'none' : 'pan-y' }}
       >
         <Suspense fallback={
-          <div className="w-full h-full bg-gradient-to-br from-slate-950 to-neutral-950 flex items-center justify-center">
-            <div className="w-6 h-6 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+          <div className="w-full h-full bg-gradient-to-br from-slate-950 to-neutral-950 flex items-center justify-center relative overflow-hidden">
+            <ShimmerRadialGlow color="blue" intensity="medium" />
+            <ShimmerSpinner size={32} color="blue" />
           </div>
         }>
           <Spline 

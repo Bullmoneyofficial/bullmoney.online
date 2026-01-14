@@ -9,15 +9,17 @@ import { detectBrowser } from "@/lib/browserDetection";
 // ==========================================
 // UNIFIED SHIMMER SYSTEM - Import from single source
 // ==========================================
-import { 
-  ShimmerBorder, 
-  ShimmerLine, 
-  ShimmerSpinner, 
+import {
+  ShimmerBorder,
+  ShimmerLine,
+  ShimmerSpinner,
   ShimmerDot,
   ShimmerFloat,
   ShimmerRadialGlow,
-  ShimmerContainer 
+  ShimmerContainer
 } from "@/components/ui/UnifiedShimmer";
+import { SplineSkeleton, LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
+import { useCacheContext } from "@/components/CacheManagerProvider";
 // Use optimized ticker for 120Hz performance
 import { LiveMarketTickerOptimized as LiveMarketTicker } from "@/components/LiveMarketTickerOptimized";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
@@ -203,7 +205,10 @@ function HomeContent() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  
+
+  // Use cache context for device tier awareness
+  const { deviceTier } = useCacheContext();
+
   // Use global theme context - syncs with hero.tsx and entire app
   const { activeThemeId, activeTheme, setAppLoading } = useGlobalTheme();
   
@@ -322,7 +327,8 @@ function HomeContent() {
               <Features />
             </section>
 
-            {/* 3D Spline Section - Hidden on small screens, show Testimonials instead */}
+            {/* 3D Spline Section - Hidden on small screens and low-end devices, show Testimonials instead */}
+            {(deviceTier === 'ultra' || deviceTier === 'high' || deviceTier === 'medium') && (
             <section id="experience" className="w-full max-w-7xl mx-auto px-4 py-16 hidden md:block" data-allow-scroll style={{ touchAction: 'pan-y' }}>
               {/* Section Header */}
               <div className="relative text-center mb-8">
@@ -345,7 +351,7 @@ function HomeContent() {
                   {/* Top shimmer line */}
                   <ShimmerLine color="blue" className="z-20" />
                   
-                <Suspense fallback={<div className="w-full h-full bg-black rounded-2xl flex items-center justify-center"><ShimmerSpinner size={40} color="blue" /></div>}>
+                <Suspense fallback={<SplineSkeleton className="w-full h-full" aspectRatio="auto" />}>
                   <DraggableSplit>
                     {/* The Scenes */}
                     <LazySplineContainer scene="/scene4.splinecode" />
@@ -355,6 +361,7 @@ function HomeContent() {
                 </div>
               </div>
             </section>
+            )}
 
             {/* Mobile-only Testimonials Section - Shows on small devices instead of heavy 3D */}
             <section id="testimonials" className="w-full max-w-5xl mx-auto px-4 py-12 md:hidden" data-allow-scroll style={{ touchAction: 'pan-y' }}>
@@ -375,11 +382,7 @@ function HomeContent() {
                 <ShimmerBorder color="blue" intensity="low" speed="slow" />
                 
                 <div className="relative z-10 bg-black rounded-2xl border border-blue-500/20 overflow-hidden">
-                  <Suspense fallback={
-                    <div className="w-full h-[320px] bg-black rounded-2xl flex items-center justify-center">
-                      <ShimmerSpinner size={32} color="blue" />
-                    </div>
-                  }>
+                  <Suspense fallback={<LoadingSkeleton variant="card" height={320} />}>
                     <TestimonialsCarousel />
                   </Suspense>
                 </div>

@@ -24,6 +24,8 @@ import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { MusicEmbedModal } from "@/components/MusicEmbedModal";
 import { BlueShimmer, Slider, TouchIndicator, GameOverScreen, EnergyBar, CompactGameHUD, BoredPopup, GameControls, GameShimmer, SparkleBurst, FloatingParticles, PulseRing, ConfettiBurst, BounceDots, StatusBadge, QuickGameTutorial, QuickGameTutorialDemo } from "@/components/audio-widget/ui";
 import { useWanderingGame } from "@/components/audio-widget/useWanderingGame";
+import { useCacheContext } from "@/components/CacheManagerProvider";
+import { ShimmerBorder, ShimmerSpinner } from "@/components/ui/UnifiedShimmer";
 
 const sourceLabel: Record<MusicSource, string> = {
   THEME: "Theme",
@@ -48,6 +50,9 @@ const sourceIcons: Partial<Record<MusicSource, React.ReactNode>> = {
 
 const AudioWidget = React.memo(function AudioWidget() {
   const prefersReducedMotion = useReducedMotion();
+  const { deviceTier, isSafari } = useCacheContext();
+  const isLowEndDevice = deviceTier === 'low' || deviceTier === 'minimal';
+  
   const [hasStartedCatchGame, setHasStartedCatchGame] = useState(false);
   const [showCatchGameTutorial, setShowCatchGameTutorial] = useState(false);
   const [showCatchGameDemo, setShowCatchGameDemo] = useState(false);
