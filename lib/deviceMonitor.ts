@@ -2258,6 +2258,10 @@ class DeviceMonitor {
     if (this.initLevel === 'none' && typeof window !== 'undefined') {
       void this.start('light');
     }
+    // If device info is missing/unknown, kick a refresh in the background.
+    if (typeof window !== 'undefined' && (!this.info.device || this.info.device.os === 'Unknown')) {
+      void this.detectDevice();
+    }
 
     const fallbackDeviceType: 'mobile' | 'tablet' | 'desktop' =
       typeof window !== 'undefined' && window.innerWidth < 768 ? 'mobile' : 'desktop';

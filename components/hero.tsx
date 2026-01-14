@@ -354,6 +354,22 @@ const HeroParallax = () => {
 
   const currentTheme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   const displayTheme = hoverThemeId ? ALL_THEMES.find(t => t.id === hoverThemeId) : currentTheme;
+  const [heroSize, setHeroSize] = useState({ width: 0, height: 0 });
+
+  // Track viewport size to size the hero spline to the device resolution/window.
+  useEffect(() => {
+    const calcSize = () => {
+      const w = typeof window !== 'undefined' ? window.innerWidth : 1200;
+      const h = typeof window !== 'undefined' ? window.innerHeight : 800;
+      setHeroSize({
+        width: Math.max(320, Math.min(w, 1400)),
+        height: Math.max(260, Math.min(h * 0.7, 820)),
+      });
+    };
+    calcSize();
+    window.addEventListener('resize', calcSize);
+    return () => window.removeEventListener('resize', calcSize);
+  }, []);
 
   const parallaxItems = useMemo(() => {
     const formattedProjects: GridItem[] = projects.map((p: Project) => ({
@@ -945,13 +961,25 @@ const HeroParallax = () => {
               touchAction: 'pan-y',
             }}
           >
-            <Spline 
-              scene="/scene1.splinecode" 
-              placeholder={undefined} 
-              className="!w-full !h-full pointer-events-none"
-              priority={true}
-              isHero={true}
-            />
+            <div className="w-full h-full flex items-center justify-center">
+              <div
+                className="w-full h-full"
+                style={{
+                  maxWidth: `${heroSize.width}px`,
+                  maxHeight: `${heroSize.height}px`,
+                  minWidth: 320,
+                  minHeight: 260,
+                }}
+              >
+                <Spline 
+                  scene="/scene1.splinecode" 
+                  placeholder={undefined} 
+                  className="!w-full !h-full pointer-events-none"
+                  priority={true}
+                  isHero={true}
+                />
+              </div>
+            </div>
           </div>
         </div>
         <div className="max-w-7xl relative mx-auto pt-32 pb-12 md:py-32 px-4 w-full z-20 mb-10 md:mb-32">
