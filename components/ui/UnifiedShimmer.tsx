@@ -74,18 +74,18 @@ const ShimmerStyles = () => (
     }
     
     @keyframes unified-pulse {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 0.6; }
+      0%, 100% { opacity: 0.25; }
+      50% { opacity: 0.45; }
     }
     
     @keyframes unified-glow {
-      0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-      50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
+      0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
+      50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.35); }
     }
     
     @keyframes unified-float {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-8px); }
+      50% { transform: translateY(-4px); }
     }
     
     @keyframes unified-dot-pulse {
@@ -106,37 +106,38 @@ const ShimmerStyles = () => (
     /* =================================================================
        SHIMMER CSS CLASSES
        Use these classes directly for maximum performance
+       SMOOTH left-to-right animations for aesthetic look
        ================================================================= */
     
     .shimmer-line {
-      animation: unified-shimmer-ltr 4.5s linear infinite;
+      animation: unified-shimmer-ltr 14s linear infinite;
       will-change: transform;
     }
     
     /* shimmer-spin: LEFT-TO-RIGHT ONLY - NO ROTATION/SPINNING */
     .shimmer-spin {
-      animation: unified-sweep-ltr 7s linear infinite;
+      animation: unified-sweep-ltr 16s linear infinite;
       will-change: transform;
     }
     
-    /* Explicit left-to-right class for clarity */
+    /* Explicit left-to-right class for clarity - SMOOTH */
     .shimmer-ltr {
-      animation: unified-shimmer-ltr 4.5s linear infinite;
+      animation: unified-shimmer-ltr 14s linear infinite;
       will-change: transform;
     }
     
     .shimmer-pulse {
-      animation: unified-pulse 4.5s ease-in-out infinite;
+      animation: unified-pulse 12s ease-in-out infinite;
       will-change: opacity;
     }
     
     .shimmer-glow {
-      animation: unified-glow 4.5s ease-in-out infinite;
+      animation: unified-glow 10s ease-in-out infinite;
       will-change: box-shadow;
     }
     
     .shimmer-float {
-      animation: unified-float 3s ease-in-out infinite;
+      animation: unified-float 6s ease-in-out infinite;
       will-change: transform;
     }
     
@@ -171,41 +172,41 @@ const ShimmerStyles = () => (
        Classes added by UnifiedPerformanceSystem based on real FPS
        ================================================================= */
 
-    /* Medium quality - slow down animations */
-    html.shimmer-quality-medium .shimmer-line { animation-duration: 5s; }
-    html.shimmer-quality-medium .shimmer-spin { animation-duration: 6s; }
-    html.shimmer-quality-medium .shimmer-ltr { animation-duration: 5s; }
-    html.shimmer-quality-medium .shimmer-pulse { animation-duration: 5s; }
-    html.shimmer-quality-medium .shimmer-glow { animation-duration: 5s; }
-    html.shimmer-quality-medium .shimmer-ping { animation-duration: 2s; }
+    /* Medium quality - slow down animations significantly */
+    html.shimmer-quality-medium .shimmer-line { animation-duration: 14s; }
+    html.shimmer-quality-medium .shimmer-spin { animation-duration: 16s; }
+    html.shimmer-quality-medium .shimmer-ltr { animation-duration: 14s; }
+    html.shimmer-quality-medium .shimmer-pulse { animation-duration: 12s; }
+    html.shimmer-quality-medium .shimmer-glow { animation-duration: 14s; }
+    html.shimmer-quality-medium .shimmer-ping { animation-duration: 4s; }
 
-    /* Low quality - slower animations but KEEP LEFT-TO-RIGHT effect */
+    /* Low quality - very slow animations but KEEP LEFT-TO-RIGHT effect */
     html.shimmer-quality-low .shimmer-line,
     html.shimmer-quality-low .shimmer-spin,
     html.shimmer-quality-low .shimmer-ltr {
-      animation-duration: 9s !important;
+      animation-duration: 20s !important;
     }
 
     html.shimmer-quality-low .shimmer-glow,
     html.shimmer-quality-low .shimmer-float {
-      animation-duration: 10s !important;
+      animation-duration: 18s !important;
     }
 
     html.shimmer-quality-low .shimmer-dot-pulse,
     html.shimmer-quality-low .shimmer-ping {
-      animation-duration: 4s !important;
+      animation-duration: 8s !important;
     }
 
     html.shimmer-quality-low .shimmer-pulse {
-      animation-duration: 8s;
+      animation-duration: 16s;
     }
 
-    /* Disabled - VERY slow animations, keep left-to-right look */
+    /* Disabled - ULTRA slow animations, keep left-to-right look */
     html.shimmer-quality-disabled .shimmer-line,
     html.shimmer-quality-disabled .shimmer-spin,
     html.shimmer-quality-disabled .shimmer-ltr {
-      animation-duration: 15s !important;
-      opacity: 0.4;
+      animation-duration: 30s !important;
+      opacity: 0.3;
     }
 
     html.shimmer-quality-disabled .shimmer-pulse,
@@ -213,8 +214,8 @@ const ShimmerStyles = () => (
     html.shimmer-quality-disabled .shimmer-float,
     html.shimmer-quality-disabled .shimmer-dot-pulse,
     html.shimmer-quality-disabled .shimmer-ping {
-      animation-duration: 12s !important;
-      opacity: 0.3;
+      animation-duration: 25s !important;
+      opacity: 0.2;
     }
 
     /* =================================================================
@@ -223,59 +224,59 @@ const ShimmerStyles = () => (
        Applied by UnifiedPerformanceSystem based on real-time FPS
        ================================================================= */
 
-    /* FPS MINIMAL (<30fps) - Very slow but KEEP left-to-right animation */
+    /* FPS MINIMAL (<30fps) - Ultra slow animations */
     html.fps-minimal [class*="shimmer"] {
-      animation-duration: 14s !important;
-      opacity: 0.4 !important;
+      animation-duration: 30s !important;
+      opacity: 0.3 !important;
       will-change: auto !important;
     }
 
     html.fps-minimal .shimmer-text {
-      animation-duration: 12s !important;
+      animation-duration: 25s !important;
     }
 
-    /* FPS LOW (30-35fps) - Slower shimmers, keep aesthetic */
+    /* FPS LOW (30-35fps) - Very slow shimmers, keep aesthetic */
     html.fps-low [class*="shimmer"]:not(.shimmer-essential) {
-      animation-duration: 10s !important;
+      animation-duration: 20s !important;
       will-change: auto !important;
     }
 
     html.fps-low .shimmer-pulse,
     html.fps-low .shimmer-glow {
-      animation-duration: 12s !important;
+      animation-duration: 22s !important;
     }
 
     /* FPS MEDIUM (35-50fps) - Moderate speed reduction */
-    html.fps-medium .shimmer-line { animation-duration: 6s !important; }
-    html.fps-medium .shimmer-spin { animation-duration: 8s !important; }
-    html.fps-medium .shimmer-ltr { animation-duration: 6s !important; }
-    html.fps-medium .shimmer-pulse { animation-duration: 6s !important; }
-    html.fps-medium .shimmer-glow { animation-duration: 8s !important; }
-    html.fps-medium .shimmer-float { animation-duration: 6s !important; }
+    html.fps-medium .shimmer-line { animation-duration: 14s !important; }
+    html.fps-medium .shimmer-spin { animation-duration: 16s !important; }
+    html.fps-medium .shimmer-ltr { animation-duration: 14s !important; }
+    html.fps-medium .shimmer-pulse { animation-duration: 12s !important; }
+    html.fps-medium .shimmer-glow { animation-duration: 16s !important; }
+    html.fps-medium .shimmer-float { animation-duration: 12s !important; }
 
-    /* iOS/Safari specific - slower but keep animation */
+    /* iOS/Safari specific - much slower but keep animation */
     html.is-ios [class*="shimmer"],
     html.is-safari [class*="shimmer"] {
-      animation-duration: 7s !important;
+      animation-duration: 14s !important;
     }
 
     html.is-ios.fps-medium [class*="shimmer"],
     html.is-safari.fps-medium [class*="shimmer"] {
-      animation-duration: 10s !important;
-      opacity: 0.7 !important;
+      animation-duration: 18s !important;
+      opacity: 0.6 !important;
     }
 
-    /* CRITICAL: Keep shimmers visible on iOS/Safari even at low FPS - just very slow */
+    /* CRITICAL: Keep shimmers visible on iOS/Safari even at low FPS - ultra slow */
     html.is-ios.fps-low [class*="shimmer"],
     html.is-safari.fps-low [class*="shimmer"] {
-      animation-duration: 12s !important;
-      opacity: 0.5 !important;
+      animation-duration: 24s !important;
+      opacity: 0.4 !important;
     }
 
     html.is-ios.fps-minimal [class*="shimmer"],
     html.is-safari.fps-minimal [class*="shimmer"] {
-      animation-duration: 16s !important;
-      opacity: 0.35 !important;
+      animation-duration: 35s !important;
+      opacity: 0.25 !important;
     }
     
     /* =================================================================
@@ -305,11 +306,13 @@ const ShimmerStyles = () => (
       }
     }
     
-    /* Mobile: slow down animations for battery */
+    /* Mobile: slow down animations for battery and performance */
     @media (max-width: 768px) {
-      .shimmer-line { animation-duration: 5s; }
-      .shimmer-spin { animation-duration: 6s; }
-      .shimmer-ltr { animation-duration: 5s; }
+      .shimmer-line { animation-duration: 14s; }
+      .shimmer-spin { animation-duration: 16s; }
+      .shimmer-ltr { animation-duration: 14s; }
+      .shimmer-pulse { animation-duration: 12s; }
+      .shimmer-glow { animation-duration: 14s; }
     }
     
     /* Component visibility optimization - slow down shimmers on inactive components */
@@ -380,15 +383,15 @@ const colorMap = {
 };
 
 const speedMap = {
-  slow: '5s',
-  normal: '3s',
-  fast: '2s',
+  slow: '16s',
+  normal: '10s',
+  fast: '7s',
 };
 
 const intensityMap = {
-  low: 0.3,
-  medium: 0.5,
-  high: 0.8,
+  low: 0.25,
+  medium: 0.4,
+  high: 0.55,
 };
 
 /**

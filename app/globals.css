@@ -379,6 +379,39 @@ html, body {
   transition: background 0.5s ease-in-out;
   /* Explicitly ensure no filter on html/body */
   filter: none !important;
+  -webkit-filter: none !important;
+}
+
+/* GLOBAL BLUR REMOVAL - No blur effects anywhere for performance */
+* {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Disable all blur classes globally */
+.backdrop-blur,
+.backdrop-blur-sm,
+.backdrop-blur-md,
+.backdrop-blur-lg,
+.backdrop-blur-xl,
+.backdrop-blur-2xl,
+.backdrop-blur-3xl,
+[class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Disable filter blur on any element */
+[style*="blur"],
+.blur,
+.blur-sm,
+.blur-md,
+.blur-lg,
+.blur-xl,
+.blur-2xl,
+.blur-3xl {
+  filter: none !important;
+  -webkit-filter: none !important;
 }
 
 /* Theme filter wrapper - applies filter only to main content, preserving fixed elements */
@@ -488,11 +521,11 @@ body[data-theme]::before {
   box-shadow: 0 0 20px var(--theme-accent-glow, rgba(59, 130, 246, 0.3));
 }
 
-/* Theme-aware cards */
+/* Theme-aware cards - NO BLUR */
 .theme-card {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.8);
   border: 1px solid var(--theme-accent-border, rgba(59, 130, 246, 0.2));
-  backdrop-filter: blur(10px);
+  /* NO BLUR - removed for performance */
 }
 
 .theme-card:hover {
@@ -694,20 +727,22 @@ html[data-active-theme] {
 /* FPS Medium - reduce complexity */
 html.shimmer-quality-medium {
   /* Slower animations use less CPU */
-  --animation-duration-multiplier: 0.6;
+  --animation-duration-multiplier: 0.4;
 }
 
+/* NO BLUR - disabled globally */
 html.shimmer-quality-medium [class*="backdrop-blur"] {
-  backdrop-filter: blur(8px) !important;
+  backdrop-filter: none !important;
 }
 
 /* FPS Low - minimal effects */
 html.shimmer-quality-low {
-  --animation-duration-multiplier: 0.3;
+  --animation-duration-multiplier: 0.2;
 }
 
+/* NO BLUR - disabled globally */
 html.shimmer-quality-low [class*="backdrop-blur"] {
-  backdrop-filter: blur(4px) !important;
+  backdrop-filter: none !important;
 }
 
 html.shimmer-quality-low .shadow-lg,
@@ -744,81 +779,81 @@ html.shimmer-quality-disabled [class*="backdrop-blur"] {
    IMPORTANT: ONLY slow down animations - NEVER touch blur, shadows, or filters!
    ================================================================= */
 
-/* FPS MINIMAL: EMERGENCY MODE - Very slow animations only */
+/* FPS MINIMAL: EMERGENCY MODE - Ultra slow animations only */
 html.fps-minimal [class*="shimmer"] {
-  animation-duration: 14s !important;
+  animation-duration: 30s !important;
 }
 
 html.fps-minimal [class*="glow"],
 html.fps-minimal [class*="pulse"] {
-  animation-duration: 12s !important;
+  animation-duration: 25s !important;
 }
 
 html.fps-minimal .text-shimmer-effect {
-  animation-duration: 10s !important;
+  animation-duration: 22s !important;
 }
 
 html.fps-minimal [data-theme-illusion="CRT"]::after,
 html.fps-minimal [data-theme-illusion="GLITCH"]::after {
-  animation-duration: 15s !important;
+  animation-duration: 30s !important;
 }
 
-/* FPS LOW: Slow animations */
+/* FPS LOW: Very slow animations */
 html.fps-low [class*="shimmer"] {
-  animation-duration: 10s !important;
+  animation-duration: 22s !important;
 }
 
 html.fps-low [class*="glow"],
 html.fps-low [class*="pulse"] {
-  animation-duration: 8s !important;
+  animation-duration: 18s !important;
 }
 
 html.fps-low .text-shimmer-effect {
-  animation-duration: 8s !important;
+  animation-duration: 18s !important;
 }
 
 html.fps-low [data-theme-illusion="CRT"]::after,
 html.fps-low [data-theme-illusion="GLITCH"]::after {
-  animation-duration: 12s !important;
+  animation-duration: 24s !important;
 }
 
 /* FPS MEDIUM: Moderate animation slowdown */
 html.fps-medium [class*="shimmer"] {
-  animation-duration: 6s !important;
+  animation-duration: 14s !important;
 }
 
 html.fps-medium [class*="glow"],
 html.fps-medium [class*="pulse"] {
-  animation-duration: 5s !important;
+  animation-duration: 12s !important;
 }
 
 html.fps-medium .text-shimmer-effect {
-  animation-duration: 5s !important;
+  animation-duration: 12s !important;
 }
 
-/* FPS HIGH: Slight animation slowdown */
+/* FPS HIGH: Moderate shimmer speed */
 html.fps-high [class*="shimmer"] {
-  animation-duration: 4.5s !important;
-}
-
-/* FPS ULTRA: FULL QUALITY - No restrictions */
-html.fps-ultra [class*="shimmer"] {
-  animation-duration: 3s !important;
-}
-
-/* =================================================================
-   MOBILE OPTIMIZATIONS - Animation speed only
-   ================================================================= */
-html.is-mobile [class*="shimmer"] {
-  animation-duration: 6s !important;
-}
-
-html.is-mobile.fps-low [class*="shimmer"] {
   animation-duration: 10s !important;
 }
 
+/* FPS ULTRA: FULL QUALITY - Still slow and smooth */
+html.fps-ultra [class*="shimmer"] {
+  animation-duration: 8s !important;
+}
+
+/* =================================================================
+   MOBILE OPTIMIZATIONS - Much slower animation speed
+   ================================================================= */
+html.is-mobile [class*="shimmer"] {
+  animation-duration: 16s !important;
+}
+
+html.is-mobile.fps-low [class*="shimmer"] {
+  animation-duration: 24s !important;
+}
+
 html.is-mobile.fps-minimal [class*="shimmer"] {
-  animation-duration: 14s !important;
+  animation-duration: 35s !important;
 }
 
 /* =================================================================

@@ -617,8 +617,8 @@
   position: fixed;
   top: 20px;
   right: 20px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(139, 92, 246, 0.9));
-  backdrop-filter: blur(20px);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(139, 92, 246, 0.95));
+  /* NO BLUR - removed for performance */
   border-radius: 12px;
   padding: 16px 20px;
   display: flex;
@@ -691,9 +691,9 @@
 /* ===== GLASSMORPHISM ===== */
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.8);
+  /* NO BLUR - removed for performance */
+  border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 

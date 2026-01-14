@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   motion,
   AnimatePresence,
@@ -9,6 +9,9 @@ import {
 } from "framer-motion";
 import { ArrowUpRight, Zap, TrendingUp, Sparkles, Rocket, Star, Trophy, Flame, Diamond, Moon, Target, Dumbbell, CheckCircle2, CircleDollarSign, BarChart3, Activity } from "lucide-react";
 import Image from "next/image";
+
+// --- IMPORT UNIFIED SHIMMER SYSTEM FOR FPS-AWARE ANIMATIONS ---
+import { useOptimizedShimmer } from "@/components/ui/UnifiedShimmer";
 
 // --- TYPES ---
 type AssetKey = "BTC" | "ETH" | "SOL";
@@ -446,6 +449,18 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   const [selectedAsset, setSelectedAsset] = useState<AssetKey>("BTC");
   const { price: realPrice } = useLivePrice(selectedAsset);
   const [displayPrice, setDisplayPrice] = useState(0);
+  
+  // --- FPS-AWARE SHIMMER SETTINGS ---
+  const shimmerSettings = useOptimizedShimmer();
+  // Calculate shimmer duration based on FPS tier (slower = less CPU usage)
+  const shimmerDuration = useMemo(() => {
+    switch (shimmerSettings.speed) {
+      case 'slow': return 3.5; // Slow for low FPS
+      case 'normal': return 2.8; // Default smooth shimmer
+      case 'fast': return 2.2; // Normal speed
+      default: return 2.8;
+    }
+  }, [shimmerSettings.speed]);
 
   const shakeX = useMotionValue(0);
   const shakeY = useMotionValue(0);
@@ -772,22 +787,22 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
               />
             </div>
             
-            {/* Navbar-style blue shimmer overlay - LEFT TO RIGHT */}
+            {/* Navbar-style blue shimmer overlay - LEFT TO RIGHT (FPS-aware) */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"
-                animate={{ x: ["-100%", "200%"] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", repeatDelay: 1 }}
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/40 to-transparent"
+                animate={{ x: ["-100%", "100%"] }}
+                transition={{ duration: shimmerDuration * 1.8, repeat: Infinity, ease: "linear", repeatDelay: 0.8 }}
               />
             </div>
 
             {/* Trading Ticker Tape - Black/Blue navbar style with LEFT TO RIGHT shimmer */}
-            <div className="absolute top-0 left-0 right-0 h-10 bg-black/95 backdrop-blur-xl border-b-2 border-blue-500/40 overflow-hidden shadow-[0_0_30px_rgba(59,130,246,0.4)] z-40">
-              {/* Left to right shimmer on ticker */}
+            <div className="absolute top-0 left-0 right-0 h-10 bg-black border-b-2 border-blue-500/70 overflow-hidden shadow-[0_0_40px_rgba(59,130,246,0.6)] z-40">
+              {/* Left to right shimmer on ticker (FPS-aware) */}
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/30 to-transparent"
-                animate={{ x: ["-100%", "200%"] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/50 to-transparent"
+                animate={{ x: ["-100%", "100%"] }}
+                transition={{ duration: shimmerDuration * 0.8, repeat: Infinity, ease: "linear" }}
               />
               <motion.div
                 animate={{ x: ["-100%", "0%"] }}
@@ -879,10 +894,10 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                       setSelectedAsset(key as AssetKey);
                     }}
                     className={cn(
-                      "px-3 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-black border-2 transition-all backdrop-blur-xl min-w-[44px] min-h-[44px] sm:min-w-[52px] sm:min-h-[52px] flex items-center gap-1 sm:gap-1.5 shadow-lg relative overflow-hidden",
+                      "px-3 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-black border-2 transition-all min-w-[44px] min-h-[44px] sm:min-w-[52px] sm:min-h-[52px] flex items-center gap-1 sm:gap-1.5 shadow-lg relative overflow-hidden",
                       key === selectedAsset
-                        ? "bg-black/80 text-blue-400 border-blue-500/80 shadow-[0_0_25px_rgba(59,130,246,0.5)]"
-                        : "bg-black/60 text-blue-200/80 border-blue-500/30 hover:border-blue-400/60 hover:bg-black/80"
+                        ? "bg-black text-blue-300 border-blue-500/90 shadow-[0_0_35px_rgba(59,130,246,0.7)]"
+                        : "bg-black text-blue-200 border-blue-500/50 hover:border-blue-400/80 hover:bg-black"
                     )}
                     style={{
                       touchAction: 'manipulation',
@@ -891,15 +906,15 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                   >
                     {key === selectedAsset && (
                       <>
-                        {/* Blue shimmer LEFT TO RIGHT like navbar */}
+                        {/* Blue shimmer LEFT TO RIGHT like navbar (FPS-aware) */}
                         <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/50 to-transparent z-0 rounded-full"
-                          animate={{ x: ["-100%", "200%"] }}
-                          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/70 to-transparent z-0 rounded-full"
+                          animate={{ x: ["-100%", "100%"] }}
+                          transition={{ duration: shimmerDuration * 0.7, repeat: Infinity, ease: "linear" }}
                         />
                         <motion.div
                           layoutId="activeAsset"
-                          className="absolute inset-[1px] bg-black/95 rounded-full z-[1]"
+                          className="absolute inset-[1px] bg-black rounded-full z-[1]"
                           transition={{ type: "spring", stiffness: 400, damping: 25 }}
                         />
                       </>
@@ -1108,16 +1123,16 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                     />
                   </motion.div>
                 </div>
-                <div className="w-full h-2.5 bg-black/60 border border-blue-500/30 rounded-full overflow-hidden shadow-[inset_0_0_10px_rgba(0,0,0,0.5)]">
+                <div className="w-full h-2.5 bg-black border-2 border-blue-500/60 rounded-full overflow-hidden shadow-[inset_0_0_15px_rgba(0,0,0,0.7),0_0_25px_rgba(59,130,246,0.4)]">
                   <motion.div
                     className="h-full bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 relative"
                     style={{ width: `${progress}%` }}
                   >
                     {isHolding && (
                       <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                        animate={{ x: ["-100%", "200%"] }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent"
+                        animate={{ x: ["-100%", "100%"] }}
+                        transition={{ duration: shimmerDuration * 0.6, repeat: Infinity, ease: "linear" }}
                       />
                     )}
                   </motion.div>
@@ -1148,20 +1163,20 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                     initial={{ y: 12, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: -12, opacity: 0 }}
-                    className="pointer-events-none mt-6 flex items-center gap-2 text-xs text-blue-200 bg-black/80 backdrop-blur-xl px-5 py-2.5 rounded-full border-2 border-blue-500/40 shadow-[0_0_25px_rgba(59,130,246,0.4)] relative overflow-hidden"
+                    className="pointer-events-none mt-6 flex items-center gap-2 text-xs text-blue-50 bg-black px-5 py-2.5 rounded-full border-2 border-blue-500/70 shadow-[0_0_35px_rgba(59,130,246,0.6)] relative overflow-hidden"
                   >
-                    {/* Left to right shimmer */}
+                    {/* Left to right shimmer (FPS-aware) */}
                     <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/30 to-transparent"
-                      animate={{ x: ["-100%", "200%"] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/50 to-transparent"
+                      animate={{ x: ["-100%", "100%"] }}
+                      transition={{ duration: shimmerDuration * 0.9, repeat: Infinity, ease: "linear" }}
                     />
                     {/* Pulse indicator */}
                     <div className="relative flex h-2 w-2 shrink-0 z-10">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
                     </div>
-                    <span className="relative z-10 flex items-center gap-1"><Diamond className="w-3 h-3" /> Hold anywhere until 100% <Rocket className="w-3 h-3" /></span>
+                    <span className="relative z-10 flex items-center gap-1 font-medium"><Diamond className="w-3 h-3" /> Hold anywhere until 100% <Rocket className="w-3 h-3" /></span>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -1216,12 +1231,12 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
             transition={{ duration: 0.3 }}
             className="min-h-screen bg-black flex items-center justify-center p-8 relative overflow-hidden"
           >
-            {/* Blue shimmer background - LEFT TO RIGHT */}
+            {/* Blue shimmer background - LEFT TO RIGHT (FPS-aware) */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/15 to-transparent"
-                animate={{ x: ["-100%", "200%"] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.5 }}
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"
+                animate={{ x: ["-100%", "100%"] }}
+                transition={{ duration: shimmerDuration * 2, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
               />
             </div>
             
@@ -1234,13 +1249,13 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 className="relative"
               >
                 {/* Glow effect behind logo */}
-                <div className="absolute inset-[-20px] bg-blue-500/30 rounded-full blur-2xl" />
-                <div className="relative w-32 h-32 rounded-full bg-black border-2 border-blue-500/60 flex items-center justify-center shadow-[0_0_60px_rgba(59,130,246,0.5)] overflow-hidden">
-                  {/* Left to right shimmer on logo container */}
+                <div className="absolute inset-[-20px] bg-blue-500/40 rounded-full blur-2xl" />
+                <div className="relative w-32 h-32 rounded-full bg-black border-2 border-blue-500/80 flex items-center justify-center shadow-[0_0_75px_rgba(59,130,246,0.7)] overflow-hidden">
+                  {/* Left to right shimmer on logo container (FPS-aware) */}
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/40 to-transparent"
-                    animate={{ x: ["-100%", "200%"] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/60 to-transparent"
+                    animate={{ x: ["-100%", "100%"] }}
+                    transition={{ duration: shimmerDuration * 0.75, repeat: Infinity, ease: "linear" }}
                   />
                   <Image
                     src="/BULL.svg"
@@ -1283,7 +1298,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-lg text-blue-200/70 max-w-md"
+                className="text-lg text-blue-100/80 max-w-md"
               >
                 You&apos;ve successfully accessed the site. Your {ASSETS[selectedAsset].id} is ready to pump!
               </motion.p>
@@ -1293,16 +1308,16 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 transition={{ delay: 0.25, type: "spring", stiffness: 300 }}
                 className="mt-4 flex gap-2"
               >
-                <div className="px-4 py-2 bg-black border-2 border-blue-500/50 rounded-full text-sm font-bold text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.3)] relative overflow-hidden">
-                  {/* Shimmer effect */}
+                <div className="px-4 py-2 bg-black border-2 border-blue-500/80 rounded-full text-sm font-bold text-blue-100 shadow-[0_0_30px_rgba(59,130,246,0.5)] relative overflow-hidden">
+                  {/* Shimmer effect (FPS-aware) */}
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/30 to-transparent"
-                    animate={{ x: ["-100%", "200%"] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/50 to-transparent"
+                    animate={{ x: ["-100%", "100%"] }}
+                    transition={{ duration: shimmerDuration * 0.8, repeat: Infinity, ease: "linear", delay: 0.5 }}
                   />
                   <span className="relative z-10">{ASSETS[selectedAsset].icon} {ASSETS[selectedAsset].id}</span>
                 </div>
-                <div className="px-4 py-2 bg-black border-2 border-green-500/50 rounded-full text-sm font-bold text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                <div className="px-4 py-2 bg-black border-2 border-green-500/80 rounded-full text-sm font-bold text-green-200 shadow-[0_0_25px_rgba(34,197,94,0.5)]">
                   ✓ Connected
                 </div>
               </motion.div>

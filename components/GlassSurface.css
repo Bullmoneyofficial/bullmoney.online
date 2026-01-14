@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, var(--glass-opacity, 0.1));
-  backdrop-filter: saturate(var(--glass-saturation, 1.2));
+  /* NO BLUR - removed for performance */
 }
 
 .glass-surface__filter {
@@ -29,7 +29,8 @@
 }
 
 .glass-mobile-3d {
-  backdrop-filter: blur(var(--blur, 8px)) saturate(var(--glass-saturation, 1.2));
+  /* NO BLUR - removed for performance */
+  background: rgba(0, 0, 0, 0.7);
 }
 
 .mobile-liquid-layer {

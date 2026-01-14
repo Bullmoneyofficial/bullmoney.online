@@ -7,6 +7,7 @@ import "../styles/120hz-performance.css"; // Critical 120Hz optimizations
 import "../styles/device-tier-optimizations.css"; // Device-tier aware CSS
 import "../styles/safari-optimizations.css"; // Safari-specific fixes
 import "../styles/no-spin.css"; // Disable rotation-based spin animations
+import "../styles/fps-optimization.css"; // FPS optimization & frame skipping
 import { cn } from "@/lib/utils";
 
 import { ThemeProvider } from "@/context/providers";
@@ -23,6 +24,12 @@ import { PerformanceProvider, FPSCounter } from "@/components/PerformanceProvide
 
 // ✅ ADDED: Import the FPS Optimizer for device-aware optimization
 import { FpsOptimizerProvider } from "@/lib/FpsOptimizer";
+
+// ✅ ADDED: Import rendering optimizations
+import { injectRenderingOptimizations } from "@/lib/renderingOptimizations";
+
+// ✅ ADDED: Import FPS Monitor component
+import FpsMonitor from "@/components/FpsMonitor";
 
 // ✅ ADDED: Import the Unified Shimmer Styles Provider
 import { ShimmerStylesProvider } from "@/components/ui/UnifiedShimmer";
@@ -616,9 +623,12 @@ export default function RootLayout({
                     {/* ✅ CRASH TRACKER: Error/interaction logging to Supabase */}
                     <CrashTrackerProvider>
                     {/* ✅ FPS Optimizer for device-aware quality control */}
-                    <FpsOptimizerProvider>
+                    <FpsOptimizerProvider enableMonitoring={true} monitoringInterval={500} startDelay={1000}>
                     {/* ✅ Performance Provider for 120Hz optimization & smooth scroll */}
                     <PerformanceProvider enableSmoothScroll={true}>
+                      {/* ✅ FPS MONITOR OVERLAY - Disabled (moved to Ultimate Control Panel button) */}
+                      <FpsMonitor show={false} />
+                      
                       {/* Custom Cursor for Desktop */}
                       <ClientCursor />
                       {/* Navbar rendered outside filter wrapper to preserve fixed positioning */}

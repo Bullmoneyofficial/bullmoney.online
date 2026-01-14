@@ -169,17 +169,18 @@ export function applySafariCSSFixes(): void {
        SAFARI-SPECIFIC CSS FIXES
        ================================================================ */
     
-    /* Fix Safari backdrop-filter performance */
+    /* NO BLUR - removed for performance */
     html.is-safari .backdrop-blur-2xl,
     html.is-safari .backdrop-blur-xl {
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      background-color: rgba(0, 0, 0, 0.85);
     }
     
     /* Safari needs explicit -webkit prefixes for some animations */
     html.is-safari .shimmer-spin {
-      -webkit-animation: unified-spin 4s linear infinite;
-      animation: unified-spin 4s linear infinite;
+      -webkit-animation: unified-spin 14s linear infinite;
+      animation: unified-spin 14s linear infinite;
     }
     
     /* Fix Safari transform compositing */
@@ -214,13 +215,13 @@ export function applySafariCSSFixes(): void {
       transform: translateZ(0);
     }
     
-    /* Safari legacy fixes (< 15) */
+    /* Safari legacy fixes (< 15) - NO BLUR */
     html.safari-legacy .backdrop-blur-2xl,
     html.safari-legacy .backdrop-blur-xl,
     html.safari-legacy .backdrop-blur-lg {
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      background-color: rgba(0, 0, 0, 0.8);
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      background-color: rgba(0, 0, 0, 0.9);
     }
     
     /* Fix Safari CSS contain support */
@@ -373,12 +374,12 @@ export function applySafariMemoryOptimizations(): void {
   const root = document.documentElement;
   
   if (info.isMobileSafari) {
-    // On mobile Safari, be more aggressive with optimizations
+    // On mobile Safari, be aggressive with optimizations - NO BLUR
     root.classList.add('reduce-blur');
-    root.style.setProperty('--blur-amount', '4px');
+    root.style.setProperty('--blur-amount', '0px');  // NO BLUR ever
     
-    // Reduce animation duration
-    root.style.setProperty('--animation-duration-multiplier', '0.8');
+    // Reduce animation duration significantly
+    root.style.setProperty('--animation-duration-multiplier', '0.3');
     
     console.log('[SafariOptimizations] Mobile Safari memory optimizations applied');
   }

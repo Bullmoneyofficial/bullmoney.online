@@ -50,6 +50,8 @@ import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 import { ShimmerLine, ShimmerBorder } from '@/components/ui/UnifiedShimmer';
 import { useComponentLifecycle, useUnifiedPerformance } from '@/lib/UnifiedPerformanceSystem';
 import { useComponentTracking } from '@/lib/CrashTracker';
+import { useFpsOptimizer } from '@/lib/FpsOptimizer';
+import CompactFpsDisplay from '@/components/CompactFpsDisplay';
 
 // --- IMPORT NAVBAR CSS FOR CONSISTENT THEMING ---
 import './navbar.css';
@@ -270,6 +272,198 @@ function PerformanceRing({ score, size = 120 }: { score: number; size?: number }
     </div>
   );
 }
+
+/**
+ * FPS Display wrapper using FpsOptimizer hook
+ */
+function FpsDisplayWithOptimizer() {
+  const {
+    currentFps,
+    deviceTier,
+    shimmerQuality,
+    splineQuality,
+    enable3D,
+  } = useFpsOptimizer();
+
+  return (
+    <CompactFpsDisplay
+      fps={currentFps}
+      deviceTier={deviceTier}
+      shimmerQuality={shimmerQuality}
+      splineQuality={splineQuality}
+      enable3D={enable3D}
+    />
+  );
+}
+
+/**
+ * FPS Performance Panel - Detailed metrics from FpsOptimizer
+ */
+function FpsPerformancePanel({ deviceInfo }: { deviceInfo: DeviceInfo }) {
+  const {
+    currentFps,
+    averageFps,
+    deviceTier,
+    shimmerQuality,
+    splineQuality,
+    enable3D,
+    targetFrameRate,
+  } = useFpsOptimizer();
+
+  const getColorClass = (fpsValue: number) => {
+    if (fpsValue >= 58) return 'text-green-300';
+    if (fpsValue >= 50) return 'text-lime-300';
+    if (fpsValue >= 40) return 'text-yellow-300';
+    if (fpsValue >= 30) return 'text-orange-300';
+    return 'text-red-300';
+  };
+
+  const getTierColor = (tier: string) => {
+    switch (tier) {
+      case 'ultra':
+        return 'bg-purple-500/20 border-purple-400/40 text-purple-300';
+      case 'high':
+        return 'bg-green-500/20 border-green-400/40 text-green-300';
+      case 'medium':
+        return 'bg-yellow-500/20 border-yellow-400/40 text-yellow-300';
+      case 'low':
+        return 'bg-orange-500/20 border-orange-400/40 text-orange-300';
+      case 'minimal':
+        return 'bg-red-500/20 border-red-400/40 text-red-300';
+      default:
+        return 'bg-gray-500/20 border-gray-400/40 text-gray-300';
+    }
+  };
+
+  const getQualityColor = (quality: string) => {
+    switch (quality) {
+      case 'high':
+      case 'ultra':
+        return 'text-green-300';
+      case 'medium':
+        return 'text-yellow-300';
+      case 'low':
+        return 'text-orange-300';
+      case 'disabled':
+        return 'text-red-300';
+      default:
+        return 'text-gray-300';
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="space-y-4"
+    >
+      {/* Main FPS Card */}
+      <div className="relative p-4 rounded-xl overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-br from-green-950/40 via-slate-900/50 to-blue-900/40 border border-green-400/40 rounded-xl transition-all duration-300 group-hover:border-green-300/60 shadow-lg shadow-green-500/10" />
+        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
+          <motion.div 
+            animate={{ x: ['0%', '200%'] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-green-500/0 via-green-400/40 to-green-500/0 opacity-100"
+          />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl" />
+        <div className="relative z-10 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-blue-200/60">Current FPS</div>
+              <div className={`text-4xl font-black drop-shadow-lg ${getColorClass(currentFps)}`}>
+                {currentFps}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-xs text-blue-200/60">Target</div>
+              <div className="text-xl font-bold text-blue-300">{targetFrameRate}fps</div>
+            </div>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 gap-2 text-sm border-t border-green-400/20 pt-3">
+            <div>
+              <span className="text-blue-200/60">Average:</span>
+              <span className={`ml-2 font-semibold drop-shadow-lg ${getColorClass(averageFps)}`}>{averageFps}fps</span>
+            </div>
+            <div>
+              <span className="text-blue-200/60">Frame Time:</span>
+              <span className={`ml-2 font-semibold drop-shadow-lg ${deviceInfo.live.frameTime > (1000 / targetFrameRate) * 1.1 ? 'text-orange-300' : 'text-green-300'}`}>
+                {deviceInfo.live.frameTime.toFixed(2)}ms
+              </span>
+            </div>
+            <div>
+              <span className="text-blue-200/60">Target Frame:</span>
+              <span className="ml-2 font-semibold text-blue-300 drop-shadow-lg">{(1000 / targetFrameRate).toFixed(2)}ms</span>
+            </div>
+            <div>
+              <span className="text-blue-200/60">Status:</span>
+              <span className={`ml-2 font-semibold drop-shadow-lg ${currentFps >= targetFrameRate * 0.95 ? 'text-green-300' : 'text-yellow-300'}`}>
+                {currentFps >= targetFrameRate * 0.95 ? '✓ Good' : '⚠ Low'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Device Tier & Quality Settings */}
+      <div className="relative p-4 rounded-xl overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-purple-900/40 border border-blue-400/40 rounded-xl transition-all duration-300 group-hover:border-blue-300/60 shadow-lg shadow-blue-500/10" />
+        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
+          <motion.div 
+            animate={{ x: ['0%', '200%'] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/40 to-blue-500/0 opacity-100"
+          />
+        </div>
+        <div className="relative z-10 space-y-3">
+          <div className="text-sm text-blue-200/60 mb-3">Performance Configuration</div>
+          
+          {/* Device Tier Badge */}
+          <div className="flex items-center justify-between">
+            <span className="text-blue-200/70">Device Tier</span>
+            <span className={`px-3 py-1 rounded-lg border font-semibold text-sm ${getTierColor(deviceTier)} capitalize drop-shadow-lg`}>
+              {deviceTier}
+            </span>
+          </div>
+
+          {/* Quality Settings */}
+          <div className="space-y-2 border-t border-blue-400/20 pt-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-2">
+                <span className="text-blue-200/70">Shimmer Quality</span>
+              </span>
+              <span className={`font-semibold drop-shadow-lg ${getQualityColor(shimmerQuality)} capitalize`}>
+                {shimmerQuality}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-2">
+                <span className="text-blue-200/70">3D/Spline Quality</span>
+              </span>
+              <span className={`font-semibold drop-shadow-lg ${getQualityColor(splineQuality)} capitalize`}>
+                {splineQuality}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-2">
+                <span className="text-blue-200/70">3D Effects</span>
+              </span>
+              <span className={`font-semibold drop-shadow-lg ${enable3D ? 'text-green-300' : 'text-gray-400'}`}>
+                {enable3D ? '✓ Enabled' : '✗ Disabled'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 
 // ============================================================================
 // MAIN COMPONENT
@@ -588,12 +782,12 @@ export function UltimateControlPanel({
                   initial: { x: 0 },
                   hover: { x: -8 }
                 }}
-                className="relative rounded-l-2xl bg-black/60 backdrop-blur-3xl border-y border-l border-blue-500/30 transition-all duration-300 hover:border-blue-400/50 shadow-lg shadow-blue-900/20"
-                whileHover={{ boxShadow: "0 0 30px rgba(59, 130, 246, 0.4)" }}
+                className="relative rounded-l-3xl bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-slate-900/40 backdrop-blur-2xl border-y border-l border-blue-500/50 transition-all duration-300 hover:border-blue-400/70 shadow-2xl hover:shadow-blue-600/40 hover:shadow-xl"
+                whileHover={{ boxShadow: "0 0 40px rgba(59, 130, 246, 0.6), inset 0 0 20px rgba(59, 130, 246, 0.15)" }}
               >
                 {/* FPS Display - Mobile Tap Optimized: First tap expands, second tap opens panel */}
                 <div 
-                  className="px-4 py-3 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
+                  className="px-2 py-2 cursor-pointer min-h-auto flex items-center justify-center touch-manipulation"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -633,20 +827,12 @@ export function UltimateControlPanel({
                     userSelect: 'none'
                   }}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <ChevronRight 
-                      size={16} 
-                      className={`text-blue-300/70 group-hover:text-blue-200 transition-colors mr-1 ${isMobileExpanded ? 'rotate-90' : 'rotate-180'}`}
+                      size={14} 
+                      className={`text-blue-500 group-hover:text-blue-400 transition-colors drop-shadow-[0_0_6px_rgba(59,130,246,0.8)] ${isMobileExpanded ? 'rotate-90' : 'rotate-180'}`}
                     />
-                    <div className="flex flex-col">
-                      <span className="text-blue-100 text-lg font-black leading-none drop-shadow-lg">
-                        {deviceInfo.live.fps}
-                      </span>
-                      <span className="text-blue-200/80 text-[9px] font-semibold uppercase tracking-wider drop-shadow">
-                        FPS
-                      </span>
-                    </div>
-                    <Activity size={18} className="text-blue-400/80 shimmer-pulse" />
+                    <FpsDisplayWithOptimizer />
                   </div>
                 </div>
 
@@ -1367,31 +1553,8 @@ export function UltimateControlPanel({
                         <PerformanceRing score={performanceScore} size={140} />
                       </div>
 
-                      {/* FPS */}
-                      <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-green-950/40 via-slate-900/50 to-blue-900/40 border border-green-400/40 rounded-xl transition-all duration-300 group-hover:border-green-300/60 shadow-lg shadow-green-500/10" />
-                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
-                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
-                          <motion.div 
-                            animate={{ x: ['0%', '200%'] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-green-500/0 via-green-400/40 to-green-500/0 opacity-100"
-                          />
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl" />
-                        <div className="relative z-10 flex items-center justify-between">
-                          <div>
-                            <div className="text-sm text-blue-200/60">Current FPS</div>
-                            <div className="text-3xl font-black text-white drop-shadow-lg">
-                              {deviceInfo.live.fps}
-                            </div>
-                            <div className="text-xs text-blue-200/50">
-                              Frame time: {deviceInfo.live.frameTime.toFixed(2)}ms
-                            </div>
-                          </div>
-                          <Activity size={40} className="text-green-400 opacity-20" />
-                        </div>
-                      </div>
+                      {/* FPS Performance Panel */}
+                      <FpsPerformancePanel deviceInfo={deviceInfo} />
 
                       {/* GPU */}
                       <StatCard

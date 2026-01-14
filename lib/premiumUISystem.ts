@@ -13,10 +13,10 @@ export const PREMIUM_THEME = {
   BLUE_GLOW_STRONG: "0 0 40px rgba(59, 130, 246, 0.6)",
   GLASS_BG: "rgba(15, 23, 42, 0.6)", // slate-950 with transparency
   
-  // Animation configs
+  // Animation configs - SLOW animations for better performance
   ANIMATIONS: {
-    SHIMMER: { duration: 3, repeat: Infinity, ease: "linear" },
-    GLOW_PULSE: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+    SHIMMER: { duration: 10, repeat: Infinity, ease: "linear" },
+    GLOW_PULSE: { duration: 8, repeat: Infinity, ease: "easeInOut" },
     HOVER: { duration: 0.3 },
     TAP: { duration: 0.15 },
   },
@@ -43,7 +43,7 @@ export const PREMIUM_THEME = {
 } as const;
 
 export const GLASS_STYLES = {
-  backdrop: "backdrop-blur-xl",
+  backdrop: "",  // NO BLUR - removed for performance
   border: "border border-blue-500/20",
   shadow: `shadow-lg shadow-blue-500/10`,
   gradient: `bg-gradient-to-br from-blue-950/40 via-slate-950 to-neutral-950`,

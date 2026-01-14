@@ -147,11 +147,8 @@ const optimizeInAppBrowser = () => {
   const capabilities = detectBrowserCapabilities();
   
   if (capabilities.isInAppBrowser) {
-    // Disable heavy animations
-    document.documentElement.style.setProperty('--animation-duration-multiplier', '0.5');
-    
-    // Reduce blur effects
-    document.documentElement.style.setProperty('--backdrop-blur-amount', '8px');
+    // Slow down animations significantly for in-app browsers
+    document.documentElement.style.setProperty('--animation-duration-multiplier', '0.3');
     
     // Disable 3D transforms on low memory
     if (capabilities.memory < 3) {
@@ -340,14 +337,11 @@ export const PerformanceProvider = memo(({ children, showFPS = false }: Performa
         animation: none !important;
       }
       
-      html.reduce-blur {
-        --blur-amount: 4px !important;
-      }
-      
-      html.reduce-blur .backdrop-blur-2xl,
-      html.reduce-blur .backdrop-blur-xl,
-      html.reduce-blur .backdrop-blur-lg {
-        backdrop-filter: blur(var(--blur-amount, 4px)) !important;
+      /* NO BLUR - all blur effects globally disabled */
+      html.reduce-blur *, 
+      * {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
       }
       
       html.reduce-shadows * {
@@ -385,7 +379,7 @@ export const PerformanceProvider = memo(({ children, showFPS = false }: Performa
       /* Spline optimization - reduce GPU load during scroll */
       html.is-scrolling .spline-container canvas,
       html.is-scrolling [data-spline] canvas {
-        filter: blur(2px);
+        /* NO BLUR - removed for performance */
         opacity: 0.9;
       }
     `;
@@ -493,23 +487,19 @@ export const useDesktopFPSOptimizer = (enabled = true) => {
         if (avgFps < 25 && qualityLevelRef.current !== 'low') {
           // Critical: Drop to low quality
           qualityLevelRef.current = 'low';
-          root.classList.add('reduce-animations', 'reduce-blur', 'reduce-shadows');
-          root.style.setProperty('--animation-duration-multiplier', '0.3');
-          root.style.setProperty('--blur-amount', '4px');
+          root.classList.add('reduce-animations', 'reduce-shadows');
+          root.style.setProperty('--animation-duration-multiplier', '0.15');
           console.warn(`⚠️ FPS critical (${Math.round(avgFps)}fps) - reducing quality to LOW`);
         } else if (avgFps < 40 && qualityLevelRef.current === 'high') {
           // Medium: Reduce some effects
           qualityLevelRef.current = 'medium';
-          root.classList.add('reduce-blur');
-          root.style.setProperty('--animation-duration-multiplier', '0.6');
-          root.style.setProperty('--blur-amount', '8px');
+          root.style.setProperty('--animation-duration-multiplier', '0.4');
           console.log(`⚡ FPS dropping (${Math.round(avgFps)}fps) - reducing quality to MEDIUM`);
         } else if (avgFps >= 55 && qualityLevelRef.current !== 'high') {
           // Good: Restore quality
           qualityLevelRef.current = 'high';
-          root.classList.remove('reduce-animations', 'reduce-blur', 'reduce-shadows');
-          root.style.setProperty('--animation-duration-multiplier', '1');
-          root.style.setProperty('--blur-amount', '16px');
+          root.classList.remove('reduce-animations', 'reduce-shadows');
+          root.style.setProperty('--animation-duration-multiplier', '0.7');
           console.log(`✅ FPS recovered (${Math.round(avgFps)}fps) - restoring quality to HIGH`);
         }
         

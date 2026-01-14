@@ -70,7 +70,7 @@ const MobileMenuControls = memo(({
 
     {/* Inner Content Container */}
     <div 
-      className="relative h-full w-full bg-black/40 dark:bg-black/40 backdrop-blur-xl rounded-full p-[2px] flex items-center justify-center gap-1 px-2 sm:px-3 border border-blue-500/40 dark:border-blue-500/40 transition-all duration-300 group-hover:border-blue-400/70 group-hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] z-10"
+      className="relative h-full w-full bg-black/80 dark:bg-black/80 backdrop-blur-xl rounded-full p-[2px] flex items-center justify-center gap-1 px-2 sm:px-3 border-2 border-blue-500/60 dark:border-blue-500/60 transition-all duration-300 group-hover:border-blue-400/80 group-hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] z-10"
     >
       {/* Theme Selector Button */}
       <motion.button

@@ -313,24 +313,21 @@ body {
    ============================================================================ */
 
 .glass-effect {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.85);
+  /* NO BLUR - removed for performance */
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
 }
 
 .glass-effect-heavy {
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: rgba(0, 0, 0, 0.92);
+  /* NO BLUR - removed for performance */
+  border: 2px solid rgba(59, 130, 246, 0.4);
 }
 
 .glass-effect-light {
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border: 1px solid rgba(59, 130, 246, 0.15);
+  background: rgba(0, 0, 0, 0.7);
+  /* NO BLUR - removed for performance */
+  border: 1.5px solid rgba(59, 130, 246, 0.35);
 }
 
 
@@ -340,14 +337,13 @@ body {
    ============================================================================ */
 
 .mobile-controls-glass {
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  border: 1.5px solid rgba(59, 130, 246, 0.3);
+  background: rgba(0, 0, 0, 0.9);
+  /* NO BLUR - removed for performance */
+  border: 2px solid rgba(59, 130, 246, 0.55);
   box-shadow: 
-    0 8px 32px 0 rgba(31, 38, 135, 0.15),
-    inset 0 0 20px rgba(59, 130, 246, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 8px 32px 0 rgba(31, 38, 135, 0.25),
+    inset 0 0 25px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .mobile-controls-glass:hover {
@@ -364,14 +360,13 @@ body {
    ============================================================================ */
 
 .dock-glass {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  border: 1.5px solid rgba(59, 130, 246, 0.3);
+  background: rgba(0, 0, 0, 0.9);
+  /* NO BLUR - removed for performance */
+  border: 2px solid rgba(59, 130, 246, 0.5);
   box-shadow:
-    0 8px 32px 0 rgba(31, 38, 135, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 0 20px rgba(59, 130, 246, 0.08);
+    0 8px 32px 0 rgba(31, 38, 135, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 0 25px rgba(59, 130, 246, 0.12);
 }
 
 .dock-glass:hover {
@@ -388,15 +383,14 @@ body {
    ============================================================================ */
 
 .icon-glass {
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border: 1px solid rgba(59, 130, 246, 0.25);
+  background: rgba(0, 0, 0, 0.6);
+  /* NO BLUR - removed for performance */
+  border: 1px solid rgba(59, 130, 246, 0.3);
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .icon-glass:hover {
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.7);
   border-color: rgba(59, 130, 246, 0.5);
   box-shadow: 0 0 25px rgba(59, 130, 246, 0.3);
 }
@@ -407,10 +401,9 @@ body {
    ============================================================================ */
 
 .tooltip-glass {
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(59, 130, 246, 0.4);
+  background: rgba(0, 0, 0, 0.9);
+  /* NO BLUR - removed for performance */
+  border: 1px solid rgba(59, 130, 246, 0.45);
   box-shadow:
     0 8px 32px rgba(31, 38, 135, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
@@ -423,14 +416,13 @@ body {
    ============================================================================ */
 
 .menu-glass {
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1.5px solid rgba(59, 130, 246, 0.35);
+  background: rgba(0, 0, 0, 0.95);
+  /* NO BLUR - removed for performance */
+  border: 2px solid rgba(59, 130, 246, 0.55);
   box-shadow:
-    0 12px 48px 0 rgba(31, 38, 135, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 0 30px rgba(59, 130, 246, 0.08);
+    0 12px 48px 0 rgba(31, 38, 135, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 0 35px rgba(59, 130, 246, 0.12);
 }
 
 .glass-active {
@@ -519,13 +511,13 @@ body {
 /* Disable expensive effects on low-end devices */
 @media (max-width: 768px) {
   .dock-glass {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    /* NO BLUR - removed for performance */
+    background: rgba(0, 0, 0, 0.85);
   }
   
   .menu-glass {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    /* NO BLUR - removed for performance */
+    background: rgba(0, 0, 0, 0.95);
   }
 }
 

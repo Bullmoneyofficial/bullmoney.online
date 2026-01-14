@@ -102,7 +102,7 @@ export interface FpsOptimizerState {
   getComponentAge: (component: TrackedComponent) => number; // How long since mount
 }
 
-// Default state for SSR
+// Default state for SSR - NO BLUR anywhere
 const defaultState: FpsOptimizerState = {
   deviceTier: 'high',
   isMobile: false,
@@ -113,8 +113,8 @@ const defaultState: FpsOptimizerState = {
   averageFps: 60,
   shimmerQuality: 'high',
   splineQuality: 'high',
-  animationMultiplier: 1,
-  enableBlur: true,
+  animationMultiplier: 0.6,  // Default to slower animations
+  enableBlur: false,  // ALWAYS false - no blur
   enableShadows: true,
   enable3D: true,
   enableParticles: true,
@@ -160,81 +160,83 @@ export interface DeviceTierConfig {
 }
 
 // Pre-computed configurations for each device tier
+// NOTE: enableBlur is ALWAYS false - blur effects are disabled globally for performance
+// M1 Mac optimizations: Target 60fps with frame skipping for expensive effects
 const TIER_CONFIGS: Record<DeviceTier, DeviceTierConfig> = {
   ultra: {
-    shimmerQuality: 'high',
-    splineQuality: 'ultra',
-    animationMultiplier: 1,
-    enableBlur: true,
-    enableShadows: true,
-    enable3D: true,
-    enableParticles: true,
-    enableGlassEffects: true,
-    enableHoverAnimations: true,
-    enableScrollAnimations: true,
-    maxPolygons: 3000000,
-    textureQuality: '4k',
-    targetFrameRate: 120,
+    shimmerQuality: 'high',        // High shimmer but with frame skipping (every 2 frames = 30fps visual)
+    splineQuality: 'ultra',         // Full quality 3D
+    animationMultiplier: 0.8,       // Smooth animations on ultra devices
+    enableBlur: false,              // NO BLUR - disabled globally for M1 performance
+    enableShadows: true,            // Shadows are cheap with GPU acceleration
+    enable3D: true,                 // Full 3D rendering
+    enableParticles: true,          // GPU-accelerated particles
+    enableGlassEffects: true,       // Glass effects (not blur)
+    enableHoverAnimations: true,    // Smooth hover feedback
+    enableScrollAnimations: true,   // Scroll-triggered animations
+    maxPolygons: 3000000,           // M1 can handle high polygon counts
+    textureQuality: '4k',           // Full resolution textures
+    targetFrameRate: 60,            // Target 60fps minimum (120 possible but 60 is stable)
   },
   high: {
-    shimmerQuality: 'high',
-    splineQuality: 'high',
-    animationMultiplier: 1,
-    enableBlur: true,
+    shimmerQuality: 'high',         // Frame-skipped shimmer (30fps visual, 60fps render)
+    splineQuality: 'high',          // High quality 3D
+    animationMultiplier: 0.7,       // Slightly slower animations to maintain 60fps
+    enableBlur: false,              // NO BLUR - disabled globally
     enableShadows: true,
     enable3D: true,
-    enableParticles: true,
+    enableParticles: true,          // But frame-skipped
     enableGlassEffects: true,
     enableHoverAnimations: true,
     enableScrollAnimations: true,
-    maxPolygons: 2000000,
+    maxPolygons: 2000000,           // Good polygon budget
     textureQuality: '4k',
-    targetFrameRate: 60,
+    targetFrameRate: 60,            // Strict 60fps
   },
   medium: {
-    shimmerQuality: 'medium',
-    splineQuality: 'medium',
-    animationMultiplier: 0.7,
-    enableBlur: true,
-    enableShadows: true,
+    shimmerQuality: 'medium',       // More aggressive frame skipping
+    splineQuality: 'medium',        // Reduced 3D quality
+    animationMultiplier: 0.5,       // Slower animations
+    enableBlur: false,              // NO BLUR
+    enableShadows: true,            // Keep shadows for depth
     enable3D: true,
-    enableParticles: false,
-    enableGlassEffects: true,
-    enableHoverAnimations: true,
-    enableScrollAnimations: true,
-    maxPolygons: 1000000,
-    textureQuality: '2k',
-    targetFrameRate: 60,
+    enableParticles: false,         // Disable particles
+    enableGlassEffects: true,       // Simple glass (no blur)
+    enableHoverAnimations: true,    // But reduced
+    enableScrollAnimations: false,  // Disable scroll animations
+    maxPolygons: 1000000,           // Conservative polygon budget
+    textureQuality: '2k',           // Lower resolution
+    targetFrameRate: 60,            // Still target 60fps
   },
   low: {
-    shimmerQuality: 'low',
-    splineQuality: 'low',
-    animationMultiplier: 0.4,
-    enableBlur: false,
-    enableShadows: false,
-    enable3D: true, // Still render 3D, just lower quality
+    shimmerQuality: 'low',          // Minimal shimmer
+    splineQuality: 'low',           // Very low quality 3D
+    animationMultiplier: 0.3,       // Very slow animations
+    enableBlur: false,              // NO BLUR
+    enableShadows: false,           // Disable shadows to save GPU
+    enable3D: true,                 // Minimal 3D
     enableParticles: false,
-    enableGlassEffects: false,
-    enableHoverAnimations: false,
+    enableGlassEffects: false,      // Disable glass effects
+    enableHoverAnimations: false,   // No hover animations
     enableScrollAnimations: false,
-    maxPolygons: 250000,
+    maxPolygons: 250000,            // Minimal polygon budget
     textureQuality: '1k',
-    targetFrameRate: 30,
+    targetFrameRate: 60,            // Still target 60fps (drop quality instead of FPS)
   },
   minimal: {
-    shimmerQuality: 'disabled',
-    splineQuality: 'low',
-    animationMultiplier: 0.1,
-    enableBlur: false,
+    shimmerQuality: 'disabled',     // No shimmers at all
+    splineQuality: 'low',           // Fallback 3D quality
+    animationMultiplier: 0.1,       // Minimal animations
+    enableBlur: false,              // NO BLUR
     enableShadows: false,
-    enable3D: true, // Still render 3D with fallback quality
+    enable3D: true,                 // Minimal 3D with fallbacks
     enableParticles: false,
     enableGlassEffects: false,
     enableHoverAnimations: false,
     enableScrollAnimations: false,
-    maxPolygons: 100000,
+    maxPolygons: 100000,            // Very minimal
     textureQuality: '512',
-    targetFrameRate: 30,
+    targetFrameRate: 60,            // Still aim for 60fps
   },
 };
 
@@ -349,8 +351,8 @@ function injectOptimizationClasses(state: FpsOptimizerState) {
   // Add shimmer quality class
   root.classList.add(`shimmer-quality-${state.shimmerQuality}`);
   
-  // Add feature reduction classes
-  if (!state.enableBlur) root.classList.add('reduce-blur');
+  // Add feature reduction classes - ALWAYS add reduce-blur
+  root.classList.add('reduce-blur');  // ALWAYS disable blur
   if (!state.enableShadows) root.classList.add('reduce-shadows');
   if (state.animationMultiplier < 0.5) root.classList.add('reduce-animations');
   if (!state.enableParticles) root.classList.add('reduce-particles');
@@ -361,9 +363,9 @@ function injectOptimizationClasses(state: FpsOptimizerState) {
   if (state.isSafari) root.classList.add('is-safari');
   if (state.isIOS) root.classList.add('is-ios');
   
-  // Set CSS custom properties for animations
+  // Set CSS custom properties for animations - NO BLUR ever
   root.style.setProperty('--animation-duration-multiplier', String(state.animationMultiplier));
-  root.style.setProperty('--blur-amount', state.enableBlur ? '12px' : '0px');
+  root.style.setProperty('--blur-amount', '0px');  // ALWAYS 0 - no blur
   root.style.setProperty('--shadow-opacity', state.enableShadows ? '1' : '0');
   root.style.setProperty('--target-fps', String(state.targetFrameRate));
 }
@@ -414,6 +416,8 @@ export const FpsOptimizerProvider = memo(function FpsOptimizerProvider({
   const lastTimeRef = useRef(0);
   const lastUpdateRef = useRef(0);
   const lowFpsCountRef = useRef(0); // Track how many times FPS dropped
+  const frameTimeRef = useRef<number[]>([]);
+  const lastFrameTimeRef = useRef(0);
   
   // Component registration - components call this when they mount
   const registerComponent = useCallback((name: TrackedComponent) => {
@@ -637,7 +641,7 @@ export const FpsOptimizerProvider = memo(function FpsOptimizerProvider({
     };
   }, [shimmerQuality, config.shimmerQuality]);
   
-  // FPS monitoring and dynamic optimization
+  // FPS monitoring and dynamic optimization - Game loop style for 60 FPS target
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!enableMonitoring) return;
@@ -645,25 +649,43 @@ export const FpsOptimizerProvider = memo(function FpsOptimizerProvider({
     let animationId: number;
     let started = false;
     
-    const measureAndOptimize = (timestamp: number) => {
+    // Game loop: runs once per frame, measures frame time
+    const gameLoop = (timestamp: number) => {
       if (!started) {
         lastTimeRef.current = timestamp;
         lastUpdateRef.current = timestamp;
+        lastFrameTimeRef.current = timestamp;
         started = true;
-        animationId = requestAnimationFrame(measureAndOptimize);
+        animationId = requestAnimationFrame(gameLoop);
         return;
+      }
+      
+      // Calculate frame time (delta time)
+      const frameTime = timestamp - lastFrameTimeRef.current;
+      lastFrameTimeRef.current = timestamp;
+      
+      // Track frame times
+      frameTimeRef.current.push(frameTime);
+      if (frameTimeRef.current.length > 60) {
+        frameTimeRef.current.shift();
       }
       
       frameCountRef.current++;
       const elapsed = timestamp - lastTimeRef.current;
       
+      // Update FPS every monitoring interval
       if (elapsed >= monitoringInterval) {
         const fps = Math.round((frameCountRef.current * 1000) / elapsed);
         setCurrentFps(fps);
         
+        // Calculate average frame time
+        const avgFrameTime = frameTimeRef.current.length > 0 
+          ? frameTimeRef.current.reduce((a, b) => a + b, 0) / frameTimeRef.current.length 
+          : 16.67;
+        
         // Update history
         fpsHistoryRef.current.push(fps);
-        if (fpsHistoryRef.current.length > 10) {
+        if (fpsHistoryRef.current.length > 30) {
           fpsHistoryRef.current.shift();
         }
         
@@ -671,41 +693,45 @@ export const FpsOptimizerProvider = memo(function FpsOptimizerProvider({
         const avg = fpsHistoryRef.current.reduce((a, b) => a + b, 0) / fpsHistoryRef.current.length;
         setAverageFps(Math.round(avg));
         
+        // Frame time budget analysis (target 60fps = 16.67ms budget)
+        const TARGET_FRAME_TIME_60 = 16.67;
+        const targetFrameTime = TARGET_FRAME_TIME_60;
+        const frameTimeOverbudget = avgFrameTime > targetFrameTime;
+        const frameTimePressure = avgFrameTime / targetFrameTime; // > 1.0 means overbudget
+        
         // Only update quality if enough time passed (prevent thrashing)
         const timeSinceLastUpdate = timestamp - lastUpdateRef.current;
-        if (timeSinceLastUpdate >= 2000) { // 2 second debounce
-          // Dynamic quality adjustment based on FPS
-          // More aggressive degradation to prevent crashes
-          if (avg < 15) {
-            // CRITICAL: Disable everything to prevent crash
+        if (timeSinceLastUpdate >= 3000) { // 3 second debounce
+          // Aggressive frame-time based quality scaling
+          // Prioritize hitting 60fps
+          if (frameTimePressure > 2.0 || avg < 20) {
+            // CRITICAL: Frame time is 2x over budget - aggressive reduction
             setShimmerQuality('disabled');
             setSplineQuality('low');
             lowFpsCountRef.current++;
-            console.warn(`🔴 [FpsOptimizer] CRITICAL FPS (${Math.round(avg)}) - Disabling shimmers`);
-          } else if (avg < 25) {
+            console.warn(`🔴 [FpsOptimizer] CRITICAL FRAME TIME (${Math.round(avgFrameTime)}ms / 16.67ms) - Heavy reduction`);
+          } else if (frameTimePressure > 1.5 || avg < 30) {
+            // Severe: Frame time 1.5x over budget
             setShimmerQuality('disabled');
-            lowFpsCountRef.current++;
-            console.warn(`⚠️ [FpsOptimizer] Very low FPS (${Math.round(avg)}) - Shimmers disabled`);
-          } else if (avg < 35) {
+            console.warn(`⚠️ [FpsOptimizer] SEVERE FPS (${Math.round(avg)}) - Frame time: ${Math.round(avgFrameTime)}ms`);
+          } else if (frameTimePressure > 1.2 || avg < 45) {
+            // High pressure: 20% over budget
             setShimmerQuality('low');
-            console.log(`⚡ [FpsOptimizer] Low FPS (${Math.round(avg)}) - Shimmer quality: low`);
-          } else if (avg < 50) {
+            console.log(`⚡ [FpsOptimizer] Low FPS (${Math.round(avg)}) - Frame time: ${Math.round(avgFrameTime)}ms`);
+          } else if (frameTimePressure > 1.0 || avg < 55) {
+            // Slight pressure: slightly over budget
             setShimmerQuality('medium');
-          } else {
-            // Only restore quality if we haven't had too many low FPS incidents
-            if (lowFpsCountRef.current < 3) {
+          } else if (avg >= 58) {
+            // Stable at 60fps - can use normal quality
+            if (lowFpsCountRef.current < 2) {
               setShimmerQuality(config.shimmerQuality);
             } else {
-              // Keep at medium if we've had FPS issues
               setShimmerQuality('medium');
             }
           }
-          // Target a faster frame rate if we're dipping; allow all tiers to aim for 60fps minimum.
-          if (avg < 45) {
-            setTargetFrameRate(60);
-          } else {
-            setTargetFrameRate(config.targetFrameRate);
-          }
+          
+          // Always target 60fps minimum on M1/desktop
+          setTargetFrameRate(60);
           lastUpdateRef.current = timestamp;
         }
         
@@ -713,19 +739,23 @@ export const FpsOptimizerProvider = memo(function FpsOptimizerProvider({
         lastTimeRef.current = timestamp;
       }
       
-      animationId = requestAnimationFrame(measureAndOptimize);
+      // Use high-priority callback if available for smoother updates
+      if ('scheduler' in window && 'yield' in (window.scheduler as any)) {
+        (window.scheduler as any).yield?.().then(() => {
+          animationId = requestAnimationFrame(gameLoop);
+        });
+      } else {
+        animationId = requestAnimationFrame(gameLoop);
+      }
     };
     
-    // Delay start to let page settle
-    const timeout = setTimeout(() => {
-      animationId = requestAnimationFrame(measureAndOptimize);
-    }, startDelay);
+    // Start monitoring immediately for game-like responsiveness
+    animationId = requestAnimationFrame(gameLoop);
     
     return () => {
-      clearTimeout(timeout);
       if (animationId) cancelAnimationFrame(animationId);
     };
-  }, [enableMonitoring, isMobile, monitoringInterval, startDelay, config.shimmerQuality]);
+  }, [enableMonitoring, isMobile, monitoringInterval, config.shimmerQuality]);
   
   // Build state object
   const state: FpsOptimizerState = {
