@@ -925,7 +925,7 @@ const HeroParallax = () => {
         data-allow-scroll
     >
         <div 
-          className="absolute inset-0 w-full h-full z-0 bg-black/5 pointer-events-none"
+          className="absolute inset-0 w-full h-full z-0 pointer-events-none"
           style={{ 
             contain: 'strict',
             isolation: 'isolate',

@@ -37,6 +37,7 @@ import type { DeviceInfo as DeviceMonitorInfo } from '@/lib/deviceMonitor';
 export type DeviceTier = 'ultra' | 'high' | 'medium' | 'low' | 'minimal';
 export type ShimmerQuality = 'high' | 'medium' | 'low' | 'disabled';
 export type PerformanceMode = 'ultra' | 'balanced' | 'power-saver';
+export type SplineQuality = 'high' | 'medium' | 'low';
 
 // Trackable components for smart caching
 export type TrackedComponent = 
@@ -107,6 +108,7 @@ export interface UnifiedPerformanceState {
   
   // Quality levels (dynamic)
   shimmerQuality: ShimmerQuality;
+  splineQuality: SplineQuality;
   performanceMode: PerformanceMode;
   animationMultiplier: number;
   
@@ -198,6 +200,7 @@ const defaultState: UnifiedPerformanceState = {
   isScrolling: false,
   isIdle: false,
   shimmerQuality: 'high',
+  splineQuality: 'high',
   performanceMode: 'balanced',
   animationMultiplier: 1,
   enableBlur: true,
@@ -735,6 +738,7 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
   
   // Quality state
   const [shimmerQuality, setShimmerQuality] = useState<ShimmerQuality>('high');
+  const [splineQuality, setSplineQuality] = useState<SplineQuality>('high');
   const [performanceMode, setPerformanceMode] = useState<PerformanceMode>('balanced');
   const [qualityOverride, setQualityOverride] = useState<ShimmerQuality | null>(null);
   
@@ -832,6 +836,20 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
         try {
           (window as any).deviceMonitor?.setExternalFps?.(fps, avg);
         } catch {}
+        
+        // Spline quality control: prefer stable FPS over sharpness.
+        let newSplineQuality: SplineQuality = 'high';
+        if ((device?.tier ?? 'high') === 'minimal') newSplineQuality = 'low';
+        else if ((device?.tier ?? 'high') === 'low') newSplineQuality = 'low';
+        else if (avg < 35) newSplineQuality = 'low';
+        else if (avg < 50) newSplineQuality = 'medium';
+        
+        if (newSplineQuality !== splineQuality) {
+          setSplineQuality(newSplineQuality);
+          const root = document.documentElement;
+          root.classList.remove('spline-quality-high', 'spline-quality-medium', 'spline-quality-low');
+          root.classList.add(`spline-quality-${newSplineQuality}`);
+        }
         
         // Throttle quality updates to prevent thrashing
         const now = performance.now();
@@ -994,6 +1012,12 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
       device.tier === 'medium' ? 'medium' : 'low';
     setShimmerQuality(initialQuality);
     root.classList.add(`shimmer-quality-${initialQuality}`);
+
+    const initialSplineQuality: SplineQuality =
+      device.tier === 'ultra' || device.tier === 'high' ? 'high' :
+      device.tier === 'medium' ? 'medium' : 'low';
+    setSplineQuality(initialSplineQuality);
+    root.classList.add(`spline-quality-${initialSplineQuality}`);
     
   }, [device]);
   
@@ -1103,11 +1127,12 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
     isScrolling,
     isIdle,
     shimmerQuality: qualityOverride ?? shimmerQuality,
+    splineQuality,
     performanceMode,
     animationMultiplier: shimmerQuality === 'disabled' ? 0.1 : shimmerQuality === 'low' ? 0.4 : shimmerQuality === 'medium' ? 0.7 : 1,
     enableBlur: shimmerQuality !== 'disabled' && shimmerQuality !== 'low',
     enableShadows: shimmerQuality !== 'disabled' && shimmerQuality !== 'low',
-    enable3D: (device?.tier ?? 'high') !== 'minimal',
+    enable3D: true,
     enableParticles: (device?.tier ?? 'high') === 'ultra' || (device?.tier ?? 'high') === 'high',
     enableHoverAnimations: shimmerQuality !== 'disabled',
     enableScrollAnimations: shimmerQuality !== 'disabled' && shimmerQuality !== 'low',
@@ -1127,7 +1152,7 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
     resetQuality,
   }), [
     device, currentFps, averageFps, isScrolling, isIdle,
-    shimmerQuality, qualityOverride, performanceMode,
+    shimmerQuality, qualityOverride, splineQuality, performanceMode,
     loadedComponents, preloadQueue, unloadQueue, smartCache,
     registerComponent, unregisterComponent, trackInteraction,
     setComponentVisibility, shouldRenderComponent, shouldEnableShimmer,

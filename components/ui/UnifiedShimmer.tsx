@@ -109,29 +109,29 @@ const ShimmerStyles = () => (
        ================================================================= */
     
     .shimmer-line {
-      animation: unified-shimmer-ltr 3s linear infinite;
+      animation: unified-shimmer-ltr 4.5s linear infinite;
       will-change: transform;
     }
     
     /* shimmer-spin: LEFT-TO-RIGHT ONLY - NO ROTATION/SPINNING */
     .shimmer-spin {
-      animation: unified-sweep-ltr 4s linear infinite;
+      animation: unified-sweep-ltr 7s linear infinite;
       will-change: transform;
     }
     
     /* Explicit left-to-right class for clarity */
     .shimmer-ltr {
-      animation: unified-shimmer-ltr 3s linear infinite;
+      animation: unified-shimmer-ltr 4.5s linear infinite;
       will-change: transform;
     }
     
     .shimmer-pulse {
-      animation: unified-pulse 3s ease-in-out infinite;
+      animation: unified-pulse 4.5s ease-in-out infinite;
       will-change: opacity;
     }
     
     .shimmer-glow {
-      animation: unified-glow 3s ease-in-out infinite;
+      animation: unified-glow 4.5s ease-in-out infinite;
       will-change: box-shadow;
     }
     

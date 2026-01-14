@@ -52,7 +52,7 @@ function SplineSceneComponent({
   useEffect(() => {
     const browserInfo = detectBrowser();
     const canBrowserRender = !(browserInfo.isInAppBrowser || !browserInfo.canHandle3D);
-    const canDeviceRender = perf.enable3D && perf.deviceTier !== 'low' && perf.deviceTier !== 'minimal';
+    const canDeviceRender = perf.enable3D;
     setShouldRender(canBrowserRender && canDeviceRender);
   }, [perf.enable3D, perf.deviceTier]);
 

@@ -404,8 +404,7 @@ function HomeContent() {
               <Features />
             </section>
 
-            {/* 3D Spline Section - Hidden on small screens and low-end devices, show Testimonials instead */}
-            {(deviceTier === 'ultra' || deviceTier === 'high' || deviceTier === 'medium') && (
+            {/* 3D Spline Section - Desktop only; quality adapts per device */}
             <section id="experience" className="w-full max-w-7xl mx-auto px-4 py-16 hidden md:block" data-allow-scroll style={{ touchAction: 'pan-y' }}>
               {/* Section Header */}
               <div className="relative text-center mb-8">
@@ -438,7 +437,6 @@ function HomeContent() {
                 </div>
               </div>
             </section>
-            )}
 
             {/* Mobile-only Testimonials Section - Shows on small devices instead of heavy 3D */}
             <section id="testimonials" className="w-full max-w-5xl mx-auto px-4 py-12 md:hidden" data-allow-scroll style={{ touchAction: 'pan-y' }}>
