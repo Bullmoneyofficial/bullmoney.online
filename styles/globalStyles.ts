@@ -103,10 +103,7 @@ export const GLOBAL_STYLES = `
   }
   /* --- MOBILE SCROLL FIXES END --- */
 
-  @keyframes spin-border {
-    0% { --bg-angle: 0deg; }
-    100% { --bg-angle: 360deg; }
-  }
+  /* Shining border: left-to-right sweep (no rotation) */
   @keyframes particleFloat {
     0% { transform: translateY(0) scale(1); opacity: 1; }
     100% { transform: translateY(-100vh) scale(0); opacity: 0; }
@@ -166,14 +163,16 @@ export const GLOBAL_STYLES = `
     position: absolute;
     inset: -2px;
     z-index: -1;
-    background: conic-gradient(
-      from var(--bg-angle),
+    background: linear-gradient(
+      90deg,
       transparent 0%,
       #0088ff 20%,
       #0000ff 40%,
       transparent 60%
     );
-    animation: spin-border 3s linear infinite;
+    background-size: 200% 100%;
+    background-position: -200% 0;
+    animation: unified-border-ltr 3.5s linear infinite;
   }
   
   .shining-border::after {
@@ -185,12 +184,6 @@ export const GLOBAL_STYLES = `
     border-radius: 0.5rem;
   }
   
-  @property --bg-angle {
-    syntax: '<angle>';
-    initial-value: 0deg;
-    inherits: false;
-  }
-   
   .profit-reveal {
     animation: profitReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }

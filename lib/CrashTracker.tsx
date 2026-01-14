@@ -26,6 +26,8 @@ import React, {
   memo,
   ReactNode,
 } from 'react';
+import { usePathname } from 'next/navigation';
+import { useUnifiedPerformance } from '@/lib/UnifiedPerformanceSystem';
 
 // ============================================================================
 // TYPES
@@ -97,12 +99,26 @@ export interface SessionData {
   deviceInfo: {
     tier: string;
     isMobile: boolean;
+    deviceType?: 'mobile' | 'tablet' | 'desktop';
+    model?: string;
+    manufacturer?: string;
     browser: string;
+    browserVersion?: string;
     os: string;
+    osVersion?: string;
     screenWidth: number;
     screenHeight: number;
+    devicePixelRatio?: number;
+    refreshRate?: number;
     memory?: number;
     cores?: number;
+    gpuTier?: 'high' | 'medium' | 'low' | 'unknown';
+    gpuVendor?: string;
+    gpuRenderer?: string;
+    connectionType?: string;
+    downlinkMbps?: number;
+    rttMs?: number;
+    saveData?: boolean;
   };
   pageViews: string[];
   eventCount: number;
@@ -180,7 +196,24 @@ function getBrowserInfo(): { browser: string; os: string } {
   return { browser, os };
 }
 
-function getDeviceInfo(): SessionData['deviceInfo'] {
+function getConnectionInfo(): Pick<
+  SessionData['deviceInfo'],
+  'connectionType' | 'downlinkMbps' | 'rttMs' | 'saveData'
+> {
+  if (typeof navigator === 'undefined') return {};
+  const connection =
+    (navigator as any).connection ||
+    (navigator as any).mozConnection ||
+    (navigator as any).webkitConnection;
+  return {
+    connectionType: connection?.effectiveType,
+    downlinkMbps: connection?.downlink,
+    rttMs: connection?.rtt,
+    saveData: connection?.saveData,
+  };
+}
+
+function getBaseDeviceInfo(): SessionData['deviceInfo'] {
   if (typeof window === 'undefined') {
     return {
       tier: 'unknown',
@@ -196,6 +229,7 @@ function getDeviceInfo(): SessionData['deviceInfo'] {
   const memory = (navigator as any).deviceMemory || undefined;
   const cores = navigator.hardwareConcurrency || undefined;
   const isMobile = window.innerWidth < 768;
+  const devicePixelRatio = window.devicePixelRatio || 1;
   
   // Get device tier from CSS class or compute
   let tier = 'medium';
@@ -211,9 +245,49 @@ function getDeviceInfo(): SessionData['deviceInfo'] {
     os,
     screenWidth: window.innerWidth,
     screenHeight: window.innerHeight,
+    devicePixelRatio,
     memory,
     cores,
+    ...getConnectionInfo(),
   };
+}
+
+function mergeDeviceInfo(
+  base: SessionData['deviceInfo'],
+  patch: Partial<SessionData['deviceInfo']>
+): SessionData['deviceInfo'] {
+  return { ...base, ...patch };
+}
+
+async function getDeviceMonitorPatch(): Promise<Partial<SessionData['deviceInfo']>> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const mod = await import('@/lib/deviceMonitor');
+    const info = mod.deviceMonitor.getInfo();
+    const browser = info?.device?.browser || undefined;
+    const os = info?.device?.os || undefined;
+    return {
+      deviceType: info?.device?.type,
+      model: info?.device?.model,
+      manufacturer: info?.device?.manufacturer,
+      browser: browser ? browser.toLowerCase() : undefined,
+      browserVersion: info?.device?.browserVersion,
+      os: os ? os.toLowerCase() : undefined,
+      osVersion: info?.device?.osVersion,
+      memory: info?.performance?.memory?.total,
+      cores: info?.performance?.cpu?.cores,
+      gpuTier: info?.performance?.gpu?.tier ?? 'unknown',
+      gpuVendor: info?.performance?.gpu?.vendor,
+      gpuRenderer: info?.performance?.gpu?.renderer,
+      refreshRate: info?.screen?.refreshRate,
+      connectionType: info?.network?.effectiveType,
+      downlinkMbps: info?.network?.measuredDownlink ?? info?.network?.downlink,
+      rttMs: info?.network?.rtt,
+      saveData: info?.network?.saveData,
+    };
+  } catch {
+    return {};
+  }
 }
 
 // ============================================================================
@@ -338,6 +412,22 @@ export function useCrashTracker() {
   return useContext(CrashTrackerContext);
 }
 
+// Allow non-hook callers (e.g., ErrorBoundary) to report errors.
+let globalTrackError:
+  | ((error: Error, component?: ComponentName, metadata?: Record<string, any>) => void)
+  | null = null;
+
+export function reportReactError(error: Error, errorInfo?: React.ErrorInfo) {
+  try {
+    globalTrackError?.(error, 'global', {
+      source: 'react_error_boundary',
+      componentStack: errorInfo?.componentStack,
+    });
+  } catch {
+    // Best-effort only.
+  }
+}
+
 // ============================================================================
 // PROVIDER
 // ============================================================================
@@ -351,18 +441,27 @@ export const CrashTrackerProvider = memo(function CrashTrackerProvider({
   children,
   enabled = true,
 }: CrashTrackerProviderProps) {
+  const pathname = usePathname();
+  const perf = useUnifiedPerformance();
   const [isEnabled, setIsEnabled] = useState(enabled);
   const [sessionId] = useState(() => getSessionId());
   const eventQueueRef = useRef<TrackingEvent[]>([]);
   const sessionDataRef = useRef<SessionData | null>(null);
   const flushTimeoutRef = useRef<NodeJS.Timeout>();
   const isFlushingRef = useRef(false);
+  const lastGlobalErrorRef = useRef<{ key: string; ts: number } | null>(null);
+  const lastPathRef = useRef<string | null>(null);
   
   // Initialize session data
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    const deviceInfo = getDeviceInfo();
+    const baseDeviceInfo = getBaseDeviceInfo();
+    const deviceInfo = mergeDeviceInfo(baseDeviceInfo, {
+      tier: perf.deviceTier,
+      isMobile: perf.isMobile,
+      refreshRate: perf.refreshRate,
+    });
     sessionDataRef.current = {
       id: sessionId,
       startedAt: Date.now(),
@@ -381,38 +480,144 @@ export const CrashTrackerProvider = memo(function CrashTrackerProvider({
     
     // Flush offline events on load
     flushOfflineEvents();
-  }, [sessionId]);
+  }, [sessionId, perf.deviceTier, perf.isMobile, perf.refreshRate]);
+
+  // Hydrate session device info from DeviceMonitor (real hardware/network) after load/reload
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!isEnabled) return;
+
+    let cancelled = false;
+    const hydrate = async () => {
+      const patch = await getDeviceMonitorPatch();
+      if (cancelled) return;
+      if (!sessionDataRef.current) return;
+      sessionDataRef.current.deviceInfo = mergeDeviceInfo(sessionDataRef.current.deviceInfo, patch);
+    };
+
+    const t = window.setTimeout(hydrate, 0);
+
+    const onPageShow = () => hydrate();
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') hydrate();
+    };
+    window.addEventListener('pageshow', onPageShow);
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+      window.removeEventListener('pageshow', onPageShow);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [isEnabled]);
+
+  // Track navigation (page views) in App Router
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!isEnabled) return;
+    if (!pathname) return;
+
+    const prev = lastPathRef.current;
+    if (prev === pathname) return;
+    lastPathRef.current = pathname;
+
+    if (sessionDataRef.current) {
+      const views = sessionDataRef.current.pageViews;
+      if (!views.includes(pathname)) views.push(pathname);
+      sessionDataRef.current.lastActivity = Date.now();
+    }
+
+    // Only emit event after first mount route is recorded.
+    if (prev) {
+      eventQueueRef.current.push({
+        id: generateId(),
+        timestamp: Date.now(),
+        type: 'navigation',
+        component: 'global',
+        action: 'route_change',
+        target: pathname,
+        metadata: { from: prev, to: pathname },
+        sessionId,
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+        deviceTier: perf.deviceTier,
+      });
+      if (sessionDataRef.current) {
+        sessionDataRef.current.eventCount++;
+        sessionDataRef.current.lastActivity = Date.now();
+      }
+    }
+  }, [pathname, isEnabled, sessionId, perf.deviceTier]);
+
+  // Keep session device tier/mobile flags in sync with unified device manager
+  useEffect(() => {
+    if (!sessionDataRef.current) return;
+    sessionDataRef.current.deviceInfo = mergeDeviceInfo(sessionDataRef.current.deviceInfo, {
+      tier: perf.deviceTier,
+      isMobile: perf.isMobile,
+      refreshRate: perf.refreshRate,
+    });
+  }, [perf.deviceTier, perf.isMobile, perf.refreshRate]);
   
   // Global error handler
   useEffect(() => {
     if (typeof window === 'undefined' || !isEnabled) return;
     
-    const handleError = (event: ErrorEvent) => {
+    const handleError = (event: Event | ErrorEvent) => {
+      const now = Date.now();
+
+      // Resource load error (script/link/img) comes through as Event without message.
+      const target = (event as any).target as HTMLElement | undefined;
+      const isResourceError =
+        !!target &&
+        (target instanceof HTMLScriptElement ||
+          target instanceof HTMLLinkElement ||
+          target instanceof HTMLImageElement);
+
+      const errEvent = event as ErrorEvent;
+      const message = isResourceError
+        ? 'resource_error'
+        : errEvent.message || 'unknown_error';
+
+      const key = isResourceError
+        ? `${(target as any).tagName || 'unknown'}:${(target as any).src || (target as any).href || ''}`
+        : `${message}|${errEvent.filename || ''}|${errEvent.lineno || 0}|${errEvent.colno || 0}`;
+
+      const last = lastGlobalErrorRef.current;
+      if (last && last.key === key && now - last.ts < 2000) return;
+      lastGlobalErrorRef.current = { key, ts: now };
+
       const trackEvent: TrackingEvent = {
         id: generateId(),
-        timestamp: Date.now(),
+        timestamp: now,
         type: 'crash',
         component: 'global',
-        action: 'uncaught_error',
+        action: isResourceError ? 'resource_error' : 'uncaught_error',
         sessionId,
         userAgent: navigator.userAgent,
         url: window.location.href,
-        deviceTier: sessionDataRef.current?.deviceInfo.tier,
-        errorMessage: event.message,
-        errorStack: event.error?.stack,
-        metadata: {
-          filename: event.filename,
-          lineno: event.lineno,
-          colno: event.colno,
-        },
+        deviceTier: perf.deviceTier,
+        errorMessage: isResourceError ? undefined : errEvent.message,
+        errorStack: isResourceError ? undefined : errEvent.error?.stack,
+        metadata: isResourceError
+          ? {
+              tag: (target as any).tagName,
+              src: (target as any).src,
+              href: (target as any).href,
+            }
+          : {
+              filename: errEvent.filename,
+              lineno: errEvent.lineno,
+              colno: errEvent.colno,
+            },
       };
-      
+
       eventQueueRef.current.push(trackEvent);
       if (sessionDataRef.current) {
         sessionDataRef.current.errorCount++;
       }
-      
-      // Immediately flush on crash
+
       flushEventsInternal();
     };
     
@@ -426,7 +631,7 @@ export const CrashTrackerProvider = memo(function CrashTrackerProvider({
         sessionId,
         userAgent: navigator.userAgent,
         url: window.location.href,
-        deviceTier: sessionDataRef.current?.deviceInfo.tier,
+        deviceTier: perf.deviceTier,
         errorMessage: event.reason?.message || String(event.reason),
         errorStack: event.reason?.stack,
       };
@@ -439,14 +644,15 @@ export const CrashTrackerProvider = memo(function CrashTrackerProvider({
       flushEventsInternal();
     };
     
-    window.addEventListener('error', handleError);
+    // Capture phase catches resource errors as well.
+    window.addEventListener('error', handleError as any, true);
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
     
     return () => {
-      window.removeEventListener('error', handleError);
+      window.removeEventListener('error', handleError as any, true);
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
     };
-  }, [isEnabled, sessionId]);
+  }, [isEnabled, sessionId, perf.deviceTier]);
   
   // Periodic flush
   useEffect(() => {
@@ -518,7 +724,12 @@ export const CrashTrackerProvider = memo(function CrashTrackerProvider({
       sessionId,
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'ssr',
       url: typeof window !== 'undefined' ? window.location.href : '',
-      deviceTier: sessionDataRef.current?.deviceInfo.tier,
+      deviceTier: perf.deviceTier,
+      metadata: {
+        ...event.metadata,
+        visibilityState: typeof document !== 'undefined' ? document.visibilityState : 'unknown',
+        referrer: typeof document !== 'undefined' ? document.referrer : undefined,
+      },
     };
     
     eventQueueRef.current.push(fullEvent);
@@ -532,7 +743,7 @@ export const CrashTrackerProvider = memo(function CrashTrackerProvider({
     if (eventQueueRef.current.length >= MAX_QUEUE_SIZE) {
       flushEventsInternal();
     }
-  }, [isEnabled, sessionId, flushEventsInternal]);
+  }, [isEnabled, sessionId, perf.deviceTier, flushEventsInternal]);
   
   const trackClick = useCallback((component: ComponentName, target: string, metadata?: Record<string, any>) => {
     addEvent({ type: 'click', component, target, metadata });
@@ -616,6 +827,15 @@ export const CrashTrackerProvider = memo(function CrashTrackerProvider({
     trackComponentMount, trackComponentUnmount, trackError, trackPerformanceWarning,
     trackCustomEvent, flushEvents, setEnabled,
   ]);
+
+  // Expose error reporter for non-hook callers (ErrorBoundary, etc.)
+  globalTrackError = trackError;
+
+  useEffect(() => {
+    return () => {
+      if (globalTrackError === trackError) globalTrackError = null;
+    };
+  }, [trackError]);
   
   return (
     <CrashTrackerContext.Provider value={state}>

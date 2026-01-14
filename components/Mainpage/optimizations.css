@@ -287,11 +287,12 @@
 
 /* --- LOADING SPINNER --- */
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  0%, 100% { transform: none; opacity: 0.55; }
+  50% { transform: none; opacity: 1; }
 }
 
 .spinner {
-  animation: spin 1s linear infinite;
+  animation: spin 1.5s ease-in-out infinite;
 }
 
 /* --- GLASS MORPHISM (Optimized) --- */

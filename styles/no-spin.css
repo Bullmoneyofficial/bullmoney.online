@@ -1,0 +1,20 @@
+/* Disable rotation-based "spin" animations (replace with subtle pulse).
+   This intentionally overrides Tailwind's `@keyframes spin` so any usage of
+   `animate-spin` or `animate-[spin_*]` stops rotating across the app. */
+
+@keyframes spin {
+  0%,
+  100% {
+    transform: none;
+    opacity: 0.55;
+  }
+  50% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.animate-spin {
+  animation-timing-function: ease-in-out !important;
+}
+

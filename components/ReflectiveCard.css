@@ -127,8 +127,11 @@
 .status-dot.red { background: #ff3232; box-shadow: 0 0 8px #ff3232; }
 
 /* 6. Animations */
-.spin-slow { animation: spin 4s linear infinite; }
-@keyframes spin { 100% { transform: rotate(360deg); } }
+.spin-slow { animation: spin 2.5s ease-in-out infinite; }
+@keyframes spin {
+  0%, 100% { transform: none; opacity: 0.6; }
+  50% { transform: none; opacity: 1; }
+}
 
 .blink { animation: blink 1s infinite; }
 @keyframes blink { 50% { opacity: 0.3; } }

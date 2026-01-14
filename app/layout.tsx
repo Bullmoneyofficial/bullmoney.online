@@ -6,6 +6,7 @@ import "../styles/gpu-animations.css";
 import "../styles/120hz-performance.css"; // Critical 120Hz optimizations
 import "../styles/device-tier-optimizations.css"; // Device-tier aware CSS
 import "../styles/safari-optimizations.css"; // Safari-specific fixes
+import "../styles/no-spin.css"; // Disable rotation-based spin animations
 import { cn } from "@/lib/utils";
 
 import { ThemeProvider } from "@/context/providers";

@@ -28,6 +28,7 @@ import React, {
   memo,
   ReactNode,
 } from 'react';
+import type { DeviceInfo as DeviceMonitorInfo } from '@/lib/deviceMonitor';
 
 // ============================================================================
 // TYPES
@@ -630,6 +631,65 @@ function detectDeviceCapabilities(): DeviceCapabilities {
   return cachedCapabilities;
 }
 
+function clampRefreshRate(rate: unknown): 30 | 60 | 90 | 120 {
+  const n = typeof rate === 'number' ? rate : Number(rate);
+  if (n >= 120) return 120;
+  if (n >= 90) return 90;
+  if (n >= 60) return 60;
+  return 30;
+}
+
+function computeTierFromDeviceMonitor(info: DeviceMonitorInfo, fallback: DeviceCapabilities): DeviceCapabilities {
+  const deviceType = info?.device?.type;
+  const isMobile = deviceType === 'mobile' ? true : fallback.isMobile;
+  const isTablet = deviceType === 'tablet' ? true : fallback.isTablet;
+
+  const browserName = (info?.device?.browser || '').toLowerCase();
+  const osName = (info?.device?.os || '').toLowerCase();
+  const isSafari = browserName.includes('safari') ? true : fallback.isSafari;
+  const isIOS = osName.includes('ios') ? true : fallback.isIOS;
+
+  const memory = info?.performance?.memory?.total ?? fallback.memory;
+  const cores = info?.performance?.cpu?.cores ?? fallback.cores;
+  const gpuTier = info?.performance?.gpu?.tier ?? fallback.gpuTier;
+
+  const cpuName = (info?.performance?.cpu?.name || '').toLowerCase();
+  const gpuRenderer = (info?.performance?.gpu?.renderer || '').toLowerCase();
+  const isAppleSilicon =
+    cpuName.includes('apple m') ||
+    (gpuRenderer.includes('apple') && (gpuRenderer.includes('gpu') || /m[1-9]/.test(gpuRenderer))) ||
+    fallback.isAppleSilicon;
+
+  const refreshRate = clampRefreshRate(info?.screen?.refreshRate ?? fallback.refreshRate);
+
+  let tier: DeviceTier = 'medium';
+  if (!isMobile && (isAppleSilicon || (gpuTier === 'high' && memory >= 16 && cores >= 8))) {
+    tier = 'ultra';
+  } else if (gpuTier === 'high' && memory >= 8) {
+    tier = 'high';
+  } else if (gpuTier === 'medium' || (memory >= 4 && cores >= 4)) {
+    tier = 'medium';
+  } else if (memory < 4 || cores < 4) {
+    tier = memory < 2 ? 'minimal' : 'low';
+  }
+
+  if (isMobile && tier === 'ultra') tier = 'high';
+  if (isMobile && tier === 'high' && memory < 6) tier = 'medium';
+
+  return {
+    tier,
+    isMobile,
+    isTablet,
+    isSafari,
+    isIOS,
+    isAppleSilicon,
+    refreshRate,
+    memory,
+    cores,
+    gpuTier,
+  };
+}
+
 // ============================================================================
 // CONTEXT
 // ============================================================================
@@ -691,6 +751,72 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
   // Initialize device detection
   useEffect(() => {
     setDevice(detectDeviceCapabilities());
+  }, []);
+
+  // Hydrate device detection with real device monitor info (async, runs after load/reload)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let cancelled = false;
+
+    const hydrate = async () => {
+      try {
+        const mod = await import('@/lib/deviceMonitor');
+        const info = mod.deviceMonitor.getInfo();
+        const base = cachedCapabilities ?? detectDeviceCapabilities();
+        const next = computeTierFromDeviceMonitor(info as DeviceMonitorInfo, base);
+
+        if (cancelled) return;
+        cachedCapabilities = next;
+        setDevice(prev => {
+          if (!prev) return next;
+          const unchanged =
+            prev.tier === next.tier &&
+            prev.isMobile === next.isMobile &&
+            prev.isTablet === next.isTablet &&
+            prev.isSafari === next.isSafari &&
+            prev.isIOS === next.isIOS &&
+            prev.isAppleSilicon === next.isAppleSilicon &&
+            prev.refreshRate === next.refreshRate &&
+            prev.memory === next.memory &&
+            prev.cores === next.cores &&
+            prev.gpuTier === next.gpuTier;
+          return unchanged ? prev : next;
+        });
+      } catch (e) {
+        // Device monitor is optional; keep best-effort baseline.
+      }
+    };
+
+    // Let initial render settle, then hydrate.
+    const t = window.setTimeout(hydrate, 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, []);
+
+  // Keep mobile/tablet flags accurate on resize (tier doesn't change, viewport can)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onResize = () => {
+      const width = window.innerWidth;
+      const isMobile = width < 768;
+      const isTablet = width >= 768 && width < 1024;
+      setDevice(prev => {
+        if (!prev) return prev;
+        if (prev.isMobile === isMobile && prev.isTablet === isTablet) return prev;
+        const next = { ...prev, isMobile, isTablet };
+        cachedCapabilities = next;
+        return next;
+      });
+    };
+    window.addEventListener('resize', onResize, { passive: true });
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
   }, []);
   
   // Subscribe to FPS monitor
