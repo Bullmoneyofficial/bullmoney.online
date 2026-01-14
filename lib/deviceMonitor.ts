@@ -1805,16 +1805,9 @@ class DeviceMonitor {
 
         if (cacheBloated || sessionTooLong) {
           sessionStorage.setItem('bm_last_auto_refresh', String(now));
-          try {
-            if ('caches' in window) {
-              const keys = await caches.keys();
-              await Promise.all(keys.map((k) => caches.delete(k)));
-            }
-          } catch {
-            // ignore cache clear failures
-          }
-          // Keep auth/localStorage intact; just reload.
-          window.location.reload();
+          // Suggest refresh instead of forcing it; UI can handle prompt.
+          const detail = { cacheUsageMB: usageMB, cacheQuotaMB: quotaMB, sessionMinutes, cacheBloated, sessionTooLong };
+          window.dispatchEvent(new CustomEvent('bm:auto-refresh-suggest', { detail }));
         }
       } catch (err) {
         console.warn('[DeviceMonitor] auto refresh check failed', err);

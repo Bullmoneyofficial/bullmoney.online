@@ -398,6 +398,7 @@ export const FpsOptimizerProvider = memo(function FpsOptimizerProvider({
   const [averageFps, setAverageFps] = useState(60);
   const [shimmerQuality, setShimmerQuality] = useState<ShimmerQuality>('high');
   const [splineQuality, setSplineQuality] = useState<SplineQuality>('high');
+  const [targetFrameRate, setTargetFrameRate] = useState<30 | 60 | 90 | 120>(60);
   const [config, setConfig] = useState<DeviceTierConfig>(TIER_CONFIGS.high);
   
   // Component tracking - for dynamic optimization based on usage
@@ -571,6 +572,7 @@ export const FpsOptimizerProvider = memo(function FpsOptimizerProvider({
     setConfig(tierConfig);
     setShimmerQuality(tierConfig.shimmerQuality);
     setSplineQuality(tierConfig.splineQuality);
+    setTargetFrameRate(tierConfig.targetFrameRate);
     
     console.log(`[FpsOptimizer] Device tier: ${tier}, Mobile: ${window.innerWidth < 768}, Safari: ${safari}`);
   }, []);
@@ -639,7 +641,6 @@ export const FpsOptimizerProvider = memo(function FpsOptimizerProvider({
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!enableMonitoring) return;
-    if (isMobile) return; // Skip FPS monitoring on mobile for battery
     
     let animationId: number;
     let started = false;
@@ -699,6 +700,12 @@ export const FpsOptimizerProvider = memo(function FpsOptimizerProvider({
               setShimmerQuality('medium');
             }
           }
+          // Target a faster frame rate if we're dipping; allow all tiers to aim for 60fps minimum.
+          if (avg < 45) {
+            setTargetFrameRate(60);
+          } else {
+            setTargetFrameRate(config.targetFrameRate);
+          }
           lastUpdateRef.current = timestamp;
         }
         
@@ -741,7 +748,7 @@ export const FpsOptimizerProvider = memo(function FpsOptimizerProvider({
     enableScrollAnimations: config.enableScrollAnimations,
     maxPolygons: config.maxPolygons,
     textureQuality: config.textureQuality,
-    targetFrameRate: config.targetFrameRate,
+    targetFrameRate,
     activeComponents,
     componentUsage,
     componentInteractionCount,

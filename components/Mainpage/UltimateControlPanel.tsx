@@ -668,6 +668,19 @@ export function UltimateControlPanel({
                             <div className="text-[11px] text-cyan-200/60">Quota: {cacheQuotaMB.toFixed(1)} MB</div>
                           )}
                         </div>
+                        <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-400/30">
+                          <div className="text-xs text-amber-200/70">Storage</div>
+                          <div className="text-lg font-bold text-white">
+                            {deviceInfo.performance.storage?.available !== undefined
+                              ? `${deviceInfo.performance.storage.available}GB free`
+                              : 'Measuring…'}
+                          </div>
+                          {deviceInfo.performance.storage?.total !== undefined && (
+                            <div className="text-[11px] text-amber-200/60">
+                              Total: {deviceInfo.performance.storage.total}GB
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* Battery */}

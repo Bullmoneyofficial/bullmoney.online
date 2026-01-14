@@ -43,6 +43,7 @@ import { Footer } from "@/components/Mainpage/footer";
 // Client-side cursor component for desktop
 import ClientCursor from "@/components/ClientCursor";
 import AudioWidget from "@/components/AudioWidget";
+import { AutoRefreshPrompt } from "@/components/AutoRefreshPrompt";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
@@ -624,6 +625,7 @@ export default function RootLayout({
                       <Navbar />
                       {/* Bottom-left audio widget (not in navbar) */}
                       <AudioWidget />
+                      <AutoRefreshPrompt />
                       {/* Route-level modals should not be inside the filter wrapper */}
                       {modal}
                       {/* Theme filter wrapper - applies filter only to main content */}
