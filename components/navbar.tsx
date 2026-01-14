@@ -44,7 +44,8 @@ import { NAVBAR_TRADING_TIPS } from "./navbar/navbar.utils";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 
 // --- IMPORT UNIFIED SHIMMER SYSTEM ---
-import { ShimmerLine, ShimmerBorder } from "@/components/ui/UnifiedShimmer";
+import { ShimmerLine, ShimmerBorder, useOptimizedShimmer } from "@/components/ui/UnifiedShimmer";
+import { useFpsOptimizer } from "@/lib/FpsOptimizer";
 
 // --- IMPORT NAVBAR CSS ---
 import "./navbar.css";
@@ -55,13 +56,15 @@ const MobileMenuControls = memo(({
   onToggle, 
   onThemeClick, 
   hasReward,
-  isXMUser
+  isXMUser,
+  shimmerEnabled = true,
+  shimmerSettings = { intensity: 'medium' as const, speed: 'normal' as const }
 }: any) => (
   <div 
-    className="relative group rounded-full overflow-hidden shadow-2xl z-50 h-12 sm:h-14 flex items-center flex-grow max-w-xs mobile-controls-glass"
+    className="relative group rounded-full overflow-hidden shadow-2xl z-50 h-12 sm:h-14 flex items-center flex-grow max-w-xs mobile-controls-glass navbar-shimmer"
   >
-    {/* Unified Shimmer Border - GPU accelerated */}
-    <ShimmerBorder color="blue" intensity="medium" speed="normal" />
+    {/* Unified Shimmer Border - GPU accelerated, LEFT TO RIGHT */}
+    {shimmerEnabled && <ShimmerBorder color="blue" intensity={shimmerSettings.intensity} speed={shimmerSettings.speed} />}
 
     {/* Inner Content Container */}
     <div 
@@ -115,6 +118,13 @@ export const Navbar = memo(() => {
   const { tipsMuted } = useAudioSettings();
   const { deviceTier, isSafari } = useCacheContext();
   
+  // FPS Optimizer integration for component lifecycle tracking
+  const { registerComponent, unregisterComponent, shouldEnableShimmer } = useFpsOptimizer();
+  const shimmerSettings = useOptimizedShimmer();
+  
+  // Check if shimmer should be enabled for navbar
+  const shimmerEnabled = shouldEnableShimmer('navbar') && !shimmerSettings.disabled;
+  
   // Modal states
   const [open, setOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
@@ -156,6 +166,12 @@ export const Navbar = memo(() => {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Register/unregister with FPS optimizer
+  useEffect(() => {
+    registerComponent('navbar');
+    return () => unregisterComponent('navbar');
+  }, [registerComponent, unregisterComponent]);
 
   // Rotate tips every 10 seconds
   const soundPlayedRef = useRef(false);
@@ -201,15 +217,7 @@ export const Navbar = memo(() => {
 
   return (
     <>
-      <style jsx global>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes shimmer {
-          100% { transform: translateX(150%); }
-        }
-      `}</style>
+      {/* All keyframes now in UnifiedShimmer.tsx - no duplicate definitions */}
 
       {/* Modal Components */}
       <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
@@ -293,6 +301,8 @@ export const Navbar = memo(() => {
             onThemeClick={() => { setOpen(false); setIsThemeSelectorOpen(true); }}
             hasReward={hasReward}
             isXMUser={isXMUser}
+            shimmerEnabled={shimmerEnabled}
+            shimmerSettings={shimmerSettings}
           />
         </div>
       </motion.div>

@@ -25,7 +25,8 @@ import { MusicEmbedModal } from "@/components/MusicEmbedModal";
 import { BlueShimmer, Slider, TouchIndicator, GameOverScreen, EnergyBar, CompactGameHUD, BoredPopup, GameControls, GameShimmer, SparkleBurst, FloatingParticles, PulseRing, ConfettiBurst, BounceDots, StatusBadge, QuickGameTutorial, QuickGameTutorialDemo } from "@/components/audio-widget/ui";
 import { useWanderingGame } from "@/components/audio-widget/useWanderingGame";
 import { useCacheContext } from "@/components/CacheManagerProvider";
-import { ShimmerBorder, ShimmerSpinner } from "@/components/ui/UnifiedShimmer";
+import { ShimmerBorder, ShimmerSpinner, ShimmerLine, useOptimizedShimmer } from "@/components/ui/UnifiedShimmer";
+import { useFpsOptimizer } from "@/lib/FpsOptimizer";
 
 const sourceLabel: Record<MusicSource, string> = {
   THEME: "Theme",
@@ -52,6 +53,19 @@ const AudioWidget = React.memo(function AudioWidget() {
   const prefersReducedMotion = useReducedMotion();
   const { deviceTier, isSafari } = useCacheContext();
   const isLowEndDevice = deviceTier === 'low' || deviceTier === 'minimal';
+  
+  // FPS Optimizer integration for component lifecycle tracking
+  const { registerComponent, unregisterComponent, shouldEnableShimmer, trackInteraction } = useFpsOptimizer();
+  const shimmerSettings = useOptimizedShimmer();
+  
+  // Register component with FPS optimizer on mount
+  useEffect(() => {
+    registerComponent('audioWidget');
+    return () => unregisterComponent('audioWidget');
+  }, [registerComponent, unregisterComponent]);
+  
+  // Check if shimmer should be enabled for this component
+  const shimmerEnabled = shouldEnableShimmer('audioWidget') && !shimmerSettings.disabled;
   
   const [hasStartedCatchGame, setHasStartedCatchGame] = useState(false);
   const [showCatchGameTutorial, setShowCatchGameTutorial] = useState(false);
@@ -598,18 +612,12 @@ const AudioWidget = React.memo(function AudioWidget() {
               layout
               className={cn(
                 "relative rounded-2xl border border-blue-500/30 bg-black/70 backdrop-blur-2xl shadow-2xl",
-                "text-white/90 overflow-hidden",
+                "text-white/90 overflow-hidden audio-shimmer",
                 open ? "w-[280px] sm:w-[320px]" : "w-auto"
               )}
             >
-              {/* Blue shimmer border effect */}
-              <div className="absolute inset-0 rounded-2xl pointer-events-none overflow-hidden">
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/10 to-transparent"
-                  animate={{ x: ["-100%", "200%"] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "linear", repeatDelay: 2 }}
-                />
-              </div>
+              {/* Unified Shimmer - LEFT TO RIGHT using CSS animation */}
+              {shimmerEnabled && <ShimmerLine color="blue" intensity={shimmerSettings.intensity} speed={shimmerSettings.speed} />}
 
               {/* Header - More compact */}
               <div className="relative flex items-center gap-2 p-2">

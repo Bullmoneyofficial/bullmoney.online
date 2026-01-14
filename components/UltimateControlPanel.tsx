@@ -46,6 +46,8 @@ import { deviceMonitor, type DeviceInfo } from '@/lib/deviceMonitor';
 import { queueManager } from '@/lib/splineQueueManager';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
+import { ShimmerLine, ShimmerBorder, useOptimizedShimmer } from '@/components/ui/UnifiedShimmer';
+import { useFpsOptimizer } from '@/lib/FpsOptimizer';
 
 // --- IMPORT NAVBAR CSS FOR CONSISTENT THEMING ---
 import './navbar.css';
@@ -150,15 +152,11 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
       {/* Inner highlight for depth */}
       <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
       
-      {/* Shimmer effect on hover */}
+      {/* Unified Shimmer - LEFT TO RIGHT on hover */}
       <div 
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none overflow-hidden rounded-xl"
       >
-        <motion.div 
-          animate={{ x: ['0%', '200%'] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/30 to-blue-500/0"
-        />
+        <div className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/30 to-blue-500/0" />
       </div>
       
       {/* Accent glow */}
@@ -211,15 +209,11 @@ function PerformanceRing({ score, size = 120 }: { score: number; size?: number }
       <div className="absolute inset-0 rounded-full bg-slate-900/90 border border-blue-400/30 transition-all duration-300 group-hover:border-blue-300/50 shadow-lg shadow-blue-900/20" />
       <div className="absolute inset-[1px] rounded-full bg-gradient-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
       
-      {/* Shimmer effect */}
+      {/* Unified Shimmer - LEFT TO RIGHT using CSS animation */}
       <div 
-        className="absolute inset-0 opacity-15 group-hover:opacity-25 transition-opacity pointer-events-none overflow-hidden rounded-full"
+        className="absolute inset-0 opacity-15 group-hover:opacity-25 transition-opacity pointer-events-none overflow-hidden rounded-full panel-shimmer"
       >
-        <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-          className="absolute w-full h-full bg-gradient-to-r from-blue-600/0 via-blue-500/30 to-blue-600/0"
-        />
+        <div className="shimmer-ltr shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/30 to-blue-600/0" style={{ animationDuration: '5s' }} />
       </div>
       
       {/* SVG Ring - properly centered */}
@@ -305,6 +299,13 @@ export function UltimateControlPanel({
   // Get CSS filter for current theme - matches navbar exactly
   const themeFilter = activeTheme?.mobileFilter || 'none';
   
+  // FPS Optimizer integration for component lifecycle tracking
+  const { registerComponent, unregisterComponent, shouldEnableShimmer, setComponentVisibility } = useFpsOptimizer();
+  const shimmerSettings = useOptimizedShimmer();
+  
+  // Check if shimmer should be enabled for this component
+  const shimmerEnabled = shouldEnableShimmer('ultimatePanel') && !shimmerSettings.disabled;
+  
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'network' | 'performance' | 'account'>('overview');
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -325,6 +326,17 @@ export function UltimateControlPanel({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Register/unregister with FPS optimizer and track visibility
+  useEffect(() => {
+    registerComponent('ultimatePanel');
+    return () => unregisterComponent('ultimatePanel');
+  }, [registerComponent, unregisterComponent]);
+  
+  // Update visibility state when panel opens/closes
+  useEffect(() => {
+    setComponentVisibility('ultimatePanel', isOpen);
+  }, [isOpen, setComponentVisibility]);
 
   // Update device info periodically
   useEffect(() => {
@@ -540,14 +552,18 @@ export function UltimateControlPanel({
                 touchAction: 'manipulation'
               }}
             >
-              {/* Shimmer background - matches navbar */}
-              <div className="absolute inset-0 rounded-l-2xl overflow-hidden">
-                <motion.div 
-                  animate={{ x: ['0%', '200%'] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/40 to-blue-600/0 opacity-100"
-                />
-              </div>
+              {/* Unified Shimmer Background - LEFT TO RIGHT only (no component movement) */}
+              {shimmerEnabled && (
+                <div className="absolute inset-0 rounded-l-2xl overflow-hidden pointer-events-none panel-shimmer">
+                  <div 
+                    className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%]"
+                    style={{
+                      background: 'linear-gradient(to right, transparent, rgba(59, 130, 246, 0.4), transparent)',
+                      animationDuration: shimmerSettings.speed === 'slow' ? '5s' : '3s',
+                    }}
+                  />
+                </div>
+              )}
               
               {/* Main FPS Content - Always visible */}
               <motion.div 
@@ -921,14 +937,18 @@ export function UltimateControlPanel({
                 <div className="relative flex gap-1 p-1.5 rounded-xl bg-gradient-to-r from-blue-950/50 via-slate-900/60 to-blue-950/50 border border-blue-400/40 overflow-hidden isolate shadow-lg">
                   {/* Inner highlight */}
                   <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
-                  {/* Shimmer effect for tabs - matches navbar */}
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
-                    <motion.div 
-                      animate={{ x: ['0%', '200%'] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                      className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/20 to-blue-600/0 opacity-100"
-                    />
-                  </div>
+                  {/* Unified Shimmer for tabs */}
+                  {shimmerEnabled && (
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl panel-shimmer">
+                      <div 
+                        className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%]"
+                        style={{
+                          background: 'linear-gradient(to right, transparent, rgba(59, 130, 246, 0.2), transparent)',
+                          animationDuration: '4s',
+                        }}
+                      />
+                    </div>
+                  )}
                   
                   {[
                     { id: 'overview', label: 'Overview', icon: Monitor },
@@ -1025,13 +1045,17 @@ export function UltimateControlPanel({
                       <div className="relative p-4 rounded-xl overflow-hidden group">
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-purple-900/40 border border-blue-400/40 rounded-xl transition-all duration-300 group-hover:border-blue-300/60 shadow-lg shadow-blue-500/10" />
                         <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
-                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
-                          <motion.div 
-                            animate={{ x: ['0%', '200%'] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/40 to-blue-500/0 opacity-100"
-                          />
-                        </div>
+                        {shimmerEnabled && (
+                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
+                            <div 
+                              className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%]"
+                              style={{
+                                background: 'linear-gradient(to right, transparent, rgba(59, 130, 246, 0.4), transparent)',
+                                animationDuration: '4s',
+                              }}
+                            />
+                          </div>
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl" />
                         <div className="relative z-10">
                           <div className="text-xs text-blue-200/80 uppercase tracking-wider font-semibold mb-2">
@@ -1071,13 +1095,17 @@ export function UltimateControlPanel({
                         <div className="relative p-4 rounded-xl overflow-hidden group">
                           <div className="absolute inset-0 bg-gradient-to-br from-green-950/40 via-slate-900/50 to-blue-900/40 border border-green-400/40 rounded-xl transition-all duration-300 group-hover:border-green-300/60 shadow-lg shadow-green-500/10" />
                           <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
-                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
-                            <motion.div 
-                              animate={{ x: ['0%', '200%'] }}
-                              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                              className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-green-500/0 via-green-400/40 to-green-500/0 opacity-100"
-                            />
-                          </div>
+                          {shimmerEnabled && (
+                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
+                              <div 
+                                className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%]"
+                                style={{
+                                  background: 'linear-gradient(to right, transparent, rgba(34, 197, 94, 0.4), transparent)',
+                                  animationDuration: '4s',
+                                }}
+                              />
+                            </div>
+                          )}
                           <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl" />
                           <div className="relative z-10 flex items-center justify-between">
                             <div className="flex items-center gap-2">

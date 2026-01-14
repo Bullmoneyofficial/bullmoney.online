@@ -3,24 +3,33 @@
 import React, { memo, useEffect, useMemo, createContext, useContext, useState } from 'react';
 
 /**
- * Unified Shimmer System v2
+ * Unified Shimmer System v3
+ * 
+ * THE SINGLE SOURCE OF TRUTH FOR ALL SHIMMER EFFECTS
+ * All components must use this for shimmer animations.
  * 
  * This component provides a single, optimized shimmer implementation
  * to reduce lag from multiple shimmer animations across the app.
  * 
  * Features:
+ * - ALL shimmers animate LEFT-TO-RIGHT consistently
  * - CSS animations with will-change hints for GPU acceleration
  * - All shimmers synced to reduce repaints
- * - Global FPS-aware quality control
+ * - Integrates with FpsOptimizer for device-aware quality
  * - Automatic degradation when FPS drops
  * 
  * Usage:
  * 1. Add <ShimmerStylesProvider /> in layout.tsx (once)
- * 2. Use shimmer components or CSS classes directly
+ * 2. Use shimmer components: ShimmerLine, ShimmerBorder, ShimmerGlow, etc.
+ * 3. Use CSS classes directly: shimmer-line, shimmer-spin, shimmer-pulse
+ * 
+ * Components using this:
+ * - Navbar, Footer, AudioWidget, UltimateControlPanel
+ * - All modals and cards
  */
 
 // Global shimmer quality state
-type ShimmerQuality = 'high' | 'medium' | 'low' | 'disabled';
+export type ShimmerQuality = 'high' | 'medium' | 'low' | 'disabled';
 
 const ShimmerQualityContext = createContext<{
   quality: ShimmerQuality;
@@ -46,9 +55,22 @@ const ShimmerStyles = () => (
       100% { transform: translateX(200%); }
     }
     
+    /* LEFT-TO-RIGHT Border shimmer - sweeps around the border */
+    @keyframes unified-border-ltr {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
+    /* LEFT-TO-RIGHT sweep - replaces all spinning animations */
+    @keyframes unified-sweep-ltr {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
+    
+    /* Deprecated: unified-spin now redirects to sweep (NO SPINNING EVER) */
     @keyframes unified-spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
     }
     
     @keyframes unified-pulse {
@@ -85,8 +107,15 @@ const ShimmerStyles = () => (
       will-change: transform;
     }
     
+    /* shimmer-spin: LEFT-TO-RIGHT ONLY - NO ROTATION/SPINNING */
     .shimmer-spin {
-      animation: unified-spin 4s linear infinite;
+      animation: unified-sweep-ltr 4s linear infinite;
+      will-change: transform;
+    }
+    
+    /* Explicit left-to-right class for clarity */
+    .shimmer-ltr {
+      animation: unified-shimmer-ltr 3s linear infinite;
       will-change: transform;
     }
     
@@ -128,6 +157,7 @@ const ShimmerStyles = () => (
     /* Medium quality - slow down animations */
     html.shimmer-quality-medium .shimmer-line { animation-duration: 5s; }
     html.shimmer-quality-medium .shimmer-spin { animation-duration: 6s; }
+    html.shimmer-quality-medium .shimmer-ltr { animation-duration: 5s; }
     html.shimmer-quality-medium .shimmer-pulse { animation-duration: 5s; }
     html.shimmer-quality-medium .shimmer-glow { animation-duration: 5s; }
     html.shimmer-quality-medium .shimmer-ping { animation-duration: 2s; }
@@ -135,6 +165,7 @@ const ShimmerStyles = () => (
     /* Low quality - minimal animations */
     html.shimmer-quality-low .shimmer-line,
     html.shimmer-quality-low .shimmer-spin,
+    html.shimmer-quality-low .shimmer-ltr,
     html.shimmer-quality-low .shimmer-glow,
     html.shimmer-quality-low .shimmer-float,
     html.shimmer-quality-low .shimmer-dot-pulse,
@@ -149,6 +180,7 @@ const ShimmerStyles = () => (
     /* Disabled - no animations at all */
     html.shimmer-quality-disabled .shimmer-line,
     html.shimmer-quality-disabled .shimmer-spin,
+    html.shimmer-quality-disabled .shimmer-ltr,
     html.shimmer-quality-disabled .shimmer-pulse,
     html.shimmer-quality-disabled .shimmer-glow,
     html.shimmer-quality-disabled .shimmer-float,
@@ -165,6 +197,7 @@ const ShimmerStyles = () => (
     
     html.is-scrolling .shimmer-line,
     html.is-scrolling .shimmer-spin,
+    html.is-scrolling .shimmer-ltr,
     html.is-scrolling .shimmer-glow,
     html.is-scrolling .shimmer-float,
     html.is-scrolling .shimmer-ping {
@@ -188,6 +221,24 @@ const ShimmerStyles = () => (
     @media (max-width: 768px) {
       .shimmer-line { animation-duration: 5s; }
       .shimmer-spin { animation-duration: 6s; }
+      .shimmer-ltr { animation-duration: 5s; }
+    }
+    
+    /* Component visibility optimization - hide shimmers on inactive components */
+    /* When FPS optimizer detects component is unused, disable its shimmers to save performance */
+    html.component-inactive-navbar .navbar-shimmer,
+    html.component-inactive-navbar .shimmer-line.navbar-shimmer,
+    html.component-inactive-footer .footer-shimmer,
+    html.component-inactive-footer .shimmer-line.footer-shimmer,
+    html.component-inactive-audioWidget .audio-shimmer,
+    html.component-inactive-audioWidget .shimmer-line.audio-shimmer,
+    html.component-inactive-ultimatePanel .panel-shimmer,
+    html.component-inactive-ultimatePanel .shimmer-line.panel-shimmer,
+    html.component-inactive-staticTip .static-tip-shimmer,
+    html.component-inactive-movingTip .moving-tip-shimmer {
+      animation: none !important;
+      opacity: 0 !important;
+      display: none !important;
     }
     
     /* Performance hint for GPU compositing */
@@ -298,25 +349,47 @@ export const ShimmerBorder = memo(({
   disabled = false
 }: Omit<ShimmerProps, 'variant'>) => {
   const colors = colorMap[color];
-  const conicColor = customColor || colors.conic;
+  const viaColor = customColor || colors.via;
   
   if (disabled) return null;
   
+  // LEFT-TO-RIGHT shimmer border effect
   return (
-    <span 
-      className={`shimmer-spin shimmer-gpu absolute inset-[-2px] rounded-2xl pointer-events-none ${className}`}
-      style={{ 
-        background: `conic-gradient(from 90deg at 50% 50%, #00000000 0%, ${conicColor} 25%, ${conicColor}80 50%, ${conicColor} 75%, #00000000 100%)`,
-        opacity: intensityMap[intensity],
-        animationDuration: speedMap[speed],
-      }} 
-    />
+    <>
+      {/* Top border shimmer - LEFT TO RIGHT */}
+      <span 
+        className={`shimmer-line shimmer-gpu absolute top-0 left-0 right-0 h-[2px] overflow-hidden pointer-events-none ${className}`}
+      >
+        <span 
+          className="absolute inset-y-0 left-[-100%] w-[100%] shimmer-line"
+          style={{ 
+            background: `linear-gradient(to right, transparent, ${viaColor}, transparent)`,
+            opacity: intensityMap[intensity],
+            animationDuration: speedMap[speed],
+          }} 
+        />
+      </span>
+      {/* Bottom border shimmer - LEFT TO RIGHT */}
+      <span 
+        className={`shimmer-line shimmer-gpu absolute bottom-0 left-0 right-0 h-[2px] overflow-hidden pointer-events-none ${className}`}
+      >
+        <span 
+          className="absolute inset-y-0 left-[-100%] w-[100%] shimmer-line"
+          style={{ 
+            background: `linear-gradient(to right, transparent, ${viaColor}, transparent)`,
+            opacity: intensityMap[intensity],
+            animationDuration: speedMap[speed],
+            animationDelay: '1.5s',
+          }} 
+        />
+      </span>
+    </>
   );
 });
 ShimmerBorder.displayName = 'ShimmerBorder';
 
 /**
- * Conic Shimmer - Spinning conic gradient
+ * Conic Shimmer - Now LEFT TO RIGHT sweep (no spinning)
  */
 export const ShimmerConic = memo(({ 
   color = 'blue', 
@@ -327,19 +400,24 @@ export const ShimmerConic = memo(({
   disabled = false
 }: Omit<ShimmerProps, 'variant'>) => {
   const colors = colorMap[color];
-  const conicColor = customColor || colors.conic;
+  const viaColor = customColor || colors.via;
   
   if (disabled) return null;
   
+  // LEFT-TO-RIGHT sweep instead of spinning
   return (
     <span 
-      className={`shimmer-spin shimmer-gpu absolute inset-0 rounded-full ${className}`}
-      style={{ 
-        background: `conic-gradient(from 90deg at 50% 50%, #00000000 0%, ${conicColor} 50%, #00000000 100%)`,
-        opacity: intensityMap[intensity],
-        animationDuration: speedMap[speed],
-      }} 
-    />
+      className={`shimmer-gpu absolute inset-0 rounded-full overflow-hidden pointer-events-none ${className}`}
+    >
+      <span 
+        className="absolute inset-y-0 left-[-100%] w-[100%] shimmer-line"
+        style={{ 
+          background: `linear-gradient(to right, transparent, ${viaColor}, transparent)`,
+          opacity: intensityMap[intensity],
+          animationDuration: speedMap[speed],
+        }} 
+      />
+    </span>
   );
 });
 ShimmerConic.displayName = 'ShimmerConic';
@@ -443,7 +521,7 @@ export const ShimmerDot = memo(({
 ShimmerDot.displayName = 'ShimmerDot';
 
 /**
- * Spinner Shimmer - Loading spinner with conic gradient
+ * Spinner Shimmer - Loading spinner with LEFT-TO-RIGHT sweep (no spinning)
  */
 export const ShimmerSpinner = memo(({ 
   size = 40,
@@ -458,13 +536,18 @@ export const ShimmerSpinner = memo(({
   
   return (
     <div className={`relative ${className}`} style={{ width: size, height: size }}>
+      {/* LEFT-TO-RIGHT sweep instead of spinning */}
       <span 
-        className="shimmer-spin shimmer-gpu absolute inset-0 rounded-full"
-        style={{ 
-          background: `conic-gradient(from 90deg at 50% 50%, #00000000 0%, ${colors.conic} 50%, #00000000 100%)`,
-          animationDuration: speedMap[speed],
-        }} 
-      />
+        className="shimmer-gpu absolute inset-0 rounded-full overflow-hidden"
+      >
+        <span 
+          className="absolute inset-y-0 left-[-100%] w-[100%] shimmer-line"
+          style={{ 
+            background: `linear-gradient(to right, transparent, ${colors.via}, transparent)`,
+            animationDuration: speedMap[speed],
+          }} 
+        />
+      </span>
       <div className="absolute inset-[2px] bg-black rounded-full" />
       <div className="absolute inset-0 flex items-center justify-center">
         <span 
@@ -567,5 +650,50 @@ export const ShimmerContainer = memo(({
   );
 });
 ShimmerContainer.displayName = 'ShimmerContainer';
+
+/**
+ * Hook to get shimmer props based on FpsOptimizer device tier
+ * Use this in components to get device-aware shimmer settings
+ * 
+ * @example
+ * const { disabled, speed, intensity } = useOptimizedShimmer();
+ * <ShimmerLine disabled={disabled} speed={speed} intensity={intensity} />
+ */
+export function useOptimizedShimmer() {
+  const [settings, setSettings] = useState({
+    disabled: false,
+    speed: 'normal' as 'slow' | 'normal' | 'fast',
+    intensity: 'medium' as 'low' | 'medium' | 'high',
+  });
+  
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const root = document.documentElement;
+    
+    const updateSettings = () => {
+      if (root.classList.contains('shimmer-quality-disabled')) {
+        setSettings({ disabled: true, speed: 'slow', intensity: 'low' });
+      } else if (root.classList.contains('shimmer-quality-low')) {
+        setSettings({ disabled: false, speed: 'slow', intensity: 'low' });
+      } else if (root.classList.contains('shimmer-quality-medium')) {
+        setSettings({ disabled: false, speed: 'slow', intensity: 'medium' });
+      } else {
+        setSettings({ disabled: false, speed: 'normal', intensity: 'medium' });
+      }
+    };
+    
+    // Initial check
+    updateSettings();
+    
+    // Watch for class changes
+    const observer = new MutationObserver(updateSettings);
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+    
+    return () => observer.disconnect();
+  }, []);
+  
+  return settings;
+}
 
 export default UnifiedShimmer;

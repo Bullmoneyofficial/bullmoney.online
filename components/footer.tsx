@@ -9,7 +9,8 @@ import { SocialsRow } from "./footer/SocialsRow";
 import AdminModal from "@/components/AdminModal";
 import BullMoneyModal from "@/components/Faq";
 import AffiliateModal from "@/components/AffiliateModal";
-import { ShimmerLine, ShimmerBorder } from "@/components/ui/UnifiedShimmer";
+import { ShimmerLine, ShimmerBorder, useOptimizedShimmer } from "@/components/ui/UnifiedShimmer";
+import { useFpsOptimizer } from "@/lib/FpsOptimizer";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 
 // Unified Modal Wrapper for Footer - Fixes display issues on all devices
@@ -148,6 +149,19 @@ AppsToolsContent.displayName = 'AppsToolsContent';
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
+  // FPS Optimizer integration for component lifecycle tracking
+  const { registerComponent, unregisterComponent, shouldEnableShimmer } = useFpsOptimizer();
+  const shimmerSettings = useOptimizedShimmer();
+  
+  // Register component with FPS optimizer on mount
+  useEffect(() => {
+    registerComponent('footer');
+    return () => unregisterComponent('footer');
+  }, [registerComponent, unregisterComponent]);
+  
+  // Check if shimmer should be enabled for this component
+  const shimmerEnabled = shouldEnableShimmer('footer') && !shimmerSettings.disabled;
+
   const [isDisclaimerOpen, setIsDisclaimerOpen] = useState(false);
   const [isAppsOpen, setIsAppsOpen] = useState(false);
 
@@ -181,9 +195,9 @@ export function Footer() {
         transition={{ duration: 0.5 }}
       >
         {/* Inner Content Container */}
-        <div className="relative max-w-7xl mx-auto flex flex-col items-center gap-6 sm:gap-8 bg-black/40 backdrop-blur-2xl rounded-2xl p-4 sm:p-6 border border-blue-500/30">
-          {/* Top shimmer */}
-          <ShimmerLine color="blue" />
+        <div className="relative max-w-7xl mx-auto flex flex-col items-center gap-6 sm:gap-8 bg-black/40 backdrop-blur-2xl rounded-2xl p-4 sm:p-6 border border-blue-500/30 footer-shimmer">
+          {/* Top shimmer - LEFT TO RIGHT, FPS-aware */}
+          {shimmerEnabled && <ShimmerLine color="blue" intensity={shimmerSettings.intensity} speed={shimmerSettings.speed} />}
           
           {/* Top: Logo */}
           <div className="scale-110 sm:scale-125 md:scale-150 origin-center p-1">

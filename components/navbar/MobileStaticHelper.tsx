@@ -4,13 +4,26 @@ import { MOBILE_HELPER_TIPS } from './navbar.utils';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
+import { useFpsOptimizer } from '@/lib/FpsOptimizer';
+import { ShimmerLine, useOptimizedShimmer } from '@/components/ui/UnifiedShimmer';
 
 export const MobileStaticHelper = memo(() => {
   const { activeTheme } = useGlobalTheme();
   const { tipsMuted } = useAudioSettings();
+  const { registerComponent, unregisterComponent, shouldEnableShimmer, trackInteraction } = useFpsOptimizer();
+  const shimmerSettings = useOptimizedShimmer();
   const [tipIndex, setTipIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const soundPlayedRef = useRef(false);
+  
+  // Register component with FPS optimizer
+  useEffect(() => {
+    registerComponent('staticTip');
+    return () => unregisterComponent('staticTip');
+  }, [registerComponent, unregisterComponent]);
+  
+  // Check if shimmer should be enabled for this component
+  const shimmerEnabled = shouldEnableShimmer('staticTip') && !shimmerSettings.disabled;
   
   // Get theme filter for consistency with navbar
   // Use mobileFilter for both mobile and desktop to ensure consistent theming
@@ -60,21 +73,24 @@ export const MobileStaticHelper = memo(() => {
           duration: 0.35,
           ease: [0.34, 1.56, 0.64, 1]
         }}
-        className="relative mx-auto w-fit max-w-[90%] px-3 py-2 rounded-xl bg-black/80 backdrop-blur-xl gpu-accelerated overflow-hidden"
+        className="relative mx-auto w-fit max-w-[90%] px-3 py-2 rounded-xl bg-black/80 backdrop-blur-xl gpu-accelerated overflow-hidden static-tip-shimmer"
         style={{
           border: '1px solid rgba(59, 130, 246, 0.5)',
           boxShadow: '0 0 30px rgba(59, 130, 246, 0.3), inset 0 0 15px rgba(59, 130, 246, 0.1)'
         }}
       >
-        {/* Shimmer Background - Left to Right Gradient */}
-        <motion.div 
-          animate={{ x: ['0%', '200%'] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-y-0 left-[-100%] w-[100%] z-0"
-          style={{
-            background: 'linear-gradient(to right, transparent, rgba(59, 130, 246, 0.3), transparent)'
-          }}
-        />
+        {/* Unified Shimmer - Left to Right using ShimmerLine component */}
+        {shimmerEnabled && (
+          <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
+            <div 
+              className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%]"
+              style={{
+                background: 'linear-gradient(to right, transparent, rgba(59, 130, 246, 0.3), transparent)',
+                animationDuration: shimmerSettings.speed === 'slow' ? '5s' : '3s',
+              }}
+            />
+          </div>
+        )}
         
         <motion.div 
           className="flex items-center gap-2.5 justify-center relative z-10"

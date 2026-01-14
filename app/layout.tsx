@@ -20,6 +20,9 @@ import { ShopProvider } from "@/components/ShopContext";
 // ✅ ADDED: Import the Performance Provider for 120Hz optimization
 import { PerformanceProvider, FPSCounter } from "@/components/PerformanceProvider";
 
+// ✅ ADDED: Import the FPS Optimizer for device-aware optimization
+import { FpsOptimizerProvider } from "@/lib/FpsOptimizer";
+
 // ✅ ADDED: Import the Unified Shimmer Styles Provider
 import { ShimmerStylesProvider } from "@/components/ui/UnifiedShimmer";
 
@@ -600,6 +603,8 @@ export default function RootLayout({
                 <StudioProvider>
                   {/* ✅ ADDED: ShopProvider starts here */}
                   <ShopProvider>
+                    {/* ✅ FPS Optimizer for device-aware quality control */}
+                    <FpsOptimizerProvider>
                     {/* ✅ Performance Provider for 120Hz optimization & smooth scroll */}
                     <PerformanceProvider enableSmoothScroll={true}>
                       {/* Custom Cursor for Desktop */}
@@ -626,6 +631,7 @@ export default function RootLayout({
                       {/* FPS Counter - only shows in development */}
                       <FPSCounter />
                     </PerformanceProvider>
+                    </FpsOptimizerProvider>
                   </ShopProvider>
                   {/* ✅ ADDED: ShopProvider ends here */}
                 </StudioProvider>

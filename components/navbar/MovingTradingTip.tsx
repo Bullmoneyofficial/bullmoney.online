@@ -2,6 +2,8 @@ import React, { useEffect, useState, useMemo, memo } from 'react';
 import { motion } from 'framer-motion';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
+import { useFpsOptimizer } from '@/lib/FpsOptimizer';
+import { useOptimizedShimmer } from '@/components/ui/UnifiedShimmer';
 
 interface MovingTradingTipProps {
   tip: { target: string; text: string; buttonIndex: number };
@@ -18,8 +20,19 @@ export const MovingTradingTip = memo(({
 }: MovingTradingTipProps) => {
   const { activeTheme } = useGlobalTheme();
   const { tipsMuted } = useAudioSettings();
+  const { registerComponent, unregisterComponent, shouldEnableShimmer } = useFpsOptimizer();
+  const shimmerSettings = useOptimizedShimmer();
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isReady, setIsReady] = useState(false);
+  
+  // Register component with FPS optimizer
+  useEffect(() => {
+    registerComponent('movingTip');
+    return () => unregisterComponent('movingTip');
+  }, [registerComponent, unregisterComponent]);
+  
+  // Check if shimmer should be enabled for this component
+  const shimmerEnabled = shouldEnableShimmer('movingTip') && !shimmerSettings.disabled;
   
   // Get theme filter for consistency with navbar
   // Use mobileFilter for both mobile and desktop to ensure consistent theming
@@ -112,15 +125,18 @@ export const MovingTradingTip = memo(({
             boxShadow: '0 0 40px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(59, 130, 246, 0.1)'
           }}
         >
-          {/* Shimmer Background - Left to Right Gradient */}
-          <motion.div 
-            animate={{ x: ['0%', '200%'] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-y-0 left-[-100%] w-[100%] z-0"
-            style={{
-              background: 'linear-gradient(to right, transparent, rgba(59, 130, 246, 0.4), transparent)'
-            }}
-          />
+          {/* Unified Shimmer Background - Left to Right CSS animation */}
+          {shimmerEnabled && (
+            <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none moving-tip-shimmer">
+              <div 
+                className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] z-0"
+                style={{
+                  background: 'linear-gradient(to right, transparent, rgba(59, 130, 246, 0.4), transparent)',
+                  animationDuration: shimmerSettings.speed === 'slow' ? '5s' : '3s',
+                }}
+              />
+            </div>
+          )}
           
           <div className="flex items-center gap-3 relative z-10">
             {/* Pulse indicator */}

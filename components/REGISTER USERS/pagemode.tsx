@@ -525,24 +525,27 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black gpu-accel" />
         
-        <div className="register-card shimmer-ltr bg-black/80 border-2 border-blue-500/40 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.3)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
-          <div className="mx-auto w-20 h-20 md:w-24 md:h-24 relative mb-5 md:mb-6">
+        <div className="register-card bg-black/80 border-2 border-blue-500/40 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.3)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
+          {/* Shimmer overlay effect */}
+          <div className="absolute inset-0 shimmer-ltr opacity-10 pointer-events-none rounded-2xl" />
+          
+          <div className="mx-auto w-20 h-20 md:w-24 md:h-24 relative mb-5 md:mb-6 z-10">
             <div className="absolute inset-0 rounded-full border-2 border-blue-500/50 animate-[spin_3s_linear_infinite]" />
             <div className="absolute inset-0 bg-blue-500 rounded-full scale-0 animate-[scale-up_0.5s_ease-out_forwards_0.2s] flex items-center justify-center">
               <Check className="w-10 h-10 md:w-12 md:h-12 text-white stroke-[3] opacity-0 animate-[fade-in_0.3s_ease-out_forwards_0.6s]" />
             </div>
           </div>
           
-          <h2 className="text-xl md:text-3xl font-bold shimmer-text mb-2">You&apos;re In 🚀</h2>
-          <p className="text-blue-200/70 mb-6 md:mb-8 text-sm md:text-base">
+          <h2 className="text-xl md:text-3xl font-bold shimmer-text mb-2 relative z-10">You&apos;re In 🚀</h2>
+          <p className="text-blue-200/70 mb-6 md:mb-8 text-sm md:text-base relative z-10">
             Your free BullMoney access is now active.<br/>
           </p>
           
           <button 
             onClick={onUnlock}
-            className="shimmer-ltr w-full py-3.5 md:py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold tracking-wide transition-all shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] group flex items-center justify-center mb-4 cursor-target relative overflow-hidden"
+            className="relative z-10 w-full py-3.5 md:py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold tracking-wide transition-all shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] group flex items-center justify-center mb-4 cursor-target overflow-hidden"
           >
-            <span className="relative z-10 flex items-center shimmer-text">
+            <span className="relative z-20 flex items-center shimmer-text">
               Go to Dashboard  
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </span>
@@ -550,7 +553,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
            <button 
             onClick={() => window.open(TELEGRAM_GROUP_LINK, '_blank')}
-            className="text-sm text-blue-400/60 hover:text-blue-300 transition-colors flex items-center justify-center gap-2 mx-auto cursor-target"
+            className="relative z-10 text-sm text-blue-400/60 hover:text-blue-300 transition-colors flex items-center justify-center gap-2 mx-auto cursor-target"
           >
             <FolderPlus className="w-4 h-4" /> Join Free Telegram
           </button>
@@ -633,9 +636,11 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             animate={{ opacity: 1, scale: 1 }}
             className="w-full"
           >
-             <div className="register-card shimmer-ltr bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.2)] relative overflow-hidden">
+             <div className="register-card bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.2)] relative overflow-hidden">
+                {/* Shimmer overlay effect */}
+                <div className="absolute inset-0 shimmer-ltr opacity-10 pointer-events-none" />
                 
-                <div className="absolute top-0 right-0 p-3 md:p-4 opacity-10">
+                <div className="absolute top-0 right-0 p-3 md:p-4 opacity-10 z-0">
                     <Lock className="w-24 h-24 md:w-32 md:h-32 text-blue-400" />
                 </div>
                 
@@ -688,9 +693,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     <button
                       type="submit"
                       disabled={!loginEmail || !loginPassword}
-                      className="shimmer-ltr w-full py-3 md:py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-target text-base relative overflow-hidden"
+                      className="relative z-10 w-full py-3 md:py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-target text-base overflow-hidden"
                     >
-                      <span className="relative z-10 flex items-center gap-2 shimmer-text">
+                      <span className="relative z-20 flex items-center gap-2 shimmer-text">
                         LOGIN
                         <ArrowRight className="w-4 h-4" />
                       </span>
@@ -716,7 +721,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       key={partner}
                       onClick={() => handleBrokerSwitch(partner)}
                       className={cn(
-                        "shimmer-ltr relative px-5 md:px-6 py-2 rounded-full font-semibold transition-all duration-300 z-20 cursor-target text-sm md:text-base",
+                        "relative px-5 md:px-6 py-2 rounded-full font-semibold transition-all duration-300 z-20 cursor-target text-sm md:text-base",
                         isActive ? "shimmer-text" : "bg-black/60 border-2 border-blue-500/20 text-blue-300/60 hover:border-blue-500/40"
                       )}
                     >
@@ -745,9 +750,11 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
                  >
-                   <div className="register-card shimmer-ltr bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.2)] relative overflow-hidden text-center">
+                   <div className="register-card bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.2)] relative overflow-hidden text-center">
+                      {/* Shimmer overlay effect */}
+                      <div className="absolute inset-0 shimmer-ltr opacity-10 pointer-events-none" />
                       
-                      <div className="absolute top-0 right-0 p-3 md:p-4 opacity-5">
+                      <div className="absolute top-0 right-0 p-3 md:p-4 opacity-5 z-0">
                         <Lock className="w-24 h-24 md:w-32 md:h-32 text-blue-400" />
                       </div>
 
@@ -757,8 +764,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                          </div>
                       </div>
 
-                      <h2 className="text-xl md:text-3xl font-extrabold shimmer-text mb-3">Unlock Free BullMoney Access</h2>
-                      <p className="text-blue-200/70 text-sm md:text-base mb-6 md:mb-8 max-w-sm mx-auto leading-relaxed">
+                      <h2 className="text-xl md:text-3xl font-extrabold shimmer-text mb-3 relative z-10">Unlock Free BullMoney Access</h2>
+                      <p className="text-blue-200/70 text-sm md:text-base mb-6 md:mb-8 max-w-sm mx-auto leading-relaxed relative z-10">
                         Get free trading setups and community access. <br/>
                         <span className="text-blue-300/40">No payment. Takes about 2 minutes.</span>
                       </p>
@@ -767,14 +774,14 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         onClick={handleNext}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="shimmer-ltr w-full py-3 md:py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold text-base md:text-lg tracking-wide transition-all shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] flex items-center justify-center cursor-target relative overflow-hidden"
+                        className="relative z-10 w-full py-3 md:py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold text-base md:text-lg tracking-wide transition-all shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] flex items-center justify-center cursor-target overflow-hidden"
                       >
                         <span className="relative z-10 flex items-center shimmer-text">
                           Start Free Access <ArrowRight className="w-5 h-5 ml-2" />
                         </span>
                       </motion.button>
                       
-                      <div className="mt-4 space-y-3">
+                      <div className="mt-4 space-y-3 relative z-10">
                          <div className="flex items-center justify-center gap-2 text-xs text-blue-400/40">
                              <Lock className="w-3 h-3" /> No credit card required
                          </div>
@@ -783,7 +790,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                          <motion.button 
                            onClick={toggleViewMode}
                            whileHover={{ scale: 1.01 }}
-                           className="shimmer-ltr w-full py-3 rounded-lg text-sm font-semibold transition-all border-2 border-blue-500/20 mt-2 bg-black/60 text-blue-300/80 hover:bg-blue-950/30 hover:border-blue-500/40"
+                           className="w-full py-3 rounded-lg text-sm font-semibold transition-all border-2 border-blue-500/20 mt-2 bg-black/60 text-blue-300/80 hover:bg-blue-950/30 hover:border-blue-500/40"
                          >
                             Already a member? Login here
                          </motion.button>
@@ -796,9 +803,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               {step === 1 && (
                 <motion.div
                   key="step1"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
                 >
                   <StepCard
@@ -815,7 +822,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                            {/* COPY CODE BUTTON */}
                           <button
                             onClick={() => copyCode(brokerCode)}
-                            className="shimmer-ltr inline-flex items-center gap-2 rounded-lg px-3 py-2.5 md:py-3 text-sm font-semibold ring-2 ring-inset transition cursor-target w-full justify-center mb-1 text-blue-300 ring-blue-500/40 hover:bg-blue-500/10"
+                            className="inline-flex items-center gap-2 rounded-lg px-3 py-2.5 md:py-3 text-sm font-semibold ring-2 ring-inset transition cursor-target w-full justify-center mb-1 text-blue-300 ring-blue-500/40 hover:bg-blue-500/10"
                           >
                             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                             <span className="shimmer-text">{copied ? "Copied" : `Copy Code: ${brokerCode}`}</span>
@@ -824,7 +831,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                            {/* EXTERNAL LINK BUTTON */}
                           <button
                             onClick={handleBrokerClick}
-                            className="shimmer-ltr w-full py-3 md:py-3.5 rounded-xl font-bold text-blue-400 shadow transition flex items-center justify-center gap-2 cursor-target text-base bg-black border-2 border-blue-500/60 hover:border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] relative overflow-hidden"
+                            className="w-full py-3 md:py-3.5 rounded-xl font-bold text-blue-400 shadow transition flex items-center justify-center gap-2 cursor-target text-base bg-black border-2 border-blue-500/60 hover:border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] relative overflow-hidden"
                           >
                             <span className="relative z-10 flex items-center gap-2 shimmer-text">
                               Open Free Account
@@ -836,7 +843,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         {/* DYNAMIC SECONDARY BUTTON FOR "ALREADY HAVE ACCOUNT" */}
                         <button 
                             onClick={handleNext}
-                            className="shimmer-ltr w-full py-2.5 md:py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border-2 mt-1 border-blue-500/30 text-blue-300 bg-black/60 hover:bg-blue-950/30 hover:border-blue-500/50"
+                            className="w-full py-2.5 md:py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border-2 mt-1 border-blue-500/30 text-blue-300 bg-black/60 hover:bg-blue-950/30 hover:border-blue-500/50"
                         >
                             I already have an account
                         </button>
@@ -864,9 +871,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               {step === 2 && (
                 <motion.div
                   key="step2"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
                 >
                   <StepCard
@@ -878,7 +885,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         onClick={handleNext}
                         disabled={!formData.mt5Number}
                         className={cn(
-                          "shimmer-ltr w-full py-3 md:py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
+                          "w-full py-3 md:py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
                           !formData.mt5Number 
                             ? "opacity-50 cursor-not-allowed bg-black/60 border-2 border-blue-500/20 text-blue-300/50" 
                             : "bg-black border-2 border-blue-500/60 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:border-blue-400 hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
@@ -920,9 +927,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               {step === 3 && (
                 <motion.div
                   key="step3"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
                 >
                   <StepCard
@@ -934,7 +941,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         onClick={handleNext}
                         disabled={!formData.email || !formData.password || !acceptedTerms}
                         className={cn(
-                          "shimmer-ltr w-full py-3 md:py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
+                          "w-full py-3 md:py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
                           (!formData.email || !formData.password || !acceptedTerms) 
                             ? "opacity-50 cursor-not-allowed bg-black/60 border-2 border-blue-500/20 text-blue-300/50" 
                             : "bg-black border-2 border-blue-500/60 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:border-blue-400 hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
@@ -1051,22 +1058,24 @@ const StepCard = memo(({ number, number2, title, children, actions, className }:
   const n = useRed ? number2 : number;
   return (
     <div className={cn(
-      "shimmer-ltr group relative overflow-hidden rounded-2xl p-5 md:p-8",
+      "group relative overflow-hidden rounded-2xl p-5 md:p-8",
       "bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl",
       "shadow-[0_0_40px_rgba(59,130,246,0.2)]",
       className
     )}>
+      {/* Shimmer overlay effect */}
+      <div className="absolute inset-0 shimmer-ltr opacity-10 pointer-events-none rounded-2xl" />
       
-      <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l blur-2xl from-blue-500/20 via-blue-500/10 to-transparent" />
-      <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-blue-500/10" />
-      <div className="flex items-center justify-between mb-3 md:mb-6">
-        <span className="shimmer-ltr inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md ring-2 text-blue-300/90 ring-blue-500/30 bg-black/60">
+      <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l blur-2xl from-blue-500/20 via-blue-500/10 to-transparent z-0" />
+      <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-blue-500/10 z-0" />
+      <div className="flex items-center justify-between mb-3 md:mb-6 relative z-10">
+        <span className="inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md ring-2 text-blue-300/90 ring-blue-500/30 bg-black/60">
           <span className="shimmer-text">Step {n} of 3</span>
         </span>
       </div>
-      <h3 className="text-lg md:text-2xl font-extrabold shimmer-text mb-3 md:mb-4">{title}</h3>
-      <div className="flex-1">{children}</div>
-      {actions && <div className="mt-5 md:mt-8 pt-5 md:pt-6 border-t border-blue-500/20">{actions}</div>}
+      <h3 className="text-lg md:text-2xl font-extrabold shimmer-text mb-3 md:mb-4 relative z-10">{title}</h3>
+      <div className="flex-1 relative z-10">{children}</div>
+      {actions && <div className="mt-5 md:mt-8 pt-5 md:pt-6 border-t border-blue-500/20 relative z-10">{actions}</div>}
     </div>
   );
 });
