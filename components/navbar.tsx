@@ -46,6 +46,7 @@ import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 // --- IMPORT UNIFIED SHIMMER SYSTEM ---
 import { ShimmerLine, ShimmerBorder, useOptimizedShimmer } from "@/components/ui/UnifiedShimmer";
 import { useFpsOptimizer } from "@/lib/FpsOptimizer";
+import { useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
 
 // --- IMPORT NAVBAR CSS ---
 import "./navbar.css";
@@ -118,12 +119,15 @@ export const Navbar = memo(() => {
   const { tipsMuted } = useAudioSettings();
   const { deviceTier, isSafari } = useCacheContext();
   
-  // FPS Optimizer integration for component lifecycle tracking
+  // Unified Performance System - single source for lifecycle & shimmer
+  const navbarPerf = useComponentLifecycle('navbar', 10); // Priority 10 (highest)
+  
+  // FPS Optimizer integration for component lifecycle tracking (legacy support)
   const { registerComponent, unregisterComponent, shouldEnableShimmer } = useFpsOptimizer();
   const shimmerSettings = useOptimizedShimmer();
   
-  // Check if shimmer should be enabled for navbar
-  const shimmerEnabled = shouldEnableShimmer('navbar') && !shimmerSettings.disabled;
+  // Check if shimmer should be enabled for navbar - use unified system
+  const shimmerEnabled = navbarPerf.shimmerEnabled && !shimmerSettings.disabled;
   
   // Modal states
   const [open, setOpen] = useState(false);
@@ -167,11 +171,8 @@ export const Navbar = memo(() => {
     setMounted(true);
   }, []);
 
-  // Register/unregister with FPS optimizer
-  useEffect(() => {
-    registerComponent('navbar');
-    return () => unregisterComponent('navbar');
-  }, [registerComponent, unregisterComponent]);
+  // Note: Component lifecycle is now managed by useComponentLifecycle hook above
+  // No need for separate registerComponent/unregisterComponent calls
 
   // Rotate tips every 10 seconds
   const soundPlayedRef = useRef(false);

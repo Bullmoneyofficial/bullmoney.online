@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/UnifiedShimmer";
 import { SplineSkeleton, LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import { useCacheContext } from "@/components/CacheManagerProvider";
+import { useUnifiedPerformance, useVisibility, useObserver } from "@/lib/UnifiedPerformanceSystem";
 // Use optimized ticker for 120Hz performance
 import { LiveMarketTickerOptimized as LiveMarketTicker } from "@/components/LiveMarketTickerOptimized";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
@@ -48,6 +49,9 @@ function LazySplineContainer({ scene }: { scene: string }) {
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [showFallback, setShowFallback] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Use unified observer pool instead of individual IntersectionObserver
+  const { observe } = useUnifiedPerformance();
 
   // Check if device can handle 3D at mount
   useEffect(() => {
@@ -93,27 +97,17 @@ function LazySplineContainer({ scene }: { scene: string }) {
     return () => resizeObserver.disconnect();
   }, []);
 
+  // Use shared observer pool for visibility detection
   useEffect(() => {
     if (!containerRef.current || !canRender) return;
     
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsInView(entry.isIntersecting);
-        
-        // Mark as loaded once it hits the buffer zone
-        if (entry.isIntersecting && !hasLoadedOnce) {
-          setHasLoadedOnce(true);
-        }
-      },
-      { 
-        // Load 600px before it hits the screen, Unload when 600px away
-        rootMargin: '600px' 
+    return observe(containerRef.current, (isIntersecting) => {
+      setIsInView(isIntersecting);
+      if (isIntersecting && !hasLoadedOnce) {
+        setHasLoadedOnce(true);
       }
-    );
-
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, [hasLoadedOnce, canRender]);
+    }, { rootMargin: '600px' });
+  }, [observe, hasLoadedOnce, canRender]);
 
   // Show optimized fallback on devices that can't handle 3D
   if (!canRender) {
@@ -206,8 +200,8 @@ function HomeContent() {
   const [isMobile, setIsMobile] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
 
-  // Use cache context for device tier awareness
-  const { deviceTier } = useCacheContext();
+  // Use unified performance for tracking - only need device tier
+  const { deviceTier, registerComponent, unregisterComponent } = useUnifiedPerformance();
 
   // Use global theme context - syncs with hero.tsx and entire app
   const { activeThemeId, activeTheme, setAppLoading } = useGlobalTheme();
@@ -215,6 +209,22 @@ function HomeContent() {
   // Fallback theme lookup if context not ready
   const theme = activeTheme || ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   useAudioEngine(!isMuted, 'MECHANICAL');
+  
+  // Register main content components with unified system
+  useEffect(() => {
+    if (currentView === 'content') {
+      registerComponent('hero', 9);
+      registerComponent('features', 5);
+      registerComponent('chartnews', 6);
+      registerComponent('ticker', 7);
+    }
+    return () => {
+      unregisterComponent('hero');
+      unregisterComponent('features');
+      unregisterComponent('chartnews');
+      unregisterComponent('ticker');
+    };
+  }, [currentView, registerComponent, unregisterComponent]);
   
   useEffect(() => {
     if (currentView === 'content') {

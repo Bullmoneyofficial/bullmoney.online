@@ -26,6 +26,9 @@ import { FpsOptimizerProvider } from "@/lib/FpsOptimizer";
 // ✅ ADDED: Import the Unified Shimmer Styles Provider
 import { ShimmerStylesProvider } from "@/components/ui/UnifiedShimmer";
 
+// ✅ ADDED: Import the Unified Performance System for consolidated FPS/observer/caching
+import { UnifiedPerformanceProvider } from "@/lib/UnifiedPerformanceSystem";
+
 // ✅ ADDED: Import the Cache Manager Provider for version-based cache invalidation
 import { CacheManagerProvider } from "@/components/CacheManagerProvider";
 
@@ -603,6 +606,8 @@ export default function RootLayout({
                 <StudioProvider>
                   {/* ✅ ADDED: ShopProvider starts here */}
                   <ShopProvider>
+                    {/* ✅ UNIFIED PERFORMANCE: Single FPS monitor, observer pool, smart caching */}
+                    <UnifiedPerformanceProvider startDelay={2000}>
                     {/* ✅ FPS Optimizer for device-aware quality control */}
                     <FpsOptimizerProvider>
                     {/* ✅ Performance Provider for 120Hz optimization & smooth scroll */}
@@ -632,6 +637,7 @@ export default function RootLayout({
                       <FPSCounter />
                     </PerformanceProvider>
                     </FpsOptimizerProvider>
+                    </UnifiedPerformanceProvider>
                   </ShopProvider>
                   {/* ✅ ADDED: ShopProvider ends here */}
                 </StudioProvider>

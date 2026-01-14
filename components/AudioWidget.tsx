@@ -25,8 +25,8 @@ import { MusicEmbedModal } from "@/components/MusicEmbedModal";
 import { BlueShimmer, Slider, TouchIndicator, GameOverScreen, EnergyBar, CompactGameHUD, BoredPopup, GameControls, GameShimmer, SparkleBurst, FloatingParticles, PulseRing, ConfettiBurst, BounceDots, StatusBadge, QuickGameTutorial, QuickGameTutorialDemo } from "@/components/audio-widget/ui";
 import { useWanderingGame } from "@/components/audio-widget/useWanderingGame";
 import { useCacheContext } from "@/components/CacheManagerProvider";
-import { ShimmerBorder, ShimmerSpinner, ShimmerLine, useOptimizedShimmer } from "@/components/ui/UnifiedShimmer";
-import { useFpsOptimizer } from "@/lib/FpsOptimizer";
+import { ShimmerBorder, ShimmerSpinner, ShimmerLine } from "@/components/ui/UnifiedShimmer";
+import { useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
 
 const sourceLabel: Record<MusicSource, string> = {
   THEME: "Theme",
@@ -54,18 +54,10 @@ const AudioWidget = React.memo(function AudioWidget() {
   const { deviceTier, isSafari } = useCacheContext();
   const isLowEndDevice = deviceTier === 'low' || deviceTier === 'minimal';
   
-  // FPS Optimizer integration for component lifecycle tracking
-  const { registerComponent, unregisterComponent, shouldEnableShimmer, trackInteraction } = useFpsOptimizer();
-  const shimmerSettings = useOptimizedShimmer();
-  
-  // Register component with FPS optimizer on mount
-  useEffect(() => {
-    registerComponent('audioWidget');
-    return () => unregisterComponent('audioWidget');
-  }, [registerComponent, unregisterComponent]);
-  
-  // Check if shimmer should be enabled for this component
-  const shimmerEnabled = shouldEnableShimmer('audioWidget') && !shimmerSettings.disabled;
+  // Use unified performance system for lifecycle & shimmer optimization
+  const perf = useComponentLifecycle('audioWidget', 7);
+  const shimmerEnabled = perf.shimmerEnabled;
+  const shimmerSettings = perf.shimmerSettings;
   
   const [hasStartedCatchGame, setHasStartedCatchGame] = useState(false);
   const [showCatchGameTutorial, setShowCatchGameTutorial] = useState(false);

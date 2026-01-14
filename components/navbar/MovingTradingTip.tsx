@@ -2,8 +2,7 @@ import React, { useEffect, useState, useMemo, memo } from 'react';
 import { motion } from 'framer-motion';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
-import { useFpsOptimizer } from '@/lib/FpsOptimizer';
-import { useOptimizedShimmer } from '@/components/ui/UnifiedShimmer';
+import { useComponentLifecycle } from '@/lib/UnifiedPerformanceSystem';
 
 interface MovingTradingTipProps {
   tip: { target: string; text: string; buttonIndex: number };
@@ -20,19 +19,14 @@ export const MovingTradingTip = memo(({
 }: MovingTradingTipProps) => {
   const { activeTheme } = useGlobalTheme();
   const { tipsMuted } = useAudioSettings();
-  const { registerComponent, unregisterComponent, shouldEnableShimmer } = useFpsOptimizer();
-  const shimmerSettings = useOptimizedShimmer();
+  
+  // Use unified performance system for lifecycle & shimmer optimization
+  const perf = useComponentLifecycle('movingTip', 3);
+  const shimmerEnabled = perf.shimmerEnabled;
+  const shimmerSettings = perf.shimmerSettings;
+  
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isReady, setIsReady] = useState(false);
-  
-  // Register component with FPS optimizer
-  useEffect(() => {
-    registerComponent('movingTip');
-    return () => unregisterComponent('movingTip');
-  }, [registerComponent, unregisterComponent]);
-  
-  // Check if shimmer should be enabled for this component
-  const shimmerEnabled = shouldEnableShimmer('movingTip') && !shimmerSettings.disabled;
   
   // Get theme filter for consistency with navbar
   // Use mobileFilter for both mobile and desktop to ensure consistent theming

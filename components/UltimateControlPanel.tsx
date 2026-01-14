@@ -46,8 +46,8 @@ import { deviceMonitor, type DeviceInfo } from '@/lib/deviceMonitor';
 import { queueManager } from '@/lib/splineQueueManager';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
-import { ShimmerLine, ShimmerBorder, useOptimizedShimmer } from '@/components/ui/UnifiedShimmer';
-import { useFpsOptimizer } from '@/lib/FpsOptimizer';
+import { ShimmerLine, ShimmerBorder } from '@/components/ui/UnifiedShimmer';
+import { useComponentLifecycle, useUnifiedPerformance } from '@/lib/UnifiedPerformanceSystem';
 
 // --- IMPORT NAVBAR CSS FOR CONSISTENT THEMING ---
 import './navbar.css';
@@ -299,12 +299,11 @@ export function UltimateControlPanel({
   // Get CSS filter for current theme - matches navbar exactly
   const themeFilter = activeTheme?.mobileFilter || 'none';
   
-  // FPS Optimizer integration for component lifecycle tracking
-  const { registerComponent, unregisterComponent, shouldEnableShimmer, setComponentVisibility } = useFpsOptimizer();
-  const shimmerSettings = useOptimizedShimmer();
-  
-  // Check if shimmer should be enabled for this component
-  const shimmerEnabled = shouldEnableShimmer('ultimatePanel') && !shimmerSettings.disabled;
+  // Use unified performance system for lifecycle & shimmer optimization
+  const perf = useComponentLifecycle('ultimatePanel', 6);
+  const { setComponentVisibility } = useUnifiedPerformance();
+  const shimmerEnabled = perf.shimmerEnabled;
+  const shimmerSettings = perf.shimmerSettings;
   
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'network' | 'performance' | 'account'>('overview');
@@ -327,11 +326,7 @@ export function UltimateControlPanel({
     setMounted(true);
   }, []);
 
-  // Register/unregister with FPS optimizer and track visibility
-  useEffect(() => {
-    registerComponent('ultimatePanel');
-    return () => unregisterComponent('ultimatePanel');
-  }, [registerComponent, unregisterComponent]);
+  // Note: Component lifecycle is managed by useComponentLifecycle hook above
   
   // Update visibility state when panel opens/closes
   useEffect(() => {

@@ -228,3 +228,120 @@ iframe {
   /* Optimize all animations for high refresh */
   animation-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
 }
+
+/* ============================================================================
+   UNIFIED PERFORMANCE SYSTEM - COMPONENT STATE OPTIMIZATIONS
+   ============================================================================ */
+
+/* When FPS is critical - disable ALL non-essential animations */
+html.shimmer-quality-disabled {
+  --animation-duration-multiplier: 0.1;
+}
+
+html.shimmer-quality-disabled * {
+  animation-duration: 0.1s !important;
+  transition-duration: 0.1s !important;
+}
+
+html.shimmer-quality-disabled .shimmer-spin,
+html.shimmer-quality-disabled .shimmer-line,
+html.shimmer-quality-disabled .shimmer-pulse,
+html.shimmer-quality-disabled .shimmer-ping,
+html.shimmer-quality-disabled .page-spin,
+html.shimmer-quality-disabled .page-shimmer-ltr {
+  animation: none !important;
+}
+
+/* Low quality mode - slower, simpler animations */
+html.shimmer-quality-low {
+  --animation-duration-multiplier: 0.4;
+}
+
+html.shimmer-quality-low .shimmer-spin {
+  animation-duration: 6s !important;
+}
+
+html.shimmer-quality-low .shimmer-line {
+  animation-duration: 5s !important;
+}
+
+/* Medium quality - slightly reduced animations */
+html.shimmer-quality-medium {
+  --animation-duration-multiplier: 0.7;
+}
+
+html.shimmer-quality-medium .shimmer-spin {
+  animation-duration: 4s !important;
+}
+
+/* Scroll performance - pause animations during scroll */
+html.is-scrolling .shimmer-spin,
+html.is-scrolling .shimmer-line,
+html.is-scrolling .shimmer-pulse,
+html.is-scrolling .shimmer-glow,
+html.is-scrolling .page-spin,
+html.is-scrolling .page-shimmer-ltr,
+html.is-scrolling .shimmer-ping {
+  animation-play-state: paused !important;
+}
+
+html.is-scrolling canvas {
+  pointer-events: none;
+}
+
+/* Reduce GPU load on Spline during scroll */
+html.is-scrolling .spline-container canvas,
+html.is-scrolling [data-spline] canvas {
+  filter: blur(1px);
+  opacity: 0.95;
+  transition: filter 0.1s, opacity 0.1s;
+}
+
+/* Component-specific optimization classes */
+html.component-inactive-navbar .navbar-shimmer { animation: none !important; }
+html.component-inactive-audioWidget .audio-widget-shimmer { animation: none !important; }
+html.component-inactive-ultimatePanel .ultimate-panel-shimmer { animation: none !important; }
+html.component-inactive-movingTip .moving-tip-shimmer { animation: none !important; }
+html.component-inactive-staticTip .static-tip-shimmer { animation: none !important; }
+html.component-inactive-spline .spline-container { opacity: 0; pointer-events: none; }
+
+/* Blur reduction for low-end devices */
+html.reduce-blur {
+  --blur-amount: 4px !important;
+}
+
+html.reduce-blur .backdrop-blur-2xl,
+html.reduce-blur .backdrop-blur-xl,
+html.reduce-blur .backdrop-blur-lg {
+  backdrop-filter: blur(4px) !important;
+}
+
+html.reduce-blur .backdrop-blur-md,
+html.reduce-blur .backdrop-blur-sm {
+  backdrop-filter: blur(2px) !important;
+}
+
+/* Shadow reduction for performance */
+html.reduce-shadows * {
+  box-shadow: none !important;
+}
+
+/* Reduce animations globally */
+html.reduce-animations * {
+  animation-duration: 0.1s !important;
+  transition-duration: 0.1s !important;
+}
+
+/* GPU-accelerated animation helpers */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+}
+
+.shimmer-gpu {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}

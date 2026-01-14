@@ -4,26 +4,20 @@ import { MOBILE_HELPER_TIPS } from './navbar.utils';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
-import { useFpsOptimizer } from '@/lib/FpsOptimizer';
-import { ShimmerLine, useOptimizedShimmer } from '@/components/ui/UnifiedShimmer';
+import { useComponentLifecycle } from '@/lib/UnifiedPerformanceSystem';
 
 export const MobileStaticHelper = memo(() => {
   const { activeTheme } = useGlobalTheme();
   const { tipsMuted } = useAudioSettings();
-  const { registerComponent, unregisterComponent, shouldEnableShimmer, trackInteraction } = useFpsOptimizer();
-  const shimmerSettings = useOptimizedShimmer();
+  
+  // Use unified performance system for lifecycle & shimmer optimization
+  const perf = useComponentLifecycle('staticTip', 3);
+  const shimmerEnabled = perf.shimmerEnabled;
+  const shimmerSettings = perf.shimmerSettings;
+  
   const [tipIndex, setTipIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const soundPlayedRef = useRef(false);
-  
-  // Register component with FPS optimizer
-  useEffect(() => {
-    registerComponent('staticTip');
-    return () => unregisterComponent('staticTip');
-  }, [registerComponent, unregisterComponent]);
-  
-  // Check if shimmer should be enabled for this component
-  const shimmerEnabled = shouldEnableShimmer('staticTip') && !shimmerSettings.disabled;
   
   // Get theme filter for consistency with navbar
   // Use mobileFilter for both mobile and desktop to ensure consistent theming
