@@ -511,7 +511,7 @@ const AudioWidget = React.memo(function AudioWidget() {
               SoundEffects.click();
               setWidgetHidden(false);
             }}
-            className="fixed left-0 bottom-16 z-[100200] flex items-center gap-1 pl-1 pr-3 py-3 rounded-r-xl bg-blue-500/20 border border-l-0 border-blue-400/30 backdrop-blur-md hover:bg-blue-500/30 transition-colors group pointer-events-auto"
+            className="fixed left-0 bottom-16 z-[100200] flex items-center gap-1 pl-1 pr-3 py-3 rounded-r-xl bg-blue-500/40 border border-l-0 border-blue-400/50 backdrop-blur-md hover:bg-blue-500/50 transition-colors group pointer-events-auto"
           >
             <IconGripVertical className="w-4 h-4 text-blue-300/60 group-hover:text-blue-300" />
             <IconMusic className="w-4 h-4 text-blue-300" />
@@ -532,7 +532,7 @@ const AudioWidget = React.memo(function AudioWidget() {
               {/* Close button */}
               <button
                 onClick={() => setShowTipsOverlay(false)}
-                className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-white/25 hover:bg-white/35 transition-colors"
               >
                 <IconX className="w-3.5 h-3.5 text-white/60" />
               </button>
@@ -607,7 +607,7 @@ const AudioWidget = React.memo(function AudioWidget() {
             <motion.div
               layout
               className={cn(
-                "relative rounded-2xl border border-blue-500/30 bg-black/70 backdrop-blur-2xl shadow-2xl",
+                "relative rounded-2xl border border-blue-500/30 bg-black/95 backdrop-blur-2xl shadow-2xl",
                 "text-white/90 overflow-hidden audio-shimmer",
                 open ? "w-[280px] sm:w-[320px]" : "w-auto"
               )}
@@ -625,9 +625,9 @@ const AudioWidget = React.memo(function AudioWidget() {
                   }}
                   className={cn(
                     "relative h-10 w-10 rounded-xl flex items-center justify-center",
-                    "bg-gradient-to-br from-blue-500/20 to-blue-600/10",
-                    "hover:from-blue-500/30 hover:to-blue-600/20",
-                    "border border-blue-400/30 transition-all duration-200"
+                    "bg-gradient-to-br from-blue-500/40 to-blue-600/30",
+                    "hover:from-blue-500/50 hover:to-blue-600/40",
+                    "border border-blue-400/50 transition-all duration-200"
                   )}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -648,8 +648,8 @@ const AudioWidget = React.memo(function AudioWidget() {
                     className={cn(
                       "relative h-10 w-10 rounded-xl flex items-center justify-center border",
                       isStreamingSource && streamingActive
-                        ? "bg-gradient-to-br from-blue-500/20 to-cyan-500/15 border-blue-400/40" 
-                        : "bg-white/5 border-white/10"
+                        ? "bg-gradient-to-br from-blue-500/40 to-cyan-500/30 border-blue-400/60" 
+                        : "bg-white/15 border-white/25"
                     )}
                     animate={isStreamingSource && streamingActive ? { 
                       boxShadow: ["0 0 0 0 rgba(59, 130, 246, 0)", "0 0 15px 3px rgba(59, 130, 246, 0.15)", "0 0 0 0 rgba(59, 130, 246, 0)"]
@@ -690,9 +690,9 @@ const AudioWidget = React.memo(function AudioWidget() {
                     }}
                     className={cn(
                       "relative h-10 w-10 rounded-xl flex items-center justify-center",
-                      "bg-gradient-to-br from-white/10 to-white/5",
-                      "hover:from-white/15 hover:to-white/10",
-                      "border border-white/15 transition-all"
+                      "bg-gradient-to-br from-white/25 to-white/15",
+                      "hover:from-white/35 hover:to-white/25",
+                      "border border-white/30 transition-all"
                     )}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -713,7 +713,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                         SoundEffects.click();
                         setOpen(false);
                       }}
-                      className="h-10 w-10 rounded-xl flex items-center justify-center bg-blue-500/20 hover:bg-blue-500/30 border border-blue-400/30 transition-all"
+                      className="h-10 w-10 rounded-xl flex items-center justify-center bg-blue-500/40 hover:bg-blue-500/50 border border-blue-400/50 transition-all"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -738,7 +738,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                       <motion.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="mb-2 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 flex items-center justify-between"
+                        className="mb-2 px-2 py-1.5 rounded-lg bg-white/15 border border-white/25 flex items-center justify-between"
                       >
                         <div className="flex items-center gap-2">
                           <div className="flex gap-0.5 h-3 items-end">
@@ -784,7 +784,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                                 "relative h-12 rounded-lg flex flex-col items-center justify-center gap-1 text-[9px] font-medium transition-all overflow-hidden",
                                 isActive
                                   ? "bg-gradient-to-br from-blue-500/25 via-sky-500/20 to-blue-600/25 border-blue-400/50 text-sky-100 border"
-                                  : "bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
+                                  : "bg-white/15 border border-white/25 text-white/80 hover:bg-white/25 hover:text-white"
                               )}
                               whileTap={{ scale: 0.95 }}
                             >
@@ -815,8 +815,8 @@ const AudioWidget = React.memo(function AudioWidget() {
                           className={cn(
                             "px-2 py-0.5 rounded text-[8px] font-medium transition-colors",
                             tipsMuted
-                              ? "bg-white/5 text-white/40"
-                              : "bg-blue-500/20 text-blue-200"
+                              ? "bg-white/15 text-white/60"
+                              : "bg-blue-500/40 text-blue-200"
                           )}
                         >
                           Tips: {tipsMuted ? "OFF" : "ON"}
@@ -871,19 +871,19 @@ const AudioWidget = React.memo(function AudioWidget() {
                           </div>
                         </div>
                         <div className="grid grid-cols-3 gap-1.5">
-                          <div className="text-center p-1.5 rounded bg-white/5 relative overflow-hidden">
+                          <div className="text-center p-1.5 rounded bg-white/15 relative overflow-hidden">
                             <GameShimmer colors="blue" speed="slow" />
-                            <div className="text-[9px] text-white/40">High Score</div>
+                            <div className="text-[9px] text-white/60">High Score</div>
                             <div className="text-sm font-bold text-sky-300 tabular-nums">{gameStats.highScore}</div>
                           </div>
-                          <div className="text-center p-1.5 rounded bg-white/5 relative overflow-hidden">
+                          <div className="text-center p-1.5 rounded bg-white/15 relative overflow-hidden">
                             <GameShimmer colors="blue" speed="slow" />
-                            <div className="text-[9px] text-white/40">Catches</div>
+                            <div className="text-[9px] text-white/60">Catches</div>
                             <div className="text-sm font-bold text-blue-300 tabular-nums">{gameStats.totalCatches}</div>
                           </div>
-                          <div className="text-center p-1.5 rounded bg-white/5 relative overflow-hidden">
+                          <div className="text-center p-1.5 rounded bg-white/15 relative overflow-hidden">
                             <GameShimmer colors="blue" speed="slow" />
-                            <div className="text-[9px] text-white/40">Games</div>
+                            <div className="text-[9px] text-white/60">Games</div>
                             <div className="text-sm font-bold text-blue-400 tabular-nums">{gameStats.gamesPlayed}</div>
                           </div>
                         </div>
@@ -972,7 +972,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                     }}
                     className={cn(
                       "fixed z-[100220] left-0 flex items-center py-6 pl-0.5 pr-2 rounded-r-lg backdrop-blur-sm transition-colors",
-                      "bg-blue-500/20 hover:bg-blue-500/30 border-r border-y border-blue-400/30"
+                      "bg-blue-500/40 hover:bg-blue-500/50 border-r border-y border-blue-400/50"
                     )}
                     style={{ bottom: 220 }}
                   >
@@ -1102,7 +1102,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                 >
                   <div className={cn(
                     "relative rounded-r-xl border-r border-y backdrop-blur-md shadow-xl overflow-hidden flex",
-                    "bg-black/85",
+                    "bg-black/95",
                     "border-blue-400/30",
                     // Enhanced ring effects for game states
                     isFleeing && "ring-4 ring-sky-300/95 ring-offset-2 ring-offset-transparent shadow-[0_0_45px_rgba(56,189,248,0.55)]",

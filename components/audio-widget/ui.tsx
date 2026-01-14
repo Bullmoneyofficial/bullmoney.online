@@ -85,7 +85,7 @@ export const BoredPopup = React.memo(function BoredPopup({
           {/* Content */}
           <div className="relative flex items-center gap-3">
             <motion.div
-              className="p-1.5 rounded-xl bg-white/5 border border-white/10"
+              className="p-1.5 rounded-xl bg-white/15 border border-white/25"
               animate={{ opacity: [0.85, 1, 0.85] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               aria-hidden
@@ -98,7 +98,7 @@ export const BoredPopup = React.memo(function BoredPopup({
             </div>
             <button
               onClick={onDismiss}
-              className="ml-2 p-1 rounded-full hover:bg-white/10 transition-colors"
+              className="ml-2 p-1 rounded-full hover:bg-white/25 transition-colors"
             >
               <IconX className="w-3 h-3 text-white/60" />
             </button>
@@ -158,7 +158,7 @@ export const QuickGameTutorial = React.memo(function QuickGameTutorial({
 
             <button
               onClick={onDone}
-              className="absolute top-2 right-2 p-1.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+              className="absolute top-2 right-2 p-1.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors"
               aria-label="Dismiss tutorial"
               type="button"
             >
@@ -213,8 +213,8 @@ export const QuickGameTutorial = React.memo(function QuickGameTutorial({
                       onClick={onWatchDemo}
                       className={cn(
                         "flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl",
-                        "bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/15",
-                        "text-[10px] font-semibold text-white/80 transition-colors"
+                        "bg-white/15 hover:bg-white/25 border border-white/25 hover:border-white/35",
+                        "text-[10px] font-semibold text-white/90 transition-colors"
                       )}
                     >
                       <IconInfoCircle className="w-4 h-4" />
@@ -291,7 +291,7 @@ export const QuickGameTutorialDemo = React.memo(function QuickGameTutorialDemo({
 
             <button
               onClick={onDone}
-              className="absolute top-2 right-2 p-1.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+              className="absolute top-2 right-2 p-1.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors"
               aria-label="Close demo"
               type="button"
             >
@@ -414,8 +414,8 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
       exit={{ opacity: 0, y: 5, scale: 0.95 }}
       className={cn(
         "relative overflow-hidden rounded-xl border backdrop-blur-md shadow-lg",
-        "bg-black/80 border-blue-400/30",
-        variant === "attached" && "bg-black/85 border-blue-300/35 shadow-2xl",
+        "bg-black/95 border-blue-400/30",
+        variant === "attached" && "bg-black/95 border-blue-300/35 shadow-2xl",
         isFleeing && "border-sky-300/70 shadow-[0_0_32px_rgba(56,189,248,0.45)]",
         isReturning && "border-blue-300/60 shadow-[0_0_22px_rgba(59,130,246,0.28)]"
       )}
@@ -543,8 +543,8 @@ export const GameControls = React.memo(function GameControls({
           disabled={disabled}
           className={cn(
             "relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg overflow-hidden",
-            "bg-gradient-to-r from-blue-500/20 via-sky-500/15 to-blue-600/20",
-            "border border-blue-400/30 hover:border-sky-300/60",
+            "bg-gradient-to-r from-blue-500/40 via-sky-500/35 to-blue-600/40",
+            "border border-blue-400/50 hover:border-sky-300/70",
             "text-[10px] font-medium text-sky-200 hover:text-sky-100",
             "transition-all duration-200",
             disabled && "opacity-50 cursor-not-allowed"
@@ -564,8 +564,8 @@ export const GameControls = React.memo(function GameControls({
           disabled={disabled}
           className={cn(
             "relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg overflow-hidden",
-            "bg-gradient-to-r from-blue-500/20 via-sky-500/15 to-blue-500/20",
-            "border border-blue-400/30 hover:border-sky-300/60",
+            "bg-gradient-to-r from-blue-500/40 via-sky-500/35 to-blue-500/40",
+            "border border-blue-400/50 hover:border-sky-300/70",
             "text-[10px] font-medium text-sky-200 hover:text-sky-100",
             "transition-all duration-200",
             disabled && "opacity-50 cursor-not-allowed"
@@ -1105,7 +1105,7 @@ export const StepGuide = React.memo(function StepGuide({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="relative p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border border-blue-400/30 overflow-hidden"
+      className="relative p-3 rounded-xl bg-gradient-to-br from-blue-500/40 to-cyan-500/25 border border-blue-400/50 overflow-hidden"
     >
       <div
         className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-400/10 to-transparent"
@@ -1493,7 +1493,7 @@ export const GameHUD = React.memo(function GameHUD({
         "backdrop-blur-xl rounded-2xl border shadow-2xl overflow-hidden",
         isFleeing ? "bg-blue-500/20 border-blue-400/40" :
         isReturning ? "bg-sky-500/20 border-sky-400/40" :
-        "bg-black/70 border-white/20"
+        "bg-black/95 border-white/20"
       )}>
         <div className={cn("p-3", isMobile ? "flex flex-col gap-2" : "flex items-center gap-4 px-4")}>
           {/* Status */}

@@ -222,12 +222,20 @@ const ShimmerStyles = () => (
        FPS-CLASS BASED EMERGENCY CONTROLS
        These provide immediate CSS-level performance improvements
        Applied by UnifiedPerformanceSystem based on real-time FPS
+       NOTE: Only target actual shimmer animation elements, NOT containers
        ================================================================= */
 
     /* FPS MINIMAL (<30fps) - Ultra slow animations */
-    html.fps-minimal [class*="shimmer"] {
+    /* IMPORTANT: Only target actual shimmer overlays, not parent containers */
+    html.fps-minimal .shimmer-line,
+    html.fps-minimal .shimmer-spin,
+    html.fps-minimal .shimmer-ltr,
+    html.fps-minimal .shimmer-pulse,
+    html.fps-minimal .shimmer-glow,
+    html.fps-minimal .shimmer-float,
+    html.fps-minimal .shimmer-dot-pulse,
+    html.fps-minimal .shimmer-ping {
       animation-duration: 30s !important;
-      opacity: 0.3 !important;
       will-change: auto !important;
     }
 
@@ -236,7 +244,11 @@ const ShimmerStyles = () => (
     }
 
     /* FPS LOW (30-35fps) - Very slow shimmers, keep aesthetic */
-    html.fps-low [class*="shimmer"]:not(.shimmer-essential) {
+    html.fps-low .shimmer-line:not(.shimmer-essential),
+    html.fps-low .shimmer-spin:not(.shimmer-essential),
+    html.fps-low .shimmer-ltr:not(.shimmer-essential),
+    html.fps-low .shimmer-pulse:not(.shimmer-essential),
+    html.fps-low .shimmer-glow:not(.shimmer-essential) {
       animation-duration: 20s !important;
       will-change: auto !important;
     }
@@ -254,29 +266,47 @@ const ShimmerStyles = () => (
     html.fps-medium .shimmer-glow { animation-duration: 16s !important; }
     html.fps-medium .shimmer-float { animation-duration: 12s !important; }
 
-    /* iOS/Safari specific - much slower but keep animation */
-    html.is-ios [class*="shimmer"],
-    html.is-safari [class*="shimmer"] {
+    /* iOS/Safari specific - slower animations for performance */
+    /* NOTE: Only target actual shimmer elements, not containers */
+    html.is-ios .shimmer-line,
+    html.is-ios .shimmer-spin,
+    html.is-ios .shimmer-ltr,
+    html.is-ios .shimmer-pulse,
+    html.is-ios .shimmer-glow,
+    html.is-safari .shimmer-line,
+    html.is-safari .shimmer-spin,
+    html.is-safari .shimmer-ltr,
+    html.is-safari .shimmer-pulse,
+    html.is-safari .shimmer-glow {
       animation-duration: 14s !important;
     }
 
-    html.is-ios.fps-medium [class*="shimmer"],
-    html.is-safari.fps-medium [class*="shimmer"] {
+    html.is-ios.fps-medium .shimmer-line,
+    html.is-ios.fps-medium .shimmer-spin,
+    html.is-ios.fps-medium .shimmer-ltr,
+    html.is-safari.fps-medium .shimmer-line,
+    html.is-safari.fps-medium .shimmer-spin,
+    html.is-safari.fps-medium .shimmer-ltr {
       animation-duration: 18s !important;
-      opacity: 0.6 !important;
     }
 
-    /* CRITICAL: Keep shimmers visible on iOS/Safari even at low FPS - ultra slow */
-    html.is-ios.fps-low [class*="shimmer"],
-    html.is-safari.fps-low [class*="shimmer"] {
+    /* iOS/Safari at low FPS - ultra slow animations */
+    html.is-ios.fps-low .shimmer-line,
+    html.is-ios.fps-low .shimmer-spin,
+    html.is-ios.fps-low .shimmer-ltr,
+    html.is-safari.fps-low .shimmer-line,
+    html.is-safari.fps-low .shimmer-spin,
+    html.is-safari.fps-low .shimmer-ltr {
       animation-duration: 24s !important;
-      opacity: 0.4 !important;
     }
 
-    html.is-ios.fps-minimal [class*="shimmer"],
-    html.is-safari.fps-minimal [class*="shimmer"] {
+    html.is-ios.fps-minimal .shimmer-line,
+    html.is-ios.fps-minimal .shimmer-spin,
+    html.is-ios.fps-minimal .shimmer-ltr,
+    html.is-safari.fps-minimal .shimmer-line,
+    html.is-safari.fps-minimal .shimmer-spin,
+    html.is-safari.fps-minimal .shimmer-ltr {
       animation-duration: 35s !important;
-      opacity: 0.25 !important;
     }
     
     /* =================================================================
@@ -317,19 +347,19 @@ const ShimmerStyles = () => (
     
     /* Component visibility optimization - slow down shimmers on inactive components */
     /* When FPS optimizer detects component is offscreen, slow down shimmers significantly */
-    html.component-inactive-navbar .navbar-shimmer,
-    html.component-inactive-navbar .shimmer-line.navbar-shimmer,
-    html.component-inactive-footer .footer-shimmer,
-    html.component-inactive-footer .shimmer-line.footer-shimmer,
-    html.component-inactive-audioWidget .audio-shimmer,
-    html.component-inactive-audioWidget .shimmer-line.audio-shimmer,
-    html.component-inactive-ultimatePanel .panel-shimmer,
-    html.component-inactive-ultimatePanel .shimmer-line.panel-shimmer,
-    html.component-inactive-staticTip .static-tip-shimmer,
-    html.component-inactive-movingTip .moving-tip-shimmer {
+    /* NOTE: Only target shimmer-line elements INSIDE containers, not the containers themselves */
+    html.component-inactive-navbar .navbar-shimmer .shimmer-line,
+    html.component-inactive-navbar .navbar-shimmer .shimmer-spin,
+    html.component-inactive-footer .footer-shimmer .shimmer-line,
+    html.component-inactive-footer .footer-shimmer .shimmer-spin,
+    html.component-inactive-audioWidget .audio-shimmer .shimmer-line,
+    html.component-inactive-audioWidget .audio-shimmer .shimmer-spin,
+    html.component-inactive-ultimatePanel .panel-shimmer .shimmer-line,
+    html.component-inactive-ultimatePanel .panel-shimmer .shimmer-spin,
+    html.component-inactive-staticTip .static-tip-shimmer .shimmer-line,
+    html.component-inactive-movingTip .moving-tip-shimmer .shimmer-line {
       animation-duration: 20s !important;
       animation-play-state: paused !important;
-      opacity: 0.2 !important;
     }
     
     /* Performance hint for GPU compositing */

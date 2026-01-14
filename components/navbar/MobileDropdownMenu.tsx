@@ -91,7 +91,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -15, scale: 0.92 }}
           transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
-          className="lg:hidden fixed top-28 sm:top-32 left-3 right-3 z-[9999] rounded-2xl bg-black/90 p-5 sm:p-6 backdrop-blur-2xl menu-glass overflow-hidden"
+          className="lg:hidden fixed top-28 sm:top-32 left-3 right-3 z-[9999] rounded-2xl bg-black/98 p-5 sm:p-6 backdrop-blur-2xl menu-glass overflow-hidden"
           style={{ 
             touchAction: 'auto',
             pointerEvents: 'auto',
