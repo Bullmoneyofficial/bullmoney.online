@@ -4,6 +4,7 @@ import React, { useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IconHandFinger, IconArrowLeft, IconArrowRight, IconPlayerPlay, IconInfoCircle, IconVolume, IconChevronUp, IconMusic, IconTrophy, IconFlame, IconBolt, IconZzz, IconPlayerPause, IconPlayerStop, IconX } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
+import { ShimmerLine } from "@/components/ui/UnifiedShimmer";
 
 // Game color palette - BLUE ONLY (per design requirement)
 const GAME_COLORS = {
@@ -13,7 +14,7 @@ const GAME_COLORS = {
   shimmer: "from-transparent via-sky-400/30 to-transparent",
 };
 
-// Optimized shimmer effect - uses CSS animation for better performance
+// Optimized shimmer effect - uses unified shimmer system for better performance
 export const GameShimmer = React.memo(function GameShimmer({ 
   className = "",
   speed = "normal",
@@ -23,42 +24,25 @@ export const GameShimmer = React.memo(function GameShimmer({
   speed?: "slow" | "normal" | "fast";
   colors?: "blue" | "purple" | "red" | "rainbow";
 }) {
-  const colorMap = {
-    blue: "via-sky-400/25",
-    // Force legacy variants to blue so callsites stay simple
-    purple: "via-sky-400/25",
-    red: "via-sky-400/25",
-    rainbow: "via-sky-400/25",
-  };
-  
-  const speedMap = {
-    slow: "5s",
-    normal: "3s",
-    fast: "2s",
-  };
-
   return (
-    <div className={cn("absolute inset-0 overflow-hidden rounded-xl pointer-events-none", className)}>
-      <div
-        className={cn(
-          "shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent to-transparent",
-          colorMap[colors]
-        )}
-        style={{ animationDuration: speedMap[speed] }}
-      />
-    </div>
+    <ShimmerLine 
+      color="blue" 
+      speed={speed as 'slow' | 'normal' | 'fast'}
+      intensity="medium"
+      className={className}
+    />
   );
 });
 
-// Blue shimmer border effect
+// Blue shimmer border effect - using unified shimmer
 export const BlueShimmer = React.memo(function BlueShimmer({ className = "" }: { className?: string }) {
   return (
-    <div className={cn("absolute inset-0 overflow-hidden rounded-xl pointer-events-none", className)}>
-      <div
-        className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-400/20 to-transparent"
-        style={{ animationDuration: "3s" }}
-      />
-    </div>
+    <ShimmerLine 
+      color="blue" 
+      speed="normal"
+      intensity="medium"
+      className={className}
+    />
   );
 });
 

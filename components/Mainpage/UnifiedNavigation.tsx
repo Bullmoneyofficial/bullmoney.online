@@ -5,7 +5,8 @@ import { ChevronLeft, ChevronRight, Grid3x3, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UI_LAYERS, GAME_UI_CONFIG } from '@/lib/uiLayers';
 import { playClick, playHover, playSwipe } from '@/lib/interactionUtils';
-import { PremiumShimmerBorder, PremiumGlassCard } from './PremiumUIComponents';
+import { ShimmerBorder, ShimmerLine, useOptimizedShimmer } from '@/components/ui/UnifiedShimmer';
+import { PremiumGlassCard } from './PremiumUIComponents';
 import { Hint } from '@/components/ui/Hint';
 
 interface PageConfig {
@@ -118,30 +119,35 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
           >
-            <PremiumShimmerBorder
-              className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 rounded-full"
-              borderRadius="rounded-full"
-              borderWidth="inset-[2px]"
-              active={currentPage > 1 && !disabled}
+            <div
+              className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 rounded-full overflow-hidden"
+              style={{
+                zIndex: UI_LAYERS.NAV_ARROWS,
+              }}
             >
+              <ShimmerBorder 
+                color="blue" 
+                intensity={currentPage > 1 ? "medium" : "low"}
+                speed="normal"
+              />
               <button
                 onClick={handlePrevPage}
                 disabled={disabled || currentPage <= 1}
                 className={`
-                  w-11 h-11 md:w-14 md:h-14 rounded-full
+                  relative z-10 w-11 h-11 md:w-14 md:h-14 rounded-full
                   bg-gradient-to-br from-slate-950 to-black
+                  border border-blue-500/30
                   flex items-center justify-center
                   transition-all duration-300 touch-manipulation
                   hover:from-slate-900 hover:to-neutral-900
                   ${disabled || currentPage <= 1 ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'hover:scale-110 active:scale-95'}
                 `}
                 style={{
-                  zIndex: UI_LAYERS.NAV_ARROWS,
                   WebkitTapHighlightColor: 'transparent',
                   touchAction: 'manipulation',
                   minHeight: '44px',
                   minWidth: '44px',
-                }}
+                } as React.CSSProperties}
                 onMouseEnter={() => {
                   if (currentPage > 1) playHover();
                 }}
@@ -153,7 +159,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
                   style={{ color: currentPage > 1 ? accentColor : 'rgba(255,255,255,0.3)' }}
                 />
               </button>
-            </PremiumShimmerBorder>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -167,30 +173,35 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
           >
-            <PremiumShimmerBorder
-              className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 rounded-full"
-              borderRadius="rounded-full"
-              borderWidth="inset-[2px]"
-              active={currentPage < totalPages && !disabled}
+            <div
+              className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 rounded-full overflow-hidden"
+              style={{
+                zIndex: UI_LAYERS.NAV_ARROWS,
+              }}
             >
+              <ShimmerBorder 
+                color="blue" 
+                intensity={currentPage < totalPages ? "medium" : "low"}
+                speed="normal"
+              />
               <button
                 onClick={handleNextPage}
                 disabled={disabled || currentPage >= totalPages}
                 className={`
-                  w-11 h-11 md:w-14 md:h-14 rounded-full
+                  relative z-10 w-11 h-11 md:w-14 md:h-14 rounded-full
                   bg-gradient-to-br from-slate-950 to-black
+                  border border-blue-500/30
                   flex items-center justify-center
                   transition-all duration-300 touch-manipulation
                   hover:from-slate-900 hover:to-neutral-900
                   ${disabled || currentPage >= totalPages ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'hover:scale-110 active:scale-95'}
                 `}
                 style={{
-                  zIndex: UI_LAYERS.NAV_ARROWS,
                   WebkitTapHighlightColor: 'transparent',
                   touchAction: 'manipulation',
                   minHeight: '44px',
                   minWidth: '44px',
-                }}
+                } as React.CSSProperties}
                 onMouseEnter={() => {
                   if (currentPage < totalPages) playHover();
                 }}
@@ -202,7 +213,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
                   style={{ color: currentPage < totalPages ? accentColor : 'rgba(255,255,255,0.3)' }}
                 />
               </button>
-            </PremiumShimmerBorder>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -216,68 +227,67 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            className="fixed rounded-full overflow-hidden"
+            style={{
+              zIndex: UI_LAYERS.NAV_MOBILE_FAB,
+              bottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))',
+              right: 'calc(0.75rem + env(safe-area-inset-right, 0px))',
+              width: 'clamp(56px, 16vw, 64px)',
+              height: 'clamp(56px, 16vw, 64px)',
+            }}
           >
-            <PremiumShimmerBorder
-              className="fixed rounded-full"
-              borderRadius="rounded-full"
-              borderWidth="inset-[2px]"
+            <ShimmerBorder 
+              color="blue" 
+              intensity={disabled ? "low" : "medium"}
+              speed="normal"
+            />
+            <motion.button
+              onClick={toggleGrid}
+              disabled={disabled}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative z-10 w-full h-full rounded-full bg-gradient-to-br from-slate-900 via-slate-950 to-black border border-blue-500/30 flex items-center justify-center group"
               style={{
-                zIndex: UI_LAYERS.NAV_MOBILE_FAB,
-                bottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))',
-                right: 'calc(0.75rem + env(safe-area-inset-right, 0px))',
-                width: 'clamp(56px, 16vw, 64px)',
-                height: 'clamp(56px, 16vw, 64px)',
+                WebkitTapHighlightColor: 'transparent',
+                touchAction: 'manipulation',
+                minHeight: '56px',
+                minWidth: '56px',
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                opacity: disabled ? 0.5 : 1,
+              } as React.CSSProperties}
+              onMouseEnter={() => {
+                setIsHovering(true);
+                if (!disabled) playHover();
               }}
-              active={!disabled}
+              onMouseLeave={() => setIsHovering(false)}
+              aria-label="Open page navigation"
             >
-              <motion.button
-                onClick={toggleGrid}
-                disabled={disabled}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full h-full rounded-full bg-gradient-to-br from-slate-900 via-slate-950 to-black flex items-center justify-center group"
-                style={{
-                  WebkitTapHighlightColor: 'transparent',
-                  touchAction: 'manipulation',
-                  minHeight: '56px',
-                  minWidth: '56px',
-                  cursor: disabled ? 'not-allowed' : 'pointer',
-                  opacity: disabled ? 0.5 : 1,
-                }}
-                onMouseEnter={() => {
-                  setIsHovering(true);
-                  if (!disabled) playHover();
-                }}
-                onMouseLeave={() => setIsHovering(false)}
-                aria-label="Open page navigation"
-              >
-                <div className="relative">
-                  <motion.div
-                    animate={{ rotate: isGridOpen ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Grid3x3 
-                      size={24} 
-                      className="text-blue-400 group-hover:text-blue-300 transition-colors"
-                    />
-                  </motion.div>
-                  
-                  {/* Current page badge */}
-                  <motion.div
-                    key={`badge-${currentPage}`}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white"
-                    style={{
-                      backgroundColor: accentColor,
-                      boxShadow: `0 0 12px ${accentColor}`,
-                    }}
-                  >
-                    {currentPage}
-                  </motion.div>
-                </div>
-              </motion.button>
-            </PremiumShimmerBorder>
+              <div className="relative">
+                <motion.div
+                  animate={{ rotate: isGridOpen ? 180 : 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Grid3x3 
+                    size={24} 
+                    className="text-blue-400 group-hover:text-blue-300 transition-colors"
+                  />
+                </motion.div>
+                
+                {/* Current page badge */}
+                <motion.div
+                  key={`badge-${currentPage}`}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white"
+                  style={{
+                    backgroundColor: accentColor,
+                    boxShadow: `0 0 12px ${accentColor}`,
+                  }}
+                >
+                  {currentPage}
+                </motion.div>
+              </div>
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -302,31 +312,30 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 }}
-              className="absolute top-6 right-6"
+              className="absolute top-6 right-6 rounded-full overflow-hidden"
             >
-              <PremiumShimmerBorder
-                className="rounded-full"
-                borderRadius="rounded-full"
-                borderWidth="inset-[1px]"
+              <ShimmerBorder 
+                color="blue" 
+                intensity="low"
+                speed="normal"
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleGrid();
+                }}
+                className="relative z-10 w-12 h-12 rounded-full bg-slate-950 border border-blue-500/30 hover:bg-slate-900 flex items-center justify-center transition-all hover:scale-110 active:scale-95 touch-manipulation"
+                style={{
+                  WebkitTapHighlightColor: 'transparent',
+                  touchAction: 'manipulation',
+                  minHeight: '44px',
+                  minWidth: '44px',
+                } as React.CSSProperties}
+                onMouseEnter={() => playHover()}
+                aria-label="Close navigation"
               >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleGrid();
-                  }}
-                  className="w-12 h-12 rounded-full bg-slate-950 hover:bg-slate-900 flex items-center justify-center transition-all hover:scale-110 active:scale-95 touch-manipulation"
-                  style={{
-                    WebkitTapHighlightColor: 'transparent',
-                    touchAction: 'manipulation',
-                    minHeight: '44px',
-                    minWidth: '44px',
-                  }}
-                  onMouseEnter={() => playHover()}
-                  aria-label="Close navigation"
-                >
-                  <X size={20} className="text-blue-400" />
-                </button>
-              </PremiumShimmerBorder>
+                <X size={20} className="text-blue-400" />
+              </button>
             </motion.div>
 
             {/* Title */}

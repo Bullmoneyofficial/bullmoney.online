@@ -679,13 +679,11 @@ html[data-active-theme] {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: shimmer-text 3s linear infinite;
+  animation: unified-shimmer-ltr 3s linear infinite;
+  background-size: 200% auto;
 }
 
-@keyframes shimmer-text {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
+/* Text shimmer now uses unified-shimmer-ltr from UnifiedShimmer.tsx */
 
 /* =================================================================
    GLOBAL FPS QUALITY CONTROL

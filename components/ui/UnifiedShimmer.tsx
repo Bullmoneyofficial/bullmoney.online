@@ -97,6 +97,12 @@ const ShimmerStyles = () => (
       75%, 100% { transform: scale(2); opacity: 0; }
     }
     
+    /* Text shimmer - background position animation for gradient text */
+    @keyframes unified-text-shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
     /* =================================================================
        SHIMMER CSS CLASSES
        Use these classes directly for maximum performance
@@ -141,6 +147,17 @@ const ShimmerStyles = () => (
     
     .shimmer-ping {
       animation: unified-ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+    
+    /* Text shimmer - for animated gradient text */
+    .shimmer-text {
+      background: linear-gradient(110deg, #FFFFFF 0%, #3b82f6 45%, #60a5fa 55%, #FFFFFF 100%);
+      background-size: 200% auto;
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: unified-text-shimmer 3s linear infinite;
+      will-change: background-position;
     }
     
     /* GPU acceleration hint */
@@ -588,6 +605,41 @@ export const ShimmerRadialGlow = memo(({
   );
 });
 ShimmerRadialGlow.displayName = 'ShimmerRadialGlow';
+
+/**
+ * Text Shimmer - Animated gradient text effect
+ */
+export const ShimmerText = memo(({ 
+  children,
+  className = '',
+  speed = 'normal',
+  disabled = false
+}: { 
+  children: React.ReactNode; 
+  className?: string;
+  speed?: 'slow' | 'normal' | 'fast';
+  disabled?: boolean;
+}) => {
+  const speedMap = {
+    slow: '5s',
+    normal: '3s',
+    fast: '2s',
+  };
+  
+  if (disabled) return <>{children}</>;
+  
+  return (
+    <span 
+      className={`shimmer-text shimmer-gpu ${className}`}
+      style={{
+        animationDuration: speedMap[speed],
+      }}
+    >
+      {children}
+    </span>
+  );
+});
+ShimmerText.displayName = 'ShimmerText';
 
 /**
  * Unified Shimmer - All-in-one component
