@@ -27,6 +27,7 @@ import { useWanderingGame } from "@/components/audio-widget/useWanderingGame";
 import { useCacheContext } from "@/components/CacheManagerProvider";
 import { ShimmerBorder, ShimmerSpinner, ShimmerLine } from "@/components/ui/UnifiedShimmer";
 import { useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
+import { useComponentTracking } from "@/lib/CrashTracker";
 
 const sourceLabel: Record<MusicSource, string> = {
   THEME: "Theme",
@@ -58,6 +59,9 @@ const AudioWidget = React.memo(function AudioWidget() {
   const perf = useComponentLifecycle('audioWidget', 7);
   const shimmerEnabled = perf.shimmerEnabled;
   const shimmerSettings = perf.shimmerSettings;
+  
+  // Crash tracking for all audio widget interactions
+  const { trackClick, trackError, trackCustom } = useComponentTracking('audioWidget');
   
   const [hasStartedCatchGame, setHasStartedCatchGame] = useState(false);
   const [showCatchGameTutorial, setShowCatchGameTutorial] = useState(false);

@@ -6,6 +6,8 @@ import { motion, useMotionValue, useMotionTemplate, AnimatePresence } from "fram
 import Image from "next/image";
 import createGlobe from "cobe";
 import { detectBrowser } from "@/lib/browserDetection";
+import { useComponentTracking } from "@/lib/CrashTracker";
+import { useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
 
 // --- THEME CONSTANTS ---
 const GOLD_SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #D9BD6A 50%, #00000000 100%)";

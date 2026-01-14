@@ -47,6 +47,7 @@ import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 import { ShimmerLine, ShimmerBorder, useOptimizedShimmer } from "@/components/ui/UnifiedShimmer";
 import { useFpsOptimizer } from "@/lib/FpsOptimizer";
 import { useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
+import { useComponentTracking } from "@/lib/CrashTracker";
 
 // --- IMPORT NAVBAR CSS ---
 import "./navbar.css";
@@ -121,6 +122,9 @@ export const Navbar = memo(() => {
   
   // Unified Performance System - single source for lifecycle & shimmer
   const navbarPerf = useComponentLifecycle('navbar', 10); // Priority 10 (highest)
+  
+  // Crash tracking for all navbar interactions
+  const { trackClick, trackError, trackCustom } = useComponentTracking('navbar');
   
   // FPS Optimizer integration for component lifecycle tracking (legacy support)
   const { registerComponent, unregisterComponent, shouldEnableShimmer } = useFpsOptimizer();

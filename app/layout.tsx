@@ -29,6 +29,9 @@ import { ShimmerStylesProvider } from "@/components/ui/UnifiedShimmer";
 // ✅ ADDED: Import the Unified Performance System for consolidated FPS/observer/caching
 import { UnifiedPerformanceProvider } from "@/lib/UnifiedPerformanceSystem";
 
+// ✅ ADDED: Import the Crash Tracker for error logging to Supabase
+import { CrashTrackerProvider } from "@/lib/CrashTracker";
+
 // ✅ ADDED: Import the Cache Manager Provider for version-based cache invalidation
 import { CacheManagerProvider } from "@/components/CacheManagerProvider";
 
@@ -608,6 +611,8 @@ export default function RootLayout({
                   <ShopProvider>
                     {/* ✅ UNIFIED PERFORMANCE: Single FPS monitor, observer pool, smart caching */}
                     <UnifiedPerformanceProvider startDelay={2000}>
+                    {/* ✅ CRASH TRACKER: Error/interaction logging to Supabase */}
+                    <CrashTrackerProvider>
                     {/* ✅ FPS Optimizer for device-aware quality control */}
                     <FpsOptimizerProvider>
                     {/* ✅ Performance Provider for 120Hz optimization & smooth scroll */}
@@ -637,6 +642,7 @@ export default function RootLayout({
                       <FPSCounter />
                     </PerformanceProvider>
                     </FpsOptimizerProvider>
+                    </CrashTrackerProvider>
                     </UnifiedPerformanceProvider>
                   </ShopProvider>
                   {/* ✅ ADDED: ShopProvider ends here */}

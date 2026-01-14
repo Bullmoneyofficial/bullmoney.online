@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
 import { useComponentLifecycle } from '@/lib/UnifiedPerformanceSystem';
+import { useComponentTracking } from '@/lib/CrashTracker';
 
 interface MovingTradingTipProps {
   tip: { target: string; text: string; buttonIndex: number };

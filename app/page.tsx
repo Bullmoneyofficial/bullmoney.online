@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, lazy, useState, useEffect, useRef } from "react";
+import { Suspense, lazy, useState, useEffect, useRef, useCallback } from "react";
 import Hero from "@/components/hero";
 import CTA from "@/components/Chartnews";
 import { Features } from "@/components/features";
@@ -20,7 +20,8 @@ import {
 } from "@/components/ui/UnifiedShimmer";
 import { SplineSkeleton, LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import { useCacheContext } from "@/components/CacheManagerProvider";
-import { useUnifiedPerformance, useVisibility, useObserver } from "@/lib/UnifiedPerformanceSystem";
+import { useUnifiedPerformance, useVisibility, useObserver, useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
+import { useComponentTracking, useCrashTracker } from "@/lib/CrashTracker";
 // Use optimized ticker for 120Hz performance
 import { LiveMarketTickerOptimized as LiveMarketTicker } from "@/components/LiveMarketTickerOptimized";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
@@ -201,7 +202,19 @@ function HomeContent() {
   const [isMuted, setIsMuted] = useState(false);
 
   // Use unified performance for tracking - only need device tier
-  const { deviceTier, registerComponent, unregisterComponent } = useUnifiedPerformance();
+  const { 
+    deviceTier, 
+    registerComponent, 
+    unregisterComponent,
+    averageFps,
+    shimmerQuality,
+    preloadQueue,
+    unloadQueue 
+  } = useUnifiedPerformance();
+  
+  // Crash tracking for the main page
+  const { trackClick, trackError, trackCustom } = useComponentTracking('page');
+  const { trackPerformanceWarning } = useCrashTracker();
 
   // Use global theme context - syncs with hero.tsx and entire app
   const { activeThemeId, activeTheme, setAppLoading } = useGlobalTheme();
@@ -210,6 +223,25 @@ function HomeContent() {
   const theme = activeTheme || ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   useAudioEngine(!isMuted, 'MECHANICAL');
   
+  // Track FPS drops and log them
+  useEffect(() => {
+    if (averageFps < 25 && currentView === 'content') {
+      trackPerformanceWarning('page', averageFps, `FPS dropped to ${averageFps}`);
+    }
+  }, [averageFps, currentView, trackPerformanceWarning]);
+  
+  // Smart preloading based on usage patterns
+  useEffect(() => {
+    if (preloadQueue.length > 0) {
+      console.log('[Page] Preload suggestions:', preloadQueue);
+      // Could trigger lazy loading of components in queue
+    }
+    if (unloadQueue.length > 0) {
+      console.log('[Page] Unload suggestions:', unloadQueue);
+      // Could unmount heavy components to save memory
+    }
+  }, [preloadQueue, unloadQueue]);
+  
   // Register main content components with unified system
   useEffect(() => {
     if (currentView === 'content') {
@@ -217,6 +249,7 @@ function HomeContent() {
       registerComponent('features', 5);
       registerComponent('chartnews', 6);
       registerComponent('ticker', 7);
+      trackCustom('content_loaded', { deviceTier, shimmerQuality });
     }
     return () => {
       unregisterComponent('hero');
@@ -224,7 +257,7 @@ function HomeContent() {
       unregisterComponent('chartnews');
       unregisterComponent('ticker');
     };
-  }, [currentView, registerComponent, unregisterComponent]);
+  }, [currentView, registerComponent, unregisterComponent, trackCustom, deviceTier, shimmerQuality]);
   
   useEffect(() => {
     if (currentView === 'content') {

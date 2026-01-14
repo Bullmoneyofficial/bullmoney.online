@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { IconExternalLink, IconRefresh } from "@tabler/icons-react";
 import { ChevronDown, ChartBar, Newspaper, X, ArrowRight } from "lucide-react";
+import { useComponentTracking } from "@/lib/CrashTracker";
+import { useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
 
 // --- UTILS ---
 function cn(...classes: (string | undefined | null | false)[]) {

@@ -48,6 +48,7 @@ import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 import { ShimmerLine, ShimmerBorder } from '@/components/ui/UnifiedShimmer';
 import { useComponentLifecycle, useUnifiedPerformance } from '@/lib/UnifiedPerformanceSystem';
+import { useComponentTracking } from '@/lib/CrashTracker';
 
 // --- IMPORT NAVBAR CSS FOR CONSISTENT THEMING ---
 import './navbar.css';

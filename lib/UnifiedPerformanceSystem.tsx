@@ -51,7 +51,18 @@ export type TrackedComponent =
   | 'features'
   | 'chartnews'
   | 'testimonials'
-  | 'ticker';
+  | 'ticker'
+  | 'themeSelectorModal'
+  | 'adminModal'
+  | 'affiliateModal'
+  | 'faqModal'
+  | 'servicesModal'
+  | 'contactModal'
+  | 'musicEmbedModal'
+  | 'liveStreamModal'
+  | 'analysisModal'
+  | 'pagemode'
+  | 'multiStepLoader';
 
 // Component cache entry for smart storage
 interface ComponentCacheEntry {
@@ -148,6 +159,18 @@ const COMPONENT_PRIORITIES: Record<TrackedComponent, number> = {
   staticTip: 3,
   movingTip: 3,
   spline: 2, // Heavy 3D, low priority for keeping loaded
+  // Modal priorities (lower = unload faster when closed)
+  themeSelectorModal: 3,
+  adminModal: 3,
+  affiliateModal: 3,
+  faqModal: 3,
+  servicesModal: 3,
+  contactModal: 3,
+  musicEmbedModal: 3,
+  liveStreamModal: 3,
+  analysisModal: 3,
+  pagemode: 8, // High priority during load
+  multiStepLoader: 8, // High priority during load
 };
 
 // Quality thresholds

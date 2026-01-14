@@ -23,6 +23,10 @@ import { Loader2, Edit2, Save, X, Trash2, Upload, Instagram, Send } from "lucide
 // --- CONTEXT INTEGRATION ---
 import { useStudio, type Project } from "@/context/StudioContext";
 
+// --- CRASH TRACKING ---
+import { useComponentTracking, useTrackModal } from "@/lib/CrashTracker";
+import { useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
+
 // --- EXTERNAL COMPONENTS ---
 import ServicesModal from "@/components/ui/SeviceModal";
 import AdminModal from "@/components/AdminModal";

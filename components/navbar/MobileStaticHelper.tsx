@@ -5,6 +5,7 @@ import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
 import { useComponentLifecycle } from '@/lib/UnifiedPerformanceSystem';
+import { useComponentTracking } from '@/lib/CrashTracker';
 
 export const MobileStaticHelper = memo(() => {
   const { activeTheme } = useGlobalTheme();
