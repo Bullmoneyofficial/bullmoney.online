@@ -90,7 +90,7 @@ export const MobileStaticHelper = memo(() => {
             className="relative flex h-1.5 w-1.5 shrink-0"
           >
             <span 
-              className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" 
+              className="shimmer-ping absolute inline-flex h-full w-full rounded-full opacity-75" 
               style={{ backgroundColor: '#3b82f6' }}
             />
             <span 

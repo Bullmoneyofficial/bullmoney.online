@@ -757,7 +757,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[11px] text-white/70 font-medium">🎧 Music Service</span>
                         {!streamingActive && (
-                          <span className="text-[9px] text-blue-400 animate-pulse">Tap one</span>
+                          <span className="text-[9px] text-blue-400 shimmer-pulse">Tap one</span>
                         )}
                       </div>
                       

@@ -827,14 +827,13 @@ export function UltimateControlPanel({
                 paddingBottom: 'env(safe-area-inset-bottom, 0px)'
               }}
             >
-              {/* Shimmer background effect - matches navbar */}
+              {/* Shimmer background effect - using unified CSS shimmer for performance */}
               <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <motion.div 
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                  className="absolute w-full h-full"
+                <div 
+                  className="shimmer-spin shimmer-gpu absolute w-full h-full"
                   style={{
-                    background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(59,130,246,0.08) 30deg, rgba(59,130,246,0.12) 60deg, rgba(59,130,246,0.08) 90deg, transparent 120deg, transparent 360deg)'
+                    background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(59,130,246,0.08) 30deg, rgba(59,130,246,0.12) 60deg, rgba(59,130,246,0.08) 90deg, transparent 120deg, transparent 360deg)',
+                    animationDuration: '15s'
                   }}
                 />
               </div>
@@ -885,7 +884,8 @@ export function UltimateControlPanel({
                     >
                       <RefreshCw
                         size={18}
-                        className={`text-blue-200/70 ${isRefreshing ? 'animate-spin' : ''}`}
+                        className={`text-blue-200/70 ${isRefreshing ? 'shimmer-spin' : ''}`}
+                        style={isRefreshing ? { animationDuration: '1s' } : undefined}
                       />
                     </motion.button>
                     <motion.button
@@ -1498,17 +1498,7 @@ export function UltimateControlPanel({
         )}
       </AnimatePresence>
 
-      {/* Shimmer animation keyframes - add to global CSS */}
-      <style jsx global>{`
-        @keyframes shimmer {
-          0% {
-            background-position: -200% center;
-          }
-          100% {
-            background-position: 200% center;
-          }
-        }
-      `}</style>
+      {/* Shimmer keyframes now in UnifiedShimmer.tsx for centralized performance control */}
     </>
   );
 

@@ -112,11 +112,9 @@ const DockLabelInline = memo(({
                 : '0 0 40px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(59, 130, 246, 0.1)'
             }}
           >
-            {/* Shimmer Background - Left to Right Gradient */}
-            <motion.div 
-              animate={{ x: ['0%', '200%'] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              className="absolute inset-y-0 left-[-100%] w-[100%] z-0"
+            {/* Shimmer Background - Using unified CSS shimmer class for performance */}
+            <div 
+              className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] z-0"
               style={{
                 background: isXMUser 
                   ? 'linear-gradient(to right, transparent, rgba(239, 68, 68, 0.4), transparent)'
@@ -133,7 +131,7 @@ const DockLabelInline = memo(({
             />
             
             <div className="flex items-center gap-3 relative z-10">
-              {/* Pulse indicator */}
+              {/* Pulse indicator - using unified shimmer-ping class */}
               <motion.div 
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -141,7 +139,7 @@ const DockLabelInline = memo(({
                 className="relative flex h-2 w-2 shrink-0"
               >
                 <span 
-                  className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" 
+                  className="shimmer-ping absolute inline-flex h-full w-full rounded-full opacity-75" 
                   style={{ backgroundColor: effectiveColor }}
                 />
                 <span 
@@ -295,9 +293,9 @@ const DockItem = memo(({
         {item.label}
       </DockLabelInline>
 
-      {/* INVISIBLE OVERLAY TRIGGER FOR MODALS */}
+      {/* Modal trigger overlay - must be visible for click detection */}
       {item.triggerComponent && (
-        <div className="absolute inset-0 z-20 opacity-0 cursor-pointer">
+        <div className="absolute inset-0 z-20" style={{ pointerEvents: 'auto' }}>
           {item.triggerComponent}
         </div>
       )}

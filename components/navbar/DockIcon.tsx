@@ -88,7 +88,7 @@ export const DockIcon = memo(React.forwardRef<HTMLDivElement, DockIconProps>(
                 className="absolute -top-1 -right-1 flex h-2.5 w-2.5"
               >
                 <span 
-                  className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                  className="shimmer-ping absolute inline-flex h-full w-full rounded-full opacity-75"
                   style={{ backgroundColor: '#3b82f6' }}
                 />
                 <span 

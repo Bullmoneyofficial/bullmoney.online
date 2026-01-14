@@ -18,6 +18,9 @@ import { ShopProvider } from "@/components/ShopContext";
 // ✅ ADDED: Import the Performance Provider for 120Hz optimization
 import { PerformanceProvider, FPSCounter } from "@/components/PerformanceProvider";
 
+// ✅ ADDED: Import the Unified Shimmer Styles Provider
+import { ShimmerStylesProvider } from "@/components/ui/UnifiedShimmer";
+
 // Navigation and Footer components
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/Mainpage/footer";
@@ -434,6 +437,8 @@ export default function RootLayout({
         className={cn("antialiased dark:bg-black bg-white", inter.className)}
         suppressHydrationWarning
       >
+        {/* Global Shimmer Styles - ensures all shimmers are synchronized */}
+        <ShimmerStylesProvider />
         <ErrorBoundary>
           <ThemeProvider
             attribute="class"

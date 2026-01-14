@@ -1,20 +1,20 @@
-import React, { memo, useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   IconBuildingStore,
-  IconSparkles,
+  IconBroadcast,
   IconUsersGroup,
   IconHelp,
-  IconCreditCard,
+  IconChartLine,
   IconPalette,
   IconSettings,
   IconLock,
 } from '@tabler/icons-react';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
-import ServicesModal from '@/components/ui/SeviceModal';
-import { LoyaltyModal } from '@/components/LoyaltyCard';
+import { LiveStreamModal } from '@/components/LiveStreamModal';
+import { AnalysisModal } from '@/components/AnalysisModal';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 
 interface MobileDropdownMenuProps {
@@ -105,11 +105,9 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               : '0 0 50px rgba(59, 130, 246, 0.4), inset 0 0 30px rgba(59, 130, 246, 0.08)'
           }}
         >
-          {/* Shimmer Background - Left to Right Gradient */}
-          <motion.div 
-            animate={{ x: ['0%', '200%'] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-y-0 left-[-100%] w-[100%] z-0"
+          {/* Shimmer Background - Using unified CSS shimmer class for performance */}
+          <div 
+            className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] z-0"
             style={{
               background: isXMUser 
                 ? 'linear-gradient(to right, transparent, rgba(239, 68, 68, 0.3), transparent)'
@@ -126,19 +124,17 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
             {/* Home */}
             <ThemedMenuItem delay={0.12} href="/" onClick={handleClose} icon={<IconBuildingStore className="h-5 w-5" stroke={1.5} />} label="Home" />
 
-            {/* Setups */}
+            {/* Live Stream */}
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.14 }}
               className="w-full"
             >
-              <motion.button 
+              <motion.div 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
                 onHoverStart={() => SoundEffects.hover()}
-                onClick={handleClose}
-                onTouchStart={() => SoundEffects.click()}
                 className="relative flex items-center justify-center gap-3 w-full text-sm sm:text-base font-semibold hover:text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl cursor-pointer transition-all duration-200"
                 style={{
                   color: '#93c5fd',
@@ -146,10 +142,10 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                   border: '1px solid rgba(59, 130, 246, 0.3)'
                 }}
               >
-                <IconSparkles className="h-5 w-5" stroke={1.5} style={{ color: '#60a5fa' }} />
-                Setups
-                <div className="absolute inset-0 opacity-0"><ServicesModal /></div>
-              </motion.button>
+                <IconBroadcast className="h-5 w-5 pointer-events-none" stroke={1.5} style={{ color: '#60a5fa' }} />
+                <span className="pointer-events-none">Live Stream</span>
+                <div className="absolute inset-0 z-10"><LiveStreamModal /></div>
+              </motion.div>
             </motion.div>
 
             {/* Affiliates */}
@@ -210,31 +206,28 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               </motion.button>
             </motion.div>
 
-            {/* Rewards */}
+            {/* Analysis */}
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.20 }}
               className="w-full"
             >
-              <motion.button 
+              <motion.div 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
                 onHoverStart={() => SoundEffects.hover()}
-                onTouchStart={() => SoundEffects.click()}
-                onClick={() => { SoundEffects.click(); onClose(); }}
-                className="relative w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200"
+                className="relative w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200 cursor-pointer"
                 style={{
-                  color: hasReward ? '#60a5fa' : '#93c5fd',
-                  backgroundColor: hasReward ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.08)',
-                  border: hasReward ? '1px solid rgba(59, 130, 246, 0.6)' : '1px solid rgba(59, 130, 246, 0.3)',
-                  fontWeight: hasReward ? 'bold' : 'normal'
+                  color: '#93c5fd',
+                  backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
                 }}
               >
-                <IconCreditCard className="h-5 w-5" stroke={1.5} style={{ color: '#60a5fa' }} />
-                {hasReward ? "Reward Unlocked!" : "Rewards Card"}
-                <div className="absolute inset-0 opacity-0"><LoyaltyModal /></div>
-              </motion.button>
+                <IconChartLine className="h-5 w-5 pointer-events-none" stroke={1.5} style={{ color: '#60a5fa' }} />
+                <span className="pointer-events-none">Analysis</span>
+                <div className="absolute inset-0 z-10"><AnalysisModal /></div>
+              </motion.div>
             </motion.div>
 
             {/* Divider */}

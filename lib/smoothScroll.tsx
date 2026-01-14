@@ -133,18 +133,24 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
     const lenisOptions: any = {
       lerp: appliedLerp,
       duration: appliedDuration,
-      smoothWheel: options.smoothWheel ?? !isMobile,
-      wheelMultiplier: options.wheelMultiplier ?? (isHighEndDesktop ? 0.7 : 0.8),
-      touchMultiplier: options.touchMultiplier ?? (isMobile ? 1.2 : 1.5),
+      smoothWheel: options.smoothWheel ?? true, // Always smooth wheel on desktop
+      wheelMultiplier: options.wheelMultiplier ?? (isHighEndDesktop ? 0.8 : 1.0),
+      touchMultiplier: options.touchMultiplier ?? (isMobile ? 1.2 : 2.0), // Higher for trackpad
       infinite: options.infinite ?? false,
       orientation: 'vertical',
       gestureOrientation: 'vertical',
-
-      // Mobile: allow touch smoothing for native feel, but don't over-smooth
-      // Desktop: wheel smoothing, native touch/trackpad handling.
-      smoothTouch: isMobile,
-      syncTouch: isMobile,
-      syncTouchLerp: isMobile ? 0.08 : 1,
+      
+      // Desktop: enhanced trackpad support
+      // Trackpad gestures are detected as touch events in some browsers
+      smoothTouch: !isMobile, // Enable smooth touch on desktop for trackpad
+      syncTouch: false, // Don't sync touch to prevent conflicts
+      syncTouchLerp: 0.075,
+      
+      // Prevent over-scrolling
+      overscroll: false,
+      
+      // Use RAF for 120Hz synchronization
+      autoRaf: false, // We handle RAF manually for precise timing
     };
 
     lenisRef.current = new Lenis(lenisOptions);

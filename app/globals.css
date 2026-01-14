@@ -687,6 +687,52 @@ html[data-active-theme] {
   100% { background-position: -200% 0; }
 }
 
+/* =================================================================
+   GLOBAL FPS QUALITY CONTROL
+   Applied by PerformanceProvider based on measured FPS
+   Works with UnifiedShimmer.tsx for centralized animation control
+   ================================================================= */
+
+/* FPS Medium - reduce complexity */
+html.shimmer-quality-medium {
+  /* Slower animations use less CPU */
+  --animation-duration-multiplier: 0.6;
+}
+
+html.shimmer-quality-medium [class*="backdrop-blur"] {
+  backdrop-filter: blur(8px) !important;
+}
+
+/* FPS Low - minimal effects */
+html.shimmer-quality-low {
+  --animation-duration-multiplier: 0.3;
+}
+
+html.shimmer-quality-low [class*="backdrop-blur"] {
+  backdrop-filter: blur(4px) !important;
+}
+
+html.shimmer-quality-low .shadow-lg,
+html.shimmer-quality-low .shadow-xl,
+html.shimmer-quality-low .shadow-2xl {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+}
+
+/* FPS Disabled - essential only */
+html.shimmer-quality-disabled {
+  --animation-duration-multiplier: 0.1;
+}
+
+html.shimmer-quality-disabled [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+html.shimmer-quality-disabled canvas:not([data-essential="true"]) {
+  opacity: 0.5;
+  filter: blur(2px);
+}
+
 /* Text glow effect for active theme elements */
 .text-glow {
   text-shadow: 

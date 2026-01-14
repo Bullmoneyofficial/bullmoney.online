@@ -14,38 +14,12 @@ import {
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 
 // ==========================================
-// KEYFRAMES STYLES (Injected once)
+// STYLES (Using unified shimmer from UnifiedShimmer.tsx)
+// Keyframes removed - now in UnifiedShimmer.tsx for performance
 // ==========================================
 const FooterStyles = () => (
   <style jsx global>{`
-    @keyframes footer-shimmer-ltr {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(200%); }
-    }
-    @keyframes footer-pulse-glow {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 0.6; }
-    }
-    @keyframes footer-spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    @keyframes footer-dot-pulse {
-      0%, 100% { opacity: 0.4; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.3); }
-    }
-    .footer-shimmer-ltr {
-      animation: footer-shimmer-ltr 3s linear infinite;
-    }
-    .footer-spin {
-      animation: footer-spin 4s linear infinite;
-    }
-    .footer-pulse-glow {
-      animation: footer-pulse-glow 3s ease-in-out infinite;
-    }
-    .footer-dot-pulse {
-      animation: footer-dot-pulse 1.5s ease-in-out infinite;
-    }
+    /* Scrollbar styles only - shimmer animations come from UnifiedShimmer.tsx */
     .footer-scrollbar::-webkit-scrollbar {
       width: 6px;
     }
@@ -132,7 +106,7 @@ const EnhancedModal = ({ isOpen, onClose, title, children, maxWidth = "max-w-3xl
           >
             {/* Spinning Shimmer Border */}
             <div className="absolute inset-[-2px] overflow-hidden rounded-2xl sm:rounded-3xl pointer-events-none">
-              <div className="absolute inset-0 footer-spin bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#60a5fa_50%,#3b82f6_75%,#00000000_100%)] opacity-80" />
+              <div className="absolute inset-0 shimmer-spin shimmer-gpu bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#60a5fa_50%,#3b82f6_75%,#00000000_100%)] opacity-80" />
             </div>
 
             {/* Inner Content Area */}
@@ -142,7 +116,7 @@ const EnhancedModal = ({ isOpen, onClose, title, children, maxWidth = "max-w-3xl
               <div className="relative flex items-center justify-between border-b border-blue-500/30 px-4 sm:px-6 py-3 sm:py-4 bg-neutral-950 shrink-0">
                 {/* Header shimmer effect - left to right */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/15 to-transparent footer-shimmer-ltr" />
+                  <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/15 to-transparent shimmer-line shimmer-gpu" />
                 </div>
                 
                 {/* Top glow line */}
@@ -563,7 +537,7 @@ const SocialIcon = ({ href, icon, alt: _alt }: { href: string; icon: React.React
         
         {/* Shimmer effect - left to right */}
         <div className="absolute inset-0 overflow-hidden rounded-xl">
-          <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent opacity-0 group-hover:opacity-100 footer-shimmer-ltr transition-opacity duration-300" />
+          <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent opacity-0 group-hover:opacity-100 shimmer-line shimmer-gpu transition-opacity duration-300" />
         </div>
         
         {/* Top glow line on hover */}
@@ -588,7 +562,7 @@ const DisclaimerSection = ({ number, title, text }: { number: string; title: str
     
     {/* Shimmer on hover - left to right */}
     <div className="absolute inset-0 overflow-hidden rounded-xl">
-      <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/15 to-transparent opacity-0 group-hover:opacity-100 footer-shimmer-ltr transition-opacity duration-300" />
+      <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/15 to-transparent opacity-0 group-hover:opacity-100 shimmer-line shimmer-gpu transition-opacity duration-300" />
     </div>
     
     <div className="relative p-3 sm:p-4">
@@ -633,7 +607,7 @@ const FooterButton = ({ onClick, children, variant = 'secondary', icon }: Footer
     >
       {/* Spinning shimmer border for primary */}
       {isPrimary && (
-        <span className="absolute inset-[-2px] footer-spin bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-80 rounded-xl" />
+        <span className="absolute inset-[-2px] shimmer-spin shimmer-gpu bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-80 rounded-xl" />
       )}
       
       {/* Solid background - NO blur */}
@@ -646,7 +620,7 @@ const FooterButton = ({ onClick, children, variant = 'secondary', icon }: Footer
       
       {/* Shimmer effect on hover */}
       <span className="absolute inset-0 overflow-hidden rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <span className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent footer-shimmer-ltr" />
+        <span className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent shimmer-line shimmer-gpu" />
       </span>
       
       <span className="relative z-10 flex items-center gap-2">
@@ -708,14 +682,14 @@ export function Footer() {
         <div className="relative group">
           
           {/* Spinning Conic Gradient Shimmer Border */}
-          <span className="absolute inset-[-2px] footer-spin bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#60a5fa_50%,#3b82f6_75%,#00000000_100%)] opacity-50 rounded-t-2xl sm:rounded-t-3xl" />
+          <span className="absolute inset-[-2px] shimmer-spin shimmer-gpu bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#60a5fa_50%,#3b82f6_75%,#00000000_100%)] opacity-50 rounded-t-2xl sm:rounded-t-3xl" />
           
           {/* Solid Background Container */}
           <div className="relative bg-black border-t-2 border-blue-500/40 hover:border-blue-400/60 transition-all duration-500 rounded-t-2xl sm:rounded-t-3xl">
             
             {/* Top Shimmer Line - Left to Right */}
             <div className="absolute inset-x-0 top-0 h-[2px] overflow-hidden rounded-t-2xl sm:rounded-t-3xl">
-              <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500 to-transparent footer-shimmer-ltr" />
+              <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500 to-transparent shimmer-line shimmer-gpu" />
             </div>
             
             {/* Subtle Blue Glow - Top */}
@@ -751,7 +725,7 @@ export function Footer() {
                 <div className="relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-6 bg-neutral-900/80 border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 shadow-[0_0_30px_rgba(59,130,246,0.08)]">
                   {/* Inner shimmer effect - Left to Right */}
                   <div className="absolute inset-0 overflow-hidden rounded-xl sm:rounded-2xl">
-                    <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/10 to-transparent footer-shimmer-ltr" style={{ animationDuration: '4s' }} />
+                    <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/10 to-transparent shimmer-line shimmer-gpu" style={{ animationDuration: '4s' }} />
                   </div>
                   
                   <p className="relative text-center text-[9px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.25em] font-bold text-blue-400 mb-4 sm:mb-6 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">
@@ -767,11 +741,11 @@ export function Footer() {
                 {/* Brand & Copyright - Solid Container */}
                 <div className="relative w-full lg:w-auto flex flex-col items-center lg:items-start gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-neutral-900/80 border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 overflow-hidden">
                   {/* Pulse glow effect */}
-                  <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 footer-pulse-glow pointer-events-none" />
+                  <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 shimmer-pulse pointer-events-none" />
                   
                   {/* Shimmer effect */}
                   <div className="absolute inset-0 overflow-hidden rounded-xl sm:rounded-2xl">
-                    <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/5 to-transparent footer-shimmer-ltr" style={{ animationDuration: '5s' }} />
+                    <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/5 to-transparent shimmer-line shimmer-gpu" style={{ animationDuration: '5s' }} />
                   </div>
                   
                   <div className="relative">
@@ -786,7 +760,7 @@ export function Footer() {
                 <div className="relative w-full lg:w-auto flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-neutral-900/80 border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 shadow-[0_0_25px_rgba(59,130,246,0.08)] overflow-hidden">
                   {/* Shimmer overlay */}
                   <div className="absolute inset-0 rounded-xl sm:rounded-2xl overflow-hidden">
-                    <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/8 to-transparent footer-shimmer-ltr" style={{ animationDuration: '5s' }} />
+                    <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/8 to-transparent shimmer-line shimmer-gpu" style={{ animationDuration: '5s' }} />
                   </div>
                   
                   {/* Apps Button */}
@@ -819,7 +793,7 @@ export function Footer() {
                   <p className="text-xl sm:text-2xl md:text-3xl font-serif font-black tracking-tight">
                     <span className="relative inline-block">
                       {/* Text with shimmer */}
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-400 to-white bg-[length:200%_100%] drop-shadow-[0_0_20px_rgba(59,130,246,0.5)]" style={{ animation: 'footer-shimmer-ltr 3s linear infinite', backgroundPosition: '0% 0%' }}>
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-400 to-white bg-[length:200%_100%] drop-shadow-[0_0_20px_rgba(59,130,246,0.5)]" style={{ animation: 'shimmer-line shimmer-gpu 3s linear infinite', backgroundPosition: '0% 0%' }}>
                         Bull Money
                       </span>
                     </span>
@@ -830,9 +804,9 @@ export function Footer() {
                   
                   {/* Decorative dots */}
                   <div className="flex justify-center gap-1 sm:gap-1.5 mt-3 sm:mt-4">
-                    <span className="w-1 h-1 rounded-full bg-blue-500/60 footer-dot-pulse" />
-                    <span className="w-1 h-1 rounded-full bg-blue-400/80 footer-dot-pulse" style={{ animationDelay: '0.2s' }} />
-                    <span className="w-1 h-1 rounded-full bg-blue-500/60 footer-dot-pulse" style={{ animationDelay: '0.4s' }} />
+                    <span className="w-1 h-1 rounded-full bg-blue-500/60 shimmer-dot-pulse" />
+                    <span className="w-1 h-1 rounded-full bg-blue-400/80 shimmer-dot-pulse" style={{ animationDelay: '0.2s' }} />
+                    <span className="w-1 h-1 rounded-full bg-blue-500/60 shimmer-dot-pulse" style={{ animationDelay: '0.4s' }} />
                   </div>
                 </div>
               </div>
@@ -876,7 +850,7 @@ export function Footer() {
                       
                       {/* Shimmer on hover - left to right */}
                       <div className="absolute inset-0 overflow-hidden rounded-lg sm:rounded-xl">
-                        <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 footer-shimmer-ltr transition-opacity duration-300" />
+                        <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 shimmer-line shimmer-gpu transition-opacity duration-300" />
                       </div>
                       
                       {/* Top glow line on hover */}
@@ -893,7 +867,7 @@ export function Footer() {
                       className="group relative col-span-1 sm:col-span-2 lg:col-span-1 flex items-center justify-center gap-2 rounded-lg sm:rounded-xl overflow-hidden p-3 sm:p-4 text-xs sm:text-sm font-semibold text-white transition-all duration-300"
                     >
                       {/* Spinning shimmer border */}
-                      <span className="absolute inset-[-2px] footer-spin bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-80 rounded-lg sm:rounded-xl" />
+                      <span className="absolute inset-[-2px] shimmer-spin shimmer-gpu bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)] opacity-80 rounded-lg sm:rounded-xl" />
                       
                       {/* Solid gradient background - NO blur */}
                       <span className="absolute inset-[1px] bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg sm:rounded-xl" />
@@ -933,7 +907,7 @@ export function Footer() {
               
               {/* Shimmer effect */}
               <div className="absolute inset-0 overflow-hidden rounded-xl">
-                <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-red-500/10 to-transparent footer-shimmer-ltr" style={{ animationDuration: '4s' }} />
+                <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-red-500/10 to-transparent shimmer-line shimmer-gpu" style={{ animationDuration: '4s' }} />
               </div>
               
               <div className="relative flex gap-3 sm:gap-4">
@@ -1010,7 +984,7 @@ export function Footer() {
               className="group relative flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 overflow-hidden rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all active:scale-95"
             >
               {/* Spinning shimmer border */}
-              <span className="absolute inset-[-2px] footer-spin bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#22c55e_50%,#00000000_100%)] opacity-80 rounded-lg sm:rounded-xl" />
+              <span className="absolute inset-[-2px] shimmer-spin shimmer-gpu bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#22c55e_50%,#00000000_100%)] opacity-80 rounded-lg sm:rounded-xl" />
               
               {/* Glass background */}
               <span className="absolute inset-[1px] bg-white rounded-lg sm:rounded-xl" />

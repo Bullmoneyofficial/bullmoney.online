@@ -10,7 +10,56 @@ import React, { useEffect, useRef, useCallback, memo } from 'react';
  * 2. Updates prices via direct DOM manipulation (useRef)
  * 3. Zero React re-renders for price changes
  * 4. GPU-accelerated ticker scrolling
+ * 5. Integrated with FPS optimizer via shimmer-quality-* CSS classes
  */
+
+// FPS-aware ticker styles injected once
+const TickerStyles = () => (
+  <style jsx global>{`
+    /* GPU hints for ticker animation */
+    .ticker-track {
+      animation: ticker-scroll 40s linear infinite;
+      will-change: transform;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+    }
+    
+    @keyframes ticker-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    
+    /* FPS-aware quality control */
+    html.shimmer-quality-low .ticker-track {
+      animation-duration: 60s;
+    }
+    
+    html.shimmer-quality-disabled .ticker-track {
+      animation: none !important;
+    }
+    
+    html.is-scrolling .ticker-track {
+      animation-play-state: paused;
+    }
+    
+    /* Pulse indicator GPU optimization */
+    .animate-pulse-gpu {
+      animation: pulse-gpu 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      will-change: opacity;
+    }
+    
+    @keyframes pulse-gpu {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+    
+    html.shimmer-quality-low .animate-pulse-gpu,
+    html.shimmer-quality-disabled .animate-pulse-gpu {
+      animation: none;
+      opacity: 1;
+    }
+  `}</style>
+);
 
 interface MarketData {
   symbol: string;
@@ -211,7 +260,9 @@ export const LiveMarketTickerOptimized: React.FC = memo(function LiveMarketTicke
   }, [updatePriceDOM]);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 w-full overflow-hidden bg-gradient-to-r from-black via-gray-900 to-black border-t border-white/10 shadow-2xl transform translateZ-0">
+    <>
+      <TickerStyles />
+      <div className="fixed bottom-0 left-0 right-0 z-50 w-full overflow-hidden bg-gradient-to-r from-black via-gray-900 to-black border-t border-white/10 shadow-2xl transform translateZ-0">
       {/* Background pattern - static, no animation */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
         <div
@@ -265,6 +316,7 @@ export const LiveMarketTickerOptimized: React.FC = memo(function LiveMarketTicke
         </div>
       </div>
     </div>
+    </>
   );
 });
 

@@ -13,6 +13,9 @@ import {
 import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "framer-motion";
 import { cn } from "@/lib/utils";
 
+// --- UNIFIED SHIMMER SYSTEM ---
+import { ShimmerLine, ShimmerBorder, ShimmerSpinner, ShimmerRadialGlow } from '@/components/ui/UnifiedShimmer';
+
 // --- IMPORT SEPARATE LOADER COMPONENT ---
 import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader"; 
 
@@ -69,25 +72,9 @@ const GlobalStyles = () => (
         left: 0 !important;
     }
 
-    /* === BLUE SHIMMER LEFT-TO-RIGHT ANIMATION === */
-    @keyframes shimmer-ltr {
-      0% {
-        transform: translateX(-100%);
-      }
-      100% {
-        transform: translateX(100%);
-      }
-    }
-
-    @keyframes shimmer-text {
-      0% {
-        background-position: -200% center;
-      }
-      100% {
-        background-position: 200% center;
-      }
-    }
-
+    /* === SHIMMER ANIMATIONS - Using unified system from UnifiedShimmer.tsx === */
+    /* These are fallback styles - prefer using ShimmerLine component directly */
+    
     .shimmer-ltr {
       position: relative;
       overflow: hidden;
@@ -108,9 +95,11 @@ const GlobalStyles = () => (
         rgba(59, 130, 246, 0.15) 75%,
         transparent 100%
       );
-      animation: shimmer-ltr 2.5s ease-in-out infinite;
+      animation: unified-shimmer-ltr 2.5s ease-in-out infinite;
       pointer-events: none;
       z-index: 1;
+      will-change: transform;
+      transform: translateZ(0);
     }
 
     .shimmer-text {
@@ -127,6 +116,26 @@ const GlobalStyles = () => (
       background-clip: text;
       -webkit-text-fill-color: transparent;
       animation: shimmer-text 3s ease-in-out infinite;
+      will-change: background-position;
+    }
+    
+    @keyframes shimmer-text {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    
+    /* FPS-aware quality control integration */
+    html.shimmer-quality-low .shimmer-ltr::before,
+    html.shimmer-quality-disabled .shimmer-ltr::before {
+      animation: none !important;
+    }
+    
+    html.shimmer-quality-low .shimmer-text {
+      animation-duration: 6s;
+    }
+    
+    html.is-scrolling .shimmer-ltr::before {
+      animation-play-state: paused;
     }
 
     /* === MOBILE VIEWPORT FIXES FOR SAFARI & IN-APP BROWSERS === */

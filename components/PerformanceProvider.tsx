@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ReactNode, useEffect } from 'react';
+import React, { ReactNode, useEffect, useRef } from 'react';
 import { LenisProvider } from '@/lib/smoothScroll';
 import { usePerformanceInit, usePerformanceCSSSync } from '@/hooks/usePerformanceInit';
 import { detectBrowser } from '@/lib/browserDetection';
@@ -20,6 +20,135 @@ interface PerformanceProviderProps {
     wheelMultiplier?: number;
     touchMultiplier?: number;
   };
+}
+
+/**
+ * Desktop FPS Optimizer Hook v2
+ * Advanced FPS monitoring with granular shimmer quality control
+ * Dynamically adjusts animation complexity when FPS drops
+ */
+function useDesktopFPSOptimizer() {
+  const fpsHistoryRef = useRef<number[]>([]);
+  const frameCountRef = useRef(0);
+  const lastTimeRef = useRef(performance.now());
+  const qualityLevelRef = useRef<'high' | 'medium' | 'low'>('high');
+  const shimmerQualityRef = useRef<'high' | 'medium' | 'low' | 'disabled'>('high');
+  
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.innerWidth < 1024) return; // Desktop only
+    
+    let animationId: number;
+    
+    const measureAndOptimize = () => {
+      frameCountRef.current++;
+      const now = performance.now();
+      const elapsed = now - lastTimeRef.current;
+      
+      if (elapsed >= 1000) {
+        const currentFps = Math.round(frameCountRef.current * 1000 / elapsed);
+        fpsHistoryRef.current.push(currentFps);
+        
+        if (fpsHistoryRef.current.length > 5) {
+          fpsHistoryRef.current.shift();
+        }
+        
+        const avgFps = fpsHistoryRef.current.reduce((a, b) => a + b, 0) / fpsHistoryRef.current.length;
+        const root = document.documentElement;
+        
+        // Clear all shimmer quality classes first
+        root.classList.remove('shimmer-quality-high', 'shimmer-quality-medium', 'shimmer-quality-low', 'shimmer-quality-disabled');
+        
+        // Critical FPS - disable most animations
+        if (avgFps < 20) {
+          if (shimmerQualityRef.current !== 'disabled') {
+            shimmerQualityRef.current = 'disabled';
+            root.classList.add('shimmer-quality-disabled', 'reduce-animations', 'reduce-blur', 'reduce-shadows');
+            root.style.setProperty('--animation-duration-multiplier', '0.1');
+            console.warn(`🔴 FPS critical (${Math.round(avgFps)}fps) - shimmers DISABLED`);
+          }
+        }
+        // Low FPS - minimal shimmer animations
+        else if (avgFps < 30) {
+          if (shimmerQualityRef.current !== 'low') {
+            shimmerQualityRef.current = 'low';
+            qualityLevelRef.current = 'low';
+            root.classList.add('shimmer-quality-low', 'reduce-animations', 'reduce-blur', 'reduce-shadows');
+            root.style.setProperty('--animation-duration-multiplier', '0.3');
+            console.warn(`⚠️ FPS low (${Math.round(avgFps)}fps) - shimmer quality LOW`);
+          }
+        }
+        // Medium FPS - slow down shimmers
+        else if (avgFps < 45) {
+          if (shimmerQualityRef.current !== 'medium') {
+            shimmerQualityRef.current = 'medium';
+            qualityLevelRef.current = 'medium';
+            root.classList.add('shimmer-quality-medium', 'reduce-blur');
+            root.classList.remove('reduce-animations', 'reduce-shadows');
+            root.style.setProperty('--animation-duration-multiplier', '0.6');
+            console.log(`⚡ FPS medium (${Math.round(avgFps)}fps) - shimmer quality MEDIUM`);
+          }
+        }
+        // Good FPS - full quality
+        else if (avgFps >= 55) {
+          if (shimmerQualityRef.current !== 'high') {
+            shimmerQualityRef.current = 'high';
+            qualityLevelRef.current = 'high';
+            root.classList.add('shimmer-quality-high');
+            root.classList.remove('reduce-animations', 'reduce-blur', 'reduce-shadows');
+            root.style.setProperty('--animation-duration-multiplier', '1');
+            console.log(`✅ FPS good (${Math.round(avgFps)}fps) - shimmer quality HIGH`);
+          }
+        }
+        
+        frameCountRef.current = 0;
+        lastTimeRef.current = now;
+      }
+      
+      animationId = requestAnimationFrame(measureAndOptimize);
+    };
+    
+    const timeout = setTimeout(() => {
+      animationId = requestAnimationFrame(measureAndOptimize);
+    }, 3000); // Wait for page to settle
+    
+    return () => {
+      clearTimeout(timeout);
+      if (animationId) cancelAnimationFrame(animationId);
+    };
+  }, []);
+}
+
+/**
+ * Scroll-aware animation pauser
+ * Pauses heavy animations during scroll for better performance
+ */
+function useScrollAwareAnimations() {
+  const timeoutRef = useRef<NodeJS.Timeout>();
+  
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.innerWidth < 1024) return; // Desktop only
+    
+    const handleScroll = () => {
+      document.documentElement.classList.add('is-scrolling');
+      
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      
+      timeoutRef.current = setTimeout(() => {
+        document.documentElement.classList.remove('is-scrolling');
+      }, 150);
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 }
 
 /**
@@ -105,6 +234,36 @@ export function PerformanceProvider({
   // Sync performance state to CSS
   usePerformanceCSSSync();
 
+  // Desktop-only mouse scrolling - prevent keyboard scrolling
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (isMobile) return;
+    
+    const preventKeyScroll = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInputField = target.tagName === 'INPUT' || 
+                          target.tagName === 'TEXTAREA' || 
+                          target.isContentEditable ||
+                          target.closest('[contenteditable="true"]');
+      
+      // Allow in input fields
+      if (isInputField) return;
+      
+      // Prevent scroll keys on desktop
+      const scrollKeys = ['ArrowUp', 'ArrowDown', 'Space', 'PageUp', 'PageDown', 'Home', 'End'];
+      
+      if (scrollKeys.includes(e.code) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+      }
+    };
+    
+    window.addEventListener('keydown', preventKeyScroll, { passive: false });
+    
+    return () => {
+      window.removeEventListener('keydown', preventKeyScroll);
+    };
+  }, [isMobile]);
+
   // Set up performance observers
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -157,8 +316,71 @@ export function PerformanceProvider({
  * Performance Optimizer - Applies runtime optimizations
  */
 function PerformanceOptimizer({ children }: { children: ReactNode }) {
+  // Enable FPS optimizer on desktop
+  useDesktopFPSOptimizer();
+  
+  // Enable scroll-aware animation pausing
+  useScrollAwareAnimations();
+  
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    
+    // Inject scroll-aware CSS
+    const styleId = 'perf-optimizer-styles';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = `
+        /* FPS Optimizer - Quality Reduction Classes */
+        html.reduce-animations * {
+          animation-duration: 0.1s !important;
+          transition-duration: 0.1s !important;
+        }
+        
+        html.reduce-animations .shimmer-spin,
+        html.reduce-animations .shimmer-line,
+        html.reduce-animations .shimmer-pulse {
+          animation: none !important;
+        }
+        
+        html.reduce-blur {
+          --blur-amount: 4px !important;
+        }
+        
+        html.reduce-blur .backdrop-blur-2xl,
+        html.reduce-blur .backdrop-blur-xl,
+        html.reduce-blur .backdrop-blur-lg {
+          backdrop-filter: blur(4px) !important;
+        }
+        
+        html.reduce-shadows * {
+          box-shadow: none !important;
+        }
+        
+        /* Scroll Performance - Pause animations while scrolling */
+        html.is-scrolling .shimmer-spin,
+        html.is-scrolling .shimmer-line,
+        html.is-scrolling .shimmer-pulse,
+        html.is-scrolling .shimmer-glow,
+        html.is-scrolling .page-spin,
+        html.is-scrolling .page-shimmer-ltr {
+          animation-play-state: paused !important;
+        }
+        
+        html.is-scrolling canvas {
+          pointer-events: none;
+        }
+        
+        /* Reduce GPU load during scroll */
+        html.is-scrolling .spline-container canvas,
+        html.is-scrolling [data-spline] canvas {
+          filter: blur(1px);
+          opacity: 0.95;
+          transition: filter 0.1s, opacity 0.1s;
+        }
+      `;
+      document.head.appendChild(style);
+    }
 
     // Request high priority rendering
     if ('scheduler' in window && 'yield' in (window as any).scheduler) {
