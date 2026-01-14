@@ -60,7 +60,7 @@ const DraggableSplit: React.FC<DraggableSplitProps> = ({ children, initialRatio 
   return (
     <div
       ref={containerRef}
-      className="flex flex-col w-full h-[800px] overflow-hidden relative bg-black/5 rounded-lg touch-none"
+      className="flex flex-col w-full h-[800px] overflow-hidden relative bg-black rounded-lg touch-none"
     >
       {/* Top Section */}
       <div

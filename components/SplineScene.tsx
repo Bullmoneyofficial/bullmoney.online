@@ -147,7 +147,7 @@ function SplineSceneComponent({
       {!isInteractive && !hasError && isVisible && (
         <button
           onClick={() => setIsInteractive(true)}
-          className="absolute inset-0 z-10 flex items-center justify-center bg-transparent hover:bg-black/5 transition-colors cursor-pointer"
+          className="absolute inset-0 z-10 flex items-center justify-center bg-transparent transition-colors cursor-pointer"
           aria-label="Interact with 3D Scene"
           style={{ touchAction: 'pan-y' }} // Allow scrolling to pass through
         >
