@@ -33,6 +33,7 @@ function useDesktopFPSOptimizer() {
   const lastTimeRef = useRef(performance.now());
   const qualityLevelRef = useRef<'high' | 'medium' | 'low'>('high');
   const shimmerQualityRef = useRef<'high' | 'medium' | 'low' | 'disabled'>('high');
+  const lastUpdateTimeRef = useRef(0); // Prevent rapid switching
   
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -49,12 +50,21 @@ function useDesktopFPSOptimizer() {
         const currentFps = Math.round(frameCountRef.current * 1000 / elapsed);
         fpsHistoryRef.current.push(currentFps);
         
-        if (fpsHistoryRef.current.length > 5) {
+        if (fpsHistoryRef.current.length > 10) {
           fpsHistoryRef.current.shift();
         }
         
         const avgFps = fpsHistoryRef.current.reduce((a, b) => a + b, 0) / fpsHistoryRef.current.length;
         const root = document.documentElement;
+        
+        // Only update if 500ms has passed since last update - prevents thrashing
+        const timeSinceLastUpdate = performance.now() - lastUpdateTimeRef.current;
+        if (timeSinceLastUpdate < 500) {
+          frameCountRef.current = 0;
+          lastTimeRef.current = now;
+          animationId = requestAnimationFrame(measureAndOptimize);
+          return;
+        }
         
         // Clear all shimmer quality classes first
         root.classList.remove('shimmer-quality-high', 'shimmer-quality-medium', 'shimmer-quality-low', 'shimmer-quality-disabled');
@@ -65,38 +75,42 @@ function useDesktopFPSOptimizer() {
             shimmerQualityRef.current = 'disabled';
             root.classList.add('shimmer-quality-disabled', 'reduce-animations', 'reduce-blur', 'reduce-shadows');
             root.style.setProperty('--animation-duration-multiplier', '0.1');
+            lastUpdateTimeRef.current = performance.now();
             console.warn(`🔴 FPS critical (${Math.round(avgFps)}fps) - shimmers DISABLED`);
           }
         }
         // Low FPS - minimal shimmer animations
-        else if (avgFps < 30) {
+        else if (avgFps < 35) {
           if (shimmerQualityRef.current !== 'low') {
             shimmerQualityRef.current = 'low';
             qualityLevelRef.current = 'low';
             root.classList.add('shimmer-quality-low', 'reduce-animations', 'reduce-blur', 'reduce-shadows');
             root.style.setProperty('--animation-duration-multiplier', '0.3');
+            lastUpdateTimeRef.current = performance.now();
             console.warn(`⚠️ FPS low (${Math.round(avgFps)}fps) - shimmer quality LOW`);
           }
         }
         // Medium FPS - slow down shimmers
-        else if (avgFps < 45) {
+        else if (avgFps < 50) {
           if (shimmerQualityRef.current !== 'medium') {
             shimmerQualityRef.current = 'medium';
             qualityLevelRef.current = 'medium';
             root.classList.add('shimmer-quality-medium', 'reduce-blur');
             root.classList.remove('reduce-animations', 'reduce-shadows');
-            root.style.setProperty('--animation-duration-multiplier', '0.6');
+            root.style.setProperty('--animation-duration-multiplier', '0.7');
+            lastUpdateTimeRef.current = performance.now();
             console.log(`⚡ FPS medium (${Math.round(avgFps)}fps) - shimmer quality MEDIUM`);
           }
         }
         // Good FPS - full quality
-        else if (avgFps >= 55) {
+        else {
           if (shimmerQualityRef.current !== 'high') {
             shimmerQualityRef.current = 'high';
             qualityLevelRef.current = 'high';
             root.classList.add('shimmer-quality-high');
             root.classList.remove('reduce-animations', 'reduce-blur', 'reduce-shadows');
             root.style.setProperty('--animation-duration-multiplier', '1');
+            lastUpdateTimeRef.current = performance.now();
             console.log(`✅ FPS good (${Math.round(avgFps)}fps) - shimmer quality HIGH`);
           }
         }
@@ -108,9 +122,10 @@ function useDesktopFPSOptimizer() {
       animationId = requestAnimationFrame(measureAndOptimize);
     };
     
+    // Wait 5 seconds for page to fully load and settle before starting optimization
     const timeout = setTimeout(() => {
       animationId = requestAnimationFrame(measureAndOptimize);
-    }, 3000); // Wait for page to settle
+    }, 5000);
     
     return () => {
       clearTimeout(timeout);

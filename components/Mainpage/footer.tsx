@@ -557,12 +557,12 @@ const SocialIcon = ({ href, icon, alt: _alt }: { href: string; icon: React.React
 
 const DisclaimerSection = ({ number, title, text }: { number: string; title: string; text: string }) => (
   <div className="group relative rounded-xl overflow-hidden transition-all duration-300">
-    {/* Solid dark background - NO blur */}
-    <div className="absolute inset-0 bg-neutral-900/80 border border-blue-500/10 group-hover:border-blue-500/30 rounded-xl transition-all duration-300" />
+    {/* Solid black background with blue border */}
+    <div className="absolute inset-0 bg-black border border-blue-500/20 group-hover:border-blue-500/40 rounded-xl transition-all duration-300" />
     
     {/* Shimmer on hover - left to right */}
-    <div className="absolute inset-0 overflow-hidden rounded-xl">
-      <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/15 to-transparent opacity-0 group-hover:opacity-100 shimmer-line shimmer-gpu transition-opacity duration-300" />
+    <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
+      <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 shimmer-line shimmer-gpu transition-opacity duration-300" />
     </div>
     
     <div className="relative p-3 sm:p-4">

@@ -327,8 +327,10 @@ const AnalysisContent = memo(() => {
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-2xl max-h-[95vh] overflow-hidden rounded-2xl"
       >
-        {/* Shimmer Border */}
-        <ShimmerBorder color="blue" intensity="low" />
+        {/* Shimmer Border - Positioned outside inner container */}
+        <div className="absolute inset-[-2px] overflow-hidden rounded-2xl pointer-events-none z-0">
+          <ShimmerBorder color="blue" intensity="low" />
+        </div>
         
         {/* Inner Container */}
         <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-blue-500/30 overflow-hidden max-h-[95vh] flex flex-col">
