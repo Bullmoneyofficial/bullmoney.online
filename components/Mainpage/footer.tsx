@@ -110,7 +110,7 @@ const EnhancedModal = ({ isOpen, onClose, title, children, maxWidth = "max-w-3xl
             </div>
 
             {/* Inner Content Area */}
-            <div className="relative z-10 m-[2px] flex max-h-[90vh] xs:max-h-[88vh] sm:max-h-[85vh] md:max-h-[82vh] lg:max-h-[80vh] flex-col rounded-xl xs:rounded-2xl sm:rounded-2xl md:rounded-3xl bg-black overflow-hidden">
+            <div className="relative z-10 m-[2px] flex max-h-[90vh] xs:max-h-[88vh] sm:max-h-[85vh] md:max-h-[82vh] lg:max-h-[80vh] flex-col rounded-xl xs:rounded-2xl sm:rounded-2xl md:rounded-3xl bg-black overflow-hidden min-h-0">
               
               {/* Header */}
               <div className="relative flex items-center justify-between border-b border-blue-500/30 px-3 xs:px-4 sm:px-5 md:px-6 py-2.5 xs:py-3 sm:py-3.5 md:py-4 bg-neutral-950 shrink-0">
@@ -136,7 +136,7 @@ const EnhancedModal = ({ isOpen, onClose, title, children, maxWidth = "max-w-3xl
               </div>
 
               {/* Scrollable Body */}
-              <div className="flex-1 overflow-y-auto px-3 xs:px-4 sm:px-5 md:px-6 py-3 xs:py-4 sm:py-5 md:py-6 footer-scrollbar relative bg-neutral-950">
+              <div className="flex-1 min-h-0 overflow-y-auto px-3 xs:px-4 sm:px-5 md:px-6 py-3 xs:py-4 sm:py-5 md:py-6 footer-scrollbar relative bg-neutral-950">
                 {/* Radial Gradient Background */}
                 <div className="absolute inset-0 z-[-1] bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.1)_0%,transparent_60%)] pointer-events-none" />
                 {children}
@@ -555,29 +555,96 @@ const SocialIcon = ({ href, icon, alt: _alt }: { href: string; icon: React.React
 // 3. DISCLAIMER HELPER COMPONENT
 // ==========================================
 
-const DisclaimerSection = ({ number, title, text }: { number: string; title: string; text: string }) => (
-  <div className="group relative rounded-lg xs:rounded-xl sm:rounded-xl md:rounded-xl overflow-hidden transition-all duration-300">
-    {/* Solid black background with blue border */}
-    <div className="absolute inset-0 bg-black border border-blue-500/20 group-hover:border-blue-500/40 rounded-lg xs:rounded-xl sm:rounded-xl md:rounded-xl transition-all duration-300" />
-    
-    {/* Shimmer on hover - left to right */}
-    <div className="absolute inset-0 overflow-hidden rounded-lg xs:rounded-xl sm:rounded-xl md:rounded-xl pointer-events-none">
-      <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 shimmer-line shimmer-gpu transition-opacity duration-300" />
+const DisclaimerSection = ({
+  number,
+  title,
+  text,
+  isOpen,
+  onToggle,
+}: {
+  number: string;
+  title: string;
+  text: string;
+  isOpen: boolean;
+  onToggle: (id: string) => void;
+}) => {
+  const contentId = `disclaimer-${number}`;
+  const isCollapsed = !isOpen;
+
+  return (
+    <div className="group relative rounded-lg xs:rounded-xl sm:rounded-xl md:rounded-xl overflow-hidden transition-all duration-300">
+      <button
+        type="button"
+        onClick={() => onToggle(number)}
+        aria-expanded={isOpen}
+        aria-controls={contentId}
+        title={title}
+        className={cn(
+          "relative flex w-full items-center justify-between text-left",
+          isCollapsed
+            ? "gap-1.5 xs:gap-2 sm:gap-2 md:gap-2.5 p-1.5 xs:p-2 sm:p-2.5 md:p-3 min-h-[34px]"
+            : "gap-2 xs:gap-2.5 sm:gap-3 md:gap-4 p-2 xs:p-2.5 sm:p-3 md:p-4"
+        )}
+      >
+        <div className={cn(
+          "flex items-center",
+          isCollapsed ? "gap-1.5 xs:gap-2" : "gap-1.5 xs:gap-2 sm:gap-2 md:gap-3"
+        )}>
+          <span className="flex h-4 w-4 xs:h-5 xs:w-5 sm:h-5 sm:w-5 md:h-6 md:w-6 items-center justify-center rounded text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] font-bold text-blue-400 font-mono border border-blue-500/30 bg-blue-500/20 flex-shrink-0">
+            {number}
+          </span>
+          <span className="line-clamp-2 text-xs xs:text-sm sm:text-sm md:text-base font-semibold text-white">
+            {title}
+          </span>
+        </div>
+        <ChevronRight
+          className={cn(
+            "h-4 w-4 xs:h-5 xs:w-5 sm:h-5 sm:w-5 text-blue-400 transition-transform duration-300",
+            isOpen ? "rotate-90" : "rotate-0"
+          )}
+        />
+      </button>
+
+      {/* Solid black background with blue border */}
+      <div className="pointer-events-none absolute inset-0 bg-black border border-blue-500/20 group-hover:border-blue-500/40 rounded-lg xs:rounded-xl sm:rounded-xl md:rounded-xl transition-all duration-300" />
+
+      {/* Shimmer on hover - left to right */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-lg xs:rounded-xl sm:rounded-xl md:rounded-xl">
+        <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 shimmer-line shimmer-gpu transition-opacity duration-300" />
+      </div>
+
+      {/* Persistent title bar so label stays visible when collapsed */}
+      <div className={cn(
+        "relative z-10 pb-1 xs:pb-1.5 sm:pb-2 md:pb-2.5",
+        isCollapsed ? "px-3 xs:px-3.5 sm:px-4" : "px-3 xs:px-3.5 sm:px-4 md:px-5"
+      )}>
+        <p className={cn(
+          "text-white font-semibold leading-tight",
+          isCollapsed
+            ? "text-[10px] xs:text-xs sm:text-sm"
+            : "text-[10px] xs:text-xs sm:text-sm md:text-base"
+        )}>
+          {title}
+        </p>
+      </div>
+
+      <motion.div
+        id={contentId}
+        aria-hidden={!isOpen}
+        initial={false}
+        animate={{ height: isOpen ? "auto" : 0, opacity: isOpen ? 1 : 0 }}
+        transition={{ duration: 0.25, ease: "easeInOut" }}
+        className="relative z-10 px-2 pb-2 xs:px-2.5 xs:pb-2.5 sm:px-3 sm:pb-3 md:px-4 md:pb-4 overflow-hidden"
+      >
+        <div className="space-y-1.5" aria-hidden={!isOpen}>
+          <p className="text-neutral-400 text-[9px] xs:text-[10px] sm:text-xs md:text-sm pl-5 xs:pl-6 sm:pl-6 md:pl-7 leading-relaxed">
+            {text}
+          </p>
+        </div>
+      </motion.div>
     </div>
-    
-    <div className="relative p-2 xs:p-2.5 sm:p-3 md:p-4">
-      <h3 className="flex items-center gap-1.5 xs:gap-2 sm:gap-2 md:gap-3 font-semibold text-white mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 text-xs xs:text-sm sm:text-sm md:text-base">
-        <span className="flex h-4 w-4 xs:h-5 xs:w-5 sm:h-5 sm:w-5 md:h-6 md:w-6 items-center justify-center rounded text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] font-bold text-blue-400 font-mono border border-blue-500/30 bg-blue-500/20 flex-shrink-0">
-          {number}
-        </span>
-        <span className="line-clamp-2">{title}</span>
-      </h3>
-      <p className="text-neutral-400 text-[9px] xs:text-[10px] sm:text-xs md:text-sm pl-5 xs:pl-6 sm:pl-6 md:pl-7 leading-relaxed">
-        {text}
-      </p>
-    </div>
-  </div>
-);
+  );
+};
 
 // ==========================================
 // 4. NAVBAR-STYLE BUTTON COMPONENT
@@ -639,6 +706,7 @@ export function Footer() {
   const [openDisclaimer, setOpenDisclaimer] = useState(false);
   const [openApps, setOpenApps] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [openDisclaimerId, setOpenDisclaimerId] = useState<string | null>("01");
 
   useEffect(() => {
     setIsMounted(true);
@@ -843,6 +911,7 @@ export function Footer() {
                       key={i}
                       href={link.href}
                       target="_blank"
+                      title={link.label}
                       className="group relative flex items-center justify-between rounded-lg xs:rounded-lg sm:rounded-xl md:rounded-xl overflow-hidden p-2 xs:p-2.5 sm:p-3 md:p-4 text-[10px] xs:text-xs sm:text-sm md:text-sm text-neutral-300 transition-all duration-300 hover:scale-105"
                     >
                       {/* Solid dark background - NO blur */}
@@ -888,7 +957,7 @@ export function Footer() {
       <EnhancedModal 
         isOpen={openDisclaimer} 
         onClose={() => setOpenDisclaimer(false)} 
-        maxWidth="max-w-2xl"
+        maxWidth="max-w-3xl"
         title={
           <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-2 text-white">
             <ShieldAlert className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0" />
@@ -896,10 +965,10 @@ export function Footer() {
           </div>
         }
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full min-h-0">
           
           {/* SCROLLABLE CONTENT AREA */}
-          <div className="space-y-4 sm:space-y-6 text-sm leading-relaxed text-neutral-400">
+          <div className="flex-1 min-h-0 overflow-y-auto footer-scrollbar space-y-4 sm:space-y-6 text-sm leading-relaxed text-neutral-400 pr-1 sm:pr-2 pb-24 sm:pb-20">
             
             {/* ALERT BANNER */}
             <div className="relative overflow-hidden rounded-lg xs:rounded-xl sm:rounded-xl md:rounded-xl border border-red-500/30 bg-red-950/50 p-2.5 xs:p-3 sm:p-4 md:p-5">
@@ -934,36 +1003,48 @@ export function Footer() {
                 number="01" 
                 title="No Financial Advice & Education Only" 
                 text="Bullmoney is strictly an educational platform and software provider. We are NOT financial advisors, brokers, or registered investment analysts. No content herein constitutes a recommendation to buy or sell any specific asset. You are solely responsible for your own investment decisions."
+                isOpen={openDisclaimerId === "01"}
+                onToggle={(id) => setOpenDisclaimerId((prev) => (prev === id ? null : id))}
               />
               
               <DisclaimerSection 
                 number="02" 
                 title="Extreme Risk Warning" 
                 text="Trading Foreign Exchange (Forex) and Contracts for Difference (CFDs) on margin carries a high level of risk and may not be suitable for all investors. The high degree of leverage can work against you as well as for you. There is a possibility that you may sustain a loss of some or all of your initial investment."
+                isOpen={openDisclaimerId === "02"}
+                onToggle={(id) => setOpenDisclaimerId((prev) => (prev === id ? null : id))}
               />
 
               <DisclaimerSection 
                 number="03" 
                 title="Shop Policy: Digital Goods & Refunds" 
                 text="All products sold via the Bullmoney Shop (including Indicators, PDFs, software, and courses) are intangible digital goods. Due to the nature of digital content, ALL SALES ARE FINAL. We do not offer refunds once the product has been accessed or downloaded. These tools are technical aids and do not guarantee profitability."
+                isOpen={openDisclaimerId === "03"}
+                onToggle={(id) => setOpenDisclaimerId((prev) => (prev === id ? null : id))}
               />
 
               <DisclaimerSection 
                 number="04" 
                 title="Affiliate Disclosure" 
                 text="Bullmoney may contain affiliate links to third-party brokerage services. We may receive a commission if you sign up through our links. This does not impact the cost to you. We do not own, operate, or control these third-party brokers and are not liable for their solvency or actions."
+                isOpen={openDisclaimerId === "04"}
+                onToggle={(id) => setOpenDisclaimerId((prev) => (prev === id ? null : id))}
               />
 
               <DisclaimerSection 
                 number="05" 
                 title="Jurisdictional Restrictions" 
                 text="Services and products are not intended for distribution to any person in any country where such distribution or use would be contrary to local law or regulation. It is the responsibility of the visitor to ascertain the terms of and comply with any local law or regulation to which they are subject."
+                isOpen={openDisclaimerId === "05"}
+                onToggle={(id) => setOpenDisclaimerId((prev) => (prev === id ? null : id))}
               />
 
                <DisclaimerSection 
                 number="06" 
                 title="Limitation of Liability" 
                 text="Under no circumstances shall Bullmoney, its owners, or affiliates be liable for any direct, indirect, incidental, or consequential damages resulting from the use or inability to use our website, shop products, or signals. You assume full responsibility for your trading results."
+                isOpen={openDisclaimerId === "06"}
+                onToggle={(id) => setOpenDisclaimerId((prev) => (prev === id ? null : id))}
               />
             </div>
 
@@ -977,12 +1058,12 @@ export function Footer() {
           </div>
 
           {/* FIXED ACTION FOOTER */}
-          <div className="mt-3 xs:mt-4 sm:mt-5 md:mt-6 pt-3 xs:pt-3.5 sm:pt-4 md:pt-4 border-t border-blue-500/20 flex justify-end shrink-0">
+          <div className="sticky bottom-0 z-10 bg-neutral-950 mt-3 xs:mt-4 sm:mt-5 md:mt-6 pt-3 xs:pt-3.5 sm:pt-4 md:pt-4 pb-[env(safe-area-inset-bottom,0px)] px-3 xs:px-4 sm:px-5 md:px-6 border-t border-blue-500/20 flex justify-center sm:justify-end shrink-0 shadow-[0_-8px_20px_rgba(0,0,0,0.6)]">
             <motion.button 
               onClick={() => setOpenDisclaimer(false)}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="group relative flex items-center gap-2 px-3 xs:px-4 sm:px-5 md:px-6 py-1.5 xs:py-1.75 sm:py-2 md:py-2.5 overflow-hidden rounded-lg xs:rounded-lg sm:rounded-xl md:rounded-xl text-[10px] xs:text-xs sm:text-sm md:text-sm font-semibold transition-all active:scale-95"
+              className="group relative flex w-full sm:w-auto items-center justify-center gap-2 px-3 xs:px-4 sm:px-5 md:px-6 py-1.5 xs:py-1.75 sm:py-2 md:py-2.5 overflow-hidden rounded-lg xs:rounded-lg sm:rounded-xl md:rounded-xl text-[10px] xs:text-xs sm:text-sm md:text-sm font-semibold transition-all active:scale-95"
             >
               {/* Spinning shimmer border */}
               <span className="absolute inset-[-2px] shimmer-spin shimmer-gpu bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#22c55e_50%,#00000000_100%)] opacity-80 rounded-lg xs:rounded-lg sm:rounded-xl md:rounded-xl" />
