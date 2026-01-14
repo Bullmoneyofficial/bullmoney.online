@@ -34,7 +34,8 @@ import {
   TrendingUp,
   Globe,
   Eye,
-  EyeOff
+  EyeOff,
+  Clock
 } from 'lucide-react';
 import { deviceMonitor, type DeviceInfo } from '@/lib/deviceMonitor';
 import { queueManager } from '@/lib/splineQueueManager';
@@ -377,6 +378,9 @@ export function UltimateControlPanel({
   const liveJitter = Math.max(0, deviceInfo.live.jitter || deviceInfo.network.jitter || 0);
   const reportedDownlink = deviceInfo.network.downlink || 0;
   const measuredType = (deviceInfo.network.effectiveType || '4g').toUpperCase();
+  const sessionMs = deviceInfo.app?.sessionMs ?? 0;
+  const cacheUsageMB = deviceInfo.app?.cacheUsageMB;
+  const cacheQuotaMB = deviceInfo.app?.cacheQuotaMB;
 
   const panelContent = (
     <>
@@ -647,6 +651,25 @@ export function UltimateControlPanel({
                         </div>
                       </div>
 
+                      {/* Session + Cache */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-400/30">
+                          <div className="text-xs text-emerald-200/70">Session length</div>
+                          <div className="text-lg font-bold text-white">
+                            {Math.max(1, Math.floor(sessionMs / 1000 / 60))} min
+                          </div>
+                        </div>
+                        <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-400/30">
+                          <div className="text-xs text-cyan-200/70">Cache usage</div>
+                          <div className="text-lg font-bold text-white">
+                            {cacheUsageMB !== undefined ? `${cacheUsageMB.toFixed(1)} MB` : 'Measuring…'}
+                          </div>
+                          {cacheQuotaMB !== undefined && (
+                            <div className="text-[11px] text-cyan-200/60">Quota: {cacheQuotaMB.toFixed(1)} MB</div>
+                          )}
+                        </div>
+                      </div>
+
                       {/* Battery */}
                       {deviceInfo.battery.level >= 0 && (
                         <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-white/10">
@@ -799,6 +822,12 @@ export function UltimateControlPanel({
                             </div>
                             <div className="text-xs text-white/40">
                               ISP: {deviceInfo.network.isp}
+                            </div>
+                            <div className="text-xs text-white/40">
+                              Browser: {deviceInfo.device.browser} {deviceInfo.device.browserVersion}
+                            </div>
+                            <div className="text-xs text-white/40">
+                              App Build: {deviceInfo.app?.buildId || 'n/a'}
                             </div>
                           </div>
                           <button

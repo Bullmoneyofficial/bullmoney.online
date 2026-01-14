@@ -40,7 +40,8 @@ import {
   Send,
   Settings,
   Edit2,
-  Fingerprint
+  Fingerprint,
+  Clock
 } from 'lucide-react';
 import { deviceMonitor, type DeviceInfo } from '@/lib/deviceMonitor';
 import { queueManager } from '@/lib/splineQueueManager';
@@ -476,6 +477,9 @@ export function UltimateControlPanel({
   const liveJitter = Math.max(0, deviceInfo.live.jitter || deviceInfo.network.jitter || 0);
   const reportedDownlink = deviceInfo.network.downlink || 0;
   const measuredType = (deviceInfo.network.effectiveType || '4g').toUpperCase();
+  const sessionMs = deviceInfo.app?.sessionMs ?? 0;
+  const cacheUsageMB = deviceInfo.app?.cacheUsageMB;
+  const cacheQuotaMB = deviceInfo.app?.cacheQuotaMB;
 
   // Default handlers for buttons - now with smart tapping (toggle behavior)
   const handleServicesClick = () => {
@@ -1054,6 +1058,26 @@ export function UltimateControlPanel({
                         />
                       </div>
 
+                      {/* Session + Cache */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <StatCard
+                          icon={Clock}
+                          label="Session length"
+                          value={`${Math.max(1, Math.floor(sessionMs / 1000 / 60))} min`}
+                          sublabel="Current tab"
+                          color="#22c55e"
+                        />
+                        <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-400/30">
+                          <div className="text-xs text-cyan-200/70">Cache usage</div>
+                          <div className="text-lg font-bold text-white">
+                            {cacheUsageMB !== undefined ? `${cacheUsageMB.toFixed(1)} MB` : 'Measuring…'}
+                          </div>
+                          {cacheQuotaMB !== undefined && (
+                            <div className="text-[11px] text-cyan-200/60">Quota: {cacheQuotaMB.toFixed(1)} MB</div>
+                          )}
+                        </div>
+                      </div>
+
                       {/* Screen Info */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-purple-900/40 border border-blue-400/40 rounded-xl transition-all duration-300 group-hover:border-blue-300/60 shadow-lg shadow-blue-500/10" />
@@ -1304,6 +1328,12 @@ export function UltimateControlPanel({
                             </div>
                             <div className="text-xs text-blue-300/50">
                               ISP: {deviceInfo.network.isp}
+                            </div>
+                            <div className="text-xs text-blue-300/50">
+                              Browser: {deviceInfo.device.browser} {deviceInfo.device.browserVersion}
+                            </div>
+                            <div className="text-xs text-blue-300/50">
+                              App Build: {deviceInfo.app?.buildId || 'n/a'}
                             </div>
                           </div>
                           <button

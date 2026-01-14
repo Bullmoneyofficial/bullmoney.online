@@ -723,6 +723,16 @@ export interface DeviceInfo {
     diagonal?: number; // inches
   };
 
+  app?: {
+    buildId?: string;
+    sessionMs?: number;
+    sessionStart?: number;
+    cacheUsageMB?: number;
+    cacheQuotaMB?: number;
+    dataUsageMB?: string;
+    dataTotalMB?: string;
+  };
+
   // Live Metrics
   live: {
     fps: number;
@@ -781,6 +791,8 @@ class DeviceMonitor {
   private liveNetworkIntervalId: number | null = null;
   private liveProbeCounter = 0;
   private networkListenersInstalled = false;
+  private sessionStart = typeof performance !== 'undefined' ? performance.timeOrigin : Date.now();
+  private autoRefreshIntervalId: number | null = null;
 
   constructor() {
     // Initialize minimal defaults so getInfo() is always safe/synchronous.
@@ -805,6 +817,9 @@ class DeviceMonitor {
           void this.detectNetwork({ includeGeoIp: true, timeoutMs: 900 });
         }
       }, 1200);
+
+      // Periodic auto-refresh check (cache bloat / long session). Will not clear auth/localStorage.
+      this.startAutoRefreshCheck();
     }
   }
 
@@ -829,11 +844,12 @@ class DeviceMonitor {
         // Order matters: detectDevice feeds type/model used by performance/screen heuristics.
         await this.detectDevice();
         await this.detectPerformance();
-        await this.detectNetwork({ includeGeoIp: false, timeoutMs: 0 });
-        this.startLiveNetworkProbe();
-        this.installNetworkListeners();
-        this.detectScreen();
-        this.initLevel = 'light';
+      await this.detectNetwork({ includeGeoIp: false, timeoutMs: 0 });
+      this.startLiveNetworkProbe();
+      this.installNetworkListeners();
+      this.startAutoRefreshCheck();
+      this.detectScreen();
+      this.initLevel = 'light';
       })().catch((err) => {
         console.warn('[DeviceMonitor] Light init failed:', err);
       });
@@ -852,6 +868,7 @@ class DeviceMonitor {
       });
       this.startLiveNetworkProbe();
       this.installNetworkListeners();
+      this.startAutoRefreshCheck();
 
       if (options.enableInternalFpsMonitor) {
         this.startFPSMonitoring();
@@ -1655,9 +1672,18 @@ class DeviceMonitor {
           this.info.performance.storage = {
             total: Math.max(estimatedTotal, 64), // Minimum 64GB estimate
             available: Math.max(available, 1),
-            type: estimatedTotal >= 512 ? 'NVMe SSD' : estimatedTotal >= 256 ? 'SSD' : 'Storage'
+            type: estimatedTotal >= 512 ? 'NVMe SSD' : estimatedTotal >= 256 ? 'SSD' : 'Storage',
           };
         }
+
+        // Cache/App usage snapshot for panels
+        const cacheUsageMB = Math.round((usage / 1024 / 1024) * 100) / 100;
+        const cacheQuotaMB = Math.round((quota / 1024 / 1024) * 100) / 100;
+        this.info.app = {
+          ...(this.info.app || {}),
+          cacheUsageMB,
+          cacheQuotaMB,
+        };
       }
     } catch (error) {
       console.warn('[DeviceMonitor] Storage detection failed:', error);
@@ -1736,6 +1762,67 @@ class DeviceMonitor {
     window.addEventListener('online', handler);
     window.addEventListener('offline', handler);
     this.networkListenersInstalled = true;
+  }
+
+  /**
+   * Periodically check cache usage/session age and refresh if bloated.
+   * Does NOT clear localStorage/cookies, so logins remain.
+   */
+  private startAutoRefreshCheck(intervalMs = 60_000, options: { maxCacheMB?: number; maxSessionMinutes?: number } = {}) {
+    if (this.autoRefreshIntervalId !== null || typeof window === 'undefined' || typeof navigator === 'undefined') return;
+
+    const maxCacheMB = options.maxCacheMB ?? 512; // soft cap for app cache
+    const maxSessionMinutes = options.maxSessionMinutes ?? 12 * 60; // 12h session cap
+    const minReloadGapMs = 30 * 60 * 1000; // don't auto-reload more than once per 30m
+
+    const check = async () => {
+      try {
+        const now = Date.now();
+        const last = Number(sessionStorage.getItem('bm_last_auto_refresh') || 0);
+        if (now - last < minReloadGapMs) return;
+
+        let usageMB = 0;
+        let quotaMB = 0;
+
+        if ('storage' in navigator && 'estimate' in navigator.storage) {
+          const estimate = await navigator.storage.estimate();
+          const usage = estimate.usage || 0;
+          const quota = estimate.quota || 0;
+          usageMB = Math.round((usage / 1024 / 1024) * 100) / 100;
+          quotaMB = Math.round((quota / 1024 / 1024) * 100) / 100;
+
+          // Update app cache snapshot for panels
+          this.info.app = {
+            ...(this.info.app || {}),
+            cacheUsageMB: usageMB,
+            cacheQuotaMB: quotaMB,
+          };
+        }
+
+        const sessionMinutes = (now - this.sessionStart) / 60000;
+        const cacheBloated = usageMB > maxCacheMB;
+        const sessionTooLong = sessionMinutes > maxSessionMinutes;
+
+        if (cacheBloated || sessionTooLong) {
+          sessionStorage.setItem('bm_last_auto_refresh', String(now));
+          try {
+            if ('caches' in window) {
+              const keys = await caches.keys();
+              await Promise.all(keys.map((k) => caches.delete(k)));
+            }
+          } catch {
+            // ignore cache clear failures
+          }
+          // Keep auth/localStorage intact; just reload.
+          window.location.reload();
+        }
+      } catch (err) {
+        console.warn('[DeviceMonitor] auto refresh check failed', err);
+      }
+    };
+
+    this.autoRefreshIntervalId = window.setInterval(check, Math.max(15_000, intervalMs));
+    void check();
   }
 
   /**
@@ -2279,12 +2366,26 @@ class DeviceMonitor {
       dischargingTime: -1,
     };
 
+    // App/build/session info
+    const buildId = (typeof window !== 'undefined' && (window as any).__NEXT_DATA__?.buildId) || undefined;
+    const sessionMs = Date.now() - this.sessionStart;
+    const dataUsage = this.getDataUsage();
+    const app = {
+      ...(this.info.app || {}),
+      buildId,
+      sessionMs,
+      sessionStart: this.sessionStart,
+      dataUsageMB: dataUsage.sessionMB,
+      dataTotalMB: dataUsage.totalMB,
+    };
+
     return {
       device,
       performance,
       network,
       battery,
       screen: screenInfo,
+      app,
       live: {
         fps: this.fps,
         frameTime: 1000 / Math.max(this.fps, 1),
