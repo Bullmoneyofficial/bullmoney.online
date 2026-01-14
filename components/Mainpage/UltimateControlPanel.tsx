@@ -38,6 +38,8 @@ import {
 } from 'lucide-react';
 import { deviceMonitor, type DeviceInfo } from '@/lib/deviceMonitor';
 import { queueManager } from '@/lib/splineQueueManager';
+import { ShimmerLine, ShimmerBorder, ShimmerText, useOptimizedShimmer } from '@/components/ui/UnifiedShimmer';
+import { useFpsOptimizer } from '@/lib/FpsOptimizer';
 
 // ============================================================================
 // TYPES
@@ -117,24 +119,45 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
-      className="p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm"
+      whileTap={{ scale: 0.98 }}
+      className="relative p-3 rounded-xl overflow-hidden group isolate"
     >
-      <div className="flex items-start gap-3">
+      {/* Glass background - solid with subtle transparency */}
+      <div className="absolute inset-0 bg-slate-900/90 border border-blue-400/30 rounded-xl transition-all duration-300 group-hover:border-blue-300/50 shadow-lg shadow-blue-900/20" />
+      
+      {/* Inner highlight for depth */}
+      <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
+      
+      {/* Unified Shimmer - LEFT TO RIGHT on hover */}
+      <div 
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none overflow-hidden rounded-xl"
+      >
+        <div className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/30 to-blue-500/0" />
+      </div>
+      
+      {/* Accent glow */}
+      <div 
+        className="absolute inset-0 opacity-20 rounded-xl transition-opacity group-hover:opacity-35 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse at top left, ${color}40 0%, transparent 60%)` }}
+      />
+      
+      {/* Content */}
+      <div className="relative z-10 flex items-start gap-3">
         <div
-          className="p-2 rounded-lg"
-          style={{ backgroundColor: `${color}20` }}
+          className="p-2 rounded-lg border border-white/10"
+          style={{ backgroundColor: `${color}25` }}
         >
-          <Icon size={18} style={{ color }} />
+          <Icon size={18} style={{ color, filter: `drop-shadow(0 0 3px ${color}60)` }} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">
+          <div className="text-[10px] text-blue-200/90 uppercase tracking-wider font-semibold">
             {label}
           </div>
           <div className="text-sm font-bold text-white truncate mt-0.5">
             {value}
           </div>
           {sublabel && (
-            <div className="text-[10px] text-white/40 mt-0.5">
+            <div className="text-[10px] text-blue-200/70 mt-0.5">
               {sublabel}
             </div>
           )}
@@ -149,50 +172,72 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
  */
 function PerformanceRing({ score, size = 120 }: { score: number; size?: number }) {
   const { grade, color, label } = getPerformanceGrade(score);
-  const radius = size / 2 - 10;
+  const padding = 8;
+  const strokeWidth = 8;
+  const radius = (size - padding * 2 - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
+  const center = size / 2;
 
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      {/* Background ring */}
-      <svg className="absolute inset-0 -rotate-90">
+    <div className="relative group isolate" style={{ width: size, height: size }}>
+      {/* Glass background - solid, no blur */}
+      <div className="absolute inset-0 rounded-full bg-slate-900/90 border border-blue-400/30 transition-all duration-300 group-hover:border-blue-300/50 shadow-lg shadow-blue-900/20" />
+      <div className="absolute inset-[1px] rounded-full bg-gradient-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
+      
+      {/* Unified Shimmer - LEFT TO RIGHT using CSS animation */}
+      <div 
+        className="absolute inset-0 opacity-15 group-hover:opacity-25 transition-opacity pointer-events-none overflow-hidden rounded-full panel-shimmer"
+      >
+        <div className="shimmer-ltr shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/30 to-blue-600/0" style={{ animationDuration: '5s' }} />
+      </div>
+      
+      {/* SVG Ring - properly centered */}
+      <svg 
+        className="absolute inset-0 -rotate-90 z-10" 
+        width={size} 
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+      >
+        {/* Background circle */}
         <circle
-          cx={size / 2}
-          cy={size / 2}
+          cx={center}
+          cy={center}
           r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.1)"
-          strokeWidth="8"
+          stroke="rgba(59,130,246,0.15)"
+          strokeWidth={strokeWidth}
         />
+        {/* Progress circle */}
         <circle
-          cx={size / 2}
-          cy={size / 2}
+          cx={center}
+          cy={center}
           r={radius}
           fill="none"
           stroke={color}
-          strokeWidth="8"
+          strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"
           style={{
-            transition: 'stroke-dashoffset 1s ease, stroke 0.3s ease'
+            transition: 'stroke-dashoffset 1s ease, stroke 0.3s ease',
+            filter: `drop-shadow(0 0 6px ${color}80)`
           }}
         />
       </svg>
 
       {/* Center content */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
+      <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
         <div
           className="text-4xl font-black"
-          style={{ color }}
+          style={{ color, textShadow: `0 0 15px ${color}50` }}
         >
           {grade}
         </div>
-        <div className="text-xs text-white/60 font-semibold">
+        <div className="text-xs text-blue-200/80 font-semibold">
           {label}
         </div>
-        <div className="text-[10px] text-white/40 mt-1">
+        <div className="text-[10px] text-blue-300/60 mt-1">
           {score}/100
         </div>
       </div>
@@ -211,6 +256,13 @@ export function UltimateControlPanel({
   userName,
   accentColor = '#3b82f6'
 }: UltimateControlPanelProps) {
+  // FPS Optimizer integration for component lifecycle tracking
+  const { registerComponent, unregisterComponent, shouldEnableShimmer, setComponentVisibility } = useFpsOptimizer();
+  const shimmerSettings = useOptimizedShimmer();
+  
+  // Check if shimmer should be enabled for this component
+  const shimmerEnabled = shouldEnableShimmer('ultimatePanel') && !shimmerSettings.disabled;
+  
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'network' | 'performance' | 'account'>('overview');
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -219,6 +271,23 @@ export function UltimateControlPanel({
   const [dragProgress, setDragProgress] = useState(0);
   const sessionStartRef = useRef<number>(Date.now());
   const [sessionDuration, setSessionDuration] = useState('0m');
+  const [mounted, setMounted] = useState(false);
+  
+  // Ensure component only renders on client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  // Register/unregister with FPS optimizer
+  useEffect(() => {
+    registerComponent('ultimatePanel');
+    return () => unregisterComponent('ultimatePanel');
+  }, [registerComponent, unregisterComponent]);
+  
+  // Update visibility state when panel opens/closes
+  useEffect(() => {
+    setComponentVisibility('ultimatePanel', isOpen);
+  }, [isOpen, setComponentVisibility]);
 
   // Update device info periodically
   useEffect(() => {
@@ -279,7 +348,7 @@ export function UltimateControlPanel({
     setDragProgress(0);
   };
 
-  if (!deviceInfo) {
+  if (!deviceInfo || !mounted) {
     return null;
   }
 
@@ -315,12 +384,14 @@ export function UltimateControlPanel({
               onDragEnd={handleDragEnd}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 py-2.5 rounded-full bg-gradient-to-r from-blue-500/90 to-purple-500/90 backdrop-blur-xl border border-white/20 shadow-2xl flex items-center gap-2 pointer-events-auto group"
+              className="relative px-6 py-2.5 rounded-full bg-gradient-to-r from-blue-500/90 to-purple-500/90 backdrop-blur-xl border border-white/20 shadow-2xl flex items-center gap-2 pointer-events-auto group overflow-hidden"
               style={{
                 boxShadow: `0 8px 32px ${accentColor}40, 0 0 0 1px rgba(255,255,255,0.1)`
               }}
             >
-              <Activity size={16} className="text-white animate-pulse" />
+              {/* Unified Shimmer */}
+              {shimmerEnabled && <ShimmerLine color="blue" intensity={shimmerSettings.intensity} speed={shimmerSettings.speed} />}
+              <Activity size={16} className="text-white shimmer-pulse" />
               <span className="text-white text-sm font-semibold">
                 {deviceInfo.live.fps} FPS
               </span>
@@ -374,24 +445,27 @@ export function UltimateControlPanel({
               dragElastic={0.1}
               onDragEnd={handleDragEnd}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-[250000] max-h-[85vh] overflow-hidden rounded-t-3xl bg-gradient-to-b from-gray-900/95 to-black/95 backdrop-blur-xl border-t border-white/10 shadow-2xl"
+              className="fixed bottom-0 left-0 right-0 z-[250000] max-h-[85vh] overflow-hidden rounded-t-3xl bg-gradient-to-b from-slate-900/95 to-black/95 backdrop-blur-xl border-t border-blue-400/30 shadow-2xl panel-shimmer"
               style={{
                 paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)'
               }}
             >
+              {/* Unified Shimmer on top of panel */}
+              {shimmerEnabled && <ShimmerLine color="blue" intensity={shimmerSettings.intensity} speed={shimmerSettings.speed} />}
+              
               {/* Drag handle */}
               <div className="flex flex-col items-center gap-1 py-3 cursor-grab active:cursor-grabbing">
                 <div
-                  className="w-12 h-1.5 rounded-full bg-white/30"
+                  className="w-12 h-1.5 rounded-full shimmer-pulse"
                   style={{ backgroundColor: `${accentColor}60` }}
                 />
-                <div className="text-[9px] text-white/30 font-mono tracking-wider">SWIPE DOWN</div>
+                <div className="text-[9px] text-blue-200/50 font-mono tracking-wider">SWIPE DOWN</div>
               </div>
 
               {/* Header */}
               <div className="px-6 pb-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60">
+                  <h2 className="text-2xl font-black shimmer-text">
                     Device Center
                   </h2>
                   <div className="flex items-center gap-2">
