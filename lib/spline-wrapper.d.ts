@@ -11,6 +11,12 @@ declare module '@/lib/spline-wrapper' {
     priority?: boolean;
     /** Alias for priority - optimizes for hero section with 200ms load target */
     isHero?: boolean;
+    /** Optional: cap render FPS for this scene */
+    targetFPS?: number;
+    /** Optional: cap devicePixelRatio used for canvas resolution */
+    maxDpr?: number;
+    /** Optional: floor devicePixelRatio used for canvas resolution */
+    minDpr?: number;
   }
   
   const SplineWrapper: ComponentType<SplineWrapperProps>;

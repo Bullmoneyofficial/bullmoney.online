@@ -52,7 +52,7 @@ function LazySplineContainer({ scene }: { scene: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Use unified observer pool instead of individual IntersectionObserver
-  const { observe } = useUnifiedPerformance();
+  const { observe, deviceTier } = useUnifiedPerformance();
 
   // Check if device can handle 3D at mount
   useEffect(() => {
@@ -107,8 +107,8 @@ function LazySplineContainer({ scene }: { scene: string }) {
       if (isIntersecting && !hasLoadedOnce) {
         setHasLoadedOnce(true);
       }
-    }, { rootMargin: '600px' });
-  }, [observe, hasLoadedOnce, canRender]);
+    }, { rootMargin: deviceTier === 'ultra' || deviceTier === 'high' ? '1400px' : deviceTier === 'medium' ? '1100px' : '600px' });
+  }, [observe, hasLoadedOnce, canRender, deviceTier]);
 
   // Show optimized fallback on devices that can't handle 3D
   if (!canRender) {
@@ -200,6 +200,7 @@ function HomeContent() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const splinePreloadRanRef = useRef(false);
 
   // Use unified performance for tracking - only need device tier
   const { 
@@ -275,17 +276,50 @@ function HomeContent() {
 
   // 1. STEALTH PRE-LOADER
   useEffect(() => {
+    if (currentView === 'pagemode') return;
     const preloadSplineEngine = async () => {
       try {
-        await import('@splinetool/runtime'); 
-        console.log("3D Engine pre-cached in background");
+        const browserInfo = detectBrowser();
+        if (browserInfo.isInAppBrowser || !browserInfo.canHandle3D) return;
+        if (splinePreloadRanRef.current) return;
+
+        // Only worth it on devices that will actually render 3D
+        if (deviceTier === 'low' || deviceTier === 'minimal') return;
+        if (typeof window !== 'undefined' && window.innerWidth < 768) return;
+
+        splinePreloadRanRef.current = true;
+
+        // Prime runtime + component chunks so first in-view render is "snappy"
+        await Promise.allSettled([
+          import('@splinetool/runtime'),
+          import('@/components/SplineScene'),
+          import('@/components/DraggableSplit'),
+          import('@/lib/spline-wrapper'),
+        ]);
+
+        // Warm HTTP cache for the home-page scenes
+        const preloadFetch = (href: string) => {
+          if (typeof document === 'undefined') return;
+          const existing = document.querySelector(`link[rel="preload"][as="fetch"][href="${href}"]`);
+          if (existing) return;
+          const link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'fetch';
+          link.href = href;
+          link.crossOrigin = 'anonymous';
+          document.head.appendChild(link);
+        };
+        preloadFetch('/scene3.splinecode');
+        preloadFetch('/scene4.splinecode');
+
+        console.log('[Page] Spline runtime + scenes preloaded');
       } catch (e) {
         console.warn("Preload failed", e);
       }
     };
-    const t = setTimeout(preloadSplineEngine, 2000);
+    const t = setTimeout(preloadSplineEngine, 200);
     return () => clearTimeout(t);
-  }, []);
+  }, [deviceTier, currentView]);
 
   // 2. Session Check
   useEffect(() => {

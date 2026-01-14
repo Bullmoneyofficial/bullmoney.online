@@ -1,10 +1,10 @@
 "use client";
 
 import dynamic from 'next/dynamic';
-import { Suspense, useState, useEffect, memo, useCallback, useRef } from 'react';
-import { detectRefreshRate } from '@/lib/use120Hz';
+import { Suspense, useState, useEffect, memo } from 'react';
 import { detectBrowser } from '@/lib/browserDetection';
 import { ShimmerSpinner, ShimmerRadialGlow, ShimmerBorder } from '@/components/ui/UnifiedShimmer';
+import { useUnifiedPerformance } from '@/lib/UnifiedPerformanceSystem';
 
 interface SplineWrapperProps {
   scene: string;
@@ -14,7 +14,9 @@ interface SplineWrapperProps {
   onError?: (error: Error) => void;
   withSparkles?: boolean;
   optimizeForMobile?: boolean;
-  targetFPS?: number; // New: Allow custom FPS target (up to 120)
+  targetFPS?: number;
+  maxDpr?: number;
+  minDpr?: number;
 }
 
 // Dynamic import for the heavy Spline runtime - ultra lightweight
@@ -29,132 +31,6 @@ const Sparkle = dynamic(() => import('react-sparkle'), {
   loading: () => null
 });
 
-// Device tier detection (enhanced for 120Hz support on ALL devices)
-const getDeviceTier = (): 'ultra' | 'high' | 'medium' | 'low' | 'disabled' => {
-  if (typeof window === 'undefined') return 'high';
-  
-  // Check browser capabilities first - disable for in-app browsers
-  const browserInfo = detectBrowser();
-  if (browserInfo.isInAppBrowser || !browserInfo.canHandle3D) {
-    console.log('[SplineScene] 🔒 Disabled for:', browserInfo.browserName);
-    return 'disabled';
-  }
-  
-  if (browserInfo.isVeryLowMemoryDevice) {
-    return 'low';
-  }
-  
-  const memory = (navigator as any).deviceMemory || 4;
-  const cores = navigator.hardwareConcurrency || 4;
-  const isMobile = window.innerWidth < 768;
-  const isSmallScreen = window.innerWidth < 480;
-  const isVeryLowMemory = memory < 4;
-  const isLowCores = cores < 4;
-  const refreshRate = detectRefreshRate();
-  const ua = navigator.userAgent.toLowerCase();
-  
-  // ENHANCED: Apple Silicon detection for Macs
-  const isMac = /macintosh|mac os x/i.test(ua);
-  let isAppleSilicon = false;
-  if (isMac && !isMobile) {
-    try {
-      const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
-      if (gl) {
-        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-        if (debugInfo) {
-          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
-          isAppleSilicon = renderer.includes('apple') && (renderer.includes('gpu') || /m[1-9]/.test(renderer));
-        }
-      }
-    } catch (e) {}
-    // Fallback: 8+ core Mac is likely Apple Silicon
-    if (!isAppleSilicon && cores >= 8) {
-      isAppleSilicon = true;
-    }
-  }
-  
-  // High-refresh mobile devices (iPhone Pro, iPad Pro) get tier upgrade
-  const isHighRefreshMobile = isMobile && refreshRate >= 120;
-  
-  // Force low tier for very small screens or low specs to prevent crashes
-  if (isSmallScreen || (isMobile && !isHighRefreshMobile && (isVeryLowMemory || isLowCores))) {
-    return 'low';
-  }
-  
-  // ENHANCED: Apple Silicon Macs get ULTRA tier
-  if (isAppleSilicon) {
-    console.log('[SplineScene] 🍎 Apple Silicon detected - ULTRA tier');
-    return 'ultra';
-  }
-  
-  // High-end desktop with discrete GPU or lots of RAM
-  if (!isMobile) {
-    // Check for discrete GPU
-    try {
-      const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
-      if (gl) {
-        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-        if (debugInfo) {
-          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
-          const hasDiscreteGPU = renderer.includes('nvidia') || renderer.includes('geforce') || 
-                                  renderer.includes('radeon') || renderer.includes('amd') ||
-                                  renderer.includes('rtx') || renderer.includes('gtx');
-          if (hasDiscreteGPU && memory >= 8) {
-            console.log('[SplineScene] 🎮 Discrete GPU detected - ULTRA tier');
-            return 'ultra';
-          }
-        }
-      }
-    } catch (e) {}
-    
-    // High-spec desktop: 16GB+ RAM, 8+ cores
-    if (memory >= 16 && cores >= 8) {
-      return 'ultra';
-    }
-    
-    // Good desktop: 8GB+ RAM, 4+ cores
-    if (memory >= 8 && cores >= 4) {
-      return 'high';
-    }
-    
-    // Basic desktop
-    return memory >= 4 ? 'medium' : 'low';
-  }
-  
-  // ProMotion devices get medium or high based on specs
-  if (isHighRefreshMobile) {
-    return memory >= 4 && cores >= 4 ? 'high' : 'medium';
-  }
-  
-  if (isMobile) {
-    return memory >= 6 && cores >= 6 ? 'medium' : 'low';
-  }
-  return memory >= 8 && cores >= 8 ? 'high' : 'medium';
-};
-
-// Check if device can handle 3D scenes safely
-const canRender3D = (): boolean => {
-  if (typeof window === 'undefined') return true;
-  
-  // Check browser capabilities
-  const browserInfo = detectBrowser();
-  if (browserInfo.isInAppBrowser || !browserInfo.canHandle3D) {
-    return false;
-  }
-  
-  const memory = (navigator as any).deviceMemory || 4;
-  const isSmallScreen = window.innerWidth < 480;
-  const isMobile = window.innerWidth < 768;
-  
-  // Disable 3D on very small screens or very low memory devices
-  if (isSmallScreen) return false;
-  if (isMobile && memory < 3) return false;
-  
-  return true;
-};
-
 function SplineSceneComponent({ 
   scene, 
   className = "", 
@@ -162,34 +38,29 @@ function SplineSceneComponent({
   onError,
   placeholder,
   withSparkles = true,
-  optimizeForMobile = true
+  optimizeForMobile: _optimizeForMobile = true,
+  targetFPS,
 }: SplineWrapperProps) {
   
   const [isInteractive, setIsInteractive] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [deviceTier, setDeviceTier] = useState<'ultra' | 'high' | 'medium' | 'low' | 'disabled'>('medium');
   const [isVisible, setIsVisible] = useState(false);
   const [shouldRender, setShouldRender] = useState(true);
+  const perf = useUnifiedPerformance();
 
-  // Detect device tier and rendering capability once
+  // Decide rendering + quality using unified device manager + browser detection
   useEffect(() => {
-    const tier = getDeviceTier();
-    setDeviceTier(tier);
-    
-    // Skip 3D rendering for disabled or low tier devices
-    const canRender = canRender3D();
-    setShouldRender(canRender && tier !== 'low' && tier !== 'disabled');
-    
-    if (!canRender || tier === 'low' || tier === 'disabled') {
-      console.log('🔒 3D scenes disabled for device protection - tier:', tier);
-    } else {
-      console.log(`✅ 3D scenes enabled - Device tier: ${tier.toUpperCase()}`);
-    }
-  }, []);
+    const browserInfo = detectBrowser();
+    const canBrowserRender = !(browserInfo.isInAppBrowser || !browserInfo.canHandle3D);
+    const canDeviceRender = perf.enable3D && perf.deviceTier !== 'low' && perf.deviceTier !== 'minimal';
+    setShouldRender(canBrowserRender && canDeviceRender);
+  }, [perf.enable3D, perf.deviceTier]);
 
-  // ENHANCED: Show sparkles on ultra AND high-end devices
-  const showSparkles = withSparkles && (deviceTier === 'ultra' || deviceTier === 'high') && !hasError;
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const showSparkles =
+    withSparkles &&
+    (perf.deviceTier === 'ultra' || perf.deviceTier === 'high') &&
+    !perf.isMobile &&
+    !hasError;
 
   // Handle spline loading errors gracefully
   const handleError = (error: Error) => {
@@ -265,6 +136,9 @@ function SplineSceneComponent({
             onError={handleError} 
             placeholder={placeholder}
             className="w-full h-full"
+            targetFPS={targetFPS ?? (perf.deviceTier === 'ultra' ? perf.refreshRate : perf.deviceTier === 'high' ? 90 : perf.deviceTier === 'medium' ? 60 : 45)}
+            maxDpr={perf.deviceTier === 'ultra' ? 1.75 : perf.deviceTier === 'high' ? 1.45 : perf.deviceTier === 'medium' ? 1.0 : 0.85}
+            minDpr={0.75}
           />
         </Suspense>
       </div>
