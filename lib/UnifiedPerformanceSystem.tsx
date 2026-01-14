@@ -822,12 +822,16 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
   // Subscribe to FPS monitor
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (device?.isMobile) return; // Skip FPS monitoring on mobile for battery
+    if (device?.tier === 'minimal') return; // Skip on ultra low-end for battery/stability
     
     const timeoutId = setTimeout(() => {
       const unsubscribe = fpsMonitor.subscribe((fps, avg) => {
         setCurrentFps(fps);
         setAverageFps(avg);
+        // Feed FPS into DeviceMonitor (avoids a second RAF loop).
+        try {
+          (window as any).deviceMonitor?.setExternalFps?.(fps, avg);
+        } catch {}
         
         // Throttle quality updates to prevent thrashing
         const now = performance.now();

@@ -336,6 +336,9 @@ export function UltimateControlPanel({
 
   // Update device info periodically
   useEffect(() => {
+    // Upgrade to full device info only when this panel is mounted (avoids heavy work during normal page loads).
+    void deviceMonitor.start('full', { includeGeoIp: true, geoIpTimeoutMs: 1200 });
+
     const updateInfo = () => {
       const info = deviceMonitor.getInfo();
       setDeviceInfo(info);

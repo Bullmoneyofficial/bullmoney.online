@@ -740,42 +740,196 @@ export interface DeviceInfo {
 // DEVICE MONITOR CLASS
 // ============================================================================
 
+type InitLevel = 'none' | 'light' | 'full';
+
+export interface DeviceMonitorStartOptions {
+  /**
+   * Fetch Geo/IP (network request). Off by default for performance/privacy.
+   */
+  includeGeoIp?: boolean;
+  /**
+   * Run Cloudflare bandwidth tests periodically (heavy). Off by default.
+   */
+  enableNetworkSpeedTest?: boolean;
+  /**
+   * Run an internal RAF FPS counter. Prefer using UnifiedPerformance as the FPS source.
+   */
+  enableInternalFpsMonitor?: boolean;
+  /**
+   * Abort Geo/IP fetch after this many ms (only applies when includeGeoIp=true).
+   */
+  geoIpTimeoutMs?: number;
+}
+
 class DeviceMonitor {
   private info: Partial<DeviceInfo> = {};
-  private fps = 0;
+  private fps = 60;
   private frameCount = 0;
   private networkSpeed = 0;
   private uploadSpeed = 0;
   private latency = 0;
   private latencyJitter = 0;
   private battery: any = null;
+  private geoIpCache = { ip: 'Unknown', location: 'Unknown', isp: 'Unknown' };
+  private initLevel: InitLevel = 'none';
+  private initPromise: Promise<void> | null = null;
+  private fullPromise: Promise<void> | null = null;
+  private geoIpPromise: Promise<void> | null = null;
+  private networkTestIntervalId: number | null = null;
+  private fpsRafId: number | null = null;
+  private externalFpsLastUpdated = 0;
 
   constructor() {
-    this.initialize();
+    // Initialize minimal defaults so getInfo() is always safe/synchronous.
+    this.info.live = {
+      fps: this.fps,
+      frameTime: 1000 / this.fps,
+      networkSpeed: 0,
+      uploadSpeed: 0,
+      latency: 0,
+      jitter: 0,
+      timestamp: Date.now(),
+    };
+
+    // Kick off lightweight init (no network tests) without blocking first paint.
+    if (typeof window !== 'undefined') {
+      queueMicrotask(() => {
+        void this.start('light');
+      });
+    }
   }
 
   /**
-   * Initialize all monitors
+   * Backwards-compatible alias (full init).
    */
   async initialize(): Promise<void> {
-    console.log('[DeviceMonitor] Initializing...');
+    await this.start('full', { includeGeoIp: true });
+  }
 
-    await Promise.all([
-      this.detectDevice(),
-      this.detectPerformance(),
-      this.detectNetwork(),
-      this.detectBattery(),
-      this.detectScreen()
-    ]);
+  /**
+   * Start (or upgrade) device monitoring.
+   * - `light`: no Geo/IP fetch, no bandwidth tests, no internal FPS loop
+   * - `full`: optional Geo/IP fetch and optional bandwidth tests
+   */
+  async start(level: Exclude<InitLevel, 'none'> = 'light', options: DeviceMonitorStartOptions = {}): Promise<void> {
+    if (this.initLevel === 'full') return;
 
-    // Start live monitoring
-    this.startFPSMonitoring();
-    this.startNetworkSpeedTest();
-    
-    // Detect storage
-    this.detectStorage();
+    if (level === 'light') {
+      if (this.initPromise) return this.initPromise;
+      this.initPromise = (async () => {
+        // Order matters: detectDevice feeds type/model used by performance/screen heuristics.
+        await this.detectDevice();
+        await this.detectPerformance();
+        await this.detectNetwork({ includeGeoIp: false, timeoutMs: 0 });
+        this.detectScreen();
+        this.initLevel = 'light';
+      })().catch((err) => {
+        console.warn('[DeviceMonitor] Light init failed:', err);
+      });
+      return this.initPromise;
+    }
 
-    console.log('[DeviceMonitor] Ready');
+    // Full init (upgrade)
+    if (this.fullPromise) return this.fullPromise;
+    this.fullPromise = (async () => {
+      await this.start('light');
+      await this.detectBattery();
+      await this.detectStorage();
+      await this.detectNetwork({
+        includeGeoIp: options.includeGeoIp ?? false,
+        timeoutMs: options.geoIpTimeoutMs ?? 1200,
+      });
+
+      if (options.enableInternalFpsMonitor) {
+        this.startFPSMonitoring();
+      }
+      if (options.enableNetworkSpeedTest) {
+        await this.startNetworkSpeedTest();
+      }
+
+      this.initLevel = 'full';
+    })().catch((err) => {
+      console.warn('[DeviceMonitor] Full init failed:', err);
+    });
+    return this.fullPromise;
+  }
+
+  /**
+   * Prefer this over an extra RAF loop: UnifiedPerformance can feed FPS into DeviceMonitor.
+   */
+  setExternalFps(fps: number, avg?: number): void {
+    const safeFps = Number.isFinite(fps) ? Math.max(1, Math.round(fps)) : this.fps;
+    this.fps = safeFps;
+    this.externalFpsLastUpdated = Date.now();
+    if (!this.info.live) {
+      this.info.live = {
+        fps: safeFps,
+        frameTime: 1000 / safeFps,
+        networkSpeed: this.networkSpeed,
+        uploadSpeed: this.uploadSpeed,
+        latency: this.latency,
+        jitter: this.latencyJitter,
+        timestamp: Date.now(),
+      };
+      return;
+    }
+    this.info.live.fps = safeFps;
+    this.info.live.frameTime = 1000 / Math.max(safeFps, 1);
+    this.info.live.timestamp = Date.now();
+    if (typeof avg === 'number' && Number.isFinite(avg)) {
+      this.info.live.cpuUsage = undefined;
+    }
+  }
+
+  private getPhysicalScreenPixels(): { width: number; height: number; pixelRatio: number } {
+    const pixelRatio = window.devicePixelRatio || 1;
+    const width = Math.round(Math.max(screen.width, screen.height) * pixelRatio);
+    const height = Math.round(Math.min(screen.width, screen.height) * pixelRatio);
+    return { width, height, pixelRatio };
+  }
+
+  private matchesScreen(specW: number, specH: number, w: number, h: number): boolean {
+    const tol = 3; // iOS can be off by 1-2px due to rounding/zoom
+    const direct = Math.abs(specW - w) <= tol && Math.abs(specH - h) <= tol;
+    const swapped = Math.abs(specW - h) <= tol && Math.abs(specH - w) <= tol;
+    return direct || swapped;
+  }
+
+  private resolveAppleSpec(cpuName: string, ua: string): { deviceId: string; spec: DeviceSpec } | null {
+    if (!/iPhone|iPad|iPod/i.test(ua)) return null;
+    const { width, height } = this.getPhysicalScreenPixels();
+    const prefix = /iPad/i.test(ua) ? 'iPad' : 'iPhone';
+
+    const candidates = Object.entries(DEVICE_DATABASE).filter(([key, spec]) => {
+      if (!key.startsWith(prefix)) return false;
+      if (!spec.screenWidth || !spec.screenHeight) return false;
+      return this.matchesScreen(spec.screenWidth, spec.screenHeight, width, height);
+    });
+    if (!candidates.length) return null;
+
+    const normalizedCpu = (cpuName || '').toLowerCase();
+    const hasSpecificAppleChip =
+      normalizedCpu.includes('apple a') ||
+      normalizedCpu.includes('apple m') ||
+      normalizedCpu.includes('a18') ||
+      normalizedCpu.includes('a17') ||
+      normalizedCpu.includes('a16') ||
+      normalizedCpu.includes('a15') ||
+      normalizedCpu.includes('a14') ||
+      normalizedCpu.includes('a13');
+
+    let filtered = candidates;
+    if (hasSpecificAppleChip) {
+      filtered = candidates.filter(([, spec]) => spec.cpu.toLowerCase() === normalizedCpu);
+      if (!filtered.length) {
+        filtered = candidates.filter(([, spec]) => spec.cpu.toLowerCase().includes(normalizedCpu));
+      }
+    }
+
+    // Choose conservatively when uncertain: prefer lower RAM, then newer year.
+    filtered.sort((a, b) => (a[1].ram - b[1].ram) || ((b[1].year || 0) - (a[1].year || 0)));
+    const [deviceId, spec] = filtered[0] || candidates[0]!;
+    return { deviceId, spec };
   }
 
   /**
@@ -832,7 +986,14 @@ class DeviceMonitor {
     if (/apple m1 ultra/i.test(gpuRenderer)) return { name: 'Apple M1 Ultra', threads: 20 };
     if (/apple m1 max/i.test(gpuRenderer)) return { name: 'Apple M1 Max', threads: 10 };
     if (/apple m1 pro/i.test(gpuRenderer)) return { name: 'Apple M1 Pro', threads: 10 };
-    if (/apple m1/i.test(gpuRenderer) || /apple gpu/i.test(gpuRenderer)) return { name: 'Apple M1', threads: 8 };
+    if (/apple m1/i.test(gpuRenderer)) return { name: 'Apple M1', threads: 8 };
+    // IMPORTANT: iOS often reports a generic "Apple GPU" renderer; do not mislabel this as an M-series chip.
+    if (/apple gpu/i.test(gpuRenderer)) {
+      if (/iPhone|iPad|iPod/i.test(ua)) {
+        return { name: 'Apple A-Series', threads: Math.max(cores, 6) };
+      }
+      return { name: 'Apple Silicon', threads: Math.max(cores, 8) };
+    }
     
     // Check for A-series chips (iPhone/iPad)
     if (/apple a18 pro/i.test(gpuRenderer)) return { name: 'Apple A18 Pro', threads: 6 };
@@ -841,6 +1002,8 @@ class DeviceMonitor {
     if (/apple a16/i.test(gpuRenderer)) return { name: 'Apple A16 Bionic', threads: 6 };
     if (/apple a15/i.test(gpuRenderer)) return { name: 'Apple A15 Bionic', threads: 6 };
     if (/apple a14/i.test(gpuRenderer)) return { name: 'Apple A14 Bionic', threads: 6 };
+    if (/apple a13/i.test(gpuRenderer)) return { name: 'Apple A13 Bionic', threads: 6 };
+    if (/apple a12/i.test(gpuRenderer)) return { name: 'Apple A12 Bionic', threads: 6 };
     
     // Estimate based on core count for desktop
     if (cores >= 24) return { name: 'Intel Core i9-14900K / Ryzen 9 7950X', threads: cores * 2 };
@@ -1275,7 +1438,8 @@ class DeviceMonitor {
     const ua = navigator.userAgent;
     
     // CPU cores from browser API
-    const cores = navigator.hardwareConcurrency || 4;
+    const reportedCores = navigator.hardwareConcurrency || 4;
+    let effectiveCores = reportedCores;
     
     // Architecture detection
     let architecture = 'unknown';
@@ -1296,7 +1460,9 @@ class DeviceMonitor {
 
     let vendor = 'Unknown';
     let renderer = 'Unknown';
-    const deviceMemory = (navigator as any).deviceMemory || 4;
+    const deviceMemoryApi =
+      typeof (navigator as any).deviceMemory === 'number' ? (navigator as any).deviceMemory : undefined;
+    let estimatedMemoryGb = deviceMemoryApi ?? 4;
     const jsMemory = (performance as any).memory;
 
     if (gl) {
@@ -1307,26 +1473,45 @@ class DeviceMonitor {
       }
     }
 
-    const gpuInfo = this.classifyGpuTier(renderer, vendor, deviceMemory);
-    
-    // Detect CPU name based on cores and context
-    const cpuInfo = this.detectCPU(cores, ua, renderer);
-    
-    // Get real RAM from device database or estimate
-    let realRam = deviceMemory;
-    const dbDevice = this.lookupDevice(ua);
-    if (dbDevice) {
-      realRam = dbDevice.ram;
-    } else {
-      // Estimate based on deviceMemory API (usually returns 4, 8, etc.)
-      // For desktops, multiply by detected cores ratio for better estimate
-      if (this.info.device?.type === 'desktop') {
-        if (cores >= 16) realRam = Math.max(deviceMemory, 32);
-        else if (cores >= 12) realRam = Math.max(deviceMemory, 16);
-        else if (cores >= 8) realRam = Math.max(deviceMemory, 16);
-        else if (cores >= 6) realRam = Math.max(deviceMemory, 8);
+    // Detect CPU name based on cores + GPU renderer context
+    let cpuInfo = this.detectCPU(reportedCores, ua, renderer);
+
+    // Resolve Apple iPhone/iPad model via screen pixels + chip hint.
+    // This fixes iOS Safari where navigator.deviceMemory is unavailable and WebGL often reports generic "Apple GPU".
+    const appleResolved = this.resolveAppleSpec(cpuInfo.name, ua);
+    if (appleResolved) {
+      const { deviceId, spec } = appleResolved;
+      this.info.device = {
+        ...(this.info.device || ({} as any)),
+        manufacturer: 'Apple',
+        model: spec.model,
+        deviceId,
+        year: spec.year,
+      };
+      estimatedMemoryGb = spec.ram;
+      cpuInfo = { name: spec.cpu, threads: spec.cpuCores };
+      // iOS core counts can be misleading; use known cores when we have the device spec.
+      if ((this.info.device as any)?.os === 'iOS') {
+        effectiveCores = spec.cpuCores;
       }
+      architecture = 'ARM64';
     }
+
+    // Get real RAM from device database or estimate
+    let realRam = estimatedMemoryGb;
+    const dbDevice = this.lookupDevice(ua);
+    if (dbDevice?.ram) {
+      realRam = dbDevice.ram;
+    } else if (this.info.device?.type === 'desktop') {
+      // For desktops, multiply by detected cores ratio for better estimate
+      if (reportedCores >= 16) realRam = Math.max(realRam, 32);
+      else if (reportedCores >= 12) realRam = Math.max(realRam, 16);
+      else if (reportedCores >= 8) realRam = Math.max(realRam, 16);
+      else if (reportedCores >= 6) realRam = Math.max(realRam, 8);
+    }
+
+    // GPU tier scoring uses real RAM when available (helps iOS where deviceMemory is missing)
+    const gpuInfo = this.classifyGpuTier(renderer, vendor, realRam);
 
     // JS heap memory stats
     let used = 0;
@@ -1342,7 +1527,7 @@ class DeviceMonitor {
     this.info.performance = {
       cpu: { 
         name: cpuInfo.name,
-        cores, 
+        cores: effectiveCores, 
         threads: cpuInfo.threads,
         architecture 
       },
@@ -1394,7 +1579,7 @@ class DeviceMonitor {
   /**
    * Detect network information
    */
-  private async detectNetwork(): Promise<void> {
+  private async detectNetwork(options: { includeGeoIp: boolean; timeoutMs: number }): Promise<void> {
     const connection = (navigator as any).connection || {};
 
     const type = connection.type || 'unknown';
@@ -1403,19 +1588,27 @@ class DeviceMonitor {
     const rtt = connection.rtt || 0;
     const saveData = connection.saveData || false;
 
-    // Get IP and location
-    let ip = 'Unknown';
-    let location = 'Unknown';
-    let isp = 'Unknown';
-
-    try {
-      const response = await fetch('https://ipapi.co/json/');
-      const data = await response.json();
-      ip = data.ip || 'Unknown';
-      location = `${data.city || ''}, ${data.country_name || ''}`.trim();
-      isp = data.org || 'Unknown';
-    } catch (error) {
-      console.warn('[DeviceMonitor] Failed to fetch IP info');
+    if (options.includeGeoIp) {
+      if (!this.geoIpPromise) {
+        this.geoIpPromise = (async () => {
+          try {
+            const controller = new AbortController();
+            const timeoutId = window.setTimeout(() => controller.abort(), options.timeoutMs);
+            const response = await fetch('https://ipapi.co/json/', { signal: controller.signal, cache: 'no-store' });
+            window.clearTimeout(timeoutId);
+            const data = await response.json();
+            this.geoIpCache.ip = data.ip || this.geoIpCache.ip;
+            this.geoIpCache.location =
+              `${data.city || ''}, ${data.country_name || ''}`.trim() || this.geoIpCache.location;
+            this.geoIpCache.isp = data.org || this.geoIpCache.isp;
+          } catch (error) {
+            // Ignore - keep Unknown values.
+          } finally {
+            this.geoIpPromise = null;
+          }
+        })();
+      }
+      await this.geoIpPromise;
     }
 
     this.info.network = {
@@ -1424,9 +1617,9 @@ class DeviceMonitor {
       downlink,
       rtt,
       saveData,
-      ip,
-      location,
-      isp,
+      ip: this.geoIpCache.ip,
+      location: this.geoIpCache.location,
+      isp: this.geoIpCache.isp,
       measuredDownlink: downlink,
       measuredUpload: 0,
       jitter: 0,
@@ -1502,8 +1695,10 @@ class DeviceMonitor {
     const screenW = screen.width;
     const screenH = screen.height;
     
-    // Try to get actual device resolution from database
-    const dbDevice = this.lookupDevice(ua);
+    // Try to get actual device resolution from database (prefer resolved deviceId)
+    const resolvedId = this.info.device?.deviceId;
+    const dbDevice =
+      (resolvedId && DEVICE_DATABASE[resolvedId]) ? DEVICE_DATABASE[resolvedId] : this.lookupDevice(ua);
     let ppi: number | undefined;
     let diagonal: number | undefined;
     
@@ -1563,20 +1758,24 @@ class DeviceMonitor {
       hdr = window.matchMedia('(dynamic-range: high)').matches;
     }
     
-    // Detect refresh rate (if available via Screen API)
+    // Detect refresh rate (prefer Screen API, fallback to heuristics)
     let refreshRate: number | undefined;
-    // Use a heuristic based on device type and year
-    if (dbDevice) {
-      if (dbDevice.year >= 2022) {
-        refreshRate = 120; // Most modern flagships
-      } else if (dbDevice.year >= 2020) {
-        refreshRate = 90;
+    if (typeof (window.screen as any)?.refreshRate === 'number') {
+      refreshRate = Math.min((window.screen as any).refreshRate, 240);
+    } else if (dbDevice) {
+      const modelName = (dbDevice.model || '').toLowerCase();
+      const isApple = dbDevice.manufacturer.toLowerCase() === 'apple';
+      if (isApple) {
+        // Apple: iPhone Pro/Pro Max + iPad Pro are 120Hz, most others are 60Hz.
+        if (modelName.includes('pro') || modelName.includes('ipad pro')) refreshRate = 120;
+        else refreshRate = 60;
       } else {
-        refreshRate = 60;
+        // Android flagship heuristic by year.
+        if (dbDevice.year >= 2022) refreshRate = 120;
+        else if (dbDevice.year >= 2020) refreshRate = 90;
+        else refreshRate = 60;
       }
     } else if (this.info.device?.type === 'desktop') {
-      // Estimate based on common monitor refresh rates
-      // High-end gaming monitors are 144Hz+, but assume 60Hz as default
       refreshRate = 60;
     }
 
@@ -1609,9 +1808,16 @@ class DeviceMonitor {
    * Start FPS monitoring
    */
   private startFPSMonitoring(): void {
+    if (this.fpsRafId !== null) return;
     let lastTime = performance.now();
 
     const measureFPS = (timestamp: number) => {
+      // If UnifiedPerformance is feeding FPS, don't run a second RAF loop.
+      if (this.externalFpsLastUpdated && Date.now() - this.externalFpsLastUpdated < 1500) {
+        this.fpsRafId = null;
+        return;
+      }
+
       this.frameCount++;
 
       // Update every second
@@ -1627,25 +1833,30 @@ class DeviceMonitor {
         }
       }
 
-      requestAnimationFrame(measureFPS);
+      this.fpsRafId = requestAnimationFrame(measureFPS);
     };
 
-    requestAnimationFrame(measureFPS);
+    this.fpsRafId = requestAnimationFrame(measureFPS);
   }
 
   /**
    * Start network speed test
    */
   private async startNetworkSpeedTest(): Promise<void> {
+    if (this.networkTestIntervalId !== null) return;
     const pingUrl = 'https://speed.cloudflare.com/__down?bytes=64';
-    const downUrl = 'https://speed.cloudflare.com/__down?bytes=2500000';
+    // Keep payloads smaller; this is a background signal, not a benchmark.
+    const downUrl = 'https://speed.cloudflare.com/__down?bytes=750000';
     const upUrl = 'https://speed.cloudflare.com/__up';
 
     const test = async () => {
       try {
+        // Respect user data saver where possible
+        if (this.info.network?.saveData) return;
+
         const latencyProbe = this.measureLatency(pingUrl);
         const downloadProbe = this.measureDownloadSpeed(`${downUrl}&ts=${Date.now()}`);
-        const uploadProbe = this.measureUploadSpeed(`${upUrl}?ts=${Date.now()}`, 600000);
+        const uploadProbe = this.measureUploadSpeed(`${upUrl}?ts=${Date.now()}`, 200000);
 
         const [{ latency, jitter }, measuredSpeed, measuredUpload] = await Promise.all([
           latencyProbe,
@@ -1681,7 +1892,7 @@ class DeviceMonitor {
     };
 
     await test();
-    setInterval(test, 15000);
+    this.networkTestIntervalId = window.setInterval(test, 60000);
   }
 
   /**
@@ -1764,6 +1975,52 @@ class DeviceMonitor {
    * Get complete device info
    */
   getInfo(): DeviceInfo {
+    // Ensure light init is at least started; never block callers.
+    if (this.initLevel === 'none' && typeof window !== 'undefined') {
+      void this.start('light');
+    }
+
+    const fallbackDeviceType: 'mobile' | 'tablet' | 'desktop' =
+      typeof window !== 'undefined' && window.innerWidth < 768 ? 'mobile' : 'desktop';
+
+    const device = this.info.device || {
+      type: fallbackDeviceType,
+      model: 'Unknown',
+      manufacturer: 'Unknown',
+      os: 'Unknown',
+      osVersion: '',
+      browser: 'Unknown',
+      browserVersion: '',
+      deviceId: undefined,
+      year: undefined,
+    };
+
+    const memoryFallback =
+      typeof (navigator as any).deviceMemory === 'number' ? (navigator as any).deviceMemory : 4;
+    const coresFallback = navigator.hardwareConcurrency || 4;
+
+    const performance = this.info.performance || {
+      cpu: {
+        name: 'Unknown',
+        cores: coresFallback,
+        threads: coresFallback,
+        architecture: 'unknown',
+      },
+      gpu: {
+        vendor: 'Unknown',
+        renderer: 'Unknown',
+        tier: 'medium' as const,
+        score: 50,
+      },
+      memory: {
+        total: memoryFallback,
+        used: 0,
+        limit: 0,
+        percentage: 0,
+        type: memoryFallback >= 16 ? 'DDR5' : memoryFallback >= 8 ? 'DDR4' : 'DDR4/LPDDR',
+      },
+    };
+
     const network = this.info.network || {
       type: 'unknown',
       effectiveType: '4g' as const,
@@ -1781,9 +2038,49 @@ class DeviceMonitor {
     network.measuredUpload = this.uploadSpeed || network.measuredUpload || 0;
     network.jitter = this.latencyJitter || network.jitter || 0;
 
+    const screenInfo =
+      this.info.screen ||
+      (() => {
+        if (typeof window === 'undefined') {
+          return {
+            physicalWidth: 0,
+            physicalHeight: 0,
+            viewportWidth: 0,
+            viewportHeight: 0,
+            orientation: 'portrait' as const,
+            pixelRatio: 1,
+            colorDepth: 24,
+            touchSupport: false,
+          };
+        }
+        const { width, height, pixelRatio } = this.getPhysicalScreenPixels();
+        return {
+          physicalWidth: width,
+          physicalHeight: height,
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+          orientation: width > height ? 'landscape' as const : 'portrait' as const,
+          pixelRatio,
+          colorDepth: screen.colorDepth || 24,
+          refreshRate: typeof (window.screen as any)?.refreshRate === 'number' ? (window.screen as any).refreshRate : undefined,
+          hdr: typeof window.matchMedia === 'function' ? window.matchMedia('(dynamic-range: high)').matches : undefined,
+          touchSupport: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+        };
+      })();
+
+    const battery = this.info.battery || {
+      level: -1,
+      charging: false,
+      chargingTime: -1,
+      dischargingTime: -1,
+    };
+
     return {
-      ...this.info,
+      device,
+      performance,
       network,
+      battery,
+      screen: screenInfo,
       live: {
         fps: this.fps,
         frameTime: 1000 / Math.max(this.fps, 1),
