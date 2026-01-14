@@ -83,15 +83,21 @@ export class RenderScheduler {
       if (priority === 'high') {
         // High priority: run immediately
         executeWork();
-      } else if (typeof scheduler !== 'undefined' && 'yield' in scheduler) {
-        // Use scheduler.yield if available (Chrome 94+)
-        (scheduler as any).yield().then(executeWork);
       } else {
-        // Fallback: use requestIdleCallback or requestAnimationFrame
-        if ('requestIdleCallback' in window) {
-          requestIdleCallback(executeWork);
+        const browserScheduler = typeof globalThis !== 'undefined'
+          ? (globalThis as any).scheduler
+          : undefined;
+
+        if (browserScheduler && typeof browserScheduler.yield === 'function') {
+          // Use scheduler.yield if available (Chrome 94+)
+          browserScheduler.yield().then(executeWork);
         } else {
-          requestAnimationFrame(executeWork);
+          // Fallback: use requestIdleCallback or requestAnimationFrame
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(executeWork);
+          } else {
+            requestAnimationFrame(executeWork);
+          }
         }
       }
 

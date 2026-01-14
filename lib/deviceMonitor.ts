@@ -1110,18 +1110,61 @@ class DeviceMonitor {
     if (/apple a13/i.test(gpuRenderer)) return { name: 'Apple A13 Bionic', threads: 6 };
     if (/apple a12/i.test(gpuRenderer)) return { name: 'Apple A12 Bionic', threads: 6 };
     
-    // Estimate based on core count for desktop
-    if (cores >= 24) return { name: 'Intel Core i9-14900K / Ryzen 9 7950X', threads: cores * 2 };
-    if (cores >= 20) return { name: 'Intel Core i7-14700K / Ryzen 9 7900X', threads: cores + 8 };
-    if (cores >= 16) return { name: 'Intel Core i9-13900K / Ryzen 9 5950X', threads: cores * 2 };
-    if (cores >= 14) return { name: 'Intel Core i5-13600K / Ryzen 7', threads: cores + 6 };
-    if (cores >= 12) return { name: 'Intel Core i7-12700K / Ryzen 7', threads: cores + 8 };
-    if (cores >= 10) return { name: 'Intel Core i5-12600K / Ryzen 5', threads: cores + 6 };
-    if (cores >= 8) return { name: 'Intel Core i7 / Ryzen 7 / Snapdragon 8', threads: cores * 2 };
-    if (cores >= 6) return { name: 'Intel Core i5 / Ryzen 5 / Snapdragon', threads: cores * 2 };
-    if (cores >= 4) return { name: 'Intel Core i3 / Ryzen 3 / Quad-Core', threads: cores * 2 };
+    // Check GPU for AMD/NVIDIA hints
+    const gpuLower = gpuRenderer.toLowerCase();
+    const isAMD = /radeon|amd/i.test(gpuLower);
+    const isNVIDIA = /nvidia|geforce|rtx|gtx/.test(gpuLower);
     
-    return { name: `${cores}-Core Processor`, threads: cores };
+    // Estimate based on core count for desktop
+    if (cores >= 24) {
+      const brand = isAMD ? 'Ryzen 9 7950X3D' : isNVIDIA ? 'Intel Core i9-14900KS' : 'Intel Core i9-14900K / Ryzen 9 7950X';
+      return { name: brand, threads: cores * 2 };
+    }
+    if (cores >= 20) {
+      const brand = isAMD ? 'Ryzen 9 7900X' : 'Intel Core i9-14700K';
+      return { name: brand, threads: cores + 8 };
+    }
+    if (cores >= 16) {
+      const brand = isAMD ? 'Ryzen 9 5950X' : 'Intel Core i9-13900K';
+      return { name: brand, threads: cores * 2 };
+    }
+    if (cores >= 14) {
+      const brand = isAMD ? 'Ryzen 7 7700X' : 'Intel Core i7-13700K';
+      return { name: brand, threads: cores + 6 };
+    }
+    if (cores >= 12) {
+      const brand = isAMD ? 'Ryzen 7 5800X' : 'Intel Core i7-12700K';
+      return { name: brand, threads: cores + 8 };
+    }
+    if (cores >= 10) {
+      const brand = isAMD ? 'Ryzen 5 7600X' : 'Intel Core i5-13600K';
+      return { name: brand, threads: cores + 6 };
+    }
+    if (cores >= 8) {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
+      if (isMobile) {
+        return { name: 'Snapdragon 8 Gen 3 / A17 Pro', threads: cores };
+      }
+      const brand = isAMD ? 'Ryzen 7' : 'Intel Core i7';
+      return { name: brand, threads: cores * 2 };
+    }
+    if (cores >= 6) {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
+      if (isMobile) {
+        return { name: 'Snapdragon 778G / A15 Bionic', threads: cores };
+      }
+      const brand = isAMD ? 'Ryzen 5' : 'Intel Core i5';
+      return { name: brand, threads: cores * 2 };
+    }
+    if (cores >= 4) {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
+      if (isMobile) {
+        return { name: 'Snapdragon 7 Series', threads: cores };
+      }
+      return { name: 'Intel Core i3 / Ryzen 3', threads: cores * 2 };
+    }
+    
+    return { name: `${cores}-Core Processor`, threads: cores };  
   }
 
   /**
@@ -1610,9 +1653,30 @@ class DeviceMonitor {
     } else if (this.info.device?.type === 'desktop') {
       // For desktops, multiply by detected cores ratio for better estimate
       if (reportedCores >= 16) realRam = Math.max(realRam, 32);
-      else if (reportedCores >= 12) realRam = Math.max(realRam, 16);
+      else if (reportedCores >= 12) realRam = Math.max(realRam, 24);
       else if (reportedCores >= 8) realRam = Math.max(realRam, 16);
-      else if (reportedCores >= 6) realRam = Math.max(realRam, 8);
+      else if (reportedCores >= 6) realRam = Math.max(realRam, 16);
+      else if (reportedCores >= 4) realRam = Math.max(realRam, 8);
+      
+      // Also check GPU renderer for high-end systems
+      const gpuLower = renderer.toLowerCase();
+      if (/rtx\s?40[89]0|rtx\s?3090|rx\s?7900/.test(gpuLower)) {
+        realRam = Math.max(realRam, 32);
+      } else if (/rtx\s?4070|rtx\s?3080|rx\s?7800/.test(gpuLower)) {
+        realRam = Math.max(realRam, 16);
+      }
+    } else if (this.info.device?.type === 'mobile' || this.info.device?.type === 'tablet') {
+      // For mobile/tablet, use better heuristics based on screen resolution and year
+      const screenRes = (this.info.screen?.physicalWidth || 0) * (this.info.screen?.physicalHeight || 0);
+      const deviceYear = this.info.device?.year || new Date().getFullYear();
+      
+      if (screenRes >= 2000000 && deviceYear >= 2022) {
+        realRam = Math.max(realRam, 8);
+      } else if (screenRes >= 1500000 && deviceYear >= 2020) {
+        realRam = Math.max(realRam, 6);
+      } else if (screenRes >= 1000000 && deviceYear >= 2018) {
+        realRam = Math.max(realRam, 4);
+      }
     }
 
     // GPU tier scoring uses real RAM when available (helps iOS where deviceMemory is missing)
@@ -1980,18 +2044,54 @@ class DeviceMonitor {
       if (this.info.device?.type === 'desktop') {
         physicalWidth = screenW;
         physicalHeight = screenH;
-        // Estimate PPI for common monitor sizes
+        // Estimate PPI for common monitor sizes - improved logic
         const diagPixels = Math.sqrt(screenW ** 2 + screenH ** 2);
-        if (screenW >= 3840) {
-          ppi = 163; // 27" 4K
+        
+        // 5K and above (iMac 27", Studio Display)
+        if (screenW >= 5120) {
+          ppi = 218; // 27" 5K
           diagonal = 27;
-        } else if (screenW >= 2560) {
-          ppi = 109; // 27" QHD
-          diagonal = 27;
-        } else if (screenW >= 1920) {
-          ppi = 92; // 24" FHD
-          diagonal = 24;
-        } else {
+        }
+        // 4K monitors
+        else if (screenW >= 3840) {
+          if (screenH >= 2400) {
+            ppi = 169; // 32" 4K
+            diagonal = 32;
+          } else {
+            ppi = 163; // 27" 4K
+            diagonal = 27;
+          }
+        }
+        // QHD/1440p monitors  
+        else if (screenW >= 2560) {
+          if (screenH >= 1600) {
+            ppi = 110; // 30" QHD+
+            diagonal = 30;
+          } else {
+            ppi = 109; // 27" QHD
+            diagonal = 27;
+          }
+        }
+        // Full HD monitors
+        else if (screenW >= 1920) {
+          if (screenH >= 1200) {
+            ppi = 94; // 24" FHD+
+            diagonal = 24;
+          } else {
+            ppi = 92; // 24" FHD
+            diagonal = 24;
+          }
+        }
+        // HD and below
+        else if (screenW >= 1680) {
+          ppi = 99; // 22" HD+
+          diagonal = 22;
+        }
+        else if (screenW >= 1366) {
+          ppi = 96; // 15.6" laptop HD
+          diagonal = 15.6;
+        }
+        else {
           ppi = 96;
           diagonal = Math.round((diagPixels / 96) * 10) / 10;
         }
