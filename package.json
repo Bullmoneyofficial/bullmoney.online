@@ -3,10 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
+    "dev:standard": "next dev",
+    "dev:fast": "NODE_OPTIONS='--max-old-space-size=8192' next dev --turbo",
     "dev:webpack": "next dev --webpack",
     "build": "next build",
+    "build:fast": "NODE_OPTIONS='--max-old-space-size=8192' next build",
     "start": "next start -p $PORT",
+    "start:fast": "NODE_OPTIONS='--max-old-space-size=4096' next start -p ${PORT:-3000}",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "echo 'Running production readiness checks...' && npm run lint && npm run build",
@@ -18,7 +22,8 @@
     "security": "npm audit --audit-level=high",
     "security:fix": "npm audit fix",
     "pre-deploy": "node scripts/pre-deploy.mjs",
-    "deploy-check": "npm run type-check && npm run lint && npm run build"
+    "deploy-check": "npm run type-check && npm run lint && npm run build",
+    "clean": "rm -rf .next node_modules/.cache"
   },
   "dependencies": {
     "@calcom/embed-react": "^1.5.3",
