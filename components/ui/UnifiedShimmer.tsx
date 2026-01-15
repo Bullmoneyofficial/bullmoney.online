@@ -57,392 +57,537 @@ export const useShimmerQuality = () => useContext(ShimmerQualityContext);
 const ShimmerStyles = () => (
   <style jsx global>{`
     /* =================================================================
-       UNIFIED SHIMMER KEYFRAMES v4 - ENHANCED AESTHETIC
+       UNIFIED SHIMMER KEYFRAMES v5 - ENHANCED AESTHETIC WITH GLOW
        All shimmer animations in one place for consistent performance
-       Now includes wave, ripple, and gradient sweep effects
+       Now includes wave, ripple, gradient sweep, and enhanced glow effects
+       ALL ANIMATIONS ARE LEFT-TO-RIGHT - NO SPINNING
        ================================================================= */
-    
-    /* Enhanced left-to-right shimmer with glow effect */
+
+    /* PRIMARY: Enhanced left-to-right shimmer with trailing glow */
     @keyframes unified-shimmer-ltr {
-      0% { 
+      0% {
         transform: translateX(-100%);
         opacity: 0;
+        filter: blur(0px);
       }
-      20% { opacity: 0.5; }
-      50% { opacity: 1; }
-      80% { opacity: 0.5; }
-      100% { 
+      10% {
+        opacity: 0.3;
+        filter: blur(0px);
+      }
+      30% {
+        opacity: 0.7;
+        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+      }
+      50% {
+        opacity: 1;
+        filter: drop-shadow(0 0 12px rgba(147, 197, 253, 0.8));
+      }
+      70% {
+        opacity: 0.7;
+        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+      }
+      90% {
+        opacity: 0.3;
+        filter: blur(0px);
+      }
+      100% {
         transform: translateX(200%);
         opacity: 0;
+        filter: blur(0px);
       }
     }
-    
-    /* LEFT-TO-RIGHT Border shimmer - enhanced with glow */
+
+    /* LEFT-TO-RIGHT Border shimmer - enhanced with pulsing glow */
     @keyframes unified-border-ltr {
-      0% { 
+      0% {
         background-position: -200% 0;
         filter: drop-shadow(0 0 0 rgba(59, 130, 246, 0));
       }
-      50% { 
-        filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.6));
+      25% {
+        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));
       }
-      100% { 
+      50% {
+        filter: drop-shadow(0 0 20px rgba(147, 197, 253, 0.8));
+      }
+      75% {
+        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));
+      }
+      100% {
         background-position: 200% 0;
         filter: drop-shadow(0 0 0 rgba(59, 130, 246, 0));
       }
     }
-    
-    /* Enhanced LEFT-TO-RIGHT sweep with glow */
+
+    /* Enhanced LEFT-TO-RIGHT sweep with soft glow trail */
     @keyframes unified-sweep-ltr {
-      0% { 
+      0% {
         transform: translateX(-100%);
         opacity: 0;
       }
-      20% { opacity: 0.6; }
-      50% { opacity: 1; }
-      80% { opacity: 0.6; }
-      100% { 
+      15% {
+        opacity: 0.4;
+      }
+      35% {
+        opacity: 0.8;
+        filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.5));
+      }
+      50% {
+        opacity: 1;
+        filter: drop-shadow(0 0 15px rgba(147, 197, 253, 0.9));
+      }
+      65% {
+        opacity: 0.8;
+        filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.5));
+      }
+      85% {
+        opacity: 0.4;
+      }
+      100% {
         transform: translateX(200%);
         opacity: 0;
       }
     }
-    
-    /* NEW: Wave animation - creates smooth wave motion left to right */
+
+    /* Wave animation - smooth wave motion left to right with glow */
     @keyframes unified-wave {
-      0% { 
+      0% {
         transform: translateX(-100%) scaleY(1);
         opacity: 0;
       }
-      25% { opacity: 0.4; }
-      50% { 
-        transform: translateX(0) scaleY(1.2);
-        opacity: 1; 
+      20% {
+        opacity: 0.5;
+        filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4));
       }
-      75% { opacity: 0.4; }
-      100% { 
+      50% {
+        transform: translateX(0%) scaleY(1.15);
+        opacity: 1;
+        filter: drop-shadow(0 0 12px rgba(147, 197, 253, 0.8));
+      }
+      80% {
+        opacity: 0.5;
+        filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4));
+      }
+      100% {
         transform: translateX(100%) scaleY(1);
         opacity: 0;
       }
     }
-    
-    /* NEW: Ripple animation - expanding circles */
+
+    /* Ripple animation - expanding circles with glow */
     @keyframes unified-ripple {
       0% {
         transform: scale(0);
         opacity: 1;
+        box-shadow: 0 0 0 rgba(59, 130, 246, 0.8);
+      }
+      50% {
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
       }
       100% {
         transform: scale(4);
         opacity: 0;
+        box-shadow: 0 0 0 rgba(59, 130, 246, 0);
       }
     }
-    
-    /* NEW: Gradient wave - combines color shift with movement */
+
+    /* Gradient wave - combines color shift with LEFT TO RIGHT movement */
     @keyframes unified-gradient-wave {
-      0% { 
+      0% {
         background-position: 0% 50%;
         transform: translateX(-100%);
+        filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.3));
       }
-      50% { 
+      50% {
         background-position: 100% 50%;
         transform: translateX(0);
+        filter: drop-shadow(0 0 12px rgba(147, 197, 253, 0.6));
       }
-      100% { 
+      100% {
         background-position: 0% 50%;
         transform: translateX(100%);
+        filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.3));
       }
     }
-    
-    /* Enhanced pulse with glow */
+
+    /* Enhanced pulse with vibrant glow */
     @keyframes unified-pulse {
-      0%, 100% { 
+      0%, 100% {
         opacity: 0.4;
-        box-shadow: 0 0 0 rgba(59, 130, 246, 0.2);
+        box-shadow: 0 0 5px rgba(59, 130, 246, 0.2),
+                    0 0 10px rgba(59, 130, 246, 0.1);
       }
-      50% { 
-        opacity: 0.7;
-        box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+      50% {
+        opacity: 0.8;
+        box-shadow: 0 0 25px rgba(59, 130, 246, 0.6),
+                    0 0 40px rgba(147, 197, 253, 0.4);
       }
     }
-    
-    /* Enhanced glow - more vibrant */
+
+    /* Enhanced glow - more vibrant with color shift */
     @keyframes unified-glow {
-      0%, 100% { 
+      0%, 100% {
         box-shadow: 0 0 15px rgba(59, 130, 246, 0.3),
-                    0 0 25px rgba(59, 130, 246, 0.1);
+                    0 0 30px rgba(59, 130, 246, 0.15),
+                    inset 0 0 10px rgba(59, 130, 246, 0.05);
       }
-      50% { 
-        box-shadow: 0 0 30px rgba(59, 130, 246, 0.6),
-                    0 0 50px rgba(59, 130, 246, 0.3);
+      50% {
+        box-shadow: 0 0 35px rgba(59, 130, 246, 0.7),
+                    0 0 60px rgba(147, 197, 253, 0.4),
+                    inset 0 0 15px rgba(147, 197, 253, 0.1);
       }
     }
-    
-    /* Enhanced float with smooth motion */
+
+    /* Enhanced float with glow pulse */
     @keyframes unified-float {
-      0%, 100% { 
+      0%, 100% {
         transform: translateY(0);
         opacity: 0.8;
+        filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.3));
       }
-      50% { 
+      50% {
         transform: translateY(-8px);
         opacity: 1;
+        filter: drop-shadow(0 0 12px rgba(147, 197, 253, 0.6));
       }
     }
-    
-    /* Enhanced dot pulse - more prominent */
+
+    /* Enhanced dot pulse - more prominent glow ring */
     @keyframes unified-dot-pulse {
-      0%, 100% { 
-        opacity: 0.5; 
+      0%, 100% {
+        opacity: 0.5;
         transform: scale(1);
-        box-shadow: 0 0 0 rgba(59, 130, 246, 0.4);
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4),
+                    0 0 5px rgba(59, 130, 246, 0.3);
       }
-      50% { 
-        opacity: 1; 
-        transform: scale(1.4);
-        box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+      50% {
+        opacity: 1;
+        transform: scale(1.3);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2),
+                    0 0 20px rgba(147, 197, 253, 0.7);
       }
     }
-    
-    /* Enhanced ping with glow */
+
+    /* Enhanced ping with expanding glow ring */
     @keyframes unified-ping {
-      0% { 
+      0% {
         transform: scale(1);
         opacity: 1;
-        box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.7);
       }
-      75% { 
-        transform: scale(2.5);
-        opacity: 0.5;
-        box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+      50% {
+        transform: scale(2);
+        opacity: 0.6;
+        box-shadow: 0 0 25px rgba(147, 197, 253, 0.5);
       }
-      100% { 
+      100% {
         transform: scale(3);
         opacity: 0;
         box-shadow: 0 0 0 rgba(59, 130, 246, 0);
       }
     }
-    
-    /* Enhanced text shimmer - vibrant gradient sweep */
+
+    /* Enhanced text shimmer - vibrant gradient sweep LEFT TO RIGHT */
     @keyframes unified-text-shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
+      0% {
+        background-position: 200% 0;
+        filter: drop-shadow(0 0 0 transparent);
+      }
+      50% {
+        filter: drop-shadow(0 0 8px rgba(147, 197, 253, 0.5));
+      }
+      100% {
+        background-position: -200% 0;
+        filter: drop-shadow(0 0 0 transparent);
+      }
     }
-    
-    /* NEW: Enhanced glow sweep - left to right glow effect */
+
+    /* Enhanced glow sweep - LEFT TO RIGHT with bright center */
     @keyframes unified-glow-sweep {
       0% {
         background-position: -100% 0;
         opacity: 0;
       }
-      20% { opacity: 0.3; }
-      50% { opacity: 0.8; }
-      80% { opacity: 0.3; }
+      15% {
+        opacity: 0.2;
+      }
+      35% {
+        opacity: 0.6;
+        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
+      }
+      50% {
+        opacity: 1;
+        filter: drop-shadow(0 0 15px rgba(147, 197, 253, 0.8));
+      }
+      65% {
+        opacity: 0.6;
+        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
+      }
+      85% {
+        opacity: 0.2;
+      }
       100% {
         background-position: 100% 0;
         opacity: 0;
       }
     }
-    
-    /* NEW: Shine burst - sudden bright flash */
+
+    /* Shine burst - sudden bright flash with expanding glow */
     @keyframes unified-shine-burst {
       0% {
         opacity: 0;
+        transform: scale(0.8);
         box-shadow: 0 0 0 rgba(147, 197, 253, 0);
       }
       50% {
         opacity: 1;
-        box-shadow: 0 0 30px rgba(147, 197, 253, 0.8);
+        transform: scale(1.1);
+        box-shadow: 0 0 40px rgba(147, 197, 253, 0.9),
+                    0 0 60px rgba(59, 130, 246, 0.5);
       }
       100% {
         opacity: 0;
+        transform: scale(0.8);
         box-shadow: 0 0 0 rgba(147, 197, 253, 0);
+      }
+    }
+
+    /* NEW: Smooth glide - gentle left to right with soft edges */
+    @keyframes unified-glide {
+      0% {
+        transform: translateX(-100%);
+        opacity: 0;
+      }
+      20% {
+        opacity: 0.6;
+      }
+      50% {
+        opacity: 1;
+        filter: drop-shadow(0 0 10px rgba(147, 197, 253, 0.7));
+      }
+      80% {
+        opacity: 0.6;
+      }
+      100% {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+
+    /* NEW: Streak - fast left to right with bright trail */
+    @keyframes unified-streak {
+      0% {
+        transform: translateX(-100%) scaleX(0.5);
+        opacity: 0;
+      }
+      30% {
+        transform: translateX(-20%) scaleX(1.2);
+        opacity: 1;
+        filter: drop-shadow(0 0 15px rgba(147, 197, 253, 1));
+      }
+      100% {
+        transform: translateX(200%) scaleX(0.5);
+        opacity: 0;
       }
     }
     
     /* =================================================================
-       SHIMMER CSS CLASSES v4 - ENHANCED AESTHETIC
+       SHIMMER CSS CLASSES v5 - ENHANCED AESTHETIC WITH GLOW
        Use these classes directly for maximum performance
-       SMOOTH left-to-right animations with glow effects
+       ALL LEFT-TO-RIGHT animations with vibrant glow effects
        ================================================================= */
-    
+
     .shimmer-line {
-      animation: unified-shimmer-ltr 10s linear infinite;
-      will-change: transform;
+      animation: unified-shimmer-ltr 8s ease-in-out infinite;
+      will-change: transform, filter;
       background: linear-gradient(
         90deg,
         transparent 0%,
-        rgba(59, 130, 246, 0.8) 20%,
+        rgba(59, 130, 246, 0.4) 15%,
         rgba(147, 197, 253, 1) 50%,
-        rgba(59, 130, 246, 0.8) 80%,
+        rgba(59, 130, 246, 0.4) 85%,
         transparent 100%
       );
     }
-    
-    /* shimmer-spin: LEFT-TO-RIGHT with enhanced glow */
+
+    /* shimmer-spin: LEFT-TO-RIGHT sweep with enhanced glow trail */
     .shimmer-spin {
-      animation: unified-sweep-ltr 12s linear infinite;
-      will-change: transform;
-      filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.6));
+      animation: unified-sweep-ltr 10s ease-in-out infinite;
+      will-change: transform, filter;
     }
-    
-    /* Explicit left-to-right class - ENHANCED */
+
+    /* Explicit left-to-right class - ENHANCED with glow */
     .shimmer-ltr {
-      animation: unified-shimmer-ltr 10s linear infinite;
-      will-change: transform;
+      animation: unified-shimmer-ltr 8s ease-in-out infinite;
+      will-change: transform, filter;
       background: linear-gradient(
         90deg,
         transparent 0%,
-        rgba(59, 130, 246, 0.7) 20%,
+        rgba(59, 130, 246, 0.3) 10%,
         rgba(147, 197, 253, 1) 50%,
-        rgba(59, 130, 246, 0.7) 80%,
+        rgba(59, 130, 246, 0.3) 90%,
         transparent 100%
       );
     }
-    
-    /* NEW: Wave animation - smooth wave motion */
-    .shimmer-wave {
-      animation: unified-wave 8s ease-in-out infinite;
-      will-change: transform, opacity;
+
+    /* NEW: Glide animation - smooth gentle sweep */
+    .shimmer-glide {
+      animation: unified-glide 6s ease-in-out infinite;
+      will-change: transform, filter;
       background: linear-gradient(
         90deg,
         transparent 0%,
-        rgba(59, 130, 246, 0.6) 20%,
+        rgba(59, 130, 246, 0.5) 20%,
         rgba(147, 197, 253, 0.9) 50%,
-        rgba(59, 130, 246, 0.6) 80%,
+        rgba(59, 130, 246, 0.5) 80%,
         transparent 100%
       );
     }
-    
-    /* NEW: Ripple animation - expanding ripple effect */
+
+    /* NEW: Streak animation - fast bright trail */
+    .shimmer-streak {
+      animation: unified-streak 4s ease-out infinite;
+      will-change: transform, filter;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(147, 197, 253, 0.6) 30%,
+        rgba(255, 255, 255, 1) 50%,
+        rgba(147, 197, 253, 0.6) 70%,
+        transparent 100%
+      );
+    }
+
+    /* Wave animation - smooth wave motion with glow */
+    .shimmer-wave {
+      animation: unified-wave 6s ease-in-out infinite;
+      will-change: transform, opacity, filter;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(59, 130, 246, 0.4) 15%,
+        rgba(147, 197, 253, 0.95) 50%,
+        rgba(59, 130, 246, 0.4) 85%,
+        transparent 100%
+      );
+    }
+
+    /* Ripple animation - expanding ripple effect with glow */
     .shimmer-ripple {
       animation: unified-ripple 1.5s ease-out infinite;
-      will-change: transform, opacity;
+      will-change: transform, opacity, box-shadow;
       border-radius: 50%;
       border: 2px solid rgba(59, 130, 246, 0.8);
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
     }
-    
-    /* NEW: Gradient wave - color shift with movement */
+
+    /* Gradient wave - color shift with movement and glow */
     .shimmer-gradient-wave {
-      animation: unified-gradient-wave 8s ease-in-out infinite;
-      will-change: background-position, transform;
+      animation: unified-gradient-wave 6s ease-in-out infinite;
+      will-change: background-position, transform, filter;
       background-size: 200% 200%;
       background: linear-gradient(
         135deg,
-        rgba(59, 130, 246, 0.3) 0%,
-        rgba(147, 197, 253, 0.6) 25%,
-        rgba(59, 130, 246, 0.3) 50%,
-        rgba(147, 197, 253, 0.6) 75%,
-        rgba(59, 130, 246, 0.3) 100%
+        rgba(59, 130, 246, 0.2) 0%,
+        rgba(147, 197, 253, 0.7) 25%,
+        rgba(59, 130, 246, 0.2) 50%,
+        rgba(147, 197, 253, 0.7) 75%,
+        rgba(59, 130, 246, 0.2) 100%
       );
     }
-    
-    /* NEW: Shine burst - sudden bright flash */
+
+    /* Shine burst - sudden bright flash with expanding glow */
     .shimmer-shine-burst {
       animation: unified-shine-burst 2s ease-in-out infinite;
-      will-change: opacity, box-shadow;
+      will-change: opacity, box-shadow, transform;
+      border-radius: 50%;
     }
-    
-    /* Enhanced pulse with glow */
+
+    /* Enhanced pulse with vibrant glow */
     .shimmer-pulse {
-      animation: unified-pulse 6s ease-in-out infinite;
+      animation: unified-pulse 5s ease-in-out infinite;
       will-change: opacity, box-shadow;
     }
-    
-    /* Enhanced glow - more vibrant */
+
+    /* Enhanced glow - more vibrant with inner glow */
     .shimmer-glow {
-      animation: unified-glow 5s ease-in-out infinite;
+      animation: unified-glow 4s ease-in-out infinite;
       will-change: box-shadow;
     }
-    
-    /* Enhanced float with glow */
+
+    /* Enhanced float with glow trail */
     .shimmer-float {
-      animation: unified-float 4s ease-in-out infinite;
-      will-change: transform, opacity;
-      filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));
+      animation: unified-float 3s ease-in-out infinite;
+      will-change: transform, opacity, filter;
     }
-    
-    /* Enhanced dot pulse - more prominent glow */
+
+    /* Enhanced dot pulse - prominent glow ring */
     .shimmer-dot-pulse {
-      animation: unified-dot-pulse 1.5s ease-in-out infinite;
+      animation: unified-dot-pulse 1.2s ease-in-out infinite;
       will-change: opacity, transform, box-shadow;
       border-radius: 50%;
-      box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
     }
-    
-    /* Enhanced ping with glow spread */
+
+    /* Enhanced ping with expanding glow ring */
     .shimmer-ping {
-      animation: unified-ping 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+      animation: unified-ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
       will-change: transform, opacity, box-shadow;
       border-radius: 50%;
     }
-    
-    /* Text shimmer - for animated gradient text - ENHANCED AESTHETIC */
+
+    /* Text shimmer - vibrant gradient text with glow */
     .shimmer-text {
       background: linear-gradient(
-        110deg, 
-        rgba(255, 255, 255, 0.9) 0%, 
-        rgba(59, 130, 246, 0.8) 20%,
-        rgba(147, 197, 253, 1) 40%,
-        rgba(59, 130, 246, 0.8) 60%,
-        rgba(255, 255, 255, 0.9) 80%,
-        rgba(59, 130, 246, 0.8) 100%
+        110deg,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(59, 130, 246, 0.7) 15%,
+        rgba(147, 197, 253, 1) 35%,
+        rgba(255, 255, 255, 1) 50%,
+        rgba(147, 197, 253, 1) 65%,
+        rgba(59, 130, 246, 0.7) 85%,
+        rgba(255, 255, 255, 0.9) 100%
       );
       background-size: 300% auto;
       background-clip: text;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      animation: unified-text-shimmer 4s linear infinite;
-      will-change: background-position;
+      animation: unified-text-shimmer 3s linear infinite;
+      will-change: background-position, filter;
     }
-    
+
     /* GPU acceleration hint */
     .shimmer-gpu {
       transform: translateZ(0);
       backface-visibility: hidden;
     }
-    
-    /* FIX for low devices: Use ::before pseudo-element for circles instead of rounded-full */
-    /* This prevents rendering performance issues on low-end devices */
+
+    /* Circle styling - uses proper border-radius, works on all devices */
     .shimmer-circle {
       position: relative;
       display: inline-block;
-    }
-    
-    .shimmer-circle::before {
-      content: '';
-      position: absolute;
-      inset: 0;
       border-radius: 50%;
-      background: inherit;
-      pointer-events: none;
-      will-change: contents;
     }
     
     /* =================================================================
-       FPS-AWARE QUALITY CONTROL - ENHANCED v4
+       FPS-AWARE QUALITY CONTROL - ENHANCED v5
        Classes added by UnifiedPerformanceSystem based on real FPS
-       Now includes fixes for circles on low-end devices
+       FIXED: Removed aggressive border-radius removal that broke shapes
        ================================================================= */
 
-    /* CRITICAL FIX: Hide rounded-full circles on low FPS devices */
-    html.fps-minimal [class*="rounded-full"],
-    html.fps-low [class*="rounded-full"],
-    html.shimmer-quality-disabled [class*="rounded-full"] {
-      border-radius: 0 !important;
-      box-shadow: none !important;
-    }
-    
-    /* Disable complex shadows on low FPS */
+    /* NOTE: Removed border-radius: 0 rules that were breaking UI shapes */
+    /* Instead, we slow down animations and reduce glow effects on low FPS */
+
+    /* Simplify shadows on low FPS devices */
     html.fps-minimal .shimmer-dot-pulse,
     html.fps-low .shimmer-dot-pulse,
     html.shimmer-quality-disabled .shimmer-dot-pulse {
-      box-shadow: none !important;
+      box-shadow: 0 0 4px rgba(59, 130, 246, 0.3) !important;
     }
-    
+
+    /* Simplify ping animation on low FPS */
     html.fps-minimal .shimmer-ping,
     html.fps-low .shimmer-ping,
     html.shimmer-quality-disabled .shimmer-ping {
-      border-radius: 0 !important;
+      animation-duration: 3s !important;
     }
 
     /* Medium quality - STILL AESTHETIC, just slower */
@@ -691,30 +836,28 @@ const ShimmerStyles = () => (
     
     /* Mobile: slow down animations for battery and performance but KEEP AESTHETIC */
     @media (max-width: 768px) {
-      /* FIX: Disable rounded-full circles on mobile for performance */
-      [class*="rounded-full"] {
-        border-radius: 0 !important;
-      }
-      
-      .shimmer-line { 
+      /* FIXED: Removed border-radius: 0 rule that was breaking UI shapes on mobile */
+      /* Circles and rounded elements should still render correctly */
+
+      .shimmer-line {
         animation-duration: 14s;
         opacity: 0.85;
         filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.4));
       }
-      .shimmer-spin { 
+      .shimmer-spin {
         animation-duration: 16s;
         opacity: 0.85;
         filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.4));
       }
-      .shimmer-ltr { 
+      .shimmer-ltr {
         animation-duration: 14s;
         opacity: 0.85;
       }
-      .shimmer-pulse { 
+      .shimmer-pulse {
         animation-duration: 12s;
         opacity: 0.8;
       }
-      .shimmer-glow { 
+      .shimmer-glow {
         animation-duration: 14s;
         opacity: 0.8;
         box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
@@ -724,7 +867,8 @@ const ShimmerStyles = () => (
         opacity: 0.8;
       }
       .shimmer-ripple {
-        display: none;
+        animation-duration: 2s;
+        opacity: 0.6;
       }
     }
     
@@ -759,7 +903,7 @@ export const ShimmerStylesProvider = memo(() => <ShimmerStyles />);
 ShimmerStylesProvider.displayName = 'ShimmerStylesProvider';
 
 // Types
-type ShimmerVariant = 'line' | 'border' | 'conic' | 'glow' | 'pulse' | 'wave' | 'ripple' | 'gradient-wave' | 'shine-burst';
+type ShimmerVariant = 'line' | 'border' | 'conic' | 'glow' | 'pulse' | 'wave' | 'ripple' | 'gradient-wave' | 'shine-burst' | 'glide' | 'streak' | 'glow-border';
 type ShimmerColor = 'blue' | 'red' | 'white' | 'custom';
 
 interface ShimmerProps {
@@ -1216,35 +1360,168 @@ ShimmerGradientWave.displayName = 'ShimmerGradientWave';
  * Shine Burst - Sudden bright flash effect
  * NEW in v4 - Creates bright flash bursts for attention-grabbing elements
  */
-export const ShimmerShineBurst = memo(({ 
+export const ShimmerShineBurst = memo(({
   color = 'blue',
   size = 20,
   className = '',
   disabled = false
 }: { color?: ShimmerColor; size?: number; className?: string; disabled?: boolean }) => {
   const colors = colorMap[color];
-  
+
   if (disabled) return null;
-  
+
   return (
-    <div 
+    <div
       className={`shimmer-shine-burst shimmer-gpu ${className}`}
-      style={{ 
+      style={{
         width: size,
         height: size,
         backgroundColor: colors.conic,
-      }} 
+      }}
     />
   );
 });
 ShimmerShineBurst.displayName = 'ShimmerShineBurst';
 
 /**
- * Unified Shimmer - All-in-one component
+ * Glide Shimmer - Smooth gentle sweep effect
+ * NEW in v5 - Creates a smooth left-to-right glide with soft glow
  */
-export const UnifiedShimmer = memo(({ 
-  variant, 
-  ...props 
+export const ShimmerGlide = memo(({
+  color = 'blue',
+  customColor,
+  intensity = 'medium',
+  speed = 'normal',
+  className = '',
+  disabled = false
+}: Omit<ShimmerProps, 'variant'>) => {
+  const colors = colorMap[color];
+  const viaColor = customColor || colors.via;
+
+  if (disabled) return null;
+
+  return (
+    <div
+      className={`absolute inset-x-0 top-0 h-[2px] overflow-hidden ${className}`}
+      style={{ willChange: 'contents' }}
+    >
+      <div
+        className="shimmer-glide shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%]"
+        style={{
+          background: `linear-gradient(to right, transparent, ${viaColor}, transparent)`,
+          opacity: intensityMap[intensity],
+          animationDuration: speedMap[speed],
+        }}
+      />
+    </div>
+  );
+});
+ShimmerGlide.displayName = 'ShimmerGlide';
+
+/**
+ * Streak Shimmer - Fast bright trail effect
+ * NEW in v5 - Creates a fast moving streak with bright center
+ */
+export const ShimmerStreak = memo(({
+  color = 'blue',
+  customColor,
+  intensity = 'high',
+  className = '',
+  disabled = false
+}: Omit<ShimmerProps, 'variant'>) => {
+  const colors = colorMap[color];
+  const viaColor = customColor || 'rgba(255, 255, 255, 0.9)';
+
+  if (disabled) return null;
+
+  return (
+    <div
+      className={`absolute inset-x-0 top-0 h-[1px] overflow-hidden ${className}`}
+      style={{ willChange: 'contents' }}
+    >
+      <div
+        className="shimmer-streak shimmer-gpu absolute inset-y-0 left-[-100%] w-[50%]"
+        style={{
+          background: `linear-gradient(to right, transparent, ${colors.via}, ${viaColor}, ${colors.via}, transparent)`,
+          opacity: intensityMap[intensity],
+        }}
+      />
+    </div>
+  );
+});
+ShimmerStreak.displayName = 'ShimmerStreak';
+
+/**
+ * Enhanced Glow Border - Left-to-right shimmer with glow on all borders
+ * NEW in v5 - Creates a glowing border effect that sweeps left to right
+ */
+export const ShimmerGlowBorder = memo(({
+  color = 'blue',
+  customColor,
+  intensity = 'medium',
+  speed = 'normal',
+  className = '',
+  disabled = false
+}: Omit<ShimmerProps, 'variant'>) => {
+  const colors = colorMap[color];
+  const viaColor = customColor || colors.via;
+  const glowColor = colors.glow;
+
+  if (disabled) return null;
+
+  return (
+    <div className={`absolute inset-0 pointer-events-none ${className}`}>
+      {/* Top shimmer */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] overflow-hidden">
+        <div
+          className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%]"
+          style={{
+            background: `linear-gradient(to right, transparent, ${viaColor}, transparent)`,
+            opacity: intensityMap[intensity],
+            animationDuration: speedMap[speed],
+          }}
+        />
+      </div>
+      {/* Bottom shimmer - delayed */}
+      <div className="absolute bottom-0 left-0 right-0 h-[2px] overflow-hidden">
+        <div
+          className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%]"
+          style={{
+            background: `linear-gradient(to right, transparent, ${viaColor}, transparent)`,
+            opacity: intensityMap[intensity],
+            animationDuration: speedMap[speed],
+            animationDelay: '2s',
+          }}
+        />
+      </div>
+      {/* Corner glow effects */}
+      <div
+        className="shimmer-glow absolute top-0 left-0 w-8 h-8 rounded-tl-xl"
+        style={{
+          boxShadow: `inset 8px 8px 20px ${glowColor}`,
+          opacity: intensityMap[intensity] * 0.5,
+        }}
+      />
+      <div
+        className="shimmer-glow absolute top-0 right-0 w-8 h-8 rounded-tr-xl"
+        style={{
+          boxShadow: `inset -8px 8px 20px ${glowColor}`,
+          opacity: intensityMap[intensity] * 0.5,
+          animationDelay: '1s',
+        }}
+      />
+    </div>
+  );
+});
+ShimmerGlowBorder.displayName = 'ShimmerGlowBorder';
+
+/**
+ * Unified Shimmer - All-in-one component
+ * Supports all shimmer variants with enhanced glow effects
+ */
+export const UnifiedShimmer = memo(({
+  variant,
+  ...props
 }: ShimmerProps) => {
   switch (variant) {
     case 'line':
@@ -1265,6 +1542,12 @@ export const UnifiedShimmer = memo(({
       return <ShimmerGradientWave {...props} />;
     case 'shine-burst':
       return <ShimmerShineBurst {...props} />;
+    case 'glide':
+      return <ShimmerGlide {...props} />;
+    case 'streak':
+      return <ShimmerStreak {...props} />;
+    case 'glow-border':
+      return <ShimmerGlowBorder {...props} />;
     default:
       return null;
   }
