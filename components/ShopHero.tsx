@@ -362,35 +362,63 @@ const HeroParallax = () => {
         
     <style jsx global>{`
       @keyframes shimmer {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
+        0% { 
+          background-position: 200% 0;
+          opacity: 0;
+        }
+        20% { 
+          opacity: 0.3;
+        }
+        50% { 
+          background-position: 0% 0;
+          opacity: 1;
+        }
+        80% { 
+          opacity: 0.3;
+        }
+        100% { 
+          background-position: -200% 0;
+          opacity: 0;
+        }
       }
       .animate-shimmer {
-        animation: shimmer 3s linear infinite;
+        animation: shimmer 3.5s linear infinite;
+        filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.6));
       }
       
       /* Define the gradient animation for text-shimmer */
       @keyframes text-shimmer {
-        0% { background-position: 0% 50%; }
-        100% { background-position: -200% 50%; }
+        0% { 
+          background-position: 0% 50%;
+          opacity: 0.4;
+        }
+        50% { 
+          background-position: -200% 50%;
+          opacity: 1;
+        }
+        100% { 
+          background-position: 0% 50%;
+          opacity: 0.4;
+        }
       }
 
       .animate-text-shimmer {
-        /* Premium Grey to White to Blue-ish White Gradient */
+        /* Premium Grey to White to Blue Gradient */
         background: linear-gradient(
           110deg, 
-          #64748b 20%,   /* Darker Grey Start */
+          #475569 20%,   /* Darker slate start */
           #ffffff 48%,   /* White Peak */
-          #a5b4fc 52%,   /* Subtle Indigo Hint */
-          #64748b 80%    /* Darker Grey End */
+          #3b82f6 52%,   /* Vibrant Blue */
+          #475569 80%    /* Darker slate end */
         );
         background-size: 200% auto;
         background-clip: text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         color: transparent;
-        animation: text-shimmer 3s linear infinite;
+        animation: text-shimmer 3.5s linear infinite;
         display: inline-block;
+        filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.4));
       }
 
       /* Make the button text shimmer too */

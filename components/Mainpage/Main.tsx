@@ -469,14 +469,14 @@ const CardDescription = ({
   className?: string;
 }) => {
   return (
-    <p
+    <div
       className={cn(
         "font-sans max-w-xs text-base font-normal tracking-tight mt-2 text-neutral-500 dark:text-neutral-400",
         className
       )}
     >
       {children}
-    </p>
+    </div>
   );
 };
 

@@ -759,7 +759,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
           <motion.div
             exit={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }}
             transition={{ duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96] }}
-            className="fixed inset-0 z-[9999999] flex flex-col items-center justify-center bg-black text-white overflow-hidden"
+            className="fixed inset-0 z-[9999999] flex flex-col items-center justify-center bg-[#000000] text-white overflow-hidden"
             style={{ isolation: 'isolate' }}
             onMouseDown={handleInteractionStart}
             onMouseUp={handleInteractionEnd}
@@ -768,41 +768,41 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
             onTouchEnd={handleInteractionEnd}
             onTouchCancel={handleInteractionEnd}
           >
-            {/* Trading Chart Background - Blue accent grid like navbar */}
-            <div className="absolute inset-0 overflow-hidden opacity-30">
+            {/* Trading Chart Background - Blue accent grid - ENHANCED */}
+            <div className="absolute inset-0 overflow-hidden opacity-20">
               <motion.div
                 animate={{
                   backgroundPosition: ["0% 0%", "100% 100%"],
                 }}
                 transition={{
-                  duration: 15,
+                  duration: 20,
                   repeat: Infinity,
                   ease: "linear",
                 }}
                 className="w-full h-full absolute inset-0"
                 style={{
-                  backgroundImage: `linear-gradient(rgba(59, 130, 246, 0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.25) 1px, transparent 1px)`,
-                  backgroundSize: "40px 40px",
+                  backgroundImage: `linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px)`,
+                  backgroundSize: "50px 50px",
                 }}
               />
             </div>
             
-            {/* Navbar-style blue shimmer overlay - LEFT TO RIGHT (FPS-aware) */}
+            {/* Navbar-style blue shimmer overlay - LEFT TO RIGHT (FPS-aware) - SMOOTHER */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/40 to-transparent"
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"
                 animate={{ x: ["-100%", "100%"] }}
-                transition={{ duration: shimmerDuration * 1.8, repeat: Infinity, ease: "linear", repeatDelay: 0.8 }}
+                transition={{ duration: shimmerDuration * 2.5, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
               />
             </div>
 
-            {/* Trading Ticker Tape - Black/Blue navbar style with LEFT TO RIGHT shimmer */}
-            <div className="absolute top-0 left-0 right-0 h-10 bg-black border-b-2 border-blue-500/70 overflow-hidden shadow-[0_0_40px_rgba(59,130,246,0.6)] z-40">
-              {/* Left to right shimmer on ticker (FPS-aware) */}
+            {/* Trading Ticker Tape - Pure Black/Blue navbar style with LEFT TO RIGHT shimmer */}
+            <div className="absolute top-0 left-0 right-0 h-10 bg-[#000000] border-b border-blue-500/50 overflow-hidden shadow-[0_0_30px_rgba(59,130,246,0.4)] z-40">
+              {/* Left to right shimmer on ticker (FPS-aware) - SMOOTHER */}
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/50 to-transparent"
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/40 to-transparent"
                 animate={{ x: ["-100%", "100%"] }}
-                transition={{ duration: shimmerDuration * 0.8, repeat: Infinity, ease: "linear" }}
+                transition={{ duration: shimmerDuration * 1.2, repeat: Infinity, ease: "linear" }}
               />
               <motion.div
                 animate={{ x: ["-100%", "0%"] }}
@@ -823,42 +823,42 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
               </motion.div>
             </div>
 
-            {/* Radial Gradient Glow - Pure blue */}
+            {/* Radial Gradient Glow - Pure blue, subtle */}
             <motion.div
               className="absolute inset-0 pointer-events-none"
               style={{
-                background: `radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.3), rgba(59, 130, 246, 0.1) 40%, transparent 70%)`,
+                background: `radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.08) 40%, transparent 70%)`,
               }}
               animate={{
-                opacity: isHolding ? 1 : 0.5,
-                scale: isHolding ? 1.2 : 1,
+                opacity: isHolding ? 0.8 : 0.4,
+                scale: isHolding ? 1.15 : 1,
               }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.4 }}
             />
 
-            {/* Floating Blue Orbs - Navbar style */}
+            {/* Floating Blue Orbs - Subtle and smooth */}
             <motion.div
-              className="absolute top-1/3 left-1/4 w-48 h-48 rounded-full bg-blue-500/10 blur-3xl pointer-events-none"
+              className="absolute top-1/3 left-1/4 w-48 h-48 rounded-full bg-blue-500/8 blur-3xl pointer-events-none"
               animate={{
-                x: [0, 80, 0],
-                y: [0, -40, 0],
-                scale: [1, 1.2, 1],
+                x: [0, 60, 0],
+                y: [0, -30, 0],
+                scale: [1, 1.15, 1],
               }}
               transition={{
-                duration: 8,
+                duration: 12,
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
             />
             <motion.div
-              className="absolute bottom-1/3 right-1/4 w-64 h-64 rounded-full bg-blue-600/10 blur-3xl pointer-events-none"
+              className="absolute bottom-1/3 right-1/4 w-64 h-64 rounded-full bg-blue-600/8 blur-3xl pointer-events-none"
               animate={{
-                x: [0, -60, 0],
-                y: [0, 50, 0],
+                x: [0, -50, 0],
+                y: [0, 40, 0],
                 scale: [1, 1.1, 1],
               }}
               transition={{
-                duration: 10,
+                duration: 14,
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
@@ -1123,16 +1123,16 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                     />
                   </motion.div>
                 </div>
-                <div className="w-full h-2.5 bg-black border-2 border-blue-500/60 rounded-full overflow-hidden shadow-[inset_0_0_15px_rgba(0,0,0,0.7),0_0_25px_rgba(59,130,246,0.4)]">
+                <div className="w-full h-2.5 bg-[#000000] border border-blue-500/50 rounded-full overflow-hidden shadow-[inset_0_0_10px_rgba(0,0,0,0.5),0_0_20px_rgba(59,130,246,0.3)]">
                   <motion.div
                     className="h-full bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 relative"
                     style={{ width: `${progress}%` }}
                   >
                     {isHolding && (
                       <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent"
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
                         animate={{ x: ["-100%", "100%"] }}
-                        transition={{ duration: shimmerDuration * 0.6, repeat: Infinity, ease: "linear" }}
+                        transition={{ duration: shimmerDuration * 0.8, repeat: Infinity, ease: "linear" }}
                       />
                     )}
                   </motion.div>
@@ -1156,20 +1156,20 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 </motion.div>
               ))}
 
-              {/* Helper Tip - Navbar style */}
+              {/* Helper Tip - Navbar style - SMOOTHER */}
               <AnimatePresence>
                 {showTip && progress === 0 && (
                   <motion.div
                     initial={{ y: 12, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: -12, opacity: 0 }}
-                    className="pointer-events-none mt-6 flex items-center gap-2 text-xs text-blue-50 bg-black px-5 py-2.5 rounded-full border-2 border-blue-500/70 shadow-[0_0_35px_rgba(59,130,246,0.6)] relative overflow-hidden"
+                    className="pointer-events-none mt-6 flex items-center gap-2 text-xs text-blue-50 bg-[#000000] px-5 py-2.5 rounded-full border border-blue-500/50 shadow-[0_0_25px_rgba(59,130,246,0.4)] relative overflow-hidden"
                   >
-                    {/* Left to right shimmer (FPS-aware) */}
+                    {/* Left to right shimmer (FPS-aware) - SMOOTHER */}
                     <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/50 to-transparent"
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/40 to-transparent"
                       animate={{ x: ["-100%", "100%"] }}
-                      transition={{ duration: shimmerDuration * 0.9, repeat: Infinity, ease: "linear" }}
+                      transition={{ duration: shimmerDuration * 1.4, repeat: Infinity, ease: "linear" }}
                     />
                     {/* Pulse indicator */}
                     <div className="relative flex h-2 w-2 shrink-0 z-10">
@@ -1222,21 +1222,21 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
         )}
       </AnimatePresence>
 
-      {/* Demo Content After Gate - Black/Blue navbar theme */}
+      {/* Demo Content After Gate - Pure Black/Blue navbar theme */}
       <AnimatePresence>
         {showContent && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className="min-h-screen bg-black flex items-center justify-center p-8 relative overflow-hidden"
+            className="min-h-screen bg-[#000000] flex items-center justify-center p-8 relative overflow-hidden"
           >
-            {/* Blue shimmer background - LEFT TO RIGHT (FPS-aware) */}
+            {/* Blue shimmer background - LEFT TO RIGHT (FPS-aware) - SMOOTHER */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"
                 animate={{ x: ["-100%", "100%"] }}
-                transition={{ duration: shimmerDuration * 2, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
+                transition={{ duration: shimmerDuration * 3, repeat: Infinity, ease: "linear", repeatDelay: 1.5 }}
               />
             </div>
             
@@ -1248,14 +1248,14 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 className="relative"
               >
-                {/* Glow effect behind logo */}
-                <div className="absolute inset-[-20px] bg-blue-500/40 rounded-full blur-2xl" />
-                <div className="relative w-32 h-32 rounded-full bg-black border-2 border-blue-500/80 flex items-center justify-center shadow-[0_0_75px_rgba(59,130,246,0.7)] overflow-hidden">
-                  {/* Left to right shimmer on logo container (FPS-aware) */}
+                {/* Glow effect behind logo - subtle */}
+                <div className="absolute inset-[-20px] bg-blue-500/30 rounded-full blur-2xl" />
+                <div className="relative w-32 h-32 rounded-full bg-[#000000] border border-blue-500/60 flex items-center justify-center shadow-[0_0_50px_rgba(59,130,246,0.5)] overflow-hidden">
+                  {/* Left to right shimmer on logo container (FPS-aware) - SMOOTHER */}
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/60 to-transparent"
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/50 to-transparent"
                     animate={{ x: ["-100%", "100%"] }}
-                    transition={{ duration: shimmerDuration * 0.75, repeat: Infinity, ease: "linear" }}
+                    transition={{ duration: shimmerDuration * 1.2, repeat: Infinity, ease: "linear" }}
                   />
                   <Image
                     src="/BULL.svg"
@@ -1315,16 +1315,16 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 transition={{ delay: 0.25, type: "spring", stiffness: 300 }}
                 className="mt-4 flex gap-2"
               >
-                <div className="px-4 py-2 bg-black border-2 border-blue-500/80 rounded-full text-sm font-bold text-blue-100 shadow-[0_0_30px_rgba(59,130,246,0.5)] relative overflow-hidden">
-                  {/* Shimmer effect (FPS-aware) */}
+                <div className="px-4 py-2 bg-[#000000] border border-blue-500/60 rounded-full text-sm font-bold text-blue-100 shadow-[0_0_20px_rgba(59,130,246,0.4)] relative overflow-hidden">
+                  {/* Shimmer effect (FPS-aware) - SMOOTHER */}
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/50 to-transparent"
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/40 to-transparent"
                     animate={{ x: ["-100%", "100%"] }}
-                    transition={{ duration: shimmerDuration * 0.8, repeat: Infinity, ease: "linear", delay: 0.5 }}
+                    transition={{ duration: shimmerDuration * 1.2, repeat: Infinity, ease: "linear", delay: 0.5 }}
                   />
                   <span className="relative z-10">{ASSETS[selectedAsset].icon} {ASSETS[selectedAsset].id}</span>
                 </div>
-                <div className="px-4 py-2 bg-black border-2 border-green-500/80 rounded-full text-sm font-bold text-green-200 shadow-[0_0_25px_rgba(34,197,94,0.5)]">
+                <div className="px-4 py-2 bg-[#000000] border border-green-500/60 rounded-full text-sm font-bold text-green-200 shadow-[0_0_18px_rgba(34,197,94,0.4)]">
                   ✓ Connected
                 </div>
               </motion.div>

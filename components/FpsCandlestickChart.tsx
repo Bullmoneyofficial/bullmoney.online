@@ -266,10 +266,12 @@ const FpsCandlestickChart: React.FC<FpsCandlestickChartProps> = ({
       <style jsx>{`
         @keyframes pulse {
           0%, 100% {
-            opacity: 0.6;
+            opacity: 0.5;
+            filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.3));
           }
           50% {
-            opacity: 0.9;
+            opacity: 1;
+            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8));
           }
         }
       `}</style>

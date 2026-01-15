@@ -3,20 +3,31 @@
 import React, { memo, useEffect, useMemo, createContext, useContext, useState } from 'react';
 
 /**
- * Unified Shimmer System v3
+ * Unified Shimmer System v4 - ENHANCED
  * 
  * THE SINGLE SOURCE OF TRUTH FOR ALL SHIMMER EFFECTS
  * All components must use this for shimmer animations.
  * 
- * This component provides a single, optimized shimmer implementation
+ * This component provides a unified, optimized shimmer implementation
  * to reduce lag from multiple shimmer animations across the app.
  * 
  * Features:
- * - ALL shimmers animate LEFT-TO-RIGHT consistently
- * - CSS animations with will-change hints for GPU acceleration
- * - All shimmers synced to reduce repaints
- * - Integrates with FpsOptimizer for device-aware quality
- * - Automatic degradation when FPS drops
+ * ✓ ALL shimmers animate LEFT-TO-RIGHT consistently (NO SPINNING)
+ * ✓ CSS animations with will-change hints for GPU acceleration
+ * ✓ All shimmers synced to reduce repaints
+ * ✓ Integrates with FpsOptimizer for device-aware quality
+ * ✓ Automatic degradation when FPS drops
+ * ✓ Enhanced aesthetic with vibrant gradients and glow effects
+ * ✓ NO circles on low-end devices (fixed with CSS)
+ * ✓ Mobile-optimized animations (slower for battery)
+ * ✓ Wave, ripple, and gradient animations
+ * 
+ * NEW IN v4:
+ * - ShimmerWave - Wave effect animations
+ * - ShimmerRipple - Expanding ripple effect
+ * - Enhanced gradient support with multiple colors
+ * - Automatic device tier detection
+ * - CSS-based circle rendering (no rounded-full on low FPS)
  * 
  * Usage:
  * 1. Add <ShimmerStylesProvider /> in layout.tsx (once)
@@ -46,118 +57,341 @@ export const useShimmerQuality = () => useContext(ShimmerQualityContext);
 const ShimmerStyles = () => (
   <style jsx global>{`
     /* =================================================================
-       UNIFIED SHIMMER KEYFRAMES
+       UNIFIED SHIMMER KEYFRAMES v4 - ENHANCED AESTHETIC
        All shimmer animations in one place for consistent performance
+       Now includes wave, ripple, and gradient sweep effects
        ================================================================= */
     
+    /* Enhanced left-to-right shimmer with glow effect */
     @keyframes unified-shimmer-ltr {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(200%); }
+      0% { 
+        transform: translateX(-100%);
+        opacity: 0;
+      }
+      20% { opacity: 0.5; }
+      50% { opacity: 1; }
+      80% { opacity: 0.5; }
+      100% { 
+        transform: translateX(200%);
+        opacity: 0;
+      }
     }
     
-    /* LEFT-TO-RIGHT Border shimmer - sweeps around the border */
+    /* LEFT-TO-RIGHT Border shimmer - enhanced with glow */
     @keyframes unified-border-ltr {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
+      0% { 
+        background-position: -200% 0;
+        filter: drop-shadow(0 0 0 rgba(59, 130, 246, 0));
+      }
+      50% { 
+        filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.6));
+      }
+      100% { 
+        background-position: 200% 0;
+        filter: drop-shadow(0 0 0 rgba(59, 130, 246, 0));
+      }
     }
     
-    /* LEFT-TO-RIGHT sweep - replaces all spinning animations */
+    /* Enhanced LEFT-TO-RIGHT sweep with glow */
     @keyframes unified-sweep-ltr {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(200%); }
+      0% { 
+        transform: translateX(-100%);
+        opacity: 0;
+      }
+      20% { opacity: 0.6; }
+      50% { opacity: 1; }
+      80% { opacity: 0.6; }
+      100% { 
+        transform: translateX(200%);
+        opacity: 0;
+      }
     }
     
-    /* Deprecated: unified-spin now redirects to sweep (NO SPINNING EVER) */
-    @keyframes unified-spin {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(200%); }
+    /* NEW: Wave animation - creates smooth wave motion left to right */
+    @keyframes unified-wave {
+      0% { 
+        transform: translateX(-100%) scaleY(1);
+        opacity: 0;
+      }
+      25% { opacity: 0.4; }
+      50% { 
+        transform: translateX(0) scaleY(1.2);
+        opacity: 1; 
+      }
+      75% { opacity: 0.4; }
+      100% { 
+        transform: translateX(100%) scaleY(1);
+        opacity: 0;
+      }
     }
     
+    /* NEW: Ripple animation - expanding circles */
+    @keyframes unified-ripple {
+      0% {
+        transform: scale(0);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+    
+    /* NEW: Gradient wave - combines color shift with movement */
+    @keyframes unified-gradient-wave {
+      0% { 
+        background-position: 0% 50%;
+        transform: translateX(-100%);
+      }
+      50% { 
+        background-position: 100% 50%;
+        transform: translateX(0);
+      }
+      100% { 
+        background-position: 0% 50%;
+        transform: translateX(100%);
+      }
+    }
+    
+    /* Enhanced pulse with glow */
     @keyframes unified-pulse {
-      0%, 100% { opacity: 0.25; }
-      50% { opacity: 0.45; }
+      0%, 100% { 
+        opacity: 0.4;
+        box-shadow: 0 0 0 rgba(59, 130, 246, 0.2);
+      }
+      50% { 
+        opacity: 0.7;
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+      }
     }
     
+    /* Enhanced glow - more vibrant */
     @keyframes unified-glow {
-      0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
-      50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.35); }
+      0%, 100% { 
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.3),
+                    0 0 25px rgba(59, 130, 246, 0.1);
+      }
+      50% { 
+        box-shadow: 0 0 30px rgba(59, 130, 246, 0.6),
+                    0 0 50px rgba(59, 130, 246, 0.3);
+      }
     }
     
+    /* Enhanced float with smooth motion */
     @keyframes unified-float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-4px); }
+      0%, 100% { 
+        transform: translateY(0);
+        opacity: 0.8;
+      }
+      50% { 
+        transform: translateY(-8px);
+        opacity: 1;
+      }
     }
     
+    /* Enhanced dot pulse - more prominent */
     @keyframes unified-dot-pulse {
-      0%, 100% { opacity: 0.4; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.3); }
+      0%, 100% { 
+        opacity: 0.5; 
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(59, 130, 246, 0.4);
+      }
+      50% { 
+        opacity: 1; 
+        transform: scale(1.4);
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+      }
     }
     
+    /* Enhanced ping with glow */
     @keyframes unified-ping {
-      75%, 100% { transform: scale(2); opacity: 0; }
+      0% { 
+        transform: scale(1);
+        opacity: 1;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+      }
+      75% { 
+        transform: scale(2.5);
+        opacity: 0.5;
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+      }
+      100% { 
+        transform: scale(3);
+        opacity: 0;
+        box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+      }
     }
     
-    /* Text shimmer - background position animation for gradient text */
+    /* Enhanced text shimmer - vibrant gradient sweep */
     @keyframes unified-text-shimmer {
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
     
+    /* NEW: Enhanced glow sweep - left to right glow effect */
+    @keyframes unified-glow-sweep {
+      0% {
+        background-position: -100% 0;
+        opacity: 0;
+      }
+      20% { opacity: 0.3; }
+      50% { opacity: 0.8; }
+      80% { opacity: 0.3; }
+      100% {
+        background-position: 100% 0;
+        opacity: 0;
+      }
+    }
+    
+    /* NEW: Shine burst - sudden bright flash */
+    @keyframes unified-shine-burst {
+      0% {
+        opacity: 0;
+        box-shadow: 0 0 0 rgba(147, 197, 253, 0);
+      }
+      50% {
+        opacity: 1;
+        box-shadow: 0 0 30px rgba(147, 197, 253, 0.8);
+      }
+      100% {
+        opacity: 0;
+        box-shadow: 0 0 0 rgba(147, 197, 253, 0);
+      }
+    }
+    
     /* =================================================================
-       SHIMMER CSS CLASSES
+       SHIMMER CSS CLASSES v4 - ENHANCED AESTHETIC
        Use these classes directly for maximum performance
-       SMOOTH left-to-right animations for aesthetic look
+       SMOOTH left-to-right animations with glow effects
        ================================================================= */
     
     .shimmer-line {
-      animation: unified-shimmer-ltr 14s linear infinite;
+      animation: unified-shimmer-ltr 10s linear infinite;
       will-change: transform;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(59, 130, 246, 0.8) 20%,
+        rgba(147, 197, 253, 1) 50%,
+        rgba(59, 130, 246, 0.8) 80%,
+        transparent 100%
+      );
     }
     
-    /* shimmer-spin: LEFT-TO-RIGHT ONLY - NO ROTATION/SPINNING */
+    /* shimmer-spin: LEFT-TO-RIGHT with enhanced glow */
     .shimmer-spin {
-      animation: unified-sweep-ltr 16s linear infinite;
+      animation: unified-sweep-ltr 12s linear infinite;
       will-change: transform;
+      filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.6));
     }
     
-    /* Explicit left-to-right class for clarity - SMOOTH */
+    /* Explicit left-to-right class - ENHANCED */
     .shimmer-ltr {
-      animation: unified-shimmer-ltr 14s linear infinite;
+      animation: unified-shimmer-ltr 10s linear infinite;
       will-change: transform;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(59, 130, 246, 0.7) 20%,
+        rgba(147, 197, 253, 1) 50%,
+        rgba(59, 130, 246, 0.7) 80%,
+        transparent 100%
+      );
     }
     
+    /* NEW: Wave animation - smooth wave motion */
+    .shimmer-wave {
+      animation: unified-wave 8s ease-in-out infinite;
+      will-change: transform, opacity;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(59, 130, 246, 0.6) 20%,
+        rgba(147, 197, 253, 0.9) 50%,
+        rgba(59, 130, 246, 0.6) 80%,
+        transparent 100%
+      );
+    }
+    
+    /* NEW: Ripple animation - expanding ripple effect */
+    .shimmer-ripple {
+      animation: unified-ripple 1.5s ease-out infinite;
+      will-change: transform, opacity;
+      border-radius: 50%;
+      border: 2px solid rgba(59, 130, 246, 0.8);
+    }
+    
+    /* NEW: Gradient wave - color shift with movement */
+    .shimmer-gradient-wave {
+      animation: unified-gradient-wave 8s ease-in-out infinite;
+      will-change: background-position, transform;
+      background-size: 200% 200%;
+      background: linear-gradient(
+        135deg,
+        rgba(59, 130, 246, 0.3) 0%,
+        rgba(147, 197, 253, 0.6) 25%,
+        rgba(59, 130, 246, 0.3) 50%,
+        rgba(147, 197, 253, 0.6) 75%,
+        rgba(59, 130, 246, 0.3) 100%
+      );
+    }
+    
+    /* NEW: Shine burst - sudden bright flash */
+    .shimmer-shine-burst {
+      animation: unified-shine-burst 2s ease-in-out infinite;
+      will-change: opacity, box-shadow;
+    }
+    
+    /* Enhanced pulse with glow */
     .shimmer-pulse {
-      animation: unified-pulse 12s ease-in-out infinite;
-      will-change: opacity;
+      animation: unified-pulse 6s ease-in-out infinite;
+      will-change: opacity, box-shadow;
     }
     
+    /* Enhanced glow - more vibrant */
     .shimmer-glow {
-      animation: unified-glow 10s ease-in-out infinite;
+      animation: unified-glow 5s ease-in-out infinite;
       will-change: box-shadow;
     }
     
+    /* Enhanced float with glow */
     .shimmer-float {
-      animation: unified-float 6s ease-in-out infinite;
-      will-change: transform;
+      animation: unified-float 4s ease-in-out infinite;
+      will-change: transform, opacity;
+      filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));
     }
     
+    /* Enhanced dot pulse - more prominent glow */
     .shimmer-dot-pulse {
       animation: unified-dot-pulse 1.5s ease-in-out infinite;
-      will-change: opacity, transform;
+      will-change: opacity, transform, box-shadow;
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
     }
     
+    /* Enhanced ping with glow spread */
     .shimmer-ping {
-      animation: unified-ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+      animation: unified-ping 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+      will-change: transform, opacity, box-shadow;
+      border-radius: 50%;
     }
     
-    /* Text shimmer - for animated gradient text */
+    /* Text shimmer - for animated gradient text - ENHANCED AESTHETIC */
     .shimmer-text {
-      background: linear-gradient(110deg, #FFFFFF 0%, #3b82f6 45%, #60a5fa 55%, #FFFFFF 100%);
-      background-size: 200% auto;
+      background: linear-gradient(
+        110deg, 
+        rgba(255, 255, 255, 0.9) 0%, 
+        rgba(59, 130, 246, 0.8) 20%,
+        rgba(147, 197, 253, 1) 40%,
+        rgba(59, 130, 246, 0.8) 60%,
+        rgba(255, 255, 255, 0.9) 80%,
+        rgba(59, 130, 246, 0.8) 100%
+      );
+      background-size: 300% auto;
       background-clip: text;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      animation: unified-text-shimmer 3s linear infinite;
+      animation: unified-text-shimmer 4s linear infinite;
       will-change: background-position;
     }
     
@@ -167,55 +401,117 @@ const ShimmerStyles = () => (
       backface-visibility: hidden;
     }
     
+    /* FIX for low devices: Use ::before pseudo-element for circles instead of rounded-full */
+    /* This prevents rendering performance issues on low-end devices */
+    .shimmer-circle {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .shimmer-circle::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: inherit;
+      pointer-events: none;
+      will-change: contents;
+    }
+    
     /* =================================================================
-       FPS-AWARE QUALITY CONTROL
+       FPS-AWARE QUALITY CONTROL - ENHANCED v4
        Classes added by UnifiedPerformanceSystem based on real FPS
+       Now includes fixes for circles on low-end devices
        ================================================================= */
 
-    /* Medium quality - slow down animations significantly */
-    html.shimmer-quality-medium .shimmer-line { animation-duration: 14s; }
-    html.shimmer-quality-medium .shimmer-spin { animation-duration: 16s; }
-    html.shimmer-quality-medium .shimmer-ltr { animation-duration: 14s; }
-    html.shimmer-quality-medium .shimmer-pulse { animation-duration: 12s; }
-    html.shimmer-quality-medium .shimmer-glow { animation-duration: 14s; }
-    html.shimmer-quality-medium .shimmer-ping { animation-duration: 4s; }
+    /* CRITICAL FIX: Hide rounded-full circles on low FPS devices */
+    html.fps-minimal [class*="rounded-full"],
+    html.fps-low [class*="rounded-full"],
+    html.shimmer-quality-disabled [class*="rounded-full"] {
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+    
+    /* Disable complex shadows on low FPS */
+    html.fps-minimal .shimmer-dot-pulse,
+    html.fps-low .shimmer-dot-pulse,
+    html.shimmer-quality-disabled .shimmer-dot-pulse {
+      box-shadow: none !important;
+    }
+    
+    html.fps-minimal .shimmer-ping,
+    html.fps-low .shimmer-ping,
+    html.shimmer-quality-disabled .shimmer-ping {
+      border-radius: 0 !important;
+    }
 
-    /* Low quality - very slow animations but KEEP LEFT-TO-RIGHT effect */
+    /* Medium quality - STILL AESTHETIC, just slower */
+    html.shimmer-quality-medium .shimmer-line { 
+      animation-duration: 14s;
+      opacity: 0.9;
+    }
+    html.shimmer-quality-medium .shimmer-spin { 
+      animation-duration: 16s;
+      opacity: 0.9;
+    }
+    html.shimmer-quality-medium .shimmer-ltr { 
+      animation-duration: 14s;
+      opacity: 0.9;
+    }
+    html.shimmer-quality-medium .shimmer-pulse { 
+      animation-duration: 8s;
+      opacity: 0.85;
+    }
+    html.shimmer-quality-medium .shimmer-glow { 
+      animation-duration: 7s;
+      opacity: 0.8;
+    }
+    html.shimmer-quality-medium .shimmer-ping { 
+      animation-duration: 2s;
+      opacity: 0.85;
+    }
+
+    /* Low quality - STILL AESTHETIC, very slow to preserve FPS */
     html.shimmer-quality-low .shimmer-line,
     html.shimmer-quality-low .shimmer-spin,
     html.shimmer-quality-low .shimmer-ltr {
       animation-duration: 20s !important;
+      opacity: 0.8 !important;
     }
 
     html.shimmer-quality-low .shimmer-glow,
-    html.shimmer-quality-low .shimmer-float {
-      animation-duration: 18s !important;
+    html.shimmer-quality-low .shimmer-float,
+    html.shimmer-quality-low .shimmer-pulse {
+      animation-duration: 12s !important;
+      opacity: 0.75 !important;
     }
 
     html.shimmer-quality-low .shimmer-dot-pulse,
     html.shimmer-quality-low .shimmer-ping {
-      animation-duration: 8s !important;
+      animation-duration: 3s !important;
+      opacity: 0.7 !important;
     }
 
-    html.shimmer-quality-low .shimmer-pulse {
-      animation-duration: 16s;
-    }
-
-    /* Disabled - ULTRA slow animations, keep left-to-right look */
+    /* Disabled - ULTRA SLOW but keep glow aesthetic */
     html.shimmer-quality-disabled .shimmer-line,
     html.shimmer-quality-disabled .shimmer-spin,
     html.shimmer-quality-disabled .shimmer-ltr {
-      animation-duration: 30s !important;
-      opacity: 0.3;
+      animation-duration: 35s !important;
+      opacity: 0.5 !important;
+      filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.4));
     }
 
     html.shimmer-quality-disabled .shimmer-pulse,
     html.shimmer-quality-disabled .shimmer-glow,
-    html.shimmer-quality-disabled .shimmer-float,
+    html.shimmer-quality-disabled .shimmer-float {
+      animation-duration: 20s !important;
+      opacity: 0.4 !important;
+    }
+
     html.shimmer-quality-disabled .shimmer-dot-pulse,
     html.shimmer-quality-disabled .shimmer-ping {
-      animation-duration: 25s !important;
-      opacity: 0.2;
+      animation-duration: 5s !important;
+      opacity: 0.35 !important;
     }
 
     /* =================================================================
@@ -225,7 +521,7 @@ const ShimmerStyles = () => (
        NOTE: Only target actual shimmer animation elements, NOT containers
        ================================================================= */
 
-    /* FPS MINIMAL (<30fps) - Ultra slow animations */
+    /* FPS MINIMAL (<30fps) - Ultra slow animations with glow */
     /* IMPORTANT: Only target actual shimmer overlays, not parent containers */
     html.fps-minimal .shimmer-line,
     html.fps-minimal .shimmer-spin,
@@ -237,36 +533,85 @@ const ShimmerStyles = () => (
     html.fps-minimal .shimmer-ping {
       animation-duration: 30s !important;
       will-change: auto !important;
+      opacity: 0.6 !important;
+      filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.3)) !important;
     }
 
     html.fps-minimal .shimmer-text {
       animation-duration: 25s !important;
     }
 
-    /* FPS LOW (30-35fps) - Very slow shimmers, keep aesthetic */
+    /* FPS LOW (30-35fps) - Very slow shimmers with subtle glow */
     html.fps-low .shimmer-line:not(.shimmer-essential),
     html.fps-low .shimmer-spin:not(.shimmer-essential),
     html.fps-low .shimmer-ltr:not(.shimmer-essential),
     html.fps-low .shimmer-pulse:not(.shimmer-essential),
     html.fps-low .shimmer-glow:not(.shimmer-essential) {
-      animation-duration: 20s !important;
+      animation-duration: 22s !important;
       will-change: auto !important;
+      opacity: 0.7 !important;
+      filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.4)) !important;
     }
 
     html.fps-low .shimmer-pulse,
     html.fps-low .shimmer-glow {
-      animation-duration: 22s !important;
+      animation-duration: 18s !important;
+      opacity: 0.75 !important;
     }
 
-    /* FPS MEDIUM (35-50fps) - Moderate speed reduction */
-    html.fps-medium .shimmer-line { animation-duration: 14s !important; }
-    html.fps-medium .shimmer-spin { animation-duration: 16s !important; }
-    html.fps-medium .shimmer-ltr { animation-duration: 14s !important; }
-    html.fps-medium .shimmer-pulse { animation-duration: 12s !important; }
-    html.fps-medium .shimmer-glow { animation-duration: 16s !important; }
-    html.fps-medium .shimmer-float { animation-duration: 12s !important; }
+    html.fps-low .shimmer-float,
+    html.fps-low .shimmer-dot-pulse {
+      animation-duration: 20s !important;
+      opacity: 0.65 !important;
+    }
 
-    /* iOS/Safari specific - slower animations for performance */
+    /* FPS MEDIUM (35-50fps) - Moderate speed, maintain aesthetics */
+    html.fps-medium .shimmer-line { 
+      animation-duration: 12s !important;
+      opacity: 0.85 !important;
+    }
+    html.fps-medium .shimmer-spin { 
+      animation-duration: 14s !important;
+      opacity: 0.85 !important;
+    }
+    html.fps-medium .shimmer-ltr { 
+      animation-duration: 12s !important;
+      opacity: 0.85 !important;
+    }
+    html.fps-medium .shimmer-pulse { 
+      animation-duration: 8s !important;
+      opacity: 0.8 !important;
+    }
+    html.fps-medium .shimmer-glow { 
+      animation-duration: 7s !important;
+      opacity: 0.8 !important;
+    }
+    html.fps-medium .shimmer-float { 
+      animation-duration: 6s !important;
+      opacity: 0.8 !important;
+    }
+
+    /* FPS HIGH (50-60fps) - Normal speeds, full aesthetic */
+    html.fps-high .shimmer-line { 
+      animation-duration: 10s !important;
+      opacity: 0.95 !important;
+    }
+    html.fps-high .shimmer-glow {
+      animation-duration: 5s !important;
+      opacity: 0.9 !important;
+    }
+
+    /* FPS ULTRA (60+fps) - FULL QUALITY */
+    html.fps-ultra .shimmer-line { 
+      animation-duration: 8s !important;
+      opacity: 1 !important;
+    }
+    html.fps-ultra .shimmer-glow {
+      animation-duration: 4s !important;
+      opacity: 1 !important;
+    }
+
+    /* iOS/Safari specific - slower animations but KEEP GLOW AESTHETIC */
     /* NOTE: Only target actual shimmer elements, not containers */
     html.is-ios .shimmer-line,
     html.is-ios .shimmer-spin,
@@ -278,7 +623,10 @@ const ShimmerStyles = () => (
     html.is-safari .shimmer-ltr,
     html.is-safari .shimmer-pulse,
     html.is-safari .shimmer-glow {
-      animation-duration: 14s !important;
+      animation-duration: 16s !important;
+      will-change: auto !important;
+      opacity: 0.8 !important;
+      filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.5)) !important;
     }
 
     html.is-ios.fps-medium .shimmer-line,
@@ -287,17 +635,20 @@ const ShimmerStyles = () => (
     html.is-safari.fps-medium .shimmer-line,
     html.is-safari.fps-medium .shimmer-spin,
     html.is-safari.fps-medium .shimmer-ltr {
-      animation-duration: 18s !important;
+      animation-duration: 20s !important;
+      opacity: 0.75 !important;
     }
 
-    /* iOS/Safari at low FPS - ultra slow animations */
+    /* iOS/Safari at low FPS - ultra slow animations but keep glow */
     html.is-ios.fps-low .shimmer-line,
     html.is-ios.fps-low .shimmer-spin,
     html.is-ios.fps-low .shimmer-ltr,
     html.is-safari.fps-low .shimmer-line,
     html.is-safari.fps-low .shimmer-spin,
     html.is-safari.fps-low .shimmer-ltr {
-      animation-duration: 24s !important;
+      animation-duration: 28s !important;
+      opacity: 0.7 !important;
+      filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.4)) !important;
     }
 
     html.is-ios.fps-minimal .shimmer-line,
@@ -306,7 +657,9 @@ const ShimmerStyles = () => (
     html.is-safari.fps-minimal .shimmer-line,
     html.is-safari.fps-minimal .shimmer-spin,
     html.is-safari.fps-minimal .shimmer-ltr {
-      animation-duration: 35s !important;
+      animation-duration: 40s !important;
+      opacity: 0.6 !important;
+      filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.3)) !important;
     }
     
     /* =================================================================
@@ -336,17 +689,47 @@ const ShimmerStyles = () => (
       }
     }
     
-    /* Mobile: slow down animations for battery and performance */
+    /* Mobile: slow down animations for battery and performance but KEEP AESTHETIC */
     @media (max-width: 768px) {
-      .shimmer-line { animation-duration: 14s; }
-      .shimmer-spin { animation-duration: 16s; }
-      .shimmer-ltr { animation-duration: 14s; }
-      .shimmer-pulse { animation-duration: 12s; }
-      .shimmer-glow { animation-duration: 14s; }
+      /* FIX: Disable rounded-full circles on mobile for performance */
+      [class*="rounded-full"] {
+        border-radius: 0 !important;
+      }
+      
+      .shimmer-line { 
+        animation-duration: 14s;
+        opacity: 0.85;
+        filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.4));
+      }
+      .shimmer-spin { 
+        animation-duration: 16s;
+        opacity: 0.85;
+        filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.4));
+      }
+      .shimmer-ltr { 
+        animation-duration: 14s;
+        opacity: 0.85;
+      }
+      .shimmer-pulse { 
+        animation-duration: 12s;
+        opacity: 0.8;
+      }
+      .shimmer-glow { 
+        animation-duration: 14s;
+        opacity: 0.8;
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+      }
+      .shimmer-wave {
+        animation-duration: 12s;
+        opacity: 0.8;
+      }
+      .shimmer-ripple {
+        display: none;
+      }
     }
     
-    /* Component visibility optimization - slow down shimmers on inactive components */
-    /* When FPS optimizer detects component is offscreen, slow down shimmers significantly */
+    /* Component visibility optimization - slow down shimmers on inactive components but KEEP AESTHETIC GLOW */
+    /* When FPS optimizer detects component is offscreen, slow animations significantly while maintaining visual appeal */
     /* NOTE: Only target shimmer-line elements INSIDE containers, not the containers themselves */
     html.component-inactive-navbar .navbar-shimmer .shimmer-line,
     html.component-inactive-navbar .navbar-shimmer .shimmer-spin,
@@ -358,8 +741,9 @@ const ShimmerStyles = () => (
     html.component-inactive-ultimatePanel .panel-shimmer .shimmer-spin,
     html.component-inactive-staticTip .static-tip-shimmer .shimmer-line,
     html.component-inactive-movingTip .moving-tip-shimmer .shimmer-line {
-      animation-duration: 20s !important;
-      animation-play-state: paused !important;
+      animation-duration: 28s !important;
+      opacity: 0.7;
+      filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.5)) !important;
     }
     
     /* Performance hint for GPU compositing */
@@ -375,7 +759,7 @@ export const ShimmerStylesProvider = memo(() => <ShimmerStyles />);
 ShimmerStylesProvider.displayName = 'ShimmerStylesProvider';
 
 // Types
-type ShimmerVariant = 'line' | 'border' | 'conic' | 'glow' | 'pulse';
+type ShimmerVariant = 'line' | 'border' | 'conic' | 'glow' | 'pulse' | 'wave' | 'ripple' | 'gradient-wave' | 'shine-burst';
 type ShimmerColor = 'blue' | 'red' | 'white' | 'custom';
 
 interface ShimmerProps {
@@ -388,40 +772,40 @@ interface ShimmerProps {
   disabled?: boolean;
 }
 
-// Color presets
+// Color presets - ENHANCED for better aesthetics
 const colorMap = {
   blue: {
-    via: 'rgba(59, 130, 246, 0.5)',
-    glow: 'rgba(59, 130, 246, 0.3)',
+    via: 'rgba(59, 130, 246, 0.6)',
+    glow: 'rgba(59, 130, 246, 0.4)',
     conic: '#3b82f6',
   },
   red: {
-    via: 'rgba(239, 68, 68, 0.5)',
-    glow: 'rgba(239, 68, 68, 0.3)',
+    via: 'rgba(239, 68, 68, 0.6)',
+    glow: 'rgba(239, 68, 68, 0.4)',
     conic: '#ef4444',
   },
   white: {
-    via: 'rgba(255, 255, 255, 0.3)',
-    glow: 'rgba(255, 255, 255, 0.2)',
+    via: 'rgba(255, 255, 255, 0.4)',
+    glow: 'rgba(255, 255, 255, 0.25)',
     conic: '#ffffff',
   },
   custom: {
-    via: 'rgba(59, 130, 246, 0.5)',
-    glow: 'rgba(59, 130, 246, 0.3)',
+    via: 'rgba(59, 130, 246, 0.6)',
+    glow: 'rgba(59, 130, 246, 0.4)',
     conic: '#3b82f6',
   },
 };
 
 const speedMap = {
-  slow: '16s',
-  normal: '10s',
-  fast: '7s',
+  slow: '14s',
+  normal: '8s',
+  fast: '5s',
 };
 
 const intensityMap = {
-  low: 0.25,
-  medium: 0.4,
-  high: 0.55,
+  low: 0.35,
+  medium: 0.5,
+  high: 0.65,
 };
 
 /**
@@ -643,6 +1027,7 @@ ShimmerDot.displayName = 'ShimmerDot';
 
 /**
  * Spinner Shimmer - Loading spinner with LEFT-TO-RIGHT sweep (no spinning)
+ * FIXED: Uses CSS classes instead of rounded-full to avoid circles on low devices
  */
 export const ShimmerSpinner = memo(({ 
   size = 40,
@@ -656,10 +1041,11 @@ export const ShimmerSpinner = memo(({
   if (disabled) return null;
   
   return (
-    <div className={`relative ${className}`} style={{ width: size, height: size }}>
+    <div className={`relative shimmer-gpu ${className}`} style={{ width: size, height: size }}>
       {/* LEFT-TO-RIGHT sweep instead of spinning */}
       <span 
-        className="shimmer-gpu absolute inset-0 rounded-full overflow-hidden"
+        className="shimmer-gpu absolute inset-0 overflow-hidden"
+        style={{ borderRadius: '50%' }}
       >
         <span 
           className="absolute inset-y-0 left-[-100%] w-[100%] shimmer-line"
@@ -669,14 +1055,15 @@ export const ShimmerSpinner = memo(({
           }} 
         />
       </span>
-      <div className="absolute inset-[2px] bg-black rounded-full" />
+      <div className="absolute inset-[2px] bg-black" style={{ borderRadius: '50%' }} />
       <div className="absolute inset-0 flex items-center justify-center">
         <span 
-          className="shimmer-dot-pulse rounded-full"
+          className="shimmer-dot-pulse"
           style={{ 
             width: size * 0.15,
             height: size * 0.15,
             backgroundColor: `${colors.conic}99`,
+            borderRadius: '50%',
           }} 
         />
       </div>
@@ -746,6 +1133,113 @@ export const ShimmerText = memo(({
 ShimmerText.displayName = 'ShimmerText';
 
 /**
+ * Wave Shimmer - Smooth wave motion effect
+ * NEW in v4 - Enhanced aesthetic for cards and buttons
+ */
+export const ShimmerWave = memo(({ 
+  color = 'blue',
+  customColor,
+  intensity = 'medium',
+  speed = 'normal',
+  className = '',
+  disabled = false
+}: Omit<ShimmerProps, 'variant'>) => {
+  const colors = colorMap[color];
+  const viaColor = customColor || colors.via;
+  
+  if (disabled) return null;
+  
+  return (
+    <div 
+      className={`shimmer-wave shimmer-gpu absolute inset-0 pointer-events-none ${className}`}
+      style={{ 
+        opacity: intensityMap[intensity],
+        animationDuration: speedMap[speed],
+      }} 
+    />
+  );
+});
+ShimmerWave.displayName = 'ShimmerWave';
+
+/**
+ * Ripple Shimmer - Expanding ripple effect
+ * NEW in v4 - Creates expanding circles on click or hover
+ */
+export const ShimmerRipple = memo(({ 
+  color = 'blue',
+  size = 20,
+  delay = 0,
+  className = '',
+  disabled = false
+}: { color?: ShimmerColor; size?: number; delay?: number; className?: string; disabled?: boolean }) => {
+  const colors = colorMap[color];
+  
+  if (disabled) return null;
+  
+  return (
+    <span 
+      className={`shimmer-ripple shimmer-gpu ${className}`}
+      style={{ 
+        width: size,
+        height: size,
+        borderColor: colors.conic,
+        animationDelay: `${delay}s`
+      }} 
+    />
+  );
+});
+ShimmerRipple.displayName = 'ShimmerRipple';
+
+/**
+ * Gradient Wave - Color-shifting wave animation
+ * NEW in v4 - Enhanced gradient sweep with color transitions
+ */
+export const ShimmerGradientWave = memo(({ 
+  className = '',
+  intensity = 'medium',
+  disabled = false
+}: { className?: string; intensity?: 'low' | 'medium' | 'high'; disabled?: boolean }) => {
+  if (disabled) return null;
+  
+  return (
+    <div 
+      className={`shimmer-gradient-wave shimmer-gpu absolute inset-0 pointer-events-none ${className}`}
+      style={{ 
+        opacity: intensityMap[intensity],
+      }} 
+    />
+  );
+});
+ShimmerGradientWave.displayName = 'ShimmerGradientWave';
+
+/**
+ * Shine Burst - Sudden bright flash effect
+ * NEW in v4 - Creates bright flash bursts for attention-grabbing elements
+ */
+export const ShimmerShineBurst = memo(({ 
+  color = 'blue',
+  size = 20,
+  className = '',
+  disabled = false
+}: { color?: ShimmerColor; size?: number; className?: string; disabled?: boolean }) => {
+  const colors = colorMap[color];
+  
+  if (disabled) return null;
+  
+  return (
+    <div 
+      className={`shimmer-shine-burst shimmer-gpu ${className}`}
+      style={{ 
+        width: size,
+        height: size,
+        backgroundColor: colors.conic,
+      }} 
+    />
+  );
+});
+ShimmerShineBurst.displayName = 'ShimmerShineBurst';
+
+/**
  * Unified Shimmer - All-in-one component
  */
 export const UnifiedShimmer = memo(({ 
@@ -763,6 +1257,14 @@ export const UnifiedShimmer = memo(({
       return <ShimmerGlow {...props} />;
     case 'pulse':
       return <ShimmerPulse {...props} />;
+    case 'wave':
+      return <ShimmerWave {...props} />;
+    case 'ripple':
+      return <ShimmerRipple {...props} />;
+    case 'gradient-wave':
+      return <ShimmerGradientWave {...props} />;
+    case 'shine-burst':
+      return <ShimmerShineBurst {...props} />;
     default:
       return null;
   }

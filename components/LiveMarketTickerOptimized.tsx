@@ -49,14 +49,21 @@ const TickerStyles = () => (
     }
     
     @keyframes pulse-gpu {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 1; }
+      0%, 100% { 
+        opacity: 0.4;
+        filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.3));
+      }
+      50% { 
+        opacity: 1;
+        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8));
+      }
     }
     
     html.shimmer-quality-low .animate-pulse-gpu,
     html.shimmer-quality-disabled .animate-pulse-gpu {
       animation: none;
       opacity: 1;
+      filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.5));
     }
   `}</style>
 );

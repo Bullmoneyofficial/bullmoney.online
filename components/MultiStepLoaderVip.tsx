@@ -457,8 +457,18 @@ export const MultiStepLoaderVip = ({ loadingStates, loading }: { loadingStates: 
             .loader-active { overflow: hidden !important; height: 100vh; width: 100vw; }
             
             @keyframes text-shimmer {
-              0% { background-position: 0% 50%; }
-              100% { background-position: -200% 50%; }
+              0% { 
+                background-position: 0% 50%;
+                opacity: 0.4;
+              }
+              50% { 
+                background-position: -200% 50%;
+                opacity: 1;
+              }
+              100% { 
+                background-position: 0% 50%;
+                opacity: 0.4;
+              }
             }
 
             .animate-text-shimmer-vip {
@@ -476,7 +486,8 @@ export const MultiStepLoaderVip = ({ loadingStates, loading }: { loadingStates: 
               -webkit-background-clip: text;
               -webkit-text-fill-color: transparent;
               color: transparent;
-              animation: text-shimmer 3s linear infinite;
+              animation: text-shimmer 3.5s linear infinite;
+              filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.6));
             }
           `}</style>
 

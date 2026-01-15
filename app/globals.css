@@ -5,8 +5,8 @@
 
 :root {
   --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --background-start-rgb: 0, 0, 0;
+  --background-end-rgb: 0, 0, 0;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -247,11 +247,11 @@ html {
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: oklch(0 0 0);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.05 0 0);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.05 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
@@ -698,22 +698,28 @@ html[data-active-theme] {
 }
 
 /* ============================================
-   SHIMMER TEXT EFFECT (Used in theme UI)
+   SHIMMER TEXT EFFECT (Used in theme UI) - ENHANCED AESTHETIC
    ============================================ */
 
 .text-shimmer-effect {
   background: linear-gradient(
     90deg,
-    var(--accent-color, #3b82f6) 0%,
-    white 50%,
-    var(--accent-color, #3b82f6) 100%
+    rgba(255, 255, 255, 0.9) 0%,
+    var(--accent-color, #3b82f6) 25%,
+    rgba(147, 197, 253, 1) 50%,
+    var(--accent-color, #3b82f6) 75%,
+    rgba(255, 255, 255, 0.9) 100%
   );
-  background-size: 200% 100%;
+  background-size: 300% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: unified-shimmer-ltr 3s linear infinite;
-  background-size: 200% auto;
+  animation: text-shimmer-sweep 5s linear infinite;
+}
+
+@keyframes text-shimmer-sweep {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
 }
 
 /* Text shimmer now uses unified-shimmer-ltr from UnifiedShimmer.tsx */
@@ -869,4 +875,47 @@ html.spline-quality-low canvas {
 .spline-paused canvas {
   visibility: hidden !important;
   pointer-events: none !important;
+}
+
+/* =================================================================
+   IPHONE-SPECIFIC PERFORMANCE OPTIMIZATIONS
+   Aggressive animation slowdown for smooth 60fps on iPhone
+   ================================================================= */
+
+/* iPhone base - slow all animations */
+html.is-ios {
+  --shimmer-base-speed: 16s;
+}
+
+html.is-ios [class*="animate-"] {
+  animation-duration: 16s !important;
+}
+
+/* iPhone low FPS - ultra slow */
+html.is-ios.fps-low,
+html.is-ios.fps-minimal {
+  --shimmer-base-speed: 30s;
+}
+
+html.is-ios.fps-low [class*="animate-"],
+html.is-ios.fps-minimal [class*="animate-"] {
+  animation-duration: 30s !important;
+}
+
+/* Disable complex effects on iPhone when FPS drops */
+html.is-ios.fps-low .shimmer-glow,
+html.is-ios.fps-minimal .shimmer-glow,
+html.is-ios.fps-low .shimmer-float,
+html.is-ios.fps-minimal .shimmer-float {
+  animation: none !important;
+  opacity: 0.3;
+}
+
+/* Ensure pure black backgrounds on all devices */
+html, body {
+  background-color: #000000 !important;
+}
+
+.dark {
+  background-color: #000000 !important;
 }

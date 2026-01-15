@@ -451,25 +451,36 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
             .loader-active { overflow: hidden !important; height: 100vh; width: 100vw; }
             
             @keyframes text-shimmer {
-              0% { background-position: 0% 50%; }
-              100% { background-position: -200% 50%; }
+              0% { 
+                background-position: 0% 50%;
+                opacity: 0.4;
+              }
+              50% { 
+                background-position: -200% 50%;
+                opacity: 1;
+              }
+              100% { 
+                background-position: 0% 50%;
+                opacity: 0.4;
+              }
             }
 
             .animate-text-shimmer {
-              /* Premium Grey to White to Indigo Gradient */
+              /* Premium Slate to White to Blue Gradient */
               background: linear-gradient(
                 110deg, 
-                #64748b 20%,   
+                #475569 20%,   
                 #ffffff 48%,   
-                #818cf8 52%,   
-                #64748b 80%    
+                #3b82f6 52%,   
+                #475569 80%    
               );
               background-size: 200% auto;
               background-clip: text;
               -webkit-background-clip: text;
               -webkit-text-fill-color: transparent;
               color: transparent;
-              animation: text-shimmer 3s linear infinite;
+              animation: text-shimmer 3.5s linear infinite;
+              filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.5));
             }
           `}</style>
 

@@ -1387,13 +1387,37 @@ const GameBoyPacmanGame = () => {
       
       <style>{`
         @keyframes shimmer {
-          0% { background-position: -200% center; }
-          100% { background-position: 200% center; }
+          0% { 
+            background-position: -200% center;
+            opacity: 0;
+          }
+          25% {
+            opacity: 0.6;
+          }
+          50% { 
+            background-position: 200% center;
+            opacity: 1;
+          }
+          75% {
+            opacity: 0.6;
+          }
+          100% { 
+            background-position: 200% center;
+            opacity: 0;
+          }
         }
         
         @keyframes pulse {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(1.05); }
+          0%, 100% { 
+            opacity: 0.3; 
+            transform: scale(1);
+            filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.3));
+          }
+          50% { 
+            opacity: 0.7; 
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+          }
         }
         
         @keyframes shake {
@@ -1406,17 +1430,20 @@ const GameBoyPacmanGame = () => {
           0% {
             opacity: 1;
             transform: translate(0, 0) scale(1);
+            filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.8));
           }
           100% {
             opacity: 0;
             transform: translate(0, -20px) scale(0.5);
+            filter: drop-shadow(0 0 0px rgba(59, 130, 246, 0));
           }
         }
         
         @keyframes trailFade {
           0% {
-            opacity: 0.6;
+            opacity: 0.8;
             transform: scale(1);
+            filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.6));
           }
           100% {
             opacity: 0;
