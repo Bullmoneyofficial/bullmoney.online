@@ -1,14 +1,17 @@
 "use client";
 
-import { Suspense, lazy, useState, useEffect, useRef, useCallback } from "react";
-import Hero from "@/components/hero";
-import CTA from "@/components/Chartnews";
-import { Features } from "@/components/features";
+import { Suspense, useState, useEffect, useRef, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { detectBrowser } from "@/lib/browserDetection";
 
 // ==========================================
-// UNIFIED SHIMMER SYSTEM - Import from single source
+// LAZY-LOAD HEAVY COMPONENTS FOR FAST INITIAL COMPILE
 // ==========================================
+const Hero = dynamic(() => import("@/components/hero"), { ssr: false });
+const CTA = dynamic(() => import("@/components/Chartnews"), { ssr: false });
+const Features = dynamic(() => import("@/components/features").then(mod => ({ default: mod.Features })), { ssr: false });
+
+// UNIFIED SHIMMER SYSTEM - Import from single source
 import {
   ShimmerBorder,
   ShimmerLine,
@@ -22,25 +25,25 @@ import { SplineSkeleton, LoadingSkeleton } from "@/components/ui/LoadingSkeleton
 import { useCacheContext } from "@/components/CacheManagerProvider";
 import { useUnifiedPerformance, useVisibility, useObserver, useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
 import { useComponentTracking, useCrashTracker } from "@/lib/CrashTracker";
-// Use optimized ticker for 120Hz performance
-import { LiveMarketTickerOptimized as LiveMarketTicker } from "@/components/LiveMarketTickerOptimized";
+// Use optimized ticker for 120Hz performance - lazy load
+const LiveMarketTicker = dynamic(() => import("@/components/LiveMarketTickerOptimized").then(mod => ({ default: mod.LiveMarketTickerOptimized })), { ssr: false });
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
-import HiddenYoutubePlayer from "@/components/Mainpage/HiddenYoutubePlayer";
+const HiddenYoutubePlayer = dynamic(() => import("@/components/Mainpage/HiddenYoutubePlayer"), { ssr: false });
 import { ALL_THEMES } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 import Image from "next/image";
 
-import MobileSwipeNavigator from "@/components/navigation/MobileSwipeNavigator";
-import DesktopKeyNavigator from "@/components/navigation/DesktopKeyNavigator";
+const MobileSwipeNavigator = dynamic(() => import("@/components/navigation/MobileSwipeNavigator"), { ssr: false });
+const DesktopKeyNavigator = dynamic(() => import("@/components/navigation/DesktopKeyNavigator"), { ssr: false });
 
-// Import loaders
-import PageMode from "@/components/REGISTER USERS/pagemode";
-import MultiStepLoaderv2 from "@/components/MultiStepLoaderv2";
+// Import loaders - lazy
+const PageMode = dynamic(() => import("@/components/REGISTER USERS/pagemode"), { ssr: false });
+const MultiStepLoaderv2 = dynamic(() => import("@/components/MultiStepLoaderv2"), { ssr: false });
 
-// Lazy imports
-const DraggableSplit = lazy(() => import('@/components/DraggableSplit'));
-const SplineScene = lazy(() => import('@/components/SplineScene'));
-const TestimonialsCarousel = lazy(() => import('@/components/Testimonial').then(mod => ({ default: mod.TestimonialsCarousel })));
+// Lazy imports for heavy 3D components
+const DraggableSplit = dynamic(() => import('@/components/DraggableSplit'), { ssr: false });
+const SplineScene = dynamic(() => import('@/components/SplineScene'), { ssr: false });
+const TestimonialsCarousel = dynamic(() => import('@/components/Testimonial').then(mod => ({ default: mod.TestimonialsCarousel })), { ssr: false });
 
 // --- SMART CONTAINER: Handles Preloading & FPS Saving ---
 // FIXED: Prevents constant reloading on small devices by:

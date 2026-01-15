@@ -19,38 +19,17 @@ import { AudioSettingsProvider } from "@/contexts/AudioSettingsProvider";
 // ✅ ADDED: Import the ShopProvider
 import { ShopProvider } from "@/components/ShopContext";
 
-// ✅ ADDED: Import the Performance Provider for 120Hz optimization
-import { PerformanceProvider, FPSCounter } from "@/components/PerformanceProvider";
-
-// ✅ ADDED: Import the FPS Optimizer for device-aware optimization
-import { FpsOptimizerProvider } from "@/lib/FpsOptimizer";
-
-// ✅ ADDED: Import rendering optimizations
-import { injectRenderingOptimizations } from "@/lib/renderingOptimizations";
-
-// ✅ ADDED: Import FPS Monitor component
-import FpsMonitor from "@/components/FpsMonitor";
+// ✅ LAZY LOADED: All performance providers bundled in client wrapper
+import { ClientProviders, ClientExtras, Footer } from "@/components/ClientProviders";
 
 // ✅ ADDED: Import the Unified Shimmer Styles Provider
 import { ShimmerStylesProvider } from "@/components/ui/UnifiedShimmer";
 
-// ✅ ADDED: Import the Unified Performance System for consolidated FPS/observer/caching
-import { UnifiedPerformanceProvider } from "@/lib/UnifiedPerformanceSystem";
-
-// ✅ ADDED: Import the Crash Tracker for error logging to Supabase
-import { CrashTrackerProvider } from "@/lib/CrashTracker";
-
 // ✅ ADDED: Import the Cache Manager Provider for version-based cache invalidation
 import { CacheManagerProvider } from "@/components/CacheManagerProvider";
 
-// Navigation and Footer components
+// Navigation component
 import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/Mainpage/footer";
-
-// Client-side cursor component for desktop
-import ClientCursor from "@/components/ClientCursor";
-import AudioWidget from "@/components/AudioWidget";
-import { AutoRefreshPrompt } from "@/components/AutoRefreshPrompt";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
@@ -618,46 +597,12 @@ export default function RootLayout({
                 <StudioProvider>
                   {/* ✅ ADDED: ShopProvider starts here */}
                   <ShopProvider>
-                    {/* ✅ UNIFIED PERFORMANCE: Single FPS monitor, observer pool, smart caching */}
-                    <UnifiedPerformanceProvider startDelay={2000}>
-                    {/* ✅ CRASH TRACKER: Error/interaction logging to Supabase */}
-                    <CrashTrackerProvider>
-                    {/* ✅ FPS Optimizer for device-aware quality control */}
-                    <FpsOptimizerProvider enableMonitoring={true} monitoringInterval={500} startDelay={1000}>
-                    {/* ✅ Performance Provider for 120Hz optimization & smooth scroll */}
-                    <PerformanceProvider enableSmoothScroll={true}>
-                      {/* ✅ FPS MONITOR OVERLAY - Disabled (moved to Ultimate Control Panel button) */}
-                      <FpsMonitor show={false} />
-                      
-                      {/* Custom Cursor for Desktop */}
-                      <ClientCursor />
-                      {/* Navbar rendered outside filter wrapper to preserve fixed positioning */}
-                      <Navbar />
-                      {/* Bottom-left audio widget (not in navbar) */}
-                      <AudioWidget />
-                      <AutoRefreshPrompt />
-                      {/* Route-level modals should not be inside the filter wrapper */}
-                      {modal}
-                      {/* Theme filter wrapper - applies filter only to main content */}
-                      <main 
-                        className="theme-filter-wrapper min-h-screen"
-                        style={{ 
-                          filter: 'var(--theme-filter, none)',
-                          transition: 'filter 0.5s ease-in-out',
-                          touchAction: 'pan-y',
-                          overflowY: 'visible'
-                        }}
-                        data-allow-scroll
-                      >
-                        {children}
-                      </main>
-                      <Footer />
-                      {/* FPS Counter - only shows in development */}
-                      <FPSCounter />
-                    </PerformanceProvider>
-                    </FpsOptimizerProvider>
-                    </CrashTrackerProvider>
-                    </UnifiedPerformanceProvider>
+                    {/* Navbar rendered outside ClientProviders for fixed positioning */}
+                    <Navbar />
+                    {/* ✅ LAZY LOADED: All performance providers bundled */}
+                    <ClientProviders modal={modal}>
+                      {children}
+                    </ClientProviders>
                   </ShopProvider>
                   {/* ✅ ADDED: ShopProvider ends here */}
                 </StudioProvider>

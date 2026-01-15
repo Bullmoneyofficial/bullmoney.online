@@ -1,0 +1,81 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { ReactNode, Suspense } from "react";
+
+// Lazy load performance providers for faster initial compile
+const PerformanceProvider = dynamic(
+  () => import("@/components/PerformanceProvider").then((mod) => ({ default: mod.PerformanceProvider })),
+  { ssr: false }
+);
+
+const FPSCounter = dynamic(
+  () => import("@/components/PerformanceProvider").then((mod) => ({ default: mod.FPSCounter })),
+  { ssr: false }
+);
+
+const FpsOptimizerProvider = dynamic(
+  () => import("@/lib/FpsOptimizer").then((mod) => ({ default: mod.FpsOptimizerProvider })),
+  { ssr: false }
+);
+
+const UnifiedPerformanceProvider = dynamic(
+  () => import("@/lib/UnifiedPerformanceSystem").then((mod) => ({ default: mod.UnifiedPerformanceProvider })),
+  { ssr: false }
+);
+
+const CrashTrackerProvider = dynamic(
+  () => import("@/lib/CrashTracker").then((mod) => ({ default: mod.CrashTrackerProvider })),
+  { ssr: false }
+);
+
+const FpsMonitor = dynamic(() => import("@/components/FpsMonitor"), { ssr: false });
+const ClientCursor = dynamic(() => import("@/components/ClientCursor"), { ssr: false });
+const AudioWidget = dynamic(() => import("@/components/AudioWidget"), { ssr: false });
+const AutoRefreshPrompt = dynamic(
+  () => import("@/components/AutoRefreshPrompt").then((mod) => ({ default: mod.AutoRefreshPrompt })),
+  { ssr: false }
+);
+const FooterComponent = dynamic(
+  () => import("@/components/Mainpage/footer").then((mod) => ({ default: mod.Footer })),
+  { ssr: false }
+);
+
+interface ClientProvidersProps {
+  children: ReactNode;
+  modal?: ReactNode;
+}
+
+export function ClientProviders({ children, modal }: ClientProvidersProps) {
+  return (
+    <UnifiedPerformanceProvider startDelay={2000}>
+      <CrashTrackerProvider>
+        <FpsOptimizerProvider enableMonitoring={true} monitoringInterval={500} startDelay={1000}>
+          <PerformanceProvider enableSmoothScroll={true}>
+            <FpsMonitor show={false} />
+            <ClientCursor />
+            <AudioWidget />
+            <AutoRefreshPrompt />
+            {modal}
+            <main 
+              className="theme-filter-wrapper min-h-screen"
+              style={{ 
+                filter: 'var(--theme-filter, none)',
+                transition: 'filter 0.5s ease-in-out',
+                touchAction: 'pan-y',
+                overflowY: 'visible'
+              }}
+              data-allow-scroll
+            >
+              {children}
+            </main>
+            <FooterComponent />
+            <FPSCounter />
+          </PerformanceProvider>
+        </FpsOptimizerProvider>
+      </CrashTrackerProvider>
+    </UnifiedPerformanceProvider>
+  );
+}
+
+export { FooterComponent as Footer };

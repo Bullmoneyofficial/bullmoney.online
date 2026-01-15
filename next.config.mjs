@@ -10,9 +10,38 @@ const nextConfig = {
   // Optimize production builds
   productionBrowserSourceMaps: false,
 
+  // Turbopack configuration (enabled via --turbopack flag)
+  turbopack: {
+    // Enable persistent caching for faster restarts
+    memoryLimit: 4000,
+  },
+
   // Optimize chunking for better caching
   experimental: {
-    optimizePackageImports: ['@splinetool/react-spline', 'lucide-react', 'react-youtube'],
+    // Enable Turbopack's persistent disk cache
+    turbo: {
+      unstable_allowDynamicGlobals: true,
+    },
+    optimizePackageImports: [
+      '@splinetool/react-spline',
+      '@splinetool/runtime',
+      'lucide-react',
+      'react-youtube',
+      'framer-motion',
+      '@tabler/icons-react',
+      'react-icons',
+      '@react-three/drei',
+      '@react-three/fiber',
+      'three',
+      'gsap',
+      'cobe',
+      '@supabase/supabase-js',
+      '@tsparticles/react',
+      '@tsparticles/slim',
+      'zod',
+      'zustand',
+      'swr',
+    ],
   },
 
   images: {
@@ -79,34 +108,10 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-
-  // Webpack optimizations
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      // Let Next.js handle chunking for dynamic imports
-      // Remove custom spline chunking that conflicts with React.lazy()
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          ...config.optimization.splitChunks,
-          cacheGroups: {
-            ...config.optimization.splitChunks?.cacheGroups,
-            // Group other heavy libraries together but don't force spline into a static chunk
-            lib: {
-              test: /[\\/]node_modules[\\/](?!@splinetool)/,
-              name(module) {
-                const packageName = module.context.match(
-                  /[\\/]node_modules[\\/](.*?)([\\/]|$)/
-                )?.[1];
-                return `npm.${packageName?.replace('@', '')}`;
-              },
-              priority: 30,
-            },
-          },
-        },
-      };
-    }
-    return config;
+  
+  typescript: {
+    // Skip type checking during dev for faster compilation
+    ignoreBuildErrors: process.env.NODE_ENV === 'development',
   },
 };
 
