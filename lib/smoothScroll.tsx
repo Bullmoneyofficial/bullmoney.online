@@ -130,27 +130,32 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
     });
 
     // Lenis option surface varies by version; keep config flexible.
+    // FIXED: Improved wheel and trackpad handling for better desktop scrolling
     const lenisOptions: any = {
       lerp: appliedLerp,
       duration: appliedDuration,
       smoothWheel: options.smoothWheel ?? true, // Always smooth wheel on desktop
-      wheelMultiplier: options.wheelMultiplier ?? (isHighEndDesktop ? 0.8 : 1.0),
-      touchMultiplier: options.touchMultiplier ?? (isMobile ? 1.2 : 2.0), // Higher for trackpad
+      wheelMultiplier: options.wheelMultiplier ?? (isHighEndDesktop ? 1.0 : 1.2), // FIXED: Increased multiplier for better responsiveness
+      touchMultiplier: options.touchMultiplier ?? (isMobile ? 1.2 : 1.5), // FIXED: Better trackpad sensitivity
       infinite: options.infinite ?? false,
       orientation: 'vertical',
       gestureOrientation: 'vertical',
-      
+
       // Desktop: enhanced trackpad support
-      // Trackpad gestures are detected as touch events in some browsers
-      smoothTouch: !isMobile, // Enable smooth touch on desktop for trackpad
-      syncTouch: false, // Don't sync touch to prevent conflicts
-      syncTouchLerp: 0.075,
-      
-      // Prevent over-scrolling
-      overscroll: false,
-      
+      // FIXED: Enable smooth touch for trackpad gestures on desktop
+      smoothTouch: !isMobile,
+      syncTouch: false,
+      syncTouchLerp: 0.1, // FIXED: Slightly higher for better trackpad response
+
+      // FIXED: Allow normal overscroll behavior
+      overscroll: true,
+
       // Use RAF for 120Hz synchronization
       autoRaf: false, // We handle RAF manually for precise timing
+
+      // FIXED: Ensure wheel events are captured
+      wrapper: window,
+      content: document.documentElement,
     };
 
     lenisRef.current = new Lenis(lenisOptions);

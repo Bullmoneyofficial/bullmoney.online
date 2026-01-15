@@ -54,9 +54,12 @@ export function useScrollManagement({
     document.addEventListener('touchstart', handleTouchStart, { passive: true });
     document.addEventListener('touchmove', handleTouchMove, { passive: false });
 
-    // Disable pull-to-refresh
+    // FIXED: Only set overscroll behavior on mobile to prevent scroll issues on desktop
+    const isMobileDevice = window.innerWidth < 768;
     const originalOverscrollBehavior = document.body.style.overscrollBehavior;
-    document.body.style.overscrollBehavior = 'contain';
+    if (isMobileDevice) {
+      document.body.style.overscrollBehavior = 'contain';
+    }
 
     // Optimized 60fps scroll handler
     let rafId: number | null = null;
@@ -112,7 +115,10 @@ export function useScrollManagement({
       scrollElement.removeEventListener('scroll', handleScroll);
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchmove', handleTouchMove);
-      document.body.style.overscrollBehavior = originalOverscrollBehavior;
+      // Only restore overscroll behavior if we changed it (mobile only)
+      if (isMobileDevice) {
+        document.body.style.overscrollBehavior = originalOverscrollBehavior;
+      }
 
       if (rafId !== null) {
         cancelAnimationFrame(rafId);

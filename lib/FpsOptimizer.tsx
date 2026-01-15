@@ -641,15 +641,15 @@ export const FpsOptimizerProvider = memo(function FpsOptimizerProvider({
     };
   }, [shimmerQuality, config.shimmerQuality]);
   
-  // FPS monitoring and dynamic optimization - Game loop style for 60 FPS target
+  // FPS monitoring and dynamic optimization - OPTIMIZED: Less aggressive to save CPU
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!enableMonitoring) return;
-    
-    let animationId: number;
+
+    let animationId: number | null = null;
     let started = false;
-    
-    // Game loop: runs once per frame, measures frame time
+
+    // OPTIMIZED: Game loop with reduced overhead
     const gameLoop = (timestamp: number) => {
       if (!started) {
         lastTimeRef.current = timestamp;
@@ -659,103 +659,79 @@ export const FpsOptimizerProvider = memo(function FpsOptimizerProvider({
         animationId = requestAnimationFrame(gameLoop);
         return;
       }
-      
+
       // Calculate frame time (delta time)
       const frameTime = timestamp - lastFrameTimeRef.current;
       lastFrameTimeRef.current = timestamp;
-      
-      // Track frame times
+
+      // OPTIMIZED: Only track last 30 frames instead of 60
       frameTimeRef.current.push(frameTime);
-      if (frameTimeRef.current.length > 60) {
+      if (frameTimeRef.current.length > 30) {
         frameTimeRef.current.shift();
       }
-      
+
       frameCountRef.current++;
       const elapsed = timestamp - lastTimeRef.current;
-      
-      // Update FPS every monitoring interval
-      if (elapsed >= monitoringInterval) {
+
+      // OPTIMIZED: Update FPS every 2 seconds instead of monitoringInterval (500ms)
+      if (elapsed >= 2000) {
         const fps = Math.round((frameCountRef.current * 1000) / elapsed);
         setCurrentFps(fps);
-        
+
         // Calculate average frame time
-        const avgFrameTime = frameTimeRef.current.length > 0 
-          ? frameTimeRef.current.reduce((a, b) => a + b, 0) / frameTimeRef.current.length 
+        const avgFrameTime = frameTimeRef.current.length > 0
+          ? frameTimeRef.current.reduce((a, b) => a + b, 0) / frameTimeRef.current.length
           : 16.67;
-        
-        // Update history
+
+        // Update history - keep only 10 samples
         fpsHistoryRef.current.push(fps);
-        if (fpsHistoryRef.current.length > 30) {
+        if (fpsHistoryRef.current.length > 10) {
           fpsHistoryRef.current.shift();
         }
-        
-        // Calculate average
+
         const avg = fpsHistoryRef.current.reduce((a, b) => a + b, 0) / fpsHistoryRef.current.length;
         setAverageFps(Math.round(avg));
-        
-        // Frame time budget analysis (target 60fps = 16.67ms budget)
-        const TARGET_FRAME_TIME_60 = 16.67;
-        const targetFrameTime = TARGET_FRAME_TIME_60;
-        const frameTimeOverbudget = avgFrameTime > targetFrameTime;
-        const frameTimePressure = avgFrameTime / targetFrameTime; // > 1.0 means overbudget
-        
-        // Only update quality if enough time passed (prevent thrashing)
+
+        // OPTIMIZED: Only update quality every 6 seconds (reduced from 3)
         const timeSinceLastUpdate = timestamp - lastUpdateRef.current;
-        if (timeSinceLastUpdate >= 3000) { // 3 second debounce
-          // Aggressive frame-time based quality scaling
-          // Prioritize hitting 60fps
+        if (timeSinceLastUpdate >= 6000) {
+          const frameTimePressure = avgFrameTime / 16.67;
+
           if (frameTimePressure > 2.0 || avg < 20) {
-            // CRITICAL: Frame time is 2x over budget - aggressive reduction
             setShimmerQuality('disabled');
             setSplineQuality('low');
             lowFpsCountRef.current++;
-            console.warn(`🔴 [FpsOptimizer] CRITICAL FRAME TIME (${Math.round(avgFrameTime)}ms / 16.67ms) - Heavy reduction`);
           } else if (frameTimePressure > 1.5 || avg < 30) {
-            // Severe: Frame time 1.5x over budget
             setShimmerQuality('disabled');
-            console.warn(`⚠️ [FpsOptimizer] SEVERE FPS (${Math.round(avg)}) - Frame time: ${Math.round(avgFrameTime)}ms`);
           } else if (frameTimePressure > 1.2 || avg < 45) {
-            // High pressure: 20% over budget
             setShimmerQuality('low');
-            console.log(`⚡ [FpsOptimizer] Low FPS (${Math.round(avg)}) - Frame time: ${Math.round(avgFrameTime)}ms`);
           } else if (frameTimePressure > 1.0 || avg < 55) {
-            // Slight pressure: slightly over budget
             setShimmerQuality('medium');
           } else if (avg >= 58) {
-            // Stable at 60fps - can use normal quality
-            if (lowFpsCountRef.current < 2) {
-              setShimmerQuality(config.shimmerQuality);
-            } else {
-              setShimmerQuality('medium');
-            }
+            setShimmerQuality(lowFpsCountRef.current < 2 ? config.shimmerQuality : 'medium');
           }
-          
-          // Always target 60fps minimum on M1/desktop
+
           setTargetFrameRate(60);
           lastUpdateRef.current = timestamp;
         }
-        
+
         frameCountRef.current = 0;
         lastTimeRef.current = timestamp;
       }
-      
-      // Use high-priority callback if available for smoother updates
-      if ('scheduler' in window && 'yield' in (window.scheduler as any)) {
-        (window.scheduler as any).yield?.().then(() => {
-          animationId = requestAnimationFrame(gameLoop);
-        });
-      } else {
-        animationId = requestAnimationFrame(gameLoop);
-      }
+
+      animationId = requestAnimationFrame(gameLoop);
     };
-    
-    // Start monitoring immediately for game-like responsiveness
-    animationId = requestAnimationFrame(gameLoop);
-    
+
+    // OPTIMIZED: Wait 5 seconds before starting (was immediate)
+    const timeout = setTimeout(() => {
+      animationId = requestAnimationFrame(gameLoop);
+    }, 5000);
+
     return () => {
-      if (animationId) cancelAnimationFrame(animationId);
+      clearTimeout(timeout);
+      if (animationId !== null) cancelAnimationFrame(animationId);
     };
-  }, [enableMonitoring, isMobile, monitoringInterval, config.shimmerQuality]);
+  }, [enableMonitoring, isMobile, config.shimmerQuality]);
   
   // Build state object
   const state: FpsOptimizerState = {

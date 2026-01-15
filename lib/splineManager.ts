@@ -402,19 +402,20 @@ export class SplineManager {
   }
 
   /**
-   * Initialize the manager
+   * Initialize the manager - OPTIMIZED for faster startup
    */
   async initialize(): Promise<void> {
     console.log('[SplineManager] Initializing...');
 
-    this.capabilities = await this.detector.detect();
-
-    // Setup resource hints for Spline CDN
+    // Setup resource hints immediately for faster loading
     this.addResourceHints();
 
-    // Cleanup old caches
+    // Detect capabilities asynchronously
+    this.capabilities = await this.detector.detect();
+
+    // Cleanup old caches in background (don't await)
     const cache = new SplineCacheManager();
-    await cache.cleanup();
+    cache.cleanup().catch(console.warn);
 
     console.log('[SplineManager] Ready');
   }
@@ -504,7 +505,7 @@ export class SplineManager {
   }
 
   /**
-   * Add resource hints for faster loading
+   * Add resource hints for faster loading - OPTIMIZED with more CDN preconnects
    */
   private addResourceHints(): void {
     if (typeof document === 'undefined') return;
@@ -522,6 +523,13 @@ export class SplineManager {
       dnsPrefetch.rel = 'dns-prefetch';
       dnsPrefetch.href = 'https://prod.spline.design';
       document.head.appendChild(dnsPrefetch);
+
+      // Also preconnect to draft CDN (sometimes used)
+      const draftPreconnect = document.createElement('link');
+      draftPreconnect.rel = 'preconnect';
+      draftPreconnect.href = 'https://draft.spline.design';
+      draftPreconnect.crossOrigin = 'anonymous';
+      document.head.appendChild(draftPreconnect);
     }
   }
 }

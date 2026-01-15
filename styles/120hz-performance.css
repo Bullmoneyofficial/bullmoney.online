@@ -10,20 +10,25 @@
 
 /* ============================================================================
    CRITICAL: SCROLL FIX - Make page scrollable at 120Hz
+   FIXED: Changed overscroll-behavior from 'none' to 'auto' to enable scrolling
    ============================================================================ */
 html {
   /* Native scrolling - do NOT use scroll-behavior: smooth, it causes jank */
-  overflow-y: auto;
+  overflow-y: auto !important;
   overflow-x: hidden;
-  overscroll-behavior: none;
+  /* FIXED: Changed from 'none' to 'auto' - 'none' was blocking scroll on some devices */
+  overscroll-behavior: auto;
   /* Touch scrolling for iOS */
   -webkit-overflow-scrolling: touch;
+  /* Ensure scroll works on desktop */
+  scroll-behavior: auto;
 }
 
 body {
-  overflow-y: auto;
+  overflow-y: visible;
   overflow-x: hidden;
-  overscroll-behavior-y: none;
+  /* FIXED: Changed from 'none' to 'contain' - only prevent overscroll bounce */
+  overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   /* Prevent body from being fixed */
   position: relative !important;

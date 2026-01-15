@@ -111,32 +111,25 @@ const applyPerformanceClasses = (capabilities: ReturnType<typeof detectBrowserCa
   }
 };
 
-// Disable keyboard scrolling on desktop
+// Desktop scrolling setup - FIXED: Allow keyboard and all scroll inputs
+// Previously this was blocking keyboard scrolling which broke normal navigation
 const setupDesktopScrolling = () => {
   if (typeof window === 'undefined') return () => {};
-  
-  const preventKeyScroll = (e: KeyboardEvent) => {
-    // Allow scrolling only with specific modifiers or in input fields
-    const target = e.target as HTMLElement;
-    const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
-    
-    if (isInputField) return;
-    
-    // Prevent arrow keys, space, page up/down from scrolling
-    const scrollKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'PageUp', 'PageDown', 'Home', 'End'];
-    
-    if (scrollKeys.includes(e.code) && !e.ctrlKey && !e.metaKey) {
-      e.preventDefault();
-    }
-  };
-  
-  // Only on desktop
+
+  // REMOVED: Keyboard scroll prevention - users should be able to scroll with keyboard
+  // The previous code was blocking Arrow keys, Space, PageUp/Down which broke normal scrolling
+
+  // Instead, just set up smooth scroll behavior for desktop
   if (window.innerWidth >= 1024) {
-    window.addEventListener('keydown', preventKeyScroll, { passive: false });
+    // Ensure scroll events work properly on desktop
+    document.documentElement.style.scrollBehavior = 'auto';
+    document.body.style.overscrollBehavior = 'auto';
   }
-  
+
   return () => {
-    window.removeEventListener('keydown', preventKeyScroll);
+    // Cleanup - reset to defaults
+    document.documentElement.style.scrollBehavior = '';
+    document.body.style.overscrollBehavior = '';
   };
 };
 
@@ -157,7 +150,7 @@ const optimizeInAppBrowser = () => {
   }
 };
 
-// FPS Monitor (development only)
+// FPS Monitor (development only) - OPTIMIZED: Uses less CPU with longer intervals
 interface FPSMonitorProps {
   enabled?: boolean;
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -167,41 +160,48 @@ export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: 
   const [fps, setFps] = useState(0);
   const frameCountRef = useRef(0);
   const lastTimeRef = useRef(performance.now());
-  
+  const rafIdRef = useRef<number | null>(null);
+
   useEffect(() => {
     if (!enabled) return;
-    
-    let animationId: number;
-    
+
+    // Use a more efficient measurement approach - sample every 2 seconds instead of continuous
     const measureFPS = () => {
       frameCountRef.current++;
       const now = performance.now();
-      
-      if (now - lastTimeRef.current >= 1000) {
-        setFps(Math.round(frameCountRef.current * 1000 / (now - lastTimeRef.current)));
+      const elapsed = now - lastTimeRef.current;
+
+      // Update FPS display every 2 seconds to reduce state updates
+      if (elapsed >= 2000) {
+        setFps(Math.round(frameCountRef.current * 1000 / elapsed));
         frameCountRef.current = 0;
         lastTimeRef.current = now;
       }
-      
-      animationId = requestAnimationFrame(measureFPS);
+
+      rafIdRef.current = requestAnimationFrame(measureFPS);
     };
-    
-    animationId = requestAnimationFrame(measureFPS);
-    
-    return () => cancelAnimationFrame(animationId);
+
+    rafIdRef.current = requestAnimationFrame(measureFPS);
+
+    return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+    };
   }, [enabled]);
-  
+
   if (!enabled) return null;
-  
+
   const positionClasses = {
     'top-left': 'top-2 left-2',
     'top-right': 'top-2 right-2',
     'bottom-left': 'bottom-2 left-2',
     'bottom-right': 'bottom-2 right-2',
   };
-  
+
   const fpsColor = fps >= 55 ? 'text-green-400' : fps >= 30 ? 'text-yellow-400' : 'text-red-400';
-  
+
   return (
     <div className={`fixed ${positionClasses[position]} z-[99999] px-2 py-1 bg-black/80 rounded text-xs font-mono ${fpsColor}`}>
       {fps} FPS
