@@ -531,7 +531,7 @@ export const useDesktopFPSOptimizer = (enabled = true) => {
  */
 export const useScrollAwareAnimations = () => {
   const [isScrolling, setIsScrolling] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   useEffect(() => {
     if (typeof window === 'undefined') return;

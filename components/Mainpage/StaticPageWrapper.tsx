@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useState, memo } from 'react';
-import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring, AnimatePresence, type Variants } from 'framer-motion';
 
 // ==========================================
 // STATIC PAGE WRAPPER WITH ANIMATIONS
@@ -101,7 +101,7 @@ export const StaticPageWrapper = memo<StaticPageWrapperProps>(({
   );
 
   // Get animation variants based on type
-  const getAnimationVariants = () => {
+  const getAnimationVariants = (): Variants => {
     if (prefersReducedMotion || animationType === 'none') {
       return {
         hidden: { opacity: 1 },
@@ -118,7 +118,7 @@ export const StaticPageWrapper = memo<StaticPageWrapperProps>(({
             y: 0,
             transition: {
               duration: 0.6,
-              ease: [0.25, 0.1, 0.25, 1]
+              ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number]
             }
           },
         };
@@ -130,7 +130,7 @@ export const StaticPageWrapper = memo<StaticPageWrapperProps>(({
             scale: 1,
             transition: {
               duration: 0.7,
-              ease: [0.25, 0.1, 0.25, 1]
+              ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number]
             }
           },
         };
@@ -142,7 +142,7 @@ export const StaticPageWrapper = memo<StaticPageWrapperProps>(({
             opacity: 1,
             transition: {
               duration: 0.5,
-              ease: 'easeOut'
+              ease: 'easeOut' as const
             }
           },
         };

@@ -2,32 +2,24 @@
 const nextConfig = {
   output: 'standalone',
   reactStrictMode: true,
-
-  // Performance optimizations for Vercel
-  swcMinify: true,
   compress: true,
-
-  // Optimize production builds
   productionBrowserSourceMaps: false,
 
-  // Turbopack configuration (enabled via --turbopack flag)
-  turbopack: {
-    // Enable persistent caching for faster restarts
-    memoryLimit: 4000,
-  },
-
-  // Optimize chunking for better caching
+  // Experimental features for Next.js 16
   experimental: {
-    // Enable Turbopack's persistent disk cache
-    turbo: {
-      unstable_allowDynamicGlobals: true,
+    // Improved caching for better performance
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
     },
+    // Package import optimizations
     optimizePackageImports: [
       '@splinetool/react-spline',
       '@splinetool/runtime',
       'lucide-react',
       'react-youtube',
       'framer-motion',
+      'motion',
       '@tabler/icons-react',
       'react-icons',
       '@react-three/drei',
@@ -48,7 +40,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**", // This wild card allows ALL https domains
+        hostname: "**",
       },
     ],
     formats: ['image/avif', 'image/webp'],
@@ -76,15 +68,6 @@ const nextConfig = {
         ],
       },
       {
-        source: '/scene:splat*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      {
         source: '/:all*(svg|jpg|png|webp|avif)',
         headers: [
           {
@@ -105,12 +88,7 @@ const nextConfig = {
     ];
   },
 
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  
   typescript: {
-    // Skip type checking during dev for faster compilation
     ignoreBuildErrors: process.env.NODE_ENV === 'development',
   },
 };

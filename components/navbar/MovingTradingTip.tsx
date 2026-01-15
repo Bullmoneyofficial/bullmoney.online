@@ -8,7 +8,7 @@ import { useComponentTracking } from '@/lib/CrashTracker';
 interface MovingTradingTipProps {
   tip: { target: string; text: string; buttonIndex: number };
   buttonRefs: React.RefObject<(HTMLDivElement | null)[]>;
-  dockRef: React.RefObject<HTMLDivElement>;
+  dockRef: React.RefObject<HTMLDivElement | null>;
   isVisible: boolean;
 }
 

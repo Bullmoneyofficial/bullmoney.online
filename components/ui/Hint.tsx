@@ -3,9 +3,14 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
+type HintChildProps = React.HTMLAttributes<HTMLElement> & {
+  title?: string;
+  "aria-label"?: string;
+};
+
 type HintProps = {
   label: string;
-  children: React.ReactElement;
+  children: React.ReactElement<HintChildProps>;
   longPressMs?: number;
   autoHideMs?: number;
 };
@@ -71,6 +76,7 @@ export function Hint({
   }, [open, hide, show]);
 
   const child = useMemo(() => {
+    const childProps = children.props;
     const props: any = {
       ref: (node: HTMLElement | null) => {
         triggerRef.current = node;
@@ -78,11 +84,11 @@ export function Hint({
         if (typeof originalRef === "function") originalRef(node);
         else if (originalRef && typeof originalRef === "object") originalRef.current = node;
       },
-      onMouseEnter: composeHandlers(children.props.onMouseEnter, () => show()),
-      onMouseLeave: composeHandlers(children.props.onMouseLeave, () => hide()),
-      onFocus: composeHandlers(children.props.onFocus, () => show()),
-      onBlur: composeHandlers(children.props.onBlur, () => hide()),
-      onPointerDown: composeHandlers(children.props.onPointerDown, (e: PointerEvent) => {
+      onMouseEnter: composeHandlers(childProps.onMouseEnter, () => show()),
+      onMouseLeave: composeHandlers(childProps.onMouseLeave, () => hide()),
+      onFocus: composeHandlers(childProps.onFocus, () => show()),
+      onBlur: composeHandlers(childProps.onBlur, () => hide()),
+      onPointerDown: composeHandlers(childProps.onPointerDown, (e: React.PointerEvent<HTMLElement>) => {
         if (e.pointerType === "mouse") return;
         clearTimers();
         longPressTimerRef.current = window.setTimeout(() => {
@@ -90,10 +96,10 @@ export function Hint({
           autoHideTimerRef.current = window.setTimeout(() => hide(), autoHideMs);
         }, longPressMs);
       }),
-      onPointerUp: composeHandlers(children.props.onPointerUp, () => clearTimers()),
-      onPointerCancel: composeHandlers(children.props.onPointerCancel, () => clearTimers()),
-      title: children.props.title ?? label,
-      "aria-label": children.props["aria-label"] ?? label,
+      onPointerUp: composeHandlers(childProps.onPointerUp, () => clearTimers()),
+      onPointerCancel: composeHandlers(childProps.onPointerCancel, () => clearTimers()),
+      title: childProps.title ?? label,
+      "aria-label": childProps["aria-label"] ?? label,
     };
     return React.cloneElement(children, props);
   }, [autoHideMs, children, label, longPressMs]);
@@ -137,4 +143,3 @@ export function Hint({
     </>
   );
 }
-

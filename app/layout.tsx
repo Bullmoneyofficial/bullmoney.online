@@ -20,7 +20,7 @@ import { AudioSettingsProvider } from "@/contexts/AudioSettingsProvider";
 import { ShopProvider } from "@/components/ShopContext";
 
 // ✅ LAZY LOADED: All performance providers bundled in client wrapper
-import { ClientProviders, ClientExtras, Footer } from "@/components/ClientProviders";
+import { ClientProviders, Footer } from "@/components/ClientProviders";
 
 // ✅ ADDED: Import the Unified Shimmer Styles Provider
 import { ShimmerStylesProvider } from "@/components/ui/UnifiedShimmer";

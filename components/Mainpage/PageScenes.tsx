@@ -600,7 +600,7 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
     setIsDragging(false);
   };
 
-  const rafRef = useRef<number>();
+  const rafRef = useRef<number | null>(null);
 
   const handleDragMove = useCallback((e: any) => {
     if (!containerRef.current) return;
@@ -631,7 +631,7 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
     return () => {
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
-        rafRef.current = undefined;
+        rafRef.current = null;
       }
     };
   }, []); // Empty deps = only on mount/unmount
@@ -651,7 +651,7 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
       // BUG FIX #4: Also cleanup RAF when dragging state changes
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
-        rafRef.current = undefined;
+        rafRef.current = null;
       }
     };
   }, [isDragging, handleDragMove]);

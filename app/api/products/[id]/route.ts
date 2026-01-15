@@ -7,7 +7,7 @@ import { logger } from "@/lib/logger";
 // PUT: Update a product
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Require admin authentication
@@ -15,7 +15,7 @@ export async function PUT(
     if (!authResult.authorized && authResult.response) return authResult.response;
 
     const body = await request.json();
-    const id = params.id;
+    const { id } = await params;
 
     // Validate update data
     const validation = UpdateProductSchema.safeParse(body);
@@ -82,14 +82,14 @@ export async function PUT(
 // DELETE: Remove a product
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Require admin authentication
     const authResult = await requireAdmin(request);
     if (!authResult.authorized && authResult.response) return authResult.response;
 
-    const id = params.id;
+    const { id } = await params;
 
     const { error, data } = await supabase
       .from("products")

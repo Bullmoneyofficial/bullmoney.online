@@ -909,7 +909,7 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
   // Refs for performance
   const lastQualityUpdateRef = useRef(0);
   const lastIdleCheckRef = useRef(Date.now());
-  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Game-like quality tracking refs
   const qualityLevelRef = useRef<QualityLevel>(4); // Start at high

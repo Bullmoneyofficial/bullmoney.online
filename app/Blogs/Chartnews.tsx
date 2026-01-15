@@ -182,7 +182,7 @@ const HighAestheticCard = memo(({
 }: { 
     title: string, 
     subtitle: string, 
-    icon: React.ElementType, 
+    icon: React.ComponentType<{ className?: string }>, 
     onShow: () => void,
     isChart?: boolean,
     showTip?: boolean,

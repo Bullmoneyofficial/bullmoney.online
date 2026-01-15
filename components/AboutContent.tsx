@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import { SparklesCore } from "@/components/Mainpage/sparkles"; // Adjust import path if needed (e.g. "../sparkles" or "./sparkles")
 
 const fade = {
@@ -228,12 +229,12 @@ export function AboutContent() {
           {/* CTA / Footer */}
           <div className="mt-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-blue-500/20 to-indigo-500/20" />
           <footer className="mt-6 flex items-center justify-between">
-            <a
+            <Link
               href="/"
               className="rounded-full px-3 py-1 text-sm font-semibold text-white bg-neutral-900 ring-1 ring-sky-500/30 hover:ring-sky-400/60"
             >
               Back
-            </a>
+            </Link>
             <span className="text-sm bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 bg-clip-text text-transparent font-semibold">
               • • •
             </span>

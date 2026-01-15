@@ -62,7 +62,7 @@ export function MobileQuickActions({
   const [position, setPosition] = useState({ x: 12, y: 0 });
   
   const constraintsRef = useRef<HTMLDivElement>(null);
-  const dragTimeoutRef = useRef<NodeJS.Timeout>();
+  const dragTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prefersReducedMotion = useReducedMotion();
 
   // Memoized visibility flags

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, forwardRef, useCallback } from 'react';
 import { createPortal } from 'react-dom'; // <--- KEY FIX
-import { Volume2, Volume1, VolumeX, Palette, Music, Hand } from 'lucide-react';
+import { Volume2, Volume1, VolumeX, Palette, Music, Hand, type LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -31,7 +31,7 @@ interface BottomControlsProps {
 const ControlButton = forwardRef<HTMLButtonElement, { 
   onClick: (e: React.MouseEvent) => void; 
   active?: boolean; 
-  icon: React.ElementType; 
+  icon: LucideIcon; 
   label: string;
   className?: string;
   children?: React.ReactNode;

@@ -7,7 +7,7 @@ import { logger } from "@/lib/logger";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
     // Require admin authentication
@@ -18,7 +18,7 @@ export async function PUT(
 
     await dbConnect();
     const body = await request.json();
-    const { id } = params;
+    const { id } = await params;
 
     // Validate MongoDB ID format
     const idValidation = MongoIdSchema.safeParse(id);
@@ -68,7 +68,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
     // Require admin authentication
@@ -78,7 +78,7 @@ export async function DELETE(
     }
 
     await dbConnect();
-    const { id } = params;
+    const { id } = await params;
 
     // Validate MongoDB ID format
     const idValidation = MongoIdSchema.safeParse(id);

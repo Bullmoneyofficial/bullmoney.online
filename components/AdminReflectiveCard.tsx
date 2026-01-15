@@ -29,7 +29,7 @@ const AdminReflectiveCard = forwardRef<HTMLDivElement, AdminPanelProps>(({
   style = {},
 }, ref) => {
   const turbulenceRef = useRef<SVGFETurbulenceElement>(null);
-  const requestRef = useRef<number>();
+  const requestRef = useRef<number | undefined>(undefined);
   
   // States: AUTH_CHECK -> PIN_ENTRY -> DASHBOARD -> ACCESS_DENIED
   const [status, setStatus] = useState<'AUTH_CHECK' | 'PIN_ENTRY' | 'DASHBOARD' | 'ACCESS_DENIED'>('AUTH_CHECK');

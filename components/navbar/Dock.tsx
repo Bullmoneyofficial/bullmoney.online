@@ -26,7 +26,7 @@ interface DockProps {
   magnification?: number;
   spring?: any;
   distance?: number;
-  dockRef?: React.RefObject<HTMLDivElement>;
+  dockRef?: React.RefObject<HTMLDivElement | null>;
   buttonRefs?: React.RefObject<(HTMLDivElement | null)[]>;
   onHoverChange?: (isHovered: boolean) => void;
   isXMUser?: boolean;

@@ -2,7 +2,16 @@
 
 import React, { useCallback } from 'react';
 import {
-  Command, DollarSign, Zap, VolumeX, MessageCircle, ArrowRight, SkipForward, Check, Lock
+  Command,
+  DollarSign,
+  Zap,
+  VolumeX,
+  MessageCircle,
+  ArrowRight,
+  SkipForward,
+  Check,
+  Lock,
+  type LucideIcon,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -130,7 +139,7 @@ export const ShimmerCard = ({ children, className = "", onClick, ...props }: Shi
 );
 
 interface ShimmerButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    icon?: React.ElementType;
+    icon?: LucideIcon;
 }
 
 export const ShimmerButton = ({ onClick = () => {}, children, className = "", icon: Icon, disabled = false, title, ...props }: ShimmerButtonProps) => (
@@ -147,7 +156,12 @@ export const ShimmerButton = ({ onClick = () => {}, children, className = "", ic
         <ShimmerBorder active={!disabled} />
         <div className="absolute inset-[1px] bg-[#0a0a0a] group-hover/btn:bg-[#151515] transition-colors rounded-[11px] flex items-center justify-center gap-2">
             <span className="font-bold text-blue-500 text-[10px] md:text-xs tracking-[0.2em] uppercase text-glow">{children}</span>
-            {Icon && <Icon className="w-4 h-4 text-blue-500 group-hover/btn:translate-x-1 transition-transform drop-shadow-[0_0_5px_rgba(59,130,246,1)]" aria-hidden="true" />}
+            {Icon && (
+                <Icon
+                    className="w-4 h-4 text-blue-500 group-hover/btn:translate-x-1 transition-transform drop-shadow-[0_0_5px_rgba(59,130,246,1)]"
+                    aria-hidden={true}
+                />
+            )}
         </div>
     </button>
 );

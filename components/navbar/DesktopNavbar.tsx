@@ -21,7 +21,7 @@ interface DesktopNavbarProps {
   isAdmin: boolean;
   isAuthenticated: boolean;
   hasReward: boolean;
-  dockRef: React.RefObject<HTMLDivElement>;
+  dockRef: React.RefObject<HTMLDivElement | null>;
   buttonRefs: React.RefObject<(HTMLDivElement | null)[]>;
   onHoverChange: (isHovered: boolean) => void;
   onAffiliateClick: () => void;

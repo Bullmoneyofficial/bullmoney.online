@@ -1,26 +1,23 @@
 "use client";
 import React from "react";
 import { cn } from "@/lib/utils";
-import { Link} from "next-view-transitions";
 
-export const Button = ({
-  href,
-  as: Tag = "a",
-  children,
-  className,
-  variant = "primary",
-  ...props
-}: {
+type ButtonProps = {
   href?: string;
   as?: React.ElementType;
   children: React.ReactNode;
   className?: string;
   variant?: "primary" | "secondary" | "dark" | "gradient" | "clear";
-} & (
-  | React.ComponentPropsWithoutRef<"a">
-  | React.ComponentPropsWithoutRef<"button">
-  | typeof Link
-)) => {
+} & React.HTMLAttributes<HTMLElement>;
+
+export const Button = ({
+  href,
+  as,
+  children,
+  className,
+  variant = "primary",
+  ...props
+}: ButtonProps) => {
   const baseStyles =
     "px-4 py-2 rounded-md bg-white text-black text-sm font-bold relative cursor-pointer hover:-translate-y-0.5 transition duration-200 inline-block text-center";
 
@@ -36,13 +33,12 @@ export const Button = ({
     clear: "bg-transparent shadow-none text-inherit p-0",
   };
 
-  return (
-    <Tag
-      href={href || undefined}
-      className={cn(baseStyles, variantStyles[variant], className)}
-      {...props}
-    >
-      {children}
-    </Tag>
-  );
+  const Component = (as ?? "a") as React.ElementType;
+  const componentProps = {
+    ...(href ? { href } : {}),
+    className: cn(baseStyles, variantStyles[variant], className),
+    ...props,
+  } as React.HTMLAttributes<HTMLElement>;
+
+  return React.createElement(Component, componentProps, children);
 };

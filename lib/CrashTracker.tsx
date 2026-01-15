@@ -447,7 +447,7 @@ export const CrashTrackerProvider = memo(function CrashTrackerProvider({
   const [sessionId] = useState(() => getSessionId());
   const eventQueueRef = useRef<TrackingEvent[]>([]);
   const sessionDataRef = useRef<SessionData | null>(null);
-  const flushTimeoutRef = useRef<NodeJS.Timeout>();
+  const flushTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFlushingRef = useRef(false);
   const lastGlobalErrorRef = useRef<{ key: string; ts: number } | null>(null);
   const lastPathRef = useRef<string | null>(null);

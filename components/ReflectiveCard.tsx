@@ -58,7 +58,7 @@ const ReflectiveCard = forwardRef<ReflectiveCardHandle, ReflectiveCardProps>(({
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const turbulenceRef = useRef<SVGFETurbulenceElement>(null);
-  const requestRef = useRef<number>();
+  const requestRef = useRef<number | null>(null);
   
   const [status, setStatus] = useState<'IDLE' | 'SCANNING' | 'VERIFIED' | 'DASHBOARD' | 'ERROR' | 'UNAUTHORIZED'>('IDLE');
   const [scanProgress, setScanProgress] = useState(0);

@@ -286,7 +286,7 @@ const LaserFlow: React.FC<Props> = ({
   const timeRef = useRef<number>(0);
   const mouseRef = useRef<THREE.Vector2>(new THREE.Vector2(0, 0));
   const targetMouseRef = useRef<THREE.Vector2>(new THREE.Vector2(0, 0));
-  const requestRef = useRef<number>();
+  const requestRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!mountRef.current) return;

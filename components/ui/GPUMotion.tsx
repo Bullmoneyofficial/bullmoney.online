@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useCallback, memo, ComponentType, ReactNode } from 'react';
+import React, { useRef, useEffect, useCallback, memo, ComponentType, ReactNode, ElementType } from 'react';
 import { motion, MotionProps, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { usePerformanceStore } from '@/stores/performanceStore';
 
@@ -132,7 +132,7 @@ export const staggerContainer = {
 interface GPUMotionProps extends MotionProps {
   children: ReactNode;
   className?: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: React.ElementType;
 }
 
 /**

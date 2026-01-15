@@ -265,7 +265,6 @@ export const SmartSplineLoader = memo(({
       } : 'undefined'
     });
     loadSpline();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene, priority, isWebView, isMobile]);
 
   // BUG FIX #2: Cleanup - revoke ALL blob URLs created during the component's lifetime

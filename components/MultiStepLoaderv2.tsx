@@ -467,7 +467,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   const scale = useSpring(1, { stiffness: 300, damping: 20 });
   const iconRotate = useMotionValue(0);
   
-  const requestRef = useRef<number>();
+  const requestRef = useRef<number | null>(null);
   const completionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasFinishedRef = useRef(false);
   const particleIdRef = useRef(0);
@@ -476,7 +476,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   const isMountedRef = useRef(false); // Track if component has mounted
   const hasUserInteractedRef = useRef(false); // CRITICAL: Only allow progress after first user touch
   const animationStartedRef = useRef(false); // CRITICAL: Animation loop only starts after first interaction
-  const animateFnRef = useRef<() => void>(); // Store animate function for stable reference
+  const animateFnRef = useRef<(() => void) | null>(null); // Store animate function for stable reference
 
   const { startEngine, updateEngine, stopEngine, playSuccess } = useAudioEngine();
 
@@ -492,7 +492,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
     // Cancel any existing animation frames
     if (requestRef.current) {
       cancelAnimationFrame(requestRef.current);
-      requestRef.current = undefined;
+      requestRef.current = null;
     }
     
     return () => {
@@ -1271,13 +1271,20 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                     key={i}
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ 
-                      scale: [0, 1.2, 1], 
+                      scale: 1, 
                       opacity: 1,
                       x: Math.cos((i / 4) * Math.PI * 2) * 80,
                       y: Math.sin((i / 4) * Math.PI * 2) * 80,
                       rotate: [0, 10, -10, 0],
                     }}
-                    transition={{ delay: 0.2 + i * 0.1, type: "spring", stiffness: 200, rotate: { repeat: Infinity, duration: 1 } }}
+                    transition={{ 
+                      delay: 0.2 + i * 0.1, 
+                      scale: { type: "spring", stiffness: 200, damping: 10 },
+                      opacity: { duration: 0.3 },
+                      x: { type: "spring", stiffness: 200, damping: 15 },
+                      y: { type: "spring", stiffness: 200, damping: 15 },
+                      rotate: { repeat: Infinity, duration: 1, ease: "easeInOut" } 
+                    }}
                     className="absolute"
                     style={{ left: "50%", top: "50%" }}
                   >

@@ -139,7 +139,7 @@ function useFPSMonitor(enabled: boolean, threshold: number) {
 
 // Visibility observer hook
 function useVisibilityObserver(
-  ref: React.RefObject<HTMLElement>,
+  ref: React.RefObject<HTMLElement | null>,
   options: { rootMargin: string; threshold: number; enabled: boolean }
 ) {
   const [isVisible, setIsVisible] = useState(!options.enabled);
@@ -195,7 +195,7 @@ function OptimizedWrapperComponent({
   const containerRef = useRef<HTMLDivElement>(null);
   const { deviceTier } = useCacheContext();
   const { isLowEnd, isHighEnd } = useDeviceTier();
-  const unmountTimeoutRef = useRef<NodeJS.Timeout>();
+  const unmountTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Check if disabled for this device tier
   const isDisabled = disableOn.includes(deviceTier as 'minimal' | 'low');
@@ -222,7 +222,7 @@ function OptimizedWrapperComponent({
       // Cancel any pending unmount
       if (unmountTimeoutRef.current) {
         clearTimeout(unmountTimeoutRef.current);
-        unmountTimeoutRef.current = undefined;
+        unmountTimeoutRef.current = null;
       }
       setIsMounted(true);
       onVisible?.();

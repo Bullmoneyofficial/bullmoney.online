@@ -108,7 +108,7 @@ export function useThrottledResize(
   callback: (width: number, height: number) => void,
   delay: number = 100
 ) {
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

@@ -279,7 +279,7 @@ export function UltraSplineLoader({
   const [sceneUrl, setSceneUrl] = useState<string | null>(null);
   const splineRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number | null>(null);
   const lastFrameTimeRef = useRef(0);
 
   // Load scene with streaming

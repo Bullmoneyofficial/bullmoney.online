@@ -26,7 +26,7 @@ const Spline = dynamic<SplineWrapperProps>(() => import('@/lib/spline-wrapper') 
 });
 
 // Lightweight sparkles - only load on high-end devices
-const Sparkle = dynamic(() => import('react-sparkle'), {
+const Sparkle = dynamic(() => import('@/components/ui/Sparkle'), {
   ssr: false,
   loading: () => null
 });

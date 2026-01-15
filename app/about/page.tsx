@@ -80,9 +80,10 @@ const BackgroundMusicSystem = ({
   onReady: (player: any) => void;
   volume: number;
 }) => {
-  const videoId = (THEME_SOUNDTRACKS && THEME_SOUNDTRACKS[themeId]) 
-    ? THEME_SOUNDTRACKS[themeId] 
-    : 'jfKfPfyJRdk';
+  const soundProfile = THEME_SOUNDTRACKS?.[themeId];
+  const videoId = typeof soundProfile === 'object' && 'name' in soundProfile 
+    ? soundProfile.name 
+    : (typeof soundProfile === 'string' ? soundProfile : 'jfKfPfyJRdk');
     
   const opts: YouTubeProps['opts'] = {
     height: '1', 

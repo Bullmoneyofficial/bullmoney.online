@@ -5,17 +5,19 @@ import { logger } from "@/lib/logger";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Require admin authentication
     const authResult = await requireAdmin(request);
     if (!authResult.authorized && authResult.response) return authResult.response;
 
+    const { id } = await params;
+
     const { error, data } = await supabase
       .from("product_categories")
       .delete()
-      .eq("id", params.id)
+      .eq("id", id)
       .select();
 
     if (error) {
@@ -30,7 +32,7 @@ export async function DELETE(
       );
     }
 
-    logger.log(`Category deleted: ${params.id}`);
+    logger.log(`Category deleted: ${id}`);
     return NextResponse.json({ message: "Category deleted" });
   } catch (error: any) {
     logger.error("Error deleting category:", error);

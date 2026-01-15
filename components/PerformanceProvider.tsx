@@ -140,7 +140,7 @@ function useDesktopFPSOptimizer() {
  * Pauses heavy animations during scroll for better performance
  */
 function useScrollAwareAnimations() {
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   useEffect(() => {
     if (typeof window === 'undefined') return;

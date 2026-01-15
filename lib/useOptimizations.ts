@@ -89,7 +89,7 @@ export function useOptimizations(config?: {
 export function useOptimizedScroll(containerRef: React.RefObject<HTMLElement>) {
   const [scrollY, setScrollY] = useState(0);
   const [scrollPercentage, setScrollPercentage] = useState(0);
-  const rafRef = useRef<number>();
+  const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;

@@ -328,7 +328,10 @@ export const InfoPanel = ({ config, isOpen, onClose, accentColor }: any) => {
 // 4. MUSIC SYSTEM
 // ----------------------------------------------------------------------
 export const BackgroundMusicSystem = ({ themeId, onReady, volume: _volume, trackKey }: { themeId: string; onReady: (player: any) => void; volume: number; trackKey?: number; }) => {
-  const videoId = (THEME_SOUNDTRACKS && THEME_SOUNDTRACKS[themeId]) ? THEME_SOUNDTRACKS[themeId] : 'jfKfPfyJRdk';
+  const soundProfile = THEME_SOUNDTRACKS?.[themeId];
+  const videoId = typeof soundProfile === 'object' && 'name' in soundProfile 
+    ? soundProfile.name 
+    : (typeof soundProfile === 'string' ? soundProfile : 'jfKfPfyJRdk');
 
   // Log theme and video changes for debugging
   useEffect(() => {

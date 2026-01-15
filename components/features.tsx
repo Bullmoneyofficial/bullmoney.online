@@ -117,7 +117,7 @@ export function Features() {
               JOIN US ON GOAT FUNDED
             </h3>
 
-            <p className="mt-2 text-sm leading-relaxed text-neutral-200 font-extrabold">
+            <div className="mt-2 text-sm leading-relaxed text-neutral-200 font-extrabold">
               Trade With Our Community Using Partner Code{" "}
               <span className="relative inline-block">
                   {/* TIP 0: Partner Code */}
@@ -146,7 +146,7 @@ export function Features() {
                   </button>
               </span>
               .
-            </p>
+            </div>
 
             <div className="mt-3 flex items-center gap-3">
               <a
@@ -718,14 +718,14 @@ const CardDescription = ({
   className?: string;
 }) => {
   return (
-    <p
+    <div
       className={cn(
         "font-sans max-w-xs text-base font-normal tracking-tight mt-2 text-neutral-300",
         className
       )}
     >
       {children}
-    </p>
+    </div>
   );
 };
 
