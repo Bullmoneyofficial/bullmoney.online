@@ -441,12 +441,82 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
   const [hoveredButton, setHoveredButton] = useState<string | null>(null);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [showFirstTimeHelp, setShowFirstTimeHelp] = useState(true);
+  
+  // Scroll-based minimization for mobile - separates iframe from main player
+  const [isScrollMinimized, setIsScrollMinimized] = useState(false);
+  // Scroll-based compacting for pull tab when minimized
+  const [isPullTabCompact, setIsPullTabCompact] = useState(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pullTabScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastScrollY = useRef(0);
 
   // Auto-hide first time help
   useEffect(() => {
     const timer = setTimeout(() => setShowFirstTimeHelp(false), 8000);
     return () => clearTimeout(timer);
   }, []);
+
+  // Scroll detection for iframe auto-minimizing on mobile
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = Math.abs(currentScrollY - lastScrollY.current);
+      
+      // Only trigger minimization on significant scroll when player is not hidden or open
+      if (scrollDelta > 15 && !open && !playerHidden && !isMinimized) {
+        setIsScrollMinimized(true);
+        lastScrollY.current = currentScrollY;
+        
+        // Clear existing timeout
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+        
+        // Auto-expand after scroll stops
+        scrollTimeoutRef.current = setTimeout(() => {
+          setIsScrollMinimized(false);
+        }, 1200); // Expand back 1.2s after scroll stops
+      }
+      
+      // Also compact the pull tab when minimized and scrolling
+      if (scrollDelta > 15 && !open && !playerHidden && isMinimized && !forceMinimize) {
+        setIsPullTabCompact(true);
+        lastScrollY.current = currentScrollY;
+        
+        // Clear existing timeout
+        if (pullTabScrollTimeoutRef.current) {
+          clearTimeout(pullTabScrollTimeoutRef.current);
+        }
+        
+        // Auto-expand pull tab after scroll stops
+        pullTabScrollTimeoutRef.current = setTimeout(() => {
+          setIsPullTabCompact(false);
+        }, 1200); // Expand back 1.2s after scroll stops
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      if (pullTabScrollTimeoutRef.current) {
+        clearTimeout(pullTabScrollTimeoutRef.current);
+      }
+    };
+  }, [open, playerHidden, isMinimized, forceMinimize]);
+
+  // Reset minimized state when player opens or is manually minimized
+  useEffect(() => {
+    if (open || isMinimized) {
+      setIsScrollMinimized(false);
+    }
+    // Reset pull tab compact when unminimized
+    if (!isMinimized) {
+      setIsPullTabCompact(false);
+    }
+  }, [open, isMinimized]);
 
   // Handle forceMinimize from UIStateContext - this is the key to audio persistence!
   // When other UI components open (mobile menu, modals, etc.), we minimize the player
@@ -556,78 +626,187 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
       <AnimatePresence mode="wait">
         {isMinimized && !open && (
           forceMinimize ? (
-            /* Compact circular wave button when UI is open */
+            /* Compact pill button when modals/UI is open - matches scroll-minimized design */
             <motion.button
-              key="compact-tab"
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.5 }}
-              transition={{ type: "spring", damping: 20, stiffness: 300 }}
+              key="compact-pill-tab"
+              initial={{ opacity: 0, scale: 0.7, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.7, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 500, mass: 0.6 }}
               onClick={handleExpandPlayer}
               onMouseEnter={() => setHoveredButton('expand')}
               onMouseLeave={() => setHoveredButton(null)}
               className={cn(
-                "fixed w-12 h-12 rounded-full",
-                "bg-gradient-to-br from-slate-900 via-gray-800 to-black",
-                "border-2 border-blue-500/50 shadow-2xl",
-                "hover:border-blue-400 hover:scale-110",
-                "active:scale-95",
-                "flex items-center justify-center overflow-hidden",
-                playerSide === 'left' ? "left-2" : "right-2"
+                "fixed left-3 bottom-14 flex items-center gap-1.5 px-2.5 py-2 rounded-xl",
+                "bg-gradient-to-br from-blue-600/40 via-blue-500/25 to-slate-900/50",
+                "backdrop-blur-2xl border border-blue-500/50",
+                "shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30",
+                "hover:border-blue-400/70 transition-all duration-200",
+                "pointer-events-auto"
               )}
               style={{
-                bottom: 140,
-                zIndex: Z_INDEX.PULL_TAB,
-                boxShadow: '0 0 20px rgba(59, 130, 246, 0.4), 0 4px 20px rgba(0,0,0,0.5)',
+                zIndex: 100201, // Just above MainWidget z-[100200]
               }}
+              whileHover={{ scale: 1.05, x: 2 }}
+              whileTap={{ scale: 0.95 }}
             >
-              {/* Animated circular wave background */}
-              <div className="absolute inset-0 rounded-full overflow-hidden">
-                {/* Pulsing ring */}
-                <motion.div
-                  className="absolute inset-0 rounded-full border-2 border-blue-400/30"
-                  animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
+              {/* Music Icon with pulse */}
+              <motion.div
+                animate={isPlaying ? { scale: [1, 1.1, 1] } : {}}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                className="relative"
+              >
+                <IconMusic 
+                  className={cn(
+                    "w-4 h-4",
+                    isPlaying ? "text-blue-300" : "text-blue-400/70"
+                  )} 
+                  style={isPlaying ? {
+                    filter: "drop-shadow(0 0 6px rgba(96, 165, 250, 0.8))"
+                  } : {}}
                 />
-                {/* Second ring offset */}
-                <motion.div
-                  className="absolute inset-0 rounded-full border-2 border-blue-500/20"
-                  animate={{ scale: [1, 1.8, 1], opacity: [0.3, 0, 0.3] }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut", delay: 0.3 }}
-                />
-              </div>
-
-              {/* Audio wave bars in circle */}
-              <div className="relative flex items-end justify-center gap-[3px] h-6">
-                {[1, 2, 3, 4, 5].map(i => (
+                {/* Playing indicator dot */}
+                {isPlaying && (
+                  <motion.div
+                    animate={{ scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                    className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-green-400"
+                    style={{ boxShadow: "0 0 4px rgba(74, 222, 128, 0.8)" }}
+                  />
+                )}
+              </motion.div>
+              
+              {/* Animated Music Wave Bars */}
+              <div className="flex items-end gap-[2px] h-[14px]">
+                {[0, 1, 2, 3].map((i) => (
                   <motion.div
                     key={i}
-                    className="w-[3px] bg-gradient-to-t from-blue-500 to-blue-300 rounded-full origin-bottom"
-                    animate={{
-                      scaleY: isPlaying ? [0.3, 1, 0.5, 0.8, 0.3] : 0.3,
-                      opacity: isPlaying ? [0.7, 1, 0.8, 1, 0.7] : 0.5
+                    className="w-[3px] rounded-full origin-bottom"
+                    style={{ 
+                      backgroundColor: isPlaying ? "#34d399" : "#60a5fa",
+                      boxShadow: isPlaying 
+                        ? "0 0 4px rgba(52, 211, 153, 0.6)"
+                        : "0 0 4px rgba(96, 165, 250, 0.6)",
                     }}
-                    transition={{
-                      duration: 0.8,
+                    animate={isPlaying ? {
+                      height: [
+                        4 + Math.random() * 4,
+                        8 + Math.random() * 6,
+                        3 + Math.random() * 5,
+                        10 + Math.random() * 4,
+                        5 + Math.random() * 3,
+                      ],
+                    } : { height: 4 }}
+                    transition={isPlaying ? {
+                      duration: 0.4 + i * 0.05,
                       repeat: Infinity,
-                      delay: i * 0.1,
-                      ease: "easeInOut"
-                    }}
-                    style={{ height: 16 }}
+                      repeatType: "reverse",
+                      ease: "easeInOut",
+                      delay: i * 0.08,
+                    } : { duration: 0.2 }}
                   />
                 ))}
               </div>
 
-              {/* Glow overlay */}
-              <motion.div
-                className="absolute inset-0 rounded-full bg-blue-500/10"
-                animate={{ opacity: [0.1, 0.3, 0.1] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              <ButtonTooltip
+                show={hoveredButton === 'expand'}
+                text="🎵 Tap to Expand"
+                position={playerSide === 'left' ? 'right' : 'left'}
+                color="blue"
               />
+            </motion.button>
+          ) : isPullTabCompact ? (
+            /* Compact pill version when scrolling - same as forceMinimize pill */
+            <motion.button
+              key="scroll-compact-pill-tab"
+              initial={{ opacity: 0, scale: 0.7, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.7, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 500, mass: 0.6 }}
+              onClick={handleExpandPlayer}
+              onMouseEnter={() => {
+                setHoveredButton('expand');
+                // Expand on hover for desktop
+                if (window.matchMedia('(hover: hover)').matches) {
+                  setIsPullTabCompact(false);
+                }
+              }}
+              onMouseLeave={() => setHoveredButton(null)}
+              className={cn(
+                "fixed left-3 bottom-14 flex items-center gap-1.5 px-2.5 py-2 rounded-xl",
+                "bg-gradient-to-br from-blue-600/40 via-blue-500/25 to-slate-900/50",
+                "backdrop-blur-2xl border border-blue-500/50",
+                "shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30",
+                "hover:border-blue-400/70 transition-all duration-200",
+                "pointer-events-auto"
+              )}
+              style={{
+                zIndex: 100201, // Just above MainWidget z-[100200]
+              }}
+              whileHover={{ scale: 1.05, x: 2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {/* Music Icon with pulse */}
+              <motion.div
+                animate={isPlaying ? { scale: [1, 1.1, 1] } : {}}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                className="relative"
+              >
+                <IconMusic 
+                  className={cn(
+                    "w-4 h-4",
+                    isPlaying ? "text-blue-300" : "text-blue-400/70"
+                  )} 
+                  style={isPlaying ? {
+                    filter: "drop-shadow(0 0 6px rgba(96, 165, 250, 0.8))"
+                  } : {}}
+                />
+                {/* Playing indicator dot */}
+                {isPlaying && (
+                  <motion.div
+                    animate={{ scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                    className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-green-400"
+                    style={{ boxShadow: "0 0 4px rgba(74, 222, 128, 0.8)" }}
+                  />
+                )}
+              </motion.div>
+              
+              {/* Animated Music Wave Bars */}
+              <div className="flex items-end gap-[2px] h-[14px]">
+                {[0, 1, 2, 3].map((i) => (
+                  <motion.div
+                    key={i}
+                    className="w-[3px] rounded-full origin-bottom"
+                    style={{ 
+                      backgroundColor: isPlaying ? "#34d399" : "#60a5fa",
+                      boxShadow: isPlaying 
+                        ? "0 0 4px rgba(52, 211, 153, 0.6)"
+                        : "0 0 4px rgba(96, 165, 250, 0.6)",
+                    }}
+                    animate={isPlaying ? {
+                      height: [
+                        4 + Math.random() * 4,
+                        8 + Math.random() * 6,
+                        3 + Math.random() * 5,
+                        10 + Math.random() * 4,
+                        5 + Math.random() * 3,
+                      ],
+                    } : { height: 4 }}
+                    transition={isPlaying ? {
+                      duration: 0.4 + i * 0.05,
+                      repeat: Infinity,
+                      repeatType: "reverse",
+                      ease: "easeInOut",
+                      delay: i * 0.08,
+                    } : { duration: 0.2 }}
+                  />
+                ))}
+              </div>
 
               <ButtonTooltip
                 show={hoveredButton === 'expand'}
-                text="🎵 Expand"
+                text="🎵 Tap to Expand"
                 position={playerSide === 'left' ? 'right' : 'left'}
                 color="blue"
               />
@@ -735,6 +914,100 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
         )}
       </AnimatePresence>
 
+      {/* SCROLL-MINIMIZED PULL TAB - Cool pill design for scroll-based minimization */}
+      <AnimatePresence>
+        {isScrollMinimized && !open && !playerHidden && !isMinimized && (
+          <motion.button
+            key="scroll-minimized-tab"
+            initial={{ opacity: 0, scale: 0.7, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.7, y: 20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 500, mass: 0.6 }}
+            onClick={() => {
+              SoundEffects.click();
+              setIsScrollMinimized(false);
+            }}
+            onMouseEnter={() => {
+              SoundEffects.hover?.();
+              if (window.matchMedia('(hover: hover)').matches) {
+                setIsScrollMinimized(false);
+              }
+            }}
+            className={cn(
+              "fixed left-3 bottom-14 flex items-center gap-1.5 px-2.5 py-2 rounded-xl",
+              "bg-gradient-to-br from-blue-600/40 via-blue-500/25 to-slate-900/50",
+              "backdrop-blur-2xl border border-blue-500/50",
+              "shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30",
+              "hover:border-blue-400/70 transition-all duration-200",
+              "pointer-events-auto"
+            )}
+            style={{
+              zIndex: 100201, // Just above MainWidget z-[100200]
+            }}
+            whileHover={{ scale: 1.05, x: 2 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {/* Music Icon with pulse */}
+            <motion.div
+              animate={isPlaying ? { scale: [1, 1.1, 1] } : {}}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              className="relative"
+            >
+              <IconMusic 
+                className={cn(
+                  "w-4 h-4",
+                  isPlaying ? "text-blue-300" : "text-blue-400/70"
+                )} 
+                style={isPlaying ? {
+                  filter: "drop-shadow(0 0 6px rgba(96, 165, 250, 0.8))"
+                } : {}}
+              />
+              {/* Playing indicator dot */}
+              {isPlaying && (
+                <motion.div
+                  animate={{ scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                  className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-green-400"
+                  style={{ boxShadow: "0 0 4px rgba(74, 222, 128, 0.8)" }}
+                />
+              )}
+            </motion.div>
+            
+            {/* Animated Music Wave Bars */}
+            <div className="flex items-end gap-[2px] h-[14px]">
+              {[0, 1, 2, 3].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-[3px] rounded-full origin-bottom"
+                  style={{ 
+                    backgroundColor: isPlaying ? "#34d399" : "#60a5fa",
+                    boxShadow: isPlaying 
+                      ? "0 0 4px rgba(52, 211, 153, 0.6)"
+                      : "0 0 4px rgba(96, 165, 250, 0.6)",
+                  }}
+                  animate={isPlaying ? {
+                    height: [
+                      4 + Math.random() * 4,
+                      8 + Math.random() * 6,
+                      3 + Math.random() * 5,
+                      10 + Math.random() * 4,
+                      5 + Math.random() * 3,
+                    ],
+                  } : { height: 4 }}
+                  transition={isPlaying ? {
+                    duration: 0.4 + i * 0.05,
+                    repeat: Infinity,
+                    repeatType: "reverse",
+                    ease: "easeInOut",
+                    delay: i * 0.08,
+                  } : { duration: 0.2 }}
+                />
+              ))}
+            </div>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
       {/*
         SINGLE PERSISTENT IFRAME - The ONLY iframe for audio
         This is ALWAYS in DOM. When expanded, it's visible in the iPhone.
@@ -747,24 +1020,24 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
         className="fixed transition-all duration-300 ease-out"
         style={{
           position: 'fixed',
-          // Position: When minimized, behind pull tab. When forceMinimize, push further off-screen
-          bottom: isMinimized ? (forceMinimize ? 80 : 125) : (60 + 180),
-          [playerSide]: isMinimized ? (forceMinimize ? -60 : 5) : (playerSide === 'left' ? 8 : 8),
-          // Size: Full size when expanded, small when minimized but valid for SDK
-          width: isMinimized ? (forceMinimize ? 100 : 150) : 254,
-          height: isMinimized ? (forceMinimize ? 60 : 80) : (musicSource === 'YOUTUBE' ? 180 : 110),
+          // Position: When minimized, behind pull tab. When forceMinimize, push further off-screen. When scroll minimized, hide above.
+          bottom: isScrollMinimized ? (60 + 200) : isMinimized ? (forceMinimize ? 80 : 125) : (60 + 180),
+          [playerSide]: isScrollMinimized ? 8 : isMinimized ? (forceMinimize ? -60 : 5) : (playerSide === 'left' ? 8 : 8),
+          // Size: Full size when expanded, small when minimized but valid for SDK, minimal when scroll minimized
+          width: isScrollMinimized ? 0.01 : isMinimized ? (forceMinimize ? 100 : 150) : 254,
+          height: isScrollMinimized ? 0.01 : isMinimized ? (forceMinimize ? 60 : 80) : (musicSource === 'YOUTUBE' ? 180 : 110),
           overflow: 'hidden',
-          // Opacity: Nearly invisible when minimized, full when expanded
-          opacity: isMinimized ? 0.01 : 1,
-          // Z-index: Behind pull tab when minimized, above content when expanded
-          zIndex: isMinimized ? (Z_INDEX.PULL_TAB - 1) : (Z_INDEX.PLAYER_BASE + 5),
-          pointerEvents: isMinimized ? 'none' : 'auto',
-          borderRadius: isMinimized ? '12px' : '0 0 16px 16px',
-          // Hide behind pull tab when minimized, push further when forceMinimize
-          transform: isMinimized ? (forceMinimize ? 'scale(0.3)' : 'scale(0.5)') : 'scale(1)',
+          // Opacity: Nearly invisible when minimized or scroll minimized, full when expanded
+          opacity: isScrollMinimized ? 0 : isMinimized ? 0.01 : 1,
+          // Z-index: Behind pull tab when minimized/scroll-minimized, above content when expanded
+          zIndex: isScrollMinimized ? (Z_INDEX.PULL_TAB - 10) : isMinimized ? (Z_INDEX.PULL_TAB - 1) : (Z_INDEX.PLAYER_BASE + 5),
+          pointerEvents: isScrollMinimized || isMinimized ? 'none' : 'auto',
+          borderRadius: isScrollMinimized ? '12px' : isMinimized ? '12px' : '0 0 16px 16px',
+          // Hide behind pull tab when minimized, collapse when scroll minimized
+          transform: isScrollMinimized ? 'scale(0)' : isMinimized ? (forceMinimize ? 'scale(0.3)' : 'scale(0.5)') : 'scale(1)',
           transformOrigin: playerSide === 'left' ? 'left center' : 'right center',
         }}
-        aria-hidden={isMinimized}
+        aria-hidden={isScrollMinimized || isMinimized}
       >
         <iframe
           ref={iframeRef}

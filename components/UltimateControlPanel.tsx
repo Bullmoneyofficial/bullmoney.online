@@ -622,6 +622,10 @@ export function UltimateControlPanel({
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollY = useRef(0);
   
+  // Mobile pull tab state - for panel minimize/maximize like MainWidget
+  const [isMobilePanelMinimized, setIsMobilePanelMinimized] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  
   // Get UI state context for detecting when modals/panels are open
   let uiStateContext: ReturnType<typeof useUIStateContext> | null = null;
   try {
@@ -642,6 +646,16 @@ export function UltimateControlPanel({
   // Ensure component only renders on client
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Detect mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || !window.matchMedia('(hover: hover)').matches);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   // Note: Component lifecycle is managed by useComponentLifecycle hook above
@@ -1324,6 +1338,45 @@ export function UltimateControlPanel({
                     Device Center
                   </h2>
                   <div className="flex items-center gap-2">
+                    {/* Mobile Minimize Button - Cyberpunk style */}
+                    {isMobile && (
+                      <motion.button
+                        whileHover={{ scale: 1.1, backgroundColor: "rgba(34, 211, 238, 0.15)" }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          SoundEffects.swoosh();
+                          setIsMobilePanelMinimized(true);
+                          onOpenChange(false);
+                        }}
+                        onMouseEnter={() => SoundEffects.hover()}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          e.currentTarget.style.transform = 'scale(0.9)';
+                        }}
+                        onTouchEnd={(e) => {
+                          e.stopPropagation();
+                          e.currentTarget.style.transform = '';
+                          SoundEffects.swoosh();
+                          setIsMobilePanelMinimized(true);
+                          onOpenChange(false);
+                        }}
+                        className="relative p-3 rounded-full bg-gradient-to-br from-cyan-900/40 to-slate-900/60 hover:from-cyan-800/50 hover:to-slate-800/70 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation border border-cyan-500/40 shadow-lg shadow-cyan-900/20 overflow-hidden group"
+                        style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+                        aria-label="Minimize panel"
+                      >
+                        {/* Animated glow effect */}
+                        <motion.div
+                          className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500/0 via-cyan-500/20 to-cyan-500/0"
+                          animate={{ x: ['-100%', '100%'] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                        />
+                        <ChevronDown
+                          size={18}
+                          className="text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.6)] relative z-10 group-hover:text-cyan-200"
+                        />
+                      </motion.button>
+                    )}
                     <motion.button
                       whileHover={{ scale: 1.1, rotate: 180, backgroundColor: "rgba(59, 130, 246, 0.15)" }}
                       whileTap={{ scale: 0.9 }}
