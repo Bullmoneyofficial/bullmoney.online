@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence } from "framer-motion";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 import { useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
 import { MusicEmbedModal } from "@/components/MusicEmbedModal";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
-import { useMobileMenu } from "@/contexts/MobileMenuContext";
+import { useAudioWidgetUI } from "@/contexts/UIStateContext";
 import {
   useAudioWidgetState, useAudioWidgetEffects, useAudioWidgetHandlers, useWanderingGame,
   MainWidget, FloatingPlayer, TipsOverlay, TouchIndicator, GameOverScreen, QuickGameTutorial, QuickGameTutorialDemo,
@@ -16,11 +16,28 @@ import {
 const AudioWidget = React.memo(function AudioWidget() {
   const perf = useComponentLifecycle('audioWidget', 7);
   const audioSettings = useAudioSettings();
-  const { isMobileMenuOpen } = useMobileMenu();
+  // Use the new UIState context for mutual exclusion with other components
+  const { shouldHideFloatingPlayer, setAudioWidgetOpen } = useAudioWidgetUI();
   const state = useAudioWidgetState();
   const game = useWanderingGame({ isMobile: state.isMobile });
   useAudioWidgetEffects(state, audioSettings, game);
   const h = useAudioWidgetHandlers({ state, audioSettings, gameHook: game });
+
+  // Wrapped setOpen that notifies context for mutual exclusion
+  const handleSetOpen = useCallback((open: boolean) => {
+    state.setOpen(open);
+    // Notify context when audio widget opens (closes other components)
+    if (open) {
+      setAudioWidgetOpen(true);
+    }
+  }, [state.setOpen, setAudioWidgetOpen]);
+
+  // Auto-close audio widget panel when other UI components open (mobile menu, modals, etc.)
+  useEffect(() => {
+    if (shouldHideFloatingPlayer && state.open) {
+      state.setOpen(false);
+    }
+  }, [shouldHideFloatingPlayer, state.open, state.setOpen]);
 
   useEffect(() => { h.broadcastVolumeToIframe(state.iframeRef); }, [audioSettings.musicVolume, audioSettings.musicSource, state.iframeKey, h, state.iframeRef]);
 
@@ -46,12 +63,12 @@ const AudioWidget = React.memo(function AudioWidget() {
 
       <TipsOverlay show={state.showTipsOverlay} open={state.open} streamingActive={state.streamingActive} onClose={() => state.setShowTipsOverlay(false)} />
 
-      <MainWidget {...state} {...audioSettings} {...h} shimmerEnabled={perf.shimmerEnabled} shimmerSettings={perf.shimmerSettings}
+      <MainWidget {...state} {...audioSettings} {...h} setOpen={handleSetOpen} shimmerEnabled={perf.shimmerEnabled} shimmerSettings={perf.shimmerSettings}
         isWandering={game.isWandering} gameStats={game.gameStats} gameState={game.gameState} />
 
       {typeof document !== "undefined" && createPortal(
         <AnimatePresence>
-          {!isMobileMenuOpen && (
+          {!shouldHideFloatingPlayer && (
             <FloatingPlayer miniPlayerRef={game.miniPlayerRef} {...state} {...audioSettings}
               isWandering={game.isWandering} wanderPosition={game.wanderPosition} morphPhase={game.morphPhase}
               isHovering={game.isHovering} setIsHovering={game.setIsHovering} isNearPlayer={game.isNearPlayer}

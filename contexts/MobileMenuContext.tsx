@@ -1,28 +1,25 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+/**
+ * @deprecated This file is kept for backwards compatibility.
+ * Please use UIStateContext instead for new code.
+ * 
+ * The useMobileMenu hook and MobileMenuProvider are now re-exported
+ * from UIStateContext which handles mutual exclusion between:
+ * - Mobile menu
+ * - Navbar modals
+ * - Audio Widget
+ * - Ultimate Control Panel
+ */
 
-interface MobileMenuContextType {
-  isMobileMenuOpen: boolean;
-  setIsMobileMenuOpen: (open: boolean) => void;
-}
-
-const MobileMenuContext = createContext<MobileMenuContextType | undefined>(undefined);
-
-export function MobileMenuProvider({ children }: { children: ReactNode }) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  return (
-    <MobileMenuContext.Provider value={{ isMobileMenuOpen, setIsMobileMenuOpen }}>
-      {children}
-    </MobileMenuContext.Provider>
-  );
-}
-
-export function useMobileMenu() {
-  const context = useContext(MobileMenuContext);
-  if (!context) {
-    throw new Error('useMobileMenu must be used within MobileMenuProvider');
-  }
-  return context;
-}
+// Re-export everything from UIStateContext for backwards compatibility
+export { 
+  useMobileMenu, 
+  UIStateProvider as MobileMenuProvider,
+  useUIState,
+  useAudioWidgetUI,
+  useUltimatePanelUI,
+  useNavbarModals,
+  type UIComponentType,
+  type NavbarModalType,
+} from './UIStateContext';

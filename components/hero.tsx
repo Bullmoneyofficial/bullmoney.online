@@ -22,7 +22,7 @@ import { Loader2, Edit2, Save, X, Trash2, Upload, Instagram, Send } from "lucide
 
 // --- CONTEXT INTEGRATION ---
 import { useStudio, type Project } from "@/context/StudioContext";
-import { useMobileMenu } from "@/contexts/MobileMenuContext";
+import { useMobileMenu, useUltimatePanelUI } from "@/contexts/UIStateContext";
 
 // --- CRASH TRACKING ---
 import { useComponentTracking, useTrackModal } from "@/lib/CrashTracker";
@@ -342,9 +342,27 @@ const HeroParallax = () => {
     : 'MECHANICAL';
   const sfx = useAudioEngine(!isMuted, audioProfile);
 
-  const [isUcpOpen, setIsUcpOpen] = useState(false);
+  const [isUcpOpen, setIsUcpOpenLocal] = useState(false);
+  // Use UIState context for mutual exclusion - panel auto-hides when other components open
+  const { shouldHide: shouldHideUcp, setUltimatePanelOpen } = useUltimatePanelUI();
   const [isReflectiveCardOpen, setIsReflectiveCardOpen] = useState(false);
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
+
+  // Wrapped setIsUcpOpen that notifies context for mutual exclusion
+  const setIsUcpOpen = useCallback((open: boolean) => {
+    setIsUcpOpenLocal(open);
+    // Notify context when UCP opens (closes other components)
+    if (open) {
+      setUltimatePanelOpen(true);
+    }
+  }, [setUltimatePanelOpen]);
+
+  // Auto-close UCP when other UI components open (mobile menu, modals, etc.)
+  useEffect(() => {
+    if (shouldHideUcp && isUcpOpen) {
+      setIsUcpOpenLocal(false);
+    }
+  }, [shouldHideUcp, isUcpOpen]);
 
   // Load saved sound preferences from localStorage
   useEffect(() => {
@@ -639,7 +657,7 @@ const HeroParallax = () => {
     />
 
     <DynamicUltimateControlPanel 
-      isOpen={isUcpOpen && !isMobileMenuOpen} 
+      isOpen={isUcpOpen && !shouldHideUcp} 
       onOpenChange={setIsUcpOpen}
       onServicesClick={() => setIsServicesModalOpen(true)}
       onContactClick={() => setIsContactModalOpen(true)}

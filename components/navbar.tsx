@@ -25,6 +25,7 @@ import { CONSTANTS } from "@/constants/links";
 import { useStudio } from "@/context/StudioContext";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useCacheContext } from "@/components/CacheManagerProvider";
+import { useMobileMenu, useNavbarModals } from "@/contexts/UIStateContext";
 
 // --- IMPORT MODAL COMPONENTS ---
 import AdminModal from "@/components/AdminModal";
@@ -120,6 +121,20 @@ export const Navbar = memo(() => {
   const { tipsMuted } = useAudioSettings();
   const { deviceTier, isSafari } = useCacheContext();
   
+  // Unified UI State - handles mutual exclusion between mobile menu, modals, audio widget, etc.
+  const { isMobileMenuOpen, setIsMobileMenuOpen } = useMobileMenu();
+  const { 
+    isAdminOpen, 
+    isFaqOpen, 
+    isAffiliateOpen, 
+    isThemeSelectorOpen,
+    openAdminModal,
+    openFaqModal,
+    openAffiliateModal,
+    openThemeSelectorModal,
+    closeNavbarModal,
+  } = useNavbarModals();
+  
   // Unified Performance System - single source for lifecycle & shimmer
   const navbarPerf = useComponentLifecycle('navbar', 10); // Priority 10 (highest)
   
@@ -133,12 +148,9 @@ export const Navbar = memo(() => {
   // Check if shimmer should be enabled for navbar - use unified system
   const shimmerEnabled = navbarPerf.shimmerEnabled && !shimmerSettings.disabled;
   
-  // Modal states
-  const [open, setOpen] = useState(false);
-  const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const [isFaqOpen, setIsFaqOpen] = useState(false);
-  const [isAffiliateOpen, setIsAffiliateOpen] = useState(false);
-  const [isThemeSelectorOpen, setIsThemeSelectorOpen] = useState(false);
+  // Mobile menu uses context, alias for backwards compatibility
+  const open = isMobileMenuOpen;
+  const setOpen = setIsMobileMenuOpen;
   
   // Hydration
   const [mounted, setMounted] = useState(false);
@@ -225,10 +237,10 @@ export const Navbar = memo(() => {
       {/* All keyframes now in UnifiedShimmer.tsx - no duplicate definitions */}
 
       {/* Modal Components */}
-      <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
-      <BullMoneyModal isOpen={isFaqOpen} onClose={() => setIsFaqOpen(false)} />
-      <AffiliateModal isOpen={isAffiliateOpen} onClose={() => setIsAffiliateOpen(false)} />
-      <ThemeSelectorModal isOpen={isThemeSelectorOpen} onClose={() => setIsThemeSelectorOpen(false)} />
+      <AdminModal isOpen={isAdminOpen} onClose={closeNavbarModal} />
+      <BullMoneyModal isOpen={isFaqOpen} onClose={closeNavbarModal} />
+      <AffiliateModal isOpen={isAffiliateOpen} onClose={closeNavbarModal} />
+      <ThemeSelectorModal isOpen={isThemeSelectorOpen} onClose={closeNavbarModal} />
       
       {/* Desktop Moving Trading Tips */}
       <AnimatePresence mode="wait">
@@ -277,10 +289,10 @@ export const Navbar = memo(() => {
           dockRef={dockRef}
           buttonRefs={buttonRefs}
           onHoverChange={setIsDockHovered}
-          onAffiliateClick={() => setIsAffiliateOpen(true)}
-          onFaqClick={() => setIsFaqOpen(true)}
-          onThemeClick={() => setIsThemeSelectorOpen(true)}
-          onAdminClick={() => setIsAdminOpen(true)}
+          onAffiliateClick={openAffiliateModal}
+          onFaqClick={openFaqModal}
+          onThemeClick={openThemeSelectorModal}
+          onAdminClick={openAdminModal}
           mounted={mounted}
         />
 
@@ -303,7 +315,7 @@ export const Navbar = memo(() => {
           <MobileMenuControls 
             open={open} 
             onToggle={() => setOpen(!open)}
-            onThemeClick={() => { setOpen(false); setIsThemeSelectorOpen(true); }}
+            onThemeClick={openThemeSelectorModal}
             hasReward={hasReward}
             isXMUser={isXMUser}
             shimmerEnabled={shimmerEnabled}
@@ -320,10 +332,10 @@ export const Navbar = memo(() => {
         hasReward={hasReward}
         isAdmin={isAdmin}
         isAuthenticated={isAuthenticated}
-        onAffiliateClick={() => setIsAffiliateOpen(true)}
-        onFaqClick={() => setIsFaqOpen(true)}
-        onAdminClick={() => setIsAdminOpen(true)}
-        onThemeClick={() => setIsThemeSelectorOpen(true)}
+        onAffiliateClick={openAffiliateModal}
+        onFaqClick={openFaqModal}
+        onAdminClick={openAdminModal}
+        onThemeClick={openThemeSelectorModal}
       />
     </>
   );
