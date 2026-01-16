@@ -215,8 +215,12 @@ export const LiveMarketTickerOptimized: React.FC = memo(function LiveMarketTicke
         // Process each coin
         COIN_ORDER.forEach((coin) => {
           const result = payload.find((entry) => entry.id === coin.id);
-          const currentPrice = result?.current_price;
-          const changeValue = result?.price_change_percentage_24h ?? 0;
+          if (!result) {
+            console.warn(`No data found for coin: ${coin.id}`);
+            return; // Skip this coin
+          }
+          const currentPrice = result.current_price;
+          const changeValue = result.price_change_percentage_24h ?? 0;
           
           const newData: MarketData = {
             symbol: coin.symbol,
