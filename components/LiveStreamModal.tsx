@@ -76,6 +76,8 @@ interface PersonalVideo {
   title: string;
   youtube_id: string;
   added_at: string;
+  thumbnail?: string;
+  channelTitle?: string;
 }
 
 interface UserYouTubeProfile {
@@ -83,6 +85,34 @@ interface UserYouTubeProfile {
   videos: PersonalVideo[];
   lastUpdated: string;
 }
+
+interface YouTubeAuthProfile {
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt: number;
+  user: {
+    name: string;
+    email: string;
+    picture: string;
+    channelId?: string;
+  };
+}
+
+interface YouTubePlaylistItem {
+  id: string;
+  title: string;
+  youtube_id: string;
+  thumbnail: string;
+  channelTitle: string;
+}
+
+// YouTube OAuth Config - Uses environment variables
+const YOUTUBE_CLIENT_ID = process.env.NEXT_PUBLIC_YOUTUBE_CLIENT_ID || '';
+const YOUTUBE_SCOPES = [
+  'https://www.googleapis.com/auth/youtube.readonly',
+  'https://www.googleapis.com/auth/userinfo.profile',
+  'https://www.googleapis.com/auth/userinfo.email'
+].join(' ');
 
 // Modal Context
 interface ModalState {
@@ -203,6 +233,238 @@ const LiveStreamContent = memo(() => {
   const [personalChannelUrl, setPersonalChannelUrl] = useState('');
   const [personalSaving, setPersonalSaving] = useState(false);
   const [personalError, setPersonalError] = useState('');
+  
+  // YouTube OAuth state
+  const [youtubeAuth, setYoutubeAuth] = useState<YouTubeAuthProfile | null>(null);
+  const [youtubeLoading, setYoutubeLoading] = useState(false);
+  const [youtubePlaylists, setYoutubePlaylists] = useState<{id: string; title: string; itemCount: number}[]>([]);
+  const [selectedPlaylist, setSelectedPlaylist] = useState<string>('liked');
+  const [youtubeVideos, setYoutubeVideos] = useState<YouTubePlaylistItem[]>([]);
+  const [loadingYoutubeVideos, setLoadingYoutubeVideos] = useState(false);
+
+  // Load YouTube auth from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('bullmoney_youtube_auth');
+      if (saved) {
+        const auth = JSON.parse(saved) as YouTubeAuthProfile;
+        // Check if token is still valid
+        if (auth.expiresAt > Date.now()) {
+          setYoutubeAuth(auth);
+        } else {
+          localStorage.removeItem('bullmoney_youtube_auth');
+        }
+      }
+      
+      // Also load manual profile
+      const savedProfile = localStorage.getItem('bullmoney_personal_youtube');
+      if (savedProfile) {
+        setPersonalProfile(JSON.parse(savedProfile));
+      }
+    } catch (e) {
+      console.error('Error loading YouTube auth:', e);
+    }
+  }, []);
+
+  // Fetch user's YouTube playlists when authenticated
+  useEffect(() => {
+    if (youtubeAuth?.accessToken) {
+      fetchYoutubePlaylists();
+    }
+  }, [youtubeAuth?.accessToken]);
+
+  // Fetch videos when playlist changes
+  useEffect(() => {
+    if (youtubeAuth?.accessToken && selectedPlaylist) {
+      fetchPlaylistVideos(selectedPlaylist);
+    }
+  }, [youtubeAuth?.accessToken, selectedPlaylist]);
+
+  // YouTube OAuth Login
+  const handleYoutubeLogin = useCallback(() => {
+    if (!YOUTUBE_CLIENT_ID) {
+      setPersonalError('YouTube login is not configured. Please add NEXT_PUBLIC_YOUTUBE_CLIENT_ID to your environment.');
+      return;
+    }
+
+    setYoutubeLoading(true);
+    setPersonalError('');
+
+    // Create OAuth URL
+    const redirectUri = `${window.location.origin}/auth/youtube/callback`;
+    const state = Math.random().toString(36).substring(7);
+    
+    // Store state for verification
+    sessionStorage.setItem('youtube_oauth_state', state);
+    
+    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    authUrl.searchParams.set('client_id', YOUTUBE_CLIENT_ID);
+    authUrl.searchParams.set('redirect_uri', redirectUri);
+    authUrl.searchParams.set('response_type', 'token');
+    authUrl.searchParams.set('scope', YOUTUBE_SCOPES);
+    authUrl.searchParams.set('state', state);
+    authUrl.searchParams.set('include_granted_scopes', 'true');
+    authUrl.searchParams.set('prompt', 'consent');
+
+    // Open popup for OAuth
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+    
+    const popup = window.open(
+      authUrl.toString(),
+      'YouTube Login',
+      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`
+    );
+
+    // Listen for OAuth callback
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      
+      if (event.data?.type === 'YOUTUBE_AUTH_SUCCESS') {
+        const { accessToken, expiresIn, user } = event.data;
+        
+        const authProfile: YouTubeAuthProfile = {
+          accessToken,
+          expiresAt: Date.now() + (expiresIn * 1000),
+          user
+        };
+        
+        localStorage.setItem('bullmoney_youtube_auth', JSON.stringify(authProfile));
+        setYoutubeAuth(authProfile);
+        setYoutubeLoading(false);
+        setShowPersonalLogin(false);
+        SoundEffects.click();
+        
+        popup?.close();
+      } else if (event.data?.type === 'YOUTUBE_AUTH_ERROR') {
+        setPersonalError(event.data.error || 'Failed to login with YouTube');
+        setYoutubeLoading(false);
+        popup?.close();
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    // Check if popup was closed without completing auth
+    const checkPopup = setInterval(() => {
+      if (popup?.closed) {
+        clearInterval(checkPopup);
+        window.removeEventListener('message', handleMessage);
+        setYoutubeLoading(false);
+      }
+    }, 500);
+  }, []);
+
+  // Fetch user's playlists from YouTube API
+  const fetchYoutubePlaylists = useCallback(async () => {
+    if (!youtubeAuth?.accessToken) return;
+
+    try {
+      const response = await fetch(
+        'https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&mine=true&maxResults=25',
+        {
+          headers: {
+            Authorization: `Bearer ${youtubeAuth.accessToken}`
+          }
+        }
+      );
+
+      if (!response.ok) throw new Error('Failed to fetch playlists');
+
+      const data = await response.json();
+      const playlists = data.items?.map((item: any) => ({
+        id: item.id,
+        title: item.snippet.title,
+        itemCount: item.contentDetails.itemCount
+      })) || [];
+
+      setYoutubePlaylists(playlists);
+    } catch (error) {
+      console.error('Error fetching playlists:', error);
+    }
+  }, [youtubeAuth?.accessToken]);
+
+  // Fetch videos from a playlist
+  const fetchPlaylistVideos = useCallback(async (playlistId: string) => {
+    if (!youtubeAuth?.accessToken) return;
+
+    setLoadingYoutubeVideos(true);
+    try {
+      let url = '';
+      
+      if (playlistId === 'liked') {
+        // Fetch liked videos
+        url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet&myRating=like&maxResults=50';
+      } else if (playlistId === 'history') {
+        // Watch history requires special permissions, fallback to recent activity
+        url = 'https://www.googleapis.com/youtube/v3/activities?part=snippet,contentDetails&mine=true&maxResults=50';
+      } else {
+        // Fetch specific playlist
+        url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=50`;
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${youtubeAuth.accessToken}`
+        }
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'Failed to fetch videos');
+      }
+
+      const data = await response.json();
+      
+      let videos: YouTubePlaylistItem[] = [];
+      
+      if (playlistId === 'liked') {
+        videos = data.items?.map((item: any) => ({
+          id: item.id,
+          title: item.snippet.title,
+          youtube_id: item.id,
+          thumbnail: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url,
+          channelTitle: item.snippet.channelTitle
+        })) || [];
+      } else if (playlistId === 'history') {
+        videos = data.items?.filter((item: any) => item.snippet.type === 'upload' || item.contentDetails?.upload)
+          .map((item: any) => ({
+            id: item.contentDetails?.upload?.videoId || item.id,
+            title: item.snippet.title,
+            youtube_id: item.contentDetails?.upload?.videoId || '',
+            thumbnail: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url,
+            channelTitle: item.snippet.channelTitle
+          })).filter((v: YouTubePlaylistItem) => v.youtube_id) || [];
+      } else {
+        videos = data.items?.map((item: any) => ({
+          id: item.id,
+          title: item.snippet.title,
+          youtube_id: item.snippet.resourceId?.videoId || '',
+          thumbnail: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url,
+          channelTitle: item.snippet.channelTitle
+        })).filter((v: YouTubePlaylistItem) => v.youtube_id) || [];
+      }
+
+      setYoutubeVideos(videos);
+    } catch (error) {
+      console.error('Error fetching playlist videos:', error);
+      setYoutubeVideos([]);
+    } finally {
+      setLoadingYoutubeVideos(false);
+    }
+  }, [youtubeAuth?.accessToken]);
+
+  // Logout from YouTube
+  const handleYoutubeLogout = useCallback(() => {
+    localStorage.removeItem('bullmoney_youtube_auth');
+    setYoutubeAuth(null);
+    setYoutubePlaylists([]);
+    setYoutubeVideos([]);
+    setSelectedPlaylist('liked');
+    SoundEffects.click();
+  }, []);
 
   // Load personal profile from localStorage
   useEffect(() => {
@@ -304,8 +566,16 @@ const LiveStreamContent = memo(() => {
     SoundEffects.click();
   }, [personalChannelUrl, personalProfile, savePersonalProfile]);
 
-  // Logout from personal YouTube
+  // Logout from personal YouTube (both OAuth and manual)
   const logoutPersonal = useCallback(() => {
+    // Clear OAuth
+    localStorage.removeItem('bullmoney_youtube_auth');
+    setYoutubeAuth(null);
+    setYoutubePlaylists([]);
+    setYoutubeVideos([]);
+    setSelectedPlaylist('liked');
+    
+    // Clear manual profile
     localStorage.removeItem('bullmoney_personal_youtube');
     setPersonalProfile(null);
     setPersonalChannelUrl('');
@@ -386,19 +656,37 @@ const LiveStreamContent = memo(() => {
 
   // Personal video index state
   const [personalVideoIndex, setPersonalVideoIndex] = useState(0);
+  const [youtubeVideoIndex, setYoutubeVideoIndex] = useState(0);
 
-  // Current video - handles both tabs
+  // Current video - handles both tabs and OAuth
   const currentVideo = activeTab === 'bullmoney' 
     ? (videos[currentVideoIndex] || null)
     : null;
   
-  const currentPersonalVideo = activeTab === 'personal' && personalProfile?.videos
+  // For personal tab: OAuth videos take priority, then manual videos
+  const currentYoutubeVideo = activeTab === 'personal' && youtubeAuth && youtubeVideos.length > 0
+    ? (youtubeVideos[youtubeVideoIndex] || null)
+    : null;
+    
+  const currentPersonalVideo = activeTab === 'personal' && !youtubeAuth && personalProfile?.videos
     ? (personalProfile.videos[personalVideoIndex] || null)
     : null;
 
-  const activeVideo = activeTab === 'bullmoney' ? currentVideo : currentPersonalVideo;
-  const activeVideoList = activeTab === 'bullmoney' ? videos : (personalProfile?.videos || []);
-  const activeVideoIndex = activeTab === 'bullmoney' ? currentVideoIndex : personalVideoIndex;
+  // Active video selection
+  const activeVideo = activeTab === 'bullmoney' 
+    ? currentVideo 
+    : (currentYoutubeVideo || currentPersonalVideo);
+    
+  // Active video list
+  const activeVideoList = activeTab === 'bullmoney' 
+    ? videos 
+    : (youtubeAuth && youtubeVideos.length > 0 
+        ? youtubeVideos 
+        : (personalProfile?.videos || []));
+        
+  const activeVideoIndex = activeTab === 'bullmoney' 
+    ? currentVideoIndex 
+    : (youtubeAuth ? youtubeVideoIndex : personalVideoIndex);
 
   const youtubeEmbedUrl = activeVideo 
     ? `https://www.youtube.com/embed/${activeVideo.youtube_id}?autoplay=${isPlaying ? 1 : 0}&mute=${isMuted ? 1 : 0}&rel=0&modestbranding=1`
@@ -409,28 +697,34 @@ const LiveStreamContent = memo(() => {
     SoundEffects.click();
     if (activeTab === 'bullmoney') {
       setCurrentVideoIndex((prev) => (prev + 1) % videos.length);
+    } else if (youtubeAuth && youtubeVideos.length) {
+      setYoutubeVideoIndex((prev) => (prev + 1) % youtubeVideos.length);
     } else if (personalProfile?.videos.length) {
       setPersonalVideoIndex((prev) => (prev + 1) % personalProfile.videos.length);
     }
-  }, [activeTab, videos.length, personalProfile?.videos.length]);
+  }, [activeTab, videos.length, youtubeAuth, youtubeVideos.length, personalProfile?.videos.length]);
 
   const playPrevious = useCallback(() => {
     SoundEffects.click();
     if (activeTab === 'bullmoney') {
       setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length);
+    } else if (youtubeAuth && youtubeVideos.length) {
+      setYoutubeVideoIndex((prev) => (prev - 1 + youtubeVideos.length) % youtubeVideos.length);
     } else if (personalProfile?.videos.length) {
       setPersonalVideoIndex((prev) => (prev - 1 + personalProfile.videos.length) % personalProfile.videos.length);
     }
-  }, [activeTab, videos.length, personalProfile?.videos.length]);
+  }, [activeTab, videos.length, youtubeAuth, youtubeVideos.length, personalProfile?.videos.length]);
 
   const playVideo = useCallback((index: number) => {
     SoundEffects.click();
     if (activeTab === 'bullmoney') {
       setCurrentVideoIndex(index);
+    } else if (youtubeAuth) {
+      setYoutubeVideoIndex(index);
     } else {
       setPersonalVideoIndex(index);
     }
-  }, [activeTab]);
+  }, [activeTab, youtubeAuth]);
 
   // Admin functions
   const addVideo = useCallback(async () => {
@@ -604,7 +898,24 @@ const LiveStreamContent = memo(() => {
           <div className="flex items-center gap-2">
             {/* Personal YouTube Login/Logout */}
             {activeTab === 'personal' && (
-              personalProfile ? (
+              youtubeAuth ? (
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={youtubeAuth.user.picture} 
+                    alt={youtubeAuth.user.name}
+                    className="w-7 h-7 rounded-full border border-purple-500/50"
+                  />
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={logoutPersonal}
+                    className="p-2 rounded-lg bg-white/10 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                    title="Logout from YouTube"
+                  >
+                    <LogOut className="w-5 h-5" />
+                  </motion.button>
+                </div>
+              ) : personalProfile ? (
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -756,7 +1067,7 @@ const LiveStreamContent = memo(() => {
 
         {/* Personal YouTube Setup Panel */}
         <AnimatePresence>
-          {showPersonalLogin && activeTab === 'personal' && !personalProfile && (
+          {showPersonalLogin && activeTab === 'personal' && !youtubeAuth && !personalProfile && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
@@ -765,14 +1076,53 @@ const LiveStreamContent = memo(() => {
             >
               <div className="p-4 space-y-4">
                 <div className="flex items-center gap-2">
-                  <User className="w-5 h-5 text-purple-400" />
-                  <h3 className="text-sm font-semibold text-purple-400 uppercase tracking-wider">Setup My YouTube</h3>
+                  <Youtube className="w-5 h-5 text-red-500" />
+                  <h3 className="text-sm font-semibold text-purple-400 uppercase tracking-wider">Connect Your YouTube</h3>
                 </div>
-                <p className="text-xs text-neutral-400">
-                  Add your YouTube channel and videos to watch them here. Your data is saved locally on this device.
-                </p>
                 
-                {/* Channel URL */}
+                {personalError && (
+                  <div className="flex items-center gap-2 text-xs text-red-400 bg-red-500/10 px-3 py-2 rounded-lg">
+                    <AlertCircle className="w-3 h-3" />
+                    {personalError}
+                  </div>
+                )}
+                
+                {/* Google/YouTube OAuth Login */}
+                <div className="space-y-3">
+                  <p className="text-xs text-neutral-400">
+                    Sign in with your Google account to access your YouTube playlists, liked videos, and more.
+                  </p>
+                  
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleYoutubeLogin}
+                    disabled={youtubeLoading}
+                    className="w-full px-4 py-3 bg-white hover:bg-neutral-100 text-neutral-800 rounded-lg font-medium text-sm flex items-center justify-center gap-3 disabled:opacity-50 transition-colors"
+                  >
+                    {youtubeLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" viewBox="0 0 24 24">
+                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Sign in with Google
+                      </>
+                    )}
+                  </motion.button>
+                  
+                  <div className="flex items-center gap-3 my-3">
+                    <div className="flex-1 h-px bg-white/10" />
+                    <span className="text-xs text-neutral-500">or add videos manually</span>
+                    <div className="flex-1 h-px bg-white/10" />
+                  </div>
+                </div>
+                
+                {/* Manual Channel URL - Fallback */}
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
@@ -788,9 +1138,55 @@ const LiveStreamContent = memo(() => {
                     className="px-4 py-2 bg-purple-500 text-white rounded-lg font-medium text-sm flex items-center justify-center gap-2 hover:bg-purple-600 transition-colors"
                   >
                     <Check className="w-4 h-4" />
-                    Save
+                    Continue
                   </motion.button>
                 </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* YouTube OAuth Playlists Panel */}
+        <AnimatePresence>
+          {activeTab === 'personal' && youtubeAuth && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden bg-purple-900/20 border-b border-purple-500/20 flex-shrink-0"
+            >
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <img 
+                      src={youtubeAuth.user.picture} 
+                      alt={youtubeAuth.user.name}
+                      className="w-6 h-6 rounded-full"
+                    />
+                    <span className="text-sm text-white font-medium">{youtubeAuth.user.name}</span>
+                  </div>
+                  
+                  {/* Playlist Selector */}
+                  <select
+                    value={selectedPlaylist}
+                    onChange={(e) => setSelectedPlaylist(e.target.value)}
+                    className="px-3 py-1.5 bg-black/50 border border-purple-500/30 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500"
+                  >
+                    <option value="liked">❤️ Liked Videos</option>
+                    {youtubePlaylists.map(playlist => (
+                      <option key={playlist.id} value={playlist.id}>
+                        📁 {playlist.title} ({playlist.itemCount})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                {loadingYoutubeVideos && (
+                  <div className="flex items-center justify-center py-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+                    <span className="text-xs text-neutral-400 ml-2">Loading videos...</span>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -884,21 +1280,37 @@ const LiveStreamContent = memo(() => {
                   allowFullScreen
                   title={activeVideo.title}
                 />
-              ) : activeTab === 'personal' && !personalProfile ? (
+              ) : activeTab === 'personal' && !youtubeAuth && !personalProfile ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-purple-900/20 to-black">
-                  <User className="w-16 h-16 text-purple-400/50" />
-                  <p className="text-neutral-400 text-center max-w-xs">Set up your personal YouTube to watch your favorite videos here</p>
+                  <Youtube className="w-16 h-16 text-red-500/50" />
+                  <p className="text-neutral-400 text-center max-w-xs">Connect your YouTube account to watch your playlists and liked videos</p>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowPersonalLogin(true)}
-                    className="px-4 py-2 bg-purple-500 text-white rounded-lg font-medium text-sm flex items-center gap-2"
+                    className="px-4 py-3 bg-white hover:bg-neutral-100 text-neutral-800 rounded-lg font-medium text-sm flex items-center gap-2 transition-colors"
                   >
-                    <LogIn className="w-4 h-4" />
-                    Get Started
+                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Sign in with Google
                   </motion.button>
                 </div>
-              ) : activeTab === 'personal' && personalProfile && personalProfile.videos.length === 0 ? (
+              ) : activeTab === 'personal' && youtubeAuth && youtubeVideos.length === 0 && loadingYoutubeVideos ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-purple-900/20 to-black">
+                  <ShimmerSpinner size={48} color="blue" />
+                  <p className="text-neutral-400 text-sm">Loading your videos...</p>
+                </div>
+              ) : activeTab === 'personal' && youtubeAuth && youtubeVideos.length === 0 ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-purple-900/20 to-black">
+                  <Heart className="w-16 h-16 text-purple-400/50" />
+                  <p className="text-neutral-400 text-center max-w-xs">No videos found in this playlist</p>
+                  <p className="text-neutral-500 text-xs">Try selecting a different playlist above</p>
+                </div>
+              ) : activeTab === 'personal' && !youtubeAuth && personalProfile && personalProfile.videos.length === 0 ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-purple-900/20 to-black">
                   <Heart className="w-16 h-16 text-purple-400/50" />
                   <p className="text-neutral-400 text-center max-w-xs">Add your first video above to start watching</p>
@@ -1127,8 +1539,68 @@ const LiveStreamContent = memo(() => {
                         </div>
                       </motion.button>
                     ))
+                  ) : youtubeAuth && youtubeVideos.length > 0 ? (
+                    // YouTube OAuth Videos
+                    youtubeVideos.map((video, index) => (
+                      <motion.button
+                        key={video.id}
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        onClick={() => playVideo(index)}
+                        className={`
+                          w-full flex gap-3 p-2 rounded-lg transition-all text-left group
+                          ${index === youtubeVideoIndex 
+                            ? 'bg-purple-500/20 ring-1 ring-purple-500/50' 
+                            : 'hover:bg-white/5'
+                          }
+                        `}
+                      >
+                        {/* Thumbnail */}
+                        <div className="relative w-24 aspect-video rounded-md overflow-hidden bg-neutral-800 flex-shrink-0">
+                          <img 
+                            src={video.thumbnail || getYouTubeThumbnail(video.youtube_id, 'mq')} 
+                            alt={video.title}
+                            className="w-full h-full object-cover"
+                          />
+                          {/* Play overlay */}
+                          <div className={`
+                            absolute inset-0 flex items-center justify-center bg-black/40 
+                            transition-opacity
+                            ${index === youtubeVideoIndex ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
+                          `}>
+                            <div className={`p-1.5 rounded-full ${index === youtubeVideoIndex ? 'bg-purple-500' : 'bg-white/20'}`}>
+                              {index === youtubeVideoIndex ? (
+                                <Radio className="w-3 h-3 text-white" />
+                              ) : (
+                                <Play className="w-3 h-3 text-white" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Info */}
+                        <div className="flex-1 min-w-0 py-0.5">
+                          <p className={`
+                            text-xs font-medium line-clamp-2 mb-1 transition-colors
+                            ${index === youtubeVideoIndex ? 'text-purple-400' : 'text-white group-hover:text-purple-400'}
+                          `}>
+                            {video.title}
+                          </p>
+                          <p className="text-[10px] text-neutral-500 flex items-center gap-1 truncate">
+                            <Youtube className="w-3 h-3 flex-shrink-0" />
+                            {video.channelTitle || 'YouTube'}
+                          </p>
+                          {index === youtubeVideoIndex && (
+                            <p className="text-[10px] text-purple-400 mt-0.5 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
+                              Playing
+                            </p>
+                          )}
+                        </div>
+                      </motion.button>
+                    ))
                   ) : (
-                    // Personal Videos
+                    // Manual Personal Videos (fallback)
                     personalProfile?.videos.map((video, index) => (
                       <motion.div
                         key={video.id}
