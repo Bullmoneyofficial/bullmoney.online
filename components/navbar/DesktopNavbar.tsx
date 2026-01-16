@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   IconBuildingStore,
   IconUsersGroup,
@@ -11,11 +12,14 @@ import {
   IconBroadcast,
   IconChartLine,
   IconPalette,
+  IconChevronDown,
 } from '@tabler/icons-react';
 import { Dock } from './Dock';
+import { MinimizedDock } from './MinimizedDock';
 import { LiveStreamModal } from '@/components/LiveStreamModal';
 import { AnalysisModal } from '@/components/AnalysisModal';
 import { ProductsModal } from '@/components/ProductsModal';
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
 
 interface DesktopNavbarProps {
   isXMUser: boolean;
@@ -30,6 +34,8 @@ interface DesktopNavbarProps {
   onThemeClick: () => void;
   onAdminClick: () => void;
   mounted: boolean;
+  isScrollMinimized?: boolean;
+  onExpandClick?: () => void;
 }
 
 export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbarProps>(
@@ -47,6 +53,8 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
       onThemeClick,
       onAdminClick,
       mounted,
+      isScrollMinimized = false,
+      onExpandClick,
     },
     ref
   ) => {
@@ -121,26 +129,68 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
 
     return (
       <div ref={ref} className="hidden lg:flex w-full max-w-7xl mx-auto items-center h-24 relative">
-        <div className="pointer-events-auto z-50 flex items-center justify-center h-23 w-23 overflow-hidden relative">
-          <Link href="/" className="relative w-full h-full block">
-            <Image
-              src="/BULL.svg"
-              alt="BullMoney"
-              fill
-              className="object-cover"
-              priority
-            />
-          </Link>
-        </div>
-        <div className="absolute left-1/2 -translate-x-1/2 pointer-events-auto z-40">
-          <Dock 
-            items={desktopNavItems} 
-            dockRef={dockRef}
-            buttonRefs={buttonRefs}
-            onHoverChange={onHoverChange}
-            isXMUser={isXMUser}
-          />
-        </div>
+        {/* Logo - always visible */}
+        <AnimatePresence mode="wait">
+          {!isScrollMinimized && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 400 }}
+              className="pointer-events-auto z-50 flex items-center justify-center h-23 w-23 overflow-hidden relative"
+            >
+              <Link href="/" className="relative w-full h-full block">
+                <Image
+                  src="/BULL.svg"
+                  alt="BullMoney"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        {/* Full Dock - shown when not minimized */}
+        <AnimatePresence mode="wait">
+          {!isScrollMinimized ? (
+            <motion.div 
+              key="full-dock"
+              initial={{ opacity: 0, y: -20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -30, scale: 0.8 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="absolute left-1/2 -translate-x-1/2 pointer-events-auto z-40"
+            >
+              <Dock 
+                items={desktopNavItems} 
+                dockRef={dockRef}
+                buttonRefs={buttonRefs}
+                onHoverChange={onHoverChange}
+                isXMUser={isXMUser}
+              />
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="minimized-dock"
+              initial={{ opacity: 0, y: 30, scale: 0.5 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 30, scale: 0.5 }}
+              transition={{ type: 'spring', damping: 22, stiffness: 350, mass: 0.8 }}
+              className="absolute left-1/2 -translate-x-1/2 pointer-events-auto z-40"
+            >
+              <MinimizedDock 
+                items={desktopNavItems}
+                onExpandClick={() => {
+                  SoundEffects.click();
+                  onExpandClick?.();
+                }}
+                isXMUser={isXMUser}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }

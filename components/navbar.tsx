@@ -198,6 +198,24 @@ export const Navbar = memo(() => {
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollY = useRef(0);
   
+  // Scroll minimization state for DESKTOP navbar (icon mode)
+  const [isDesktopScrollMinimized, setIsDesktopScrollMinimized] = useState(false);
+  const desktopScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastDesktopScrollY = useRef(0);
+  
+  // Handle dock hover - expand minimized navbar on hover
+  const handleDockHoverChange = useCallback((isHovered: boolean) => {
+    setIsDockHovered(isHovered);
+    // If hovering the minimized dock, expand it after a brief moment
+    if (isHovered && isDesktopScrollMinimized) {
+      // Small delay so it doesn't expand accidentally on quick passes
+      const expandTimer = setTimeout(() => {
+        setIsDesktopScrollMinimized(false);
+      }, 150);
+      return () => clearTimeout(expandTimer);
+    }
+  }, [isDesktopScrollMinimized]);
+  
   // Refs
   const dockRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -256,6 +274,50 @@ export const Navbar = memo(() => {
       }
     };
   }, [isMobile, open]);
+
+  // Scroll detection for DESKTOP navbar minimization (icon mode)
+  useEffect(() => {
+    if (isMobile) return;
+    
+    const handleDesktopScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = Math.abs(currentScrollY - lastDesktopScrollY.current);
+      
+      // Minimize on scroll down past 100px threshold
+      if (currentScrollY > 100 && scrollDelta > 10) {
+        if (!isDesktopScrollMinimized) {
+          setIsDesktopScrollMinimized(true);
+        }
+        lastDesktopScrollY.current = currentScrollY;
+        
+        // Clear existing timeout
+        if (desktopScrollTimeoutRef.current) {
+          clearTimeout(desktopScrollTimeoutRef.current);
+        }
+        
+        // Set timeout to expand back after scroll stops
+        desktopScrollTimeoutRef.current = setTimeout(() => {
+          setIsDesktopScrollMinimized(false);
+        }, 2000); // Expand back 2s after scroll stops
+      }
+      
+      // Immediately expand when scrolled back to top
+      if (currentScrollY < 50) {
+        setIsDesktopScrollMinimized(false);
+        if (desktopScrollTimeoutRef.current) {
+          clearTimeout(desktopScrollTimeoutRef.current);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleDesktopScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleDesktopScroll);
+      if (desktopScrollTimeoutRef.current) {
+        clearTimeout(desktopScrollTimeoutRef.current);
+      }
+    };
+  }, [isMobile, isDesktopScrollMinimized]);
 
   // Reset minimized state when menu opens
   useEffect(() => {
@@ -365,12 +427,14 @@ export const Navbar = memo(() => {
           hasReward={hasReward}
           dockRef={dockRef}
           buttonRefs={buttonRefs}
-          onHoverChange={setIsDockHovered}
+          onHoverChange={handleDockHoverChange}
           onAffiliateClick={openAffiliateModal}
           onFaqClick={openFaqModal}
           onThemeClick={openThemeSelectorModal}
           onAdminClick={openAdminModal}
           mounted={mounted}
+          isScrollMinimized={isDesktopScrollMinimized}
+          onExpandClick={() => setIsDesktopScrollMinimized(false)}
         />
 
         {/* MOBILE NAVBAR */}
