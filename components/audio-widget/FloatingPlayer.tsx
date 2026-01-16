@@ -646,49 +646,54 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
         )}
       </AnimatePresence>
 
-      {/* Hidden iframe container - keeps audio playing when minimized
-          Following Apple Music & Spotify embed rules:
-          - iframe must remain in DOM for audio continuity
-          - Positioned BEHIND the pull tab button (not off-screen)
-          - This ensures embed SDK stays active while visually hidden
-          - autoplay and encrypted-media permissions required
+      {/* 
+        SINGLE PERSISTENT IFRAME - The ONLY iframe for audio
+        This is ALWAYS in DOM. When expanded, it's visible in the iPhone.
+        When minimized, it shrinks and hides behind the pull tab but keeps playing.
+        
+        KEY: Same iframe element = same audio context = continuous playback
       */}
-      {isMinimized && streamingEmbedUrl && (
-        <div 
-          className="fixed pointer-events-none overflow-hidden"
+      <div
+        className="fixed transition-all duration-300 ease-out"
+        style={{
+          position: 'fixed',
+          // Position: When minimized, behind pull tab. When expanded, inside iPhone visual area
+          bottom: isMinimized ? 125 : (60 + 180), // Adjust for iPhone player position
+          [playerSide]: isMinimized ? 5 : (playerSide === 'left' ? 8 : 8),
+          // Size: Full size when expanded, small when minimized but valid for SDK
+          width: isMinimized ? 150 : 254,
+          height: isMinimized ? 80 : (musicSource === 'YOUTUBE' ? 180 : 110),
+          overflow: 'hidden',
+          // Opacity: Nearly invisible when minimized, full when expanded
+          opacity: isMinimized ? 0.01 : 1,
+          // Z-index: Behind pull tab when minimized, above content when expanded
+          zIndex: isMinimized ? (Z_INDEX.PULL_TAB - 1) : (Z_INDEX.PLAYER_BASE + 5),
+          pointerEvents: isMinimized ? 'none' : 'auto',
+          borderRadius: isMinimized ? '12px' : '0 0 16px 16px',
+          // Hide behind pull tab when minimized
+          transform: isMinimized ? 'scale(0.5)' : 'scale(1)',
+          transformOrigin: playerSide === 'left' ? 'left center' : 'right center',
+        }}
+        aria-hidden={isMinimized}
+      >
+        <iframe
+          ref={iframeRef}
+          key={`streaming-single-${musicSource}-${iframeKey}`}
+          title={`${sourceLabel[musicSource]} player`}
+          src={streamingEmbedUrl}
+          width="100%"
+          height="100%"
+          loading="eager"
           style={{ 
-            position: 'fixed',
-            bottom: 140, // Same position as pull tab
-            [playerSide]: 0, // Match pull tab side (left or right)
-            width: 80, // Slightly larger than pull tab to ensure coverage
-            height: 80,
-            overflow: 'hidden',
-            opacity: 0.01, // Near-invisible but not fully hidden for embed SDK
-            zIndex: Z_INDEX.PULL_TAB - 1, // Render BEHIND the pull tab
-            borderRadius: '16px',
-            clipPath: 'inset(0)', // Clip any overflow
+            border: 'none', 
+            display: 'block',
+            borderRadius: 'inherit',
           }}
-          aria-hidden="true"
-        >
-          <iframe
-            ref={iframeRef}
-            key={`streaming-bg-${musicSource}-${iframeKey}`}
-            title={`${sourceLabel[musicSource]} background player`}
-            src={streamingEmbedUrl}
-            width="320"
-            height="152"
-            loading="eager"
-            style={{ 
-              border: 'none', 
-              display: 'block',
-              transform: 'scale(0.25)', // Scale down to fit behind button
-              transformOrigin: 'top left',
-            }}
-            allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-          />
-        </div>
-      )}
+          onLoad={handlePlayerInteraction}
+          allow="autoplay; encrypted-media; fullscreen; picture-in-picture; clipboard-write"
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
+        />
+      </div>
 
       {/* Pull tab when hidden (original hide feature) */}
       {playerHidden && !open && !isMinimized && (
@@ -1032,7 +1037,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 </motion.button>
               </div>
 
-              {/* Embedded Player */}
+              {/* Embedded Player Area - Visual placeholder, actual iframe is persistent and positioned here when expanded */}
               <div 
                 className="relative bg-black rounded-b-2xl overflow-hidden"
                 style={{ height: musicSource === 'YOUTUBE' ? '180px' : '110px' }}
@@ -1043,19 +1048,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                   animate={{ x: ['-100%', '200%'] }}
                   transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
                 />
-                
-                <iframe
-                  ref={iframeRef}
-                  key={`streaming-persistent-${musicSource}-${iframeKey}`}
-                  title={`${sourceLabel[musicSource]} player`}
-                  src={streamingEmbedUrl}
-                  width="100%"
-                  height="100%"
-                  loading="eager"
-                  style={{ border: 0, display: 'block' }}
-                  onLoad={handlePlayerInteraction}
-                  allow="autoplay; encrypted-media; fullscreen"
-                />
+                {/* The persistent iframe floats above this area when not minimized */}
               </div>
 
               {/* Media Controls */}
