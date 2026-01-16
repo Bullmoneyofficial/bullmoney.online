@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, useState } from 'react';
+import React, { memo, useCallback, useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,6 +17,7 @@ import { LiveStreamModal } from '@/components/LiveStreamModal';
 import { AnalysisModal } from '@/components/AnalysisModal';
 import { ProductsModal } from '@/components/ProductsModal';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
+import { useMobileMenu } from '@/contexts/MobileMenuContext';
 
 interface MobileDropdownMenuProps {
   open: boolean;
@@ -48,6 +49,12 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
     ref
   ) => {
     const { activeTheme } = useGlobalTheme();
+    const { setIsMobileMenuOpen } = useMobileMenu();
+    
+    // Sync mobile menu open state to context
+    useEffect(() => {
+      setIsMobileMenuOpen(open);
+    }, [open, setIsMobileMenuOpen]);
     
     // Get theme filter for consistency with navbar
     // Use mobileFilter for both mobile and desktop to ensure consistent theming
@@ -92,7 +99,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -15, scale: 0.92 }}
           transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
-          className="lg:hidden fixed top-28 sm:top-32 left-3 right-3 z-[9999] rounded-2xl bg-black/98 p-5 sm:p-6 backdrop-blur-2xl menu-glass overflow-hidden"
+          className="lg:hidden fixed top-28 sm:top-32 left-3 right-3 z-[99999999] rounded-2xl bg-black/98 p-5 sm:p-6 backdrop-blur-2xl menu-glass overflow-hidden"
           style={{ 
             touchAction: 'auto',
             pointerEvents: 'auto',
@@ -103,7 +110,9 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               : '2px solid rgba(59, 130, 246, 0.5)',
             boxShadow: isXMUser
               ? '0 0 50px rgba(239, 68, 68, 0.4), inset 0 0 30px rgba(239, 68, 68, 0.08)'
-              : '0 0 50px rgba(59, 130, 246, 0.4), inset 0 0 30px rgba(59, 130, 246, 0.08)'
+              : '0 0 50px rgba(59, 130, 246, 0.4), inset 0 0 30px rgba(59, 130, 246, 0.08)',
+            position: 'fixed',
+            isolation: 'isolate'
           }}
         >
           {/* Shimmer Background - Using unified CSS shimmer class for performance */}

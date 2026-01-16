@@ -22,6 +22,7 @@ import { Loader2, Edit2, Save, X, Trash2, Upload, Instagram, Send } from "lucide
 
 // --- CONTEXT INTEGRATION ---
 import { useStudio, type Project } from "@/context/StudioContext";
+import { useMobileMenu } from "@/contexts/MobileMenuContext";
 
 // --- CRASH TRACKING ---
 import { useComponentTracking, useTrackModal } from "@/lib/CrashTracker";
@@ -321,6 +322,7 @@ const HeroParallax = () => {
   const { projects, serviceItems, hero, loading, isAuthenticated, isAdmin } = state;
   
   const isMobile = useIsMobile();
+  const { isMobileMenuOpen } = useMobileMenu();
   const willChange = useWillChange();
 
   const buttonText = hero?.button_text || "View Trading Setups";
@@ -637,7 +639,7 @@ const HeroParallax = () => {
     />
 
     <DynamicUltimateControlPanel 
-      isOpen={isUcpOpen} 
+      isOpen={isUcpOpen && !isMobileMenuOpen} 
       onOpenChange={setIsUcpOpen}
       onServicesClick={() => setIsServicesModalOpen(true)}
       onContactClick={() => setIsContactModalOpen(true)}

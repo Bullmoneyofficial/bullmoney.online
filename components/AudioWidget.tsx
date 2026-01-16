@@ -7,6 +7,7 @@ import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 import { useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
 import { MusicEmbedModal } from "@/components/MusicEmbedModal";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
+import { useMobileMenu } from "@/contexts/MobileMenuContext";
 import {
   useAudioWidgetState, useAudioWidgetEffects, useAudioWidgetHandlers, useWanderingGame,
   MainWidget, FloatingPlayer, TipsOverlay, TouchIndicator, GameOverScreen, QuickGameTutorial, QuickGameTutorialDemo,
@@ -15,6 +16,7 @@ import {
 const AudioWidget = React.memo(function AudioWidget() {
   const perf = useComponentLifecycle('audioWidget', 7);
   const audioSettings = useAudioSettings();
+  const { isMobileMenuOpen } = useMobileMenu();
   const state = useAudioWidgetState();
   const game = useWanderingGame({ isMobile: state.isMobile });
   useAudioWidgetEffects(state, audioSettings, game);
@@ -49,14 +51,16 @@ const AudioWidget = React.memo(function AudioWidget() {
 
       {typeof document !== "undefined" && createPortal(
         <AnimatePresence>
-          <FloatingPlayer miniPlayerRef={game.miniPlayerRef} {...state} {...audioSettings}
-            isWandering={game.isWandering} wanderPosition={game.wanderPosition} morphPhase={game.morphPhase}
-            isHovering={game.isHovering} setIsHovering={game.setIsHovering} isNearPlayer={game.isNearPlayer}
-            isFleeing={game.isFleeing} isReturning={game.isReturning} movementStyle={game.movementStyle}
-            speedMultiplier={game.speedMultiplier} fleeDirection={game.fleeDirection} handlePlayerInteraction={game.handlePlayerInteraction}
-            energy={game.energy} combo={game.combo} getTirednessLevel={game.getTirednessLevel} gameStats={game.gameStats}
-            gameState={game.gameState} hasStartedCatchGame={state.hasStartedCatchGame}
-            maybeShowCatchGameTutorial={h.maybeShowCatchGameTutorial} dismissCatchGameTutorial={h.dismissCatchGameTutorial} />
+          {!isMobileMenuOpen && (
+            <FloatingPlayer miniPlayerRef={game.miniPlayerRef} {...state} {...audioSettings}
+              isWandering={game.isWandering} wanderPosition={game.wanderPosition} morphPhase={game.morphPhase}
+              isHovering={game.isHovering} setIsHovering={game.setIsHovering} isNearPlayer={game.isNearPlayer}
+              isFleeing={game.isFleeing} isReturning={game.isReturning} movementStyle={game.movementStyle}
+              speedMultiplier={game.speedMultiplier} fleeDirection={game.fleeDirection} handlePlayerInteraction={game.handlePlayerInteraction}
+              energy={game.energy} combo={game.combo} getTirednessLevel={game.getTirednessLevel} gameStats={game.gameStats}
+              gameState={game.gameState} hasStartedCatchGame={state.hasStartedCatchGame}
+              maybeShowCatchGameTutorial={h.maybeShowCatchGameTutorial} dismissCatchGameTutorial={h.dismissCatchGameTutorial} />
+          )}
         </AnimatePresence>, document.body)}
 
       {typeof document !== "undefined" && createPortal(
