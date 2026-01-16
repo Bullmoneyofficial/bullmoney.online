@@ -133,11 +133,19 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
         <AnimatePresence mode="wait">
           {!isScrollMinimized && (
             <motion.div 
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 400 }}
+              initial={{ opacity: 0, scale: 0.6, x: -20, filter: 'blur(6px)' }}
+              animate={{ opacity: 1, scale: 1, x: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, scale: 0.7, x: -15, filter: 'blur(4px)' }}
+              transition={{ 
+                type: 'spring', 
+                damping: 28, 
+                stiffness: 500,
+                mass: 0.35,
+                opacity: { duration: 0.1 },
+                filter: { duration: 0.12 }
+              }}
               className="pointer-events-auto z-50 flex items-center justify-center h-23 w-23 overflow-hidden relative"
+              style={{ willChange: 'transform, opacity, filter' }}
             >
               <Link href="/" className="relative w-full h-full block">
                 <Image
@@ -157,11 +165,19 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
           {!isScrollMinimized ? (
             <motion.div 
               key="full-dock"
-              initial={{ opacity: 0, y: -20, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -30, scale: 0.8 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              initial={{ opacity: 0, y: -40, scale: 0.7, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: -30, scale: 0.75, filter: 'blur(6px)' }}
+              transition={{ 
+                type: 'spring', 
+                damping: 28, 
+                stiffness: 500,
+                mass: 0.4,
+                opacity: { duration: 0.12 },
+                filter: { duration: 0.15 }
+              }}
               className="absolute left-1/2 -translate-x-1/2 pointer-events-auto z-40"
+              style={{ willChange: 'transform, opacity, filter' }}
             >
               <Dock 
                 items={desktopNavItems} 
@@ -174,11 +190,19 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
           ) : (
             <motion.div 
               key="minimized-dock"
-              initial={{ opacity: 0, y: 30, scale: 0.5 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 30, scale: 0.5 }}
-              transition={{ type: 'spring', damping: 22, stiffness: 350, mass: 0.8 }}
+              initial={{ opacity: 0, y: 50, scale: 0.5, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: 40, scale: 0.6, filter: 'blur(6px)' }}
+              transition={{ 
+                type: 'spring', 
+                damping: 26, 
+                stiffness: 550,
+                mass: 0.35,
+                opacity: { duration: 0.1 },
+                filter: { duration: 0.12 }
+              }}
               className="absolute left-1/2 -translate-x-1/2 pointer-events-auto z-40"
+              style={{ willChange: 'transform, opacity, filter' }}
             >
               <MinimizedDock 
                 items={desktopNavItems}

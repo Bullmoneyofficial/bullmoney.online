@@ -43,18 +43,19 @@ const MinimizedIcon = memo(({
   
   const content = (
     <motion.div
-      initial={{ opacity: 0, scale: 0, y: 10 }}
+      initial={{ opacity: 0, scale: 0.6, y: 10 }}
       animate={{ 
         opacity: 1, 
-        scale: isHovered ? 1.15 : 1, 
-        y: isHovered && localHover ? -8 : 0,
+        scale: isHovered ? 1.1 : 1, 
+        y: isHovered && localHover ? -5 : 0,
       }}
-      exit={{ opacity: 0, scale: 0, y: 10 }}
+      exit={{ opacity: 0, scale: 0.6, y: 10 }}
       transition={{ 
         type: 'spring', 
-        damping: 20, 
-        stiffness: 400,
-        delay: staggerDelay,
+        damping: 28, 
+        stiffness: 500,
+        delay: staggerDelay * 0.6,
+        opacity: { duration: 0.08 }
       }}
       onHoverStart={() => {
         setLocalHover(true);
@@ -73,18 +74,19 @@ const MinimizedIcon = memo(({
         "bg-gradient-to-br from-slate-800/80 to-slate-900/80",
         "border border-blue-500/30 hover:border-blue-400/60",
         "shadow-lg hover:shadow-blue-500/30",
-        "transition-all duration-200",
+        "transition-colors duration-150",
         item.isXMHighlight && "border-red-500/30 hover:border-red-400/60 hover:shadow-red-500/30"
       )}
       style={{
+        willChange: 'transform, opacity',
         transform: 'translateZ(0)',
       }}
     >
       {/* Icon with scaling */}
       <motion.div 
         className="flex items-center justify-center"
-        animate={{ scale: localHover ? 1.1 : 1 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+        animate={{ scale: localHover ? 1.08 : 1 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 28 }}
       >
         <div className={cn(
           "w-5 h-5 [&>svg]:w-5 [&>svg]:h-5",
@@ -182,28 +184,32 @@ export const MinimizedDock = memo(({
         "rounded-2xl backdrop-blur-2xl",
         "bg-gradient-to-br from-black/70 via-slate-900/70 to-black/70",
         "border-2 border-blue-500/40 hover:border-blue-400/60",
-        "shadow-2xl hover:shadow-blue-500/30",
-        "transition-all duration-300"
+        "shadow-2xl",
+        "transition-colors duration-200"
       )}
       style={{
+        willChange: 'transform',
         transform: 'translateZ(0)',
         boxShadow: isHovered 
-          ? '0 0 40px rgba(59, 130, 246, 0.3), 0 10px 40px rgba(0,0,0,0.5)'
-          : '0 0 20px rgba(59, 130, 246, 0.15), 0 10px 30px rgba(0,0,0,0.4)'
+          ? '0 0 50px rgba(59, 130, 246, 0.35), 0 12px 45px rgba(0,0,0,0.5)'
+          : '0 0 25px rgba(59, 130, 246, 0.18), 0 10px 30px rgba(0,0,0,0.4)'
       }}
     >
-      {/* Animated shimmer background */}
-      <motion.div
-        className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isHovered ? 1 : 0.5 }}
-      >
+      {/* Animated shimmer background - simplified for performance */}
+      {isHovered && (
         <motion.div
-          className="absolute inset-y-0 w-[200%] bg-gradient-to-r from-transparent via-blue-500/10 to-transparent"
-          animate={{ x: ['-100%', '100%'] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-        />
-      </motion.div>
+          className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.7 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            className="absolute inset-y-0 w-[200%] bg-gradient-to-r from-transparent via-blue-500/15 to-transparent"
+            animate={{ x: ['-100%', '100%'] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
+          />
+        </motion.div>
+      )}
 
       {/* Logo pill */}
       <motion.div
@@ -334,11 +340,11 @@ export const MinimizedDock = memo(({
         </AnimatePresence>
       </motion.button>
 
-      {/* Floating particles effect on hover */}
+      {/* Floating particles effect on hover - reduced for performance */}
       <AnimatePresence>
         {isHovered && (
           <>
-            {[...Array(5)].map((_, i) => (
+            {[...Array(3)].map((_, i) => (
               <motion.div
                 key={i}
                 initial={{ 
@@ -348,21 +354,22 @@ export const MinimizedDock = memo(({
                   y: 0,
                 }}
                 animate={{ 
-                  opacity: [0, 1, 0],
-                  scale: [0, 1, 0],
-                  x: (Math.random() - 0.5) * 100,
-                  y: -30 - Math.random() * 40,
+                  opacity: [0, 0.8, 0],
+                  scale: [0, 1.2, 0],
+                  x: (Math.random() - 0.5) * 80,
+                  y: -25 - Math.random() * 30,
                 }}
                 exit={{ opacity: 0 }}
                 transition={{ 
-                  duration: 1 + Math.random() * 0.5,
-                  delay: i * 0.1,
+                  duration: 1.2 + Math.random() * 0.4,
+                  delay: i * 0.15,
                   repeat: Infinity,
-                  repeatDelay: Math.random() * 0.5,
+                  repeatDelay: Math.random() * 0.3,
                 }}
-                className="absolute left-1/2 top-1/2 w-1.5 h-1.5 rounded-full bg-blue-400 pointer-events-none"
+                className="absolute left-1/2 top-1/2 w-2 h-2 rounded-full bg-blue-400 pointer-events-none"
                 style={{
-                  boxShadow: '0 0 6px rgba(59, 130, 246, 0.8)',
+                  willChange: 'transform, opacity',
+                  boxShadow: '0 0 8px rgba(59, 130, 246, 0.9)',
                 }}
               />
             ))}
