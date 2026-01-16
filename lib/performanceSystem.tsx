@@ -157,11 +157,29 @@ const setupDesktopScrolling = () => {
   // REMOVED: Keyboard scroll prevention - users should be able to scroll with keyboard
   // The previous code was blocking Arrow keys, Space, PageUp/Down which broke normal scrolling
 
+  // ADDED 2026: Detect touch devices vs mouse users for scroll optimization
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  const html = document.documentElement;
+  
+  if (isTouchDevice) {
+    html.classList.add('touch-device');
+    html.classList.remove('mouse-device');
+  } else {
+    html.classList.add('mouse-device');
+    html.classList.remove('touch-device');
+  }
+
   // Instead, just set up smooth scroll behavior for desktop
   if (window.innerWidth >= 1024) {
     // Ensure scroll events work properly on desktop
     document.documentElement.style.scrollBehavior = 'auto';
     document.body.style.overscrollBehavior = 'auto';
+    
+    // ADDED 2026: Disable scroll-snap for mouse users on big displays
+    if (!isTouchDevice && window.innerWidth >= 1440) {
+      html.classList.add('big-display');
+      console.log('[PerformanceSystem] Big display detected, optimizing mouse scroll');
+    }
   }
 
   return () => {

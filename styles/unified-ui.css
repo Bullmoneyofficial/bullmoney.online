@@ -175,12 +175,24 @@
   scroll-behavior: auto;
 }
 
+/* FIXED: Disable snap scrolling for desktop mouse users - causes jerky scroll */
+/* Non-touch devices (desktop with mouse) should have smooth, natural scrolling */
 .unified-scroll.non-touch-device {
+  scroll-snap-type: none; /* CHANGED from y mandatory - allows smooth mouse wheel */
+  scroll-behavior: auto;  /* CHANGED from smooth - prevents scroll jank */
+}
+
+/* Only apply scroll-snap when explicitly requested */
+.unified-scroll.snap-enabled {
   scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
 }
 
 .unified-scroll-section {
+  /* Only align when parent has snap-enabled */
+  scroll-snap-align: none;
+}
+
+.snap-enabled .unified-scroll-section {
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }

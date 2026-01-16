@@ -12,7 +12,8 @@
    120Hz REFRESH RATE OPTIMIZATIONS
    ============================================================================ */
 html {
-  scroll-behavior: smooth;
+  /* FIXED: Use 'auto' instead of 'smooth' - smooth causes jank with mouse wheel on big displays */
+  scroll-behavior: auto;
   /* Enable high refresh rate scrolling on iOS Safari */
   -webkit-overflow-scrolling: touch;
   /* Note: Do NOT use contain on html - it breaks scrolling */

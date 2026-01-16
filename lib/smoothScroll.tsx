@@ -137,14 +137,21 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
       duration: appliedDuration
     });
 
+    // FIXED 2026: Big display mouse wheel scroll improvements
+    // Higher wheelMultiplier = more responsive scrolling with mouse wheel
+    // Lower lerp = smoother but can feel "laggy" on big displays
+    const isBigDisplay = window.innerWidth >= 1440 || window.innerHeight >= 900;
+    const adjustedWheelMultiplier = isBigDisplay ? 1.5 : (isHighEndDesktop ? 1.0 : 1.2);
+    const adjustedLerp = isBigDisplay ? 0.1 : appliedLerp; // Higher lerp for more responsive feel
+
     // Lenis option surface varies by version; keep config flexible.
     // FIXED: Improved wheel and trackpad handling for better desktop scrolling
     const lenisOptions: any = {
-      lerp: appliedLerp,
-      duration: appliedDuration,
+      lerp: adjustedLerp, // FIXED: Use adjusted lerp for big displays
+      duration: isBigDisplay ? 0.6 : appliedDuration, // Shorter duration for snappier feel
       smoothWheel: options.smoothWheel ?? true, // Always smooth wheel on desktop
-      wheelMultiplier: options.wheelMultiplier ?? (isHighEndDesktop ? 1.0 : 1.2), // FIXED: Increased multiplier for better responsiveness
-      touchMultiplier: options.touchMultiplier ?? (isMobile ? 1.2 : 1.5), // FIXED: Better trackpad sensitivity
+      wheelMultiplier: options.wheelMultiplier ?? adjustedWheelMultiplier, // FIXED: Higher multiplier for big displays
+      touchMultiplier: options.touchMultiplier ?? (isMobile ? 1.2 : 1.8), // FIXED: Higher trackpad sensitivity
       infinite: options.infinite ?? false,
       orientation: 'vertical',
       gestureOrientation: 'vertical',
@@ -153,7 +160,7 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
       // FIXED: Enable smooth touch for trackpad gestures on desktop
       smoothTouch: !isMobile,
       syncTouch: false,
-      syncTouchLerp: 0.1, // FIXED: Slightly higher for better trackpad response
+      syncTouchLerp: 0.12, // FIXED: Higher for better trackpad/mouse response
 
       // FIXED: Allow normal overscroll behavior
       overscroll: true,

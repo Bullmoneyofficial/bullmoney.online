@@ -6,21 +6,23 @@
    on Apple Silicon devices. It follows the "Glass Engine" rule and ensures
    smooth scrolling and GPU compositing.
    
+   UPDATED 2026: Fixed mouse wheel scrolling on big displays
    ============================================================================ */
 
 /* ============================================================================
    CRITICAL: SCROLL FIX - Make page scrollable at 120Hz
    FIXED: Changed overscroll-behavior from 'none' to 'auto' to enable scrolling
+   FIXED 2026: Better mouse wheel support for big displays (1440px+)
    ============================================================================ */
 html {
-  /* Native scrolling - do NOT use scroll-behavior: smooth, it causes jank */
+  /* Native scrolling - do NOT use scroll-behavior: smooth, it causes jank with mouse wheel */
   overflow-y: auto !important;
   overflow-x: hidden;
   /* FIXED: Changed from 'none' to 'auto' - 'none' was blocking scroll on some devices */
   overscroll-behavior: auto;
   /* Touch scrolling for iOS */
   -webkit-overflow-scrolling: touch;
-  /* Ensure scroll works on desktop */
+  /* CRITICAL: Use 'auto' for instant mouse wheel response on big displays */
   scroll-behavior: auto;
 }
 
@@ -34,6 +36,27 @@ body {
   position: relative !important;
   height: auto !important;
   min-height: 100vh;
+}
+
+/* ============================================================================
+   BIG DISPLAY OPTIMIZATIONS (1440px+) - Mouse wheel scrolling fixes
+   ============================================================================ */
+@media (min-width: 1440px) {
+  html {
+    /* Ensure instant scroll response on big displays */
+    scroll-behavior: auto !important;
+  }
+  
+  /* Disable scroll-snap for mouse users on big displays */
+  html:not(.touch-device) body,
+  html:not(.touch-device) main {
+    scroll-snap-type: none !important;
+  }
+  
+  html:not(.touch-device) section {
+    scroll-snap-align: none !important;
+    scroll-snap-stop: normal !important;
+  }
 }
 
 /* Override Lenis if it's blocking scroll */

@@ -90,15 +90,19 @@ export const GLOBAL_STYLES = `
     touch-action: pan-y;
   }
 
-  /* Desktop only: Enable snap scrolling */
+  /* Desktop: Disabled snap scrolling for smooth mouse wheel experience */
+  /* Snap scrolling causes jerky behavior with mouse wheel on big displays */
   @media (min-width: 769px) {
     .mobile-scroll {
-      scroll-snap-type: y mandatory;
+      /* DISABLED: scroll-snap-type: y mandatory; - causes jank with mouse wheel */
+      scroll-snap-type: none;
+      scroll-behavior: auto;
     }
     section {
-      scroll-snap-align: start;
-      scroll-snap-stop: always;
-      height: 100dvh;
+      /* DISABLED: scroll-snap-align/stop - allows smooth mouse wheel scrolling */
+      scroll-snap-align: none;
+      min-height: 100dvh;
+      height: auto;
     }
   }
   /* --- MOBILE SCROLL FIXES END --- */

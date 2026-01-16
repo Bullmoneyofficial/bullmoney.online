@@ -198,6 +198,50 @@ html {
   }
 }
 
+/* ============================================================================
+   BIG DISPLAY MOUSE WHEEL SCROLL FIXES (1440px+)
+   Ensures smooth, responsive mouse wheel scrolling on large monitors
+   ============================================================================ */
+@media (min-width: 1440px) {
+  /* Mouse users on big displays should have instant scroll response */
+  html.mouse-device,
+  html.big-display {
+    scroll-behavior: auto !important;
+  }
+  
+  /* Disable scroll-snap for mouse users - it causes jerky scrolling */
+  html.mouse-device body,
+  html.mouse-device main,
+  html.big-display body,
+  html.big-display main {
+    scroll-snap-type: none !important;
+  }
+  
+  html.mouse-device section,
+  html.big-display section {
+    scroll-snap-align: none !important;
+    scroll-snap-stop: normal !important;
+  }
+  
+  /* Ensure smooth scrollbar on big displays */
+  html.big-display::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  html.big-display::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+  }
+  
+  html.big-display::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.5);
+    border-radius: 5px;
+  }
+  
+  html.big-display::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.7);
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
