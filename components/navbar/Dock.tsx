@@ -304,6 +304,11 @@ const DockItem = memo(({
     </motion.div>
   );
 
+  // If there's a triggerComponent, don't wrap in Link - modal handles interaction
+  if (item.triggerComponent) {
+    return content;
+  }
+
   if (item.href) {
     return (
       <Link href={item.href}>

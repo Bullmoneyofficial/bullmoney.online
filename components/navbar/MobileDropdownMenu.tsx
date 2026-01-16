@@ -15,6 +15,7 @@ import {
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { LiveStreamModal } from '@/components/LiveStreamModal';
 import { AnalysisModal } from '@/components/AnalysisModal';
+import { ProductsModal } from '@/components/ProductsModal';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 
 interface MobileDropdownMenuProps {
@@ -242,7 +243,28 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
             />
 
             {/* Products */}
-            <ThemedMenuItem delay={0.24} href="/products" onClick={handleClose} icon={<IconBuildingStore className="h-5 w-5" stroke={1.5} />} label="Products" highlighted />
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.24 }}
+              className="w-full"
+            >
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                onHoverStart={() => SoundEffects.hover()}
+                className="relative w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200 cursor-pointer"
+                style={{
+                  color: '#93c5fd',
+                  backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                }}
+              >
+                <IconBuildingStore className="h-5 w-5 pointer-events-none" stroke={1.5} style={{ color: '#60a5fa' }} />
+                <span className="pointer-events-none">Products</span>
+                <div className="absolute inset-0 z-10"><ProductsModal /></div>
+              </motion.div>
+            </motion.div>
 
             {/* Theme */}
             <motion.div

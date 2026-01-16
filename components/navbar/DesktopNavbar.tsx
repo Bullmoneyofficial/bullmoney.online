@@ -15,6 +15,7 @@ import {
 import { Dock } from './Dock';
 import { LiveStreamModal } from '@/components/LiveStreamModal';
 import { AnalysisModal } from '@/components/AnalysisModal';
+import { ProductsModal } from '@/components/ProductsModal';
 
 interface DesktopNavbarProps {
   isXMUser: boolean;
@@ -97,7 +98,7 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
         icon: <IconCalendarTime className="h-6 w-6 text-blue-400" stroke={1.5} />,
         label: "Products",
         tips: ["Browse our products", "Find the best tools for you", "Check out our latest offers"],
-        href: "/products",
+        triggerComponent: <div className="w-full h-full flex items-center justify-center pointer-events-auto"><ProductsModal /></div>,
       },
       {
         icon: safeThemeIcon,
