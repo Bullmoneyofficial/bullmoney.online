@@ -12,7 +12,7 @@ import { Z_INDEX } from "./constants/zIndex";
 import { sourceLabel, sourceIcons } from "./constants";
 import type { MusicSource } from "@/contexts/AudioSettingsProvider";
 
-interface iPhoneFrameProps {
+interface IPhoneFrameProps {
   musicSource: MusicSource;
   streamingEmbedUrl: string | null;
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
@@ -25,7 +25,7 @@ interface iPhoneFrameProps {
   onOpenCamera: () => void;
 }
 
-export const iPhoneFrame = React.memo(function iPhoneFrame({
+export const IPhoneFrame = React.memo(function IPhoneFrame({
   musicSource,
   streamingEmbedUrl,
   iframeRef,
@@ -36,7 +36,7 @@ export const iPhoneFrame = React.memo(function iPhoneFrame({
   setMusicEnabled,
   onMinimize,
   onOpenCamera,
-}: iPhoneFrameProps) {
+}: IPhoneFrameProps) {
   const [volume, setVolume] = useState(70);
   const [isMuted, setIsMuted] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
