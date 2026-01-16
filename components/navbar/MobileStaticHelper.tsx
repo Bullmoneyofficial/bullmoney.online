@@ -22,16 +22,19 @@ export const MobileStaticHelper = memo(() => {
   const soundPlayedRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Scroll detection - sync with navbar scroll behavior
+  // Scroll detection - sync with FPS button scroll behavior
   useEffect(() => {
     let lastScrollY = window.scrollY;
     
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      const isScrollingDown = currentScrollY > lastScrollY && currentScrollY > 15;
+      const scrollDelta = Math.abs(currentScrollY - lastScrollY);
       
-      if (isScrollingDown) {
+      // Only trigger minimization on significant scroll (matches FPS button behavior)
+      if (scrollDelta > 10) {
         setIsScrollMinimized(true);
+        lastScrollY = currentScrollY;
+        
         // Clear existing timeout
         if (scrollTimeoutRef.current) {
           clearTimeout(scrollTimeoutRef.current);
@@ -49,8 +52,6 @@ export const MobileStaticHelper = memo(() => {
           clearTimeout(scrollTimeoutRef.current);
         }
       }
-      
-      lastScrollY = currentScrollY;
     };
     
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -98,11 +99,12 @@ export const MobileStaticHelper = memo(() => {
     <motion.div
       className="fixed z-30 pointer-events-none lg:hidden mobile-helper-optimized"
       animate={{
-        top: isScrollMinimized ? 'calc(3.5rem + env(safe-area-inset-top, 0px))' : 'calc(5.5rem + env(safe-area-inset-top, 0px))',
+        top: isScrollMinimized ? 'calc(5.5rem + env(safe-area-inset-top, 0px))' : 'calc(9rem + env(safe-area-inset-top, 0px))',
       }}
       transition={{ type: 'spring', damping: 25, stiffness: 450, mass: 0.6 }}
       style={{ 
-        right: '1.5rem',
+        right: 0,
+        paddingRight: 'calc(env(safe-area-inset-right, 0px) + 8px)',
         filter: themeFilter,
         transition: 'filter 0.5s ease-in-out'
       }}
@@ -114,15 +116,17 @@ export const MobileStaticHelper = memo(() => {
           duration: 0.3,
           ease: [0.34, 1.56, 0.64, 1]
         }}
-        className="relative w-fit max-w-[160px] px-2 py-1.5 rounded-lg bg-black/85 backdrop-blur-xl gpu-accelerated overflow-hidden static-tip-shimmer"
+        className="relative w-fit px-2.5 py-1.5 rounded-l-2xl bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-slate-900/40 backdrop-blur-2xl gpu-accelerated overflow-hidden static-tip-shimmer"
         style={{
-          border: '1px solid rgba(59, 130, 246, 0.4)',
+          borderTop: '1px solid rgba(59, 130, 246, 0.5)',
+          borderLeft: '1px solid rgba(59, 130, 246, 0.5)',
+          borderBottom: '1px solid rgba(59, 130, 246, 0.5)',
           boxShadow: '0 0 20px rgba(59, 130, 246, 0.2), inset 0 0 10px rgba(59, 130, 246, 0.08)'
         }}
       >
         {/* Unified Shimmer - Left to Right using ShimmerLine component */}
         {shimmerEnabled && (
-          <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
+          <div className="absolute inset-0 overflow-hidden rounded-l-2xl pointer-events-none">
             <div 
               className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%]"
               style={{
@@ -167,7 +171,7 @@ export const MobileStaticHelper = memo(() => {
                 duration: 0.25,
                 ease: [0.34, 1.56, 0.64, 1]
               }}
-              className="text-[9px] tracking-wide font-medium text-right leading-tight"
+              className="text-[9px] tracking-wide font-medium text-right leading-tight whitespace-nowrap"
               style={{ color: '#93c5fd' }}
             >
               {MOBILE_HELPER_TIPS[tipIndex]}

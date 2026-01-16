@@ -922,6 +922,7 @@ export function UltimateControlPanel({
               x: 0, 
               opacity: 1, 
               scale: effectiveMinimized ? 0.9 : 1,
+              top: isScrolling ? 'calc(7.5rem + env(safe-area-inset-top, 0px))' : 'calc(11rem + env(safe-area-inset-top, 0px))',
             }}
             exit={{ x: 80, opacity: 0 }}
             transition={{ 
@@ -929,11 +930,11 @@ export function UltimateControlPanel({
               damping: 28, 
               stiffness: 450,
               mass: 0.7,
-              scale: { type: 'spring', damping: 22, stiffness: 600 }
+              scale: { type: 'spring', damping: 22, stiffness: 600 },
+              top: { type: 'spring', damping: 25, stiffness: 450, mass: 0.6 }
             }}
             className="fixed right-0 z-[250000] pointer-events-none control-panel-themed"
             style={{
-              top: 'calc(11rem + env(safe-area-inset-top, 0px))',
               paddingRight: 'calc(env(safe-area-inset-right, 0px) + 8px)',
               filter: themeFilter,
               transition: 'filter 0.5s ease-in-out'
