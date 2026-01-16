@@ -963,3 +963,205 @@ html, body {
 .dark {
   background-color: #000000 !important;
 }
+
+/* =================================================================
+   CRITICAL PERFORMANCE FIX - GLOBAL OVERRIDE
+   Forces all expensive effects off to prevent lag
+   ================================================================= */
+
+/* FORCE DISABLE ALL BACKDROP BLUR - #1 cause of lag */
+* {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Replace backdrop-blur with solid backgrounds */
+.backdrop-blur,
+.backdrop-blur-sm,
+.backdrop-blur-md,
+.backdrop-blur-lg,
+.backdrop-blur-xl,
+.backdrop-blur-2xl,
+.backdrop-blur-3xl {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: rgba(0, 0, 0, 0.9) !important;
+}
+
+/* DISABLE SPINNING ANIMATIONS - Major GPU hog */
+[class*="animate-[spin"],
+.animate-spin,
+[style*="animation"][style*="spin"] {
+  animation: none !important;
+}
+
+/* Replace conic-gradient spinning borders with static gradients */
+[class*="conic-gradient"],
+[style*="conic-gradient"] {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.5), rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.5)) !important;
+  animation: none !important;
+}
+
+/* Disable expensive box-shadows */
+.shadow-2xl,
+.shadow-xl,
+[class*="shadow-[0_0"] {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* EXCEPTION: Allow shadows inside fps-chart-container */
+.fps-chart-container .shadow-lg,
+.fps-chart-container .shadow-xl,
+.fps-chart-container [class*="shadow-"],
+[data-fps-chart] .shadow-lg,
+[data-fps-chart] [class*="shadow-"] {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Disable drop-shadow filters */
+[class*="drop-shadow"],
+[style*="drop-shadow"] {
+  filter: none !important;
+}
+
+/* EXCEPTION: Allow drop-shadow inside fps-chart-container */
+.fps-chart-container [class*="drop-shadow"],
+[data-fps-chart] [class*="drop-shadow"] {
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8)) !important;
+}
+
+/* Optimize will-change - don't over-use it */
+[style*="will-change"]:not(.critical-animation) {
+  will-change: auto !important;
+}
+
+/* Pause animations during scroll - CRITICAL for smoothness */
+html.is-scrolling * {
+  animation-play-state: paused !important;
+  transition: none !important;
+}
+
+/* EXCEPTION: Keep FPS chart animating during scroll */
+html.is-scrolling .fps-chart-container,
+html.is-scrolling .fps-chart-container *,
+html.is-scrolling [data-fps-chart],
+html.is-scrolling [data-fps-chart] * {
+  animation-play-state: running !important;
+  transition: all 0.2s ease !important;
+}
+
+/* GPU compositing for critical elements */
+nav,
+footer,
+.modal,
+[data-spline],
+canvas {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout style paint;
+}
+
+/* Disable Framer Motion hover effects during scroll */
+html.is-scrolling [data-framer-component-type],
+html.is-scrolling [style*="transform"] {
+  transform: none !important;
+  transition: none !important;
+}
+
+/* EXCEPTION: Keep FPS chart transforms */
+html.is-scrolling .fps-chart-container [style*="transform"],
+html.is-scrolling [data-fps-chart] [style*="transform"] {
+  transform: unset !important;
+}
+
+/* =================================================================
+   MOBILE PERFORMANCE - Extra aggressive
+   ================================================================= */
+@media (max-width: 768px) {
+  /* No blur on mobile ever */
+  * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  
+  /* EXCEPTION: Allow FPS chart on mobile */
+  .fps-chart-container,
+  .fps-chart-container *,
+  [data-fps-chart],
+  [data-fps-chart] * {
+    backdrop-filter: unset !important;
+    -webkit-backdrop-filter: unset !important;
+    filter: unset !important;
+    box-shadow: unset !important;
+    transform: unset !important;
+    animation-play-state: running !important;
+  }
+  
+  /* Simpler shadows on mobile */
+  [class*="shadow-"] {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  }
+  
+  /* EXCEPTION: Allow shadows for FPS chart */
+  .fps-chart-container [class*="shadow-"],
+  [data-fps-chart] [class*="shadow-"] {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  /* No filter effects on mobile */
+  [class*="filter"],
+  [style*="filter"] {
+    filter: none !important;
+  }
+  
+  /* EXCEPTION: Allow filter effects for FPS chart */
+  .fps-chart-container [class*="filter"],
+  .fps-chart-container [class*="drop-shadow"],
+  [data-fps-chart] [class*="filter"],
+  [data-fps-chart] [class*="drop-shadow"] {
+    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8)) !important;
+  }
+  
+  /* Disable 3D transforms on mobile for battery */
+  [style*="transform3d"],
+  [style*="translateZ"] {
+    transform: none !important;
+  }
+}
+
+/* =================================================================
+   FPS CHART EXCEPTION - HIGHEST SPECIFICITY (AT END OF FILE)
+   These rules MUST come last to override everything above
+   ================================================================= */
+.fps-chart-container,
+.fps-chart-container *,
+[data-fps-chart],
+[data-fps-chart] * {
+  /* Reset ALL performance overrides */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  animation-play-state: running !important;
+}
+
+/* SVG must be visible */
+.fps-chart-container svg,
+.fps-chart-container svg *,
+[data-fps-chart] svg,
+[data-fps-chart] svg * {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+}
+
+/* Keep FPS chart working even during scroll */
+html.is-scrolling .fps-chart-container,
+html.is-scrolling .fps-chart-container *,
+html.is-scrolling [data-fps-chart],
+html.is-scrolling [data-fps-chart] * {
+  animation-play-state: running !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}

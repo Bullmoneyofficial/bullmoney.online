@@ -105,7 +105,7 @@ const FpsCandlestickChart: React.FC<FpsCandlestickChartProps> = ({
   const animationDuration = 2; // Constant 2 second duration for stability
 
   return (
-    <div className="relative overflow-hidden rounded-lg" style={{ width, height }}>
+    <div className="fps-chart-container relative overflow-hidden rounded-lg" style={{ width, height }} data-fps-chart>
       {/* Glass background - NO BLUR */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-600/15 via-blue-500/5 to-slate-900/25 border border-blue-500/20" />
 

@@ -917,14 +917,13 @@ export function UltimateControlPanel({
         {!isOpen && (
           <motion.div
             key="fps-action-button"
-            initial={{ x: 100, opacity: 0, y: '-50%' }}
+            initial={{ x: 100, opacity: 0 }}
             animate={{ 
               x: 0, 
               opacity: 1, 
-              y: '-50%',
               scale: effectiveMinimized ? 0.9 : 1,
             }}
-            exit={{ x: 80, opacity: 0, y: '-50%' }}
+            exit={{ x: 80, opacity: 0 }}
             transition={{ 
               type: 'spring', 
               damping: 28, 
@@ -934,7 +933,7 @@ export function UltimateControlPanel({
             }}
             className="fixed right-0 z-[250000] pointer-events-none control-panel-themed"
             style={{
-              top: '50%',
+              top: 'calc(11rem + env(safe-area-inset-top, 0px))',
               paddingRight: 'calc(env(safe-area-inset-right, 0px) + 8px)',
               filter: themeFilter,
               transition: 'filter 0.5s ease-in-out'

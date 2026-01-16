@@ -1149,28 +1149,44 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
     return () => clearTimeout(timeoutId);
   }, [device?.tier, fpsMonitor, shimmerQuality, splineQuality, qualityOverride, startDelay]);
   
-  // Scroll detection (pause animations during scroll)
+  // Scroll detection (pause animations during scroll) - OPTIMIZED for better performance
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
+    let rafId: number | null = null;
+    let isCurrentlyScrolling = false;
+    
     const handleScroll = () => {
-      setIsScrolling(true);
-      document.documentElement.classList.add('is-scrolling');
+      // Use RAF to batch scroll updates and reduce main thread work
+      if (rafId) return;
       
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-      
-      scrollTimeoutRef.current = setTimeout(() => {
-        setIsScrolling(false);
-        document.documentElement.classList.remove('is-scrolling');
-      }, 150);
+      rafId = requestAnimationFrame(() => {
+        if (!isCurrentlyScrolling) {
+          isCurrentlyScrolling = true;
+          setIsScrolling(true);
+          document.documentElement.classList.add('is-scrolling');
+        }
+        
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+        
+        // Shorter timeout for faster recovery after scroll stops
+        scrollTimeoutRef.current = setTimeout(() => {
+          isCurrentlyScrolling = false;
+          setIsScrolling(false);
+          document.documentElement.classList.remove('is-scrolling');
+        }, 100); // Reduced from 150ms to 100ms for faster response
+        
+        rafId = null;
+      });
     };
     
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', handleScroll);
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);
   

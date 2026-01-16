@@ -103,64 +103,45 @@ const CompactFpsDisplay: React.FC<CompactFpsDisplayProps> = ({
   const performanceStatus = fps >= 58 ? '📈' : fps >= 50 ? '↗️' : fps >= 40 ? '→' : '⚠️';
 
   return (
-    <div className="relative">
-      {/* Glass Background with bullmoney blue gradient */}
-      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-blue-600/25 via-blue-500/10 to-slate-900/30 backdrop-blur-xl border border-blue-500/40 shadow-lg shadow-blue-600/20" />
-      
-      {/* Shimmer effect on hover */}
-      <div className="absolute inset-0 rounded-lg opacity-0 hover:opacity-100 transition-opacity duration-300 overflow-hidden pointer-events-none">
-        <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-400/20 to-transparent animate-pulse" />
-      </div>
+    <div className="fps-chart-container relative" data-fps-chart>
+      {/* Glass Background - NO BLUR for performance */}
+      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-slate-900/40 border border-blue-500/40 shadow-lg shadow-blue-600/20" />
 
-      {/* Content - Vertical Layout */}
-      <div className="relative px-1.5 py-1.5 flex flex-col gap-1.5">
-        {/* Chart - Top */}
-        <div className="flex-shrink-0 flex justify-center">
-          <FpsCandlestickChart fps={fps} maxFps={120} height={64} width={110} candleCount={10} />
+      {/* Content - Horizontal compact layout */}
+      <div className="relative px-2 py-1.5 flex items-center gap-2">
+        {/* Chart */}
+        <div className="flex-shrink-0">
+          <FpsCandlestickChart fps={fps} maxFps={120} height={48} width={80} candleCount={8} />
         </div>
 
-        {/* Info - Bottom */}
-        <div className="flex flex-col gap-0.5 px-1">
+        {/* Info - Right side */}
+        <div className="flex flex-col gap-0.5 min-w-[40px]">
           {/* FPS Number with glow */}
-          <div className="flex items-center gap-1 justify-center">
+          <div className="flex items-center gap-1">
             <Activity 
-              size={12} 
-              className={`text-blue-500 animate-pulse drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]`}
+              size={10} 
+              className="text-blue-400"
             />
-            <span className={`text-xs font-black drop-shadow-lg ${getColorClass(fps)} ${getGlowClass(fps)}`}>
+            <span className={`text-sm font-black ${getColorClass(fps)}`}>
               {fps}
             </span>
-            <span className="text-[6px] text-blue-400/90 font-bold uppercase tracking-wider drop-shadow-[0_0_3px_rgba(59,130,246,0.5)]">
-              FPS
-            </span>
           </div>
 
-          {/* Device Tier Badge with glow */}
-          <div className={`text-[6px] font-mono font-bold uppercase text-center ${getTierColor(deviceTier)} ${getTierGlow(deviceTier)} tracking-wider`}>
-            {deviceTier === 'ultra' && '◆'} {deviceTier}
+          {/* Device Tier */}
+          <div className={`text-[8px] font-mono font-bold uppercase ${getTierColor(deviceTier)} tracking-wide`}>
+            {deviceTier}
           </div>
 
-          {/* Quality Indicators - Trading theme */}
-          <div className="flex items-center justify-center gap-0.5">
-            {/* Shimmer Quality */}
-            <span className={`text-[6px] font-bold ${getQualityColor(shimmerQuality)} ${getQualityGlow(shimmerQuality)}`}>
-              ✦
+          {/* Quality Indicators */}
+          <div className="flex items-center gap-1">
+            <span className={`text-[8px] font-bold ${getQualityColor(shimmerQuality)}`}>
+              ✦{shimmerQuality.charAt(0).toUpperCase()}
             </span>
-            
-            {/* 3D/Spline Quality */}
-            <span className={`text-[6px] font-bold ${getQualityColor(splineQuality)} ${getQualityGlow(splineQuality)}`}>
-              ◆
-            </span>
-            
-            {/* 3D Status with trading icon */}
             {enable3D ? (
-              <TrendingUp size={8} className="text-blue-500 drop-shadow-[0_0_3px_rgba(59,130,246,0.8)]" />
+              <TrendingUp size={8} className="text-blue-400" />
             ) : (
-              <Zap size={7} className="text-blue-800 opacity-40" />
+              <Zap size={8} className="text-blue-700 opacity-50" />
             )}
-
-            {/* Performance Status */}
-            <span className="text-[7px] ml-0.5">{performanceStatus}</span>
           </div>
         </div>
       </div>

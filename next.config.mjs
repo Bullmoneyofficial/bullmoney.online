@@ -1,9 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  reactStrictMode: true,
+  reactStrictMode: false, // Disable StrictMode in prod - reduces double renders
   compress: true,
   productionBrowserSourceMaps: false,
+  
+  // Reduce JavaScript bundle size
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'],
+    } : false,
+  },
 
   // Experimental features for Next.js 16
   experimental: {
@@ -12,7 +19,7 @@ const nextConfig = {
       dynamic: 30,
       static: 180,
     },
-    // Package import optimizations
+    // Package import optimizations - tree shake these heavy packages
     optimizePackageImports: [
       '@splinetool/react-spline',
       '@splinetool/runtime',

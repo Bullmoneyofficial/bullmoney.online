@@ -413,3 +413,109 @@ body {
     font-variation-settings: 'wght' 700;
   }
 }
+
+/* ========================================
+   CRITICAL PERFORMANCE FIXES - NEW
+   ======================================== */
+
+/* DISABLE ALL SPINNING ANIMATIONS - Major GPU drain */
+.animate-\[spin,
+[class*="animate-[spin"],
+[style*="animation"][style*="spin"] {
+  animation: none !important;
+}
+
+/* Pause ALL animations during scroll */
+html.is-scrolling * {
+  animation-play-state: paused !important;
+  transition: none !important;
+}
+
+/* Disable backdrop-blur EVERYWHERE - extremely expensive */
+*,
+*::before,
+*::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Replace blur with solid backgrounds */
+.backdrop-blur-xl,
+.backdrop-blur-lg,
+.backdrop-blur-md,
+.backdrop-blur-sm,
+.backdrop-blur,
+[class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Disable expensive box shadows on scroll */
+html.is-scrolling .shadow-lg,
+html.is-scrolling .shadow-xl,
+html.is-scrolling .shadow-2xl,
+html.is-scrolling [class*="shadow-"] {
+  box-shadow: none !important;
+}
+
+/* Disable filter effects during scroll */
+html.is-scrolling [style*="filter"],
+html.is-scrolling [class*="drop-shadow"],
+html.is-scrolling .drop-shadow {
+  filter: none !important;
+}
+
+/* Disable all transforms except translateZ for compositing */
+html.is-scrolling [style*="transform"]:not([style*="translateZ"]) {
+  transform: none !important;
+}
+
+/* Kill conic gradients with spin - MAJOR CPU/GPU drain */
+[class*="conic-gradient"],
+[style*="conic-gradient"] {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.3), transparent) !important;
+  animation: none !important;
+}
+
+/* Disable framer-motion hover effects during scroll */
+html.is-scrolling [data-framer-component-type] {
+  pointer-events: none !important;
+}
+
+/* GPU layer optimization - force compositing for frequently animated elements */
+.gpu-accelerated,
+nav,
+footer,
+.modal,
+[data-spline],
+canvas {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  contain: layout style paint;
+}
+
+/* Disable will-change on elements not currently animating */
+html.is-scrolling [style*="will-change"] {
+  will-change: auto !important;
+}
+
+/* Aggressive shimmer disable at low FPS */
+html.shimmer-quality-low [data-shimmer],
+html.shimmer-quality-low .shimmer-line,
+html.shimmer-quality-low .shimmer-border,
+html.fps-low [data-shimmer],
+html.fps-minimal [data-shimmer] {
+  display: none !important;
+  animation: none !important;
+}
+
+/* Disable particle effects */
+html.fps-low [class*="particle"],
+html.fps-low [class*="tsparticles"],
+html.fps-minimal [class*="particle"],
+html.fps-minimal [class*="tsparticles"] {
+  display: none !important;
+}
