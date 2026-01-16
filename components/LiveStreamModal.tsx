@@ -105,19 +105,25 @@ const LiveStreamTrigger = memo(() => {
     SoundEffects.click();
     setIsOpen(true);
   }, [setIsOpen]);
+
+  const handleTouch = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    SoundEffects.click();
+    setIsOpen(true);
+  }, [setIsOpen]);
   
   return (
     <button
       onClick={handleClick}
-      onTouchEnd={(e) => {
-        e.preventDefault();
-        SoundEffects.click();
-        setIsOpen(true);
-      }}
-      className="w-full h-full absolute inset-0 cursor-pointer bg-transparent border-0 outline-none z-50"
+      onTouchEnd={handleTouch}
+      onMouseDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+      className="w-full h-full absolute inset-0 cursor-pointer bg-transparent border-0 outline-none z-[100]"
       style={{ 
         background: 'transparent',
-        touchAction: 'manipulation'
+        touchAction: 'manipulation',
+        WebkitTapHighlightColor: 'transparent'
       }}
       aria-label="Open Live Stream"
     />
@@ -294,11 +300,13 @@ const LiveStreamContent = memo(() => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4"
-      onClick={handleClose}
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-2 sm:p-4 pointer-events-none"
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" />
+      {/* Invisible backdrop for click-outside-to-close */}
+      <div 
+        className="absolute inset-0 pointer-events-auto"
+        onClick={handleClose}
+      />
       
       {/* Modal */}
       <motion.div
@@ -307,7 +315,7 @@ const LiveStreamContent = memo(() => {
         exit={{ scale: 0.9, opacity: 0, y: 50 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-4xl max-h-[95vh] overflow-hidden rounded-2xl"
+        className="relative w-full max-w-4xl max-h-[95vh] overflow-hidden rounded-2xl pointer-events-auto"
       >
         {/* Shimmer Border - Positioned outside inner container */}
         <div className="absolute inset-[-2px] overflow-hidden rounded-2xl pointer-events-none z-0">

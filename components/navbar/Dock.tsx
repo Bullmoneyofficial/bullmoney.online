@@ -266,15 +266,15 @@ const DockItem = memo(({
       onHoverEnd={() => isHovered.set(0)}
       onFocus={() => isHovered.set(1)}
       onBlur={() => isHovered.set(0)}
-      onClick={item.onClick}
+      onClick={item.triggerComponent ? undefined : item.onClick}
       onMouseEnter={() => {
         SoundEffects.hover();
       }}
       onMouseDown={() => {
-        SoundEffects.click();
+        if (!item.triggerComponent) SoundEffects.click();
       }}
       onTouchStart={() => {
-        SoundEffects.click();
+        if (!item.triggerComponent) SoundEffects.click();
       }}
       className={cn(
         "relative flex flex-col items-center justify-center cursor-pointer mb-2 dock-item-optimized",
@@ -284,18 +284,20 @@ const DockItem = memo(({
       aria-haspopup="true"
     >
       {/* DockIcon with icon and label */}
-      <DockIcon label={item.label} showShine={item.showShine} isXMUser={item.isXMHighlight}>
-        {item.icon}
-      </DockIcon>
+      <div className={cn("w-full h-full flex items-center justify-center", item.triggerComponent && "pointer-events-none")}>
+        <DockIcon label={item.label} showShine={item.showShine} isXMUser={item.isXMHighlight}>
+          {item.icon}
+        </DockIcon>
+      </div>
       
       {/* DockLabel with tooltip */}
       <DockLabelInline tips={item.tips} isHovered={isHovered} isXMUser={item.isXMHighlight}>
         {item.label}
       </DockLabelInline>
 
-      {/* Modal trigger overlay - must be visible for click detection */}
+      {/* Modal trigger overlay - must be on top for click detection */}
       {item.triggerComponent && (
-        <div className="absolute inset-0 z-20" style={{ pointerEvents: 'auto' }}>
+        <div className="absolute inset-0 z-[100]" style={{ pointerEvents: 'auto' }}>
           {item.triggerComponent}
         </div>
       )}
