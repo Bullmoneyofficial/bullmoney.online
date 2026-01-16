@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo, memo } from 'react';
+import React, { useEffect, useState, useRef, useMemo, memo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOBILE_HELPER_TIPS } from './navbar.utils';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
@@ -18,7 +18,49 @@ export const MobileStaticHelper = memo(() => {
   
   const [tipIndex, setTipIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
+  const [isScrollMinimized, setIsScrollMinimized] = useState(false);
   const soundPlayedRef = useRef(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Scroll detection - sync with navbar scroll behavior
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const isScrollingDown = currentScrollY > lastScrollY && currentScrollY > 15;
+      
+      if (isScrollingDown) {
+        setIsScrollMinimized(true);
+        // Clear existing timeout
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+        // Set timeout to restore after 1.5s of no scrolling
+        scrollTimeoutRef.current = setTimeout(() => {
+          setIsScrollMinimized(false);
+        }, 1500);
+      }
+      
+      // Restore immediately when at top
+      if (currentScrollY < 15) {
+        setIsScrollMinimized(false);
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+      }
+      
+      lastScrollY = currentScrollY;
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
   
   // Get theme filter for consistency with navbar
   // Use mobileFilter for both mobile and desktop to ensure consistent theming
@@ -53,10 +95,13 @@ export const MobileStaticHelper = memo(() => {
   if (tipsMuted) return null;
   
   return (
-    <div
+    <motion.div
       className="fixed z-30 pointer-events-none lg:hidden mobile-helper-optimized"
+      animate={{
+        top: isScrollMinimized ? 'calc(3.5rem + env(safe-area-inset-top, 0px))' : 'calc(5.5rem + env(safe-area-inset-top, 0px))',
+      }}
+      transition={{ type: 'spring', damping: 25, stiffness: 450, mass: 0.6 }}
       style={{ 
-        top: 'calc(5.5rem + env(safe-area-inset-top, 0px))',
         right: '1.5rem',
         filter: themeFilter,
         transition: 'filter 0.5s ease-in-out'
@@ -130,7 +175,7 @@ export const MobileStaticHelper = memo(() => {
           </AnimatePresence>
         </motion.div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 });
 
