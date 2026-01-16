@@ -66,7 +66,9 @@ export type UIComponentType =
   | 'adminModal'
   | 'faqModal'
   | 'appsModal'           // Footer: Apps & Tools modal
-  | 'disclaimerModal';    // Footer: Legal Disclaimer modal
+  | 'disclaimerModal'     // Footer: Legal Disclaimer modal
+  | 'pagemode'            // Registration/pagemode overlay
+  | 'loaderv2';           // Multi-step loader overlay
 
 // Legacy type for backwards compatibility
 export type NavbarModalType = 'admin' | 'faq' | 'affiliate' | 'themeSelector' | null;
@@ -87,6 +89,8 @@ interface UIStateContextType {
   isFaqModalOpen: boolean;
   isAppsModalOpen: boolean;        // Footer: Apps & Tools modal
   isDisclaimerModalOpen: boolean;  // Footer: Legal Disclaimer modal
+  isPagemodeOpen: boolean;         // Registration page overlay
+  isLoaderv2Open: boolean;         // Multi-step loader overlay
 
   // Legacy: activeNavbarModal (maps to specific modal states)
   activeNavbarModal: NavbarModalType;
@@ -112,6 +116,8 @@ interface UIStateContextType {
   setFaqModalOpen: (open: boolean) => void;
   setAppsModalOpen: (open: boolean) => void;
   setDisclaimerModalOpen: (open: boolean) => void;
+  setPagemodeOpen: (open: boolean) => void;
+  setLoaderv2Open: (open: boolean) => void;
 
   // Legacy: setNavbarModal (for backwards compatibility)
   setNavbarModal: (modal: NavbarModalType) => void;
@@ -161,6 +167,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const [isFaqModalOpen, setIsFaqModalOpenState] = useState(false);
   const [isAppsModalOpen, setIsAppsModalOpenState] = useState(false);
   const [isDisclaimerModalOpen, setIsDisclaimerModalOpenState] = useState(false);
+  const [isPagemodeOpen, setIsPagemodeOpenState] = useState(false);
+  const [isLoaderv2Open, setIsLoaderv2OpenState] = useState(false);
 
   // Derived state: Legacy activeNavbarModal (maps to individual states)
   const activeNavbarModal: NavbarModalType =
@@ -174,7 +182,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const isAnyModalOpen = isFooterOpen || isChartNewsOpen || isAnalysisModalOpen ||
     isLiveStreamModalOpen || isProductsModalOpen || isAffiliateModalOpen ||
     isThemeSelectorModalOpen || isAdminModalOpen || isFaqModalOpen ||
-    isAppsModalOpen || isDisclaimerModalOpen;
+    isAppsModalOpen || isDisclaimerModalOpen || isPagemodeOpen || isLoaderv2Open;
 
   // Derived state: is any component currently open?
   const isAnyOpen = isMobileMenuOpen || isAudioWidgetOpen || isUltimatePanelOpen || isAnyModalOpen;
@@ -191,6 +199,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isMobileMenuOpen ? 'mobileMenu' :
     isAudioWidgetOpen ? 'audioWidget' :
     isUltimatePanelOpen ? 'ultimatePanel' :
+    isPagemodeOpen ? 'pagemode' :
+    isLoaderv2Open ? 'loaderv2' :
     isFooterOpen ? 'footer' :
     isChartNewsOpen ? 'chartnews' :
     isAnalysisModalOpen ? 'analysisModal' :
@@ -220,6 +230,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (except !== 'faqModal') setIsFaqModalOpenState(false);
     if (except !== 'appsModal') setIsAppsModalOpenState(false);
     if (except !== 'disclaimerModal') setIsDisclaimerModalOpenState(false);
+    if (except !== 'pagemode') setIsPagemodeOpenState(false);
+    if (except !== 'loaderv2') setIsLoaderv2OpenState(false);
   }, []);
 
   // Closes all modals but preserves floating elements state
@@ -235,6 +247,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsFaqModalOpenState(false);
     setIsAppsModalOpenState(false);
     setIsDisclaimerModalOpenState(false);
+    setIsPagemodeOpenState(false);
+    setIsLoaderv2OpenState(false);
   }, []);
 
   // Closes all components
@@ -343,6 +357,20 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsDisclaimerModalOpenState(open);
   }, [closeOthers]);
 
+  const setPagemodeOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('pagemode');
+    }
+    setIsPagemodeOpenState(open);
+  }, [closeOthers]);
+
+  const setLoaderv2Open = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('loaderv2');
+    }
+    setIsLoaderv2OpenState(open);
+  }, [closeOthers]);
+
   // Legacy: setNavbarModal for backwards compatibility
   const setNavbarModal = useCallback((modal: NavbarModalType) => {
     // Close all navbar-type modals first
@@ -418,6 +446,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isFaqModalOpen,
     isAppsModalOpen,
     isDisclaimerModalOpen,
+    isPagemodeOpen,
+    isLoaderv2Open,
     activeNavbarModal,
     isAnyOpen,
     isAnyModalOpen,
@@ -440,6 +470,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setFaqModalOpen,
     setAppsModalOpen,
     setDisclaimerModalOpen,
+    setPagemodeOpen,
+    setLoaderv2Open,
     setNavbarModal,
 
     // Convenience methods
@@ -487,6 +519,8 @@ export function useAudioWidgetUI() {
     setAudioWidgetOpen,
     shouldMinimizeAudioWidget,
     hasOverlayingUI,
+    isPagemodeOpen,
+    isLoaderv2Open,
   } = useUIState();
 
   // IMPORTANT: We no longer return shouldHideFloatingPlayer that causes unmount.
@@ -497,12 +531,18 @@ export function useAudioWidgetUI() {
   // shouldHideFloatingPlayer now means "minimize" not "unmount"
   const shouldHideFloatingPlayer = shouldMinimizeAudioWidget;
 
+  // When pagemode or loaderv2 is open, don't show the audio widget at all
+  const shouldHideAudioWidgetCompletely = isPagemodeOpen || isLoaderv2Open;
+
   return {
     isAudioWidgetOpen,
     setAudioWidgetOpen,
     shouldHideFloatingPlayer,
     shouldMinimizeAudioWidget,
     hasOverlayingUI,
+    isPagemodeOpen,
+    isLoaderv2Open,
+    shouldHideAudioWidgetCompletely,
   };
 }
 

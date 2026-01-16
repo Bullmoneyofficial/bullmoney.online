@@ -16,6 +16,7 @@ import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { BlueShimmer, Slider, GameOverScreen, GameControls, GameShimmer, BounceDots, StatusBadge, QuickGameTutorial, QuickGameTutorialDemo } from "@/components/audio-widget/ui";
 import { ShimmerLine } from "@/components/ui/UnifiedShimmer";
 import { sourceLabel, streamingOptions, sourceIcons } from "./constants";
+import { useAudioWidgetUI } from "@/contexts/UIStateContext";
 import type { MusicSource } from "@/contexts/AudioSettingsProvider";
 
 /**
@@ -121,6 +122,9 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
     iframeRef, isWandering, gameStats, gameState,
   } = props;
 
+  // Get UI state to hide when loader v2 is open
+  const { isLoaderv2Open } = useAudioWidgetUI();
+
   // Scroll detection for auto-minimizing
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollY = useRef(0);
@@ -173,8 +177,11 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
 
   return (
     <>
-      {/* Pull tab to show widget when hidden - minimizes/maximizes on scroll */}
-      <AnimatePresence mode="wait">
+      {/* Don't show the main widget when loader v2 is open */}
+      {isLoaderv2Open ? null : (
+      <>
+        {/* Pull tab to show widget when hidden - minimizes/maximizes on scroll */}
+        <AnimatePresence mode="wait">
         {widgetHidden && !isScrollMinimized && (
           <motion.button
             key="normal-pull-tab"
@@ -599,6 +606,8 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
           </>
         )}
       </AnimatePresence>
+      </>
+      )}
     </>
   );
 });

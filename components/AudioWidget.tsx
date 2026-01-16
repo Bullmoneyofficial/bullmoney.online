@@ -17,7 +17,8 @@ const AudioWidget = React.memo(function AudioWidget() {
   const perf = useComponentLifecycle('audioWidget', 7);
   const audioSettings = useAudioSettings();
   // Use the new UIState context for mutual exclusion with other components
-  const { shouldHideFloatingPlayer, setAudioWidgetOpen } = useAudioWidgetUI();
+  // shouldHideAudioWidgetCompletely hides the entire widget when pagemode or loaderv2 is open
+  const { shouldHideFloatingPlayer, setAudioWidgetOpen, shouldHideAudioWidgetCompletely } = useAudioWidgetUI();
   const state = useAudioWidgetState();
   const game = useWanderingGame({ isMobile: state.isMobile });
   useAudioWidgetEffects(state, audioSettings, game);
@@ -63,12 +64,14 @@ const AudioWidget = React.memo(function AudioWidget() {
 
       <TipsOverlay show={state.showTipsOverlay} open={state.open} streamingActive={state.streamingActive} onClose={() => state.setShowTipsOverlay(false)} />
 
-      <MainWidget {...state} {...audioSettings} {...h} setOpen={handleSetOpen} shimmerEnabled={perf.shimmerEnabled} shimmerSettings={perf.shimmerSettings}
-        isWandering={game.isWandering} gameStats={game.gameStats} gameState={game.gameState} />
+      {!shouldHideAudioWidgetCompletely && (
+        <MainWidget {...state} {...audioSettings} {...h} setOpen={handleSetOpen} shimmerEnabled={perf.shimmerEnabled} shimmerSettings={perf.shimmerSettings}
+          isWandering={game.isWandering} gameStats={game.gameStats} gameState={game.gameState} />
+      )}
 
       {typeof document !== "undefined" && createPortal(
         <AnimatePresence>
-          {!shouldHideFloatingPlayer && (
+          {!shouldHideFloatingPlayer && !shouldHideAudioWidgetCompletely && (
             <FloatingPlayer miniPlayerRef={game.miniPlayerRef} {...state} {...audioSettings}
               isWandering={game.isWandering} wanderPosition={game.wanderPosition} morphPhase={game.morphPhase}
               isHovering={game.isHovering} setIsHovering={game.setIsHovering} isNearPlayer={game.isNearPlayer}

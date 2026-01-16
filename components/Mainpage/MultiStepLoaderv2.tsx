@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUIState } from "@/contexts/UIStateContext";
 
 interface LoadingState {
   text: string;
@@ -25,6 +26,20 @@ export const MultiStepLoaderV2 = ({
   loop = true,
 }: MultiStepLoaderV2Props) => {
   const [currentState, setCurrentState] = useState(0);
+  
+  // --- UI STATE CONTEXT: Signal to minimize audio widget while loader is active ---
+  const { setLoaderv2Open } = useUIState();
+  
+  // Use useLayoutEffect to set state BEFORE browser paint - ensures AudioWidget sees it on first render
+  useLayoutEffect(() => {
+    // When MultiStepLoaderv2 component is mounted/rendered, it's active
+    // Set it as open SYNCHRONOUSLY before browser paints
+    setLoaderv2Open(true);
+    
+    return () => {
+      setLoaderv2Open(false);
+    };
+  }, [setLoaderv2Open]);
 
   useEffect(() => {
     if (!loading) {

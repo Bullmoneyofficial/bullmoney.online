@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, memo } from 'react';
 import { createClient } from '@supabase/supabase-js'; 
 import { gsap } from 'gsap';
 import dynamic from 'next/dynamic';
@@ -15,6 +15,9 @@ import { cn } from "@/lib/utils";
 
 // --- UNIFIED SHIMMER SYSTEM ---
 import { ShimmerLine, ShimmerBorder, ShimmerSpinner, ShimmerRadialGlow } from '@/components/ui/UnifiedShimmer';
+
+// --- UI STATE CONTEXT ---
+import { useUIState } from "@/contexts/UIStateContext";
 
 // --- IMPORT SEPARATE LOADER COMPONENT ---
 import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader"; 
@@ -223,6 +226,21 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  
+  // --- UI STATE CONTEXT: Signal to minimize audio widget when pagemode is active ---
+  const { setPagemodeOpen } = useUIState();
+  
+  // Use useLayoutEffect to set state BEFORE browser paint - ensures AudioWidget sees it on first render
+  useLayoutEffect(() => {
+    // Open the pagemode state to signal audio widget to hide
+    // Use SYNCHRONOUS layout effect so AudioWidget sees this on initial render
+    setPagemodeOpen(true);
+    
+    // Cleanup: close the pagemode state when component unmounts
+    return () => {
+      setPagemodeOpen(false);
+    };
+  }, [setPagemodeOpen]);
   
   const isVantage = activeBroker === 'Vantage';
   const brokerCode = isVantage ? "BULLMONEY" : "X3R7P";

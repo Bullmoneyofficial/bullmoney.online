@@ -197,6 +197,11 @@ export function useAudioWidgetEffects(
   const { musicSource, setMusicSource, setMusicEnabled, musicEnabled, isStreamingSource, streamingEmbedUrl } = audioSettings;
   const { isWandering, gameState, gameStats } = gameHook;
 
+  // Show pull tab on mount (minimize player on page reload)
+  useEffect(() => {
+    setPlayerHidden(true);
+  }, [setPlayerHidden]);
+
   // Detect mobile/touch device
   useEffect(() => {
     const checkMobile = () => {

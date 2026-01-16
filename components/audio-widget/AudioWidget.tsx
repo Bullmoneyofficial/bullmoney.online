@@ -19,7 +19,8 @@ const AudioWidget = React.memo(function AudioWidget() {
   // Use the new UIState context for mutual exclusion with other components
   // shouldMinimizeAudioWidget tells FloatingPlayer to minimize (hide iframe behind pull tab)
   // but NOT unmount - this preserves audio playback
-  const { shouldMinimizeAudioWidget, setAudioWidgetOpen } = useAudioWidgetUI();
+  // shouldHideAudioWidgetCompletely hides the entire widget when pagemode or loaderv2 is open
+  const { shouldMinimizeAudioWidget, setAudioWidgetOpen, shouldHideAudioWidgetCompletely } = useAudioWidgetUI();
   const state = useAudioWidgetState();
   const game = useWanderingGame({ isMobile: state.isMobile });
   useAudioWidgetEffects(state, audioSettings, game);
@@ -80,27 +81,33 @@ const AudioWidget = React.memo(function AudioWidget() {
 
       <TipsOverlay show={state.showTipsOverlay} open={state.open} streamingActive={state.streamingActive} onClose={() => state.setShowTipsOverlay(false)} />
 
-      <MainWidget {...state} {...audioSettings} {...h} setOpen={handleSetOpen} shimmerEnabled={perf.shimmerEnabled} shimmerSettings={perf.shimmerSettings}
-        isWandering={game.isWandering} gameStats={game.gameStats} gameState={game.gameState} />
+      {!shouldHideAudioWidgetCompletely && (
+        <MainWidget {...state} {...audioSettings} {...h} setOpen={handleSetOpen} shimmerEnabled={perf.shimmerEnabled} shimmerSettings={perf.shimmerSettings}
+          isWandering={game.isWandering} gameStats={game.gameStats} gameState={game.gameState} />
+      )}
 
       {/*
         IMPORTANT: FloatingPlayer is ALWAYS rendered to preserve audio persistence.
         When shouldMinimizeAudioWidget is true, the player minimizes (hides iframe behind pull tab)
         but the iframe stays in the DOM so audio continues playing.
         This is the key to audio persistence across UI state changes.
+        
+        However, when pagemode or loaderv2 is open (shouldHideAudioWidgetCompletely), we don't show it at all.
       */}
-      {typeof document !== "undefined" && createPortal(
-        <FloatingPlayer miniPlayerRef={game.miniPlayerRef} {...state} {...audioSettings}
-          isWandering={game.isWandering} wanderPosition={game.wanderPosition} morphPhase={game.morphPhase}
-          isHovering={game.isHovering} setIsHovering={game.setIsHovering} isNearPlayer={game.isNearPlayer}
-          isFleeing={game.isFleeing} isReturning={game.isReturning} movementStyle={game.movementStyle}
-          speedMultiplier={game.speedMultiplier} fleeDirection={game.fleeDirection} handlePlayerInteraction={game.handlePlayerInteraction}
-          energy={game.energy} combo={game.combo} getTirednessLevel={game.getTirednessLevel} gameStats={game.gameStats}
-          gameState={game.gameState} hasStartedCatchGame={state.hasStartedCatchGame}
-          maybeShowCatchGameTutorial={h.maybeShowCatchGameTutorial} dismissCatchGameTutorial={h.dismissCatchGameTutorial}
-          showCatchGameTutorial={state.showCatchGameTutorial && !state.open && !state.playerHidden}
-          tutorialContent={tutorialContent}
-          forceMinimize={shouldMinimizeAudioWidget} />, document.body)}
+      {!shouldHideAudioWidgetCompletely && (
+        typeof document !== "undefined" && createPortal(
+          <FloatingPlayer miniPlayerRef={game.miniPlayerRef} {...state} {...audioSettings}
+            isWandering={game.isWandering} wanderPosition={game.wanderPosition} morphPhase={game.morphPhase}
+            isHovering={game.isHovering} setIsHovering={game.setIsHovering} isNearPlayer={game.isNearPlayer}
+            isFleeing={game.isFleeing} isReturning={game.isReturning} movementStyle={game.movementStyle}
+            speedMultiplier={game.speedMultiplier} fleeDirection={game.fleeDirection} handlePlayerInteraction={game.handlePlayerInteraction}
+            energy={game.energy} combo={game.combo} getTirednessLevel={game.getTirednessLevel} gameStats={game.gameStats}
+            gameState={game.gameState} hasStartedCatchGame={state.hasStartedCatchGame}
+            maybeShowCatchGameTutorial={h.maybeShowCatchGameTutorial} dismissCatchGameTutorial={h.dismissCatchGameTutorial}
+            showCatchGameTutorial={state.showCatchGameTutorial && !state.open && !state.playerHidden}
+            tutorialContent={tutorialContent}
+            forceMinimize={shouldMinimizeAudioWidget} />, document.body)
+      )}
 
       {typeof document !== "undefined" && createPortal(
         <MusicEmbedModal open={state.musicEmbedOpen} onClose={() => { SoundEffects.click(); state.setMusicEmbedOpen(false); }} />, document.body)}
