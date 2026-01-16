@@ -34,10 +34,21 @@ export const detectBrowserCapabilities = () => {
   const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua);
   const isDesktop = !isMobile;
   
-  // In-app browser detection
-  const isInAppBrowser = 
+  // Apple device detection - Premium experience for all Apple devices through 2026
+  const isIOS = /iphone|ipad|ipod/i.test(ua);
+  const isMac = /macintosh|mac os x/i.test(ua);
+  const isAppleDevice = isIOS || isMac;
+  
+  // Instagram detection - now gets full features
+  const isInstagram = /instagram|ig_/i.test(ua);
+  
+  // In-app browser detection - UPDATED: Exclude Instagram and Apple devices
+  const isInAppBrowserRaw = 
     /fbav|fban|instagram|twitter|line|telegram|wechat|whatsapp|snapchat|linkedin/i.test(ua) ||
     /webview|wv|; wv\)/i.test(ua);
+  
+  // Instagram and Apple devices get full experience, so don't mark them as restricted in-app browsers
+  const isInAppBrowser = isInAppBrowserRaw && !isInstagram && !isAppleDevice;
   
   // Performance capabilities
   const memory = (navigator as any).deviceMemory || 4;
@@ -83,10 +94,36 @@ const applyPerformanceClasses = (capabilities: ReturnType<typeof detectBrowserCa
   
   const html = document.documentElement;
   const body = document.body;
+  const ua = navigator.userAgent.toLowerCase();
+  
+  // UPDATED 2026: Detect Apple devices and Instagram for premium experience
+  const isIOS = /iphone|ipad|ipod/.test(ua);
+  const isMac = /macintosh|mac os x/i.test(ua);
+  const isAppleDevice = isIOS || isMac;
+  const isInstagram = ua.includes('instagram') || ua.includes('ig_');
   
   // Clear existing performance classes
-  html.classList.remove('desktop-optimized', 'high-performance', 'mobile-optimized', 'in-app-browser', 'display-120hz');
-  body.classList.remove('desktop-optimized', 'high-performance', 'mobile-optimized', 'in-app-browser');
+  html.classList.remove(
+    'desktop-optimized', 'high-performance', 'mobile-optimized', 
+    'in-app-browser', 'display-120hz', 'apple-premium', 'instagram-premium'
+  );
+  body.classList.remove(
+    'desktop-optimized', 'high-performance', 'mobile-optimized', 
+    'in-app-browser', 'apple-premium', 'instagram-premium'
+  );
+  
+  // UPDATED 2026: Add Apple premium and Instagram premium classes
+  if (isAppleDevice) {
+    html.classList.add('apple-premium');
+    body.classList.add('apple-premium');
+    console.log('[PerformanceSystem] Apple device detected - premium experience enabled');
+  }
+  
+  if (isInstagram) {
+    html.classList.add('instagram-premium');
+    body.classList.add('instagram-premium');
+    console.log('[PerformanceSystem] Instagram detected - premium experience enabled');
+  }
   
   if (capabilities.isDesktop) {
     html.classList.add('desktop-optimized');
@@ -105,7 +142,8 @@ const applyPerformanceClasses = (capabilities: ReturnType<typeof detectBrowserCa
     body.classList.add('mobile-optimized');
   }
   
-  if (capabilities.isInAppBrowser) {
+  // UPDATED 2026: Don't add in-app-browser class for Apple devices or Instagram
+  if (capabilities.isInAppBrowser && !isAppleDevice && !isInstagram) {
     html.classList.add('in-app-browser');
     body.classList.add('in-app-browser');
   }
@@ -138,6 +176,22 @@ const optimizeInAppBrowser = () => {
   if (typeof window === 'undefined') return;
   
   const capabilities = detectBrowserCapabilities();
+  const ua = navigator.userAgent.toLowerCase();
+  
+  // UPDATED 2026: Check for Apple device and Instagram premium experience
+  const isIOS = /iphone|ipad|ipod/.test(ua);
+  const isMac = /macintosh|mac os x/i.test(ua);
+  const isAppleDevice = isIOS || isMac;
+  const isInstagram = ua.includes('instagram') || ua.includes('ig_');
+  
+  // Skip in-app optimizations for Apple devices and Instagram
+  if (isAppleDevice || isInstagram) {
+    console.log('[PerformanceSystem] Skipping in-app browser optimizations for premium experience');
+    // Set full animation speed for premium experience
+    document.documentElement.style.setProperty('--animation-duration-multiplier', '1');
+    document.documentElement.style.setProperty('--disable-3d', '0');
+    return;
+  }
   
   if (capabilities.isInAppBrowser) {
     // Slow down animations significantly for in-app browsers

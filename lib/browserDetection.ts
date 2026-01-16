@@ -5,7 +5,12 @@
  * Detects in-app browsers (Instagram, TikTok, Facebook, etc.) that have
  * restricted WebGL/memory capabilities and can crash on heavy 3D content.
  * 
- * @version 2026.1.0
+ * SPECIAL EXCEPTIONS (Full site experience enabled):
+ * - Instagram: Full features enabled (2026 update)
+ * - Apple Devices: All Macs and iPhones get full experience through 2026
+ *   (includes Safari, Chrome on Mac/iOS, Safari WebView on iOS)
+ * 
+ * @version 2026.1.1
  */
 
 export interface BrowserInfo {
@@ -31,6 +36,11 @@ export interface BrowserInfo {
   browserName: string;
   deviceMemory: number;
   hardwareConcurrency: number;
+  // NEW: Apple device flags for premium experience
+  isAppleDevice: boolean;
+  isMac: boolean;
+  isIOS: boolean;
+  hasApplePremiumExperience: boolean;
 }
 
 // Cache the result to avoid repeated detection
@@ -59,6 +69,17 @@ export function detectBrowser(): BrowserInfo {
   const isVeryLowMemoryDevice = deviceMemory < 2;
   const isLowMemoryDevice = deviceMemory < 4;
   
+  // ============================================================================
+  // APPLE DEVICE DETECTION - Premium experience for all Apple devices through 2026
+  // ============================================================================
+  const isIOS = /iphone|ipad|ipod/.test(ua);
+  const isMac = /macintosh|mac os x/i.test(ua);
+  const isAppleDevice = isIOS || isMac;
+  
+  // Apple devices get premium experience regardless of browser
+  // This includes Safari, Chrome on Mac/iOS, and even in-app browsers on Apple devices
+  const hasApplePremiumExperience = isAppleDevice;
+  
   // In-app browser detection
   const isInstagram = ua.includes('instagram') || ua.includes('ig_');
   const isTikTok = ua.includes('tiktok') || ua.includes('bytedance') || ua.includes('musical_ly');
@@ -70,7 +91,6 @@ export function detectBrowser(): BrowserInfo {
   const isLine = ua.includes('line/');
   
   // Safari WebView detection (iOS apps that use WKWebView)
-  const isIOS = /iphone|ipad|ipod/.test(ua);
   const isSafari = /safari/.test(ua) && !/chrome|crios|fxios/.test(ua);
   const isSafariWebView = isIOS && !isSafari && !standalone && !ua.includes('crios');
   
@@ -79,8 +99,9 @@ export function detectBrowser(): BrowserInfo {
   const isMobileChrome = /android/.test(ua) && /chrome/.test(ua);
   
   // Combined in-app browser check
-  const isInAppBrowser = 
-    isInstagram || 
+  // EXCEPTIONS: Instagram is now enabled, Apple devices get full experience
+  const isInAppBrowserRaw = 
+    isInstagram ||  // Instagram is detected but won't be restricted
     isTikTok || 
     isFacebook || 
     isTwitter || 
@@ -89,6 +110,10 @@ export function detectBrowser(): BrowserInfo {
     isWeChat ||
     isLine ||
     isSafariWebView;
+  
+  // Instagram gets full features, Apple devices get full features
+  // Only restrict non-Apple, non-Instagram in-app browsers
+  const isInAppBrowser = isInAppBrowserRaw && !isInstagram && !hasApplePremiumExperience;
   
   // Check for WebGL support
   let canHandleWebGL = true;
@@ -114,22 +139,37 @@ export function detectBrowser(): BrowserInfo {
   }
   
   // Determine capabilities
-  // In-app browsers have severe WebGL memory limits - disable 3D entirely
-  const canHandle3D = canHandleWebGL && !isInAppBrowser && !isVeryLowMemoryDevice;
+  // UPDATED 2026: Instagram and Apple devices get FULL capabilities
+  // In-app browsers have severe WebGL memory limits - but not on Apple devices or Instagram
+  const canHandle3D = canHandleWebGL && (
+    hasApplePremiumExperience ||  // Apple devices always can handle 3D
+    isInstagram ||                 // Instagram now enabled
+    (!isInAppBrowser && !isVeryLowMemoryDevice)
+  );
   
-  // WebSocket can fail in some in-app browsers
-  const canHandleWebSocket = !isInstagram && !isTikTok && 'WebSocket' in window;
+  // WebSocket - now enabled for Instagram and Apple devices
+  const canHandleWebSocket = (
+    hasApplePremiumExperience ||
+    isInstagram ||
+    (!isTikTok && 'WebSocket' in window)
+  );
   
-  // Audio context is restricted in many in-app browsers
-  const canHandleAudio = !isInAppBrowser && ('AudioContext' in window || 'webkitAudioContext' in window);
+  // Audio context - enabled for Instagram and Apple devices
+  const canHandleAudio = (
+    hasApplePremiumExperience ||
+    isInstagram ||
+    (!isInAppBrowser && ('AudioContext' in window || 'webkitAudioContext' in window))
+  );
   
   // Reduce animations for performance
+  // Apple devices and Instagram get full animations
   const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
   const shouldReduceAnimations = 
     prefersReducedMotion || 
-    isInAppBrowser || 
-    isLowMemoryDevice ||
-    (isIOS && deviceMemory < 4);
+    (!hasApplePremiumExperience && !isInstagram && (
+      isInAppBrowser || 
+      isLowMemoryDevice
+    ));
   
   // Determine browser name for logging
   let browserName = 'Unknown';
@@ -171,17 +211,26 @@ export function detectBrowser(): BrowserInfo {
     browserName,
     deviceMemory,
     hardwareConcurrency,
+    // Apple device flags
+    isAppleDevice,
+    isMac,
+    isIOS,
+    hasApplePremiumExperience,
   };
   
   // Log detection for debugging
-  if (isInAppBrowser) {
-    console.log(`[BrowserDetection] In-app browser detected: ${browserName}`);
+  if (isInAppBrowserRaw || hasApplePremiumExperience) {
+    console.log(`[BrowserDetection] Browser detected: ${browserName}`);
+    console.log(`[BrowserDetection] Apple Device: ${isAppleDevice} (Mac: ${isMac}, iOS: ${isIOS})`);
+    console.log(`[BrowserDetection] Instagram: ${isInstagram}`);
+    console.log(`[BrowserDetection] Premium Experience Enabled: ${hasApplePremiumExperience || isInstagram}`);
     console.log(`[BrowserDetection] Capabilities:`, {
       canHandle3D,
       canHandleWebGL,
       canHandleWebSocket,
       canHandleAudio,
       shouldReduceAnimations,
+      isInAppBrowser,
     });
   }
   
@@ -212,6 +261,11 @@ function getDefaultInfo(): BrowserInfo {
     browserName: 'Unknown',
     deviceMemory: 4,
     hardwareConcurrency: 4,
+    // Apple device flags - default to false for SSR
+    isAppleDevice: false,
+    isMac: false,
+    isIOS: false,
+    hasApplePremiumExperience: false,
   };
 }
 

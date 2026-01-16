@@ -178,6 +178,12 @@ export function PerformanceProvider({
       const browserInfo = detectBrowser();
       setIsInAppBrowser(browserInfo.isInAppBrowser);
       
+      // UPDATED 2026: Detect Apple devices and Instagram for premium experience
+      const ua = navigator.userAgent.toLowerCase();
+      const isAppleDevice = /iphone|ipad|ipod/i.test(ua) || /macintosh|mac os x/i.test(ua);
+      const isInstagram = ua.includes('instagram') || ua.includes('ig_');
+      const hasPremiumExperience = isAppleDevice || isInstagram;
+      
       // Initialize Safari-specific optimizations
       const safariInfo = detectSafari();
       if (safariInfo.isSafari) {
@@ -185,15 +191,32 @@ export function PerformanceProvider({
         applySafariMemoryOptimizations();
         console.log('[PerformanceProvider] Safari optimizations applied');
         
-        // Safari on mobile needs extra careful handling
-        if (safariInfo.isMobileSafari) {
+        // Safari on mobile needs extra careful handling - but Apple devices still get premium
+        if (safariInfo.isMobileSafari && !isAppleDevice) {
           console.log('[PerformanceProvider] Mobile Safari detected - enabling conservative mode');
           setIsHighEndDesktop(false);
           return;
         }
       }
       
-      if (browserInfo.isInAppBrowser) {
+      // UPDATED 2026: Apple devices and Instagram get premium experience regardless of browser
+      if (hasPremiumExperience) {
+        console.log('[PerformanceProvider] Premium experience enabled for:', isAppleDevice ? 'Apple device' : 'Instagram');
+        setIsHighEndDesktop(true);
+        
+        // Add appropriate premium classes to both html and body
+        if (isAppleDevice) {
+          document.documentElement.classList.add('apple-premium', 'high-performance');
+          document.body?.classList.add('apple-premium', 'high-performance');
+        }
+        if (isInstagram) {
+          document.documentElement.classList.add('instagram-premium', 'high-performance');
+          document.body?.classList.add('instagram-premium', 'high-performance');
+        }
+        // Continue with detection but don't return early
+      }
+      
+      if (browserInfo.isInAppBrowser && !hasPremiumExperience) {
         console.log('[PerformanceProvider] In-app browser detected:', browserInfo.browserName);
         console.log('[PerformanceProvider] Disabling heavy features for stability');
         setIsHighEndDesktop(false);
@@ -271,8 +294,14 @@ export function PerformanceProvider({
   }, []);
 
   // Wrap with Lenis if smooth scroll is enabled.
-  // IMPORTANT: Disable Lenis on mobile and in-app browsers - use native scroll for best touch experience
-  const shouldUseSmoothScroll = enableSmoothScroll && !isMobile && !isInAppBrowser;
+  // IMPORTANT: Disable Lenis on mobile and non-premium in-app browsers
+  // UPDATED 2026: Apple devices and Instagram get smooth scroll even in in-app browser
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
+  const isAppleDevice = /iphone|ipad|ipod/i.test(ua) || /macintosh|mac os x/i.test(ua);
+  const isInstagram = ua.includes('instagram') || ua.includes('ig_');
+  const hasPremiumExperience = isAppleDevice || isInstagram;
+  
+  const shouldUseSmoothScroll = enableSmoothScroll && !isMobile && (!isInAppBrowser || hasPremiumExperience);
   
   if (shouldUseSmoothScroll) {
     return (

@@ -241,10 +241,51 @@ const TIER_CONFIGS: Record<DeviceTier, DeviceTierConfig> = {
 };
 
 /**
+ * Detect if user has Apple device or Instagram premium experience
+ */
+function detectPremiumExperience(): { hasApplePremiumExperience: boolean; isInstagram: boolean } {
+  if (typeof navigator === 'undefined') {
+    return { hasApplePremiumExperience: false, isInstagram: false };
+  }
+  
+  const ua = navigator.userAgent.toLowerCase();
+  const isIOS = /iphone|ipad|ipod/.test(ua);
+  const isMac = /macintosh|mac os x/i.test(ua);
+  const isAppleDevice = isIOS || isMac;
+  const isInstagram = ua.includes('instagram') || ua.includes('ig_');
+  
+  return {
+    hasApplePremiumExperience: isAppleDevice,
+    isInstagram,
+  };
+}
+
+/**
  * Compute device tier from DeviceInfo
+ * UPDATED 2026: Apple devices and Instagram always get 'high' or 'ultra' tier
  */
 function computeDeviceTier(info: DeviceInfo | null): DeviceTier {
   if (!info) return 'high';
+  
+  // UPDATED 2026: Apple devices and Instagram get premium experience
+  const { hasApplePremiumExperience, isInstagram } = detectPremiumExperience();
+  
+  // Apple devices always get at least 'high' tier
+  if (hasApplePremiumExperience || isInstagram) {
+    const gpuTier = info.performance?.gpu?.tier || 'high';
+    const memory = info.performance?.memory?.total || 8;
+    const cores = info.performance?.cpu?.cores || 8;
+    
+    // Apple Silicon Macs and newer iPhones get ultra
+    if (gpuTier === 'high' && memory >= 8 && cores >= 6) {
+      console.log('[FpsOptimizer] Apple/Instagram premium: ultra tier');
+      return 'ultra';
+    }
+    
+    // All other Apple devices get high
+    console.log('[FpsOptimizer] Apple/Instagram premium: high tier');
+    return 'high';
+  }
   
   const gpuTier = info.performance?.gpu?.tier || 'medium';
   const memory = info.performance?.memory?.total || 4;
@@ -559,7 +600,17 @@ export const FpsOptimizerProvider = memo(function FpsOptimizerProvider({
     if (typeof window === 'undefined') return;
     
     const info = safeGetDeviceInfo();
-    const tier = computeDeviceTier(info);
+    let tier = computeDeviceTier(info);
+    
+    // UPDATED 2026: Apple devices and Instagram get premium experience
+    const { hasApplePremiumExperience, isInstagram } = detectPremiumExperience();
+    
+    // Ensure Apple/Instagram users get at least 'high' tier
+    if ((hasApplePremiumExperience || isInstagram) && (tier === 'low' || tier === 'minimal' || tier === 'medium')) {
+      tier = 'high';
+      console.log('[FpsOptimizer] Boosted to high tier for Apple/Instagram premium experience');
+    }
+    
     const tierConfig = TIER_CONFIGS[tier];
     
     setDeviceTier(tier);
@@ -574,11 +625,18 @@ export const FpsOptimizerProvider = memo(function FpsOptimizerProvider({
     setIsSafari(safari);
     setIsIOS(ios);
     setConfig(tierConfig);
-    setShimmerQuality(tierConfig.shimmerQuality);
-    setSplineQuality(tierConfig.splineQuality);
+    
+    // UPDATED 2026: Apple/Instagram always get high shimmer quality
+    if (hasApplePremiumExperience || isInstagram) {
+      setShimmerQuality('high');
+      setSplineQuality(tierConfig.splineQuality === 'disabled' ? 'high' : tierConfig.splineQuality);
+    } else {
+      setShimmerQuality(tierConfig.shimmerQuality);
+      setSplineQuality(tierConfig.splineQuality);
+    }
     setTargetFrameRate(tierConfig.targetFrameRate);
     
-    console.log(`[FpsOptimizer] Device tier: ${tier}, Mobile: ${window.innerWidth < 768}, Safari: ${safari}`);
+    console.log(`[FpsOptimizer] Device tier: ${tier}, Mobile: ${window.innerWidth < 768}, Safari: ${safari}, ApplePremium: ${hasApplePremiumExperience}, Instagram: ${isInstagram}`);
   }, []);
   
   // Initial setup

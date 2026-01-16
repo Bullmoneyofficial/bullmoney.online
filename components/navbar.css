@@ -536,3 +536,105 @@ body {
     animation: none !important;
   }
 }
+
+/* ============================================================================
+   APPLE DEVICE & INSTAGRAM MOBILE PREMIUM SHIMMER (2026 Update)
+   Full quality LEFT-TO-RIGHT shimmer on navbar for Apple devices and Instagram
+   ============================================================================ */
+
+/* Enable full shimmer on Apple mobile navbar */
+@media (max-width: 768px) {
+  /* Apple premium - full quality shimmer on navbar */
+  html.apple-premium .navbar-shimmer,
+  html.instagram-premium .navbar-shimmer {
+    overflow: visible !important;
+  }
+  
+  /* Mobile controls glass - enhanced glow on Apple */
+  html.apple-premium .mobile-controls-glass,
+  html.instagram-premium .mobile-controls-glass {
+    box-shadow: 
+      0 0 30px rgba(59, 130, 246, 0.5),
+      0 0 60px rgba(59, 130, 246, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(59, 130, 246, 0.7) !important;
+  }
+  
+  /* Shimmer border animation LEFT TO RIGHT on Apple */
+  html.apple-premium .navbar-shimmer::before,
+  html.instagram-premium .navbar-shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(59, 130, 246, 0.4) 15%,
+      rgba(147, 197, 253, 1) 50%,
+      rgba(59, 130, 246, 0.4) 85%,
+      transparent 100%
+    );
+    animation: navbarShimmerLTR 6s ease-in-out infinite;
+    z-index: 10;
+    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+  }
+  
+  /* Bottom shimmer line on Apple */
+  html.apple-premium .navbar-shimmer::after,
+  html.instagram-premium .navbar-shimmer::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(59, 130, 246, 0.4) 15%,
+      rgba(147, 197, 253, 1) 50%,
+      rgba(59, 130, 246, 0.4) 85%,
+      transparent 100%
+    );
+    animation: navbarShimmerLTR 6s ease-in-out infinite;
+    animation-delay: 1.5s;
+    z-index: 10;
+    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+  }
+  
+  /* Nav buttons glow on Apple mobile */
+  html.apple-premium .nav-button,
+  html.instagram-premium .nav-button {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3) !important;
+  }
+  
+  html.apple-premium .nav-button:active,
+  html.instagram-premium .nav-button:active {
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.5) !important;
+  }
+}
+
+/* LEFT TO RIGHT shimmer keyframe for navbar */
+@keyframes navbarShimmerLTR {
+  0% {
+    left: -100%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 12px rgba(147, 197, 253, 0.8));
+  }
+  90% {
+    opacity: 0.5;
+  }
+  100% {
+    left: 200%;
+    opacity: 0;
+  }
+}

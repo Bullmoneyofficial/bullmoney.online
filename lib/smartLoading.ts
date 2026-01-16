@@ -63,12 +63,20 @@ class SmartLoadingManager {
     // Check for in-app browsers that can't handle heavy content
     const browserInfo = detectBrowser();
     const isInAppBrowser = browserInfo.isInAppBrowser;
+    
+    // UPDATED 2026: Apple devices and Instagram get full experience
+    const hasApplePremiumExperience = browserInfo.hasApplePremiumExperience;
+    const isInstagram = browserInfo.isInstagram;
+    const hasPremiumExperience = hasApplePremiumExperience || isInstagram;
 
     const isLowEnd = memory < 4 || cores < 4 || this.connection.effectiveType === '2g' || this.connection.effectiveType === 'slow-2g';
 
-    // Determine quality level - 'disabled' for in-app browsers
+    // Determine quality level - Apple devices and Instagram always get 'high'
     let quality: 'high' | 'medium' | 'low' | 'disabled' = 'high';
-    if (isInAppBrowser || !browserInfo.canHandle3D) {
+    if (hasPremiumExperience) {
+      // Apple devices and Instagram get HIGH quality always
+      quality = 'high';
+    } else if (isInAppBrowser || !browserInfo.canHandle3D) {
       quality = 'disabled';
     } else if (isLowEnd || this.connection.saveData) {
       quality = 'low';

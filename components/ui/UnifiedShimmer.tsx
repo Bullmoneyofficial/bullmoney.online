@@ -756,6 +756,59 @@ const ShimmerStyles = () => (
       opacity: 1 !important;
     }
 
+    /* =================================================================
+       APPLE DEVICE & INSTAGRAM PREMIUM EXPERIENCE (2026 Update)
+       Full quality animations for all Apple devices (Mac, iPhone, iPad)
+       and Instagram in-app browser regardless of detected FPS
+       ================================================================= */
+    
+    /* Apple devices get FULL QUALITY animations */
+    html.apple-premium .shimmer-line,
+    html.apple-premium .shimmer-spin,
+    html.apple-premium .shimmer-ltr,
+    html.apple-premium .shimmer-pulse,
+    html.apple-premium .shimmer-glow,
+    html.apple-premium .shimmer-wave,
+    html.apple-premium .shimmer-ripple,
+    html.instagram-premium .shimmer-line,
+    html.instagram-premium .shimmer-spin,
+    html.instagram-premium .shimmer-ltr,
+    html.instagram-premium .shimmer-pulse,
+    html.instagram-premium .shimmer-glow,
+    html.instagram-premium .shimmer-wave,
+    html.instagram-premium .shimmer-ripple {
+      animation-duration: 8s !important;
+      opacity: 1 !important;
+      filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6)) !important;
+      will-change: transform, opacity, filter !important;
+    }
+    
+    /* Apple devices - override any low FPS settings */
+    html.apple-premium.fps-low .shimmer-line,
+    html.apple-premium.fps-low .shimmer-spin,
+    html.apple-premium.fps-minimal .shimmer-line,
+    html.apple-premium.fps-minimal .shimmer-spin,
+    html.instagram-premium.fps-low .shimmer-line,
+    html.instagram-premium.fps-low .shimmer-spin,
+    html.instagram-premium.fps-minimal .shimmer-line,
+    html.instagram-premium.fps-minimal .shimmer-spin {
+      animation-duration: 10s !important;
+      opacity: 0.95 !important;
+      filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.5)) !important;
+    }
+    
+    /* Apple devices in shimmer-quality-disabled should still work */
+    html.apple-premium.shimmer-quality-disabled .shimmer-line,
+    html.apple-premium.shimmer-quality-disabled .shimmer-spin,
+    html.apple-premium.shimmer-quality-disabled .shimmer-glow,
+    html.instagram-premium.shimmer-quality-disabled .shimmer-line,
+    html.instagram-premium.shimmer-quality-disabled .shimmer-spin,
+    html.instagram-premium.shimmer-quality-disabled .shimmer-glow {
+      animation: unified-shimmer-ltr 10s ease-in-out infinite !important;
+      opacity: 0.9 !important;
+      display: block !important;
+    }
+
     /* iOS/Safari specific - slower animations but KEEP GLOW AESTHETIC */
     /* NOTE: Only target actual shimmer elements, not containers */
     html.is-ios .shimmer-line,
@@ -869,6 +922,192 @@ const ShimmerStyles = () => (
       .shimmer-ripple {
         animation-duration: 2s;
         opacity: 0.6;
+      }
+    }
+    
+    /* =================================================================
+       APPLE DEVICE & INSTAGRAM MOBILE PREMIUM SHIMMER (2026 Update)
+       Full quality LEFT-TO-RIGHT shimmer animations on mobile for
+       navbar, audio widget buttons, and all interactive elements
+       ================================================================= */
+    
+    /* Apple devices on mobile get FULL shimmer animations */
+    @media (max-width: 768px) {
+      /* Navbar shimmer - LEFT TO RIGHT on Apple mobile */
+      html.apple-premium .navbar-shimmer .shimmer-line,
+      html.apple-premium .navbar-shimmer .shimmer-spin,
+      html.apple-premium .navbar-shimmer .shimmer-ltr,
+      html.instagram-premium .navbar-shimmer .shimmer-line,
+      html.instagram-premium .navbar-shimmer .shimmer-spin,
+      html.instagram-premium .navbar-shimmer .shimmer-ltr {
+        animation: unified-shimmer-ltr 8s ease-in-out infinite !important;
+        opacity: 1 !important;
+        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6)) !important;
+        will-change: transform, opacity !important;
+      }
+      
+      /* Audio widget shimmer - LEFT TO RIGHT on Apple mobile */
+      html.apple-premium .audio-shimmer .shimmer-line,
+      html.apple-premium .audio-shimmer .shimmer-spin,
+      html.apple-premium .audio-shimmer .shimmer-ltr,
+      html.instagram-premium .audio-shimmer .shimmer-line,
+      html.instagram-premium .audio-shimmer .shimmer-spin,
+      html.instagram-premium .audio-shimmer .shimmer-ltr {
+        animation: unified-shimmer-ltr 8s ease-in-out infinite !important;
+        opacity: 1 !important;
+        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6)) !important;
+        will-change: transform, opacity !important;
+      }
+      
+      /* All shimmer elements on Apple mobile get full quality */
+      html.apple-premium .shimmer-line,
+      html.apple-premium .shimmer-spin,
+      html.apple-premium .shimmer-ltr,
+      html.apple-premium .shimmer-glow,
+      html.apple-premium .shimmer-pulse,
+      html.instagram-premium .shimmer-line,
+      html.instagram-premium .shimmer-spin,
+      html.instagram-premium .shimmer-ltr,
+      html.instagram-premium .shimmer-glow,
+      html.instagram-premium .shimmer-pulse {
+        animation-duration: 8s !important;
+        opacity: 1 !important;
+        filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.5)) !important;
+      }
+      
+      /* Shimmer border on Apple mobile - vibrant LEFT TO RIGHT */
+      html.apple-premium .shimmer-border,
+      html.instagram-premium .shimmer-border {
+        animation: unified-border-ltr 6s ease-in-out infinite !important;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(59, 130, 246, 0.4) 15%,
+          rgba(147, 197, 253, 1) 50%,
+          rgba(59, 130, 246, 0.4) 85%,
+          transparent 100%
+        ) !important;
+        opacity: 1 !important;
+      }
+      
+      /* Mobile controls glass effect with shimmer on Apple */
+      html.apple-premium .mobile-controls-glass,
+      html.instagram-premium .mobile-controls-glass {
+        box-shadow: 0 0 30px rgba(59, 130, 246, 0.4), 
+                    inset 0 0 20px rgba(59, 130, 246, 0.1) !important;
+      }
+      
+      /* Button hover/glow effects on Apple mobile */
+      html.apple-premium button .shimmer-glow,
+      html.apple-premium [role="button"] .shimmer-glow,
+      html.instagram-premium button .shimmer-glow,
+      html.instagram-premium [role="button"] .shimmer-glow {
+        animation: unified-glow 4s ease-in-out infinite !important;
+        box-shadow: 0 0 25px rgba(59, 130, 246, 0.5),
+                    0 0 50px rgba(147, 197, 253, 0.3) !important;
+        opacity: 1 !important;
+      }
+      
+      /* =================================================================
+         AUDIO WIDGET BUTTONS - LEFT TO RIGHT SHIMMER ON APPLE/INSTAGRAM
+         ================================================================= */
+      
+      /* Audio widget button shimmer overlay - sweeps left to right */
+      html.apple-premium .audio-shimmer button::before,
+      html.apple-premium .audio-shimmer [role="button"]::before,
+      html.instagram-premium .audio-shimmer button::before,
+      html.instagram-premium .audio-shimmer [role="button"]::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(59, 130, 246, 0.15) 25%,
+          rgba(147, 197, 253, 0.4) 50%,
+          rgba(59, 130, 246, 0.15) 75%,
+          transparent 100%
+        );
+        animation: buttonShimmerLTR 4s ease-in-out infinite;
+        pointer-events: none;
+        z-index: 1;
+        border-radius: inherit;
+      }
+      
+      /* Audio widget play/pause button - enhanced shimmer */
+      html.apple-premium .audio-shimmer button[class*="rounded-xl"]::after,
+      html.instagram-premium .audio-shimmer button[class*="rounded-xl"]::after {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(59, 130, 246, 0.3) 30%,
+          rgba(147, 197, 253, 0.6) 50%,
+          rgba(59, 130, 246, 0.3) 70%,
+          transparent 100%
+        );
+        border-radius: inherit;
+        animation: buttonBorderLTR 5s ease-in-out infinite;
+        pointer-events: none;
+        z-index: -1;
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask-composite: exclude;
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        padding: 2px;
+      }
+      
+      /* Audio source buttons glow on Apple mobile */
+      html.apple-premium .audio-shimmer button,
+      html.instagram-premium .audio-shimmer button {
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 0 12px rgba(59, 130, 246, 0.25) !important;
+      }
+      
+      html.apple-premium .audio-shimmer button:active,
+      html.instagram-premium .audio-shimmer button:active {
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.5) !important;
+      }
+    }
+    
+    /* LEFT TO RIGHT shimmer keyframes for buttons */
+    @keyframes buttonShimmerLTR {
+      0% {
+        left: -100%;
+        opacity: 0;
+      }
+      15% {
+        opacity: 0.6;
+      }
+      50% {
+        opacity: 1;
+      }
+      85% {
+        opacity: 0.6;
+      }
+      100% {
+        left: 200%;
+        opacity: 0;
+      }
+    }
+    
+    @keyframes buttonBorderLTR {
+      0% {
+        background-position: -200% center;
+        filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.3));
+      }
+      50% {
+        filter: drop-shadow(0 0 10px rgba(147, 197, 253, 0.6));
+      }
+      100% {
+        background-position: 200% center;
+        filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.3));
       }
     }
     

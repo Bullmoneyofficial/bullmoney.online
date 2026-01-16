@@ -57,11 +57,19 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Check for in-app browsers - disable Lenis entirely
+    // Check for in-app browsers - but allow Apple devices and Instagram (2026 update)
     const browserInfo = detectBrowser();
-    if (browserInfo.isInAppBrowser) {
+    const hasApplePremiumExperience = browserInfo.hasApplePremiumExperience || false;
+    const isInstagram = browserInfo.isInstagram || false;
+    
+    // UPDATED 2026: Apple devices and Instagram get full Lenis experience
+    if (browserInfo.isInAppBrowser && !hasApplePremiumExperience && !isInstagram) {
       console.log('[Lenis] Disabled for in-app browser:', browserInfo.browserName);
       return;
+    }
+    
+    if (hasApplePremiumExperience || isInstagram) {
+      console.log('[Lenis] Enabled for premium experience:', browserInfo.browserName, '(Apple:', hasApplePremiumExperience, ', Instagram:', isInstagram, ')');
     }
 
     const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
