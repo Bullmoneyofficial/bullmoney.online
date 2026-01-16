@@ -1,671 +1,1247 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Sparkles, X, LogOut, Trash2, Plus, Loader2, 
-  Edit2, Upload, ImageIcon, AlertCircle, 
-  FileText, Layers, Grid, Share2, Video, DollarSign, Clock, Wrench, RefreshCw,
-  Users, Search, CheckCircle2, HelpCircle, ChevronRight, LayoutDashboard, ChevronDown
+  X, Trash2, Plus, Loader2, Save, Eye, EyeOff,
+  Video, Radio, Youtube, Tv, Settings, LogOut,
+  ExternalLink, GripVertical, Check, AlertCircle,
+  RefreshCw, Link2, Play, Clock, ListVideo, Edit3,
+  ChevronDown, ChevronUp, FolderPlus, Folder
 } from "lucide-react";
+import { createSupabaseClient } from "@/lib/supabase";
+import { useShop } from "@/components/ShopContext";
 
-// --- CONTEXT ---
-import { useStudio, type ProjectFormData, type ServiceItem } from "@/context/StudioContext"; 
-
-// --- ERGONOMIC UI COMPONENTS ---
-
-const HelpTooltip = ({ text, active, side = "top" }: { text: string, active: boolean, side?: "top" | "bottom" | "left" | "right" }) => {
-  if (!active) return null;
-  const positionClasses = {
-      top: "bottom-full mb-3 left-1/2 -translate-x-1/2",
-      bottom: "top-full mt-3 left-1/2 -translate-x-1/2",
-      left: "right-full mr-3 top-1/2 -translate-y-1/2",
-      right: "left-full ml-3 top-1/2 -translate-y-1/2"
-  };
-  return (
-    <motion.div 
-        initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
-        className={`absolute z-[50] w-48 p-3 bg-blue-600 text-white text-[12px] font-medium leading-snug rounded-xl shadow-xl border-2 border-blue-400 pointer-events-none ${positionClasses[side]}`}
-    >
-        <div className="flex items-start gap-2">
-            <HelpCircle size={16} className="mt-0.5 shrink-0 text-blue-200 fill-blue-800" />
-            <span>{text}</span>
-        </div>
-        <div className={`absolute w-3 h-3 bg-blue-600 rotate-45 border-r border-b border-blue-400 ${side === 'top' ? '-bottom-1.5 left-1/2 -translate-x-1/2' : ''} ${side === 'bottom' ? '-top-1.5 left-1/2 -translate-x-1/2 border-t border-l border-transparent border-r-0 border-b-0 bg-blue-600 border-blue-400' : ''}`} />
-    </motion.div>
-  );
-};
-
-// FIX: Hidden label on mobile (hidden md:block) to save horizontal space
-const NavPill = ({ active, onClick, icon: Icon, label }: any) => (
-  <button onClick={onClick} className={`flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-xl transition-all duration-200 w-full ${active ? "bg-amber-500 text-black shadow-lg shadow-amber-500/20 scale-[1.02]" : "bg-neutral-900 text-neutral-400 hover:bg-neutral-800 hover:text-white"}`}>
-    <Icon size={20} strokeWidth={active ? 2.5 : 2} />
-    <span className="text-[10px] font-bold uppercase tracking-wide hidden md:block">{label}</span>
-  </button>
-);
-
-const SectionHeader = ({ title, sub }: { title: string, sub: string }) => (
-  <div className="mb-6 flex items-center gap-4">
-    <div className="h-10 w-1 bg-amber-500 rounded-full shrink-0" />
-    <div>
-      <h3 className="text-white font-bold text-xl tracking-tight">{title}</h3>
-      <p className="text-neutral-500 text-xs">{sub}</p>
-    </div>
-  </div>
-);
-
-const InputGroup = ({ label, children, className, helpText, helpActive }: { label: string; children: React.ReactNode, className?: string, helpText?: string, helpActive?: boolean }) => (
-  <div className={`mb-5 relative ${className}`}>
-    <label className="mb-2 block text-[11px] font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2">{label}</label>
-    {children}
-    {helpText && <HelpTooltip active={!!helpActive} text={helpText} side="top" />}
-  </div>
-);
-
-// --- 1. LOGIN SCREEN ---
-function AdminLogin() {
-  const { login } = useStudio();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    const result = await login(email.trim().toLowerCase(), password.trim());
-    if (!result.success) {
-      setError(result.msg || "Credenciais inválidas.");
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="w-full max-w-sm mx-4 overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-950 shadow-2xl relative z-[1000]" onClick={(e) => e.stopPropagation()}>
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-amber-500/20 blur-[50px] pointer-events-none" />
-      <div className="p-8 relative z-10 flex flex-col items-center">
-        <div className="mb-6"><div className="inline-flex p-3 bg-neutral-900 rounded-2xl border border-neutral-800 shadow-lg"><Sparkles className="h-6 w-6 text-amber-500 fill-amber-500/20" /></div></div>
-        <h2 className="font-serif text-2xl text-white mb-1">Bem-vinda</h2>
-        <p className="text-neutral-400 text-xs uppercase tracking-widest mb-8">Painel Administrativo</p>
-        <form onSubmit={handleSubmit} className="w-full space-y-5">
-          <div className="space-y-1">
-            <label className="text-[10px] uppercase font-bold text-neutral-500 ml-1 block">Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input-login" placeholder="admin@studio.com" autoFocus />
-          </div>
-          <div className="space-y-1">
-             <label className="text-[10px] uppercase font-bold text-neutral-500 ml-1 block">Senha</label>
-             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="input-login" placeholder="••••••••" />
-          </div>
-          {error && <div className="flex items-center justify-center gap-2 text-red-400 text-xs bg-red-950/30 p-3 rounded-lg border border-red-900/50 mt-2"><span className="font-bold">Erro:</span> {error}</div>}
-          <button type="submit" disabled={isLoading} className="w-full bg-white text-black font-bold h-12 rounded-xl mt-6 hover:bg-neutral-200 active:scale-[0.98] transition-all shadow-lg flex items-center justify-center gap-2 uppercase tracking-wider text-sm">
-            {isLoading ? <Loader2 className="animate-spin h-5 w-5 text-black" /> : "ENTRAR"}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
+// Types
+interface LiveStreamVideo {
+  id: string;
+  title: string;
+  youtube_id: string;
+  is_live: boolean;
+  order_index: number;
+  playlist_id?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
-// --- 2. DASHBOARD ---
-function Dashboard({ onClose }: { onClose: () => void }) {
-  const { 
-    state, logout, uploadFile,
-    updateHero, updateAbout,
-    addProject, updateProject, deleteProject,
-    addServiceCategory, deleteServiceCategory,
-    addServiceItem, updateServiceItem, deleteServiceItem,
-    addGalleryItem, deleteGalleryItem,
-    updateSocialLink,
-    searchUserByEmail, updateUserLoyalty, fetchAllLoyaltyUsers
-  } = useStudio();
+interface Playlist {
+  id: string;
+  name: string;
+  description?: string;
+  created_at?: string;
+}
 
-  const [activeTab, setActiveTab] = useState<"hero" | "about" | "services" | "portfolio" | "gallery" | "socials" | "loyalty">("hero");
-  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
-  const [isUploading, setIsUploading] = useState(false);
-  const [helpMode, setHelpMode] = useState(false);
+interface LiveStreamConfig {
+  id?: string;
+  channel_url: string | null;
+  current_video_id: string | null;
+  is_live_now: boolean;
+  updated_at?: string;
+}
 
-  // Forms
-  const [heroForm, setHeroForm] = useState(state.hero);
-  const [aboutForm, setAboutForm] = useState(state.about);
-  const initialProject: ProjectFormData = { title: "", thumbnail: "", description: "", price: "", duration: "", technique: "", link: "" };
-  const [projectForm, setProjectForm] = useState<ProjectFormData>(initialProject);
-  const [editingProjectId, setEditingProjectId] = useState<number | null>(null);
+// YouTube thumbnail helper
+const getYouTubeThumbnail = (videoId: string, quality: 'default' | 'mq' | 'hq' = 'mq') => {
+  const qualityMap = { default: 'default', mq: 'mqdefault', hq: 'hqdefault' };
+  return `https://img.youtube.com/vi/${videoId}/${qualityMap[quality]}.jpg`;
+};
 
-  // Services State
-  const [newCatName, setNewCatName] = useState("");
-  const initialServiceItem: Partial<ServiceItem> = { name: "", price: "", detail_type: "", detail_time: "", detail_includes: "", image_url: "" };
-  const [serviceForm, setServiceForm] = useState<Partial<ServiceItem>>(initialServiceItem);
-  const [activeCatId, setActiveCatId] = useState<number | null>(null); 
-  const [editingServiceId, setEditingServiceId] = useState<number | null>(null); 
-
-  // Loyalty State
-  const [loyaltySearch, setLoyaltySearch] = useState("");
-  const [loyaltyUser, setLoyaltyUser] = useState<any>(null);
-  const [loyaltyMsg, setLoyaltyMsg] = useState("");
-  const [isSearchingUser, setIsSearchingUser] = useState(false);
-  const [allLoyaltyUsers, setAllLoyaltyUsers] = useState<any[]>([]);
-  const [isFetchingAllUsers, setIsFetchingAllUsers] = useState(false);
-
-  useEffect(() => {
-    if(state.hero) setHeroForm({ ...state.hero, hero_images: state.hero.hero_images || [], beam_text_1: state.hero.beam_text_1 || "", beam_text_2: state.hero.beam_text_2 || "", beam_text_3: state.hero.beam_text_3 || "" });
-    if(state.about) setAboutForm(state.about);
-  }, [state.hero, state.about]);
+// Extract YouTube ID from URL or ID
+const extractYouTubeId = (input: string): string => {
+  const trimmed = input.trim();
+  // Already an ID (11 characters, no special chars)
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
   
-  useEffect(() => {
-    if (activeTab === "loyalty" && state.isAdmin) {
-        setIsFetchingAllUsers(true);
-        fetchAllLoyaltyUsers().then(users => { setAllLoyaltyUsers(users); }).finally(() => setIsFetchingAllUsers(false));
+  // Try to extract from URL
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /^([a-zA-Z0-9_-]{11})$/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = trimmed.match(pattern);
+    if (match) return match[1];
+  }
+  
+  return trimmed;
+};
+
+// Toast notification component
+const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 50, scale: 0.9 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    exit={{ opacity: 0, y: 20, scale: 0.9 }}
+    className={`fixed bottom-6 right-6 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 ${
+      type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`}
+    style={{ zIndex: 2147483647 }}
+  >
+    {type === 'success' ? <Check className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+    <span className="font-medium text-sm">{message}</span>
+    <button onClick={onClose} className="ml-2 hover:opacity-70">
+      <X className="w-4 h-4" />
+    </button>
+  </motion.div>
+);
+
+// Main Admin Panel Content
+function AdminDashboard({ onClose }: { onClose: () => void }) {
+  const { logout } = useShop();
+  
+  // State
+  const [videos, setVideos] = useState<LiveStreamVideo[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [config, setConfig] = useState<LiveStreamConfig | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  
+  // Form state
+  const [newVideoTitle, setNewVideoTitle] = useState('');
+  const [newVideoUrl, setNewVideoUrl] = useState('');
+  const [newVideoIsLive, setNewVideoIsLive] = useState(false);
+  const [newVideoPlaylist, setNewVideoPlaylist] = useState('');
+  const [channelUrl, setChannelUrl] = useState('');
+  const [isLiveNow, setIsLiveNow] = useState(false);
+  const [currentVideoId, setCurrentVideoId] = useState('');
+  
+  // Playlist form state
+  const [newPlaylistName, setNewPlaylistName] = useState('');
+  const [showPlaylistForm, setShowPlaylistForm] = useState(false);
+  const [selectedPlaylistFilter, setSelectedPlaylistFilter] = useState<string>('all');
+  
+  // Edit state - now supports multiple videos
+  const [editingVideos, setEditingVideos] = useState<Map<string, LiveStreamVideo>>(new Map());
+  const [bulkEditMode, setBulkEditMode] = useState(false);
+  const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
+
+  // Show toast
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  // Fetch data
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const supabase = createSupabaseClient();
+      
+      // Fetch videos
+      const { data: videosData, error: videosError } = await supabase
+        .from('livestream_videos')
+        .select('*')
+        .order('order_index', { ascending: true });
+      
+      if (videosError) throw videosError;
+      
+      const normalizedVideos = (videosData || []).map(video => ({
+        ...video,
+        is_live: video.is_live === true || video.is_live === 'true'
+      }));
+      setVideos(normalizedVideos);
+      
+      // Fetch playlists
+      const { data: playlistsData, error: playlistsError } = await supabase
+        .from('livestream_playlists')
+        .select('*')
+        .order('created_at', { ascending: true });
+      
+      if (!playlistsError && playlistsData) {
+        setPlaylists(playlistsData);
+      }
+      
+      // Fetch config
+      const { data: configData, error: configError } = await supabase
+        .from('livestream_config')
+        .select('*')
+        .limit(1)
+        .single();
+      
+      if (configError && configError.code !== 'PGRST116') throw configError;
+      
+      if (configData) {
+        const normalizedConfig = {
+          ...configData,
+          is_live_now: configData.is_live_now === true || configData.is_live_now === 'true'
+        };
+        setConfig(normalizedConfig);
+        setChannelUrl(configData.channel_url || '');
+        setIsLiveNow(normalizedConfig.is_live_now);
+        setCurrentVideoId(configData.current_video_id || '');
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      showToast('Failed to load data', 'error');
+    } finally {
+      setLoading(false);
     }
-  }, [activeTab, state.isAdmin, fetchAllLoyaltyUsers]);
+  }, []);
 
-  const handleSave = async (fn: () => Promise<void>) => {
-    setSaveState("saving");
-    try { await fn(); setSaveState("saved"); setTimeout(() => setSaveState("idle"), 2000); } 
-    catch (e) { setSaveState("idle"); alert("Erro ao salvar"); console.error(e); }
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Add video
+  const handleAddVideo = async () => {
+    if (!newVideoTitle.trim() || !newVideoUrl.trim()) {
+      showToast('Please fill in title and video URL/ID', 'error');
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      const supabase = createSupabaseClient();
+      const youtubeId = extractYouTubeId(newVideoUrl);
+      
+      const { error } = await supabase
+        .from('livestream_videos')
+        .insert({
+          title: newVideoTitle.trim(),
+          youtube_id: youtubeId,
+          is_live: newVideoIsLive,
+          order_index: videos.length,
+          playlist_id: newVideoPlaylist || null,
+        });
+      
+      if (error) throw error;
+      
+      setNewVideoTitle('');
+      setNewVideoUrl('');
+      setNewVideoIsLive(false);
+      setNewVideoPlaylist('');
+      showToast('Video added successfully!', 'success');
+      fetchData();
+    } catch (error) {
+      console.error('Error adding video:', error);
+      showToast('Failed to add video', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, onSuccess: (url: string) => void) => {
-    if (!e.target.files?.[0]) return;
-    setIsUploading(true);
-    const { url, error } = await uploadFile(e.target.files[0]);
-    setIsUploading(false);
-    if (url) onSuccess(url);
-    else alert(error || "Falha no upload");
+  // Add playlist
+  const handleAddPlaylist = async () => {
+    if (!newPlaylistName.trim()) {
+      showToast('Please enter a playlist name', 'error');
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      const supabase = createSupabaseClient();
+      
+      const { error } = await supabase
+        .from('livestream_playlists')
+        .insert({
+          name: newPlaylistName.trim(),
+        });
+      
+      if (error) throw error;
+      
+      setNewPlaylistName('');
+      setShowPlaylistForm(false);
+      showToast('Playlist created!', 'success');
+      fetchData();
+    } catch (error) {
+      console.error('Error creating playlist:', error);
+      showToast('Failed to create playlist', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // Logic Helpers
-  const addHeroImage = (url: string) => setHeroForm(prev => ({ ...prev, hero_images: [...(prev.hero_images || []), url] }));
-  const removeHeroImage = (index: number) => setHeroForm(prev => ({ ...prev, hero_images: prev.hero_images.filter((_, i) => i !== index) }));
-  
-  const handleUserSearch = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setIsSearchingUser(true); setLoyaltyMsg(""); setLoyaltyUser(null);
-      try {
-          const cleanEmail = loyaltySearch.trim().toLowerCase(); 
-          if (!cleanEmail) { setLoyaltyMsg("Digite um email."); setIsSearchingUser(false); return; }
-          const user = await searchUserByEmail(cleanEmail);
-          if(user) setLoyaltyUser(user); else setLoyaltyMsg("Usuário não encontrado.");
-      } catch(err) { setLoyaltyMsg("Erro ao buscar."); }
-      setIsSearchingUser(false);
+  // Delete playlist
+  const handleDeletePlaylist = async (id: string) => {
+    if (!confirm('Delete this playlist? Videos will be unassigned but not deleted.')) return;
+    
+    setSaving(true);
+    try {
+      const supabase = createSupabaseClient();
+      
+      // Unassign videos from playlist
+      await supabase
+        .from('livestream_videos')
+        .update({ playlist_id: null })
+        .eq('playlist_id', id);
+      
+      // Delete playlist
+      const { error } = await supabase
+        .from('livestream_playlists')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      showToast('Playlist deleted!', 'success');
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting playlist:', error);
+      showToast('Failed to delete playlist', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleUpdateStamps = async (count: number) => {
-      if(!loyaltyUser) return;
-      await updateUserLoyalty(loyaltyUser.id, count);
-      setLoyaltyUser({...loyaltyUser, stamps: count});
-      setAllLoyaltyUsers(prev => prev.map(u => u.id === loyaltyUser.id ? {...u, stamps: count} : u));
+  // Start editing a video
+  const startEditingVideo = (video: LiveStreamVideo) => {
+    const newMap = new Map(editingVideos);
+    newMap.set(video.id, { ...video });
+    setEditingVideos(newMap);
+  };
+
+  // Cancel editing a video
+  const cancelEditingVideo = (id: string) => {
+    const newMap = new Map(editingVideos);
+    newMap.delete(id);
+    setEditingVideos(newMap);
+  };
+
+  // Update editing video field
+  const updateEditingVideo = (id: string, updates: Partial<LiveStreamVideo>) => {
+    const newMap = new Map(editingVideos);
+    const video = newMap.get(id);
+    if (video) {
+      newMap.set(id, { ...video, ...updates });
+      setEditingVideos(newMap);
+    }
+  };
+
+  // Save single video
+  const handleSaveVideo = async (id: string) => {
+    const video = editingVideos.get(id);
+    if (!video) return;
+    
+    setSaving(true);
+    try {
+      const supabase = createSupabaseClient();
+      
+      const { error } = await supabase
+        .from('livestream_videos')
+        .update({
+          title: video.title,
+          youtube_id: video.youtube_id,
+          is_live: video.is_live,
+          playlist_id: video.playlist_id || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', video.id);
+      
+      if (error) throw error;
+      
+      cancelEditingVideo(id);
+      showToast('Video updated!', 'success');
+      fetchData();
+    } catch (error) {
+      console.error('Error updating video:', error);
+      showToast('Failed to update video', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Save all editing videos at once
+  const handleSaveAllVideos = async () => {
+    if (editingVideos.size === 0) return;
+    
+    setSaving(true);
+    try {
+      const supabase = createSupabaseClient();
+      
+      const updates = Array.from(editingVideos.values()).map(video => ({
+        id: video.id,
+        title: video.title,
+        youtube_id: video.youtube_id,
+        is_live: video.is_live,
+        playlist_id: video.playlist_id || null,
+        updated_at: new Date().toISOString()
+      }));
+      
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('livestream_videos')
+          .update(update)
+          .eq('id', update.id);
+        if (error) throw error;
+      }
+      
+      setEditingVideos(new Map());
+      showToast(`${updates.length} videos updated!`, 'success');
+      fetchData();
+    } catch (error) {
+      console.error('Error updating videos:', error);
+      showToast('Failed to update videos', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Toggle video selection for bulk actions
+  const toggleVideoSelection = (id: string) => {
+    const newSet = new Set(selectedVideos);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedVideos(newSet);
+  };
+
+  // Select all videos
+  const selectAllVideos = () => {
+    const filtered = getFilteredVideos();
+    setSelectedVideos(new Set(filtered.map(v => v.id)));
+  };
+
+  // Deselect all
+  const deselectAllVideos = () => {
+    setSelectedVideos(new Set());
+  };
+
+  // Bulk assign to playlist
+  const bulkAssignPlaylist = async (playlistId: string | null) => {
+    if (selectedVideos.size === 0) return;
+    
+    setSaving(true);
+    try {
+      const supabase = createSupabaseClient();
+      
+      const { error } = await supabase
+        .from('livestream_videos')
+        .update({ playlist_id: playlistId, updated_at: new Date().toISOString() })
+        .in('id', Array.from(selectedVideos));
+      
+      if (error) throw error;
+      
+      setSelectedVideos(new Set());
+      showToast(`${selectedVideos.size} videos updated!`, 'success');
+      fetchData();
+    } catch (error) {
+      console.error('Error bulk updating:', error);
+      showToast('Failed to update videos', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Bulk delete
+  const bulkDeleteVideos = async () => {
+    if (selectedVideos.size === 0) return;
+    if (!confirm(`Delete ${selectedVideos.size} selected videos?`)) return;
+    
+    setSaving(true);
+    try {
+      const supabase = createSupabaseClient();
+      
+      const { error } = await supabase
+        .from('livestream_videos')
+        .delete()
+        .in('id', Array.from(selectedVideos));
+      
+      if (error) throw error;
+      
+      setSelectedVideos(new Set());
+      showToast(`${selectedVideos.size} videos deleted!`, 'success');
+      fetchData();
+    } catch (error) {
+      console.error('Error bulk deleting:', error);
+      showToast('Failed to delete videos', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Get filtered videos by playlist
+  const getFilteredVideos = () => {
+    if (selectedPlaylistFilter === 'all') return videos;
+    if (selectedPlaylistFilter === 'none') return videos.filter(v => !v.playlist_id);
+    return videos.filter(v => v.playlist_id === selectedPlaylistFilter);
+  };
+
+  // Update video - keeping for compatibility
+  const handleUpdateVideo = async () => {
+    // Now handled by handleSaveVideo
+  };
+
+  // Delete video
+  const handleDeleteVideo = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this video?')) return;
+    
+    setSaving(true);
+    try {
+      const supabase = createSupabaseClient();
+      
+      const { error } = await supabase
+        .from('livestream_videos')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      showToast('Video deleted successfully!', 'success');
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting video:', error);
+      showToast('Failed to delete video', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Save config
+  const handleSaveConfig = async () => {
+    setSaving(true);
+    try {
+      const supabase = createSupabaseClient();
+      
+      const configPayload = {
+        channel_url: channelUrl || null,
+        is_live_now: isLiveNow,
+        current_video_id: currentVideoId || null,
+        updated_at: new Date().toISOString()
+      };
+      
+      if (config?.id) {
+        const { error } = await supabase
+          .from('livestream_config')
+          .update(configPayload)
+          .eq('id', config.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('livestream_config')
+          .insert(configPayload);
+        if (error) throw error;
+      }
+      
+      showToast('Settings saved successfully!', 'success');
+      fetchData();
+    } catch (error) {
+      console.error('Error saving config:', error);
+      showToast('Failed to save settings', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Logout
+  const handleLogout = () => {
+    logout();
+    onClose();
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, scale: 0.95, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95, y: 20 }}
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
-      // FIX: Ensure it takes full width on mobile
-      className="fixed inset-0 md:inset-6 lg:inset-x-[15%] lg:inset-y-[5%] bg-neutral-950 border border-neutral-800 shadow-2xl md:rounded-3xl flex flex-col overflow-hidden z-[1000]"
+      className="w-full max-w-4xl max-h-[90vh] bg-neutral-950 border border-neutral-800 rounded-2xl shadow-2xl flex flex-col"
       onClick={(e) => e.stopPropagation()}
+      onPointerDownCapture={(e) => e.stopPropagation()}
     >
-      {/* 1. HEADER BAR */}
-      <div className="flex-none h-16 px-4 md:px-6 border-b border-neutral-800 flex justify-between items-center bg-neutral-950 z-20">
+      {/* Header */}
+      <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-neutral-800 bg-neutral-900/50">
         <div className="flex items-center gap-3">
-            <div className="bg-amber-500/10 p-2 rounded-lg"><LayoutDashboard size={20} className="text-amber-500"/></div>
-            <div>
-                <h2 className="text-white font-bold tracking-tight text-sm">Painel</h2>
-                <p className="text-neutral-500 text-[10px] uppercase tracking-wider hidden md:block">Modo Admin</p>
-            </div>
+          <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
+            <Tv className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-white font-bold text-lg">LiveStream Admin</h2>
+            <p className="text-neutral-500 text-xs">Manage videos & settings</p>
+          </div>
         </div>
-        <div className="flex gap-2 md:gap-3 items-center">
-          <button onClick={() => setHelpMode(!helpMode)} className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-full text-xs font-bold transition-all border ${helpMode ? "bg-blue-600 border-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]" : "bg-neutral-900 border-neutral-800 text-neutral-500 hover:text-white"}`}>
-            <HelpCircle size={14} /><span className="hidden md:inline">{helpMode ? "AJUDA ON" : "Ajuda?"}</span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className="p-2 rounded-lg bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 transition-all"
+            title="Refresh"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
-          <div className="h-6 w-px bg-neutral-800 mx-1" />
-          <button onClick={() => logout()} title="Sair" className="p-2 bg-neutral-900 rounded-full text-neutral-400 hover:text-red-400 hover:bg-red-900/10 transition-colors"><LogOut size={18} /></button>
-          <button onClick={onClose} title="Fechar" className="p-2 bg-neutral-900 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"><X size={18} /></button>
+          <button
+            onClick={handleLogout}
+            className="p-2 rounded-lg bg-neutral-800 text-neutral-400 hover:text-red-400 hover:bg-red-900/20 transition-all"
+            title="Logout"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 transition-all"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
       </div>
 
-      {/* 2. MAIN LAYOUT: SPLIT VIEW */}
-      <div className="flex-1 flex overflow-hidden">
-        
-        {/* LEFT SIDEBAR NAVIGATION (NARROW ON MOBILE) */}
-        {/* FIX: Reduced width on mobile (w-[60px]) to give content more room */}
-        <div className="w-[60px] md:w-[100px] bg-neutral-900/50 border-r border-neutral-800 flex-none flex flex-col gap-2 p-2 overflow-y-auto scrollbar-hide">
-            <NavPill active={activeTab === "hero"} onClick={() => setActiveTab("hero")} icon={Sparkles} label="Capa" />
-            <NavPill active={activeTab === "portfolio"} onClick={() => setActiveTab("portfolio")} icon={ImageIcon} label="Looks" />
-            <NavPill active={activeTab === "services"} onClick={() => setActiveTab("services")} icon={Layers} label="Serviços" />
-            <NavPill active={activeTab === "loyalty"} onClick={() => setActiveTab("loyalty")} icon={Users} label="Fidelidade" />
-            <NavPill active={activeTab === "about"} onClick={() => setActiveTab("about")} icon={FileText} label="Sobre" />
-            <NavPill active={activeTab === "gallery"} onClick={() => setActiveTab("gallery")} icon={Grid} label="Galeria" />
-            <NavPill active={activeTab === "socials"} onClick={() => setActiveTab("socials")} icon={Share2} label="Links" />
-        </div>
-
-        {/* RIGHT CONTENT AREA */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 relative bg-neutral-950/50">
-            {/* === HERO TAB === */}
-            {activeTab === "hero" && (
-            <div className="max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <SectionHeader title="Capa do Site (Hero)" sub="Personalize a primeira impressão do seu site." />
-                <div className="card-section mb-6 relative">
-                    <div className="flex justify-between items-center mb-4">
-                        <span className="section-label">Imagens de Fundo</span>
-                        <div className="relative">
-                            <label className="btn-secondary text-[10px] py-1.5 px-3">
-                                {isUploading ? <Loader2 className="animate-spin" size={12} /> : <Plus size={12} />} <span className="hidden md:inline ml-1">Adicionar</span>
-                                <input type="file" hidden accept="image/*" onChange={(e) => handleUpload(e, addHeroImage)} />
-                            </label>
-                            <HelpTooltip active={helpMode} text="Adicione camadas PNG transparentes para o efeito 3D." side="left" />
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {heroForm.hero_images && heroForm.hero_images.map((url, idx) => (
-                            <div key={idx} className="aspect-[2/3] relative group rounded-xl overflow-hidden bg-black border border-neutral-800">
-                                <img src={url} alt="Hero background layer" className="h-full w-full object-cover" />
-                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
-                                    <button onClick={() => removeHeroImage(idx)} className="text-red-500 bg-white p-2 rounded-full hover:scale-110 transition-transform"><Trash2 size={16}/></button>
-                                </div>
-                                <span className="absolute bottom-2 right-2 text-[10px] font-bold bg-black/50 backdrop-blur-md text-white px-2 py-0.5 rounded-md border border-white/10">{idx + 1}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="card-section space-y-4">
-                    <InputGroup label="Título Principal (Headline)" helpText="O texto grande que aparece no centro." helpActive={helpMode}>
-                        <input value={heroForm.headline} onChange={(e) => setHeroForm({ ...heroForm, headline: e.target.value })} className="input-dark text-lg" />
-                    </InputGroup>
-                    <InputGroup label="Subtítulo">
-                        <textarea rows={2} value={heroForm.subheadline} onChange={(e) => setHeroForm({ ...heroForm, subheadline: e.target.value })} className="input-dark resize-none" />
-                    </InputGroup>
-                    <InputGroup label="Texto do Botão">
-                        <input value={heroForm.button_text} onChange={(e) => setHeroForm({ ...heroForm, button_text: e.target.value })} className="input-dark" />
-                    </InputGroup>
-                </div>
-                <div className="sticky bottom-0 pt-4 bg-gradient-to-t from-neutral-950 via-neutral-950 to-transparent z-10">
-                    <button onClick={() => handleSave(() => updateHero(heroForm))} className="w-full btn-primary shadow-2xl relative">
-                         {saveState === "saving" ? <Loader2 className="animate-spin" /> : (saveState === "saved" ? "Salvo com Sucesso!" : "Salvar Alterações")}
-                    </button>
-                </div>
-            </div>
-            )}
-
-            {/* === PORTFOLIO TAB === */}
-            {activeTab === "portfolio" && (
-            <div className="max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <SectionHeader title="Portfólio" sub="Gerencie os visuais (Looks) exibidos." />
-                <div className={`card-section mb-8 transition-colors ${editingProjectId ? "border-amber-500/50 bg-amber-900/5" : ""}`}>
-                    <div className="flex flex-col md:flex-row gap-4 mb-4">
-                         <div className="w-full md:w-28 aspect-square md:h-28 bg-black rounded-xl border border-neutral-700 overflow-hidden relative group shrink-0">
-                            {projectForm.thumbnail ? <img src={projectForm.thumbnail} alt="Project thumbnail" className="h-full w-full object-cover" /> : <div className="h-full flex items-center justify-center text-neutral-600"><ImageIcon/></div>}
-                            <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center cursor-pointer transition-opacity">
-                                <Upload className="text-white mb-1" size={20}/>
-                                <span className="text-[9px] text-white font-bold uppercase">Alterar Foto</span>
-                                <input type="file" hidden accept="image/*" onChange={(e) => handleUpload(e, (url) => setProjectForm(p => ({...p, thumbnail: url})))} />
-                            </label>
-                        </div>
-                        <div className="flex-1 space-y-3">
-                             <InputGroup label="Nome do Look" className="mb-0">
-                                 <input className="input-dark" value={projectForm.title} onChange={e => setProjectForm({...projectForm, title: e.target.value})} placeholder="Título..." />
-                             </InputGroup>
-                             <div className="grid grid-cols-2 gap-3">
-                                <InputGroup label="Preço" className="mb-0">
-                                     <input className="input-dark" value={projectForm.price || ""} onChange={e => setProjectForm({...projectForm, price: e.target.value})} placeholder="€..." />
-                                </InputGroup>
-                                <InputGroup label="Duração" className="mb-0">
-                                     <input className="input-dark" value={projectForm.duration || ""} onChange={e => setProjectForm({...projectForm, duration: e.target.value})} placeholder="90m..." />
-                                </InputGroup>
-                             </div>
-                        </div>
-                    </div>
-                    
-                    <button onClick={async () => {
-                        if(!projectForm.title || !projectForm.thumbnail) return alert("Título e Foto são obrigatórios");
-                        if(editingProjectId) { await updateProject(editingProjectId, projectForm); setEditingProjectId(null); }
-                        else { await addProject(projectForm); }
-                        setProjectForm(initialProject);
-                    }} className="w-full btn-primary text-xs">
-                    {editingProjectId ? "Atualizar Look" : "Adicionar ao Portfólio"}
-                    </button>
-                    {editingProjectId && <button onClick={() => { setEditingProjectId(null); setProjectForm(initialProject); }} className="w-full mt-2 text-xs text-neutral-500 hover:text-white underline">Cancelar Edição</button>}
-                </div>
-
+      {/* Content */}
+      <div 
+        className="flex-1 overflow-y-auto p-6 space-y-6 overscroll-contain"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+          </div>
+        ) : (
+          <>
+            {/* Stream Settings */}
+            <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Settings className="w-5 h-5 text-blue-400" />
+                <h3 className="text-white font-semibold">Stream Settings</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Channel URL */}
                 <div className="space-y-2">
-                    <h4 className="section-label mb-2">Seus Looks Ativos ({state.projects.length})</h4>
-                    {state.projects.map(p => (
-                        <div key={p.id} className="flex items-center gap-4 bg-neutral-900 p-3 rounded-xl border border-neutral-800 hover:border-neutral-600 transition-colors group">
-                            <img src={p.thumbnail} alt={p.title} className="h-12 w-12 rounded-lg object-cover" />
-                            <div className="flex-1">
-                                <div className="text-white text-sm font-bold">{p.title}</div>
-                                <div className="text-neutral-500 text-xs">{p.price} • {p.duration}</div>
-                            </div>
-                            <div className="flex gap-2 opacity-100 md:opacity-50 md:group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => { setEditingProjectId(p.id); setProjectForm(p as ProjectFormData); window.scrollTo({top:0, behavior:'smooth'}); }} className="p-2 bg-neutral-800 rounded-lg hover:text-white"><Edit2 size={16}/></button>
-                                <button onClick={() => { if(confirm("Apagar?")) deleteProject(p.id); }} className="p-2 bg-neutral-800 rounded-lg hover:text-red-500"><Trash2 size={16}/></button>
-                            </div>
-                        </div>
-                    ))}
+                  <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider flex items-center gap-2">
+                    <Youtube className="w-3 h-3" /> YouTube Channel URL
+                  </label>
+                  <input
+                    type="text"
+                    value={channelUrl}
+                    onChange={(e) => setChannelUrl(e.target.value)}
+                    placeholder="https://youtube.com/@YourChannel"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 placeholder-neutral-500"
+                  />
                 </div>
-            </div>
-            )}
-
-            {/* === SERVICES TAB (FIXED RESPONSIVE LAYOUT) === */}
-            {activeTab === "services" && (
-            <div className="max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-                 <SectionHeader title="Menu de Serviços" sub="Categorias e preços." />
-                 
-                 <div className="flex gap-2 mb-8 relative">
-                    <input value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Nova Categoria (ex: Sobrancelhas)" className="input-dark flex-1" />
-                    <button 
-                      onClick={async () => { if(newCatName) { await addServiceCategory(newCatName); setNewCatName(""); } }}
-                      className="btn-secondary whitespace-nowrap"
-                    >Criar</button>
-                 </div>
-
-                 <div className="grid gap-6">
-                    {state.serviceCategories.map(cat => (
-                       <div key={cat.id} className="card-section p-0 overflow-hidden">
-                          <div className="p-4 bg-neutral-800/30 flex justify-between items-center border-b border-neutral-800">
-                             <h4 className="font-bold text-white text-sm tracking-wide uppercase">{cat.name}</h4>
-                             <button onClick={() => { if(confirm("Apagar categoria e itens?")) deleteServiceCategory(cat.id); }} className="text-neutral-500 hover:text-red-500"><Trash2 size={16}/></button>
-                          </div>
-
-                          <div className="p-4 space-y-3">
-                                {/* List of Items - FIXED: Stacked on Mobile, Row on Desktop */}
-                                {state.serviceItems.filter(i => i.category_id === cat.id).map(item => (
-                                    <div key={item.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-neutral-300 p-3 hover:bg-neutral-800 rounded-lg transition-colors group border border-transparent hover:border-neutral-700">
-                                       
-                                       {/* Left: Info */}
-                                       <div className="flex items-center gap-3 w-full sm:w-auto mb-2 sm:mb-0">
-                                          {item.image_url && <img src={item.image_url} alt={item.name} className="w-10 h-10 rounded-lg object-cover bg-neutral-900" />}
-                                          <div className="flex flex-col">
-                                            <span className="font-bold text-white text-base sm:text-sm">{item.name}</span>
-                                            <span className="text-[10px] text-neutral-500">{item.detail_time}</span>
-                                          </div>
-                                       </div>
-
-                                       {/* Right: Price & Actions - Full width on mobile, space-between */}
-                                       <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-                                          <span className="text-amber-500 font-bold bg-amber-900/20 px-3 py-1.5 rounded-lg text-xs tracking-wide">{item.price}</span>
-                                          
-                                          <div className="flex gap-2">
-                                            <button 
-                                                onClick={() => { 
-                                                    setServiceForm(item); 
-                                                    setActiveCatId(cat.id); 
-                                                    setEditingServiceId(item.id); 
-                                                }} 
-                                                className="p-2 text-neutral-400 hover:text-white bg-neutral-900 border border-neutral-800 rounded-lg hover:border-neutral-600"
-                                            >
-                                                <Edit2 size={14}/>
-                                            </button>
-                                            <button 
-                                                onClick={() => deleteServiceItem(item.id)} 
-                                                className="p-2 text-neutral-400 hover:text-red-500 bg-neutral-900 border border-neutral-800 rounded-lg hover:border-red-900/50"
-                                            >
-                                                <X size={14}/>
-                                            </button>
-                                          </div>
-                                       </div>
-                                    </div>
-                                ))}
-
-                                {/* Add/Edit Form */}
-                                {activeCatId === cat.id ? (
-                                    <div className="mt-4 p-4 bg-black/40 rounded-xl border border-dashed border-neutral-700 animate-in fade-in relative">
-                                        
-                                       {/* Image Upload for Service */}
-                                       <div className="mb-4 flex items-center gap-3">
-                                            <div className="w-16 h-16 bg-neutral-900 rounded-lg border border-neutral-800 flex items-center justify-center relative overflow-hidden group shrink-0">
-                                                {serviceForm.image_url ? <img src={serviceForm.image_url} alt="Service item preview" className="w-full h-full object-cover" /> : <ImageIcon size={20} className="text-neutral-600" />}
-                                                <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-                                                    <Upload size={14} className="text-white"/>
-                                                    <input type="file" hidden accept="image/*" onChange={(e) => handleUpload(e, (url) => setServiceForm(prev => ({...prev, image_url: url})))} />
-                                                </label>
-                                            </div>
-                                            <div className="text-[10px] text-neutral-500">
-                                                Toque no quadrado para<br/>adicionar foto (opcional).
-                                            </div>
-                                       </div>
-
-                                       {/* Inputs - Stacked on Mobile, Split on Desktop */}
-                                       <div className="space-y-4">
-                                           <div className="w-full">
-                                                <label className="text-[10px] uppercase font-bold text-neutral-500 mb-1 block">Nome do Serviço</label>
-                                                <input 
-                                                    className="input-dark w-full" 
-                                                    placeholder="Ex: Unhas de Gel" 
-                                                    value={serviceForm.name} 
-                                                    onChange={e => setServiceForm({...serviceForm, name: e.target.value})} 
-                                                    autoFocus 
-                                                />
-                                           </div>
-                                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                <div>
-                                                    <label className="text-[10px] uppercase font-bold text-neutral-500 mb-1 block">Preço</label>
-                                                    <input 
-                                                        className="input-dark w-full" 
-                                                        placeholder="Ex: €20" 
-                                                        value={serviceForm.price} 
-                                                        onChange={e => setServiceForm({...serviceForm, price: e.target.value})} 
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] uppercase font-bold text-neutral-500 mb-1 block">Tempo</label>
-                                                    <input 
-                                                        className="input-dark w-full" 
-                                                        placeholder="Ex: 30m" 
-                                                        value={serviceForm.detail_time || ""} 
-                                                        onChange={e => setServiceForm({...serviceForm, detail_time: e.target.value})} 
-                                                    />
-                                                </div>
-                                           </div>
-                                       </div>
-
-                                       {/* Actions */}
-                                       <div className="flex gap-2 mt-6">
-                                           <button onClick={async () => {
-                                              if(serviceForm.name && serviceForm.price) {
-                                                  if (editingServiceId) {
-                                                      await updateServiceItem(editingServiceId, serviceForm);
-                                                  } else {
-                                                      await addServiceItem({ ...serviceForm as any, category_id: cat.id, display_order: 0 });
-                                                  }
-                                                  setServiceForm(initialServiceItem);
-                                                  setActiveCatId(null);
-                                                  setEditingServiceId(null);
-                                              } else {
-                                                  alert("Nome e Preço são obrigatórios");
-                                              }
-                                          }} className="btn-primary text-xs flex-1 justify-center py-3">
-                                            {editingServiceId ? "Atualizar" : "Salvar Item"}
-                                          </button>
-                                          
-                                          <button onClick={() => {
-                                              setActiveCatId(null);
-                                              setEditingServiceId(null);
-                                              setServiceForm(initialServiceItem);
-                                          }} className="px-4 py-2 rounded-lg bg-neutral-800 text-neutral-400 hover:text-white text-xs border border-neutral-700">
-                                            Cancelar
-                                          </button>
-                                       </div>
-                                    </div>
-                                ) : (
-                                    <button onClick={() => { setActiveCatId(cat.id); setServiceForm(initialServiceItem); setEditingServiceId(null); }} className="w-full py-3 text-xs text-neutral-400 border border-dashed border-neutral-800 rounded-xl hover:text-amber-500 hover:border-amber-500 hover:bg-amber-500/5 transition-all flex items-center justify-center gap-2 mt-2">
-                                       <Plus size={14} /> Adicionar Serviço em {cat.name}
-                                    </button>
-                                )}
-                          </div>
-                       </div>
+                
+                {/* Current Video ID */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider flex items-center gap-2">
+                    <Play className="w-3 h-3" /> Default Video ID
+                  </label>
+                  <select
+                    value={currentVideoId}
+                    onChange={(e) => setCurrentVideoId(e.target.value)}
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="">-- Select default video --</option>
+                    {videos.map((video) => (
+                      <option key={video.id} value={video.youtube_id}>
+                        {video.title}
+                      </option>
                     ))}
-                 </div>
+                  </select>
+                </div>
+              </div>
+              
+              {/* Live Now Toggle */}
+              <div className="mt-4 flex items-center justify-between p-4 bg-neutral-800/50 rounded-lg border border-neutral-700">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${isLiveNow ? 'bg-red-500/20' : 'bg-neutral-700'}`}>
+                    <Radio className={`w-4 h-4 ${isLiveNow ? 'text-red-500' : 'text-neutral-400'}`} />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium text-sm">Live Now Status</p>
+                    <p className="text-neutral-500 text-xs">Show live indicator across the site</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsLiveNow(!isLiveNow)}
+                  className={`relative w-14 h-7 rounded-full transition-colors ${isLiveNow ? 'bg-red-500' : 'bg-neutral-700'}`}
+                >
+                  <motion.div
+                    animate={{ x: isLiveNow ? 28 : 4 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-lg"
+                  />
+                </button>
+              </div>
+              
+              {/* Save Button */}
+              <button
+                onClick={handleSaveConfig}
+                disabled={saving}
+                className="mt-4 w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Settings
+              </button>
             </div>
-            )}
-            
-            {/* === LOYALTY TAB === */}
-            {activeTab === "loyalty" && (
-                <div className="max-w-xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <SectionHeader title="Fidelidade" sub="Cartões de selos digitais." />
-                    <div className="card-section flex gap-2 mb-6 p-2 relative">
-                         <div className="relative flex-1">
-                             <Search className="absolute left-3 top-3 text-neutral-500" size={16} />
-                             <input className="w-full bg-neutral-950 border-none text-white pl-10 h-10 rounded-lg focus:ring-0" placeholder="Buscar email do cliente..." value={loyaltySearch} onChange={(e) => { setLoyaltySearch(e.target.value); if(loyaltyUser) setLoyaltyUser(null); }}/>
-                         </div>
-                         <button onClick={handleUserSearch} className="btn-secondary h-10 px-4">
-                            {isSearchingUser ? <Loader2 className="animate-spin" size={16}/> : "Buscar"}
-                         </button>
-                    </div>
 
-                    {loyaltyUser ? (
-                        <div className="bg-neutral-900 border border-amber-500/30 rounded-2xl p-8 text-center shadow-2xl relative">
-                             <h3 className="text-2xl font-bold text-white mb-2">{loyaltyUser.email}</h3>
-                             <p className="text-amber-500 text-sm font-bold uppercase tracking-widest mb-8">Cartão Atual</p>
-                             <div className="flex justify-center gap-4 mb-8 relative">
-                                {[1, 2, 3, 4, 5].map((num) => (
-                                    <button key={num} onClick={() => handleUpdateStamps(num)} className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${loyaltyUser.stamps >= num ? "bg-amber-500 border-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)] scale-110" : "bg-transparent border-neutral-700 text-neutral-600 hover:border-neutral-500"}`}>
-                                        {loyaltyUser.stamps >= num ? <CheckCircle2 size={24} strokeWidth={3} /> : <span className="text-sm font-bold">{num}</span>}
-                                    </button>
-                                ))}
-                             </div>
-                             <div className="flex justify-center gap-4">
-                                <button onClick={() => handleUpdateStamps(0)} className="px-4 py-2 bg-neutral-800 rounded-lg text-xs hover:bg-red-900/20 hover:text-red-400 transition-colors flex items-center gap-2"><RefreshCw size={14}/> Zerar</button>
-                                <button onClick={() => { setLoyaltyUser(null); setLoyaltySearch(""); }} className="px-4 py-2 bg-neutral-800 rounded-lg text-xs hover:bg-neutral-700 text-white transition-colors">Fechar</button>
-                             </div>
-                        </div>
-                    ) : (
-                        <div className="card-section p-0">
-                             <div className="p-4 border-b border-neutral-800 bg-neutral-900"><h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Clientes Recentes</h4></div>
-                             <div className="max-h-[300px] overflow-y-auto">
-                                 {allLoyaltyUsers.length === 0 ? <div className="p-8 text-center text-neutral-600 text-xs">Nenhum cliente encontrado.</div> : allLoyaltyUsers.map(user => (
-                                     <div key={user.id} onClick={() => { setLoyaltyUser(user); setLoyaltySearch(user.email); }} className="p-4 border-b border-neutral-800 hover:bg-neutral-800 transition-colors cursor-pointer flex justify-between items-center group">
-                                         <div>
-                                             <div className="text-white text-sm font-bold">{user.email}</div>
-                                             <div className={`text-xs mt-1 ${user.stamps >= 5 ? "text-green-500 font-bold" : "text-neutral-500"}`}>{user.stamps} / 5 Selos {user.stamps >= 5 && "• PRÊMIO DISPONÍVEL"}</div>
-                                         </div>
-                                         <ChevronRight className="text-neutral-600 group-hover:text-amber-500 transition-colors" size={16} />
-                                     </div>
-                                 ))}
-                             </div>
-                        </div>
+            {/* Add New Video */}
+            <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Plus className="w-5 h-5 text-green-400" />
+                <h3 className="text-white font-semibold">Add New Video</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
+                    Video Title
+                  </label>
+                  <input
+                    type="text"
+                    value={newVideoTitle}
+                    onChange={(e) => setNewVideoTitle(e.target.value)}
+                    placeholder="e.g., Day Trading Strategies"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:outline-none focus:border-green-500 placeholder-neutral-500"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
+                    YouTube URL or Video ID
+                  </label>
+                  <input
+                    type="text"
+                    value={newVideoUrl}
+                    onChange={(e) => setNewVideoUrl(e.target.value)}
+                    placeholder="https://youtu.be/xxxxx or video ID"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:outline-none focus:border-green-500 placeholder-neutral-500"
+                  />
+                </div>
+              </div>
+              
+              {/* Preview */}
+              {newVideoUrl && (
+                <div className="mt-4 p-3 bg-neutral-800 rounded-lg border border-neutral-700">
+                  <p className="text-xs text-neutral-500 mb-2">Preview:</p>
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={getYouTubeThumbnail(extractYouTubeId(newVideoUrl), 'mq')}
+                      alt="Preview"
+                      className="w-24 h-14 object-cover rounded-lg bg-neutral-700"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.png'; }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium truncate">{newVideoTitle || 'Untitled'}</p>
+                      <p className="text-neutral-500 text-xs">ID: {extractYouTubeId(newVideoUrl)}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="mt-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newVideoIsLive}
+                      onChange={(e) => setNewVideoIsLive(e.target.checked)}
+                      className="w-4 h-4 rounded border-neutral-600 bg-neutral-800 text-red-500 focus:ring-red-500"
+                    />
+                    <span className="text-sm text-neutral-400">Mark as Live Stream</span>
+                    {newVideoIsLive && <Radio className="w-3 h-3 text-red-500 animate-pulse" />}
+                  </label>
+                  
+                  {playlists.length > 0 && (
+                    <select
+                      value={newVideoPlaylist}
+                      onChange={(e) => setNewVideoPlaylist(e.target.value)}
+                      className="px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-neutral-300 text-sm focus:outline-none focus:border-green-500"
+                    >
+                      <option value="">No playlist</option>
+                      {playlists.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+                
+                <button
+                  onClick={handleAddVideo}
+                  disabled={saving || !newVideoTitle.trim() || !newVideoUrl.trim()}
+                  className="px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                  Add Video
+                </button>
+              </div>
+            </div>
+
+            {/* Playlists Section */}
+            <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <ListVideo className="w-5 h-5 text-amber-400" />
+                  <h3 className="text-white font-semibold">Playlists</h3>
+                </div>
+                <button
+                  onClick={() => setShowPlaylistForm(!showPlaylistForm)}
+                  className="p-2 rounded-lg bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 transition-all"
+                >
+                  {showPlaylistForm ? <ChevronUp className="w-4 h-4" /> : <FolderPlus className="w-4 h-4" />}
+                </button>
+              </div>
+              
+              {/* Create Playlist Form */}
+              <AnimatePresence>
+                {showPlaylistForm && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="flex gap-2 mb-4">
+                      <input
+                        type="text"
+                        value={newPlaylistName}
+                        onChange={(e) => setNewPlaylistName(e.target.value)}
+                        placeholder="New playlist name..."
+                        className="flex-1 px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500 placeholder-neutral-500"
+                      />
+                      <button
+                        onClick={handleAddPlaylist}
+                        disabled={saving || !newPlaylistName.trim()}
+                        className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+                      >
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                        Create
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              {/* Playlist List */}
+              {playlists.length === 0 ? (
+                <p className="text-neutral-500 text-sm text-center py-4">No playlists yet. Create one to organize your videos.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {playlists.map(playlist => (
+                    <div
+                      key={playlist.id}
+                      className="flex items-center gap-2 px-3 py-2 bg-neutral-800 rounded-lg border border-neutral-700 group"
+                    >
+                      <Folder className="w-4 h-4 text-amber-400" />
+                      <span className="text-white text-sm">{playlist.name}</span>
+                      <span className="text-neutral-500 text-xs">
+                        ({videos.filter(v => v.playlist_id === playlist.id).length})
+                      </span>
+                      <button
+                        onClick={() => handleDeletePlaylist(playlist.id)}
+                        className="p-1 text-neutral-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Video List */}
+            <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-5">
+              {/* Header with filters and bulk actions */}
+              <div className="flex flex-col gap-4 mb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Video className="w-5 h-5 text-purple-400" />
+                    <h3 className="text-white font-semibold">Video Library</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-neutral-500 bg-neutral-800 px-2 py-1 rounded-full">
+                      {getFilteredVideos().length} videos
+                    </span>
+                    {editingVideos.size > 0 && (
+                      <button
+                        onClick={handleSaveAllVideos}
+                        disabled={saving}
+                        className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
+                      >
+                        {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                        Save All ({editingVideos.size})
+                      </button>
                     )}
+                  </div>
                 </div>
-            )}
-
-            {activeTab === "about" && (
-                <div className="max-w-2xl mx-auto animate-in fade-in">
-                    <SectionHeader title="Sobre Nós" sub="Texto do 'Sobre'." />
-                    <div className="card-section space-y-4">
-                        <InputGroup label="Título & Subtítulo">
-                            <input value={aboutForm.title} onChange={(e) => setAboutForm({...aboutForm, title: e.target.value})} className="input-dark mb-2" placeholder="Título" />
-                            <input value={aboutForm.subtitle} onChange={(e) => setAboutForm({...aboutForm, subtitle: e.target.value})} className="input-dark" placeholder="Subtítulo" />
-                        </InputGroup>
-                        <InputGroup label="Parágrafos">
-                            <textarea rows={4} value={aboutForm.description_1} onChange={(e) => setAboutForm({...aboutForm, description_1: e.target.value})} className="input-dark mb-2 resize-none" placeholder="Parágrafo 1" />
-                            <textarea rows={4} value={aboutForm.description_2} onChange={(e) => setAboutForm({...aboutForm, description_2: e.target.value})} className="input-dark resize-none" placeholder="Parágrafo 2" />
-                        </InputGroup>
-                        <button onClick={() => handleSave(() => updateAbout(aboutForm))} className="w-full btn-primary">Salvar Texto</button>
-                    </div>
-                </div>
-            )}
-            
-            {activeTab === "gallery" && (
-                <div className="max-w-2xl mx-auto animate-in fade-in">
-                    <SectionHeader title="Galeria" sub="Upload de fotos e vídeos." />
-                    <div className="border-2 border-dashed border-neutral-800 rounded-2xl p-8 flex flex-col items-center justify-center text-neutral-500 hover:bg-neutral-900/50 hover:border-amber-500/50 transition-all cursor-pointer group mb-6 relative">
-                         <Upload size={32} className="mb-2 text-neutral-600 group-hover:text-amber-500 transition-colors"/>
-                         <span className="text-xs font-bold uppercase">Clique para Upload</span>
-                         <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*,video/*" onChange={async (e) => {
-                             if(e.target.files?.[0]) {
-                                 const file = e.target.files[0];
-                                 const type = file.type.startsWith('video') ? 'video' : 'image';
-                                 handleUpload(e, (url) => addGalleryItem({ media_url: url, media_type: type, caption: '', display_order: 0 }));
-                             }
-                         }}/>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                         {state.gallery.map(item => (
-                             <div key={item.id} className="aspect-square bg-neutral-900 rounded-xl overflow-hidden relative group border border-neutral-800">
-                                 {item.media_type === 'video' ? <video src={item.media_url} className="h-full w-full object-cover" muted /> : <img src={item.media_url} alt="Gallery item" className="h-full w-full object-cover" />}
-                                 <button onClick={() => deleteGalleryItem(item.id)} className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-red-500 transition-all"><Trash2 size={24} /></button>
-                             </div>
-                         ))}
-                    </div>
-                </div>
-            )}
-            
-            {activeTab === "socials" && (
-                <div className="max-w-2xl mx-auto animate-in fade-in">
-                    <SectionHeader title="Redes Sociais" sub="Links externos." />
-                    <div className="space-y-4">
-                        {state.socials.map(link => (
-                            <div key={link.id} className="card-section flex flex-col gap-2 relative">
-                                <div className="flex justify-between font-bold text-white text-sm">
-                                    <span>{link.platform}</span>
-                                    <input type="checkbox" checked={link.active} onChange={(e) => updateSocialLink(link.id, link.url, e.target.checked)} className="accent-amber-500 h-4 w-4" />
-                                </div>
-                                <input className="input-dark text-xs" value={link.url} onChange={(e) => updateSocialLink(link.id, e.target.value, link.active)} placeholder="https://..." />
-                            </div>
+                
+                {/* Filters and bulk actions */}
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Playlist filter */}
+                  <select
+                    value={selectedPlaylistFilter}
+                    onChange={(e) => setSelectedPlaylistFilter(e.target.value)}
+                    className="px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-neutral-300 text-xs focus:outline-none focus:border-purple-500"
+                  >
+                    <option value="all">All Videos</option>
+                    <option value="none">No Playlist</option>
+                    {playlists.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                  
+                  {/* Bulk mode toggle */}
+                  <button
+                    onClick={() => {
+                      setBulkEditMode(!bulkEditMode);
+                      if (bulkEditMode) setSelectedVideos(new Set());
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      bulkEditMode ? 'bg-purple-500 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    <Edit3 className="w-3 h-3 inline mr-1" />
+                    Bulk Edit
+                  </button>
+                  
+                  {/* Bulk actions */}
+                  {bulkEditMode && selectedVideos.size > 0 && (
+                    <>
+                      <select
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            bulkAssignPlaylist(e.target.value === 'none' ? null : e.target.value);
+                            e.target.value = '';
+                          }
+                        }}
+                        className="px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-neutral-300 text-xs focus:outline-none"
+                        defaultValue=""
+                      >
+                        <option value="" disabled>Move to playlist...</option>
+                        <option value="none">Remove from playlist</option>
+                        {playlists.map(p => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
+                      </select>
+                      <button
+                        onClick={bulkDeleteVideos}
+                        className="px-3 py-1.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg text-xs font-medium transition-colors"
+                      >
+                        <Trash2 className="w-3 h-3 inline mr-1" />
+                        Delete ({selectedVideos.size})
+                      </button>
+                    </>
+                  )}
+                  
+                  {bulkEditMode && (
+                    <div className="flex items-center gap-1 ml-auto">
+                      <button onClick={selectAllVideos} className="text-xs text-blue-400 hover:underline">Select All</button>
+                      <span className="text-neutral-600">|</span>
+                      <button onClick={deselectAllVideos} className="text-xs text-neutral-400 hover:underline">Deselect</button>
                     </div>
+                  )}
                 </div>
-            )}
-        </div>
+              </div>
+              
+              {getFilteredVideos().length === 0 ? (
+                <div className="text-center py-12">
+                  <Youtube className="w-12 h-12 text-neutral-700 mx-auto mb-3" />
+                  <p className="text-neutral-500 text-sm">No videos found</p>
+                  <p className="text-neutral-600 text-xs mt-1">Add videos or change the filter</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                  {getFilteredVideos().map((video, index) => {
+                    const isEditing = editingVideos.has(video.id);
+                    const editingData = editingVideos.get(video.id);
+                    const isSelected = selectedVideos.has(video.id);
+                    
+                    return (
+                      <motion.div
+                        key={video.id}
+                        layout
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        className={`flex items-center gap-3 p-3 rounded-lg border transition-all group ${
+                          isEditing 
+                            ? 'bg-blue-900/20 border-blue-500/50' 
+                            : isSelected
+                            ? 'bg-purple-900/20 border-purple-500/50'
+                            : 'bg-neutral-800/50 border-neutral-700 hover:border-neutral-600'
+                        }`}
+                      >
+                        {/* Checkbox for bulk select */}
+                        {bulkEditMode && (
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleVideoSelection(video.id)}
+                            className="w-4 h-4 rounded border-neutral-600 bg-neutral-800 text-purple-500 focus:ring-purple-500"
+                          />
+                        )}
+                        
+                        {/* Thumbnail */}
+                        <div className="relative w-24 h-14 rounded-lg overflow-hidden bg-neutral-700 flex-shrink-0">
+                          <img
+                            src={getYouTubeThumbnail(isEditing ? editingData!.youtube_id : video.youtube_id, 'mq')}
+                            alt={video.title}
+                            className="w-full h-full object-cover"
+                          />
+                          {(isEditing ? editingData!.is_live : video.is_live) && (
+                            <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-red-600 text-white text-[8px] font-bold rounded uppercase flex items-center gap-1">
+                              <span className="w-1 h-1 bg-white rounded-full animate-pulse" />
+                              Live
+                            </span>
+                          )}
+                          <a
+                            href={`https://youtube.com/watch?v=${video.youtube_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                          >
+                            <ExternalLink className="w-4 h-4 text-white" />
+                          </a>
+                        </div>
+                        
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          {isEditing ? (
+                            <div className="space-y-2">
+                              <input
+                                type="text"
+                                value={editingData!.title}
+                                onChange={(e) => updateEditingVideo(video.id, { title: e.target.value })}
+                                placeholder="Video Title"
+                                className="w-full px-2 py-1 bg-neutral-700 border border-neutral-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
+                              />
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={editingData!.youtube_id}
+                                  onChange={(e) => updateEditingVideo(video.id, { youtube_id: extractYouTubeId(e.target.value) })}
+                                  placeholder="YouTube URL or ID"
+                                  className="flex-1 px-2 py-1 bg-neutral-700 border border-neutral-600 rounded text-white text-xs font-mono focus:outline-none focus:border-blue-500"
+                                />
+                                <select
+                                  value={editingData!.playlist_id || ''}
+                                  onChange={(e) => updateEditingVideo(video.id, { playlist_id: e.target.value || null })}
+                                  className="px-2 py-1 bg-neutral-700 border border-neutral-600 rounded text-white text-xs focus:outline-none focus:border-blue-500"
+                                >
+                                  <option value="">No playlist</option>
+                                  {playlists.map(p => (
+                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-white font-medium text-sm truncate">{video.title}</p>
+                              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                <span className="text-neutral-500 text-xs font-mono">{video.youtube_id}</span>
+                                {video.playlist_id && (
+                                  <span className="text-amber-400 text-xs flex items-center gap-1">
+                                    <Folder className="w-3 h-3" />
+                                    {playlists.find(p => p.id === video.playlist_id)?.name}
+                                  </span>
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        
+                        {/* Actions */}
+                        <div className="flex items-center gap-1">
+                          {isEditing ? (
+                            <>
+                              <button
+                                onClick={() => updateEditingVideo(video.id, { is_live: !editingData!.is_live })}
+                                className={`p-2 rounded-lg transition-colors ${editingData!.is_live ? 'bg-red-500/20 text-red-400' : 'bg-neutral-700 text-neutral-400'}`}
+                                title="Toggle Live"
+                              >
+                                <Radio className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleSaveVideo(video.id)}
+                                disabled={saving}
+                                className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
+                                title="Save"
+                              >
+                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                              </button>
+                              <button
+                                onClick={() => cancelEditingVideo(video.id)}
+                                className="p-2 rounded-lg bg-neutral-700 text-neutral-400 hover:text-white transition-colors"
+                                title="Cancel"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => startEditingVideo(video)}
+                                className="p-2 rounded-lg bg-neutral-700 text-neutral-400 hover:text-white hover:bg-neutral-600 transition-colors opacity-0 group-hover:opacity-100"
+                                title="Edit"
+                              >
+                                <Settings className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteVideo(video.id)}
+                                disabled={saving}
+                                className="p-2 rounded-lg bg-neutral-700 text-neutral-400 hover:text-red-400 hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
-      
-      {/* GLOBAL STYLES */}
+
+      {/* Toast */}
+      <AnimatePresence>
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      </AnimatePresence>
+
+      {/* Custom Scrollbar Styles */}
       <style jsx global>{`
-        .input-login {
-            width: 100%;
-            background-color: rgb(38 38 38);
-            border: 1px solid rgb(64 64 64);
-            border-radius: 0.75rem;
-            padding: 1rem;
-            color: white;
-            font-size: 16px; /* Prevents mobile zoom */
-            outline: none;
-            transition: all 0.2s;
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
         }
-        .input-login:focus { border-color: white; background-color: rgb(50 50 50); box-shadow: 0 0 0 1px white; }
-        
-        .input-dark {
-            width: 100%;
-            background-color: rgb(10 10 10);
-            border: 1px solid rgb(38 38 38);
-            border-radius: 0.75rem;
-            padding: 0.875rem;
-            color: white;
-            outline: none;
-            transition: all 0.2s;
-            font-size: 16px; /* CRITICAL: Fixed mobile zoom issue */
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
         }
-        .input-dark:focus { border-color: rgb(245 158 11); box-shadow: 0 0 0 1px rgb(245 158 11); background-color: rgb(23 23 23); }
-        
-        .card-section { background-color: rgb(23 23 23); border: 1px solid rgb(38 38 38); border-radius: 1rem; padding: 1.25rem; }
-        .section-label { display: block; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: rgb(115 115 115); }
-        .btn-primary { background-color: rgb(245 158 11); color: black; font-weight: 800; padding: 0.875rem; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
-        .btn-primary:hover { background-color: rgb(251 191 36); transform: translateY(-2px); }
-        .btn-secondary { background-color: rgb(38 38 38); color: white; font-weight: 700; padding: 0.5rem 1rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: background 0.2s; font-size: 0.75rem; }
-        .btn-secondary:hover { background-color: rgb(64 64 64); color: white; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
       `}</style>
     </motion.div>
   );
 }
 
-// --- MAIN EXPORT ---
+// Login Screen
+function AdminLogin({ onLogin }: { onLogin: () => void }) {
+  const { login } = useShop();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    
+    // Check credentials from environment variables
+    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+    const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+    
+    if (email.toLowerCase().trim() === adminEmail?.toLowerCase() && password === adminPassword) {
+      // Use the login function from ShopContext (pass any values, we already validated)
+      login(email, password);
+      onLogin();
+    } else {
+      setError('Invalid email or password');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="w-full max-w-sm bg-neutral-950 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="p-8">
+        <div className="flex flex-col items-center mb-8">
+          <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4">
+            <Tv className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-white font-bold text-xl">Admin Access</h2>
+          <p className="text-neutral-500 text-sm mt-1">Enter credentials to continue</p>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-1 block">
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@email.com"
+              className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl text-white focus:outline-none focus:border-blue-500 placeholder-neutral-500"
+              autoFocus
+            />
+          </div>
+          
+          <div>
+            <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-1 block">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••••••"
+              className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl text-white focus:outline-none focus:border-blue-500 placeholder-neutral-500"
+            />
+          </div>
+          
+          {error && (
+            <div className="flex items-center gap-2 text-red-400 text-sm bg-red-900/20 px-4 py-2 rounded-lg">
+              <AlertCircle className="w-4 h-4" />
+              {error}
+            </div>
+          )}
+          
+          <button
+            type="submit"
+            disabled={loading || !email || !password}
+            className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Login'}
+          </button>
+        </form>
+      </div>
+    </motion.div>
+  );
+}
+
+// Main Export
 export default function AdminModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const { state } = useStudio();
-  
+  const { state } = useShop();
+  const [authenticated, setAuthenticated] = useState(false);
+
+  // Check if already admin from shop state
+  useEffect(() => {
+    if (state.isAdmin) {
+      setAuthenticated(true);
+    }
+  }, [state.isAdmin]);
+
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }} 
-            className="absolute inset-0 bg-black/80 backdrop-blur-md" 
-            onClick={onClose} 
+        <div 
+          className="fixed inset-0"
+          style={{ zIndex: 2147483647, isolation: 'isolate' }}
+        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/90 backdrop-blur-xl"
+            style={{ zIndex: 0 }}
+            onClick={onClose}
           />
-          {!state.isAuthenticated ? <AdminLogin /> : <Dashboard onClose={onClose} />}
+          <div 
+            className="relative h-full flex items-center justify-center p-4 pointer-events-none"
+            style={{ zIndex: 10 }}
+          >
+            <div className="pointer-events-auto">
+              {!authenticated ? (
+                <AdminLogin onLogin={() => setAuthenticated(true)} />
+              ) : (
+                <AdminDashboard onClose={onClose} />
+              )}
+            </div>
+          </div>
         </div>
       )}
     </AnimatePresence>
