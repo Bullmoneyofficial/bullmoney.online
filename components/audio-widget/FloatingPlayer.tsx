@@ -268,7 +268,7 @@ const CameraModal = React.memo(function CameraModal({
               <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30">
                 <div className="bg-black rounded-full px-6 py-2 flex items-center gap-3">
                   <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 ring-1 ring-slate-600">
-                    <motion.div className="w-full h-full rounded-full bg-green-500/40" animate={{ opacity: [0.4, 0.8, 0.4] }} transition={{ duration: 1.5, repeat: Infinity }} />
+                    <motion.div className="w-full h-full rounded-full bg-blue-500/40" animate={{ opacity: [0.4, 0.8, 0.4] }} transition={{ duration: 1.5, repeat: Infinity }} />
                   </div>
                   <span className="text-[9px] text-white/60 font-medium">Recording</span>
                 </div>
@@ -551,7 +551,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               "fixed flex items-center gap-3 py-3.5 backdrop-blur-2xl transition-all duration-300",
               "bg-gradient-to-br from-slate-900/98 via-gray-900/98 to-black/98",
               "border-2 border-slate-500/60 shadow-2xl",
-              "hover:shadow-green-500/40 hover:border-green-400/60 hover:scale-105",
+              "hover:shadow-blue-500/40 hover:border-blue-400/60 hover:scale-105",
               "active:scale-95",
               // Pulsing glow animation when playing
               isPlaying && "animate-pulse-subtle",
@@ -563,7 +563,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               bottom: 140, 
               zIndex: Z_INDEX.PULL_TAB,
               boxShadow: isPlaying 
-                ? '0 0 30px rgba(34, 197, 94, 0.3), 0 10px 40px rgba(0,0,0,0.5)' 
+                ? '0 0 30px rgba(59, 130, 246, 0.3), 0 10px 40px rgba(0,0,0,0.5)' 
                 : '0 10px 40px rgba(0,0,0,0.5)',
             }}
           >
@@ -581,7 +581,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             <div className="relative">
               {/* Glow effect */}
               <motion.div
-                className="absolute -inset-2 bg-green-500/25 rounded-2xl blur-lg"
+                className="absolute -inset-2 bg-blue-500/25 rounded-2xl blur-lg"
                 animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
                 transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
               />
@@ -598,7 +598,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                   {[1, 2, 3, 4].map(i => (
                     <motion.div
                       key={i}
-                      className="w-[3px] bg-green-400 rounded-full origin-bottom"
+                      className="w-[3px] bg-blue-400 rounded-full origin-bottom"
                       animate={{ scaleY: isPlaying ? [0.3, 1, 0.3] : 0.3 }}
                       transition={{ 
                         duration: 0.5, 
@@ -623,7 +623,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             {/* Text label */}
             <div className="flex flex-col">
               <span className="text-[10px] font-bold text-white/90">{sourceLabel[musicSource]}</span>
-              <span className="text-[8px] text-green-400/80 font-medium">♪ Playing</span>
+              <span className="text-[8px] text-blue-400/80 font-medium">♪ Playing</span>
             </div>
             
             {/* Pull arrow for left side */}
@@ -640,7 +640,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               show={hoveredButton === 'expand'} 
               text="🎵 Tap to Expand" 
               position={playerSide === 'left' ? 'right' : 'left'} 
-              color="green" 
+              color="blue" 
             />
           </motion.button>
         )}
@@ -843,7 +843,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                         {[1, 2, 3, 4].map(i => (
                           <motion.div
                             key={i}
-                            className="w-[2px] bg-green-400 rounded-full"
+                            className="w-[2px] bg-blue-400 rounded-full"
                             animate={{ height: [3, 10, 3] }}
                             transition={{ duration: 0.4, repeat: Infinity, delay: i * 0.08 }}
                           />
@@ -996,7 +996,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                   </div>
                   <span className="ml-0.5">5G</span>
                   <div className="ml-1.5 w-6 h-[10px] border border-white/50 rounded-[3px] relative">
-                    <div className="absolute inset-[1px] rounded-[2px] bg-green-400" style={{ width: '75%' }} />
+                    <div className="absolute inset-[1px] rounded-[2px] bg-blue-400" style={{ width: '75%' }} />
                     <div className="absolute -right-[3px] top-1/2 -translate-y-1/2 w-[2px] h-[5px] bg-white/50 rounded-r-sm" />
                   </div>
                 </div>
@@ -1151,7 +1151,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.7)' }}
                 whileTap={{ scale: 0.95 }}
               />
-              <ButtonTooltip show={hoveredButton === 'home'} text="🏠 Tap to Interact" position="top" color="green" />
+              <ButtonTooltip show={hoveredButton === 'home'} text="🏠 Tap to Interact" position="top" color="blue" />
             </div>
 
             {/* Hide/Minimize Tab - Dynamic position based on side */}
