@@ -649,21 +649,24 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
       {/* Hidden iframe container - keeps audio playing when minimized
           Following Apple Music & Spotify embed rules:
           - iframe must remain in DOM for audio continuity
-          - Position off-screen but keep dimensions for embed SDK
+          - Positioned BEHIND the pull tab button (not off-screen)
+          - This ensures embed SDK stays active while visually hidden
           - autoplay and encrypted-media permissions required
       */}
       {isMinimized && streamingEmbedUrl && (
         <div 
-          className="fixed pointer-events-none" 
+          className="fixed pointer-events-none overflow-hidden"
           style={{ 
             position: 'fixed',
-            top: -9999,
-            left: -9999,
-            width: 320,
-            height: 152,
+            bottom: 140, // Same position as pull tab
+            [playerSide]: 0, // Match pull tab side (left or right)
+            width: 80, // Slightly larger than pull tab to ensure coverage
+            height: 80,
             overflow: 'hidden',
             opacity: 0.01, // Near-invisible but not fully hidden for embed SDK
-            zIndex: -1,
+            zIndex: Z_INDEX.PULL_TAB - 1, // Render BEHIND the pull tab
+            borderRadius: '16px',
+            clipPath: 'inset(0)', // Clip any overflow
           }}
           aria-hidden="true"
         >
@@ -675,7 +678,12 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             width="320"
             height="152"
             loading="eager"
-            style={{ border: 'none', display: 'block' }}
+            style={{ 
+              border: 'none', 
+              display: 'block',
+              transform: 'scale(0.25)', // Scale down to fit behind button
+              transformOrigin: 'top left',
+            }}
             allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
             sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
           />

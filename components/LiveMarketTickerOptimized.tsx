@@ -216,8 +216,9 @@ export const LiveMarketTickerOptimized: React.FC = memo(function LiveMarketTicke
         COIN_ORDER.forEach((coin) => {
           const result = payload.find((entry) => entry.id === coin.id);
           if (!result) {
-            console.warn(`No data found for coin: ${coin.id}`);
-            return; // Skip this coin
+            // Silently skip coins not in API response - this is expected behavior
+            // when API returns partial data or coin ID doesn't match
+            return;
           }
           const currentPrice = result.current_price;
           const changeValue = result.price_change_percentage_24h ?? 0;
