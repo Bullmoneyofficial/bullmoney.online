@@ -104,11 +104,20 @@ export const LiveMarketTicker: React.FC = () => {
 
         const nextData: MarketData[] = COIN_ORDER.map((coin) => {
           const result = payload.find((entry) => entry.id === coin.id);
+          if (!result) {
+            console.warn(`No data found for coin: ${coin.id}`);
+            return baseTickerData.find(c => c.symbol === coin.symbol) || {
+              symbol: coin.symbol,
+              price: '—',
+              change: 0,
+              isUp: true,
+            };
+          }
           const currentPrice =
-            typeof result?.current_price === 'number' ? result.current_price : undefined;
-          const changeValue = result?.price_change_percentage_24h ?? 0;
+            typeof result.current_price === 'number' ? result.current_price : undefined;
+          const changeValue = result.price_change_percentage_24h ?? 0;
           const roundedChange = Number(changeValue.toFixed(2));
-          const symbol = result?.symbol?.toUpperCase() ?? coin.symbol;
+          const symbol = result.symbol?.toUpperCase() ?? coin.symbol;
           return {
             symbol,
             price:
