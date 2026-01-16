@@ -64,6 +64,19 @@ interface LiveStreamConfig {
   updated_at?: string;
 }
 
+interface PersonalVideo {
+  id: string;
+  title: string;
+  youtube_id: string;
+  added_at: string;
+}
+
+interface UserYouTubeProfile {
+  channelUrl: string;
+  videos: PersonalVideo[];
+  lastUpdated: string;
+}
+
 // Modal Context
 interface ModalState {
   isOpen: boolean;
