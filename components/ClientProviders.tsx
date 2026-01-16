@@ -31,7 +31,7 @@ const CrashTrackerProvider = dynamic(
 
 const FpsMonitor = dynamic(() => import("@/components/FpsMonitor"), { ssr: false });
 const ClientCursor = dynamic(() => import("@/components/ClientCursor"), { ssr: false });
-const AudioWidget = dynamic(() => import("@/components/AudioWidget"), { ssr: false });
+const AudioWidget = dynamic(() => import("@/components/audio-widget/AudioWidget"), { ssr: false });
 const AutoRefreshPrompt = dynamic(
   () => import("@/components/AutoRefreshPrompt").then((mod) => ({ default: mod.AutoRefreshPrompt })),
   { ssr: false }
