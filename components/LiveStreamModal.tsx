@@ -26,7 +26,14 @@ import {
   Maximize2,
   Clock,
   TrendingUp,
-  Tv
+  Tv,
+  User,
+  LogIn,
+  LogOut,
+  Heart,
+  Link2,
+  Check,
+  AlertCircle
 } from 'lucide-react';
 import { ShimmerLine, ShimmerBorder, ShimmerSpinner } from '@/components/ui/UnifiedShimmer';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
@@ -187,6 +194,125 @@ const LiveStreamContent = memo(() => {
   const [channelUrl, setChannelUrl] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // Personal YouTube state
+  const [activeTab, setActiveTab] = useState<'bullmoney' | 'personal'>('bullmoney');
+  const [showPersonalLogin, setShowPersonalLogin] = useState(false);
+  const [personalProfile, setPersonalProfile] = useState<UserYouTubeProfile | null>(null);
+  const [personalVideoUrl, setPersonalVideoUrl] = useState('');
+  const [personalVideoTitle, setPersonalVideoTitle] = useState('');
+  const [personalChannelUrl, setPersonalChannelUrl] = useState('');
+  const [personalSaving, setPersonalSaving] = useState(false);
+  const [personalError, setPersonalError] = useState('');
+
+  // Load personal profile from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('bullmoney_personal_youtube');
+      if (saved) {
+        setPersonalProfile(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error('Error loading personal profile:', e);
+    }
+  }, []);
+
+  // Save personal profile to localStorage
+  const savePersonalProfile = useCallback((profile: UserYouTubeProfile) => {
+    try {
+      localStorage.setItem('bullmoney_personal_youtube', JSON.stringify(profile));
+      setPersonalProfile(profile);
+    } catch (e) {
+      console.error('Error saving personal profile:', e);
+    }
+  }, []);
+
+  // Extract YouTube video ID from URL
+  const extractYouTubeId = useCallback((input: string): string => {
+    const trimmed = input.trim();
+    if (!trimmed) return '';
+    
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+      /^([a-zA-Z0-9_-]{11})$/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = trimmed.match(pattern);
+      if (match) return match[1];
+    }
+    
+    return trimmed;
+  }, []);
+
+  // Add personal video
+  const addPersonalVideo = useCallback(() => {
+    const videoId = extractYouTubeId(personalVideoUrl);
+    if (!videoId || !personalVideoTitle.trim()) {
+      setPersonalError('Please enter both a title and valid YouTube URL/ID');
+      return;
+    }
+    
+    setPersonalSaving(true);
+    setPersonalError('');
+    
+    const newVideo: PersonalVideo = {
+      id: `personal_${Date.now()}`,
+      title: personalVideoTitle.trim(),
+      youtube_id: videoId,
+      added_at: new Date().toISOString()
+    };
+    
+    const updatedProfile: UserYouTubeProfile = {
+      channelUrl: personalProfile?.channelUrl || personalChannelUrl,
+      videos: [...(personalProfile?.videos || []), newVideo],
+      lastUpdated: new Date().toISOString()
+    };
+    
+    savePersonalProfile(updatedProfile);
+    setPersonalVideoUrl('');
+    setPersonalVideoTitle('');
+    setPersonalSaving(false);
+    SoundEffects.click();
+  }, [personalVideoUrl, personalVideoTitle, personalProfile, personalChannelUrl, extractYouTubeId, savePersonalProfile]);
+
+  // Remove personal video
+  const removePersonalVideo = useCallback((videoId: string) => {
+    if (!personalProfile) return;
+    
+    const updatedProfile: UserYouTubeProfile = {
+      ...personalProfile,
+      videos: personalProfile.videos.filter(v => v.id !== videoId),
+      lastUpdated: new Date().toISOString()
+    };
+    
+    savePersonalProfile(updatedProfile);
+    SoundEffects.click();
+  }, [personalProfile, savePersonalProfile]);
+
+  // Save personal channel URL
+  const savePersonalChannelUrl = useCallback(() => {
+    if (!personalChannelUrl.trim()) return;
+    
+    const updatedProfile: UserYouTubeProfile = {
+      channelUrl: personalChannelUrl.trim(),
+      videos: personalProfile?.videos || [],
+      lastUpdated: new Date().toISOString()
+    };
+    
+    savePersonalProfile(updatedProfile);
+    setShowPersonalLogin(false);
+    SoundEffects.click();
+  }, [personalChannelUrl, personalProfile, savePersonalProfile]);
+
+  // Logout from personal YouTube
+  const logoutPersonal = useCallback(() => {
+    localStorage.removeItem('bullmoney_personal_youtube');
+    setPersonalProfile(null);
+    setPersonalChannelUrl('');
+    setActiveTab('bullmoney');
+    SoundEffects.click();
+  }, []);
+
   // Auto-hide controls
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -258,27 +384,53 @@ const LiveStreamContent = memo(() => {
     fetchData();
   }, [fetchData]);
 
-  // Current video
-  const currentVideo = videos[currentVideoIndex] || null;
-  const youtubeEmbedUrl = currentVideo 
-    ? `https://www.youtube.com/embed/${currentVideo.youtube_id}?autoplay=${isPlaying ? 1 : 0}&mute=${isMuted ? 1 : 0}&rel=0&modestbranding=1`
+  // Personal video index state
+  const [personalVideoIndex, setPersonalVideoIndex] = useState(0);
+
+  // Current video - handles both tabs
+  const currentVideo = activeTab === 'bullmoney' 
+    ? (videos[currentVideoIndex] || null)
+    : null;
+  
+  const currentPersonalVideo = activeTab === 'personal' && personalProfile?.videos
+    ? (personalProfile.videos[personalVideoIndex] || null)
+    : null;
+
+  const activeVideo = activeTab === 'bullmoney' ? currentVideo : currentPersonalVideo;
+  const activeVideoList = activeTab === 'bullmoney' ? videos : (personalProfile?.videos || []);
+  const activeVideoIndex = activeTab === 'bullmoney' ? currentVideoIndex : personalVideoIndex;
+
+  const youtubeEmbedUrl = activeVideo 
+    ? `https://www.youtube.com/embed/${activeVideo.youtube_id}?autoplay=${isPlaying ? 1 : 0}&mute=${isMuted ? 1 : 0}&rel=0&modestbranding=1`
     : '';
 
   // Navigation
   const playNext = useCallback(() => {
     SoundEffects.click();
-    setCurrentVideoIndex((prev) => (prev + 1) % videos.length);
-  }, [videos.length]);
+    if (activeTab === 'bullmoney') {
+      setCurrentVideoIndex((prev) => (prev + 1) % videos.length);
+    } else if (personalProfile?.videos.length) {
+      setPersonalVideoIndex((prev) => (prev + 1) % personalProfile.videos.length);
+    }
+  }, [activeTab, videos.length, personalProfile?.videos.length]);
 
   const playPrevious = useCallback(() => {
     SoundEffects.click();
-    setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length);
-  }, [videos.length]);
+    if (activeTab === 'bullmoney') {
+      setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length);
+    } else if (personalProfile?.videos.length) {
+      setPersonalVideoIndex((prev) => (prev - 1 + personalProfile.videos.length) % personalProfile.videos.length);
+    }
+  }, [activeTab, videos.length, personalProfile?.videos.length]);
 
   const playVideo = useCallback((index: number) => {
     SoundEffects.click();
-    setCurrentVideoIndex(index);
-  }, []);
+    if (activeTab === 'bullmoney') {
+      setCurrentVideoIndex(index);
+    } else {
+      setPersonalVideoIndex(index);
+    }
+  }, [activeTab]);
 
   // Admin functions
   const addVideo = useCallback(async () => {
@@ -415,11 +567,65 @@ const LiveStreamContent = memo(() => {
             )}
             <div className="flex items-center gap-2">
               <Tv className="w-5 h-5 text-blue-400" />
-              <span className="text-white font-semibold">BullMoney TV</span>
+              <span className="text-white font-semibold hidden sm:inline">BullMoney TV</span>
+            </div>
+            
+            {/* Tab Switcher */}
+            <div className="flex items-center bg-black/40 rounded-lg p-0.5 ml-2">
+              <button
+                onClick={() => { SoundEffects.click(); setActiveTab('bullmoney'); }}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  activeTab === 'bullmoney' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'text-neutral-400 hover:text-white'
+                }`}
+              >
+                <span className="flex items-center gap-1.5">
+                  <Tv className="w-3 h-3" />
+                  <span className="hidden sm:inline">Channel</span>
+                </span>
+              </button>
+              <button
+                onClick={() => { SoundEffects.click(); setActiveTab('personal'); }}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  activeTab === 'personal' 
+                    ? 'bg-purple-500 text-white' 
+                    : 'text-neutral-400 hover:text-white'
+                }`}
+              >
+                <span className="flex items-center gap-1.5">
+                  <User className="w-3 h-3" />
+                  <span className="hidden sm:inline">My YouTube</span>
+                </span>
+              </button>
             </div>
           </div>
           
           <div className="flex items-center gap-2">
+            {/* Personal YouTube Login/Logout */}
+            {activeTab === 'personal' && (
+              personalProfile ? (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={logoutPersonal}
+                  className="p-2 rounded-lg bg-white/10 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                  title="Logout"
+                >
+                  <LogOut className="w-5 h-5" />
+                </motion.button>
+              ) : (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => { SoundEffects.click(); setShowPersonalLogin(!showPersonalLogin); }}
+                  className={`p-2 rounded-lg transition-all ${showPersonalLogin ? 'bg-purple-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                  title="Setup My YouTube"
+                >
+                  <LogIn className="w-5 h-5" />
+                </motion.button>
+              )
+            )}
             {isAdmin && (
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -547,27 +753,156 @@ const LiveStreamContent = memo(() => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Personal YouTube Setup Panel */}
+        <AnimatePresence>
+          {showPersonalLogin && activeTab === 'personal' && !personalProfile && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden bg-purple-900/20 border-b border-purple-500/20 flex-shrink-0"
+            >
+              <div className="p-4 space-y-4">
+                <div className="flex items-center gap-2">
+                  <User className="w-5 h-5 text-purple-400" />
+                  <h3 className="text-sm font-semibold text-purple-400 uppercase tracking-wider">Setup My YouTube</h3>
+                </div>
+                <p className="text-xs text-neutral-400">
+                  Add your YouTube channel and videos to watch them here. Your data is saved locally on this device.
+                </p>
+                
+                {/* Channel URL */}
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="text"
+                    placeholder="Your YouTube Channel URL (optional)"
+                    value={personalChannelUrl}
+                    onChange={(e) => setPersonalChannelUrl(e.target.value)}
+                    className="flex-1 px-3 py-2 bg-black/50 border border-purple-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 placeholder-neutral-500"
+                  />
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={savePersonalChannelUrl}
+                    className="px-4 py-2 bg-purple-500 text-white rounded-lg font-medium text-sm flex items-center justify-center gap-2 hover:bg-purple-600 transition-colors"
+                  >
+                    <Check className="w-4 h-4" />
+                    Save
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Personal YouTube Add Video Panel */}
+        <AnimatePresence>
+          {activeTab === 'personal' && personalProfile && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden bg-purple-900/20 border-b border-purple-500/20 flex-shrink-0"
+            >
+              <div className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Heart className="w-4 h-4 text-purple-400" />
+                    <h3 className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Add to My Videos</h3>
+                  </div>
+                  {personalProfile.channelUrl && (
+                    <a
+                      href={personalProfile.channelUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                    >
+                      <Link2 className="w-3 h-3" />
+                      My Channel
+                    </a>
+                  )}
+                </div>
+                
+                {personalError && (
+                  <div className="flex items-center gap-2 text-xs text-red-400 bg-red-500/10 px-3 py-2 rounded-lg">
+                    <AlertCircle className="w-3 h-3" />
+                    {personalError}
+                  </div>
+                )}
+                
+                {/* Add Video Form */}
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="text"
+                    placeholder="Video Title"
+                    value={personalVideoTitle}
+                    onChange={(e) => { setPersonalVideoTitle(e.target.value); setPersonalError(''); }}
+                    className="flex-1 px-3 py-2 bg-black/50 border border-purple-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 placeholder-neutral-500"
+                  />
+                  <input
+                    type="text"
+                    placeholder="YouTube URL or Video ID"
+                    value={personalVideoUrl}
+                    onChange={(e) => { setPersonalVideoUrl(e.target.value); setPersonalError(''); }}
+                    className="flex-1 px-3 py-2 bg-black/50 border border-purple-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 placeholder-neutral-500"
+                  />
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={addPersonalVideo}
+                    disabled={personalSaving || !personalVideoTitle.trim() || !personalVideoUrl.trim()}
+                    className="px-4 py-2 bg-purple-500 text-white rounded-lg font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-purple-600 transition-colors"
+                  >
+                    {personalSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                    Add
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         
         {/* Main Content Area */}
         <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
           {/* Video Player */}
           <div className="flex-1 flex flex-col min-w-0">
             <div className="relative aspect-video bg-black">
-              {loading ? (
+              {loading && activeTab === 'bullmoney' ? (
                 <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-neutral-900 to-black">
                   <div className="flex flex-col items-center gap-4">
                     <ShimmerSpinner size={48} color="blue" />
                     <p className="text-neutral-400 text-sm">Loading stream...</p>
                   </div>
                 </div>
-              ) : currentVideo ? (
+              ) : activeVideo ? (
                 <iframe
+                  key={activeVideo.youtube_id}
                   src={youtubeEmbedUrl}
                   className="w-full h-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
-                  title={currentVideo.title}
+                  title={activeVideo.title}
                 />
+              ) : activeTab === 'personal' && !personalProfile ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-purple-900/20 to-black">
+                  <User className="w-16 h-16 text-purple-400/50" />
+                  <p className="text-neutral-400 text-center max-w-xs">Set up your personal YouTube to watch your favorite videos here</p>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowPersonalLogin(true)}
+                    className="px-4 py-2 bg-purple-500 text-white rounded-lg font-medium text-sm flex items-center gap-2"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    Get Started
+                  </motion.button>
+                </div>
+              ) : activeTab === 'personal' && personalProfile && personalProfile.videos.length === 0 ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-purple-900/20 to-black">
+                  <Heart className="w-16 h-16 text-purple-400/50" />
+                  <p className="text-neutral-400 text-center max-w-xs">Add your first video above to start watching</p>
+                </div>
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-neutral-900 to-black">
                   <Youtube className="w-16 h-16 text-blue-400/50" />
@@ -591,22 +926,28 @@ const LiveStreamContent = memo(() => {
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div className="flex-1 min-w-0">
                   <h2 className="text-lg font-semibold text-white line-clamp-1 mb-1">
-                    {currentVideo?.title || 'No video selected'}
+                    {activeVideo?.title || 'No video selected'}
                   </h2>
                   <p className="text-sm text-neutral-400 flex items-center gap-2">
                     <Clock className="w-4 h-4" />
-                    {currentVideo?.is_live ? 'Streaming now' : 'On demand'}
-                    {videos.length > 1 && (
+                    {activeTab === 'bullmoney' && currentVideo?.is_live ? 'Streaming now' : 'On demand'}
+                    {activeVideoList.length > 1 && (
                       <>
                         <span className="text-neutral-600">•</span>
-                        <span>{currentVideoIndex + 1} of {videos.length}</span>
+                        <span>{activeVideoIndex + 1} of {activeVideoList.length}</span>
+                      </>
+                    )}
+                    {activeTab === 'personal' && (
+                      <>
+                        <span className="text-neutral-600">•</span>
+                        <span className="text-purple-400">My Video</span>
                       </>
                     )}
                   </p>
                 </div>
                 
-                {/* YouTube Link */}
-                {channelUrl && (
+                {/* YouTube Link / Watch on YouTube */}
+                {activeTab === 'bullmoney' && channelUrl ? (
                   <motion.a
                     href={channelUrl}
                     target="_blank"
@@ -619,13 +960,26 @@ const LiveStreamContent = memo(() => {
                     <Youtube className="w-4 h-4" />
                     <span className="hidden sm:inline">Subscribe</span>
                   </motion.a>
+                ) : activeVideo && (
+                  <motion.a
+                    href={`https://www.youtube.com/watch?v=${activeVideo.youtube_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => SoundEffects.click()}
+                    className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium text-xs transition-colors flex-shrink-0"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    <span className="hidden sm:inline">YouTube</span>
+                  </motion.a>
                 )}
               </div>
               
               {/* Playback Controls */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1">
-                  {videos.length > 1 && (
+                  {activeVideoList.length > 1 && (
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
@@ -640,12 +994,12 @@ const LiveStreamContent = memo(() => {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => { SoundEffects.click(); setIsPlaying(!isPlaying); }}
-                    className="p-3 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-all"
+                    className={`p-3 rounded-full text-white transition-all ${activeTab === 'personal' ? 'bg-purple-500 hover:bg-purple-600' : 'bg-blue-500 hover:bg-blue-600'}`}
                   >
                     {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
                   </motion.button>
                   
-                  {videos.length > 1 && (
+                  {activeVideoList.length > 1 && (
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
@@ -696,86 +1050,172 @@ const LiveStreamContent = memo(() => {
                 <div className="p-3 border-b border-white/5 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                      <List className="w-4 h-4 text-blue-400" />
-                      Up Next
+                      <List className={`w-4 h-4 ${activeTab === 'personal' ? 'text-purple-400' : 'text-blue-400'}`} />
+                      {activeTab === 'personal' ? 'My Videos' : 'Up Next'}
                     </h3>
-                    <span className="text-xs text-neutral-500 bg-neutral-800 px-2 py-0.5 rounded-full">
-                      {videos.length}
+                    <span className={`text-xs text-neutral-500 px-2 py-0.5 rounded-full ${activeTab === 'personal' ? 'bg-purple-500/20' : 'bg-neutral-800'}`}>
+                      {activeVideoList.length}
                     </span>
                   </div>
                 </div>
                 
                 {/* Playlist Items */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
-                  {videos.map((video, index) => (
-                    <motion.button
-                      key={video.id}
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                      onClick={() => playVideo(index)}
-                      className={`
-                        w-full flex gap-3 p-2 rounded-lg transition-all text-left group
-                        ${index === currentVideoIndex 
-                          ? 'bg-blue-500/20 ring-1 ring-blue-500/50' 
-                          : 'hover:bg-white/5'
-                        }
-                      `}
-                    >
-                      {/* Thumbnail */}
-                      <div className="relative w-24 aspect-video rounded-md overflow-hidden bg-neutral-800 flex-shrink-0">
-                        <img 
-                          src={getYouTubeThumbnail(video.youtube_id, 'mq')} 
-                          alt={video.title}
-                          className="w-full h-full object-cover"
-                        />
-                        {/* Play overlay */}
-                        <div className={`
-                          absolute inset-0 flex items-center justify-center bg-black/40 
-                          transition-opacity
-                          ${index === currentVideoIndex ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
-                        `}>
-                          <div className={`p-1.5 rounded-full ${index === currentVideoIndex ? 'bg-blue-500' : 'bg-white/20'}`}>
-                            {index === currentVideoIndex ? (
-                              <Radio className="w-3 h-3 text-white" />
-                            ) : (
-                              <Play className="w-3 h-3 text-white" />
+                  {activeTab === 'bullmoney' ? (
+                    // BullMoney TV Videos
+                    videos.map((video, index) => (
+                      <motion.button
+                        key={video.id}
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        onClick={() => playVideo(index)}
+                        className={`
+                          w-full flex gap-3 p-2 rounded-lg transition-all text-left group
+                          ${index === currentVideoIndex 
+                            ? 'bg-blue-500/20 ring-1 ring-blue-500/50' 
+                            : 'hover:bg-white/5'
+                          }
+                        `}
+                      >
+                        {/* Thumbnail */}
+                        <div className="relative w-24 aspect-video rounded-md overflow-hidden bg-neutral-800 flex-shrink-0">
+                          <img 
+                            src={getYouTubeThumbnail(video.youtube_id, 'mq')} 
+                            alt={video.title}
+                            className="w-full h-full object-cover"
+                          />
+                          {/* Play overlay */}
+                          <div className={`
+                            absolute inset-0 flex items-center justify-center bg-black/40 
+                            transition-opacity
+                            ${index === currentVideoIndex ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
+                          `}>
+                            <div className={`p-1.5 rounded-full ${index === currentVideoIndex ? 'bg-blue-500' : 'bg-white/20'}`}>
+                              {index === currentVideoIndex ? (
+                                <Radio className="w-3 h-3 text-white" />
+                              ) : (
+                                <Play className="w-3 h-3 text-white" />
+                              )}
+                            </div>
+                          </div>
+                          {/* Live badge */}
+                          {video.is_live && (
+                            <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-red-600 text-white text-[9px] font-bold rounded uppercase">
+                              Live
+                            </span>
+                          )}
+                        </div>
+                        
+                        {/* Info */}
+                        <div className="flex-1 min-w-0 py-0.5">
+                          <p className={`
+                            text-xs font-medium line-clamp-2 mb-1 transition-colors
+                            ${index === currentVideoIndex ? 'text-blue-400' : 'text-white group-hover:text-blue-400'}
+                          `}>
+                            {video.title}
+                          </p>
+                          <p className="text-[10px] text-neutral-500 flex items-center gap-1">
+                            <Tv className="w-3 h-3" />
+                            BullMoney TV
+                          </p>
+                          {index === currentVideoIndex && (
+                            <p className="text-[10px] text-blue-400 mt-0.5 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
+                              Playing
+                            </p>
+                          )}
+                        </div>
+                      </motion.button>
+                    ))
+                  ) : (
+                    // Personal Videos
+                    personalProfile?.videos.map((video, index) => (
+                      <motion.div
+                        key={video.id}
+                        whileHover={{ scale: 1.01 }}
+                        className={`
+                          w-full flex gap-3 p-2 rounded-lg transition-all text-left group
+                          ${index === personalVideoIndex 
+                            ? 'bg-purple-500/20 ring-1 ring-purple-500/50' 
+                            : 'hover:bg-white/5'
+                          }
+                        `}
+                      >
+                        <button
+                          onClick={() => playVideo(index)}
+                          className="flex gap-3 flex-1 min-w-0"
+                        >
+                          {/* Thumbnail */}
+                          <div className="relative w-24 aspect-video rounded-md overflow-hidden bg-neutral-800 flex-shrink-0">
+                            <img 
+                              src={getYouTubeThumbnail(video.youtube_id, 'mq')} 
+                              alt={video.title}
+                              className="w-full h-full object-cover"
+                            />
+                            {/* Play overlay */}
+                            <div className={`
+                              absolute inset-0 flex items-center justify-center bg-black/40 
+                              transition-opacity
+                              ${index === personalVideoIndex ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
+                            `}>
+                              <div className={`p-1.5 rounded-full ${index === personalVideoIndex ? 'bg-purple-500' : 'bg-white/20'}`}>
+                                {index === personalVideoIndex ? (
+                                  <Radio className="w-3 h-3 text-white" />
+                                ) : (
+                                  <Play className="w-3 h-3 text-white" />
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Info */}
+                          <div className="flex-1 min-w-0 py-0.5">
+                            <p className={`
+                              text-xs font-medium line-clamp-2 mb-1 transition-colors
+                              ${index === personalVideoIndex ? 'text-purple-400' : 'text-white group-hover:text-purple-400'}
+                            `}>
+                              {video.title}
+                            </p>
+                            <p className="text-[10px] text-neutral-500 flex items-center gap-1">
+                              <Heart className="w-3 h-3" />
+                              My Video
+                            </p>
+                            {index === personalVideoIndex && (
+                              <p className="text-[10px] text-purple-400 mt-0.5 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
+                                Playing
+                              </p>
                             )}
                           </div>
-                        </div>
-                        {/* Live badge */}
-                        {video.is_live && (
-                          <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-red-600 text-white text-[9px] font-bold rounded uppercase">
-                            Live
-                          </span>
-                        )}
-                      </div>
-                      
-                      {/* Info */}
-                      <div className="flex-1 min-w-0 py-0.5">
-                        <p className={`
-                          text-xs font-medium line-clamp-2 mb-1 transition-colors
-                          ${index === currentVideoIndex ? 'text-blue-400' : 'text-white group-hover:text-blue-400'}
-                        `}>
-                          {video.title}
-                        </p>
-                        <p className="text-[10px] text-neutral-500 flex items-center gap-1">
-                          <Tv className="w-3 h-3" />
-                          BullMoney TV
-                        </p>
-                        {index === currentVideoIndex && (
-                          <p className="text-[10px] text-blue-400 mt-0.5 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
-                            Playing
-                          </p>
-                        )}
-                      </div>
-                    </motion.button>
-                  ))}
+                        </button>
+                        
+                        {/* Delete Button */}
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => removePersonalVideo(video.id)}
+                          className="p-1.5 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 rounded-full opacity-0 group-hover:opacity-100 transition-all self-center"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </motion.button>
+                      </motion.div>
+                    ))
+                  )}
                   
-                  {videos.length === 0 && (
+                  {activeVideoList.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
-                      <Youtube className="w-10 h-10 text-neutral-700 mb-2" />
-                      <p className="text-neutral-500 text-xs">No videos in playlist</p>
+                      {activeTab === 'personal' ? (
+                        <>
+                          <Heart className="w-10 h-10 text-purple-400/30 mb-2" />
+                          <p className="text-neutral-500 text-xs">No videos added yet</p>
+                          <p className="text-neutral-600 text-[10px] mt-1">Add videos above to watch them here</p>
+                        </>
+                      ) : (
+                        <>
+                          <Youtube className="w-10 h-10 text-neutral-700 mb-2" />
+                          <p className="text-neutral-500 text-xs">No videos in playlist</p>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
