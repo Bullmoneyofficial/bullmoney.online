@@ -14,6 +14,7 @@ import React, {
   useRef,
   useState,
   memo,
+  useCallback,
 } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -61,17 +62,30 @@ const MobileMenuControls = memo(({
   hasReward,
   isXMUser,
   shimmerEnabled = true,
-  shimmerSettings = { intensity: 'medium' as const, speed: 'normal' as const }
+  shimmerSettings = { intensity: 'medium' as const, speed: 'normal' as const },
+  isScrollMinimized = false,
 }: any) => (
-  <div 
-    className="relative group rounded-full overflow-hidden shadow-2xl z-50 h-12 sm:h-14 flex items-center flex-grow max-w-xs mobile-controls-glass navbar-shimmer"
+  <motion.div 
+    className="relative group rounded-full overflow-hidden shadow-2xl z-50 flex items-center flex-grow navbar-shimmer"
+    animate={{
+      height: isScrollMinimized ? 36 : undefined,
+      maxWidth: isScrollMinimized ? '7rem' : '12rem',
+      scale: isScrollMinimized ? 0.9 : 1,
+    }}
+    transition={{ type: 'spring', damping: 25, stiffness: 450, mass: 0.6 }}
+    style={{ 
+      height: isScrollMinimized ? 36 : 'auto',
+    }}
   >
     {/* Unified Shimmer Border - GPU accelerated, LEFT TO RIGHT */}
-    {shimmerEnabled && <ShimmerBorder color="blue" intensity={shimmerSettings.intensity} speed={shimmerSettings.speed} />}
+    {shimmerEnabled && !isScrollMinimized && <ShimmerBorder color="blue" intensity={shimmerSettings.intensity} speed={shimmerSettings.speed} />}
 
     {/* Inner Content Container */}
-    <div 
-      className="relative h-full w-full bg-black/95 dark:bg-black/95 backdrop-blur-xl rounded-full p-[2px] flex items-center justify-center gap-1 px-2 sm:px-3 border-2 border-blue-500/60 dark:border-blue-500/60 transition-all duration-300 group-hover:border-blue-400/80 group-hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] z-10"
+    <motion.div 
+      className={cn(
+        "relative h-full w-full bg-black/95 dark:bg-black/95 backdrop-blur-xl rounded-full flex items-center justify-center border-2 border-blue-500/60 dark:border-blue-500/60 transition-all duration-200 group-hover:border-blue-400/80 group-hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] z-10",
+        isScrollMinimized ? "p-[1px] gap-0.5 px-1.5" : "p-[2px] gap-1 px-2 sm:px-3"
+      )}
     >
       {/* Theme Selector Button */}
       <motion.button
@@ -80,14 +94,22 @@ const MobileMenuControls = memo(({
         onTouchStart={() => SoundEffects.click()}
         whileHover={{ scale: 1.1, backgroundColor: "rgba(59, 130, 246, 0.15)" }}
         whileTap={{ scale: 0.95 }}
-        className="p-1.5 rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
+        className={cn(
+          "rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center",
+          isScrollMinimized 
+            ? "p-1 min-w-[28px] min-h-[28px]" 
+            : "p-1.5 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
+        )}
         title="Theme Selector"
       >
-        <IconPalette className="h-4 w-4 sm:h-5 sm:w-5" />
+        <IconPalette className={isScrollMinimized ? "h-3.5 w-3.5" : "h-4 w-4 sm:h-5 sm:w-5"} />
       </motion.button>
 
       {/* Divider */}
-      <div className="h-4 w-[1px] bg-gradient-to-b from-blue-500/20 via-blue-500/40 to-blue-500/20 dark:bg-blue-500/20" />
+      <div className={cn(
+        "bg-gradient-to-b from-blue-500/20 via-blue-500/40 to-blue-500/20 dark:bg-blue-500/20",
+        isScrollMinimized ? "h-3 w-[1px]" : "h-4 w-[1px]"
+      )} />
 
       {/* Menu Toggle Button */}
       <motion.button
@@ -96,11 +118,20 @@ const MobileMenuControls = memo(({
         onTouchStart={() => SoundEffects.click()}
         whileHover={{ scale: 1.1, backgroundColor: "rgba(59, 130, 246, 0.15)" }}
         whileTap={{ scale: 0.95 }}
-        className="p-1.5 rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
+        className={cn(
+          "rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center",
+          isScrollMinimized 
+            ? "p-1 min-w-[28px] min-h-[28px]" 
+            : "p-1.5 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
+        )}
         title={open ? 'Close menu' : 'Open menu'}
       >
         <div className="relative flex items-center justify-center">
-          {open ? <IconX className="h-4 w-4 sm:h-5 sm:w-5" /> : <IconMenu2 className="h-4 w-4 sm:h-5 sm:w-5" />}
+          {open ? (
+            <IconX className={isScrollMinimized ? "h-3.5 w-3.5" : "h-4 w-4 sm:h-5 sm:w-5"} />
+          ) : (
+            <IconMenu2 className={isScrollMinimized ? "h-3.5 w-3.5" : "h-4 w-4 sm:h-5 sm:w-5"} />
+          )}
           {hasReward && !open && (
             <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
               <span className="shimmer-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
@@ -109,8 +140,8 @@ const MobileMenuControls = memo(({
           )}
         </div>
       </motion.button>
-    </div>
-  </div>
+    </motion.div>
+  </motion.div>
 ));
 MobileMenuControls.displayName = 'MobileMenuControls';
 
@@ -162,6 +193,11 @@ export const Navbar = memo(() => {
   // Dock hover state
   const [isDockHovered, setIsDockHovered] = useState(false);
   
+  // Scroll minimization state for mobile navbar
+  const [isScrollMinimized, setIsScrollMinimized] = useState(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastScrollY = useRef(0);
+  
   // Refs
   const dockRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -186,6 +222,47 @@ export const Navbar = memo(() => {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Scroll detection for mobile navbar minimization
+  useEffect(() => {
+    if (!isMobile) return;
+    
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = Math.abs(currentScrollY - lastScrollY.current);
+      
+      // Only trigger minimization on significant scroll when menu is closed
+      if (scrollDelta > 15 && !open) {
+        setIsScrollMinimized(true);
+        lastScrollY.current = currentScrollY;
+        
+        // Clear existing timeout
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+        
+        // Set timeout to expand back after scroll stops
+        scrollTimeoutRef.current = setTimeout(() => {
+          setIsScrollMinimized(false);
+        }, 1000); // Expand back 1s after scroll stops
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [isMobile, open]);
+
+  // Reset minimized state when menu opens
+  useEffect(() => {
+    if (open) {
+      setIsScrollMinimized(false);
+    }
+  }, [open]);
 
   // Note: Component lifecycle is now managed by useComponentLifecycle hook above
   // No need for separate registerComponent/unregisterComponent calls
@@ -298,17 +375,68 @@ export const Navbar = memo(() => {
 
         {/* MOBILE NAVBAR */}
         <div className="lg:hidden flex flex-row items-center justify-between w-full px-2 sm:px-4 pointer-events-auto gap-2">
-          {/* Logo */}
-          <div className="relative flex items-center justify-center overflow-hidden h-16 w-16 sm:h-20 sm:w-20 z-50 flex-shrink-0">
-            <Link href="/" className="relative w-full h-full block">
-              <Image
-                src="/BULL.svg"
-                alt="BullMoney"
-                fill
-                className="object-cover"
-                priority
-              />
-            </Link>
+          {/* Logo + Brand Name */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Logo - shrinks on scroll */}
+            <motion.div 
+              className="relative flex items-center justify-center overflow-hidden z-50 flex-shrink-0"
+              animate={{
+                height: isScrollMinimized ? 36 : undefined,
+                width: isScrollMinimized ? 36 : undefined,
+              }}
+              transition={{ type: 'spring', damping: 25, stiffness: 450, mass: 0.6 }}
+              style={{
+                height: isScrollMinimized ? 36 : 56,
+                width: isScrollMinimized ? 36 : 56,
+              }}
+            >
+              <Link href="/" className="relative w-full h-full block">
+                <Image
+                  src="/BULL.svg"
+                  alt="BullMoney"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </Link>
+            </motion.div>
+
+            {/* BULLMONEY Text with Shimmer */}
+            <AnimatePresence>
+              {!isScrollMinimized && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10, width: 0 }}
+                  animate={{ opacity: 1, x: 0, width: 'auto' }}
+                  exit={{ opacity: 0, x: -10, width: 0 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 400, mass: 0.6 }}
+                  className="relative overflow-hidden"
+                >
+                  <Link href="/" className="relative block">
+                    <span 
+                      className="text-lg font-black tracking-tight bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 bg-clip-text text-transparent"
+                      style={{
+                        textShadow: '0 0 20px rgba(59, 130, 246, 0.5)',
+                      }}
+                    >
+                      BULLMONEY
+                    </span>
+                    {/* Shimmer overlay */}
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                      <motion.div
+                        className="absolute inset-y-0 w-[60%] bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                        animate={{ x: ['-100%', '200%'] }}
+                        transition={{
+                          duration: 2.5,
+                          repeat: Infinity,
+                          repeatDelay: 1,
+                          ease: 'easeInOut',
+                        }}
+                      />
+                    </div>
+                  </Link>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Mobile Controls */}
@@ -320,6 +448,7 @@ export const Navbar = memo(() => {
             isXMUser={isXMUser}
             shimmerEnabled={shimmerEnabled}
             shimmerSettings={shimmerSettings}
+            isScrollMinimized={isScrollMinimized}
           />
         </div>
       </motion.div>

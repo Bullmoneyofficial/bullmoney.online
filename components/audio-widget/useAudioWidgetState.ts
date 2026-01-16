@@ -32,6 +32,8 @@ export interface UseAudioWidgetStateReturn {
   setWidgetHidden: React.Dispatch<React.SetStateAction<boolean>>;
   isMobile: boolean;
   setIsMobile: React.Dispatch<React.SetStateAction<boolean>>;
+  isScrollMinimized: boolean;
+  setIsScrollMinimized: React.Dispatch<React.SetStateAction<boolean>>;
   
   // Game state
   hasStartedCatchGame: boolean;
@@ -84,6 +86,7 @@ export function useAudioWidgetState(): UseAudioWidgetStateReturn {
   const [showTipsOverlay, setShowTipsOverlay] = useState(false);
   const [widgetHidden, setWidgetHidden] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isScrollMinimized, setIsScrollMinimized] = useState(false);
   
   // Game state
   const [hasStartedCatchGame, setHasStartedCatchGame] = useState(false);
@@ -142,6 +145,7 @@ export function useAudioWidgetState(): UseAudioWidgetStateReturn {
     showTipsOverlay, setShowTipsOverlay,
     widgetHidden, setWidgetHidden,
     isMobile, setIsMobile,
+    isScrollMinimized, setIsScrollMinimized,
     hasStartedCatchGame, setHasStartedCatchGame,
     showCatchGameTutorial, setShowCatchGameTutorial,
     showCatchGameDemo, setShowCatchGameDemo,

@@ -54,24 +54,25 @@ export const MobileStaticHelper = memo(() => {
   
   return (
     <div
-      className="fixed right-3 left-3 z-30 pointer-events-none lg:hidden mobile-helper-optimized"
+      className="fixed z-30 pointer-events-none lg:hidden mobile-helper-optimized"
       style={{ 
-        top: 'calc(6.5rem + env(safe-area-inset-top, 0px))',
+        top: 'calc(5.5rem + env(safe-area-inset-top, 0px))',
+        right: '1.5rem',
         filter: themeFilter,
         transition: 'filter 0.5s ease-in-out'
       }}
     >
       <motion.div 
-        initial={{ opacity: 0, y: -8, scale: 0.95 }}
-        animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : -8, scale: isVisible ? 1 : 0.95 }}
+        initial={{ opacity: 0, x: 20, scale: 0.9 }}
+        animate={{ opacity: isVisible ? 1 : 0, x: isVisible ? 0 : 20, scale: isVisible ? 1 : 0.9 }}
         transition={{ 
-          duration: 0.35,
+          duration: 0.3,
           ease: [0.34, 1.56, 0.64, 1]
         }}
-        className="relative mx-auto w-fit max-w-[90%] px-3 py-2 rounded-xl bg-black/80 backdrop-blur-xl gpu-accelerated overflow-hidden static-tip-shimmer"
+        className="relative w-fit max-w-[160px] px-2 py-1.5 rounded-lg bg-black/85 backdrop-blur-xl gpu-accelerated overflow-hidden static-tip-shimmer"
         style={{
-          border: '1px solid rgba(59, 130, 246, 0.5)',
-          boxShadow: '0 0 30px rgba(59, 130, 246, 0.3), inset 0 0 15px rgba(59, 130, 246, 0.1)'
+          border: '1px solid rgba(59, 130, 246, 0.4)',
+          boxShadow: '0 0 20px rgba(59, 130, 246, 0.2), inset 0 0 10px rgba(59, 130, 246, 0.08)'
         }}
       >
         {/* Unified Shimmer - Left to Right using ShimmerLine component */}
@@ -88,7 +89,7 @@ export const MobileStaticHelper = memo(() => {
         )}
         
         <motion.div 
-          className="flex items-center gap-2.5 justify-center relative z-10"
+          className="flex items-center gap-1.5 justify-end relative z-10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1, duration: 0.2 }}
@@ -114,14 +115,14 @@ export const MobileStaticHelper = memo(() => {
           <AnimatePresence mode="wait">
             <motion.span 
               key={tipIndex}
-              initial={{ opacity: 0, y: 4, x: -8 }}
-              animate={{ opacity: 1, y: 0, x: 0 }}
-              exit={{ opacity: 0, y: -4, x: 8 }}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
               transition={{ 
-                duration: 0.3,
+                duration: 0.25,
                 ease: [0.34, 1.56, 0.64, 1]
               }}
-              className="text-[10px] tracking-wide font-medium text-center"
+              className="text-[9px] tracking-wide font-medium text-right leading-tight"
               style={{ color: '#93c5fd' }}
             >
               {MOBILE_HELPER_TIPS[tipIndex]}

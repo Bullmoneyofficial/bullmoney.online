@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   IconMusic,
@@ -18,6 +18,47 @@ import { ShimmerLine } from "@/components/ui/UnifiedShimmer";
 import { sourceLabel, streamingOptions, sourceIcons } from "./constants";
 import type { MusicSource } from "@/contexts/AudioSettingsProvider";
 
+/**
+ * Animated Music Wave Bars - Trading ticker style
+ * Shows animated equalizer bars next to music icon
+ */
+function MusicWaveBars({ isPlaying, color = "blue" }: { isPlaying: boolean; color?: "blue" | "green" }) {
+  const barColors = color === "green" 
+    ? { bar: "#34d399", glow: "rgba(52, 211, 153, 0.6)" }
+    : { bar: "#60a5fa", glow: "rgba(96, 165, 250, 0.6)" };
+  
+  return (
+    <div className="flex items-end gap-[2px] h-[14px]">
+      {[0, 1, 2, 3].map((i) => (
+        <motion.div
+          key={i}
+          className="w-[3px] rounded-full origin-bottom"
+          style={{ 
+            backgroundColor: barColors.bar,
+            boxShadow: `0 0 4px ${barColors.glow}`,
+          }}
+          animate={isPlaying ? {
+            height: [
+              4 + Math.random() * 4,
+              8 + Math.random() * 6,
+              3 + Math.random() * 5,
+              10 + Math.random() * 4,
+              5 + Math.random() * 3,
+            ],
+          } : { height: 4 }}
+          transition={isPlaying ? {
+            duration: 0.4 + i * 0.05,
+            repeat: Infinity,
+            repeatType: "reverse",
+            ease: "easeInOut",
+            delay: i * 0.08,
+          } : { duration: 0.2 }}
+        />
+      ))}
+    </div>
+  );
+}
+
 interface MainWidgetProps {
   open: boolean;
   setOpen: (v: boolean) => void;
@@ -29,6 +70,8 @@ interface MainWidgetProps {
   setWidgetHidden: (v: boolean) => void;
   shimmerEnabled: boolean;
   shimmerSettings: { intensity: string; speed: string };
+  isScrollMinimized: boolean;
+  setIsScrollMinimized: (v: boolean) => void;
   
   // Audio state
   musicSource: MusicSource;
@@ -69,6 +112,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
   const {
     open, setOpen, widgetRef, widgetX, widgetOpacity, handleWidgetDragEnd,
     widgetHidden, setWidgetHidden, shimmerEnabled, shimmerSettings,
+    isScrollMinimized, setIsScrollMinimized,
     musicSource, isStreamingSource, streamingActive, setStreamingActive,
     streamingEmbedUrl, musicEnabled, setMusicEnabled, isMusicPlaying, toggleMusic,
     musicVolume, setMusicVolume, sfxVolume, setSfxVolume, tipsMuted, setTipsMuted,
@@ -76,6 +120,48 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
     setMusicEmbedOpen, setShowTipsOverlay, showReturnUserHint, showFirstTimeHelp,
     iframeRef, isWandering, gameStats, gameState,
   } = props;
+
+  // Scroll detection for auto-minimizing
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastScrollY = useRef(0);
+  
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = Math.abs(currentScrollY - lastScrollY.current);
+      
+      // Only trigger minimization on significant scroll when widget is not open
+      if (scrollDelta > 15 && !open && !widgetHidden) {
+        setIsScrollMinimized(true);
+        lastScrollY.current = currentScrollY;
+        
+        // Clear existing timeout
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+        
+        // Set timeout to expand back after scroll stops
+        scrollTimeoutRef.current = setTimeout(() => {
+          setIsScrollMinimized(false);
+        }, 1200); // Expand back 1.2s after scroll stops
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [open, widgetHidden, setIsScrollMinimized]);
+
+  // Reset minimized state when widget opens
+  useEffect(() => {
+    if (open) {
+      setIsScrollMinimized(false);
+    }
+  }, [open, setIsScrollMinimized]);
 
   const currentStreamingIcon = React.useMemo(() => {
     const SourceIcon = sourceIcons[musicSource];
@@ -106,20 +192,88 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {!widgetHidden && (
-          <motion.div 
-            ref={widgetRef}
-            initial={{ x: 0 }}
-            animate={{ x: 0 }}
-            exit={{ x: -200, opacity: 0 }}
-            className="fixed left-3 bottom-14 z-[100200] pointer-events-auto"
-            drag="x"
-            dragConstraints={{ left: -150, right: 0 }}
-            dragElastic={0.1}
-            onDragEnd={handleWidgetDragEnd}
-            style={{ x: widgetX, opacity: widgetOpacity }}
-          >
+          <>
+            {/* MINIMIZED PILL STATE - Music icon with animated wave bars */}
+            <AnimatePresence>
+              {isScrollMinimized && !open && (
+                <motion.div
+                  key="minimized-audio"
+                  initial={{ opacity: 0, scale: 0.7, x: -20 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.7, x: -20 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 500, mass: 0.6 }}
+                  className="fixed left-3 bottom-14 z-[100200] pointer-events-auto"
+                >
+                  <motion.button
+                    onClick={() => {
+                      SoundEffects.click();
+                      setIsScrollMinimized(false);
+                    }}
+                    onMouseEnter={() => {
+                      SoundEffects.hover();
+                      // Expand on hover (desktop)
+                      if (window.matchMedia('(hover: hover)').matches) {
+                        setIsScrollMinimized(false);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-gradient-to-br from-blue-600/40 via-blue-500/25 to-slate-900/50 backdrop-blur-2xl border border-blue-500/50 shadow-lg shadow-blue-500/20 hover:border-blue-400/70 hover:shadow-blue-500/30 transition-all duration-200"
+                    whileHover={{ scale: 1.05, x: 2 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {/* Music Icon with pulse */}
+                    <motion.div
+                      animate={isMusicPlaying || streamingActive ? { 
+                        scale: [1, 1.1, 1],
+                      } : {}}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                      className="relative"
+                    >
+                      <IconMusic 
+                        className={cn(
+                          "w-4 h-4",
+                          isMusicPlaying || streamingActive ? "text-blue-300" : "text-blue-400/70"
+                        )} 
+                        style={isMusicPlaying || streamingActive ? {
+                          filter: "drop-shadow(0 0 6px rgba(96, 165, 250, 0.8))"
+                        } : {}}
+                      />
+                      {/* Playing indicator dot */}
+                      {(isMusicPlaying || streamingActive) && (
+                        <motion.div
+                          animate={{ scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
+                          transition={{ duration: 1, repeat: Infinity }}
+                          className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-green-400"
+                          style={{ boxShadow: "0 0 4px rgba(74, 222, 128, 0.8)" }}
+                        />
+                      )}
+                    </motion.div>
+                    
+                    {/* Animated Music Wave Bars */}
+                    <MusicWaveBars isPlaying={isMusicPlaying || streamingActive} color={isMusicPlaying || streamingActive ? "green" : "blue"} />
+                  </motion.button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* FULL WIDGET STATE */}
+            <AnimatePresence>
+              {!isScrollMinimized && (
+                <motion.div 
+                  key="full-audio"
+                  ref={widgetRef}
+                  initial={{ opacity: 0, scale: 0.85, x: -20 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.85, x: -20 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 450, mass: 0.6 }}
+                  className="fixed left-3 bottom-14 z-[100200] pointer-events-auto"
+                  drag="x"
+                  dragConstraints={{ left: -150, right: 0 }}
+                  dragElastic={0.1}
+                  onDragEnd={handleWidgetDragEnd}
+                  style={{ x: widgetX, opacity: widgetOpacity }}
+                >
             {/* Return User "Click Play" Helper */}
             <AnimatePresence>
               {!open && showReturnUserHint && (
@@ -372,13 +526,16 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
 
             {/* Swipe hint */}
             <AnimatePresence>
-              {!open && showFirstTimeHelp && !streamingActive && (
+              {!open && !isScrollMinimized && showFirstTimeHelp && !streamingActive && (
                 <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="absolute left-full ml-2 top-1/2 -translate-y-1/2 whitespace-nowrap">
                   <span className="text-[9px] text-white/40">← Swipe to hide</span>
                 </motion.div>
               )}
             </AnimatePresence>
-          </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          </>
         )}
       </AnimatePresence>
     </>

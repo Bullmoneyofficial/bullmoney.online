@@ -14,9 +14,10 @@
  * - Theme-aware styling via GlobalThemeProvider
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import { motion, AnimatePresence, PanInfo, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { useUIState as useUIStateContext } from '@/contexts/UIStateContext';
 import {
   Activity,
   Wifi,
@@ -297,6 +298,102 @@ function FpsDisplayWithOptimizer() {
 }
 
 /**
+ * Minimized FPS Number - Trading Ticker Style
+ * Fast, smooth digit-by-digit rolling animation like stock tickers
+ */
+function MinimizedFpsNumber() {
+  const { currentFps } = useFpsOptimizer();
+  const prevFpsRef = useRef(currentFps);
+  const [direction, setDirection] = useState<'up' | 'down' | 'neutral'>('neutral');
+  
+  // Track direction for visual indicator
+  useEffect(() => {
+    if (currentFps > prevFpsRef.current) {
+      setDirection('up');
+    } else if (currentFps < prevFpsRef.current) {
+      setDirection('down');
+    }
+    prevFpsRef.current = currentFps;
+    
+    // Reset direction indicator after flash
+    const timer = setTimeout(() => setDirection('neutral'), 300);
+    return () => clearTimeout(timer);
+  }, [currentFps]);
+
+  // Color based on FPS performance
+  const getColors = (fps: number) => {
+    if (fps >= 58) return { text: '#34d399', glow: 'rgba(52, 211, 153, 0.9)', bg: 'rgba(52, 211, 153, 0.15)' };
+    if (fps >= 50) return { text: '#60a5fa', glow: 'rgba(96, 165, 250, 0.9)', bg: 'rgba(96, 165, 250, 0.15)' };
+    if (fps >= 40) return { text: '#fbbf24', glow: 'rgba(251, 191, 36, 0.8)', bg: 'rgba(251, 191, 36, 0.15)' };
+    if (fps >= 30) return { text: '#fb923c', glow: 'rgba(251, 146, 60, 0.8)', bg: 'rgba(251, 146, 60, 0.15)' };
+    return { text: '#f87171', glow: 'rgba(248, 113, 113, 0.8)', bg: 'rgba(248, 113, 113, 0.15)' };
+  };
+
+  const colors = getColors(currentFps);
+  const digits = String(currentFps).padStart(2, '0').split('');
+
+  return (
+    <div className="flex items-center gap-0.5">
+      {/* Direction indicator - trading style */}
+      <motion.div
+        initial={false}
+        animate={{
+          opacity: direction !== 'neutral' ? 1 : 0.4,
+          scale: direction !== 'neutral' ? [1, 1.3, 1] : 1,
+          y: direction === 'up' ? -1 : direction === 'down' ? 1 : 0,
+        }}
+        transition={{ duration: 0.15, ease: 'easeOut' }}
+        className="text-[8px] font-bold"
+        style={{ color: direction === 'up' ? '#34d399' : direction === 'down' ? '#f87171' : colors.text }}
+      >
+        {direction === 'up' ? '▲' : direction === 'down' ? '▼' : '●'}
+      </motion.div>
+      
+      {/* Digit container with ticker-style animation */}
+      <div className="flex overflow-hidden rounded" style={{ background: colors.bg }}>
+        {digits.map((digit, idx) => (
+          <div key={idx} className="relative w-[10px] h-[16px] overflow-hidden">
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.span
+                key={`${idx}-${digit}`}
+                initial={{ y: direction === 'down' ? -16 : 16, opacity: 0, filter: 'blur(2px)' }}
+                animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+                exit={{ y: direction === 'down' ? 16 : -16, opacity: 0, filter: 'blur(2px)' }}
+                transition={{ 
+                  type: 'spring', 
+                  stiffness: 700, 
+                  damping: 30,
+                  mass: 0.5,
+                }}
+                className="absolute inset-0 flex items-center justify-center text-[13px] font-black tabular-nums"
+                style={{ 
+                  color: colors.text,
+                  textShadow: `0 0 8px ${colors.glow}, 0 0 16px ${colors.glow}`,
+                }}
+              >
+                {digit}
+              </motion.span>
+            </AnimatePresence>
+          </div>
+        ))}
+      </div>
+      
+      {/* FPS label with pulse on change */}
+      <motion.span 
+        animate={{ 
+          opacity: direction !== 'neutral' ? [0.6, 1, 0.8] : 0.8,
+          scale: direction !== 'neutral' ? [1, 1.1, 1] : 1,
+        }}
+        transition={{ duration: 0.2 }}
+        className="text-[7px] text-blue-400/90 font-bold uppercase tracking-wider ml-0.5"
+      >
+        fps
+      </motion.span>
+    </div>
+  );
+}
+
+/**
  * FPS Performance Panel - Detailed metrics from FpsOptimizer
  */
 function FpsPerformancePanel({ deviceInfo }: { deviceInfo: DeviceInfo }) {
@@ -519,6 +616,29 @@ export function UltimateControlPanel({
   // 1 tap = open modal, 2nd tap = close modal (toggle behavior)
   const [activeModal, setActiveModal] = useState<'services' | 'contact' | 'theme' | 'admin' | 'identity' | null>(null);
 
+  // Scroll detection for FPS button minimization
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastScrollY = useRef(0);
+  
+  // Get UI state context for detecting when modals/panels are open
+  let uiStateContext: ReturnType<typeof useUIStateContext> | null = null;
+  try {
+    uiStateContext = useUIStateContext();
+  } catch {
+    // Context not available, fallback to local state
+  }
+  
+  // Determine if FPS button should be minimized based on UI state
+  const shouldMinimizeFromUI = useMemo(() => {
+    if (!uiStateContext) return false;
+    return uiStateContext.isAnyModalOpen || uiStateContext.isMobileMenuOpen;
+  }, [uiStateContext?.isAnyModalOpen, uiStateContext?.isMobileMenuOpen]);
+
+  // Combined minimized state - scroll OR UI triggered
+  const effectiveMinimized = isMinimized || shouldMinimizeFromUI;
+
   // Ensure component only renders on client
   useEffect(() => {
     setMounted(true);
@@ -659,6 +779,53 @@ export function UltimateControlPanel({
     return () => window.removeEventListener('keydown', handleEscKey);
   }, []);
 
+  // Scroll detection for auto-minimizing FPS button
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = Math.abs(currentScrollY - lastScrollY.current);
+      
+      // Only trigger minimization on significant scroll
+      if (scrollDelta > 10) {
+        setIsScrolling(true);
+        setIsMinimized(true);
+        lastScrollY.current = currentScrollY;
+        
+        // Clear existing timeout
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+        
+        // Set timeout to expand back after scroll stops
+        scrollTimeoutRef.current = setTimeout(() => {
+          setIsScrolling(false);
+          // Only un-minimize if not triggered by UI state
+          if (!shouldMinimizeFromUI) {
+            setIsMinimized(false);
+          }
+        }, 1500); // Expand back 1.5s after scroll stops
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [shouldMinimizeFromUI]);
+
+  // Auto-minimize when UI state changes
+  useEffect(() => {
+    if (shouldMinimizeFromUI) {
+      setIsMinimized(true);
+    } else if (!isScrolling) {
+      // Only expand if not currently scrolling
+      setIsMinimized(false);
+    }
+  }, [shouldMinimizeFromUI, isScrolling]);
+
   if (!deviceInfo || !mounted) {
     return null;
   }
@@ -737,15 +904,26 @@ export function UltimateControlPanel({
           <motion.div
             key="fps-action-button"
             initial={{ x: 100, opacity: 0, y: '-50%' }}
-            animate={{ x: 0, opacity: 1, y: '-50%' }}
-            exit={{ x: 100, opacity: 0, y: '-50%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            animate={{ 
+              x: 0, 
+              opacity: 1, 
+              y: '-50%',
+              scale: effectiveMinimized ? 0.9 : 1,
+            }}
+            exit={{ x: 80, opacity: 0, y: '-50%' }}
+            transition={{ 
+              type: 'spring', 
+              damping: 28, 
+              stiffness: 450,
+              mass: 0.7,
+              scale: { type: 'spring', damping: 22, stiffness: 600 }
+            }}
             className="fixed right-0 z-[250000] pointer-events-none control-panel-themed"
             style={{
               top: '50%',
               paddingRight: 'calc(env(safe-area-inset-right, 0px) + 8px)',
               filter: themeFilter,
-              transition: 'filter 0.5s ease-in-out, opacity 0.3s ease-in-out'
+              transition: 'filter 0.5s ease-in-out'
             }}
           >
             <motion.div
@@ -755,7 +933,7 @@ export function UltimateControlPanel({
               onDrag={handleSwipeableDrag}
               onDragEnd={handleSwipeableDragEnd}
               whileHover="hover"
-              animate={isMobileExpanded ? "hover" : "initial"}
+              animate={isMobileExpanded ? "hover" : effectiveMinimized ? "minimized" : "initial"}
               initial="initial"
               className="relative pointer-events-auto group touch-manipulation"
               style={{ 
@@ -764,7 +942,7 @@ export function UltimateControlPanel({
               }}
             >
               {/* Unified Shimmer Background - LEFT TO RIGHT only (no component movement) */}
-              {shimmerEnabled && (
+              {shimmerEnabled && !effectiveMinimized && (
                 <div className="absolute inset-0 rounded-l-2xl overflow-hidden pointer-events-none panel-shimmer">
                   <div 
                     className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%]"
@@ -776,65 +954,133 @@ export function UltimateControlPanel({
                 </div>
               )}
               
-              {/* Main FPS Content - Always visible */}
+              {/* Main FPS Content - Animated between full and minimized states */}
               <motion.div 
                 variants={{
-                  initial: { x: 0 },
-                  hover: { x: -8 }
+                  initial: { x: 0, scale: 1 },
+                  hover: { x: -8, scale: 1.02 },
+                  minimized: { x: 2, scale: 0.95 }
                 }}
-                className="relative rounded-l-3xl bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-slate-900/40 backdrop-blur-2xl border-y border-l border-blue-500/50 transition-all duration-300 hover:border-blue-400/70 shadow-2xl hover:shadow-blue-600/40 hover:shadow-xl"
+                transition={{ type: 'spring', damping: 28, stiffness: 500, mass: 0.8 }}
+                className="relative rounded-l-3xl bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-slate-900/40 backdrop-blur-2xl border-y border-l border-blue-500/50 transition-colors duration-200 hover:border-blue-400/70 shadow-2xl hover:shadow-blue-600/40 hover:shadow-xl"
                 whileHover={{ boxShadow: "0 0 40px rgba(59, 130, 246, 0.6), inset 0 0 20px rgba(59, 130, 246, 0.15)" }}
               >
-                {/* FPS Display - Mobile Tap Optimized: First tap expands, second tap opens panel */}
-                <div 
-                  className="px-2 py-2 cursor-pointer min-h-auto flex items-center justify-center touch-manipulation"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    SoundEffects.click(); // Play click sound
-                    // Desktop: always open panel
-                    if (window.matchMedia('(hover: hover)').matches) {
-                      onOpenChange(true);
-                    } else {
-                      // Mobile: first tap expands, second tap opens panel
-                      if (isMobileExpanded) {
-                        onOpenChange(true);
+                {/* FPS Display - Animated between full and minimized pill states */}
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {effectiveMinimized ? (
+                    // MINIMIZED PILL STATE - Trading ticker style
+                    <motion.div
+                      key="minimized-fps"
+                      initial={{ opacity: 0, scale: 0.7, x: 10 }}
+                      animate={{ opacity: 1, scale: 1, x: 0 }}
+                      exit={{ opacity: 0, scale: 0.7, x: 10 }}
+                      transition={{ type: 'spring', damping: 25, stiffness: 500, mass: 0.6 }}
+                      className="px-2 py-1.5 cursor-pointer flex items-center justify-center touch-manipulation"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        SoundEffects.click();
+                        // Clicking minimized button expands it
+                        setIsMinimized(false);
                         setIsMobileExpanded(false);
-                      } else {
-                        setIsMobileExpanded(true);
-                      }
-                    }
-                  }}
-                  onMouseEnter={() => SoundEffects.hover()}
-                  onTouchStart={(e) => {
-                    e.stopPropagation();
-                  }}
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    SoundEffects.click(); // Play click sound
-                    // Mobile: first tap expands, second tap opens panel
-                    if (isMobileExpanded) {
-                      onOpenChange(true);
-                      setIsMobileExpanded(false);
-                    } else {
-                      setIsMobileExpanded(true);
-                    }
-                  }}
-                  style={{ 
-                    WebkitTapHighlightColor: 'transparent',
-                    touchAction: 'manipulation',
-                    userSelect: 'none'
-                  }}
-                >
-                  <div className="flex items-center gap-1">
-                    <ChevronRight 
-                      size={14} 
-                      className={`text-blue-500 group-hover:text-blue-400 transition-colors drop-shadow-[0_0_6px_rgba(59,130,246,0.8)] ${isMobileExpanded ? 'rotate-90' : 'rotate-180'}`}
-                    />
-                    <FpsDisplayWithOptimizer />
-                  </div>
-                </div>
+                      }}
+                      onMouseEnter={() => {
+                        SoundEffects.hover();
+                        // Expand on hover (desktop)
+                        if (window.matchMedia('(hover: hover)').matches && !shouldMinimizeFromUI) {
+                          setIsMinimized(false);
+                        }
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        SoundEffects.click();
+                        setIsMinimized(false);
+                      }}
+                      style={{ 
+                        WebkitTapHighlightColor: 'transparent',
+                        touchAction: 'manipulation',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <div className="flex items-center gap-1">
+                        <motion.div
+                          animate={{ 
+                            scale: [1, 1.2, 1],
+                            opacity: [0.7, 1, 0.7],
+                          }}
+                          transition={{ 
+                            duration: 1.5, 
+                            repeat: Infinity, 
+                            ease: 'easeInOut' 
+                          }}
+                        >
+                          <Activity 
+                            size={11} 
+                            className="text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.9)]"
+                          />
+                        </motion.div>
+                        <MinimizedFpsNumber />
+                      </div>
+                    </motion.div>
+                  ) : (
+                    // FULL STATE - Complete FPS display with candlestick chart
+                    <motion.div
+                      key="full-fps"
+                      initial={{ opacity: 0, scale: 0.85, x: -10 }}
+                      animate={{ opacity: 1, scale: 1, x: 0 }}
+                      exit={{ opacity: 0, scale: 0.85, x: -10 }}
+                      transition={{ type: 'spring', damping: 25, stiffness: 500, mass: 0.6 }}
+                      className="px-2 py-2 cursor-pointer min-h-auto flex items-center justify-center touch-manipulation"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        SoundEffects.click();
+                        // Desktop: always open panel
+                        if (window.matchMedia('(hover: hover)').matches) {
+                          onOpenChange(true);
+                        } else {
+                          // Mobile: first tap expands, second tap opens panel
+                          if (isMobileExpanded) {
+                            onOpenChange(true);
+                            setIsMobileExpanded(false);
+                          } else {
+                            setIsMobileExpanded(true);
+                          }
+                        }
+                      }}
+                      onMouseEnter={() => SoundEffects.hover()}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        SoundEffects.click();
+                        // Mobile: first tap expands, second tap opens panel
+                        if (isMobileExpanded) {
+                          onOpenChange(true);
+                          setIsMobileExpanded(false);
+                        } else {
+                          setIsMobileExpanded(true);
+                        }
+                      }}
+                      style={{ 
+                        WebkitTapHighlightColor: 'transparent',
+                        touchAction: 'manipulation',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <div className="flex items-center gap-1">
+                        <ChevronRight 
+                          size={14} 
+                          className={`text-blue-500 group-hover:text-blue-400 transition-colors drop-shadow-[0_0_6px_rgba(59,130,246,0.8)] ${isMobileExpanded ? 'rotate-90' : 'rotate-180'}`}
+                        />
+                        <FpsDisplayWithOptimizer />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Action Buttons - Shown on hover or mobile tap */}
                 <motion.div
