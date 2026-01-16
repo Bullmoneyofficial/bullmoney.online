@@ -26,6 +26,7 @@ import { ShimmerLine, ShimmerBorder, ShimmerSpinner } from '@/components/ui/Unif
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useShop } from '@/components/ShopContext';
 import { createSupabaseClient } from '@/lib/supabase';
+import { useLiveStreamModalUI } from '@/contexts/UIStateContext';
 
 // Types
 interface LiveStreamVideo {
@@ -59,9 +60,10 @@ const useModalState = () => {
   return context;
 };
 
-// Main Modal Component
+// Main Modal Component - Now uses centralized UIStateContext for mutual exclusion
 export const LiveStreamModal = memo(() => {
-  const [isOpen, setIsOpen] = useState(false);
+  // Use centralized UI state for mutual exclusion with other modals
+  const { isOpen, setIsOpen } = useLiveStreamModalUI();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

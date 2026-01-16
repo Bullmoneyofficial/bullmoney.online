@@ -86,6 +86,10 @@ interface FloatingPlayerProps {
   onPlayerSideChange?: (side: 'left' | 'right') => void;
   onMinimizedChange?: (minimized: boolean) => void;
   onPlayerPositionUpdate?: (position: { x: number; y: number; width: number; height: number }) => void;
+
+  // Force minimize from parent (UIStateContext) - used when other UI components open
+  // This minimizes the player (hides iframe behind pull tab) but keeps it mounted for audio persistence
+  forceMinimize?: boolean;
 }
 
 // iPhone Button Tooltip Component
@@ -414,6 +418,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
     isMobile, hasStartedCatchGame, maybeShowCatchGameTutorial, dismissCatchGameTutorial,
     isTutorialHovered, showBoredPopup, setShowBoredPopup, showCatchSparkle, showConfetti,
     showCatchGameTutorial, tutorialContent,
+    forceMinimize = false, // NEW: Force minimize from UIStateContext for audio persistence
   } = props;
 
   const prefersReducedMotion = useReducedMotion();
@@ -442,6 +447,16 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
     const timer = setTimeout(() => setShowFirstTimeHelp(false), 8000);
     return () => clearTimeout(timer);
   }, []);
+
+  // Handle forceMinimize from UIStateContext - this is the key to audio persistence!
+  // When other UI components open (mobile menu, modals, etc.), we minimize the player
+  // (hide iframe behind pull tab) instead of unmounting, preserving audio playback.
+  useEffect(() => {
+    if (forceMinimize && !isMinimized) {
+      setIsMinimized(true);
+      props.onMinimizedChange?.(true);
+    }
+  }, [forceMinimize, isMinimized, props]);
 
   // Report player position for external tutorial positioning
   useEffect(() => {
@@ -537,132 +552,207 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
       <CameraModal isOpen={showCameraModal} onClose={() => setShowCameraModal(false)} />
 
       {/* Minimized iPod Pull Tab - Audio persists like Apple Music! */}
-      <AnimatePresence>
+      {/* When forceMinimize is true (other UI is open), shows a compact circular wave indicator */}
+      <AnimatePresence mode="wait">
         {isMinimized && !open && (
-          <motion.button
-            initial={{ opacity: 0, x: playerSide === 'left' ? -100 : 100, scale: 0.8 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: playerSide === 'left' ? -100 : 100, scale: 0.8 }}
-            transition={{ type: "spring", damping: 22, stiffness: 300 }}
-            onClick={handleExpandPlayer}
-            onMouseEnter={() => setHoveredButton('expand')}
-            onMouseLeave={() => setHoveredButton(null)}
-            className={cn(
-              "fixed flex items-center gap-3 py-3.5 backdrop-blur-2xl transition-all duration-300",
-              "bg-gradient-to-br from-slate-900/98 via-gray-900/98 to-black/98",
-              "border-2 border-slate-500/60 shadow-2xl",
-              "hover:shadow-blue-500/40 hover:border-blue-400/60 hover:scale-105",
-              "active:scale-95",
-              // Pulsing glow animation when playing
-              isPlaying && "animate-pulse-subtle",
-              playerSide === 'left' 
-                ? "left-0 pl-3 pr-5 rounded-r-3xl border-l-0" 
-                : "right-0 pr-3 pl-5 rounded-l-3xl border-r-0"
-            )}
-            style={{ 
-              bottom: 140, 
-              zIndex: Z_INDEX.PULL_TAB,
-              boxShadow: isPlaying 
-                ? '0 0 30px rgba(59, 130, 246, 0.3), 0 10px 40px rgba(0,0,0,0.5)' 
-                : '0 10px 40px rgba(0,0,0,0.5)',
-            }}
-          >
-            {/* Icon order depends on side */}
-            {playerSide === 'right' && (
-              <motion.div
-                animate={{ x: [-3, 0, -3] }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <IconChevronLeft className="w-5 h-5 text-white/70" />
-              </motion.div>
-            )}
-            
-            {/* Pulsing indicator that music is playing */}
-            <div className="relative">
-              {/* Glow effect */}
-              <motion.div
-                className="absolute -inset-2 bg-blue-500/25 rounded-2xl blur-lg"
-                animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
-                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <div className={cn(
-                "relative w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden",
-                "bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800",
-                "border border-slate-500/50 shadow-inner"
-              )}>
-                {/* Source icon */}
-                <SourceIcon className="w-6 h-6 text-white/95" />
-                
-                {/* Audio wave animation at bottom */}
-                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-[3px]">
-                  {[1, 2, 3, 4].map(i => (
-                    <motion.div
-                      key={i}
-                      className="w-[3px] bg-blue-400 rounded-full origin-bottom"
-                      animate={{ scaleY: isPlaying ? [0.3, 1, 0.3] : 0.3 }}
-                      transition={{ 
-                        duration: 0.5, 
-                        repeat: Infinity, 
-                        delay: i * 0.08,
-                        ease: "easeInOut"
-                      }}
-                      style={{ height: 10 }}
-                    />
-                  ))}
-                </div>
-                
-                {/* Reflective shimmer */}
+          forceMinimize ? (
+            /* Compact circular wave button when UI is open */
+            <motion.button
+              key="compact-tab"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              transition={{ type: "spring", damping: 20, stiffness: 300 }}
+              onClick={handleExpandPlayer}
+              onMouseEnter={() => setHoveredButton('expand')}
+              onMouseLeave={() => setHoveredButton(null)}
+              className={cn(
+                "fixed w-12 h-12 rounded-full",
+                "bg-gradient-to-br from-slate-900 via-gray-800 to-black",
+                "border-2 border-blue-500/50 shadow-2xl",
+                "hover:border-blue-400 hover:scale-110",
+                "active:scale-95",
+                "flex items-center justify-center overflow-hidden",
+                playerSide === 'left' ? "left-2" : "right-2"
+              )}
+              style={{
+                bottom: 140,
+                zIndex: Z_INDEX.PULL_TAB,
+                boxShadow: '0 0 20px rgba(59, 130, 246, 0.4), 0 4px 20px rgba(0,0,0,0.5)',
+              }}
+            >
+              {/* Animated circular wave background */}
+              <div className="absolute inset-0 rounded-full overflow-hidden">
+                {/* Pulsing ring */}
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"
-                  animate={{ x: ['-100%', '200%'] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 rounded-full border-2 border-blue-400/30"
+                  animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
+                />
+                {/* Second ring offset */}
+                <motion.div
+                  className="absolute inset-0 rounded-full border-2 border-blue-500/20"
+                  animate={{ scale: [1, 1.8, 1], opacity: [0.3, 0, 0.3] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut", delay: 0.3 }}
                 />
               </div>
-            </div>
-            
-            {/* Text label */}
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-white/90">{sourceLabel[musicSource]}</span>
-              <span className="text-[8px] text-blue-400/80 font-medium">♪ Playing</span>
-            </div>
-            
-            {/* Pull arrow for left side */}
-            {playerSide === 'left' && (
+
+              {/* Audio wave bars in circle */}
+              <div className="relative flex items-end justify-center gap-[3px] h-6">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <motion.div
+                    key={i}
+                    className="w-[3px] bg-gradient-to-t from-blue-500 to-blue-300 rounded-full origin-bottom"
+                    animate={{
+                      scaleY: isPlaying ? [0.3, 1, 0.5, 0.8, 0.3] : 0.3,
+                      opacity: isPlaying ? [0.7, 1, 0.8, 1, 0.7] : 0.5
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: Infinity,
+                      delay: i * 0.1,
+                      ease: "easeInOut"
+                    }}
+                    style={{ height: 16 }}
+                  />
+                ))}
+              </div>
+
+              {/* Glow overlay */}
               <motion.div
-                animate={{ x: [0, 3, 0] }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <IconChevronRight className="w-5 h-5 text-white/70" />
-              </motion.div>
-            )}
-            
-            <ButtonTooltip 
-              show={hoveredButton === 'expand'} 
-              text="🎵 Tap to Expand" 
-              position={playerSide === 'left' ? 'right' : 'left'} 
-              color="blue" 
-            />
-          </motion.button>
+                className="absolute inset-0 rounded-full bg-blue-500/10"
+                animate={{ opacity: [0.1, 0.3, 0.1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              />
+
+              <ButtonTooltip
+                show={hoveredButton === 'expand'}
+                text="🎵 Expand"
+                position={playerSide === 'left' ? 'right' : 'left'}
+                color="blue"
+              />
+            </motion.button>
+          ) : (
+            /* Full pull tab when no UI is overlaying */
+            <motion.button
+              key="full-tab"
+              initial={{ opacity: 0, x: playerSide === 'left' ? -100 : 100, scale: 0.8 }}
+              animate={{ opacity: 1, x: 0, scale: 1, bottom: 140 }}
+              exit={{ opacity: 0, x: playerSide === 'left' ? -100 : 100, scale: 0.8 }}
+              transition={{ type: "spring", damping: 22, stiffness: 300 }}
+              onClick={handleExpandPlayer}
+              onMouseEnter={() => setHoveredButton('expand')}
+              onMouseLeave={() => setHoveredButton(null)}
+              className={cn(
+                "fixed flex items-center gap-3 py-3.5 backdrop-blur-2xl",
+                "bg-gradient-to-br from-slate-900/98 via-gray-900/98 to-black/98",
+                "border-2 border-slate-500/60 shadow-2xl",
+                "hover:shadow-blue-500/40 hover:border-blue-400/60 hover:scale-105",
+                "active:scale-95",
+                isPlaying && "animate-pulse-subtle",
+                playerSide === 'left'
+                  ? "left-0 pl-3 pr-5 rounded-r-3xl border-l-0"
+                  : "right-0 pr-3 pl-5 rounded-l-3xl border-r-0"
+              )}
+              style={{
+                zIndex: Z_INDEX.PULL_TAB,
+                boxShadow: isPlaying
+                  ? '0 0 30px rgba(59, 130, 246, 0.3), 0 10px 40px rgba(0,0,0,0.5)'
+                  : '0 10px 40px rgba(0,0,0,0.5)',
+              }}
+            >
+              {/* Left chevron for right side */}
+              {playerSide === 'right' && (
+                <motion.div
+                  animate={{ x: [-3, 0, -3] }}
+                  transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <IconChevronLeft className="w-5 h-5 text-white/70" />
+                </motion.div>
+              )}
+
+              {/* Pulsing indicator */}
+              <div className="relative">
+                <motion.div
+                  className="absolute -inset-2 bg-blue-500/25 rounded-2xl blur-lg"
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <div className={cn(
+                  "relative w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden",
+                  "bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800",
+                  "border border-slate-500/50 shadow-inner"
+                )}>
+                  <SourceIcon className="w-6 h-6 text-white/95" />
+                  <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-[3px]">
+                    {[1, 2, 3, 4].map(i => (
+                      <motion.div
+                        key={i}
+                        className="w-[3px] bg-blue-400 rounded-full origin-bottom"
+                        animate={{ scaleY: isPlaying ? [0.3, 1, 0.3] : 0.3 }}
+                        transition={{
+                          duration: 0.5,
+                          repeat: Infinity,
+                          delay: i * 0.08,
+                          ease: "easeInOut"
+                        }}
+                        style={{ height: 10 }}
+                      />
+                    ))}
+                  </div>
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"
+                    animate={{ x: ['-100%', '200%'] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  />
+                </div>
+              </div>
+
+              {/* Text label */}
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-white/90">{sourceLabel[musicSource]}</span>
+                <span className="text-[8px] text-blue-400/80 font-medium">♪ Playing</span>
+              </div>
+
+              {/* Right chevron for left side */}
+              {playerSide === 'left' && (
+                <motion.div
+                  animate={{ x: [0, 3, 0] }}
+                  transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <IconChevronRight className="w-5 h-5 text-white/70" />
+                </motion.div>
+              )}
+
+              <ButtonTooltip
+                show={hoveredButton === 'expand'}
+                text="🎵 Tap to Expand"
+                position={playerSide === 'left' ? 'right' : 'left'}
+                color="blue"
+              />
+            </motion.button>
+          )
         )}
       </AnimatePresence>
 
-      {/* 
+      {/*
         SINGLE PERSISTENT IFRAME - The ONLY iframe for audio
         This is ALWAYS in DOM. When expanded, it's visible in the iPhone.
         When minimized, it shrinks and hides behind the pull tab but keeps playing.
-        
+        When forceMinimize is true, it pushes further off-screen so modals have more visible area.
+
         KEY: Same iframe element = same audio context = continuous playback
       */}
       <div
         className="fixed transition-all duration-300 ease-out"
         style={{
           position: 'fixed',
-          // Position: When minimized, behind pull tab. When expanded, inside iPhone visual area
-          bottom: isMinimized ? 125 : (60 + 180), // Adjust for iPhone player position
-          [playerSide]: isMinimized ? 5 : (playerSide === 'left' ? 8 : 8),
+          // Position: When minimized, behind pull tab. When forceMinimize, push further off-screen
+          bottom: isMinimized ? (forceMinimize ? 80 : 125) : (60 + 180),
+          [playerSide]: isMinimized ? (forceMinimize ? -60 : 5) : (playerSide === 'left' ? 8 : 8),
           // Size: Full size when expanded, small when minimized but valid for SDK
-          width: isMinimized ? 150 : 254,
-          height: isMinimized ? 80 : (musicSource === 'YOUTUBE' ? 180 : 110),
+          width: isMinimized ? (forceMinimize ? 100 : 150) : 254,
+          height: isMinimized ? (forceMinimize ? 60 : 80) : (musicSource === 'YOUTUBE' ? 180 : 110),
           overflow: 'hidden',
           // Opacity: Nearly invisible when minimized, full when expanded
           opacity: isMinimized ? 0.01 : 1,
@@ -670,8 +760,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
           zIndex: isMinimized ? (Z_INDEX.PULL_TAB - 1) : (Z_INDEX.PLAYER_BASE + 5),
           pointerEvents: isMinimized ? 'none' : 'auto',
           borderRadius: isMinimized ? '12px' : '0 0 16px 16px',
-          // Hide behind pull tab when minimized
-          transform: isMinimized ? 'scale(0.5)' : 'scale(1)',
+          // Hide behind pull tab when minimized, push further when forceMinimize
+          transform: isMinimized ? (forceMinimize ? 'scale(0.3)' : 'scale(0.5)') : 'scale(1)',
           transformOrigin: playerSide === 'left' ? 'left center' : 'right center',
         }}
         aria-hidden={isMinimized}

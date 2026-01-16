@@ -15,6 +15,7 @@ import {
 import { ShimmerLine, ShimmerBorder } from '@/components/ui/UnifiedShimmer';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useShop, Product, Category } from '@/components/ShopContext';
+import { useProductsModalUI } from '@/contexts/UIStateContext';
 
 // Modal Context
 interface ModalState {
@@ -47,9 +48,10 @@ type Filters = {
   category: string;
 };
 
-// Main Modal Component
+// Main Modal Component - Now uses centralized UIStateContext for mutual exclusion
 export const ProductsModal = memo(() => {
-  const [isOpen, setIsOpen] = useState(false);
+  // Use centralized UI state for mutual exclusion with other modals
+  const { isOpen, setIsOpen } = useProductsModalUI();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

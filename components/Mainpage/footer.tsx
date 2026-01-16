@@ -9,10 +9,11 @@ import { SocialsRow } from "./footer/Socials";
 import { FooterButton } from "./footer/FooterButton";
 import { AppsModal } from "./footer/AppsModal";
 import { LegalDisclaimerModal } from "./footer/LegalDisclaimerModal";
+import { useFooterModalsUI } from "@/contexts/UIStateContext";
 
 export function Footer() {
-  const [openDisclaimer, setOpenDisclaimer] = useState(false);
-  const [openApps, setOpenApps] = useState(false);
+  // Use centralized UI state for mutual exclusion with other modals
+  const { isAppsOpen, isDisclaimerOpen, setAppsOpen, setDisclaimerOpen } = useFooterModalsUI();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -89,11 +90,11 @@ export function Footer() {
                     <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/8 to-transparent shimmer-line shimmer-gpu" style={{ animationDuration: "5s" }} />
                   </div>
 
-                  <FooterButton onClick={() => setOpenApps(true)} variant="primary" icon={<ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}>
+                  <FooterButton onClick={() => setAppsOpen(true)} variant="primary" icon={<ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}>
                     Apps & Tools
                   </FooterButton>
 
-                  <FooterButton onClick={() => setOpenDisclaimer(true)} icon={<ShieldAlert className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}>
+                  <FooterButton onClick={() => setDisclaimerOpen(true)} icon={<ShieldAlert className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}>
                     Legal Disclaimer
                   </FooterButton>
                 </div>
@@ -126,8 +127,8 @@ export function Footer() {
         </div>
       </footer>
 
-      <AppsModal isOpen={openApps} onClose={() => setOpenApps(false)} />
-      <LegalDisclaimerModal isOpen={openDisclaimer} onClose={() => setOpenDisclaimer(false)} />
+      <AppsModal isOpen={isAppsOpen} onClose={() => setAppsOpen(false)} />
+      <LegalDisclaimerModal isOpen={isDisclaimerOpen} onClose={() => setDisclaimerOpen(false)} />
     </>
   );
 }

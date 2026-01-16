@@ -3,30 +3,72 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 
 /**
- * UIStateContext - Manages mutual exclusion between UI components
- * 
- * When one component opens, others automatically close to prevent UI overlap.
- * This includes:
- * - Mobile menu (navbar dropdown)
- * - Navbar modals (Admin, FAQ, Affiliate, Theme Selector)
- * - Audio Widget (main panel + floating player)
+ * UIStateContext - Centralized UI state management with mutual exclusion
+ *
+ * This context ensures only ONE UI component can be fully open at a time.
+ * When one component opens, others automatically close.
+ *
+ * Components managed:
+ * - Mobile menu (navbar dropdown) - HIGHEST PRIORITY, appears on top of everything
+ * - Audio Widget (main panel) - NOTE: Floating player/iframe stays alive for audio persistence
  * - Ultimate Control Panel
- * - Footer components
+ * - Footer modal
  * - ChartNews modal
- * 
- * This system ensures a clean and predictable user experience.
+ * - Analysis modal
+ * - LiveStream modal
+ * - Products modal
+ * - Affiliate modal
+ * - Theme Selector modal
+ * - Admin modal
+ * - FAQ modal
+ *
+ * IMPORTANT: Audio Widget special handling:
+ * - When other UI opens, the audio widget MENU closes but the floating player
+ *   MINIMIZES (hides iframe behind pull tab) rather than unmounting.
+ * - This preserves audio playback across UI state changes.
  */
 
+// Z-Index hierarchy for all UI components (centralized for consistency)
+export const UI_Z_INDEX = {
+  // Base layers
+  CONTENT: 1,
+  FOOTER: 100,
+
+  // Floating elements
+  FLOATING_PLAYER_MINIMIZED: 2147483590, // Pull tab when minimized
+  FLOATING_PLAYER: 2147483610,           // Full floating player
+  ULTIMATE_PANEL: 2147483620,            // Control panel
+
+  // Modals (standard layer)
+  MODAL_BACKDROP: 99990,
+  MODAL_CONTENT: 99999,
+
+  // High priority modals
+  CHARTNEWS: 9999999,
+  AFFILIATE: 999999,
+
+  // Mobile menu - HIGHEST PRIORITY (appears on top of everything)
+  MOBILE_MENU: 99999999,
+} as const;
+
 // Define all UI component types that participate in mutual exclusion
-export type UIComponentType = 
+export type UIComponentType =
   | 'mobileMenu'
-  | 'navbarModal'
   | 'audioWidget'
   | 'ultimatePanel'
   | 'footer'
-  | 'chartnews';
+  | 'chartnews'
+  | 'analysisModal'
+  | 'liveStreamModal'
+  | 'productsModal'
+  | 'affiliateModal'
+  | 'themeSelectorModal'
+  | 'adminModal'
+  | 'faqModal'
+  | 'appsModal'           // Footer: Apps & Tools modal
+  | 'disclaimerModal';    // Footer: Legal Disclaimer modal
 
-// Specific navbar modal types for tracking which one is open
+// Legacy type for backwards compatibility
 export type NavbarModalType = 'admin' | 'faq' | 'affiliate' | 'themeSelector' | null;
 
 interface UIStateContextType {
@@ -36,65 +78,163 @@ interface UIStateContextType {
   isUltimatePanelOpen: boolean;
   isFooterOpen: boolean;
   isChartNewsOpen: boolean;
+  isAnalysisModalOpen: boolean;
+  isLiveStreamModalOpen: boolean;
+  isProductsModalOpen: boolean;
+  isAffiliateModalOpen: boolean;
+  isThemeSelectorModalOpen: boolean;
+  isAdminModalOpen: boolean;
+  isFaqModalOpen: boolean;
+  isAppsModalOpen: boolean;        // Footer: Apps & Tools modal
+  isDisclaimerModalOpen: boolean;  // Footer: Legal Disclaimer modal
+
+  // Legacy: activeNavbarModal (maps to specific modal states)
   activeNavbarModal: NavbarModalType;
-  
+
   // Check if any component is open
   isAnyOpen: boolean;
-  
+
+  // Check if any MODAL is open (excludes mobile menu, audio widget, ultimate panel)
+  isAnyModalOpen: boolean;
+
   // Setters with mutual exclusion
   setMobileMenuOpen: (open: boolean) => void;
   setAudioWidgetOpen: (open: boolean) => void;
   setUltimatePanelOpen: (open: boolean) => void;
-  setNavbarModal: (modal: NavbarModalType) => void;
   setFooterOpen: (open: boolean) => void;
   setChartNewsOpen: (open: boolean) => void;
-  
-  // Convenience methods for navbar modals
+  setAnalysisModalOpen: (open: boolean) => void;
+  setLiveStreamModalOpen: (open: boolean) => void;
+  setProductsModalOpen: (open: boolean) => void;
+  setAffiliateModalOpen: (open: boolean) => void;
+  setThemeSelectorModalOpen: (open: boolean) => void;
+  setAdminModalOpen: (open: boolean) => void;
+  setFaqModalOpen: (open: boolean) => void;
+  setAppsModalOpen: (open: boolean) => void;
+  setDisclaimerModalOpen: (open: boolean) => void;
+
+  // Legacy: setNavbarModal (for backwards compatibility)
+  setNavbarModal: (modal: NavbarModalType) => void;
+
+  // Convenience methods for opening specific modals
   openAdminModal: () => void;
   openFaqModal: () => void;
   openAffiliateModal: () => void;
   openThemeSelectorModal: () => void;
+  openAnalysisModal: () => void;
+  openLiveStreamModal: () => void;
+  openProductsModal: () => void;
   closeNavbarModal: () => void;
-  
+
   // Close all UI components
   closeAll: () => void;
-  
+
+  // Close all modals but keep floating elements (audio widget pull tab, etc.)
+  closeAllModals: () => void;
+
   // Check which component is currently active
   activeComponent: UIComponentType | null;
+
+  // Signal for audio widget to minimize (not close) when other UI opens
+  // This allows the iframe to stay alive behind the pull tab
+  shouldMinimizeAudioWidget: boolean;
+
+  // Signal that something is overlaying the floating player (for z-index management)
+  hasOverlayingUI: boolean;
 }
 
 const UIStateContext = createContext<UIStateContextType | undefined>(undefined);
 
 export function UIStateProvider({ children }: { children: ReactNode }) {
-  // Core states
+  // Core states - all UI components
   const [isMobileMenuOpen, setIsMobileMenuOpenState] = useState(false);
   const [isAudioWidgetOpen, setIsAudioWidgetOpenState] = useState(false);
   const [isUltimatePanelOpen, setIsUltimatePanelOpenState] = useState(false);
-  const [activeNavbarModal, setActiveNavbarModalState] = useState<NavbarModalType>(null);
   const [isFooterOpen, setIsFooterOpenState] = useState(false);
   const [isChartNewsOpen, setIsChartNewsOpenState] = useState(false);
+  const [isAnalysisModalOpen, setIsAnalysisModalOpenState] = useState(false);
+  const [isLiveStreamModalOpen, setIsLiveStreamModalOpenState] = useState(false);
+  const [isProductsModalOpen, setIsProductsModalOpenState] = useState(false);
+  const [isAffiliateModalOpen, setIsAffiliateModalOpenState] = useState(false);
+  const [isThemeSelectorModalOpen, setIsThemeSelectorModalOpenState] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpenState] = useState(false);
+  const [isFaqModalOpen, setIsFaqModalOpenState] = useState(false);
+  const [isAppsModalOpen, setIsAppsModalOpenState] = useState(false);
+  const [isDisclaimerModalOpen, setIsDisclaimerModalOpenState] = useState(false);
+
+  // Derived state: Legacy activeNavbarModal (maps to individual states)
+  const activeNavbarModal: NavbarModalType =
+    isAdminModalOpen ? 'admin' :
+    isFaqModalOpen ? 'faq' :
+    isAffiliateModalOpen ? 'affiliate' :
+    isThemeSelectorModalOpen ? 'themeSelector' :
+    null;
+
+  // Derived state: is any modal open?
+  const isAnyModalOpen = isFooterOpen || isChartNewsOpen || isAnalysisModalOpen ||
+    isLiveStreamModalOpen || isProductsModalOpen || isAffiliateModalOpen ||
+    isThemeSelectorModalOpen || isAdminModalOpen || isFaqModalOpen ||
+    isAppsModalOpen || isDisclaimerModalOpen;
 
   // Derived state: is any component currently open?
-  const isAnyOpen = isMobileMenuOpen || isAudioWidgetOpen || isUltimatePanelOpen || activeNavbarModal !== null || isFooterOpen || isChartNewsOpen;
-  
+  const isAnyOpen = isMobileMenuOpen || isAudioWidgetOpen || isUltimatePanelOpen || isAnyModalOpen;
+
+  // Derived state: should audio widget minimize (not unmount)?
+  // True when any other UI component is open that would overlay the player
+  const shouldMinimizeAudioWidget = isMobileMenuOpen || isUltimatePanelOpen || isAnyModalOpen;
+
+  // Derived state: is there UI overlaying the floating player area?
+  const hasOverlayingUI = isMobileMenuOpen || isAnyModalOpen;
+
   // Derived state: which component is active?
-  const activeComponent: UIComponentType | null = 
+  const activeComponent: UIComponentType | null =
     isMobileMenuOpen ? 'mobileMenu' :
-    activeNavbarModal !== null ? 'navbarModal' :
     isAudioWidgetOpen ? 'audioWidget' :
     isUltimatePanelOpen ? 'ultimatePanel' :
     isFooterOpen ? 'footer' :
     isChartNewsOpen ? 'chartnews' :
+    isAnalysisModalOpen ? 'analysisModal' :
+    isLiveStreamModalOpen ? 'liveStreamModal' :
+    isProductsModalOpen ? 'productsModal' :
+    isAffiliateModalOpen ? 'affiliateModal' :
+    isThemeSelectorModalOpen ? 'themeSelectorModal' :
+    isAdminModalOpen ? 'adminModal' :
+    isFaqModalOpen ? 'faqModal' :
+    isAppsModalOpen ? 'appsModal' :
+    isDisclaimerModalOpen ? 'disclaimerModal' :
     null;
 
   // Closes all other components except the one specified
   const closeOthers = useCallback((except?: UIComponentType) => {
     if (except !== 'mobileMenu') setIsMobileMenuOpenState(false);
-    if (except !== 'navbarModal') setActiveNavbarModalState(null);
     if (except !== 'audioWidget') setIsAudioWidgetOpenState(false);
     if (except !== 'ultimatePanel') setIsUltimatePanelOpenState(false);
     if (except !== 'footer') setIsFooterOpenState(false);
     if (except !== 'chartnews') setIsChartNewsOpenState(false);
+    if (except !== 'analysisModal') setIsAnalysisModalOpenState(false);
+    if (except !== 'liveStreamModal') setIsLiveStreamModalOpenState(false);
+    if (except !== 'productsModal') setIsProductsModalOpenState(false);
+    if (except !== 'affiliateModal') setIsAffiliateModalOpenState(false);
+    if (except !== 'themeSelectorModal') setIsThemeSelectorModalOpenState(false);
+    if (except !== 'adminModal') setIsAdminModalOpenState(false);
+    if (except !== 'faqModal') setIsFaqModalOpenState(false);
+    if (except !== 'appsModal') setIsAppsModalOpenState(false);
+    if (except !== 'disclaimerModal') setIsDisclaimerModalOpenState(false);
+  }, []);
+
+  // Closes all modals but preserves floating elements state
+  const closeAllModals = useCallback(() => {
+    setIsFooterOpenState(false);
+    setIsChartNewsOpenState(false);
+    setIsAnalysisModalOpenState(false);
+    setIsLiveStreamModalOpenState(false);
+    setIsProductsModalOpenState(false);
+    setIsAffiliateModalOpenState(false);
+    setIsThemeSelectorModalOpenState(false);
+    setIsAdminModalOpenState(false);
+    setIsFaqModalOpenState(false);
+    setIsAppsModalOpenState(false);
+    setIsDisclaimerModalOpenState(false);
   }, []);
 
   // Closes all components
@@ -105,41 +245,151 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   // --- Setters with built-in mutual exclusion ---
 
   const setMobileMenuOpen = useCallback((open: boolean) => {
-    if (open) closeOthers('mobileMenu');
+    if (open) {
+      // Mobile menu has highest priority - closes everything else
+      closeOthers('mobileMenu');
+    }
     setIsMobileMenuOpenState(open);
   }, [closeOthers]);
 
   const setAudioWidgetOpen = useCallback((open: boolean) => {
-    if (open) closeOthers('audioWidget');
+    if (open) {
+      closeOthers('audioWidget');
+    }
     setIsAudioWidgetOpenState(open);
   }, [closeOthers]);
 
   const setUltimatePanelOpen = useCallback((open: boolean) => {
-    if (open) closeOthers('ultimatePanel');
+    if (open) {
+      closeOthers('ultimatePanel');
+    }
     setIsUltimatePanelOpenState(open);
   }, [closeOthers]);
 
-  const setNavbarModal = useCallback((modal: NavbarModalType) => {
-    if (modal !== null) closeOthers('navbarModal');
-    setActiveNavbarModalState(modal);
-  }, [closeOthers]);
-
   const setFooterOpen = useCallback((open: boolean) => {
-    if (open) closeOthers('footer');
+    if (open) {
+      closeOthers('footer');
+    }
     setIsFooterOpenState(open);
   }, [closeOthers]);
 
   const setChartNewsOpen = useCallback((open: boolean) => {
-    if (open) closeOthers('chartnews');
+    if (open) {
+      closeOthers('chartnews');
+    }
     setIsChartNewsOpenState(open);
   }, [closeOthers]);
 
-  // Convenience methods for opening specific navbar modals
-  const openAdminModal = useCallback(() => setNavbarModal('admin'), [setNavbarModal]);
-  const openFaqModal = useCallback(() => setNavbarModal('faq'), [setNavbarModal]);
-  const openAffiliateModal = useCallback(() => setNavbarModal('affiliate'), [setNavbarModal]);
-  const openThemeSelectorModal = useCallback(() => setNavbarModal('themeSelector'), [setNavbarModal]);
-  const closeNavbarModal = useCallback(() => setNavbarModal(null), [setNavbarModal]);
+  const setAnalysisModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('analysisModal');
+    }
+    setIsAnalysisModalOpenState(open);
+  }, [closeOthers]);
+
+  const setLiveStreamModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('liveStreamModal');
+    }
+    setIsLiveStreamModalOpenState(open);
+  }, [closeOthers]);
+
+  const setProductsModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('productsModal');
+    }
+    setIsProductsModalOpenState(open);
+  }, [closeOthers]);
+
+  const setAffiliateModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('affiliateModal');
+    }
+    setIsAffiliateModalOpenState(open);
+  }, [closeOthers]);
+
+  const setThemeSelectorModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('themeSelectorModal');
+    }
+    setIsThemeSelectorModalOpenState(open);
+  }, [closeOthers]);
+
+  const setAdminModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('adminModal');
+    }
+    setIsAdminModalOpenState(open);
+  }, [closeOthers]);
+
+  const setFaqModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('faqModal');
+    }
+    setIsFaqModalOpenState(open);
+  }, [closeOthers]);
+
+  const setAppsModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('appsModal');
+    }
+    setIsAppsModalOpenState(open);
+  }, [closeOthers]);
+
+  const setDisclaimerModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('disclaimerModal');
+    }
+    setIsDisclaimerModalOpenState(open);
+  }, [closeOthers]);
+
+  // Legacy: setNavbarModal for backwards compatibility
+  const setNavbarModal = useCallback((modal: NavbarModalType) => {
+    // Close all navbar-type modals first
+    setIsAdminModalOpenState(false);
+    setIsFaqModalOpenState(false);
+    setIsAffiliateModalOpenState(false);
+    setIsThemeSelectorModalOpenState(false);
+
+    if (modal !== null) {
+      closeOthers(
+        modal === 'admin' ? 'adminModal' :
+        modal === 'faq' ? 'faqModal' :
+        modal === 'affiliate' ? 'affiliateModal' :
+        'themeSelectorModal'
+      );
+
+      switch (modal) {
+        case 'admin':
+          setIsAdminModalOpenState(true);
+          break;
+        case 'faq':
+          setIsFaqModalOpenState(true);
+          break;
+        case 'affiliate':
+          setIsAffiliateModalOpenState(true);
+          break;
+        case 'themeSelector':
+          setIsThemeSelectorModalOpenState(true);
+          break;
+      }
+    }
+  }, [closeOthers]);
+
+  // Convenience methods for opening specific modals
+  const openAdminModal = useCallback(() => setAdminModalOpen(true), [setAdminModalOpen]);
+  const openFaqModal = useCallback(() => setFaqModalOpen(true), [setFaqModalOpen]);
+  const openAffiliateModal = useCallback(() => setAffiliateModalOpen(true), [setAffiliateModalOpen]);
+  const openThemeSelectorModal = useCallback(() => setThemeSelectorModalOpen(true), [setThemeSelectorModalOpen]);
+  const openAnalysisModal = useCallback(() => setAnalysisModalOpen(true), [setAnalysisModalOpen]);
+  const openLiveStreamModal = useCallback(() => setLiveStreamModalOpen(true), [setLiveStreamModalOpen]);
+  const openProductsModal = useCallback(() => setProductsModalOpen(true), [setProductsModalOpen]);
+  const closeNavbarModal = useCallback(() => {
+    setIsAdminModalOpenState(false);
+    setIsFaqModalOpenState(false);
+    setIsAffiliateModalOpenState(false);
+    setIsThemeSelectorModalOpenState(false);
+  }, []);
 
   // Global escape key handler to close any open component
   useEffect(() => {
@@ -159,25 +409,50 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isUltimatePanelOpen,
     isFooterOpen,
     isChartNewsOpen,
+    isAnalysisModalOpen,
+    isLiveStreamModalOpen,
+    isProductsModalOpen,
+    isAffiliateModalOpen,
+    isThemeSelectorModalOpen,
+    isAdminModalOpen,
+    isFaqModalOpen,
+    isAppsModalOpen,
+    isDisclaimerModalOpen,
     activeNavbarModal,
     isAnyOpen,
+    isAnyModalOpen,
     activeComponent,
-    
+    shouldMinimizeAudioWidget,
+    hasOverlayingUI,
+
     // Setters
     setMobileMenuOpen,
     setAudioWidgetOpen,
     setUltimatePanelOpen,
-    setNavbarModal,
     setFooterOpen,
     setChartNewsOpen,
-    
+    setAnalysisModalOpen,
+    setLiveStreamModalOpen,
+    setProductsModalOpen,
+    setAffiliateModalOpen,
+    setThemeSelectorModalOpen,
+    setAdminModalOpen,
+    setFaqModalOpen,
+    setAppsModalOpen,
+    setDisclaimerModalOpen,
+    setNavbarModal,
+
     // Convenience methods
     openAdminModal,
     openFaqModal,
     openAffiliateModal,
     openThemeSelectorModal,
+    openAnalysisModal,
+    openLiveStreamModal,
+    openProductsModal,
     closeNavbarModal,
     closeAll,
+    closeAllModals,
   };
 
   return (
@@ -200,46 +475,51 @@ export function useUIState() {
 
 export function useMobileMenu() {
   const { isMobileMenuOpen, setMobileMenuOpen } = useUIState();
-  return { 
-    isMobileMenuOpen, 
-    setIsMobileMenuOpen: setMobileMenuOpen 
+  return {
+    isMobileMenuOpen,
+    setIsMobileMenuOpen: setMobileMenuOpen
   };
 }
 
 export function useAudioWidgetUI() {
-  const { 
-    isAudioWidgetOpen, 
-    setAudioWidgetOpen, 
-    isMobileMenuOpen, 
-    activeNavbarModal, 
-    isUltimatePanelOpen,
-    isFooterOpen,
-    isChartNewsOpen
+  const {
+    isAudioWidgetOpen,
+    setAudioWidgetOpen,
+    shouldMinimizeAudioWidget,
+    hasOverlayingUI,
   } = useUIState();
-  
-  // The floating player should be hidden if any other managed UI component is open.
-  const shouldHideFloatingPlayer = isMobileMenuOpen || activeNavbarModal !== null || isUltimatePanelOpen || isFooterOpen || isChartNewsOpen;
-  
-  return { 
-    isAudioWidgetOpen, 
+
+  // IMPORTANT: We no longer return shouldHideFloatingPlayer that causes unmount.
+  // Instead, we return shouldMinimizeAudioWidget which signals the floating player
+  // to minimize (hide iframe behind pull tab) while keeping audio playing.
+
+  // For backwards compatibility, keep the old name but with new behavior
+  // shouldHideFloatingPlayer now means "minimize" not "unmount"
+  const shouldHideFloatingPlayer = shouldMinimizeAudioWidget;
+
+  return {
+    isAudioWidgetOpen,
     setAudioWidgetOpen,
     shouldHideFloatingPlayer,
+    shouldMinimizeAudioWidget,
+    hasOverlayingUI,
   };
 }
 
 export function useUltimatePanelUI() {
-  const { 
-    isUltimatePanelOpen, 
+  const {
+    isUltimatePanelOpen,
     setUltimatePanelOpen,
-    ...uiState
+    isMobileMenuOpen,
+    isAnyModalOpen,
   } = useUIState();
-  
-  // The panel should be hidden (and swipe disabled) if any other managed component is open.
-  const shouldHide = uiState.isMobileMenuOpen || uiState.activeNavbarModal !== null || uiState.isAudioWidgetOpen || uiState.isFooterOpen || uiState.isChartNewsOpen;
+
+  // The panel should be hidden if mobile menu or any modal is open
+  const shouldHide = isMobileMenuOpen || isAnyModalOpen;
   const shouldShow = isUltimatePanelOpen && !shouldHide;
-  
-  return { 
-    isUltimatePanelOpen, 
+
+  return {
+    isUltimatePanelOpen,
     setUltimatePanelOpen,
     shouldShow,
     shouldHide,
@@ -247,22 +527,26 @@ export function useUltimatePanelUI() {
 }
 
 export function useNavbarModals() {
-  const { 
-    activeNavbarModal, 
+  const {
+    activeNavbarModal,
     setNavbarModal,
     openAdminModal,
     openFaqModal,
     openAffiliateModal,
     openThemeSelectorModal,
     closeNavbarModal,
+    isAdminModalOpen,
+    isFaqModalOpen,
+    isAffiliateModalOpen,
+    isThemeSelectorModalOpen,
   } = useUIState();
-  
+
   return {
     activeNavbarModal,
-    isAdminOpen: activeNavbarModal === 'admin',
-    isFaqOpen: activeNavbarModal === 'faq',
-    isAffiliateOpen: activeNavbarModal === 'affiliate',
-    isThemeSelectorOpen: activeNavbarModal === 'themeSelector',
+    isAdminOpen: isAdminModalOpen,
+    isFaqOpen: isFaqModalOpen,
+    isAffiliateOpen: isAffiliateModalOpen,
+    isThemeSelectorOpen: isThemeSelectorModalOpen,
     setNavbarModal,
     openAdminModal,
     openFaqModal,
@@ -272,7 +556,7 @@ export function useNavbarModals() {
   };
 }
 
-// New convenience hooks
+// Convenience hooks for individual modals
 export function useFooterUI() {
   const { isFooterOpen, setFooterOpen } = useUIState();
   return { isFooterOpen, setFooterOpen };
@@ -282,3 +566,67 @@ export function useChartNewsUI() {
   const { isChartNewsOpen, setChartNewsOpen } = useUIState();
   return { isChartNewsOpen, setChartNewsOpen };
 }
+
+export function useAnalysisModalUI() {
+  const { isAnalysisModalOpen, setAnalysisModalOpen, openAnalysisModal } = useUIState();
+  return { isOpen: isAnalysisModalOpen, setIsOpen: setAnalysisModalOpen, open: openAnalysisModal };
+}
+
+export function useLiveStreamModalUI() {
+  const { isLiveStreamModalOpen, setLiveStreamModalOpen, openLiveStreamModal } = useUIState();
+  return { isOpen: isLiveStreamModalOpen, setIsOpen: setLiveStreamModalOpen, open: openLiveStreamModal };
+}
+
+export function useProductsModalUI() {
+  const { isProductsModalOpen, setProductsModalOpen, openProductsModal } = useUIState();
+  return { isOpen: isProductsModalOpen, setIsOpen: setProductsModalOpen, open: openProductsModal };
+}
+
+export function useAffiliateModalUI() {
+  const { isAffiliateModalOpen, setAffiliateModalOpen, openAffiliateModal } = useUIState();
+  return { isOpen: isAffiliateModalOpen, setIsOpen: setAffiliateModalOpen, open: openAffiliateModal };
+}
+
+export function useThemeSelectorModalUI() {
+  const { isThemeSelectorModalOpen, setThemeSelectorModalOpen, openThemeSelectorModal } = useUIState();
+  return { isOpen: isThemeSelectorModalOpen, setIsOpen: setThemeSelectorModalOpen, open: openThemeSelectorModal };
+}
+
+export function useAdminModalUI() {
+  const { isAdminModalOpen, setAdminModalOpen, openAdminModal } = useUIState();
+  return { isOpen: isAdminModalOpen, setIsOpen: setAdminModalOpen, open: openAdminModal };
+}
+
+export function useFaqModalUI() {
+  const { isFaqModalOpen, setFaqModalOpen, openFaqModal } = useUIState();
+  return { isOpen: isFaqModalOpen, setIsOpen: setFaqModalOpen, open: openFaqModal };
+}
+
+// Footer modal hooks
+export function useAppsModalUI() {
+  const { isAppsModalOpen, setAppsModalOpen } = useUIState();
+  return { isOpen: isAppsModalOpen, setIsOpen: setAppsModalOpen };
+}
+
+export function useDisclaimerModalUI() {
+  const { isDisclaimerModalOpen, setDisclaimerModalOpen } = useUIState();
+  return { isOpen: isDisclaimerModalOpen, setIsOpen: setDisclaimerModalOpen };
+}
+
+// Combined footer modals hook for convenience
+export function useFooterModalsUI() {
+  const {
+    isAppsModalOpen,
+    isDisclaimerModalOpen,
+    setAppsModalOpen,
+    setDisclaimerModalOpen,
+  } = useUIState();
+
+  return {
+    isAppsOpen: isAppsModalOpen,
+    isDisclaimerOpen: isDisclaimerModalOpen,
+    setAppsOpen: setAppsModalOpen,
+    setDisclaimerOpen: setDisclaimerModalOpen,
+  };
+}
+

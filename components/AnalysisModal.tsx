@@ -25,6 +25,7 @@ import { ShimmerLine, ShimmerBorder, ShimmerSpinner } from '@/components/ui/Unif
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useShop } from '@/components/ShopContext';
 import { createSupabaseClient } from '@/lib/supabase';
+import { useAnalysisModalUI } from '@/contexts/UIStateContext';
 
 // Types
 interface Analysis {
@@ -77,9 +78,10 @@ const marketColors: Record<string, string> = {
   indices: 'bg-purple-500',
 };
 
-// Main Modal Component
+// Main Modal Component - Now uses centralized UIStateContext for mutual exclusion
 export const AnalysisModal = memo(() => {
-  const [isOpen, setIsOpen] = useState(false);
+  // Use centralized UI state for mutual exclusion with other modals
+  const { isOpen, setIsOpen } = useAnalysisModalUI();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

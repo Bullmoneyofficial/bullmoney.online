@@ -12,6 +12,7 @@ import AffiliateModal from "@/components/AffiliateModal";
 import { ShimmerLine, ShimmerBorder, useOptimizedShimmer } from "@/components/ui/UnifiedShimmer";
 import { useFpsOptimizer } from "@/lib/FpsOptimizer";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
+import { useFooterModalsUI } from "@/contexts/UIStateContext";
 
 // Unified Modal Wrapper for Footer - Fixes display issues on all devices
 const FooterModal = memo(({ 
@@ -162,27 +163,27 @@ export function Footer() {
   // Check if shimmer should be enabled for this component
   const shimmerEnabled = shouldEnableShimmer('footer') && !shimmerSettings.disabled;
 
-  const [isDisclaimerOpen, setIsDisclaimerOpen] = useState(false);
-  const [isAppsOpen, setIsAppsOpen] = useState(false);
+  // Use centralized UI state for mutual exclusion with other modals
+  const { isAppsOpen, isDisclaimerOpen, setAppsOpen, setDisclaimerOpen } = useFooterModalsUI();
 
   const handleDisclaimerClick = useCallback(() => {
     SoundEffects.click();
-    setIsDisclaimerOpen(true);
-  }, []);
+    setDisclaimerOpen(true);
+  }, [setDisclaimerOpen]);
 
   const handleAppsClick = useCallback(() => {
     SoundEffects.click();
-    setIsAppsOpen(true);
-  }, []);
+    setAppsOpen(true);
+  }, [setAppsOpen]);
 
   return (
     <>
       {/* Modal Components */}
-      <BullMoneyModal isOpen={isDisclaimerOpen} onClose={() => setIsDisclaimerOpen(false)} />
-      
-      <FooterModal 
-        isOpen={isAppsOpen} 
-        onClose={() => setIsAppsOpen(false)} 
+      <BullMoneyModal isOpen={isDisclaimerOpen} onClose={() => setDisclaimerOpen(false)} />
+
+      <FooterModal
+        isOpen={isAppsOpen}
+        onClose={() => setAppsOpen(false)}
         title="Apps & Tools"
       >
         <AppsToolsContent />

@@ -17,7 +17,7 @@ import { LiveStreamModal } from '@/components/LiveStreamModal';
 import { AnalysisModal } from '@/components/AnalysisModal';
 import { ProductsModal } from '@/components/ProductsModal';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
-import { useMobileMenu } from '@/contexts/MobileMenuContext';
+import { useMobileMenu, UI_Z_INDEX } from '@/contexts/UIStateContext';
 
 interface MobileDropdownMenuProps {
   open: boolean;
@@ -99,20 +99,22 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -15, scale: 0.92 }}
           transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
-          className="lg:hidden fixed top-28 sm:top-32 left-3 right-3 z-[99999999] rounded-2xl bg-black/98 p-5 sm:p-6 backdrop-blur-2xl menu-glass overflow-hidden"
-          style={{ 
+          className="lg:hidden fixed top-28 sm:top-32 left-3 right-3 rounded-2xl bg-black/98 p-5 sm:p-6 backdrop-blur-2xl menu-glass overflow-hidden"
+          style={{
             touchAction: 'auto',
             pointerEvents: 'auto',
             filter: themeFilter,
             transition: 'filter 0.5s ease-in-out',
-            border: isXMUser 
-              ? '2px solid rgba(239, 68, 68, 0.5)' 
+            border: isXMUser
+              ? '2px solid rgba(239, 68, 68, 0.5)'
               : '2px solid rgba(59, 130, 246, 0.5)',
             boxShadow: isXMUser
               ? '0 0 50px rgba(239, 68, 68, 0.4), inset 0 0 30px rgba(239, 68, 68, 0.08)'
               : '0 0 50px rgba(59, 130, 246, 0.4), inset 0 0 30px rgba(59, 130, 246, 0.08)',
             position: 'fixed',
-            isolation: 'isolate'
+            isolation: 'isolate',
+            // HIGHEST z-index - mobile menu appears on top of ALL other components
+            zIndex: UI_Z_INDEX.MOBILE_MENU,
           }}
         >
           {/* Shimmer Background - Using unified CSS shimmer class for performance */}
