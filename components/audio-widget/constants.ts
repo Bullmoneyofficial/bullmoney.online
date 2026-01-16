@@ -27,10 +27,10 @@ export const streamingOptions: {
   { value: "YOUTUBE", label: "YouTube", icon: React.createElement(IconBrandYoutube, { className: "w-5 h-5" }), color: "blue", recommended: true },
 ];
 
-export const sourceIcons: Partial<Record<MusicSource, React.ReactNode>> = {
-  SPOTIFY: React.createElement(IconBrandSpotify, { className: "w-5 h-5 text-sky-300" }),
-  APPLE_MUSIC: React.createElement(IconBrandApple, { className: "w-5 h-5 text-sky-300" }),
-  YOUTUBE: React.createElement(IconBrandYoutube, { className: "w-5 h-5 text-sky-300" }),
+export const sourceIcons: Partial<Record<MusicSource, React.ComponentType<{ className?: string }>>> = {
+  SPOTIFY: IconBrandSpotify,
+  APPLE_MUSIC: IconBrandApple,
+  YOUTUBE: IconBrandYoutube,
 };
 
 export const tutorialSteps = [

@@ -1010,9 +1010,18 @@ const ShimmerStyles = () => (
       
       /* =================================================================
          AUDIO WIDGET BUTTONS - LEFT TO RIGHT SHIMMER ON APPLE/INSTAGRAM
+         Blue background shimmer sweep across buttons
          ================================================================= */
       
-      /* Audio widget button shimmer overlay - sweeps left to right */
+      /* Audio widget buttons - ensure position relative for shimmer */
+      html.apple-premium .audio-shimmer button,
+      html.instagram-premium .audio-shimmer button {
+        position: relative !important;
+        overflow: hidden !important;
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.35) !important;
+      }
+      
+      /* Audio widget button BACKGROUND shimmer - sweeps left to right */
       html.apple-premium .audio-shimmer button::before,
       html.apple-premium .audio-shimmer [role="button"]::before,
       html.instagram-premium .audio-shimmer button::before,
@@ -1026,18 +1035,99 @@ const ShimmerStyles = () => (
         background: linear-gradient(
           90deg,
           transparent 0%,
-          rgba(59, 130, 246, 0.15) 25%,
-          rgba(147, 197, 253, 0.4) 50%,
-          rgba(59, 130, 246, 0.15) 75%,
+          rgba(59, 130, 246, 0.15) 15%,
+          rgba(59, 130, 246, 0.3) 30%,
+          rgba(147, 197, 253, 0.5) 50%,
+          rgba(59, 130, 246, 0.3) 70%,
+          rgba(59, 130, 246, 0.15) 85%,
           transparent 100%
         );
-        animation: buttonShimmerLTR 4s ease-in-out infinite;
+        animation: audioButtonShimmerLTR 3.5s ease-in-out infinite;
         pointer-events: none;
-        z-index: 1;
+        z-index: 0;
         border-radius: inherit;
       }
       
-      /* Audio widget play/pause button - enhanced shimmer */
+      /* Ensure icons inside audio buttons stay visible */
+      html.apple-premium .audio-shimmer button svg,
+      html.apple-premium .audio-shimmer button span,
+      html.apple-premium .audio-shimmer [role="button"] svg,
+      html.apple-premium .audio-shimmer [role="button"] span,
+      html.instagram-premium .audio-shimmer button svg,
+      html.instagram-premium .audio-shimmer button span,
+      html.instagram-premium .audio-shimmer [role="button"] svg,
+      html.instagram-premium .audio-shimmer [role="button"] span {
+        position: relative;
+        z-index: 5 !important;
+      }
+      
+      /* Audio widget icons - color aware with blue tint */
+      html.apple-premium .audio-shimmer svg,
+      html.instagram-premium .audio-shimmer svg {
+        color: rgba(147, 197, 253, 1) !important;
+        filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.5));
+        transition: color 0.3s ease, filter 0.3s ease;
+        animation: audioIconPulse 3.5s ease-in-out infinite;
+      }
+      
+      /* Audio icons glow on active */
+      html.apple-premium .audio-shimmer button:active svg,
+      html.instagram-premium .audio-shimmer button:active svg {
+        color: rgba(255, 255, 255, 1) !important;
+        filter: drop-shadow(0 0 8px rgba(147, 197, 253, 1)) drop-shadow(0 0 15px rgba(59, 130, 246, 0.7));
+      }
+      
+      /* Text/labels in audio widget - color aware */
+      html.apple-premium .audio-shimmer span,
+      html.apple-premium .audio-shimmer div,
+      html.instagram-premium .audio-shimmer span,
+      html.instagram-premium .audio-shimmer div {
+        text-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+      }
+    }
+    
+    /* Audio icon pulse glow synced with button shimmer */
+    @keyframes audioIconPulse {
+      0%, 100% {
+        filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.4));
+        color: rgba(147, 197, 253, 0.9);
+      }
+      35% {
+        filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.6));
+      }
+      50% {
+        filter: drop-shadow(0 0 10px rgba(147, 197, 253, 0.9)) drop-shadow(0 0 18px rgba(59, 130, 246, 0.5));
+        color: rgba(255, 255, 255, 1);
+      }
+      65% {
+        filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.6));
+      }
+    }
+      
+    /* Stagger animation for different buttons */
+    @media (max-width: 768px) {
+      html.apple-premium .audio-shimmer button:nth-child(2)::before,
+      html.instagram-premium .audio-shimmer button:nth-child(2)::before {
+        animation-delay: 0.3s;
+      }
+      
+      html.apple-premium .audio-shimmer button:nth-child(3)::before,
+      html.instagram-premium .audio-shimmer button:nth-child(3)::before {
+        animation-delay: 0.6s;
+      }
+      
+      /* Stagger icon pulse for visual interest */
+      html.apple-premium .audio-shimmer button:nth-child(2) svg,
+      html.instagram-premium .audio-shimmer button:nth-child(2) svg {
+        animation-delay: 0.3s;
+      }
+      
+      html.apple-premium .audio-shimmer button:nth-child(3) svg,
+      html.instagram-premium .audio-shimmer button:nth-child(3) svg {
+        animation-delay: 0.6s;
+      }
+      
+      /* Audio widget play/pause button - enhanced border shimmer */
       html.apple-premium .audio-shimmer button[class*="rounded-xl"]::after,
       html.instagram-premium .audio-shimmer button[class*="rounded-xl"]::after {
         content: '';
@@ -1046,13 +1136,13 @@ const ShimmerStyles = () => (
         background: linear-gradient(
           90deg,
           transparent 0%,
-          rgba(59, 130, 246, 0.3) 30%,
-          rgba(147, 197, 253, 0.6) 50%,
-          rgba(59, 130, 246, 0.3) 70%,
+          rgba(59, 130, 246, 0.4) 25%,
+          rgba(147, 197, 253, 0.8) 50%,
+          rgba(59, 130, 246, 0.4) 75%,
           transparent 100%
         );
         border-radius: inherit;
-        animation: buttonBorderLTR 5s ease-in-out infinite;
+        animation: audioButtonBorderLTR 3.5s ease-in-out infinite;
         pointer-events: none;
         z-index: -1;
         mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -1062,34 +1152,26 @@ const ShimmerStyles = () => (
         padding: 2px;
       }
       
-      /* Audio source buttons glow on Apple mobile */
-      html.apple-premium .audio-shimmer button,
-      html.instagram-premium .audio-shimmer button {
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 0 12px rgba(59, 130, 246, 0.25) !important;
-      }
-      
       html.apple-premium .audio-shimmer button:active,
       html.instagram-premium .audio-shimmer button:active {
-        box-shadow: 0 0 20px rgba(59, 130, 246, 0.5) !important;
+        box-shadow: 0 0 25px rgba(59, 130, 246, 0.6) !important;
       }
     }
     
-    /* LEFT TO RIGHT shimmer keyframes for buttons */
-    @keyframes buttonShimmerLTR {
+    /* LEFT TO RIGHT shimmer keyframes for audio buttons */
+    @keyframes audioButtonShimmerLTR {
       0% {
         left: -100%;
         opacity: 0;
       }
-      15% {
-        opacity: 0.6;
+      10% {
+        opacity: 0.7;
       }
       50% {
         opacity: 1;
       }
-      85% {
-        opacity: 0.6;
+      90% {
+        opacity: 0.7;
       }
       100% {
         left: 200%;
@@ -1097,17 +1179,17 @@ const ShimmerStyles = () => (
       }
     }
     
-    @keyframes buttonBorderLTR {
+    @keyframes audioButtonBorderLTR {
       0% {
         background-position: -200% center;
-        filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.3));
+        filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4));
       }
       50% {
-        filter: drop-shadow(0 0 10px rgba(147, 197, 253, 0.6));
+        filter: drop-shadow(0 0 12px rgba(147, 197, 253, 0.8));
       }
       100% {
         background-position: 200% center;
-        filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.3));
+        filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4));
       }
     }
     

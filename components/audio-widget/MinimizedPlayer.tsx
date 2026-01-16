@@ -89,7 +89,7 @@ export const MinimizedPlayer = React.memo(function MinimizedPlayer({
                 "bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800",
                 "border border-slate-500/50 shadow-inner"
               )}>
-                <SourceIcon className="w-6 h-6 text-white/95" />
+                {SourceIcon && <SourceIcon className="w-6 h-6 text-white/95" />}
                 
                 <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-[3px]">
                   {[1, 2, 3, 4].map(i => (

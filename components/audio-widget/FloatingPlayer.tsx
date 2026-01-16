@@ -1016,7 +1016,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               <div className="relative flex items-center justify-between px-3 py-2.5 bg-gradient-to-r from-slate-900/90 to-slate-800/90 rounded-t-2xl border-b border-white/5 backdrop-blur-sm mt-2">
                 <div className="flex items-center gap-2">
                   <div className="p-1.5 rounded-xl bg-gradient-to-br from-blue-500/30 to-purple-500/30 shadow-inner">
-                    {sourceIcons[musicSource]}
+                    {sourceIcons[musicSource] && React.createElement(sourceIcons[musicSource]!, { className: "w-5 h-5 text-sky-300" })}
                   </div>
                   <div>
                     <span className="text-[10px] text-white/90 font-semibold block">{sourceLabel[musicSource]}</span>

@@ -78,8 +78,9 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
   } = props;
 
   const currentStreamingIcon = React.useMemo(() => {
-    if (isStreamingSource && sourceIcons[musicSource]) {
-      return sourceIcons[musicSource];
+    const SourceIcon = sourceIcons[musicSource];
+    if (isStreamingSource && SourceIcon) {
+      return <SourceIcon className="h-5 w-5 text-blue-200/90" />;
     }
     return <IconMusic className="h-5 w-5 text-blue-200/90" />;
   }, [isStreamingSource, musicSource]);
