@@ -24,14 +24,28 @@ const AudioWidget = React.memo(function AudioWidget() {
 
   const startGame = () => { h.dismissCatchGameTutorial(); h.handleStartCatchGame(); };
 
+  // Create tutorial content element to pass to FloatingPlayer
+  const tutorialContent = (
+    <QuickGameTutorial 
+      show={true}  // Visibility controlled by parent
+      onDone={h.dismissCatchGameTutorial}
+      durationMs={game.gameStats.gamesPlayed === 0 && !state.hasStartedCatchGame ? 0 : 7500} 
+      onStart={startGame} 
+      onWatchDemo={h.handleWatchCatchGameDemo} 
+      onHoverChange={state.setIsTutorialHovered}
+      embedded={true}  // New prop to indicate embedded rendering
+    />
+  );
+
   return (
     <>
       <AnimatePresence>
         {state.isMobile && game.isWandering && !state.open && <TouchIndicator position={game.touchPosition} isActive={game.isTouching} />}
       </AnimatePresence>
 
-      <QuickGameTutorial show={state.showCatchGameTutorial && !state.open && !state.playerHidden} onDone={h.dismissCatchGameTutorial}
-        durationMs={game.gameStats.gamesPlayed === 0 && !state.hasStartedCatchGame ? 0 : 7500} onStart={startGame} onWatchDemo={h.handleWatchCatchGameDemo} onHoverChange={state.setIsTutorialHovered} />
+      {/* Fallback standalone tutorial for when not embedded (e.g., different positioning needed) */}
+      {/* <QuickGameTutorial show={state.showCatchGameTutorial && !state.open && !state.playerHidden} onDone={h.dismissCatchGameTutorial}
+        durationMs={game.gameStats.gamesPlayed === 0 && !state.hasStartedCatchGame ? 0 : 7500} onStart={startGame} onWatchDemo={h.handleWatchCatchGameDemo} onHoverChange={state.setIsTutorialHovered} /> */}
       <QuickGameTutorialDemo show={state.showCatchGameDemo} onDone={h.dismissCatchGameDemo} onStart={() => { h.dismissCatchGameDemo(); h.handleStartCatchGame(); }} />
 
       <AnimatePresence>
@@ -56,7 +70,9 @@ const AudioWidget = React.memo(function AudioWidget() {
             speedMultiplier={game.speedMultiplier} fleeDirection={game.fleeDirection} handlePlayerInteraction={game.handlePlayerInteraction}
             energy={game.energy} combo={game.combo} getTirednessLevel={game.getTirednessLevel} gameStats={game.gameStats}
             gameState={game.gameState} hasStartedCatchGame={state.hasStartedCatchGame}
-            maybeShowCatchGameTutorial={h.maybeShowCatchGameTutorial} dismissCatchGameTutorial={h.dismissCatchGameTutorial} />
+            maybeShowCatchGameTutorial={h.maybeShowCatchGameTutorial} dismissCatchGameTutorial={h.dismissCatchGameTutorial}
+            showCatchGameTutorial={state.showCatchGameTutorial && !state.open && !state.playerHidden}
+            tutorialContent={tutorialContent} />
         </AnimatePresence>, document.body)}
 
       {typeof document !== "undefined" && createPortal(

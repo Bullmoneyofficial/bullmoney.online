@@ -93,17 +93,7 @@ export const LiveMarketTicker: React.FC = () => {
 
     const fetchMarketData = async () => {
       try {
-        const params = new URLSearchParams({
-          vs_currency: 'usd',
-          ids: COIN_ORDER.map((coin) => coin.id).join(','),
-          order: 'market_cap_desc',
-          per_page: COIN_ORDER.length.toString(),
-          page: '1',
-          sparkline: 'false',
-          price_change_percentage: '24h',
-        });
-
-        const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?${params}`);
+        const response = await fetch('/api/market-data');
 
         if (!response.ok) {
           throw new Error(`Market request failed with ${response.status}`);

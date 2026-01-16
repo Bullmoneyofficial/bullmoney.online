@@ -46,7 +46,7 @@ export const BlueShimmer = React.memo(function BlueShimmer({ className = "" }: {
   );
 });
 
-// "I'm Bored" popup that educates users about the game
+// "I'm Bored" popup that educates users about the game - renders ABOVE iPhone
 export const BoredPopup = React.memo(function BoredPopup({
   show,
   onDismiss,
@@ -74,7 +74,8 @@ export const BoredPopup = React.memo(function BoredPopup({
         damping: 15,
         rotate: { duration: 2, repeat: Infinity, repeatDelay: 1 }
       }}
-      className="absolute -top-16 left-0 right-0 mx-auto w-max z-20 pointer-events-auto"
+      className="absolute left-0 right-0 mx-auto w-max pointer-events-auto"
+      style={{ zIndex: 999965, top: 0 }}
     >
       <div className="relative">
         {/* Main bubble */}
@@ -112,7 +113,7 @@ export const BoredPopup = React.memo(function BoredPopup({
   );
 });
 
-// Quick 5–10s tutorial bubble (shown on first hover)
+// Quick 5–10s tutorial bubble (shown on first hover) - positioned ABOVE iPhone player
 export const QuickGameTutorial = React.memo(function QuickGameTutorial({
   show,
   onDone,
@@ -121,6 +122,8 @@ export const QuickGameTutorial = React.memo(function QuickGameTutorial({
   durationMs = 7500,
   className = "",
   onHoverChange,
+  playerSide = "left",
+  embedded = false, // When true, renders without fixed positioning (parent handles position)
 }: {
   show: boolean;
   onDone: () => void;
@@ -129,6 +132,8 @@ export const QuickGameTutorial = React.memo(function QuickGameTutorial({
   durationMs?: number;
   className?: string;
   onHoverChange?: (isHovering: boolean) => void;
+  playerSide?: "left" | "right";
+  embedded?: boolean;
 }) {
   React.useEffect(() => {
     if (!show) return;
@@ -137,111 +142,135 @@ export const QuickGameTutorial = React.memo(function QuickGameTutorial({
     return () => window.clearTimeout(t);
   }, [show, durationMs, onDone]);
 
+  // When embedded, render without animation wrapper (parent handles that)
+  const content = (
+    <div
+      className={cn(
+        "w-full pointer-events-auto",
+        className
+      )}
+      onMouseEnter={() => onHoverChange?.(true)}
+      onMouseLeave={() => onHoverChange?.(false)}
+    >
+      <div className="relative overflow-hidden rounded-2xl border border-sky-400/25 bg-gradient-to-br from-blue-950/92 via-slate-900/95 to-blue-950/92 backdrop-blur-xl shadow-2xl">
+        <GameShimmer colors="blue" speed="fast" />
+
+        <button
+          onClick={onDone}
+          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors z-10"
+          aria-label="Dismiss tutorial"
+          type="button"
+        >
+          <IconX className="w-3.5 h-3.5 text-white/60" />
+        </button>
+
+        <div className="relative p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="p-1.5 rounded-xl bg-sky-500/10 border border-sky-300/15">
+              <IconInfoCircle className="w-4 h-4 text-sky-200" />
+            </div>
+            <div>
+              <div className="text-[11px] font-semibold text-white">How to play</div>
+              <div className="text-[9px] text-white/55">Catch it before it escapes</div>
+            </div>
+          </div>
+
+          <div className="space-y-1.5 text-[10px] text-white/75">
+            <div className="flex items-start gap-2">
+              <span className="mt-[3px] inline-block w-1.5 h-1.5 rounded-full bg-sky-200/80" />
+              <span>Press Start to begin.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="mt-[3px] inline-block w-1.5 h-1.5 rounded-full bg-sky-200/80" />
+              <span>Move your cursor near it to make it run.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="mt-[3px] inline-block w-1.5 h-1.5 rounded-full bg-sky-200/80" />
+              <span>Click it to catch and score.</span>
+            </div>
+          </div>
+
+          {(onStart || onWatchDemo) && (
+            <div className="mt-3 flex items-center gap-2">
+              {onStart && (
+                <button
+                  type="button"
+                  onClick={onStart}
+                  className={cn(
+                    "flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl",
+                    "bg-sky-500/15 hover:bg-sky-500/20 border border-sky-300/25 hover:border-sky-300/40",
+                    "text-[10px] font-semibold text-sky-100 transition-colors"
+                  )}
+                >
+                  <IconPlayerPlay className="w-4 h-4" />
+                  Start
+                </button>
+              )}
+              {onWatchDemo && (
+                <button
+                  type="button"
+                  onClick={onWatchDemo}
+                  className={cn(
+                    "flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl",
+                    "bg-white/15 hover:bg-white/25 border border-white/25 hover:border-white/35",
+                    "text-[10px] font-semibold text-white/90 transition-colors"
+                  )}
+                >
+                  <IconInfoCircle className="w-4 h-4" />
+                  Watch demo
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Tiny simulated chase bar */}
+          <div className="mt-3 relative h-8 rounded-xl bg-black/40 border border-white/10 overflow-hidden">
+            <motion.div
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white/60"
+              animate={{ x: [0, 210, 40, 210] }}
+              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+              aria-hidden
+            />
+            <motion.div
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-sky-300"
+              animate={{ x: [30, 150, 10, 170] }}
+              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: 0.15 }}
+              aria-hidden
+            />
+            <div className="absolute inset-x-2 bottom-1 text-[9px] text-white/45">Try to catch it before it escapes</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // If embedded, parent handles AnimatePresence and positioning
+  if (embedded) {
+    return show ? content : null;
+  }
+
+  // Standalone mode with fixed positioning
   return (
     <AnimatePresence>
       {show && (
         <motion.div
-          initial={{ opacity: 0, y: 12, scale: 0.97 }}
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 8, scale: 0.98 }}
-          transition={{ type: "spring", stiffness: 300, damping: 22 }}
+          exit={{ opacity: 0, y: 10, scale: 0.98 }}
+          transition={{ type: "spring", stiffness: 280, damping: 22 }}
           className={cn(
-            "fixed left-0 bottom-[200px] z-[10002] w-[300px] pointer-events-auto",
+            "fixed w-[300px] pointer-events-auto",
+            playerSide === "left" ? "left-3" : "right-3",
             className
           )}
-          style={{ paddingLeft: '12px', paddingBottom: '20px' }}
+          style={{ 
+            bottom: 520, // Positioned ABOVE the iPhone player
+            zIndex: 2147483690, // Very high z-index to be above everything
+          }}
           onMouseEnter={() => onHoverChange?.(true)}
           onMouseLeave={() => onHoverChange?.(false)}
         >
-          <div className="relative overflow-hidden rounded-2xl border border-sky-400/25 bg-gradient-to-br from-blue-950/92 via-slate-900/95 to-blue-950/92 backdrop-blur-xl shadow-2xl">
-            <GameShimmer colors="blue" speed="fast" />
-
-            <button
-              onClick={onDone}
-              className="absolute top-2 right-2 p-1.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors"
-              aria-label="Dismiss tutorial"
-              type="button"
-            >
-              <IconX className="w-3.5 h-3.5 text-white/60" />
-            </button>
-
-            <div className="relative p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 rounded-xl bg-sky-500/10 border border-sky-300/15">
-                  <IconInfoCircle className="w-4 h-4 text-sky-200" />
-                </div>
-                <div>
-                  <div className="text-[11px] font-semibold text-white">How to play</div>
-                  <div className="text-[9px] text-white/55">Catch it before it escapes</div>
-                </div>
-              </div>
-
-              <div className="space-y-1.5 text-[10px] text-white/75">
-                <div className="flex items-start gap-2">
-                  <span className="mt-[3px] inline-block w-1.5 h-1.5 rounded-full bg-sky-200/80" />
-                  <span>Press Start to begin.</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="mt-[3px] inline-block w-1.5 h-1.5 rounded-full bg-sky-200/80" />
-                  <span>Move your cursor near it to make it run.</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="mt-[3px] inline-block w-1.5 h-1.5 rounded-full bg-sky-200/80" />
-                  <span>Click it to catch and score.</span>
-                </div>
-              </div>
-
-              {(onStart || onWatchDemo) && (
-                <div className="mt-3 flex items-center gap-2">
-                  {onStart && (
-                    <button
-                      type="button"
-                      onClick={onStart}
-                      className={cn(
-                        "flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl",
-                        "bg-sky-500/15 hover:bg-sky-500/20 border border-sky-300/25 hover:border-sky-300/40",
-                        "text-[10px] font-semibold text-sky-100 transition-colors"
-                      )}
-                    >
-                      <IconPlayerPlay className="w-4 h-4" />
-                      Start
-                    </button>
-                  )}
-                  {onWatchDemo && (
-                    <button
-                      type="button"
-                      onClick={onWatchDemo}
-                      className={cn(
-                        "flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl",
-                        "bg-white/15 hover:bg-white/25 border border-white/25 hover:border-white/35",
-                        "text-[10px] font-semibold text-white/90 transition-colors"
-                      )}
-                    >
-                      <IconInfoCircle className="w-4 h-4" />
-                      Watch demo
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {/* Tiny simulated chase bar */}
-              <div className="mt-3 relative h-8 rounded-xl bg-black/40 border border-white/10 overflow-hidden">
-                <motion.div
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white/60"
-                  animate={{ x: [0, 210, 40, 210] }}
-                  transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-                  aria-hidden
-                />
-                <motion.div
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-sky-300"
-                  animate={{ x: [30, 150, 10, 170] }}
-                  transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: 0.15 }}
-                  aria-hidden
-                />
-                <div className="absolute inset-x-2 bottom-1 text-[9px] text-white/45">Try to catch it before it escapes</div>
-              </div>
-            </div>
-          </div>
+          {content}
         </motion.div>
       )}
     </AnimatePresence>
@@ -272,7 +301,8 @@ export const QuickGameTutorialDemo = React.memo(function QuickGameTutorialDemo({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[10003] bg-black/55 backdrop-blur-sm pointer-events-auto"
+          className="fixed inset-0 flex items-center justify-center bg-black/55 backdrop-blur-sm pointer-events-auto"
+          style={{ zIndex: 999995 }}
           onClick={onDone}
         >
           <motion.div

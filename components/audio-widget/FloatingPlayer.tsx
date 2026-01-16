@@ -1,13 +1,34 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { IconX, IconGripVertical, IconVolume, IconVolumeOff, IconLock, IconCamera, IconInfoCircle, IconChevronUp, IconPlayerPlay, IconPlayerPause, IconBrandSpotify, IconBrandApple, IconBrandYoutube, IconFlare, IconSwitchHorizontal } from "@tabler/icons-react";
+import { motion, AnimatePresence, useReducedMotion, useDragControls, PanInfo } from "framer-motion";
+import { IconX, IconGripVertical, IconVolume, IconVolumeOff, IconLock, IconCamera, IconInfoCircle, IconChevronUp, IconPlayerPlay, IconPlayerPause, IconBrandSpotify, IconBrandApple, IconBrandYoutube, IconFlare, IconSwitchHorizontal, IconChevronLeft, IconChevronRight, IconMusic } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { CompactGameHUD, BoredPopup, SparkleBurst, ConfettiBurst, PulseRing } from "@/components/audio-widget/ui";
 import { sourceLabel, sourceIcons } from "./constants";
 import type { MusicSource } from "@/contexts/AudioSettingsProvider";
+
+// Z-Index Constants - Centralized for consistency
+// Using very high values to ensure ALL elements render ABOVE everything else
+// Hierarchy: Base < Controls < HUD < Effects < Hints < Helpers < Tutorial < Tooltips < Modal
+const Z_INDEX = {
+  PULL_TAB: 2147483600,        // Minimized pull tab - high priority
+  PLAYER_BASE: 2147483610,     // Main iPhone container
+  PLAYER_CONTROLS: 2147483620, // Volume, power buttons
+  VOLUME_SLIDER: 2147483630,   // Volume overlay
+  LOCK_SCREEN: 2147483640,     // Lock screen overlay
+  GAME_HUD: 2147483650,        // Game score HUD
+  EFFECTS: 2147483660,         // Sparkles, confetti
+  SWIPE_HINT: 2147483670,      // "Swipe to minimize" hint
+  HELPERS: 2147483680,         // First time help tips
+  TUTORIAL: 2147483690,        // Game tutorial - MUST be above iPhone
+  TOOLTIPS: 2147483695,        // Button tooltips - highest UI element
+  CAMERA_MODAL: 2147483647,    // Camera modal - max safe integer
+} as const;
+
+// Export for external components (like QuickGameTutorial)
+export { Z_INDEX };
 
 interface FloatingPlayerProps {
   miniPlayerRef: React.RefObject<HTMLDivElement | null>;
@@ -56,6 +77,15 @@ interface FloatingPlayerProps {
   setShowBoredPopup: (v: boolean) => void;
   showCatchSparkle: boolean;
   showConfetti: boolean;
+  
+  // Tutorial
+  showCatchGameTutorial?: boolean;
+  tutorialContent?: React.ReactNode;
+  
+  // Optional callbacks for external state sync
+  onPlayerSideChange?: (side: 'left' | 'right') => void;
+  onMinimizedChange?: (minimized: boolean) => void;
+  onPlayerPositionUpdate?: (position: { x: number; y: number; width: number; height: number }) => void;
 }
 
 // iPhone Button Tooltip Component
@@ -93,7 +123,8 @@ const ButtonTooltip = React.memo(function ButtonTooltip({
           animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
           exit={{ opacity: 0, scale: 0.8 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
-          className={cn("absolute z-[100400] whitespace-nowrap pointer-events-none", positionClasses[position])}
+          className={cn("absolute whitespace-nowrap pointer-events-none", positionClasses[position])}
+          style={{ zIndex: Z_INDEX.TOOLTIPS }}
         >
           <div className={cn(
             "px-3 py-2 rounded-xl text-white text-[10px] font-semibold shadow-xl backdrop-blur-md border bg-gradient-to-r",
@@ -205,7 +236,8 @@ const CameraModal = React.memo(function CameraModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100500] flex items-center justify-center bg-black/90 backdrop-blur-md"
+          className="fixed inset-0 flex items-center justify-center bg-black/90 backdrop-blur-md"
+          style={{ zIndex: Z_INDEX.CAMERA_MODAL }}
           onClick={onClose}
         >
           <motion.div
@@ -381,9 +413,11 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
     handlePlayerInteraction, energy, combo, getTirednessLevel, gameStats,
     isMobile, hasStartedCatchGame, maybeShowCatchGameTutorial, dismissCatchGameTutorial,
     isTutorialHovered, showBoredPopup, setShowBoredPopup, showCatchSparkle, showConfetti,
+    showCatchGameTutorial, tutorialContent,
   } = props;
 
   const prefersReducedMotion = useReducedMotion();
+  const dragControls = useDragControls();
   
   // iPhone UI States
   const [volume, setVolume] = useState(70);
@@ -392,6 +426,11 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
   const [brightness, setBrightness] = useState(100);
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
+  
+  // Position state - left or right side of screen
+  const [playerSide, setPlayerSide] = useState<'left' | 'right'>('left');
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   
   // Button hover states for tooltips
   const [hoveredButton, setHoveredButton] = useState<string | null>(null);
@@ -403,6 +442,51 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
     const timer = setTimeout(() => setShowFirstTimeHelp(false), 8000);
     return () => clearTimeout(timer);
   }, []);
+
+  // Report player position for external tutorial positioning
+  useEffect(() => {
+    if (miniPlayerRef.current && props.onPlayerPositionUpdate) {
+      const rect = miniPlayerRef.current.getBoundingClientRect();
+      props.onPlayerPositionUpdate({
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+      });
+    }
+  }, [isMinimized, playerSide, open, playerHidden, props]);
+
+  // Handle swipe/drag to change sides - bidirectional
+  const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    setIsDragging(false);
+    const threshold = 80; // Lower threshold for easier swipe
+    const velocity = info.velocity.x;
+    const velocityThreshold = 300; // Also trigger on fast swipes
+    
+    // Swipe right (from left side OR anywhere with right velocity)
+    if (info.offset.x > threshold || velocity > velocityThreshold) {
+      SoundEffects.click();
+      setIsMinimized(true);
+      setPlayerSide('right');
+      props.onPlayerSideChange?.('right');
+      props.onMinimizedChange?.(true);
+    }
+    // Swipe left (from right side OR anywhere with left velocity)  
+    else if (info.offset.x < -threshold || velocity < -velocityThreshold) {
+      SoundEffects.click();
+      setIsMinimized(true);
+      setPlayerSide('left');
+      props.onPlayerSideChange?.('left');
+      props.onMinimizedChange?.(true);
+    }
+  }, [props]);
+
+  // Expand from minimized state - keeps the player on the same side
+  const handleExpandPlayer = useCallback(() => {
+    SoundEffects.click();
+    setIsMinimized(false);
+    props.onMinimizedChange?.(false);
+  }, [props]);
 
   // Volume control
   const handleVolumeUp = useCallback(() => {
@@ -452,19 +536,165 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
       {/* Camera Modal */}
       <CameraModal isOpen={showCameraModal} onClose={() => setShowCameraModal(false)} />
 
-      {/* Pull tab when hidden */}
-      {playerHidden && !open && (
+      {/* Minimized iPod Pull Tab - Audio persists like Apple Music! */}
+      <AnimatePresence>
+        {isMinimized && !open && (
+          <motion.button
+            initial={{ opacity: 0, x: playerSide === 'left' ? -100 : 100, scale: 0.8 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: playerSide === 'left' ? -100 : 100, scale: 0.8 }}
+            transition={{ type: "spring", damping: 22, stiffness: 300 }}
+            onClick={handleExpandPlayer}
+            onMouseEnter={() => setHoveredButton('expand')}
+            onMouseLeave={() => setHoveredButton(null)}
+            className={cn(
+              "fixed flex items-center gap-3 py-3.5 backdrop-blur-2xl transition-all duration-300",
+              "bg-gradient-to-br from-slate-900/98 via-gray-900/98 to-black/98",
+              "border-2 border-slate-500/60 shadow-2xl",
+              "hover:shadow-green-500/40 hover:border-green-400/60 hover:scale-105",
+              "active:scale-95",
+              // Pulsing glow animation when playing
+              isPlaying && "animate-pulse-subtle",
+              playerSide === 'left' 
+                ? "left-0 pl-3 pr-5 rounded-r-3xl border-l-0" 
+                : "right-0 pr-3 pl-5 rounded-l-3xl border-r-0"
+            )}
+            style={{ 
+              bottom: 140, 
+              zIndex: Z_INDEX.PULL_TAB,
+              boxShadow: isPlaying 
+                ? '0 0 30px rgba(34, 197, 94, 0.3), 0 10px 40px rgba(0,0,0,0.5)' 
+                : '0 10px 40px rgba(0,0,0,0.5)',
+            }}
+          >
+            {/* Icon order depends on side */}
+            {playerSide === 'right' && (
+              <motion.div
+                animate={{ x: [-3, 0, -3] }}
+                transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <IconChevronLeft className="w-5 h-5 text-white/70" />
+              </motion.div>
+            )}
+            
+            {/* Pulsing indicator that music is playing */}
+            <div className="relative">
+              {/* Glow effect */}
+              <motion.div
+                className="absolute -inset-2 bg-green-500/25 rounded-2xl blur-lg"
+                animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <div className={cn(
+                "relative w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden",
+                "bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800",
+                "border border-slate-500/50 shadow-inner"
+              )}>
+                {/* Source icon */}
+                <SourceIcon className="w-6 h-6 text-white/95" />
+                
+                {/* Audio wave animation at bottom */}
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-[3px]">
+                  {[1, 2, 3, 4].map(i => (
+                    <motion.div
+                      key={i}
+                      className="w-[3px] bg-green-400 rounded-full origin-bottom"
+                      animate={{ scaleY: isPlaying ? [0.3, 1, 0.3] : 0.3 }}
+                      transition={{ 
+                        duration: 0.5, 
+                        repeat: Infinity, 
+                        delay: i * 0.08,
+                        ease: "easeInOut"
+                      }}
+                      style={{ height: 10 }}
+                    />
+                  ))}
+                </div>
+                
+                {/* Reflective shimmer */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"
+                  animate={{ x: ['-100%', '200%'] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                />
+              </div>
+            </div>
+            
+            {/* Text label */}
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold text-white/90">{sourceLabel[musicSource]}</span>
+              <span className="text-[8px] text-green-400/80 font-medium">♪ Playing</span>
+            </div>
+            
+            {/* Pull arrow for left side */}
+            {playerSide === 'left' && (
+              <motion.div
+                animate={{ x: [0, 3, 0] }}
+                transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <IconChevronRight className="w-5 h-5 text-white/70" />
+              </motion.div>
+            )}
+            
+            <ButtonTooltip 
+              show={hoveredButton === 'expand'} 
+              text="🎵 Tap to Expand" 
+              position={playerSide === 'left' ? 'right' : 'left'} 
+              color="green" 
+            />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Hidden iframe container - keeps audio playing when minimized
+          Following Apple Music & Spotify embed rules:
+          - iframe must remain in DOM for audio continuity
+          - Position off-screen but keep dimensions for embed SDK
+          - autoplay and encrypted-media permissions required
+      */}
+      {isMinimized && streamingEmbedUrl && (
+        <div 
+          className="fixed pointer-events-none" 
+          style={{ 
+            position: 'fixed',
+            top: -9999,
+            left: -9999,
+            width: 320,
+            height: 152,
+            overflow: 'hidden',
+            opacity: 0.01, // Near-invisible but not fully hidden for embed SDK
+            zIndex: -1,
+          }}
+          aria-hidden="true"
+        >
+          <iframe
+            ref={iframeRef}
+            key={`streaming-bg-${musicSource}-${iframeKey}`}
+            title={`${sourceLabel[musicSource]} background player`}
+            src={streamingEmbedUrl}
+            width="320"
+            height="152"
+            loading="eager"
+            style={{ border: 'none', display: 'block' }}
+            allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+          />
+        </div>
+      )}
+
+      {/* Pull tab when hidden (original hide feature) */}
+      {playerHidden && !open && !isMinimized && (
         <motion.button
           initial={{ x: -30, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: -30, opacity: 0 }}
           onClick={() => { SoundEffects.click(); setPlayerHidden(false); }}
           className={cn(
-            "fixed z-[100220] left-0 flex items-center py-8 pl-0.5 pr-2 rounded-r-2xl backdrop-blur-md transition-colors",
+            "fixed left-0 flex items-center py-8 pl-0.5 pr-2 rounded-r-2xl backdrop-blur-md transition-colors",
             "bg-gradient-to-r from-slate-800/95 to-slate-700/95 hover:from-slate-700/95 hover:to-slate-600/95",
             "border-r border-y border-slate-500/40 shadow-xl"
           )}
-          style={{ bottom: 180 }}
+          style={{ bottom: 180, zIndex: Z_INDEX.PULL_TAB }}
         >
           <motion.div animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
             <IconGripVertical className="w-4 h-4 text-white/70" />
@@ -473,34 +703,68 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
       )}
       
       {/* Main iPhone 17 Floating Player */}
-      <motion.div
-        ref={miniPlayerRef}
-        initial={{ x: -300 }}
-        animate={{ 
-          x: open ? -300 : (playerHidden ? -300 : wanderPosition.x),
-          y: isWandering ? wanderPosition.y : 0,
-          opacity: open ? 0 : 1,
-          scale: isLocked ? 0.98 : 1,
-        }}
-        exit={{ x: -300, opacity: 0, scale: 0.8 }}
-        transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className="fixed z-[100230] pointer-events-auto"
-        style={{ 
-          left: 0, 
-          bottom: 60, 
-          pointerEvents: (open || playerHidden) ? 'none' : 'auto',
-          filter: `brightness(${brightness / 100})`
-        }}
-        onClick={handlePlayerInteraction}
-        onMouseEnter={() => { setIsHovering(true); if (!hasStartedCatchGame) maybeShowCatchGameTutorial(hasStartedCatchGame); }}
-        onMouseLeave={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          const padding = 80;
-          const isNearby = e.clientX >= rect.left - padding && e.clientX <= rect.right + padding && e.clientY >= rect.top - padding && e.clientY <= rect.bottom + padding;
-          setIsHovering(false);
-          if (gameStats.gamesPlayed === 0 && !hasStartedCatchGame && !isTutorialHovered && !isNearby) dismissCatchGameTutorial();
-        }}
-      >
+      <AnimatePresence>
+        {!isMinimized && (
+          <motion.div
+            ref={miniPlayerRef}
+            initial={{ x: playerSide === 'left' ? -300 : 300, opacity: 0 }}
+            animate={{ 
+              x: open ? (playerSide === 'left' ? -300 : 300) : (playerHidden ? (playerSide === 'left' ? -300 : 300) : (isWandering ? wanderPosition.x : 0)),
+              y: isWandering ? wanderPosition.y : 0,
+              opacity: open ? 0 : 1,
+              scale: isLocked ? 0.98 : 1,
+            }}
+            exit={{ x: playerSide === 'left' ? -300 : 300, opacity: 0, scale: 0.8 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            drag="x"
+            dragConstraints={{ left: -200, right: 200 }}
+            dragElastic={0.4}
+            onDragStart={() => setIsDragging(true)}
+            onDragEnd={handleDragEnd}
+            className="fixed pointer-events-auto"
+            style={{ 
+              [playerSide]: 0, 
+              bottom: 60, 
+              pointerEvents: (open || playerHidden) ? 'none' : 'auto',
+              filter: `brightness(${brightness / 100})`,
+              zIndex: Z_INDEX.PLAYER_BASE,
+              cursor: isDragging ? 'grabbing' : 'grab',
+            }}
+            onClick={handlePlayerInteraction}
+            onMouseEnter={() => { setIsHovering(true); if (!hasStartedCatchGame) maybeShowCatchGameTutorial(hasStartedCatchGame); }}
+            onMouseLeave={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const padding = 80;
+              const isNearby = e.clientX >= rect.left - padding && e.clientX <= rect.right + padding && e.clientY >= rect.top - padding && e.clientY <= rect.bottom + padding;
+              setIsHovering(false);
+              if (gameStats.gamesPlayed === 0 && !hasStartedCatchGame && !isTutorialHovered && !isNearby) dismissCatchGameTutorial();
+            }}
+          >
+            {/* Swipe Hint Overlay - ABOVE iPhone */}
+            <AnimatePresence>
+              {isHovering && !isDragging && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 5 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                  className="absolute -top-14 left-1/2 -translate-x-1/2 whitespace-nowrap pointer-events-none"
+                  style={{ zIndex: Z_INDEX.SWIPE_HINT }}
+                >
+                  <div className="px-4 py-2 rounded-2xl bg-gradient-to-r from-slate-900/95 via-gray-800/95 to-slate-900/95 backdrop-blur-xl border border-white/25 shadow-xl shadow-black/40 text-[10px] text-white/90 font-semibold flex items-center gap-2">
+                    <motion.div animate={{ x: [-4, 4, -4] }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}>
+                      <IconChevronLeft className="w-4 h-4 text-blue-400" />
+                    </motion.div>
+                    <span>Swipe to minimize</span>
+                    <motion.div animate={{ x: [4, -4, 4] }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}>
+                      <IconChevronRight className="w-4 h-4 text-blue-400" />
+                    </motion.div>
+                  </div>
+                  {/* Arrow pointing down to iPhone */}
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-gradient-to-br from-gray-800/95 to-slate-900/95 rotate-45 border-r border-b border-white/25" />
+                </motion.div>
+              )}
+            </AnimatePresence>
         {/* iPhone 17 Frame */}
         <div className="relative">
           {/* Main iPhone Body */}
@@ -526,7 +790,10 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             />
             
             {/* Dynamic Island / Notch */}
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30">
+            <div 
+              className="absolute top-3 left-1/2 -translate-x-1/2"
+              style={{ zIndex: Z_INDEX.PLAYER_CONTROLS }}
+            >
               <motion.div 
                 className="relative bg-black rounded-full flex items-center justify-center gap-2 px-4 py-2 overflow-hidden cursor-pointer shadow-lg"
                 animate={{ width: isPlaying ? 130 : 90, height: 30 }}
@@ -576,7 +843,10 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             </div>
 
             {/* Volume Buttons (Left Side) */}
-            <div className="absolute -left-[5px] top-20 flex flex-col gap-2 z-40">
+            <div 
+              className="absolute -left-[5px] top-20 flex flex-col gap-2"
+              style={{ zIndex: Z_INDEX.PLAYER_CONTROLS }}
+            >
               {/* Mute/Silent Switch */}
               <div
                 className="relative"
@@ -627,7 +897,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
 
             {/* Power/Side Button (Right Side) */}
             <div
-              className="absolute -right-[5px] top-28 z-40"
+              className="absolute -right-[5px] top-28"
+              style={{ zIndex: Z_INDEX.PLAYER_CONTROLS }}
               onMouseEnter={() => setHoveredButton('power')}
               onMouseLeave={() => setHoveredButton(null)}
             >
@@ -651,7 +922,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className="absolute top-14 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+                  className="absolute top-14 left-1/2 -translate-x-1/2 pointer-events-none"
+                  style={{ zIndex: Z_INDEX.VOLUME_SLIDER }}
                 >
                   <div className="bg-black/90 backdrop-blur-xl rounded-2xl px-5 py-3 flex items-center gap-3 border border-white/10 shadow-2xl">
                     {isMuted ? (
@@ -679,7 +951,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute inset-0 z-40 bg-black/95 backdrop-blur-lg flex flex-col items-center justify-center rounded-[36px]"
+                  className="absolute inset-0 bg-black/95 backdrop-blur-lg flex flex-col items-center justify-center rounded-[36px]"
+                  style={{ zIndex: Z_INDEX.LOCK_SCREEN }}
                   onClick={(e) => { e.stopPropagation(); handlePower(); }}
                 >
                   <motion.div
@@ -697,7 +970,10 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             {/* Screen Content */}
             <div className="relative h-full pt-12 pb-6 px-2">
               {/* Status Bar */}
-              <div className="absolute top-0 left-0 right-0 h-11 flex items-end justify-between px-7 pb-1 text-white/80 text-[9px] font-semibold z-20">
+              <div 
+                className="absolute top-0 left-0 right-0 h-11 flex items-end justify-between px-7 pb-1 text-white/80 text-[9px] font-semibold"
+                style={{ zIndex: Z_INDEX.PLAYER_CONTROLS - 10 }}
+              >
                 <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 <div className="flex items-center gap-1.5">
                   <div className="flex gap-[2px]">
@@ -715,7 +991,10 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
 
               {/* Game HUD */}
               {isWandering && !open && !playerHidden && (
-                <div className="absolute left-2 top-14 z-50 pointer-events-none">
+                <div 
+                  className="absolute left-2 top-14 pointer-events-none"
+                  style={{ zIndex: Z_INDEX.GAME_HUD }}
+                >
                   <CompactGameHUD score={gameStats.currentScore} highScore={gameStats.highScore} energy={energy} combo={combo} isFleeing={isFleeing} isReturning={isReturning} tirednessLevel={getTirednessLevel()} variant="attached" isVisible={true} />
                 </div>
               )}
@@ -860,7 +1139,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
 
             {/* Home Indicator */}
             <div 
-              className="absolute bottom-2 left-1/2 -translate-x-1/2 cursor-pointer z-30"
+              className="absolute bottom-2 left-1/2 -translate-x-1/2 cursor-pointer"
+              style={{ zIndex: Z_INDEX.PLAYER_CONTROLS }}
               onClick={(e) => { e.stopPropagation(); handleHome(); }}
               onMouseEnter={() => setHoveredButton('home')}
               onMouseLeave={() => setHoveredButton(null)}
@@ -873,24 +1153,87 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               <ButtonTooltip show={hoveredButton === 'home'} text="🏠 Tap to Interact" position="top" color="green" />
             </div>
 
-            {/* Hide Tab */}
+            {/* Hide/Minimize Tab - Dynamic position based on side */}
             <motion.button
-              onClick={(e) => { e.stopPropagation(); SoundEffects.click(); handlePlayerInteraction(); setPlayerHidden(true); }}
-              className="absolute -right-4 top-1/2 -translate-y-1/2 w-4 h-14 flex flex-col items-center justify-center bg-slate-700/90 rounded-r-lg border-r border-y border-slate-500/40 hover:bg-slate-600/90 transition-colors shadow-lg"
-              title="Hide player"
-              whileHover={{ x: 2 }}
+              onClick={(e) => { e.stopPropagation(); SoundEffects.click(); setIsMinimized(true); }}
+              className={cn(
+                "absolute top-1/2 -translate-y-1/2 w-4 h-14 flex flex-col items-center justify-center bg-slate-700/90 border-slate-500/40 hover:bg-slate-600/90 transition-colors shadow-lg",
+                playerSide === 'left' 
+                  ? "-right-4 rounded-r-lg border-r border-y" 
+                  : "-left-4 rounded-l-lg border-l border-y"
+              )}
+              style={{ zIndex: Z_INDEX.PLAYER_CONTROLS }}
+              title="Minimize player (audio continues)"
+              whileHover={{ x: playerSide === 'left' ? 2 : -2 }}
               whileTap={{ scale: 0.95 }}
+              onMouseEnter={() => setHoveredButton('minimize')}
+              onMouseLeave={() => setHoveredButton(null)}
             >
               <IconGripVertical className="w-2.5 h-2.5 text-white/50" />
+              <ButtonTooltip 
+                show={hoveredButton === 'minimize'} 
+                text="📱 Minimize (audio plays)" 
+                position={playerSide === 'left' ? 'right' : 'left'} 
+                color="purple" 
+              />
             </motion.button>
           </div>
         </div>
         
-        <BoredPopup show={showBoredPopup} onDismiss={() => setShowBoredPopup(false)} />
-        <SparkleBurst trigger={showCatchSparkle} />
-        <ConfettiBurst trigger={showConfetti} />
-        <PulseRing active={isHovering || isNearPlayer} color="blue" />
+        {/* Tutorial Slot - ABOVE the iPhone player with highest priority */}
+        <AnimatePresence>
+          {showCatchGameTutorial && tutorialContent && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ type: "spring", damping: 20, stiffness: 300 }}
+              className="absolute -top-36 left-1/2 -translate-x-1/2 pointer-events-auto"
+              style={{ zIndex: Z_INDEX.TUTORIAL, width: 280 }}
+            >
+              {tutorialContent}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Effects - positioned ABOVE the iPhone player */}
+        <div 
+          className="absolute -top-20 left-1/2 -translate-x-1/2 pointer-events-none"
+          style={{ zIndex: Z_INDEX.EFFECTS, width: 300 }}
+        >
+          <BoredPopup show={showBoredPopup} onDismiss={() => setShowBoredPopup(false)} />
+        </div>
+        
+        {/* Sparkle and confetti effects */}
+        <div 
+          className="absolute inset-0 pointer-events-none overflow-visible"
+          style={{ zIndex: Z_INDEX.EFFECTS }}
+        >
+          <SparkleBurst trigger={showCatchSparkle} />
+          <ConfettiBurst trigger={showConfetti} />
+          <PulseRing active={isHovering || isNearPlayer} color="blue" />
+        </div>
+
+        {/* Helper Overlay - appears on first interaction */}
+        <AnimatePresence>
+          {showFirstTimeHelp && !isMinimized && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="absolute -bottom-16 left-1/2 -translate-x-1/2 whitespace-nowrap pointer-events-none"
+              style={{ zIndex: Z_INDEX.HELPERS }}
+            >
+              <div className="px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600/90 to-purple-600/90 backdrop-blur-xl border border-white/30 shadow-xl text-[9px] text-white font-medium flex items-center gap-2">
+                <IconInfoCircle className="w-3.5 h-3.5" />
+                <span>Try the side buttons! 🎮</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 });

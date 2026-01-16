@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Sparkles, X, LogOut, Trash2, Plus, Loader2, 
-  Edit2, Upload, ImageIcon, AlertCircle, Link as LinkIcon, 
+  Edit2, Upload, ImageIcon, AlertCircle, 
   FileText, Layers, Grid, Share2, Video, DollarSign, Clock, Wrench, RefreshCw,
   Users, Search, CheckCircle2, HelpCircle, ChevronRight, LayoutDashboard, ChevronDown
 } from "lucide-react";

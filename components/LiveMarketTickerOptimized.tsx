@@ -206,17 +206,7 @@ export const LiveMarketTickerOptimized: React.FC = memo(function LiveMarketTicke
     
     const fetchMarketData = async () => {
       try {
-        const params = new URLSearchParams({
-          vs_currency: 'usd',
-          ids: COIN_ORDER.map(c => c.id).join(','),
-          order: 'market_cap_desc',
-          per_page: COIN_ORDER.length.toString(),
-          page: '1',
-          sparkline: 'false',
-          price_change_percentage: '24h',
-        });
-
-        const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?${params}`);
+        const response = await fetch('/api/market-data');
         if (!response.ok || isCancelled) return;
 
         const payload: CoinGeckoMarketResponse[] = await response.json();

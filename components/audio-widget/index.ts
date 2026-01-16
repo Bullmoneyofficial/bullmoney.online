@@ -3,7 +3,7 @@ export { sourceLabel, streamingOptions, sourceIcons, tutorialSteps } from "./con
 export { useAudioWidgetState, useAudioWidgetEffects, type UseAudioWidgetStateReturn } from "./useAudioWidgetState";
 export { useAudioWidgetHandlers } from "./useAudioWidgetHandlers";
 export { MainWidget } from "./MainWidget";
-export { FloatingPlayer } from "./FloatingPlayer";
+export { FloatingPlayer, Z_INDEX } from "./FloatingPlayer";
 export { TipsOverlay } from "./TipsOverlay";
 export { useWanderingGame } from "./useWanderingGame";
 export * from "./ui";
