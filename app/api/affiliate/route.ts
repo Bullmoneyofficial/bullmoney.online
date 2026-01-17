@@ -1,6 +1,7 @@
 // app/api/affiliate/route.ts
 import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
+import { trackServerEvent } from '@/lib/analytics';
 
 // 1. Connect to MongoDB
 const MONGODB_URI = process.env.MONGODB_URI || "YOUR_MONGODB_CONNECTION_STRING";
@@ -76,6 +77,13 @@ export async function POST(request: Request) {
       },
       { new: true, upsert: true } // Create if doesn't exist
     );
+
+    // Track affiliate commission update (server-side)
+    await trackServerEvent('affiliate_commission_update', {
+      email: targetEmail,
+      commissions: parseFloat(newCommissions),
+      referrals: parseInt(newReferrals),
+    });
 
     return NextResponse.json({ success: true, data: updatedUser });
   } catch (error) {

@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { detectBrowser } from "@/lib/browserDetection";
+import { trackEvent, BullMoneyAnalytics } from "@/lib/analytics";
 
 // ==========================================
 // LAZY-LOAD HEAVY COMPONENTS FOR FAST INITIAL COMPILE

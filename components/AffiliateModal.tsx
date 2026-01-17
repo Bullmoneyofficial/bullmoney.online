@@ -10,6 +10,9 @@ import { cn } from "@/lib/utils";
 import { createClient } from '@supabase/supabase-js';
 import { gsap } from 'gsap';
 
+// --- ANALYTICS ---
+import { BullMoneyAnalytics, trackEvent } from '@/lib/analytics';
+
 // --- CORE STATIC IMPORTS ---
 import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
 import { safeGetItem, safeSetItem } from '@/lib/localStorage';
@@ -796,12 +799,20 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
   const handleBrokerClick = () => {
     const link = activeBroker === 'Vantage' ? "https://vigco.co/iQbe2u" : "https://affs.click/t5wni";
+    // Track affiliate broker click
+    BullMoneyAnalytics.trackAffiliateClick(activeBroker, 'affiliate_modal');
     window.open(link, '_blank');
   };
 
   const handleRegisterSubmit = async () => {
     setStep(4);
     setSubmitError(null);
+    
+    // Track registration attempt
+    trackEvent('checkout_start', { 
+      broker: activeBroker, 
+      hasReferralCode: !!formData.referralCode 
+    });
 
     try {
       const { data: existingUser } = await supabase
@@ -839,6 +850,14 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
           broker: activeBroker // Save the broker choice
         }));
         
+        // 🎉 Track successful affiliate signup
+        BullMoneyAnalytics.trackAffiliateSignup(formData.referralCode || 'direct');
+        trackEvent('signup', { 
+          method: 'email', 
+          broker: activeBroker,
+          source: 'affiliate_modal' 
+        });
+        
         // 🎉 XM EASTER EGG: If user registered with XM, activate red theme site-wide!
         if (isXM) {
           setIsXMUser(true);
@@ -852,6 +871,12 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
     } catch (err: any) {
       console.error("Submission Error:", err);
+      // Track registration error
+      trackEvent('error', { 
+        type: 'registration_failed', 
+        message: err.message || 'Unknown error' 
+      });
+      
       if (err.code === '23505') {
         setSubmitError("This email is already registered.");
       } else {
