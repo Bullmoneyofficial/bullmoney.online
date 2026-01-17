@@ -460,7 +460,27 @@ interface FPSData {
 }
 
 /**
+ * Check if device is desktop/Mac (skip lazy loading for these)
+ */
+function isDesktopOrMac(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent.toLowerCase();
+  const isMobile = /mobi|android|iphone|ipad|ipod/i.test(ua) || window.innerWidth < 768;
+  return !isMobile;
+}
+
+// Cache the desktop check result
+let cachedIsDesktop: boolean | null = null;
+function getIsDesktop(): boolean {
+  if (cachedIsDesktop === null) {
+    cachedIsDesktop = isDesktopOrMac();
+  }
+  return cachedIsDesktop;
+}
+
+/**
  * Shared IntersectionObserver Pool - One observer per threshold/rootMargin combo
+ * Desktop/Mac devices: Skip lazy loading, immediately report as visible
  */
 class ObserverPool {
   private static instance: ObserverPool;
@@ -504,6 +524,26 @@ class ObserverPool {
     callback: (isIntersecting: boolean, entry: IntersectionObserverEntry) => void,
     options: { threshold?: number; rootMargin?: string } = {}
   ): () => void {
+    // Desktop/Mac: Skip lazy loading, immediately mark as visible
+    if (getIsDesktop()) {
+      // Create a synthetic entry to satisfy the callback signature
+      const syntheticEntry = {
+        isIntersecting: true,
+        target: element,
+        boundingClientRect: element.getBoundingClientRect(),
+        intersectionRatio: 1,
+        intersectionRect: element.getBoundingClientRect(),
+        rootBounds: null,
+        time: performance.now(),
+      } as IntersectionObserverEntry;
+      
+      // Immediately call callback with visible=true
+      callback(true, syntheticEntry);
+      
+      // Return a no-op cleanup function
+      return () => {};
+    }
+    
     const threshold = options.threshold ?? 0;
     const rootMargin = options.rootMargin ?? '0px';
     
@@ -1467,16 +1507,25 @@ export function useObserver(
 /**
  * Hook for visibility tracking with IntersectionObserver
  * Replaces useVisibility implementations
+ * Desktop/Mac: Returns true immediately (no lazy loading)
  */
 export function useVisibility(
   ref: React.RefObject<Element>,
   options?: { threshold?: number; rootMargin?: string; once?: boolean }
 ): boolean {
-  const [isVisible, setIsVisible] = useState(false);
-  const hasBeenVisibleRef = useRef(false);
+  // Desktop/Mac: Start as visible immediately (no lazy loading)
+  const [isVisible, setIsVisible] = useState(() => getIsDesktop());
+  const hasBeenVisibleRef = useRef(getIsDesktop());
   const { observe } = useUnifiedPerformance();
   
   useEffect(() => {
+    // Desktop/Mac: Skip observer, already visible
+    if (getIsDesktop()) {
+      setIsVisible(true);
+      hasBeenVisibleRef.current = true;
+      return;
+    }
+    
     if (!ref.current) return;
     if (options?.once && hasBeenVisibleRef.current) return;
     

@@ -129,13 +129,31 @@ const MODAL_FREEZE_STYLE = `
 `;
 
 // ============================================================================
+// DEVICE DETECTION - Skip lazy loading on desktop/Mac
+// ============================================================================
+
+function isDesktopOrMac(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent.toLowerCase();
+  const isMobile = /mobi|android|iphone|ipad|ipod/i.test(ua) || window.innerWidth < 768;
+  return !isMobile;
+}
+
+// ============================================================================
 // VIEWPORT FREEZE HOOK - Performance optimization
+// Desktop/Mac: Always consider content in viewport (no lazy visibility)
 // ============================================================================
 
 export function useViewportFreeze(ref: React.RefObject<HTMLElement | null>) {
   const [isInViewport, setIsInViewport] = useState(false);
   
   useEffect(() => {
+    // Desktop/Mac: Skip lazy viewport detection, always mark as in viewport
+    if (isDesktopOrMac()) {
+      setIsInViewport(true);
+      return;
+    }
+    
     if (!ref.current) return;
     
     const observer = new IntersectionObserver(

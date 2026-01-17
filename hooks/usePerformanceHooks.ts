@@ -157,7 +157,18 @@ export function useDOMUpdater<T>(
 }
 
 /**
+ * Check if device is desktop/Mac (skip lazy loading for these)
+ */
+function isDesktopOrMac(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent.toLowerCase();
+  const isMobile = /mobi|android|iphone|ipad|ipod/i.test(ua) || window.innerWidth < 768;
+  return !isMobile;
+}
+
+/**
  * Intersection Observer Hook - For visibility-based optimization
+ * Desktop/Mac: Skip lazy loading, always return visible
  * 
  * Returns isVisible state and ref to attach to element
  */
@@ -166,10 +177,27 @@ export function useVisibility(
 ): [React.RefCallback<Element>, boolean] {
   const elementRef = useRef<Element | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const isDesktopRef = useRef<boolean | null>(null);
   const isVisibleRef = useRef(false);
+  
+  // Check if desktop once
+  if (isDesktopRef.current === null) {
+    isDesktopRef.current = isDesktopOrMac();
+    // Desktop/Mac: Start as visible
+    if (isDesktopRef.current) {
+      isVisibleRef.current = true;
+    }
+  }
   
   // Use callback ref pattern for proper cleanup
   const setRef = useCallback((element: Element | null) => {
+    // Desktop/Mac: Skip observer entirely, always visible
+    if (isDesktopRef.current) {
+      isVisibleRef.current = true;
+      elementRef.current = element;
+      return;
+    }
+    
     // Cleanup previous observer
     if (observerRef.current) {
       observerRef.current.disconnect();

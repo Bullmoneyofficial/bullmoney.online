@@ -175,14 +175,32 @@ export function useBatchedUpdates() {
 }
 
 /**
+ * Check if device is desktop/Mac (skip lazy loading for these)
+ */
+function isDesktopOrMac(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent.toLowerCase();
+  const isMobile = /mobi|android|iphone|ipad|ipod/i.test(ua) || window.innerWidth < 768;
+  return !isMobile;
+}
+
+/**
  * Intersection Observer for lazy loading and visibility detection
+ * Desktop/Mac devices: immediately mark as visible (skip lazy loading)
  */
 export function useIntersectionObserver(
   ref: React.RefObject<HTMLElement>,
   callback: (isVisible: boolean) => void,
-  options?: IntersectionObserverInit
+  options?: IntersectionObserverInit & { forceLazyOnDesktop?: boolean }
 ) {
   useEffect(() => {
+    // Desktop/Mac: Skip lazy loading, immediately mark as visible
+    // Unless forceLazyOnDesktop is explicitly set to true
+    if (isDesktopOrMac() && !options?.forceLazyOnDesktop) {
+      callback(true);
+      return;
+    }
+
     if (!ref.current) return;
 
     const observer = new IntersectionObserver(([entry]) => {

@@ -181,6 +181,16 @@ const useResponsiveDimension = (
   return responsive ? val : config[key];
 };
 
+/**
+ * Check if device is desktop/Mac (skip lazy loading for these)
+ */
+const isDesktopOrMac = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent.toLowerCase();
+  const isMobile = /mobi|android|iphone|ipad|ipod/i.test(ua) || window.innerWidth < 768;
+  return !isMobile;
+};
+
 const useIntersectionObserver = (
   ref: React.RefObject<HTMLDivElement | null>,
   shouldObserve: boolean = false
@@ -188,6 +198,12 @@ const useIntersectionObserver = (
   const [isVisible, setIsVisible] = useState(!shouldObserve);
 
   useEffect(() => {
+    // Desktop/Mac: Skip lazy loading, always mark as visible
+    if (isDesktopOrMac()) {
+      setIsVisible(true);
+      return;
+    }
+    
     if (!shouldObserve || !ref.current) return;
 
     const observer = new IntersectionObserver(

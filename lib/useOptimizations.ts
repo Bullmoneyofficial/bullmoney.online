@@ -184,14 +184,38 @@ export function useUserPreferences() {
 }
 
 /**
+ * Check if device is desktop/Mac (skip lazy loading for these)
+ */
+function isDesktopOrMac(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent.toLowerCase();
+  const isMobile = /mobi|android|iphone|ipad|ipod/i.test(ua) || window.innerWidth < 768;
+  return !isMobile;
+}
+
+/**
  * Hook for lazy loading with intersection observer
+ * Desktop/Mac devices skip lazy loading for instant content display
  */
 export function useLazyLoad(options?: IntersectionObserverInit) {
   const [isVisible, setIsVisible] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
   const targetRef = useRef<HTMLDivElement>(null);
+  const isDesktop = useRef<boolean | null>(null);
 
   useEffect(() => {
+    // Check if desktop/Mac - skip lazy loading entirely
+    if (isDesktop.current === null) {
+      isDesktop.current = isDesktopOrMac();
+    }
+    
+    if (isDesktop.current) {
+      // Desktop/Mac: Load immediately, no lazy loading
+      setIsVisible(true);
+      setHasLoaded(true);
+      return;
+    }
+
     const target = targetRef.current;
     if (!target) return;
 

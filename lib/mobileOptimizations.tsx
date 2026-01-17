@@ -193,6 +193,16 @@ export function useDeviceDetection(): DeviceInfo {
 // LAZY LOADING FOR IMAGES
 // ============================================================================
 
+/**
+ * Check if device is desktop/Mac (skip lazy loading for these)
+ */
+function isDesktopOrMac(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent.toLowerCase();
+  const isMobile = /mobi|android|iphone|ipad|ipod/i.test(ua) || window.innerWidth < 768;
+  return !isMobile;
+}
+
 interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
   alt: string;
@@ -200,6 +210,9 @@ interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   threshold?: number;
 }
 
+/**
+ * LazyImage component - Desktop/Mac devices skip lazy loading for instant display
+ */
 export const LazyImage: React.FC<LazyImageProps> = ({
   src,
   alt,
@@ -208,11 +221,24 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   className = '',
   ...props
 }) => {
+  const isDesktopRef = useRef<boolean | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(placeholder);
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
+    // Check if desktop/Mac - skip lazy loading entirely
+    if (isDesktopRef.current === null) {
+      isDesktopRef.current = isDesktopOrMac();
+    }
+    
+    if (isDesktopRef.current) {
+      // Desktop/Mac: Load immediately, no lazy loading
+      setCurrentSrc(src);
+      setIsLoaded(true);
+      return;
+    }
+
     if (!imgRef.current) return;
 
     const observer = new IntersectionObserver(
@@ -233,13 +259,16 @@ export const LazyImage: React.FC<LazyImageProps> = ({
     return () => observer.disconnect();
   }, [src, threshold]);
 
+  // Desktop/Mac: Use eager loading instead of lazy
+  const loadingStrategy = isDesktopRef.current ? 'eager' : 'lazy';
+
   return (
     <img
       ref={imgRef}
       src={currentSrc}
       alt={alt || "Image"}
       className={`${className} transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-      loading="lazy"
+      loading={loadingStrategy}
       {...props}
     />
   );
