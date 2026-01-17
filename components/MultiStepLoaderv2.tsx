@@ -9,6 +9,7 @@ import {
 } from "framer-motion";
 import { ArrowUpRight, LockOpen, Zap, TrendingUp, Sparkles, Rocket, Star, Trophy, Flame, Diamond, Moon, Target, Dumbbell, CheckCircle2, CircleDollarSign, BarChart3, Activity } from "lucide-react";
 import Image from "next/image";
+import { trackEvent } from "@/lib/analytics";
 
 // --- IMPORT UNIFIED SHIMMER SYSTEM FOR FPS-AWARE ANIMATIONS ---
 import { useOptimizedShimmer } from "@/components/ui/UnifiedShimmer";
@@ -624,13 +625,25 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
     if (hasFinishedRef.current) return;
     hasFinishedRef.current = true;
     setShowContent(true);
+    // Track successful loader completion
+    trackEvent('feature_used', { 
+      component: 'loader_v2', 
+      action: 'completed',
+      asset: selectedAsset 
+    });
     onFinished?.();
-  }, [onFinished]);
+  }, [onFinished, selectedAsset]);
 
   // Handle vault access button click - triggers vault opening animation
   const handleVaultAccess = useCallback(() => {
     if (vaultOpening || hasFinishedRef.current) return;
     setVaultOpening(true);
+    
+    // Track vault access click
+    trackEvent('cta_click', { 
+      element: 'vault_access_button', 
+      source: 'loader_v2' 
+    });
 
     startPriceDeflate();
     
@@ -729,6 +742,12 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
           if (next >= 100 && holding && !isCompletingRef.current && !hasFinishedRef.current && hasUserInteractedRef.current) {
             // Lock in completion state immediately
             isCompletingRef.current = true;
+            
+            // Track vault unlock achievement
+            trackEvent('feature_used', { 
+              component: 'loader_v2', 
+              action: 'vault_unlocked' 
+            });
             
             // Use RAF to ensure state is fully committed before proceeding
             requestAnimationFrame(() => {
@@ -837,6 +856,15 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
     hasUserInteractedRef.current = true;
     isHoldingRef.current = true; // Update ref immediately
     setIsHolding(true);
+    
+    // Track first interaction with loader
+    if (!animationStartedRef.current) {
+      trackEvent('feature_used', { 
+        component: 'loader_v2', 
+        action: 'hold_started',
+        asset: selectedAsset 
+      });
+    }
     
     // CRITICAL: Start animation loop ONLY on first user interaction
     if (!animationStartedRef.current && animateFnRef.current) {

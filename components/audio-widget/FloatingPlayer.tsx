@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion, useDragControls, PanInfo } from "framer-motion";
+import { trackEvent } from "@/lib/analytics";
 import { IconX, IconGripVertical, IconVolume, IconVolumeOff, IconLock, IconCamera, IconInfoCircle, IconChevronUp, IconPlayerPlay, IconPlayerPause, IconBrandSpotify, IconBrandApple, IconBrandYoutube, IconFlare, IconSwitchHorizontal, IconChevronLeft, IconChevronRight, IconMusic } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
@@ -397,12 +398,14 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
   // Home button / Navigation
   const handleHome = useCallback(() => {
     SoundEffects.click();
+    trackEvent('feature_used', { component: 'floating_player', action: 'home_button' });
     handlePlayerInteraction();
   }, [handlePlayerInteraction]);
 
   // Camera button
   const handleCamera = useCallback(() => {
     SoundEffects.click();
+    trackEvent('feature_used', { component: 'floating_player', action: 'camera' });
     setShowCameraModal(true);
   }, []);
 

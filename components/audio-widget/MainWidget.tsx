@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { trackEvent } from "@/lib/analytics";
 import {
   IconMusic,
   IconPlayerPlay,
@@ -398,6 +399,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                 <motion.button
                   onClick={() => {
                     SoundEffects.click();
+                    if (!open) trackEvent('feature_used', { component: 'audio_widget', action: 'expand' });
                     setOpen(!open);
                   }}
                   className={cn(

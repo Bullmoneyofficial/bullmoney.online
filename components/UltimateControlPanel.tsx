@@ -17,6 +17,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, PanInfo, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { trackEvent, trackClick } from '@/lib/analytics';
 import { useUIState as useUIStateContext } from '@/contexts/UIStateContext';
 import {
   Activity,
@@ -885,6 +886,7 @@ export function UltimateControlPanel({
     } else {
       // 1st tap - open
       setActiveModal('services');
+      trackClick('services_button', { source: 'ultimate_panel' });
       onServicesClick?.();
       uiStateContext?.setServicesModalOpen?.(true);
     }
@@ -896,6 +898,7 @@ export function UltimateControlPanel({
       setActiveModal(null);
     } else {
       setActiveModal('contact');
+      trackClick('contact_button', { source: 'ultimate_panel' });
       onContactClick?.();
     }
   };
@@ -906,6 +909,7 @@ export function UltimateControlPanel({
       setActiveModal(null);
     } else {
       setActiveModal('theme');
+      trackClick('theme_button', { source: 'ultimate_panel' });
       onThemeClick?.();
     }
   };
@@ -916,6 +920,7 @@ export function UltimateControlPanel({
       setActiveModal(null);
     } else {
       setActiveModal('admin');
+      trackClick('admin_button', { source: 'ultimate_panel' });
       onAdminClick?.();
     }
   };

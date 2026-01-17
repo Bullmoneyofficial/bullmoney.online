@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { ExternalLink, ShieldAlert } from "lucide-react";
+import { trackClick } from "@/lib/analytics";
 import { SparklesCore } from "./sparkles";
 import { Logo } from "./logo";
 import FooterStyles from "./footer/FooterStyles";
@@ -90,11 +91,11 @@ export function Footer() {
                     <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/8 to-transparent shimmer-line shimmer-gpu" style={{ animationDuration: "5s" }} />
                   </div>
 
-                  <FooterButton onClick={() => setAppsOpen(true)} variant="primary" icon={<ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}>
+                  <FooterButton onClick={() => { trackClick('apps_tools_button', { source: 'footer' }); setAppsOpen(true); }} variant="primary" icon={<ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}>
                     Apps & Tools
                   </FooterButton>
 
-                  <FooterButton onClick={() => setDisclaimerOpen(true)} icon={<ShieldAlert className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}>
+                  <FooterButton onClick={() => { trackClick('legal_disclaimer_button', { source: 'footer' }); setDisclaimerOpen(true); }} icon={<ShieldAlert className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}>
                     Legal Disclaimer
                   </FooterButton>
                 </div>

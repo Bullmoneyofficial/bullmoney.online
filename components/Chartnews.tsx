@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, memo, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { trackEvent, trackClick } from "@/lib/analytics";
 import { IconExternalLink, IconRefresh } from "@tabler/icons-react";
 import { ChevronDown, ChartBar, Newspaper, X, ArrowRight } from "lucide-react";
 import { useComponentTracking } from "@/lib/CrashTracker";
@@ -1181,7 +1182,8 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
 
     const handleOpenModal = useCallback(() => {
         setIsOpen(true);
-    }, []);
+        trackEvent('modal_open', { modal: 'chartnews', market: activeMarket });
+    }, [activeMarket]);
 
     const handleCloseModal = useCallback(() => {
         setIsOpen(false);

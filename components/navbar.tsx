@@ -1,5 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils";
+import { trackEvent, trackClick } from "@/lib/analytics";
 import {
   IconMenu2,
   IconX,
@@ -531,7 +532,10 @@ export const Navbar = memo(() => {
           {/* Mobile Controls */}
           <MobileMenuControls 
             open={open} 
-            onToggle={() => setOpen(!open)}
+            onToggle={() => { 
+              if (!open) trackEvent('menu_toggle', { type: 'mobile_menu', action: 'open' });
+              setOpen(!open);
+            }}
             onThemeClick={openThemeSelectorModal}
             hasReward={hasReward}
             isXMUser={isXMUser}
@@ -550,11 +554,11 @@ export const Navbar = memo(() => {
         hasReward={hasReward}
         isAdmin={isAdmin}
         isAuthenticated={isAuthenticated}
-        onAffiliateClick={openAffiliateModal}
-        onFaqClick={openFaqModal}
-        onAdminClick={openAdminModal}
-        onThemeClick={openThemeSelectorModal}
-        onAnalysisClick={openAnalysisModal}
+        onAffiliateClick={() => { trackClick('affiliate_nav', { source: 'mobile_menu' }); openAffiliateModal(); }}
+        onFaqClick={() => { trackClick('faq_nav', { source: 'mobile_menu' }); openFaqModal(); }}
+        onAdminClick={() => { trackClick('admin_nav', { source: 'mobile_menu' }); openAdminModal(); }}
+        onThemeClick={() => { trackClick('theme_nav', { source: 'mobile_menu' }); openThemeSelectorModal(); }}
+        onAnalysisClick={() => { trackClick('analysis_nav', { source: 'mobile_menu' }); openAnalysisModal(); }}
       />
     </>
   );

@@ -118,8 +118,12 @@ interface AnalyticsConfig {
 // ============================================
 
 const config: AnalyticsConfig = {
-  enabled: typeof window !== 'undefined' && process.env.NODE_ENV === 'production',
-  debounceMs: 500,
+  // Enable tracking in production OR when NEXT_PUBLIC_ENABLE_ANALYTICS is set
+  enabled: typeof window !== 'undefined' && (
+    process.env.NODE_ENV === 'production' || 
+    process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === 'true'
+  ),
+  debounceMs: 300, // Reduced for better tracking
   debugMode: process.env.NODE_ENV === 'development',
   alwaysTrack: [
     'signup',
@@ -127,6 +131,11 @@ const config: AnalyticsConfig = {
     'purchase',
     'checkout_complete',
     'affiliate_signup',
+    'affiliate_click',
+    'modal_open',
+    'cta_click',
+    'menu_toggle',
+    'feature_used',
     'error',
   ],
 };
