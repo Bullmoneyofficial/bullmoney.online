@@ -28,10 +28,12 @@ import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useCacheContext } from "@/components/CacheManagerProvider";
 import { useMobileMenu, useNavbarModals } from "@/contexts/UIStateContext";
 
-// --- IMPORT MODAL COMPONENTS ---
-import AdminModal from "@/components/AdminModal";
-import BullMoneyModal from "@/components/Faq";
-import AffiliateModal from "@/components/AffiliateModal";
+// --- IMPORT LAZY MODAL SYSTEM (optimized loading/unloading like ServicesModal) ---
+import { 
+  LazyAdminModal, 
+  LazyAffiliateModal, 
+  LazyFaqModal 
+} from "./navbar/LazyModalSystem";
 
 // --- IMPORT SOUND EFFECTS ---
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
@@ -45,6 +47,7 @@ import { MobileStaticHelper } from "./navbar/MobileStaticHelper";
 import { MobileDropdownMenu } from "./navbar/MobileDropdownMenu";
 import { MovingTradingTip } from "./navbar/MovingTradingTip";
 import { ThemeSelectorModal } from "./navbar/ThemeSelectorModal";
+// LazyThemeSelectorModal available but ThemeSelectorModal is lightweight enough to use directly
 import { NAVBAR_TRADING_TIPS } from "./navbar/navbar.utils";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 
@@ -386,10 +389,16 @@ export const Navbar = memo(() => {
     <>
       {/* All keyframes now in UnifiedShimmer.tsx - no duplicate definitions */}
 
-      {/* Modal Components */}
-      <AdminModal isOpen={isAdminOpen} onClose={closeNavbarModal} />
-      <BullMoneyModal isOpen={isFaqOpen} onClose={closeNavbarModal} />
-      <AffiliateModal isOpen={isAffiliateOpen} onClose={closeNavbarModal} />
+      {/* Modal Components - Using Lazy Modal System (load/unload like ServicesModal) */}
+      {/* These modals now: 
+          1. Don't load until first opened
+          2. Fully unmount when closed (freeing memory)
+          3. Freeze animations during scroll
+          4. Use content-visibility for off-screen sections
+      */}
+      <LazyAdminModal isOpen={isAdminOpen} onClose={closeNavbarModal} />
+      <LazyFaqModal isOpen={isFaqOpen} onClose={closeNavbarModal} />
+      <LazyAffiliateModal isOpen={isAffiliateOpen} onClose={closeNavbarModal} />
       <ThemeSelectorModal isOpen={isThemeSelectorOpen} onClose={closeNavbarModal} />
       
       {/* Desktop Moving Trading Tips */}

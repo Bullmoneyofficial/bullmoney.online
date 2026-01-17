@@ -12,3 +12,15 @@ export {
   MOBILE_HELPER_TIPS, 
   useRotatingIndex 
 } from './navbar.utils';
+
+// Lazy Modal System - optimized loading/unloading like ServicesModal
+export {
+  LazyAdminModal,
+  LazyAffiliateModal,
+  LazyFaqModal,
+  LazyUltimatePanel,
+  useModalFreeze,
+  useViewportFreeze,
+  FreezeZone,
+  ModalLoadingSpinner,
+} from './LazyModalSystem';

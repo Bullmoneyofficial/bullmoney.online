@@ -1,0 +1,194 @@
+/**
+ * SmartMount CSS - Global freeze/unfreeze styles
+ * 
+ * When components are closed, they should consume ZERO resources.
+ * These styles ensure:
+ * 1. Animations stop completely when not visible
+ * 2. GPU memory is freed
+ * 3. Layout calculations are skipped
+ */
+
+/* ============================================================================
+   SMART FREEZE STATES
+   ============================================================================ */
+
+/* FROZEN STATE: Component is closed/hidden - stop ALL expensive operations */
+.smart-frozen,
+.smart-frozen *,
+[data-smart-frozen="true"],
+[data-smart-frozen="true"] * {
+  animation: none !important;
+  animation-play-state: paused !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+
+/* Freeze backdrop effects (very expensive on GPU) */
+.smart-frozen [class*="backdrop-blur"],
+.smart-frozen [class*="backdrop-filter"],
+[data-smart-frozen="true"] [class*="backdrop-blur"],
+[data-smart-frozen="true"] [class*="backdrop-filter"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Freeze box shadows (GPU intensive) */
+.smart-frozen [class*="shadow-"],
+[data-smart-frozen="true"] [class*="shadow-"] {
+  box-shadow: none !important;
+}
+
+/* Freeze shimmer animations */
+.smart-frozen .shimmer-line,
+.smart-frozen .shimmer-border,
+.smart-frozen .shimmer-glow,
+.smart-frozen .shimmer-ping,
+.smart-frozen .shimmer-ltr,
+[data-smart-frozen="true"] .shimmer-line,
+[data-smart-frozen="true"] .shimmer-border,
+[data-smart-frozen="true"] .shimmer-glow,
+[data-smart-frozen="true"] .shimmer-ping,
+[data-smart-frozen="true"] .shimmer-ltr {
+  animation: none !important;
+  opacity: 0 !important;
+}
+
+/* Freeze Framer Motion portals */
+.smart-frozen [data-framer-portal-id],
+.smart-frozen [data-motion-pop-id],
+[data-smart-frozen="true"] [data-framer-portal-id],
+[data-smart-frozen="true"] [data-motion-pop-id] {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* ============================================================================
+   ACTIVE STATE: Component is open - full rendering
+   ============================================================================ */
+
+/* Keep interactive elements working when active */
+.smart-active button,
+.smart-active [role="button"],
+.smart-active a,
+.smart-active input,
+.smart-active textarea {
+  pointer-events: auto;
+  animation-play-state: running !important;
+}
+
+/* ============================================================================
+   CONTENT VISIBILITY OPTIMIZATION
+   ============================================================================ */
+
+/* Off-screen content should not be rendered */
+.smart-offscreen {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 300px;
+}
+
+/* Force GPU layers for visible content */
+.smart-visible {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ============================================================================
+   MODAL CLOSED OPTIMIZATIONS
+   ============================================================================ */
+
+/* When any modal is closed, stop its content from consuming resources */
+[data-modal-closed="true"] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  animation: none !important;
+}
+
+/* Modal portal optimization */
+.modal-portal-unmounted {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* ============================================================================
+   COMPONENT-SPECIFIC FREEZE STATES
+   ============================================================================ */
+
+/* Mobile Menu Freeze */
+[data-mobile-menu-closed="true"] {
+  display: none;
+  animation: none !important;
+}
+
+/* Audio Widget Menu Freeze (NOT the floating player) */
+[data-audio-widget-menu-closed="true"] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Ultimate Control Panel Freeze */
+[data-ultimate-panel-closed="true"] {
+  display: none;
+  animation: none !important;
+}
+
+/* Navbar Modal Freeze */
+[data-navbar-modal-closed="true"] {
+  display: none;
+  animation: none !important;
+}
+
+/* ============================================================================
+   SCROLL PERFORMANCE OPTIMIZATION
+   ============================================================================ */
+
+/* During scroll, pause ALL non-critical animations */
+.is-scrolling .shimmer-line,
+.is-scrolling .shimmer-border,
+.is-scrolling .shimmer-glow,
+.is-scrolling .shimmer-ping,
+.is-scrolling .shimmer-ltr {
+  animation-play-state: paused !important;
+}
+
+.is-scrolling [class*="backdrop-blur"],
+.is-scrolling [class*="backdrop-filter"] {
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+}
+
+/* ============================================================================
+   REDUCED MOTION SUPPORT
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .smart-frozen *,
+  .smart-active * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================================================
+   STRICT CONTAINMENT FOR CLOSED MODALS
+   ============================================================================ */
+
+/* Portal containers for closed modals */
+.modal-portal-container[data-open="false"] {
+  contain: strict;
+  content-visibility: hidden;
+}
+
+/* Ensure closed modals don't affect layout */
+.modal-container-closed {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  contain: strict;
+}

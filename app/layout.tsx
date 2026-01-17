@@ -9,6 +9,7 @@ import "../styles/safari-optimizations.css"; // Safari-specific fixes
 import "../styles/no-spin.css"; // Disable rotation-based spin animations
 import "../styles/fps-optimization.css"; // FPS optimization & frame skipping
 import "../styles/mobile-scroll-optimization.css"; // Mobile & scroll performance optimizations
+import "../styles/smart-mount.css"; // Smart mount/unmount freeze styles
 import { cn } from "@/lib/utils";
 
 import { ThemeProvider } from "@/context/providers";

@@ -1751,6 +1751,58 @@ html.is-scrolling [data-fps-chart] [style*="transform"] {
 }
 
 /* =================================================================
+   NAVBAR MODAL FREEZE SYSTEM - Same as ServicesShowcaseModal
+   Controls animation freeze during scroll for optimal FPS
+   ================================================================= */
+
+/* Freeze Zone - viewport-aware content optimization */
+.freeze-zone {
+  contain: content;
+}
+
+.freeze-zone.in-viewport {
+  contain: layout style;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.freeze-zone:not(.in-viewport) {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 300px;
+}
+
+/* Aggressive freeze for off-screen modal content */
+.freeze-zone:not(.in-viewport) * {
+  animation: none !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+
+/* Freeze-exempt elements stay interactive */
+.freeze-exempt,
+.freeze-exempt * {
+  animation-play-state: running !important;
+  transition-duration: 0.15s !important;
+  pointer-events: auto !important;
+}
+
+/* Modal scroll performance mode */
+.navbar-modal-content.is-scrolling *,
+.services-modal-content.is-scrolling * {
+  animation-play-state: paused !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+
+.navbar-modal-content.is-scrolling [class*="backdrop-blur"],
+.navbar-modal-content.is-scrolling [class*="backdrop-filter"],
+.services-modal-content.is-scrolling [class*="backdrop-blur"],
+.services-modal-content.is-scrolling [class*="backdrop-filter"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* =================================================================
    FPS CHART EXCEPTION - HIGHEST SPECIFICITY (AT END OF FILE)
    These rules MUST come last to override everything above
    ================================================================= */

@@ -1,8 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ReactNode, Suspense } from "react";
+import { ReactNode, Suspense, memo } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { useUIState } from "@/contexts/UIStateContext";
 // RecruitAuthProvider is now in layout.tsx to wrap Navbar
 // REMOVED: UIStateProvider - already provided by MobileMenuProvider in layout.tsx
 
@@ -40,6 +41,7 @@ const CrashTrackerProvider = dynamic(
 
 const FpsMonitor = dynamic(() => import("@/components/FpsMonitor"), { ssr: false });
 const ClientCursor = dynamic(() => import("@/components/ClientCursor"), { ssr: false });
+// AudioWidget stays loaded - NOT lazy unmounted - for audio persistence
 const AudioWidget = dynamic(() => import("@/components/audio-widget/AudioWidget"), { ssr: false });
 const AutoRefreshPrompt = dynamic(
   () => import("@/components/AutoRefreshPrompt").then((mod) => ({ default: mod.AutoRefreshPrompt })),
@@ -50,28 +52,99 @@ const FooterComponent = dynamic(
   { ssr: false }
 );
 
-// Bull Feed modals - lazy loaded
-const AuthModal = dynamic(
-  () => import("@/components/auth/AuthModal").then((mod) => ({ default: mod.AuthModal })),
-  { ssr: false }
-);
-const BullFeedModal = dynamic(
-  () => import("@/components/bull-feed/BullFeedModal").then((mod) => ({ default: mod.BullFeedModal })),
-  { ssr: false }
-);
-const PostComposer = dynamic(
-  () => import("@/components/composer/PostComposer").then((mod) => ({ default: mod.PostComposer })),
-  { ssr: false }
-);
-const EnhancedAnalysisModal = dynamic(
-  () => import("@/components/analysis-enhanced/EnhancedAnalysisModal").then((mod) => ({ default: mod.EnhancedAnalysisModal })),
-  { ssr: false }
-);
+// SMART MOUNT: Import lazy modal wrappers (mount/unmount with zero cost when closed)
+import {
+  LazyAuthModal,
+  LazyBullFeedModal,
+  LazyPostComposerModal,
+  LazyAnalysisModal,
+  LazyLiveStreamModal,
+  LazyProductsModal,
+  LazyServicesModal,
+} from "@/components/LazyUIComponents";
 
 interface ClientProvidersProps {
   children: ReactNode;
   modal?: ReactNode;
 }
+
+/**
+ * LazyGlobalModals - SMART MOUNT system for all global modals
+ * 
+ * PERFORMANCE: "Closed = Unmounted = Zero Cost"
+ * 
+ * These modals follow the smart mount pattern:
+ * - ZERO rendering until first opened
+ * - Complete unmount when closed (frees all memory)
+ * - Delayed unmount allows exit animations
+ * - No React reconciliation for closed modals
+ * 
+ * EXCEPTION: AudioWidget is NOT included - it persists for audio playback
+ */
+const LazyGlobalModals = memo(function LazyGlobalModals() {
+  const {
+    isAuthModalOpen,
+    setAuthModalOpen,
+    isBullFeedModalOpen,
+    setBullFeedModalOpen,
+    isPostComposerModalOpen,
+    setPostComposerModalOpen,
+    isAnalysisModalOpen,
+    setAnalysisModalOpen,
+    isLiveStreamModalOpen,
+    setLiveStreamModalOpen,
+    isProductsModalOpen,
+    setProductsModalOpen,
+    isServicesModalOpen,
+    setServicesModalOpen,
+  } = useUIState();
+
+  return (
+    <>
+      {/* Auth Modal - mounts only when opened, unmounts when closed */}
+      <LazyAuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setAuthModalOpen(false)} 
+      />
+      
+      {/* Bull Feed Modal - mounts only when opened, unmounts when closed */}
+      <LazyBullFeedModal 
+        isOpen={isBullFeedModalOpen} 
+        onClose={() => setBullFeedModalOpen(false)} 
+      />
+      
+      {/* Post Composer Modal - mounts only when opened, unmounts when closed */}
+      <LazyPostComposerModal 
+        isOpen={isPostComposerModalOpen} 
+        onClose={() => setPostComposerModalOpen(false)} 
+      />
+      
+      {/* Analysis Modal - mounts only when opened, unmounts when closed */}
+      <LazyAnalysisModal 
+        isOpen={isAnalysisModalOpen} 
+        onClose={() => setAnalysisModalOpen(false)} 
+      />
+      
+      {/* Live Stream Modal - mounts only when opened, unmounts when closed */}
+      <LazyLiveStreamModal 
+        isOpen={isLiveStreamModalOpen} 
+        onClose={() => setLiveStreamModalOpen(false)} 
+      />
+      
+      {/* Products Modal - mounts only when opened, unmounts when closed */}
+      <LazyProductsModal 
+        isOpen={isProductsModalOpen} 
+        onClose={() => setProductsModalOpen(false)} 
+      />
+      
+      {/* Services Modal - mounts only when opened, unmounts when closed */}
+      <LazyServicesModal 
+        isOpen={isServicesModalOpen} 
+        onClose={() => setServicesModalOpen(false)} 
+      />
+    </>
+  );
+});
 
 export function ClientProviders({ children, modal }: ClientProvidersProps) {
   return (
@@ -84,6 +157,7 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
             <PerformanceProvider enableSmoothScroll={true}>
               <FpsMonitor show={false} />
               <ClientCursor />
+              {/* AudioWidget stays mounted - NOT lazy unmounted - for audio persistence */}
               <AudioWidget />
               <AutoRefreshPrompt />
               {modal}
@@ -121,11 +195,14 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
               <FooterComponent />
               <FPSCounter />
               
-              {/* Bull Feed Modals */}
-              <AuthModal />
-              <BullFeedModal />
-              <PostComposer />
-              <EnhancedAnalysisModal />
+              {/* 
+                SMART MOUNT GLOBAL MODALS v3.0:
+                - ZERO cost when closed (completely unmounted)
+                - Mounts ONLY when opened
+                - Delayed unmount allows exit animations
+                - EXCEPTION: AudioWidget stays mounted for audio persistence
+              */}
+              <LazyGlobalModals />
             </PerformanceProvider>
           </FpsOptimizerProvider>
         </CrashTrackerProvider>

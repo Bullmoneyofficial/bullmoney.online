@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, useState, useEffect } from 'react';
+import React, { memo, useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,11 +13,14 @@ import {
   IconLock,
 } from '@tabler/icons-react';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
-import { LiveStreamModal } from '@/components/LiveStreamModal';
-import { AnalysisModal } from '@/components/AnalysisModal';
-import { ProductsModal } from '@/components/ProductsModal';
+// SMART MOUNT: Only import lightweight trigger components - heavy modals mount via UIState
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
-import { useMobileMenu, UI_Z_INDEX } from '@/contexts/UIStateContext';
+import { 
+  useMobileMenu, 
+  UI_Z_INDEX,
+  useLiveStreamModalUI,
+  useProductsModalUI,
+} from '@/contexts/UIStateContext';
 // UNIFIED SHIMMER SYSTEM - Import from single source
 import { ShimmerBorder, ShimmerLine, ShimmerRadialGlow, ShimmerDot } from '@/components/ui/UnifiedShimmer';
 
@@ -55,9 +58,36 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
     const { activeTheme } = useGlobalTheme();
     const { setIsMobileMenuOpen } = useMobileMenu();
     
-    // Sync mobile menu open state to context
+    // SMART MOUNT: Use centralized UI state for modals - they mount ONLY when opened
+    const { setIsOpen: setLiveStreamOpen } = useLiveStreamModalUI();
+    const { setIsOpen: setProductsOpen } = useProductsModalUI();
+    
+    // Track if component should render (delayed unmount for exit animation)
+    const [shouldRender, setShouldRender] = useState(open);
+    const unmountTimerRef = useRef<NodeJS.Timeout | null>(null);
+    
+    // SMART MOUNT: Delayed unmount for exit animations
     useEffect(() => {
-      setIsMobileMenuOpen(open);
+      if (open) {
+        if (unmountTimerRef.current) {
+          clearTimeout(unmountTimerRef.current);
+          unmountTimerRef.current = null;
+        }
+        setShouldRender(true);
+        setIsMobileMenuOpen(true);
+      } else {
+        // Delay unmount for exit animation
+        unmountTimerRef.current = setTimeout(() => {
+          setShouldRender(false);
+        }, 350);
+        setIsMobileMenuOpen(false);
+      }
+      
+      return () => {
+        if (unmountTimerRef.current) {
+          clearTimeout(unmountTimerRef.current);
+        }
+      };
     }, [open, setIsMobileMenuOpen]);
     
     // Get theme filter for consistency with navbar
@@ -100,7 +130,22 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
       onThemeClick();
     }, [onClose, onThemeClick]);
     
-    if (!open) return null;
+    // SMART MOUNT: Trigger LiveStream modal via UI state (not embedded component)
+    const handleLiveStreamClick = useCallback(() => {
+      SoundEffects.click();
+      setLiveStreamOpen(true);
+      onClose();
+    }, [setLiveStreamOpen, onClose]);
+    
+    // SMART MOUNT: Trigger Products modal via UI state (not embedded component)
+    const handleProductsClick = useCallback(() => {
+      SoundEffects.click();
+      setProductsOpen(true);
+      onClose();
+    }, [setProductsOpen, onClose]);
+    
+    // SMART MOUNT: Return null if shouldn't render (component fully unmounted)
+    if (!shouldRender) return null;
 
     return (
       <AnimatePresence>
@@ -145,28 +190,28 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
             {/* Home */}
             <ThemedMenuItem delay={0.12} href="/" onClick={handleClose} icon={<IconBuildingStore className="h-5 w-5" stroke={1.5} />} label="Home" />
 
-            {/* Live Stream */}
+            {/* Live Stream - SMART MOUNT: Button triggers modal via UI state, not embedded */}
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.14 }}
               className="w-full"
             >
-              <motion.div 
+              <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
                 onHoverStart={() => SoundEffects.hover()}
-                className="relative flex items-center justify-center gap-3 w-full text-sm sm:text-base font-semibold hover:text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl cursor-pointer transition-all duration-200"
+                onClick={handleLiveStreamClick}
+                className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold hover:text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl cursor-pointer transition-all duration-200"
                 style={{
                   color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
                   backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.08)',
                   border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)'
                 }}
               >
-                <IconBroadcast className="h-5 w-5 pointer-events-none" stroke={1.5} style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 1)' }} />
-                <span className="pointer-events-none">Live Stream</span>
-                <div className="absolute inset-0 z-10 pointer-events-auto"><LiveStreamModal /></div>
-              </motion.div>
+                <IconBroadcast className="h-5 w-5" stroke={1.5} style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 1)' }} />
+                <span>Live Stream</span>
+              </motion.button>
             </motion.div>
 
             {/* Affiliates */}
@@ -263,28 +308,28 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               }}
             />
 
-            {/* Products */}
+            {/* Products - SMART MOUNT: Button triggers modal via UI state, not embedded */}
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.24 }}
               className="w-full"
             >
-              <motion.div 
+              <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
                 onHoverStart={() => SoundEffects.hover()}
-                className="relative w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200 cursor-pointer"
+                onClick={handleProductsClick}
+                className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200 cursor-pointer"
                 style={{
                   color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
                   backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.08)',
                   border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
                 }}
               >
-                <IconBuildingStore className="h-5 w-5 pointer-events-none" stroke={1.5} style={{ color: 'var(--accent-color, #60a5fa)' }} />
-                <span className="pointer-events-none">Products</span>
-                <div className="absolute inset-0 z-10 pointer-events-auto"><ProductsModal /></div>
-              </motion.div>
+                <IconBuildingStore className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #60a5fa)' }} />
+                <span>Products</span>
+              </motion.button>
             </motion.div>
 
             {/* Theme */}

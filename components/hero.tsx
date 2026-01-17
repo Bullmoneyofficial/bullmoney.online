@@ -39,10 +39,8 @@ import type { SoundProfile } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 
-const DynamicUltimateControlPanel = dynamic(() => import('./UltimateControlPanel').then(mod => mod.UltimateControlPanel), {
-  ssr: false,
-  loading: () => <div>Loading Control Panel...</div>,
-});
+// UltimateControlPanel - direct import, it handles its own internal mount/unmount
+import UltimateControlPanel from "@/components/UltimateControlPanel";
 
 // --- TYPE EXTENSION FOR GRID ---
 type GridItem = Project & {
@@ -662,7 +660,8 @@ const HeroParallax = () => {
       showTrigger={false}
     />
 
-    <DynamicUltimateControlPanel 
+    {/* UltimateControlPanel - Always mounted, internal content mounts/unmounts based on isOpen */}
+    <UltimateControlPanel 
       isOpen={isUcpOpen && !shouldHideUcp} 
       onOpenChange={setIsUcpOpen}
       onServicesClick={() => setIsServicesModalOpen(true)}
