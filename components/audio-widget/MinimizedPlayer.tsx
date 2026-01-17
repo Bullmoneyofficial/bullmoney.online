@@ -20,6 +20,7 @@ interface MinimizedPlayerProps {
   hoveredButton: string | null;
   setHoveredButton: (button: string | null) => void;
   onExpand: () => void;
+  renderHiddenIframe?: boolean;
 }
 
 export function MinimizedPlayer({
@@ -34,6 +35,7 @@ export function MinimizedPlayer({
   hoveredButton,
   setHoveredButton,
   onExpand,
+  renderHiddenIframe = true,
 }: MinimizedPlayerProps) {
   const SourceIcon = sourceIcons[musicSource];
   const [isScrolling, setIsScrolling] = useState(false);
@@ -284,7 +286,7 @@ export function MinimizedPlayer({
       </AnimatePresence>
 
       {/* Hidden iframe container - keeps audio playing when minimized */}
-      {isMinimized && streamingEmbedUrl && (
+      {renderHiddenIframe && isMinimized && streamingEmbedUrl && (
         <motion.div 
           className="fixed pointer-events-none" 
           animate={{
