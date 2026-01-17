@@ -452,6 +452,8 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   const [vaultOpening, setVaultOpening] = useState(false); // Vault door animation state
   const [gateVisible, setGateVisible] = useState(true);
   const [showContent, setShowContent] = useState(false);
+  const [showTransitionOverlay, setShowTransitionOverlay] = useState(false); // Smooth transition while Spline loads
+  const [transitionProgress, setTransitionProgress] = useState(0); // 0-100 progress during transition
   const [particles, setParticles] = useState<Particle[]>([]);
   const [showTip, setShowTip] = useState(true);
   const [isDeflating, setIsDeflating] = useState(false);
@@ -667,15 +669,47 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   const finishLoader = useCallback(() => {
     if (hasFinishedRef.current) return;
     hasFinishedRef.current = true;
-    setShowContent(true);
-    // Track successful loader completion
-    trackEvent('feature_used', { 
-      component: 'loader_v2', 
-      action: 'completed',
-      asset: selectedAsset 
-    });
+    
+    // CRITICAL: Call onFinished IMMEDIATELY so Spline starts loading in background
+    // The main page content (including Spline) will render behind our overlay
     onFinished?.();
-  }, [onFinished, selectedAsset]);
+    
+    // Show transition overlay ON TOP while Spline loads behind it
+    setShowTransitionOverlay(true);
+    setShowContent(true);
+    
+    // Animate the transition progress smoothly over 2.5-3.5 seconds
+    // Spline loads in background during this time
+    const transitionDuration = isMobile ? 3500 : 2500; // Longer on mobile
+    const startTime = performance.now();
+    
+    const animateTransition = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min((elapsed / transitionDuration) * 100, 100);
+      
+      // Use easeOutExpo for smooth deceleration
+      const easedProgress = 100 * (1 - Math.pow(2, -10 * (progress / 100)));
+      setTransitionProgress(easedProgress);
+      
+      if (progress < 100) {
+        requestAnimationFrame(animateTransition);
+      } else {
+        // Fade out the overlay - Spline should be loaded by now
+        setTimeout(() => {
+          setShowTransitionOverlay(false);
+          // Track successful loader completion
+          trackEvent('feature_used', { 
+            component: 'loader_v2', 
+            action: 'completed',
+            asset: selectedAsset 
+          });
+          // Note: onFinished already called at start so Spline loads in background
+        }, 300);
+      }
+    };
+    
+    requestAnimationFrame(animateTransition);
+  }, [onFinished, selectedAsset, isMobile]);
 
   // Handle vault access button click - triggers vault opening animation
   const handleVaultAccess = useCallback(() => {
@@ -1876,113 +1910,232 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
         )}
       </AnimatePresence>
 
-      {/* Demo Content After Gate - Pure Black/Blue navbar theme */}
+      {/* ═══════════════════════════════════════════════════════════════════════════
+          SMOOTH TRANSITION OVERLAY - Covers Spline loading time (1-3.5 seconds)
+          Shows after vault opens with a beautiful loading animation
+          ═══════════════════════════════════════════════════════════════════════════ */}
       <AnimatePresence>
-        {showContent && (
+        {showTransitionOverlay && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="min-h-screen bg-[#000000] flex items-center justify-center p-8 relative overflow-hidden"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="fixed inset-0 z-[9999998] flex flex-col items-center justify-center bg-black overflow-hidden"
+            style={{ 
+              willChange: 'opacity',
+              touchAction: 'none',
+            }}
           >
-            {/* Blue shimmer background - LEFT TO RIGHT (FPS-aware) - SMOOTHER */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"
-                animate={{ x: ["-100%", "100%"] }}
-                transition={{ duration: shimmerDuration * 3, repeat: Infinity, ease: "linear", repeatDelay: 1.5 }}
+            {/* Animated gradient background */}
+            <motion.div
+              className="absolute inset-0"
+              style={{
+                background: 'radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 70%)',
+              }}
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.5, 0.8, 0.5],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+
+            {/* Subtle grid pattern */}
+            {!isMobile && (
+              <div 
+                className="absolute inset-0 opacity-[0.03]"
+                style={{
+                  backgroundImage: 'linear-gradient(rgba(59, 130, 246, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.5) 1px, transparent 1px)',
+                  backgroundSize: '40px 40px',
+                }}
               />
-            </div>
-            
-            <div className="text-center text-white flex flex-col items-center gap-4 relative z-10">
-              {/* BullMoney Logo */}
+            )}
+
+            {/* Main content container */}
+            <div className="relative z-10 flex flex-col items-center gap-6 px-6">
+              {/* Animated Logo */}
               <motion.div
-                initial={{ scale: 0.5, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 200, damping: 20 }}
                 className="relative"
               >
-                {/* Glow effect behind logo - subtle */}
-                <div className="absolute inset-[-20px] bg-blue-500/30 rounded-full blur-2xl" />
-                <div className="relative w-32 h-32 rounded-full bg-[#000000] border border-blue-500/60 flex items-center justify-center shadow-[0_0_50px_rgba(59,130,246,0.5)] overflow-hidden">
-                  {/* Left to right shimmer on logo container (FPS-aware) - SMOOTHER */}
+                {/* Pulsing glow ring */}
+                <motion.div
+                  className="absolute inset-[-12px] rounded-full"
+                  style={{
+                    background: 'radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%)',
+                  }}
+                  animate={{
+                    scale: [1, 1.3, 1],
+                    opacity: [0.6, 0.3, 0.6],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                />
+                
+                {/* Logo container */}
+                <motion.div
+                  className="relative w-20 h-20 rounded-full bg-black border-2 border-blue-500/60 flex items-center justify-center overflow-hidden"
+                  style={{
+                    boxShadow: '0 0 40px rgba(59, 130, 246, 0.5)',
+                  }}
+                  animate={{
+                    borderColor: ['rgba(59, 130, 246, 0.6)', 'rgba(59, 130, 246, 0.9)', 'rgba(59, 130, 246, 0.6)'],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  {/* Rotating shimmer */}
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/50 to-transparent"
-                    animate={{ x: ["-100%", "100%"] }}
-                    transition={{ duration: shimmerDuration * 1.2, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/30 to-transparent"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                   />
                   <Image
                     src="/BULL.svg"
-                    alt="BullMoney Logo"
-                    width={80}
-                    height={80}
-                    className="object-contain relative z-10"
+                    alt="BullMoney"
+                    width={48}
+                    height={48}
+                    className="relative z-10"
+                    style={{ filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))' }}
                   />
+                </motion.div>
+
+                {/* Orbiting particles - desktop only */}
+                {!isMobile && !prefersReducedMotion && (
+                  <>
+                    {[0, 1, 2].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute w-2 h-2 rounded-full bg-blue-400"
+                        style={{
+                          left: '50%',
+                          top: '50%',
+                          marginLeft: '-4px',
+                          marginTop: '-4px',
+                          boxShadow: '0 0 10px rgba(59, 130, 246, 0.8)',
+                        }}
+                        animate={{
+                          x: [
+                            Math.cos((i / 3) * Math.PI * 2) * 50,
+                            Math.cos((i / 3) * Math.PI * 2 + Math.PI) * 50,
+                            Math.cos((i / 3) * Math.PI * 2) * 50,
+                          ],
+                          y: [
+                            Math.sin((i / 3) * Math.PI * 2) * 50,
+                            Math.sin((i / 3) * Math.PI * 2 + Math.PI) * 50,
+                            Math.sin((i / 3) * Math.PI * 2) * 50,
+                          ],
+                          opacity: [0.8, 0.4, 0.8],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          delay: i * 0.3,
+                        }}
+                      />
+                    ))}
+                  </>
+                )}
+              </motion.div>
+
+              {/* Loading text */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-col items-center gap-2"
+              >
+                <h2 className="text-xl font-bold text-white tracking-wide">
+                  {transitionProgress < 30 ? "Initializing..." : transitionProgress < 60 ? "Loading Experience..." : transitionProgress < 90 ? "Almost Ready..." : "Welcome!"}
+                </h2>
+                <p className="text-sm text-blue-200/60">
+                  {transitionProgress < 50 ? "Preparing your trading environment" : "Setting up 3D visualization"}
+                </p>
+              </motion.div>
+
+              {/* Progress bar */}
+              <div className="w-64 sm:w-80">
+                <div 
+                  className="h-1.5 bg-white/10 rounded-full overflow-hidden"
+                  style={{
+                    boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.5)',
+                  }}
+                >
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-400 rounded-full relative"
+                    style={{ 
+                      width: `${transitionProgress}%`,
+                      boxShadow: '0 0 20px rgba(59, 130, 246, 0.6)',
+                    }}
+                    transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                  >
+                    {/* Shimmer on progress bar */}
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                      animate={{ x: ["-100%", "100%"] }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    />
+                  </motion.div>
                 </div>
-                {/* Celebration icons around logo */}
-                {[Rocket, CircleDollarSign, TrendingUp, Zap].map((Icon, i) => (
+                
+                {/* Progress percentage */}
+                <motion.p
+                  className="text-center mt-3 text-sm font-mono text-blue-300/80"
+                  key={Math.floor(transitionProgress / 10)}
+                  initial={{ opacity: 0.5, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {Math.floor(transitionProgress)}%
+                </motion.p>
+              </div>
+
+              {/* Animated icons row */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="flex items-center gap-4 mt-2"
+              >
+                {[TrendingUp, BarChart3, Activity].map((Icon, i) => (
                   <motion.div
                     key={i}
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ 
-                      scale: 1, 
-                      opacity: 1,
-                      x: Math.cos((i / 4) * Math.PI * 2) * 80,
-                      y: Math.sin((i / 4) * Math.PI * 2) * 80,
-                      rotate: [0, 10, -10, 0],
+                    animate={{
+                      y: [0, -4, 0],
+                      opacity: [0.4, 0.8, 0.4],
                     }}
-                    transition={{ 
-                      delay: 0.2 + i * 0.1, 
-                      scale: { type: "spring", stiffness: 200, damping: 10 },
-                      opacity: { duration: 0.3 },
-                      x: { type: "spring", stiffness: 200, damping: 15 },
-                      y: { type: "spring", stiffness: 200, damping: 15 },
-                      rotate: { repeat: Infinity, duration: 1, ease: "easeInOut" } 
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      delay: i * 0.2,
+                      ease: "easeInOut",
                     }}
-                    className="absolute"
-                    style={{ left: "50%", top: "50%" }}
                   >
-                    <Icon className="w-6 h-6 text-blue-400" />
+                    <Icon className="w-5 h-5 text-blue-400/60" />
                   </motion.div>
                 ))}
               </motion.div>
-              
-              <motion.h1
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.15, type: "spring", stiffness: 200 }}
-                className="text-5xl font-black bg-gradient-to-r from-blue-400 via-blue-300 to-blue-500 bg-clip-text text-transparent"
-              >
-                Welcome to BullMoney
-              </motion.h1>
-              <motion.p
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="text-lg text-blue-100/80 max-w-md"
-              >
-                You&apos;ve successfully accessed the site. Your {ASSETS[selectedAsset].id} is ready to pump!
-              </motion.p>
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.25, type: "spring", stiffness: 300 }}
-                className="mt-4 flex gap-2"
-              >
-                <div className="px-4 py-2 bg-[#000000] border border-blue-500/60 rounded-full text-sm font-bold text-blue-100 shadow-[0_0_20px_rgba(59,130,246,0.4)] relative overflow-hidden">
-                  {/* Shimmer effect (FPS-aware) - SMOOTHER */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/40 to-transparent"
-                    animate={{ x: ["-100%", "100%"] }}
-                    transition={{ duration: shimmerDuration * 1.2, repeat: Infinity, ease: "linear", delay: 0.5 }}
-                  />
-                  <span className="relative z-10">{ASSETS[selectedAsset].icon} {ASSETS[selectedAsset].id}</span>
-                </div>
-                <div className="px-4 py-2 bg-[#000000] border border-green-500/60 rounded-full text-sm font-bold text-green-200 shadow-[0_0_18px_rgba(34,197,94,0.4)]">
-                  ✓ Connected
-                </div>
-              </motion.div>
             </div>
+
+            {/* Bottom gradient fade */}
+            <div 
+              className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
+              style={{
+                background: 'linear-gradient(to top, rgba(59, 130, 246, 0.1), transparent)',
+              }}
+            />
           </motion.div>
         )}
       </AnimatePresence>
