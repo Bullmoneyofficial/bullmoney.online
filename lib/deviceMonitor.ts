@@ -300,12 +300,19 @@ const DEVICE_DATABASE: Record<string, DeviceSpec> = {
   'iMac11,3': { model: 'iMac 27" (2010)', manufacturer: 'Apple', ram: 4, cpu: 'Intel Core i3-540', cpuCores: 2, screenWidth: 2560, screenHeight: 1440, ppi: 109, year: 2010 },
   
   // === SAMSUNG GALAXY PHONES (2020-2026) ===
+  // 2025 Galaxy S25 Series
+  'SM-S938': { model: 'Galaxy S25 Ultra', manufacturer: 'Samsung', ram: 16, cpu: 'Snapdragon 8 Elite', cpuCores: 8, screenWidth: 1440, screenHeight: 3120, ppi: 505, year: 2025 },
+  'SM-S936': { model: 'Galaxy S25+', manufacturer: 'Samsung', ram: 12, cpu: 'Snapdragon 8 Elite', cpuCores: 8, screenWidth: 1440, screenHeight: 3120, ppi: 516, year: 2025 },
+  'SM-S931': { model: 'Galaxy S25', manufacturer: 'Samsung', ram: 12, cpu: 'Snapdragon 8 Elite', cpuCores: 8, screenWidth: 1080, screenHeight: 2340, ppi: 416, year: 2025 },
+  // 2024 Galaxy S24 Series
   'SM-S928': { model: 'Galaxy S24 Ultra', manufacturer: 'Samsung', ram: 12, cpu: 'Snapdragon 8 Gen 3', cpuCores: 8, screenWidth: 1440, screenHeight: 3120, ppi: 505, year: 2024 },
   'SM-S926': { model: 'Galaxy S24+', manufacturer: 'Samsung', ram: 12, cpu: 'Snapdragon 8 Gen 3', cpuCores: 8, screenWidth: 1440, screenHeight: 3120, ppi: 516, year: 2024 },
   'SM-S921': { model: 'Galaxy S24', manufacturer: 'Samsung', ram: 8, cpu: 'Exynos 2400', cpuCores: 8, screenWidth: 1080, screenHeight: 2340, ppi: 416, year: 2024 },
+  // 2023 Galaxy S23 Series
   'SM-S918': { model: 'Galaxy S23 Ultra', manufacturer: 'Samsung', ram: 12, cpu: 'Snapdragon 8 Gen 2', cpuCores: 8, screenWidth: 1440, screenHeight: 3088, ppi: 500, year: 2023 },
   'SM-S916': { model: 'Galaxy S23+', manufacturer: 'Samsung', ram: 8, cpu: 'Snapdragon 8 Gen 2', cpuCores: 8, screenWidth: 1080, screenHeight: 2340, ppi: 393, year: 2023 },
   'SM-S911': { model: 'Galaxy S23', manufacturer: 'Samsung', ram: 8, cpu: 'Snapdragon 8 Gen 2', cpuCores: 8, screenWidth: 1080, screenHeight: 2340, ppi: 425, year: 2023 },
+  // 2022 Galaxy S22 Series
   'SM-S908': { model: 'Galaxy S22 Ultra', manufacturer: 'Samsung', ram: 12, cpu: 'Snapdragon 8 Gen 1', cpuCores: 8, screenWidth: 1440, screenHeight: 3088, ppi: 500, year: 2022 },
   'SM-S906': { model: 'Galaxy S22+', manufacturer: 'Samsung', ram: 8, cpu: 'Snapdragon 8 Gen 1', cpuCores: 8, screenWidth: 1080, screenHeight: 2340, ppi: 393, year: 2022 },
   'SM-S901': { model: 'Galaxy S22', manufacturer: 'Samsung', ram: 8, cpu: 'Snapdragon 8 Gen 1', cpuCores: 8, screenWidth: 1080, screenHeight: 2340, ppi: 425, year: 2022 },
