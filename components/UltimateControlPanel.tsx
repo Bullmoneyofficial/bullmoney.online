@@ -1558,7 +1558,7 @@ export function UltimateControlPanel({
                           icon={HardDrive}
                           label="RAM"
                           value={`${memoryStats.jsHeapUsed}MB / ${memoryStats.jsHeapLimit}MB`}
-                          sublabel={`Browser: ${memoryStats.percentage}% • Device: ${memoryStats.deviceRam}GB`}
+                          sublabel={`Browser: ${memoryStats.percentage}% • Device: ${deviceInfo?.performance?.memory?.total || memoryStats.deviceRam}GB (${deviceInfo?.performance?.memory?.type || 'DDR'})`}
                           color="#f59e0b"
                         />
                       </div>
