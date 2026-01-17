@@ -904,8 +904,8 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
           <motion.div
             exit={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }}
             transition={{ duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96] }}
-            className="fixed inset-0 z-[9999999] flex flex-col items-center justify-center bg-[#000000] text-white overflow-hidden"
-            style={{ isolation: 'isolate' }}
+            className="fixed inset-0 z-[9999999] flex flex-col items-center justify-center text-white overflow-hidden"
+            style={{ isolation: 'isolate', backgroundColor: 'rgba(0, 0, 0, 0.95)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}
             onMouseDown={!vaultUnlocked ? handleInteractionStart : undefined}
             onMouseUp={!vaultUnlocked ? handleInteractionEnd : undefined}
             onMouseLeave={!vaultUnlocked ? handleInteractionEnd : undefined}
@@ -925,8 +925,8 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                     initial={{ x: 0 }}
                     animate={{ x: "-100%" }}
                     transition={{ duration: 0.7, ease: [0.43, 0.13, 0.23, 0.96] }}
-                    className="fixed inset-y-0 left-0 w-1/2 bg-[#000000] z-[99999999] border-r-4"
-                    style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)' }}
+                    className="fixed inset-y-0 left-0 w-1/2 z-[99999999] border-r-4"
+                    style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)', backgroundColor: 'rgba(0, 0, 0, 0.98)' }}
                   >
                     {/* Vault door details - left */}
                     <div className="absolute inset-0 flex items-center justify-end pr-8">
@@ -950,8 +950,8 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                     initial={{ x: 0 }}
                     animate={{ x: "100%" }}
                     transition={{ duration: 0.7, ease: [0.43, 0.13, 0.23, 0.96] }}
-                    className="fixed inset-y-0 right-0 w-1/2 bg-[#000000] z-[99999999] border-l-4"
-                    style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)' }}
+                    className="fixed inset-y-0 right-0 w-1/2 z-[99999999] border-l-4"
+                    style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)', backgroundColor: 'rgba(0, 0, 0, 0.98)' }}
                   >
                     {/* Vault door details - right */}
                     <div className="absolute inset-0 flex items-center justify-start pl-8">
@@ -1169,8 +1169,8 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                     className={cn(
                       "px-3 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-black border-2 transition-all min-w-[44px] min-h-[44px] sm:min-w-[52px] sm:min-h-[52px] flex items-center gap-1 sm:gap-1.5 shadow-lg relative overflow-hidden",
                       key === selectedAsset
-                        ? "bg-black text-blue-300 border-blue-500/90 shadow-[0_0_35px_rgba(59,130,246,0.7)]"
-                        : "bg-black text-blue-200 border-blue-500/50 hover:border-blue-400/80 hover:bg-black"
+                        ? "text-blue-300 border-blue-500/90 shadow-[0_0_35px_rgba(59,130,246,0.7)]" + " bg-black/90"
+                        : "text-blue-200 border-blue-500/50 hover:border-blue-400/80" + " bg-black/90 hover:bg-black/95"
                     )}
                     style={{
                       touchAction: 'manipulation',
@@ -1187,7 +1187,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                         />
                         <motion.div
                           layoutId="activeAsset"
-                          className="absolute inset-[1px] bg-black rounded-full z-[1]"
+                          className="absolute inset-[1px] bg-black/95 rounded-full z-[1]"
                           transition={{ type: "spring", stiffness: 400, damping: 25 }}
                         />
                       </>
@@ -1259,7 +1259,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                       : "0 0 40px rgba(59, 130, 246, 0.6)",
                   }}
                   style={{ rotate: iconRotate }}
-                  className="relative w-24 h-24 rounded-full bg-black border-2 border-blue-500/50 flex items-center justify-center text-5xl font-bold shadow-[inset_0_0_30px_rgba(59,130,246,0.3)]"
+                  className="relative w-24 h-24 rounded-full bg-black/90 border-2 border-blue-500/50 flex items-center justify-center text-5xl font-bold shadow-[inset_0_0_30px_rgba(59,130,246,0.3)]"
                 >
                   <span
                     className="relative z-10 leading-none"
