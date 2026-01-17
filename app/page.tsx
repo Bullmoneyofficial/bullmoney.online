@@ -186,7 +186,7 @@ function LazySplineContainer({ scene }: { scene: string }) {
       {/* Loading placeholder - shown before first load */}
       {/* CLS FIX: Placeholder has same size as content */}
       {!hasLoadedOnce && !isInView && (
-        <div className="absolute inset-0 bg-black rounded-xl overflow-hidden" style={{ minHeight: '300px' }}>
+        <div className="absolute inset-0 bg-transparent rounded-xl overflow-hidden backdrop-blur-sm" style={{ minHeight: '300px', backgroundColor: 'rgba(0, 0, 0, 0.3)' }}>
           <ShimmerRadialGlow color="blue" intensity="low" />
           <div className="absolute inset-0 flex items-center justify-center">
             <ShimmerSpinner size={32} color="blue" speed="slow" />
@@ -198,7 +198,7 @@ function LazySplineContainer({ scene }: { scene: string }) {
       {/* Spline Scene - STAYS MOUNTED after first load, uses CSS to pause when out of view */}
       {shouldShowSpline && (
         <Suspense fallback={
-          <div className="absolute inset-0 flex items-center justify-center bg-black rounded-xl overflow-hidden">
+          <div className="absolute inset-0 flex items-center justify-center rounded-xl overflow-hidden backdrop-blur-sm" style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}>
             <ShimmerRadialGlow color="blue" intensity="medium" />
             <ShimmerLine color="blue" />
             <ShimmerSpinner size={40} color="blue" />

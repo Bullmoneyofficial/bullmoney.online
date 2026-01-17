@@ -547,7 +547,7 @@ export function UltraSplineLoader({
             loadState.status === 'ready' ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <Suspense fallback={<div className="w-full h-full bg-black" />}>
+          <Suspense fallback={<div className="w-full h-full backdrop-blur-sm" style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }} />}>
             <Spline
               scene={sceneUrl}
               onLoad={handleSplineLoad}

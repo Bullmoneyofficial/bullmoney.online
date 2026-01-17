@@ -655,7 +655,9 @@ export const ShimmerStylesProvider = memo(() => (
     
     .shimmer-card { 
       animation: shimmer-glow 5s ease-in-out infinite; 
-      background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(10,20,40,0.95) 100%); 
+      background: rgba(0, 0, 0, 0.5); 
+      backdrop-filter: blur(12px) saturate(120%);
+      -webkit-backdrop-filter: blur(12px) saturate(120%);
       border: 1px solid rgba(var(--accent-rgb), 0.3); 
     }
     
@@ -687,7 +689,9 @@ export const ShimmerStylesProvider = memo(() => (
     }
     
     .shimmer-bg { 
-      background: linear-gradient(135deg, rgba(0,0,0,1) 0%, rgba(10,20,50,0.98) 50%, rgba(0,0,0,1) 100%); 
+      background: transparent; 
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
     
     .shimmer-ping {
@@ -775,10 +779,11 @@ export const ShimmerStylesProvider = memo(() => (
         ellipse at 40% 40%,
         var(--shimmer-blue) 0%,
         transparent 60%
-      ),
-      linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(10,20,40,0.95) 100%);
+      );
       background-size: 100% 100%;
       animation: shimmer-plasma 10s ease infinite;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
     
     /* HOLOGRAM - Iridescent */
@@ -1106,6 +1111,36 @@ export const ShimmerStylesProvider = memo(() => (
       .shimmer-slide, .shimmer-orbit { 
         animation: none !important; 
       } 
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════
+       IN-APP BROWSERS FIX - Ensure transparent backgrounds
+       Fixes black UI in Instagram, Facebook, Twitter in-app browsers
+       ═══════════════════════════════════════════════════════════════════════ */
+    
+    @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+      .shimmer-bg,
+      .shimmer-card,
+      .shimmer-plasma,
+      .shimmer-section,
+      .shimmer-container {
+        background-color: transparent !important;
+      }
+    }
+    
+    /* Fallback for browsers without backdrop-filter support */
+    @supports not (backdrop-filter: blur(1px)) and not (-webkit-backdrop-filter: blur(1px)) {
+      .shimmer-bg {
+        background: rgba(0, 0, 0, 0.3) !important;
+      }
+      
+      .shimmer-card {
+        background: rgba(0, 0, 0, 0.4) !important;
+      }
+      
+      .shimmer-plasma {
+        background: rgba(10, 20, 40, 0.3) !important;
+      }
     }
   `}</style>
 ));

@@ -178,7 +178,7 @@ export const CrashSafeSplineLoader = memo<CrashSafeSplineLoaderProps>(({
       >
         <Suspense
           fallback={
-            <div className="w-full h-full flex items-center justify-center bg-black">
+            <div className="w-full h-full flex items-center justify-center backdrop-blur-sm" style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}>
               <LoadingAnimation />
             </div>
           }
