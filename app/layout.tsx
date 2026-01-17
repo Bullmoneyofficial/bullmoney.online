@@ -28,6 +28,12 @@ import { AdvancedSEO } from "@/components/AdvancedSEO";
 // ✅ GOOGLE SEO BOOST - Maximum ranking power with all schema types
 import { GoogleSEOBoost } from "@/components/GoogleSEOBoost";
 
+// ✅ SEO DOMINATION - Addresses backlinks, authority, content quality, competition
+import { SEODomination } from "@/components/SEODomination";
+
+// ✅ INTERNAL LINKING SEO - Content hubs and topic clusters for authority
+import { InternalLinkingSEO } from "@/components/InternalLinkingSEO";
+
 import { ThemeProvider } from "@/context/providers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StudioProvider } from "@/context/StudioContext";
@@ -236,7 +242,52 @@ export const metadata: Metadata = {
     // Beginner Success Keywords
     "beginner made money trading", "started trading with $100",
     "first profitable trade", "new trader success", "trading changed my life",
-    "trading transformation", "from broke to rich trading"
+    "trading transformation", "from broke to rich trading",
+    
+    // ============================================
+    // 🎯 COMPETITION KILLER - LOW COMPETITION LONG-TAIL (2026)
+    // These have LESS competition but HIGH intent
+    // ============================================
+    
+    // Ultra-Specific Free Mentor Queries
+    "free trading mentor near me", "free trading mentor online",
+    "free gold trading mentor", "free crypto trading mentor",
+    "free forex mentor for beginners", "free day trading mentor",
+    "where to find free trading help", "free trading guidance",
+    "trading mentor that's actually free", "no cost trading education",
+    
+    // Question-Based Keywords (Voice Search Ready)
+    "how do I learn trading for free", "can you learn trading without paying",
+    "is there free trading education", "where can I learn trading free",
+    "what is the best free trading course", "how to start trading with no money",
+    "can beginners make money trading", "how long to learn trading",
+    "is trading worth learning in 2026", "should I start trading in 2026",
+    
+    // Location + Trading (Local SEO)
+    "trading community South Africa", "trading education Africa",
+    "gold trading South Africa", "crypto trading Africa",
+    "forex trading South Africa", "trading mentorship Africa",
+    
+    // Specific Pain Point Keywords
+    "why do I keep losing trades", "how to stop losing money trading",
+    "trading without blowing account", "safe trading strategies",
+    "low risk trading strategies", "trading without fear",
+    "overcome trading anxiety", "trading for scared beginners",
+    
+    // Time-Specific Keywords
+    "learn trading in 30 days", "trading in one month",
+    "fast track trading education", "quick trading course",
+    "trading crash course free", "weekend trading education",
+    
+    // Comparison Keywords
+    "BullMoney vs paid courses", "free vs paid trading education",
+    "is free trading education good", "free trading community review",
+    "best free alternative to trading courses",
+    
+    // Intent Keywords
+    "I want to learn trading", "teach me trading free",
+    "help me start trading", "guide me through trading",
+    "trading for complete beginners", "never traded before help"
   ],
   
   // ============================================
@@ -981,6 +1032,23 @@ export default function RootLayout({
             - NewsArticleList: News section schema
         */}
         <GoogleSEOBoost />
+        
+        {/* ✅ SEO DOMINATION - Addresses the 4 critical ranking factors
+            - Backlink Magnets: Dataset, Quotation, CreativeWork schemas
+            - Domain Authority: E-E-A-T signals, expert credentials, trust badges
+            - Content Quality: DefinedTerms, LearningResource, topical depth
+            - Competition: 10+ FAQ rich snippets targeting long-tail keywords
+            - Social Proof: Aggregate ratings, reviews, testimonials
+            - Live Events: Trading session event schema
+        */}
+        <SEODomination />
+        
+        {/* ✅ INTERNAL LINKING SEO - Content structure for topical authority
+            - Content Hubs: Pillar page structure
+            - Topic Clusters: Gold, Crypto, Prop Firm series
+            - Semantic Relationships: Connected topic signals
+        */}
+        <InternalLinkingSEO />
       </body>
     </html>
   );
