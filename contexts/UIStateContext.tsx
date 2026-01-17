@@ -68,7 +68,10 @@ export type UIComponentType =
   | 'appsModal'           // Footer: Apps & Tools modal
   | 'disclaimerModal'     // Footer: Legal Disclaimer modal
   | 'pagemode'            // Registration/pagemode overlay
-  | 'loaderv2';           // Multi-step loader overlay
+  | 'loaderv2'            // Multi-step loader overlay
+  | 'authModal'           // Bull Feed: Auth/Login/Signup modal
+  | 'bullFeedModal'       // Bull Feed: Main feed modal
+  | 'postComposerModal';  // Bull Feed: Create post modal
 
 // Legacy type for backwards compatibility
 export type NavbarModalType = 'admin' | 'faq' | 'affiliate' | 'themeSelector' | null;
@@ -91,6 +94,9 @@ interface UIStateContextType {
   isDisclaimerModalOpen: boolean;  // Footer: Legal Disclaimer modal
   isPagemodeOpen: boolean;         // Registration page overlay
   isLoaderv2Open: boolean;         // Multi-step loader overlay
+  isAuthModalOpen: boolean;        // Bull Feed: Auth modal
+  isBullFeedModalOpen: boolean;    // Bull Feed: Main feed
+  isPostComposerModalOpen: boolean; // Bull Feed: Create post
 
   // Legacy: activeNavbarModal (maps to specific modal states)
   activeNavbarModal: NavbarModalType;
@@ -118,6 +124,9 @@ interface UIStateContextType {
   setDisclaimerModalOpen: (open: boolean) => void;
   setPagemodeOpen: (open: boolean) => void;
   setLoaderv2Open: (open: boolean) => void;
+  setAuthModalOpen: (open: boolean) => void;
+  setBullFeedModalOpen: (open: boolean) => void;
+  setPostComposerModalOpen: (open: boolean) => void;
 
   // Legacy: setNavbarModal (for backwards compatibility)
   setNavbarModal: (modal: NavbarModalType) => void;
@@ -130,6 +139,9 @@ interface UIStateContextType {
   openAnalysisModal: () => void;
   openLiveStreamModal: () => void;
   openProductsModal: () => void;
+  openAuthModal: () => void;
+  openBullFeedModal: () => void;
+  openPostComposerModal: () => void;
   closeNavbarModal: () => void;
 
   // Close all UI components
@@ -169,6 +181,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const [isDisclaimerModalOpen, setIsDisclaimerModalOpenState] = useState(false);
   const [isPagemodeOpen, setIsPagemodeOpenState] = useState(false);
   const [isLoaderv2Open, setIsLoaderv2OpenState] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpenState] = useState(false);
+  const [isBullFeedModalOpen, setIsBullFeedModalOpenState] = useState(false);
+  const [isPostComposerModalOpen, setIsPostComposerModalOpenState] = useState(false);
 
   // Derived state: Legacy activeNavbarModal (maps to individual states)
   const activeNavbarModal: NavbarModalType =
@@ -182,7 +197,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const isAnyModalOpen = isFooterOpen || isChartNewsOpen || isAnalysisModalOpen ||
     isLiveStreamModalOpen || isProductsModalOpen || isAffiliateModalOpen ||
     isThemeSelectorModalOpen || isAdminModalOpen || isFaqModalOpen ||
-    isAppsModalOpen || isDisclaimerModalOpen || isPagemodeOpen || isLoaderv2Open;
+    isAppsModalOpen || isDisclaimerModalOpen || isPagemodeOpen || isLoaderv2Open ||
+    isAuthModalOpen || isBullFeedModalOpen || isPostComposerModalOpen;
 
   // Derived state: is any component currently open?
   const isAnyOpen = isMobileMenuOpen || isAudioWidgetOpen || isUltimatePanelOpen || isAnyModalOpen;
@@ -212,6 +228,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isFaqModalOpen ? 'faqModal' :
     isAppsModalOpen ? 'appsModal' :
     isDisclaimerModalOpen ? 'disclaimerModal' :
+    isAuthModalOpen ? 'authModal' :
+    isBullFeedModalOpen ? 'bullFeedModal' :
+    isPostComposerModalOpen ? 'postComposerModal' :
     null;
 
   // Closes all other components except the one specified
@@ -232,6 +251,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (except !== 'disclaimerModal') setIsDisclaimerModalOpenState(false);
     if (except !== 'pagemode') setIsPagemodeOpenState(false);
     if (except !== 'loaderv2') setIsLoaderv2OpenState(false);
+    if (except !== 'authModal') setIsAuthModalOpenState(false);
+    if (except !== 'bullFeedModal') setIsBullFeedModalOpenState(false);
+    if (except !== 'postComposerModal') setIsPostComposerModalOpenState(false);
   }, []);
 
   // Closes all modals but preserves floating elements state
@@ -249,6 +271,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsDisclaimerModalOpenState(false);
     setIsPagemodeOpenState(false);
     setIsLoaderv2OpenState(false);
+    setIsAuthModalOpenState(false);
+    setIsBullFeedModalOpenState(false);
+    setIsPostComposerModalOpenState(false);
   }, []);
 
   // Closes all components
@@ -371,6 +396,27 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsLoaderv2OpenState(open);
   }, [closeOthers]);
 
+  const setAuthModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('authModal');
+    }
+    setIsAuthModalOpenState(open);
+  }, [closeOthers]);
+
+  const setBullFeedModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('bullFeedModal');
+    }
+    setIsBullFeedModalOpenState(open);
+  }, [closeOthers]);
+
+  const setPostComposerModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('postComposerModal');
+    }
+    setIsPostComposerModalOpenState(open);
+  }, [closeOthers]);
+
   // Legacy: setNavbarModal for backwards compatibility
   const setNavbarModal = useCallback((modal: NavbarModalType) => {
     // Close all navbar-type modals first
@@ -412,6 +458,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const openAnalysisModal = useCallback(() => setAnalysisModalOpen(true), [setAnalysisModalOpen]);
   const openLiveStreamModal = useCallback(() => setLiveStreamModalOpen(true), [setLiveStreamModalOpen]);
   const openProductsModal = useCallback(() => setProductsModalOpen(true), [setProductsModalOpen]);
+  const openAuthModal = useCallback(() => setAuthModalOpen(true), [setAuthModalOpen]);
+  const openBullFeedModal = useCallback(() => setBullFeedModalOpen(true), [setBullFeedModalOpen]);
+  const openPostComposerModal = useCallback(() => setPostComposerModalOpen(true), [setPostComposerModalOpen]);
   const closeNavbarModal = useCallback(() => {
     setIsAdminModalOpenState(false);
     setIsFaqModalOpenState(false);
@@ -448,6 +497,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isDisclaimerModalOpen,
     isPagemodeOpen,
     isLoaderv2Open,
+    isAuthModalOpen,
+    isBullFeedModalOpen,
+    isPostComposerModalOpen,
     activeNavbarModal,
     isAnyOpen,
     isAnyModalOpen,
@@ -472,6 +524,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setDisclaimerModalOpen,
     setPagemodeOpen,
     setLoaderv2Open,
+    setAuthModalOpen,
+    setBullFeedModalOpen,
+    setPostComposerModalOpen,
     setNavbarModal,
 
     // Convenience methods
@@ -482,6 +537,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     openAnalysisModal,
     openLiveStreamModal,
     openProductsModal,
+    openAuthModal,
+    openBullFeedModal,
+    openPostComposerModal,
     closeNavbarModal,
     closeAll,
     closeAllModals,
@@ -668,5 +726,21 @@ export function useFooterModalsUI() {
     setAppsOpen: setAppsModalOpen,
     setDisclaimerOpen: setDisclaimerModalOpen,
   };
+}
+
+// Bull Feed modal hooks
+export function useAuthModalUI() {
+  const { isAuthModalOpen, setAuthModalOpen, openAuthModal } = useUIState();
+  return { isOpen: isAuthModalOpen, setIsOpen: setAuthModalOpen, open: openAuthModal };
+}
+
+export function useBullFeedModalUI() {
+  const { isBullFeedModalOpen, setBullFeedModalOpen, openBullFeedModal } = useUIState();
+  return { isOpen: isBullFeedModalOpen, setIsOpen: setBullFeedModalOpen, open: openBullFeedModal };
+}
+
+export function usePostComposerModalUI() {
+  const { isPostComposerModalOpen, setPostComposerModalOpen, openPostComposerModal } = useUIState();
+  return { isOpen: isPostComposerModalOpen, setIsOpen: setPostComposerModalOpen, open: openPostComposerModal };
 }
 

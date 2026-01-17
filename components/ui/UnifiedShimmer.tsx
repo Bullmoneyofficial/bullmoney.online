@@ -22,7 +22,7 @@ const ShimmerQualityContext = createContext<{ quality: ShimmerQuality; setQualit
 export const useShimmerQuality = () => useContext(ShimmerQualityContext);
 
 export function useOptimizedShimmer() {
-  const [settings, setSettings] = useState({ disabled: false, speed: 'slow' as const, intensity: 'medium' as 'low' | 'medium' | 'high' });
+  const [settings, setSettings] = useState<{ disabled: boolean; speed: 'slow' | 'normal' | 'fast'; intensity: 'low' | 'medium' | 'high' }>({ disabled: false, speed: 'slow', intensity: 'medium' });
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const root = document.documentElement;
