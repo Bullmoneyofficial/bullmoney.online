@@ -1,0 +1,336 @@
+/**
+ * Mobile & Scroll Performance Optimizations
+ * Targets: iPhone, Instagram, Android
+ * 
+ * Key optimizations:
+ * - Disable expensive effects during scroll
+ * - Use CSS containment to isolate expensive renders
+ * - GPU acceleration for animations
+ * - Reduce motion on low-end devices
+ */
+
+/* ============================================================
+   SCROLL PERFORMANCE - Pause animations during scroll
+   ============================================================ */
+
+/* During active scrolling, reduce expensive effects */
+html.is-scrolling {
+  /* Pause shimmer animations */
+  --shimmer-paused: 1;
+}
+
+html.is-scrolling .shimmer-spin,
+html.is-scrolling .shimmer-pulse,
+html.is-scrolling .shimmer-wave,
+html.is-scrolling .shimmer-border {
+  animation-play-state: paused !important;
+}
+
+/* Reduce filter effects during scroll */
+html.is-scrolling [style*="filter"] {
+  filter: none !important;
+}
+
+/* Pause parallax during scroll to save GPU memory */
+html.is-scrolling .parallax,
+html.is-scrolling [data-parallax] {
+  transform: none !important;
+}
+
+/* ============================================================
+   COMPONENT ISOLATION - CSS Containment
+   ============================================================ */
+
+/* Isolate expensive sections to prevent layout thrashing */
+section[data-allow-scroll],
+section[data-scrollable],
+main[data-allow-scroll] {
+  contain: layout style paint;
+  will-change: auto;
+}
+
+/* When section is visible and nearby, enable GPU acceleration */
+section:not([style*="visibility: hidden"]) {
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* ============================================================
+   MOBILE TOUCH OPTIMIZATION
+   ============================================================ */
+
+@media (max-width: 768px) {
+  /* Reduce animations on mobile */
+  * {
+    /* Shorter transition durations for snappier feel */
+    transition-duration: 0.2s !important;
+  }
+
+  /* Disable expensive parallax on mobile */
+  [data-parallax],
+  .parallax,
+  .parallax-scroll {
+    transform: none !important;
+  }
+
+  /* Optimize backdrops for mobile */
+  .backdrop-blur,
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg {
+    backdrop-filter: none !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+  }
+
+  /* Disable hover effects on touch devices */
+  .group:hover,
+  .group-hover\:,
+  [data-hover] {
+    /* Touch devices don't have hover state */
+  }
+
+  /* Optimize for single-threaded mobile */
+  html {
+    font-size: 16px; /* Prevent auto-zoom on iOS */
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Smooth scrolling on mobile (native) */
+  html {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   IPHONE SPECIFIC OPTIMIZATIONS
+   ============================================================ */
+
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific fixes */
+  
+  /* Fix viewport on iOS Safari */
+  html, body {
+    height: 100%;
+    height: 100dvh;
+    height: 100vh;
+  }
+
+  /* Prevent iOS Safari rubber band scroll */
+  body {
+    overscroll-behavior-y: contain;
+  }
+
+  /* iOS Safari font smoothing */
+  body,
+  button,
+  input,
+  select,
+  textarea {
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Disable tap highlight on iOS and fix input font size */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Fix position: fixed on iOS */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Optimize animations for iOS */
+  .animate {
+    -webkit-animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* ============================================================
+   INSTAGRAM WEBVIEW OPTIMIZATION
+   ============================================================ */
+
+.is-instagram-webview,
+[data-browser*="instagram"] {
+  /* Reduce max animation duration in Instagram */
+  --max-animation-duration: 300ms;
+
+  /* Disable expensive effects in Instagram */
+}
+
+.is-instagram-webview .backdrop-blur,
+[data-browser*="instagram"] .backdrop-blur {
+  backdrop-filter: none !important;
+}
+
+/* ============================================================
+   ANIMATION PERFORMANCE
+   ============================================================ */
+
+/* GPU-accelerated animations only */
+@keyframes fps-optimized-fade {
+  0% {
+    opacity: 0;
+    will-change: opacity;
+  }
+  100% {
+    opacity: 1;
+    will-change: auto;
+  }
+}
+
+@keyframes fps-optimized-slide {
+  0% {
+    transform: translateY(20px);
+    will-change: transform;
+  }
+  100% {
+    transform: translateY(0);
+    will-change: auto;
+  }
+}
+
+/* Use these animations for critical path elements */
+.fade-in {
+  animation: fps-optimized-fade 0.3s ease-out forwards;
+}
+
+.slide-in {
+  animation: fps-optimized-slide 0.3s ease-out forwards;
+}
+
+/* ============================================================
+   MEMORY OPTIMIZATION - Cleanup off-screen content
+   ============================================================ */
+
+/* Hide off-screen elements more aggressively on mobile */
+@media (max-width: 768px) {
+  .off-screen {
+    visibility: hidden;
+    pointer-events: none;
+    /* Allow browser to free GPU memory */
+    will-change: auto;
+  }
+
+  /* De-allocate content outside viewport */
+  [data-offscreen] {
+    contain: strict;
+    content-visibility: auto;
+  }
+}
+
+/* ============================================================
+   SCROLLBAR OPTIMIZATION
+   ============================================================ */
+
+/* Custom scrollbar for better performance */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.5);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--accent-rgb, 59, 130, 246), 0.3) transparent;
+}
+
+/* ============================================================
+   TOUCH ACTION OPTIMIZATION
+   ============================================================ */
+
+/* Improve scroll performance with touch-action */
+html,
+body {
+  touch-action: pan-y pinch-zoom;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection where needed */
+p,
+span,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* ============================================================
+   FONT OPTIMIZATION
+   ============================================================ */
+
+/* Optimize font rendering */
+body {
+  -webkit-font-feature-settings: "kern" 1;
+  font-feature-settings: "kern" 1;
+  font-kerning: auto;
+}
+
+/* Disable font smoothing during scroll */
+html.is-scrolling {
+  -webkit-font-smoothing: grayscale;
+  font-smoothing: grayscale;
+}
+
+/* Restore after scroll */
+html:not(.is-scrolling) {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   LAYOUT STABILITY
+   ============================================================ */
+
+/* Prevent CLS (Cumulative Layout Shift) */
+section,
+article,
+main {
+  contain: layout;
+}
+
+/* Reserve space for expected dynamic content */
+.lazy-loaded-container {
+  min-height: 100px;
+  background-color: var(--skeleton-bg, rgba(0, 0, 0, 0.1));
+}
+
+/* ============================================================
+   DEBUG - Performance Monitoring (dev only)
+   ============================================================ */
+
+@supports (--variable: value) {
+  :root {
+    --scroll-fps: 60;
+    --is-scrolling: 0;
+  }
+
+  html.is-scrolling {
+    --is-scrolling: 1;
+  }
+}

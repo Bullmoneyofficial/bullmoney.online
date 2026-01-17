@@ -12,6 +12,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Navbar } from "@/components/Mainpage/navbar"; 
 import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
 import { safeGetItem, safeSetItem } from '@/lib/localStorage';
+import { useUIState } from '@/contexts/UIStateContext';
 
 // --- LOADER IMPORTS ---
 import { MultiStepLoader } from "@/components/Mainpage/MultiStepLoaderAffiliate"; 
@@ -300,6 +301,7 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
   const [isMuted, setIsMuted] = useState(false); 
   const [volume, setVolume] = useState(25);
   const playerRef = useRef<any>(null);
+  const { setV2Unlocked } = useUIState();
   
   const isPreviewing = false;
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -449,15 +451,18 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
   }, []);
 
   const handleV2Complete = useCallback(() => {
+      setV2Unlocked(true);
+      sessionStorage.setItem('affiliate_unlock_complete', 'true');
       setCurrentStage("content");
       safePlay();
-  }, [safePlay]);
+  }, [safePlay, setV2Unlocked]);
 
   const handleHoldComplete = useCallback(() => {
       sessionStorage.setItem('affiliate_unlock_complete', 'true');
+      setV2Unlocked(true);
       setCurrentStage("content");
       safePlay(); 
-  }, [safePlay]);
+  }, [safePlay, setV2Unlocked]);
 
   if (!isClient || searchParams?.src !== "nav") return null;
 

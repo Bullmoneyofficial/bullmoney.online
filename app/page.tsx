@@ -25,9 +25,11 @@ import { SplineSkeleton, LoadingSkeleton } from "@/components/ui/LoadingSkeleton
 import { useCacheContext } from "@/components/CacheManagerProvider";
 import { useUnifiedPerformance, useVisibility, useObserver, useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
 import { useComponentTracking, useCrashTracker } from "@/lib/CrashTracker";
+import { useScrollOptimization } from "@/hooks/useScrollOptimization";
 // Use optimized ticker for 120Hz performance - lazy load
 const LiveMarketTicker = dynamic(() => import("@/components/LiveMarketTickerOptimized").then(mod => ({ default: mod.LiveMarketTickerOptimized })), { ssr: false });
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
+import { useUIState } from "@/contexts/UIStateContext";
 const HiddenYoutubePlayer = dynamic(() => import("@/components/Mainpage/HiddenYoutubePlayer"), { ssr: false });
 import { ALL_THEMES } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
@@ -220,6 +222,7 @@ function HomeContent() {
   const [isMobile, setIsMobile] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const splinePreloadRanRef = useRef(false);
+  const { setLoaderv2Open, setV2Unlocked } = useUIState();
 
   // Use unified performance for tracking - only need device tier
   const { 
@@ -286,6 +289,11 @@ function HomeContent() {
       setAppLoading(true);
     }
   }, [currentView, setAppLoading]);
+
+  useEffect(() => {
+    setLoaderv2Open(currentView === 'loader');
+    return () => setLoaderv2Open(false);
+  }, [currentView, setLoaderv2Open]);
 
   // Load muted preference from localStorage
   useEffect(() => {
@@ -367,8 +375,9 @@ function HomeContent() {
 
   // Called when user completes the vault and taps "Access Website" button
   const handleLoaderComplete = useCallback(() => {
+    setV2Unlocked(true);
     setCurrentView('content');
-  }, []);
+  }, [setV2Unlocked]);
 
   // REMOVED: Auto-transition timer that bypassed vault
   // The vault system in MultiStepLoaderv2 now controls when to show content

@@ -13,7 +13,7 @@ import {
   MainWidget, FloatingPlayer, TipsOverlay, TouchIndicator, GameOverScreen, QuickGameTutorial, QuickGameTutorialDemo,
 } from "@/components/audio-widget";
 
-const AudioWidget = React.memo(function AudioWidget() {
+const AudioWidget = function AudioWidget() {
   const perf = useComponentLifecycle('audioWidget', 7);
   const audioSettings = useAudioSettings();
   // Use the new UIState context for mutual exclusion with other components
@@ -87,6 +87,6 @@ const AudioWidget = React.memo(function AudioWidget() {
         <MusicEmbedModal open={state.musicEmbedOpen} onClose={() => { SoundEffects.click(); state.setMusicEmbedOpen(false); }} />, document.body)}
     </>
   );
-});
+};
 
 export default AudioWidget;

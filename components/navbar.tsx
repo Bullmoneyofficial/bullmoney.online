@@ -36,6 +36,9 @@ import AffiliateModal from "@/components/AffiliateModal";
 // --- IMPORT SOUND EFFECTS ---
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 
+// --- IMPORT SCROLL OPTIMIZATION ---
+import { useScrollOptimization } from "@/hooks/useScrollOptimization";
+
 // --- IMPORT MODULAR NAVBAR COMPONENTS ---
 import { DesktopNavbar } from "./navbar/DesktopNavbar";
 import { MobileStaticHelper } from "./navbar/MobileStaticHelper";
@@ -263,83 +266,69 @@ export const Navbar = memo(() => {
     setMounted(true);
   }, []);
 
-  // Scroll detection for mobile navbar minimization
+  // Scroll detection using optimized hook with RAF throttling
+  const { isScrolling, scrollDirection } = useScrollOptimization({
+    throttleMs: 16.67, // 60fps
+    enableVisibilityTracking: false,
+    enableMemoryOptimizations: false,
+  });
+
+  // Mobile scroll minimization
   useEffect(() => {
     if (!isMobile) return;
     
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const scrollDelta = Math.abs(currentScrollY - lastScrollY.current);
+    // Only minimize when scrolling DOWN and menu is closed
+    if (scrollDirection === 'down' && !open) {
+      setIsScrollMinimized(true);
       
-      // Only trigger minimization on significant scroll when menu is closed
-      if (scrollDelta > 15 && !open) {
-        setIsScrollMinimized(true);
-        lastScrollY.current = currentScrollY;
-        
-        // Clear existing timeout
-        if (scrollTimeoutRef.current) {
-          clearTimeout(scrollTimeoutRef.current);
-        }
-        
-        // Set timeout to expand back after scroll stops
-        scrollTimeoutRef.current = setTimeout(() => {
-          setIsScrollMinimized(false);
-        }, 1000); // Expand back 1s after scroll stops
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
+      // Clear existing timeout
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
-    };
-  }, [isMobile, open]);
+      
+      // Set timeout to expand back after scroll stops
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsScrollMinimized(false);
+      }, 1000); // Expand back 1s after scroll stops
+    } else if (scrollDirection === 'up' || scrollDirection === 'idle') {
+      // Expand on scroll up
+      setIsScrollMinimized(false);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    }
+  }, [isMobile, open, scrollDirection]);
 
-  // Scroll detection for DESKTOP navbar minimization (icon mode)
+  // Desktop scroll minimization
   useEffect(() => {
     if (isMobile) return;
     
-    const handleDesktopScroll = () => {
-      const currentScrollY = window.scrollY;
-      const scrollDelta = Math.abs(currentScrollY - lastDesktopScrollY.current);
-      
-      // Minimize on scroll down past 100px threshold
-      if (currentScrollY > 100 && scrollDelta > 10) {
-        if (!isDesktopScrollMinimized) {
-          setIsDesktopScrollMinimized(true);
-        }
-        lastDesktopScrollY.current = currentScrollY;
-        
-        // Clear existing timeout
-        if (desktopScrollTimeoutRef.current) {
-          clearTimeout(desktopScrollTimeoutRef.current);
-        }
-        
-        // Set timeout to expand back after scroll stops
-        desktopScrollTimeoutRef.current = setTimeout(() => {
-          setIsDesktopScrollMinimized(false);
-        }, 2000); // Expand back 2s after scroll stops
+    // Get current scroll position from window
+    const currentScrollY = window.scrollY;
+    
+    // Minimize on scroll down past 100px
+    if (currentScrollY > 100 && scrollDirection === 'down') {
+      if (!isDesktopScrollMinimized) {
+        setIsDesktopScrollMinimized(true);
       }
       
-      // Immediately expand when scrolled back to top
-      if (currentScrollY < 50) {
-        setIsDesktopScrollMinimized(false);
-        if (desktopScrollTimeoutRef.current) {
-          clearTimeout(desktopScrollTimeoutRef.current);
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleDesktopScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleDesktopScroll);
       if (desktopScrollTimeoutRef.current) {
         clearTimeout(desktopScrollTimeoutRef.current);
       }
-    };
-  }, [isMobile, isDesktopScrollMinimized]);
+      
+      desktopScrollTimeoutRef.current = setTimeout(() => {
+        setIsDesktopScrollMinimized(false);
+      }, 2000);
+    }
+    
+    // Immediately expand when scrolled back to top
+    if (currentScrollY < 50) {
+      setIsDesktopScrollMinimized(false);
+      if (desktopScrollTimeoutRef.current) {
+        clearTimeout(desktopScrollTimeoutRef.current);
+      }
+    }
+  }, [isMobile, scrollDirection]);
 
   // Reset minimized state when menu opens
   useEffect(() => {

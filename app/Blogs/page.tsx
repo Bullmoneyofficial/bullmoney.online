@@ -1,5 +1,7 @@
 "use client";
 
+import { useUIState } from "@/contexts/UIStateContext";
+
 import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import dynamic from 'next/dynamic';
 import { redirect } from "next/navigation";
@@ -268,6 +270,7 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
   const [isMuted, setIsMuted] = useState(false); 
   const [volume, setVolume] = useState(25);
   const playerRef = useRef<any>(null);
+    const { setV2Unlocked } = useUIState();
   
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showHelper, setShowHelper] = useState(false);
@@ -382,22 +385,23 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
         safeSetItem('user_is_muted', String(muted));
         setShowConfigurator(false);
         setTimeout(() => setIsTransitioning(false), 100);
-    }, 300);
-  }, []);
+        }, 300);
+    }, []);
 
-  const handleRegisterComplete = useCallback(() => {
-    safeSetItem('vip_user_registered', 'true');
-    setCurrentStage("hold"); 
-  }, []);
+    const handleRegisterComplete = useCallback(() => {
+        safeSetItem('vip_user_registered', 'true');
+        setCurrentStage("hold"); 
+    }, []);
 
-  const handleHoldComplete = useCallback(() => {
-    setCurrentStage("v2");
-  }, []);
+    const handleHoldComplete = useCallback(() => {
+        setCurrentStage("v2");
+    }, []);
 
-  const handleV2Complete = useCallback(() => {
-    setCurrentStage("content");
-    setTimeout(() => safePlay(), 500);
-  }, [safePlay]);
+    const handleV2Complete = useCallback(() => {
+        setV2Unlocked(true);
+        setCurrentStage("content");
+        setTimeout(() => safePlay(), 500);
+    }, [safePlay, setV2Unlocked]);
 
   if (!isClient) return null;
 

@@ -101,6 +101,7 @@ interface UIStateContextType {
   isAuthModalOpen: boolean;        // Bull Feed: Auth modal
   isBullFeedModalOpen: boolean;    // Bull Feed: Main feed
   isPostComposerModalOpen: boolean; // Bull Feed: Create post
+  isV2Unlocked: boolean;
 
   // Legacy: activeNavbarModal (maps to specific modal states)
   activeNavbarModal: NavbarModalType;
@@ -131,6 +132,7 @@ interface UIStateContextType {
   setAuthModalOpen: (open: boolean) => void;
   setBullFeedModalOpen: (open: boolean) => void;
   setPostComposerModalOpen: (open: boolean) => void;
+  setV2Unlocked: (unlocked: boolean) => void;
 
   // Legacy: setNavbarModal (for backwards compatibility)
   setNavbarModal: (modal: NavbarModalType) => void;
@@ -188,6 +190,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const [isAuthModalOpen, setIsAuthModalOpenState] = useState(false);
   const [isBullFeedModalOpen, setIsBullFeedModalOpenState] = useState(false);
   const [isPostComposerModalOpen, setIsPostComposerModalOpenState] = useState(false);
+  const [isV2Unlocked, setIsV2UnlockedState] = useState(
+    () => typeof window !== 'undefined' && sessionStorage.getItem('affiliate_unlock_complete') === 'true'
+  );
 
   // Derived state: Legacy activeNavbarModal (maps to individual states)
   const activeNavbarModal: NavbarModalType =
@@ -422,6 +427,13 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsPostComposerModalOpenState(open);
   }, [closeOthers]);
 
+  const setV2Unlocked = useCallback((unlocked: boolean) => {
+    setIsV2UnlockedState(unlocked);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('affiliate_unlock_complete', String(unlocked));
+    }
+  }, []);
+
   // Legacy: setNavbarModal for backwards compatibility
   const setNavbarModal = useCallback((modal: NavbarModalType) => {
     // Close all navbar-type modals first
@@ -505,6 +517,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isAuthModalOpen,
     isBullFeedModalOpen,
     isPostComposerModalOpen,
+    isV2Unlocked,
     activeNavbarModal,
     isAnyOpen,
     isAnyModalOpen,
@@ -532,6 +545,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setAuthModalOpen,
     setBullFeedModalOpen,
     setPostComposerModalOpen,
+    setV2Unlocked,
     setNavbarModal,
 
     // Convenience methods
@@ -584,6 +598,7 @@ export function useAudioWidgetUI() {
     hasOverlayingUI,
     isPagemodeOpen,
     isLoaderv2Open,
+    isV2Unlocked,
   } = useUIState();
 
   // IMPORTANT: We no longer return shouldHideFloatingPlayer that causes unmount.
@@ -594,8 +609,8 @@ export function useAudioWidgetUI() {
   // shouldHideFloatingPlayer now means "minimize" not "unmount"
   const shouldHideFloatingPlayer = shouldMinimizeAudioWidget;
 
-  // When pagemode or loaderv2 is open, don't show the audio widget at all
-  const shouldHideAudioWidgetCompletely = isPagemodeOpen || isLoaderv2Open;
+  // When pagemode or loaderv2 is open, or v2 is not unlocked, don't show the audio widget at all
+  const shouldHideAudioWidgetCompletely = isPagemodeOpen || isLoaderv2Open || !isV2Unlocked;
 
   return {
     isAudioWidgetOpen,
@@ -605,6 +620,7 @@ export function useAudioWidgetUI() {
     hasOverlayingUI,
     isPagemodeOpen,
     isLoaderv2Open,
+    isV2Unlocked,
     shouldHideAudioWidgetCompletely,
   };
 }

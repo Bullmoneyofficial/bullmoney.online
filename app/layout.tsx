@@ -8,6 +8,7 @@ import "../styles/device-tier-optimizations.css"; // Device-tier aware CSS
 import "../styles/safari-optimizations.css"; // Safari-specific fixes
 import "../styles/no-spin.css"; // Disable rotation-based spin animations
 import "../styles/fps-optimization.css"; // FPS optimization & frame skipping
+import "../styles/mobile-scroll-optimization.css"; // Mobile & scroll performance optimizations
 import { cn } from "@/lib/utils";
 
 import { ThemeProvider } from "@/context/providers";
@@ -17,6 +18,7 @@ import { GlobalThemeProvider } from "@/contexts/GlobalThemeProvider";
 import { AudioSettingsProvider } from "@/contexts/AudioSettingsProvider";
 import { MobileMenuProvider } from "@/contexts/MobileMenuContext";
 import { RecruitAuthProvider } from "@/contexts/RecruitAuthContext";
+import { ViewportStateProvider } from "@/contexts/ViewportStateContext";
 
 // ✅ ADDED: Import the ShopProvider
 import { ShopProvider } from "@/components/ShopContext";
@@ -635,24 +637,26 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <GlobalThemeProvider>
-              <MobileMenuProvider>
-                <RecruitAuthProvider>
-                  <AudioSettingsProvider>
-                    <StudioProvider>
-                      {/* ✅ ADDED: ShopProvider starts here */}
-                      <ShopProvider>
-                        {/* Navbar rendered outside ClientProviders for fixed positioning */}
-                        <Navbar />
-                        {/* ✅ LAZY LOADED: All performance providers bundled */}
-                        <ClientProviders modal={modal}>
-                          {children}
-                        </ClientProviders>
-                      </ShopProvider>
-                      {/* ✅ ADDED: ShopProvider ends here */}
-                    </StudioProvider>
-                  </AudioSettingsProvider>
-                </RecruitAuthProvider>
-              </MobileMenuProvider>
+              <ViewportStateProvider>
+                <MobileMenuProvider>
+                  <RecruitAuthProvider>
+                    <AudioSettingsProvider>
+                      <StudioProvider>
+                        {/* ✅ ADDED: ShopProvider starts here */}
+                        <ShopProvider>
+                          {/* Navbar rendered outside ClientProviders for fixed positioning */}
+                          <Navbar />
+                          {/* ✅ LAZY LOADED: All performance providers bundled */}
+                          <ClientProviders modal={modal}>
+                            {children}
+                          </ClientProviders>
+                        </ShopProvider>
+                        {/* ✅ ADDED: ShopProvider ends here */}
+                      </StudioProvider>
+                    </AudioSettingsProvider>
+                  </RecruitAuthProvider>
+                </MobileMenuProvider>
+              </ViewportStateProvider>
             </GlobalThemeProvider>
           </ThemeProvider>
           </CacheManagerProvider>

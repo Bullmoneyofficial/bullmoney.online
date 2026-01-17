@@ -13,6 +13,7 @@ interface MultiStepLoaderV2Props {
   loading?: boolean;
   duration?: number;
   loop?: boolean;
+  onFinished?: () => void;
 }
 
 export const MultiStepLoaderV2 = ({
@@ -24,6 +25,7 @@ export const MultiStepLoaderV2 = ({
   loading = false,
   duration = 2000,
   loop = true,
+  onFinished = () => {},
 }: MultiStepLoaderV2Props) => {
   const [currentState, setCurrentState] = useState(0);
   
@@ -31,15 +33,10 @@ export const MultiStepLoaderV2 = ({
   const { setLoaderv2Open } = useUIState();
   
   // Use useLayoutEffect to set state BEFORE browser paint - ensures AudioWidget sees it on first render
+  // When loading is true, set isLoaderv2Open to true. When loading is false, set it to false.
   useLayoutEffect(() => {
-    // When MultiStepLoaderv2 component is mounted/rendered, it's active
-    // Set it as open SYNCHRONOUSLY before browser paints
-    setLoaderv2Open(true);
-    
-    return () => {
-      setLoaderv2Open(false);
-    };
-  }, [setLoaderv2Open]);
+    setLoaderv2Open(loading);
+  }, [loading, setLoaderv2Open]);
 
   useEffect(() => {
     if (!loading) {
@@ -50,6 +47,10 @@ export const MultiStepLoaderV2 = ({
     const interval = setInterval(() => {
       setCurrentState((prev) => {
         if (prev === loadingStates.length - 1) {
+          if (!loop) {
+            onFinished();
+            return prev;
+          }
           return loop ? 0 : prev;
         }
         return prev + 1;
