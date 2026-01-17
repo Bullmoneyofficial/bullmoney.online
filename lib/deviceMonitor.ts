@@ -1041,21 +1041,43 @@ class DeviceMonitor {
    * Look up device from database by matching UA patterns
    */
   private lookupDevice(ua: string): DeviceSpec | null {
-    // Try exact model matches from UA
-    for (const [key, spec] of Object.entries(DEVICE_DATABASE)) {
-      if (ua.includes(key)) {
-        return spec;
-      }
+    // CRITICAL: Try iPhone/iPad model matches FIRST (most specific)
+    // iPhone format: iPhone17,1 iPhone17,2 etc in UA string
+    const iPhoneMatch = ua.match(/iPhone(\d+,\d+)/);
+    if (iPhoneMatch) {
+      const deviceId = `iPhone${iPhoneMatch[1]}`;
+      const spec = DEVICE_DATABASE[deviceId];
+      if (spec) return spec;
     }
-    
-    // Try partial matches for Samsung
-    const samsungMatch = ua.match(/SM-[A-Z]\d{3,4}/);
+
+    const iPadMatch = ua.match(/iPad(\d+,\d+)/);
+    if (iPadMatch) {
+      const deviceId = `iPad${iPadMatch[1]}`;
+      const spec = DEVICE_DATABASE[deviceId];
+      if (spec) return spec;
+    }
+
+    // Try Samsung models NEXT (very specific)
+    // Samsung format: SM-S928, SM-G998, etc
+    const samsungMatch = ua.match(/SM-[A-Z]\d{3}/);
     if (samsungMatch) {
-      const prefix = samsungMatch[0].substring(0, 6);
+      const deviceId = samsungMatch[0];
+      const spec = DEVICE_DATABASE[deviceId];
+      if (spec) return spec;
+      
+      // Try prefix match if exact not found
+      const prefix = deviceId.substring(0, 6);
       for (const [key, spec] of Object.entries(DEVICE_DATABASE)) {
-        if (key.startsWith(prefix)) {
+        if (key.startsWith(prefix) && key.includes('SM-')) {
           return spec;
         }
+      }
+    }
+
+    // Try exact model matches from UA for other devices
+    for (const [key, spec] of Object.entries(DEVICE_DATABASE)) {
+      if (ua.includes(key) && key.length > 3) {
+        return spec;
       }
     }
     
@@ -1306,10 +1328,16 @@ class DeviceMonitor {
       // Samsung detection
       else if (/Samsung|SM-/.test(ua)) {
         manufacturer = 'Samsung';
-        const samsungMatch = ua.match(/SM-[A-Z]\d{3,4}[A-Z]?/);
+        const samsungMatch = ua.match(/SM-[A-Z]\d{3}/);
         if (samsungMatch) {
           deviceId = samsungMatch[0];
-          model = deviceId;
+          const spec = DEVICE_DATABASE[deviceId];
+          if (spec) {
+            model = spec.model;
+            year = spec.year;
+          } else {
+            model = deviceId;
+          }
         }
       }
       // Google Pixel

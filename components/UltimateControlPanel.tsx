@@ -42,7 +42,8 @@ import {
   Settings,
   Edit2,
   Fingerprint,
-  Clock
+  Clock,
+  Database
 } from 'lucide-react';
 import { deviceMonitor, type DeviceInfo } from '@/lib/deviceMonitor';
 import { queueManager } from '@/lib/splineQueueManager';
@@ -54,6 +55,10 @@ import { useComponentTracking } from '@/lib/CrashTracker';
 import { useFpsOptimizer } from '@/lib/FpsOptimizer';
 import CompactFpsDisplay from '@/components/CompactFpsDisplay';
 import CrashTrackerDisplay from '@/components/CrashTrackerDisplay';
+import { useRealTimeMemory } from '@/hooks/useRealTimeMemory';
+import { useBrowserInfo } from '@/hooks/useBrowserInfo';
+import { useStorageInfo } from '@/hooks/useStorageInfo';
+import { useRealTimeCache } from '@/hooks/useRealTimeCache';
 
 // --- IMPORT NAVBAR CSS FOR CONSISTENT THEMING ---
 import './navbar.css';
@@ -598,6 +603,12 @@ export function UltimateControlPanel({
   const { setComponentVisibility } = useUnifiedPerformance();
   const shimmerEnabled = perf.shimmerEnabled;
   const shimmerSettings = perf.shimmerSettings;
+  
+  // Real-time memory and browser info hooks
+  const memoryStats = useRealTimeMemory();
+  const browserInfo = useBrowserInfo();
+  const storageInfo = useStorageInfo();
+  const cacheStats = useRealTimeCache();
   
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'network' | 'performance' | 'account'>('overview');
@@ -1525,35 +1536,71 @@ export function UltimateControlPanel({
                         <StatCard
                           icon={Smartphone}
                           label="Device"
-                          value={deviceInfo.device.model}
-                          sublabel={deviceInfo.device.manufacturer}
+                          value={deviceInfo?.device?.model || 'Unknown'}
+                          sublabel={deviceInfo?.device?.manufacturer || 'Unknown'}
                           color="#3b82f6"
                         />
                         <StatCard
                           icon={Monitor}
                           label="OS"
-                          value={deviceInfo.device.os}
-                          sublabel={`v${deviceInfo.device.osVersion}`}
+                          value={deviceInfo?.device?.os || 'Unknown'}
+                          sublabel={`v${deviceInfo?.device?.osVersion || '?'}`}
                           color="#8b5cf6"
                         />
                         <StatCard
                           icon={Cpu}
                           label="CPU"
-                          value={deviceInfo.performance.cpu.name || `${deviceInfo.performance.cpu.cores} Cores`}
-                          sublabel={`${deviceInfo.performance.cpu.cores}C/${deviceInfo.performance.cpu.threads}T • ${deviceInfo.performance.cpu.architecture}`}
+                          value={deviceInfo?.performance?.cpu?.name || `${deviceInfo?.performance?.cpu?.cores || 4} Cores`}
+                          sublabel={`${deviceInfo?.performance?.cpu?.cores || 4}C/${deviceInfo?.performance?.cpu?.threads || 4}T • ${deviceInfo?.performance?.cpu?.architecture || 'Unknown'}`}
                           color="#22c55e"
                         />
                         <StatCard
                           icon={HardDrive}
                           label="RAM"
-                          value={`${deviceInfo.performance.memory.total}GB`}
-                          sublabel={deviceInfo.performance.memory.type || `${deviceInfo.performance.memory.percentage}% used`}
+                          value={`${memoryStats.jsHeapUsed}MB / ${memoryStats.jsHeapLimit}MB`}
+                          sublabel={`Browser: ${memoryStats.percentage}% • Device: ${memoryStats.deviceRam}GB`}
                           color="#f59e0b"
                         />
                       </div>
 
-                      {/* Session + Cache */}
+                      {/* Browser Info */}
                       <div className="grid grid-cols-2 gap-3">
+                        <StatCard
+                          icon={Globe}
+                          label="Browser"
+                          value={browserInfo.name}
+                          sublabel={`v${browserInfo.version} • ${browserInfo.engine}`}
+                          color="#ec4899"
+                        />
+                        <StatCard
+                          icon={Monitor}
+                          label="Platform"
+                          value={browserInfo.platform}
+                          sublabel={`${browserInfo.locale}${browserInfo.onLine ? ' • Online' : ' • Offline'}`}
+                          color="#06b6d4"
+                        />
+                      </div>
+
+                      {/* Storage Info */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <StatCard
+                          icon={Database}
+                          label="Storage"
+                          value={`${storageInfo?.used || 0}GB / ${storageInfo?.total || 64}GB`}
+                          sublabel={`${storageInfo?.percentage || 0}% • ${storageInfo?.type || 'Detecting...'}`}
+                          color="#d946ef"
+                        />
+                        <StatCard
+                          icon={HardDrive}
+                          label="Cache"
+                          value={`${cacheStats?.usage?.toFixed(1) || '0.0'}MB`}
+                          sublabel={`${cacheStats?.percentage || 0}% • Quota: ${cacheStats?.quota?.toFixed(1) || '0.0'}MB`}
+                          color="#06b6d4"
+                        />
+                      </div>
+
+                      {/* Session */}
+                      <div className="grid grid-cols-1 gap-3">
                         <StatCard
                           icon={Clock}
                           label="Session length"
@@ -1561,15 +1608,6 @@ export function UltimateControlPanel({
                           sublabel="Current tab"
                           color="#22c55e"
                         />
-                        <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-400/30">
-                          <div className="text-xs text-cyan-200/70">Cache usage</div>
-                          <div className="text-lg font-bold text-white">
-                            {cacheUsageMB !== undefined ? `${cacheUsageMB.toFixed(1)} MB` : 'Measuring…'}
-                          </div>
-                          {cacheQuotaMB !== undefined && (
-                            <div className="text-[11px] text-cyan-200/60">Quota: {cacheQuotaMB.toFixed(1)} MB</div>
-                          )}
-                        </div>
                       </div>
 
                       {/* Screen Info */}
