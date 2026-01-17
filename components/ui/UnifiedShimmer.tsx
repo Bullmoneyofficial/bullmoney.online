@@ -87,6 +87,7 @@ type ShimmerProps = {
   intensity?: 'low' | 'medium' | 'high' | string;
   speed?: 'slow' | 'normal' | 'fast' | string;
   size?: number;
+  delay?: number;
 };
 
 /** Left-to-right gradient sweep line */
@@ -172,7 +173,12 @@ export const ShimmerGlide = ShimmerLine;
 export const ShimmerStreak = ShimmerLine;
 export const ShimmerGlowBorder = ShimmerBorder;
 export const ShimmerFloat = memo(({ children, className = '' }: ShimmerProps) => <div className={`shimmer-glow ${className}`}>{children}</div>);
-export const ShimmerDot = memo(({ className = '' }: ShimmerProps) => <span className={`shimmer-glow w-2 h-2 rounded-full bg-blue-500 ${className}`} />);
+export const ShimmerDot = memo(({ className = '', delay = 0 }: ShimmerProps) => (
+  <span 
+    className={`shimmer-glow w-2 h-2 rounded-full bg-blue-500 ${className}`} 
+    style={{ animationDelay: `${delay}s` }}
+  />
+));
 export const ShimmerSpinner = memo(({ className = '', size = 32 }: ShimmerProps) => {
   const sizeStyle = { width: size, height: size };
   return (
