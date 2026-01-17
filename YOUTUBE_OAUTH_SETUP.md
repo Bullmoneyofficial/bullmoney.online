@@ -23,7 +23,7 @@ This guide explains how to set up YouTube OAuth login for BullMoney TV.
      - `http://localhost:3000/auth/youtube/callback` (for development)
      - `https://yourdomain.com/auth/youtube/callback` (for production)
 7. Click **CREATE**
-8. Copy the **Client ID** (you'll need this)
+8. **IMPORTANT**: Copy both the **Client ID** and **Client Secret** (you'll need both)
 
 ## Step 2: Enable YouTube Data API
 
@@ -37,8 +37,14 @@ Add the following to your `.env.local` file:
 
 ```env
 # YouTube OAuth (Google Cloud Console)
+# Client ID - used on both client and server
 NEXT_PUBLIC_YOUTUBE_CLIENT_ID=your-client-id-here.apps.googleusercontent.com
+
+# Client Secret - SERVER ONLY (never expose this publicly!)
+YOUTUBE_CLIENT_SECRET=your-client-secret-here
 ```
+
+> ⚠️ **Security Note**: The `YOUTUBE_CLIENT_SECRET` should NEVER be prefixed with `NEXT_PUBLIC_` as it must remain server-side only.
 
 ## Step 4: Configure OAuth Consent Screen
 
@@ -68,12 +74,35 @@ NEXT_PUBLIC_YOUTUBE_CLIENT_ID=your-client-id-here.apps.googleusercontent.com
 - **Liked Videos**: Watch videos you've liked on YouTube
 - **Playlists**: Access all your personal playlists
 - **User Profile**: Your Google profile picture and name are displayed
+- **Automatic Token Refresh**: Sessions persist without re-prompting (using refresh tokens)
+
+## OAuth Flow Details
+
+BullMoney TV uses the **Authorization Code Flow** with the following features:
+
+- **Refresh Tokens**: Sessions persist until explicitly logged out
+- **Automatic Refresh**: Access tokens are automatically refreshed before expiry
+- **Secure Token Exchange**: Authorization codes are exchanged server-side
+- **Offline Access**: Users don't need to re-authenticate every hour
+
+### How It Works
+
+1. User clicks "Sign in with Google"
+2. Popup opens to Google's consent screen
+3. After consent, Google returns an authorization code
+4. Our server exchanges the code for access + refresh tokens
+5. Access token is used for API calls
+6. When access token expires, refresh token gets a new one automatically
 
 ## Troubleshooting
 
 ### "YouTube login is not configured"
 - Make sure `NEXT_PUBLIC_YOUTUBE_CLIENT_ID` is set in `.env.local`
 - Restart the development server after adding the environment variable
+
+### "OAuth credentials not configured"
+- Make sure `YOUTUBE_CLIENT_SECRET` is set in `.env.local`
+- Ensure the secret matches the one from Google Cloud Console
 
 ### "Access blocked" error
 - Ensure your redirect URIs match exactly
@@ -84,8 +113,21 @@ NEXT_PUBLIC_YOUTUBE_CLIENT_ID=your-client-id-here.apps.googleusercontent.com
 - Verify all required scopes are added to the OAuth consent screen
 - Make sure the YouTube Data API is enabled
 
+### "Session expired" error
+- If refresh token is revoked, user needs to sign in again
+- This can happen if user revokes access in Google Account settings
+
 ## Security Notes
 
-- The access token is stored in `localStorage` and expires after 1 hour
-- Users can log out at any time, which clears all stored data
-- No sensitive data is sent to any server - everything is client-side
+- Access tokens expire after 1 hour but are automatically refreshed
+- Refresh tokens persist until user logs out or revokes access
+- Client secret is never exposed to the browser (server-side only)
+- State parameter protects against CSRF attacks
+- Token exchange happens server-side for security
+
+## API Routes
+
+The following API routes handle OAuth:
+
+- `POST /api/auth/youtube` - Exchanges authorization code for tokens
+- `POST /api/auth/youtube/refresh` - Refreshes expired access tokens

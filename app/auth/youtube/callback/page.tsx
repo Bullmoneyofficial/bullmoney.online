@@ -10,79 +10,128 @@ export default function YouTubeCallbackPage() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Get the hash fragment (contains access_token for implicit flow)
+        // Check for authorization code flow (code in query params)
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        const errorParam = urlParams.get('error');
+        const errorDescription = urlParams.get('error_description');
+
+        // Also check hash for implicit flow fallback (backwards compatibility)
         const hash = window.location.hash.substring(1);
-        const params = new URLSearchParams(hash);
-        
-        const accessToken = params.get('access_token');
-        const expiresIn = params.get('expires_in');
-        const tokenType = params.get('token_type');
-        const errorParam = params.get('error');
-        const errorDescription = params.get('error_description');
+        const hashParams = new URLSearchParams(hash);
+        const hashAccessToken = hashParams.get('access_token');
 
         if (errorParam) {
           throw new Error(errorDescription || errorParam);
         }
 
-        if (!accessToken) {
-          throw new Error('No access token received');
-        }
-
-        // Fetch user info from Google
-        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
+        // Authorization Code Flow (preferred)
+        if (code) {
+          // Verify state to prevent CSRF
+          const savedState = sessionStorage.getItem('youtube_oauth_state');
+          if (state && savedState && state !== savedState) {
+            throw new Error('State mismatch. Please try again.');
           }
-        });
+          sessionStorage.removeItem('youtube_oauth_state');
 
-        if (!userInfoResponse.ok) {
-          throw new Error('Failed to fetch user info');
+          // Exchange code for tokens via server API
+          const redirectUri = `${window.location.origin}/auth/youtube/callback`;
+          const tokenResponse = await fetch('/api/auth/youtube', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ code, redirect_uri: redirectUri }),
+          });
+
+          const tokenData = await tokenResponse.json();
+
+          if (!tokenResponse.ok) {
+            throw new Error(tokenData.error || 'Failed to exchange authorization code');
+          }
+
+          // Send success message to parent window with refresh token
+          if (window.opener) {
+            window.opener.postMessage({
+              type: 'YOUTUBE_AUTH_SUCCESS',
+              accessToken: tokenData.access_token,
+              refreshToken: tokenData.refresh_token,
+              expiresIn: tokenData.expires_in,
+              tokenType: tokenData.token_type,
+              user: tokenData.user
+            }, window.location.origin);
+          }
+
+          setStatus('success');
+          setTimeout(() => {
+            window.close();
+          }, 1500);
+          return;
         }
 
-        const userInfo = await userInfoResponse.json();
+        // Implicit Flow fallback (backwards compatibility)
+        if (hashAccessToken) {
+          const expiresIn = hashParams.get('expires_in');
+          const tokenType = hashParams.get('token_type');
 
-        // Get YouTube channel info
-        let channelId = null;
-        try {
-          const channelResponse = await fetch(
-            'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',
-            {
-              headers: {
-                Authorization: `Bearer ${accessToken}`
+          // Fetch user info from Google
+          const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: {
+              Authorization: `Bearer ${hashAccessToken}`
+            }
+          });
+
+          if (!userInfoResponse.ok) {
+            throw new Error('Failed to fetch user info');
+          }
+
+          const userInfo = await userInfoResponse.json();
+
+          // Get YouTube channel info
+          let channelId = null;
+          try {
+            const channelResponse = await fetch(
+              'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',
+              {
+                headers: {
+                  Authorization: `Bearer ${hashAccessToken}`
+                }
               }
+            );
+            
+            if (channelResponse.ok) {
+              const channelData = await channelResponse.json();
+              channelId = channelData.items?.[0]?.id || null;
             }
-          );
-          
-          if (channelResponse.ok) {
-            const channelData = await channelResponse.json();
-            channelId = channelData.items?.[0]?.id || null;
+          } catch (e) {
+            console.warn('Could not fetch YouTube channel:', e);
           }
-        } catch (e) {
-          console.warn('Could not fetch YouTube channel:', e);
+
+          // Send success message to parent window (no refresh token in implicit flow)
+          if (window.opener) {
+            window.opener.postMessage({
+              type: 'YOUTUBE_AUTH_SUCCESS',
+              accessToken: hashAccessToken,
+              expiresIn: parseInt(expiresIn || '3600'),
+              tokenType,
+              user: {
+                name: userInfo.name,
+                email: userInfo.email,
+                picture: userInfo.picture,
+                channelId
+              }
+            }, window.location.origin);
+          }
+
+          setStatus('success');
+          setTimeout(() => {
+            window.close();
+          }, 1500);
+          return;
         }
 
-        // Send success message to parent window
-        if (window.opener) {
-          window.opener.postMessage({
-            type: 'YOUTUBE_AUTH_SUCCESS',
-            accessToken,
-            expiresIn: parseInt(expiresIn || '3600'),
-            tokenType,
-            user: {
-              name: userInfo.name,
-              email: userInfo.email,
-              picture: userInfo.picture,
-              channelId
-            }
-          }, window.location.origin);
-        }
-
-        setStatus('success');
-        
-        // Close popup after a short delay
-        setTimeout(() => {
-          window.close();
-        }, 1500);
+        throw new Error('No authorization code or access token received');
 
       } catch (err) {
         console.error('YouTube auth error:', err);

@@ -438,7 +438,7 @@ const LiveStreamContent = memo(() => {
     }
   }, [youtubeAuth?.accessToken, selectedPlaylist]);
 
-  // YouTube OAuth Login
+  // YouTube OAuth Login - Using Authorization Code Flow for refresh tokens
   const handleYoutubeLogin = useCallback(() => {
     if (!YOUTUBE_CLIENT_ID) {
       setPersonalError('YouTube login is not configured. Please add NEXT_PUBLIC_YOUTUBE_CLIENT_ID to your environment.');
@@ -448,7 +448,7 @@ const LiveStreamContent = memo(() => {
     setYoutubeLoading(true);
     setPersonalError('');
 
-    // Create OAuth URL
+    // Create OAuth URL - Authorization Code Flow
     const redirectUri = `${window.location.origin}/auth/youtube/callback`;
     const state = Math.random().toString(36).substring(7);
     
@@ -458,11 +458,12 @@ const LiveStreamContent = memo(() => {
     const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
     authUrl.searchParams.set('client_id', YOUTUBE_CLIENT_ID);
     authUrl.searchParams.set('redirect_uri', redirectUri);
-    authUrl.searchParams.set('response_type', 'token');
+    authUrl.searchParams.set('response_type', 'code'); // Changed from 'token' to 'code'
     authUrl.searchParams.set('scope', YOUTUBE_SCOPES);
     authUrl.searchParams.set('state', state);
+    authUrl.searchParams.set('access_type', 'offline'); // Request refresh token
     authUrl.searchParams.set('include_granted_scopes', 'true');
-    authUrl.searchParams.set('prompt', 'consent');
+    authUrl.searchParams.set('prompt', 'consent'); // Force consent to get refresh token
 
     // Open popup for OAuth
     const width = 500;
@@ -481,10 +482,11 @@ const LiveStreamContent = memo(() => {
       if (event.origin !== window.location.origin) return;
       
       if (event.data?.type === 'YOUTUBE_AUTH_SUCCESS') {
-        const { accessToken, expiresIn, user } = event.data;
+        const { accessToken, refreshToken, expiresIn, user } = event.data;
         
         const authProfile: YouTubeAuthProfile = {
           accessToken,
+          refreshToken, // Now we have a refresh token!
           expiresAt: Date.now() + (expiresIn * 1000),
           user
         };
@@ -517,12 +519,82 @@ const LiveStreamContent = memo(() => {
     }, 500);
   }, []);
 
-  // Refresh YouTube token (re-authenticate)
-  const refreshYoutubeToken = useCallback(() => {
-    setTokenNeedsRefresh(false);
+  // Refresh YouTube token using refresh token (no user interaction needed)
+  const refreshYoutubeToken = useCallback(async () => {
+    if (!youtubeAuth?.refreshToken) {
+      // No refresh token available, need to re-authenticate
+      setPersonalError('Session expired. Please sign in again.');
+      handleYoutubeLogin();
+      return;
+    }
+
+    setYoutubeLoading(true);
     setPersonalError('');
-    handleYoutubeLogin();
-  }, [handleYoutubeLogin]);
+
+    try {
+      const response = await fetch('/api/auth/youtube/refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh_token: youtubeAuth.refreshToken }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.requiresReauth) {
+          // Refresh token is invalid, need to re-authenticate
+          handleYoutubeLogin();
+          return;
+        }
+        throw new Error(data.error || 'Failed to refresh token');
+      }
+
+      // Update auth with new access token (keep existing refresh token and user)
+      const updatedAuth: YouTubeAuthProfile = {
+        ...youtubeAuth,
+        accessToken: data.access_token,
+        expiresAt: Date.now() + (data.expires_in * 1000),
+      };
+
+      localStorage.setItem('bullmoney_youtube_auth', JSON.stringify(updatedAuth));
+      setYoutubeAuth(updatedAuth);
+      setTokenNeedsRefresh(false);
+      SoundEffects.click();
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      setPersonalError(error instanceof Error ? error.message : 'Failed to refresh session');
+      // Fallback to re-authentication
+      handleYoutubeLogin();
+    } finally {
+      setYoutubeLoading(false);
+    }
+  }, [youtubeAuth, handleYoutubeLogin]);
+
+  // Auto-refresh token before it expires
+  useEffect(() => {
+    if (!youtubeAuth?.accessToken || !youtubeAuth?.refreshToken) return;
+
+    // Check if token will expire in the next 5 minutes
+    const expiresIn = youtubeAuth.expiresAt - Date.now();
+    const refreshThreshold = 5 * 60 * 1000; // 5 minutes
+
+    if (expiresIn < refreshThreshold && expiresIn > 0) {
+      // Token expiring soon, refresh it
+      refreshYoutubeToken();
+    } else if (expiresIn <= 0) {
+      // Token already expired
+      setTokenNeedsRefresh(true);
+    } else {
+      // Schedule refresh for 5 minutes before expiry
+      const refreshTimeout = setTimeout(() => {
+        refreshYoutubeToken();
+      }, expiresIn - refreshThreshold);
+
+      return () => clearTimeout(refreshTimeout);
+    }
+  }, [youtubeAuth?.accessToken, youtubeAuth?.expiresAt, youtubeAuth?.refreshToken, refreshYoutubeToken]);
 
   // Fetch user's playlists from YouTube API
   const fetchYoutubePlaylists = useCallback(async () => {
