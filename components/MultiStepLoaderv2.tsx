@@ -492,14 +492,27 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   // Reduce particle count on mobile
   const maxParticles = isMobile ? 4 : 12;
 
+  // Use smooth spring-based motion values for buttery animations
   const shakeX = useMotionValue(0);
   const shakeY = useMotionValue(0);
-  // Softer spring on mobile for smoother feel
+  // Much softer springs for ultra-smooth feel during hold
   const scale = useSpring(1, { 
-    stiffness: isMobile ? 200 : 300, 
-    damping: isMobile ? 25 : 20 
+    stiffness: isMobile ? 120 : 180, 
+    damping: isMobile ? 20 : 18,
+    mass: 0.8
   });
-  const iconRotate = useMotionValue(0);
+  // Smooth rotation spring (desktop only)
+  const iconRotate = useSpring(0, {
+    stiffness: 100,
+    damping: 15,
+    mass: 0.5
+  });
+  // Smooth progress spring for visual display (doesn't affect actual progress)
+  const smoothProgress = useSpring(0, {
+    stiffness: isMobile ? 80 : 120,
+    damping: isMobile ? 18 : 15,
+    mass: 0.6
+  });
   
   const requestRef = useRef<number | null>(null);
   const completionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -518,6 +531,8 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   const priceBaseRef = useRef<number>(0);
   const progressRef = useRef(0);
   const displayPriceRef = useRef(0);
+  const lastFrameTimeRef = useRef<number>(0); // For time-based smooth progress
+  const targetProgressRef = useRef<number>(0); // Smooth interpolation target
 
   const { startEngine, updateEngine, stopEngine, playSuccess } = useAudioEngine();
 
@@ -741,6 +756,11 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
       return;
     }
 
+    // Time-based progress for consistent speed regardless of frame rate
+    const now = performance.now();
+    const deltaTime = lastFrameTimeRef.current ? Math.min((now - lastFrameTimeRef.current) / 1000, 0.05) : 0.016;
+    lastFrameTimeRef.current = now;
+
     setProgress((prev) => {
       // TRIPLE LOCK: Block ALL progress if user hasn't interacted
       if (!hasUserInteractedRef.current || !isMountedRef.current) {
@@ -754,41 +774,44 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
 
       // CRITICAL: Only advance progress if user is ACTIVELY holding right now
       if (holding && hasUserInteractedRef.current) {
-        // Only increment if we haven't completed yet - SNAPPIER PROGRESS
+        // Only increment if we haven't completed yet
         if (!isCompletingRef.current) {
-          // Much faster boost values for snappy feel
-          // Slightly slower on mobile to reduce jank
-          const boost = isMobile 
-            ? (prev > 70 ? 5 : prev > 40 ? 4 : 3)
-            : (prev > 70 ? 7 : prev > 40 ? 5.5 : 4);
-          next = Math.min(prev + boost, 100);
+          // Time-based progress for smooth consistent feel
+          // ~2.5 seconds to complete on desktop, ~3 seconds on mobile
+          const progressPerSecond = isMobile ? 35 : 45;
+          // Accelerate slightly as we get closer to completion
+          const speedMultiplier = prev > 70 ? 1.3 : prev > 40 ? 1.15 : 1;
+          next = Math.min(prev + (progressPerSecond * speedMultiplier * deltaTime), 100);
 
+          // Update audio engine
           updateEngine(next);
 
-          // Reduced scale on mobile
-          scale.set(1 + (next / 100) * (isMobile ? 0.15 : 0.25));
-          // Skip rotation on mobile - causes jitter
-          if (!isMobile) {
-            iconRotate.set((next / 100) * 720); // Double spin
+          // Smooth spring-based scale
+          const targetScale = 1 + (next / 100) * (isMobile ? 0.12 : 0.2);
+          scale.set(targetScale);
+          
+          // Update smooth progress spring for visual elements
+          smoothProgress.set(next);
+          
+          // Smooth rotation on desktop only
+          if (!isMobile && !prefersReducedMotion) {
+            iconRotate.set((next / 100) * 540);
           }
 
-          // Much less shake on mobile to reduce jitter
-          const shakeAmount = isMobile 
-            ? (next / 100) * 3 // Minimal shake on mobile
-            : (next / 100) * 10;
-          // Only update shake every few frames on mobile to reduce jank
-          if (!isMobile || Math.random() < 0.3) {
-            shakeX.set((Math.random() - 0.5) * shakeAmount);
-            shakeY.set((Math.random() - 0.5) * shakeAmount);
+          // Gentle shake - use sine wave for smoother feel instead of random
+          const shakeIntensity = isMobile ? 1.5 : 4;
+          const shakePhase = now * 0.01;
+          if (!prefersReducedMotion) {
+            shakeX.set(Math.sin(shakePhase) * shakeIntensity * (next / 100));
+            shakeY.set(Math.cos(shakePhase * 1.3) * shakeIntensity * (next / 100));
           }
 
+          // Subtle vibration feedback
           if (typeof navigator !== "undefined" && navigator.vibrate) {
-            // Less frequent vibration on mobile
-            if (next > 70 && Math.random() < (isMobile ? 0.2 : 0.5)) navigator.vibrate(isMobile ? 5 : 8);
+            if (next > 80 && Math.random() < 0.15) navigator.vibrate(isMobile ? 3 : 5);
           }
 
           // CRITICAL: Only trigger completion when progress reaches EXACTLY 100 AND still holding
-          // Triple-check all conditions to prevent premature unlock
           if (next >= 100 && holding && !isCompletingRef.current && !hasFinishedRef.current && hasUserInteractedRef.current) {
             // Lock in completion state immediately
             isCompletingRef.current = true;
@@ -804,17 +827,17 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
               setIsCompleted(true);
               stopEngine();
               playSuccess();
-              scale.set(1.4);
+              scale.set(1.3);
+              smoothProgress.set(100);
 
               if (typeof navigator !== "undefined" && navigator.vibrate) {
-                navigator.vibrate([80, 40, 80]);
+                navigator.vibrate([60, 30, 60]);
               }
 
               // Show vault unlocked state with "Access Website" button
-              // User must tap button to enter site
               completionTimeoutRef.current = setTimeout(() => {
                 setVaultUnlocked(true);
-              }, 400);
+              }, 350);
             });
             return 100;
           }
@@ -823,17 +846,18 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
           return 100;
         }
       } else {
-        // Not holding - drain progress and reset completion flag
+        // Not holding - smooth drain with spring
         shakeX.set(0);
         shakeY.set(0);
         scale.set(1);
         iconRotate.set(0);
         
-        // Drain progress even faster
-        next = Math.max(prev - 16, 0);
+        // Smooth drain - faster but still feels nice
+        const drainSpeed = isMobile ? 40 : 50;
+        next = Math.max(prev - (drainSpeed * deltaTime), 0);
+        smoothProgress.set(next);
         
         // Only reset completion flag if we drop significantly below 100
-        // This prevents glitch from rapid release/hold at 100%
         if (next < 95) {
           isCompletingRef.current = false;
         }
@@ -846,7 +870,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
     if (!isCompleted && hasUserInteractedRef.current && isMountedRef.current) {
       requestRef.current = requestAnimationFrame(animate);
     }
-  }, [finishLoader, isCompleted, playSuccess, scale, shakeX, shakeY, stopEngine, updateEngine, iconRotate]);
+  }, [finishLoader, isCompleted, playSuccess, scale, shakeX, shakeY, stopEngine, updateEngine, iconRotate, smoothProgress, isMobile, prefersReducedMotion]);
 
   // Keep animate function ref updated
   useEffect(() => {
@@ -963,18 +987,23 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
       <AnimatePresence>
         {gateVisible && (
           <motion.div
-            exit={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }}
-            transition={{ duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96] }}
-            className="fixed inset-0 z-[9999999] flex flex-col items-center justify-center text-white overflow-hidden"
+            exit={{ opacity: 0, scale: 1.05, filter: isMobile ? "none" : "blur(20px)" }}
+            transition={{ duration: isMobile ? 0.5 : 0.8, ease: [0.43, 0.13, 0.23, 0.96] }}
+            className="fixed inset-0 z-[9999999] flex flex-col items-center justify-center text-white overflow-hidden select-none"
             style={{ 
               isolation: 'isolate', 
               backgroundColor: isMobile ? '#000000' : 'rgba(0, 0, 0, 0.95)', 
               // Disable backdrop-filter on mobile/in-app browsers to prevent black boxes
               backdropFilter: isMobile ? 'none' : 'blur(10px)', 
               WebkitBackdropFilter: isMobile ? 'none' : 'blur(10px)',
-              // Force GPU acceleration
+              // Force GPU acceleration and prevent pull-to-refresh
               transform: 'translateZ(0)',
               willChange: 'transform',
+              // Prevent default touch behaviors for smoother holding
+              touchAction: 'none',
+              WebkitTouchCallout: 'none',
+              WebkitUserSelect: 'none',
+              userSelect: 'none',
             }}
             onMouseDown={!vaultUnlocked ? handleInteractionStart : undefined}
             onMouseUp={!vaultUnlocked ? handleInteractionEnd : undefined}
@@ -982,6 +1011,8 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
             onTouchStart={!vaultUnlocked ? handleInteractionStart : undefined}
             onTouchEnd={!vaultUnlocked ? handleInteractionEnd : undefined}
             onTouchCancel={!vaultUnlocked ? handleInteractionEnd : undefined}
+            // Prevent context menu on long press
+            onContextMenu={(e) => e.preventDefault()}
           >
             {/* ═══════════════════════════════════════════════════════════════════
                 VAULT DOOR OVERLAY - Appears when vault is opening
@@ -1415,14 +1446,16 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 <motion.div
                   animate={{
                     color: isHolding ? "#60a5fa" : "#ffffff",
-                    scale: isHolding ? [1, 1.05, 1] : 1,
+                    scale: isHolding && !isMobile ? [1, 1.03, 1] : 1,
                   }}
                   transition={{
-                    scale: { duration: 0.5, repeat: isHolding ? Infinity : 0 }
+                    color: { duration: 0.3, ease: "easeOut" },
+                    scale: { duration: 0.8, repeat: isHolding && !isMobile ? Infinity : 0, ease: "easeInOut" }
                   }}
                   className="relative text-4xl md:text-6xl font-black tracking-tighter font-mono"
                   style={{
-                    textShadow: isHolding ? "0 0 30px rgba(59, 130, 246, 1)" : "0 2px 20px rgba(0,0,0,0.8)",
+                    textShadow: isHolding && !isMobile ? "0 0 30px rgba(59, 130, 246, 1)" : "0 2px 20px rgba(0,0,0,0.8)",
+                    willChange: isHolding ? 'transform' : 'auto',
                   }}
                 >
                   {isDeflating && !isMobile && !prefersReducedMotion && (
@@ -1666,7 +1699,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 </div>
               </motion.div>
 
-              {/* Progress Display - Hide when vault is unlocked - Hide when vault is unlocked */}
+              {/* Progress Display - Hide when vault is unlocked */}
               <AnimatePresence>
               {!vaultUnlocked && (
               <motion.div
@@ -1679,27 +1712,30 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 <div className="flex items-center gap-2 text-2xl md:text-3xl font-black tracking-tighter">
                   <motion.span
                     animate={{
-                      scale: isHolding ? [1, 1.1, 1] : 1,
+                      scale: isHolding && !isMobile ? [1, 1.05, 1] : 1,
                     }}
                     transition={{
-                      duration: 0.3,
-                      repeat: isHolding ? Infinity : 0,
+                      duration: 0.6,
+                      repeat: isHolding && !isMobile ? Infinity : 0,
+                      ease: "easeInOut",
                     }}
                     style={{
                       color: progress > 50 ? "#60a5fa" : "#ffffff",
-                      textShadow: progress > 50 ? "0 0 25px rgba(59,130,246,0.8)" : "0 2px 10px rgba(0,0,0,0.5)",
+                      textShadow: progress > 50 && !isMobile ? "0 0 25px rgba(59,130,246,0.8)" : "0 2px 10px rgba(0,0,0,0.5)",
                     }}
                   >
                     {progress === 0 ? "HOLD TO PUMP" : progress >= 100 ? "TO THE MOON" : `${Math.floor(progress)}%`}
                   </motion.span>
                   <motion.div
                     animate={{
-                      rotate: isHolding ? 360 : 0,
-                      x: isHolding ? 8 : 0,
-                      y: isHolding ? -8 : 0,
+                      rotate: isHolding && !isMobile && !prefersReducedMotion ? 360 : 0,
+                      x: isHolding ? (isMobile ? 4 : 8) : 0,
+                      y: isHolding ? (isMobile ? -4 : -8) : 0,
                     }}
                     transition={{
-                      rotate: { duration: 1, repeat: Infinity, ease: "linear" },
+                      rotate: { duration: 1.5, repeat: Infinity, ease: "linear" },
+                      x: { type: "spring", stiffness: 200, damping: 20 },
+                      y: { type: "spring", stiffness: 200, damping: 20 },
                     }}
                   >
                     <Rocket
@@ -1710,16 +1746,27 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                     />
                   </motion.div>
                 </div>
-                <div className="w-full h-2.5 bg-[#000000] border border-blue-500/50 rounded-full overflow-hidden shadow-[inset_0_0_10px_rgba(0,0,0,0.5),0_0_20px_rgba(59,130,246,0.3)]">
+                {/* Progress bar with smooth spring-based width */}
+                <div 
+                  className="w-full h-2.5 bg-[#000000] border border-blue-500/50 rounded-full overflow-hidden"
+                  style={{
+                    boxShadow: isMobile ? '0 0 10px rgba(59,130,246,0.2)' : 'inset 0 0 10px rgba(0,0,0,0.5), 0 0 20px rgba(59,130,246,0.3)',
+                  }}
+                >
                   <motion.div
-                    className="h-full bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 relative"
-                    style={{ width: `${progress}%` }}
+                    className="h-full bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 relative origin-left"
+                    style={{ 
+                      width: `${progress}%`,
+                      willChange: 'width',
+                    }}
+                    transition={{ type: "spring", stiffness: 100, damping: 20 }}
                   >
-                    {isHolding && (
+                    {isHolding && !isMobile && !prefersReducedMotion && (
                       <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
                         animate={{ x: ["-100%", "100%"] }}
                         transition={{ duration: shimmerDuration * 0.8, repeat: Infinity, ease: "linear" }}
+                        style={{ willChange: 'transform' }}
                       />
                     )}
                   </motion.div>
