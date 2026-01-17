@@ -132,12 +132,17 @@ body {
   -webkit-user-select: none !important;
 }
 
-/* The theme color overlay specifically */
+/* Theme overlay elements - CRITICAL for scroll */
+#theme-global-overlay,
+#theme-edge-glow,
 #theme-filter-overlay,
-html[data-active-theme]::before {
+html[data-active-theme]::before,
+html[data-active-theme]::after {
   /* These are set inline but ensure CSS backup */
   pointer-events: none !important;
   touch-action: none !important;
+  -webkit-touch-callout: none !important;
+  overflow: visible !important;
 }
 
 /* 120Hz ProMotion Display Optimizations */
@@ -540,18 +545,20 @@ body::after {
 }
 
 /* ============================================
-   GLOBAL THEME OVERLAY SYSTEM v2.0
-   Applies theme colors/filters as safe CSS layers
+   GLOBAL THEME OVERLAY SYSTEM v3.0
+   Full-coverage overlay that tints EVERYTHING including Spline/Canvas
    WITHOUT breaking scroll, fixed elements, or cross-browser compat
    ============================================ */
 
 /* 
    ARCHITECTURE:
-   1. html::before = color overlay (pointer-events: none, doesn't block scroll)
-   2. CSS variables = component-level theming
-   3. data attributes = selector-based theme effects
+   1. #theme-global-overlay = DOM element injected by GlobalThemeProvider
+   2. #theme-edge-glow = Vignette glow effect around edges
+   3. html::before = Fallback CSS overlay
+   4. CSS variables = component-level theming
+   5. data attributes = selector-based theme effects
    
-   CRITICAL: Never apply filter to html/body - breaks position:fixed on Safari/iOS
+   CRITICAL: All overlays use pointer-events: none to allow interactions through
 */
 
 html, body {
@@ -561,14 +568,61 @@ html, body {
   -webkit-filter: none !important;
   /* Ensure scrolling works on all devices */
   -webkit-overflow-scrolling: touch;
-  overflow-y: auto;
+  overflow-y: auto !important;
   overflow-x: hidden;
+  /* Touch handling */
+  touch-action: pan-y pan-x;
+  /* Prevent scroll blocking */
+  overscroll-behavior: auto;
 }
 
 /* ============================================
-   GLOBAL THEME COLOR OVERLAY
-   A transparent color layer that tints everything
-   Uses mix-blend-mode for natural color mixing
+   DOM-BASED THEME OVERLAYS (Injected by JS)
+   These cover EVERYTHING including canvas/WebGL
+   ============================================ */
+
+#theme-global-overlay,
+#theme-edge-glow {
+  /* CRITICAL: Never block any interactions */
+  pointer-events: none !important;
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-touch-callout: none !important;
+  /* Don't create scroll container */
+  overflow: visible !important;
+  /* GPU layer */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  /* Prevent layout shift */
+  contain: layout style;
+}
+
+/* Mobile-specific overlay adjustments */
+@media (max-width: 768px) {
+  #theme-global-overlay {
+    /* Lighter overlay on mobile for performance */
+    opacity: 0.4 !important;
+  }
+  #theme-edge-glow {
+    opacity: 0.3 !important;
+  }
+}
+
+/* Reduce overlay for low-performance devices */
+html.fps-minimal #theme-global-overlay,
+html.fps-low #theme-global-overlay {
+  opacity: 0.2 !important;
+}
+
+html.fps-minimal #theme-edge-glow,
+html.fps-low #theme-edge-glow {
+  display: none !important;
+}
+
+/* ============================================
+   CSS FALLBACK OVERLAY (::before pseudo-element)
+   Used when DOM overlay isn't available yet
    ============================================ */
 
 /* Theme color overlay - appears on top of everything as color tint */
@@ -586,7 +640,8 @@ html[data-active-theme]::before {
     transparent 100%
   );
   /* CRITICAL: Allow clicks/touches to pass through */
-  pointer-events: none;
+  pointer-events: none !important;
+  touch-action: none !important;
   /* Blend naturally with underlying content */
   mix-blend-mode: soft-light;
   opacity: var(--theme-overlay-opacity, 0.6);
@@ -597,7 +652,7 @@ html[data-active-theme]::before {
   /* Prevent this layer from causing scroll issues */
   contain: strict;
   /* Ensure it doesn't create a new scroll context */
-  overflow: visible;
+  overflow: visible !important;
 }
 
 /* Reduce overlay on mobile for performance */
@@ -624,6 +679,59 @@ html.fps-low[data-active-theme]::before {
 html[data-active-theme][data-theme-light="true"]::before {
   mix-blend-mode: multiply;
   opacity: 0.3;
+}
+
+/* ============================================
+   SCROLL SAFETY FOR ALL OVERLAY ELEMENTS
+   Ensures overlays NEVER block scrolling on ANY device
+   ============================================ */
+
+/* Universal overlay scroll passthrough */
+#theme-global-overlay,
+#theme-edge-glow,
+html::before,
+html::after,
+body::before,
+body::after,
+[id*="theme-overlay"],
+[class*="theme-overlay"] {
+  pointer-events: none !important;
+  touch-action: none !important;
+  -webkit-overflow-scrolling: unset !important;
+  overflow: visible !important;
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  #theme-global-overlay,
+  #theme-edge-glow {
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+  
+  /* Ensure body can scroll on iOS */
+  body {
+    -webkit-overflow-scrolling: touch !important;
+    overflow-y: auto !important;
+  }
+}
+
+/* Samsung Browser / Android WebView fixes */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  #theme-global-overlay,
+  #theme-edge-glow {
+    /* Force hardware acceleration */
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+}
+
+/* In-App Browsers (Instagram, TikTok, Facebook, etc.) */
+html.is-in-app-browser #theme-global-overlay,
+html.is-in-app-browser #theme-edge-glow {
+  /* Reduce z-index in webviews which have quirky stacking */
+  z-index: 99990 !important;
 }
 
 /* ============================================

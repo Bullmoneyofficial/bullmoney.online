@@ -13,8 +13,9 @@ interface ThemeSelectorModalProps {
 export const ThemeSelectorModal = ({ isOpen, onClose }: ThemeSelectorModalProps) => {
   const { activeThemeId: globalThemeId, setTheme } = useGlobalTheme();
   
-  const [activeThemeId, setActiveThemeId] = useState(globalThemeId || 'BITCOIN');
-  const [activeCategory, setActiveCategory] = useState<ThemeCategory>('CRYPTO');
+  // Default to BullMoney Blue if no theme is set
+  const [activeThemeId, setActiveThemeId] = useState(globalThemeId || 'bullmoney-blue');
+  const [activeCategory, setActiveCategory] = useState<ThemeCategory>('SPECIAL');
   const [currentSound, setCurrentSound] = useState<SoundProfile>('SILENT');
   const [isMuted, setIsMuted] = useState(true);
   const [previewThemeId, setPreviewThemeId] = useState<string | null>(null);
@@ -76,20 +77,35 @@ export const ThemeSelectorModal = ({ isOpen, onClose }: ThemeSelectorModalProps)
         {/* Backdrop */}
         <div className="absolute inset-0 bg-black/80" />
         
-        {/* Modal container */}
+        {/* Modal container - Theme-aware styling */}
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ type: "spring", duration: 0.5 }}
           onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-4xl max-h-[85vh] rounded-2xl overflow-hidden border border-blue-500/30 shadow-[0_0_60px_rgba(59,130,246,0.3)]"
+          className="relative w-full max-w-4xl max-h-[85vh] rounded-2xl overflow-hidden"
+          style={{
+            border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+            boxShadow: '0 0 60px rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+          }}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 bg-black/90 border-b border-blue-500/30">
+          {/* Header - Theme-aware */}
+          <div 
+            className="flex items-center justify-between px-6 py-4 bg-black/90"
+            style={{
+              borderBottom: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+            }}
+          >
             <div className="flex items-center gap-3">
-              <IconPalette className="w-5 h-5 text-blue-400" />
-              <span className="text-sm font-bold uppercase tracking-widest text-blue-400">
+              <IconPalette 
+                className="w-5 h-5" 
+                style={{ color: 'var(--accent-color, #3b82f6)' }}
+              />
+              <span 
+                className="text-sm font-bold uppercase tracking-widest"
+                style={{ color: 'var(--accent-color, #3b82f6)' }}
+              >
                 Theme Selector
               </span>
             </div>

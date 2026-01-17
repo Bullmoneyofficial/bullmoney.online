@@ -190,6 +190,75 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
       window.dispatchEvent(new CustomEvent('bullmoney-theme-change', { 
         detail: { theme, themeId: theme.id, accentColor: theme.accentColor } 
       }));
+      
+      // ═══════════════════════════════════════════════════════════════════════════
+      // GLOBAL THEME OVERLAY v3.0 - DOM-Based for Full Coverage
+      // This overlay covers EVERYTHING including Spline/Canvas elements
+      // Uses pointer-events: none to allow all interactions through
+      // ═══════════════════════════════════════════════════════════════════════════
+      
+      let overlay = document.getElementById('theme-global-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'theme-global-overlay';
+        // Insert as first child of body to be behind modals but cover content
+        document.body.insertBefore(overlay, document.body.firstChild);
+      }
+      
+      // Apply overlay styles - covers everything, passes through all events
+      Object.assign(overlay.style, {
+        position: 'fixed',
+        inset: '0',
+        zIndex: '999999', // Above everything including Spline
+        pointerEvents: 'none', // CRITICAL: Pass through ALL interactions
+        touchAction: 'none', // Don't capture touch events
+        userSelect: 'none',
+        webkitUserSelect: 'none',
+        // Color tint using theme accent
+        background: `radial-gradient(
+          ellipse at 50% 30%,
+          rgba(${r}, ${g}, ${b}, 0.12) 0%,
+          rgba(${r}, ${g}, ${b}, 0.06) 30%,
+          rgba(${r}, ${g}, ${b}, 0.03) 60%,
+          transparent 100%
+        )`,
+        // Blend mode for natural color mixing
+        mixBlendMode: theme.isLight ? 'multiply' : 'screen',
+        opacity: overlayOpacity,
+        transition: 'opacity 0.5s ease, background 0.5s ease',
+        // GPU acceleration
+        transform: 'translateZ(0)',
+        willChange: 'opacity',
+        // Prevent scroll interference
+        overflow: 'visible',
+        contain: 'layout style',
+      });
+      
+      // Add a second overlay for edge glow effect
+      let edgeGlow = document.getElementById('theme-edge-glow');
+      if (!edgeGlow) {
+        edgeGlow = document.createElement('div');
+        edgeGlow.id = 'theme-edge-glow';
+        document.body.insertBefore(edgeGlow, document.body.firstChild);
+      }
+      
+      Object.assign(edgeGlow.style, {
+        position: 'fixed',
+        inset: '0',
+        zIndex: '999998',
+        pointerEvents: 'none',
+        touchAction: 'none',
+        userSelect: 'none',
+        // Vignette-style edge glow
+        boxShadow: `inset 0 0 150px rgba(${r}, ${g}, ${b}, 0.15), 
+                    inset 0 0 80px rgba(${r}, ${g}, ${b}, 0.1),
+                    inset 0 0 40px rgba(${r}, ${g}, ${b}, 0.05)`,
+        opacity: theme.isLight ? '0.3' : '0.5',
+        transition: 'box-shadow 0.5s ease, opacity 0.5s ease',
+        transform: 'translateZ(0)',
+        overflow: 'visible',
+        contain: 'layout style',
+      });
     }
   }, [activeThemeId, isInitialized, isMobile]);
 
