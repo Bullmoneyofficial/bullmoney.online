@@ -5,6 +5,7 @@ import {
   IconBrandSpotify,
   IconBrandApple,
   IconBrandYoutube,
+  type IconProps,
 } from "@tabler/icons-react";
 import type { MusicSource } from "@/contexts/AudioSettingsProvider";
 
@@ -27,7 +28,7 @@ export const streamingOptions: {
   { value: "YOUTUBE", label: "YouTube", icon: React.createElement(IconBrandYoutube, { className: "w-5 h-5" }), color: "blue", recommended: true },
 ];
 
-export const sourceIcons: Partial<Record<MusicSource, React.ComponentType<{ className?: string }>>> = {
+export const sourceIcons: Partial<Record<MusicSource, React.ComponentType<IconProps>>> = {
   SPOTIFY: IconBrandSpotify,
   APPLE_MUSIC: IconBrandApple,
   YOUTUBE: IconBrandYoutube,

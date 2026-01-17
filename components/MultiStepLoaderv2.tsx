@@ -43,7 +43,7 @@ const ASSETS: Record<AssetKey, { id: string; symbol: string; icon: string; color
   SOL: { id: "SOL", symbol: "BINANCE:SOLUSDT", icon: "◎", color: "#14F195" },
 };
 
-// --- LIVE PRICE HOOK (WITH IN-APP BROWSER FALLBACK) ---
+// --- LIVE PRICE HOOK (ENABLED FOR ALL DEVICES) ---
 const useLivePrice = (assetKey: AssetKey) => {
   const [price, setPrice] = useState<number>(0);
   const lastUpdateRef = useRef<number>(0);
@@ -54,12 +54,8 @@ const useLivePrice = (assetKey: AssetKey) => {
     const controller = new AbortController();
     let pollId: ReturnType<typeof setInterval> | null = null;
     
-    // Import browser detection dynamically to avoid SSR issues
     const initPriceUpdates = async () => {
       try {
-        const { detectBrowser } = await import('@/lib/browserDetection');
-        const browserInfo = detectBrowser();
-        
         const symbolParts = ASSETS[assetKey].symbol.split(":");
         const symbol = symbolParts[1]?.toLowerCase();
         const symbolUpper = symbolParts[1]?.toUpperCase();
@@ -88,8 +84,8 @@ const useLivePrice = (assetKey: AssetKey) => {
         // Poll every 2 seconds as fallback
         pollId = setInterval(fetchTicker, 2000);
 
-        // Only use WebSocket if browser supports it (skip in-app browsers)
-        if (browserInfo.canHandleWebSocket && !browserInfo.isInAppBrowser) {
+        // WebSocket enabled for ALL devices - try to connect
+        if ('WebSocket' in window) {
           try {
             ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@trade`);
             
@@ -120,8 +116,6 @@ const useLivePrice = (assetKey: AssetKey) => {
           } catch (e) {
             console.log('[Price] WebSocket not available, using polling only');
           }
-        } else {
-          console.log('[Price] WebSocket disabled for:', browserInfo.browserName);
         }
       } catch (e) {
         console.error('[Price] Init failed:', e);
@@ -146,7 +140,7 @@ const useLivePrice = (assetKey: AssetKey) => {
   return { price };
 };
 
-// --- AUDIO ENGINE (CINEMATIC V2 - GLITCH-FREE WITH IN-APP BROWSER SAFETY) ---
+// --- AUDIO ENGINE (CINEMATIC V2 - ENABLED FOR ALL DEVICES) ---
 const useAudioEngine = () => {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const oscillatorRef = useRef<OscillatorNode | null>(null);
@@ -158,21 +152,15 @@ const useAudioEngine = () => {
   const lastStartTimeRef = useRef(0);
   const isDisabledRef = useRef(false);
 
-  // Check if audio is disabled for this browser
+  // Audio is now enabled for ALL browsers and devices
+  // Only disable if AudioContext is truly unavailable
   useEffect(() => {
-    const checkAudioSupport = async () => {
-      try {
-        const { detectBrowser } = await import('@/lib/browserDetection');
-        const browserInfo = detectBrowser();
-        if (!browserInfo.canHandleAudio || browserInfo.isInAppBrowser) {
-          isDisabledRef.current = true;
-          console.log('[Audio] Disabled for:', browserInfo.browserName);
-        }
-      } catch (e) {
-        // If detection fails, try to use audio anyway
-      }
-    };
-    checkAudioSupport();
+    // Check if AudioContext exists at all
+    const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) {
+      isDisabledRef.current = true;
+      console.log('[Audio] AudioContext not available in this browser');
+    }
   }, []);
 
   const initAudio = useCallback(() => {
