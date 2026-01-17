@@ -30,7 +30,12 @@ interface DeviceSpec {
 // Comprehensive device database - phones, tablets, desktops
 const DEVICE_DATABASE: Record<string, DeviceSpec> = {
   // === APPLE IPHONES (2010-2026) ===
-  // 2026 (Future/Expected)
+  // 2026 (Projected - iPhone 18)
+  'iPhone19,1': { model: 'iPhone 18 Pro', manufacturer: 'Apple', ram: 12, cpu: 'Apple A20 Pro', cpuCores: 6, screenWidth: 1206, screenHeight: 2622, ppi: 460, year: 2026 },
+  'iPhone19,2': { model: 'iPhone 18 Pro Max', manufacturer: 'Apple', ram: 12, cpu: 'Apple A20 Pro', cpuCores: 6, screenWidth: 1320, screenHeight: 2868, ppi: 460, year: 2026 },
+  'iPhone19,3': { model: 'iPhone 18', manufacturer: 'Apple', ram: 8, cpu: 'Apple A20', cpuCores: 6, screenWidth: 1179, screenHeight: 2556, ppi: 460, year: 2026 },
+  'iPhone19,4': { model: 'iPhone 18 Plus', manufacturer: 'Apple', ram: 8, cpu: 'Apple A20', cpuCores: 6, screenWidth: 1290, screenHeight: 2796, ppi: 460, year: 2026 },
+  // 2025 (iPhone 17)
   'iPhone18,1': { model: 'iPhone 17 Pro', manufacturer: 'Apple', ram: 12, cpu: 'Apple A19 Pro', cpuCores: 6, screenWidth: 1206, screenHeight: 2622, ppi: 460, year: 2025 },
   'iPhone18,2': { model: 'iPhone 17 Pro Max', manufacturer: 'Apple', ram: 12, cpu: 'Apple A19 Pro', cpuCores: 6, screenWidth: 1320, screenHeight: 2868, ppi: 460, year: 2025 },
   'iPhone18,3': { model: 'iPhone 17', manufacturer: 'Apple', ram: 8, cpu: 'Apple A19', cpuCores: 6, screenWidth: 1179, screenHeight: 2556, ppi: 460, year: 2025 },
@@ -304,6 +309,10 @@ const DEVICE_DATABASE: Record<string, DeviceSpec> = {
   'SM-S938': { model: 'Galaxy S25 Ultra', manufacturer: 'Samsung', ram: 16, cpu: 'Snapdragon 8 Elite', cpuCores: 8, screenWidth: 1440, screenHeight: 3120, ppi: 505, year: 2025 },
   'SM-S936': { model: 'Galaxy S25+', manufacturer: 'Samsung', ram: 12, cpu: 'Snapdragon 8 Elite', cpuCores: 8, screenWidth: 1440, screenHeight: 3120, ppi: 516, year: 2025 },
   'SM-S931': { model: 'Galaxy S25', manufacturer: 'Samsung', ram: 12, cpu: 'Snapdragon 8 Elite', cpuCores: 8, screenWidth: 1080, screenHeight: 2340, ppi: 416, year: 2025 },
+  // 2026 Galaxy S26 Series (Projected)
+  'SM-S948': { model: 'Galaxy S26 Ultra', manufacturer: 'Samsung', ram: 16, cpu: 'Snapdragon 9 Elite', cpuCores: 8, screenWidth: 1440, screenHeight: 3120, ppi: 505, year: 2026 },
+  'SM-S946': { model: 'Galaxy S26+', manufacturer: 'Samsung', ram: 12, cpu: 'Snapdragon 9 Elite', cpuCores: 8, screenWidth: 1440, screenHeight: 3120, ppi: 516, year: 2026 },
+  'SM-S941': { model: 'Galaxy S26', manufacturer: 'Samsung', ram: 12, cpu: 'Snapdragon 9 Elite', cpuCores: 8, screenWidth: 1080, screenHeight: 2340, ppi: 416, year: 2026 },
   // 2024 Galaxy S24 Series
   'SM-S928': { model: 'Galaxy S24 Ultra', manufacturer: 'Samsung', ram: 12, cpu: 'Snapdragon 8 Gen 3', cpuCores: 8, screenWidth: 1440, screenHeight: 3120, ppi: 505, year: 2024 },
   'SM-S926': { model: 'Galaxy S24+', manufacturer: 'Samsung', ram: 12, cpu: 'Snapdragon 8 Gen 3', cpuCores: 8, screenWidth: 1440, screenHeight: 3120, ppi: 516, year: 2024 },
