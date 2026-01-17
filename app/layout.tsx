@@ -52,6 +52,9 @@ import { ShimmerStylesProvider } from "@/components/ui/UnifiedShimmer";
 // ✅ ADDED: Import the Cache Manager Provider for version-based cache invalidation
 import { CacheManagerProvider } from "@/components/CacheManagerProvider";
 
+// ✅ ADDED: Browser Switch Tab - Encourages traders to use Chrome/Desktop
+import { BrowserSwitchTab } from "@/components/BrowserSwitchTab";
+
 // Navigation component
 import { Navbar } from "@/components/navbar";
 
@@ -1030,6 +1033,8 @@ export default function RootLayout({
                         <ShopProvider>
                           {/* Navbar rendered outside ClientProviders for fixed positioning */}
                           <Navbar />
+                          {/* ✅ ADDED: Browser Switch Tab - Pull tab for Chrome/Desktop */}
+                          <BrowserSwitchTab />
                           {/* ✅ LAZY LOADED: All performance providers bundled */}
                           <ClientProviders modal={modal}>
                             {children}
