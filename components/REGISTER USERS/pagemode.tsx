@@ -505,6 +505,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
     } catch (err: any) {
       console.error("Submission Error:", err);
+      // Track registration error
+      trackEvent('error', { 
+        type: 'registration_failed', 
+        code: err.code || 'unknown',
+        source: 'pagemode' 
+      });
       if (err.code === '23505') {
         setSubmitError("This email is already registered.");
       } else {
@@ -518,6 +524,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     e.preventDefault();
     setSubmitError(null);
     setLoading(true);
+    
+    // Track login attempt
+    trackEvent('login_attempt', { source: 'pagemode' });
 
     try {
       const { data, error } = await supabase
@@ -547,6 +556,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         recruitId: data.id,
         email: loginEmail
       }));
+      
+      // Track successful login
+      trackEvent('login', { method: 'email', source: 'pagemode' });
 
       setTimeout(() => {
         setLoading(false);
@@ -555,6 +567,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
     } catch (err: any) {
       setLoading(false);
+      // Track login error
+      trackEvent('error', { type: 'login_failed', source: 'pagemode' });
       setSubmitError(err.message || "Invalid credentials.");
     }
   };
