@@ -1845,18 +1845,18 @@ html.fps-ultra [class*="shimmer"] {
 }
 
 /* =================================================================
-   MOBILE OPTIMIZATIONS - Much slower animation speed
+   UPDATED 2026: Full speed animations for all devices including mobile
    ================================================================= */
 html.is-mobile [class*="shimmer"] {
-  animation-duration: 16s !important;
+  animation-duration: 4s !important; /* Same as desktop */
 }
 
 html.is-mobile.fps-low [class*="shimmer"] {
-  animation-duration: 24s !important;
+  animation-duration: 6s !important; /* Slight slowdown only for very low FPS */
 }
 
 html.is-mobile.fps-minimal [class*="shimmer"] {
-  animation-duration: 35s !important;
+  animation-duration: 8s !important; /* Minimal slowdown */
 }
 
 /* =================================================================

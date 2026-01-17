@@ -91,48 +91,36 @@ export function useOptimizedShimmer() {
     const root = document.documentElement;
     
     const update = () => {
-      const isDesktop = root.classList.contains('desktop-mode') || 
-                        root.classList.contains('desktop-optimized') ||
-                        window.innerWidth >= 1024;
+      // UPDATED 2026: All devices get desktop-quality shimmers
+      const isDesktop = true; // Always enable desktop features
       const isAppleSilicon = root.classList.contains('apple-silicon') ||
                              /apple-silicon-m[1-5]/.test(root.className);
       const isUltra = root.classList.contains('perf-ultra');
       const isHigh = root.classList.contains('perf-high');
-      const fps = isAppleSilicon ? 120 : (isDesktop ? 60 : 30);
+      // UPDATED 2026: All devices get 60 FPS minimum
+      const fps = isAppleSilicon ? 120 : 60;
       
-      // 🖥️ DESKTOP/APPLE SILICON: Full shimmer effects unlocked
-      if (isDesktop || isAppleSilicon) {
-        if (isUltra || isAppleSilicon) {
-          setSettings({ 
-            disabled: false, 
-            speed: 'ultra', 
-            intensity: 'max',
-            isDesktop: true,
-            isAppleSilicon,
-            enableAdvanced: true,
-            fps,
-          });
-        } else if (isHigh) {
-          setSettings({ 
-            disabled: false, 
-            speed: 'fast', 
-            intensity: 'ultra',
-            isDesktop: true,
-            isAppleSilicon,
-            enableAdvanced: true,
-            fps,
-          });
-        } else {
-          setSettings({ 
-            disabled: false, 
-            speed: 'normal', 
-            intensity: 'high',
-            isDesktop: true,
-            isAppleSilicon,
-            enableAdvanced: true,
-            fps,
-          });
-        }
+      // 🖥️ UPDATED 2026: All devices get full shimmer effects
+      if (isUltra || isAppleSilicon) {
+        setSettings({ 
+          disabled: false, 
+          speed: 'ultra', 
+          intensity: 'max',
+          isDesktop: true,
+          isAppleSilicon,
+          enableAdvanced: true,
+          fps,
+        });
+      } else if (isHigh) {
+        setSettings({ 
+          disabled: false, 
+          speed: 'fast', 
+          intensity: 'ultra',
+          isDesktop: true,
+          isAppleSilicon,
+          enableAdvanced: true,
+          fps,
+        });
       } else if (root.classList.contains('shimmer-quality-disabled')) {
         setSettings({ 
           disabled: true, 
@@ -144,15 +132,15 @@ export function useOptimizedShimmer() {
           fps: 30,
         });
       } else {
-        // Mobile: Battery efficient mode
+        // UPDATED 2026: All devices get high quality shimmers
         setSettings({ 
           disabled: false, 
-          speed: 'slow', 
-          intensity: 'medium', 
-          isDesktop: false, 
+          speed: 'normal', 
+          intensity: 'high', 
+          isDesktop: true, // UPDATED 2026: All devices treated as desktop for shimmers
           isAppleSilicon: false,
-          enableAdvanced: false,
-          fps: 30,
+          enableAdvanced: true, // UPDATED 2026: Advanced features for all
+          fps,
         });
       }
     };

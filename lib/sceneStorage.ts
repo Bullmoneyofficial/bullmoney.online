@@ -166,8 +166,8 @@ export const scheduleSceneStorageSave = (scene: string, blob: Blob, options?: Sc
     }
   };
 
-  const isLowEndMobile = options?.deviceProfile?.isMobile && !options?.deviceProfile?.isHighEndDevice;
-  const delayMs = isLowEndMobile ? 2800 : 1200;
+  // UPDATED 2026: No delays for any device - instant caching
+  const delayMs = 0;
   scheduleIdleTask(run, delayMs);
 };
 
@@ -186,14 +186,6 @@ function shouldPersistSceneBlob(options?: SceneStorageSaveOptions) {
 }
 
 function shouldThrottleLowEndSave(scene: string, options?: SceneStorageSaveOptions) {
-  const isLowEndMobile = options?.deviceProfile?.isMobile && !options?.deviceProfile?.isHighEndDevice;
-  if (!isLowEndMobile) return false;
-  if (options?.priority === 'hero') return false;
-  const lastAttempt = lowEndSceneCooldowns.get(scene) || 0;
-  if (Date.now() - lastAttempt < LOW_END_COOLDOWN_MS) {
-    console.log('[SceneStorage] Low-end device - throttled extra saves for', scene);
-    return true;
-  }
-  lowEndSceneCooldowns.set(scene, Date.now());
+  // UPDATED 2026: No throttling for any device
   return false;
 };

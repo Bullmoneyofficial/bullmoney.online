@@ -57,16 +57,13 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Check for in-app browsers - but allow Apple devices and Instagram (2026 update)
+    // Check for in-app browsers - UPDATED 2026: All browsers get full Lenis experience
     const browserInfo = detectBrowser();
     const hasApplePremiumExperience = browserInfo.hasApplePremiumExperience || false;
     const isInstagram = browserInfo.isInstagram || false;
     
-    // UPDATED 2026: Apple devices and Instagram get full Lenis experience
-    if (browserInfo.isInAppBrowser && !hasApplePremiumExperience && !isInstagram) {
-      console.log('[Lenis] Disabled for in-app browser:', browserInfo.browserName);
-      return;
-    }
+    // UPDATED 2026: All devices and in-app browsers get full Lenis experience
+    console.log('[Lenis] Enabled for all browsers:', browserInfo.browserName);
     
     if (hasApplePremiumExperience || isInstagram) {
       console.log('[Lenis] Enabled for premium experience:', browserInfo.browserName, '(Apple:', hasApplePremiumExperience, ', Instagram:', isInstagram, ')');
@@ -80,10 +77,9 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
 
     const isMobile = window.innerWidth < 768;
     
-    // Disable Lenis on mobile to prevent scroll conflicts
+    // UPDATED 2026: Enable Lenis on mobile for premium smooth scroll experience
     if (isMobile) {
-      console.log('[Lenis] Disabled on mobile for native scroll performance');
-      return;
+      console.log('[Lenis] Enabled on mobile for smooth scroll experience');
     }
     
     // ENHANCED: Detect high-end desktop for optimal settings

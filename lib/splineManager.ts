@@ -96,21 +96,21 @@ class DeviceDetector {
   }
 
   getQualityRecommendation(): 'high' | 'medium' | 'low' {
-    if (!this.capabilities) return 'medium';
+    if (!this.capabilities) return 'high'; // Default to high quality
 
     const { gpu, memory, isMobile, connection } = this.capabilities;
 
-    // Desktop high-end
-    if (!isMobile && gpu === 'high' && memory >= 8 && connection === 'fast') {
+    // UPDATED 2026: All devices get high quality experience
+    if (gpu === 'high' || memory >= 4) {
       return 'high';
     }
 
-    // Mobile high-end or desktop mid-range
-    if (gpu === 'high' && memory >= 4) {
+    // Medium for mid-range devices
+    if (gpu === 'medium' && memory >= 2) {
       return 'medium';
     }
 
-    // Low-end devices
+    // Low only for very low-end devices
     return 'low';
   }
 }

@@ -248,24 +248,11 @@ const optimizeInAppBrowser = () => {
   const isAppleDevice = isIOS || isMac;
   const isInstagram = ua.includes('instagram') || ua.includes('ig_');
   
-  // Skip in-app optimizations for Apple devices and Instagram
-  if (isAppleDevice || isInstagram) {
-    console.log('[PerformanceSystem] Skipping in-app browser optimizations for premium experience');
-    // Set full animation speed for premium experience
-    document.documentElement.style.setProperty('--animation-duration-multiplier', '1');
-    document.documentElement.style.setProperty('--disable-3d', '0');
-    return;
-  }
-  
-  if (capabilities.isInAppBrowser) {
-    // Slow down animations significantly for in-app browsers
-    document.documentElement.style.setProperty('--animation-duration-multiplier', '0.3');
-    
-    // Disable 3D transforms on low memory
-    if (capabilities.memory < 3) {
-      document.documentElement.style.setProperty('--disable-3d', '1');
-    }
-  }
+  // UPDATED 2026: Full animation speed and 3D for all browsers
+  console.log('[PerformanceSystem] Premium experience enabled for all devices');
+  // Set full animation speed for all browsers
+  document.documentElement.style.setProperty('--animation-duration-multiplier', '1');
+  document.documentElement.style.setProperty('--disable-3d', '0');
 };
 
 // FPS Monitor (development only) - OPTIMIZED: Uses less CPU with longer intervals
