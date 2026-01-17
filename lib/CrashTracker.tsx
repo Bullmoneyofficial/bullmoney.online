@@ -126,11 +126,22 @@ export interface SessionData {
   lastActivity: number;
 }
 
+export type SyncStatus = 'idle' | 'sending' | 'success' | 'error' | 'offline';
+
+export interface SyncState {
+  status: SyncStatus;
+  lastSyncTime: number | null;
+  successfulSyncs: number;
+  failedSyncs: number;
+  lastError: string | null;
+}
+
 export interface CrashTrackerState {
   isEnabled: boolean;
   sessionId: string;
   eventQueue: TrackingEvent[];
   sessionData: SessionData | null;
+  syncState: SyncState;
   
   // Actions
   trackClick: (component: ComponentName, target: string, metadata?: Record<string, any>) => void;
@@ -389,11 +400,20 @@ async function flushOfflineEvents(): Promise<void> {
 // CONTEXT
 // ============================================================================
 
+const defaultSyncState: SyncState = {
+  status: 'idle',
+  lastSyncTime: null,
+  successfulSyncs: 0,
+  failedSyncs: 0,
+  lastError: null,
+};
+
 const defaultState: CrashTrackerState = {
   isEnabled: true,
   sessionId: '',
   eventQueue: [],
   sessionData: null,
+  syncState: defaultSyncState,
   trackClick: () => {},
   trackModalOpen: () => {},
   trackModalClose: () => {},
@@ -445,12 +465,38 @@ export const CrashTrackerProvider = memo(function CrashTrackerProvider({
   const perf = useUnifiedPerformance();
   const [isEnabled, setIsEnabled] = useState(enabled);
   const [sessionId] = useState(() => getSessionId());
+  const [syncState, setSyncState] = useState<SyncState>(defaultSyncState);
   const eventQueueRef = useRef<TrackingEvent[]>([]);
   const sessionDataRef = useRef<SessionData | null>(null);
   const flushTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFlushingRef = useRef(false);
   const lastGlobalErrorRef = useRef<{ key: string; ts: number } | null>(null);
   const lastPathRef = useRef<string | null>(null);
+  
+  // Check online status
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleOnline = () => {
+      setSyncState(prev => prev.status === 'offline' ? { ...prev, status: 'idle' } : prev);
+    };
+    const handleOffline = () => {
+      setSyncState(prev => ({ ...prev, status: 'offline' }));
+    };
+    
+    // Set initial status
+    if (!navigator.onLine) {
+      setSyncState(prev => ({ ...prev, status: 'offline' }));
+    }
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
   
   // Initialize session data
   useEffect(() => {
@@ -701,12 +747,59 @@ export const CrashTrackerProvider = memo(function CrashTrackerProvider({
   const flushEventsInternal = useCallback(async () => {
     if (isFlushingRef.current || eventQueueRef.current.length === 0) return;
     
+    // Check if offline
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setSyncState(prev => ({ ...prev, status: 'offline' }));
+      return;
+    }
+    
     isFlushingRef.current = true;
+    setSyncState(prev => ({ ...prev, status: 'sending', lastError: null }));
+    
     const events = eventQueueRef.current.slice(0, BATCH_SIZE);
     eventQueueRef.current = eventQueueRef.current.slice(BATCH_SIZE);
     
     try {
-      await sendToSupabase(events, sessionDataRef.current || undefined);
+      const success = await sendToSupabase(events, sessionDataRef.current || undefined);
+      
+      if (success) {
+        setSyncState(prev => ({
+          ...prev,
+          status: 'success',
+          lastSyncTime: Date.now(),
+          successfulSyncs: prev.successfulSyncs + 1,
+          lastError: null,
+        }));
+        
+        // Reset to idle after showing success
+        setTimeout(() => {
+          setSyncState(prev => prev.status === 'success' ? { ...prev, status: 'idle' } : prev);
+        }, 2000);
+      } else {
+        setSyncState(prev => ({
+          ...prev,
+          status: 'error',
+          failedSyncs: prev.failedSyncs + 1,
+          lastError: 'Failed to send to Supabase',
+        }));
+        
+        // Reset to idle after showing error
+        setTimeout(() => {
+          setSyncState(prev => prev.status === 'error' ? { ...prev, status: 'idle' } : prev);
+        }, 3000);
+      }
+    } catch (err) {
+      setSyncState(prev => ({
+        ...prev,
+        status: 'error',
+        failedSyncs: prev.failedSyncs + 1,
+        lastError: err instanceof Error ? err.message : 'Unknown error',
+      }));
+      
+      // Reset to idle after showing error
+      setTimeout(() => {
+        setSyncState(prev => prev.status === 'error' ? { ...prev, status: 'idle' } : prev);
+      }, 3000);
     } finally {
       isFlushingRef.current = false;
     }
@@ -812,6 +905,7 @@ export const CrashTrackerProvider = memo(function CrashTrackerProvider({
     sessionId,
     eventQueue: eventQueueRef.current,
     sessionData: sessionDataRef.current,
+    syncState,
     trackClick,
     trackModalOpen,
     trackModalClose,
@@ -823,7 +917,7 @@ export const CrashTrackerProvider = memo(function CrashTrackerProvider({
     flushEvents,
     setEnabled,
   }), [
-    isEnabled, sessionId, trackClick, trackModalOpen, trackModalClose,
+    isEnabled, sessionId, syncState, trackClick, trackModalOpen, trackModalClose,
     trackComponentMount, trackComponentUnmount, trackError, trackPerformanceWarning,
     trackCustomEvent, flushEvents, setEnabled,
   ]);

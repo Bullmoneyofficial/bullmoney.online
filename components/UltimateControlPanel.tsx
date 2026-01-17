@@ -53,6 +53,7 @@ import { useComponentLifecycle, useUnifiedPerformance } from '@/lib/UnifiedPerfo
 import { useComponentTracking } from '@/lib/CrashTracker';
 import { useFpsOptimizer } from '@/lib/FpsOptimizer';
 import CompactFpsDisplay from '@/components/CompactFpsDisplay';
+import CrashTrackerDisplay from '@/components/CrashTrackerDisplay';
 
 // --- IMPORT NAVBAR CSS FOR CONSISTENT THEMING ---
 import './navbar.css';
@@ -2070,6 +2071,12 @@ export function UltimateControlPanel({
                           Copy Device Snapshot
                         </button>
                       </div>
+
+                      {/* Crash Tracker Display - Website Info Panel */}
+                      <CrashTrackerDisplay 
+                        detailed={true}
+                        shimmerEnabled={shimmerEnabled}
+                      />
                     </motion.div>
                   )}
                 </AnimatePresence>
