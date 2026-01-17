@@ -467,6 +467,12 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   const hasUserInteractedRef = useRef(false); // CRITICAL: Only allow progress after first user touch
   const animationStartedRef = useRef(false); // CRITICAL: Animation loop only starts after first interaction
   const animateFnRef = useRef<(() => void) | null>(null); // Store animate function for stable reference
+  const priceRafRef = useRef<number | null>(null);
+  const priceDeflateRef = useRef<number | null>(null);
+  const priceHoldStartRef = useRef<number | null>(null);
+  const priceBaseRef = useRef<number>(0);
+  const progressRef = useRef(0);
+  const displayPriceRef = useRef(0);
 
   const { startEngine, updateEngine, stopEngine, playSuccess } = useAudioEngine();
 
@@ -494,10 +500,83 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   }, []);
 
   useEffect(() => {
-    if (realPrice > 0) {
+    if (realPrice > 0 && !isHolding && !vaultUnlocked && !isCompleted) {
       setDisplayPrice(realPrice);
     }
+  }, [realPrice, isHolding, vaultUnlocked, isCompleted]);
+
+  useEffect(() => {
+    displayPriceRef.current = displayPrice;
+  }, [displayPrice]);
+
+  useEffect(() => {
+    progressRef.current = progress;
+  }, [progress]);
+
+  // Moon-price animation while holding (visual only)
+  const startPriceDeflate = useCallback(() => {
+    if (priceDeflateRef.current) {
+      cancelAnimationFrame(priceDeflateRef.current);
+    }
+    if (realPrice <= 0) return;
+
+    const start = performance.now();
+    const startPrice = displayPriceRef.current > 0 ? displayPriceRef.current : realPrice;
+    const duration = 700;
+
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      const next = startPrice + (realPrice - startPrice) * eased;
+      setDisplayPrice(next);
+      if (t < 1) {
+        priceDeflateRef.current = requestAnimationFrame(tick);
+      }
+    };
+
+    priceDeflateRef.current = requestAnimationFrame(tick);
   }, [realPrice]);
+
+  useEffect(() => {
+    if (priceRafRef.current) {
+      cancelAnimationFrame(priceRafRef.current);
+      priceRafRef.current = null;
+    }
+    if (priceDeflateRef.current) {
+      cancelAnimationFrame(priceDeflateRef.current);
+      priceDeflateRef.current = null;
+    }
+
+    if (isHolding && !isCompleted && realPrice > 0) {
+      priceBaseRef.current = displayPriceRef.current > 0 ? displayPriceRef.current : realPrice;
+      priceHoldStartRef.current = performance.now();
+
+      const tick = (now: number) => {
+        if (!isHoldingRef.current || isCompleted) {
+          return;
+        }
+        const elapsed = Math.min((now - (priceHoldStartRef.current || now)) / 1000, 8);
+        const progressBoost = 1 + (progressRef.current / 100) * 1.25;
+        const moonCurve = Math.pow(1.12, elapsed); // smooth exponential rise
+        const target = priceBaseRef.current * progressBoost * moonCurve;
+        setDisplayPrice(target);
+
+        priceRafRef.current = requestAnimationFrame(tick);
+      };
+
+      priceRafRef.current = requestAnimationFrame(tick);
+      return () => {
+        if (priceRafRef.current) cancelAnimationFrame(priceRafRef.current);
+      };
+    }
+
+    if (!isHolding && realPrice > 0) {
+      if (!vaultUnlocked) {
+        setDisplayPrice(realPrice);
+      }
+    }
+  }, [isHolding, isCompleted, realPrice, vaultUnlocked]);
+
 
   useEffect(() => {
     if (isCompleted) return;
@@ -526,6 +605,8 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   const handleVaultAccess = useCallback(() => {
     if (vaultOpening || hasFinishedRef.current) return;
     setVaultOpening(true);
+
+    startPriceDeflate();
     
     // Play a satisfying "vault opening" sound
     playSuccess();
@@ -539,7 +620,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
       setGateVisible(false);
       setTimeout(finishLoader, 300);
     }, 800);
-  }, [vaultOpening, playSuccess, finishLoader]);
+  }, [vaultOpening, playSuccess, finishLoader, startPriceDeflate]);
 
   const createParticles = (x: number, y: number) => {
     const newParticles: Particle[] = [];
