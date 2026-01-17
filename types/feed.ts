@@ -227,6 +227,9 @@ export const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
   deep_dive: 'Deep Dive',
   market_pulse: 'Market Pulse',
   blog_post: 'Blog Post',
+  quick_take: 'Quick Take',
+  trade_idea: 'Trade Idea',
+  educational: 'Educational',
 };
 
 // Max character limits

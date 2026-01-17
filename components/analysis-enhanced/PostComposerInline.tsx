@@ -27,7 +27,7 @@ interface PostComposerInlineProps {
 }
 
 export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) => {
-  const { user, profile, isLoading: authLoading } = useUserStore();
+  const { user, isLoading: authLoading } = useUserStore();
   const { isAuthenticated, recruit } = useRecruitAuth();
   const { setIsOpen: setAuthModalOpen } = useAuthModalUI();
   
