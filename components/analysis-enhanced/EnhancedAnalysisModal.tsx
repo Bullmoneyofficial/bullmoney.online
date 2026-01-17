@@ -21,7 +21,10 @@ import {
   Share2,
   Bell,
   Copy,
-  ExternalLink
+  ExternalLink,
+  Rss,
+  PenSquare,
+  Users
 } from 'lucide-react';
 import { ShimmerLine, ShimmerBorder, ShimmerSpinner } from '@/components/ui/UnifiedShimmer';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
@@ -34,15 +37,33 @@ import { SentimentBadge } from './SentimentBadge';
 import { AttachmentCarousel } from './AttachmentCarousel';
 import type { Analysis, ReactionType, Attachment, ContentType, MarketType, Direction, ChartConfig } from '@/types/feed';
 
+// Dynamically import other components to avoid circular dependencies
+import dynamic from 'next/dynamic';
+
+const FeedInlineDynamic = dynamic(
+  () => import('./FeedInline').then(mod => ({ default: mod.FeedInline })),
+  { ssr: false, loading: () => <div className="flex items-center justify-center py-20"><ShimmerSpinner size={48} color="blue" /></div> }
+);
+
+const PostComposerInlineDynamic = dynamic(
+  () => import('./PostComposerInline').then(mod => ({ default: mod.PostComposerInline })),
+  { ssr: false, loading: () => <div className="flex items-center justify-center py-20"><ShimmerSpinner size={48} color="blue" /></div> }
+);
+
 // Debug: Log when module loads
 if (typeof window !== 'undefined') {
   console.log('[EnhancedAnalysisModal] Module loaded in browser');
 }
 
+// Tab types for the modal
+type ModalTab = 'analysis' | 'feed' | 'compose';
+
 // Modal Context
 interface ModalState {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  activeTab: ModalTab;
+  setActiveTab: (tab: ModalTab) => void;
 }
 
 const ModalContext = React.createContext<ModalState | undefined>(undefined);
@@ -88,6 +109,31 @@ const getChartSymbol = (analysis: Analysis): string => {
   }
   return pair;
 };
+
+// Tab Button Component
+interface TabButtonProps {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}
+
+const TabButton = memo(({ active, onClick, icon, label }: TabButtonProps) => (
+  <motion.button
+    whileHover={{ scale: 1.02 }}
+    whileTap={{ scale: 0.98 }}
+    onClick={onClick}
+    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+      active 
+        ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25' 
+        : 'bg-neutral-800/50 text-neutral-400 hover:bg-neutral-800 hover:text-white'
+    }`}
+  >
+    {icon}
+    <span className="hidden sm:inline">{label}</span>
+  </motion.button>
+));
+TabButton.displayName = 'TabButton';
 
 // Main Modal Component - Uses centralized UIStateContext for mutual exclusion
 export const EnhancedAnalysisModal = memo(() => {
@@ -150,14 +196,21 @@ export const EnhancedAnalysisModal = memo(() => {
 });
 EnhancedAnalysisModal.displayName = 'EnhancedAnalysisModal';
 
-// Wrapper that provides the close function
+// Wrapper that provides the close function and tab state
 interface ContentWrapperProps {
   onClose: () => void;
 }
 
 const EnhancedAnalysisContentWrapper = memo(({ onClose }: ContentWrapperProps) => {
+  const [activeTab, setActiveTab] = useState<ModalTab>('analysis');
+  
   return (
-    <ModalContext.Provider value={{ isOpen: true, setIsOpen: (open) => !open && onClose() }}>
+    <ModalContext.Provider value={{ 
+      isOpen: true, 
+      setIsOpen: (open) => !open && onClose(),
+      activeTab,
+      setActiveTab
+    }}>
       <EnhancedAnalysisContent onClose={onClose} />
     </ModalContext.Provider>
   );
@@ -209,6 +262,7 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
   console.log('[EnhancedAnalysisContent] Rendering content component');
   const { state } = useShop();
   const { isAdmin } = state;
+  const { activeTab, setActiveTab } = useModalState();
   
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -478,15 +532,25 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-blue-500/20 flex-shrink-0">
             <div className="flex items-center gap-3">
-              <BarChart3 className="w-6 h-6 text-blue-400" />
+              {activeTab === 'analysis' && <BarChart3 className="w-6 h-6 text-blue-400" />}
+              {activeTab === 'feed' && <Rss className="w-6 h-6 text-blue-400" />}
+              {activeTab === 'compose' && <PenSquare className="w-6 h-6 text-blue-400" />}
               <div>
-                <h2 className="text-lg sm:text-xl font-bold text-white">Trade Analysis</h2>
-                <p className="text-xs text-blue-400/70">Pro-grade market insights</p>
+                <h2 className="text-lg sm:text-xl font-bold text-white">
+                  {activeTab === 'analysis' && 'Trade Analysis'}
+                  {activeTab === 'feed' && 'Bull Feed'}
+                  {activeTab === 'compose' && 'Create Post'}
+                </h2>
+                <p className="text-xs text-blue-400/70">
+                  {activeTab === 'analysis' && 'Pro-grade market insights'}
+                  {activeTab === 'feed' && 'Community trading ideas'}
+                  {activeTab === 'compose' && 'Share your analysis'}
+                </p>
               </div>
             </div>
             
             <div className="flex items-center gap-2">
-              {isAdmin && viewMode === 'view' && (
+              {isAdmin && viewMode === 'view' && activeTab === 'analysis' && (
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
@@ -508,27 +572,58 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
             </div>
           </div>
           
+          {/* Tab Navigation */}
+          <div className="flex items-center gap-1 p-2 border-b border-blue-500/20 flex-shrink-0 bg-neutral-900/50">
+            <TabButton 
+              active={activeTab === 'analysis'} 
+              onClick={() => { SoundEffects.click(); setActiveTab('analysis'); }}
+              icon={<BarChart3 className="w-4 h-4" />}
+              label="Analysis"
+            />
+            <TabButton 
+              active={activeTab === 'feed'} 
+              onClick={() => { SoundEffects.click(); setActiveTab('feed'); }}
+              icon={<Rss className="w-4 h-4" />}
+              label="Feed"
+            />
+            <TabButton 
+              active={activeTab === 'compose'} 
+              onClick={() => { SoundEffects.click(); setActiveTab('compose'); }}
+              icon={<PenSquare className="w-4 h-4" />}
+              label="Create"
+            />
+          </div>
+          
           {/* Content */}
           <div className="flex-1 overflow-y-auto">
-            {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <ShimmerSpinner size={48} color="blue" />
-              </div>
-            ) : viewMode === 'edit' ? (
-              /* Edit Mode - Form */
-              <EditForm 
-                formData={formData}
-                setFormData={setFormData}
-                saving={saving}
-                selectedAnalysis={selectedAnalysis}
-                onSave={saveAnalysis}
-                onDelete={deleteAnalysis}
-                onCancel={() => { SoundEffects.click(); setViewMode('view'); }}
-              />
-            ) : analyses.length === 0 ? (
-              /* No analyses */
-              <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <BarChart3 className="w-16 h-16 text-blue-400/30" />
+            <AnimatePresence mode="wait">
+              {activeTab === 'analysis' && (
+                <motion.div
+                  key="analysis"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center py-20">
+                      <ShimmerSpinner size={48} color="blue" />
+                    </div>
+                  ) : viewMode === 'edit' ? (
+                    /* Edit Mode - Form */
+                    <EditForm 
+                      formData={formData}
+                      setFormData={setFormData}
+                      saving={saving}
+                      selectedAnalysis={selectedAnalysis}
+                      onSave={saveAnalysis}
+                      onDelete={deleteAnalysis}
+                      onCancel={() => { SoundEffects.click(); setViewMode('view'); }}
+                    />
+                  ) : analyses.length === 0 ? (
+                    /* No analyses */
+                    <div className="flex flex-col items-center justify-center py-20 gap-4">
+                      <BarChart3 className="w-16 h-16 text-blue-400/30" />
                 <p className="text-neutral-500">No analysis available yet</p>
                 {isAdmin && (
                   <motion.button
@@ -751,42 +846,73 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
                 </div>
               </div>
             ) : null}
-          </div>
-          
-          {/* Navigation */}
-          {viewMode === 'view' && analyses.length > 1 && (
-            <div className="flex items-center justify-between p-4 border-t border-blue-500/20 flex-shrink-0">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={goPrev}
-                className="p-2.5 rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition-colors"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </motion.button>
-              
-              <div className="flex items-center gap-2">
-                {analyses.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => { SoundEffects.click(); setCurrentIndex(index); }}
-                    className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                      index === currentIndex ? 'bg-blue-500' : 'bg-neutral-600 hover:bg-neutral-500'
-                    }`}
-                  />
-                ))}
+            
+            {/* Navigation for Analysis */}
+            {viewMode === 'view' && analyses.length > 1 && (
+              <div className="flex items-center justify-between p-4 border-t border-blue-500/20 flex-shrink-0">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={goPrev}
+                  className="p-2.5 rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </motion.button>
+                
+                <div className="flex items-center gap-2">
+                  {analyses.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => { SoundEffects.click(); setCurrentIndex(index); }}
+                      className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                        index === currentIndex ? 'bg-blue-500' : 'bg-neutral-600 hover:bg-neutral-500'
+                      }`}
+                    />
+                  ))}
+                </div>
+                
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={goNext}
+                  className="p-2.5 rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </motion.button>
               </div>
+            )}
+                </motion.div>
+              )}
               
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={goNext}
-                className="p-2.5 rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition-colors"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </motion.button>
-            </div>
-          )}
+              {/* Feed Tab Content */}
+              {activeTab === 'feed' && (
+                <motion.div
+                  key="feed"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="min-h-[400px]"
+                >
+                  <FeedInlineDynamic inModal={true} />
+                </motion.div>
+              )}
+              
+              {/* Compose Tab Content */}
+              {activeTab === 'compose' && (
+                <motion.div
+                  key="compose"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="min-h-[400px]"
+                >
+                  <PostComposerInlineDynamic onSuccess={() => setActiveTab('feed')} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </motion.div>
     </motion.div>

@@ -6,3 +6,5 @@ export { TradingViewWidget } from './TradingViewWidget';
 export { ConfidenceMeter } from './ConfidenceMeter';
 export { SentimentBadge } from './SentimentBadge';
 export { AttachmentCarousel } from './AttachmentCarousel';
+export { FeedInline } from './FeedInline';
+export { PostComposerInline } from './PostComposerInline';
