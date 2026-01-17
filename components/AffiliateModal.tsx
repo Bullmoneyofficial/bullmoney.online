@@ -570,8 +570,36 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
       if (savedSessionStr) {
         const session = JSON.parse(savedSessionStr);
         if (session && session.email && session.id) {
-          setSavedSession({ id: session.id, email: session.email });
+          setSavedSession({ id: session.id, email: session.email, mt5_id: session.mt5_id });
           setFormData(prev => ({ ...prev, email: session.email }));
+          setIsReturningUser(true);
+          
+          // If user has existing MT5 ID in their session, auto-verify and skip to dashboard
+          if (session.mt5_id) {
+            setFormData(prev => ({ ...prev, mt5Number: session.mt5_id }));
+            setMt5Verified(true);
+            // Verify MT5 exists and skip directly to success screen
+            setTimeout(async () => {
+              try {
+                const { data: existingMT5 } = await supabase
+                  .from("recruits")
+                  .select("id, email, mt5_id")
+                  .eq("mt5_id", session.mt5_id)
+                  .maybeSingle();
+                
+                if (existingMT5 && existingMT5.id === session.id) {
+                  // User already fully registered - go to dashboard
+                  setStep(6);
+                } else {
+                  // MT5 not found or mismatch - go back to MT5 verification
+                  setStep(2);
+                }
+              } catch (err) {
+                console.error('Error verifying MT5:', err);
+                setStep(2); // Fallback to MT5 verification
+              }
+            }, 300);
+          }
         }
       }
     } catch (e) {
@@ -806,6 +834,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         localStorage.setItem("bullmoney_session", JSON.stringify({
           id: newUser.id,
           email: formData.email,
+          mt5_id: formData.mt5Number, // Save MT5 ID so user stays logged in
           timestamp: Date.now(),
           broker: activeBroker // Save the broker choice
         }));

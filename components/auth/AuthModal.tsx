@@ -350,7 +350,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
                 </motion.button>
 
                 <p className="text-center text-sm text-neutral-400">
-                  Don't have an account?{' '}
+                  Don&apos;t have an account?{' '}
                   <button
                     type="button"
                     onClick={() => handleViewChange('signup')}

@@ -26,7 +26,16 @@ export const getItem = <T = any>(key: string, defaultValue?: T): T | null => {
   try {
     const item = storage.getItem(key);
     if (item === null) return defaultValue ?? null;
-    return JSON.parse(item) as T;
+    
+    // Try to parse as JSON, but fall back to returning the string if it fails
+    // This handles both JSON objects/arrays and plain string values
+    try {
+      return JSON.parse(item) as T;
+    } catch (parseError) {
+      // If JSON parsing fails, return the raw string value
+      // This handles cases where plain strings were stored directly
+      return item as T;
+    }
   } catch (error) {
     console.error("Error reading from localStorage:", error);
     return defaultValue ?? null;

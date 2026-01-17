@@ -627,12 +627,8 @@ export function UltimateControlPanel({
   const [isMobile, setIsMobile] = useState(false);
   
   // Get UI state context for detecting when modals/panels are open
-  let uiStateContext: ReturnType<typeof useUIStateContext> | null = null;
-  try {
-    uiStateContext = useUIStateContext();
-  } catch {
-    // Context not available, fallback to local state
-  }
+  // This hook is always called unconditionally - we handle missing context via default values
+  const uiStateContext = useUIStateContext();
   
   // Determine if FPS button should be minimized based on UI state
   const shouldMinimizeFromUI = useMemo(() => {

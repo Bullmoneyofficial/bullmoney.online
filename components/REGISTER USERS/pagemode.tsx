@@ -467,6 +467,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         localStorage.setItem("bullmoney_session", JSON.stringify({
           id: newUser.id,
           email: formData.email,
+          mt5_id: formData.mt5Number, // Save MT5 ID for affiliate modal persistence
           timestamp: Date.now()
         }));
         
@@ -503,7 +504,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     try {
       const { data, error } = await supabase
         .from("recruits")
-        .select("id") 
+        .select("id, mt5_id") 
         .eq("email", loginEmail)
         .eq("password", loginPassword) 
         .maybeSingle();
@@ -519,6 +520,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       localStorage.setItem("bullmoney_session", JSON.stringify({
         id: data.id,
         email: loginEmail,
+        mt5_id: data.mt5_id, // Save MT5 ID for affiliate modal persistence
         timestamp: Date.now()
       }));
       

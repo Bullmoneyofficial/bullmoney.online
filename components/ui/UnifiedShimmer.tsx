@@ -172,14 +172,20 @@ export const ShimmerGradientWave = ShimmerGlow;
 export const ShimmerGlide = ShimmerLine;
 export const ShimmerStreak = ShimmerLine;
 export const ShimmerGlowBorder = ShimmerBorder;
-export const ShimmerFloat = memo(({ children, className = '' }: ShimmerProps) => <div className={`shimmer-glow ${className}`}>{children}</div>);
-export const ShimmerDot = memo(({ className = '', delay = 0 }: ShimmerProps) => (
+const ShimmerFloatComponent = memo(({ children, className = '' }: ShimmerProps) => <div className={`shimmer-glow ${className}`}>{children}</div>);
+ShimmerFloatComponent.displayName = 'ShimmerFloat';
+export const ShimmerFloat = ShimmerFloatComponent;
+
+const ShimmerDotComponent = memo(({ className = '', delay = 0 }: ShimmerProps) => (
   <span 
     className={`shimmer-glow w-2 h-2 rounded-full bg-blue-500 ${className}`} 
     style={{ animationDelay: `${delay}s` }}
   />
 ));
-export const ShimmerSpinner = memo(({ className = '', size = 32 }: ShimmerProps) => {
+ShimmerDotComponent.displayName = 'ShimmerDot';
+export const ShimmerDot = ShimmerDotComponent;
+
+const ShimmerSpinnerComponent = memo(({ className = '', size = 32 }: ShimmerProps) => {
   const sizeStyle = { width: size, height: size };
   return (
     <div className={`shimmer-glow rounded-full border-2 border-blue-500/50 flex items-center justify-center ${className}`} style={sizeStyle}>
@@ -187,6 +193,8 @@ export const ShimmerSpinner = memo(({ className = '', size = 32 }: ShimmerProps)
     </div>
   );
 });
+ShimmerSpinnerComponent.displayName = 'ShimmerSpinner';
+export const ShimmerSpinner = ShimmerSpinnerComponent;
 export const ShimmerRadialGlow = ShimmerGlow;
 export const ShimmerRipple = ShimmerGlow;
 export const ShimmerShineBurst = ShimmerGlow;
