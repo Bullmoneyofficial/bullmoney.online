@@ -436,6 +436,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   const [showContent, setShowContent] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [showTip, setShowTip] = useState(true);
+  const [isDeflating, setIsDeflating] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<AssetKey>("BTC");
   const { price: realPrice } = useLivePrice(selectedAsset);
   const [displayPrice, setDisplayPrice] = useState(0);
@@ -469,6 +470,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   const animateFnRef = useRef<(() => void) | null>(null); // Store animate function for stable reference
   const priceRafRef = useRef<number | null>(null);
   const priceDeflateRef = useRef<number | null>(null);
+  const priceDeflateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const priceHoldStartRef = useRef<number | null>(null);
   const priceBaseRef = useRef<number>(0);
   const progressRef = useRef(0);
@@ -523,6 +525,14 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
     const start = performance.now();
     const startPrice = displayPriceRef.current > 0 ? displayPriceRef.current : realPrice;
     const duration = 700;
+
+    if (priceDeflateTimeoutRef.current) {
+      clearTimeout(priceDeflateTimeoutRef.current);
+    }
+    setIsDeflating(true);
+    priceDeflateTimeoutRef.current = setTimeout(() => {
+      setIsDeflating(false);
+    }, duration + 200);
 
     const tick = (now: number) => {
       const t = Math.min((now - start) / duration, 1);
@@ -770,6 +780,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   useEffect(() => {
     return () => {
       if (completionTimeoutRef.current) clearTimeout(completionTimeoutRef.current);
+      if (priceDeflateTimeoutRef.current) clearTimeout(priceDeflateTimeoutRef.current);
     };
   }, []);
 
@@ -1257,12 +1268,28 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                     textShadow: isHolding ? "0 0 30px rgba(59, 130, 246, 1)" : "0 2px 20px rgba(0,0,0,0.8)",
                   }}
                 >
-                  {displayPrice > 0 || realPrice > 0
-                    ? `$${(displayPrice > 0 ? displayPrice : realPrice).toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}`
-                    : "--"}
+                  <motion.span
+                    animate={
+                      isDeflating
+                        ? {
+                            scale: [1, 1.06, 0.92],
+                            scaleY: [1, 0.7, 0.35],
+                            rotate: [0, 2, -4],
+                            y: [0, 6, 12],
+                            opacity: [1, 0.9, 0.75],
+                          }
+                        : { scale: 1, scaleY: 1, rotate: 0, y: 0, opacity: 1 }
+                    }
+                    transition={{ duration: 0.7, ease: "easeInOut" }}
+                    className="inline-block origin-top"
+                  >
+                    {displayPrice > 0 || realPrice > 0
+                      ? `$${(displayPrice > 0 ? displayPrice : realPrice).toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}`
+                      : "--"}
+                  </motion.span>
                 </motion.div>
 
                 {/* Status Text */}
