@@ -148,7 +148,8 @@ export const CommentCard = memo(({
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="absolute left-0 top-6 z-50 bg-neutral-900 border border-neutral-700 rounded-lg shadow-xl overflow-hidden min-w-[120px]"
+                    className="absolute left-0 top-6 bg-neutral-900 border border-neutral-700 rounded-lg shadow-xl overflow-hidden min-w-[120px]"
+                    style={{ zIndex: 9999 }}
                   >
                     <button
                       onClick={handleEdit}

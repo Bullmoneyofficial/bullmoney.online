@@ -187,7 +187,8 @@ export const TickerSelector = memo(({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute z-50 left-0 right-0 mt-2 bg-neutral-900 border border-neutral-700 rounded-xl shadow-xl overflow-hidden"
+            className="absolute left-0 right-0 mt-2 bg-neutral-900 border border-neutral-700 rounded-xl shadow-xl overflow-hidden"
+            style={{ zIndex: 9999 }}
           >
             {suggestions.map((ticker) => {
               const isSelected = selectedTickers.includes(ticker.symbol);

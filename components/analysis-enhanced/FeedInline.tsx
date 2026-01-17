@@ -55,21 +55,24 @@ export const FeedInline = memo(({ inModal = true }: FeedInlineProps) => {
       }
       
       // Transform and add calculated scores
-      let transformed = (data || []).map((item: any) => ({
-        ...item,
-        attachments: item.attachments || [],
-        tickers: item.tickers || [],
-        confidence_score: item.confidence_score || 5,
-        content_type: item.content_type || 'quick_take',
-        bull_score: item.bull_score || 0,
-        view_count: item.view_count || 0,
-        hot_score: calculateHotScore({
+      let transformed = (data || []).map((item: any) => {
+        const reactionCounts = item.reaction_counts || { bull: 0, bear: 0, save: 0 };
+        const commentCount = item.comment_count || 0;
+        const createdAt = item.created_at;
+        
+        return {
           ...item,
-          reaction_counts: item.reaction_counts || {},
+          attachments: item.attachments || [],
+          tickers: item.tickers || [],
+          confidence_score: item.confidence_score || 5,
+          content_type: item.content_type || 'quick_take',
+          bull_score: item.bull_score || 0,
           view_count: item.view_count || 0,
-          comment_count: item.comment_count || 0,
-        }),
-      }));
+          reaction_counts: reactionCounts,
+          comment_count: commentCount,
+          hot_score: calculateHotScore(reactionCounts, commentCount, createdAt),
+        };
+      });
       
       // Apply sorting based on tab
       switch (activeTab) {

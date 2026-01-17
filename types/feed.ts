@@ -6,7 +6,7 @@ import type { UserProfile } from './user';
 export type { UserProfile } from './user';
 
 // Content types
-export type ContentType = 'deep_dive' | 'market_pulse' | 'blog_post';
+export type ContentType = 'deep_dive' | 'market_pulse' | 'blog_post' | 'quick_take' | 'trade_idea' | 'educational';
 export type MarketType = 'forex' | 'crypto' | 'stocks' | 'indices';
 export type Direction = 'bullish' | 'bearish' | 'neutral';
 export type ReactionType = 'bull' | 'bear' | 'save';
@@ -77,6 +77,7 @@ export interface Analysis {
 export interface AnalysisInsert {
   title: string;
   content: string;
+  author_id?: string | null;
   rich_content?: RichContent | null;
   market: MarketType;
   direction: Direction;

@@ -322,6 +322,8 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
           content_type: item.content_type || 'deep_dive',
           bull_score: item.bull_score || 0,
           view_count: item.view_count || 0,
+          reaction_counts: item.reaction_counts || { bull: 0, bear: 0, save: 0 },
+          comment_count: item.comment_count || 0,
         }));
         setAnalyses(transformed);
       }

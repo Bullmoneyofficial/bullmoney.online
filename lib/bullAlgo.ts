@@ -79,9 +79,19 @@ export function getScoreBreakdown(
 export function calculateHotScore(
   reactionCounts: ReactionCounts,
   commentCount: number,
-  createdAt: Date | string
+  createdAt?: Date | string | null
 ): number {
+  // Handle null/undefined createdAt - default to now (gives score of 0 hours)
+  if (!createdAt) {
+    createdAt = new Date();
+  }
   const createdTime = typeof createdAt === 'string' ? new Date(createdAt) : createdAt;
+  
+  // Handle invalid date
+  if (isNaN(createdTime.getTime())) {
+    return 0;
+  }
+  
   const now = new Date();
   const hoursSincePost = Math.max(1, (now.getTime() - createdTime.getTime()) / (1000 * 60 * 60));
 
