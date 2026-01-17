@@ -23,6 +23,7 @@ import { FeedSwiper } from './FeedSwiper';
 import { FeedFilters, MarketFilter, type FeedTab } from './FeedFilters';
 import { useFeedStore } from '@/stores/feedStore';
 import { useUserStore } from '@/stores/userStore';
+import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { calculateHotScore, calculateBullScore, sortByHot, sortByTopRated, filterSmartMoney, sortByFresh } from '@/lib/bullAlgo';
 import type { Analysis, ReactionType, MarketType, ContentType } from '@/types/feed';
 
@@ -134,7 +135,8 @@ const BullFeedContent = memo(() => {
     setLoading 
   } = useFeedStore();
   
-  const { user, isAuthenticated } = useUserStore();
+  const { user } = useUserStore();
+  const { isAuthenticated, recruit } = useRecruitAuth();
   
   // Local state for search
   const [searchQuery, setSearchQuery] = useState('');
@@ -375,13 +377,22 @@ const BullFeedContent = memo(() => {
                     <span className="hidden sm:inline">Sign In</span>
                   </motion.button>
                 ) : (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="p-2 bg-neutral-800 text-white rounded-xl hover:bg-neutral-700"
-                  >
-                    <User className="w-5 h-5" />
-                  </motion.button>
+                  <div className="flex items-center gap-2">
+                    {recruit?.image_url ? (
+                      <img 
+                        src={recruit.image_url} 
+                        alt="Profile" 
+                        className="w-8 h-8 rounded-full object-cover border-2 border-blue-500/50"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center border-2 border-blue-500/50">
+                        <User className="w-4 h-4 text-blue-400" />
+                      </div>
+                    )}
+                    <span className="hidden sm:block text-sm text-neutral-300 truncate max-w-[120px]">
+                      {recruit?.social_handle || recruit?.email?.split('@')[0] || 'User'}
+                    </span>
+                  </div>
                 )}
                 
                 {/* View Mode Toggle (desktop only) */}

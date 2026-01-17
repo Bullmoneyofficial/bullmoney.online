@@ -23,6 +23,7 @@ import { ShimmerLine, ShimmerBorder } from '@/components/ui/UnifiedShimmer';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { usePostComposerModalUI, useAuthModalUI } from '@/contexts/UIStateContext';
 import { useUserStore } from '@/stores/userStore';
+import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { createSupabaseClient } from '@/lib/supabase';
 import { RichTextEditor } from './RichTextEditor';
 import { MediaUploader } from './MediaUploader';
@@ -97,7 +98,8 @@ const markets: { id: MarketType; label: string; color: string }[] = [
 const PostComposerContent = memo(() => {
   const { setIsOpen } = useModalState();
   const { setIsOpen: setAuthModalOpen } = useAuthModalUI();
-  const { user, isAuthenticated } = useUserStore();
+  const { user } = useUserStore();
+  const { isAuthenticated, recruit } = useRecruitAuth();
   
   // Form state
   const [title, setTitle] = useState('');
@@ -206,8 +208,11 @@ const PostComposerContent = memo(() => {
       return;
     }
 
-    if (!user?.id) {
+    // Use recruit ID if available, otherwise user ID
+    const authorId = recruit?.id || user?.id;
+    if (!authorId) {
       setError('Please sign in to post');
+      setAuthModalOpen(true);
       return;
     }
 
@@ -239,7 +244,7 @@ const PostComposerContent = memo(() => {
         .from('analyses')
         .insert({
           ...analysisData,
-          author_id: user.id,
+          author_id: authorId,
           created_at: new Date().toISOString(),
         });
 
@@ -256,9 +261,9 @@ const PostComposerContent = memo(() => {
       setSaving(false);
     }
   }, [
-    isValid, user, title, content, richContent, contentType, market, direction,
+    isValid, user, recruit, title, content, richContent, contentType, market, direction,
     pair, entryPrice, targetPrice, stopLoss, confidenceScore, tickers, attachments,
-    isPublished, isProOnly, clearDraft, setIsOpen
+    isPublished, isProOnly, clearDraft, setIsOpen, setAuthModalOpen
   ]);
 
   const handleClose = useCallback(() => {

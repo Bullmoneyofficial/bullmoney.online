@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { ReactNode, Suspense } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
+// RecruitAuthProvider is now in layout.tsx to wrap Navbar
 // REMOVED: UIStateProvider - already provided by MobileMenuProvider in layout.tsx
 
 // Lazy load performance providers for faster initial compile
@@ -70,6 +71,7 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
   return (
     <AuthProvider>
       {/* NOTE: UIStateProvider is already provided by MobileMenuProvider in layout.tsx */}
+      {/* NOTE: RecruitAuthProvider is now in layout.tsx to wrap Navbar */}
       <UnifiedPerformanceProvider startDelay={2000}>
         <CrashTrackerProvider>
           <FpsOptimizerProvider enableMonitoring={true} monitoringInterval={500} startDelay={1000}>

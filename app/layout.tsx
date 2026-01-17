@@ -16,6 +16,7 @@ import { StudioProvider } from "@/context/StudioContext";
 import { GlobalThemeProvider } from "@/contexts/GlobalThemeProvider";
 import { AudioSettingsProvider } from "@/contexts/AudioSettingsProvider";
 import { MobileMenuProvider } from "@/contexts/MobileMenuContext";
+import { RecruitAuthProvider } from "@/contexts/RecruitAuthContext";
 
 // ✅ ADDED: Import the ShopProvider
 import { ShopProvider } from "@/components/ShopContext";
@@ -595,20 +596,22 @@ export default function RootLayout({
           >
             <GlobalThemeProvider>
               <MobileMenuProvider>
-                <AudioSettingsProvider>
-                  <StudioProvider>
-                    {/* ✅ ADDED: ShopProvider starts here */}
-                    <ShopProvider>
-                      {/* Navbar rendered outside ClientProviders for fixed positioning */}
-                      <Navbar />
-                      {/* ✅ LAZY LOADED: All performance providers bundled */}
-                      <ClientProviders modal={modal}>
-                        {children}
-                      </ClientProviders>
-                    </ShopProvider>
-                    {/* ✅ ADDED: ShopProvider ends here */}
-                  </StudioProvider>
-                </AudioSettingsProvider>
+                <RecruitAuthProvider>
+                  <AudioSettingsProvider>
+                    <StudioProvider>
+                      {/* ✅ ADDED: ShopProvider starts here */}
+                      <ShopProvider>
+                        {/* Navbar rendered outside ClientProviders for fixed positioning */}
+                        <Navbar />
+                        {/* ✅ LAZY LOADED: All performance providers bundled */}
+                        <ClientProviders modal={modal}>
+                          {children}
+                        </ClientProviders>
+                      </ShopProvider>
+                      {/* ✅ ADDED: ShopProvider ends here */}
+                    </StudioProvider>
+                  </AudioSettingsProvider>
+                </RecruitAuthProvider>
               </MobileMenuProvider>
             </GlobalThemeProvider>
           </ThemeProvider>

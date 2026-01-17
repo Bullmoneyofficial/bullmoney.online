@@ -17,6 +17,7 @@ import { ShimmerLine } from '@/components/ui/UnifiedShimmer';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useAuthModalUI } from '@/contexts/UIStateContext';
 import { useUserStore } from '@/stores/userStore';
+import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { createSupabaseClient } from '@/lib/supabase';
 import { ConfidenceMeter } from './ConfidenceMeter';
 import type { ContentType, MarketType, Direction, AnalysisInsert } from '@/types/feed';
@@ -26,7 +27,8 @@ interface PostComposerInlineProps {
 }
 
 export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) => {
-  const { user, profile, isAuthenticated, isLoading: authLoading } = useUserStore();
+  const { user, profile, isLoading: authLoading } = useUserStore();
+  const { isAuthenticated, recruit } = useRecruitAuth();
   const { setIsOpen: setAuthModalOpen } = useAuthModalUI();
   
   const [title, setTitle] = useState('');
@@ -45,7 +47,7 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleSubmit = useCallback(async () => {
-    if (!isAuthenticated || !user) {
+    if (!isAuthenticated) {
       setAuthModalOpen(true);
       return;
     }
@@ -61,6 +63,9 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
       
       const supabase = createSupabaseClient();
       
+      // Use recruit ID if available, otherwise user ID
+      const authorId = recruit?.id || user?.id || null;
+      
       const analysisData: AnalysisInsert = {
         title: title.trim(),
         content: content.trim(),
@@ -73,7 +78,7 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
         confidence_score: confidence,
         content_type: contentType,
         image_url: imageUrl || null,
-        author_id: user.id,
+        author_id: authorId,
         is_published: true,
         is_pro_only: false,
         tickers: [pair.trim().toUpperCase()],
@@ -106,7 +111,7 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
       setIsSubmitting(false);
     }
   }, [
-    isAuthenticated, user, title, content, market, direction, pair,
+    isAuthenticated, user, recruit, title, content, market, direction, pair,
     entryPrice, targetPrice, stopLoss, confidence, contentType, imageUrl,
     setAuthModalOpen, onSuccess
   ]);

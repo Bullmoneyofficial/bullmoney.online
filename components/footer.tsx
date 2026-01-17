@@ -62,11 +62,18 @@ const FooterModal = memo(({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[99999] flex items-center justify-center p-2 sm:p-4"
+          className="fixed inset-0 flex items-center justify-center p-2 sm:p-4"
+          style={{ 
+            zIndex: 2147483647,
+            isolation: 'isolate',
+          }}
           onClick={onClose}
         >
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" />
+          <div 
+            className="absolute inset-0 bg-black/95 backdrop-blur-lg"
+            style={{ zIndex: 0 }}
+          />
           
           {/* Modal */}
           <motion.div
@@ -76,6 +83,7 @@ const FooterModal = memo(({
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             onClick={(e) => e.stopPropagation()}
             className="relative w-full max-w-lg max-h-[90vh] overflow-hidden rounded-2xl"
+            style={{ zIndex: 1 }}
           >
             {/* Shimmer Border */}
             <ShimmerBorder color="blue" intensity="low" />

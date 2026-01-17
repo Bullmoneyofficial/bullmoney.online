@@ -7,6 +7,7 @@ import { X, Mail, Lock, User, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-rea
 import { ShimmerLine, ShimmerBorder } from '@/components/ui/UnifiedShimmer';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { useAuthModalUI } from '@/contexts/UIStateContext';
 
 type AuthView = 'login' | 'signup' | 'forgot-password';
@@ -47,6 +48,7 @@ interface AuthContentProps {
 
 const AuthContent = memo(({ onClose }: AuthContentProps) => {
   const { signIn, signUp, isLoading: authLoading } = useAuth();
+  const { signIn: recruitSignIn, isAuthenticated: isRecruitAuthenticated, recruit } = useRecruitAuth();
   const [view, setView] = useState<AuthView>('login');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +60,13 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [username, setUsername] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Auto-close if already authenticated
+  useEffect(() => {
+    if (isRecruitAuthenticated && recruit) {
+      onClose();
+    }
+  }, [isRecruitAuthenticated, recruit, onClose]);
 
   const resetForm = useCallback(() => {
     setEmail('');
@@ -105,17 +114,26 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
 
     setIsLoading(true);
     try {
+      // First try recruit auth (from recruits table)
+      const recruitResult = await recruitSignIn(email, password);
+      if (recruitResult.success) {
+        SoundEffects.click();
+        onClose();
+        return;
+      }
+      
+      // Fallback to standard Supabase auth
       const result = await signIn(email, password);
       if (result.success) {
         SoundEffects.click();
         onClose();
       } else {
-        setError(result.error || 'Failed to sign in');
+        setError(recruitResult.error || result.error || 'Invalid email or password');
       }
     } finally {
       setIsLoading(false);
     }
-  }, [email, password, signIn, onClose]);
+  }, [email, password, signIn, recruitSignIn, onClose]);
 
   const handleSignUp = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,11 +183,16 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
+      className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ 
+        zIndex: 2147483647,
+        isolation: 'isolate',
+      }}
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/95 backdrop-blur-lg"
+        style={{ zIndex: 0 }}
         onClick={handleClose}
       />
 
@@ -181,6 +204,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-md overflow-hidden rounded-2xl"
+        style={{ zIndex: 1 }}
       >
         {/* Shimmer Border */}
         <div className="absolute inset-[-2px] overflow-hidden rounded-2xl pointer-events-none z-0">

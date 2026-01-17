@@ -236,11 +236,16 @@ const ProductsContent = memo(() => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-2 sm:p-4 pointer-events-none"
+      className="fixed inset-0 flex items-center justify-center p-2 sm:p-4"
+      style={{ 
+        zIndex: 2147483647,
+        isolation: 'isolate',
+      }}
     >
-      {/* Invisible backdrop for click-outside-to-close */}
+      {/* Backdrop for click-outside-to-close */}
       <div 
-        className="absolute inset-0 pointer-events-auto"
+        className="absolute inset-0 bg-black/95 backdrop-blur-lg"
+        style={{ zIndex: 0 }}
         onClick={handleClose}
       />
       
@@ -251,7 +256,8 @@ const ProductsContent = memo(() => {
         exit={{ scale: 0.9, opacity: 0, y: 50 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-2xl pointer-events-auto"
+        className="relative w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-2xl"
+        style={{ zIndex: 1 }}
       >
         {/* Shimmer Border */}
         <div className="absolute inset-[-2px] overflow-hidden rounded-2xl pointer-events-none z-0">

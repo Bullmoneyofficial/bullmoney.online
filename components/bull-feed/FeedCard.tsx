@@ -15,6 +15,8 @@ import { format, formatDistanceToNow } from 'date-fns';
 import type { Analysis, ReactionType } from '@/types/feed';
 import type { UserProfile } from '@/types/user';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
+import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
+import { useAuthModalUI } from '@/contexts/UIStateContext';
 
 // Market badge colors
 const marketColors: Record<string, string> = {
@@ -50,6 +52,10 @@ export const FeedCard = memo(({
   const [localReaction, setLocalReaction] = useState<ReactionType | null>(
     analysis.user_reaction || null
   );
+  
+  // Auth hooks for requiring sign-in
+  const { isAuthenticated } = useRecruitAuth();
+  const { setIsOpen: setAuthModalOpen } = useAuthModalUI();
 
   const handleClick = useCallback(() => {
     SoundEffects.click();
@@ -60,6 +66,12 @@ export const FeedCard = memo(({
     e.stopPropagation();
     SoundEffects.click();
     
+    // Require authentication before reacting
+    if (!isAuthenticated) {
+      setAuthModalOpen(true);
+      return;
+    }
+    
     if (localReaction === type) {
       setLocalReaction(null);
     } else {
@@ -67,7 +79,7 @@ export const FeedCard = memo(({
     }
     
     onReaction?.(analysis.id, type);
-  }, [analysis.id, localReaction, onReaction]);
+  }, [analysis.id, localReaction, onReaction, isAuthenticated, setAuthModalOpen]);
 
   const author = analysis.author;
   const reactionCounts = analysis.reaction_counts || { bull: 0, bear: 0, save: 0 };

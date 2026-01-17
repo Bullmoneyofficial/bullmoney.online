@@ -8,6 +8,7 @@ import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { FeedGrid } from '@/components/bull-feed/FeedGrid';
 import { createSupabaseClient } from '@/lib/supabase';
 import { useUserStore } from '@/stores/userStore';
+import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { useAuthModalUI } from '@/contexts/UIStateContext';
 import { calculateHotScore, sortByHot, sortByTopRated, sortByFresh } from '@/lib/bullAlgo';
 import type { Analysis, ReactionType, MarketType } from '@/types/feed';
@@ -20,7 +21,8 @@ interface FeedInlineProps {
 }
 
 export const FeedInline = memo(({ inModal = true }: FeedInlineProps) => {
-  const { user, isAuthenticated } = useUserStore();
+  const { user } = useUserStore();
+  const { isAuthenticated } = useRecruitAuth();
   const { setIsOpen: setAuthModalOpen } = useAuthModalUI();
   
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
