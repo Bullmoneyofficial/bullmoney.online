@@ -176,7 +176,14 @@ export default function Orb({
     const renderer = new Renderer({ alpha: true, premultipliedAlpha: false });
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 0);
-    container.appendChild(gl.canvas);
+    
+    // Style the canvas to not block clicks on the button
+    const canvas = gl.canvas as HTMLCanvasElement;
+    canvas.style.pointerEvents = 'none';
+    canvas.style.position = 'absolute';
+    canvas.style.inset = '0';
+    
+    container.appendChild(canvas);
 
     const geometry = new Triangle(gl);
     const program = new Program(gl, {
@@ -261,22 +268,36 @@ export default function Orb({
       window.removeEventListener("resize", resize);
       container.removeEventListener("mousemove", handleMouseMove);
       container.removeEventListener("mouseleave", handleMouseLeave);
-      container.removeChild(gl.canvas);
+      if (canvas.parentNode === container) {
+        container.removeChild(canvas);
+      }
       gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
   }, [hue, hoverIntensity, rotateOnHover, forceHoverState]);
 
   return (
-    <div ref={ctnDom} className="relative w-full h-full flex items-center justify-center [&>canvas]:absolute [&>canvas]:inset-0 [&>canvas]:w-full [&>canvas]:h-full">
+    <div ref={ctnDom} className="relative w-full h-full flex items-center justify-center">
       {/* 🟦 The button sits above the canvas */}
-      <button
-        onClick={onButtonClick}
-        className="absolute z-10 px-6 py-3 rounded-full font-semibold text-white bg-gradient-to-r from-blue-500 to-sky-400
-          shadow-[0_0_25px_rgba(56,189,248,0.4)] hover:shadow-[0_0_45px_rgba(56,189,248,0.7)]
-          transition-all duration-300 pointer-events-auto"
-      >
-        {buttonLabel}
-      </button>
+      {onButtonClick && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            console.log("Pac-Man button clicked!"); // Debug log
+            onButtonClick();
+          }}
+          className="relative z-[100] px-8 py-4 text-lg rounded-full font-bold text-white bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-500
+            shadow-[0_0_30px_rgba(56,189,248,0.5)] hover:shadow-[0_0_60px_rgba(56,189,248,0.8)]
+            hover:scale-110 active:scale-95
+            transition-all duration-300 cursor-pointer
+            border-2 border-white/30 hover:border-white/60
+            animate-pulse hover:animate-none"
+          style={{ pointerEvents: 'auto' }}
+        >
+          {buttonLabel}
+        </button>
+      )}
     </div>
   );
 }
