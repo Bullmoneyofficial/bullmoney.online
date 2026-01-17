@@ -109,11 +109,145 @@ interface YouTubePlaylistItem {
 
 // YouTube OAuth Config - Uses environment variables
 const YOUTUBE_CLIENT_ID = process.env.NEXT_PUBLIC_YOUTUBE_CLIENT_ID || '';
+const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || '';
 const YOUTUBE_SCOPES = [
   'https://www.googleapis.com/auth/youtube.readonly',
   'https://www.googleapis.com/auth/userinfo.profile',
   'https://www.googleapis.com/auth/userinfo.email'
 ].join(' ');
+
+// Extract channel ID from various YouTube channel URL formats
+const extractChannelId = async (url: string): Promise<{ channelId: string | null; error: string | null }> => {
+  if (!url.trim()) return { channelId: null, error: 'Please enter a channel URL' };
+  
+  const trimmedUrl = url.trim();
+  
+  // Pattern 1: Direct channel ID (UC...)
+  const channelIdMatch = trimmedUrl.match(/^UC[\w-]{22}$/);
+  if (channelIdMatch) {
+    return { channelId: channelIdMatch[0], error: null };
+  }
+  
+  // Pattern 2: youtube.com/channel/UC...
+  const channelUrlMatch = trimmedUrl.match(/youtube\.com\/channel\/(UC[\w-]{22})/);
+  if (channelUrlMatch) {
+    return { channelId: channelUrlMatch[1], error: null };
+  }
+  
+  // Pattern 3: youtube.com/@handle - need to resolve via API
+  const handleMatch = trimmedUrl.match(/youtube\.com\/@([\w-]+)/);
+  if (handleMatch && YOUTUBE_API_KEY) {
+    try {
+      const response = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=@${handleMatch[1]}&key=${YOUTUBE_API_KEY}`
+      );
+      const data = await response.json();
+      if (data.items && data.items.length > 0) {
+        return { channelId: data.items[0].id, error: null };
+      }
+      return { channelId: null, error: 'Channel not found for this handle' };
+    } catch (e) {
+      return { channelId: null, error: 'Failed to resolve channel handle' };
+    }
+  }
+  
+  // Pattern 4: youtube.com/c/customname or youtube.com/user/username - need to resolve via API
+  const customUrlMatch = trimmedUrl.match(/youtube\.com\/(?:c|user)\/([\w-]+)/);
+  if (customUrlMatch && YOUTUBE_API_KEY) {
+    try {
+      // Try searching by username first
+      const response = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=id&forUsername=${customUrlMatch[1]}&key=${YOUTUBE_API_KEY}`
+      );
+      const data = await response.json();
+      if (data.items && data.items.length > 0) {
+        return { channelId: data.items[0].id, error: null };
+      }
+      // If not found, try searching
+      const searchResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(customUrlMatch[1])}&maxResults=1&key=${YOUTUBE_API_KEY}`
+      );
+      const searchData = await searchResponse.json();
+      if (searchData.items && searchData.items.length > 0) {
+        return { channelId: searchData.items[0].id.channelId, error: null };
+      }
+      return { channelId: null, error: 'Channel not found' };
+    } catch (e) {
+      return { channelId: null, error: 'Failed to resolve channel URL' };
+    }
+  }
+  
+  // Pattern 5: Just a handle without the full URL
+  if (trimmedUrl.startsWith('@') && YOUTUBE_API_KEY) {
+    try {
+      const response = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${trimmedUrl}&key=${YOUTUBE_API_KEY}`
+      );
+      const data = await response.json();
+      if (data.items && data.items.length > 0) {
+        return { channelId: data.items[0].id, error: null };
+      }
+      return { channelId: null, error: 'Channel not found for this handle' };
+    } catch (e) {
+      return { channelId: null, error: 'Failed to resolve channel handle' };
+    }
+  }
+  
+  if (!YOUTUBE_API_KEY) {
+    return { channelId: null, error: 'YouTube API key not configured. Please add NEXT_PUBLIC_YOUTUBE_API_KEY to your environment.' };
+  }
+  
+  return { channelId: null, error: 'Invalid YouTube channel URL format' };
+};
+
+// Fetch videos from a YouTube channel
+const fetchChannelVideos = async (channelId: string): Promise<{ videos: YouTubePlaylistItem[]; error: string | null }> => {
+  if (!YOUTUBE_API_KEY) {
+    return { videos: [], error: 'YouTube API key not configured' };
+  }
+  
+  try {
+    // First, get the channel's uploads playlist ID
+    const channelResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id=${channelId}&key=${YOUTUBE_API_KEY}`
+    );
+    const channelData = await channelResponse.json();
+    
+    if (!channelData.items || channelData.items.length === 0) {
+      return { videos: [], error: 'Channel not found' };
+    }
+    
+    const uploadsPlaylistId = channelData.items[0].contentDetails?.relatedPlaylists?.uploads;
+    const channelTitle = channelData.items[0].snippet?.title || 'YouTube Channel';
+    
+    if (!uploadsPlaylistId) {
+      return { videos: [], error: 'Could not find channel uploads' };
+    }
+    
+    // Fetch videos from the uploads playlist
+    const videosResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=50&key=${YOUTUBE_API_KEY}`
+    );
+    const videosData = await videosResponse.json();
+    
+    if (!videosData.items) {
+      return { videos: [], error: 'No videos found' };
+    }
+    
+    const videos: YouTubePlaylistItem[] = videosData.items.map((item: any) => ({
+      id: item.id,
+      title: item.snippet.title,
+      youtube_id: item.snippet.resourceId?.videoId || '',
+      thumbnail: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || '',
+      channelTitle: channelTitle
+    })).filter((v: YouTubePlaylistItem) => v.youtube_id);
+    
+    return { videos, error: null };
+  } catch (e) {
+    console.error('Error fetching channel videos:', e);
+    return { videos: [], error: 'Failed to fetch channel videos' };
+  }
+};
 
 // Modal Context
 interface ModalState {
@@ -243,6 +377,12 @@ const LiveStreamContent = memo(() => {
   const [youtubeVideos, setYoutubeVideos] = useState<YouTubePlaylistItem[]>([]);
   const [loadingYoutubeVideos, setLoadingYoutubeVideos] = useState(false);
   const [tokenNeedsRefresh, setTokenNeedsRefresh] = useState(false);
+  
+  // Channel-based video fetching state
+  const [channelVideos, setChannelVideos] = useState<YouTubePlaylistItem[]>([]);
+  const [loadingChannelVideos, setLoadingChannelVideos] = useState(false);
+  const [channelVideoError, setChannelVideoError] = useState('');
+  const [resolvedChannelId, setResolvedChannelId] = useState<string | null>(null);
 
   // Load YouTube auth from localStorage - persists forever until manually logged out
   useEffect(() => {
@@ -512,6 +652,80 @@ const LiveStreamContent = memo(() => {
     }
   }, []);
 
+  // Fetch videos from channel URL when personal profile has a channel URL
+  useEffect(() => {
+    const loadChannelVideos = async () => {
+      // Only fetch if we have a channel URL and no OAuth (OAuth takes priority)
+      if (!personalProfile?.channelUrl || youtubeAuth) {
+        setChannelVideos([]);
+        return;
+      }
+      
+      setLoadingChannelVideos(true);
+      setChannelVideoError('');
+      
+      try {
+        // Extract channel ID from URL
+        const { channelId, error: extractError } = await extractChannelId(personalProfile.channelUrl);
+        
+        if (extractError || !channelId) {
+          setChannelVideoError(extractError || 'Could not extract channel ID');
+          setLoadingChannelVideos(false);
+          return;
+        }
+        
+        setResolvedChannelId(channelId);
+        
+        // Fetch videos from the channel
+        const { videos, error: fetchError } = await fetchChannelVideos(channelId);
+        
+        if (fetchError) {
+          setChannelVideoError(fetchError);
+        } else {
+          setChannelVideos(videos);
+        }
+      } catch (e) {
+        console.error('Error loading channel videos:', e);
+        setChannelVideoError('Failed to load channel videos');
+      } finally {
+        setLoadingChannelVideos(false);
+      }
+    };
+    
+    loadChannelVideos();
+  }, [personalProfile?.channelUrl, youtubeAuth]);
+
+  // Refresh channel videos manually
+  const refreshChannelVideos = useCallback(async () => {
+    if (!personalProfile?.channelUrl) return;
+    
+    setLoadingChannelVideos(true);
+    setChannelVideoError('');
+    
+    try {
+      const { channelId, error: extractError } = await extractChannelId(personalProfile.channelUrl);
+      
+      if (extractError || !channelId) {
+        setChannelVideoError(extractError || 'Could not extract channel ID');
+        return;
+      }
+      
+      setResolvedChannelId(channelId);
+      const { videos, error: fetchError } = await fetchChannelVideos(channelId);
+      
+      if (fetchError) {
+        setChannelVideoError(fetchError);
+      } else {
+        setChannelVideos(videos);
+        SoundEffects.click();
+      }
+    } catch (e) {
+      setChannelVideoError('Failed to refresh channel videos');
+    } finally {
+      setLoadingChannelVideos(false);
+    }
+  }, [personalProfile?.channelUrl]);
+
   // Save personal profile to localStorage
   const savePersonalProfile = useCallback((profile: UserYouTubeProfile) => {
     try {
@@ -697,30 +911,37 @@ const LiveStreamContent = memo(() => {
     ? (videos[currentVideoIndex] || null)
     : null;
   
-  // For personal tab: OAuth videos take priority, then manual videos
+  // For personal tab: OAuth videos take priority, then channel videos, then manual videos
   const currentYoutubeVideo = activeTab === 'personal' && youtubeAuth && youtubeVideos.length > 0
     ? (youtubeVideos[youtubeVideoIndex] || null)
     : null;
+  
+  // Channel videos (from profile channel URL)
+  const currentChannelVideo = activeTab === 'personal' && !youtubeAuth && channelVideos.length > 0
+    ? (channelVideos[youtubeVideoIndex] || null)
+    : null;
     
-  const currentPersonalVideo = activeTab === 'personal' && !youtubeAuth && personalProfile?.videos
+  const currentPersonalVideo = activeTab === 'personal' && !youtubeAuth && !channelVideos.length && personalProfile?.videos
     ? (personalProfile.videos[personalVideoIndex] || null)
     : null;
 
-  // Active video selection
+  // Active video selection - priority: OAuth > Channel Videos > Manual Videos
   const activeVideo = activeTab === 'bullmoney' 
     ? currentVideo 
-    : (currentYoutubeVideo || currentPersonalVideo);
+    : (currentYoutubeVideo || currentChannelVideo || currentPersonalVideo);
     
-  // Active video list
+  // Active video list - priority: OAuth > Channel Videos > Manual Videos  
   const activeVideoList = activeTab === 'bullmoney' 
     ? videos 
     : (youtubeAuth && youtubeVideos.length > 0 
         ? youtubeVideos 
-        : (personalProfile?.videos || []));
+        : (channelVideos.length > 0 
+            ? channelVideos 
+            : (personalProfile?.videos || [])));
         
   const activeVideoIndex = activeTab === 'bullmoney' 
     ? currentVideoIndex 
-    : (youtubeAuth ? youtubeVideoIndex : personalVideoIndex);
+    : ((youtubeAuth || channelVideos.length > 0) ? youtubeVideoIndex : personalVideoIndex);
 
   const youtubeEmbedUrl = activeVideo 
     ? `https://www.youtube.com/embed/${activeVideo.youtube_id}?autoplay=${isPlaying ? 1 : 0}&mute=${isMuted ? 1 : 0}&rel=0&modestbranding=1`
@@ -733,10 +954,12 @@ const LiveStreamContent = memo(() => {
       setCurrentVideoIndex((prev) => (prev + 1) % videos.length);
     } else if (youtubeAuth && youtubeVideos.length) {
       setYoutubeVideoIndex((prev) => (prev + 1) % youtubeVideos.length);
+    } else if (channelVideos.length) {
+      setYoutubeVideoIndex((prev) => (prev + 1) % channelVideos.length);
     } else if (personalProfile?.videos.length) {
       setPersonalVideoIndex((prev) => (prev + 1) % personalProfile.videos.length);
     }
-  }, [activeTab, videos.length, youtubeAuth, youtubeVideos.length, personalProfile?.videos.length]);
+  }, [activeTab, videos.length, youtubeAuth, youtubeVideos.length, channelVideos.length, personalProfile?.videos.length]);
 
   const playPrevious = useCallback(() => {
     SoundEffects.click();
@@ -744,21 +967,23 @@ const LiveStreamContent = memo(() => {
       setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length);
     } else if (youtubeAuth && youtubeVideos.length) {
       setYoutubeVideoIndex((prev) => (prev - 1 + youtubeVideos.length) % youtubeVideos.length);
+    } else if (channelVideos.length) {
+      setYoutubeVideoIndex((prev) => (prev - 1 + channelVideos.length) % channelVideos.length);
     } else if (personalProfile?.videos.length) {
       setPersonalVideoIndex((prev) => (prev - 1 + personalProfile.videos.length) % personalProfile.videos.length);
     }
-  }, [activeTab, videos.length, youtubeAuth, youtubeVideos.length, personalProfile?.videos.length]);
+  }, [activeTab, videos.length, youtubeAuth, youtubeVideos.length, channelVideos.length, personalProfile?.videos.length]);
 
   const playVideo = useCallback((index: number) => {
     SoundEffects.click();
     if (activeTab === 'bullmoney') {
       setCurrentVideoIndex(index);
-    } else if (youtubeAuth) {
+    } else if (youtubeAuth || channelVideos.length) {
       setYoutubeVideoIndex(index);
     } else {
       setPersonalVideoIndex(index);
     }
-  }, [activeTab, youtubeAuth]);
+  }, [activeTab, youtubeAuth, channelVideos.length]);
 
   // Admin functions
   const addVideo = useCallback(async () => {
@@ -1237,9 +1462,9 @@ const LiveStreamContent = memo(() => {
           )}
         </AnimatePresence>
 
-        {/* Personal YouTube Add Video Panel */}
+        {/* Personal YouTube Channel Videos Panel */}
         <AnimatePresence>
-          {activeTab === 'personal' && personalProfile && (
+          {activeTab === 'personal' && personalProfile && !youtubeAuth && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
@@ -1247,23 +1472,69 @@ const LiveStreamContent = memo(() => {
               className="overflow-hidden bg-purple-900/20 border-b border-purple-500/20 flex-shrink-0"
             >
               <div className="p-4 space-y-3">
+                {/* Channel Info Header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Heart className="w-4 h-4 text-purple-400" />
-                    <h3 className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Add to My Videos</h3>
+                    <Youtube className="w-4 h-4 text-red-500" />
+                    <h3 className="text-xs font-semibold text-purple-400 uppercase tracking-wider">
+                      {personalProfile.channelUrl ? 'Channel Videos' : 'My YouTube'}
+                    </h3>
+                    {channelVideos.length > 0 && (
+                      <span className="text-[10px] text-neutral-500 bg-neutral-800 px-2 py-0.5 rounded-full">
+                        {channelVideos.length} videos
+                      </span>
+                    )}
                   </div>
-                  {personalProfile.channelUrl && (
-                    <a
-                      href={personalProfile.channelUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 transition-colors"
-                    >
-                      <Link2 className="w-3 h-3" />
-                      My Channel
-                    </a>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {personalProfile.channelUrl && (
+                      <>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={refreshChannelVideos}
+                          disabled={loadingChannelVideos}
+                          className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-all disabled:opacity-50"
+                          title="Refresh channel videos"
+                        >
+                          <RefreshCw className={`w-3.5 h-3.5 ${loadingChannelVideos ? 'animate-spin' : ''}`} />
+                        </motion.button>
+                        <a
+                          href={personalProfile.channelUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          <span className="hidden sm:inline">View Channel</span>
+                        </a>
+                      </>
+                    )}
+                  </div>
                 </div>
+                
+                {/* Channel Video Loading State */}
+                {loadingChannelVideos && (
+                  <div className="flex items-center gap-2 text-xs text-purple-400 bg-purple-500/10 px-3 py-2 rounded-lg">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Loading videos from channel...
+                  </div>
+                )}
+                
+                {/* Channel Video Error */}
+                {channelVideoError && !loadingChannelVideos && (
+                  <div className="flex items-center gap-2 text-xs text-yellow-400 bg-yellow-500/10 px-3 py-2 rounded-lg">
+                    <AlertCircle className="w-3 h-3" />
+                    {channelVideoError}
+                  </div>
+                )}
+                
+                {/* Channel Video Success */}
+                {channelVideos.length > 0 && !loadingChannelVideos && (
+                  <div className="flex items-center gap-2 text-xs text-green-400 bg-green-500/10 px-3 py-2 rounded-lg">
+                    <Check className="w-3 h-3" />
+                    Loaded {channelVideos.length} videos from channel
+                  </div>
+                )}
                 
                 {personalError && (
                   <div className="flex items-center gap-2 text-xs text-red-400 bg-red-500/10 px-3 py-2 rounded-lg">
@@ -1271,6 +1542,13 @@ const LiveStreamContent = memo(() => {
                     {personalError}
                   </div>
                 )}
+                
+                {/* Divider with Add Manual Videos */}
+                <div className="flex items-center gap-3 pt-2">
+                  <div className="flex-1 h-px bg-white/10" />
+                  <span className="text-[10px] text-neutral-500 uppercase tracking-wider">Add videos manually</span>
+                  <div className="flex-1 h-px bg-white/10" />
+                </div>
                 
                 {/* Add Video Form */}
                 <div className="flex flex-col sm:flex-row gap-2">
@@ -1355,10 +1633,32 @@ const LiveStreamContent = memo(() => {
                   <p className="text-neutral-400 text-center max-w-xs">No videos found in this playlist</p>
                   <p className="text-neutral-500 text-xs">Try selecting a different playlist above</p>
                 </div>
-              ) : activeTab === 'personal' && !youtubeAuth && personalProfile && personalProfile.videos.length === 0 ? (
+              ) : activeTab === 'personal' && !youtubeAuth && loadingChannelVideos ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-purple-900/20 to-black">
-                  <Heart className="w-16 h-16 text-purple-400/50" />
-                  <p className="text-neutral-400 text-center max-w-xs">Add your first video above to start watching</p>
+                  <ShimmerSpinner size={48} color="blue" />
+                  <p className="text-neutral-400 text-sm">Loading channel videos...</p>
+                </div>
+              ) : activeTab === 'personal' && !youtubeAuth && personalProfile && channelVideos.length === 0 && personalProfile.videos.length === 0 ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-purple-900/20 to-black">
+                  <Youtube className="w-16 h-16 text-purple-400/50" />
+                  {personalProfile.channelUrl ? (
+                    <>
+                      <p className="text-neutral-400 text-center max-w-xs">
+                        {channelVideoError || 'No videos found from your channel'}
+                      </p>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={refreshChannelVideos}
+                        className="px-4 py-2 bg-purple-500 text-white rounded-lg font-medium text-sm flex items-center gap-2"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        Retry
+                      </motion.button>
+                    </>
+                  ) : (
+                    <p className="text-neutral-400 text-center max-w-xs">Add your first video above to start watching</p>
+                  )}
                 </div>
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-neutral-900 to-black">
@@ -1634,6 +1934,66 @@ const LiveStreamContent = memo(() => {
                           <p className="text-[10px] text-neutral-500 flex items-center gap-1 truncate">
                             <Youtube className="w-3 h-3 flex-shrink-0" />
                             {video.channelTitle || 'YouTube'}
+                          </p>
+                          {index === youtubeVideoIndex && (
+                            <p className="text-[10px] text-purple-400 mt-0.5 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
+                              Playing
+                            </p>
+                          )}
+                        </div>
+                      </motion.button>
+                    ))
+                  ) : channelVideos.length > 0 ? (
+                    // Channel Videos (from profile channel URL)
+                    channelVideos.map((video, index) => (
+                      <motion.button
+                        key={video.id}
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        onClick={() => playVideo(index)}
+                        className={`
+                          w-full flex gap-3 p-2 rounded-lg transition-all text-left group
+                          ${index === youtubeVideoIndex 
+                            ? 'bg-purple-500/20 ring-1 ring-purple-500/50' 
+                            : 'hover:bg-white/5'
+                          }
+                        `}
+                      >
+                        {/* Thumbnail */}
+                        <div className="relative w-24 aspect-video rounded-md overflow-hidden bg-neutral-800 flex-shrink-0">
+                          <img 
+                            src={video.thumbnail || getYouTubeThumbnail(video.youtube_id, 'mq')} 
+                            alt={video.title}
+                            className="w-full h-full object-cover"
+                          />
+                          {/* Play overlay */}
+                          <div className={`
+                            absolute inset-0 flex items-center justify-center bg-black/40 
+                            transition-opacity
+                            ${index === youtubeVideoIndex ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
+                          `}>
+                            <div className={`p-1.5 rounded-full ${index === youtubeVideoIndex ? 'bg-purple-500' : 'bg-white/20'}`}>
+                              {index === youtubeVideoIndex ? (
+                                <Radio className="w-3 h-3 text-white" />
+                              ) : (
+                                <Play className="w-3 h-3 text-white" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Info */}
+                        <div className="flex-1 min-w-0 py-0.5">
+                          <p className={`
+                            text-xs font-medium line-clamp-2 mb-1 transition-colors
+                            ${index === youtubeVideoIndex ? 'text-purple-400' : 'text-white group-hover:text-purple-400'}
+                          `}>
+                            {video.title}
+                          </p>
+                          <p className="text-[10px] text-neutral-500 flex items-center gap-1 truncate">
+                            <Youtube className="w-3 h-3 flex-shrink-0 text-red-500" />
+                            {video.channelTitle || 'Channel'}
                           </p>
                           {index === youtubeVideoIndex && (
                             <p className="text-[10px] text-purple-400 mt-0.5 flex items-center gap-1">
