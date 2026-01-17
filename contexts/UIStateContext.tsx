@@ -65,6 +65,7 @@ export type UIComponentType =
   | 'analysisModal'
   | 'liveStreamModal'
   | 'productsModal'
+  | 'servicesModal'
   | 'affiliateModal'
   | 'themeSelectorModal'
   | 'adminModal'
@@ -90,6 +91,7 @@ interface UIStateContextType {
   isAnalysisModalOpen: boolean;
   isLiveStreamModalOpen: boolean;
   isProductsModalOpen: boolean;
+  isServicesModalOpen: boolean;
   isAffiliateModalOpen: boolean;
   isThemeSelectorModalOpen: boolean;
   isAdminModalOpen: boolean;
@@ -121,6 +123,7 @@ interface UIStateContextType {
   setAnalysisModalOpen: (open: boolean) => void;
   setLiveStreamModalOpen: (open: boolean) => void;
   setProductsModalOpen: (open: boolean) => void;
+  setServicesModalOpen: (open: boolean) => void;
   setAffiliateModalOpen: (open: boolean) => void;
   setThemeSelectorModalOpen: (open: boolean) => void;
   setAdminModalOpen: (open: boolean) => void;
@@ -145,6 +148,7 @@ interface UIStateContextType {
   openAnalysisModal: () => void;
   openLiveStreamModal: () => void;
   openProductsModal: () => void;
+  openServicesModal: () => void;
   openAuthModal: () => void;
   openBullFeedModal: () => void;
   openPostComposerModal: () => void;
@@ -179,6 +183,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const [isAnalysisModalOpen, setIsAnalysisModalOpenState] = useState(false);
   const [isLiveStreamModalOpen, setIsLiveStreamModalOpenState] = useState(false);
   const [isProductsModalOpen, setIsProductsModalOpenState] = useState(false);
+  const [isServicesModalOpen, setIsServicesModalOpenState] = useState(false);
   const [isAffiliateModalOpen, setIsAffiliateModalOpenState] = useState(false);
   const [isThemeSelectorModalOpen, setIsThemeSelectorModalOpenState] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpenState] = useState(false);
@@ -204,7 +209,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
 
   // Derived state: is any modal open?
   const isAnyModalOpen = isFooterOpen || isChartNewsOpen || isAnalysisModalOpen ||
-    isLiveStreamModalOpen || isProductsModalOpen || isAffiliateModalOpen ||
+    isLiveStreamModalOpen || isProductsModalOpen || isServicesModalOpen || isAffiliateModalOpen ||
     isThemeSelectorModalOpen || isAdminModalOpen || isFaqModalOpen ||
     isAppsModalOpen || isDisclaimerModalOpen || isPagemodeOpen || isLoaderv2Open ||
     isAuthModalOpen || isBullFeedModalOpen || isPostComposerModalOpen;
@@ -231,6 +236,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isAnalysisModalOpen ? 'analysisModal' :
     isLiveStreamModalOpen ? 'liveStreamModal' :
     isProductsModalOpen ? 'productsModal' :
+    isServicesModalOpen ? 'servicesModal' :
     isAffiliateModalOpen ? 'affiliateModal' :
     isThemeSelectorModalOpen ? 'themeSelectorModal' :
     isAdminModalOpen ? 'adminModal' :
@@ -252,6 +258,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (except !== 'analysisModal') setIsAnalysisModalOpenState(false);
     if (except !== 'liveStreamModal') setIsLiveStreamModalOpenState(false);
     if (except !== 'productsModal') setIsProductsModalOpenState(false);
+    if (except !== 'servicesModal') setIsServicesModalOpenState(false);
     if (except !== 'affiliateModal') setIsAffiliateModalOpenState(false);
     if (except !== 'themeSelectorModal') setIsThemeSelectorModalOpenState(false);
     if (except !== 'adminModal') setIsAdminModalOpenState(false);
@@ -272,6 +279,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsAnalysisModalOpenState(false);
     setIsLiveStreamModalOpenState(false);
     setIsProductsModalOpenState(false);
+    setIsServicesModalOpenState(false);
     setIsAffiliateModalOpenState(false);
     setIsThemeSelectorModalOpenState(false);
     setIsAdminModalOpenState(false);
@@ -348,6 +356,13 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       closeOthers('productsModal');
     }
     setIsProductsModalOpenState(open);
+  }, [closeOthers]);
+
+  const setServicesModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('servicesModal');
+    }
+    setIsServicesModalOpenState(open);
   }, [closeOthers]);
 
   const setAffiliateModalOpen = useCallback((open: boolean) => {
@@ -475,6 +490,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const openAnalysisModal = useCallback(() => setAnalysisModalOpen(true), [setAnalysisModalOpen]);
   const openLiveStreamModal = useCallback(() => setLiveStreamModalOpen(true), [setLiveStreamModalOpen]);
   const openProductsModal = useCallback(() => setProductsModalOpen(true), [setProductsModalOpen]);
+  const openServicesModal = useCallback(() => setServicesModalOpen(true), [setServicesModalOpen]);
   const openAuthModal = useCallback(() => setAuthModalOpen(true), [setAuthModalOpen]);
   const openBullFeedModal = useCallback(() => setBullFeedModalOpen(true), [setBullFeedModalOpen]);
   const openPostComposerModal = useCallback(() => setPostComposerModalOpen(true), [setPostComposerModalOpen]);
@@ -506,6 +522,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isAnalysisModalOpen,
     isLiveStreamModalOpen,
     isProductsModalOpen,
+    isServicesModalOpen,
     isAffiliateModalOpen,
     isThemeSelectorModalOpen,
     isAdminModalOpen,
@@ -534,6 +551,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setAnalysisModalOpen,
     setLiveStreamModalOpen,
     setProductsModalOpen,
+    setServicesModalOpen,
     setAffiliateModalOpen,
     setThemeSelectorModalOpen,
     setAdminModalOpen,
@@ -556,6 +574,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     openAnalysisModal,
     openLiveStreamModal,
     openProductsModal,
+    openServicesModal,
     openAuthModal,
     openBullFeedModal,
     openPostComposerModal,
@@ -703,6 +722,11 @@ export function useLiveStreamModalUI() {
 export function useProductsModalUI() {
   const { isProductsModalOpen, setProductsModalOpen, openProductsModal } = useUIState();
   return { isOpen: isProductsModalOpen, setIsOpen: setProductsModalOpen, open: openProductsModal };
+}
+
+export function useServicesModalUI() {
+  const { isServicesModalOpen, setServicesModalOpen, openServicesModal } = useUIState();
+  return { isOpen: isServicesModalOpen, setIsOpen: setServicesModalOpen, open: openServicesModal };
 }
 
 export function useAffiliateModalUI() {

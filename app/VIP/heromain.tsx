@@ -73,7 +73,7 @@ const Typewriter = ({ text, speed }: { text: string, speed: number }) => {
 };
 
 // --- SYSTEM OVERRIDE OVERLAY (FULL SCREEN EASTER EGG) ---
-const SystemOverrideOverlay = ({ onClose }: { onClose: () => void }) => {
+const SystemOverrideOverlay = ({ onClose, embedded = false }: { onClose: () => void; embedded?: boolean }) => {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
@@ -98,7 +98,7 @@ const SystemOverrideOverlay = ({ onClose }: { onClose: () => void }) => {
         animate={{ y: "0%" }}
         exit={{ y: "-100%" }}
         transition={{ duration: 0.5, ease: "circInOut" }}
-        className="fixed inset-0 z-[100000] bg-black flex flex-col items-center justify-center font-mono text-blue-500 overflow-hidden"
+        className={`${embedded ? "absolute" : "fixed"} inset-0 z-[100000] bg-black flex flex-col items-center justify-center font-mono text-blue-500 overflow-hidden`}
     >
         {/* Matrix Rain Background (Simplified) */}
         <div className="absolute inset-0 opacity-10 pointer-events-none">
@@ -529,7 +529,7 @@ const VideoCard = React.memo(({
 VideoCard.displayName = "VideoCard";
 
 // --- MAIN HERO PARALLAX ---
-const HeroParallax = () => {
+const HeroParallax = ({ embedded = false }: { embedded?: boolean }) => {
   const { state, createProduct } = useShop() as any;
   const { products = [], hero, isAdmin, loading } = state || {};
   const isMobile = useIsMobile();
@@ -760,12 +760,12 @@ const HeroParallax = () => {
     {/* --- FULL SCREEN EASTER EGG OVERLAY --- */}
     <AnimatePresence>
         {showEasterEgg && (
-            <SystemOverrideOverlay onClose={() => setShowEasterEgg(false)} />
+            <SystemOverrideOverlay onClose={() => setShowEasterEgg(false)} embedded={embedded} />
         )}
     </AnimatePresence>
         
     {/* --- ADMIN LOGIN MODAL --- */}
-    <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-[99999]">
+    <div className={`${embedded ? "absolute" : "fixed"} top-0 left-0 w-full h-full pointer-events-none z-[99999]`}>
         <div className="pointer-events-auto">
              <AdminLoginModal 
                 open={isAdminLoginOpen} 
@@ -776,7 +776,7 @@ const HeroParallax = () => {
 
     {/* --- ADMIN CONTROLS (FLOATING) --- */}
     {isAdmin && (
-        <div className="fixed bottom-8 right-8 z-[9990] flex flex-col gap-2">
+        <div className={`${embedded ? "absolute" : "fixed"} bottom-8 right-8 z-[9990] flex flex-col gap-2`}>
             <ShimmerBorder rounded="rounded-full">
                 <button 
                     onClick={handleCreateNewVideo}
@@ -796,7 +796,7 @@ const HeroParallax = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[9999] grid place-items-center bg-black/95 md:backdrop-blur-xl p-0 md:p-4 will-change-opacity"
+                className={`${embedded ? "absolute" : "fixed"} inset-0 z-[9999] grid place-items-center bg-black/95 md:backdrop-blur-xl p-0 md:p-4 will-change-opacity`}
                 onClick={handleClose}
             >
                 <div onClick={(e) => e.stopPropagation()} className="w-full max-w-7xl h-[100dvh] md:h-[85vh] md:max-h-[800px]">
@@ -910,20 +910,6 @@ const HeroParallax = () => {
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="mt-8 md:mt-10 flex flex-col sm:flex-row gap-6 items-start sm:items-center relative z-30"
             >
-                {/* FAQ HELPER */}
-                <TipWrapper 
-                    isActive={false} // Only on hover
-                    tipText="Common Questions" 
-                    position="top"
-                    className="pointer-events-auto"
-                >
-                    <ShimmerBorder rounded="rounded-xl">
-                        <div className="bg-neutral-900/50 p-1 rounded-xl">
-                            <Faq />
-                        </div>
-                    </ShimmerBorder>
-                </TipWrapper>
-
                 <div className="flex items-center gap-4 pl-0 sm:pl-4 border-l-0 sm:border-l border-neutral-800">
                     <div className="flex -space-x-3">
                         {[1,2,3].map(i => (

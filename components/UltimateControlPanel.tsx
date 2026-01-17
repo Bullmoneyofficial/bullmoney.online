@@ -836,6 +836,16 @@ export function UltimateControlPanel({
     }
   }, [shouldMinimizeFromUI, isScrolling]);
 
+  // Sync services modal state from UIStateContext
+  useEffect(() => {
+    if (!uiStateContext) return;
+    if (uiStateContext.isServicesModalOpen) {
+      setActiveModal('services');
+    } else if (activeModal === 'services') {
+      setActiveModal(null);
+    }
+  }, [uiStateContext?.isServicesModalOpen, activeModal, uiStateContext]);
+
   if (!deviceInfo || !mounted) {
     return null;
   }
@@ -859,10 +869,12 @@ export function UltimateControlPanel({
     if (activeModal === 'services') {
       // 2nd tap - close
       setActiveModal(null);
+      uiStateContext?.setServicesModalOpen?.(false);
     } else {
       // 1st tap - open
       setActiveModal('services');
       onServicesClick?.();
+      uiStateContext?.setServicesModalOpen?.(true);
     }
   };
   const handleContactClick = () => {

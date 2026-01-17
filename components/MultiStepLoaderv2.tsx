@@ -36,6 +36,12 @@ const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Bool
 const PARTICLE_ICONS = ["rocket", "dollar", "chart", "zap", "flame", "diamond", "moon", "sparkle"] as const;
 type ParticleIcon = typeof PARTICLE_ICONS[number];
 
+const formatPrice = (value: number) =>
+  `$${value.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
 // --- CONFIG ---
 const ASSETS: Record<AssetKey, { id: string; symbol: string; icon: string; color: string }> = {
   BTC: { id: "BTC", symbol: "BINANCE:BTCUSDT", icon: "₿", color: "#F7931A" },
@@ -437,9 +443,17 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [showTip, setShowTip] = useState(true);
   const [isDeflating, setIsDeflating] = useState(false);
+  const [deflateText, setDeflateText] = useState<string | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<AssetKey>("BTC");
   const { price: realPrice } = useLivePrice(selectedAsset);
   const [displayPrice, setDisplayPrice] = useState(0);
+  const priceText = useMemo(() => {
+    if (displayPrice > 0 || realPrice > 0) {
+      return formatPrice(displayPrice > 0 ? displayPrice : realPrice);
+    }
+    return "--";
+  }, [displayPrice, realPrice]);
+  const activePriceText = isDeflating && deflateText ? deflateText : priceText;
   
   // --- FPS-AWARE SHIMMER SETTINGS ---
   const shimmerSettings = useOptimizedShimmer();
@@ -524,15 +538,17 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
 
     const start = performance.now();
     const startPrice = displayPriceRef.current > 0 ? displayPriceRef.current : realPrice;
-    const duration = 700;
+    const duration = 520;
 
     if (priceDeflateTimeoutRef.current) {
       clearTimeout(priceDeflateTimeoutRef.current);
     }
     setIsDeflating(true);
+    setDeflateText(formatPrice(startPrice));
     priceDeflateTimeoutRef.current = setTimeout(() => {
       setIsDeflating(false);
-    }, duration + 200);
+      setDeflateText(null);
+    }, duration + 120);
 
     const tick = (now: number) => {
       const t = Math.min((now - start) / duration, 1);
@@ -1263,30 +1279,90 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                   transition={{
                     scale: { duration: 0.5, repeat: isHolding ? Infinity : 0 }
                   }}
-                  className="text-4xl md:text-6xl font-black tracking-tighter font-mono"
+                  className="relative text-4xl md:text-6xl font-black tracking-tighter font-mono"
                   style={{
                     textShadow: isHolding ? "0 0 30px rgba(59, 130, 246, 1)" : "0 2px 20px rgba(0,0,0,0.8)",
                   }}
                 >
+                  {isDeflating && (
+                    <>
+                      <motion.span
+                        initial={{ opacity: 0, scale: 0.9, y: 0 }}
+                        animate={{ opacity: [0, 0.65, 0], scale: [0.9, 1.2, 1.6], y: [0, -6, 14] }}
+                        transition={{ duration: 0.55, ease: [0.2, 0.9, 0.2, 1] }}
+                        className="pointer-events-none absolute inset-0 -z-10 text-blue-200/70 blur-[2px]"
+                      >
+                        {activePriceText}
+                      </motion.span>
+                      <motion.span
+                        initial={{ opacity: 0, scale: 1, y: 0 }}
+                        animate={{ opacity: [0, 0.5, 0], scale: [1, 0.9, 0.7], y: [0, 10, 28] }}
+                        transition={{ duration: 0.52, ease: "easeOut" }}
+                        className="pointer-events-none absolute inset-0 -z-10 text-rose-300/70 blur-[4px]"
+                      >
+                        {activePriceText}
+                      </motion.span>
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.6 }}
+                        animate={{ opacity: [0, 0.6, 0], scale: [0.6, 1.6, 2.2] }}
+                        transition={{ duration: 0.55, ease: "easeOut" }}
+                        className="pointer-events-none absolute inset-0 -z-10 rounded-full border border-blue-300/70 blur-[2px]"
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.7 }}
+                        animate={{ opacity: [0, 0.5, 0], scale: [0.7, 1.3, 1.9] }}
+                        transition={{ duration: 0.52, delay: 0.02, ease: "easeOut" }}
+                        className="pointer-events-none absolute inset-0 -z-10 rounded-full border-2 border-rose-300/60 blur-[3px]"
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8, rotate: -8 }}
+                        animate={{ opacity: [0, 0.4, 0], scale: [0.8, 1.1, 1.5], rotate: [0, 6, 12] }}
+                        transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+                        className="pointer-events-none absolute inset-[-12px] -z-10 rounded-full bg-gradient-to-r from-blue-400/20 via-cyan-400/30 to-rose-400/20 blur-[10px]"
+                      />
+                      {Array.from({ length: 10 }).map((_, i) => (
+                        <motion.span
+                          key={`deflate-spark-${i}`}
+                          className="pointer-events-none absolute left-1/2 top-1/2 h-1.5 w-1.5 rounded-full bg-blue-200 shadow-[0_0_14px_rgba(59,130,246,0.9)]"
+                          style={{ rotate: i * 36 }}
+                          initial={{ opacity: 0, scale: 0.2, x: 0, y: 0 }}
+                          animate={{ opacity: [0, 1, 0], scale: [0.2, 1, 0.1], x: [0, 68], y: [0, -6, 12] }}
+                          transition={{ duration: 0.5, delay: i * 0.012, ease: [0.16, 1, 0.3, 1] }}
+                        />
+                      ))}
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <motion.span
+                          key={`deflate-flare-${i}`}
+                          className="pointer-events-none absolute left-1/2 top-1/2 text-xs text-blue-100/80 drop-shadow-[0_0_10px_rgba(147,197,253,0.9)]"
+                          style={{ rotate: i * 60 }}
+                          initial={{ opacity: 0, scale: 0.3, x: 0 }}
+                          animate={{ opacity: [0, 1, 0], scale: [0.3, 1.2, 0.2], x: [0, 54] }}
+                          transition={{ duration: 0.48, delay: i * 0.015, ease: "easeOut" }}
+                        >
+                          ✦
+                        </motion.span>
+                      ))}
+                    </>
+                  )}
                   <motion.span
                     animate={
                       isDeflating
                         ? {
-                            scale: [1.03, 1.08, 0.98, 0.78],
-                            scaleY: [1, 0.9, 0.5, 0.22],
-                            rotate: [0, 4, -6, -16],
-                            skewX: [0, -3, 2, -6],
-                            x: [0, -4, 6, -3],
-                            y: [0, 6, 18, 34],
-                            opacity: [1, 0.9, 0.65, 0.4],
-                            color: ["#93c5fd", "#fca5a5", "#f87171", "#fca5a5"],
+                            scale: [1.03, 1.12, 1.02, 0.72],
+                            scaleY: [1, 0.86, 0.52, 0.18],
+                            rotate: [0, 6, -8, -18],
+                            skewX: [0, -4, 3, -8],
+                            x: [0, -6, 8, -6],
+                            y: [0, 10, 22, 40],
+                            opacity: [1, 0.92, 0.65, 0.32],
+                            color: ["#bfdbfe", "#fca5a5", "#fb7185", "#fca5a5"],
                             textShadow: [
-                              "0 0 24px rgba(59,130,246,0.85)",
-                              "0 0 18px rgba(248,113,113,0.85)",
-                              "0 0 10px rgba(248,113,113,0.55)",
+                              "0 0 28px rgba(59,130,246,0.9)",
+                              "0 0 20px rgba(248,113,113,0.9)",
+                              "0 0 12px rgba(248,113,113,0.6)",
                               "0 0 0 rgba(0,0,0,0)",
                             ],
-                            filter: ["none", "blur(1px)", "blur(4px)", "blur(7px)"],
+                            filter: ["none", "blur(1.5px)", "blur(5px)", "blur(8px)"],
                           }
                         : {
                             scale: 1,
@@ -1301,15 +1377,11 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                             filter: "none",
                           }
                     }
-                    transition={{ duration: 1.35, ease: [0.12, 0.9, 0.15, 1] }}
+                    transition={{ duration: 0.8, ease: [0.12, 0.9, 0.15, 1] }}
                     className="inline-block origin-top"
+                    style={{ willChange: "transform, opacity, filter" }}
                   >
-                    {displayPrice > 0 || realPrice > 0
-                      ? `$${(displayPrice > 0 ? displayPrice : realPrice).toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}`
-                      : "--"}
+                    {activePriceText}
                   </motion.span>
                 </motion.div>
 

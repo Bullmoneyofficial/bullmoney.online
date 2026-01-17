@@ -19,8 +19,9 @@ import { useStudio, type Project } from "@/context/StudioContext";
 // --- EXTERNAL COMPONENTS ---
 // Make sure these paths match your project structure
 import About from "@/components/ui/About"; 
-import ServicesModal from "@/components/ui/SeviceModal";
+import ServicesShowcaseModal from "@/components/ui/ServicesShowcaseModal";
 import AdminModal from "@/components/AdminModal"; // Assuming this is your AdminModal path
+import { useServicesModalUI } from "@/contexts/UIStateContext";
 
 // --- UTILS ---
 function cn(...inputs: ClassValue[]) {
@@ -269,6 +270,7 @@ const Header = React.memo(() => {
   const { state } = useStudio();
   const { hero } = state;
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const { isOpen: isServicesModalOpen, setIsOpen: setIsServicesModalOpen } = useServicesModalUI();
 
   // Fallback defaults if hero is loading
   const headline = hero?.headline || "Alexa Studio";
@@ -360,7 +362,11 @@ const Header = React.memo(() => {
            transition={{ duration: 0.8, delay: 1 }}
            className="mt-6 flex gap-4 items-center relative z-30 pointer-events-auto"
         >
-             <ServicesModal btnText={buttonText} />
+             <ServicesShowcaseModal
+               btnText={buttonText}
+               isOpen={isServicesModalOpen}
+               onOpenChange={setIsServicesModalOpen}
+             />
              <About />
       </motion.div>
 

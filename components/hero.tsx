@@ -22,14 +22,14 @@ import { Loader2, Edit2, Save, X, Trash2, Upload, Instagram, Send } from "lucide
 
 // --- CONTEXT INTEGRATION ---
 import { useStudio, type Project } from "@/context/StudioContext";
-import { useMobileMenu, useUltimatePanelUI } from "@/contexts/UIStateContext";
+import { useMobileMenu, useServicesModalUI, useUltimatePanelUI } from "@/contexts/UIStateContext";
 
 // --- CRASH TRACKING ---
 import { useComponentTracking, useTrackModal } from "@/lib/CrashTracker";
 import { useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
 
 // --- EXTERNAL COMPONENTS ---
-import ServicesModal from "@/components/ui/SeviceModal";
+import ServicesShowcaseModal from "@/components/ui/ServicesShowcaseModal";
 import AdminModal from "@/components/AdminModal";
 import ReflectiveCard from '@/components/ReflectiveCard';
 import HiddenYoutubePlayer from "@/components/Mainpage/HiddenYoutubePlayer";
@@ -478,7 +478,7 @@ const HeroParallax = () => {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const quickEditFileInputRef = useRef<HTMLInputElement>(null);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const [isServicesModalOpen, setIsServicesModalOpen] = useState(false);
+  const { isOpen: isServicesModalOpen, setIsOpen: setIsServicesModalOpen } = useServicesModalUI();
 
   const [editForm, setEditForm] = useState<ProjectFormData>({
     title: "",
@@ -655,9 +655,9 @@ const HeroParallax = () => {
     />
 
     {/* Services Modal - Controlled externally */}
-    <ServicesModal 
-      btnText={buttonText} 
-      isOpen={isServicesModalOpen} 
+    <ServicesShowcaseModal
+      btnText={buttonText}
+      isOpen={isServicesModalOpen}
       onOpenChange={setIsServicesModalOpen}
       showTrigger={false}
     />
