@@ -33,8 +33,8 @@ import { Loader2 } from "lucide-react";
 const AuthModalLazy = lazy(() => import("@/components/auth/AuthModal").then(m => ({ default: m.AuthModal })));
 const BullFeedModalLazy = lazy(() => import("@/components/bull-feed/BullFeedModal").then(m => ({ default: m.BullFeedModal })));
 
-// Analysis & Charts
-const AnalysisModalLazy = lazy(() => import("@/components/AnalysisModal").then(m => ({ default: m.AnalysisModal })));
+// Analysis & Charts - Import the actual modal content, not the trigger
+const EnhancedAnalysisModalLazy = lazy(() => import("@/components/analysis-enhanced/EnhancedAnalysisModal").then(m => ({ default: m.EnhancedAnalysisModal })));
 
 // Live & Products - These modals use UIStateContext internally
 const LiveStreamModalLazy = lazy(() => import("@/components/LiveStreamModal").then(m => ({ default: m.LiveStreamModal })));
@@ -156,7 +156,8 @@ export const LazyPostComposerModal = memo(function LazyPostComposerModal({
 
 // ============================================================================
 // LAZY ANALYSIS MODAL
-// Note: AnalysisModal manages its own state via UIStateContext
+// Note: EnhancedAnalysisModal manages its own state via UIStateContext
+// This is the actual modal content, not just a trigger
 // ============================================================================
 
 export const LazyAnalysisModal = memo(function LazyAnalysisModal({ 
@@ -167,9 +168,11 @@ export const LazyAnalysisModal = memo(function LazyAnalysisModal({
 
   if (!shouldRender) return null;
 
+  // EnhancedAnalysisModal internally uses useAnalysisModalUI() hook
+  // which reads from the same UIStateContext, so it will be in sync
   return (
     <Suspense fallback={<ModalLoadingFallback text="Loading Analysis..." />}>
-      <AnalysisModalLazy />
+      <EnhancedAnalysisModalLazy />
     </Suspense>
   );
 });

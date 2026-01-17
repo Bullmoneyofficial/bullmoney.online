@@ -20,6 +20,7 @@ import {
   UI_Z_INDEX,
   useLiveStreamModalUI,
   useProductsModalUI,
+  useAnalysisModalUI,
 } from '@/contexts/UIStateContext';
 // UNIFIED SHIMMER SYSTEM - Import from single source
 import { ShimmerBorder, ShimmerLine, ShimmerRadialGlow, ShimmerDot } from '@/components/ui/UnifiedShimmer';
@@ -61,6 +62,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
     // SMART MOUNT: Use centralized UI state for modals - they mount ONLY when opened
     const { setIsOpen: setLiveStreamOpen } = useLiveStreamModalUI();
     const { setIsOpen: setProductsOpen } = useProductsModalUI();
+    const { setIsOpen: setAnalysisOpen } = useAnalysisModalUI();
     
     // Track if component should render (delayed unmount for exit animation)
     const [shouldRender, setShouldRender] = useState(open);
@@ -114,9 +116,13 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
     const handleAnalysisClick = useCallback(() => {
       console.log('[MobileDropdownMenu] handleAnalysisClick called');
       SoundEffects.click();
-      onAnalysisClick();
+      // SMART MOUNT: Close menu first, then open modal to avoid race conditions
       onClose();
-    }, [onAnalysisClick, onClose]);
+      // Use setTimeout to ensure menu close completes before modal opens
+      setTimeout(() => {
+        setAnalysisOpen(true);
+      }, 50);
+    }, [onClose, setAnalysisOpen]);
     
     const handleAdminClick = useCallback(() => {
       SoundEffects.click();
@@ -133,15 +139,21 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
     // SMART MOUNT: Trigger LiveStream modal via UI state (not embedded component)
     const handleLiveStreamClick = useCallback(() => {
       SoundEffects.click();
-      setLiveStreamOpen(true);
+      // Close menu first, then open modal to avoid race conditions
       onClose();
+      setTimeout(() => {
+        setLiveStreamOpen(true);
+      }, 50);
     }, [setLiveStreamOpen, onClose]);
     
     // SMART MOUNT: Trigger Products modal via UI state (not embedded component)
     const handleProductsClick = useCallback(() => {
       SoundEffects.click();
-      setProductsOpen(true);
+      // Close menu first, then open modal to avoid race conditions
       onClose();
+      setTimeout(() => {
+        setProductsOpen(true);
+      }, 50);
     }, [setProductsOpen, onClose]);
     
     // SMART MOUNT: Return null if shouldn't render (component fully unmounted)

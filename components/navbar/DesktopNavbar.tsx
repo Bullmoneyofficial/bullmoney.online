@@ -17,7 +17,6 @@ import {
 import { Dock } from './Dock';
 import { MinimizedDock } from './MinimizedDock';
 import { LiveStreamModal } from '@/components/LiveStreamModal';
-import { AnalysisModal } from '@/components/AnalysisModal';
 import { ProductsModal } from '@/components/ProductsModal';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 
