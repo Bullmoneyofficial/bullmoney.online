@@ -267,13 +267,13 @@ export default function Orb({
   }, [hue, hoverIntensity, rotateOnHover, forceHoverState]);
 
   return (
-    <div ref={ctnDom} className="relative w-full h-full flex items-center justify-center">
+    <div ref={ctnDom} className="relative w-full h-full flex items-center justify-center [&>canvas]:absolute [&>canvas]:inset-0 [&>canvas]:w-full [&>canvas]:h-full">
       {/* 🟦 The button sits above the canvas */}
       <button
         onClick={onButtonClick}
-        className="absolute px-6 py-3 rounded-full font-semibold text-white bg-gradient-to-r from-blue-500 to-sky-400
+        className="absolute z-10 px-6 py-3 rounded-full font-semibold text-white bg-gradient-to-r from-blue-500 to-sky-400
           shadow-[0_0_25px_rgba(56,189,248,0.4)] hover:shadow-[0_0_45px_rgba(56,189,248,0.7)]
-          transition-all duration-300"
+          transition-all duration-300 pointer-events-auto"
       >
         {buttonLabel}
       </button>

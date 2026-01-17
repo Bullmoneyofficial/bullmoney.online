@@ -1,15 +1,21 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { UI_Z_INDEX } from "@/contexts/UIStateContext";
 import { AboutContent } from "@/components/AboutContent";
-import { Pricing } from "@/components/pricing";
+import { Pricing } from "@/components/Mainpage/pricing";
 import VipHeroMain from "@/app/VIP/heromain";
 import { ShopProvider } from "@/app/VIP/ShopContext";
 import { cn } from "@/lib/utils";
+import Orb from "@/components/Mainpage/Orb";
+import { Features } from "@/components/Mainpage/features";
+import ProductsSection from "@/app/VIP/ProductsSection";
+import GameBoyPacman from "@/app/shop/ShopScrollFunnel";
+import { AboutContent as Testimonial } from "@/app/Testimonial";
+import { Footer } from "@/components/Mainpage/footer";
 
 interface ServicesShowcaseModalProps {
   btnText?: string;
@@ -58,6 +64,16 @@ export default function ServicesShowcaseModal({
         </div>
         <AboutContent />
         <Pricing />
+        <div className="rounded-3xl overflow-hidden border border-white/10 bg-black/50 p-6 min-h-[400px] h-[50vh] max-h-[600px]">
+          <Orb hue={0} hoverIntensity={0.3} rotateOnHover={true} />
+        </div>
+        <Features />
+        <ShopProvider>
+          <ProductsSection />
+        </ShopProvider>
+        <GameBoyPacman />
+        <Testimonial />
+        <Footer />
       </div>
     );
   }, []);
