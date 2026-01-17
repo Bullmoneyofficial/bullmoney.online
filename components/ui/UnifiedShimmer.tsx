@@ -166,7 +166,7 @@ export const ShimmerStylesProvider = memo(() => (
 ShimmerStylesProvider.displayName = 'ShimmerStylesProvider';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SHIMMER COMPONENTS
+// SHIMMER COMPONENTS - FPS Optimized 2026
 // ═══════════════════════════════════════════════════════════════════════════
 
 type ShimmerProps = { 
@@ -181,24 +181,53 @@ type ShimmerProps = {
   delay?: number;
 };
 
-/** Left-to-right gradient sweep line */
+/** 
+ * Left-to-right gradient sweep line 
+ * FPS OPTIMIZED: Uses CSS containment and will-change: auto when idle
+ */
 export const ShimmerLine = memo(({ className = '', disabled = false }: ShimmerProps) => {
   if (disabled) return null;
-  return <div className={`absolute inset-x-0 top-0 h-[2px] overflow-hidden ${className}`}><div className="shimmer-sweep shimmer-gpu absolute inset-y-0 left-[-100%] w-full" /></div>;
+  return (
+    <div 
+      className={`shimmer-line absolute inset-x-0 top-0 h-[2px] overflow-hidden ${className}`}
+      style={{ contain: 'strict' }}
+      data-shimmer="line"
+    >
+      <div className="shimmer-sweep shimmer-gpu absolute inset-y-0 left-[-100%] w-full" />
+    </div>
+  );
 });
 ShimmerLine.displayName = 'ShimmerLine';
 
-/** Glowing border effect for buttons and cards */
+/** 
+ * Glowing border effect for buttons and cards 
+ * FPS OPTIMIZED: border-radius inherit for proper GPU layer
+ */
 export const ShimmerBorder = memo(({ className = '', disabled = false }: ShimmerProps) => {
   if (disabled) return null;
-  return <div className={`shimmer-border shimmer-gpu absolute inset-0 rounded-inherit pointer-events-none ${className}`} style={{ borderRadius: 'inherit' }} />;
+  return (
+    <div 
+      className={`shimmer-border shimmer-gpu absolute inset-0 rounded-inherit pointer-events-none ${className}`} 
+      style={{ borderRadius: 'inherit', contain: 'layout paint' }}
+      data-shimmer="border"
+    />
+  );
 });
 ShimmerBorder.displayName = 'ShimmerBorder';
 
-/** Slow pulsing glow effect */
+/** 
+ * Slow pulsing glow effect 
+ * FPS OPTIMIZED: box-shadow animations only
+ */
 export const ShimmerGlow = memo(({ className = '', disabled = false }: ShimmerProps) => {
   if (disabled) return null;
-  return <div className={`shimmer-glow shimmer-gpu absolute inset-0 pointer-events-none ${className}`} style={{ borderRadius: 'inherit' }} />;
+  return (
+    <div 
+      className={`shimmer-glow shimmer-gpu absolute inset-0 pointer-events-none ${className}`} 
+      style={{ borderRadius: 'inherit', contain: 'layout paint' }}
+      data-shimmer="glow"
+    />
+  );
 });
 ShimmerGlow.displayName = 'ShimmerGlow';
 

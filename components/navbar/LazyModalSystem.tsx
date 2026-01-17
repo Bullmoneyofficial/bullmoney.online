@@ -194,7 +194,7 @@ export const ModalLoadingSpinner = memo(function ModalLoadingSpinner({
   text?: string;
 }) {
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/90">
       <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
       <p className="text-white/60 text-sm mt-4">{text}</p>
     </div>

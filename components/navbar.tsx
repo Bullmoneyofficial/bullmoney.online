@@ -98,12 +98,13 @@ const MobileMenuControls = memo(({
     {/* Inner Content Container - Theme-aware borders and shadows */}
     <motion.div 
       className={cn(
-        "relative h-full w-full bg-black/95 backdrop-blur-xl rounded-full flex items-center justify-center transition-all duration-200 z-10",
+        "relative h-full w-full bg-black/95 rounded-full flex items-center justify-center transition-all duration-200 z-10",
         isScrollMinimized ? "p-[1px] gap-0.5 px-1.5" : "p-[2px] gap-1 px-2 sm:px-3"
       )}
       style={{
         border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.6)',
         boxShadow: '0 0 25px rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+        /* FPS OPTIMIZATION: No backdrop-blur */
       }}
     >
       {/* Theme Selector Button - Theme-aware icon color */}

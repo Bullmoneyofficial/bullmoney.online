@@ -519,3 +519,213 @@ html.fps-minimal [class*="particle"],
 html.fps-minimal [class*="tsparticles"] {
   display: none !important;
 }
+
+/* ========================================
+   2026 ULTRA PERFORMANCE ENHANCEMENTS
+   ======================================== */
+
+/* CRITICAL: Content-visibility for off-screen sections */
+section,
+article,
+.content-section,
+[data-section] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+/* Skip off-screen rendering entirely */
+[data-visibility="hidden"] {
+  content-visibility: hidden;
+  visibility: hidden;
+}
+
+/* Optimize very long lists */
+.virtual-list-item,
+[data-virtual-item] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 50px;
+}
+
+/* CRITICAL: Force repaint boundaries */
+.repaint-boundary {
+  isolation: isolate;
+  contain: strict;
+}
+
+/* Optimized modal rendering */
+dialog[open],
+.modal-open {
+  contain: layout style paint size;
+  isolation: isolate;
+}
+
+dialog:not([open]),
+.modal:not(.modal-open) {
+  display: none !important;
+  content-visibility: hidden;
+}
+
+/* ULTRA: Disable all non-essential CSS during interaction */
+html.is-interacting .shimmer-line,
+html.is-interacting .shimmer-border,
+html.is-interacting .shimmer-glow,
+html.is-interacting [data-shimmer],
+html.is-interacting [class*="animate-pulse"] {
+  animation: none !important;
+  opacity: 0 !important;
+}
+
+/* Disable expensive gradients during scroll/interaction */
+html.is-scrolling [class*="bg-gradient"],
+html.is-interacting [class*="bg-gradient"] {
+  background: inherit !important;
+}
+
+/* CRITICAL: Optimize framer-motion */
+[data-framer-name],
+[data-framer-component-type],
+[data-framer-portal-id] {
+  contain: layout style;
+  will-change: auto;
+}
+
+/* Force layer promotion only for active animations */
+[data-framer-name].animating,
+.motion-animating {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* CRITICAL: Optimize SVG rendering */
+svg {
+  contain: strict;
+  transform: translateZ(0);
+}
+
+/* Disable SVG animations at low FPS */
+html.fps-low svg *,
+html.fps-minimal svg * {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* CRITICAL: Canvas optimization */
+canvas {
+  contain: strict;
+  isolation: isolate;
+  image-rendering: optimizeSpeed;
+}
+
+/* Reduce canvas quality at low FPS */
+html.fps-low canvas,
+html.fps-minimal canvas {
+  image-rendering: pixelated;
+  filter: none !important;
+}
+
+/* CRITICAL: Video optimization */
+video {
+  contain: strict;
+  object-fit: cover;
+}
+
+html.fps-low video,
+html.fps-minimal video {
+  display: none !important;
+}
+
+/* ULTRA: Aggressive touch scrolling optimization */
+@media (pointer: coarse) {
+  * {
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Disable all hover effects on touch devices */
+  *:hover {
+    animation-play-state: inherit !important;
+  }
+  
+  /* Simpler shadows on touch devices */
+  .shadow-lg,
+  .shadow-xl,
+  .shadow-2xl {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  }
+}
+
+/* CRITICAL: Page visibility optimization */
+html.page-hidden * {
+  animation-play-state: paused !important;
+  transition: none !important;
+}
+
+/* CRITICAL: Battery saver mode detection */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  
+  [data-shimmer],
+  .shimmer-line,
+  .shimmer-border {
+    display: none !important;
+  }
+}
+
+/* ULTRA: Print optimization */
+@media print {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+}
+
+/* ========================================
+   DYNAMIC FPS-BASED ANIMATION SPEED
+   ======================================== */
+
+/* Animation speed scales with FPS tier */
+html.fps-ultra {
+  --animation-speed: 1;
+  --shimmer-duration: 2s;
+}
+
+html.fps-high {
+  --animation-speed: 0.85;
+  --shimmer-duration: 2.5s;
+}
+
+html.fps-medium {
+  --animation-speed: 0.6;
+  --shimmer-duration: 4s;
+}
+
+html.fps-low {
+  --animation-speed: 0;
+  --shimmer-duration: 0s;
+}
+
+html.fps-minimal {
+  --animation-speed: 0;
+  --shimmer-duration: 0s;
+}
+
+/* Apply dynamic animation speed */
+.dynamic-animation {
+  animation-duration: calc(var(--base-duration, 1s) * var(--animation-speed, 1)) !important;
+}
+
+.shimmer-line,
+.shimmer-border {
+  animation-duration: var(--shimmer-duration, 2s) !important;
+}

@@ -114,7 +114,7 @@ export const MovingTradingTip = memo(({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.05, duration: 0.25 }}
-          className="relative px-4 py-2.5 rounded-xl bg-black/85 backdrop-blur-xl tooltip-optimized overflow-hidden"
+          className="relative px-4 py-2.5 rounded-xl bg-black/95 tooltip-optimized overflow-hidden"
           style={{
             border: '1px solid rgba(59, 130, 246, 0.5)',
             boxShadow: '0 0 40px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(59, 130, 246, 0.1)'

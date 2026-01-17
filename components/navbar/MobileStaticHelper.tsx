@@ -116,7 +116,7 @@ export const MobileStaticHelper = memo(() => {
           duration: 0.3,
           ease: [0.34, 1.56, 0.64, 1]
         }}
-        className="relative w-fit px-2.5 py-1.5 rounded-l-2xl backdrop-blur-2xl gpu-accelerated overflow-hidden static-tip-shimmer"
+        className="relative w-fit px-2.5 py-1.5 rounded-l-2xl bg-black/95 gpu-accelerated overflow-hidden static-tip-shimmer"
         data-theme-aware
         style={{
           background: 'linear-gradient(to bottom right, rgba(var(--accent-rgb, 59, 130, 246), 0.3), rgba(var(--accent-rgb, 59, 130, 246), 0.15), rgba(15, 23, 42, 0.4))',

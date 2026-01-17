@@ -7,6 +7,9 @@ import { useUIState } from "@/contexts/UIStateContext";
 // RecruitAuthProvider is now in layout.tsx to wrap Navbar
 // REMOVED: UIStateProvider - already provided by MobileMenuProvider in layout.tsx
 
+// CRITICAL: Import FPS scroll optimizer for pause-during-scroll behavior
+import { FpsScrollOptimizer } from "@/components/FpsScrollOptimizer";
+
 // Theme overlay for global filter effects
 const ThemeOverlay = dynamic(
   () => import("@/components/ThemeOverlay").then((mod) => ({ default: mod.ThemeOverlay })),
@@ -151,6 +154,10 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
     <AuthProvider>
       {/* NOTE: UIStateProvider is already provided by MobileMenuProvider in layout.tsx */}
       {/* NOTE: RecruitAuthProvider is now in layout.tsx to wrap Navbar */}
+      
+      {/* CRITICAL: FPS Scroll Optimizer - pauses animations during scroll */}
+      <FpsScrollOptimizer />
+      
       <UnifiedPerformanceProvider startDelay={2000}>
         <CrashTrackerProvider>
           <FpsOptimizerProvider enableMonitoring={true} monitoringInterval={500} startDelay={1000}>

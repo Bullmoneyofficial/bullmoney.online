@@ -660,20 +660,27 @@ export const FpsOptimizerProvider = memo(function FpsOptimizerProvider({
       const idle = Date.now() - lastInteractionTimeRef.current;
       setTimeSinceLastInteraction(idle);
       
-      // After 60 seconds of idle, reduce shimmer quality to save resources
-      if (idle > 60000 && shimmerQuality === 'high') {
+      // After 45 seconds of idle, reduce shimmer quality to save resources
+      if (idle > 45000 && shimmerQuality === 'high') {
         setShimmerQuality('medium');
         console.log('[FpsOptimizer] Idle detected - reducing shimmer quality');
       }
       
-      // After 2 minutes of idle, disable non-essential shimmers
-      if (idle > 120000 && shimmerQuality !== 'low' && shimmerQuality !== 'disabled') {
+      // After 90 seconds of idle, disable non-essential shimmers
+      if (idle > 90000 && shimmerQuality !== 'low' && shimmerQuality !== 'disabled') {
         setShimmerQuality('low');
         console.log('[FpsOptimizer] Extended idle - minimal shimmers');
       }
+      
+      // After 3 minutes of idle, disable all shimmers
+      if (idle > 180000 && shimmerQuality !== 'disabled') {
+        setShimmerQuality('disabled');
+        console.log('[FpsOptimizer] Deep idle - shimmers disabled');
+      }
     };
     
-    const idleInterval = setInterval(updateIdleTime, 5000);
+    // OPTIMIZED: Check idle less frequently (10s instead of 5s)
+    const idleInterval = setInterval(updateIdleTime, 10000);
     
     // Reset idle on any user interaction
     const resetIdle = () => {
@@ -699,97 +706,82 @@ export const FpsOptimizerProvider = memo(function FpsOptimizerProvider({
     };
   }, [shimmerQuality, config.shimmerQuality]);
   
-  // FPS monitoring and dynamic optimization - OPTIMIZED: Less aggressive to save CPU
+  // FPS monitoring and dynamic optimization - ULTRA OPTIMIZED: Minimal CPU overhead
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!enableMonitoring) return;
 
     let animationId: number | null = null;
-    let started = false;
+    let frameCount = 0;
+    let lastTime = 0;
+    let lastQualityUpdate = 0;
+    let sampleCount = 0;
+    const maxSamples = 5; // Reduced from 10 for faster response
+    const fpsBuffer: number[] = [];
 
-    // OPTIMIZED: Game loop with reduced overhead
+    // ULTRA OPTIMIZED: Lightweight game loop - no state mutations per frame
     const gameLoop = (timestamp: number) => {
-      if (!started) {
-        lastTimeRef.current = timestamp;
-        lastUpdateRef.current = timestamp;
-        lastFrameTimeRef.current = timestamp;
-        started = true;
+      if (lastTime === 0) {
+        lastTime = timestamp;
+        lastQualityUpdate = timestamp;
         animationId = requestAnimationFrame(gameLoop);
         return;
       }
 
-      // Calculate frame time (delta time)
-      const frameTime = timestamp - lastFrameTimeRef.current;
-      lastFrameTimeRef.current = timestamp;
+      frameCount++;
+      const elapsed = timestamp - lastTime;
 
-      // OPTIMIZED: Only track last 30 frames instead of 60
-      frameTimeRef.current.push(frameTime);
-      if (frameTimeRef.current.length > 30) {
-        frameTimeRef.current.shift();
-      }
-
-      frameCountRef.current++;
-      const elapsed = timestamp - lastTimeRef.current;
-
-      // OPTIMIZED: Update FPS every 2 seconds instead of monitoringInterval (500ms)
-      if (elapsed >= 2000) {
-        const fps = Math.round((frameCountRef.current * 1000) / elapsed);
+      // ULTRA OPTIMIZED: Update FPS every 3 seconds to reduce state churn
+      if (elapsed >= 3000) {
+        const fps = Math.round((frameCount * 1000) / elapsed);
+        
+        // Use buffer for averaging - no shift operations
+        fpsBuffer[sampleCount % maxSamples] = fps;
+        sampleCount++;
+        
+        const samplesCollected = Math.min(sampleCount, maxSamples);
+        let sum = 0;
+        for (let i = 0; i < samplesCollected; i++) sum += fpsBuffer[i];
+        const avg = Math.round(sum / samplesCollected);
+        
+        // Batch state updates
         setCurrentFps(fps);
+        setAverageFps(avg);
 
-        // Calculate average frame time
-        const avgFrameTime = frameTimeRef.current.length > 0
-          ? frameTimeRef.current.reduce((a, b) => a + b, 0) / frameTimeRef.current.length
-          : 16.67;
-
-        // Update history - keep only 10 samples
-        fpsHistoryRef.current.push(fps);
-        if (fpsHistoryRef.current.length > 10) {
-          fpsHistoryRef.current.shift();
-        }
-
-        const avg = fpsHistoryRef.current.reduce((a, b) => a + b, 0) / fpsHistoryRef.current.length;
-        setAverageFps(Math.round(avg));
-
-        // OPTIMIZED: Only update quality every 6 seconds (reduced from 3)
-        const timeSinceLastUpdate = timestamp - lastUpdateRef.current;
-        if (timeSinceLastUpdate >= 6000) {
-          const frameTimePressure = avgFrameTime / 16.67;
-
-          if (frameTimePressure > 2.0 || avg < 20) {
+        // ULTRA OPTIMIZED: Quality adjustment every 8 seconds
+        if (timestamp - lastQualityUpdate >= 8000) {
+          // Simple threshold-based quality adjustment
+          if (avg < 25) {
             setShimmerQuality('disabled');
             setSplineQuality('low');
             lowFpsCountRef.current++;
-          } else if (frameTimePressure > 1.5 || avg < 30) {
-            setShimmerQuality('disabled');
-          } else if (frameTimePressure > 1.2 || avg < 45) {
+          } else if (avg < 40) {
             setShimmerQuality('low');
-          } else if (frameTimePressure > 1.0 || avg < 55) {
+          } else if (avg < 52) {
             setShimmerQuality('medium');
-          } else if (avg >= 58) {
-            setShimmerQuality(lowFpsCountRef.current < 2 ? config.shimmerQuality : 'medium');
+          } else if (avg >= 56 && lowFpsCountRef.current < 3) {
+            setShimmerQuality(config.shimmerQuality);
           }
-
-          setTargetFrameRate(60);
-          lastUpdateRef.current = timestamp;
+          lastQualityUpdate = timestamp;
         }
 
-        frameCountRef.current = 0;
-        lastTimeRef.current = timestamp;
+        frameCount = 0;
+        lastTime = timestamp;
       }
 
       animationId = requestAnimationFrame(gameLoop);
     };
 
-    // OPTIMIZED: Wait 5 seconds before starting (was immediate)
+    // ULTRA OPTIMIZED: Wait 6 seconds before starting monitoring
     const timeout = setTimeout(() => {
       animationId = requestAnimationFrame(gameLoop);
-    }, 5000);
+    }, 6000);
 
     return () => {
       clearTimeout(timeout);
       if (animationId !== null) cancelAnimationFrame(animationId);
     };
-  }, [enableMonitoring, isMobile, config.shimmerQuality]);
+  }, [enableMonitoring, config.shimmerQuality]);
   
   // Build state object
   const state: FpsOptimizerState = {

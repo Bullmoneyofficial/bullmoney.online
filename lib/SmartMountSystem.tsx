@@ -71,61 +71,60 @@ interface SmartMountContextType extends SmartMountState {
 
 const SMART_FREEZE_STYLES = `
 /* SmartMount: Global freeze for all unmounted/frozen components */
+/* OPTIMIZED 2026: Reduced specificity for faster CSS matching */
 .smart-frozen,
-.smart-frozen *,
-[data-smart-frozen="true"],
-[data-smart-frozen="true"] * {
+.smart-frozen * {
   animation: none !important;
   animation-play-state: paused !important;
   transition: none !important;
   will-change: auto !important;
+  pointer-events: none !important;
 }
 
 /* Freeze backdrop effects (expensive) */
-.smart-frozen [class*="backdrop-blur"],
-.smart-frozen [class*="backdrop-filter"],
-[data-smart-frozen="true"] [class*="backdrop-blur"],
-[data-smart-frozen="true"] [class*="backdrop-filter"] {
+.smart-frozen [class*="backdrop-blur"] {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
 /* Freeze shadows (GPU intensive) */
-.smart-frozen [class*="shadow-"],
-[data-smart-frozen="true"] [class*="shadow-"] {
+.smart-frozen [class*="shadow-"] {
   box-shadow: none !important;
 }
 
 /* Freeze shimmer animations */
 .smart-frozen .shimmer-line,
 .smart-frozen .shimmer-border,
-.smart-frozen .shimmer-glow,
-.smart-frozen .shimmer-ping,
-[data-smart-frozen="true"] .shimmer-line,
-[data-smart-frozen="true"] .shimmer-border,
-[data-smart-frozen="true"] .shimmer-glow,
-[data-smart-frozen="true"] .shimmer-ping {
+.smart-frozen .shimmer-glow {
   animation: none !important;
   opacity: 0 !important;
+  display: none !important;
 }
 
 /* Freeze Framer Motion */
 .smart-frozen [data-framer-portal-id],
-.smart-frozen [data-motion-pop-id],
-[data-smart-frozen="true"] [data-framer-portal-id],
-[data-smart-frozen="true"] [data-motion-pop-id] {
+.smart-frozen [data-framer-name] {
   animation: none !important;
   transition: none !important;
 }
 
-/* Keep interactive elements working when unfrozen */
+/* Hide frozen content visibility for performance */
+.smart-frozen {
+  content-visibility: hidden;
+  contain: strict;
+}
+
+/* Active state - restore interactions */
+.smart-active {
+  content-visibility: visible;
+  contain: layout style paint;
+}
+
 .smart-active button,
 .smart-active [role="button"],
 .smart-active a,
-.smart-active input,
-.smart-active textarea {
+.smart-active input {
   pointer-events: auto;
-  animation-play-state: running !important;
 }
 `;
 

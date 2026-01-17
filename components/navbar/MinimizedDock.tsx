@@ -130,7 +130,7 @@ const MinimizedIcon = memo(({
             className={cn(
               "absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap",
               "px-2 py-1 rounded-lg text-[10px] font-bold",
-              "bg-black/90 backdrop-blur-xl",
+              "bg-black/95",
               item.isXMHighlight 
                 ? "text-red-300 border border-red-500/40" 
                 : "text-blue-300 border border-blue-500/40"
@@ -181,7 +181,7 @@ export const MinimizedDock = memo(({
       onHoverEnd={() => setIsHovered(false)}
       className={cn(
         "relative flex items-center gap-2 px-3 py-2",
-        "rounded-2xl backdrop-blur-2xl",
+        "rounded-2xl",
         "bg-gradient-to-br from-black/70 via-slate-900/70 to-black/70",
         "border-2 border-blue-500/40 hover:border-blue-400/60",
         "shadow-2xl",
@@ -332,7 +332,7 @@ export const MinimizedDock = memo(({
               initial={{ opacity: 0, y: 5, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 5, scale: 0.9 }}
-              className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 rounded-lg text-[10px] font-bold bg-black/90 backdrop-blur-xl text-blue-300 border border-blue-500/40"
+              className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 rounded-lg text-[10px] font-bold bg-black/95 text-blue-300 border border-blue-500/40"
             >
               Expand
             </motion.div>

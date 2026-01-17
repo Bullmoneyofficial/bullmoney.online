@@ -98,7 +98,7 @@ const DockLabelInline = memo(({
               opacity: { duration: 0.25 }
             }}
             className={cn(
-              "fixed w-max min-w-[160px] rounded-xl bg-black/75 backdrop-blur-2xl px-4 py-2.5 z-[150] pointer-events-none shadow-2xl tooltip-optimized overflow-hidden",
+              "fixed w-max min-w-[160px] rounded-xl bg-black/95 px-4 py-2.5 z-[150] pointer-events-none shadow-2xl tooltip-optimized overflow-hidden",
               className
             )}
             role="tooltip"
@@ -400,7 +400,7 @@ export const Dock = memo(React.forwardRef<HTMLDivElement, DockProps>(
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         className={cn(
-          "mx-auto flex h-24 items-center gap-5 rounded-3xl px-6 shadow-2xl backdrop-blur-3xl transform translateZ-0 dock-glass",
+          "mx-auto flex h-24 items-center gap-5 rounded-3xl px-6 shadow-2xl transform translateZ-0 dock-glass bg-black/90",
           className
         )}
         data-navbar
