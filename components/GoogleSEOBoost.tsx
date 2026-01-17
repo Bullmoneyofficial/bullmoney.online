@@ -567,6 +567,136 @@ const Trending2026Schema = () => {
 };
 
 // ============================================
+// VIRAL WEALTH & SUCCESS SCHEMA (2020-2027)
+// ============================================
+const ViralWealthSchema = () => {
+  const wealthSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Trading Success Stories & Wealth Building",
+    "description": "How traders become millionaires - success stories, strategies, and lifestyle",
+    "url": "https://www.bullmoney.shop",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Crypto Millionaire Stories 2020-2026",
+        "description": "Bitcoin, Ethereum, Dogecoin millionaires - how they did it"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Small Account to Big Gains",
+        "description": "Turn $100 into $10,000 - small account trading strategies"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Quit Your Job Trading",
+        "description": "Financial freedom through trading - escape the 9 to 5"
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "name": "ICT & Smart Money Concepts",
+        "description": "Inner Circle Trader strategies, order blocks, liquidity"
+      },
+      {
+        "@type": "ListItem",
+        "position": 5,
+        "name": "Meme Stock Era - GME & AMC",
+        "description": "WallStreetBets, diamond hands, meme stock millionaires"
+      },
+      {
+        "@type": "ListItem",
+        "position": 6,
+        "name": "Funded Trader Success",
+        "description": "Pass prop firm challenges, FTMO success stories"
+      },
+      {
+        "@type": "ListItem",
+        "position": 7,
+        "name": "Trading Lifestyle 2026",
+        "description": "Laptop lifestyle, trade from anywhere, digital nomad trader"
+      },
+      {
+        "@type": "ListItem",
+        "position": 8,
+        "name": "100x Crypto Gains",
+        "description": "Find the next 100x altcoin - altcoin season strategies"
+      }
+    ]
+  };
+
+  return (
+    <Script
+      id="viral-wealth-schema"
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(wealthSchema) }}
+    />
+  );
+};
+
+// ============================================
+// FAMOUS TRADERS & STRATEGIES SCHEMA
+// ============================================
+const FamousTradersSchema = () => {
+  const tradersSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Famous Trader Strategies & Methods",
+    "description": "Learn from the world's most successful traders - strategies that made millions",
+    "url": "https://www.bullmoney.shop",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "ICT Inner Circle Trader Method",
+        "description": "Smart money concepts, order blocks, liquidity pools, institutional trading"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "SMC Smart Money Concepts",
+        "description": "Bank trading strategies, market structure, supply and demand"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Price Action Trading",
+        "description": "Clean charts, candlestick patterns, support resistance trading"
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "name": "Scalping Strategies",
+        "description": "Quick profits, 1 minute charts, fast execution trading"
+      },
+      {
+        "@type": "ListItem",
+        "position": 5,
+        "name": "Swing Trading Methods",
+        "description": "Hold trades for days, bigger moves, less screen time"
+      },
+      {
+        "@type": "ListItem",
+        "position": 6,
+        "name": "Crypto Trading Strategies",
+        "description": "Bitcoin trading, altcoin rotation, DeFi strategies"
+      }
+    ]
+  };
+
+  return (
+    <Script
+      id="famous-traders-schema"
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(tradersSchema) }}
+    />
+  );
+};
+
+// ============================================
 // COMBINED GOOGLE SEO BOOST COMPONENT
 // ============================================
 export const GoogleSEOBoost = () => {
@@ -581,6 +711,8 @@ export const GoogleSEOBoost = () => {
       <SoftwareAppSchema />
       <NewsArticleListSchema />
       <Trending2026Schema />
+      <ViralWealthSchema />
+      <FamousTradersSchema />
     </>
   );
 };

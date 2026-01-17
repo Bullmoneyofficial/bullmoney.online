@@ -187,7 +187,51 @@ export const metadata: Metadata = {
     
     // 2026 Keywords
     "trading 2026", "best trading strategy 2026", "crypto 2026", "gold 2026",
-    "market outlook 2026", "investment 2026", "where to invest 2026"
+    "market outlook 2026", "investment 2026", "where to invest 2026",
+    
+    // ============================================
+    // 🔥 VIRAL WEALTH & FAMOUS TRADER KEYWORDS (2020-2027)
+    // ============================================
+    
+    // Famous Traders & Success Stories
+    "how traders get rich", "rich trader secrets", "millionaire trader",
+    "how to become rich trading", "trading millionaire", "trading billionaire",
+    "famous traders", "best traders in the world", "top traders 2026",
+    "successful traders", "profitable trader secrets", "trader lifestyle",
+    
+    // Get Rich Trading Keywords (HIGH INTENT)
+    "make money trading", "make money from home trading", "quit job trading",
+    "trading for a living", "full time trader", "trading income",
+    "passive income trading", "trading side hustle", "make $1000 a day trading",
+    "how much can you make trading", "trading profit", "trading gains",
+    "100x crypto", "1000x gains", "turn $100 into $10000",
+    
+    // Viral Trading Trends 2020-2027
+    "GME squeeze", "meme stocks", "wallstreetbets", "WSB",
+    "dogecoin millionaire", "shiba millionaire", "crypto millionaire",
+    "bitcoin millionaire", "NFT millionaire", "trading tiktok",
+    "trading youtube", "trading influencer", "fintwit",
+    
+    // Trading Lifestyle & Motivation
+    "trader motivation", "trading success story", "rags to riches trading",
+    "financial freedom trading", "escape 9 to 5 trading", "work from anywhere trading",
+    "laptop lifestyle trading", "trading from phone", "mobile trading",
+    
+    // Wealth Building Keywords
+    "build wealth trading", "generational wealth", "compound gains",
+    "grow account trading", "small account trading", "$100 to $10000",
+    "flip money", "double your money", "trading challenge",
+    
+    // Year-Specific Viral Keywords
+    "trading 2020", "trading 2021", "trading 2022", "trading 2023",
+    "trading 2024", "trading 2025", "trading 2027",
+    "best trades 2026", "biggest gains 2026", "best investments 2026",
+    "crypto bull run 2024", "crypto bull run 2025", "next bull run",
+    
+    // Beginner Success Keywords
+    "beginner made money trading", "started trading with $100",
+    "first profitable trade", "new trader success", "trading changed my life",
+    "trading transformation", "from broke to rich trading"
   ],
   
   // ============================================

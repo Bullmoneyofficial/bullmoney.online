@@ -194,6 +194,81 @@ export const CRYPTO_KEYWORDS = [
 // ============================================
 // 🔥 2026 TRENDING KEYWORDS (NEW SECTION)
 // ============================================
+// ============================================
+// 🔥 VIRAL WEALTH & FAMOUS TRADER KEYWORDS (2020-2027)
+// ============================================
+export const VIRAL_WEALTH_KEYWORDS = [
+  // Famous Traders & Influencers
+  "how traders get rich", "rich trader secrets", "millionaire trader",
+  "billionaire trader", "famous traders", "best traders in the world",
+  "top traders 2026", "successful traders", "profitable trader secrets",
+  "trader lifestyle", "trading success stories", "trader motivation",
+  
+  // Specific Famous Names (Search Volume)
+  "traders like ICT", "ICT trading", "inner circle trader",
+  "smart money concepts", "SMC trading", "order blocks",
+  "liquidity trading", "institutional trading", "bank trading strategy",
+  "warren buffett trading", "ray dalio strategy", "george soros trading",
+  
+  // Get Rich Trading (HIGH INTENT)
+  "make money trading", "make money from home trading", "quit job trading",
+  "trading for a living", "full time trader", "trading income",
+  "passive income trading", "trading side hustle", "make $1000 a day trading",
+  "make $500 a day trading", "make $100 a day trading",
+  "how much can you make trading", "trading profit", "trading gains",
+  "100x crypto", "1000x gains", "turn $100 into $10000",
+  "turn $1000 into $100000", "flip $50", "flip money trading",
+  
+  // Viral Meme Stock Era (2020-2021)
+  "GME squeeze", "gamestop trading", "AMC squeeze", "meme stocks",
+  "wallstreetbets", "WSB", "diamond hands", "to the moon",
+  "ape together strong", "YOLO trading", "reddit trading",
+  
+  // Crypto Millionaire Stories
+  "dogecoin millionaire", "shiba millionaire", "crypto millionaire",
+  "bitcoin millionaire", "ethereum millionaire", "NFT millionaire",
+  "solana millionaire", "altcoin millionaire", "meme coin millionaire",
+  "pepe millionaire", "bonk millionaire",
+  
+  // Trading Social Media
+  "trading tiktok", "trading youtube", "trading instagram",
+  "trading influencer", "fintwit", "crypto twitter",
+  "trading discord server", "alpha discord", "trading signals free",
+  
+  // Lifestyle & Freedom Keywords
+  "financial freedom trading", "escape 9 to 5", "quit your job trading",
+  "work from anywhere", "laptop lifestyle", "trading from phone",
+  "mobile trading", "trade from beach", "digital nomad trader",
+  "trader lifestyle 2026", "young trader", "gen z trading",
+  
+  // Wealth Building
+  "build wealth trading", "generational wealth crypto", "compound gains",
+  "grow account trading", "small account big gains", "$100 to $10000",
+  "$500 to $50000", "trading challenge", "account flip",
+  "prop firm flip", "funded account to millions",
+  
+  // Success Transformation Stories
+  "trading changed my life", "trading transformation", "from broke to rich",
+  "rags to riches trading", "beginner made money trading",
+  "started trading with $100", "first profitable month",
+  "new trader success", "trading success 2026",
+  
+  // Year-Specific Viral Trends
+  "best trades 2020", "best trades 2021", "best trades 2022",
+  "best trades 2023", "best trades 2024", "best trades 2025",
+  "best trades 2026", "best trades 2027",
+  "crypto 2020", "crypto 2021", "crypto 2022", "crypto 2023",
+  "crypto 2024", "crypto 2025", "crypto 2027",
+  "bull run 2021", "bull run 2024", "bull run 2025", "next bull run",
+  "bear market 2022", "market crash recovery",
+  
+  // Account Challenge Keywords
+  "$100 challenge", "$500 challenge", "$1000 challenge",
+  "small account challenge", "30 day trading challenge",
+  "1 week trading challenge", "trading competition",
+  "best trading results", "trading PnL", "trading screenshots",
+];
+
 export const TRENDING_2026_KEYWORDS = [
   // Bitcoin Price Targets
   "bitcoin $100k", "BTC to 100k", "bitcoin 100000",
@@ -709,6 +784,7 @@ export const ALL_SEO_KEYWORDS = [
   ...TRENDING_KEYWORDS,
   ...QUESTION_KEYWORDS,
   ...TRENDING_2026_KEYWORDS,
+  ...VIRAL_WEALTH_KEYWORDS,
 ];
 
 // Get a subset for meta keywords (limit to ~100 most important)
@@ -763,6 +839,13 @@ export const META_KEYWORDS = [
   "trading 2026", "best trading strategy 2026", "crypto 2026",
   "bitcoin 2026", "gold 2026", "forex 2026", "stock market 2026",
   "where to invest 2026", "market outlook 2026",
+  
+  // 🔥 Viral Wealth Keywords
+  "millionaire trader", "make money trading", "trading for a living",
+  "quit job trading", "financial freedom trading", "100x crypto",
+  "crypto millionaire", "trading lifestyle", "small account big gains",
+  "ICT trading", "smart money concepts", "SMC trading",
+  "wallstreetbets", "meme stocks", "diamond hands",
 ];
 
 export default ALL_SEO_KEYWORDS;
