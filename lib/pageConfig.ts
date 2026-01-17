@@ -74,7 +74,7 @@ export const PAGE_CONFIG = [
     label: "PRODUCTS",
     encryptedTitle: "Pr0d_C4t4l0g_X1",
     infoTitle: "Product Gallery",
-    infoDesc: "Browse our curated collection of trading tools, signals, and automation systems.",
+    infoDesc: "Browse our curated collection of trading tools, setups, and automation systems.",
     funFact: "Our products have generated over $100M in combined user profits!"
   },
   { 

@@ -7,8 +7,6 @@ import dynamic from 'next/dynamic';
 import { redirect } from "next/navigation";
 import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube';
 import { MessageCircle, Volume2, Volume1, VolumeX, X, Palette, Sparkles } from 'lucide-react';
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 
 // --- STATIC IMPORTS ---
 import { ShopProvider } from "../VIP/ShopContext"; 
@@ -407,9 +405,6 @@ export default function Page({ searchParams }: { searchParams?: { src?: string }
 
   return (
     <BlogProvider>
-      <Analytics />
-      <SpeedInsights />
-      
       <style jsx global>{`
         html, body { background-color: black; overflow-x: hidden; }
         .profit-reveal { animation: profitReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }

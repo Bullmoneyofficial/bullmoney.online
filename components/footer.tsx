@@ -126,7 +126,7 @@ const AppsToolsContent = memo(() => {
     { name: "MetaTrader 4", icon: "📈", url: "https://metatrader4.com", desc: "Forex trading platform" },
     { name: "MetaTrader 5", icon: "📉", url: "https://metatrader5.com", desc: "Multi-asset platform" },
     { name: "Discord", icon: "💬", url: "https://discord.gg/bullmoney", desc: "Community chat" },
-    { name: "Telegram", icon: "✈️", url: "https://t.me/bullmoneyonline", desc: "Updates & signals" },
+    { name: "Telegram", icon: "✈️", url: "https://t.me/bullmoneyonline", desc: "Updates & setups" },
   ];
 
   return (

@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
 import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube'; 
 import { Volume2, Volume1, VolumeX, X, Palette, Sparkles, MessageCircle } from 'lucide-react'; 
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 
 // --- CORE STATIC IMPORTS ---
 import { Navbar } from "@/components/Mainpage/navbar"; 
@@ -487,9 +485,6 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
         .animate-music-bar-2 { animation: music-bar-2 1.1s ease-in-out infinite; }
         .animate-music-bar-3 { animation: music-bar-3 0.9s ease-in-out infinite; }
       `}</style>
-
-      <Analytics />
-      <SpeedInsights />
 
       {/* AUDIO SYSTEM */}
       <BackgroundMusicSystem

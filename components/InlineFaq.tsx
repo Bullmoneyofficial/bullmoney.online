@@ -133,8 +133,8 @@ const FAQ_CONTENT: FAQCategoryData[] = [
     category: "Methodology",
     items: [
       { 
-        name: "Do you provide Trading Signals?", 
-        answer: "No. BullMoney is strictly an educational and mentorship community. We do not provide 'signals' for blind copying. We share high-probability setups and market analysis to help you make your own informed decisions."
+        name: "Do you provide Trade Setups?", 
+        answer: "BullMoney is strictly an educational and mentorship community. We share high-probability setups and market analysis to help you make your own informed decisions, not blind copy trades."
       },
       { 
         name: "Is this financial advice?", 

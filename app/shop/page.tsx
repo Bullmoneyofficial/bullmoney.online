@@ -4,8 +4,6 @@ import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic';
 import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube'; 
 import { MessageCircle, Volume2, Volume1, VolumeX, X, Palette, Sparkles } from 'lucide-react'; 
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 
 // --- STATIC IMPORTS ---
 import { ShopProvider } from "@/app/VIP/ShopContext";
@@ -437,9 +435,6 @@ export default function ShopPage() {
         .animate-music-bar-2 { animation: music-bar-2 1.1s ease-in-out infinite; }
         .animate-music-bar-3 { animation: music-bar-3 0.9s ease-in-out infinite; }
       `}</style>
-
-      <Analytics />
-      <SpeedInsights />
 
       {/* AUDIO SYSTEM */}
       <BackgroundMusicSystem

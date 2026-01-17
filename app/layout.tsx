@@ -12,6 +12,17 @@ import "../styles/mobile-scroll-optimization.css"; // Mobile & scroll performanc
 import "../styles/smart-mount.css"; // Smart mount/unmount freeze styles
 import { cn } from "@/lib/utils";
 
+// ✅ VERCEL ANALYTICS & SPEED INSIGHTS - Track all pages from root layout
+// Works with Vercel Free Plan - page views are unlimited, custom events limited to 2,500/month
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
+
+// ✅ ENHANCED WEB VITALS - Report Core Web Vitals to Vercel dashboard with bot filtering
+import { WebVitalsEnhanced } from "@/components/WebVitalsEnhanced";
+
+// ✅ SEO STRUCTURED DATA - JSON-LD for rich search results (stars, FAQs, courses)
+import { AllSEOSchemas } from "@/components/SEOSchemas";
+
 import { ThemeProvider } from "@/context/providers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StudioProvider } from "@/context/StudioContext";
@@ -42,35 +53,156 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_BASE_URL || "https://www.bullmoney.shop"
   ),
-  title: "BullMoney | Elite Trading Community",
-  description:
-    "Join BullMoney - the premier trading community for Crypto, Stocks, Forex, and Metals. Get expert trading setups, connect with traders, and master the markets in real-time. Your path to trading success starts here.",
-  icons: {
-    icon: "/BULL.svg",
+  
+  // ============================================
+  // PRIMARY SEO - Main title and description
+  // ============================================
+  title: {
+    default: "BullMoney | Free Trading Community, Crypto Setups & Market Analysis",
+    template: "%s | BullMoney Trading Community"
   },
+  description:
+    "Join BullMoney - the #1 FREE trading community for Crypto, Gold, Forex & Stocks. Get free trading setups, expert market analysis, live trading mentorship, and connect with 10,000+ traders. Start your trading journey today!",
+  
+  // ============================================
+  // KEYWORDS - Trading, Crypto, Gold, Community
+  // ============================================
+  keywords: [
+    // Primary trading keywords
+    "trading community", "free trading community", "trading setups",
+    "trading mentor", "free trading mentor", "trading mentorship",
+    "learn to trade", "how to trade", "trading for beginners",
+    
+    // Crypto keywords
+    "crypto trading", "cryptocurrency setups", "bitcoin trading",
+    "crypto community", "crypto analysis", "altcoin setups",
+    "ethereum trading", "crypto market news", "free crypto setups",
+    
+    // Gold & Metals
+    "gold trading", "gold setups", "XAUUSD", "gold analysis",
+    "precious metals trading", "gold trading community",
+    
+    // Forex keywords
+    "forex trading", "forex setups", "forex community",
+    "forex mentor", "currency trading", "forex analysis",
+    
+    // Stock keywords
+    "stock trading", "stock market analysis", "stock setups",
+    "day trading", "swing trading", "stock community",
+    
+    // Market news
+    "market news", "trading news", "financial news",
+    "market analysis", "economic news", "trading updates",
+    
+    // Community & Education
+    "trading education", "trading course", "free trading education",
+    "trading discord", "trading telegram", "traders community",
+    "prop firm", "funded trader", "FTMO", "prop trading"
+  ],
+  
+  // ============================================
+  // AUTHORS & CREATOR
+  // ============================================
+  authors: [{ name: "BullMoney", url: "https://www.bullmoney.shop" }],
+  creator: "BullMoney Trading Community",
+  publisher: "BullMoney",
+  
+  // ============================================
+  // ICONS & BRANDING
+  // ============================================
+  icons: {
+    icon: [
+      { url: "/BULL.svg", type: "image/svg+xml" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/icon-180x180.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  
+  // ============================================
+  // OPEN GRAPH - Social Media Sharing
+  // ============================================
   openGraph: {
-    title: "BullMoney | Elite Trading Community",
+    title: "BullMoney | Free Trading Community, Crypto Setups & Market Analysis",
     description:
-      "Join BullMoney - the premier trading community for Crypto, Stocks, Forex, and Metals. Get expert trading setups, connect with traders, and master the markets in real-time. Your path to trading success starts here.",
+      "Join 10,000+ traders in the #1 FREE trading community. Get free crypto setups, gold trading analysis, forex setups, and live mentorship. No fees, no BS - just profitable trading education.",
     url: "https://www.bullmoney.shop/",
-    siteName: "BullMoney",
+    siteName: "BullMoney Trading Community",
     images: [
       {
         url: "/BULL.svg",
         width: 1200,
         height: 630,
-        alt: "BullMoney - Elite Trading Community",
+        alt: "BullMoney - Free Trading Community for Crypto, Gold & Forex",
       },
     ],
     locale: "en_US",
     type: "website",
   },
+  
+  // ============================================
+  // TWITTER CARD - Twitter/X Sharing
+  // ============================================
   twitter: {
     card: "summary_large_image",
-    title: "BullMoney | Elite Trading Community",
+    title: "BullMoney | Free Trading Community & Setups",
     description:
-      "Join BullMoney - the premier trading community for Crypto, Stocks, Forex, and Metals. Get expert trading setups, connect with traders, and master the markets in real-time.",
+      "Join 10,000+ traders. FREE crypto setups, gold analysis, forex setups & live mentorship. Start trading profitably today!",
     images: ["/BULL.svg"],
+    creator: "@BullMoney",
+    site: "@BullMoney",
+  },
+  
+  // ============================================
+  // ROBOTS & INDEXING
+  // ============================================
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  
+  // ============================================
+  // VERIFICATION - Add your verification codes
+  // ============================================
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || "",
+    // yandex: "your-yandex-verification",
+    // bing: "your-bing-verification",
+  },
+  
+  // ============================================
+  // ALTERNATES & CANONICAL
+  // ============================================
+  alternates: {
+    canonical: "https://www.bullmoney.shop",
+    languages: {
+      "en-US": "https://www.bullmoney.shop",
+    },
+  },
+  
+  // ============================================
+  // CATEGORY & CLASSIFICATION
+  // ============================================
+  category: "Finance",
+  classification: "Trading Community, Financial Education",
+  
+  // ============================================
+  // OTHER META
+  // ============================================
+  other: {
+    "apple-mobile-web-app-title": "BullMoney",
+    "application-name": "BullMoney Trading",
+    "msapplication-TileColor": "#000000",
+    "theme-color": "#000000",
   },
 };
 
@@ -662,6 +794,61 @@ export default function RootLayout({
           </ThemeProvider>
           </CacheManagerProvider>
         </ErrorBoundary>
+        
+        {/* ✅ VERCEL TRACKING - Enhanced Analytics & Speed Insights
+            - Analytics: Tracks page views (unlimited on free plan)
+            - SpeedInsights: Tracks Core Web Vitals (LCP, FID, CLS, TTFB, INP)
+            - WebVitalsEnhanced: Additional metrics + bot filtering
+            
+            Free Plan Limits:
+            - Page views: Unlimited
+            - Custom events: 2,500/month
+            - Speed Insights: Included
+        */}
+        <Analytics 
+          mode="production"
+          debug={process.env.NODE_ENV === 'development'}
+          beforeSend={(event) => {
+            // Filter out bot traffic and internal paths
+            if (typeof window !== 'undefined') {
+              const ua = navigator.userAgent.toLowerCase();
+              // Skip bots
+              if (/bot|crawler|spider|scraper|headless|puppeteer|lighthouse/i.test(ua)) {
+                return null;
+              }
+              // Skip internal/admin paths from analytics (saves quota)
+              if (event.url.includes('/api/') || event.url.includes('/_next/')) {
+                return null;
+              }
+            }
+            return event;
+          }}
+        />
+        <SpeedInsights 
+          debug={process.env.NODE_ENV === 'development'}
+          sampleRate={1}
+          beforeSend={(data) => {
+            // Filter bot traffic from Speed Insights
+            if (typeof window !== 'undefined') {
+              const ua = navigator.userAgent.toLowerCase();
+              if (/bot|crawler|spider|lighthouse|pagespeed|gtmetrix/i.test(ua)) {
+                return null;
+              }
+            }
+            return data;
+          }}
+        />
+        <WebVitalsEnhanced />
+        
+        {/* ✅ SEO STRUCTURED DATA - JSON-LD Schemas for Rich Search Results
+            - Organization: Brand info + social links
+            - Website: Site search capability
+            - FAQ: Rich FAQ snippets
+            - Course: Trading education schema
+            - LocalBusiness: Rating stars
+            - Software: App schema
+        */}
+        <AllSEOSchemas />
       </body>
     </html>
   );

@@ -40,7 +40,7 @@ const SECTIONS = [
   {
     number: "06",
     title: "Limitation of Liability",
-    text: "Under no circumstances shall Bullmoney, its owners, or affiliates be liable for any direct, indirect, incidental, or consequential damages resulting from the use or inability to use our website, shop products, or signals. You assume full responsibility for your trading results.",
+    text: "Under no circumstances shall Bullmoney, its owners, or affiliates be liable for any direct, indirect, incidental, or consequential damages resulting from the use or inability to use our website, shop products, or setups. You assume full responsibility for your trading results.",
   },
 ];
 

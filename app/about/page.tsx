@@ -4,8 +4,6 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic';
 import { redirect } from "next/navigation";
 import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube'; 
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Volume2, Volume1, VolumeX, X, Palette, Sparkles, MessageCircle } from 'lucide-react'; 
 
 // --- MASTER COMPONENT IMPORTS ---
@@ -410,9 +408,6 @@ export default function Page({
         .animate-music-bar-2 { animation: music-bar-2 1.1s ease-in-out infinite; }
         .animate-music-bar-3 { animation: music-bar-3 0.9s ease-in-out infinite; }
       `}</style>
-
-      <Analytics />
-      <SpeedInsights />
 
       {/* AUDIO SYSTEM */}
       <BackgroundMusicSystem 

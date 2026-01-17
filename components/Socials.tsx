@@ -617,7 +617,7 @@ export const LiveViewersDashboard = () => {
                                     <Sparkles className="w-5 h-5 text-blue-400" />
                                     Community
                                 </h3>
-                                <p className="text-neutral-400 text-sm">Follow for signals & rewards.</p>
+                                <p className="text-neutral-400 text-sm">Follow for setups & rewards.</p>
                             </div>
                             <div className="w-full md:w-auto overflow-hidden">
                                 <SocialsRow />

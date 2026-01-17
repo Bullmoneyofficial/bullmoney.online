@@ -1078,7 +1078,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                                     <div key={i} className="h-7 w-20 animate-pulse rounded-full bg-white/5 ring-1 ring-white/10" />
                                                 ))
                                             ) : trendingKeywords.length === 0 ? (
-                                                <span className="text-xs text-neutral-600">No trend signals.</span>
+                                                <span className="text-xs text-neutral-600">No trend setups.</span>
                                             ) : (
                                                 trendingKeywords.map((w) => (
                                                     <span key={w} className="rounded-full bg-sky-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-sky-300 ring-1 ring-sky-500/20">

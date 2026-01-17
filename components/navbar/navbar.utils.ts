@@ -34,7 +34,7 @@ export const NAVBAR_THEME_FILTER_MAP: Record<string, string> = {
 // --- TRADING TIPS ---
 export const NAVBAR_TRADING_TIPS = [
   { target: 'Home', text: 'Market overview & latest updates', buttonIndex: 0 },
-  { target: 'Setups', text: 'Daily signals & chart analysis', buttonIndex: 1 },
+  { target: 'Setups', text: 'Daily setups & chart analysis', buttonIndex: 1 },
   { target: 'Affiliates', text: 'Join our affiliate program', buttonIndex: 2 },
   { target: 'FAQ', text: 'Trading guides & support', buttonIndex: 3 },
   { target: 'Rewards', text: 'Earn points on every trade', buttonIndex: 4 },
@@ -46,7 +46,7 @@ export const NAVBAR_TRADING_TIPS = [
 export const MOBILE_HELPER_TIPS = [
   // Button info
   "Home: Market overview & updates",
-  "Setups: Daily trading signals",
+  "Setups: Daily trading setups",
   "Socials: Join 10k+ traders",
   "FAQ: Trading guides & help",
   "Rewards: Earn points on trades",
@@ -66,7 +66,7 @@ export const MOBILE_HELPER_TIPS = [
   "10k+ active traders worldwide",
   "Daily setups for Crypto & Forex",
   "Join our Discord community",
-  "Premium signals available 24/7",
+  "Premium setups available 24/7",
   "Learn from pro traders daily",
 ];
 

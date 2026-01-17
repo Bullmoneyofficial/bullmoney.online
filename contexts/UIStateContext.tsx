@@ -1,6 +1,80 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from 'react';
+
+// ============================================
+// ANALYTICS TRACKING FOR UI STATE (Optimized for Vercel Free Plan)
+// ============================================
+
+// Track only important modals to save quota (2,500 events/month on free plan)
+const TRACKED_COMPONENTS = new Set([
+  'affiliateModal',    // Important for conversion tracking
+  'productsModal',     // Important for e-commerce
+  'servicesModal',     // Important for conversion
+  'adminModal',        // Track admin usage
+  'authModal',         // Track auth funnel
+]);
+
+// Debounce tracking to prevent rapid open/close spam
+const trackingDebounce = new Map<string, number>();
+const DEBOUNCE_MS = 1000; // 1 second debounce
+
+/**
+ * Track UI interactions to Vercel Analytics
+ * 
+ * ⚠️ OPTIMIZED FOR FREE PLAN: Only tracks important modals
+ * to stay within 2,500 custom events/month limit
+ */
+function trackUIStateChange(
+  component: string,
+  action: 'open' | 'close',
+  additionalProps?: Record<string, string | number | boolean | null>
+): void {
+  if (typeof window === 'undefined') return;
+  
+  // Only track important components
+  if (!TRACKED_COMPONENTS.has(component)) {
+    // Just log in development, don't send to analytics
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[UI] ${component} ${action} (not tracked)`);
+    }
+    return;
+  }
+  
+  // Debounce to prevent spam
+  const key = `${component}-${action}`;
+  const lastTrack = trackingDebounce.get(key) || 0;
+  if (Date.now() - lastTrack < DEBOUNCE_MS) {
+    return;
+  }
+  trackingDebounce.set(key, Date.now());
+  
+  // Check for bot (lightweight check)
+  const ua = navigator.userAgent.toLowerCase();
+  if (/bot|crawler|spider|scraper|headless|lighthouse/i.test(ua)) return;
+
+  // Development logging
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[Analytics] UI: ${component} ${action}`);
+  }
+
+  // Only track opens (closes are implied, saves 50% quota)
+  if (action === 'close') return;
+
+  try {
+    // Dynamic import to avoid SSR issues
+    import('@vercel/analytics').then(({ track }) => {
+      track('modal_open', {
+        modal: component,
+        page: window.location.pathname,
+      });
+    }).catch(() => {
+      // Analytics not available, silently fail
+    });
+  } catch {
+    // Silently fail if tracking unavailable
+  }
+}
 
 /**
  * UIStateContext - Centralized UI state management with mutual exclusion
@@ -298,12 +372,15 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     closeOthers();
   }, [closeOthers]);
 
-  // --- Setters with built-in mutual exclusion ---
+  // --- Setters with built-in mutual exclusion and analytics tracking ---
 
   const setMobileMenuOpen = useCallback((open: boolean) => {
     if (open) {
       // Mobile menu has highest priority - closes everything else
       closeOthers('mobileMenu');
+      trackUIStateChange('mobileMenu', 'open');
+    } else {
+      trackUIStateChange('mobileMenu', 'close');
     }
     setIsMobileMenuOpenState(open);
   }, [closeOthers]);
@@ -311,6 +388,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setAudioWidgetOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('audioWidget');
+      trackUIStateChange('audioWidget', 'open');
+    } else {
+      trackUIStateChange('audioWidget', 'close');
     }
     setIsAudioWidgetOpenState(open);
   }, [closeOthers]);
@@ -318,6 +398,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setUltimatePanelOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('ultimatePanel');
+      trackUIStateChange('ultimatePanel', 'open');
+    } else {
+      trackUIStateChange('ultimatePanel', 'close');
     }
     setIsUltimatePanelOpenState(open);
   }, [closeOthers]);
@@ -325,6 +408,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setFooterOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('footer');
+      trackUIStateChange('footer', 'open');
+    } else {
+      trackUIStateChange('footer', 'close');
     }
     setIsFooterOpenState(open);
   }, [closeOthers]);
@@ -332,6 +418,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setChartNewsOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('chartnews');
+      trackUIStateChange('chartNews', 'open');
+    } else {
+      trackUIStateChange('chartNews', 'close');
     }
     setIsChartNewsOpenState(open);
   }, [closeOthers]);
@@ -340,6 +429,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     console.log('[UIStateContext] setAnalysisModalOpen called with:', open);
     if (open) {
       closeOthers('analysisModal');
+      trackUIStateChange('analysisModal', 'open');
+    } else {
+      trackUIStateChange('analysisModal', 'close');
     }
     setIsAnalysisModalOpenState(open);
   }, [closeOthers]);
@@ -347,6 +439,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setLiveStreamModalOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('liveStreamModal');
+      trackUIStateChange('liveStreamModal', 'open');
+    } else {
+      trackUIStateChange('liveStreamModal', 'close');
     }
     setIsLiveStreamModalOpenState(open);
   }, [closeOthers]);
@@ -354,6 +449,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setProductsModalOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('productsModal');
+      trackUIStateChange('productsModal', 'open');
+    } else {
+      trackUIStateChange('productsModal', 'close');
     }
     setIsProductsModalOpenState(open);
   }, [closeOthers]);
@@ -361,6 +459,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setServicesModalOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('servicesModal');
+      trackUIStateChange('servicesModal', 'open');
+    } else {
+      trackUIStateChange('servicesModal', 'close');
     }
     setIsServicesModalOpenState(open);
   }, [closeOthers]);
@@ -368,6 +469,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setAffiliateModalOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('affiliateModal');
+      trackUIStateChange('affiliateModal', 'open');
+    } else {
+      trackUIStateChange('affiliateModal', 'close');
     }
     setIsAffiliateModalOpenState(open);
   }, [closeOthers]);
@@ -375,6 +479,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setThemeSelectorModalOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('themeSelectorModal');
+      trackUIStateChange('themeSelectorModal', 'open');
+    } else {
+      trackUIStateChange('themeSelectorModal', 'close');
     }
     setIsThemeSelectorModalOpenState(open);
   }, [closeOthers]);
@@ -382,6 +489,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setAdminModalOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('adminModal');
+      trackUIStateChange('adminModal', 'open');
+    } else {
+      trackUIStateChange('adminModal', 'close');
     }
     setIsAdminModalOpenState(open);
   }, [closeOthers]);
@@ -389,6 +499,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setFaqModalOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('faqModal');
+      trackUIStateChange('faqModal', 'open');
+    } else {
+      trackUIStateChange('faqModal', 'close');
     }
     setIsFaqModalOpenState(open);
   }, [closeOthers]);
@@ -396,6 +509,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setAppsModalOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('appsModal');
+      trackUIStateChange('appsModal', 'open');
+    } else {
+      trackUIStateChange('appsModal', 'close');
     }
     setIsAppsModalOpenState(open);
   }, [closeOthers]);
@@ -403,6 +519,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setDisclaimerModalOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('disclaimerModal');
+      trackUIStateChange('disclaimerModal', 'open');
+    } else {
+      trackUIStateChange('disclaimerModal', 'close');
     }
     setIsDisclaimerModalOpenState(open);
   }, [closeOthers]);
@@ -410,6 +529,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setPagemodeOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('pagemode');
+      trackUIStateChange('pagemode', 'open');
+    } else {
+      trackUIStateChange('pagemode', 'close');
     }
     setIsPagemodeOpenState(open);
   }, [closeOthers]);
@@ -417,6 +539,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setLoaderv2Open = useCallback((open: boolean) => {
     if (open) {
       closeOthers('loaderv2');
+      trackUIStateChange('loaderV2', 'open');
+    } else {
+      trackUIStateChange('loaderV2', 'close');
     }
     setIsLoaderv2OpenState(open);
   }, [closeOthers]);
@@ -424,6 +549,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setAuthModalOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('authModal');
+      trackUIStateChange('authModal', 'open');
+    } else {
+      trackUIStateChange('authModal', 'close');
     }
     setIsAuthModalOpenState(open);
   }, [closeOthers]);
@@ -431,6 +559,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setBullFeedModalOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('bullFeedModal');
+      trackUIStateChange('bullFeedModal', 'open');
+    } else {
+      trackUIStateChange('bullFeedModal', 'close');
     }
     setIsBullFeedModalOpenState(open);
   }, [closeOthers]);
@@ -438,6 +569,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setPostComposerModalOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('postComposerModal');
+      trackUIStateChange('postComposerModal', 'open');
+    } else {
+      trackUIStateChange('postComposerModal', 'close');
     }
     setIsPostComposerModalOpenState(open);
   }, [closeOthers]);
