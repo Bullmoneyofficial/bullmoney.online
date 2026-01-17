@@ -408,23 +408,23 @@ function HomeContent() {
 
       {currentView === 'content' && (
         <>
-          <main className="min-h-screen flex flex-col w-full overflow-x-hidden" data-allow-scroll data-scrollable>
+          <main className="min-h-screen flex flex-col w-full overflow-x-hidden" data-allow-scroll data-scrollable data-content data-theme-aware>
             <div id="top" />
 
-            <section id="hero" className="w-full" data-allow-scroll>
+            <section id="hero" className="w-full" data-allow-scroll data-content data-theme-aware>
               <Hero />
             </section>
 
-            <section id="cta" className="w-full" data-allow-scroll>
+            <section id="cta" className="w-full" data-allow-scroll data-content data-theme-aware>
               <CTA />
             </section>
 
-            <section id="features" className="w-full" data-allow-scroll>
+            <section id="features" className="w-full" data-allow-scroll data-content data-theme-aware>
               <Features />
             </section>
 
             {/* 3D Spline Section - Desktop only; quality adapts per device */}
-            <section id="experience" className="w-full max-w-7xl mx-auto px-4 py-16 hidden md:block" data-allow-scroll style={{ touchAction: 'pan-y' }}>
+            <section id="experience" className="w-full max-w-7xl mx-auto px-4 py-16 hidden md:block" data-allow-scroll data-content data-theme-aware style={{ touchAction: 'pan-y' }}>
               {/* Section Header */}
               <div className="relative text-center mb-8">
                 <h2 className="text-xl md:text-2xl font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #3b82f6), white)', filter: 'drop-shadow(0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.5))' }}>
@@ -458,7 +458,7 @@ function HomeContent() {
             </section>
 
             {/* Mobile-only Testimonials Section - Shows on small devices instead of heavy 3D */}
-            <section id="testimonials" className="w-full max-w-5xl mx-auto px-4 py-12 md:hidden" data-allow-scroll style={{ touchAction: 'pan-y' }}>
+            <section id="testimonials" className="w-full max-w-5xl mx-auto px-4 py-12 md:hidden" data-allow-scroll data-content data-theme-aware style={{ touchAction: 'pan-y' }}>
               {/* Section Header */}
               <div className="relative text-center mb-6">
                 <h2 className="text-lg font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #3b82f6), white)', filter: 'drop-shadow(0 0 15px rgba(var(--accent-rgb, 59, 130, 246), 0.5))' }}>
@@ -483,7 +483,7 @@ function HomeContent() {
               </div>
             </section>
 
-            <section id="ticker" className="w-full" data-allow-scroll>
+            <section id="ticker" className="w-full" data-allow-scroll data-footer data-theme-aware>
               <LiveMarketTicker />
             </section>
           </main>

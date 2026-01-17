@@ -192,10 +192,66 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
       }));
       
       // ═══════════════════════════════════════════════════════════════════════════
-      // GLOBAL THEME OVERLAY v3.0 - DOM-Based for Full Coverage
+      // GLOBAL THEME OVERLAY v4.0 - Bottom-to-Top Transition System
       // This overlay covers EVERYTHING including Spline/Canvas elements
+      // Theme changes animate from BOTTOM to TOP like a wave washing over the UI
       // Uses pointer-events: none to allow all interactions through
       // ═══════════════════════════════════════════════════════════════════════════
+      
+      // Create or get the transition reveal overlay (animates bottom to top)
+      let transitionOverlay = document.getElementById('theme-transition-reveal');
+      if (!transitionOverlay) {
+        transitionOverlay = document.createElement('div');
+        transitionOverlay.id = 'theme-transition-reveal';
+        document.body.appendChild(transitionOverlay);
+      }
+      
+      // Trigger bottom-to-top transition animation
+      Object.assign(transitionOverlay.style, {
+        position: 'fixed',
+        left: '0',
+        right: '0',
+        bottom: '0',
+        height: '0%',
+        zIndex: '9999999', // Above everything during transition
+        pointerEvents: 'none',
+        touchAction: 'none',
+        userSelect: 'none',
+        // Theme color with glow
+        background: `linear-gradient(
+          to top,
+          rgba(${r}, ${g}, ${b}, 0.6) 0%,
+          rgba(${r}, ${g}, ${b}, 0.4) 30%,
+          rgba(${r}, ${g}, ${b}, 0.2) 60%,
+          rgba(${r}, ${g}, ${b}, 0.05) 90%,
+          transparent 100%
+        )`,
+        boxShadow: `0 -20px 60px rgba(${r}, ${g}, ${b}, 0.4), 0 -10px 30px rgba(${r}, ${g}, ${b}, 0.3)`,
+        transform: 'translateZ(0)',
+        willChange: 'height',
+        transition: 'none', // Will be animated via keyframes
+      });
+      
+      // Trigger the bottom-to-top animation
+      transitionOverlay.animate([
+        { height: '0%', opacity: 1 },
+        { height: '100%', opacity: 1 },
+        { height: '100%', opacity: 0 }
+      ], {
+        duration: 600,
+        easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        fill: 'forwards'
+      });
+      
+      // Dispatch event for components to animate their theme changes bottom-to-top
+      window.dispatchEvent(new CustomEvent('theme-transition-start', {
+        detail: { 
+          themeId: theme.id, 
+          accentColor: theme.accentColor,
+          rgb: { r, g, b },
+          direction: 'bottom-to-top'
+        }
+      }));
       
       let overlay = document.getElementById('theme-global-overlay');
       if (!overlay) {

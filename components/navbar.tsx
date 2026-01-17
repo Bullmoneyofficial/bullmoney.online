@@ -54,7 +54,7 @@ import { useComponentTracking } from "@/lib/CrashTracker";
 // --- IMPORT NAVBAR CSS ---
 import "./navbar.css";
 
-// --- MOBILE MENU CONTROLS COMPONENT (Optimized with Unified Shimmer) ---
+// --- MOBILE MENU CONTROLS COMPONENT (Optimized with Unified Shimmer + Theme-Aware) ---
 const MobileMenuControls = memo(({ 
   open, 
   onToggle, 
@@ -66,7 +66,9 @@ const MobileMenuControls = memo(({
   isScrollMinimized = false,
 }: any) => (
   <motion.div 
-    className="relative group rounded-full overflow-hidden shadow-2xl z-50 flex items-center flex-grow navbar-shimmer"
+    className="relative group rounded-full overflow-hidden shadow-2xl z-50 flex items-center flex-grow"
+    data-theme-aware
+    data-navbar
     animate={{
       height: isScrollMinimized ? 36 : undefined,
       maxWidth: isScrollMinimized ? '7rem' : '12rem',
@@ -75,55 +77,68 @@ const MobileMenuControls = memo(({
     transition={{ type: 'spring', damping: 25, stiffness: 450, mass: 0.6 }}
     style={{ 
       height: isScrollMinimized ? 36 : 'auto',
+      transition: 'border-color 0.4s ease-out, box-shadow 0.4s ease-out',
+      transitionDelay: '0.35s', // Navbar transitions last (bottom-to-top)
     }}
   >
-    {/* Unified Shimmer Border - GPU accelerated, LEFT TO RIGHT */}
-    {shimmerEnabled && !isScrollMinimized && <ShimmerBorder color="blue" intensity={shimmerSettings.intensity} speed={shimmerSettings.speed} />}
+    {/* UNIFIED SHIMMER - Border glow effect, theme-aware via CSS variables */}
+    {shimmerEnabled && !isScrollMinimized && <ShimmerBorder />}
+    
+    {/* UNIFIED SHIMMER - Background glow effect */}
+    {shimmerEnabled && !isScrollMinimized && (
+      <div className="shimmer-glow shimmer-gpu absolute inset-0 rounded-full pointer-events-none" />
+    )}
 
-    {/* Inner Content Container */}
+    {/* Inner Content Container - Theme-aware borders and shadows */}
     <motion.div 
       className={cn(
-        "relative h-full w-full bg-black/95 dark:bg-black/95 backdrop-blur-xl rounded-full flex items-center justify-center border-2 border-blue-500/60 dark:border-blue-500/60 transition-all duration-200 group-hover:border-blue-400/80 group-hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] z-10",
+        "relative h-full w-full bg-black/95 backdrop-blur-xl rounded-full flex items-center justify-center transition-all duration-200 z-10",
         isScrollMinimized ? "p-[1px] gap-0.5 px-1.5" : "p-[2px] gap-1 px-2 sm:px-3"
       )}
+      style={{
+        border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.6)',
+        boxShadow: '0 0 25px rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+      }}
     >
-      {/* Theme Selector Button */}
+      {/* Theme Selector Button - Theme-aware icon color */}
       <motion.button
         onClick={() => { SoundEffects.click(); onThemeClick(); }}
         onMouseEnter={() => SoundEffects.hover()}
         onTouchStart={() => SoundEffects.click()}
-        whileHover={{ scale: 1.1, backgroundColor: "rgba(59, 130, 246, 0.15)" }}
+        whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         className={cn(
-          "rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center",
+          "rounded-full transition-colors flex items-center justify-center",
           isScrollMinimized 
             ? "p-1 min-w-[28px] min-h-[28px]" 
             : "p-1.5 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
         )}
+        style={{ color: 'var(--accent-color, #93c5fd)' }}
         title="Theme Selector"
       >
         <IconPalette className={isScrollMinimized ? "h-3.5 w-3.5" : "h-4 w-4 sm:h-5 sm:w-5"} />
       </motion.button>
 
-      {/* Divider */}
-      <div className={cn(
-        "bg-gradient-to-b from-blue-500/20 via-blue-500/40 to-blue-500/20 dark:bg-blue-500/20",
-        isScrollMinimized ? "h-3 w-[1px]" : "h-4 w-[1px]"
-      )} />
+      {/* Divider - Theme-aware */}
+      <div 
+        className={cn(isScrollMinimized ? "h-3 w-[1px]" : "h-4 w-[1px]")}
+        style={{ background: 'linear-gradient(to bottom, rgba(var(--accent-rgb, 59, 130, 246), 0.2), rgba(var(--accent-rgb, 59, 130, 246), 0.5), rgba(var(--accent-rgb, 59, 130, 246), 0.2))' }}
+      />
 
-      {/* Menu Toggle Button */}
+      {/* Menu Toggle Button - Theme-aware icon color */}
       <motion.button
         onClick={() => { SoundEffects.click(); onToggle(); }}
         onMouseEnter={() => SoundEffects.hover()}
         onTouchStart={() => SoundEffects.click()}
-        whileHover={{ scale: 1.1, backgroundColor: "rgba(59, 130, 246, 0.15)" }}
+        whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         className={cn(
-          "rounded-full text-blue-200/80 dark:text-blue-200/80 hover:text-blue-300 transition-colors flex items-center justify-center",
+          "rounded-full transition-colors flex items-center justify-center",
           isScrollMinimized 
             ? "p-1 min-w-[28px] min-h-[28px]" 
             : "p-1.5 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
         )}
+        style={{ color: 'var(--accent-color, #93c5fd)' }}
         title={open ? 'Close menu' : 'Open menu'}
       >
         <div className="relative flex items-center justify-center">
@@ -134,8 +149,8 @@ const MobileMenuControls = memo(({
           )}
           {hasReward && !open && (
             <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
-              <span className="shimmer-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+              <span className="shimmer-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: 'var(--accent-color, #3b82f6)' }}></span>
+              <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: 'var(--accent-color, #3b82f6)' }}></span>
             </span>
           )}
         </div>
@@ -409,12 +424,15 @@ export const Navbar = memo(() => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: mounted ? 1 : 0, y: mounted ? 0 : -20 }}
         transition={{ duration: 0.5 }}
-        className="fixed top-8 inset-x-0 z-40 w-full px-4 pointer-events-none navbar-themed"
+        className="fixed top-8 inset-x-0 z-40 w-full px-4 pointer-events-none navbar-themed navbar"
         style={{
           filter: themeFilter,
-          transition: 'filter 0.5s ease-in-out, opacity 0.3s ease-in-out'
+          transition: 'filter 0.5s ease-in-out, opacity 0.3s ease-in-out, border-color 0.4s ease-out, box-shadow 0.4s ease-out',
+          transitionDelay: '0.35s', // Navbar transitions last (top element in bottom-to-top)
         }}
         data-navbar-container
+        data-navbar
+        data-theme-aware
       >
         {/* Cal.com Hidden Trigger */}
         <button

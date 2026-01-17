@@ -957,9 +957,11 @@ const HeroParallax = () => {
 
     <div
         ref={ref}
-        className="h-screen pt-10 pb-0 antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d]"
+        className="h-screen pt-10 pb-0 antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d] hero"
         style={{ contain: 'layout', touchAction: 'pan-y' }}
         data-allow-scroll
+        data-content
+        data-theme-aware
     >
         <div 
           className="absolute inset-0 w-full h-full z-0 pointer-events-none"

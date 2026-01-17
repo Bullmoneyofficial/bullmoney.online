@@ -116,21 +116,24 @@ export const MobileStaticHelper = memo(() => {
           duration: 0.3,
           ease: [0.34, 1.56, 0.64, 1]
         }}
-        className="relative w-fit px-2.5 py-1.5 rounded-l-2xl bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-slate-900/40 backdrop-blur-2xl gpu-accelerated overflow-hidden static-tip-shimmer"
+        className="relative w-fit px-2.5 py-1.5 rounded-l-2xl backdrop-blur-2xl gpu-accelerated overflow-hidden static-tip-shimmer"
+        data-theme-aware
         style={{
-          borderTop: '1px solid rgba(59, 130, 246, 0.5)',
-          borderLeft: '1px solid rgba(59, 130, 246, 0.5)',
-          borderBottom: '1px solid rgba(59, 130, 246, 0.5)',
-          boxShadow: '0 0 20px rgba(59, 130, 246, 0.2), inset 0 0 10px rgba(59, 130, 246, 0.08)'
+          background: 'linear-gradient(to bottom right, rgba(var(--accent-rgb, 59, 130, 246), 0.3), rgba(var(--accent-rgb, 59, 130, 246), 0.15), rgba(15, 23, 42, 0.4))',
+          borderTop: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
+          borderLeft: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
+          borderBottom: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
+          boxShadow: '0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.2), inset 0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.08)',
+          transition: 'background 0.4s ease-out, border-color 0.4s ease-out, box-shadow 0.4s ease-out',
         }}
       >
-        {/* Unified Shimmer - Left to Right using ShimmerLine component */}
+        {/* Unified Shimmer - Left to Right using theme-aware colors */}
         {shimmerEnabled && (
           <div className="absolute inset-0 overflow-hidden rounded-l-2xl pointer-events-none">
             <div 
               className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%]"
               style={{
-                background: 'linear-gradient(to right, transparent, rgba(59, 130, 246, 0.3), transparent)',
+                background: 'linear-gradient(to right, transparent, rgba(var(--accent-rgb, 59, 130, 246), 0.3), transparent)',
                 animationDuration: shimmerSettings.speed === 'slow' ? '5s' : '3s',
               }}
             />
@@ -143,7 +146,7 @@ export const MobileStaticHelper = memo(() => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1, duration: 0.2 }}
         >
-          {/* Pulse indicator */}
+          {/* Pulse indicator - Theme-aware */}
           <motion.div 
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -152,15 +155,15 @@ export const MobileStaticHelper = memo(() => {
           >
             <span 
               className="shimmer-ping absolute inline-flex h-full w-full rounded-full opacity-75" 
-              style={{ backgroundColor: '#3b82f6' }}
+              style={{ backgroundColor: 'var(--accent-color, #3b82f6)' }}
             />
             <span 
               className="relative inline-flex rounded-full h-1.5 w-1.5" 
-              style={{ backgroundColor: '#3b82f6' }}
+              style={{ backgroundColor: 'var(--accent-color, #3b82f6)' }}
             />
           </motion.div>
           
-          {/* Rotating tip text */}
+          {/* Rotating tip text - Theme-aware */}
           <AnimatePresence mode="wait">
             <motion.span 
               key={tipIndex}
@@ -172,7 +175,7 @@ export const MobileStaticHelper = memo(() => {
                 ease: [0.34, 1.56, 0.64, 1]
               }}
               className="text-[9px] tracking-wide font-medium text-right leading-tight whitespace-nowrap"
-              style={{ color: '#93c5fd' }}
+              style={{ color: 'var(--accent-color, #93c5fd)' }}
             >
               {MOBILE_HELPER_TIPS[tipIndex]}
             </motion.span>

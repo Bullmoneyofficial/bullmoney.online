@@ -74,6 +74,11 @@ export const ShimmerStylesProvider = memo(() => (
       0%, 100% { box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb, 59, 130, 246), 0.3), 0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.2); } 
       50% { box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb, 59, 130, 246), 0.6), 0 0 25px rgba(var(--accent-rgb, 59, 130, 246), 0.4); } 
     }
+    
+    /* PING ANIMATION - Theme-aware expanding pulse */
+    @keyframes shimmer-ping-animation {
+      75%, 100% { transform: scale(2); opacity: 0; }
+    }
 
     /* CSS CLASSES - Theme-aware using CSS variables */
     .shimmer-sweep { 
@@ -126,6 +131,12 @@ export const ShimmerStylesProvider = memo(() => (
     .shimmer-gpu { 
       transform: translateZ(0); 
       backface-visibility: hidden; 
+    }
+    
+    /* PING - Theme-aware expanding pulse */
+    .shimmer-ping {
+      animation: shimmer-ping-animation 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+      background-color: var(--accent-color, #3b82f6);
     }
 
     /* Reduced motion */
@@ -240,8 +251,8 @@ export const ShimmerFloat = ShimmerFloatComponent;
 
 const ShimmerDotComponent = memo(({ className = '', delay = 0 }: ShimmerProps) => (
   <span 
-    className={`shimmer-glow w-2 h-2 rounded-full bg-blue-500 ${className}`} 
-    style={{ animationDelay: `${delay}s` }}
+    className={`shimmer-glow w-2 h-2 rounded-full ${className}`} 
+    style={{ animationDelay: `${delay}s`, backgroundColor: 'var(--accent-color, #3b82f6)' }}
   />
 ));
 ShimmerDotComponent.displayName = 'ShimmerDot';
@@ -250,8 +261,18 @@ export const ShimmerDot = ShimmerDotComponent;
 const ShimmerSpinnerComponent = memo(({ className = '', size = 32 }: ShimmerProps) => {
   const sizeStyle = { width: size, height: size };
   return (
-    <div className={`shimmer-glow rounded-full border-2 border-blue-500/50 flex items-center justify-center ${className}`} style={sizeStyle}>
-      <div className="animate-spin rounded-full border-2 border-transparent border-t-blue-400" style={{ width: size * 0.75, height: size * 0.75 }} />
+    <div 
+      className={`shimmer-glow rounded-full flex items-center justify-center ${className}`} 
+      style={{ ...sizeStyle, border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)' }}
+    >
+      <div 
+        className="animate-spin rounded-full border-2 border-transparent" 
+        style={{ 
+          width: size * 0.75, 
+          height: size * 0.75,
+          borderTopColor: 'var(--accent-color, #60a5fa)'
+        }} 
+      />
     </div>
   );
 });

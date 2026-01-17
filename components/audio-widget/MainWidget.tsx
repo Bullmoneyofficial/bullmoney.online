@@ -375,11 +375,19 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
             {/* Main Widget Container - Compact */}
             <motion.div
               layout
+              data-audio-widget
+              data-theme-aware
               className={cn(
-                "relative rounded-2xl border border-blue-500/30 bg-black/95 backdrop-blur-2xl shadow-2xl",
+                "relative rounded-2xl bg-black/95 backdrop-blur-2xl shadow-2xl",
                 "text-white/90 overflow-hidden audio-shimmer",
                 open ? "w-[280px] sm:w-[320px]" : "w-auto"
               )}
+              style={{
+                border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+                boxShadow: '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.15)',
+                transition: 'border-color 0.4s ease-out, box-shadow 0.4s ease-out',
+                transitionDelay: '0.05s', // Audio widget transitions first (bottom element)
+              }}
             >
               {shimmerEnabled && <ShimmerLine color="blue" intensity={shimmerSettings.intensity as any} speed={shimmerSettings.speed as any} />}
 

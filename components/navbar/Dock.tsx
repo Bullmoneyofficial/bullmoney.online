@@ -400,14 +400,18 @@ export const Dock = memo(React.forwardRef<HTMLDivElement, DockProps>(
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         className={cn(
-          "mx-auto flex h-24 items-center gap-5 rounded-3xl px-6 shadow-2xl backdrop-blur-3xl transition-all duration-300 transform translateZ-0 dock-glass",
+          "mx-auto flex h-24 items-center gap-5 rounded-3xl px-6 shadow-2xl backdrop-blur-3xl transform translateZ-0 dock-glass",
           className
         )}
+        data-navbar
+        data-theme-aware
         style={{ 
           transform: 'translateZ(0)',
           background: 'rgba(0, 0, 0, 0.5)',
-          border: '2px solid rgba(59, 130, 246, 0.4)',
-          boxShadow: '0 0 40px rgba(59, 130, 246, 0.2)'
+          border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
+          boxShadow: '0 0 40px rgba(var(--accent-rgb, 59, 130, 246), 0.2)',
+          transition: 'border-color 0.4s ease-out, box-shadow 0.4s ease-out, background-color 0.4s ease-out',
+          transitionDelay: '0.35s', // Navbar transitions last (bottom-to-top)
         }}
       >
         {items.map((item, index) => (

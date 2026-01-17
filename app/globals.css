@@ -545,10 +545,96 @@ body::after {
 }
 
 /* ============================================
-   GLOBAL THEME OVERLAY SYSTEM v3.0
+   GLOBAL THEME OVERLAY SYSTEM v4.0
+   BOTTOM-TO-TOP THEME TRANSITION SYSTEM
    Full-coverage overlay that tints EVERYTHING including Spline/Canvas
+   Theme changes animate from BOTTOM to TOP like a futuristic wave
    WITHOUT breaking scroll, fixed elements, or cross-browser compat
    ============================================ */
+
+/* Bottom-to-Top Theme Transition Reveal Overlay */
+#theme-transition-reveal {
+  pointer-events: none !important;
+  touch-action: none !important;
+  user-select: none !important;
+  overflow: visible !important;
+  /* Extra glow effects */
+  filter: blur(0px);
+}
+
+/* Theme transition animation keyframes */
+@keyframes themeRevealBottomToTop {
+  0% {
+    height: 0%;
+    opacity: 1;
+  }
+  70% {
+    height: 100%;
+    opacity: 1;
+  }
+  100% {
+    height: 100%;
+    opacity: 0;
+  }
+}
+
+/* Theme transition glow pulse */
+@keyframes themeTransitionGlow {
+  0%, 100% {
+    box-shadow: 
+      0 -20px 60px rgba(var(--accent-rgb, 59, 130, 246), 0.4),
+      0 -10px 30px rgba(var(--accent-rgb, 59, 130, 246), 0.3);
+  }
+  50% {
+    box-shadow: 
+      0 -30px 80px rgba(var(--accent-rgb, 59, 130, 246), 0.6),
+      0 -15px 45px rgba(var(--accent-rgb, 59, 130, 246), 0.5);
+  }
+}
+
+/* Apply theme transition to all visual elements - bottom to top stagger */
+.theme-transition-element {
+  transition: 
+    background-color 0.5s ease-out,
+    border-color 0.5s ease-out,
+    box-shadow 0.5s ease-out,
+    color 0.4s ease-out;
+  /* Elements at top of viewport transition last (stagger from bottom) */
+}
+
+/* Staggered transition for navbar (at top - transitions last) */
+nav, 
+header,
+[data-navbar],
+.dock-glass,
+.navbar {
+  transition-delay: 0.35s;
+}
+
+/* Staggered transition for middle content */
+main,
+section,
+[data-content],
+.hero {
+  transition-delay: 0.2s;
+}
+
+/* Staggered transition for bottom elements (transitions first) */
+footer,
+[data-footer],
+.audio-widget,
+[data-audio-widget],
+.floating-player {
+  transition-delay: 0.05s;
+}
+
+/* Theme-aware component transitions */
+[data-theme-aware] {
+  transition: 
+    background-color 0.4s ease-out,
+    border-color 0.4s ease-out,
+    box-shadow 0.4s ease-out !important;
+}
 
 /* 
    ARCHITECTURE:
