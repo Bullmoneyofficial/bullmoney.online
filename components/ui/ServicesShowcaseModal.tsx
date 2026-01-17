@@ -1,17 +1,33 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, lazy, Suspense, useRef, createContext, useContext } from "react";
+import React, { useEffect, useState, useCallback, lazy, Suspense, useRef, createContext, useContext, memo } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Gamepad2, Sparkles, Loader2 } from "lucide-react";
 import { UI_Z_INDEX, useUIState } from "@/contexts/UIStateContext";
 import { cn } from "@/lib/utils";
 
-// Animation freeze context - pauses all animations except Orb for FPS optimization
-const AnimationFreezeContext = createContext<boolean>(false);
+// ============================================================================
+// LAZY LOADING SYSTEM - Nothing loads until modal opens
+// ============================================================================
+
+// Animation freeze context - smart freezing based on visibility and interaction
+interface AnimationFreezeState {
+  isFrozen: boolean;
+  isGameOpen: boolean;
+  prefersReducedMotion: boolean;
+}
+const AnimationFreezeContext = createContext<AnimationFreezeState>({
+  isFrozen: false,
+  isGameOpen: false,
+  prefersReducedMotion: false,
+});
 export const useAnimationFreeze = () => useContext(AnimationFreezeContext);
 
-// Lazy load ALL heavy components - only load when modal opens
+// Track if modal has ever been opened - prevents ANY loading until first open
+let hasModalEverOpened = false;
+
+// Lazy load ALL heavy components - ONLY when modal actually opens
 const AboutContent = lazy(() => import("@/components/AboutContent").then(m => ({ default: m.AboutContent })));
 const Pricing = lazy(() => import("@/components/Mainpage/pricing").then(m => ({ default: m.Pricing })));
 const VipHeroMain = lazy(() => import("@/app/VIP/heromain"));
@@ -25,18 +41,129 @@ const Footer = lazy(() => import("@/components/Mainpage/footer").then(m => ({ de
 // Lazy load ShopProvider separately
 const ShopProviderLazy = lazy(() => import("@/app/VIP/ShopContext").then(m => ({ default: m.ShopProvider })));
 
-// CSS styles to freeze animations (injected when modal is open)
-const FREEZE_ANIMATIONS_STYLE = `
-  .services-modal-content *:not(.orb-container):not(.orb-container *) {
-    animation-play-state: paused !important;
-    transition-duration: 0s !important;
+// ============================================================================
+// GLOBAL FREEZE STYLES - Injected only when modal is open
+// ============================================================================
+const SMART_FREEZE_STYLE = `
+  /* GLOBAL: Prevent any services modal content from affecting main page */
+  .services-modal-portal {
+    contain: strict;
+    isolation: isolate;
   }
+
+  /* Content-visibility: skip rendering of off-screen sections */
+  .services-modal-content .freeze-zone:not(.in-viewport) {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 500px;
+  }
+  
+  /* Aggressive freeze for off-screen content */
+  .services-modal-content .freeze-zone:not(.in-viewport) * {
+    animation: none !important;
+    transition: none !important;
+    will-change: auto !important;
+  }
+  
+  /* During scroll: MAXIMUM PERFORMANCE MODE */
+  .services-modal-content.is-scrolling * {
+    animation-play-state: paused !important;
+    transition: none !important;
+    will-change: auto !important;
+  }
+  
+  .services-modal-content.is-scrolling [class*="backdrop-blur"],
+  .services-modal-content.is-scrolling [class*="backdrop-filter"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  
+  .services-modal-content.is-scrolling [class*="shadow-"] {
+    box-shadow: none !important;
+  }
+  
+  /* Always keep Orb running */
+  .services-modal-content .orb-container,
+  .services-modal-content .orb-container * {
+    animation-play-state: running !important;
+    content-visibility: visible !important;
+  }
+  
+  /* Keep interactive elements responsive */
+  .services-modal-content button,
+  .services-modal-content [role="button"],
+  .services-modal-content a,
   .services-modal-content .freeze-exempt,
   .services-modal-content .freeze-exempt * {
     animation-play-state: running !important;
-    transition-duration: unset !important;
+    transition-duration: 0.15s !important;
+    pointer-events: auto !important;
+  }
+  
+  /* GPU layer optimization for visible content */
+  .services-modal-content .freeze-zone.in-viewport {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  
+  /* Reduced motion: respect user preference */
+  @media (prefers-reduced-motion: reduce) {
+    .services-modal-content *:not(.orb-container):not(.orb-container *) {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 `;
+
+// Hook for viewport-aware freezing with better performance
+function useViewportFreeze(ref: React.RefObject<HTMLElement | null>) {
+  const [isInViewport, setIsInViewport] = useState(false);
+  
+  useEffect(() => {
+    if (!ref.current) return;
+    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Use requestAnimationFrame to batch DOM reads
+        requestAnimationFrame(() => {
+          setIsInViewport(entry.isIntersecting);
+        });
+      },
+      { 
+        threshold: 0,
+        rootMargin: '200px 0px' // Pre-load 200px before visible
+      }
+    );
+    
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [ref]);
+  
+  return isInViewport;
+}
+
+// Wrapper component for viewport-aware sections with content-visibility
+function FreezeZone({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInViewport = useViewportFreeze(ref);
+  
+  return (
+    <div 
+      ref={ref} 
+      className={cn("freeze-zone", isInViewport && "in-viewport", className)}
+      style={{
+        // CSS containment for better performance
+        contain: isInViewport ? 'layout style' : 'strict',
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
 // Loading spinner component
 function LoadingSpinner({ text = "Loading..." }: { text?: string }) {
@@ -52,7 +179,7 @@ function LoadingSpinner({ text = "Loading..." }: { text?: string }) {
 // Orb is exempt from animation freeze
 function InteractiveOrbSection({ onPlayGame }: { onPlayGame: () => void }) {
   const [orbLoaded, setOrbLoaded] = useState(false);
-  const isFrozen = useAnimationFreeze();
+  const freezeState = useAnimationFreeze();
 
   // Only load orb after a small delay to prioritize visible content
   useEffect(() => {
@@ -61,7 +188,7 @@ function InteractiveOrbSection({ onPlayGame }: { onPlayGame: () => void }) {
   }, []);
 
   return (
-    <div className="relative rounded-3xl overflow-hidden border-2 border-blue-500/30 bg-gradient-to-br from-black via-blue-950/30 to-black p-4 sm:p-8">
+    <FreezeZone className="relative rounded-3xl overflow-hidden border-2 border-blue-500/30 bg-gradient-to-br from-black via-blue-950/30 to-black p-4 sm:p-8">
       {/* Static top text - no animation */}
       <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
         <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-blue-500/30 to-cyan-500/30 border border-blue-400/40 backdrop-blur-sm">
@@ -119,7 +246,7 @@ function InteractiveOrbSection({ onPlayGame }: { onPlayGame: () => void }) {
       <div className="absolute top-4 right-4 w-10 h-10 border-r-2 border-t-2 border-blue-400/50 rounded-tr-xl pointer-events-none" />
       <div className="absolute bottom-4 left-4 w-10 h-10 border-l-2 border-b-2 border-cyan-400/50 rounded-bl-xl pointer-events-none" />
       <div className="absolute bottom-4 right-4 w-10 h-10 border-r-2 border-b-2 border-cyan-400/50 rounded-br-xl pointer-events-none" />
-    </div>
+    </FreezeZone>
   );
 }
 
@@ -203,6 +330,95 @@ interface ServicesShowcaseModalProps {
   showTrigger?: boolean;
 }
 
+// Memoized modal content wrapper - prevents re-renders when not needed
+const ModalContentWrapper = memo(function ModalContentWrapper({
+  contentReady,
+  freezeState,
+  isScrolling,
+  handlePlayGame,
+}: {
+  contentReady: boolean;
+  freezeState: AnimationFreezeState;
+  isScrolling: boolean;
+  handlePlayGame: () => void;
+}) {
+  if (!contentReady) {
+    return <LoadingSpinner text="Loading services..." />;
+  }
+
+  return (
+    <AnimationFreezeContext.Provider value={freezeState}>
+      <div className={cn(
+        "relative z-10 flex flex-col gap-10 px-3 py-6 sm:px-5 sm:py-8 md:px-8 services-modal-content",
+        isScrolling && "is-scrolling"
+      )}
+      style={{
+        // Optimize compositing
+        contain: 'layout style paint',
+      }}
+      >
+        {/* VIP Hero - Lazy loaded with ShopProvider */}
+        <FreezeZone>
+          <Suspense fallback={<LoadingSpinner text="Loading VIP section..." />}>
+            <div className="rounded-3xl overflow-hidden border border-white/10 bg-black">
+              <ShopProviderLazy>
+                <VipHeroMain embedded />
+              </ShopProviderLazy>
+            </div>
+          </Suspense>
+        </FreezeZone>
+
+        {/* About Content */}
+        <FreezeZone>
+          <Suspense fallback={<LoadingSpinner text="Loading about..." />}>
+            <AboutContent />
+          </Suspense>
+        </FreezeZone>
+
+        {/* Pricing */}
+        <FreezeZone>
+          <Suspense fallback={<LoadingSpinner text="Loading pricing..." />}>
+            <Pricing />
+          </Suspense>
+        </FreezeZone>
+
+        {/* Interactive Orb Section - Always visible, never frozen */}
+        <InteractiveOrbSection onPlayGame={handlePlayGame} />
+
+        {/* Features */}
+        <FreezeZone>
+          <Suspense fallback={<LoadingSpinner text="Loading features..." />}>
+            <Features />
+          </Suspense>
+        </FreezeZone>
+
+        {/* Products Section */}
+        <FreezeZone>
+          <Suspense fallback={<LoadingSpinner text="Loading products..." />}>
+            <ShopProviderLazy>
+              <ProductsSection />
+            </ShopProviderLazy>
+          </Suspense>
+        </FreezeZone>
+
+        {/* Testimonial */}
+        <FreezeZone>
+          <Suspense fallback={<LoadingSpinner text="Loading testimonials..." />}>
+            <Testimonial />
+          </Suspense>
+        </FreezeZone>
+
+        {/* Footer */}
+        <FreezeZone>
+          <Suspense fallback={<LoadingSpinner text="Loading footer..." />}>
+            <Footer />
+          </Suspense>
+        </FreezeZone>
+      </div>
+    </AnimationFreezeContext.Provider>
+  );
+});
+
 export default function ServicesShowcaseModal({
   btnText = "View Services",
   isOpen: externalIsOpen,
@@ -217,13 +433,54 @@ export default function ServicesShowcaseModal({
   } = useUIState();
   
   const [mounted, setMounted] = useState(false);
+  const [shouldRenderContent, setShouldRenderContent] = useState(false); // Controls full unmount
   const [contentReady, setContentReady] = useState(false);
-  const [animationsFrozen, setAnimationsFrozen] = useState(true); // Start frozen for FPS
   const [showPacMan, setShowPacMan] = useState(false); // Pac-Man game state
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const styleRef = useRef<HTMLStyleElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const unmountTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Use UIState as single source of truth, with external override support
   const open = externalIsOpen ?? isServicesModalOpen;
+  
+  // CRITICAL: Complete unmount system - load when open, unload when closed
+  // This frees memory and stops ALL background processes for better FPS
+  useEffect(() => {
+    if (open) {
+      // Clear any pending unmount
+      if (unmountTimeoutRef.current) {
+        clearTimeout(unmountTimeoutRef.current);
+        unmountTimeoutRef.current = null;
+      }
+      // Immediately allow rendering when opening
+      setShouldRenderContent(true);
+      hasModalEverOpened = true;
+    } else {
+      // Delay unmount slightly to allow exit animations
+      unmountTimeoutRef.current = setTimeout(() => {
+        setShouldRenderContent(false);
+        setContentReady(false);
+        setShowPacMan(false);
+        setIsScrolling(false);
+      }, 500); // Wait for exit animation to complete
+    }
+    
+    return () => {
+      if (unmountTimeoutRef.current) {
+        clearTimeout(unmountTimeoutRef.current);
+      }
+    };
+  }, [open]);
+  
+  // Smart freeze state - considers game open, scrolling, and reduced motion
+  const freezeState: AnimationFreezeState = {
+    isFrozen: open && !showPacMan,
+    isGameOpen: showPacMan,
+    prefersReducedMotion,
+  };
   
   const setOpen = useCallback((value: boolean) => {
     // Update UIState (handles mutual exclusion automatically)
@@ -233,12 +490,7 @@ export default function ServicesShowcaseModal({
     if (onOpenChange) {
       onOpenChange(value);
     }
-    
-    // Reset content ready state when closing (but keep hasEverOpened)
-    if (!value) {
-      setContentReady(false);
-      setShowPacMan(false); // Close game when modal closes
-    }
+    // Note: Cleanup is now handled by the shouldRenderContent effect
   }, [setServicesModalOpen, onOpenChange]);
 
   // Handle opening via UIState
@@ -259,21 +511,56 @@ export default function ServicesShowcaseModal({
     setShowPacMan(false);
   }, []);
 
+  // Handle scroll events - AGGRESSIVE throttling for smooth FPS
+  const handleScroll = useCallback(() => {
+    if (!isScrolling) {
+      setIsScrolling(true);
+    }
+    
+    // Clear existing timeout
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    
+    // Resume animations 200ms after scrolling stops (longer delay = smoother scroll)
+    scrollTimeoutRef.current = setTimeout(() => {
+      requestAnimationFrame(() => {
+        setIsScrolling(false);
+      });
+    }, 200);
+  }, [isScrolling]);
+
   useEffect(() => {
     setMounted(true);
-    return () => setMounted(false);
+    
+    // Check for reduced motion preference
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mediaQuery.matches);
+    
+    const handleChange = (e: MediaQueryListEvent) => {
+      setPrefersReducedMotion(e.matches);
+    };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    return () => {
+      setMounted(false);
+      mediaQuery.removeEventListener('change', handleChange);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
   }, []);
 
-  // Inject/remove animation freeze styles based on modal state
+  // Inject/remove smart freeze styles based on modal state
   useEffect(() => {
     if (!mounted) return;
 
-    if (open && animationsFrozen) {
-      // Inject freeze styles
+    if (open) {
+      // Inject smart freeze styles
       if (!styleRef.current) {
         const style = document.createElement('style');
-        style.id = 'services-modal-freeze-styles';
-        style.textContent = FREEZE_ANIMATIONS_STYLE;
+        style.id = 'services-modal-smart-freeze-styles';
+        style.textContent = SMART_FREEZE_STYLE;
         document.head.appendChild(style);
         styleRef.current = style;
       }
@@ -292,7 +579,7 @@ export default function ServicesShowcaseModal({
         styleRef.current = null;
       }
     };
-  }, [open, animationsFrozen, mounted]);
+  }, [open, mounted]);
 
   // Only prepare content after modal opens - reduces initial load
   useEffect(() => {
@@ -312,65 +599,23 @@ export default function ServicesShowcaseModal({
     };
   }, [open, mounted]);
 
-  // Modal content - only rendered when modal is open AND content is ready
-  const renderModalContent = useCallback(() => {
-    if (!contentReady) {
-      return <LoadingSpinner text="Loading services..." />;
-    }
-
-    return (
-      <AnimationFreezeContext.Provider value={animationsFrozen}>
-        <div className="relative z-10 flex flex-col gap-10 px-3 py-6 sm:px-5 sm:py-8 md:px-8 services-modal-content">
-          {/* VIP Hero - Lazy loaded with ShopProvider */}
-          <Suspense fallback={<LoadingSpinner text="Loading VIP section..." />}>
-            <div className="rounded-3xl overflow-hidden border border-white/10 bg-black">
-              <ShopProviderLazy>
-                <VipHeroMain embedded />
-              </ShopProviderLazy>
-            </div>
-          </Suspense>
-
-          {/* About Content */}
-          <Suspense fallback={<LoadingSpinner text="Loading about..." />}>
-            <AboutContent />
-          </Suspense>
-
-          {/* Pricing */}
-          <Suspense fallback={<LoadingSpinner text="Loading pricing..." />}>
-            <Pricing />
-          </Suspense>
-
-          {/* Interactive Orb Section - Heavy component, lazy loaded, EXEMPT from freeze */}
-          <InteractiveOrbSection onPlayGame={handlePlayGame} />
-
-          {/* Features */}
-          <Suspense fallback={<LoadingSpinner text="Loading features..." />}>
-            <Features />
-          </Suspense>
-
-          {/* Products Section */}
-          <Suspense fallback={<LoadingSpinner text="Loading products..." />}>
-            <ShopProviderLazy>
-              <ProductsSection />
-            </ShopProviderLazy>
-          </Suspense>
-
-          {/* Testimonial */}
-          <Suspense fallback={<LoadingSpinner text="Loading testimonials..." />}>
-            <Testimonial />
-          </Suspense>
-
-          {/* Footer */}
-          <Suspense fallback={<LoadingSpinner text="Loading footer..." />}>
-            <Footer />
-          </Suspense>
-        </div>
-      </AnimationFreezeContext.Provider>
-    );
-  }, [contentReady, animationsFrozen, handlePlayGame]);
-
-
-  if (!mounted || typeof window === "undefined") return null;
+  // EARLY RETURN: If modal has never been opened, render ONLY the trigger button
+  // This ensures ZERO lazy imports are resolved until user clicks to open
+  if (!mounted || typeof window === "undefined") {
+    return showTrigger ? (
+      <button
+        type="button"
+        onClick={handleOpen}
+        className={cn(
+          "relative inline-flex items-center justify-center rounded-full px-6 py-2 text-sm font-semibold",
+          "bg-white text-black shadow-lg transition-transform hover:-translate-y-0.5",
+          "dark:bg-white dark:text-black"
+        )}
+      >
+        {btnText}
+      </button>
+    ) : null;
+  }
 
   return (
     <>
@@ -388,47 +633,65 @@ export default function ServicesShowcaseModal({
         </button>
       )}
 
-      {/* Only render portal when mounted AND open */}
-      {mounted && open && createPortal(
+      {/* CRITICAL: Full unmount system - renders only when shouldRenderContent is true
+          When modal closes, everything unmounts after 500ms (for exit animations)
+          This frees memory and stops ALL background processes for maximum FPS */}
+      {shouldRenderContent && createPortal(
         <AnimatePresence mode="wait">
-          <motion.div
-            key="services-showcase-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm"
-            style={{ zIndex: UI_Z_INDEX.MODAL_BACKDROP }}
-            onClick={() => setOpen(false)}
-          >
+          {open && (
             <motion.div
-              key="services-showcase-modal"
-              initial={{ opacity: 0, scale: 0.96, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 20 }}
-              transition={{ type: "spring", stiffness: 260, damping: 24 }}
-              className="relative w-[95vw] max-w-6xl rounded-3xl border border-white/10 bg-neutral-950 text-white shadow-2xl"
-              style={{ zIndex: UI_Z_INDEX.MODAL_CONTENT }}
-              onClick={(e) => e.stopPropagation()}
+              key="services-showcase-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm services-modal-portal"
+              style={{ zIndex: UI_Z_INDEX.MODAL_BACKDROP }}
+              onClick={() => setOpen(false)}
             >
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="absolute right-4 top-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+              <motion.div
+                key="services-showcase-modal"
+                initial={{ opacity: 0, scale: 0.96, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: 20 }}
+                transition={{ type: "spring", stiffness: 260, damping: 24 }}
+                className="relative w-[95vw] max-w-6xl rounded-3xl border border-white/10 bg-neutral-950 text-white shadow-2xl"
+                style={{ zIndex: UI_Z_INDEX.MODAL_CONTENT }}
+                onClick={(e) => e.stopPropagation()}
               >
-                <X size={18} />
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="absolute right-4 top-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+                >
+                  <X size={18} />
+                </button>
 
-              <div className="max-h-[85dvh] overflow-y-auto overscroll-contain">
-                {renderModalContent()}
-              </div>
+                <div 
+                  ref={scrollContainerRef}
+                  onScroll={handleScroll}
+                  className="max-h-[85dvh] overflow-y-auto overscroll-contain scroll-smooth"
+                  style={{
+                    // GPU acceleration for smooth scrolling
+                    transform: 'translateZ(0)',
+                    willChange: isScrolling ? 'scroll-position' : 'auto',
+                  }}
+                >
+                  <ModalContentWrapper
+                    contentReady={contentReady}
+                    freezeState={freezeState}
+                    isScrolling={isScrolling}
+                    handlePlayGame={handlePlayGame}
+                  />
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
+          )}
         </AnimatePresence>,
         document.body
       )}
 
-      {/* Pac-Man Game Modal - Rendered via portal, centered on screen */}
-      <PacManGameModal isOpen={showPacMan} onClose={handleCloseGame} />
+      {/* Pac-Man Game Modal - Only rendered when content should render */}
+      {shouldRenderContent && <PacManGameModal isOpen={showPacMan} onClose={handleCloseGame} />}
     </>
   );
 }
