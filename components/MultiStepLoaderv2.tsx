@@ -1272,15 +1272,36 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                     animate={
                       isDeflating
                         ? {
-                            scale: [1, 1.06, 0.92],
-                            scaleY: [1, 0.7, 0.35],
-                            rotate: [0, 2, -4],
-                            y: [0, 6, 12],
-                            opacity: [1, 0.9, 0.75],
+                            scale: [1.03, 1.08, 0.98, 0.78],
+                            scaleY: [1, 0.9, 0.5, 0.22],
+                            rotate: [0, 4, -6, -16],
+                            skewX: [0, -3, 2, -6],
+                            x: [0, -4, 6, -3],
+                            y: [0, 6, 18, 34],
+                            opacity: [1, 0.9, 0.65, 0.4],
+                            color: ["#93c5fd", "#fca5a5", "#f87171", "#fca5a5"],
+                            textShadow: [
+                              "0 0 24px rgba(59,130,246,0.85)",
+                              "0 0 18px rgba(248,113,113,0.85)",
+                              "0 0 10px rgba(248,113,113,0.55)",
+                              "0 0 0 rgba(0,0,0,0)",
+                            ],
+                            filter: ["none", "blur(1px)", "blur(4px)", "blur(7px)"],
                           }
-                        : { scale: 1, scaleY: 1, rotate: 0, y: 0, opacity: 1 }
+                        : {
+                            scale: 1,
+                            scaleY: 1,
+                            rotate: 0,
+                            skewX: 0,
+                            x: 0,
+                            y: 0,
+                            opacity: 1,
+                            color: "#93c5fd",
+                            textShadow: "0 0 18px rgba(59,130,246,0.6)",
+                            filter: "none",
+                          }
                     }
-                    transition={{ duration: 0.7, ease: "easeInOut" }}
+                    transition={{ duration: 1.35, ease: [0.12, 0.9, 0.15, 1] }}
                     className="inline-block origin-top"
                   >
                     {displayPrice > 0 || realPrice > 0
