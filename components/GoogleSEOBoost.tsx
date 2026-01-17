@@ -28,7 +28,7 @@ const BreadcrumbSchema = () => {
         "@type": "ListItem",
         "position": 1,
         "name": "Home",
-        "item": "https://www.bullmoney.shop"
+        "item": "https://www.bullmoney.shop" // Also: https://www.bullmoney.online
       },
       {
         "@type": "ListItem",
@@ -216,6 +216,10 @@ const FinancialServiceSchema = () => {
       "worstRating": "1"
     },
     "sameAs": [
+      "https://www.bullmoney.online",
+      "https://www.bullmoney.live",
+      "https://www.bullmoney.co.za",
+      "https://www.bullmoney.site",
       "https://discord.gg/bullmoney",
       "https://t.me/bullmoney",
       "https://twitter.com/bullmoney",

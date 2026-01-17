@@ -59,6 +59,11 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_BASE_URL || "https://www.bullmoney.shop"
   ),
   
+  // All domains for SEO
+  // Primary: www.bullmoney.shop
+  // Secondary: www.bullmoney.online
+  // Additional: www.bullmoney.live, www.bullmoney.co.za, www.bullmoney.site
+  
   // ============================================
   // PRIMARY SEO - Main title and description
   // ============================================
@@ -322,6 +327,9 @@ export const metadata: Metadata = {
       "en-US": "https://www.bullmoney.shop",
     },
   },
+  
+  // Additional domain references for SEO
+  // www.bullmoney.online mirrors www.bullmoney.shop
   
   // ============================================
   // CATEGORY & CLASSIFICATION

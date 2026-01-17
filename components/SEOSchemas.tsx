@@ -33,6 +33,10 @@ export function OrganizationSchema() {
     "description": "BullMoney is the #1 free trading community for crypto, gold, forex, and stocks. Join 10,000+ traders for free setups, market analysis, and live mentorship.",
     "foundingDate": "2023",
     "sameAs": [
+      "https://www.bullmoney.online",
+      "https://www.bullmoney.live",
+      "https://www.bullmoney.co.za",
+      "https://www.bullmoney.site",
       "https://discord.gg/bullmoney",
       "https://t.me/bullmoney",
       "https://twitter.com/bullmoney",

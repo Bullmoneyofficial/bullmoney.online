@@ -1,6 +1,8 @@
 # BullMoney Trading Community - robots.txt
 # OPTIMIZED FOR GOOGLE #1 RANKING
-# https://www.bullmoney.shop
+# 
+# PRIMARY DOMAIN: https://www.bullmoney.shop
+# SECONDARY DOMAIN: https://www.bullmoney.online
 # 
 # Keywords: free trading mentor, trading community, gold trading, XAUUSD,
 # crypto trading, bitcoin, forex trading, heavy news, trading for beginners
@@ -45,9 +47,24 @@ Allow: /*?ref=*
 # NO crawl delay for Google - we want fast indexing
 # Crawl-delay: 0
 
-# Sitemaps - Multiple for redundancy
+# Sitemaps - All 5 domains
 Sitemap: https://www.bullmoney.shop/sitemap.xml
 Sitemap: https://bullmoney.shop/sitemap.xml
+Sitemap: https://www.bullmoney.online/sitemap.xml
+Sitemap: https://bullmoney.online/sitemap.xml
+Sitemap: https://www.bullmoney.live/sitemap.xml
+Sitemap: https://bullmoney.live/sitemap.xml
+Sitemap: https://www.bullmoney.co.za/sitemap.xml
+Sitemap: https://bullmoney.co.za/sitemap.xml
+Sitemap: https://www.bullmoney.site/sitemap.xml
+Sitemap: https://bullmoney.site/sitemap.xml
+
+# Host directives for all domains
+Host: https://www.bullmoney.shop
+Host: https://www.bullmoney.online
+Host: https://www.bullmoney.live
+Host: https://www.bullmoney.co.za
+Host: https://www.bullmoney.site
 
 # =============================================
 # GOOGLE - PRIORITY CRAWLER (No restrictions)
