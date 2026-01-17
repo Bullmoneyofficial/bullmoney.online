@@ -97,7 +97,7 @@ interface FloatingPlayerProps {
   setPlayerMinimized?: (v: boolean) => void;
 }
 
-const CameraModal = React.memo(function CameraModal({
+function CameraModal({
   isOpen,
   onClose,
 }: {
@@ -138,7 +138,7 @@ const CameraModal = React.memo(function CameraModal({
       </motion.div>
     </AnimatePresence>
   );
-});
+}
 
 const ButtonTooltip = React.memo(function ButtonTooltip({
   show,

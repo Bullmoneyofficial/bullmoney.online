@@ -7,7 +7,7 @@ import {
   useSpring,
   useMotionValue,
 } from "framer-motion";
-import { ArrowUpRight, Zap, TrendingUp, Sparkles, Rocket, Star, Trophy, Flame, Diamond, Moon, Target, Dumbbell, CheckCircle2, CircleDollarSign, BarChart3, Activity } from "lucide-react";
+import { ArrowUpRight, LockOpen, Zap, TrendingUp, Sparkles, Rocket, Star, Trophy, Flame, Diamond, Moon, Target, Dumbbell, CheckCircle2, CircleDollarSign, BarChart3, Activity } from "lucide-react";
 import Image from "next/image";
 
 // --- IMPORT UNIFIED SHIMMER SYSTEM FOR FPS-AWARE ANIMATIONS ---
@@ -1232,48 +1232,49 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                         onClick={handleVaultAccess}
                         onMouseDown={(e) => e.stopPropagation()}
                         onTouchStart={(e) => e.stopPropagation()}
-                        className="relative mt-4 px-8 py-4 rounded-2xl font-black text-lg uppercase tracking-wider overflow-hidden group"
+                        className="relative mt-4 inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-5 sm:py-2.5 min-h-[44px] rounded-full font-extrabold text-[11px] sm:text-sm uppercase tracking-[0.2em] overflow-hidden group"
                         style={{
-                          background: '#000000',
-                          border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
-                          boxShadow: '0 0 40px rgba(var(--accent-rgb, 59, 130, 246), 0.5), inset 0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.1)',
-                          color: 'var(--accent-color, #60a5fa)',
+                          background: 'linear-gradient(180deg, rgba(2,6,23,0.98) 0%, rgba(2,6,23,0.9) 100%)',
+                          border: '1px solid rgba(59, 130, 246, 0.5)',
+                          boxShadow: '0 0 25px rgba(59,130,246,0.55), inset 0 0 18px rgba(59,130,246,0.15)',
+                          color: '#93c5fd',
                         }}
-                        whileHover={{ scale: 1.05, boxShadow: '0 0 60px rgba(var(--accent-rgb, 59, 130, 246), 0.7), inset 0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.2)' }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: 1.03, boxShadow: '0 0 45px rgba(59,130,246,0.8), inset 0 0 26px rgba(59,130,246,0.25)' }}
+                        whileTap={{ scale: 0.97 }}
                       >
                         {/* Animated shimmer sweep */}
                         <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                          animate={{ x: ["-200%", "200%"] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/25 to-transparent"
+                          animate={{ x: ["-160%", "160%"] }}
+                          transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}
                         />
                         
                         {/* Pulsing glow ring */}
                         <motion.div
-                          className="absolute inset-0 rounded-2xl"
-                          style={{ border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)' }}
+                          className="absolute inset-0 rounded-full"
+                          style={{ border: '1px solid rgba(59, 130, 246, 0.45)' }}
                           animate={{ 
-                            scale: [1, 1.05, 1],
-                            opacity: [0.5, 0.8, 0.5],
+                            scale: [1, 1.06, 1],
+                            opacity: [0.4, 0.85, 0.4],
                           }}
-                          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
                         />
                         
                         {/* Button content */}
-                        <span className="relative z-10 flex items-center gap-3">
+                        <span className="relative z-10 flex items-center gap-2">
                           <motion.span
-                            animate={{ rotate: [0, 10, -10, 0] }}
-                            transition={{ duration: 1, repeat: Infinity }}
+                            className="text-blue-300 drop-shadow-[0_0_12px_rgba(59,130,246,0.9)]"
+                            animate={{ scale: [1, 1.1, 1], opacity: [0.7, 1, 0.7] }}
+                            transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
                           >
-                            🔓
+                            <LockOpen className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                           </motion.span>
-                          Access Website
+                          Tap / Click to Unlock
                           <motion.span
                             animate={{ x: [0, 5, 0] }}
                             transition={{ duration: 0.8, repeat: Infinity }}
                           >
-                            <ArrowUpRight className="w-5 h-5" />
+                            <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </motion.span>
                         </span>
                       </motion.button>
