@@ -1056,7 +1056,16 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                         />
                       </>
                     )}
-                    <span className="text-lg relative z-10">{asset.icon}</span>
+                    <span
+                      className="text-lg relative z-10 leading-none"
+                      style={{
+                        color: asset.color,
+                        textShadow: "0 0 12px rgba(0,0,0,0.45)",
+                        fontFamily: '"Segoe UI Symbol", "Apple Color Emoji", "Noto Sans Symbols 2", "Noto Sans Symbols", "Arial Unicode MS", sans-serif',
+                      }}
+                    >
+                      {asset.icon}
+                    </span>
                     <span className="relative z-10">{asset.id}</span>
                   </motion.button>
                 ))}
@@ -1116,7 +1125,16 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                   style={{ rotate: iconRotate }}
                   className="relative w-24 h-24 rounded-full bg-black border-2 border-blue-500/50 flex items-center justify-center text-5xl font-bold shadow-[inset_0_0_30px_rgba(59,130,246,0.3)]"
                 >
-                  {ASSETS[selectedAsset].icon}
+                  <span
+                    className="relative z-10 leading-none"
+                    style={{
+                      color: ASSETS[selectedAsset].color,
+                      textShadow: "0 0 16px rgba(0,0,0,0.6)",
+                      fontFamily: '"Segoe UI Symbol", "Apple Color Emoji", "Noto Sans Symbols 2", "Noto Sans Symbols", "Arial Unicode MS", sans-serif',
+                    }}
+                  >
+                    {ASSETS[selectedAsset].icon}
+                  </span>
                 </motion.div>
                 
                 {/* Pulse Rings - Blue theme */}
