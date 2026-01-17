@@ -560,12 +560,19 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       if (error) throw error;
 
       if (newUser) {
-        // Save persistent session
+        // Save persistent session (both storage keys for compatibility)
         localStorage.setItem("bullmoney_session", JSON.stringify({
           id: newUser.id,
           email: formData.email,
           timestamp: Date.now()
         }));
+        
+        // Also save to recruit auth storage key for immediate auth context detection
+        localStorage.setItem("bullmoney_recruit_auth", JSON.stringify({
+          recruitId: newUser.id,
+          email: formData.email
+        }));
+        
         // Clear draft
         localStorage.removeItem("bullmoney_draft");
       }
@@ -605,11 +612,17 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         throw new Error("Invalid email or password.");
       }
 
-      // Save persistent session
+      // Save persistent session (both storage keys for compatibility)
       localStorage.setItem("bullmoney_session", JSON.stringify({
         id: data.id,
         email: loginEmail,
         timestamp: Date.now()
+      }));
+      
+      // Also save to recruit auth storage key for immediate auth context detection
+      localStorage.setItem("bullmoney_recruit_auth", JSON.stringify({
+        recruitId: data.id,
+        email: loginEmail
       }));
 
       setTimeout(() => {

@@ -38,6 +38,7 @@ interface RecruitAuthContextValue extends RecruitAuthState, RecruitAuthActions {
 const RecruitAuthContext = createContext<RecruitAuthContextValue | undefined>(undefined);
 
 const RECRUIT_STORAGE_KEY = 'bullmoney_recruit_auth';
+const PAGEMODE_SESSION_KEY = 'bullmoney_session'; // Also check pagemode login
 
 export function RecruitAuthProvider({ children }: { children: React.ReactNode }) {
   const [recruit, setRecruit] = useState<RecruitProfile | null>(null);
@@ -45,27 +46,60 @@ export function RecruitAuthProvider({ children }: { children: React.ReactNode })
 
   const supabase = useMemo(() => createSupabaseClient(), []);
 
-  // Load saved session from localStorage
+  // Load saved session from localStorage (check both storage keys)
   useEffect(() => {
     const loadSavedSession = async () => {
       try {
-        const saved = localStorage.getItem(RECRUIT_STORAGE_KEY);
+        // First check our primary storage key
+        let saved = localStorage.getItem(RECRUIT_STORAGE_KEY);
+        let fromPagemode = false;
+        
+        // If not found, check pagemode session as fallback
+        if (!saved) {
+          const pagemodeSession = localStorage.getItem(PAGEMODE_SESSION_KEY);
+          if (pagemodeSession) {
+            try {
+              const parsed = JSON.parse(pagemodeSession);
+              // Convert pagemode format to our format (pagemode uses 'id', we use 'recruitId')
+              if ((parsed.id || parsed.recruitId) && parsed.email) {
+                saved = JSON.stringify({
+                  recruitId: parsed.id || parsed.recruitId,
+                  email: parsed.email
+                });
+                fromPagemode = true;
+              }
+            } catch (e) {
+              console.error('Error parsing pagemode session:', e);
+            }
+          }
+        }
+        
         if (saved) {
           const { recruitId, email } = JSON.parse(saved);
           
           // Verify the session is still valid by fetching the recruit
+          // Use case-insensitive email match for consistency
           const { data, error } = await supabase
             .from('recruits')
             .select('*')
             .eq('id', recruitId)
-            .eq('email', email)
+            .ilike('email', email)
             .single();
 
           if (!error && data) {
             setRecruit(transformRecruitData(data));
+            
+            // If loaded from pagemode, also save to our storage key for consistency
+            if (fromPagemode) {
+              localStorage.setItem(RECRUIT_STORAGE_KEY, JSON.stringify({
+                recruitId: data.id,
+                email: data.email
+              }));
+            }
           } else {
-            // Invalid session, clear it
+            // Invalid session, clear both storage keys
             localStorage.removeItem(RECRUIT_STORAGE_KEY);
+            localStorage.removeItem(PAGEMODE_SESSION_KEY);
           }
         }
       } catch (error) {
@@ -103,26 +137,40 @@ export function RecruitAuthProvider({ children }: { children: React.ReactNode })
     password: string
   ): Promise<{ success: boolean; error?: string }> => {
     try {
-      // Query the recruits table for matching email (case-insensitive) and password
-      const { data, error } = await supabase
+      // Query the recruits table for matching email (case-insensitive)
+      // First find the user by email, then verify password
+      const { data: recruits, error: fetchError } = await supabase
         .from('recruits')
         .select('*')
-        .ilike('email', email.trim())  // Case-insensitive email match
-        .eq('password', password)
-        .single();
+        .ilike('email', email.trim());  // Case-insensitive email match
 
-      if (error || !data) {
-        console.error('Login error:', error, 'Email:', email.trim());
+      if (fetchError) {
+        console.error('Login error:', fetchError, 'Email:', email.trim());
+        return { success: false, error: 'Unable to connect. Please try again.' };
+      }
+
+      // Find matching recruit with correct password
+      const data = recruits?.find(r => r.password === password);
+
+      if (!data) {
+        console.error('Login error: No matching credentials', 'Email:', email.trim());
         return { success: false, error: 'Invalid email or password' };
       }
 
       const recruitProfile = transformRecruitData(data);
       setRecruit(recruitProfile);
 
-      // Save session to localStorage
+      // Save session to localStorage (both keys for compatibility with pagemode)
       localStorage.setItem(RECRUIT_STORAGE_KEY, JSON.stringify({
         recruitId: recruitProfile.id,
         email: recruitProfile.email,
+      }));
+      
+      // Also save to pagemode session key for full app compatibility
+      localStorage.setItem(PAGEMODE_SESSION_KEY, JSON.stringify({
+        id: recruitProfile.id,
+        email: recruitProfile.email,
+        timestamp: Date.now()
       }));
 
       return { success: true };
@@ -136,6 +184,7 @@ export function RecruitAuthProvider({ children }: { children: React.ReactNode })
   const signOut = useCallback(() => {
     setRecruit(null);
     localStorage.removeItem(RECRUIT_STORAGE_KEY);
+    localStorage.removeItem(PAGEMODE_SESSION_KEY);
   }, []);
 
   // Refresh recruit data
