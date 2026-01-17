@@ -89,7 +89,8 @@ export function useAudioWidgetState(): UseAudioWidgetStateReturn {
   const [widgetHidden, setWidgetHidden] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isScrollMinimized, setIsScrollMinimized] = useState(false);
-  const [playerMinimized, setPlayerMinimized] = useState(false);
+  // Start minimized by default - will be set to false for new users after localStorage check
+  const [playerMinimized, setPlayerMinimized] = useState(true);
   
   // Game state
   const [hasStartedCatchGame, setHasStartedCatchGame] = useState(false);
@@ -191,7 +192,7 @@ export function useAudioWidgetEffects(
     setShowFirstTimeHelp, hasSeenBoredPopup, setShowBoredPopup, setHasSeenBoredPopup,
     showGameOver, setShowGameOver, setShowCatchSparkle, setShowConfetti,
     setHasCompletedTutorial, setStreamingActive, setPlayerHidden,
-    setShowReturnUserHint, catchGameTutorialTimerRef,
+    setShowReturnUserHint, catchGameTutorialTimerRef, setPlayerMinimized,
   } = state;
   
   const { musicSource, setMusicSource, setMusicEnabled, musicEnabled, isStreamingSource, streamingEmbedUrl } = audioSettings;
@@ -215,6 +216,7 @@ export function useAudioWidgetEffects(
   }, [setIsMobile]);
 
   // Check localStorage for tutorial completion and saved preference
+  // On reload: restore music source but keep player MINIMIZED (pull tab only)
   useEffect(() => {
     const completed = localStorage.getItem('audioWidgetTutorialComplete');
     if (completed === 'true') {
@@ -226,12 +228,20 @@ export function useAudioWidgetEffects(
         setMusicSource(savedSource as MusicSource);
         setStreamingActive(true);
         setMusicEnabled(true);
-        setPlayerHidden(false);
+        // Keep player minimized on reload - only show pull tab
+        // User can expand by clicking the pull tab
+        setPlayerMinimized(true);
         setShowReturnUserHint(true);
         setTimeout(() => setShowReturnUserHint(false), 10000);
+      } else {
+        // No saved source - new user, allow full player to show
+        setPlayerMinimized(false);
       }
+    } else {
+      // New user - hasn't completed tutorial, allow full player to show
+      setPlayerMinimized(false);
     }
-  }, [setMusicSource, setMusicEnabled, setHasCompletedTutorial, setShowFirstTimeHelp, setStreamingActive, setPlayerHidden, setShowReturnUserHint]);
+  }, [setMusicSource, setMusicEnabled, setHasCompletedTutorial, setShowFirstTimeHelp, setStreamingActive, setPlayerMinimized, setShowReturnUserHint]);
 
   // Hide first time help after 15 seconds
   useEffect(() => {

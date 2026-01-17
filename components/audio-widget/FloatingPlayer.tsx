@@ -90,6 +90,10 @@ interface FloatingPlayerProps {
   // Force minimize from parent (UIStateContext) - used when other UI components open
   // This minimizes the player (hides iframe behind pull tab) but keeps it mounted for audio persistence
   forceMinimize?: boolean;
+
+  // Parent-controlled minimized state (for reload persistence)
+  playerMinimized?: boolean;
+  setPlayerMinimized?: (v: boolean) => void;
 }
 
 // iPhone Button Tooltip Component
@@ -418,7 +422,9 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
     isMobile, hasStartedCatchGame, maybeShowCatchGameTutorial, dismissCatchGameTutorial,
     isTutorialHovered, showBoredPopup, setShowBoredPopup, showCatchSparkle, showConfetti,
     showCatchGameTutorial, tutorialContent,
-    forceMinimize = false, // NEW: Force minimize from UIStateContext for audio persistence
+    forceMinimize = false, // Force minimize from UIStateContext for audio persistence
+    playerMinimized = false, // Parent-controlled minimized state for reload persistence
+    setPlayerMinimized, // Callback to sync minimized state with parent
   } = props;
 
   const prefersReducedMotion = useReducedMotion();
@@ -434,8 +440,15 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
   
   // Position state - left or right side of screen
   const [playerSide, setPlayerSide] = useState<'left' | 'right'>('left');
-  const [isMinimized, setIsMinimized] = useState(false);
+  // Initialize from parent's playerMinimized prop (true on reload for pull-tab-only behavior)
+  const [isMinimized, setIsMinimizedInternal] = useState(playerMinimized);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Wrapper to sync minimized state with parent
+  const setIsMinimized = useCallback((value: boolean) => {
+    setIsMinimizedInternal(value);
+    setPlayerMinimized?.(value);
+  }, [setPlayerMinimized]);
   
   // Button hover states for tooltips
   const [hoveredButton, setHoveredButton] = useState<string | null>(null);
@@ -449,6 +462,13 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pullTabScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollY = useRef(0);
+
+  // Sync with parent's playerMinimized prop (e.g., on reload when localStorage sets it true)
+  useEffect(() => {
+    if (playerMinimized && !isMinimized) {
+      setIsMinimizedInternal(true);
+    }
+  }, [playerMinimized, isMinimized]);
 
   // Auto-hide first time help
   useEffect(() => {
@@ -478,16 +498,16 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
         }, 1200); // Expand back 1.2s after scroll stops
       }
       
-      // Also compact the pull tab when minimized and scrolling
-      if (scrollDelta > 15 && !open && !playerHidden && isMinimized && !forceMinimize) {
+      // Also compact the pull tab when minimized (internal or parent state) and scrolling
+      if (scrollDelta > 15 && !open && !playerHidden && (isMinimized || playerMinimized) && !forceMinimize) {
         setIsPullTabCompact(true);
         lastScrollY.current = currentScrollY;
-        
+
         // Clear existing timeout
         if (pullTabScrollTimeoutRef.current) {
           clearTimeout(pullTabScrollTimeoutRef.current);
         }
-        
+
         // Auto-expand pull tab after scroll stops
         pullTabScrollTimeoutRef.current = setTimeout(() => {
           setIsPullTabCompact(false);
@@ -505,18 +525,18 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
         clearTimeout(pullTabScrollTimeoutRef.current);
       }
     };
-  }, [open, playerHidden, isMinimized, forceMinimize]);
+  }, [open, playerHidden, isMinimized, playerMinimized, forceMinimize]);
 
   // Reset minimized state when player opens or is manually minimized
   useEffect(() => {
-    if (open || isMinimized) {
+    if (open || isMinimized || playerMinimized) {
       setIsScrollMinimized(false);
     }
-    // Reset pull tab compact when unminimized
-    if (!isMinimized) {
+    // Reset pull tab compact when fully unminimized (both internal and parent)
+    if (!isMinimized && !playerMinimized) {
       setIsPullTabCompact(false);
     }
-  }, [open, isMinimized]);
+  }, [open, isMinimized, playerMinimized]);
 
   // Handle forceMinimize from UIStateContext - this is the key to audio persistence!
   // When other UI components open (mobile menu, modals, etc.), we minimize the player
@@ -623,8 +643,9 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
 
       {/* Minimized iPod Pull Tab - Audio persists like Apple Music! */}
       {/* When forceMinimize is true (other UI is open), shows a compact circular wave indicator */}
+      {/* Shows when either internal isMinimized OR parent playerMinimized is true */}
       <AnimatePresence mode="wait">
-        {isMinimized && !open && (
+        {(isMinimized || playerMinimized) && !open && (
           forceMinimize ? (
             /* Compact pill button when modals/UI is open - matches scroll-minimized design */
             <motion.button
@@ -1015,29 +1036,32 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
         When forceMinimize is true, it pushes further off-screen so modals have more visible area.
 
         KEY: Same iframe element = same audio context = continuous playback
+
+        NOTE: We check both isMinimized (internal state) AND playerMinimized (parent prop) to handle
+        the race condition on reload where the prop updates after initial render.
       */}
       <div
         className="fixed transition-all duration-300 ease-out"
         style={{
           position: 'fixed',
           // Position: When minimized, behind pull tab. When forceMinimize, push further off-screen. When scroll minimized, hide above.
-          bottom: isScrollMinimized ? (60 + 200) : isMinimized ? (forceMinimize ? 80 : 125) : (60 + 180),
-          [playerSide]: isScrollMinimized ? 8 : isMinimized ? (forceMinimize ? -60 : 5) : (playerSide === 'left' ? 8 : 8),
+          bottom: isScrollMinimized ? (60 + 200) : (isMinimized || playerMinimized) ? (forceMinimize ? 80 : 125) : (60 + 180),
+          [playerSide]: isScrollMinimized ? 8 : (isMinimized || playerMinimized) ? (forceMinimize ? -60 : 5) : (playerSide === 'left' ? 8 : 8),
           // Size: Full size when expanded, small when minimized but valid for SDK, minimal when scroll minimized
-          width: isScrollMinimized ? 0.01 : isMinimized ? (forceMinimize ? 100 : 150) : 254,
-          height: isScrollMinimized ? 0.01 : isMinimized ? (forceMinimize ? 60 : 80) : (musicSource === 'YOUTUBE' ? 180 : 110),
+          width: isScrollMinimized ? 0.01 : (isMinimized || playerMinimized) ? (forceMinimize ? 100 : 150) : 254,
+          height: isScrollMinimized ? 0.01 : (isMinimized || playerMinimized) ? (forceMinimize ? 60 : 80) : (musicSource === 'YOUTUBE' ? 180 : 110),
           overflow: 'hidden',
           // Opacity: Nearly invisible when minimized or scroll minimized, full when expanded
-          opacity: isScrollMinimized ? 0 : isMinimized ? 0.01 : 1,
+          opacity: isScrollMinimized ? 0 : (isMinimized || playerMinimized) ? 0.01 : 1,
           // Z-index: Behind pull tab when minimized/scroll-minimized, above content when expanded
-          zIndex: isScrollMinimized ? (Z_INDEX.PULL_TAB - 10) : isMinimized ? (Z_INDEX.PULL_TAB - 1) : (Z_INDEX.PLAYER_BASE + 5),
-          pointerEvents: isScrollMinimized || isMinimized ? 'none' : 'auto',
-          borderRadius: isScrollMinimized ? '12px' : isMinimized ? '12px' : '0 0 16px 16px',
+          zIndex: isScrollMinimized ? (Z_INDEX.PULL_TAB - 10) : (isMinimized || playerMinimized) ? (Z_INDEX.PULL_TAB - 1) : (Z_INDEX.PLAYER_BASE + 5),
+          pointerEvents: isScrollMinimized || isMinimized || playerMinimized ? 'none' : 'auto',
+          borderRadius: isScrollMinimized ? '12px' : (isMinimized || playerMinimized) ? '12px' : '0 0 16px 16px',
           // Hide behind pull tab when minimized, collapse when scroll minimized
-          transform: isScrollMinimized ? 'scale(0)' : isMinimized ? (forceMinimize ? 'scale(0.3)' : 'scale(0.5)') : 'scale(1)',
+          transform: isScrollMinimized ? 'scale(0)' : (isMinimized || playerMinimized) ? (forceMinimize ? 'scale(0.3)' : 'scale(0.5)') : 'scale(1)',
           transformOrigin: playerSide === 'left' ? 'left center' : 'right center',
         }}
-        aria-hidden={isScrollMinimized || isMinimized}
+        aria-hidden={isScrollMinimized || isMinimized || playerMinimized}
       >
         <iframe
           ref={iframeRef}
@@ -1078,9 +1102,9 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
         </motion.button>
       )}
       
-      {/* Main iPhone 17 Floating Player */}
+      {/* Main iPhone 17 Floating Player - hidden when minimized (either internal state or parent prop) */}
       <AnimatePresence>
-        {!isMinimized && (
+        {!isMinimized && !playerMinimized && (
           <motion.div
             ref={miniPlayerRef}
             initial={{ x: playerSide === 'left' ? -300 : 300, opacity: 0 }}
