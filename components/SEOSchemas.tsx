@@ -94,7 +94,7 @@ export function WebsiteSchema() {
 }
 
 // ============================================
-// FAQ SCHEMA - Rich FAQ Snippets
+// FAQ SCHEMA - Rich FAQ Snippets (SEO Optimized)
 // ============================================
 
 export function FAQSchema() {
@@ -107,7 +107,7 @@ export function FAQSchema() {
         "name": "Is BullMoney free to join?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes! BullMoney is completely free to join. We offer free trading setups, market analysis, and access to our trading community on Discord and Telegram. No credit card required."
+          "text": "Yes! BullMoney is completely free to join. We offer free trading setups, market analysis, heavy news updates, and access to our trading community on Discord and Telegram. No credit card required. Get a free trading mentor and start learning today."
         }
       },
       {
@@ -115,23 +115,31 @@ export function FAQSchema() {
         "name": "What markets does BullMoney cover?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "BullMoney covers all major markets including Cryptocurrency (Bitcoin, Ethereum, altcoins), Gold/XAUUSD, Forex currency pairs, and Stock markets. Our analysts provide setups and analysis across all these markets daily."
+          "text": "BullMoney covers all major markets including Gold (XAUUSD), Cryptocurrency (Bitcoin, Ethereum, altcoins), Forex currency pairs (EURUSD, GBPUSD), Stock indices (S&P 500, Nasdaq), and more. Our analysts provide daily setups and heavy news analysis across all these markets."
         }
       },
       {
         "@type": "Question",
-        "name": "Do you offer trading mentorship?",
+        "name": "How do I find a free trading mentor?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes! BullMoney offers both free and premium mentorship programs. Our free community includes live trading sessions, while our premium VIP membership provides 1-on-1 mentorship with experienced traders."
+          "text": "BullMoney provides free trading mentorship to all members. Join our Discord or Telegram community to connect with experienced traders who offer guidance, share strategies, and help beginners learn to trade without expensive course fees."
         }
       },
       {
         "@type": "Question",
-        "name": "How do I get free crypto setups?",
+        "name": "Do you provide heavy news and market updates?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Join the BullMoney community for free to receive daily crypto setups. Our analysts share Bitcoin, Ethereum, and altcoin trading setups with entry points, stop losses, and take profit targets in our Discord and Telegram channels."
+          "text": "Yes! We provide real-time heavy news breakdowns of major economic events including Fed decisions, inflation data, NFP reports, and breaking market news. Stay informed on Gold, Bitcoin, Forex, and stock market movements."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How can I learn gold (XAUUSD) trading?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "BullMoney specializes in Gold/XAUUSD trading education. Get daily gold analysis, trade setups, support/resistance levels, and heavy news impact analysis. Our mentors teach gold trading strategies for beginners and advanced traders."
         }
       },
       {
@@ -139,15 +147,15 @@ export function FAQSchema() {
         "name": "What is a prop firm and does BullMoney help with funded accounts?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "A prop firm (proprietary trading firm) provides traders with capital to trade. BullMoney helps members pass prop firm challenges like FTMO, MyForexFunds, and others through our trading setups, education, and mentorship programs."
+          "text": "A prop firm (proprietary trading firm) provides traders with capital to trade. BullMoney helps members pass prop firm challenges like FTMO through our trading setups, education, risk management training, and mentorship programs."
         }
       },
       {
         "@type": "Question",
-        "name": "How can I learn to trade for free?",
+        "name": "How can I learn to trade for free in 2026?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "BullMoney offers free trading education including market analysis videos, live trading sessions, educational blog posts, and community discussions. Join our Discord for free access to all educational content."
+          "text": "BullMoney offers completely free trading education including market analysis videos, live trading sessions, educational blog posts, community discussions, and free mentorship. Join our Discord for access to all educational content at no cost."
         }
       },
       {
@@ -155,7 +163,23 @@ export function FAQSchema() {
         "name": "What makes BullMoney different from other trading communities?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "BullMoney stands out with our completely free tier, experienced mentors who are funded traders, real-time market analysis, active community of 10,000+ traders, and proven track record of helping traders become profitable."
+          "text": "BullMoney stands out with: completely free membership, experienced funded trader mentors, real-time heavy news analysis, active community of 10,000+ traders, daily setups for Gold/Crypto/Forex, prop firm passing help, and beginner-friendly education."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do you cover Bitcoin and cryptocurrency trading?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes! We provide comprehensive crypto coverage including Bitcoin (BTC), Ethereum (ETH), and altcoin analysis. Get daily crypto setups, price predictions, technical analysis, and heavy news impact on the crypto market."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is BullMoney good for trading beginners?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Absolutely! BullMoney is the perfect home for trading beginners. We offer free mentorship, step-by-step education, beginner-friendly setups, risk management training, and a supportive community to help you start your trading journey in 2026."
         }
       }
     ]

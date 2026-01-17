@@ -62,42 +62,78 @@ export const metadata: Metadata = {
     template: "%s | BullMoney Trading Community"
   },
   description:
-    "Join BullMoney - the #1 FREE trading community for Crypto, Gold, Forex & Stocks. Get free trading setups, expert market analysis, live trading mentorship, and connect with 10,000+ traders. Start your trading journey today!",
+    "Join BullMoney - the #1 FREE trading community for Crypto, Gold, Forex & Stocks. Get free trading setups, expert market analysis, live trading mentorship, heavy market news, and connect with 10,000+ traders. Free trading mentor for beginners. Start your trading journey today!",
   
   // ============================================
-  // KEYWORDS - Trading, Crypto, Gold, Community
+  // KEYWORDS - 100+ Primary Keywords for SEO
   // ============================================
   keywords: [
-    // Primary trading keywords
-    "trading community", "free trading community", "trading setups",
-    "trading mentor", "free trading mentor", "trading mentorship",
-    "learn to trade", "how to trade", "trading for beginners",
+    // Brand Keywords
+    "BullMoney", "Bull Money", "BullMoney trading", "BullMoney community",
     
-    // Crypto keywords
-    "crypto trading", "cryptocurrency setups", "bitcoin trading",
-    "crypto community", "crypto analysis", "altcoin setups",
-    "ethereum trading", "crypto market news", "free crypto setups",
+    // Free Trading Mentor Keywords (HIGH PRIORITY)
+    "free trading mentor", "free trading mentor 2026", "free trading mentorship",
+    "trading mentor free", "best free trading mentor", "find free trading mentor",
+    "free mentor for trading", "free forex mentor", "free crypto mentor",
+    "free stock mentor", "free day trading mentor", "online trading mentor free",
     
-    // Gold & Metals
-    "gold trading", "gold setups", "XAUUSD", "gold analysis",
-    "precious metals trading", "gold trading community",
+    // Trading Community Keywords (HIGH PRIORITY)
+    "trading community", "free trading community", "best trading community",
+    "online trading community", "trading community 2026", "join trading community",
+    "active trading community", "profitable trading community",
+    "day trading community", "swing trading community", "crypto trading community",
+    "forex trading community", "stock trading community", "gold trading community",
     
-    // Forex keywords
-    "forex trading", "forex setups", "forex community",
-    "forex mentor", "currency trading", "forex analysis",
+    // Heavy News & Market News Keywords (HIGH PRIORITY)
+    "heavy news", "heavy market news", "breaking news trading",
+    "market breaking news", "trading news", "trading news today",
+    "financial news", "financial news today", "economic news",
+    "market news", "market news today", "daily market news",
     
-    // Stock keywords
-    "stock trading", "stock market analysis", "stock setups",
-    "day trading", "swing trading", "stock community",
+    // Gold & XAUUSD Keywords (HIGH PRIORITY)
+    "gold trading", "gold price", "gold price today", "gold analysis",
+    "XAUUSD", "XAUUSD trading", "XAUUSD analysis", "XAUUSD price",
+    "gold chart", "gold technical analysis", "how to trade gold",
+    "gold trading strategy", "gold trading for beginners", "gold setup",
+    "gold trade setup", "gold news", "gold news today", "gold forecast",
     
-    // Market news
-    "market news", "trading news", "financial news",
-    "market analysis", "economic news", "trading updates",
+    // Cryptocurrency Keywords (HIGH PRIORITY)
+    "bitcoin trading", "bitcoin analysis", "bitcoin price", "BTC trading",
+    "ethereum trading", "ETH trading", "crypto trading", "cryptocurrency trading",
+    "altcoin trading", "crypto market", "crypto news", "crypto analysis",
+    "best crypto to buy", "crypto trading for beginners", "learn crypto trading",
     
-    // Community & Education
-    "trading education", "trading course", "free trading education",
-    "trading discord", "trading telegram", "traders community",
-    "prop firm", "funded trader", "FTMO", "prop trading"
+    // Forex Keywords
+    "forex trading", "forex analysis", "forex for beginners", "how to trade forex",
+    "EURUSD", "GBPUSD", "USDJPY", "forex community", "forex mentor",
+    
+    // Stock Market Keywords
+    "stock trading", "stock market", "S&P 500", "Nasdaq", "day trading",
+    "swing trading", "stock analysis", "stock trading for beginners",
+    
+    // Trading Education Keywords
+    "trading for beginners", "trading for beginners 2026", "how to start trading",
+    "learn to trade", "learn trading free", "trading basics",
+    "trading course", "trading course free", "free trading course",
+    "trading education", "trading school", "trading academy",
+    
+    // Prop Firm Keywords
+    "prop firm", "prop trading", "funded trader", "funded account",
+    "prop firm challenge", "FTMO", "FTMO challenge", "pass prop firm",
+    
+    // Technical Analysis Keywords
+    "technical analysis", "chart analysis", "price action",
+    "support and resistance", "candlestick patterns", "chart patterns",
+    
+    // Trading Discord & Telegram
+    "trading discord", "best trading discord", "free trading discord",
+    "trading telegram", "crypto discord", "forex discord",
+    
+    // Trading Tools
+    "TradingView", "trading charts", "economic calendar",
+    
+    // 2026 Keywords
+    "trading 2026", "best trading strategy 2026", "crypto 2026", "gold 2026"
   ],
   
   // ============================================
