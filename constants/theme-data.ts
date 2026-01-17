@@ -98,6 +98,22 @@ const REAL_YOUTUBE_IDS = {
 
 // --- 2. BASE THEMES (SPECIAL & SENTIMENT) ---
 export const BASE_THEMES: Theme[] = [
+  // ★★★ BULLMONEY BLUE - DEFAULT THEME ★★★
+  { 
+    id: 'bullmoney-blue', 
+    name: 'BullMoney Blue', 
+    description: 'Signature Blue - Default Theme', 
+    category: 'SPECIAL', 
+    filter: 'none', 
+    mobileFilter: 'none', 
+    illusion: 'NONE', 
+    accentColor: '#3b82f6', 
+    status: 'AVAILABLE',
+    bgImage: undefined,
+    audioUrl: SFX.click.scifi,
+    hoverUrl: SFX.hover.scifi,
+    youtubeId: REAL_YOUTUBE_IDS.CYBERPUNK_AMBIENT
+  },
   { 
     id: 'bull-money-special', name: 'Bull Money Chrome', description: 'Institutional Grade', category: 'SPECIAL', 
     filter: 'grayscale(1) brightness(1.2) contrast(1.2) drop-shadow(0 0 1px rgba(0,255,255,0.8))', 

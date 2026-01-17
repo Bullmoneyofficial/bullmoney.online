@@ -108,7 +108,7 @@ function LazySplineContainer({ scene }: { scene: string }) {
         <ShimmerBorder color="blue" intensity="medium" speed="normal" />
 
         {/* Inner container */}
-        <div className="relative z-10 h-full w-full bg-black rounded-2xl m-[1px] border border-blue-500/30 overflow-hidden">
+        <div className="relative z-10 h-full w-full bg-black rounded-2xl m-[1px] overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.3)', borderWidth: '1px', borderStyle: 'solid' }}>
           {/* Top Shimmer Line */}
           <ShimmerLine color="blue" />
 
@@ -120,19 +120,20 @@ function LazySplineContainer({ scene }: { scene: string }) {
             <ShimmerFloat className="relative w-20 h-20">
               {/* Spinning border ring */}
               <ShimmerBorder color="blue" intensity="medium" className="inset-[-3px] rounded-full" />
-              <div className="relative w-full h-full rounded-full bg-neutral-900 border border-blue-500/40 flex items-center justify-center overflow-hidden">
+              <div className="relative w-full h-full rounded-full bg-neutral-900 flex items-center justify-center overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.4)', borderWidth: '1px', borderStyle: 'solid' }}>
                 <Image
                   src="/BULL.svg"
                   alt="BullMoney"
                   width={48}
                   height={48}
-                  className="opacity-90 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+                  className="opacity-90"
+                  style={{ filter: 'drop-shadow(0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.5))' }}
                   priority
                 />
               </div>
             </ShimmerFloat>
-            <p className="text-xs text-blue-400 font-bold tracking-wider drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">3D View</p>
-            <p className="text-[10px] text-blue-400/60 font-medium">Optimized for your device</p>
+            <p className="text-xs font-bold tracking-wider theme-accent" style={{ filter: 'drop-shadow(0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.5))' }}>3D View</p>
+            <p className="text-[10px] font-medium" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }}>Optimized for your device</p>
 
             {/* Decorative dots */}
             <div className="flex justify-center gap-1.5 mt-2">
@@ -170,7 +171,7 @@ function LazySplineContainer({ scene }: { scene: string }) {
           <div className="absolute inset-0 flex items-center justify-center">
             <ShimmerSpinner size={32} color="blue" speed="slow" />
           </div>
-          <div className="absolute inset-0 rounded-xl border border-blue-500/20 pointer-events-none" />
+          <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.2)', borderWidth: '1px', borderStyle: 'solid' }} />
         </div>
       )}
 
@@ -206,7 +207,7 @@ function LazySplineContainer({ scene }: { scene: string }) {
           <div className="absolute inset-0 flex items-center justify-center">
             <ShimmerSpinner size={32} color="blue" speed="slow" />
           </div>
-          <div className="absolute inset-0 rounded-xl border border-blue-500/20 pointer-events-none" />
+          <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.2)', borderWidth: '1px', borderStyle: 'solid' }} />
         </div>
       )}
     </div>
@@ -426,13 +427,13 @@ function HomeContent() {
             <section id="experience" className="w-full max-w-7xl mx-auto px-4 py-16 hidden md:block" data-allow-scroll style={{ touchAction: 'pan-y' }}>
               {/* Section Header */}
               <div className="relative text-center mb-8">
-                <h2 className="text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-400 to-white drop-shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+                <h2 className="text-xl md:text-2xl font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #3b82f6), white)', filter: 'drop-shadow(0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.5))' }}>
                   Interactive 3D Experience
                 </h2>
-                <p className="text-xs text-blue-400/60 mt-2 uppercase tracking-widest font-medium">Drag to explore</p>
+                <p className="text-xs mt-2 uppercase tracking-widest font-medium" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }}>Drag to explore</p>
                 {/* Decorative line */}
                 <div className="flex justify-center mt-4">
-                  <div className="w-24 h-[2px] bg-gradient-to-r from-transparent via-blue-500 to-transparent" />
+                  <div className="w-24 h-[2px]" style={{ background: 'linear-gradient(to right, transparent, var(--accent-color, #3b82f6), transparent)' }} />
                 </div>
               </div>
               
@@ -441,7 +442,7 @@ function HomeContent() {
                 <ShimmerBorder color="blue" intensity="low" speed="normal" />
                 
                 {/* Inner container */}
-                <div className="relative z-10 w-full h-full bg-black rounded-2xl border border-blue-500/20 overflow-hidden">
+                <div className="relative z-10 w-full h-full bg-black rounded-2xl overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.2)', borderWidth: '1px', borderStyle: 'solid' }}>
                   {/* Top shimmer line */}
                   <ShimmerLine color="blue" className="z-20" />
                   
@@ -460,7 +461,7 @@ function HomeContent() {
             <section id="testimonials" className="w-full max-w-5xl mx-auto px-4 py-12 md:hidden" data-allow-scroll style={{ touchAction: 'pan-y' }}>
               {/* Section Header */}
               <div className="relative text-center mb-6">
-                <h2 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-400 to-white drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                <h2 className="text-lg font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #3b82f6), white)', filter: 'drop-shadow(0 0 15px rgba(var(--accent-rgb, 59, 130, 246), 0.5))' }}>
                   What Traders Say
                 </h2>
                 <div className="flex justify-center gap-1 mt-3">
@@ -474,7 +475,7 @@ function HomeContent() {
                 {/* Shimmer border */}
                 <ShimmerBorder color="blue" intensity="low" speed="slow" />
                 
-                <div className="relative z-10 bg-black rounded-2xl border border-blue-500/20 overflow-hidden">
+                <div className="relative z-10 bg-black rounded-2xl overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.2)', borderWidth: '1px', borderStyle: 'solid' }}>
                   <Suspense fallback={<LoadingSkeleton variant="card" height={320} />}>
                     <TestimonialsCarousel />
                   </Suspense>

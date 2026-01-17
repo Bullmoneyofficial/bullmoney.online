@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconPalette, IconX } from '@tabler/icons-react';
 import { ThemeSelector } from '@/components/Mainpage/ThemeSelector';
-import { ThemeCategory, SoundProfile } from '@/constants/theme-data';
+import { ThemeCategory, SoundProfile, ALL_THEMES } from '@/constants/theme-data';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 
 interface ThemeSelectorModalProps {
@@ -26,13 +26,38 @@ export const ThemeSelectorModal = ({ isOpen, onClose }: ThemeSelectorModalProps)
   }, [globalThemeId, isOpen]);
 
   const handleSave = (themeId: string) => {
+    // Find the full theme object
+    const selectedTheme = ALL_THEMES.find(t => t.id === themeId);
+    
+    // Update global context
     setTheme(themeId);
+    
+    // Save to multiple storage locations for persistence
     localStorage.setItem('bullmoney-theme', themeId);
     localStorage.setItem('user_theme_id', themeId);
     
-    window.dispatchEvent(new CustomEvent('bullmoney-theme-change', { 
-      detail: { themeId } 
-    }));
+    // Save full theme data for early application on next page load
+    if (selectedTheme) {
+      const themeData = {
+        id: selectedTheme.id,
+        name: selectedTheme.name,
+        accentColor: selectedTheme.accentColor,
+        filter: selectedTheme.filter,
+        mobileFilter: selectedTheme.mobileFilter,
+        category: selectedTheme.category,
+        savedAt: Date.now()
+      };
+      localStorage.setItem('bullmoney-theme-data', JSON.stringify(themeData));
+      
+      // Also dispatch event with full theme data
+      window.dispatchEvent(new CustomEvent('bullmoney-theme-change', { 
+        detail: { themeId, theme: selectedTheme, accentColor: selectedTheme.accentColor } 
+      }));
+    } else {
+      window.dispatchEvent(new CustomEvent('bullmoney-theme-change', { 
+        detail: { themeId } 
+      }));
+    }
     
     onClose();
   };

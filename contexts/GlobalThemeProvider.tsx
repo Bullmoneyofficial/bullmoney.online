@@ -19,7 +19,8 @@ interface GlobalThemeContextType {
 const GlobalThemeContext = createContext<GlobalThemeContextType | undefined>(undefined);
 
 export function GlobalThemeProvider({ children }: { children: React.ReactNode }) {
-  const [activeThemeId, setActiveThemeId] = useState<string>('t01');
+  // Default to BullMoney Blue (#3b82f6) - the signature theme
+  const [activeThemeId, setActiveThemeId] = useState<string>('bullmoney-blue');
   const [activeTheme, setActiveTheme] = useState<Theme | null>(null);
   const [accentColor, setAccentColor] = useState<string>('#3b82f6');
   const [isInitialized, setIsInitialized] = useState(false);
@@ -134,11 +135,32 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
       root.style.setProperty('--theme-overlay', theme.overlay || 'NONE');
       root.style.setProperty('--theme-is-light', theme.isLight ? '1' : '0');
       
+      // GLOBAL THEME OVERLAY v2.0: Set overlay opacity based on theme intensity
+      // This controls the CSS ::before pseudo-element color overlay
+      const overlayOpacity = theme.category === 'GLITCH' ? '0.3' : 
+                            theme.category === 'SENTIMENT' ? '0.5' :
+                            theme.isLight ? '0.4' : '0.6';
+      root.style.setProperty('--theme-overlay-opacity', overlayOpacity);
+      
+      // Set light theme flag for inverted blend modes
+      if (theme.isLight) {
+        root.setAttribute('data-theme-light', 'true');
+      } else {
+        root.removeAttribute('data-theme-light');
+      }
+      
       // Apply theme overlay as data attribute for CSS selectors
       root.setAttribute('data-active-theme', theme.id);
       root.setAttribute('data-theme-category', theme.category || 'SPECIAL');
       root.setAttribute('data-theme-illusion', theme.illusion || 'NONE');
       body.setAttribute('data-theme', theme.id);
+      
+      // CRITICAL: Force repaint to ensure overlay updates across all fixed elements
+      // This is necessary for Safari and older browsers
+      root.style.setProperty('--theme-update-trigger', String(Date.now()));
+      
+      // Log theme change for debugging
+      console.log('[GlobalTheme] Applied:', theme.name, '| Accent:', accentHex, '| Overlay:', overlayOpacity);
 
       // Persist theme to multiple storage locations for reliability
       const themeData = {

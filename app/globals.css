@@ -77,13 +77,67 @@
     0px 0px 0px 1px rgba(25,28,33,0.08);
 }
 
+/* ============================================
+   CRITICAL: GLOBAL SCROLL FOUNDATION
+   These rules ensure scrolling works on ALL devices:
+   - iPhone (Safari, Chrome, Firefox, In-App browsers)
+   - Android (Chrome, Samsung Browser, Firefox)
+   - Desktop (Safari, Chrome, Firefox, Edge)
+   ============================================ */
+
 html {
   /* CRITICAL: Use native scroll for 120Hz - do NOT use scroll-behavior: smooth */
   scroll-behavior: auto;
-  /* Enable high refresh rate scrolling */
+  /* Enable high refresh rate scrolling on iOS */
   -webkit-overflow-scrolling: touch;
   overflow-y: auto;
   overflow-x: hidden;
+  /* Prevent accidental overscroll bounce causing issues */
+  overscroll-behavior-y: auto;
+  /* Ensure proper height calculation on mobile browsers */
+  min-height: 100%;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+}
+
+body {
+  /* Body must be scrollable */
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  /* Prevent overscroll bounce on iOS */
+  overscroll-behavior-y: contain;
+  /* Use dynamic viewport height for mobile address bar */
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  /* Allow vertical scrolling gestures */
+  touch-action: pan-y;
+  /* Ensure proper scroll context */
+  position: relative;
+}
+
+/* ============================================
+   SCROLL PASSTHROUGH FOR OVERLAYS
+   Ensures theme overlays don't block scroll
+   ============================================ */
+
+/* Any overlay with pointer-events:none should not affect scroll */
+[style*="pointer-events: none"],
+[style*="pointer-events:none"],
+.pointer-events-none {
+  /* Double ensure scroll passthrough */
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* The theme color overlay specifically */
+#theme-filter-overlay,
+html[data-active-theme]::before {
+  /* These are set inline but ensure CSS backup */
+  pointer-events: none !important;
+  touch-action: none !important;
 }
 
 /* 120Hz ProMotion Display Optimizations */
@@ -381,6 +435,82 @@ canvas {
   html {
     height: -webkit-fill-available;
   }
+  
+  /* iOS Safari specific: ensure overlays don't capture touches */
+  html[data-active-theme]::before {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* ============================================
+   BROWSER-SPECIFIC SCROLL FIXES
+   Safari, Samsung Browser, Firefox, Chrome
+   ============================================ */
+
+/* Safari (macOS and iOS) */
+html.is-safari,
+html.is-ios-safari {
+  /* Safari needs explicit scroll setup */
+  -webkit-overflow-scrolling: touch;
+}
+
+html.is-safari body,
+html.is-ios-safari body {
+  /* Prevent Safari rubber-banding issues */
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Samsung Browser (Android) */
+@media screen and (-webkit-min-device-pixel-ratio: 0) 
+  and (min-resolution: 0.001dpcm) {
+  body {
+    /* Samsung Browser scroll optimization */
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+}
+
+/* Firefox Mobile */
+@-moz-document url-prefix() {
+  html, body {
+    scroll-behavior: auto;
+    overflow-y: auto;
+  }
+}
+
+/* In-App Browsers (Instagram, Facebook, TikTok, etc.) */
+/* These often have restricted scroll behavior */
+html.is-in-app-browser body {
+  /* Force scroll to work in webviews */
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: auto !important;
+}
+
+/* ============================================
+   THEME OVERLAY SCROLL SAFETY
+   Ensures the theme overlay NEVER blocks scrolling
+   ============================================ */
+
+/* The CSS pseudo-element overlay */
+html::before,
+html::after,
+body::before,
+body::after {
+  /* CRITICAL: These must never block scrolling */
+  pointer-events: none !important;
+  touch-action: none !important;
+}
+
+/* The JS-injected overlay component */
+#theme-filter-overlay {
+  /* Redundant safety - also set in JS */
+  pointer-events: none !important;
+  touch-action: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
 }
 
 /* Spline container - ensure scroll passthrough */
@@ -410,20 +540,148 @@ canvas {
 }
 
 /* ============================================
-   GLOBAL THEME OVERLAY SYSTEM
-   These styles use CSS variables set by GlobalThemeProvider
-   to apply theme colors across the entire app
+   GLOBAL THEME OVERLAY SYSTEM v2.0
+   Applies theme colors/filters as safe CSS layers
+   WITHOUT breaking scroll, fixed elements, or cross-browser compat
    ============================================ */
 
 /* 
-   IMPORTANT: Do NOT apply filter to html/body as it breaks position:fixed
-   Instead, use .theme-filter-wrapper for content that should be filtered
+   ARCHITECTURE:
+   1. html::before = color overlay (pointer-events: none, doesn't block scroll)
+   2. CSS variables = component-level theming
+   3. data attributes = selector-based theme effects
+   
+   CRITICAL: Never apply filter to html/body - breaks position:fixed on Safari/iOS
 */
+
 html, body {
-  transition: background 0.5s ease-in-out;
-  /* Explicitly ensure no filter on html/body */
+  transition: background-color 0.5s ease-in-out;
+  /* NEVER apply filter here - breaks fixed positioning */
   filter: none !important;
   -webkit-filter: none !important;
+  /* Ensure scrolling works on all devices */
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ============================================
+   GLOBAL THEME COLOR OVERLAY
+   A transparent color layer that tints everything
+   Uses mix-blend-mode for natural color mixing
+   ============================================ */
+
+/* Theme color overlay - appears on top of everything as color tint */
+html[data-active-theme]::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  /* Color overlay using theme's accent color */
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.08) 0%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.04) 40%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.02) 70%,
+    transparent 100%
+  );
+  /* CRITICAL: Allow clicks/touches to pass through */
+  pointer-events: none;
+  /* Blend naturally with underlying content */
+  mix-blend-mode: soft-light;
+  opacity: var(--theme-overlay-opacity, 0.6);
+  transition: opacity 0.5s ease-in-out, background 0.5s ease-in-out;
+  /* GPU acceleration without blocking scroll */
+  transform: translateZ(0);
+  will-change: opacity;
+  /* Prevent this layer from causing scroll issues */
+  contain: strict;
+  /* Ensure it doesn't create a new scroll context */
+  overflow: visible;
+}
+
+/* Reduce overlay on mobile for performance */
+@media (max-width: 768px) {
+  html[data-active-theme]::before {
+    background: radial-gradient(
+      ellipse at 50% 20%,
+      rgba(var(--accent-rgb, 59, 130, 246), 0.06) 0%,
+      rgba(var(--accent-rgb, 59, 130, 246), 0.02) 50%,
+      transparent 100%
+    );
+    opacity: 0.4;
+  }
+}
+
+/* Disable overlay for low-performance devices */
+html.fps-minimal[data-active-theme]::before,
+html.fps-low[data-active-theme]::before {
+  opacity: 0.2;
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.02);
+}
+
+/* Light themes need inverted overlay */
+html[data-active-theme][data-theme-light="true"]::before {
+  mix-blend-mode: multiply;
+  opacity: 0.3;
+}
+
+/* ============================================
+   THEME-AWARE BORDER GLOW SYSTEM
+   Adds colored glow to borders based on theme
+   ============================================ */
+
+/* Apply subtle theme border glow to key containers */
+html[data-active-theme] nav,
+html[data-active-theme] .modal,
+html[data-active-theme] [role="dialog"],
+html[data-active-theme] .card,
+html[data-active-theme] .theme-glow-border {
+  box-shadow: 
+    0 0 1px rgba(var(--accent-rgb, 59, 130, 246), 0.3),
+    0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.05),
+    inset 0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.02);
+  border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.2) !important;
+}
+
+/* Enhanced glow on hover */
+html[data-active-theme] nav:hover,
+html[data-active-theme] .theme-glow-border:hover {
+  box-shadow: 
+    0 0 2px rgba(var(--accent-rgb, 59, 130, 246), 0.5),
+    0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.1),
+    inset 0 0 40px rgba(var(--accent-rgb, 59, 130, 246), 0.03);
+}
+
+/* ============================================
+   FIXED ELEMENT THEME AWARENESS
+   Ensures fixed elements receive theme styling
+   ============================================ */
+
+/* Fixed navbar theming */
+html[data-active-theme] nav[class*="fixed"],
+html[data-active-theme] header[class*="fixed"] {
+  /* Subtle colored border on bottom */
+  border-bottom-color: rgba(var(--accent-rgb, 59, 130, 246), 0.15) !important;
+}
+
+/* Fixed modals and dialogs */
+html[data-active-theme] [class*="fixed"][class*="z-"] {
+  /* Theme-colored borders for visibility */
+  --modal-border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.25);
+}
+
+/* Buttons across the app get theme awareness */
+html[data-active-theme] button:not([data-no-theme]),
+html[data-active-theme] [role="button"]:not([data-no-theme]) {
+  --btn-accent: var(--accent-color, #3b82f6);
+  --btn-accent-rgb: var(--accent-rgb, 59, 130, 246);
+}
+
+/* Links get theme color on hover */
+html[data-active-theme] a:not([data-no-theme]):hover {
+  color: var(--accent-color, #3b82f6);
+  text-shadow: 0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.3);
 }
 
 /* GLOBAL BLUR REMOVAL - No blur effects anywhere for performance */
@@ -490,8 +748,9 @@ body[data-theme]::before {
 }
 
 /* ============================================
-   THEME-AWARE UTILITY CLASSES
+   THEME-AWARE UTILITY CLASSES v2.0
    Use these classes throughout the app for automatic theme adaptation
+   All colors automatically update when theme changes
    ============================================ */
 
 /* Theme-aware accent colors */
@@ -588,6 +847,118 @@ body[data-theme]::before {
   border-color: var(--accent-color, #3b82f6);
   box-shadow: 0 0 0 2px var(--theme-accent-subtle, rgba(59, 130, 246, 0.2));
   outline: none;
+}
+
+/* ============================================
+   GLOBAL THEME COLOR APPLICATION v2.0
+   Automatically converts Tailwind blue classes to use theme accent color
+   Supports opacity variants like blue-400/60, blue-500/30, etc.
+   ============================================ */
+
+/* TEXT COLORS - All blue text becomes theme color */
+html[data-active-theme] .text-blue-400,
+html[data-active-theme] .text-blue-500,
+html[data-active-theme] .text-blue-600,
+[data-active-theme] .text-blue-400,
+[data-active-theme] .text-blue-500,
+[data-active-theme] .text-blue-600 {
+  color: var(--accent-color, #3b82f6) !important;
+}
+
+/* Text with opacity variants - uses wildcard to match all variants */
+html[data-active-theme] [class*="text-blue-4"],
+html[data-active-theme] [class*="text-blue-5"] {
+  color: var(--accent-color, #3b82f6) !important;
+}
+
+/* BORDER COLORS - All blue borders become theme color */
+html[data-active-theme] .border-blue-400,
+html[data-active-theme] .border-blue-500,
+html[data-active-theme] .border-blue-600,
+[data-active-theme] .border-blue-400,
+[data-active-theme] .border-blue-500,
+[data-active-theme] .border-blue-600 {
+  border-color: var(--accent-color, #3b82f6) !important;
+}
+
+/* Border with opacity variants - uses wildcard to match all variants */
+html[data-active-theme] [class*="border-blue-4"],
+html[data-active-theme] [class*="border-blue-5"] {
+  border-color: rgba(var(--accent-rgb, 59, 130, 246), var(--tw-border-opacity, 0.3)) !important;
+}
+
+/* BACKGROUND COLORS - All blue backgrounds become theme color */
+html[data-active-theme] .bg-blue-400,
+html[data-active-theme] .bg-blue-500,
+html[data-active-theme] .bg-blue-600,
+[data-active-theme] .bg-blue-400,
+[data-active-theme] .bg-blue-500,
+[data-active-theme] .bg-blue-600 {
+  background-color: var(--accent-color, #3b82f6) !important;
+}
+
+/* Background with opacity variants - uses wildcard to match all variants */
+html[data-active-theme] [class*="bg-blue-4"],
+html[data-active-theme] [class*="bg-blue-5"] {
+  background-color: rgba(var(--accent-rgb, 59, 130, 246), var(--tw-bg-opacity, 0.2)) !important;
+}
+
+/* RING COLORS */
+html[data-active-theme] .ring-blue-400,
+html[data-active-theme] .ring-blue-500,
+html[data-active-theme] .ring-blue-600,
+html[data-active-theme] [class*="focus\:ring-blue-4"]:focus,
+html[data-active-theme] [class*="focus\:ring-blue-5"]:focus {
+  --tw-ring-color: var(--accent-color, #3b82f6) !important;
+}
+
+/* GRADIENT COLORS */
+html[data-active-theme] .from-blue-400,
+html[data-active-theme] .from-blue-500,
+html[data-active-theme] .from-blue-600,
+html[data-active-theme] [class*="from-blue-"] {
+  --tw-gradient-from: var(--accent-color, #3b82f6) !important;
+}
+
+html[data-active-theme] .to-blue-400,
+html[data-active-theme] .to-blue-500,
+html[data-active-theme] .to-blue-600,
+html[data-active-theme] [class*="to-blue-"] {
+  --tw-gradient-to: var(--accent-color, #3b82f6) !important;
+}
+
+html[data-active-theme] .via-blue-400,
+html[data-active-theme] .via-blue-500,
+html[data-active-theme] [class*="via-blue-"] {
+  --tw-gradient-via: var(--accent-color, #3b82f6) !important;
+}
+
+/* SHADOW COLORS */
+html[data-active-theme] [class*="shadow-blue"] {
+  --tw-shadow-color: rgba(var(--accent-rgb, 59, 130, 246), 0.3) !important;
+}
+
+/* DROP SHADOW - Override inline and class-based blue drop-shadows */
+html[data-active-theme] [class*="drop-shadow"][class*="blue"],
+html[data-active-theme] [style*="drop-shadow"][style*="59"][style*="130"][style*="246"] {
+  filter: drop-shadow(0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.5)) !important;
+}
+
+/* HOVER STATES - Blue hover colors become theme color */
+html[data-active-theme] [class*="hover\:text-blue-4"]:hover,
+html[data-active-theme] [class*="hover\:text-blue-5"]:hover,
+html[data-active-theme] [class*="hover\:border-blue-4"]:hover,
+html[data-active-theme] [class*="hover\:border-blue-5"]:hover,
+html[data-active-theme] [class*="hover\:bg-blue-4"]:hover,
+html[data-active-theme] [class*="hover\:bg-blue-5"]:hover {
+  color: var(--accent-color, #3b82f6) !important;
+  border-color: var(--accent-color, #3b82f6) !important;
+}
+
+/* FOCUS STATES */
+html[data-active-theme] [class*="focus\:border-blue-5"]:focus,
+html[data-active-theme] [class*="focus\:border-blue-4"]:focus {
+  border-color: var(--accent-color, #3b82f6) !important;
 }
 
 /* Theme-aware links */

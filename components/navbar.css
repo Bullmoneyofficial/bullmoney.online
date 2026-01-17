@@ -1,58 +1,68 @@
 /**
- * Navbar Theme Filters & Z-Index Configuration
- * Ensures navbar applies theme CSS filters and sits below loaders
+ * Navbar Theme Integration v2.0
+ * - Uses CSS variables set by GlobalThemeProvider
+ * - Theme colors applied via var(--accent-color) and var(--accent-rgb)
+ * - No direct filter on navbar - uses color variables instead
  */
 
 /* ============================================================================
-   THEME FILTER MAPPINGS
-   Maps theme IDs to CSS filter values for color transformation
+   THEME-AWARE NAVBAR COLORS
+   Uses CSS variables for dynamic theme color application
    ============================================================================ */
 
 :root {
-  /* Default filters (no transformation) */
-  --navbar-filter-default: hue-rotate(0deg) saturate(1) brightness(1);
+  /* Default accent (blue) - overridden by GlobalThemeProvider */
+  --navbar-accent: var(--accent-color, #3b82f6);
+  --navbar-accent-rgb: var(--accent-rgb, 59, 130, 246);
   
-  /* CRYPTO THEMES */
-  --navbar-filter-bitcoin: hue-rotate(0deg) saturate(1) brightness(1);
-  --navbar-filter-ethereum: hue-rotate(-30deg) saturate(1.2) brightness(1.05);
-  --navbar-filter-ripple: hue-rotate(200deg) saturate(1.1) brightness(0.95);
-  --navbar-filter-doge: hue-rotate(45deg) saturate(1.15) brightness(1.1);
-  --navbar-filter-cardano: hue-rotate(270deg) saturate(1.1) brightness(0.98);
-  --navbar-filter-solana: hue-rotate(-20deg) saturate(1.3) brightness(1.08);
-  --navbar-filter-polkadot: hue-rotate(280deg) saturate(1.2) brightness(1.02);
-  --navbar-filter-stellar: hue-rotate(190deg) saturate(1.15) brightness(0.97);
-  
-  /* MARKET THEMES */
-  --navbar-filter-bullish: hue-rotate(100deg) saturate(1.3) brightness(1.15);
-  --navbar-filter-bearish: hue-rotate(0deg) saturate(1.2) brightness(0.9);
-  --navbar-filter-neutral: hue-rotate(0deg) saturate(0.8) brightness(1);
-  --navbar-filter-volatile: hue-rotate(-40deg) saturate(1.4) brightness(1.2);
-  
-  /* SPECIAL THEMES */
-  --navbar-filter-midnight: hue-rotate(0deg) saturate(0.7) brightness(0.85);
-  --navbar-filter-neon: hue-rotate(0deg) saturate(1.5) brightness(1.3);
-  --navbar-filter-retro: hue-rotate(30deg) saturate(1.1) brightness(1.05);
-  --navbar-filter-cyberpunk: hue-rotate(-50deg) saturate(1.8) brightness(1.25);
-  --navbar-filter-matrix: hue-rotate(120deg) saturate(1.2) brightness(0.95);
-  --navbar-filter-ocean: hue-rotate(200deg) saturate(1.1) brightness(1);
-  --navbar-filter-desert: hue-rotate(40deg) saturate(1.15) brightness(1.1);
+  /* Derived navbar colors */
+  --navbar-border: rgba(var(--navbar-accent-rgb), 0.3);
+  --navbar-glow: rgba(var(--navbar-accent-rgb), 0.15);
+  --navbar-hover: rgba(var(--navbar-accent-rgb), 0.2);
+  --navbar-active: rgba(var(--navbar-accent-rgb), 0.25);
 }
 
 /* ============================================================================
-   NAVBAR CONTAINER - Z-INDEX & FILTER APPLICATION
-   z-40: Below loaders (z-50) but above page content
+   NAVBAR CONTAINER - THEME INTEGRATION
+   - No filter applied (preserves fixed positioning)
+   - Uses CSS variables for color theming
    ============================================================================ */
 
 .navbar-themed {
   z-index: 40;
-  filter: var(--theme-filter, none);
-  transition: filter 0.5s ease-in-out, opacity 0.3s ease-in-out;
+  /* NO FILTER - use color variables instead */
+  transition: border-color 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
   position: fixed;
   top: 8px;
   left: 0;
   right: 0;
   width: 100%;
   pointer-events: none;
+  /* Theme-aware border and glow */
+  border-color: var(--navbar-border) !important;
+  box-shadow: 
+    0 0 20px var(--navbar-glow),
+    inset 0 0 30px rgba(var(--navbar-accent-rgb), 0.03);
+}
+
+/* Navbar elements use theme accent color */
+.navbar-themed a,
+.navbar-themed button {
+  /* Links and buttons get theme color on hover */
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.navbar-themed a:hover,
+.navbar-themed button:hover {
+  color: var(--navbar-accent) !important;
+  text-shadow: 0 0 10px var(--navbar-glow);
+}
+
+/* Active nav items get theme color */
+.navbar-themed .active,
+.navbar-themed [aria-current="page"] {
+  color: var(--navbar-accent);
+  text-shadow: 0 0 8px var(--navbar-glow);
 }
 
 /* ============================================================================
@@ -433,7 +443,7 @@ body {
 
 /* ============================================================================
    MEDIA QUERIES
-   Ensure proper z-index and filter behavior on different screen sizes
+   Ensure proper z-index and theme behavior on different screen sizes
    ============================================================================ */
 
 @media (max-width: 1024px) {
@@ -445,17 +455,17 @@ body {
 @media (max-width: 640px) {
   .navbar-themed {
     z-index: 40;
-    filter: var(--theme-filter, none);
+    /* NO filter on mobile - use color variables for theming */
   }
 }
 
 /* ============================================================================
    ANIMATION STATES
-   Ensure filters apply during animations
+   Theme colors apply during animations
    ============================================================================ */
 
 .navbar-themed[data-animating="true"] {
-  filter: var(--theme-filter, none);
+  /* No filter during animation - rely on color variables */
   z-index: 40;
 }
 
@@ -484,7 +494,7 @@ body {
 /* Navbar container containment */
 .navbar-themed {
   contain: layout style;
-  will-change: filter, opacity;
+  will-change: opacity;
 }
 
 /* Optimize tooltips */

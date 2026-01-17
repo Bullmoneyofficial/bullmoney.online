@@ -44,27 +44,89 @@ export function useOptimizedShimmer() {
 
 export const ShimmerStylesProvider = memo(() => (
   <style jsx global>{`
-    /* SLOW LEFT-TO-RIGHT SWEEP */
-    @keyframes shimmer-ltr { 0% { transform: translateX(-100%); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateX(200%); opacity: 0; } }
-    /* SLOW GLOW PULSE */
-    @keyframes shimmer-glow { 0%, 100% { box-shadow: 0 0 15px rgba(59,130,246,0.3), 0 0 30px rgba(59,130,246,0.15); } 50% { box-shadow: 0 0 35px rgba(59,130,246,0.6), 0 0 60px rgba(147,197,253,0.35); } }
-    /* SLOW TEXT GLOW */
-    @keyframes shimmer-text-glow { 0%, 100% { text-shadow: 0 0 8px rgba(59,130,246,0.4); } 50% { text-shadow: 0 0 20px rgba(147,197,253,0.8), 0 0 30px rgba(59,130,246,0.5); } }
-    /* BORDER GLOW PULSE */
-    @keyframes shimmer-border-glow { 0%, 100% { box-shadow: inset 0 0 0 1px rgba(59,130,246,0.3), 0 0 10px rgba(59,130,246,0.2); } 50% { box-shadow: inset 0 0 0 1px rgba(147,197,253,0.6), 0 0 25px rgba(59,130,246,0.4); } }
+    /* 
+     * UNIFIED SHIMMER v7 - THEME-AWARE
+     * Uses CSS variables from GlobalThemeProvider for dynamic theming
+     * Fallback to BullMoney Blue: #3b82f6 | Light: #93c5fd
+     */
+    
+    /* SLOW LEFT-TO-RIGHT SWEEP - Theme-aware */
+    @keyframes shimmer-ltr { 
+      0% { transform: translateX(-100%); opacity: 0; } 
+      50% { opacity: 1; } 
+      100% { transform: translateX(200%); opacity: 0; } 
+    }
+    
+    /* SLOW GLOW PULSE - Theme-aware */
+    @keyframes shimmer-glow { 
+      0%, 100% { box-shadow: 0 0 15px rgba(var(--accent-rgb, 59, 130, 246), 0.3), 0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.15); } 
+      50% { box-shadow: 0 0 35px rgba(var(--accent-rgb, 59, 130, 246), 0.6), 0 0 60px rgba(var(--accent-rgb, 59, 130, 246), 0.35); } 
+    }
+    
+    /* SLOW TEXT GLOW - Theme-aware */
+    @keyframes shimmer-text-glow { 
+      0%, 100% { text-shadow: 0 0 8px rgba(var(--accent-rgb, 59, 130, 246), 0.4); } 
+      50% { text-shadow: 0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.8), 0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.5); } 
+    }
+    
+    /* BORDER GLOW PULSE - Theme-aware */
+    @keyframes shimmer-border-glow { 
+      0%, 100% { box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb, 59, 130, 246), 0.3), 0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.2); } 
+      50% { box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb, 59, 130, 246), 0.6), 0 0 25px rgba(var(--accent-rgb, 59, 130, 246), 0.4); } 
+    }
 
-    /* CSS CLASSES */
-    .shimmer-sweep { animation: shimmer-ltr 6s ease-in-out infinite; background: linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.3) 25%, rgba(147,197,253,0.8) 50%, rgba(59,130,246,0.3) 75%, transparent 100%); will-change: transform; }
-    .shimmer-glow { animation: shimmer-glow 4s ease-in-out infinite; will-change: box-shadow; }
-    .shimmer-text { animation: shimmer-text-glow 4s ease-in-out infinite; color: rgba(147,197,253,1); }
-    .shimmer-text-white { animation: shimmer-text-glow 4s ease-in-out infinite; color: white; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
-    .shimmer-border { animation: shimmer-border-glow 4s ease-in-out infinite; border: 1px solid rgba(59,130,246,0.4); }
-    .shimmer-card { animation: shimmer-glow 5s ease-in-out infinite; background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(10,20,40,0.95) 100%); border: 1px solid rgba(59,130,246,0.3); }
-    .shimmer-button { position: relative; overflow: hidden; animation: shimmer-border-glow 3s ease-in-out infinite; }
-    .shimmer-button::before { content: ''; position: absolute; inset: 0; animation: shimmer-ltr 4s ease-in-out infinite; background: linear-gradient(90deg, transparent, rgba(59,130,246,0.2), rgba(147,197,253,0.4), rgba(59,130,246,0.2), transparent); pointer-events: none; }
-    .shimmer-section { position: relative; animation: shimmer-glow 6s ease-in-out infinite; }
-    .shimmer-bg { background: linear-gradient(135deg, rgba(0,0,0,1) 0%, rgba(10,20,50,0.98) 50%, rgba(0,0,0,1) 100%); }
-    .shimmer-gpu { transform: translateZ(0); backface-visibility: hidden; }
+    /* CSS CLASSES - Theme-aware using CSS variables */
+    .shimmer-sweep { 
+      animation: shimmer-ltr 6s ease-in-out infinite; 
+      background: linear-gradient(90deg, transparent 0%, rgba(var(--accent-rgb, 59, 130, 246), 0.3) 25%, rgba(var(--accent-rgb, 59, 130, 246), 0.8) 50%, rgba(var(--accent-rgb, 59, 130, 246), 0.3) 75%, transparent 100%); 
+      will-change: transform; 
+    }
+    .shimmer-glow { 
+      animation: shimmer-glow 4s ease-in-out infinite; 
+      will-change: box-shadow; 
+    }
+    .shimmer-text { 
+      animation: shimmer-text-glow 4s ease-in-out infinite; 
+      color: var(--accent-color, rgba(147,197,253,1)); 
+    }
+    .shimmer-text-white { 
+      animation: shimmer-text-glow 4s ease-in-out infinite; 
+      color: white; 
+      text-shadow: 0 0 10px rgba(255,255,255,0.5); 
+    }
+    .shimmer-border { 
+      animation: shimmer-border-glow 4s ease-in-out infinite; 
+      border: 1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.4); 
+    }
+    .shimmer-card { 
+      animation: shimmer-glow 5s ease-in-out infinite; 
+      background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(10,20,40,0.95) 100%); 
+      border: 1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3); 
+    }
+    .shimmer-button { 
+      position: relative; 
+      overflow: hidden; 
+      animation: shimmer-border-glow 3s ease-in-out infinite; 
+    }
+    .shimmer-button::before { 
+      content: ''; 
+      position: absolute; 
+      inset: 0; 
+      animation: shimmer-ltr 4s ease-in-out infinite; 
+      background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb, 59, 130, 246), 0.2), rgba(var(--accent-rgb, 59, 130, 246), 0.4), rgba(var(--accent-rgb, 59, 130, 246), 0.2), transparent); 
+      pointer-events: none; 
+    }
+    .shimmer-section { 
+      position: relative; 
+      animation: shimmer-glow 6s ease-in-out infinite; 
+    }
+    .shimmer-bg { 
+      background: linear-gradient(135deg, rgba(0,0,0,1) 0%, rgba(10,20,50,0.98) 50%, rgba(0,0,0,1) 100%); 
+    }
+    .shimmer-gpu { 
+      transform: translateZ(0); 
+      backface-visibility: hidden; 
+    }
 
     /* Reduced motion */
     @media (prefers-reduced-motion: reduce) { .shimmer-sweep, .shimmer-glow, .shimmer-text, .shimmer-border, .shimmer-button::before { animation: none; } }

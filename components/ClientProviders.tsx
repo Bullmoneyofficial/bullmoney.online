@@ -6,6 +6,12 @@ import { AuthProvider } from "@/contexts/AuthContext";
 // RecruitAuthProvider is now in layout.tsx to wrap Navbar
 // REMOVED: UIStateProvider - already provided by MobileMenuProvider in layout.tsx
 
+// Theme overlay for global filter effects
+const ThemeOverlay = dynamic(
+  () => import("@/components/ThemeOverlay").then((mod) => ({ default: mod.ThemeOverlay })),
+  { ssr: false }
+);
+
 // Lazy load performance providers for faster initial compile
 const PerformanceProvider = dynamic(
   () => import("@/components/PerformanceProvider").then((mod) => ({ default: mod.PerformanceProvider })),
@@ -81,15 +87,34 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
               <AudioWidget />
               <AutoRefreshPrompt />
               {modal}
+              
+              {/* 
+                THEME OVERLAY v2.0:
+                - Applied as sibling, not wrapper
+                - Uses pointer-events:none - doesn't block scroll
+                - Works with all browsers including Safari/iOS
+              */}
+              <ThemeOverlay enableFilter={true} />
+              
+              {/* 
+                MAIN CONTENT:
+                - Uses CSS variable for filter (set by GlobalThemeProvider)
+                - touchAction: pan-y allows vertical scroll
+                - overflowY: visible prevents scroll context issues
+              */}
               <main 
-                className="theme-filter-wrapper min-h-screen"
+                className="min-h-screen"
                 style={{ 
-                  filter: 'var(--theme-filter, none)',
-                  transition: 'filter 0.5s ease-in-out',
+                  // Filter is now applied via ThemeOverlay and CSS ::before
+                  // No direct filter here to avoid scroll issues
                   touchAction: 'pan-y',
-                  overflowY: 'visible'
+                  overflowY: 'visible',
+                  // Ensure proper stacking
+                  position: 'relative',
+                  zIndex: 1,
                 }}
                 data-allow-scroll
+                data-scrollable
               >
                 {children}
               </main>

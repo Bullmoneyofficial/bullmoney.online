@@ -125,6 +125,36 @@ export default function RootLayout({
     
     console.log('[SafariFix] Safari detected, early fixes applied');
   }
+  
+  // EARLY THEME APPLICATION - Apply saved theme BEFORE React hydrates
+  // This prevents flash of default blue before theme loads
+  try {
+    var savedTheme = localStorage.getItem('bullmoney-theme-data');
+    if (savedTheme) {
+      var themeData = JSON.parse(savedTheme);
+      if (themeData && themeData.accentColor) {
+        var hex = themeData.accentColor.replace('#', '');
+        var r = parseInt(hex.substring(0, 2), 16) || 59;
+        var g = parseInt(hex.substring(2, 4), 16) || 130;
+        var b = parseInt(hex.substring(4, 6), 16) || 246;
+        
+        // Set CSS variables immediately
+        document.documentElement.style.setProperty('--accent-color', themeData.accentColor);
+        document.documentElement.style.setProperty('--accent-rgb', r + ', ' + g + ', ' + b);
+        document.documentElement.setAttribute('data-active-theme', themeData.id || 't01');
+        document.documentElement.setAttribute('data-theme-category', themeData.category || 'SPECIAL');
+        
+        console.log('[EarlyTheme] Applied:', themeData.id, themeData.accentColor);
+      }
+    } else {
+      // Set default theme attribute so CSS selectors work
+      document.documentElement.setAttribute('data-active-theme', 't01');
+    }
+  } catch (e) {
+    // Set default on error
+    document.documentElement.setAttribute('data-active-theme', 't01');
+    console.warn('[EarlyTheme] Error:', e);
+  }
 })();
             `,
           }}
