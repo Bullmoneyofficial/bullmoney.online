@@ -990,17 +990,18 @@ const HeroParallax = () => {
     >
         {/* CLS FIX: Hero Spline wrapper with fixed dimensions */}
         <div 
-          className="absolute inset-0 w-full h-full z-0 pointer-events-none hero-spline-wrapper"
+          className="absolute inset-0 w-full h-full z-0 hero-spline-wrapper"
           style={{ 
             contain: 'strict',
             isolation: 'isolate',
             touchAction: 'pan-y',
             minHeight: '100dvh',
+            pointerEvents: 'auto',
           }}
           data-allow-scroll
         >
           <div 
-            className="w-full h-full pointer-events-none relative"
+            className="w-full h-full relative"
             style={{
               position: 'absolute',
               top: 0,
@@ -1010,6 +1011,7 @@ const HeroParallax = () => {
               contain: 'strict',
               touchAction: 'pan-y',
               minHeight: '100dvh',
+              pointerEvents: 'auto',
             }}
           >
             <div className="w-full h-full flex items-center justify-center">
@@ -1025,13 +1027,15 @@ const HeroParallax = () => {
                   minWidth: 320,
                   minHeight: 260,
                   contain: 'strict',
+                  touchAction: 'pan-y',
+                  pointerEvents: 'auto',
                 }}
               >
                 {/* LCP FIX: priority=true + isHero=true for fastest load */}
                 <Spline 
                   scene="/scene1.splinecode" 
                   placeholder={undefined} 
-                  className="!w-full !h-full pointer-events-none"
+                  className="!w-full !h-full"
                   priority={true}
                   isHero={true}
                 />
