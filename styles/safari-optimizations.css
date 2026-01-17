@@ -283,3 +283,50 @@ html.is-safari input:-webkit-autofill {
     color-scheme: dark;
   }
 }
+/* ================================================================
+   MACOS SAFARI DESKTOP SCROLL FIXES
+   Critical for trackpad and mouse wheel scrolling
+   ================================================================ */
+
+/* macOS Safari scroll behavior */
+@media (min-width: 769px) and (hover: hover) {
+  html.is-safari {
+    scroll-behavior: auto !important;
+    overflow-y: scroll !important;
+    overscroll-behavior: auto;
+  }
+  
+  html.is-safari body {
+    overflow-y: visible !important;
+    overscroll-behavior: auto;
+  }
+  
+  /* Remove any scroll-snap that could interfere with trackpad */
+  html.is-safari,
+  html.is-safari body,
+  html.is-safari main {
+    scroll-snap-type: none !important;
+  }
+  
+  /* Ensure sections don't capture scroll */
+  html.is-safari section {
+    scroll-snap-align: none !important;
+    overflow: visible;
+  }
+}
+
+/* macOS-specific (non-iOS Safari) */
+html.is-safari.macos {
+  /* Trackpad momentum scrolling */
+  -webkit-overflow-scrolling: auto;
+}
+
+html.is-safari.macos body {
+  /* Allow natural overscroll for elastic effect */
+  overscroll-behavior: auto;
+}
+
+/* Ensure main content is scrollable on macOS Safari */
+html.is-safari.desktop-optimized main {
+  overflow: visible;
+}

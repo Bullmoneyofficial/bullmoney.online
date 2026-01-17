@@ -112,18 +112,27 @@ section:not([style*="visibility: hidden"]) {
    ============================================================ */
 
 @supports (-webkit-touch-callout: none) {
-  /* iOS Safari specific fixes */
+  /* iOS Safari specific fixes - MOBILE ONLY */
   
-  /* Fix viewport on iOS Safari */
-  html, body {
-    height: 100%;
-    height: 100dvh;
-    height: 100vh;
-  }
+  /* Fix viewport on iOS Safari - only apply on mobile viewports */
+  @media (max-width: 768px) {
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      height: 100vh;
+    }
 
-  /* Prevent iOS Safari rubber band scroll */
-  body {
-    overscroll-behavior-y: contain;
+    /* Prevent iOS Safari rubber band scroll */
+    body {
+      overscroll-behavior-y: contain;
+    }
+  }
+  
+  /* Desktop Safari must use auto height for proper scrolling */
+  @media (min-width: 769px) {
+    html, body {
+      height: auto !important;
+    }
   }
 
   /* iOS Safari font smoothing */
@@ -258,14 +267,27 @@ section:not([style*="visibility: hidden"]) {
 
 /* ============================================================
    TOUCH ACTION OPTIMIZATION
+   FIXED: Only apply restrictive rules on mobile
    ============================================================ */
 
-/* Improve scroll performance with touch-action */
-html,
-body {
-  touch-action: pan-y pinch-zoom;
-  -webkit-user-select: none;
-  user-select: none;
+/* Mobile-only touch optimization */
+@media (max-width: 768px) {
+  html,
+  body {
+    touch-action: pan-y pinch-zoom;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+/* Desktop needs full control */
+@media (min-width: 769px) {
+  html,
+  body {
+    touch-action: auto;
+    -webkit-user-select: auto;
+    user-select: auto;
+  }
 }
 
 /* Allow text selection where needed */

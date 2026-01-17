@@ -166,7 +166,7 @@
 .unified-scroll {
   scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto; /* FIXED: Changed from contain to auto for natural desktop scrolling */
 }
 
 /* Remove snap scrolling on touch devices for better swipe feel */
@@ -176,10 +176,11 @@
 }
 
 /* FIXED: Disable snap scrolling for desktop mouse users - causes jerky scroll */
-/* Non-touch devices (desktop with mouse) should have smooth, natural scrolling */
+/* Non-touch devices (desktop with mouse/trackpad) should have smooth, natural scrolling */
 .unified-scroll.non-touch-device {
-  scroll-snap-type: none; /* CHANGED from y mandatory - allows smooth mouse wheel */
-  scroll-behavior: auto;  /* CHANGED from smooth - prevents scroll jank */
+  scroll-snap-type: none !important; /* CHANGED from y mandatory - allows smooth mouse wheel */
+  scroll-behavior: auto !important;  /* CHANGED from smooth - prevents scroll jank */
+  overscroll-behavior: auto; /* Allow natural overscroll on desktop */
 }
 
 /* Only apply scroll-snap when explicitly requested */
@@ -197,15 +198,31 @@
   scroll-snap-stop: always;
 }
 
-/* Unified page sections - same height on all devices */
+/* Unified page sections - responsive height */
 .page-section {
   width: 100%;
   min-height: 100dvh;
-  height: 100dvh;
+  /* FIXED: Use min-height only, not fixed height - allows content to overflow */
+  /* height: 100dvh; - REMOVED to allow scrolling */
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Only use fixed height on mobile where it makes sense */
+@media (max-width: 768px) {
+  .page-section {
+    height: 100dvh;
+  }
+}
+
+/* Desktop sections must not have fixed height */
+@media (min-width: 769px) {
+  .page-section {
+    height: auto;
+    min-height: 100dvh;
+  }
 }
 
 /* Touch-friendly interactive areas */

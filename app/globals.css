@@ -86,39 +86,47 @@
    These rules ensure scrolling works on ALL devices:
    - iPhone (Safari, Chrome, Firefox, In-App browsers)
    - Android (Chrome, Samsung Browser, Firefox)
-   - Desktop (Safari, Chrome, Firefox, Edge)
+   - Desktop (Safari macOS, Chrome, Firefox, Edge)
+   - Mac trackpad (momentum scrolling, two-finger scroll)
    ============================================ */
 
 html {
   /* CRITICAL: Use native scroll for 120Hz - do NOT use scroll-behavior: smooth */
-  scroll-behavior: auto;
+  scroll-behavior: auto !important;
   /* Enable high refresh rate scrolling on iOS */
   -webkit-overflow-scrolling: touch;
-  overflow-y: auto;
+  overflow-y: scroll !important; /* FIXED: Use scroll not auto to ensure scrollbar is always present */
   overflow-x: hidden;
-  /* Prevent accidental overscroll bounce causing issues */
+  /* Prevent accidental overscroll bounce causing issues - but allow natural scrolling */
   overscroll-behavior-y: auto;
+  overscroll-behavior-x: none;
   /* Ensure proper height calculation on mobile browsers */
   min-height: 100%;
   min-height: 100dvh;
   min-height: -webkit-fill-available;
+  /* CRITICAL: Allow all scroll inputs including trackpad */
+  scroll-snap-type: none !important;
+  /* CRITICAL: Do not constrain height on desktop - allow content to overflow */
+  height: auto !important;
 }
 
 body {
-  /* Body must be scrollable */
-  overflow-y: auto;
+  /* Body must be scrollable - CRITICAL for macOS trackpad */
+  overflow-y: visible !important; /* FIXED: visible allows content to extend naturally */
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  /* Prevent overscroll bounce on iOS */
-  overscroll-behavior-y: contain;
+  /* Prevent overscroll bounce on iOS but allow on desktop */
+  overscroll-behavior-y: auto;
   /* Use dynamic viewport height for mobile address bar */
   min-height: 100vh;
   min-height: 100dvh;
   min-height: -webkit-fill-available;
-  /* Allow vertical scrolling gestures */
-  touch-action: pan-y;
+  /* Allow all scrolling gestures including trackpad */
+  touch-action: pan-x pan-y;
   /* Ensure proper scroll context */
   position: relative;
+  /* CRITICAL: Don't restrict height - allow natural content flow */
+  height: auto !important;
 }
 
 /* ============================================
@@ -184,15 +192,19 @@ article,
 }
 
 /* CRITICAL: Scroll state classes - added by useUltraFpsOptimization */
-html.is-scrolling * {
+/* FIXED: Don't completely disable transitions - just pause heavy animations */
+html.is-scrolling .shimmer-line,
+html.is-scrolling .shimmer-border,
+html.is-scrolling [data-shimmer],
+html.is-scrolling [class*="animate-"] {
   animation-play-state: paused !important;
-  transition: none !important;
 }
 
+/* Only hide shimmer effects during scroll, not all transitions */
 html.is-scrolling .shimmer-line,
 html.is-scrolling .shimmer-border,
 html.is-scrolling [data-shimmer] {
-  display: none !important;
+  opacity: 0 !important;
 }
 
 /* CRITICAL: Page hidden state - pause everything */
@@ -362,6 +374,53 @@ html.is-interacting .shimmer-border {
   }
 }
 
+/* ============================================================================
+   DESKTOP & MAC SCROLL OPTIMIZATIONS (769px+)
+   Critical fixes for macOS Safari trackpad and desktop mouse wheel
+   ============================================================================ */
+@media (min-width: 769px) {
+  /* Desktop scroll foundation */
+  html {
+    scroll-behavior: auto !important;
+    overflow-y: scroll !important;
+    overscroll-behavior: auto;
+  }
+  
+  body {
+    overflow-y: visible !important;
+    overscroll-behavior: auto;
+    /* Allow momentum scrolling on macOS */
+    -webkit-overflow-scrolling: auto;
+  }
+  
+  /* Remove any scroll-snap that could interfere with smooth scrolling */
+  html, body, main, section {
+    scroll-snap-type: none !important;
+    scroll-snap-align: none !important;
+  }
+  
+  /* Ensure content sections don't block scroll */
+  section, main, article {
+    overflow: visible;
+  }
+}
+
+/* macOS Safari specific optimizations */
+@supports (-webkit-appearance: none) and (not (-moz-appearance: none)) {
+  @media (min-width: 769px) and (hover: hover) {
+    html {
+      /* Safari-specific smooth momentum scrolling */
+      -webkit-overflow-scrolling: auto;
+      scroll-behavior: auto !important;
+    }
+    
+    /* Ensure Safari trackpad gestures work */
+    body {
+      overscroll-behavior: auto;
+    }
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
@@ -491,15 +550,24 @@ canvas {
   }
 }
 
-/* Fix for iOS Safari */
+/* Fix for iOS Safari - MOBILE ONLY */
 @supports (-webkit-touch-callout: none) {
-  body {
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
+  @media (max-width: 768px) {
+    body {
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+    }
+    
+    html {
+      height: -webkit-fill-available;
+    }
   }
   
-  html {
-    height: -webkit-fill-available;
+  /* Desktop Safari needs auto height for proper scrolling */
+  @media (min-width: 769px) {
+    html {
+      height: auto !important;
+    }
   }
   
   /* iOS Safari specific: ensure overlays don't capture touches */
@@ -519,6 +587,22 @@ html.is-safari,
 html.is-ios-safari {
   /* Safari needs explicit scroll setup */
   -webkit-overflow-scrolling: touch;
+}
+
+/* macOS Safari DESKTOP - trackpad scrolling fixes */
+html.is-safari.macos,
+html.is-safari.desktop-optimized {
+  scroll-behavior: auto !important;
+  overflow-y: scroll !important;
+  overscroll-behavior: auto;
+}
+
+html.is-safari.macos body,
+html.is-safari.desktop-optimized body {
+  overflow-y: visible !important;
+  overscroll-behavior: auto;
+  /* Enable momentum scrolling */
+  -webkit-overflow-scrolling: auto;
 }
 
 html.is-safari body,
@@ -596,8 +680,18 @@ body::after {
 }
 
 /* Fixed elements should not block scrolling */
-.fixed, [style*="position: fixed"] {
-  touch-action: none;
+/* FIXED: Only apply touch-action: none on mobile - desktop needs to pass through scroll events */
+@media (max-width: 768px) {
+  .fixed, [style*="position: fixed"] {
+    touch-action: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .fixed, [style*="position: fixed"] {
+    /* Allow scroll pass-through on desktop */
+    pointer-events: auto;
+  }
 }
 
 /* Ensure hero section doesn't block scroll */
@@ -870,10 +964,22 @@ body::after,
     -webkit-tap-highlight-color: transparent !important;
   }
   
-  /* Ensure body can scroll on iOS */
-  body {
-    -webkit-overflow-scrolling: touch !important;
-    overflow-y: auto !important;
+  /* Ensure body can scroll on iOS - MOBILE ONLY */
+  @media (max-width: 768px) {
+    body {
+      -webkit-overflow-scrolling: touch !important;
+      overflow-y: auto !important;
+    }
+  }
+  
+  /* Desktop Safari must NOT have overflow:auto on body - it needs visible */
+  @media (min-width: 769px) {
+    body {
+      overflow-y: visible !important;
+    }
+    html {
+      overflow-y: scroll !important;
+    }
   }
 }
 
@@ -1894,4 +2000,106 @@ html.is-scrolling [data-fps-chart] * {
   animation-play-state: running !important;
   opacity: 1 !important;
   visibility: visible !important;
+}
+
+/* ============================================================================
+   CRITICAL: DESKTOP BIG SCREEN SCROLL FIX (HIGHEST PRIORITY)
+   This MUST be at the end to override any conflicting rules
+   ============================================================================ */
+@media (min-width: 769px) {
+  html, html.desktop-optimized, html.big-display, html.mouse-device, html.macos {
+    height: auto !important;
+    max-height: none !important;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    scroll-behavior: auto !important;
+    scroll-snap-type: none !important;
+    overscroll-behavior: auto !important;
+  }
+  
+  body, body.desktop-optimized, body.big-display {
+    height: auto !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: auto !important;
+    position: relative !important;
+  }
+  
+  /* Ensure main content can scroll */
+  main, main[data-allow-scroll], main[data-scrollable] {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  
+  /* Remove any fixed height on sections that could block scroll */
+  section {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  
+  /* Ensure all theme overlays don't block scroll */
+  #theme-global-overlay,
+  #theme-edge-glow,
+  #theme-transition-reveal,
+  #theme-filter-overlay,
+  html::before,
+  html::after,
+  body::before,
+  body::after {
+    pointer-events: none !important;
+    touch-action: none !important;
+    position: fixed !important;
+    overflow: visible !important;
+  }
+}
+
+/* ============================================================================
+   ULTRA PRIORITY: Safari macOS Desktop Scroll Fix
+   This overrides ANY @supports (-webkit-touch-callout: none) rules
+   ============================================================================ */
+@media (min-width: 769px) {
+  @supports (-webkit-touch-callout: none) {
+    /* Safari on desktop MUST have these scroll settings */
+    html {
+      height: auto !important;
+      overflow-y: scroll !important;
+      overflow-x: hidden !important;
+    }
+    
+    body {
+      height: auto !important;
+      overflow-y: visible !important;
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: auto !important;
+    }
+  }
+}
+
+/* ============================================================================
+   FINAL OVERRIDE: Ensure document can scroll regardless of any other rules
+   ============================================================================ */
+@media screen and (min-width: 769px) {
+  :root {
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+  }
+  
+  /* Added by performanceSystem.tsx - highest priority scroll enforcement */
+  html.desktop-scroll-enabled {
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    scroll-behavior: auto !important;
+    scroll-snap-type: none !important;
+  }
+  
+  body.desktop-scroll-enabled {
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    position: relative !important;
+  }
 }

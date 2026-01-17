@@ -392,8 +392,15 @@ html.lenis body {
 /* Desktop-specific smooth scrolling */
 @media (min-width: 769px) and (hover: hover) {
   html.desktop-optimized {
-    /* Use native smooth scroll momentum */
-    scroll-behavior: auto;
+    /* Use native smooth scroll momentum - CRITICAL for macOS trackpad */
+    scroll-behavior: auto !important;
+    overflow-y: scroll !important;
+    overscroll-behavior: auto;
+  }
+  
+  html.desktop-optimized body {
+    overflow-y: visible !important;
+    overscroll-behavior: auto;
   }
   
   /* Optimize all transforms for GPU */

@@ -417,7 +417,7 @@ function HomeContent() {
 
       {currentView === 'content' && (
         <>
-          <main className="min-h-screen flex flex-col w-full overflow-x-hidden" data-allow-scroll data-scrollable data-content data-theme-aware>
+          <main className="min-h-screen flex flex-col w-full" data-allow-scroll data-scrollable data-content data-theme-aware style={{ overflow: 'visible', height: 'auto' }}>
             <div id="top" />
 
             <section id="hero" className="w-full" data-allow-scroll data-content data-theme-aware>

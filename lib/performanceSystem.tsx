@@ -163,30 +163,76 @@ const setupDesktopScrolling = () => {
   
   if (isTouchDevice) {
     html.classList.add('touch-device');
-    html.classList.remove('mouse-device');
+    html.classList.remove('mouse-device', 'non-touch-device');
   } else {
-    html.classList.add('mouse-device');
+    html.classList.add('mouse-device', 'non-touch-device');
     html.classList.remove('touch-device');
   }
 
   // Instead, just set up smooth scroll behavior for desktop
-  if (window.innerWidth >= 1024) {
-    // Ensure scroll events work properly on desktop
+  if (window.innerWidth >= 769) {
+    // FIXED 2026: Ensure scroll events work properly on desktop and macOS
+    html.classList.add('desktop-optimized');
     document.documentElement.style.scrollBehavior = 'auto';
+    document.documentElement.style.overflowY = 'scroll';
+    document.body.style.overflowY = 'visible';
     document.body.style.overscrollBehavior = 'auto';
+    
+    // Remove any scroll-snap that could interfere
+    document.documentElement.style.scrollSnapType = 'none';
+    document.body.style.scrollSnapType = 'none';
     
     // ADDED 2026: Disable scroll-snap for mouse users on big displays
     if (!isTouchDevice && window.innerWidth >= 1440) {
       html.classList.add('big-display');
       console.log('[PerformanceSystem] Big display detected, optimizing mouse scroll');
     }
+    
+    // ADDED 2026: Detect macOS for trackpad-specific optimizations
+    const isMac = /macintosh|mac os x/i.test(navigator.userAgent);
+    if (isMac) {
+      html.classList.add('macos');
+      console.log('[PerformanceSystem] macOS detected, enabling trackpad optimizations');
+    }
   }
 
   return () => {
     // Cleanup - reset to defaults
     document.documentElement.style.scrollBehavior = '';
+    document.documentElement.style.overflowY = '';
+    document.body.style.overflowY = '';
     document.body.style.overscrollBehavior = '';
   };
+};
+
+// ADDED 2026: Enforce desktop scroll settings - prevents any code from breaking scroll
+// This runs on mount and ensures desktop devices can always scroll
+const enforceDesktopScroll = () => {
+  if (typeof window === 'undefined') return;
+  
+  const isDesktop = window.innerWidth >= 769;
+  if (!isDesktop) return;
+  
+  const html = document.documentElement;
+  const body = document.body;
+  
+  // Force scroll-enabling styles
+  html.style.height = 'auto';
+  html.style.overflowY = 'scroll';
+  html.style.overflowX = 'hidden';
+  html.style.scrollSnapType = 'none';
+  html.style.scrollBehavior = 'auto';
+  
+  body.style.height = 'auto';
+  body.style.overflowY = 'visible';
+  body.style.overflowX = 'hidden';
+  body.style.position = 'relative';
+  
+  // Remove any classes that might restrict scroll
+  html.classList.add('desktop-scroll-enabled');
+  body.classList.add('desktop-scroll-enabled');
+  
+  console.log('[DesktopScroll] Scroll enforcement applied');
 };
 
 // Optimize in-app browser experience
@@ -303,6 +349,23 @@ export const PerformanceProvider = memo(({ children, showFPS = false }: Performa
     // Setup desktop scrolling
     const cleanupScroll = setupDesktopScrolling();
     
+    // ADDED 2026: Enforce desktop scroll settings immediately and periodically
+    // This prevents any subsequent code from breaking scroll
+    enforceDesktopScroll();
+    
+    // Also enforce on visibility change (when tab becomes visible again)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        enforceDesktopScroll();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Re-enforce after a short delay to catch any React hydration issues
+    const delayedEnforce = setTimeout(() => {
+      enforceDesktopScroll();
+    }, 1000);
+    
     // Optimize in-app browser
     optimizeInAppBrowser();
     
@@ -320,6 +383,8 @@ export const PerformanceProvider = memo(({ children, showFPS = false }: Performa
     
     return () => {
       cleanupScroll();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearTimeout(delayedEnforce);
     };
   }, []);
   

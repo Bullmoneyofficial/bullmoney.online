@@ -17,13 +17,18 @@ html {
   /* Enable high refresh rate scrolling on iOS Safari */
   -webkit-overflow-scrolling: touch;
   /* Note: Do NOT use contain on html - it breaks scrolling */
+  /* FIXED: Ensure desktop scroll works */
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 body {
-  /* Allow scrolling */
+  /* Allow scrolling - CRITICAL for desktop and macOS */
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: visible; /* FIXED: Use visible to allow content to extend naturally */
   -webkit-overflow-scrolling: touch;
+  /* FIXED: Allow overscroll on desktop for natural feel */
+  overscroll-behavior: auto;
 }
 
 /* Force GPU layer creation for smoother 120Hz rendering */

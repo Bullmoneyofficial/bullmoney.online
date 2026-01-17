@@ -42,18 +42,37 @@
 }
 
 html {
-  /* Use CSS custom property for viewport height */
-  height: 100%;
-  height: calc(var(--vh, 1vh) * 100);
+  /* Use CSS custom property for viewport height - MOBILE ONLY */
+  /* CRITICAL: Desktop needs height:auto for natural scrolling */
+  min-height: 100%;
+  min-height: calc(var(--vh, 1vh) * 100);
   /* Prevent font scaling in landscape on iOS */
   -webkit-text-size-adjust: 100%;
   /* Enable font smoothing on all browsers */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Prevent pull-to-refresh and overscroll */
-  overscroll-behavior-y: none;
-  /* Enable smooth scrolling */
-  scroll-behavior: smooth;
+  /* Prevent pull-to-refresh on mobile only */
+  overscroll-behavior-y: auto;
+  /* FIXED: Use auto for native 120Hz scrolling on desktop */
+  scroll-behavior: auto;
+}
+
+/* Mobile can use smooth scroll */
+@media (max-width: 768px) {
+  html {
+    height: 100%;
+    height: calc(var(--vh, 1vh) * 100);
+    overscroll-behavior-y: none;
+    scroll-behavior: smooth; /* OK on mobile touch */
+  }
+}
+
+/* Desktop must have auto height for scrolling */
+@media (min-width: 769px) {
+  html {
+    height: auto !important;
+    overflow-y: scroll !important;
+  }
 }
 
 body {
@@ -63,6 +82,7 @@ body {
   /* Use standard positioning to allow page scroll */
   width: 100%;
   overflow-x: hidden;
+  /* CRITICAL: overflow-y varies by device type */
   overflow-y: auto;
   /* Enable touch scrolling */
   -webkit-overflow-scrolling: touch;
@@ -72,6 +92,14 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Desktop body must have overflow:visible */
+@media (min-width: 769px) {
+  body {
+    overflow-y: visible !important;
+    height: auto !important;
+  }
 }
 
 /* ============================================================================

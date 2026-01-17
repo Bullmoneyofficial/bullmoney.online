@@ -180,19 +180,22 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
               {/* 
                 MAIN CONTENT:
                 - Uses CSS variable for filter (set by GlobalThemeProvider)
-                - touchAction: pan-y allows vertical scroll
+                - touchAction: auto allows all scroll interactions
                 - overflowY: visible prevents scroll context issues
+                - CRITICAL: No height constraints to allow natural scrolling
               */}
               <main 
                 className="min-h-screen"
                 style={{ 
                   // Filter is now applied via ThemeOverlay and CSS ::before
                   // No direct filter here to avoid scroll issues
-                  touchAction: 'pan-y',
-                  overflowY: 'visible',
+                  touchAction: 'auto', // FIXED: Allow ALL interactions including scroll
+                  overflow: 'visible', // FIXED: Allow content to overflow naturally
                   // Ensure proper stacking
                   position: 'relative',
                   zIndex: 1,
+                  // CRITICAL: No height constraints
+                  height: 'auto',
                 }}
                 data-allow-scroll
                 data-scrollable

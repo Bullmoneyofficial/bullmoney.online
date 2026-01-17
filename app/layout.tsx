@@ -384,6 +384,39 @@ export default function RootLayout({
   var isIOSSafari = isIOS && isSafari;
   var isMac = /macintosh|mac os x/i.test(ua);
   var isDesktop = !(/mobi|android|iphone|ipad/i.test(ua));
+  var isWindows = /windows/i.test(ua);
+  var isLinux = /linux/i.test(ua) && !(/android/i.test(ua));
+  var isBigScreen = window.innerWidth >= 769;
+  
+  // CRITICAL: Desktop scroll initialization - MUST run early
+  if (isDesktop && isBigScreen) {
+    var html = document.documentElement;
+    var body = document.body;
+    
+    // Add desktop classes
+    html.classList.add('desktop-optimized', 'mouse-device', 'non-touch-device');
+    
+    // CRITICAL: Force scroll to work on desktop
+    html.style.height = 'auto';
+    html.style.overflowY = 'scroll';
+    html.style.overflowX = 'hidden';
+    html.style.scrollBehavior = 'auto';
+    html.style.scrollSnapType = 'none';
+    html.style.overscrollBehavior = 'auto';
+    
+    // Body must not constrain scrolling
+    body.style.height = 'auto';
+    body.style.overflowY = 'visible';
+    body.style.overflowX = 'hidden';
+    body.style.overscrollBehavior = 'auto';
+    
+    console.log('[DesktopScroll] Desktop scroll fixes applied early');
+    
+    if (window.innerWidth >= 1440) {
+      html.classList.add('big-display');
+      console.log('[DesktopScroll] Big display detected');
+    }
+  }
   
   if (isSafari || isIOS) {
     // Add Safari classes immediately for CSS fixes
@@ -513,6 +546,7 @@ export default function RootLayout({
   // Track failed chunk loads
   var failedLoads = 0;
   var hasReloaded = sessionStorage.getItem('_bm_reloaded');
+  var isDev = window.location.hostname === 'localhost' || window.location.hostname.startsWith('192.168.') || window.location.hostname === '127.0.0.1';
 
   // Listen for resource load errors (404s on JS/CSS files)
   window.addEventListener('error', function(e) {
@@ -520,6 +554,11 @@ export default function RootLayout({
     if (target && target.tagName) {
       var tag = target.tagName.toLowerCase();
       var src = target.src || target.href || '';
+
+      // Skip Vercel-specific URLs in development (they only exist in production)
+      if (isDev && (src.includes('/_vercel/') || src.includes('vercel-insights') || src.includes('vercel-analytics'))) {
+        return; // Silently ignore - expected in development
+      }
 
       // Check if it's a Next.js chunk or CSS file that failed to load
       if ((tag === 'script' || tag === 'link') &&
