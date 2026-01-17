@@ -319,9 +319,10 @@ function HomeContent() {
     if (savedMuted === 'true') setIsMuted(true);
   }, []);
 
-  // 1. STEALTH PRE-LOADER
+  // 1. STEALTH PRE-LOADER - Now starts in pagemode so Spline loads early
   useEffect(() => {
-    if (currentView === 'pagemode') return;
+    // Start preloading immediately, even during pagemode
+    // This ensures Spline is ready by the time user finishes the loader
     const preloadSplineEngine = async () => {
       try {
         const browserInfo = detectBrowser();
@@ -357,13 +358,13 @@ function HomeContent() {
         preloadFetch('/scene3.splinecode');
         preloadFetch('/scene4.splinecode');
 
-        console.log('[Page] Spline runtime + scenes preloaded');
+        console.log('[Page] Spline runtime + scenes preloaded during', currentView);
       } catch (e) {
         console.warn("Preload failed", e);
       }
     };
-    const t = setTimeout(preloadSplineEngine, 200);
-    return () => clearTimeout(t);
+    // Start preloading immediately - no delay
+    preloadSplineEngine();
   }, [deviceTier, currentView]);
 
   // 2. Session Check
