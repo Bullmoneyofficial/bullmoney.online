@@ -1,12 +1,15 @@
 "use client";
 
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
 
 interface ConfidenceMeterProps {
   score: number; // 1-10
+  onChange?: (score: number) => void; // For interactive mode
   showLabel?: boolean;
   size?: 'sm' | 'md' | 'lg';
+  interactive?: boolean;
   className?: string;
 }
 
@@ -33,14 +36,23 @@ const sizeClasses = {
 
 export const ConfidenceMeter = memo(({
   score,
+  onChange,
   showLabel = true,
   size = 'md',
+  interactive = false,
   className = '',
 }: ConfidenceMeterProps) => {
   const clampedScore = Math.max(1, Math.min(10, score));
   const percentage = (clampedScore / 10) * 100;
   const colorGradient = getConfidenceColor(clampedScore);
   const label = getConfidenceLabel(clampedScore);
+
+  const handleClick = useCallback((index: number) => {
+    if (interactive && onChange) {
+      SoundEffects.click();
+      onChange(index + 1);
+    }
+  }, [interactive, onChange]);
 
   return (
     <div className={`${className}`}>
@@ -53,13 +65,14 @@ export const ConfidenceMeter = memo(({
         </div>
       )}
 
-      <div className={`relative w-full bg-neutral-800 rounded-full overflow-hidden ${sizeClasses[size]}`}>
-        {/* Background segments */}
+      <div className={`relative w-full bg-neutral-800 rounded-full overflow-hidden ${sizeClasses[size]} ${interactive ? 'cursor-pointer' : ''}`}>
+        {/* Background segments (clickable in interactive mode) */}
         <div className="absolute inset-0 flex">
           {Array.from({ length: 10 }).map((_, i) => (
             <div
               key={i}
-              className="flex-1 border-r border-neutral-700/50 last:border-r-0"
+              onClick={() => handleClick(i)}
+              className={`flex-1 border-r border-neutral-700/50 last:border-r-0 ${interactive ? 'hover:bg-white/10 transition-colors' : ''}`}
             />
           ))}
         </div>

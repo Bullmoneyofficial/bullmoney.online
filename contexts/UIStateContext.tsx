@@ -46,9 +46,13 @@ export const UI_Z_INDEX = {
   // High priority modals
   CHARTNEWS: 9999999,
   AFFILIATE: 999999,
+  PAGEMODE: 99999999,
 
   // Mobile menu - HIGHEST PRIORITY (appears on top of everything)
-  MOBILE_MENU: 99999999,
+  MOBILE_MENU: 999999999,
+  
+  // Analysis Modal - ULTRA HIGH (opens on top of pagemode and everything)
+  ANALYSIS_MODAL: 2147483640,
 } as const;
 
 // Define all UI component types that participate in mutual exclusion
@@ -320,6 +324,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   }, [closeOthers]);
 
   const setAnalysisModalOpen = useCallback((open: boolean) => {
+    console.log('[UIStateContext] setAnalysisModalOpen called with:', open);
     if (open) {
       closeOthers('analysisModal');
     }

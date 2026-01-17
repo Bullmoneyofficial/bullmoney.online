@@ -2,6 +2,9 @@
 
 import type { UserProfile } from './user';
 
+// Re-export UserProfile for convenience
+export type { UserProfile } from './user';
+
 // Content types
 export type ContentType = 'deep_dive' | 'market_pulse' | 'blog_post';
 export type MarketType = 'forex' | 'crypto' | 'stocks' | 'indices';
@@ -143,6 +146,9 @@ export interface AnalysisComment {
   replies?: AnalysisComment[];
   reply_count?: number;
 }
+
+// Alias for convenience
+export type Comment = AnalysisComment;
 
 export interface CommentInsert {
   analysis_id: string;
