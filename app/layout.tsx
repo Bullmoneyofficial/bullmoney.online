@@ -12,6 +12,9 @@ import "../styles/mobile-scroll-optimization.css"; // Mobile & scroll performanc
 import "../styles/smart-mount.css"; // Smart mount/unmount freeze styles
 import { cn } from "@/lib/utils";
 
+// ✅ CUSTOM EVENT TRACKING - Track user interactions across the site
+import { trackEvent } from "@/lib/analytics";
+
 // ✅ VERCEL ANALYTICS & SPEED INSIGHTS - Track all pages from root layout
 // Works with Vercel Free Plan - page views are unlimited, custom events limited to 2,500/month
 import { VercelAnalyticsWrapper } from "@/components/VercelAnalyticsWrapper";

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, memo 
 import { createClient } from '@supabase/supabase-js'; 
 import { gsap } from 'gsap';
 import dynamic from 'next/dynamic';
+import { trackEvent, BullMoneyAnalytics } from '@/lib/analytics';
 import {
   Check, Mail, Hash, Lock,
   ArrowRight, ChevronLeft, ExternalLink, AlertCircle,
@@ -428,12 +429,21 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
   const handleBrokerClick = () => {
     const link = activeBroker === 'Vantage' ? "https://vigco.co/iQbe2u" : "https://affs.click/t5wni";
+    // Track broker affiliate click
+    BullMoneyAnalytics.trackAffiliateClick(activeBroker, 'pagemode');
     window.open(link, '_blank');
   };
 
   const handleRegisterSubmit = async () => {
     setStep(4); // Loading
     setSubmitError(null);
+    
+    // Track registration attempt
+    trackEvent('checkout_start', { 
+      broker: activeBroker, 
+      source: 'pagemode',
+      hasReferralCode: !!formData.referralCode 
+    });
 
     try {
       const { data: existingUser } = await supabase
@@ -479,6 +489,14 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         
         // Clear draft
         localStorage.removeItem("bullmoney_draft");
+        
+        // Track successful signup
+        BullMoneyAnalytics.trackAffiliateSignup(formData.referralCode || 'direct');
+        trackEvent('signup', { 
+          method: 'email', 
+          broker: activeBroker,
+          source: 'pagemode' 
+        });
       }
 
       setTimeout(() => {
