@@ -138,11 +138,29 @@ export const ShimmerStylesProvider = memo(() => (
       animation: shimmer-ping-animation 1s cubic-bezier(0, 0, 0.2, 1) infinite;
       background-color: var(--accent-color, #3b82f6);
     }
+    
+    /* CONIC BORDER - Theme-aware spinning gradient border */
+    @keyframes shimmer-conic-rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .shimmer-conic-border {
+      background: conic-gradient(
+        from 0deg at 50% 50%,
+        var(--accent-color, #3b82f6) 0%,
+        rgba(var(--accent-rgb, 59, 130, 246), 0.3) 25%,
+        var(--accent-color, #3b82f6) 50%,
+        rgba(var(--accent-rgb, 59, 130, 246), 0.3) 75%,
+        var(--accent-color, #3b82f6) 100%
+      );
+      animation: shimmer-conic-rotate 4s linear infinite;
+    }
 
     /* Reduced motion */
-    @media (prefers-reduced-motion: reduce) { .shimmer-sweep, .shimmer-glow, .shimmer-text, .shimmer-border, .shimmer-button::before { animation: none; } }
+    @media (prefers-reduced-motion: reduce) { .shimmer-sweep, .shimmer-glow, .shimmer-text, .shimmer-border, .shimmer-button::before, .shimmer-conic-border { animation: none; } }
     /* Mobile optimization */
-    @media (max-width: 768px) { .shimmer-sweep { animation-duration: 8s; } .shimmer-glow, .shimmer-border { animation-duration: 6s; } }
+    @media (max-width: 768px) { .shimmer-sweep { animation-duration: 8s; } .shimmer-glow, .shimmer-border { animation-duration: 6s; } .shimmer-conic-border { animation-duration: 8s; } }
   `}</style>
 ));
 ShimmerStylesProvider.displayName = 'ShimmerStylesProvider';

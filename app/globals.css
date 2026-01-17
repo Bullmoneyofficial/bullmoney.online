@@ -40,13 +40,17 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   
-  /* Theme Overlay Variables - Set by GlobalThemeProvider */
+  /* Theme Overlay Variables - Set by GlobalThemeProvider & Early Theme Script */
+  /* Default to BullMoney Blue signature color */
   --accent-color: #3b82f6;
   --accent-rgb: 59, 130, 246;
-  --theme-id: 't01';
-  --theme-name: 'Default';
+  --theme-id: 'bullmoney-blue';
+  --theme-name: 'BullMoney Blue';
   --theme-accent-light: rgba(59, 130, 246, 0.25);
   --theme-accent-dark: rgba(59, 130, 246, 0.5);
+  --theme-accent-glow: rgba(59, 130, 246, 0.4);
+  --theme-accent-subtle: rgba(59, 130, 246, 0.1);
+  --theme-accent-border: rgba(59, 130, 246, 0.3);
   
   /* 120Hz Display Optimization Variables */
   --native-refresh-rate: 60;
@@ -1008,6 +1012,45 @@ body[data-theme]::before {
   );
   pointer-events: none;
   z-index: 1;
+}
+
+/* ============================================
+   SPLINE & CANVAS THEME OVERLAY
+   Applies theme color tint to 3D scenes
+   ============================================ */
+
+/* Spline container gets theme color glow */
+[data-spline],
+.spline-container {
+  position: relative;
+}
+
+[data-spline]::after,
+.spline-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.08) 0%,
+    transparent 60%
+  );
+  mix-blend-mode: screen;
+  z-index: 1;
+  border-radius: inherit;
+  transition: background 0.5s ease;
+}
+
+/* Hero spline special treatment - stronger glow */
+.hero [data-spline]::after,
+section#hero [data-spline]::after {
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.12) 0%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.05) 40%,
+    transparent 70%
+  );
 }
 
 /* Theme-aware borders with glow */

@@ -77,24 +77,35 @@ function SplineSceneComponent({
   // Show fallback if error occurred OR device can't handle 3D
   if (hasError || !shouldRender) {
     return (
-      <div className={`w-full h-full bg-gradient-to-br from-black via-blue-950/30 to-black rounded-xl overflow-hidden relative ${className}`}>
+      <div className={`w-full h-full bg-gradient-to-br from-black via-neutral-950/30 to-black rounded-xl overflow-hidden relative ${className}`}>
         {/* Unified Shimmer Border */}
         <ShimmerBorder color="blue" intensity="low" speed="slow" />
 
-        {/* Radial glow background */}
+        {/* Radial glow background - theme aware */}
         <ShimmerRadialGlow color="blue" intensity="low" />
 
         {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10">
-          <div className="w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
+          <div 
+            className="w-16 h-16 rounded-full flex items-center justify-center"
+            style={{ 
+              backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.1)', 
+              borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+              borderWidth: '1px',
+              borderStyle: 'solid'
+            }}
+          >
             <span className="text-2xl">🚀</span>
           </div>
-          <p className="text-xs text-blue-300/60 text-center px-4">3D View</p>
-          <p className="text-[10px] text-blue-400/40">Optimized for your device</p>
+          <p className="text-xs text-center px-4 theme-accent" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }}>3D View</p>
+          <p className="text-[10px]" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.4)' }}>Optimized for your device</p>
         </div>
 
-        {/* Border glow */}
-        <div className="absolute inset-0 rounded-xl border border-blue-500/20" />
+        {/* Border glow - theme aware */}
+        <div 
+          className="absolute inset-0 rounded-xl" 
+          style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.2)', borderWidth: '1px', borderStyle: 'solid' }} 
+        />
       </div>
     );
   }

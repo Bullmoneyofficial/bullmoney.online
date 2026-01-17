@@ -138,21 +138,31 @@ export default function RootLayout({
         var g = parseInt(hex.substring(2, 4), 16) || 130;
         var b = parseInt(hex.substring(4, 6), 16) || 246;
         
-        // Set CSS variables immediately
+        // Set CSS variables immediately - comprehensive theme coverage
         document.documentElement.style.setProperty('--accent-color', themeData.accentColor);
         document.documentElement.style.setProperty('--accent-rgb', r + ', ' + g + ', ' + b);
-        document.documentElement.setAttribute('data-active-theme', themeData.id || 't01');
+        document.documentElement.style.setProperty('--theme-accent-light', 'rgba(' + r + ', ' + g + ', ' + b + ', 0.25)');
+        document.documentElement.style.setProperty('--theme-accent-dark', 'rgba(' + r + ', ' + g + ', ' + b + ', 0.5)');
+        document.documentElement.style.setProperty('--theme-accent-glow', 'rgba(' + r + ', ' + g + ', ' + b + ', 0.4)');
+        document.documentElement.style.setProperty('--theme-accent-subtle', 'rgba(' + r + ', ' + g + ', ' + b + ', 0.1)');
+        document.documentElement.style.setProperty('--theme-accent-border', 'rgba(' + r + ', ' + g + ', ' + b + ', 0.3)');
+        document.documentElement.setAttribute('data-active-theme', themeData.id || 'bullmoney-blue');
         document.documentElement.setAttribute('data-theme-category', themeData.category || 'SPECIAL');
         
         console.log('[EarlyTheme] Applied:', themeData.id, themeData.accentColor);
       }
     } else {
       // Set default theme attribute so CSS selectors work
-      document.documentElement.setAttribute('data-active-theme', 't01');
+      document.documentElement.setAttribute('data-active-theme', 'bullmoney-blue');
+      // Set default blue theme variables
+      document.documentElement.style.setProperty('--accent-color', '#3b82f6');
+      document.documentElement.style.setProperty('--accent-rgb', '59, 130, 246');
     }
   } catch (e) {
     // Set default on error
-    document.documentElement.setAttribute('data-active-theme', 't01');
+    document.documentElement.setAttribute('data-active-theme', 'bullmoney-blue');
+    document.documentElement.style.setProperty('--accent-color', '#3b82f6');
+    document.documentElement.style.setProperty('--accent-rgb', '59, 130, 246');
     console.warn('[EarlyTheme] Error:', e);
   }
 })();

@@ -132,7 +132,7 @@ function LazySplineContainer({ scene }: { scene: string }) {
                 />
               </div>
             </ShimmerFloat>
-            <p className="text-xs font-bold tracking-wider theme-accent" style={{ filter: 'drop-shadow(0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.5))' }}>3D View</p>
+            <p className="text-xs font-bold tracking-wider theme-accent" style={{ color: 'var(--accent-color, #3b82f6)', filter: 'drop-shadow(0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.5))' }}>3D View</p>
             <p className="text-[10px] font-medium" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }}>Optimized for your device</p>
 
             {/* Decorative dots */}
@@ -365,14 +365,14 @@ function HomeContent() {
     setCurrentView('loader');
   };
 
-  useEffect(() => {
-    if (currentView === 'loader') {
-      const timer = setTimeout(() => {
-        setCurrentView('content');
-      }, 5000); 
-      return () => clearTimeout(timer);
-    }
-  }, [currentView]);
+  // Called when user completes the vault and taps "Access Website" button
+  const handleLoaderComplete = useCallback(() => {
+    setCurrentView('content');
+  }, []);
+
+  // REMOVED: Auto-transition timer that bypassed vault
+  // The vault system in MultiStepLoaderv2 now controls when to show content
+  // via the onFinished callback -> handleLoaderComplete
 
   if (!isInitialized) {
     // Show solid black screen while initializing to prevent any flash of content
@@ -402,7 +402,7 @@ function HomeContent() {
 
       {currentView === 'loader' && (
         <div className="fixed inset-0 z-[99999] bg-black">
-          <MultiStepLoaderv2 />
+          <MultiStepLoaderv2 onFinished={handleLoaderComplete} />
         </div>
       )}
 

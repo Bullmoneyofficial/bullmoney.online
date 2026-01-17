@@ -442,6 +442,8 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   const [progress, setProgress] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [vaultUnlocked, setVaultUnlocked] = useState(false); // Shows "Access Website" button
+  const [vaultOpening, setVaultOpening] = useState(false); // Vault door animation state
   const [gateVisible, setGateVisible] = useState(true);
   const [showContent, setShowContent] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -532,6 +534,25 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
     onFinished?.();
   }, [onFinished]);
 
+  // Handle vault access button click - triggers vault opening animation
+  const handleVaultAccess = useCallback(() => {
+    if (vaultOpening || hasFinishedRef.current) return;
+    setVaultOpening(true);
+    
+    // Play a satisfying "vault opening" sound
+    playSuccess();
+    
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate([50, 30, 100, 50, 150]);
+    }
+    
+    // Vault door animation duration before revealing content
+    setTimeout(() => {
+      setGateVisible(false);
+      setTimeout(finishLoader, 300);
+    }, 800);
+  }, [vaultOpening, playSuccess, finishLoader]);
+
   const createParticles = (x: number, y: number) => {
     const newParticles: Particle[] = [];
     for (let i = 0; i < 12; i++) {
@@ -547,19 +568,20 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
     setParticles((prev) => [...prev, ...newParticles]);
   };
 
-  // Helper to render particle icon
+  // Helper to render particle icon - now theme-aware
   const renderParticleIcon = (iconType: ParticleIcon) => {
-    const iconClass = "w-5 h-5 text-blue-400";
+    const iconClass = "w-5 h-5 theme-accent";
+    const iconStyle = { color: 'var(--accent-color, #60a5fa)' };
     switch (iconType) {
-      case "rocket": return <Rocket className={iconClass} />;
-      case "dollar": return <CircleDollarSign className={iconClass} />;
-      case "chart": return <BarChart3 className={iconClass} />;
-      case "zap": return <Zap className={iconClass} />;
-      case "flame": return <Flame className={iconClass} />;
-      case "diamond": return <Diamond className={iconClass} />;
-      case "moon": return <Moon className={iconClass} />;
-      case "sparkle": return <Sparkles className={iconClass} />;
-      default: return <Star className={iconClass} />;
+      case "rocket": return <Rocket className={iconClass} style={iconStyle} />;
+      case "dollar": return <CircleDollarSign className={iconClass} style={iconStyle} />;
+      case "chart": return <BarChart3 className={iconClass} style={iconStyle} />;
+      case "zap": return <Zap className={iconClass} style={iconStyle} />;
+      case "flame": return <Flame className={iconClass} style={iconStyle} />;
+      case "diamond": return <Diamond className={iconClass} style={iconStyle} />;
+      case "moon": return <Moon className={iconClass} style={iconStyle} />;
+      case "sparkle": return <Sparkles className={iconClass} style={iconStyle} />;
+      default: return <Star className={iconClass} style={iconStyle} />;
     }
   };
 
@@ -624,12 +646,11 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 navigator.vibrate([80, 40, 80]);
               }
 
-              // Delay transition to ensure completion state is visible
+              // Show vault unlocked state with "Access Website" button
+              // User must tap button to enter site
               completionTimeoutRef.current = setTimeout(() => {
-                if (hasFinishedRef.current) return; // Prevent double finish
-                setGateVisible(false);
-                setTimeout(finishLoader, 200);
-              }, 600);
+                setVaultUnlocked(true);
+              }, 400);
             });
             return 100;
           }
@@ -761,14 +782,82 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
             transition={{ duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96] }}
             className="fixed inset-0 z-[9999999] flex flex-col items-center justify-center bg-[#000000] text-white overflow-hidden"
             style={{ isolation: 'isolate' }}
-            onMouseDown={handleInteractionStart}
-            onMouseUp={handleInteractionEnd}
-            onMouseLeave={handleInteractionEnd}
-            onTouchStart={handleInteractionStart}
-            onTouchEnd={handleInteractionEnd}
-            onTouchCancel={handleInteractionEnd}
+            onMouseDown={!vaultUnlocked ? handleInteractionStart : undefined}
+            onMouseUp={!vaultUnlocked ? handleInteractionEnd : undefined}
+            onMouseLeave={!vaultUnlocked ? handleInteractionEnd : undefined}
+            onTouchStart={!vaultUnlocked ? handleInteractionStart : undefined}
+            onTouchEnd={!vaultUnlocked ? handleInteractionEnd : undefined}
+            onTouchCancel={!vaultUnlocked ? handleInteractionEnd : undefined}
           >
-            {/* Trading Chart Background - Blue accent grid - ENHANCED */}
+            {/* ═══════════════════════════════════════════════════════════════════
+                VAULT DOOR OVERLAY - Appears when vault is opening
+                Split door effect that slides apart to reveal content
+                ═══════════════════════════════════════════════════════════════════ */}
+            <AnimatePresence>
+              {vaultOpening && (
+                <>
+                  {/* Left vault door */}
+                  <motion.div
+                    initial={{ x: 0 }}
+                    animate={{ x: "-100%" }}
+                    transition={{ duration: 0.7, ease: [0.43, 0.13, 0.23, 0.96] }}
+                    className="fixed inset-y-0 left-0 w-1/2 bg-[#000000] z-[99999999] border-r-4"
+                    style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)' }}
+                  >
+                    {/* Vault door details - left */}
+                    <div className="absolute inset-0 flex items-center justify-end pr-8">
+                      <motion.div
+                        initial={{ opacity: 1, scale: 1 }}
+                        animate={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.3 }}
+                        className="w-24 h-24 rounded-full border-4 flex items-center justify-center"
+                        style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }}
+                      >
+                        <div className="w-16 h-16 rounded-full border-2" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.4)' }} />
+                      </motion.div>
+                    </div>
+                    {/* Horizontal bars */}
+                    <div className="absolute right-4 top-1/4 w-12 h-1 rounded" style={{ background: 'rgba(var(--accent-rgb, 59, 130, 246), 0.5)' }} />
+                    <div className="absolute right-4 bottom-1/4 w-12 h-1 rounded" style={{ background: 'rgba(var(--accent-rgb, 59, 130, 246), 0.5)' }} />
+                  </motion.div>
+                  
+                  {/* Right vault door */}
+                  <motion.div
+                    initial={{ x: 0 }}
+                    animate={{ x: "100%" }}
+                    transition={{ duration: 0.7, ease: [0.43, 0.13, 0.23, 0.96] }}
+                    className="fixed inset-y-0 right-0 w-1/2 bg-[#000000] z-[99999999] border-l-4"
+                    style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)' }}
+                  >
+                    {/* Vault door details - right */}
+                    <div className="absolute inset-0 flex items-center justify-start pl-8">
+                      <motion.div
+                        initial={{ opacity: 1, scale: 1, rotate: 0 }}
+                        animate={{ opacity: 0, scale: 0.8, rotate: -180 }}
+                        transition={{ duration: 0.5 }}
+                        className="w-24 h-24 rounded-full border-4 flex items-center justify-center"
+                        style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }}
+                      >
+                        <div className="w-16 h-16 rounded-full border-2" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.4)' }} />
+                      </motion.div>
+                    </div>
+                    {/* Horizontal bars */}
+                    <div className="absolute left-4 top-1/4 w-12 h-1 rounded" style={{ background: 'rgba(var(--accent-rgb, 59, 130, 246), 0.5)' }} />
+                    <div className="absolute left-4 bottom-1/4 w-12 h-1 rounded" style={{ background: 'rgba(var(--accent-rgb, 59, 130, 246), 0.5)' }} />
+                  </motion.div>
+                  
+                  {/* Center light beam effect */}
+                  <motion.div
+                    initial={{ scaleY: 0, opacity: 0 }}
+                    animate={{ scaleY: 1, opacity: [0, 1, 0.8] }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="fixed inset-y-0 left-1/2 w-2 -translate-x-1/2 z-[999999999]"
+                    style={{ background: 'linear-gradient(to bottom, transparent, rgba(var(--accent-rgb, 59, 130, 246), 0.8), transparent)' }}
+                  />
+                </>
+              )}
+            </AnimatePresence>
+            {/* Trading Chart Background - Theme-aware accent grid - ENHANCED */}
             <div className="absolute inset-0 overflow-hidden opacity-20">
               <motion.div
                 animate={{
@@ -781,26 +870,28 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 }}
                 className="w-full h-full absolute inset-0"
                 style={{
-                  backgroundImage: `linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px)`,
+                  backgroundImage: `linear-gradient(rgba(var(--accent-rgb, 59, 130, 246), 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb, 59, 130, 246), 0.3) 1px, transparent 1px)`,
                   backgroundSize: "50px 50px",
                 }}
               />
             </div>
             
-            {/* Navbar-style blue shimmer overlay - LEFT TO RIGHT (FPS-aware) - SMOOTHER */}
+            {/* Navbar-style shimmer overlay - LEFT TO RIGHT (FPS-aware) - SMOOTHER */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"
+                className="absolute inset-0"
+                style={{ background: `linear-gradient(to right, transparent, rgba(var(--accent-rgb, 59, 130, 246), 0.3), transparent)` }}
                 animate={{ x: ["-100%", "100%"] }}
                 transition={{ duration: shimmerDuration * 2.5, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
               />
             </div>
 
-            {/* Trading Ticker Tape - Pure Black/Blue navbar style with LEFT TO RIGHT shimmer */}
-            <div className="absolute top-0 left-0 right-0 h-10 bg-[#000000] border-b border-blue-500/50 overflow-hidden shadow-[0_0_30px_rgba(59,130,246,0.4)] z-40">
+            {/* Trading Ticker Tape - Pure Black with theme accent border and shimmer */}
+            <div className="absolute top-0 left-0 right-0 h-10 bg-[#000000] overflow-hidden z-40" style={{ borderBottom: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)', boxShadow: '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.4)' }}>
               {/* Left to right shimmer on ticker (FPS-aware) - SMOOTHER */}
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/40 to-transparent"
+                className="absolute inset-0"
+                style={{ background: `linear-gradient(to right, transparent, rgba(var(--accent-rgb, 59, 130, 246), 0.4), transparent)` }}
                 animate={{ x: ["-100%", "100%"] }}
                 transition={{ duration: shimmerDuration * 1.2, repeat: Infinity, ease: "linear" }}
               />
@@ -827,38 +918,96 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
             <motion.div
               className="absolute inset-0 pointer-events-none"
               style={{
-                background: `radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.08) 40%, transparent 70%)`,
+                background: `radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb, 59, 130, 246), 0.2), rgba(var(--accent-rgb, 59, 130, 246), 0.08) 40%, transparent 70%)`,
               }}
               animate={{
                 opacity: isHolding ? 0.8 : 0.4,
-                scale: isHolding ? 1.15 : 1,
               }}
               transition={{ duration: 0.4 }}
             />
 
-            {/* Floating Blue Orbs - Subtle and smooth */}
+            {/* ═══════════════════════════════════════════════════════════════════
+                MINIMAL FLOATING ORBS - Static glow, subtle drift only
+                - No scale, no rotate, no shape changes
+                - Just gentle position drift for ambient atmosphere
+                - Theme-aware colors
+                ═══════════════════════════════════════════════════════════════════ */}
+            
+            {/* Large ambient orb - top left */}
             <motion.div
-              className="absolute top-1/3 left-1/4 w-48 h-48 rounded-full bg-blue-500/8 blur-3xl pointer-events-none"
+              className="absolute w-80 h-80 rounded-full pointer-events-none"
+              style={{
+                top: '10%',
+                left: '5%',
+                background: `radial-gradient(circle at 40% 40%, rgba(var(--accent-rgb, 59, 130, 246), 0.12), transparent 60%)`,
+                filter: 'blur(60px)',
+              }}
               animate={{
-                x: [0, 60, 0],
-                y: [0, -30, 0],
-                scale: [1, 1.15, 1],
+                x: [0, 30, 0],
+                y: [0, 20, 0],
               }}
               transition={{
-                duration: 12,
+                duration: 20,
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
             />
+            
+            {/* Medium orb - bottom right */}
             <motion.div
-              className="absolute bottom-1/3 right-1/4 w-64 h-64 rounded-full bg-blue-600/8 blur-3xl pointer-events-none"
+              className="absolute w-64 h-64 rounded-full pointer-events-none"
+              style={{
+                bottom: '15%',
+                right: '10%',
+                background: `radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb, 59, 130, 246), 0.1), transparent 55%)`,
+                filter: 'blur(50px)',
+              }}
               animate={{
-                x: [0, -50, 0],
-                y: [0, 40, 0],
-                scale: [1, 1.1, 1],
+                x: [0, -25, 0],
+                y: [0, -15, 0],
               }}
               transition={{
-                duration: 14,
+                duration: 18,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+            
+            {/* Small accent orb - center right */}
+            <motion.div
+              className="absolute w-48 h-48 rounded-full pointer-events-none"
+              style={{
+                top: '40%',
+                right: '20%',
+                background: `radial-gradient(circle, rgba(var(--accent-rgb, 59, 130, 246), 0.15), transparent 50%)`,
+                filter: 'blur(40px)',
+              }}
+              animate={{
+                x: [0, -20, 0],
+                y: [0, 25, 0],
+              }}
+              transition={{
+                duration: 15,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+            
+            {/* Tiny accent orb - bottom left */}
+            <motion.div
+              className="absolute w-32 h-32 rounded-full pointer-events-none"
+              style={{
+                bottom: '30%',
+                left: '25%',
+                background: `radial-gradient(circle, rgba(var(--accent-rgb, 59, 130, 246), 0.18), transparent 50%)`,
+                filter: 'blur(30px)',
+              }}
+              animate={{
+                x: [0, 15, 0],
+                y: [0, -20, 0],
+              }}
+              transition={{
+                duration: 12,
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
@@ -1030,7 +1179,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 </motion.div>
 
                 {/* Status Text */}
-                <div className="h-8 mt-2 flex items-center justify-center">
+                <div className="min-h-[40px] mt-2 flex flex-col items-center justify-center gap-3">
                   <AnimatePresence mode="wait">
                     {isCompleted ? (
                       <motion.div
@@ -1043,7 +1192,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                         <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 0.5, repeat: Infinity }}>
                           <Trophy className="w-5 h-5" />
                         </motion.div>
-                        ACCESS GRANTED
+                        {vaultUnlocked ? "VAULT UNLOCKED" : "ACCESS GRANTED"}
                       </motion.div>
                     ) : isHolding ? (
                       <motion.div
@@ -1079,13 +1228,79 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                       </motion.div>
                     ) : null}
                   </AnimatePresence>
+                  
+                  {/* ═══════════════════════════════════════════════════════════════════
+                      ACCESS WEBSITE BUTTON - Appears after vault is unlocked
+                      Tap to open the vault doors and enter the site
+                      ═══════════════════════════════════════════════════════════════════ */}
+                  <AnimatePresence>
+                    {vaultUnlocked && !vaultOpening && (
+                      <motion.button
+                        key="access-button"
+                        initial={{ scale: 0, y: 20, opacity: 0 }}
+                        animate={{ scale: 1, y: 0, opacity: 1 }}
+                        exit={{ scale: 0.8, y: -10, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                        onClick={handleVaultAccess}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
+                        className="relative mt-4 px-8 py-4 rounded-2xl font-black text-lg uppercase tracking-wider overflow-hidden group"
+                        style={{
+                          background: '#000000',
+                          border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
+                          boxShadow: '0 0 40px rgba(var(--accent-rgb, 59, 130, 246), 0.5), inset 0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.1)',
+                          color: 'var(--accent-color, #60a5fa)',
+                        }}
+                        whileHover={{ scale: 1.05, boxShadow: '0 0 60px rgba(var(--accent-rgb, 59, 130, 246), 0.7), inset 0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.2)' }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {/* Animated shimmer sweep */}
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                          animate={{ x: ["-200%", "200%"] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                        />
+                        
+                        {/* Pulsing glow ring */}
+                        <motion.div
+                          className="absolute inset-0 rounded-2xl"
+                          style={{ border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)' }}
+                          animate={{ 
+                            scale: [1, 1.05, 1],
+                            opacity: [0.5, 0.8, 0.5],
+                          }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                        />
+                        
+                        {/* Button content */}
+                        <span className="relative z-10 flex items-center gap-3">
+                          <motion.span
+                            animate={{ rotate: [0, 10, -10, 0] }}
+                            transition={{ duration: 1, repeat: Infinity }}
+                          >
+                            🔓
+                          </motion.span>
+                          Access Website
+                          <motion.span
+                            animate={{ x: [0, 5, 0] }}
+                            transition={{ duration: 0.8, repeat: Infinity }}
+                          >
+                            <ArrowUpRight className="w-5 h-5" />
+                          </motion.span>
+                        </span>
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
                 </div>
               </motion.div>
 
-              {/* Progress Display */}
+              {/* Progress Display - Hide when vault is unlocked - Hide when vault is unlocked */}
+              <AnimatePresence>
+              {!vaultUnlocked && (
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -20, opacity: 0 }}
                 transition={{ delay: 0.4 }}
                 className="w-full max-w-md flex flex-col items-center gap-3"
               >
@@ -1138,6 +1353,8 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                   </motion.div>
                 </div>
               </motion.div>
+              )}
+              </AnimatePresence>
 
               {/* Animated Icon Particles */}
               {particles.map((p) => (
