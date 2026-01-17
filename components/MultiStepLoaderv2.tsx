@@ -6,7 +6,18 @@ import {
   AnimatePresence,
   useSpring,
   useMotionValue,
+  useReducedMotion,
 } from "framer-motion";
+
+// --- MOBILE DETECTION FOR PERFORMANCE OPTIMIZATIONS ---
+const getIsMobileOrInAppBrowser = () => {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  // Detect in-app browsers (Instagram, Facebook, TikTok, etc.)
+  const isInAppBrowser = /FBAN|FBAV|Instagram|Twitter|Line|Snapchat|TikTok|WebView|wv/i.test(ua);
+  return isMobile || isInAppBrowser;
+};
 import { ArrowUpRight, LockOpen, Zap, TrendingUp, Sparkles, Rocket, Star, Trophy, Flame, Diamond, Moon, Target, Dumbbell, CheckCircle2, CircleDollarSign, BarChart3, Activity } from "lucide-react";
 import Image from "next/image";
 import { trackEvent } from "@/lib/analytics";
@@ -446,6 +457,14 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   const [isDeflating, setIsDeflating] = useState(false);
   const [deflateText, setDeflateText] = useState<string | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<AssetKey>("BTC");
+  
+  // --- MOBILE PERFORMANCE OPTIMIZATIONS ---
+  const prefersReducedMotion = useReducedMotion();
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    setIsMobile(getIsMobileOrInAppBrowser());
+  }, []);
   const { price: realPrice } = useLivePrice(selectedAsset);
   const [displayPrice, setDisplayPrice] = useState(0);
   const priceText = useMemo(() => {
@@ -459,18 +478,27 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   // --- FPS-AWARE SHIMMER SETTINGS ---
   const shimmerSettings = useOptimizedShimmer();
   // Calculate shimmer duration based on FPS tier (slower = less CPU usage)
+  // Mobile/in-app browsers get longer duration to reduce jank
   const shimmerDuration = useMemo(() => {
+    if (isMobile || prefersReducedMotion) return 5; // Much slower for mobile
     switch (shimmerSettings.speed) {
-      case 'slow': return 3.5; // Slow for low FPS
-      case 'normal': return 2.8; // Default smooth shimmer
-      case 'fast': return 2.2; // Normal speed
+      case 'slow': return 3.5;
+      case 'normal': return 2.8;
+      case 'fast': return 2.2;
       default: return 2.8;
     }
-  }, [shimmerSettings.speed]);
+  }, [shimmerSettings.speed, isMobile, prefersReducedMotion]);
+  
+  // Reduce particle count on mobile
+  const maxParticles = isMobile ? 4 : 12;
 
   const shakeX = useMotionValue(0);
   const shakeY = useMotionValue(0);
-  const scale = useSpring(1, { stiffness: 300, damping: 20 });
+  // Softer spring on mobile for smoother feel
+  const scale = useSpring(1, { 
+    stiffness: isMobile ? 200 : 300, 
+    damping: isMobile ? 25 : 20 
+  });
   const iconRotate = useMotionValue(0);
   
   const requestRef = useRef<number | null>(null);
@@ -662,18 +690,26 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   }, [vaultOpening, playSuccess, finishLoader, startPriceDeflate]);
 
   const createParticles = (x: number, y: number) => {
+    // Skip particles entirely on mobile or if reduced motion is preferred
+    if (prefersReducedMotion) return;
+    
     const newParticles: Particle[] = [];
-    for (let i = 0; i < 12; i++) {
+    const particleCount = isMobile ? 4 : 12; // Fewer particles on mobile
+    for (let i = 0; i < particleCount; i++) {
       newParticles.push({
         id: particleIdRef.current++,
         x,
         y,
-        vx: (Math.random() - 0.5) * 10,
-        vy: -Math.random() * 6 - 4,
+        vx: (Math.random() - 0.5) * (isMobile ? 6 : 10),
+        vy: -Math.random() * (isMobile ? 4 : 6) - (isMobile ? 2 : 4),
         iconType: PARTICLE_ICONS[Math.floor(Math.random() * PARTICLE_ICONS.length)],
       });
     }
-    setParticles((prev) => [...prev, ...newParticles]);
+    // Limit total particles on mobile to prevent memory issues
+    setParticles((prev) => {
+      const combined = [...prev, ...newParticles];
+      return isMobile ? combined.slice(-8) : combined.slice(-24);
+    });
   };
 
   // Helper to render particle icon - now theme-aware
@@ -721,20 +757,34 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
         // Only increment if we haven't completed yet - SNAPPIER PROGRESS
         if (!isCompletingRef.current) {
           // Much faster boost values for snappy feel
-          const boost = prev > 70 ? 7 : prev > 40 ? 5.5 : 4;
+          // Slightly slower on mobile to reduce jank
+          const boost = isMobile 
+            ? (prev > 70 ? 5 : prev > 40 ? 4 : 3)
+            : (prev > 70 ? 7 : prev > 40 ? 5.5 : 4);
           next = Math.min(prev + boost, 100);
 
           updateEngine(next);
 
-          scale.set(1 + (next / 100) * 0.25);
-          iconRotate.set((next / 100) * 720); // Double spin
+          // Reduced scale on mobile
+          scale.set(1 + (next / 100) * (isMobile ? 0.15 : 0.25));
+          // Skip rotation on mobile - causes jitter
+          if (!isMobile) {
+            iconRotate.set((next / 100) * 720); // Double spin
+          }
 
-          const shakeAmount = (next / 100) * 10;
-          shakeX.set((Math.random() - 0.5) * shakeAmount);
-          shakeY.set((Math.random() - 0.5) * shakeAmount);
+          // Much less shake on mobile to reduce jitter
+          const shakeAmount = isMobile 
+            ? (next / 100) * 3 // Minimal shake on mobile
+            : (next / 100) * 10;
+          // Only update shake every few frames on mobile to reduce jank
+          if (!isMobile || Math.random() < 0.3) {
+            shakeX.set((Math.random() - 0.5) * shakeAmount);
+            shakeY.set((Math.random() - 0.5) * shakeAmount);
+          }
 
           if (typeof navigator !== "undefined" && navigator.vibrate) {
-            if (next > 70 && Math.random() < 0.5) navigator.vibrate(8);
+            // Less frequent vibration on mobile
+            if (next > 70 && Math.random() < (isMobile ? 0.2 : 0.5)) navigator.vibrate(isMobile ? 5 : 8);
           }
 
           // CRITICAL: Only trigger completion when progress reaches EXACTLY 100 AND still holding
@@ -822,21 +872,32 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
   useEffect(() => {
     if (particles.length === 0) return;
 
-    const interval = setInterval(() => {
-      setParticles((prev) =>
-        prev
-          .map((p) => ({
-            ...p,
-            x: p.x + p.vx,
-            y: p.y + p.vy,
-            vy: p.vy + 0.3,
-          }))
-          .filter((p) => p.y < 500)
-      );
-    }, 16);
-
-    return () => clearInterval(interval);
-  }, [particles.length]);
+    // Use RAF instead of setInterval for smoother animation
+    // Mobile gets lower update rate to reduce jank
+    let rafId: number;
+    let lastTime = 0;
+    const frameInterval = isMobile ? 33 : 16; // ~30fps on mobile, ~60fps on desktop
+    
+    const updateParticles = (time: number) => {
+      if (time - lastTime >= frameInterval) {
+        lastTime = time;
+        setParticles((prev) =>
+          prev
+            .map((p) => ({
+              ...p,
+              x: p.x + p.vx,
+              y: p.y + p.vy,
+              vy: p.vy + 0.3,
+            }))
+            .filter((p) => p.y < 500)
+        );
+      }
+      rafId = requestAnimationFrame(updateParticles);
+    };
+    
+    rafId = requestAnimationFrame(updateParticles);
+    return () => cancelAnimationFrame(rafId);
+  }, [particles.length, isMobile]);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowTip(false), 4000);
@@ -905,7 +966,16 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
             exit={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }}
             transition={{ duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96] }}
             className="fixed inset-0 z-[9999999] flex flex-col items-center justify-center text-white overflow-hidden"
-            style={{ isolation: 'isolate', backgroundColor: 'rgba(0, 0, 0, 0.95)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}
+            style={{ 
+              isolation: 'isolate', 
+              backgroundColor: isMobile ? '#000000' : 'rgba(0, 0, 0, 0.95)', 
+              // Disable backdrop-filter on mobile/in-app browsers to prevent black boxes
+              backdropFilter: isMobile ? 'none' : 'blur(10px)', 
+              WebkitBackdropFilter: isMobile ? 'none' : 'blur(10px)',
+              // Force GPU acceleration
+              transform: 'translateZ(0)',
+              willChange: 'transform',
+            }}
             onMouseDown={!vaultUnlocked ? handleInteractionStart : undefined}
             onMouseUp={!vaultUnlocked ? handleInteractionEnd : undefined}
             onMouseLeave={!vaultUnlocked ? handleInteractionEnd : undefined}
@@ -981,44 +1051,66 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 </>
               )}
             </AnimatePresence>
-            {/* Trading Chart Background - Theme-aware accent grid - ENHANCED */}
-            <div className="absolute inset-0 overflow-hidden opacity-20">
-              <motion.div
-                animate={{
-                  backgroundPosition: ["0% 0%", "100% 100%"],
-                }}
-                transition={{
-                  duration: 20,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-                className="w-full h-full absolute inset-0"
-                style={{
-                  backgroundImage: `linear-gradient(rgba(var(--accent-rgb, 59, 130, 246), 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb, 59, 130, 246), 0.3) 1px, transparent 1px)`,
-                  backgroundSize: "50px 50px",
-                }}
-              />
-            </div>
+            {/* Trading Chart Background - Theme-aware accent grid - OPTIMIZED FOR MOBILE */}
+            {!isMobile && (
+              <div className="absolute inset-0 overflow-hidden opacity-20">
+                <motion.div
+                  animate={{
+                    backgroundPosition: ["0% 0%", "100% 100%"],
+                  }}
+                  transition={{
+                    duration: 20,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                  className="w-full h-full absolute inset-0"
+                  style={{
+                    backgroundImage: `linear-gradient(rgba(var(--accent-rgb, 59, 130, 246), 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb, 59, 130, 246), 0.3) 1px, transparent 1px)`,
+                    backgroundSize: "50px 50px",
+                    willChange: 'background-position',
+                  }}
+                />
+              </div>
+            )}
             
-            {/* Navbar-style shimmer overlay - LEFT TO RIGHT (FPS-aware) - SMOOTHER */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              <motion.div
-                className="absolute inset-0"
-                style={{ background: `linear-gradient(to right, transparent, rgba(var(--accent-rgb, 59, 130, 246), 0.3), transparent)` }}
-                animate={{ x: ["-100%", "100%"] }}
-                transition={{ duration: shimmerDuration * 2.5, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
-              />
-            </div>
+            {/* Navbar-style shimmer overlay - LEFT TO RIGHT (FPS-aware) - MOBILE OPTIMIZED */}
+            {!prefersReducedMotion && (
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <motion.div
+                  className="absolute inset-0"
+                  style={{ 
+                    background: `linear-gradient(to right, transparent, rgba(var(--accent-rgb, 59, 130, 246), ${isMobile ? 0.15 : 0.3}), transparent)`,
+                    willChange: 'transform',
+                  }}
+                  animate={{ x: ["-100%", "100%"] }}
+                  transition={{ 
+                    duration: isMobile ? shimmerDuration * 4 : shimmerDuration * 2.5, 
+                    repeat: Infinity, 
+                    ease: "linear", 
+                    repeatDelay: isMobile ? 2 : 1 
+                  }}
+                />
+              </div>
+            )}
 
             {/* Trading Ticker Tape - Pure Black with theme accent border and shimmer */}
-            <div className="absolute top-0 left-0 right-0 h-10 bg-[#000000] overflow-hidden z-40" style={{ borderBottom: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)', boxShadow: '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.4)' }}>
-              {/* Left to right shimmer on ticker (FPS-aware) - SMOOTHER */}
-              <motion.div
-                className="absolute inset-0"
-                style={{ background: `linear-gradient(to right, transparent, rgba(var(--accent-rgb, 59, 130, 246), 0.4), transparent)` }}
-                animate={{ x: ["-100%", "100%"] }}
-                transition={{ duration: shimmerDuration * 1.2, repeat: Infinity, ease: "linear" }}
-              />
+            <div className="absolute top-0 left-0 right-0 h-10 bg-[#000000] overflow-hidden z-40" style={{ 
+              borderBottom: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)', 
+              boxShadow: isMobile ? 'none' : '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
+              transform: 'translateZ(0)',
+            }}>
+              {/* Left to right shimmer on ticker (FPS-aware) - MOBILE OPTIMIZED */}
+              {!isMobile && !prefersReducedMotion && (
+                <motion.div
+                  className="absolute inset-0"
+                  style={{ 
+                    background: `linear-gradient(to right, transparent, rgba(var(--accent-rgb, 59, 130, 246), 0.4), transparent)`,
+                    willChange: 'transform',
+                  }}
+                  animate={{ x: ["-100%", "100%"] }}
+                  transition={{ duration: shimmerDuration * 1.2, repeat: Infinity, ease: "linear" }}
+                />
+              )}
               <motion.div
                 animate={{ x: ["-100%", "0%"] }}
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -1038,104 +1130,113 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
               </motion.div>
             </div>
 
-            {/* Radial Gradient Glow - Pure blue, subtle */}
+            {/* Radial Gradient Glow - Pure blue, subtle - MOBILE OPTIMIZED */}
             <motion.div
               className="absolute inset-0 pointer-events-none"
               style={{
-                background: `radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb, 59, 130, 246), 0.2), rgba(var(--accent-rgb, 59, 130, 246), 0.08) 40%, transparent 70%)`,
+                background: isMobile 
+                  ? `radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb, 59, 130, 246), 0.1), transparent 60%)`
+                  : `radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb, 59, 130, 246), 0.2), rgba(var(--accent-rgb, 59, 130, 246), 0.08) 40%, transparent 70%)`,
+                willChange: 'opacity',
               }}
               animate={{
-                opacity: isHolding ? 0.8 : 0.4,
+                opacity: isHolding ? (isMobile ? 0.5 : 0.8) : (isMobile ? 0.2 : 0.4),
               }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: isMobile ? 0.6 : 0.4 }}
             />
 
             {/* ═══════════════════════════════════════════════════════════════════
-                MINIMAL FLOATING ORBS - Static glow, subtle drift only
-                - No scale, no rotate, no shape changes
-                - Just gentle position drift for ambient atmosphere
-                - Theme-aware colors
+                MINIMAL FLOATING ORBS - DESKTOP ONLY
+                Disabled on mobile to prevent rendering issues and improve performance
                 ═══════════════════════════════════════════════════════════════════ */}
             
-            {/* Large ambient orb - top left */}
-            <motion.div
-              className="absolute w-80 h-80 rounded-full pointer-events-none"
-              style={{
-                top: '10%',
-                left: '5%',
-                background: `radial-gradient(circle at 40% 40%, rgba(var(--accent-rgb, 59, 130, 246), 0.12), transparent 60%)`,
-                filter: 'blur(60px)',
-              }}
-              animate={{
-                x: [0, 30, 0],
-                y: [0, 20, 0],
-              }}
-              transition={{
-                duration: 20,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-            
-            {/* Medium orb - bottom right */}
-            <motion.div
-              className="absolute w-64 h-64 rounded-full pointer-events-none"
-              style={{
-                bottom: '15%',
-                right: '10%',
-                background: `radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb, 59, 130, 246), 0.1), transparent 55%)`,
-                filter: 'blur(50px)',
-              }}
-              animate={{
-                x: [0, -25, 0],
-                y: [0, -15, 0],
-              }}
-              transition={{
-                duration: 18,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-            
-            {/* Small accent orb - center right */}
-            <motion.div
-              className="absolute w-48 h-48 rounded-full pointer-events-none"
-              style={{
-                top: '40%',
-                right: '20%',
-                background: `radial-gradient(circle, rgba(var(--accent-rgb, 59, 130, 246), 0.15), transparent 50%)`,
-                filter: 'blur(40px)',
-              }}
-              animate={{
-                x: [0, -20, 0],
-                y: [0, 25, 0],
-              }}
-              transition={{
-                duration: 15,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-            
-            {/* Tiny accent orb - bottom left */}
-            <motion.div
-              className="absolute w-32 h-32 rounded-full pointer-events-none"
-              style={{
-                bottom: '30%',
-                left: '25%',
-                background: `radial-gradient(circle, rgba(var(--accent-rgb, 59, 130, 246), 0.18), transparent 50%)`,
-                filter: 'blur(30px)',
-              }}
-              animate={{
-                x: [0, 15, 0],
-                y: [0, -20, 0],
-              }}
-              transition={{
-                duration: 12,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
+            {!isMobile && !prefersReducedMotion && (
+              <>
+                {/* Large ambient orb - top left */}
+                <motion.div
+                  className="absolute w-80 h-80 rounded-full pointer-events-none"
+                  style={{
+                    top: '10%',
+                    left: '5%',
+                    background: `radial-gradient(circle at 40% 40%, rgba(var(--accent-rgb, 59, 130, 246), 0.12), transparent 60%)`,
+                    filter: 'blur(60px)',
+                    willChange: 'transform',
+                  }}
+                  animate={{
+                    x: [0, 30, 0],
+                    y: [0, 20, 0],
+                  }}
+                  transition={{
+                    duration: 20,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                />
+                
+                {/* Medium orb - bottom right */}
+                <motion.div
+                  className="absolute w-64 h-64 rounded-full pointer-events-none"
+                  style={{
+                    bottom: '15%',
+                    right: '10%',
+                    background: `radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb, 59, 130, 246), 0.1), transparent 55%)`,
+                    filter: 'blur(50px)',
+                    willChange: 'transform',
+                  }}
+                  animate={{
+                    x: [0, -25, 0],
+                    y: [0, -15, 0],
+                  }}
+                  transition={{
+                    duration: 18,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                />
+                
+                {/* Small accent orb - center right */}
+                <motion.div
+                  className="absolute w-48 h-48 rounded-full pointer-events-none"
+                  style={{
+                    top: '40%',
+                    right: '20%',
+                    background: `radial-gradient(circle, rgba(var(--accent-rgb, 59, 130, 246), 0.15), transparent 50%)`,
+                    filter: 'blur(40px)',
+                    willChange: 'transform',
+                  }}
+                  animate={{
+                    x: [0, -20, 0],
+                    y: [0, 25, 0],
+                  }}
+                  transition={{
+                    duration: 15,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                />
+                
+                {/* Tiny accent orb - bottom left */}
+                <motion.div
+                  className="absolute w-32 h-32 rounded-full pointer-events-none"
+                  style={{
+                    bottom: '30%',
+                    left: '25%',
+                    background: `radial-gradient(circle, rgba(var(--accent-rgb, 59, 130, 246), 0.18), transparent 50%)`,
+                    filter: 'blur(30px)',
+                    willChange: 'transform',
+                  }}
+                  animate={{
+                    x: [0, 15, 0],
+                    y: [0, -20, 0],
+                  }}
+                  transition={{
+                    duration: 12,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                />
+              </>
+            )}
 
             {/* Asset Selector - positioned below live ticker, lowered z-index to not overlap icon */}
             <div className="absolute top-14 sm:top-16 left-0 right-0 z-20 pointer-events-none flex justify-center">
@@ -1241,7 +1342,8 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                     strokeDasharray={377}
                     strokeDashoffset={377 - (377 * progress) / 100}
                     style={{
-                      filter: isHolding ? "drop-shadow(0 0 8px rgba(59,130,246,0.8))" : "none",
+                      // Skip drop-shadow filter on mobile - causes rendering issues
+                      filter: (!isMobile && isHolding) ? "drop-shadow(0 0 8px rgba(59,130,246,0.8))" : "none",
                     }}
                   />
                   <defs>
@@ -1253,19 +1355,26 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                 </svg>
 
                 <motion.div
-                  animate={{
-                    boxShadow: isHolding
-                      ? "0 0 60px rgba(59, 130, 246, 0.9), 0 0 120px rgba(59, 130, 246, 0.5)"
-                      : "0 0 40px rgba(59, 130, 246, 0.6)",
-                  }}
-                  style={{ rotate: iconRotate }}
-                  className="relative w-24 h-24 rounded-full bg-black/90 border-2 border-blue-500/50 flex items-center justify-center text-5xl font-bold shadow-[inset_0_0_30px_rgba(59,130,246,0.3)]"
+                  animate={
+                    isMobile
+                      ? {
+                          // Simplified animation on mobile - no box-shadow animation (expensive)
+                          opacity: isHolding ? 1 : 0.9,
+                        }
+                      : {
+                          boxShadow: isHolding
+                            ? "0 0 60px rgba(59, 130, 246, 0.9), 0 0 120px rgba(59, 130, 246, 0.5)"
+                            : "0 0 40px rgba(59, 130, 246, 0.6)",
+                        }
+                  }
+                  style={{ rotate: isMobile ? 0 : iconRotate }}
+                  className={`relative w-24 h-24 rounded-full bg-black/90 border-2 border-blue-500/50 flex items-center justify-center text-5xl font-bold ${isMobile ? 'shadow-[0_0_30px_rgba(59,130,246,0.5)]' : 'shadow-[inset_0_0_30px_rgba(59,130,246,0.3)]'}`}
                 >
                   <span
                     className="relative z-10 leading-none"
                     style={{
                       color: ASSETS[selectedAsset].color,
-                      textShadow: "0 0 16px rgba(0,0,0,0.6)",
+                      textShadow: isMobile ? "none" : "0 0 16px rgba(0,0,0,0.6)",
                       fontFamily: '"Segoe UI Symbol", "Apple Color Emoji", "Noto Sans Symbols 2", "Noto Sans Symbols", "Arial Unicode MS", sans-serif',
                     }}
                   >
@@ -1273,21 +1382,25 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                   </span>
                 </motion.div>
                 
-                {/* Pulse Rings - Blue theme */}
-                {isHolding && (
+                {/* Pulse Rings - Blue theme - MOBILE OPTIMIZED */}
+                {isHolding && !prefersReducedMotion && (
                   <>
                     <motion.div
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0, 0.6] }}
-                      transition={{ duration: 1, repeat: Infinity }}
+                      transition={{ duration: isMobile ? 1.5 : 1, repeat: Infinity }}
                       className="absolute inset-[-8px] rounded-full border-2 border-blue-500"
+                      style={{ willChange: 'transform, opacity' }}
                     />
-                    <motion.div
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: [1, 1.6, 1], opacity: [0.4, 0, 0.4] }}
-                      transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
-                      className="absolute inset-[-12px] rounded-full border-2 border-blue-400/60"
-                    />
+                    {!isMobile && (
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: [1, 1.6, 1], opacity: [0.4, 0, 0.4] }}
+                        transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+                        className="absolute inset-[-12px] rounded-full border-2 border-blue-400/60"
+                        style={{ willChange: 'transform, opacity' }}
+                      />
+                    )}
                   </>
                 )}
               </motion.div>
@@ -1312,13 +1425,14 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                     textShadow: isHolding ? "0 0 30px rgba(59, 130, 246, 1)" : "0 2px 20px rgba(0,0,0,0.8)",
                   }}
                 >
-                  {isDeflating && (
+                  {isDeflating && !isMobile && !prefersReducedMotion && (
                     <>
                       <motion.span
                         initial={{ opacity: 0, scale: 0.9, y: 0 }}
                         animate={{ opacity: [0, 0.65, 0], scale: [0.9, 1.2, 1.6], y: [0, -6, 14] }}
                         transition={{ duration: 0.55, ease: [0.2, 0.9, 0.2, 1] }}
                         className="pointer-events-none absolute inset-0 -z-10 text-blue-200/70 blur-[2px]"
+                        style={{ willChange: 'transform, opacity' }}
                       >
                         {activePriceText}
                       </motion.span>
@@ -1327,6 +1441,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                         animate={{ opacity: [0, 0.5, 0], scale: [1, 0.9, 0.7], y: [0, 10, 28] }}
                         transition={{ duration: 0.52, ease: "easeOut" }}
                         className="pointer-events-none absolute inset-0 -z-10 text-rose-300/70 blur-[4px]"
+                        style={{ willChange: 'transform, opacity' }}
                       >
                         {activePriceText}
                       </motion.span>
@@ -1335,24 +1450,27 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                         animate={{ opacity: [0, 0.6, 0], scale: [0.6, 1.6, 2.2] }}
                         transition={{ duration: 0.55, ease: "easeOut" }}
                         className="pointer-events-none absolute inset-0 -z-10 rounded-full border border-blue-300/70 blur-[2px]"
+                        style={{ willChange: 'transform, opacity' }}
                       />
                       <motion.div
                         initial={{ opacity: 0, scale: 0.7 }}
                         animate={{ opacity: [0, 0.5, 0], scale: [0.7, 1.3, 1.9] }}
                         transition={{ duration: 0.52, delay: 0.02, ease: "easeOut" }}
                         className="pointer-events-none absolute inset-0 -z-10 rounded-full border-2 border-rose-300/60 blur-[3px]"
+                        style={{ willChange: 'transform, opacity' }}
                       />
                       <motion.div
                         initial={{ opacity: 0, scale: 0.8, rotate: -8 }}
                         animate={{ opacity: [0, 0.4, 0], scale: [0.8, 1.1, 1.5], rotate: [0, 6, 12] }}
                         transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
                         className="pointer-events-none absolute inset-[-12px] -z-10 rounded-full bg-gradient-to-r from-blue-400/20 via-cyan-400/30 to-rose-400/20 blur-[10px]"
+                        style={{ willChange: 'transform, opacity' }}
                       />
                       {Array.from({ length: 10 }).map((_, i) => (
                         <motion.span
                           key={`deflate-spark-${i}`}
                           className="pointer-events-none absolute left-1/2 top-1/2 h-1.5 w-1.5 rounded-full bg-blue-200 shadow-[0_0_14px_rgba(59,130,246,0.9)]"
-                          style={{ rotate: i * 36 }}
+                          style={{ rotate: i * 36, willChange: 'transform, opacity' }}
                           initial={{ opacity: 0, scale: 0.2, x: 0, y: 0 }}
                           animate={{ opacity: [0, 1, 0], scale: [0.2, 1, 0.1], x: [0, 68], y: [0, -6, 12] }}
                           transition={{ duration: 0.5, delay: i * 0.012, ease: [0.16, 1, 0.3, 1] }}
@@ -1362,7 +1480,7 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                         <motion.span
                           key={`deflate-flare-${i}`}
                           className="pointer-events-none absolute left-1/2 top-1/2 text-xs text-blue-100/80 drop-shadow-[0_0_10px_rgba(147,197,253,0.9)]"
-                          style={{ rotate: i * 60 }}
+                          style={{ rotate: i * 60, willChange: 'transform, opacity' }}
                           initial={{ opacity: 0, scale: 0.3, x: 0 }}
                           animate={{ opacity: [0, 1, 0], scale: [0.3, 1.2, 0.2], x: [0, 54] }}
                           transition={{ duration: 0.48, delay: i * 0.015, ease: "easeOut" }}
@@ -1372,26 +1490,44 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                       ))}
                     </>
                   )}
+                  {/* Simplified deflate for mobile - just the main text animation */}
+                  {isDeflating && isMobile && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: [0, 0.5, 0], scale: [0.9, 1.3, 1.6] }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                      className="pointer-events-none absolute inset-0 -z-10 rounded-full border border-blue-400/50"
+                      style={{ willChange: 'transform, opacity' }}
+                    />
+                  )}
                   <motion.span
                     animate={
                       isDeflating
-                        ? {
-                            scale: [1.03, 1.12, 1.02, 0.72],
-                            scaleY: [1, 0.86, 0.52, 0.18],
-                            rotate: [0, 6, -8, -18],
-                            skewX: [0, -4, 3, -8],
-                            x: [0, -6, 8, -6],
-                            y: [0, 10, 22, 40],
-                            opacity: [1, 0.92, 0.65, 0.32],
-                            color: ["#bfdbfe", "#fca5a5", "#fb7185", "#fca5a5"],
-                            textShadow: [
-                              "0 0 28px rgba(59,130,246,0.9)",
-                              "0 0 20px rgba(248,113,113,0.9)",
-                              "0 0 12px rgba(248,113,113,0.6)",
-                              "0 0 0 rgba(0,0,0,0)",
-                            ],
-                            filter: ["none", "blur(1.5px)", "blur(5px)", "blur(8px)"],
-                          }
+                        ? isMobile
+                          ? {
+                              // Simplified mobile animation - no blur, minimal transforms
+                              scale: [1, 1.1, 0.8],
+                              y: [0, 5, 20],
+                              opacity: [1, 0.8, 0.3],
+                              color: ["#bfdbfe", "#fca5a5", "#fca5a5"],
+                            }
+                          : {
+                              scale: [1.03, 1.12, 1.02, 0.72],
+                              scaleY: [1, 0.86, 0.52, 0.18],
+                              rotate: [0, 6, -8, -18],
+                              skewX: [0, -4, 3, -8],
+                              x: [0, -6, 8, -6],
+                              y: [0, 10, 22, 40],
+                              opacity: [1, 0.92, 0.65, 0.32],
+                              color: ["#bfdbfe", "#fca5a5", "#fb7185", "#fca5a5"],
+                              textShadow: [
+                                "0 0 28px rgba(59,130,246,0.9)",
+                                "0 0 20px rgba(248,113,113,0.9)",
+                                "0 0 12px rgba(248,113,113,0.6)",
+                                "0 0 0 rgba(0,0,0,0)",
+                              ],
+                              filter: ["none", "blur(1.5px)", "blur(5px)", "blur(8px)"],
+                            }
                         : {
                             scale: 1,
                             scaleY: 1,
@@ -1401,13 +1537,13 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
                             y: 0,
                             opacity: 1,
                             color: "#93c5fd",
-                            textShadow: "0 0 18px rgba(59,130,246,0.6)",
+                            textShadow: isMobile ? "none" : "0 0 18px rgba(59,130,246,0.6)",
                             filter: "none",
                           }
                     }
-                    transition={{ duration: 0.8, ease: [0.12, 0.9, 0.15, 1] }}
+                    transition={{ duration: isMobile ? 0.5 : 0.8, ease: [0.12, 0.9, 0.15, 1] }}
                     className="inline-block origin-top"
-                    style={{ willChange: "transform, opacity, filter" }}
+                    style={{ willChange: isMobile ? 'transform, opacity' : 'transform, opacity, filter' }}
                   >
                     {activePriceText}
                   </motion.span>
@@ -1592,41 +1728,52 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
               )}
               </AnimatePresence>
 
-              {/* Animated Icon Particles */}
+              {/* Animated Icon Particles - MOBILE OPTIMIZED */}
               {particles.map((p) => (
                 <motion.div
                   key={p.id}
                   initial={{ opacity: 1, scale: 1, rotate: 0 }}
-                  animate={{ opacity: 0, scale: 0.5, rotate: 180 }}
-                  transition={{ duration: 0.8 }}
+                  animate={{ opacity: 0, scale: 0.5, rotate: isMobile ? 90 : 180 }}
+                  transition={{ duration: isMobile ? 0.5 : 0.8 }}
                   className="absolute pointer-events-none"
                   style={{
                     left: p.x,
                     top: p.y,
+                    willChange: 'transform, opacity',
                   }}
                 >
                   {renderParticleIcon(p.iconType || "sparkle")}
                 </motion.div>
               ))}
 
-              {/* Helper Tip - Navbar style - SMOOTHER */}
+              {/* Helper Tip - Navbar style - MOBILE OPTIMIZED */}
               <AnimatePresence>
                 {showTip && progress === 0 && (
                   <motion.div
                     initial={{ y: 12, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: -12, opacity: 0 }}
-                    className="pointer-events-none mt-6 flex items-center gap-2 text-xs text-blue-50 bg-[#000000] px-5 py-2.5 rounded-full border border-blue-500/50 shadow-[0_0_25px_rgba(59,130,246,0.4)] relative overflow-hidden"
+                    className="pointer-events-none mt-6 flex items-center gap-2 text-xs text-blue-50 bg-[#000000] px-5 py-2.5 rounded-full border border-blue-500/50 relative overflow-hidden"
+                    style={{
+                      // Reduce box-shadow on mobile
+                      boxShadow: isMobile ? '0 0 10px rgba(59,130,246,0.2)' : '0 0 25px rgba(59,130,246,0.4)',
+                      transform: 'translateZ(0)',
+                    }}
                   >
-                    {/* Left to right shimmer (FPS-aware) - SMOOTHER */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/40 to-transparent"
-                      animate={{ x: ["-100%", "100%"] }}
-                      transition={{ duration: shimmerDuration * 1.4, repeat: Infinity, ease: "linear" }}
-                    />
-                    {/* Pulse indicator */}
+                    {/* Left to right shimmer (FPS-aware) - Skip on mobile */}
+                    {!isMobile && !prefersReducedMotion && (
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/40 to-transparent"
+                        animate={{ x: ["-100%", "100%"] }}
+                        transition={{ duration: shimmerDuration * 1.4, repeat: Infinity, ease: "linear" }}
+                        style={{ willChange: 'transform' }}
+                      />
+                    )}
+                    {/* Pulse indicator - simplified on mobile */}
                     <div className="relative flex h-2 w-2 shrink-0 z-10">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                      {!isMobile && (
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                      )}
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
                     </div>
                     <span className="relative z-10 flex items-center gap-1 font-medium"><Diamond className="w-3 h-3" /> Hold anywhere until 100% <Rocket className="w-3 h-3" /></span>
@@ -1635,37 +1782,44 @@ export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
               </AnimatePresence>
             </motion.div>
 
-            {/* Completion Effect - Snappy burst */}
-            {isCompleted && (
+            {/* Completion Effect - Snappy burst - MOBILE OPTIMIZED */}
+            {isCompleted && !prefersReducedMotion && (
               <>
+                {/* Simplified glow on mobile - no blur-3xl which causes black boxes */}
                 <motion.div
                   initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 2.5, opacity: [0, 0.9, 0] }}
-                  transition={{ duration: 0.5 }}
-                  className="absolute inset-0 bg-blue-500/40 rounded-full blur-3xl pointer-events-none"
+                  animate={{ scale: isMobile ? 2 : 2.5, opacity: [0, isMobile ? 0.6 : 0.9, 0] }}
+                  transition={{ duration: isMobile ? 0.4 : 0.5 }}
+                  className={`absolute inset-0 bg-blue-500/40 rounded-full pointer-events-none ${isMobile ? '' : 'blur-3xl'}`}
+                  style={{ willChange: 'transform, opacity' }}
                 />
+                {/* Fewer icons on mobile - only 6 instead of 12, no rotation */}
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: [0, 1.3, 0] }}
-                  transition={{ duration: 0.4, times: [0, 0.5, 1] }}
+                  transition={{ duration: isMobile ? 0.3 : 0.4, times: [0, 0.5, 1] }}
                   className="absolute w-full h-full flex items-center justify-center pointer-events-none"
                 >
-                  {/* Burst of animated icons */}
-                  {[Rocket, CircleDollarSign, BarChart3, Zap, Flame, Diamond, Moon, Sparkles, Target, Dumbbell, Trophy, Star].map((Icon, i) => (
+                  {/* Burst of animated icons - reduced on mobile */}
+                  {(isMobile 
+                    ? [Rocket, Zap, Flame, Diamond, Trophy, Star]
+                    : [Rocket, CircleDollarSign, BarChart3, Zap, Flame, Diamond, Moon, Sparkles, Target, Dumbbell, Trophy, Star]
+                  ).map((Icon, i, arr) => (
                     <motion.div
                       key={i}
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{
-                        scale: [0, 1.5, 0],
+                        scale: [0, isMobile ? 1.2 : 1.5, 0],
                         opacity: [0, 1, 0],
-                        x: Math.cos((i / 12) * Math.PI * 2) * 180,
-                        y: Math.sin((i / 12) * Math.PI * 2) * 180,
-                        rotate: [0, 360],
+                        x: Math.cos((i / arr.length) * Math.PI * 2) * (isMobile ? 120 : 180),
+                        y: Math.sin((i / arr.length) * Math.PI * 2) * (isMobile ? 120 : 180),
+                        rotate: isMobile ? 0 : [0, 360], // Skip rotation on mobile
                       }}
-                      transition={{ duration: 0.6, delay: i * 0.03 }}
+                      transition={{ duration: isMobile ? 0.4 : 0.6, delay: i * (isMobile ? 0.02 : 0.03) }}
                       className="absolute"
+                      style={{ willChange: 'transform, opacity' }}
                     >
-                      <Icon className="w-8 h-8 text-blue-400" />
+                      <Icon className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'} text-blue-400`} />
                     </motion.div>
                   ))}
                 </motion.div>
