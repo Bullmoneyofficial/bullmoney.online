@@ -58,9 +58,17 @@ const DraggableSplit: React.FC<DraggableSplitProps> = ({ children, initialRatio 
   }, [isDragging, updateSplit]);
 
   return (
+    // CLS FIX: Fixed 800px height prevents layout shift
     <div
       ref={containerRef}
-      className="flex flex-col w-full h-[800px] overflow-hidden relative bg-black rounded-lg touch-none"
+      className="flex flex-col w-full overflow-hidden relative bg-black rounded-lg touch-none spline-container"
+      data-spline-scene
+      style={{
+        height: '800px',
+        minHeight: '800px',
+        maxHeight: '800px',
+        contain: 'strict',
+      }}
     >
       {/* Top Section */}
       <div

@@ -630,21 +630,68 @@ export default function RootLayout({
         <link rel="preconnect" href="https://i.ytimg.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        
+        {/* LCP FIX: Preconnect to CDN for Spline runtime */}
+        <link rel="preconnect" href="https://unpkg.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
 
         {/* DNS Prefetch for secondary resources */}
         <link rel="dns-prefetch" href="https://www.youtube.com" />
         <link rel="dns-prefetch" href="https://i.ytimg.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://unpkg.com" />
 
         {/* PERFORMANCE: Preload critical assets with proper priorities */}
         <link rel="preload" href="/BULL.svg" as="image" fetchPriority="high" />
         
-        {/* ULTRA-FAST: Preload hero Spline scene for 200ms load target */}
+        {/* LCP FIX: Preload hero Spline scene with HIGH priority for <2.5s LCP */}
         <link rel="preload" href="/scene1.splinecode" as="fetch" crossOrigin="anonymous" fetchPriority="high" />
 
-        {/* Prefetch Spline scenes with lower priority - load on demand */}
+        {/* CLS FIX: Prefetch other Spline scenes with lower priority */}
         <link rel="prefetch" href="/scene3.splinecode" as="fetch" crossOrigin="anonymous" />
         <link rel="prefetch" href="/scene4.splinecode" as="fetch" crossOrigin="anonymous" />
+        
+        {/* LCP FIX: Critical inline script to start hero scene preload immediately */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+(function() {
+  // LCP OPTIMIZATION: Start loading hero scene ASAP
+  // This runs before any other JS to get the scene loading early
+  if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+    // Desktop only - preload hero scene immediately
+    var heroScene = '/scene1.splinecode';
+    
+    // Use fetch to start download immediately (faster than link preload)
+    fetch(heroScene, { 
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'omit',
+      cache: 'force-cache'
+    }).then(function(response) {
+      if (response.ok) {
+        console.log('[LCP] Hero scene preload started');
+        // Cache the response for the Spline loader
+        if ('caches' in window) {
+          caches.open('bullmoney-spline-hero-v3').then(function(cache) {
+            cache.put(heroScene, response.clone());
+          });
+        }
+      }
+    }).catch(function() {});
+    
+    // Also prefetch the Spline runtime module
+    var splineRuntime = 'https://unpkg.com/@splinetool/runtime@latest/build/runtime.js';
+    var link = document.createElement('link');
+    link.rel = 'modulepreload';
+    link.href = splineRuntime;
+    link.crossOrigin = 'anonymous';
+    document.head.appendChild(link);
+  }
+})();
+            `,
+          }}
+        />
 
         {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" crossOrigin="use-credentials" />

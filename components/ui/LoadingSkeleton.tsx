@@ -81,6 +81,8 @@ const variantConfigs: Record<SkeletonVariant, Partial<LoadingSkeletonProps>> = {
     showGlow: true,
     showSpinner: true,
     spinnerSize: 40,
+    // CLS FIX: Fixed dimensions for Spline scenes
+    height: 800,
   },
   hero: {
     height: '100vh',
@@ -88,6 +90,7 @@ const variantConfigs: Record<SkeletonVariant, Partial<LoadingSkeletonProps>> = {
     showGlow: true,
     showSpinner: true,
     spinnerSize: 48,
+    // CLS FIX: Fixed viewport height
   },
   text: {
     height: 16,
@@ -158,18 +161,27 @@ function LoadingSkeletonComponent({
   const finalSpinnerSize = spinnerSize ?? config.spinnerSize ?? 32;
 
   // Build style object
+  // CLS FIX: Use contain:strict and exact dimensions to prevent layout shift
   const style: React.CSSProperties = {
     contain: 'strict', // Prevent layout shift
+    contentVisibility: 'auto',
   };
 
   if (finalWidth) {
     style.width = typeof finalWidth === 'number' ? `${finalWidth}px` : finalWidth;
+    style.minWidth = style.width;
   }
   if (finalHeight) {
     style.height = typeof finalHeight === 'number' ? `${finalHeight}px` : finalHeight;
+    style.minHeight = style.height;
   }
   if (finalAspectRatio) {
     style.aspectRatio = finalAspectRatio;
+  }
+  
+  // CLS FIX: containIntrinsicSize helps browser reserve space
+  if (finalHeight && typeof finalHeight === 'number') {
+    style.containIntrinsicSize = `auto ${finalHeight}px`;
   }
 
   // Base classes
@@ -213,19 +225,32 @@ export const LoadingSkeleton = memo(LoadingSkeletonComponent);
 
 /**
  * SplineSkeleton - Pre-configured for Spline 3D scenes
+ * CLS FIX: Uses fixed dimensions to prevent layout shift
  */
 export const SplineSkeleton = memo(function SplineSkeleton({
   className = '',
   aspectRatio = '16/9',
+  style: customStyle,
 }: {
   className?: string;
   aspectRatio?: string;
+  style?: React.CSSProperties;
 }) {
+  // CLS FIX: Merge custom style with default dimensions
+  const mergedStyle: React.CSSProperties = {
+    minHeight: '300px',
+    height: '800px',
+    contain: 'strict',
+    contentVisibility: 'auto',
+    ...customStyle,
+  };
+
   return (
     <LoadingSkeleton
       variant="spline"
-      className={className}
+      className={cn('spline-skeleton', className)}
       aspectRatio={aspectRatio}
+      height={mergedStyle.height}
     >
       <div className="flex flex-col items-center gap-2">
         <ShimmerSpinner size={40} color="blue" />

@@ -75,9 +75,18 @@ function SplineSceneComponent({
   };
 
   // Show fallback if error occurred OR device can't handle 3D
+  // CLS FIX: Fallback has same dimensions as actual content
   if (hasError || !shouldRender) {
     return (
-      <div className={`w-full h-full bg-gradient-to-br from-black via-neutral-950/30 to-black rounded-xl overflow-hidden relative ${className}`}>
+      <div 
+        className={`w-full h-full bg-gradient-to-br from-black via-neutral-950/30 to-black rounded-xl overflow-hidden relative spline-container ${className}`}
+        data-spline-scene
+        style={{ 
+          minHeight: '300px',
+          height: '100%',
+          contain: 'strict',
+        }}
+      >
         {/* Unified Shimmer Border */}
         <ShimmerBorder color="blue" intensity="low" speed="slow" />
 
@@ -111,7 +120,15 @@ function SplineSceneComponent({
   }
 
   return (
-    <div className={`w-full h-full relative group ${className}`}>
+    <div 
+      className={`w-full h-full relative group spline-container ${className}`}
+      data-spline-scene
+      style={{ 
+        minHeight: '300px',
+        height: '100%',
+        contain: 'layout',
+      }}
+    >
       
       {/* Sparkles Layer - Only on high-end devices */}
       {showSparkles && (

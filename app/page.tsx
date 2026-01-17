@@ -53,6 +53,7 @@ const TestimonialsCarousel = dynamic(() => import('@/components/Testimonial').th
 // 1. Using hasLoadedOnce to keep Spline mounted after first load
 // 2. Only using visibility for initial load trigger, not unmounting
 // 3. Using CSS visibility instead of conditional rendering for FPS savings
+// 4. CLS FIX: Fixed dimensions prevent layout shift during load
 function LazySplineContainer({ scene }: { scene: string }) {
   const [isInView, setIsInView] = useState(false);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
@@ -104,9 +105,19 @@ function LazySplineContainer({ scene }: { scene: string }) {
   }, [observe, hasLoadedOnce, canRender, deviceTier]);
 
   // Show optimized fallback on devices that can't handle 3D
+  // CLS FIX: Fallback has same dimensions as actual content
   if (!canRender) {
     return (
-      <div className="w-full h-full min-h-[300px] relative bg-black rounded-2xl overflow-hidden group" style={{ touchAction: 'pan-y' }}>
+      <div 
+        className="w-full h-full relative bg-black rounded-2xl overflow-hidden group spline-container" 
+        style={{ 
+          touchAction: 'pan-y',
+          minHeight: '300px',
+          height: '100%',
+          contain: 'strict',
+        }}
+        data-spline-scene
+      >
         {/* Spinning Conic Gradient Shimmer Border */}
         <ShimmerBorder color="blue" intensity="medium" speed="normal" />
 
@@ -152,24 +163,30 @@ function LazySplineContainer({ scene }: { scene: string }) {
 
   // FIXED: Once loaded, keep Spline mounted but use CSS to pause/hide when out of view
   // This prevents the expensive reload cycle on small devices
+  // CLS FIX: Container has fixed dimensions to prevent layout shift
   const shouldShowSpline = hasLoadedOnce || isInView;
   const isPaused = hasLoadedOnce && !isInView;
 
   return (
     // 'isolate' is crucial here so the Interaction Button in SplineScene works correctly with z-index
     // Use fixed height and contain:strict to prevent resize issues
+    // CLS FIX: Fixed dimensions prevent layout shift
     <div
       ref={containerRef}
-      className="w-full h-full min-h-[300px] relative isolate overflow-hidden rounded-xl pointer-events-none md:pointer-events-auto"
+      className="w-full h-full relative isolate overflow-hidden rounded-xl pointer-events-none md:pointer-events-auto spline-container"
+      data-spline-scene
       style={{
         contain: 'strict',
         touchAction: 'pan-y', // Allow vertical scrolling on touch devices
-        position: 'relative'
+        position: 'relative',
+        minHeight: '300px',
+        height: '100%',
       }}
     >
       {/* Loading placeholder - shown before first load */}
+      {/* CLS FIX: Placeholder has same size as content */}
       {!hasLoadedOnce && !isInView && (
-        <div className="absolute inset-0 bg-black rounded-xl overflow-hidden">
+        <div className="absolute inset-0 bg-black rounded-xl overflow-hidden" style={{ minHeight: '300px' }}>
           <ShimmerRadialGlow color="blue" intensity="low" />
           <div className="absolute inset-0 flex items-center justify-center">
             <ShimmerSpinner size={32} color="blue" speed="slow" />
@@ -434,9 +451,21 @@ function HomeContent() {
             </section>
 
             {/* 3D Spline Section - Desktop only; quality adapts per device */}
-            <section id="experience" className="w-full max-w-7xl mx-auto px-4 py-16 hidden md:block" data-allow-scroll data-content data-theme-aware style={{ touchAction: 'pan-y' }}>
-              {/* Section Header */}
-              <div className="relative text-center mb-8">
+            {/* CLS FIX: Fixed height container prevents layout shift */}
+            <section 
+              id="experience" 
+              className="w-full max-w-7xl mx-auto px-4 py-16 hidden md:block" 
+              data-allow-scroll 
+              data-content 
+              data-theme-aware 
+              style={{ 
+                touchAction: 'pan-y',
+                minHeight: '900px', /* CLS FIX: Reserve exact space */
+                contain: 'layout',
+              }}
+            >
+              {/* Section Header - Fixed height to prevent CLS */}
+              <div className="relative text-center mb-8" style={{ minHeight: '80px' }}>
                 <h2 className="text-xl md:text-2xl font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #3b82f6), white)', filter: 'drop-shadow(0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.5))' }}>
                   Interactive 3D Experience
                 </h2>
@@ -447,7 +476,19 @@ function HomeContent() {
                 </div>
               </div>
               
-              <div className="relative w-full h-[800px] rounded-2xl overflow-hidden">
+              {/* CLS FIX: Fixed 800px height with contain:strict */}
+              <div 
+                className="relative w-full rounded-2xl overflow-hidden spline-container" 
+                data-spline-scene
+                style={{ 
+                  height: '800px', 
+                  minHeight: '800px',
+                  maxHeight: '800px',
+                  contain: 'strict',
+                  contentVisibility: 'auto',
+                  containIntrinsicSize: '800px',
+                }}
+              >
                 {/* Spinning shimmer border */}
                 <ShimmerBorder color="blue" intensity="low" speed="normal" />
                 
@@ -456,7 +497,7 @@ function HomeContent() {
                   {/* Top shimmer line */}
                   <ShimmerLine color="blue" className="z-20" />
                   
-                <Suspense fallback={<SplineSkeleton className="w-full h-full" aspectRatio="auto" />}>
+                <Suspense fallback={<SplineSkeleton className="w-full h-full" aspectRatio="auto" style={{ height: '800px', minHeight: '800px' }} />}>
                   <DraggableSplit>
                     {/* The Scenes */}
                     <LazySplineContainer scene="/scene4.splinecode" />

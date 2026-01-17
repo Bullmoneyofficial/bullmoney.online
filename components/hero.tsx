@@ -978,17 +978,24 @@ const HeroParallax = () => {
     <div
         ref={ref}
         className="h-screen pt-10 pb-0 antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d] hero"
-        style={{ contain: 'layout', touchAction: 'pan-y' }}
+        style={{ 
+          contain: 'layout', 
+          touchAction: 'pan-y',
+          minHeight: '100dvh',
+        }}
         data-allow-scroll
         data-content
         data-theme-aware
+        data-hero
     >
+        {/* CLS FIX: Hero Spline wrapper with fixed dimensions */}
         <div 
-          className="absolute inset-0 w-full h-full z-0 pointer-events-none"
+          className="absolute inset-0 w-full h-full z-0 pointer-events-none hero-spline-wrapper"
           style={{ 
             contain: 'strict',
             isolation: 'isolate',
             touchAction: 'pan-y',
+            minHeight: '100dvh',
           }}
           data-allow-scroll
         >
@@ -1002,11 +1009,14 @@ const HeroParallax = () => {
               bottom: 0,
               contain: 'strict',
               touchAction: 'pan-y',
+              minHeight: '100dvh',
             }}
           >
             <div className="w-full h-full flex items-center justify-center">
+              {/* CLS FIX: Fixed dimensions prevent layout shift */}
               <div
-                className="w-full h-full"
+                className="w-full h-full spline-container"
+                data-spline-scene
                 style={{
                   width: `${heroSize.width}px`,
                   height: `${heroSize.height}px`,
@@ -1014,8 +1024,10 @@ const HeroParallax = () => {
                   maxHeight: '100%',
                   minWidth: 320,
                   minHeight: 260,
+                  contain: 'strict',
                 }}
               >
+                {/* LCP FIX: priority=true + isHero=true for fastest load */}
                 <Spline 
                   scene="/scene1.splinecode" 
                   placeholder={undefined} 
