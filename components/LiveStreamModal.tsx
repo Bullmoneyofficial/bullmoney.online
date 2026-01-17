@@ -33,7 +33,8 @@ import {
   Heart,
   Link2,
   Check,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import { ShimmerLine, ShimmerBorder, ShimmerSpinner } from '@/components/ui/UnifiedShimmer';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
@@ -241,18 +242,19 @@ const LiveStreamContent = memo(() => {
   const [selectedPlaylist, setSelectedPlaylist] = useState<string>('liked');
   const [youtubeVideos, setYoutubeVideos] = useState<YouTubePlaylistItem[]>([]);
   const [loadingYoutubeVideos, setLoadingYoutubeVideos] = useState(false);
+  const [tokenNeedsRefresh, setTokenNeedsRefresh] = useState(false);
 
-  // Load YouTube auth from localStorage
+  // Load YouTube auth from localStorage - persists forever until manually logged out
   useEffect(() => {
     try {
       const saved = localStorage.getItem('bullmoney_youtube_auth');
       if (saved) {
         const auth = JSON.parse(saved) as YouTubeAuthProfile;
-        // Check if token is still valid
-        if (auth.expiresAt > Date.now()) {
-          setYoutubeAuth(auth);
-        } else {
-          localStorage.removeItem('bullmoney_youtube_auth');
+        // Always load saved auth - persist forever
+        setYoutubeAuth(auth);
+        // Check if token is expired and needs refresh
+        if (auth.expiresAt <= Date.now()) {
+          setTokenNeedsRefresh(true);
         }
       }
       
@@ -265,6 +267,22 @@ const LiveStreamContent = memo(() => {
       console.error('Error loading YouTube auth:', e);
     }
   }, []);
+
+  // Helper to handle auth errors - prompts for re-login if token expired
+  const handleAuthError = useCallback((error: any) => {
+    console.error('YouTube API error:', error);
+    // Check if it's an auth error (401 or auth-related message)
+    const isAuthError = error?.status === 401 || 
+      error?.message?.includes('401') ||
+      error?.message?.toLowerCase().includes('unauthorized') ||
+      error?.message?.toLowerCase().includes('invalid credentials');
+    
+    if (isAuthError && youtubeAuth) {
+      // Token expired - set refresh flag but keep user logged in
+      setTokenNeedsRefresh(true);
+      setPersonalError('Session expired. Click refresh to continue.');
+    }
+  }, [youtubeAuth]);
 
   // Fetch user's YouTube playlists when authenticated
   useEffect(() => {
@@ -333,8 +351,10 @@ const LiveStreamContent = memo(() => {
         
         localStorage.setItem('bullmoney_youtube_auth', JSON.stringify(authProfile));
         setYoutubeAuth(authProfile);
+        setTokenNeedsRefresh(false); // Reset refresh flag on successful auth
         setYoutubeLoading(false);
         setShowPersonalLogin(false);
+        setPersonalError(''); // Clear any error messages
         SoundEffects.click();
         
         popup?.close();
@@ -357,6 +377,13 @@ const LiveStreamContent = memo(() => {
     }, 500);
   }, []);
 
+  // Refresh YouTube token (re-authenticate)
+  const refreshYoutubeToken = useCallback(() => {
+    setTokenNeedsRefresh(false);
+    setPersonalError('');
+    handleYoutubeLogin();
+  }, [handleYoutubeLogin]);
+
   // Fetch user's playlists from YouTube API
   const fetchYoutubePlaylists = useCallback(async () => {
     if (!youtubeAuth?.accessToken) return;
@@ -371,7 +398,11 @@ const LiveStreamContent = memo(() => {
         }
       );
 
-      if (!response.ok) throw new Error('Failed to fetch playlists');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const error = { status: response.status, message: errorData.error?.message || 'Failed to fetch playlists' };
+        throw error;
+      }
 
       const data = await response.json();
       const playlists = data.items?.map((item: any) => ({
@@ -381,10 +412,11 @@ const LiveStreamContent = memo(() => {
       })) || [];
 
       setYoutubePlaylists(playlists);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching playlists:', error);
+      handleAuthError(error);
     }
-  }, [youtubeAuth?.accessToken]);
+  }, [youtubeAuth?.accessToken, handleAuthError]);
 
   // Fetch videos from a playlist
   const fetchPlaylistVideos = useCallback(async (playlistId: string) => {
@@ -412,8 +444,9 @@ const LiveStreamContent = memo(() => {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'Failed to fetch videos');
+        const errorData = await response.json().catch(() => ({}));
+        const error = { status: response.status, message: errorData.error?.message || 'Failed to fetch videos' };
+        throw error;
       }
 
       const data = await response.json();
@@ -448,13 +481,14 @@ const LiveStreamContent = memo(() => {
       }
 
       setYoutubeVideos(videos);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching playlist videos:', error);
+      handleAuthError(error);
       setYoutubeVideos([]);
     } finally {
       setLoadingYoutubeVideos(false);
     }
-  }, [youtubeAuth?.accessToken]);
+  }, [youtubeAuth?.accessToken, handleAuthError]);
 
   // Logout from YouTube
   const handleYoutubeLogout = useCallback(() => {
@@ -903,8 +937,19 @@ const LiveStreamContent = memo(() => {
                   <img 
                     src={youtubeAuth.user.picture} 
                     alt={youtubeAuth.user.name}
-                    className="w-7 h-7 rounded-full border border-purple-500/50"
+                    className={`w-7 h-7 rounded-full border ${tokenNeedsRefresh ? 'border-yellow-500/70 opacity-60' : 'border-purple-500/50'}`}
                   />
+                  {tokenNeedsRefresh ? (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={refreshYoutubeToken}
+                      className="p-2 rounded-lg bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition-all"
+                      title="Session expired - Click to refresh"
+                    >
+                      <RefreshCw className="w-5 h-5" />
+                    </motion.button>
+                  ) : null}
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
