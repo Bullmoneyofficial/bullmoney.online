@@ -152,7 +152,9 @@ export const TradingViewWidget = memo(({
       const checkInterval = setInterval(() => {
         if (typeof (window as any).TradingView !== 'undefined') {
           clearInterval(checkInterval);
-          script.onload(new Event('load'));
+          if (script.onload) {
+            script.onload(new Event('load'));
+          }
         }
       }, 100);
 

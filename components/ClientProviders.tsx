@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { ReactNode, Suspense } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { UIStateProvider } from "@/contexts/UIStateContext";
+// REMOVED: UIStateProvider - already provided by MobileMenuProvider in layout.tsx
 
 // Lazy load performance providers for faster initial compile
 const PerformanceProvider = dynamic(
@@ -69,41 +69,40 @@ interface ClientProvidersProps {
 export function ClientProviders({ children, modal }: ClientProvidersProps) {
   return (
     <AuthProvider>
-      <UIStateProvider>
-        <UnifiedPerformanceProvider startDelay={2000}>
-          <CrashTrackerProvider>
-            <FpsOptimizerProvider enableMonitoring={true} monitoringInterval={500} startDelay={1000}>
-              <PerformanceProvider enableSmoothScroll={true}>
-                <FpsMonitor show={false} />
-                <ClientCursor />
-                <AudioWidget />
-                <AutoRefreshPrompt />
-                {modal}
-                <main 
-                  className="theme-filter-wrapper min-h-screen"
-                  style={{ 
-                    filter: 'var(--theme-filter, none)',
-                    transition: 'filter 0.5s ease-in-out',
-                    touchAction: 'pan-y',
-                    overflowY: 'visible'
-                  }}
-                  data-allow-scroll
-                >
-                  {children}
-                </main>
-                <FooterComponent />
-                <FPSCounter />
-                
-                {/* Bull Feed Modals */}
-                <AuthModal />
-                <BullFeedModal />
-                <PostComposer />
-                <EnhancedAnalysisModal />
-              </PerformanceProvider>
-            </FpsOptimizerProvider>
-          </CrashTrackerProvider>
-        </UnifiedPerformanceProvider>
-      </UIStateProvider>
+      {/* NOTE: UIStateProvider is already provided by MobileMenuProvider in layout.tsx */}
+      <UnifiedPerformanceProvider startDelay={2000}>
+        <CrashTrackerProvider>
+          <FpsOptimizerProvider enableMonitoring={true} monitoringInterval={500} startDelay={1000}>
+            <PerformanceProvider enableSmoothScroll={true}>
+              <FpsMonitor show={false} />
+              <ClientCursor />
+              <AudioWidget />
+              <AutoRefreshPrompt />
+              {modal}
+              <main 
+                className="theme-filter-wrapper min-h-screen"
+                style={{ 
+                  filter: 'var(--theme-filter, none)',
+                  transition: 'filter 0.5s ease-in-out',
+                  touchAction: 'pan-y',
+                  overflowY: 'visible'
+                }}
+                data-allow-scroll
+              >
+                {children}
+              </main>
+              <FooterComponent />
+              <FPSCounter />
+              
+              {/* Bull Feed Modals */}
+              <AuthModal />
+              <BullFeedModal />
+              <PostComposer />
+              <EnhancedAnalysisModal />
+            </PerformanceProvider>
+          </FpsOptimizerProvider>
+        </CrashTrackerProvider>
+      </UnifiedPerformanceProvider>
     </AuthProvider>
   );
 }

@@ -163,8 +163,15 @@ export const Navbar = memo(() => {
     openFaqModal,
     openAffiliateModal,
     openThemeSelectorModal,
+    openAnalysisModal: openAnalysisModalBase,
     closeNavbarModal,
   } = useNavbarModals();
+  
+  // Wrap openAnalysisModal with logging
+  const openAnalysisModal = useCallback(() => {
+    console.log('[Navbar] openAnalysisModal called');
+    openAnalysisModalBase();
+  }, [openAnalysisModalBase]);
   
   // Unified Performance System - single source for lifecycle & shimmer
   const navbarPerf = useComponentLifecycle('navbar', 10); // Priority 10 (highest)
@@ -432,6 +439,7 @@ export const Navbar = memo(() => {
           onFaqClick={openFaqModal}
           onThemeClick={openThemeSelectorModal}
           onAdminClick={openAdminModal}
+          onAnalysisClick={openAnalysisModal}
           mounted={mounted}
           isScrollMinimized={isDesktopScrollMinimized}
           onExpandClick={() => setIsDesktopScrollMinimized(false)}
@@ -529,6 +537,7 @@ export const Navbar = memo(() => {
         onFaqClick={openFaqModal}
         onAdminClick={openAdminModal}
         onThemeClick={openThemeSelectorModal}
+        onAnalysisClick={openAnalysisModal}
       />
     </>
   );

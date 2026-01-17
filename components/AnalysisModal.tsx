@@ -74,11 +74,12 @@ const AnalysisTriggerInternal = memo(() => {
         console.log('[AnalysisTrigger] PointerDown detected');
         e.stopPropagation();
       }}
-      className="w-full h-full absolute inset-0 cursor-pointer bg-transparent border-0 outline-none z-[100]"
+      className="w-full h-full absolute inset-0 cursor-pointer bg-transparent border-0 outline-none z-[100] pointer-events-auto"
       style={{ 
         background: 'transparent',
         touchAction: 'manipulation',
-        WebkitTapHighlightColor: 'transparent'
+        WebkitTapHighlightColor: 'transparent',
+        pointerEvents: 'auto'
       }}
       aria-label="Open Analysis"
     />

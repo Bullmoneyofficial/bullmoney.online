@@ -25,7 +25,7 @@ export const DockIcon = memo(React.forwardRef<HTMLDivElement, DockIconProps>(
         whileTap={{ scale: 0.96 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         className={cn(
-          "flex flex-col h-full w-full items-center justify-center rounded-2xl backdrop-blur-2xl shadow-lg transition-all duration-300 relative overflow-hidden group/icon icon-glass",
+          "flex flex-col h-full w-full items-center justify-center rounded-2xl backdrop-blur-2xl shadow-lg transition-all duration-300 relative overflow-hidden group/icon icon-glass pointer-events-none",
           className
         )}
         style={{

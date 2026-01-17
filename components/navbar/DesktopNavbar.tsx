@@ -33,6 +33,7 @@ interface DesktopNavbarProps {
   onFaqClick: () => void;
   onThemeClick: () => void;
   onAdminClick: () => void;
+  onAnalysisClick: () => void;
   mounted: boolean;
   isScrollMinimized?: boolean;
   onExpandClick?: () => void;
@@ -52,6 +53,7 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
       onFaqClick,
       onThemeClick,
       onAdminClick,
+      onAnalysisClick,
       mounted,
       isScrollMinimized = false,
       onExpandClick,
@@ -100,7 +102,7 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
         icon: <IconChartLine className="h-6 w-6 text-blue-400" stroke={1.5} />,
         label: "Analysis",
         tips: ["Trade analysis", "Market insights", "Expert breakdowns"],
-        triggerComponent: <div className="w-full h-full flex items-center justify-center pointer-events-auto"><AnalysisModal /></div>,
+        onClick: onAnalysisClick,
       },
       {
         icon: <IconCalendarTime className="h-6 w-6 text-blue-400" stroke={1.5} />,

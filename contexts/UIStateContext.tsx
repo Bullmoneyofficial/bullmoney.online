@@ -51,8 +51,8 @@ export const UI_Z_INDEX = {
   // Mobile menu - HIGHEST PRIORITY (appears on top of everything)
   MOBILE_MENU: 999999999,
   
-  // Analysis Modal - ULTRA HIGH (opens on top of pagemode and everything)
-  ANALYSIS_MODAL: 2147483640,
+  // Analysis Modal - Maximum z-index (same as LiveStreamModal)
+  ANALYSIS_MODAL: 2147483647,
 } as const;
 
 // Define all UI component types that participate in mutual exclusion
@@ -637,11 +637,13 @@ export function useNavbarModals() {
     openFaqModal,
     openAffiliateModal,
     openThemeSelectorModal,
+    openAnalysisModal, // Add this
     closeNavbarModal,
     isAdminModalOpen,
     isFaqModalOpen,
     isAffiliateModalOpen,
     isThemeSelectorModalOpen,
+    isAnalysisModalOpen, // And this
   } = useUIState();
 
   return {
@@ -650,11 +652,13 @@ export function useNavbarModals() {
     isFaqOpen: isFaqModalOpen,
     isAffiliateOpen: isAffiliateModalOpen,
     isThemeSelectorOpen: isThemeSelectorModalOpen,
+    isAnalysisOpen: isAnalysisModalOpen, // And this
     setNavbarModal,
     openAdminModal,
     openFaqModal,
     openAffiliateModal,
     openThemeSelectorModal,
+    openAnalysisModal, // And this
     closeNavbarModal,
   };
 }

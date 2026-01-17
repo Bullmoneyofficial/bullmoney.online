@@ -3,11 +3,11 @@
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, 
-  TrendingUp, 
-  TrendingDown, 
-  BarChart3, 
+import {
+  X,
+  TrendingUp,
+  TrendingDown,
+  BarChart3,
   Calendar,
   ChevronLeft,
   ChevronRight,
@@ -27,12 +27,17 @@ import { ShimmerLine, ShimmerBorder, ShimmerSpinner } from '@/components/ui/Unif
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useShop } from '@/components/ShopContext';
 import { createSupabaseClient } from '@/lib/supabase';
-import { useAnalysisModalUI } from '@/contexts/UIStateContext';
+import { useAnalysisModalUI, UI_Z_INDEX } from '@/contexts/UIStateContext';
 import { TradingViewWidget } from './TradingViewWidget';
 import { ConfidenceMeter } from './ConfidenceMeter';
 import { SentimentBadge } from './SentimentBadge';
 import { AttachmentCarousel } from './AttachmentCarousel';
 import type { Analysis, ReactionType, Attachment, ContentType, MarketType, Direction, ChartConfig } from '@/types/feed';
+
+// Debug: Log when module loads
+if (typeof window !== 'undefined') {
+  console.log('[EnhancedAnalysisModal] Module loaded in browser');
+}
 
 // Modal Context
 interface ModalState {
@@ -51,8 +56,8 @@ const useModalState = () => {
 // Helper to format date
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', { 
-    month: 'short', 
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
     day: 'numeric',
     year: 'numeric',
     hour: '2-digit',
@@ -84,43 +89,80 @@ const getChartSymbol = (analysis: Analysis): string => {
   return pair;
 };
 
-// Main Modal Component
+// Main Modal Component - Uses centralized UIStateContext for mutual exclusion
 export const EnhancedAnalysisModal = memo(() => {
+  // Use centralized UI state for mutual exclusion with other modals
   const { isOpen, setIsOpen } = useAnalysisModalUI();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Debug: Log on every render
+  console.log('[EnhancedAnalysisModal] Render - isOpen:', isOpen, 'mounted:', mounted);
 
   useEffect(() => {
-    console.log('[EnhancedAnalysisModal] isOpen changed:', isOpen);
+    console.log('[EnhancedAnalysisModal] Component mounted');
+    setMounted(true);
+    
+    // Debug: Add keyboard shortcut to test opening (Ctrl/Cmd + Shift + A)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        console.log('[EnhancedAnalysisModal] DEBUG: Keyboard shortcut triggered');
+        setIsOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      console.log('[EnhancedAnalysisModal] Component unmounting');
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [setIsOpen]);
+
+  useEffect(() => {
+    console.log('[EnhancedAnalysisModal] isOpen effect triggered:', isOpen);
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      console.log('[EnhancedAnalysisModal] Modal OPENING - body overflow hidden');
     } else {
       document.body.style.overflow = '';
+      console.log('[EnhancedAnalysisModal] Modal CLOSING - body overflow reset');
     }
     return () => {
       document.body.style.overflow = '';
     };
   }, [isOpen]);
 
-  if (!mounted) return null;
+  // Always render when mounted - the AnimatePresence handles show/hide
+  if (!mounted) {
+    console.log('[EnhancedAnalysisModal] Not rendering - waiting for mount');
+    return null;
+  }
 
-  // Only render the modal content when open - NO TRIGGER
-  // The trigger should be placed in the navbar/dock where needed
-  return (
-    <ModalContext.Provider value={{ isOpen, setIsOpen }}>
-      {createPortal(
-        <AnimatePresence>
-          {isOpen && <EnhancedAnalysisContent />}
-        </AnimatePresence>,
-        document.body
-      )}
-    </ModalContext.Provider>
+  console.log('[EnhancedAnalysisModal] Rendering portal with isOpen:', isOpen);
+
+  // Portal to document.body - simplified like AuthModal
+  return createPortal(
+    <AnimatePresence>
+      {isOpen && <EnhancedAnalysisContentWrapper onClose={() => setIsOpen(false)} />}
+    </AnimatePresence>,
+    document.body
   );
 });
 EnhancedAnalysisModal.displayName = 'EnhancedAnalysisModal';
+
+// Wrapper that provides the close function
+interface ContentWrapperProps {
+  onClose: () => void;
+}
+
+const EnhancedAnalysisContentWrapper = memo(({ onClose }: ContentWrapperProps) => {
+  return (
+    <ModalContext.Provider value={{ isOpen: true, setIsOpen: (open) => !open && onClose() }}>
+      <EnhancedAnalysisContent onClose={onClose} />
+    </ModalContext.Provider>
+  );
+});
+EnhancedAnalysisContentWrapper.displayName = 'EnhancedAnalysisContentWrapper';
 
 // Trigger Button
 const EnhancedAnalysisTrigger = memo(() => {
@@ -159,8 +201,12 @@ const EnhancedAnalysisTrigger = memo(() => {
 EnhancedAnalysisTrigger.displayName = 'EnhancedAnalysisTrigger';
 
 // Main Content
-const EnhancedAnalysisContent = memo(() => {
-  const { setIsOpen } = useModalState();
+interface EnhancedAnalysisContentProps {
+  onClose: () => void;
+}
+
+const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
+  console.log('[EnhancedAnalysisContent] Rendering content component');
   const { state } = useShop();
   const { isAdmin } = state;
   
@@ -370,8 +416,8 @@ const EnhancedAnalysisContent = memo(() => {
 
   const handleClose = useCallback(() => {
     SoundEffects.click();
-    setIsOpen(false);
-  }, [setIsOpen]);
+    onClose();
+  }, [onClose]);
 
   // Memoized chart symbol
   const chartSymbol = useMemo(() => {
@@ -383,12 +429,30 @@ const EnhancedAnalysisContent = memo(() => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-center p-2 sm:p-4 pointer-events-none"
-      style={{ zIndex: 2147483640 }} // Ultra-high z-index to appear on top of everything including pagemode
+      className="fixed inset-0 flex items-center justify-center p-2 sm:p-4"
+      style={{ 
+        zIndex: 2147483647, // Maximum possible z-index - matches LiveStreamModal
+        isolation: 'isolate',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+      }}
     >
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/90 backdrop-blur-md pointer-events-auto"
+      {/* Backdrop - covers everything */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="absolute inset-0 bg-black/95 backdrop-blur-lg"
+        style={{ 
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 0,
+        }}
         onClick={handleClose}
       />
       
@@ -399,8 +463,8 @@ const EnhancedAnalysisContent = memo(() => {
         exit={{ scale: 0.9, opacity: 0, y: 50 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-4xl max-h-[95vh] overflow-hidden rounded-2xl pointer-events-auto"
-        style={{ zIndex: 2147483641 }} // Higher than backdrop
+        className="relative w-full max-w-4xl max-h-[95vh] overflow-hidden rounded-2xl"
+        style={{ zIndex: 1 }}
       >
         {/* Shimmer Border */}
         <div className="absolute inset-[-2px] overflow-hidden rounded-2xl pointer-events-none z-0">
@@ -727,8 +791,7 @@ const EnhancedAnalysisContent = memo(() => {
       </motion.div>
     </motion.div>
   );
-});
-EnhancedAnalysisContent.displayName = 'EnhancedAnalysisContent';
+};
 
 // Edit Form Component
 interface EditFormProps {

@@ -30,6 +30,7 @@ interface MobileDropdownMenuProps {
   onFaqClick: () => void;
   onAdminClick: () => void;
   onThemeClick: () => void;
+  onAnalysisClick: () => void;
 }
 
 export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDropdownMenuProps>(
@@ -45,6 +46,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
       onFaqClick,
       onAdminClick,
       onThemeClick,
+      onAnalysisClick,
     },
     ref
   ) => {
@@ -76,6 +78,13 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
       onFaqClick();
       onClose();
     }, [onFaqClick, onClose]);
+
+    const handleAnalysisClick = useCallback(() => {
+      console.log('[MobileDropdownMenu] handleAnalysisClick called');
+      SoundEffects.click();
+      onAnalysisClick();
+      onClose();
+    }, [onAnalysisClick, onClose]);
     
     const handleAdminClick = useCallback(() => {
       SoundEffects.click();
@@ -156,7 +165,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               >
                 <IconBroadcast className="h-5 w-5 pointer-events-none" stroke={1.5} style={{ color: '#60a5fa' }} />
                 <span className="pointer-events-none">Live Stream</span>
-                <div className="absolute inset-0 z-10"><LiveStreamModal /></div>
+                <div className="absolute inset-0 z-10 pointer-events-auto"><LiveStreamModal /></div>
               </motion.div>
             </motion.div>
 
@@ -225,21 +234,22 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               transition={{ delay: 0.20 }}
               className="w-full"
             >
-              <motion.div 
+              <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
                 onHoverStart={() => SoundEffects.hover()}
-                className="relative w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200 cursor-pointer"
+                onTouchStart={() => SoundEffects.click()}
+                className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold hover:text-white cursor-pointer px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200"
                 style={{
                   color: '#93c5fd',
                   backgroundColor: 'rgba(59, 130, 246, 0.08)',
-                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)'
                 }}
+                onClick={handleAnalysisClick}
               >
-                <IconChartLine className="h-5 w-5 pointer-events-none" stroke={1.5} style={{ color: '#60a5fa' }} />
-                <span className="pointer-events-none">Analysis</span>
-                <div className="absolute inset-0 z-10"><AnalysisModal /></div>
-              </motion.div>
+                <IconChartLine className="h-5 w-5" stroke={1.5} style={{ color: '#60a5fa' }} />
+                Analysis
+              </motion.button>
             </motion.div>
 
             {/* Divider */}
@@ -273,7 +283,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               >
                 <IconBuildingStore className="h-5 w-5 pointer-events-none" stroke={1.5} style={{ color: '#60a5fa' }} />
                 <span className="pointer-events-none">Products</span>
-                <div className="absolute inset-0 z-10"><ProductsModal /></div>
+                <div className="absolute inset-0 z-10 pointer-events-auto"><ProductsModal /></div>
               </motion.div>
             </motion.div>
 

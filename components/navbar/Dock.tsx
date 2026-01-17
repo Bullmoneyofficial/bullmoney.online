@@ -266,7 +266,14 @@ const DockItem = memo(({
       onHoverEnd={() => isHovered.set(0)}
       onFocus={() => isHovered.set(1)}
       onBlur={() => isHovered.set(0)}
-      onClick={item.triggerComponent ? undefined : item.onClick}
+      onClick={(e) => {
+        console.log('[DockItem] onClick - label:', item.label, 'hasTrigger:', !!item.triggerComponent, 'hasOnClick:', !!item.onClick);
+        if (!item.triggerComponent && item.onClick) {
+          e.preventDefault();
+          e.stopPropagation();
+          item.onClick();
+        }
+      }}
       onMouseEnter={() => {
         SoundEffects.hover();
       }}
@@ -276,6 +283,14 @@ const DockItem = memo(({
       onTouchStart={() => {
         if (!item.triggerComponent) SoundEffects.click();
       }}
+      onTouchEnd={(e) => {
+        console.log('[DockItem] onTouchEnd - label:', item.label, 'hasTrigger:', !!item.triggerComponent, 'hasOnClick:', !!item.onClick);
+        if (!item.triggerComponent && item.onClick) {
+          e.preventDefault();
+          e.stopPropagation();
+          item.onClick();
+        }
+      }}
       className={cn(
         "relative flex flex-col items-center justify-center cursor-pointer mb-2 dock-item-optimized",
       )}
@@ -283,8 +298,14 @@ const DockItem = memo(({
       role="button"
       aria-haspopup="true"
     >
-      {/* DockIcon with icon and label */}
-      <div className={cn("w-full h-full flex items-center justify-center", item.triggerComponent && "pointer-events-none")}>
+      {/* DockIcon with icon and label - entire area is clickable */}
+      <div 
+        className={cn("w-full h-full flex items-center justify-center cursor-pointer", item.triggerComponent && "pointer-events-none")}
+        onClick={(e) => {
+          console.log('[DockItem inner div] onClick - label:', item.label);
+          // Let it bubble up to parent onClick handler
+        }}
+      >
         <DockIcon label={item.label} showShine={item.showShine} isXMUser={item.isXMHighlight}>
           {item.icon}
         </DockIcon>
