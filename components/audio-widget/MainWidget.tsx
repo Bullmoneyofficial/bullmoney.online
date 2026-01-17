@@ -22,11 +22,13 @@ import type { MusicSource } from "@/contexts/AudioSettingsProvider";
 /**
  * Animated Music Wave Bars - Trading ticker style
  * Shows animated equalizer bars next to music icon
+ * THEME-AWARE: Uses CSS variables for dynamic theming
  */
-function MusicWaveBars({ isPlaying, color = "blue" }: { isPlaying: boolean; color?: "blue" | "green" }) {
-  const barColors = color === "green" 
-    ? { bar: "#34d399", glow: "rgba(52, 211, 153, 0.6)" }
-    : { bar: "#60a5fa", glow: "rgba(96, 165, 250, 0.6)" };
+function MusicWaveBars({ isPlaying, isActive = false }: { isPlaying: boolean; isActive?: boolean }) {
+  // When active/playing, use a brighter green, otherwise use theme accent color
+  const barStyle = isActive 
+    ? { backgroundColor: '#34d399', boxShadow: '0 0 4px rgba(52, 211, 153, 0.6)' }
+    : { backgroundColor: 'var(--accent-color, #60a5fa)', boxShadow: '0 0 4px rgba(var(--accent-rgb, 96, 165, 250), 0.6)' };
   
   return (
     <div className="flex items-end gap-[2px] h-[14px]">
@@ -34,10 +36,7 @@ function MusicWaveBars({ isPlaying, color = "blue" }: { isPlaying: boolean; colo
         <motion.div
           key={i}
           className="w-[3px] rounded-full origin-bottom"
-          style={{ 
-            backgroundColor: barColors.bar,
-            boxShadow: `0 0 4px ${barColors.glow}`,
-          }}
+          style={barStyle}
           animate={isPlaying ? {
             height: [
               4 + Math.random() * 4,
@@ -170,9 +169,9 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
   const currentStreamingIcon = React.useMemo(() => {
     const SourceIcon = sourceIcons[musicSource];
     if (isStreamingSource && SourceIcon) {
-      return <SourceIcon className="h-5 w-5 text-blue-200/90" />;
+      return <SourceIcon className="h-5 w-5" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.9)' }} />;
     }
-    return <IconMusic className="h-5 w-5 text-blue-200/90" />;
+    return <IconMusic className="h-5 w-5" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.9)' }} />;
   }, [isStreamingSource, musicSource]);
 
   return (
@@ -193,10 +192,16 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               SoundEffects.click();
               setWidgetHidden(false);
             }}
-            className="fixed left-0 bottom-16 z-[100200] flex items-center gap-1 pl-1 pr-3 py-3 rounded-r-xl bg-blue-500/40 border border-l-0 border-blue-400/50 backdrop-blur-md hover:bg-blue-500/50 transition-colors group pointer-events-auto"
+            className="fixed left-0 bottom-16 z-[100200] flex items-center gap-1 pl-1 pr-3 py-3 rounded-r-xl backdrop-blur-md transition-colors group pointer-events-auto"
+            data-theme-aware
+            style={{
+              backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
+              border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
+              borderLeft: 'none',
+            }}
           >
-            <IconGripVertical className="w-4 h-4 text-blue-300/60 group-hover:text-blue-300" />
-            <IconMusic className="w-4 h-4 text-blue-300" />
+            <IconGripVertical className="w-4 h-4 group-hover:opacity-100 transition-opacity" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }} />
+            <IconMusic className="w-4 h-4" style={{ color: 'var(--accent-color, #93c5fd)' }} />
           </motion.button>
         )}
 
@@ -221,16 +226,20 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
             }}
             className={cn(
               "fixed left-0 bottom-16 z-[100200] flex items-center gap-1 px-1.5 py-2 rounded-r-lg",
-              "bg-gradient-to-r from-blue-600/40 via-blue-500/25 to-slate-900/50",
-              "backdrop-blur-2xl border border-l-0 border-blue-500/50",
-              "shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30",
-              "hover:border-blue-400/70 transition-all duration-200",
+              "backdrop-blur-2xl transition-all duration-200",
               "pointer-events-auto group"
             )}
+            data-theme-aware
+            style={{
+              background: 'linear-gradient(to right, rgba(var(--accent-rgb, 59, 130, 246), 0.4), rgba(var(--accent-rgb, 59, 130, 246), 0.25), rgba(15, 23, 42, 0.5))',
+              border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
+              borderLeft: 'none',
+              boxShadow: '0 10px 15px -3px rgba(var(--accent-rgb, 59, 130, 246), 0.2)',
+            }}
             whileHover={{ x: 2 }}
             whileTap={{ scale: 0.95 }}
           >
-            <IconGripVertical className="w-3 h-3 text-blue-300/60 group-hover:text-blue-300" />
+            <IconGripVertical className="w-3 h-3 group-hover:opacity-100 transition-opacity" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }} />
             <motion.div
               animate={isMusicPlaying || streamingActive ? { 
                 scale: [1, 1.1, 1],
@@ -239,13 +248,11 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               className="relative"
             >
               <IconMusic 
-                className={cn(
-                  "w-3 h-3",
-                  isMusicPlaying || streamingActive ? "text-blue-300" : "text-blue-400/70"
-                )} 
-                style={isMusicPlaying || streamingActive ? {
-                  filter: "drop-shadow(0 0 4px rgba(96, 165, 250, 0.8))"
-                } : {}}
+                className="w-3 h-3"
+                style={{ 
+                  color: isMusicPlaying || streamingActive ? 'var(--accent-color, #93c5fd)' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)',
+                  filter: isMusicPlaying || streamingActive ? 'drop-shadow(0 0 4px rgba(var(--accent-rgb, 96, 165, 250), 0.8))' : 'none'
+                }}
               />
               {(isMusicPlaying || streamingActive) && (
                 <motion.div
@@ -284,16 +291,19 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                 }}
                 className={cn(
                   "fixed left-3 bottom-14 z-[100200] flex items-center gap-1.5 px-2.5 py-2 rounded-xl",
-                  "bg-gradient-to-br from-blue-600/40 via-blue-500/25 to-slate-900/50",
-                  "backdrop-blur-2xl border border-blue-500/50",
-                  "shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30",
-                  "hover:border-blue-400/70 transition-all duration-200",
+                  "backdrop-blur-2xl transition-all duration-200",
                   "pointer-events-auto"
                 )}
+                data-theme-aware
+                style={{
+                  background: 'linear-gradient(to bottom right, rgba(var(--accent-rgb, 59, 130, 246), 0.4), rgba(var(--accent-rgb, 59, 130, 246), 0.25), rgba(15, 23, 42, 0.5))',
+                  border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
+                  boxShadow: '0 10px 15px -3px rgba(var(--accent-rgb, 59, 130, 246), 0.2)',
+                }}
                 whileHover={{ scale: 1.05, x: 2 }}
                 whileTap={{ scale: 0.95 }}
               >
-                {/* Music Icon with pulse */}
+                {/* Music Icon with pulse - Theme-aware */}
                 <motion.div
                   animate={isMusicPlaying || streamingActive ? { 
                     scale: [1, 1.1, 1],
@@ -302,13 +312,11 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                   className="relative"
                 >
                   <IconMusic 
-                    className={cn(
-                      "w-4 h-4",
-                      isMusicPlaying || streamingActive ? "text-blue-300" : "text-blue-400/70"
-                    )} 
-                    style={isMusicPlaying || streamingActive ? {
-                      filter: "drop-shadow(0 0 6px rgba(96, 165, 250, 0.8))"
-                    } : {}}
+                    className="w-4 h-4"
+                    style={{ 
+                      color: isMusicPlaying || streamingActive ? 'var(--accent-color, #93c5fd)' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)',
+                      filter: isMusicPlaying || streamingActive ? 'drop-shadow(0 0 6px rgba(var(--accent-rgb, 96, 165, 250), 0.8))' : 'none'
+                    }}
                   />
                   {/* Playing indicator dot */}
                   {(isMusicPlaying || streamingActive) && (
@@ -321,8 +329,8 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                   )}
                 </motion.div>
                 
-                {/* Animated Music Wave Bars */}
-                <MusicWaveBars isPlaying={isMusicPlaying || streamingActive} color={isMusicPlaying || streamingActive ? "green" : "blue"} />
+                {/* Animated Music Wave Bars - Theme-aware */}
+                <MusicWaveBars isPlaying={isMusicPlaying || streamingActive} isActive={isMusicPlaying || streamingActive} />
               </motion.button>
             )}
 
@@ -400,15 +408,18 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                   }}
                   className={cn(
                     "relative h-10 w-10 rounded-xl flex items-center justify-center",
-                    "bg-gradient-to-br from-blue-500/40 to-blue-600/30",
-                    "hover:from-blue-500/50 hover:to-blue-600/40",
-                    "border border-blue-400/50 transition-all duration-200"
+                    "hover:opacity-90",
+                    "transition-all duration-200"
                   )}
+                  style={{
+                    background: 'linear-gradient(to bottom right, rgba(var(--accent-rgb, 59, 130, 246), 0.4), rgba(var(--accent-rgb, 59, 130, 246), 0.3))',
+                    border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
+                  }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <BlueShimmer />
-                  <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.3 }} className="text-blue-300">
+                  <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.3 }} style={{ color: 'var(--accent-color, #93c5fd)' }}>
                     <IconChevronUp className="h-4 w-4" />
                   </motion.div>
                 </motion.button>
@@ -417,12 +428,14 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                   <motion.div
                     className={cn(
                       "relative h-10 w-10 rounded-xl flex items-center justify-center border",
-                      isStreamingSource && streamingActive
-                        ? "bg-gradient-to-br from-blue-500/40 to-cyan-500/30 border-blue-400/60" 
-                        : "bg-white/15 border-white/25"
+                      !isStreamingSource || !streamingActive ? "bg-white/15 border-white/25" : ""
                     )}
+                    style={isStreamingSource && streamingActive ? {
+                      background: 'linear-gradient(to bottom right, rgba(var(--accent-rgb, 59, 130, 246), 0.4), rgba(6, 182, 212, 0.3))',
+                      borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)',
+                    } : {}}
                     animate={isStreamingSource && streamingActive ? { 
-                      boxShadow: ["0 0 0 0 rgba(59, 130, 246, 0)", "0 0 15px 3px rgba(59, 130, 246, 0.15)", "0 0 0 0 rgba(59, 130, 246, 0)"]
+                      boxShadow: ["0 0 0 0 rgba(var(--accent-rgb, 59, 130, 246), 0)", "0 0 15px 3px rgba(var(--accent-rgb, 59, 130, 246), 0.15)", "0 0 0 0 rgba(var(--accent-rgb, 59, 130, 246), 0)"]
                     } : {}}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
@@ -434,7 +447,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                       <div className="text-[12px] font-semibold leading-tight text-white">
                         {isStreamingSource && streamingActive ? sourceLabel[musicSource] : "🎵 Audio"}
                       </div>
-                      <div className="text-[10px] text-blue-300/70 leading-tight">
+                      <div className="text-[10px] leading-tight" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)' }}>
                         {isStreamingSource && streamingActive ? "Playing" : "Choose service"}
                       </div>
                     </motion.div>
@@ -444,16 +457,17 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                 <div className="flex items-center gap-1.5">
                   <motion.button
                     onClick={() => { SoundEffects.click(); toggleMusic(); }}
-                    className={cn(
-                      "relative h-10 w-10 rounded-xl flex items-center justify-center",
-                      "bg-gradient-to-br from-white/25 to-white/15",
-                      "hover:from-white/35 hover:to-white/25",
-                      "border border-white/30 transition-all"
-                    )}
+                    className="relative h-10 w-10 rounded-xl flex items-center justify-center transition-all"
+                    style={{
+                      background: 'linear-gradient(to bottom right, rgba(var(--accent-rgb, 59, 130, 246), 0.4), rgba(var(--accent-rgb, 59, 130, 246), 0.25))',
+                      border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
+                    }}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    {isMusicPlaying ? <IconPlayerPause className="h-4 w-4 text-blue-300" /> : <IconPlayerPlay className="h-4 w-4 text-blue-300" />}
+                    {isMusicPlaying 
+                      ? <IconPlayerPause className="h-4 w-4" style={{ color: 'var(--accent-color, #93c5fd)' }} /> 
+                      : <IconPlayerPlay className="h-4 w-4" style={{ color: 'var(--accent-color, #93c5fd)' }} />}
                   </motion.button>
 
                   {open && (
@@ -461,11 +475,15 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       onClick={() => { SoundEffects.click(); setOpen(false); }}
-                      className="h-10 w-10 rounded-xl flex items-center justify-center bg-blue-500/40 hover:bg-blue-500/50 border border-blue-400/50 transition-all"
+                      className="h-10 w-10 rounded-xl flex items-center justify-center transition-all"
+                      style={{
+                        backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
+                        border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
+                      }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <IconX className="h-4 w-4 text-sky-200" />
+                      <IconX className="h-4 w-4" style={{ color: 'var(--accent-color, #e0f2fe)' }} />
                     </motion.button>
                   )}
                 </div>
@@ -481,26 +499,26 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                     transition={{ duration: 0.2 }}
                     className="px-3 pb-3 overflow-hidden"
                   >
-                    {/* Streaming Status */}
+                    {/* Streaming Status - Theme-aware */}
                     {isStreamingSource && streamingEmbedUrl && streamingActive && (
                       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-2 px-2 py-1.5 rounded-lg bg-white/15 border border-white/25 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="flex gap-0.5 h-3 items-end">
-                            <motion.div className="w-0.5 bg-blue-400" animate={{ height: [4, 12, 4] }} transition={{ duration: 0.5, repeat: Infinity }} />
-                            <motion.div className="w-0.5 bg-blue-400" animate={{ height: [10, 5, 10] }} transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }} />
-                            <motion.div className="w-0.5 bg-blue-400" animate={{ height: [6, 10, 6] }} transition={{ duration: 0.5, repeat: Infinity, delay: 0.2 }} />
+                            <motion.div className="w-0.5 rounded-full" style={{ backgroundColor: 'var(--accent-color, #60a5fa)' }} animate={{ height: [4, 12, 4] }} transition={{ duration: 0.5, repeat: Infinity }} />
+                            <motion.div className="w-0.5 rounded-full" style={{ backgroundColor: 'var(--accent-color, #60a5fa)' }} animate={{ height: [10, 5, 10] }} transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }} />
+                            <motion.div className="w-0.5 rounded-full" style={{ backgroundColor: 'var(--accent-color, #60a5fa)' }} animate={{ height: [6, 10, 6] }} transition={{ duration: 0.5, repeat: Infinity, delay: 0.2 }} />
                           </div>
                           <span className="text-[10px] text-white/80 font-medium">{sourceLabel[musicSource]}</span>
                         </div>
-                        <button onClick={() => { SoundEffects.click(); setStreamingActive(false); setMusicEnabled(false); }} className="text-[9px] text-sky-200 hover:text-sky-100">Stop</button>
+                        <button onClick={() => { SoundEffects.click(); setStreamingActive(false); setMusicEnabled(false); }} className="text-[9px] hover:opacity-80 transition-opacity" style={{ color: 'var(--accent-color, #e0f2fe)' }}>Stop</button>
                       </motion.div>
                     )}
 
-                    {/* Music Service Selection */}
+                    {/* Music Service Selection - Theme-aware */}
                     <div className="mb-3">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[11px] text-white/70 font-medium">🎧 Music Service</span>
-                        {!streamingActive && <span className="text-[9px] text-blue-400 shimmer-pulse">Tap one</span>}
+                        {!streamingActive && <span className="text-[9px] shimmer-pulse" style={{ color: 'var(--accent-color, #60a5fa)' }}>Tap one</span>}
                       </div>
                       <div className="grid grid-cols-3 gap-1.5">
                         {streamingOptions.map((opt) => {
@@ -511,10 +529,13 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                               onClick={() => { SoundEffects.click(); handleStreamingSelect(opt.value); }}
                               className={cn(
                                 "relative h-12 rounded-lg flex flex-col items-center justify-center gap-1 text-[9px] font-medium transition-all overflow-hidden",
-                                isActive
-                                  ? "bg-gradient-to-br from-blue-500/25 via-sky-500/20 to-blue-600/25 border-blue-400/50 text-sky-100 border"
-                                  : "bg-white/15 border border-white/25 text-white/80 hover:bg-white/25 hover:text-white"
+                                !isActive && "bg-white/15 border border-white/25 text-white/80 hover:bg-white/25 hover:text-white"
                               )}
+                              style={isActive ? {
+                                background: 'linear-gradient(to bottom right, rgba(var(--accent-rgb, 59, 130, 246), 0.25), rgba(14, 165, 233, 0.2), rgba(var(--accent-rgb, 59, 130, 246), 0.25))',
+                                border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
+                                color: 'var(--accent-color, #e0f2fe)',
+                              } : {}}
                               whileTap={{ scale: 0.95 }}
                             >
                               {opt.icon}
@@ -534,7 +555,11 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                         <span className="text-[11px] text-white/70 font-medium">🔊 Volume</span>
                         <motion.button
                           onClick={() => { SoundEffects.click(); setTipsMuted(!tipsMuted); }}
-                          className={cn("px-2 py-0.5 rounded text-[8px] font-medium transition-colors", tipsMuted ? "bg-white/15 text-white/60" : "bg-blue-500/40 text-blue-200")}
+                          className={cn("px-2 py-0.5 rounded text-[8px] font-medium transition-colors", tipsMuted ? "bg-white/15 text-white/60" : "")}
+                          style={!tipsMuted ? {
+                            backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
+                            color: 'var(--accent-color, #bfdbfe)',
+                          } : {}}
                         >
                           Tips: {tipsMuted ? "OFF" : "ON"}
                         </motion.button>
@@ -589,9 +614,9 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                       </div>
                     )}
 
-                    {/* Bottom actions */}
+                    {/* Bottom actions - Theme-aware */}
                     <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                      <button onClick={() => { SoundEffects.click(); setMusicEnabled(false); setMusicEmbedOpen(true); setOpen(false); }} className="text-[9px] text-blue-300/70 hover:text-blue-200 transition-colors">🎵 Full Library</button>
+                      <button onClick={() => { SoundEffects.click(); setMusicEnabled(false); setMusicEmbedOpen(true); setOpen(false); }} className="text-[9px] hover:opacity-80 transition-opacity" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)' }}>🎵 Full Library</button>
                       <button onClick={() => setShowTipsOverlay(true)} className="text-[9px] text-white/40 hover:text-white/70 transition-colors flex items-center gap-1">
                         <IconInfoCircle className="w-3 h-3" />Help
                       </button>

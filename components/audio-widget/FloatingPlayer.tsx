@@ -659,32 +659,31 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               onMouseLeave={() => setHoveredButton(null)}
               className={cn(
                 "fixed left-3 bottom-14 flex items-center gap-1.5 px-2.5 py-2 rounded-xl",
-                "bg-gradient-to-br from-blue-600/40 via-blue-500/25 to-slate-900/50",
-                "backdrop-blur-2xl border border-blue-500/50",
-                "shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30",
-                "hover:border-blue-400/70 transition-all duration-200",
+                "backdrop-blur-2xl transition-all duration-200",
                 "pointer-events-auto"
               )}
+              data-theme-aware
               style={{
                 zIndex: 100201, // Just above MainWidget z-[100200]
+                background: 'linear-gradient(to bottom right, rgba(var(--accent-rgb, 59, 130, 246), 0.4), rgba(var(--accent-rgb, 59, 130, 246), 0.25), rgba(15, 23, 42, 0.5))',
+                border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
+                boxShadow: '0 10px 15px -3px rgba(var(--accent-rgb, 59, 130, 246), 0.2)',
               }}
               whileHover={{ scale: 1.05, x: 2 }}
               whileTap={{ scale: 0.95 }}
             >
-              {/* Music Icon with pulse */}
+              {/* Music Icon with pulse - Theme-aware */}
               <motion.div
                 animate={isPlaying ? { scale: [1, 1.1, 1] } : {}}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                 className="relative"
               >
                 <IconMusic 
-                  className={cn(
-                    "w-4 h-4",
-                    isPlaying ? "text-blue-300" : "text-blue-400/70"
-                  )} 
-                  style={isPlaying ? {
-                    filter: "drop-shadow(0 0 6px rgba(96, 165, 250, 0.8))"
-                  } : {}}
+                  className="w-4 h-4"
+                  style={{ 
+                    color: isPlaying ? 'var(--accent-color, #93c5fd)' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)',
+                    filter: isPlaying ? 'drop-shadow(0 0 6px rgba(var(--accent-rgb, 96, 165, 250), 0.8))' : 'none'
+                  }}
                 />
                 {/* Playing indicator dot */}
                 {isPlaying && (
@@ -697,17 +696,17 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 )}
               </motion.div>
               
-              {/* Animated Music Wave Bars */}
+              {/* Animated Music Wave Bars - Theme-aware */}
               <div className="flex items-end gap-[2px] h-[14px]">
                 {[0, 1, 2, 3].map((i) => (
                   <motion.div
                     key={i}
                     className="w-[3px] rounded-full origin-bottom"
                     style={{ 
-                      backgroundColor: isPlaying ? "#34d399" : "#60a5fa",
+                      backgroundColor: isPlaying ? "#34d399" : "var(--accent-color, #60a5fa)",
                       boxShadow: isPlaying 
                         ? "0 0 4px rgba(52, 211, 153, 0.6)"
-                        : "0 0 4px rgba(96, 165, 250, 0.6)",
+                        : "0 0 4px rgba(var(--accent-rgb, 96, 165, 250), 0.6)",
                     }}
                     animate={isPlaying ? {
                       height: [
@@ -755,32 +754,31 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               onMouseLeave={() => setHoveredButton(null)}
               className={cn(
                 "fixed left-3 bottom-14 flex items-center gap-1.5 px-2.5 py-2 rounded-xl",
-                "bg-gradient-to-br from-blue-600/40 via-blue-500/25 to-slate-900/50",
-                "backdrop-blur-2xl border border-blue-500/50",
-                "shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30",
-                "hover:border-blue-400/70 transition-all duration-200",
+                "backdrop-blur-2xl transition-all duration-200",
                 "pointer-events-auto"
               )}
+              data-theme-aware
               style={{
                 zIndex: 100201, // Just above MainWidget z-[100200]
+                background: 'linear-gradient(to bottom right, rgba(var(--accent-rgb, 59, 130, 246), 0.4), rgba(var(--accent-rgb, 59, 130, 246), 0.25), rgba(15, 23, 42, 0.5))',
+                border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
+                boxShadow: '0 10px 15px -3px rgba(var(--accent-rgb, 59, 130, 246), 0.2)',
               }}
               whileHover={{ scale: 1.05, x: 2 }}
               whileTap={{ scale: 0.95 }}
             >
-              {/* Music Icon with pulse */}
+              {/* Music Icon with pulse - Theme-aware */}
               <motion.div
                 animate={isPlaying ? { scale: [1, 1.1, 1] } : {}}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                 className="relative"
               >
                 <IconMusic 
-                  className={cn(
-                    "w-4 h-4",
-                    isPlaying ? "text-blue-300" : "text-blue-400/70"
-                  )} 
-                  style={isPlaying ? {
-                    filter: "drop-shadow(0 0 6px rgba(96, 165, 250, 0.8))"
-                  } : {}}
+                  className="w-4 h-4"
+                  style={{ 
+                    color: isPlaying ? 'var(--accent-color, #93c5fd)' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)',
+                    filter: isPlaying ? 'drop-shadow(0 0 6px rgba(var(--accent-rgb, 96, 165, 250), 0.8))' : 'none'
+                  }}
                 />
                 {/* Playing indicator dot */}
                 {isPlaying && (
@@ -793,17 +791,17 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 )}
               </motion.div>
               
-              {/* Animated Music Wave Bars */}
+              {/* Animated Music Wave Bars - Theme-aware */}
               <div className="flex items-end gap-[2px] h-[14px]">
                 {[0, 1, 2, 3].map((i) => (
                   <motion.div
                     key={i}
                     className="w-[3px] rounded-full origin-bottom"
                     style={{ 
-                      backgroundColor: isPlaying ? "#34d399" : "#60a5fa",
+                      backgroundColor: isPlaying ? "#34d399" : "var(--accent-color, #60a5fa)",
                       boxShadow: isPlaying 
                         ? "0 0 4px rgba(52, 211, 153, 0.6)"
-                        : "0 0 4px rgba(96, 165, 250, 0.6)",
+                        : "0 0 4px rgba(var(--accent-rgb, 96, 165, 250), 0.6)",
                     }}
                     animate={isPlaying ? {
                       height: [
@@ -833,7 +831,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               />
             </motion.button>
           ) : (
-            /* Full pull tab when no UI is overlaying */
+            /* Full pull tab when no UI is overlaying - Theme-aware */
             <motion.button
               key="full-tab"
               initial={{ opacity: 0, x: playerSide === 'left' ? -100 : 100, scale: 0.8 }}
@@ -846,18 +844,19 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               className={cn(
                 "fixed flex items-center gap-3 py-3.5 backdrop-blur-2xl",
                 "bg-gradient-to-br from-slate-900/98 via-gray-900/98 to-black/98",
-                "border-2 border-slate-500/60 shadow-2xl",
-                "hover:shadow-blue-500/40 hover:border-blue-400/60 hover:scale-105",
+                "border-2 shadow-2xl",
                 "active:scale-95",
                 isPlaying && "animate-pulse-subtle",
                 playerSide === 'left'
                   ? "left-0 pl-3 pr-5 rounded-r-3xl border-l-0"
                   : "right-0 pr-3 pl-5 rounded-l-3xl border-r-0"
               )}
+              data-theme-aware
               style={{
                 zIndex: Z_INDEX.PULL_TAB,
+                borderColor: 'rgba(var(--accent-rgb, 100, 116, 139), 0.6)',
                 boxShadow: isPlaying
-                  ? '0 0 30px rgba(59, 130, 246, 0.3), 0 10px 40px rgba(0,0,0,0.5)'
+                  ? '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.3), 0 10px 40px rgba(0,0,0,0.5)'
                   : '0 10px 40px rgba(0,0,0,0.5)',
               }}
             >
@@ -871,10 +870,11 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 </motion.div>
               )}
 
-              {/* Pulsing indicator */}
+              {/* Pulsing indicator - Theme-aware */}
               <div className="relative">
                 <motion.div
-                  className="absolute -inset-2 bg-blue-500/25 rounded-2xl blur-lg"
+                  className="absolute -inset-2 rounded-2xl blur-lg"
+                  style={{ backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.25)' }}
                   animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
                   transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
                 />
@@ -888,7 +888,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                     {[1, 2, 3, 4].map(i => (
                       <motion.div
                         key={i}
-                        className="w-[3px] bg-blue-400 rounded-full origin-bottom"
+                        className="w-[3px] rounded-full origin-bottom"
+                        style={{ height: 10, backgroundColor: 'var(--accent-color, #60a5fa)' }}
                         animate={{ scaleY: isPlaying ? [0.3, 1, 0.3] : 0.3 }}
                         transition={{
                           duration: 0.5,
@@ -896,7 +897,6 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                           delay: i * 0.08,
                           ease: "easeInOut"
                         }}
-                        style={{ height: 10 }}
                       />
                     ))}
                   </div>
@@ -908,10 +908,10 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 </div>
               </div>
 
-              {/* Text label */}
+              {/* Text label - Theme-aware */}
               <div className="flex flex-col">
                 <span className="text-[10px] font-bold text-white/90">{sourceLabel[musicSource]}</span>
-                <span className="text-[8px] text-blue-400/80 font-medium">♪ Playing</span>
+                <span className="text-[8px] font-medium" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)' }}>♪ Playing</span>
               </div>
 
               {/* Right chevron for left side */}

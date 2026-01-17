@@ -1262,12 +1262,12 @@ export const Slider = React.memo(function Slider({
         <div className="flex items-center gap-2">
           <span className="text-white/80 font-medium">{label}</span>
           {hint && (
-            <span className="text-[9px] text-blue-400/60 opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="text-[9px] opacity-0 group-hover:opacity-100 transition-opacity\" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }}>
               {hint}
             </span>
           )}
         </div>
-        <span className="tabular-nums text-blue-300/80 font-medium">{pct}%</span>
+        <span className="tabular-nums font-medium" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)' }}>{pct}%</span>
       </div>
       <div className="relative">
         <input
@@ -1281,12 +1281,13 @@ export const Slider = React.memo(function Slider({
           disabled={disabled}
           className="w-full h-2 rounded-full appearance-none cursor-pointer bg-white/10 
                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
-                     [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-400 
-                     [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-blue-500/30
-                     [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-300/50
+                     [&::-webkit-slider-thumb]:rounded-full
+                     [&::-webkit-slider-thumb]:shadow-lg
+                     [&::-webkit-slider-thumb]:border-2
                      [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-110"
           style={{
-            background: `linear-gradient(to right, rgba(59, 130, 246, 0.5) 0%, rgba(59, 130, 246, 0.5) ${pct}%, rgba(255,255,255,0.1) ${pct}%, rgba(255,255,255,0.1) 100%)`
+            background: `linear-gradient(to right, rgba(var(--accent-rgb, 59, 130, 246), 0.5) 0%, rgba(var(--accent-rgb, 59, 130, 246), 0.5) ${pct}%, rgba(255,255,255,0.1) ${pct}%, rgba(255,255,255,0.1) 100%)`,
+            // Note: slider thumb colors need to be set via CSS custom properties in globals.css
           }}
         />
       </div>
