@@ -88,6 +88,16 @@ export const CRYPTO_KEYWORDS = [
   "how to trade bitcoin", "learn bitcoin trading", "bitcoin trading for beginners",
   "bitcoin trading 2026", "bitcoin trading strategy 2026", "bitcoin prediction 2026",
   
+  // 🔥 BITCOIN 2026 TRENDING
+  "bitcoin $100k", "BTC $100K", "bitcoin 100000", "bitcoin to 100k",
+  "bitcoin supercycle", "bitcoin supercycle 2026", "bitcoin bull run 2026",
+  "bitcoin halving effect", "bitcoin halving 2024 effect",
+  "bitcoin ETF", "bitcoin spot ETF", "bitcoin ETF inflows",
+  "bitcoin institutional", "bitcoin institutional adoption",
+  "bitcoin corporate treasury", "companies buying bitcoin",
+  "bitcoin mining 2026", "bitcoin miners", "solo bitcoin mining",
+  "bitcoin hashrate", "bitcoin difficulty",
+  
   // Ethereum Keywords
   "ethereum trading", "ethereum analysis", "ethereum price", "ethereum price today",
   "ethereum price prediction", "ethereum chart", "ethereum technical analysis",
@@ -95,6 +105,13 @@ export const CRYPTO_KEYWORDS = [
   "ethereum buy or sell", "ethereum trading strategy", "ethereum day trading",
   "ethereum news", "ethereum news today", "ethereum market analysis",
   "how to trade ethereum", "learn ethereum trading", "ethereum trading for beginners",
+  
+  // 🔥 ETHEREUM 2026 TRENDING
+  "ETH $15000", "ethereum 15000", "ethereum price target",
+  "ethereum supercycle", "ethereum supercycle 2026",
+  "ethereum staking", "ETH staking", "ethereum staking rewards",
+  "ethereum staking backlog", "ethereum validator",
+  "ethereum 2026 prediction", "ethereum price prediction 2026",
   
   // Altcoin Keywords
   "altcoin trading", "altcoin analysis", "altcoin price", "best altcoins",
@@ -144,6 +161,86 @@ export const CRYPTO_KEYWORDS = [
   // NFT Keywords
   "nft trading", "nft market", "nft news", "nft analysis",
   "best nfts", "nft trading strategy",
+  
+  // 🔥 2026 TRENDING CRYPTO KEYWORDS
+  // Tokenization (HOTTEST TREND 2026)
+  "tokenized stocks", "tokenized gold", "tokenized assets",
+  "RWA crypto", "real world assets crypto", "tokenization 2026",
+  "tokenized securities", "blockchain tokenization",
+  "tokenized funds", "tokenized real estate",
+  
+  // Stablecoins (HOT 2026)
+  "stablecoin news", "stablecoin payments", "stablecoin trading",
+  "USDC", "USDT", "stablecoin regulation 2026",
+  "crypto payments", "stablecoin bill", "stablecoin interest",
+  "crypto card", "crypto debit card", "crypto credit card",
+  
+  // Crypto Regulation 2026
+  "crypto regulation 2026", "crypto bill", "SEC crypto",
+  "crypto tax 2026", "crypto policy", "bitcoin regulation",
+  "clarity act crypto", "crypto market structure bill",
+  "crypto congress", "crypto senate",
+  
+  // AI + Crypto (HOT 2026)
+  "AI crypto", "AI crypto coins", "artificial intelligence crypto",
+  "AI trading", "AI trading bot", "machine learning trading",
+  "AI crypto tokens", "AI blockchain",
+  
+  // Meme Coins 2026
+  "meme coins 2026", "best meme coins", "meme coin trading",
+  "dogecoin 2026", "shiba inu 2026", "pepe 2026",
+];
+
+// ============================================
+// 🔥 2026 TRENDING KEYWORDS (NEW SECTION)
+// ============================================
+export const TRENDING_2026_KEYWORDS = [
+  // Bitcoin Price Targets
+  "bitcoin $100k", "BTC to 100k", "bitcoin 100000",
+  "bitcoin price target 2026", "bitcoin all time high",
+  "bitcoin new ATH", "bitcoin price prediction January 2026",
+  
+  // Ethereum Price Targets
+  "ETH $15000", "ethereum 15k", "ethereum price target 2026",
+  "ethereum all time high", "ethereum 2027 prediction",
+  
+  // Fed & Interest Rates (HOT)
+  "fed rate cut 2026", "interest rate decision 2026",
+  "FOMC meeting January 2026", "fed chair 2026",
+  "Kevin Warsh fed chair", "federal reserve 2026",
+  "inflation news 2026", "rate cut prediction",
+  "monetary policy 2026", "fed independence",
+  
+  // Stock Market 2026
+  "S&P 500 7000", "Nasdaq 2026", "dow jones 2026",
+  "stock market prediction 2026", "stock market outlook 2026",
+  "tech stocks 2026", "AI stocks 2026", "Nvidia stock 2026",
+  "Micron stock", "AMD stock", "power stocks",
+  
+  // Silver (TRENDING UP 25%)
+  "silver price 2026", "silver trading 2026", "silver 25% gain",
+  "silver analysis", "silver vs gold", "silver prediction",
+  "XAGUSD 2026", "silver rally",
+  
+  // Gold 2026
+  "gold price 2026", "gold trading 2026", "gold analysis 2026",
+  "gold vs bitcoin 2026", "gold quantum computing",
+  "gold safe haven", "gold inflation hedge",
+  
+  // Prop Trading 2026
+  "prop firm 2026", "funded trader 2026", "FTMO 2026",
+  "best prop firm 2026", "prop firm challenge strategy",
+  "funded account 2026", "pass prop challenge",
+  
+  // Trading Strategies 2026
+  "best trading strategy 2026", "day trading 2026",
+  "swing trading 2026", "scalping strategy 2026",
+  "trading setups 2026", "market analysis 2026",
+  
+  // Investment 2026
+  "where to invest 2026", "best investment 2026",
+  "investment strategy 2026", "portfolio 2026",
+  "market outlook 2026", "financial planning 2026",
 ];
 
 // ============================================
@@ -611,6 +708,7 @@ export const ALL_SEO_KEYWORDS = [
   ...TOOLS_KEYWORDS,
   ...TRENDING_KEYWORDS,
   ...QUESTION_KEYWORDS,
+  ...TRENDING_2026_KEYWORDS,
 ];
 
 // Get a subset for meta keywords (limit to ~100 most important)
@@ -626,9 +724,13 @@ export const META_KEYWORDS = [
   "bitcoin trading", "crypto trading", "ethereum trading",
   "altcoin trading", "cryptocurrency analysis", "BTC price",
   
+  // 🔥 2026 Trending Crypto
+  "bitcoin $100k", "ETH $15000", "tokenized assets", "RWA crypto",
+  "stablecoin payments", "AI crypto", "crypto regulation 2026",
+  
   // Gold
   "gold trading", "XAUUSD", "gold analysis", "gold price today",
-  "precious metals trading",
+  "precious metals trading", "silver trading", "silver 2026",
   
   // Forex
   "forex trading", "forex analysis", "EURUSD", "GBPUSD",
@@ -636,11 +738,15 @@ export const META_KEYWORDS = [
   
   // Stocks
   "stock trading", "S&P 500", "Nasdaq", "day trading",
-  "swing trading", "stock analysis",
+  "swing trading", "stock analysis", "AI stocks 2026",
   
   // News
   "heavy news", "market news", "trading news",
   "economic news", "financial news", "market analysis",
+  
+  // 🔥 Fed & Economic 2026
+  "fed rate cut 2026", "FOMC meeting", "interest rate decision",
+  "inflation news 2026", "monetary policy 2026",
   
   // Education
   "trading for beginners", "learn to trade", "trading course",
@@ -648,12 +754,15 @@ export const META_KEYWORDS = [
   
   // Prop firms
   "prop firm", "funded trader", "FTMO", "prop firm challenge",
+  "prop firm 2026", "funded trader 2026",
   
   // Tools
   "TradingView", "trading charts", "market charts",
   
-  // 2026
+  // 2026 Keywords
   "trading 2026", "best trading strategy 2026", "crypto 2026",
+  "bitcoin 2026", "gold 2026", "forex 2026", "stock market 2026",
+  "where to invest 2026", "market outlook 2026",
 ];
 
 export default ALL_SEO_KEYWORDS;

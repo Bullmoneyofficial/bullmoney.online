@@ -14,14 +14,19 @@ import { cn } from "@/lib/utils";
 
 // ✅ VERCEL ANALYTICS & SPEED INSIGHTS - Track all pages from root layout
 // Works with Vercel Free Plan - page views are unlimited, custom events limited to 2,500/month
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/react";
+import { VercelAnalyticsWrapper } from "@/components/VercelAnalyticsWrapper";
 
 // ✅ ENHANCED WEB VITALS - Report Core Web Vitals to Vercel dashboard with bot filtering
 import { WebVitalsEnhanced } from "@/components/WebVitalsEnhanced";
 
 // ✅ SEO STRUCTURED DATA - JSON-LD for rich search results (stars, FAQs, courses)
 import { AllSEOSchemas } from "@/components/SEOSchemas";
+
+// ✅ ADVANCED SEO - HowTo, Event, Service, Video schemas for Google #1 ranking
+import { AdvancedSEO } from "@/components/AdvancedSEO";
+
+// ✅ GOOGLE SEO BOOST - Maximum ranking power with all schema types
+import { GoogleSEOBoost } from "@/components/GoogleSEOBoost";
 
 import { ThemeProvider } from "@/context/providers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -65,7 +70,7 @@ export const metadata: Metadata = {
     "Join BullMoney - the #1 FREE trading community for Crypto, Gold, Forex & Stocks. Get free trading setups, expert market analysis, live trading mentorship, heavy market news, and connect with 10,000+ traders. Free trading mentor for beginners. Start your trading journey today!",
   
   // ============================================
-  // KEYWORDS - 100+ Primary Keywords for SEO
+  // KEYWORDS - 150+ Primary Keywords for SEO (2026 TRENDING)
   // ============================================
   keywords: [
     // Brand Keywords
@@ -103,13 +108,57 @@ export const metadata: Metadata = {
     "altcoin trading", "crypto market", "crypto news", "crypto analysis",
     "best crypto to buy", "crypto trading for beginners", "learn crypto trading",
     
+    // ============================================
+    // 🔥 2026 TRENDING KEYWORDS (HOT SEARCHES)
+    // ============================================
+    
+    // Bitcoin 2026 Trends
+    "bitcoin $100k", "BTC $100K", "bitcoin price prediction 2026",
+    "bitcoin supercycle", "bitcoin mining 2026", "bitcoin halving effect",
+    "bitcoin ETF", "bitcoin institutional adoption", "bitcoin price target",
+    
+    // Ethereum 2026 Trends
+    "ETH $15000", "ethereum 2026 prediction", "ethereum staking",
+    "ETH staking rewards", "ethereum supercycle", "ethereum price target 2026",
+    
+    // Tokenization Trends (HOT in 2026)
+    "tokenized stocks", "tokenized gold", "tokenized assets",
+    "RWA crypto", "real world assets crypto", "tokenization 2026",
+    
+    // Stablecoin Trends
+    "stablecoin news", "stablecoin payments", "USDC", "USDT",
+    "stablecoin regulation 2026", "crypto payments",
+    
+    // Fed & Interest Rate Keywords (HOT)
+    "fed rate cut 2026", "interest rate decision", "FOMC meeting",
+    "fed chair news", "federal reserve 2026", "inflation news 2026",
+    "rate cut prediction", "monetary policy 2026",
+    
+    // AI + Crypto Trends (HOT)
+    "AI crypto", "AI trading", "AI trading bot", "AI crypto coins",
+    "artificial intelligence trading", "machine learning trading",
+    
+    // Prop Trading 2026
+    "prop firm 2026", "funded trader 2026", "FTMO 2026",
+    "best prop firm 2026", "prop firm challenge strategy",
+    
+    // Silver & Precious Metals (TRENDING)
+    "silver price", "silver trading", "silver 2026", "silver analysis",
+    "precious metals trading", "gold vs silver", "silver price prediction",
+    
+    // Solana & Altcoins (HOT)
+    "solana trading", "SOL price", "XRP news", "XRP price",
+    "altcoin season 2026", "best altcoins 2026", "meme coins 2026",
+    
     // Forex Keywords
     "forex trading", "forex analysis", "forex for beginners", "how to trade forex",
     "EURUSD", "GBPUSD", "USDJPY", "forex community", "forex mentor",
     
-    // Stock Market Keywords
+    // Stock Market Keywords (2026)
     "stock trading", "stock market", "S&P 500", "Nasdaq", "day trading",
     "swing trading", "stock analysis", "stock trading for beginners",
+    "S&P 500 7000", "Nasdaq 2026", "stock market prediction 2026",
+    "tech stocks 2026", "AI stocks 2026", "Nvidia stock",
     
     // Trading Education Keywords
     "trading for beginners", "trading for beginners 2026", "how to start trading",
@@ -132,8 +181,13 @@ export const metadata: Metadata = {
     // Trading Tools
     "TradingView", "trading charts", "economic calendar",
     
+    // Crypto Regulation & Policy (HOT 2026)
+    "crypto regulation 2026", "crypto bill", "SEC crypto",
+    "crypto tax 2026", "crypto policy", "bitcoin regulation",
+    
     // 2026 Keywords
-    "trading 2026", "best trading strategy 2026", "crypto 2026", "gold 2026"
+    "trading 2026", "best trading strategy 2026", "crypto 2026", "gold 2026",
+    "market outlook 2026", "investment 2026", "where to invest 2026"
   ],
   
   // ============================================
@@ -841,39 +895,7 @@ export default function RootLayout({
             - Custom events: 2,500/month
             - Speed Insights: Included
         */}
-        <Analytics 
-          mode="production"
-          debug={process.env.NODE_ENV === 'development'}
-          beforeSend={(event) => {
-            // Filter out bot traffic and internal paths
-            if (typeof window !== 'undefined') {
-              const ua = navigator.userAgent.toLowerCase();
-              // Skip bots
-              if (/bot|crawler|spider|scraper|headless|puppeteer|lighthouse/i.test(ua)) {
-                return null;
-              }
-              // Skip internal/admin paths from analytics (saves quota)
-              if (event.url.includes('/api/') || event.url.includes('/_next/')) {
-                return null;
-              }
-            }
-            return event;
-          }}
-        />
-        <SpeedInsights 
-          debug={process.env.NODE_ENV === 'development'}
-          sampleRate={1}
-          beforeSend={(data) => {
-            // Filter bot traffic from Speed Insights
-            if (typeof window !== 'undefined') {
-              const ua = navigator.userAgent.toLowerCase();
-              if (/bot|crawler|spider|lighthouse|pagespeed|gtmetrix/i.test(ua)) {
-                return null;
-              }
-            }
-            return data;
-          }}
-        />
+        <VercelAnalyticsWrapper />
         <WebVitalsEnhanced />
         
         {/* ✅ SEO STRUCTURED DATA - JSON-LD Schemas for Rich Search Results
@@ -885,6 +907,28 @@ export default function RootLayout({
             - Software: App schema
         */}
         <AllSEOSchemas />
+        
+        {/* ✅ ADVANCED SEO - Additional schemas for Google #1 ranking
+            - HowTo: "How to start trading" rich snippets
+            - Event: Live trading sessions
+            - Service: Mentorship service
+            - Video: Trading tutorials
+            - Review: Star ratings
+            - ItemList: Market coverage
+        */}
+        <AdvancedSEO />
+        
+        {/* ✅ GOOGLE SEO BOOST - Maximum ranking power
+            - Breadcrumb: Site navigation structure
+            - CollectionPage: Blog/news sections
+            - FinancialService: Trading mentorship
+            - LearningResource: Education content
+            - Speakable: Voice search optimization
+            - WebsiteSearch: Site search action
+            - SoftwareApp: Trading platform schema
+            - NewsArticleList: News section schema
+        */}
+        <GoogleSEOBoost />
       </body>
     </html>
   );

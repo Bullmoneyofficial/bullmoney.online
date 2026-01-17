@@ -16,7 +16,7 @@
  * - Debug mode for development
  */
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, Suspense } from 'react';
 import { useReportWebVitals } from 'next/web-vitals';
 import { usePathname, useSearchParams } from 'next/navigation';
 
@@ -185,7 +185,8 @@ function getVitalRating(name: string, value: number): 'good' | 'needs-improvemen
 // MAIN COMPONENT
 // ============================================
 
-export function WebVitalsEnhanced() {
+// Inner component that uses useSearchParams
+function WebVitalsInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isFirstLoad = useRef(true);
@@ -290,6 +291,15 @@ export function WebVitalsEnhanced() {
   }, []);
 
   return null;
+}
+
+// Wrapper component with Suspense boundary
+export function WebVitalsEnhanced() {
+  return (
+    <Suspense fallback={null}>
+      <WebVitalsInner />
+    </Suspense>
+  );
 }
 
 // ============================================

@@ -1,47 +1,111 @@
 # BullMoney Trading Community - robots.txt
+# OPTIMIZED FOR GOOGLE #1 RANKING
 # https://www.bullmoney.shop
+# 
+# Keywords: free trading mentor, trading community, gold trading, XAUUSD,
+# crypto trading, bitcoin, forex trading, heavy news, trading for beginners
 
-# Allow all search engines
+# Allow all search engines - FULL ACCESS
 User-agent: *
 Allow: /
 
-# Important pages for SEO
+# High Priority SEO Pages
 Allow: /about
 Allow: /shop
 Allow: /Blogs
 Allow: /Prop
 Allow: /socials
+Allow: /recruit
+
+# Allow all static assets for faster indexing
+Allow: /BULL.svg
+Allow: /*.js$
+Allow: /*.css$
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.svg$
+Allow: /*.webp$
 
 # Block API routes and internal paths
 Disallow: /api/
-Disallow: /_next/
+Disallow: /_next/static/
+Disallow: /_next/image/
 Disallow: /admin
 Disallow: /login
-Disallow: /register
 Disallow: /auth
+
+# Allow Next.js data for faster page loads
+Allow: /_next/data/
 
 # Block query parameters that create duplicate content
 Disallow: /*?*
 Allow: /*?utm_*
+Allow: /*?ref=*
 
-# Crawl delay for politeness
-Crawl-delay: 1
+# NO crawl delay for Google - we want fast indexing
+# Crawl-delay: 0
 
-# Sitemaps
+# Sitemaps - Multiple for redundancy
 Sitemap: https://www.bullmoney.shop/sitemap.xml
+Sitemap: https://bullmoney.shop/sitemap.xml
 
-# Google specific
+# =============================================
+# GOOGLE - PRIORITY CRAWLER (No restrictions)
+# =============================================
 User-agent: Googlebot
 Allow: /
-Crawl-delay: 0
+Disallow: /api/
+# No crawl delay - let Google crawl as fast as it wants
 
-# Bing specific
+User-agent: Googlebot-Image
+Allow: /
+Allow: /*.svg$
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.webp$
+
+User-agent: Googlebot-Video
+Allow: /
+
+User-agent: Googlebot-News
+Allow: /Blogs
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# =============================================
+# BING - SECONDARY PRIORITY
+# =============================================
 User-agent: Bingbot
 Allow: /
-Crawl-delay: 1
+Disallow: /api/
 
-# Social media bots - allow for rich previews
+User-agent: msnbot
+Allow: /
+
+# =============================================
+# OTHER SEARCH ENGINES
+# =============================================
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: yandex
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+# =============================================
+# SOCIAL MEDIA BOTS - ALLOW FOR RICH PREVIEWS
+# =============================================
 User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Facebot
 Allow: /
 
 User-agent: Twitterbot
@@ -58,3 +122,51 @@ Allow: /
 
 User-agent: WhatsApp
 Allow: /
+
+User-agent: Slackbot
+Allow: /
+
+User-agent: Pinterest
+Allow: /
+
+User-agent: Redditbot
+Allow: /
+
+# =============================================
+# SEO & ANALYTICS TOOLS
+# =============================================
+User-agent: AhrefsBot
+Allow: /
+
+User-agent: SemrushBot
+Allow: /
+
+User-agent: MJ12bot
+Allow: /
+
+User-agent: rogerbot
+Allow: /
+
+User-agent: dotbot
+Allow: /
+
+# =============================================
+# AI CRAWLERS - ALLOW FOR VISIBILITY
+# =============================================
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+# Host directive for canonical domain
+Host: https://www.bullmoney.shop
