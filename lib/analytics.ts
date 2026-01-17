@@ -24,8 +24,6 @@
  *   track('purchase', { productId: '123', price: 49.99 });
  */
 
-import { useCallback, useRef } from 'react';
-
 // ============================================
 // TYPE DEFINITIONS
 // ============================================
@@ -347,89 +345,6 @@ export function trackUIStateChange(
     modal: component,
     ...additionalData,
   });
-}
-
-// ============================================
-// REACT HOOK
-// ============================================
-
-/**
- * React hook for analytics tracking
- * Provides memoized tracking functions for use in components
- * 
- * @example
- * ```tsx
- * function MyComponent() {
- *   const { track, trackClick } = useAnalytics();
- *   
- *   return (
- *     <button onClick={() => trackClick('signup_button', { location: 'hero' })}>
- *       Sign Up
- *     </button>
- *   );
- * }
- * ```
- */
-export function useAnalytics() {
-  // Track component mount time for performance metrics
-  const mountTime = useRef(Date.now());
-  
-  const track = useCallback((
-    eventName: AnalyticsEventName,
-    eventData?: AnalyticsEventData
-  ) => {
-    trackEvent(eventName, eventData);
-  }, []);
-  
-  const trackClickEvent = useCallback((
-    elementName: string,
-    additionalData?: AnalyticsEventData
-  ) => {
-    trackClick(elementName, additionalData);
-  }, []);
-  
-  const trackViewEvent = useCallback((
-    viewName: string,
-    additionalData?: AnalyticsEventData
-  ) => {
-    trackView(viewName, additionalData);
-  }, []);
-  
-  const trackErrorEvent = useCallback((
-    errorType: string,
-    errorMessage: string,
-    additionalData?: AnalyticsEventData
-  ) => {
-    trackError(errorType, errorMessage, additionalData);
-  }, []);
-  
-  const trackUIChange = useCallback((
-    component: string,
-    action: 'open' | 'close',
-    additionalData?: AnalyticsEventData
-  ) => {
-    trackUIStateChange(component, action, additionalData);
-  }, []);
-  
-  // Track time spent when component unmounts
-  const trackTimeSpent = useCallback((componentName: string) => {
-    const timeSpent = Math.round((Date.now() - mountTime.current) / 1000);
-    if (timeSpent > 5) { // Only track if spent more than 5 seconds
-      trackEvent('feature_used', {
-        component: componentName,
-        timeSpentSeconds: timeSpent,
-      });
-    }
-  }, []);
-  
-  return {
-    track,
-    trackClick: trackClickEvent,
-    trackView: trackViewEvent,
-    trackError: trackErrorEvent,
-    trackUI: trackUIChange,
-    trackTimeSpent,
-  };
 }
 
 // ============================================
