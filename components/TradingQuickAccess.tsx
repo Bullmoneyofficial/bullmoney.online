@@ -187,20 +187,87 @@ export function TradingQuickAccess() {
     return () => clearTimeout(timer);
   }, [isExpanded]);
 
-  // Simulated price updates - in production, connect to real WebSocket/API
+  // Live price updates from real API - Updates every 1 second
   useEffect(() => {
-    const updatePrices = () => {
-      // Simulate price updates
-      setPrices({
-        xauusd: (2650 + Math.random() * 50).toFixed(2),
-        btcusd: (98000 + Math.random() * 2000).toFixed(0)
-      });
+    let isMounted = true;
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    const fetchPrices = async () => {
+      if (!isMounted) return;
+      
+      try {
+        // Use timestamp to prevent caching
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+        
+        const response = await fetch(`/api/prices/live?t=${Date.now()}`, { 
+          cache: 'no-store',
+          headers: { 
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (isMounted) {
+          // Update prices if valid data received
+          setPrices({
+            xauusd: data.xauusd || prices.xauusd,
+            btcusd: data.btcusd || prices.btcusd
+          });
+          
+          // Reset retry count on success
+          retryCount = 0;
+          
+          // Log debug info in development
+          if (data.debug && process.env.NODE_ENV === 'development') {
+            console.log('Price update:', {
+              gold: data.xauusd,
+              btc: data.btcusd,
+              sources: data.sources
+            });
+          }
+        }
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.warn('Price fetch timeout - using cached prices');
+        } else {
+          console.error('Failed to fetch live prices:', error);
+        }
+        
+        // Retry logic with exponential backoff
+        retryCount++;
+        if (retryCount < maxRetries) {
+          const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 5000);
+          setTimeout(() => {
+            if (isMounted) fetchPrices();
+          }, retryDelay);
+        }
+      }
     };
 
-    updatePrices();
-    const interval = setInterval(updatePrices, 3000);
-    return () => clearInterval(interval);
-  }, []);
+    // Initial fetch immediately
+    fetchPrices();
+    
+    // Update every 1 second for real-time prices
+    const interval = setInterval(() => {
+      fetchPrices();
+    }, 1000);
+    
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []); // Empty deps - run once and maintain interval
 
   // Rotate trading tips with slot machine spin effect
   useEffect(() => {
