@@ -620,9 +620,9 @@ const BrandIcons = {
 export const SocialsRow = () => {
   const marqueeSocials = useMemo(() => {
     const socials = [
-      { href: "https://youtube.com/@bullmoney.online", Icon: BrandIcons.Youtube, color: "text-red-500", label: "YouTube" },
-      { href: "https://www.instagram.com/bullmoney.online/", Icon: BrandIcons.Instagram, color: "text-pink-500", label: "Instagram" },
-      { href: "https://discord.com/invite/9vVB44ZrNA", Icon: BrandIcons.Discord, color: "text-indigo-500", label: "Discord" },
+      { href: "https://youtube.com/@bullmoney.online", Icon: BrandIcons.Youtube, color: "text-blue-400", label: "YouTube" },
+      { href: "https://www.instagram.com/bullmoney.online/", Icon: BrandIcons.Instagram, color: "text-blue-400", label: "Instagram" },
+      { href: "https://discord.com/invite/9vVB44ZrNA", Icon: BrandIcons.Discord, color: "text-blue-400", label: "Discord" },
       { href: "https://t.me/bullmoneyfx", Icon: BrandIcons.Telegram, color: "text-blue-400", label: "Telegram" },
     ];
     return [...socials, ...socials, ...socials, ...socials, ...socials, ...socials];
@@ -644,7 +644,7 @@ const LightweightEvervaultCard = ({ href, Icon, color, label }: { href: string; 
   function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent) { let { left, top } = currentTarget.getBoundingClientRect(); mouseX.set(clientX - left); mouseY.set(clientY - top); }
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" className="group relative block h-28 w-28 shrink-0 sm:h-32 sm:w-32" onMouseMove={onMouseMove}>
-      <div className="relative h-full w-full overflow-hidden rounded-xl bg-neutral-950 border border-white/10">
+      <div className="relative h-full w-full overflow-hidden rounded-xl bg-neutral-950 border border-blue-500/20">
         <div className="absolute inset-0 block sm:hidden">
             <div className="absolute inset-0 motion-safe:animate-[spin_6s_linear_infinite] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_270deg,rgba(59,130,246,0.2)_360deg)] opacity-50" /> 
         </div>
@@ -652,9 +652,9 @@ const LightweightEvervaultCard = ({ href, Icon, color, label }: { href: string; 
         <div className="relative flex h-full w-full flex-col items-center justify-center gap-2">
             <div className="relative flex items-center justify-center">
                 <div className="absolute inset-0 bg-blue-500/10 blur-xl rounded-full opacity-0 group-hover:opacity-70 transition-opacity duration-500" /> 
-                <Icon className={cn("h-8 w-8 transition-all duration-500 group-hover:scale-105", color)} /> 
+                <Icon className={cn("h-8 w-8 transition-all duration-500 group-hover:scale-105 text-blue-400")} /> 
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 transition-colors group-hover:text-white">{label}</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 transition-colors group-hover:text-blue-300">{label}</span>
         </div>
         <div className="pointer-events-none absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 brightness-100 contrast-150 mix-blend-overlay" /> 
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:16px_16px]" /> 

@@ -193,63 +193,97 @@ export function BrowserSwitchTab() {
     <>
       {/* Pull Tab - Always visible on left */}
       <motion.div
-        initial={{ x: -80, opacity: 0 }}
+        initial={{ x: -300, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
+        exit={{ x: -300, opacity: 0 }}
+        transition={{ 
+          type: 'spring',
+          stiffness: 80,
+          damping: 20,
+          delay: 0.1,
+          mass: 0.8
+        }}
         className="fixed left-0 z-[250000] pointer-events-none"
         style={{
-          top: 'calc(5rem + env(safe-area-inset-top, 0px) - 17px)',
+          top: 'calc(5rem + env(safe-area-inset-top, 0px) + 10px)',
           paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 8px)',
         }}
       >
         <motion.div
-          whileHover={{ x: 8, scale: 1.02 }}
+          whileHover={{ 
+            x: 12, 
+            scale: 1.05,
+            boxShadow: '0 0 30px rgba(96, 165, 250, 0.6)'
+          }}
           className="relative pointer-events-auto cursor-pointer"
           onClick={() => setIsExpanded(!isExpanded)}
           onMouseEnter={() => setIsExpanded(true)}
+          animate={{
+            x: [0, 8, 0, 6, 0],
+          }}
+          transition={{
+            duration: 2.5,
+            repeat: Infinity,
+            repeatDelay: 3,
+            ease: 'easeInOut',
+            times: [0, 0.3, 0.5, 0.8, 1]
+          }}
         >
-          {/* Pulse effect */}
-          {showPulse && !isExpanded && (
+          {/* Pill Content */}
+          <div className="relative rounded-r-full bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-blue-500/50 shadow-2xl hover:border-blue-400/70 hover:shadow-blue-600/40">
+            {/* Enhanced pulsing glow background */}
             <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-emerald-500/30 to-cyan-500/30 rounded-r-xl blur-xl"
-              animate={{ 
-                opacity: [0.3, 0.6, 0.3],
-                scale: [1, 1.1, 1]
+              className="absolute inset-0 rounded-r-full bg-gradient-to-r from-blue-500/20 via-cyan-500/10 to-transparent opacity-0"
+              animate={{
+                opacity: [0.3, 0.8, 0.3],
+                scale: [1, 1.05, 1],
               }}
-              transition={{ 
-                duration: 2, 
+              transition={{
+                duration: 2,
                 repeat: Infinity,
-                ease: "easeInOut"
+                ease: 'easeInOut'
+              }}
+              style={{ filter: 'blur(8px)' }}
+            />
+            
+            {/* Subtle shine effect */}
+            <motion.div
+              className="absolute inset-0 rounded-r-full"
+              animate={{
+                boxShadow: [
+                  '0 0 10px rgba(96, 165, 250, 0)',
+                  '0 0 20px rgba(96, 165, 250, 0.4)',
+                  '0 0 10px rgba(96, 165, 250, 0)'
+                ]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: 'easeInOut'
               }}
             />
-          )}
-
-          {/* Tab Content */}
-          <div className="relative rounded-r-2xl bg-gradient-to-br from-emerald-600/30 via-emerald-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-emerald-500/50 shadow-2xl hover:border-emerald-400/70 hover:shadow-emerald-600/40">
-            <div className="px-3 py-3 md:px-4 md:py-4 flex items-center gap-2">
-              {/* Icon */}
+            
+            <div className="px-3 py-2 md:px-4 md:py-2.5 flex items-center gap-2 relative z-10">
+              {/* Live Indicator */}
               <motion.div
-                className="relative"
-                animate={isExpanded ? { y: [-1, 1, -1] } : {}}
-                transition={{ duration: 0.5, repeat: isExpanded ? Infinity : 0 }}
-              >
-                <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-emerald-400" />
-                <motion.div
-                  className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full"
-                  animate={{ 
-                    opacity: [1, 0.4, 1],
-                    scale: [1, 1.2, 1]
-                  }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                />
-              </motion.div>
+                className="w-2 h-2 bg-blue-400 rounded-full"
+                animate={{ 
+                  opacity: [1, 0.4, 1],
+                  scale: [1, 1.2, 1],
+                  boxShadow: [
+                    '0 0 0px rgba(96, 165, 250, 1)',
+                    '0 0 8px rgba(96, 165, 250, 0.8)',
+                    '0 0 0px rgba(96, 165, 250, 1)'
+                  ]
+                }}
+                transition={{ duration: 1, repeat: Infinity }}
+              />
 
               {/* Text */}
-              <div className="flex flex-col">
-                <span className="text-[10px] md:text-xs font-bold text-emerald-400 uppercase tracking-wider whitespace-nowrap">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-3 h-3 md:w-4 md:h-4 text-blue-300 drop-shadow-[0_0_3px_rgba(147,197,253,0.5)]" />
+                <span className="text-[9px] md:text-[10px] font-bold text-blue-200">
                   Pro Trading
-                </span>
-                <span className="text-[8px] md:text-[10px] text-zinc-400 whitespace-nowrap">
-                  {isExpanded ? 'Browsers' : 'Open →'}
                 </span>
               </div>
 
@@ -258,7 +292,7 @@ export function BrowserSwitchTab() {
                 animate={{ rotate: isExpanded ? 180 : 0 }}
                 transition={{ type: "spring", stiffness: 400 }}
               >
-                <ChevronRight className="w-4 h-4 text-emerald-400/70" />
+                <ChevronRight className="w-3 h-3 text-blue-400/70" />
               </motion.div>
             </div>
           </div>
