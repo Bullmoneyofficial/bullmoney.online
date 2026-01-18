@@ -21,7 +21,6 @@ const symbols = [
     displayName: 'Gold',
     symbol: 'OANDA:XAUUSD',
     icon: Coins,
-    color: 'amber'
   },
   {
     id: 'btcusd',
@@ -29,8 +28,18 @@ const symbols = [
     displayName: 'Bitcoin',
     symbol: 'BITSTAMP:BTCUSD',
     icon: Bitcoin,
-    color: 'orange'
   }
+];
+
+const importanceLevels = [
+  { value: '0', label: 'Low', color: 'bg-blue-900/30' },
+  { value: '1', label: 'Medium', color: 'bg-blue-700/50' },
+  { value: '2', label: 'High', color: 'bg-blue-500/70' },
+  { value: '3', label: 'Critical', color: 'bg-blue-400/90' }
+];
+
+const currencies = [
+  'USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'NZD', 'CNY'
 ];
 
 export function TradingQuickAccess() {
@@ -62,6 +71,32 @@ export function TradingQuickAccess() {
 
   const handleDiscordClick = () => {
     window.open('https://discord.gg/bullmoney', '_blank', 'noopener,noreferrer');
+  };
+
+  const toggleImportance = (level: string) => {
+    setCalendarImportance(prev => 
+      prev.includes(level) 
+        ? prev.filter(l => l !== level)
+        : [...prev, level]
+    );
+  };
+
+  const toggleCurrency = (currency: string) => {
+    setCalendarCurrencies(prev => 
+      prev.includes(currency)
+        ? prev.filter(c => c !== currency)
+        : [...prev, currency]
+    );
+  };
+
+  // Build calendar URL with filters
+  const getCalendarUrl = () => {
+    const importanceParam = calendarImportance.length > 0 
+      ? calendarImportance.sort().join('%2C')
+      : '0%2C1%2C2%2C3';
+    const currenciesParam = calendarCurrencies.join('%2C');
+    
+    return `https://www.tradingview.com/embed-widget/events/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Afalse%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22importanceFilter%22%3A%22${importanceParam}%22%2C%22currencyFilter%22%3A%22${currenciesParam}%22%2C%22utm_source%22%3A%22bullmoney.shop%22%2C%22utm_medium%22%3A%22widget%22%2C%22utm_campaign%22%3A%22events%22%7D`;
   };
 
   return (
@@ -99,15 +134,15 @@ export function TradingQuickAccess() {
               {/* Prices */}
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1">
-                  <Coins className="w-3 h-3 md:w-4 md:h-4 text-amber-400" />
-                  <span className="text-[9px] md:text-[10px] font-bold text-amber-300">
+                  <Coins className="w-3 h-3 md:w-4 md:h-4 text-blue-300" />
+                  <span className="text-[9px] md:text-[10px] font-bold text-blue-200">
                     ${prices.xauusd}
                   </span>
                 </div>
                 <div className="w-px h-3 bg-blue-500/30" />
                 <div className="flex items-center gap-1">
-                  <Bitcoin className="w-3 h-3 md:w-4 md:h-4 text-orange-400" />
-                  <span className="text-[9px] md:text-[10px] font-bold text-orange-300">
+                  <Bitcoin className="w-3 h-3 md:w-4 md:h-4 text-blue-300" />
+                  <span className="text-[9px] md:text-[10px] font-bold text-blue-200">
                     ${prices.btcusd}
                   </span>
                 </div>
@@ -212,7 +247,8 @@ export function TradingQuickAccess() {
                     <div className="w-full h-[400px] overflow-hidden">
                       {/* TradingView Economic Calendar Widget */}
                       <iframe
-                        src="https://www.tradingview.com/embed-widget/events/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Afalse%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22importanceFilter%22%3A%22-1%2C0%2C1%22%2C%22currencyFilter%22%3A%22USD%2CEUR%2CGBP%2CJPY%2CCHF%2CAUD%2CCAD%2CNZD%2CCNY%22%2C%22utm_source%22%3A%22bullmoney.shop%22%2C%22utm_medium%22%3A%22widget%22%2C%22utm_campaign%22%3A%22events%22%7D"
+                        key={getCalendarUrl()} // Force refresh when filters change
+                        src={getCalendarUrl()}
                         style={{ 
                           width: '100%', 
                           height: '100%', 
@@ -222,6 +258,61 @@ export function TradingQuickAccess() {
                         title="Economic Calendar"
                         allowFullScreen
                       />
+                    </div>
+                  </div>
+                )}
+
+                {/* Calendar Filters - Only show when calendar is active */}
+                {showForexFactory && (
+                  <div className="p-3 border-t border-blue-500/20 bg-zinc-900/50 space-y-3">
+                    {/* Importance Filter */}
+                    <div>
+                      <p className="text-[10px] text-blue-300 font-semibold mb-2 uppercase tracking-wider">
+                        Event Importance
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {importanceLevels.map((level) => (
+                          <button
+                            key={level.value}
+                            onClick={() => toggleImportance(level.value)}
+                            className={`
+                              px-2.5 py-1 text-[10px] font-semibold rounded-md
+                              transition-all duration-200
+                              ${calendarImportance.includes(level.value)
+                                ? `${level.color} border border-blue-400/70 text-white shadow-sm shadow-blue-500/20`
+                                : 'bg-zinc-800/50 border border-blue-500/20 text-blue-400/60 hover:border-blue-400/40'
+                              }
+                            `}
+                          >
+                            {level.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Currency Filter */}
+                    <div>
+                      <p className="text-[10px] text-blue-300 font-semibold mb-2 uppercase tracking-wider">
+                        Currencies
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {currencies.map((currency) => (
+                          <button
+                            key={currency}
+                            onClick={() => toggleCurrency(currency)}
+                            className={`
+                              px-2.5 py-1 text-[10px] font-bold rounded-md
+                              transition-all duration-200
+                              ${calendarCurrencies.includes(currency)
+                                ? 'bg-blue-500/70 border border-blue-400/70 text-white shadow-sm shadow-blue-500/20'
+                                : 'bg-zinc-800/50 border border-blue-500/20 text-blue-400/60 hover:border-blue-400/40'
+                              }
+                            `}
+                          >
+                            {currency}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}

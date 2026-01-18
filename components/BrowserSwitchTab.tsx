@@ -12,6 +12,7 @@ import {
   ExternalLink,
   Monitor
 } from 'lucide-react';
+import { useUIState } from '@/contexts/UIStateContext';
 
 // Browser configuration
 const browsers = [
