@@ -122,6 +122,9 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
     iframeRef, isWandering, gameStats, gameState,
   } = props;
 
+  // Get UI state to hide widget when modals/menus are open
+  const { shouldMinimizeAudioWidget } = useAudioWidgetUI();
+
   // Scroll detection for auto-minimizing
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollY = useRef(0);
@@ -163,6 +166,13 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
       setIsScrollMinimized(false);
     }
   }, [open, setIsScrollMinimized]);
+
+  // Auto-hide widget when modals/menus open
+  useEffect(() => {
+    if (shouldMinimizeAudioWidget && !widgetHidden) {
+      setWidgetHidden(true);
+    }
+  }, [shouldMinimizeAudioWidget, widgetHidden, setWidgetHidden]);
 
   const currentStreamingIcon = React.useMemo(() => {
     const SourceIcon = sourceIcons[musicSource];

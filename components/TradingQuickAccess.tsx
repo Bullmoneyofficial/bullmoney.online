@@ -60,7 +60,10 @@ export function TradingQuickAccess() {
   const [mounted, setMounted] = useState(false);
   const [tipIndex, setTipIndex] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
+  const [secretUnlocked, setSecretUnlocked] = useState(false);
+  const [secretHovered, setSecretHovered] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const secretButtonRef = useRef<HTMLDivElement>(null);
 
   // Trading tips that rotate
   const tradingTips = [
@@ -116,18 +119,32 @@ export function TradingQuickAccess() {
     "Imbalances create opportunities",
   ];
   
-  // UI State awareness
-  const { isAnyModalOpen, isMobileMenuOpen, isUltimatePanelOpen, isV2Unlocked } = useUIState();
+  // UI State awareness - use centralized state for Discord Stage modal
+  const { 
+    isAnyModalOpen, 
+    isMobileMenuOpen, 
+    isUltimatePanelOpen, 
+    isV2Unlocked,
+    isDiscordStageModalOpen,
+    setDiscordStageModalOpen
+  } = useUIState();
   
   // Wait for client-side mount to prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
+    
+    // Check if secret is unlocked from localStorage
+    const unlocked = localStorage.getItem('discord-stage-unlocked');
+    if (unlocked === 'true') {
+      setSecretUnlocked(true);
+    }
   }, []);
 
   // Auto-close when other UI elements open
   useEffect(() => {
     if (isAnyModalOpen || isMobileMenuOpen || isUltimatePanelOpen) {
       setIsExpanded(false);
+      // Discord Stage modal is handled by UIState mutual exclusion
     }
   }, [isAnyModalOpen, isMobileMenuOpen, isUltimatePanelOpen]);
   
@@ -142,10 +159,31 @@ export function TradingQuickAccess() {
   useEffect(() => {
     if (isExpanded) {
       window.dispatchEvent(new CustomEvent('tradingQuickAccessOpened'));
+      // Discord Stage modal is handled by UIState mutual exclusion
     } else {
       window.dispatchEvent(new CustomEvent('tradingQuickAccessClosed'));
     }
   }, [isExpanded]);
+  
+  // Secret modal state tracking - UIState handles mutual exclusion
+  useEffect(() => {
+    // Modal open/close is fully managed by UIState
+  }, [isDiscordStageModalOpen]);
+  
+  // Unlock secret permanently on hover - stable without closing other menus
+  const handleSecretHover = () => {
+    if (!secretUnlocked) {
+      setSecretUnlocked(true);
+      localStorage.setItem('discord-stage-unlocked', 'true');
+    }
+    setSecretHovered(true);
+    setDiscordStageModalOpen(true); // Use UIState - closes all other modals/menus
+  };
+  
+  const handleSecretUnhover = () => {
+    setSecretHovered(false);
+    // Don't close modal on unhover - let user click to close
+  };
 
   // Hide when other menus open or are being hovered
   useEffect(() => {
@@ -201,70 +239,58 @@ export function TradingQuickAccess() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
         
-        const response = await fetch(`/api/prices/live?t=${Date.now()}`, { 
-          cache: 'no-store',
-          headers: { 
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache'
-          },
-          signal: controller.signal
-        });
+        let response;
+        try {
+          response = await fetch(`/api/prices/live?t=${Date.now()}`, { 
+            cache: 'no-store',
+            headers: { 
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache'
+            },
+            signal: controller.signal
+          });
+        } catch (fetchError) {
+          // Network error - silently fail and use cached prices
+          clearTimeout(timeoutId);
+          return;
+        }
         
         clearTimeout(timeoutId);
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response || !response.ok) {
+          // HTTP error - silently fail
+          return;
         }
         
         const data = await response.json();
         
-        if (isMounted) {
+        if (isMounted && data) {
           // Update prices if valid data received
-          setPrices({
-            xauusd: data.xauusd || prices.xauusd,
-            btcusd: data.btcusd || prices.btcusd
-          });
+          setPrices(prev => ({
+            xauusd: data.xauusd || prev.xauusd,
+            btcusd: data.btcusd || prev.btcusd
+          }));
           
           // Reset retry count on success
           retryCount = 0;
-          
-          // Log debug info in development
-          if (data.debug && process.env.NODE_ENV === 'development') {
-            console.log('Price update:', {
-              gold: data.xauusd,
-              btc: data.btcusd,
-              sources: data.sources
-            });
-          }
         }
       } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
-          console.warn('Price fetch timeout - using cached prices');
-        } else {
-          console.error('Failed to fetch live prices:', error);
-        }
-        
-        // Retry logic with exponential backoff
-        retryCount++;
-        if (retryCount < maxRetries) {
-          const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 5000);
-          setTimeout(() => {
-            if (isMounted) fetchPrices();
-          }, retryDelay);
+        // Silently handle all errors - keep existing prices
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Price fetch issue:', error);
         }
       }
     };
 
-    // Initial fetch immediately
-    fetchPrices();
+    // Initial fetch with small delay
+    const initialTimeout = setTimeout(fetchPrices, 500);
     
-    // Update every 1 second for real-time prices
-    const interval = setInterval(() => {
-      fetchPrices();
-    }, 1000);
+    // Update every 2 seconds for real-time prices (reduced from 1s to prevent overwhelming)
+    const interval = setInterval(fetchPrices, 2000);
     
     return () => {
       isMounted = false;
+      clearTimeout(initialTimeout);
       clearInterval(interval);
     };
   }, []); // Empty deps - run once and maintain interval
@@ -284,8 +310,11 @@ export function TradingQuickAccess() {
     return () => clearInterval(tipInterval);
   }, [tradingTips.length]);
 
-  // Hide when not mounted, v2 not unlocked, or any modal/UI is open
-  const shouldHide = !mounted || !isV2Unlocked || isMobileMenuOpen || isUltimatePanelOpen || isAnyModalOpen;
+  // Hide ALL UI when Discord Stage is open (except the modal itself)
+  // Also hide for other modals, mobile menu, ultimate panel
+  const shouldHideForDiscordStage = isDiscordStageModalOpen;
+  const shouldHideForOtherModals = isAnyModalOpen && !isDiscordStageModalOpen;
+  const shouldHide = !mounted || !isV2Unlocked || isMobileMenuOpen || isUltimatePanelOpen || shouldHideForOtherModals || shouldHideForDiscordStage;
   
   // Prevent hover-open when another panel is active
   const canOpen = !otherMenuOpen && !otherHovered;
@@ -294,13 +323,101 @@ export function TradingQuickAccess() {
   const handleMouseEnter = () => {
     window.dispatchEvent(new CustomEvent('tradingQuickAccessHovered'));
     if (canOpen) setIsExpanded(true);
+    
+    // Unlock secret on ANY hover of the trading pill
+    if (!secretUnlocked) {
+      setSecretUnlocked(true);
+      localStorage.setItem('discord-stage-unlocked', 'true');
+    }
   };
   const handleMouseLeave = () => {
     window.dispatchEvent(new CustomEvent('tradingQuickAccessUnhovered'));
   };
 
+  // Discord Stage Modal - ALWAYS render this, even when shouldHide is true
+  // This modal appears on top of everything when open
+  const discordStageModal = (
+    <AnimatePresence>
+      {isDiscordStageModalOpen && (
+        <>
+          {/* Backdrop - highest z-index */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setDiscordStageModalOpen(false)}
+            className="fixed inset-0 bg-black/80 backdrop-blur-lg z-[2147483640]"
+          />
+          
+          {/* Centered Modal Panel - highest z-index */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            transition={{ 
+              type: 'spring',
+              stiffness: 300,
+              damping: 25,
+              mass: 0.8
+            }}
+            className="fixed inset-0 z-[2147483645] pointer-events-none flex items-center justify-center p-4"
+            style={{
+              paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)',
+              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
+            }}
+          >
+            <div 
+              className="bg-gradient-to-br from-purple-950/98 via-purple-900/95 to-zinc-900/98 backdrop-blur-2xl rounded-2xl border border-purple-500/50 shadow-2xl shadow-purple-900/50 overflow-hidden pointer-events-auto w-full max-w-[340px] sm:max-w-[400px] md:max-w-[500px]"
+              style={{
+                maxHeight: 'calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 32px)',
+              }}
+            >
+              {/* Header */}
+              <div className="p-3 sm:p-4 border-b border-purple-500/30 bg-purple-900/40">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+                    <h3 className="text-xs sm:text-sm md:text-base font-bold text-purple-100">
+                      Live Discord Stage
+                    </h3>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setDiscordStageModalOpen(false)}
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-purple-500/30 hover:bg-purple-500/50 border border-purple-400/40 flex items-center justify-center transition-colors"
+                  >
+                    <span className="text-purple-200 text-sm sm:text-base font-bold">×</span>
+                  </motion.button>
+                </div>
+                <p className="text-[10px] sm:text-xs text-purple-300/70 mt-1">
+                  Join the live stream and discussion
+                </p>
+              </div>
+
+              {/* Discord Stage Embed - Responsive height */}
+              <div className="relative w-full h-[280px] sm:h-[350px] md:h-[400px]">
+                <iframe
+                  src="https://discord.com/channels/1293532691542708276/1410093730131873893"
+                  width="100%"
+                  height="100%"
+                  // @ts-ignore - React wants lowercase for DOM attribute
+                  allowtransparency="true"
+                  frameBorder="0"
+                  sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+                  className="rounded-b-2xl"
+                />
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+
+  // Return ONLY the modal if everything else should be hidden
   if (shouldHide || otherMenuOpen) {
-    return null;
+    return discordStageModal;
   }
 
   const handleDiscordClick = () => {
@@ -769,6 +886,121 @@ export function TradingQuickAccess() {
           </>
         )}
       </AnimatePresence>
+      
+      {/* Secret Discord Stage Button - Shows if unlocked, positioned below Community button */}
+      {secretUnlocked && (
+        <motion.div
+          initial={{ x: -300, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: -300, opacity: 0 }}
+          transition={{ 
+            type: 'spring',
+            stiffness: 80,
+            damping: 20,
+            delay: 0.6,
+            mass: 0.8
+          }}
+          className="fixed left-0 z-[250000] pointer-events-none"
+          style={{
+            top: 'calc(5rem + env(safe-area-inset-top, 0px) + 238px)', // Below Community button
+            paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 8px)',
+          }}
+        >
+          <motion.div
+            ref={secretButtonRef}
+            whileHover={{ 
+              x: 12, 
+              scale: 1.05,
+              boxShadow: '0 0 30px rgba(168, 85, 247, 0.6)'
+            }}
+            className="relative pointer-events-auto cursor-pointer"
+            onClick={() => setDiscordStageModalOpen(!isDiscordStageModalOpen)}
+            onMouseEnter={handleSecretHover}
+            onMouseLeave={handleSecretUnhover}
+            animate={{
+              x: [0, 8, 0, 6, 0],
+            }}
+            transition={{
+              duration: 2.5,
+              repeat: Infinity,
+              repeatDelay: 3,
+              ease: 'easeInOut',
+              times: [0, 0.3, 0.5, 0.8, 1]
+            }}
+          >
+            {/* Purple Pill Content */}
+            <div className="relative rounded-r-full bg-gradient-to-br from-purple-600/30 via-purple-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-purple-500/50 shadow-2xl hover:border-purple-400/70 hover:shadow-purple-600/40">
+              {/* Enhanced pulsing glow background */}
+              <motion.div
+                className="absolute inset-0 rounded-r-full bg-gradient-to-r from-purple-500/20 via-fuchsia-500/10 to-transparent opacity-0"
+                animate={{
+                  opacity: [0.3, 0.8, 0.3],
+                  scale: [1, 1.05, 1],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: 'easeInOut'
+                }}
+                style={{ filter: 'blur(8px)' }}
+              />
+              
+              {/* Subtle shine effect */}
+              <motion.div
+                className="absolute inset-0 rounded-r-full"
+                animate={{
+                  boxShadow: [
+                    '0 0 10px rgba(168, 85, 247, 0)',
+                    '0 0 20px rgba(168, 85, 247, 0.4)',
+                    '0 0 10px rgba(168, 85, 247, 0)'
+                  ]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: 'easeInOut'
+                }}
+              />
+              
+              <div className="px-3 py-2 md:px-4 md:py-2.5 flex items-center gap-2 relative z-10">
+                {/* Live Indicator */}
+                <motion.div
+                  className="w-2 h-2 bg-purple-400 rounded-full"
+                  animate={{ 
+                    opacity: [1, 0.4, 1],
+                    scale: [1, 1.2, 1],
+                    boxShadow: [
+                      '0 0 0px rgba(168, 85, 247, 1)',
+                      '0 0 8px rgba(168, 85, 247, 0.8)',
+                      '0 0 0px rgba(168, 85, 247, 1)'
+                    ]
+                  }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                />
+
+                {/* Text */}
+                <div className="flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 md:w-4 md:h-4 text-purple-300 drop-shadow-[0_0_3px_rgba(216,180,254,0.5)]" />
+                  <span className="text-[9px] md:text-[10px] font-bold text-purple-200">
+                    LIVE STAGE
+                  </span>
+                </div>
+
+                {/* Arrow */}
+                <motion.div
+                  animate={{ rotate: isDiscordStageModalOpen ? 180 : 0 }}
+                  transition={{ type: "spring", stiffness: 400 }}
+                >
+                  <ChevronRight className="w-3 h-3 text-purple-400/70" />
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+      
+      {/* Discord Stage Modal - rendered via discordStageModal variable */}
+      {discordStageModal}
     </>
   );
 }

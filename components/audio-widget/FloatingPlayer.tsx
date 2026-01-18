@@ -319,12 +319,18 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
   // Handle forceMinimize from UIStateContext - this is the key to audio persistence!
   // When other UI components open (mobile menu, modals, etc.), we minimize the player
   // (hide iframe behind pull tab) instead of unmounting, preserving audio playback.
+  // When they close, we restore the player to its previous state.
   useEffect(() => {
     if (forceMinimize && !isMinimized) {
+      // Modals/menus opened - minimize the player
       setIsMinimized(true);
       props.onMinimizedChange?.(true);
+    } else if (!forceMinimize && isMinimized && !playerMinimized) {
+      // Modals/menus closed AND player wasn't manually minimized - restore player
+      setIsMinimized(false);
+      props.onMinimizedChange?.(false);
     }
-  }, [forceMinimize, isMinimized, props]);
+  }, [forceMinimize, isMinimized, playerMinimized, props]);
 
   // Report player position for external tutorial positioning
   useEffect(() => {
