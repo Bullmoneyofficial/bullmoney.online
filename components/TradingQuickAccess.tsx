@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   TrendingUp,
@@ -225,7 +225,7 @@ export function TradingQuickAccess() {
     return () => clearTimeout(timer);
   }, [isExpanded]);
 
-  // Live price updates from real API - Updates every 1 second
+  // Live price updates from real API - Updates every 2 seconds (optimized)
   useEffect(() => {
     let isMounted = true;
     let retryCount = 0;
@@ -285,8 +285,8 @@ export function TradingQuickAccess() {
     // Initial fetch with small delay
     const initialTimeout = setTimeout(fetchPrices, 500);
     
-    // Update every 2 seconds for real-time prices (reduced from 1s to prevent overwhelming)
-    const interval = setInterval(fetchPrices, 2000);
+    // Update every 3 seconds instead of 2 for better performance (reduced API pressure)
+    const interval = setInterval(fetchPrices, 3000);
     
     return () => {
       isMounted = false;
@@ -319,8 +319,8 @@ export function TradingQuickAccess() {
   // Prevent hover-open when another panel is active
   const canOpen = !otherMenuOpen && !otherHovered;
   
-  // Dispatch hover events for coordination
-  const handleMouseEnter = () => {
+  // Debounced hover handlers to prevent excessive re-renders
+  const handleMouseEnter = useCallback(() => {
     window.dispatchEvent(new CustomEvent('tradingQuickAccessHovered'));
     if (canOpen) setIsExpanded(true);
     
@@ -329,13 +329,15 @@ export function TradingQuickAccess() {
       setSecretUnlocked(true);
       localStorage.setItem('discord-stage-unlocked', 'true');
     }
-  };
-  const handleMouseLeave = () => {
+  }, [canOpen, secretUnlocked]);
+  
+  const handleMouseLeave = useCallback(() => {
     window.dispatchEvent(new CustomEvent('tradingQuickAccessUnhovered'));
-  };
+  }, []);
 
   // Discord Stage Modal - ALWAYS render this, even when shouldHide is true
   // This modal appears on top of everything when open
+  // LAZY LOAD: Only render iframe when modal is open to save resources
   const discordStageModal = (
     <AnimatePresence>
       {isDiscordStageModalOpen && (
@@ -395,7 +397,7 @@ export function TradingQuickAccess() {
                 </p>
               </div>
 
-              {/* Discord Stage Embed - Responsive height */}
+              {/* Discord Stage Embed - Lazy loaded, only rendered when modal is open */}
               <div className="relative w-full h-[280px] sm:h-[350px] md:h-[400px]">
                 <iframe
                   src="https://discord.com/channels/1293532691542708276/1410093730131873893"
@@ -406,6 +408,7 @@ export function TradingQuickAccess() {
                   frameBorder="0"
                   sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
                   className="rounded-b-2xl"
+                  loading="lazy"
                 />
               </div>
             </div>
@@ -493,7 +496,7 @@ export function TradingQuickAccess() {
         >
           {/* Pill Content */}
           <div className="relative rounded-r-full bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-blue-500/50 shadow-2xl hover:border-blue-400/70 hover:shadow-blue-600/40">
-            {/* Enhanced pulsing glow background */}
+            {/* Enhanced pulsing glow background - OPTIMIZED: reduced from 2s to 3s to reduce jank */}
             <motion.div
               className="absolute inset-0 rounded-r-full bg-gradient-to-r from-blue-500/20 via-cyan-500/10 to-transparent opacity-0"
               animate={{
@@ -501,7 +504,7 @@ export function TradingQuickAccess() {
                 scale: [1, 1.05, 1],
               }}
               transition={{
-                duration: 2,
+                duration: 3,
                 repeat: Infinity,
                 ease: 'easeInOut'
               }}

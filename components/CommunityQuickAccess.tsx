@@ -46,7 +46,7 @@ const CHANNELS = {
 
 type ChannelKey = keyof typeof CHANNELS;
 
-// VIP status hook (supports userId or email lookup)
+// VIP status hook (supports userId or email lookup) - OPTIMIZED polling
 function useVipCheck(userId?: string, userEmail?: string) {
   const [isVip, setIsVip] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -78,16 +78,16 @@ function useVipCheck(userId?: string, userEmail?: string) {
   
   useEffect(() => {
     checkStatus();
-    // Poll every 5 seconds
-    const interval = setInterval(checkStatus, 5000);
+    // Poll every 30 seconds instead of 5 to reduce unnecessary API calls
+    const interval = setInterval(checkStatus, 30000);
     return () => clearInterval(interval);
   }, [checkStatus]);
   
   return { isVip, loading };
 }
 
-// Live Telegram Channel Feed Component - Fetches from API
-function TelegramChannelEmbed({ channel = 'main', isVip = false }: { channel?: ChannelKey; isVip?: boolean }) {
+// Live Telegram Channel Feed Component - Fetches from API - MEMOIZED for performance
+const TelegramChannelEmbed = React.memo(({ channel = 'main', isVip = false }: { channel?: ChannelKey; isVip?: boolean }) => {
   const [posts, setPosts] = useState<TelegramPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -122,8 +122,8 @@ function TelegramChannelEmbed({ channel = 'main', isVip = false }: { channel?: C
     };
 
     fetchPosts();
-    // Refresh every 2 minutes
-    const interval = setInterval(fetchPosts, 120000);
+    // Refresh every 5 minutes instead of 2 minutes to reduce API calls
+    const interval = setInterval(fetchPosts, 300000);
     return () => clearInterval(interval);
   }, [channel, requiresVip]);
 
@@ -228,10 +228,10 @@ function TelegramChannelEmbed({ channel = 'main', isVip = false }: { channel?: C
       ))}
     </div>
   );
-}
+});
 
-// Live Trades Ticker - Shows scrolling messages from public trades channel
-function LiveTradesTicker() {
+// Live Trades Ticker - Shows scrolling messages from public trades channel - MEMOIZED
+const LiveTradesTicker = React.memo(() => {
   const [messages, setMessages] = useState<TelegramPost[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -261,26 +261,26 @@ function LiveTradesTicker() {
     // Fetch immediately on mount
     fetchMessages();
     
-    // Refresh messages every 5 seconds for near real-time updates
-    const refreshInterval = setInterval(fetchMessages, 5000);
+    // Refresh messages every 10 seconds instead of 5 for better performance
+    const refreshInterval = setInterval(fetchMessages, 10000);
     return () => clearInterval(refreshInterval);
   }, []);
 
-  // Cycle through messages every 3 seconds
+  // Cycle through messages every 4 seconds (increased from 3s to reduce jank)
   useEffect(() => {
     if (messages.length === 0) return;
     
     const cycleInterval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % messages.length);
-    }, 3000);
+    }, 4000);
     
     return () => clearInterval(cycleInterval);
   }, [messages.length]);
 
   const currentMessage = messages[currentIndex];
 
-  // Format message for better display - extract key info (preserves all characters including !, @, #, emojis etc)
-  const formatMessage = (text: string) => {
+  // Format message for better display - memoized with useCallback
+  const formatMessage = useCallback((text: string) => {
     if (!text) return { line1: '', line2: '' };
     
     // Split into lines, preserve all characters
@@ -310,7 +310,7 @@ function LiveTradesTicker() {
     }
     
     return { line1, line2 };
-  };
+  }, []);
 
   if (loading || !currentMessage) {
     return (
@@ -395,20 +395,21 @@ function LiveTradesTicker() {
           )}
         </div>
         
-        {/* Progress bar */}
+        {/* Progress bar - OPTIMIZED: Use will-change for better performance */}
         <div className="mt-1 h-[2px] bg-zinc-700/40 rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-400"
             initial={{ width: '0%' }}
             animate={{ width: '100%' }}
-            transition={{ duration: 3, ease: 'linear' }}
+            transition={{ duration: 4, ease: 'linear' }}
             key={currentIndex}
+            style={{ willChange: 'width' }}
           />
         </div>
       </div>
     </motion.a>
   );
-}
+});
 
 export function CommunityQuickAccess() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -426,8 +427,8 @@ export function CommunityQuickAccess() {
   const panelRef = useRef<HTMLDivElement>(null);
   const browserButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Browser configuration
-  const browsers = [
+  // Browser configuration - MEMOIZED to prevent recreation
+  const browsers = useMemo(() => [
     {
       id: 'chrome',
       name: 'Chrome',
@@ -488,7 +489,7 @@ export function CommunityQuickAccess() {
       iosAppStore: 'https://apps.apple.com/app/id1288723196',
       androidPlayStore: 'https://play.google.com/store/apps/details?id=com.microsoft.emmx'
     },
-  ];
+  ], []);
 
   const { isAnyModalOpen, isMobileMenuOpen, isUltimatePanelOpen, isV2Unlocked } = useUIState();
   const { isVip } = useVipCheck(userId, userEmail);
@@ -746,14 +747,15 @@ export function CommunityQuickAccess() {
   // Prevent hover-open when another panel is active
   const canOpen = !otherMenuOpen && !otherHovered;
   
-  // Dispatch hover events for coordination
-  const handleMouseEnter = () => {
+  // Dispatch hover events for coordination - MEMOIZED with useCallback
+  const handleMouseEnter = useCallback(() => {
     window.dispatchEvent(new CustomEvent('communityQuickAccessHovered'));
     if (canOpen) setIsExpanded(true);
-  };
-  const handleMouseLeave = () => {
+  }, [canOpen]);
+  
+  const handleMouseLeave = useCallback(() => {
     window.dispatchEvent(new CustomEvent('communityQuickAccessUnhovered'));
-  };
+  }, []);
 
   if (shouldHide || otherMenuOpen) {
     return null;
@@ -977,7 +979,7 @@ export function CommunityQuickAccess() {
         >
           {/* Pill Content */}
           <div className="relative rounded-r-2xl bg-gradient-to-br from-cyan-600/30 via-cyan-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-cyan-500/50 shadow-2xl hover:border-cyan-400/70 hover:shadow-cyan-600/40">
-            {/* Enhanced pulsing glow background */}
+            {/* Enhanced pulsing glow background - OPTIMIZED: reduced animation speed to 3s */}
             <motion.div
               className="absolute inset-0 rounded-r-2xl bg-gradient-to-r from-cyan-500/20 via-blue-500/10 to-transparent opacity-0"
               animate={{
@@ -985,14 +987,14 @@ export function CommunityQuickAccess() {
                 scale: [1, 1.05, 1],
               }}
               transition={{
-                duration: 2,
+                duration: 3,
                 repeat: Infinity,
                 ease: 'easeInOut'
               }}
               style={{ filter: 'blur(8px)' }}
             />
             
-            {/* Subtle shine effect */}
+            {/* Subtle shine effect - OPTIMIZED: increased duration to 3s */}
             <motion.div
               className="absolute inset-0 rounded-r-2xl"
               animate={{
@@ -1003,14 +1005,14 @@ export function CommunityQuickAccess() {
                 ]
               }}
               transition={{
-                duration: 2,
+                duration: 3,
                 repeat: Infinity,
                 ease: 'easeInOut'
               }}
             />
             
             <div className="px-1.5 py-1.5 sm:px-2 sm:py-1.5 md:px-3 md:py-2.5 flex items-center gap-0.5 sm:gap-1 md:gap-1.5 relative z-10">
-              {/* Live Indicator */}
+              {/* Live Indicator - OPTIMIZED: increased duration to 1.5s */}
               <motion.div
                 className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-cyan-400 rounded-full"
                 animate={{ 
@@ -1022,7 +1024,7 @@ export function CommunityQuickAccess() {
                     '0 0 0px rgba(34, 211, 238, 1)'
                   ]
                 }}
-                transition={{ duration: 1, repeat: Infinity }}
+                transition={{ duration: 1.5, repeat: Infinity }}
               />
 
               {/* Text */}
@@ -1048,7 +1050,7 @@ export function CommunityQuickAccess() {
         </motion.div>
       </motion.div>
 
-      {/* Expanded Dropdown */}
+      {/* Expanded Dropdown - CENTERED MODAL LIKE DISCORD */}
       <AnimatePresence>
         {isExpanded && (
           <>
@@ -1058,55 +1060,66 @@ export function CommunityQuickAccess() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsExpanded(false)}
-              className="fixed inset-0 bg-transparent z-[249999]"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[249999]"
               style={{ touchAction: 'manipulation' }}
             />
 
-            {/* Compact Dropdown */}
+            {/* Centered Modal Dropdown - Optimized for small screens */}
             <motion.div
               ref={panelRef}
-              initial={{ opacity: 0, x: -30, scale: 0.9 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: -30, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
               transition={{ 
                 type: 'spring', 
-                damping: 22, 
-                stiffness: 300,
+                damping: 25, 
+                stiffness: 400,
                 mass: 0.8
               }}
-              className="fixed z-[250000] w-[85vw] xs:w-[90vw] sm:w-[340px] md:w-[420px] lg:w-[480px] max-w-[90vw]"
+              className="fixed z-[250000] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] xs:w-[90vw] sm:w-[85vw] md:max-w-[520px] lg:max-w-[580px]"
               style={{
-                left: 'max(6px, calc(env(safe-area-inset-left, 0px) + 6px))',
-                right: 'auto',
-                top: 'clamp(4.5rem, calc(5rem + env(safe-area-inset-top, 0px) + 130px), calc(100vh - 500px))',
-                maxHeight: 'clamp(400px, calc(100vh - 120px), 80vh)',
+                maxHeight: 'min(90vh, calc(100vh - 40px))',
+                maxWidth: 'min(95vw, 520px)',
+                paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 8px)',
+                paddingRight: 'calc(env(safe-area-inset-right, 0px) + 8px)',
+                paddingTop: 'calc(env(safe-area-inset-top, 0px) + 8px)',
+                paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 8px)',
               }}
-              onMouseLeave={() => setIsExpanded(false)}
             >
               <div className="bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl rounded-2xl border border-blue-500/30 shadow-2xl shadow-blue-900/20 overflow-hidden flex flex-col h-full max-h-[inherit]">
                 {/* Header */}
                 <div className="p-2 sm:p-3 md:p-4 border-b border-blue-500/20 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 flex-shrink-0">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 sm:gap-2">
-                      <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400 flex-shrink-0" />
-                      <h3 className="text-[11px] sm:text-xs md:text-sm font-bold text-white truncate">Live Community Feed</h3>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 min-w-0">
+                      <MessageSquare className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-blue-400 flex-shrink-0" />
+                      <h3 className="text-[10px] sm:text-xs md:text-sm font-bold text-white truncate">Live Community</h3>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 flex-shrink-0">
                       <motion.div
                         className="w-1.5 h-1.5 bg-green-400 rounded-full"
                         animate={{ opacity: [1, 0.4, 1] }}
                         transition={{ duration: 1.5, repeat: Infinity }}
                       />
-                      <span className="text-[8px] text-green-400">LIVE</span>
+                      <span className="text-[7px] sm:text-[8px] text-green-400 font-medium">LIVE</span>
+                      {/* Close Button */}
+                      <motion.button
+                        whileHover={{ scale: 1.1, rotate: 90 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setIsExpanded(false)}
+                        className="ml-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-blue-500/30 hover:bg-blue-500/50 border border-blue-400/40 flex items-center justify-center transition-colors flex-shrink-0"
+                        title="Close"
+                      >
+                        <span className="text-blue-200 text-xs sm:text-sm font-bold">×</span>
+                      </motion.button>
                     </div>
                   </div>
-                  <p className="text-[8px] sm:text-[9px] md:text-[10px] text-zinc-400 mt-0.5">
-                    Real-time updates from Telegram
+                  <p className="text-[7px] sm:text-[8px] md:text-[10px] text-zinc-400 mt-1">
+                    Real-time Telegram updates
                   </p>
                 </div>
                 
-                {/* Channel Tabs */}
-                <div className="flex items-center gap-1 p-2 border-b border-white/10 overflow-x-auto flex-shrink-0">
+                {/* Channel Tabs - Scrollable on mobile */}
+                <div className="flex items-center gap-0.5 sm:gap-1 p-1.5 sm:p-2 border-b border-white/10 overflow-x-auto flex-shrink-0 scrollbar-hide">
                   {(Object.keys(CHANNELS) as ChannelKey[]).map((key) => {
                     const ch = CHANNELS[key];
                     const Icon = ch.icon;
@@ -1117,7 +1130,7 @@ export function CommunityQuickAccess() {
                       <button
                         key={key}
                         onClick={() => setActiveChannel(key)}
-                        className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-medium transition-all whitespace-nowrap ${
+                        className={`flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[8px] sm:text-[9px] font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                           isActive
                             ? ch.color === 'amber'
                               ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
@@ -1129,9 +1142,10 @@ export function CommunityQuickAccess() {
                             : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10'
                         }`}
                       >
-                        <Icon className="w-3 h-3" />
-                        {ch.name}
-                        {isLocked && <Lock className="w-2.5 h-2.5 ml-0.5 opacity-60" />}
+                        <Icon className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" />
+                        <span className="hidden sm:inline">{ch.name}</span>
+                        <span className="sm:hidden text-[7px]">{ch.name.split(' ')[0]}</span>
+                        {isLocked && <Lock className="w-2 h-2 sm:w-2.5 sm:h-2.5 opacity-60" />}
                       </button>
                     );
                   })}
@@ -1146,15 +1160,15 @@ export function CommunityQuickAccess() {
                       window.dispatchEvent(new CustomEvent('openAdminVIPPanel'));
                       setIsExpanded(false);
                     }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ml-auto ${
+                    className={`flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[8px] sm:text-xs font-semibold transition-all whitespace-nowrap ml-auto flex-shrink-0 ${
                       isAdmin 
                         ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white border border-blue-400/60 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50'
                         : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-300 hover:text-white border border-zinc-600/40 hover:border-zinc-500/60'
                     }`}
                     title="Admin Panel - Manage VIP Status & Users (Cmd+Shift+A)"
                   >
-                    <Shield className="w-3.5 h-3.5" />
-                    {isAdmin ? 'Admin Panel' : 'Admin'}
+                    <Shield className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+                    <span className="hidden sm:inline">Admin</span>
                   </motion.button>
                 </div>
 
@@ -1180,8 +1194,8 @@ export function CommunityQuickAccess() {
                 <div className="h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent mx-2" />
 
                 {/* Browser Switcher Section - Compact with detached hover menu */}
-                <div className="p-2 sm:p-2.5 md:p-3 flex-shrink-0">
-                  <div className="flex gap-2">
+                <div className="p-1.5 sm:p-2.5 md:p-3 flex-shrink-0">
+                  <div className="flex gap-1 sm:gap-2">
                     {/* Open in Browser Button */}
                     <motion.button
                       ref={browserButtonRef}
@@ -1191,17 +1205,16 @@ export function CommunityQuickAccess() {
                       }}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 py-1.5 sm:py-2 px-2 sm:px-2.5 md:px-3 rounded-lg
+                      className="flex-1 flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1 sm:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
                         bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500
-                        text-white font-semibold text-[10px] sm:text-xs md:text-xs whitespace-nowrap
+                        text-white font-semibold text-[8px] sm:text-xs md:text-xs whitespace-nowrap
                         border border-blue-500/30
                         shadow-lg shadow-blue-500/25
                         transition-all duration-300"
                     >
-                      <Monitor className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
-                      <span className="hidden sm:inline">Open in Browser</span>
-                      <span className="sm:hidden text-[9px]">Browser</span>
-                      <ChevronRight className={`w-2.5 h-2.5 transition-transform ${browserMenuOpen ? 'rotate-90' : ''}`} />
+                      <Monitor className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
+                      <span className="hidden xs:inline">Browser</span>
+                      <ChevronRight className={`w-2 h-2 sm:w-2.5 sm:h-2.5 transition-transform ${browserMenuOpen ? 'rotate-90' : ''}`} />
                     </motion.button>
 
                     {/* Copy Link Button */}
@@ -1210,23 +1223,23 @@ export function CommunityQuickAccess() {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className={`
-                        flex items-center justify-center gap-1.5 py-1.5 sm:py-2 px-3 sm:px-4 rounded-lg
+                        flex items-center justify-center gap-0.5 sm:gap-1.5 py-1 sm:py-2 px-1.5 sm:px-3 rounded-lg
                         ${copied 
                           ? 'bg-gradient-to-r from-blue-600 to-cyan-600' 
                           : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500'
                         }
-                        text-white font-semibold text-[10px] sm:text-xs
+                        text-white font-semibold text-[8px] sm:text-xs
                         border border-blue-500/30
                         shadow-lg shadow-blue-500/25
                         transition-all duration-300
                       `}
                     >
                       {copied ? (
-                        <Check className="w-3 h-3" />
+                        <Check className="w-2.5 h-2.5" />
                       ) : (
-                        <Copy className="w-3 h-3" />
+                        <Copy className="w-2.5 h-2.5" />
                       )}
-                      <span className="hidden sm:inline">{copied ? 'Copied!' : 'Copy'}</span>
+                      <span className="hidden xs:inline">{copied ? 'Copied!' : 'Copy'}</span>
                     </motion.button>
                   </div>
                 </div>
@@ -1234,24 +1247,23 @@ export function CommunityQuickAccess() {
                 {/* Divider */}
                 <div className="h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent mx-2" />
 
-                {/* Social Buttons Section */}
-                <div className="p-2 sm:p-2.5 md:p-3 space-y-1.5 sm:space-y-2 flex-shrink-0">
-                  <p className="text-[9px] text-zinc-500 font-semibold mb-1.5">JOIN OUR PLATFORMS</p>
+                {/* Social Buttons Section - Compact for mobile */}
+                <div className="p-1.5 sm:p-2.5 md:p-3 space-y-1 sm:space-y-1.5 md:space-y-2 flex-shrink-0">
+                  <p className="text-[7px] sm:text-[8px] md:text-[9px] text-zinc-500 font-semibold mb-1">PLATFORMS</p>
                   {/* Discord */}
                   <motion.button
                     onClick={handleDiscordClick}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 py-1.5 sm:py-2 px-2 sm:px-2.5 md:px-3 rounded-lg
+                    className="w-full flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1 sm:py-1.5 md:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
                       bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500
-                      text-white font-semibold text-[10px] sm:text-xs md:text-xs whitespace-nowrap
+                      text-white font-semibold text-[8px] sm:text-xs md:text-xs
                       border border-blue-500/30
                       shadow-lg shadow-blue-500/25
                       transition-all duration-300"
                   >
-                    <MessageSquare className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
-                    <span className="hidden sm:inline">Discord Server</span>
-                    <span className="sm:hidden text-[9px]">Discord</span>
+                    <MessageSquare className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
+                    <span className="hidden xs:inline">Discord</span>
                   </motion.button>
 
                   {/* Telegram */}
@@ -1259,16 +1271,15 @@ export function CommunityQuickAccess() {
                     onClick={handleTelegramClick}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 py-1.5 sm:py-2 px-2 sm:px-2.5 md:px-3 rounded-lg
+                    className="w-full flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1 sm:py-1.5 md:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
                       bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400
-                      text-white font-semibold text-[10px] sm:text-xs md:text-xs whitespace-nowrap
+                      text-white font-semibold text-[8px] sm:text-xs md:text-xs
                       border border-blue-500/30
                       shadow-lg shadow-blue-500/25
                       transition-all duration-300"
                   >
-                    <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
-                    <span className="hidden sm:inline">Telegram Group</span>
-                    <span className="sm:hidden text-[9px]">Telegram</span>
+                    <MessageCircle className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
+                    <span className="hidden xs:inline">Telegram</span>
                   </motion.button>
 
                   {/* Instagram */}
@@ -1276,16 +1287,15 @@ export function CommunityQuickAccess() {
                     onClick={handleInstagramClick}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 py-1.5 sm:py-2 px-2 sm:px-2.5 md:px-3 rounded-lg
+                    className="w-full flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1 sm:py-1.5 md:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
                       bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500
-                      text-white font-semibold text-[10px] sm:text-xs md:text-xs whitespace-nowrap
+                      text-white font-semibold text-[8px] sm:text-xs md:text-xs
                       border border-blue-500/30
                       shadow-lg shadow-blue-500/25
                       transition-all duration-300"
                   >
-                    <Instagram className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
-                    <span className="hidden sm:inline">Instagram</span>
-                    <span className="sm:hidden text-[9px]">Instagram</span>
+                    <Instagram className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
+                    <span className="hidden xs:inline">Instagram</span>
                   </motion.button>
 
                   {/* YouTube */}
@@ -1293,47 +1303,31 @@ export function CommunityQuickAccess() {
                     onClick={handleYoutubeClick}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 py-1.5 sm:py-2 px-2 sm:px-2.5 md:px-3 rounded-lg
+                    className="w-full flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1 sm:py-1.5 md:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
                       bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500
-                      text-white font-semibold text-[10px] sm:text-xs md:text-xs whitespace-nowrap
+                      text-white font-semibold text-[8px] sm:text-xs md:text-xs
                       border border-blue-500/30
                       shadow-lg shadow-blue-500/25
                       transition-all duration-300"
                   >
-                    <Youtube className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
-                    <span className="hidden sm:inline">YouTube Channel</span>
-                    <span className="sm:hidden text-[9px]">YouTube</span>
+                    <Youtube className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
+                    <span className="hidden xs:inline">YouTube</span>
                   </motion.button>
 
-                  {/* Join VIP */}
+                  {/* Join VIP - Blue theme */}
                   <motion.button
                     onClick={handleVIPClick}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 py-2 sm:py-2.5 px-2 sm:px-2.5 md:px-3 rounded-lg
-                      bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500
-                      text-white font-bold text-[10px] sm:text-xs md:text-xs whitespace-nowrap
-                      border border-amber-500/30
-                      shadow-lg shadow-amber-500/30
-                      transition-all duration-300
-                      relative overflow-hidden"
+                    className="w-full flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1.5 sm:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
+                      bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400
+                      text-white font-bold text-[8px] sm:text-xs md:text-xs
+                      border border-blue-500/30
+                      shadow-lg shadow-blue-500/30
+                      transition-all duration-300"
                   >
-                    {/* Shimmer overlay - left to right */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-300/40 to-transparent"
-                      animate={{
-                        x: ['-100%', '100%']
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: 'easeInOut'
-                      }}
-                    />
-                    
-                    <Crown className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0 relative z-10" />
-                    <span className="hidden sm:inline relative z-10">Join VIP</span>
-                    <span className="sm:hidden text-[9px] relative z-10">VIP</span>
+                    <Crown className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
+                    <span className="hidden xs:inline">VIP</span>
                   </motion.button>
                 </div>
               </div>
