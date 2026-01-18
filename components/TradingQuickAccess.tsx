@@ -12,6 +12,7 @@ import {
   Coins,
   ExternalLink
 } from 'lucide-react';
+import { useUIState } from '@/contexts/UIStateContext';
 
 // Trading symbols configuration
 const symbols = [
@@ -52,7 +53,37 @@ export function TradingQuickAccess() {
   });
   const [calendarImportance, setCalendarImportance] = useState<string[]>(['2', '3']); // High and Medium
   const [calendarCurrencies, setCalendarCurrencies] = useState<string[]>(['USD', 'EUR', 'GBP', 'JPY']);
+  const [mounted, setMounted] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  
+  // UI State awareness
+  const { isAnyModalOpen, isMobileMenuOpen, isUltimatePanelOpen, isV2Unlocked } = useUIState();
+  
+  // Wait for client-side mount to prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Auto-close when other UI elements open
+  useEffect(() => {
+    if (isAnyModalOpen || isMobileMenuOpen || isUltimatePanelOpen) {
+      setIsExpanded(false);
+    }
+  }, [isAnyModalOpen, isMobileMenuOpen, isUltimatePanelOpen]);
+  
+  // Close when BrowserSwitchTab opens (mutual exclusion)
+  useEffect(() => {
+    const handleBrowserOpen = () => setIsExpanded(false);
+    window.addEventListener('browserSwitchOpened', handleBrowserOpen);
+    return () => window.removeEventListener('browserSwitchOpened', handleBrowserOpen);
+  }, []);
+  
+  // Dispatch event when this component opens
+  useEffect(() => {
+    if (isExpanded) {
+      window.dispatchEvent(new CustomEvent('tradingQuickAccessOpened'));
+    }
+  }, [isExpanded]);
 
   // Simulated price updates - in production, connect to real WebSocket/API
   useEffect(() => {
@@ -68,6 +99,13 @@ export function TradingQuickAccess() {
     const interval = setInterval(updatePrices, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  // Hide when not mounted, v2 not unlocked, or any modal/UI is open
+  const shouldHide = !mounted || !isV2Unlocked || isMobileMenuOpen || isUltimatePanelOpen || isAnyModalOpen;
+
+  if (shouldHide) {
+    return null;
+  }
 
   const handleDiscordClick = () => {
     window.open('https://discord.gg/bullmoney', '_blank', 'noopener,noreferrer');

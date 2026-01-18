@@ -68,13 +68,50 @@ export function BrowserSwitchTab() {
   const [copied, setCopied] = useState(false);
   const [openingBrowser, setOpeningBrowser] = useState<string | null>(null);
   const [showPulse, setShowPulse] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  
+  // UI State awareness
+  const { isAnyModalOpen, isMobileMenuOpen, isUltimatePanelOpen, isV2Unlocked } = useUIState();
+  
+  // Wait for client-side mount to prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
+  // Auto-close when other UI elements open
+  useEffect(() => {
+    if (isAnyModalOpen || isMobileMenuOpen || isUltimatePanelOpen) {
+      setIsExpanded(false);
+    }
+  }, [isAnyModalOpen, isMobileMenuOpen, isUltimatePanelOpen]);
+  
+  // Close when TradingQuickAccess opens (mutual exclusion)
+  useEffect(() => {
+    const handleTradingOpen = () => setIsExpanded(false);
+    window.addEventListener('tradingQuickAccessOpened', handleTradingOpen);
+    return () => window.removeEventListener('tradingQuickAccessOpened', handleTradingOpen);
+  }, []);
+  
+  // Dispatch event when this component opens
+  useEffect(() => {
+    if (isExpanded) {
+      window.dispatchEvent(new CustomEvent('browserSwitchOpened'));
+    }
+  }, [isExpanded]);
+  
   useEffect(() => {
     if (isExpanded) {
       setShowPulse(false);
     }
   }, [isExpanded]);
+
+  // Hide when not mounted, v2 not unlocked, or any modal/UI is open
+  const shouldHide = !mounted || !isV2Unlocked || isMobileMenuOpen || isUltimatePanelOpen || isAnyModalOpen;
+
+  if (shouldHide) {
+    return null;
+  }
 
   const handleOpenBrowser = (browserId: string) => {
     const currentUrl = window.location.href;
