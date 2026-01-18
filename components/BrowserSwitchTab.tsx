@@ -228,8 +228,8 @@ export function BrowserSwitchTab() {
         }}
         className="fixed left-0 z-[250000] pointer-events-none"
         style={{
-          top: 'calc(5rem + env(safe-area-inset-top, 0px) + 10px)',
-          paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 8px)',
+          top: 'calc(5rem + env(safe-area-inset-top, 0px) + 8px)',
+          paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 2px)',
         }}
       >
         <motion.div
@@ -287,10 +287,10 @@ export function BrowserSwitchTab() {
               }}
             />
             
-            <div className="px-3 py-2 md:px-4 md:py-2.5 flex items-center gap-2 relative z-10">
+            <div className="px-1.5 py-1 xs:px-2 xs:py-1.5 sm:px-2.5 sm:py-1.5 md:px-4 md:py-2.5 flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 md:gap-2 relative z-10">
               {/* Live Indicator */}
               <motion.div
-                className="w-2 h-2 bg-blue-400 rounded-full"
+                className="w-1.5 h-1.5 xs:w-2 xs:h-2 bg-blue-400 rounded-full"
                 animate={{ 
                   opacity: [1, 0.4, 1],
                   scale: [1, 1.2, 1],
@@ -304,9 +304,9 @@ export function BrowserSwitchTab() {
               />
 
               {/* Text */}
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-3 h-3 md:w-4 md:h-4 text-blue-300 drop-shadow-[0_0_3px_rgba(147,197,253,0.5)]" />
-                <span className="text-[9px] md:text-[10px] font-bold text-blue-200">
+              <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 md:gap-2">
+                <TrendingUp className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-blue-300 drop-shadow-[0_0_3px_rgba(147,197,253,0.5)]" />
+                <span className="text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] font-bold text-blue-200">
                   Pro Trading
                 </span>
               </div>
@@ -316,7 +316,7 @@ export function BrowserSwitchTab() {
                 animate={{ rotate: isExpanded ? 180 : 0 }}
                 transition={{ type: "spring", stiffness: 400 }}
               >
-                <ChevronRight className="w-3 h-3 text-blue-400/70" />
+                <ChevronRight className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 text-blue-400/70" />
               </motion.div>
             </div>
           </div>

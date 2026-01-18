@@ -77,15 +77,16 @@ const MobileMenuControls = memo(({
     data-theme-aware
     data-navbar
     animate={{
-      height: isScrollMinimized ? 36 : undefined,
-      maxWidth: isScrollMinimized ? '7rem' : '12rem',
-      scale: isScrollMinimized ? 0.9 : 1,
+      height: isScrollMinimized ? 32 : undefined,
+      maxWidth: isScrollMinimized ? '7rem' : '100%',
+      scale: isScrollMinimized ? 0.85 : 1,
     }}
     transition={{ type: 'spring', damping: 25, stiffness: 450, mass: 0.6 }}
     style={{ 
-      height: isScrollMinimized ? 36 : 'auto',
+      height: isScrollMinimized ? 32 : 'auto',
+      maxWidth: isScrollMinimized ? '7rem' : 'none',
       transition: 'border-color 0.4s ease-out, box-shadow 0.4s ease-out',
-      transitionDelay: '0.35s', // Navbar transitions last (bottom-to-top)
+      transitionDelay: '0.35s',
     }}
   >
     {/* UNIFIED SHIMMER - Border glow effect, theme-aware via CSS variables */}
@@ -99,16 +100,15 @@ const MobileMenuControls = memo(({
     {/* Inner Content Container - Theme-aware borders and shadows */}
     <motion.div 
       className={cn(
-        "relative h-full w-full bg-black/95 rounded-full flex items-center justify-center transition-all duration-200 z-10",
-        isScrollMinimized ? "p-[1px] gap-0.5 px-1.5" : "p-[2px] gap-1 px-2 sm:px-3"
+        "relative h-full w-full bg-black/95 rounded-full flex items-center justify-center gap-0.5 sm:gap-1 transition-all duration-200 z-10",
+        isScrollMinimized ? "p-[1px] px-1" : "p-[2px] px-1 xs:px-1.5 sm:px-2"
       )}
       style={{
         border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.6)',
         boxShadow: '0 0 25px rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
-        /* FPS OPTIMIZATION: No backdrop-blur */
       }}
     >
-      {/* Theme Selector Button - Theme-aware icon color */}
+      {/* Theme Selector Button - With text label */}
       <motion.button
         onClick={() => { SoundEffects.click(); onThemeClick(); }}
         onMouseEnter={() => SoundEffects.hover()}
@@ -116,24 +116,25 @@ const MobileMenuControls = memo(({
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         className={cn(
-          "rounded-full transition-colors flex items-center justify-center",
+          "rounded-full transition-colors flex items-center justify-center gap-0.5",
           isScrollMinimized 
-            ? "p-1 min-w-[28px] min-h-[28px]" 
-            : "p-1.5 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
+            ? "p-0.5 min-w-[26px] min-h-[26px]" 
+            : "p-0.5 xs:p-1 sm:p-1.5 min-w-[32px] xs:min-w-[36px] sm:min-w-[40px] min-h-[32px] xs:min-h-[36px] sm:min-h-[40px]"
         )}
         style={{ color: 'var(--accent-color, #93c5fd)' }}
         title="Theme Selector"
       >
-        <IconPalette className={isScrollMinimized ? "h-3.5 w-3.5" : "h-4 w-4 sm:h-5 sm:w-5"} />
+        <IconPalette className={isScrollMinimized ? "h-2.5 w-2.5" : "h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4"} />
+        <span className="text-[7px] xs:text-[8px] sm:text-xs font-bold whitespace-nowrap">Theme</span>
       </motion.button>
 
       {/* Divider - Theme-aware */}
       <div 
-        className={cn(isScrollMinimized ? "h-3 w-[1px]" : "h-4 w-[1px]")}
+        className={cn(isScrollMinimized ? "h-3 w-[1px]" : "h-4 xs:h-5 w-[1px]")}
         style={{ background: 'linear-gradient(to bottom, rgba(var(--accent-rgb, 59, 130, 246), 0.2), rgba(var(--accent-rgb, 59, 130, 246), 0.5), rgba(var(--accent-rgb, 59, 130, 246), 0.2))' }}
       />
 
-      {/* Menu Toggle Button - Theme-aware icon color */}
+      {/* Menu Toggle Button - With text label */}
       <motion.button
         onClick={() => { SoundEffects.click(); onToggle(); }}
         onMouseEnter={() => SoundEffects.hover()}
@@ -141,19 +142,19 @@ const MobileMenuControls = memo(({
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         className={cn(
-          "rounded-full transition-colors flex items-center justify-center",
+          "rounded-full transition-colors flex items-center justify-center gap-0.5",
           isScrollMinimized 
-            ? "p-1 min-w-[28px] min-h-[28px]" 
-            : "p-1.5 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px]"
+            ? "p-0.5 min-w-[26px] min-h-[26px]" 
+            : "p-0.5 xs:p-1 sm:p-1.5 min-w-[32px] xs:min-w-[36px] sm:min-w-[40px] min-h-[32px] xs:min-h-[36px] sm:min-h-[40px]"
         )}
         style={{ color: 'var(--accent-color, #93c5fd)' }}
         title={open ? 'Close menu' : 'Open menu'}
       >
         <div className="relative flex items-center justify-center">
           {open ? (
-            <IconX className={isScrollMinimized ? "h-3.5 w-3.5" : "h-4 w-4 sm:h-5 sm:w-5"} />
+            <IconX className={isScrollMinimized ? "h-2.5 w-2.5" : "h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4"} />
           ) : (
-            <IconMenu2 className={isScrollMinimized ? "h-3.5 w-3.5" : "h-4 w-4 sm:h-5 sm:w-5"} />
+            <IconMenu2 className={isScrollMinimized ? "h-2.5 w-2.5" : "h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4"} />
           )}
           {hasReward && !open && (
             <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
@@ -162,6 +163,7 @@ const MobileMenuControls = memo(({
             </span>
           )}
         </div>
+        <span className="text-[7px] xs:text-[8px] sm:text-xs font-bold whitespace-nowrap">{open ? 'Close' : 'Menu'}</span>
       </motion.button>
     </motion.div>
   </motion.div>

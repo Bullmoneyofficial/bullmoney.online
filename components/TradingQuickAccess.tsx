@@ -469,8 +469,8 @@ export function TradingQuickAccess() {
         }}
         className="fixed left-0 z-[250000] pointer-events-none"
         style={{
-          top: 'calc(5rem + env(safe-area-inset-top, 0px) + 50px)',
-          paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 8px)',
+          top: 'calc(5rem + env(safe-area-inset-top, 0px) + 28px)',
+          paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 2px)',
         }}
       >
         <motion.div
@@ -528,10 +528,10 @@ export function TradingQuickAccess() {
               }}
             />
             
-            <div className="px-1.5 py-1.5 sm:px-2 sm:py-1.5 md:px-3 md:py-2.5 flex items-center gap-0.5 sm:gap-1 md:gap-1.5 relative z-10">
+            <div className="px-1 py-1 xs:px-1.5 xs:py-1 sm:px-2 sm:py-1.5 md:px-3 md:py-2.5 flex items-center gap-0.5 sm:gap-1 md:gap-1.5 relative z-10">
               {/* Live Indicator */}
               <motion.div
-                className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-400 rounded-full"
+                className="w-1 h-1 xs:w-1.5 xs:h-1.5 sm:w-2 sm:h-2 bg-blue-400 rounded-full"
                 animate={{ 
                   opacity: [1, 0.4, 1],
                   scale: [1, 1.2, 1],
@@ -545,17 +545,17 @@ export function TradingQuickAccess() {
               />
 
               {/* Prices */}
-              <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
-                <div className="flex items-center gap-0.5 sm:gap-1">
-                  <Coins className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-blue-300 drop-shadow-[0_0_3px_rgba(147,197,253,0.5)]" />
-                  <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold text-blue-200">
+              <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 md:gap-2">
+                <div className="flex items-center gap-0.5">
+                  <Coins className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-blue-300 drop-shadow-[0_0_3px_rgba(147,197,253,0.5)]" />
+                  <span className="text-[6px] xs:text-[7px] sm:text-[9px] md:text-[10px] font-bold text-blue-200">
                     ${prices.xauusd}
                   </span>
                 </div>
-                <div className="w-px h-2 sm:h-2.5 md:h-3 bg-blue-500/30" />
-                <div className="flex items-center gap-0.5 sm:gap-1">
-                  <Bitcoin className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-blue-300 drop-shadow-[0_0_3px_rgba(147,197,253,0.5)]" />
-                  <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold text-blue-200">
+                <div className="w-px h-1.5 xs:h-2 sm:h-2.5 md:h-3 bg-blue-500/30" />
+                <div className="flex items-center gap-0.5">
+                  <Bitcoin className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-blue-300 drop-shadow-[0_0_3px_rgba(147,197,253,0.5)]" />
+                  <span className="text-[6px] xs:text-[7px] sm:text-[9px] md:text-[10px] font-bold text-blue-200">
                     ${prices.btcusd}
                   </span>
                 </div>
@@ -566,7 +566,7 @@ export function TradingQuickAccess() {
                 animate={{ rotate: isExpanded ? 180 : 0 }}
                 transition={{ type: "spring", stiffness: 400 }}
               >
-                <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3 md:h-3 text-blue-400/70" />
+                <ChevronRight className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 text-blue-400/70" />
               </motion.div>
             </div>
           </div>
@@ -583,10 +583,10 @@ export function TradingQuickAccess() {
                 damping: 25,
                 delay: 0.5
               }}
-              className="mt-1.5"
+              className="mt-1 sm:mt-1.5"
             >
               {/* Pill Container - Same style as price UI */}
-              <div className="relative rounded-r-full bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-blue-500/50 shadow-2xl hover:border-blue-400/70 hover:shadow-blue-600/40 transition-all duration-300 px-3 py-1.5 overflow-hidden">
+              <div className="relative rounded-r-full bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-blue-500/50 shadow-2xl hover:border-blue-400/70 hover:shadow-blue-600/40 transition-all duration-300 px-1.5 py-1 xs:px-2 xs:py-1 sm:px-3 sm:py-1.5 overflow-hidden max-w-[150px] xs:max-w-[180px] sm:max-w-none">
                 {/* Animated tip pulse background */}
                 <motion.div
                   className="absolute inset-0 rounded-r-full bg-gradient-to-r from-cyan-500/15 via-blue-500/10 to-transparent"
@@ -602,7 +602,7 @@ export function TradingQuickAccess() {
                 />
                 
                 {/* Animated tip icon */}
-                <div className="flex items-center gap-2 relative z-10">
+                <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 relative z-10">
                   <motion.div
                     animate={isSpinning ? { 
                       rotate: 360,
@@ -611,11 +611,11 @@ export function TradingQuickAccess() {
                     transition={{ duration: 0.5 }}
                     className="flex-shrink-0"
                   >
-                    <Sparkles className="w-3 h-3 text-blue-400" />
+                    <Sparkles className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 text-blue-400" />
                   </motion.div>
                   
                   {/* Tip Text Window */}
-                  <div className="h-4 flex-1 overflow-hidden relative">
+                  <div className="h-3 xs:h-3.5 sm:h-4 flex-1 overflow-hidden relative">
                     <AnimatePresence mode="wait">
                       {isSpinning ? (
                         // Spinning animation
@@ -633,7 +633,7 @@ export function TradingQuickAccess() {
                           {[0, 1, 2].map((i) => (
                             <motion.span
                               key={i}
-                              className="text-[8px] md:text-[9px] text-blue-300/50 font-medium whitespace-nowrap"
+                              className="text-[6px] xs:text-[7px] sm:text-[8px] md:text-[9px] text-blue-300/50 font-medium whitespace-nowrap"
                               style={{ filter: 'blur(1px)' }}
                             >
                               {tradingTips[(tipIndex + i) % tradingTips.length].slice(0, 28)}
@@ -655,7 +655,7 @@ export function TradingQuickAccess() {
                           className="absolute inset-0 flex items-center"
                         >
                           <motion.span 
-                            className="text-[8px] md:text-[9px] text-blue-200/90 font-medium whitespace-nowrap"
+                            className="text-[6px] xs:text-[7px] sm:text-[8px] md:text-[9px] text-blue-200/90 font-medium whitespace-nowrap truncate"
                             animate={tradingTips[tipIndex].length > 40 ? {
                               x: [0, -20, 0]
                             } : {

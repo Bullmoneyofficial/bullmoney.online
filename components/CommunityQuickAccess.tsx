@@ -314,10 +314,10 @@ const LiveTradesTicker = React.memo(() => {
 
   if (loading || !currentMessage) {
     return (
-      <div className="mt-0 -translate-y-0.5 px-2.5 py-2 bg-zinc-900/80 rounded-b-xl border-x border-b border-cyan-500/20">
-        <div className="flex items-center gap-2">
-          <Loader className="w-2.5 h-2.5 text-cyan-400 animate-spin" />
-          <span className="text-[8px] text-zinc-500">Loading live trades...</span>
+      <div className="mt-0 -translate-y-0.5 px-1 py-0.5 bg-zinc-900/80 rounded-b-lg border-x border-b border-cyan-500/20 w-[100px] xs:w-[120px] sm:w-[150px] md:w-[180px]">
+        <div className="flex items-center gap-1">
+          <Loader className="w-2 h-2 text-cyan-400 animate-spin" />
+          <span className="text-[5px] text-zinc-500">Loading...</span>
         </div>
       </div>
     );
@@ -335,31 +335,29 @@ const LiveTradesTicker = React.memo(() => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
     >
-      <div className="px-1.5 py-1.5 bg-gradient-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/90 backdrop-blur-xl rounded-b-xl border-x border-b border-cyan-500/30 hover:border-cyan-400/50 hover:bg-zinc-800/95 transition-all overflow-hidden w-[200px] md:w-[240px]">
+      <div className="px-1 py-0.5 xs:py-1 bg-gradient-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/90 backdrop-blur-xl rounded-b-lg border-x border-b border-cyan-500/30 hover:border-cyan-400/50 hover:bg-zinc-800/95 transition-all overflow-hidden w-[100px] xs:w-[120px] sm:w-[150px] md:w-[180px]">
         {/* Header row */}
-        <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between mb-0.5">
+          <div className="flex items-center gap-0.5">
             <motion.div
-              className="w-1.5 h-1.5 bg-green-400 rounded-full"
+              className="w-1 h-1 bg-green-400 rounded-full"
               animate={{ 
                 opacity: [1, 0.3, 1],
                 boxShadow: ['0 0 0px rgba(74,222,128,0.8)', '0 0 6px rgba(74,222,128,0.8)', '0 0 0px rgba(74,222,128,0.8)']
               }}
               transition={{ duration: 1, repeat: Infinity }}
             />
-            <span className="text-[6px] font-bold text-cyan-400/80 uppercase tracking-wider">Live Signal</span>
+            <span className="text-[4px] font-bold text-cyan-400/80 uppercase tracking-wider">Live</span>
           </div>
           {/* Views & Stats */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             {currentMessage.views && (
               <div className="flex items-center gap-0.5">
-                <span className="text-[6px] text-zinc-500">👁</span>
-                <span className="text-[6px] text-zinc-400 font-medium">{currentMessage.views}</span>
+                <span className="text-[5px] text-zinc-400 font-medium">{currentMessage.views}</span>
               </div>
             )}
             <div className="flex items-center gap-0.5">
-              <Zap className="w-1.5 h-1.5 text-amber-400" />
-              <span className="text-[6px] text-zinc-500">{currentIndex + 1}/{messages.length}</span>
+              <span className="text-[5px] text-zinc-500">{currentIndex + 1}/{messages.length}</span>
             </div>
           </div>
         </div>
@@ -372,31 +370,17 @@ const LiveTradesTicker = React.memo(() => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="space-y-0.5"
+            className="space-y-0"
           >
             {/* Primary line */}
-            <p className="text-[9px] text-white font-semibold leading-tight truncate emoji-text">
+            <p className="text-[6px] xs:text-[7px] sm:text-[8px] text-white font-semibold leading-tight truncate emoji-text">
               {line1}
             </p>
-            {/* Secondary line */}
-            {line2 && (
-              <p className="text-[8px] text-cyan-200/80 leading-tight truncate emoji-text">
-                {line2}
-              </p>
-            )}
           </motion.div>
         </AnimatePresence>
         
-        {/* Footer with time & progress */}
-        <div className="mt-1 flex items-center justify-between">
-          <span className="text-[6px] text-zinc-500">{currentMessage.date || 'Just now'}</span>
-          {currentMessage.hasMedia && (
-            <span className="text-[6px] text-blue-400">📷 Media</span>
-          )}
-        </div>
-        
         {/* Progress bar - OPTIMIZED: Use will-change for better performance */}
-        <div className="mt-1 h-[2px] bg-zinc-700/40 rounded-full overflow-hidden">
+        <div className="mt-0.5 h-[1px] bg-zinc-700/40 rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-400"
             initial={{ width: '0%' }}
@@ -952,8 +936,8 @@ export function CommunityQuickAccess() {
         }}
         className="fixed left-0 z-[250000] pointer-events-none"
         style={{
-          top: 'calc(5rem + env(safe-area-inset-top, 0px) + 130px)',
-          paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 8px)',
+          top: 'calc(5rem + env(safe-area-inset-top, 0px) + 126px)',
+          paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 2px)',
         }}
       >
         <motion.div
@@ -1011,10 +995,10 @@ export function CommunityQuickAccess() {
               }}
             />
             
-            <div className="px-1.5 py-1.5 sm:px-2 sm:py-1.5 md:px-3 md:py-2.5 flex items-center gap-0.5 sm:gap-1 md:gap-1.5 relative z-10">
+            <div className="px-1 py-1 xs:px-1.5 xs:py-1 sm:px-2 sm:py-1.5 md:px-3 md:py-2.5 flex items-center gap-0.5 sm:gap-1 md:gap-1.5 relative z-10">
               {/* Live Indicator - OPTIMIZED: increased duration to 1.5s */}
               <motion.div
-                className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-cyan-400 rounded-full"
+                className="w-1 h-1 xs:w-1.5 xs:h-1.5 sm:w-2 sm:h-2 bg-cyan-400 rounded-full"
                 animate={{ 
                   opacity: [1, 0.4, 1],
                   scale: [1, 1.2, 1],
@@ -1029,8 +1013,8 @@ export function CommunityQuickAccess() {
 
               {/* Text */}
               <div className="flex items-center gap-0.5 sm:gap-0.5 md:gap-1">
-                <TrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-cyan-300 drop-shadow-[0_0_3px_rgba(34,211,238,0.5)]" />
-                <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold text-cyan-200">
+                <TrendingUp className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-cyan-300 drop-shadow-[0_0_3px_rgba(34,211,238,0.5)]" />
+                <span className="text-[6px] xs:text-[7px] sm:text-[9px] md:text-[10px] font-bold text-cyan-200">
                   Live Trades
                 </span>
               </div>
@@ -1040,7 +1024,7 @@ export function CommunityQuickAccess() {
                 animate={{ rotate: isExpanded ? 180 : 0 }}
                 transition={{ type: "spring", stiffness: 400 }}
               >
-                <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3 md:h-3 text-cyan-400/70" />
+                <ChevronRight className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 text-cyan-400/70" />
               </motion.div>
             </div>
             
