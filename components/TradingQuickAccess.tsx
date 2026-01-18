@@ -10,7 +10,8 @@ import {
   MessageSquare,
   Bitcoin,
   Coins,
-  ExternalLink
+  ExternalLink,
+  Sparkles
 } from 'lucide-react';
 import { useUIState } from '@/contexts/UIStateContext';
 
@@ -54,7 +55,63 @@ export function TradingQuickAccess() {
   const [calendarImportance, setCalendarImportance] = useState<string[]>(['2', '3']); // High and Medium
   const [calendarCurrencies, setCalendarCurrencies] = useState<string[]>(['USD', 'EUR', 'GBP', 'JPY']);
   const [mounted, setMounted] = useState(false);
+  const [tipIndex, setTipIndex] = useState(0);
+  const [isSpinning, setIsSpinning] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  // Trading tips that rotate
+  const tradingTips = [
+    "Check the price out! 📈",
+    "Gold often moves inverse to USD 💰",
+    "Watch for support & resistance levels",
+    "Use RSI for overbought/oversold signals",
+    "MACD crossovers signal trend changes",
+    "Volume confirms price movements",
+    "Higher highs = bullish trend 🟢",
+    "Lower lows = bearish trend 🔴",
+    "200+ chart analysis tools inside!",
+    "Set stop losses to manage risk",
+    "News events move markets fast ⚡",
+    "Fibonacci levels mark key zones",
+    "Bollinger Bands show volatility",
+    "Moving averages smooth price action",
+    "Candlestick patterns reveal sentiment",
+    "Doji = market indecision",
+    "Engulfing candles signal reversals",
+    "Head & shoulders = trend reversal",
+    "Double tops/bottoms are key patterns",
+    "Triangles precede breakouts",
+    "Always check the daily timeframe",
+    "Correlation: Gold vs DXY inverse 📊",
+    "BTC leads crypto market moves",
+    "London & NY sessions = high volume",
+    "Asian session = range-bound trading",
+    "NFP Fridays = major USD moves",
+    "FOMC meetings = volatility spikes",
+    "Risk management > prediction",
+    "1% risk per trade is wise",
+    "Trend is your friend 🎯",
+    "Don't fight the Fed",
+    "Buy the rumor, sell the news",
+    "Patience is a trader's virtue",
+    "Emotions kill trading accounts",
+    "Journal every trade you make",
+    "Backtest before going live",
+    "Paper trade to learn first",
+    "ATR measures true volatility",
+    "Pivot points mark intraday levels",
+    "VWAP is institutional favorite",
+    "Order flow reveals big players",
+    "Liquidity pools attract price",
+    "Fair value gaps get filled",
+    "Market structure = key concept",
+    "Break of structure = momentum",
+    "Change of character = reversal",
+    "Smart money concepts work",
+    "ICT methodology is powerful",
+    "Supply & demand zones matter",
+    "Imbalances create opportunities",
+  ];
   
   // UI State awareness
   const { isAnyModalOpen, isMobileMenuOpen, isUltimatePanelOpen, isV2Unlocked } = useUIState();
@@ -99,6 +156,21 @@ export function TradingQuickAccess() {
     const interval = setInterval(updatePrices, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  // Rotate trading tips with slot machine spin effect
+  useEffect(() => {
+    const tipInterval = setInterval(() => {
+      // Start spinning
+      setIsSpinning(true);
+      
+      // After spin animation, show new tip
+      setTimeout(() => {
+        setTipIndex(prev => (prev + 1) % tradingTips.length);
+        setIsSpinning(false);
+      }, 800); // Spin duration
+    }, 5000); // Time between spins
+    return () => clearInterval(tipInterval);
+  }, [tradingTips.length]);
 
   // Hide when not mounted, v2 not unlocked, or any modal/UI is open
   const shouldHide = !mounted || !isV2Unlocked || isMobileMenuOpen || isUltimatePanelOpen || isAnyModalOpen;
@@ -172,14 +244,14 @@ export function TradingQuickAccess() {
               {/* Prices */}
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1">
-                  <Coins className="w-3 h-3 md:w-4 md:h-4 text-blue-300" />
+                  <Coins className="w-3 h-3 md:w-4 md:h-4 text-blue-300 drop-shadow-[0_0_3px_rgba(147,197,253,0.5)]" />
                   <span className="text-[9px] md:text-[10px] font-bold text-blue-200">
                     ${prices.xauusd}
                   </span>
                 </div>
                 <div className="w-px h-3 bg-blue-500/30" />
                 <div className="flex items-center gap-1">
-                  <Bitcoin className="w-3 h-3 md:w-4 md:h-4 text-blue-300" />
+                  <Bitcoin className="w-3 h-3 md:w-4 md:h-4 text-blue-300 drop-shadow-[0_0_3px_rgba(147,197,253,0.5)]" />
                   <span className="text-[9px] md:text-[10px] font-bold text-blue-200">
                     ${prices.btcusd}
                   </span>
@@ -195,6 +267,94 @@ export function TradingQuickAccess() {
               </motion.div>
             </div>
           </div>
+          
+          {/* Trading Tip - Matching Price Pill Style */}
+          {!isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-1.5"
+            >
+              {/* Pill Container - Same style as price UI */}
+              <div className="relative rounded-r-full bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-blue-500/50 shadow-2xl hover:border-blue-400/70 hover:shadow-blue-600/40 transition-all duration-300 px-3 py-1.5">
+                {/* Animated tip icon */}
+                <div className="flex items-center gap-2">
+                  <motion.div
+                    animate={isSpinning ? { 
+                      rotate: 360,
+                      scale: [1, 1.2, 1]
+                    } : {}}
+                    transition={{ duration: 0.5 }}
+                    className="flex-shrink-0"
+                  >
+                    <Sparkles className="w-3 h-3 text-blue-400" />
+                  </motion.div>
+                  
+                  {/* Tip Text Window */}
+                  <div className="h-4 flex-1 overflow-hidden relative">
+                    <AnimatePresence mode="wait">
+                      {isSpinning ? (
+                        // Spinning animation
+                        <motion.div
+                          key="spinning"
+                          initial={{ y: 0 }}
+                          animate={{ y: [-60, 60, -30, 30, 0] }}
+                          transition={{ 
+                            duration: 0.8,
+                            ease: [0.25, 0.1, 0.25, 1],
+                            times: [0, 0.3, 0.5, 0.7, 1]
+                          }}
+                          className="absolute inset-0 flex flex-col items-center justify-center"
+                        >
+                          {[0, 1, 2].map((i) => (
+                            <motion.span
+                              key={i}
+                              className="text-[8px] md:text-[9px] text-blue-300/50 font-medium whitespace-nowrap"
+                              style={{ filter: 'blur(1px)' }}
+                            >
+                              {tradingTips[(tipIndex + i) % tradingTips.length].slice(0, 28)}
+                            </motion.span>
+                          ))}
+                        </motion.div>
+                      ) : (
+                        // Displayed tip with horizontal scroll for longer text
+                        <motion.div
+                          key={tipIndex}
+                          initial={{ x: 20, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          exit={{ x: -20, opacity: 0 }}
+                          transition={{ 
+                            type: 'spring',
+                            stiffness: 400,
+                            damping: 20
+                          }}
+                          className="absolute inset-0 flex items-center"
+                        >
+                          <motion.span 
+                            className="text-[8px] md:text-[9px] text-blue-200/90 font-medium whitespace-nowrap"
+                            animate={tradingTips[tipIndex].length > 40 ? {
+                              x: [0, -20, 0]
+                            } : {}}
+                            transition={{
+                              duration: Math.max(3, Math.ceil(tradingTips[tipIndex].length / 15) * 2),
+                              ease: 'linear',
+                              repeat: tradingTips[tipIndex].length > 40 ? Infinity : 0,
+                              repeatDelay: 1
+                            }}
+                          >
+                            💡 {tradingTips[tipIndex]}
+                          </motion.span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+                
+                {/* Subtle inner glow */}
+                <div className="absolute inset-0 rounded-r-full bg-gradient-to-r from-blue-500/5 to-transparent pointer-events-none" />
+              </div>
+            </motion.div>
+          )}
         </motion.div>
       </motion.div>
 
