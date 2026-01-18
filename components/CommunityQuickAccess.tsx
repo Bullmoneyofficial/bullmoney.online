@@ -936,7 +936,9 @@ export function CommunityQuickAccess() {
         }}
         className="fixed left-0 z-[250000] pointer-events-none"
         style={{
-          top: 'calc(5rem + env(safe-area-inset-top, 0px) + 126px)',
+          top: window.innerWidth === 414 && window.innerHeight === 896 
+            ? 'calc(5rem + env(safe-area-inset-top, 0px) + 142px)' // iPhone 11 - moved down by 16px
+            : 'calc(5rem + env(safe-area-inset-top, 0px) + 126px)', // Default position
           paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 2px)',
         }}
       >
