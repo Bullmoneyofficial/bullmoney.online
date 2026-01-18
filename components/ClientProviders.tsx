@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { ReactNode, Suspense, memo } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useUIState } from "@/contexts/UIStateContext";
 // RecruitAuthProvider is now in layout.tsx to wrap Navbar
 // REMOVED: UIStateProvider - already provided by MobileMenuProvider in layout.tsx
@@ -160,17 +161,18 @@ const LazyGlobalModals = memo(function LazyGlobalModals() {
 
 export function ClientProviders({ children, modal }: ClientProvidersProps) {
   return (
-    <AuthProvider>
-      {/* NOTE: UIStateProvider is already provided by MobileMenuProvider in layout.tsx */}
-      {/* NOTE: RecruitAuthProvider is now in layout.tsx to wrap Navbar */}
+    <ErrorBoundary>
+      <AuthProvider>
+        {/* NOTE: UIStateProvider is already provided by MobileMenuProvider in layout.tsx */}
+        {/* NOTE: RecruitAuthProvider is now in layout.tsx to wrap Navbar */}
+
+        {/* CRITICAL: FPS Scroll Optimizer - pauses animations during scroll */}
+        <FpsScrollOptimizer />
       
-      {/* CRITICAL: FPS Scroll Optimizer - pauses animations during scroll */}
-      <FpsScrollOptimizer />
-      
-      <UnifiedPerformanceProvider startDelay={2000}>
-        <CrashTrackerProvider>
-          <FpsOptimizerProvider enableMonitoring={true} monitoringInterval={500} startDelay={1000}>
-            <PerformanceProvider enableSmoothScroll={true}>
+        <UnifiedPerformanceProvider startDelay={2000}>
+          <CrashTrackerProvider>
+            <FpsOptimizerProvider enableMonitoring={true} monitoringInterval={500} startDelay={1000}>
+              <PerformanceProvider enableSmoothScroll={true}>
               <FpsMonitor show={false} />
               <ClientCursor />
               {/* AudioWidget stays mounted - NOT lazy unmounted - for audio persistence */}
@@ -238,11 +240,12 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
                 - Opens the Admin VIP Panel
               */}
               <AdminButton />
-            </PerformanceProvider>
-          </FpsOptimizerProvider>
-        </CrashTrackerProvider>
-      </UnifiedPerformanceProvider>
-    </AuthProvider>
+              </PerformanceProvider>
+            </FpsOptimizerProvider>
+          </CrashTrackerProvider>
+        </UnifiedPerformanceProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

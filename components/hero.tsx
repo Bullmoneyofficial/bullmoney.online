@@ -1,11 +1,7 @@
 "use client";
 import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { createPortal } from 'react-dom';
-import dynamic from 'next/dynamic';
 import { detectBrowser } from '@/lib/browserDetection';
-
-const Spline = dynamic(() => import('@/lib/spline-wrapper'), { ssr: false });
-const SplineWithAudio = dynamic(() => import('@/components/SplineWithAudio'), { ssr: false });
 import {
   motion,
   useScroll,
@@ -20,6 +16,128 @@ import Image from "next/image";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Loader2, Edit2, Save, X, Trash2, Upload, Instagram, Send } from "lucide-react";
+
+const SPLINE_VIEWER_SCRIPT_SRC = "https://unpkg.com/@splinetool/viewer@1.12.36/build/spline-viewer.js";
+
+type HeroSplineSource = {
+  runtimeUrl: string;
+  viewerUrl: string;
+  preferViewer?: boolean;
+};
+
+const HERO_SPLINE_SCENES = {
+  primary: {
+    runtimeUrl: "https://prod.spline.design/S-nBNkFCGU9KbFxY/scene.splinecode",
+    viewerUrl: "https://my.spline.design/timefoldodyssey-s3vKRBOk0ESLxu0qgZIB1IOD/",
+    preferViewer: true,
+  },
+  secondary: {
+    runtimeUrl: "https://prod.spline.design/iWLVJpgyHSJpuCnD/scene.splinecode",
+    viewerUrl: "https://my.spline.design/nexbotrobotcharacterconcept-pJvW8Dq4jVXayg6xUDiM8nPp/",
+    preferViewer: true,
+  },
+} as const;
+
+type HeroSplineScene = keyof typeof HERO_SPLINE_SCENES;
+
+const HERO_SPLINE_BLOCK_SIZE = 5;
+const HERO_SPLINE_STORAGE_KEY = "heroSplineCycleIndex";
+const HERO_SPLINE_LEGACY_KEY = "heroSplineReloadCount";
+const HERO_SPLINE_CYCLE_LENGTH = HERO_SPLINE_BLOCK_SIZE * 2;
+const HERO_SPLINE_DEFAULT_INDEX = 0;
+let heroSplineResolvedThisLoad = false;
+let heroSplineCachedResolution: HeroSplineResolution | null = null;
+
+const getStoredHeroSplineIndex = (): number => {
+  if (typeof window === "undefined") {
+    return HERO_SPLINE_DEFAULT_INDEX;
+  }
+
+  try {
+    if (window.localStorage.getItem(HERO_SPLINE_LEGACY_KEY) !== null) {
+      window.localStorage.removeItem(HERO_SPLINE_LEGACY_KEY);
+    }
+
+    const storedValue = window.localStorage.getItem(HERO_SPLINE_STORAGE_KEY);
+    const parsedValue = storedValue ? parseInt(storedValue, 10) : Number.NaN;
+
+    if (Number.isInteger(parsedValue) && parsedValue >= 0 && parsedValue < HERO_SPLINE_CYCLE_LENGTH) {
+      return parsedValue;
+    }
+
+    window.localStorage.setItem(HERO_SPLINE_STORAGE_KEY, String(HERO_SPLINE_DEFAULT_INDEX));
+    return HERO_SPLINE_DEFAULT_INDEX;
+  } catch (error) {
+    console.warn("[HeroSpline] Failed to read stored index", error);
+    return HERO_SPLINE_DEFAULT_INDEX;
+  }
+};
+
+const setStoredHeroSplineIndex = (index: number) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(HERO_SPLINE_STORAGE_KEY, String(index));
+  } catch (error) {
+    console.warn("[HeroSpline] Failed to persist index", error);
+  }
+};
+
+const sceneFromIndex = (index: number): HeroSplineScene =>
+  index < HERO_SPLINE_BLOCK_SIZE ? "primary" : "secondary";
+
+const blockStepFromIndex = (index: number): number =>
+  (index % HERO_SPLINE_BLOCK_SIZE) + 1;
+
+type HeroSplineResolution = {
+  scene: HeroSplineScene;
+  blockStep: number;
+};
+
+const resolveHeroSplineScene = (): HeroSplineResolution => {
+  if (typeof window === "undefined") {
+    return { scene: "primary", blockStep: 1 };
+  }
+
+  if (heroSplineResolvedThisLoad && heroSplineCachedResolution) {
+    return heroSplineCachedResolution;
+  }
+
+  const currentIndex = getStoredHeroSplineIndex();
+  const nextIndex = (currentIndex + 1) % HERO_SPLINE_CYCLE_LENGTH;
+  setStoredHeroSplineIndex(nextIndex);
+
+  heroSplineResolvedThisLoad = true;
+  heroSplineCachedResolution = {
+    scene: sceneFromIndex(currentIndex),
+    blockStep: blockStepFromIndex(currentIndex),
+  };
+
+  return heroSplineCachedResolution;
+};
+
+const useHeroSplineSource = () => {
+  const [resolution] = useState(() => resolveHeroSplineScene());
+  return {
+    scene: resolution.scene,
+    blockStep: resolution.blockStep,
+    source: HERO_SPLINE_SCENES[resolution.scene],
+  } as const;
+};
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      "spline-viewer": React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+        url: string;
+        loading?: "lazy" | "eager";
+        "events-target"?: string;
+      };
+    }
+  }
+}
 
 // --- CONTEXT INTEGRATION ---
 import { useStudio, type Project } from "@/context/StudioContext";
@@ -151,6 +269,58 @@ const useIsMobile = () => {
     }, []);
     return isMobile;
 };
+
+  const useSplineViewerScript = () => {
+    const [ready, setReady] = useState(false);
+
+    useEffect(() => {
+      if (typeof window === "undefined") return;
+
+      if (typeof window !== "undefined" && window.customElements?.get("spline-viewer")) {
+        setReady(true);
+        return;
+      }
+
+      const existing = document.querySelector<HTMLScriptElement>('script[data-spline-viewer]');
+      if (existing) {
+        if (existing.dataset.loaded === "true") {
+          setReady(true);
+          return;
+        }
+        const handleExistingLoad = () => setReady(true);
+        const handleExistingError = () => setReady(false);
+        existing.addEventListener("load", handleExistingLoad);
+        existing.addEventListener("error", handleExistingError);
+        return () => {
+          existing.removeEventListener("load", handleExistingLoad);
+          existing.removeEventListener("error", handleExistingError);
+        };
+      }
+
+      const script = document.createElement("script");
+      script.type = "module";
+      script.src = SPLINE_VIEWER_SCRIPT_SRC;
+      script.async = true;
+      script.dataset.splineViewer = "true";
+
+      const handleLoad = () => {
+        script.dataset.loaded = "true";
+        setReady(true);
+      };
+      const handleError = () => setReady(false);
+
+      script.addEventListener("load", handleLoad);
+      script.addEventListener("error", handleError);
+      document.head.appendChild(script);
+
+      return () => {
+        script.removeEventListener("load", handleLoad);
+        script.removeEventListener("error", handleError);
+      };
+    }, []);
+
+    return ready;
+  };
 
 // --- 0. CONTACT MODAL COMPONENT ---
 const ContactSelectionModal = ({ 
@@ -313,6 +483,65 @@ const ProductCard = React.memo(({
 });
 ProductCard.displayName = "ProductCard";
 
+const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { preferViewer: boolean; runtimeUrl: string; viewerUrl: string }) => {
+  const viewerReady = useSplineViewerScript();
+  const [forceIframeFallback, setForceIframeFallback] = useState(false);
+
+  useEffect(() => {
+    setForceIframeFallback(false);
+  }, [runtimeUrl]);
+
+  useEffect(() => {
+    if (!preferViewer || typeof window === "undefined") return;
+
+    const handleViewerError = (event: ErrorEvent) => {
+      const message = event?.message || "";
+      const source = event?.filename || "";
+      if (message.includes("Data read, but end of buffer not reached") && source.includes("@splinetool/viewer")) {
+        console.warn("[HeroSpline] Viewer parsing failed, falling back to iframe for", runtimeUrl);
+        setForceIframeFallback(true);
+      }
+    };
+
+    window.addEventListener("error", handleViewerError);
+    return () => window.removeEventListener("error", handleViewerError);
+  }, [preferViewer, runtimeUrl]);
+
+  const shouldUseViewer = preferViewer && viewerReady && !forceIframeFallback;
+
+  return (
+    <div className="relative w-full h-full" aria-label="BullMoney hero spline">
+      <div className="absolute inset-0 w-full h-full">
+        {shouldUseViewer ? (
+          <spline-viewer
+            url={runtimeUrl}
+            loading="lazy"
+            data-testid="hero-spline-viewer"
+            events-target="global"
+            style={{
+              width: "100%",
+              height: "100%",
+              border: "none",
+              background: "transparent",
+            }}
+          />
+        ) : (
+          <iframe
+            src={viewerUrl}
+            title="BullMoney hero scene"
+            frameBorder="0"
+            allow="fullscreen; autoplay; xr-spatial-tracking"
+            loading="lazy"
+            className="w-full h-full border-0"
+            data-testid="hero-spline-iframe"
+          />
+        )}
+      </div>
+    </div>
+  );
+});
+SplineSceneEmbed.displayName = "SplineSceneEmbed";
+
 // --- 3. MAIN HERO PARALLAX ---
 const HeroParallax = () => {
   const { 
@@ -331,6 +560,14 @@ const HeroParallax = () => {
   const willChange = useWillChange();
 
   const buttonText = hero?.button_text || "View Trading Setups";
+  const { scene: heroSplineScene, source: heroSplineSource, blockStep: heroSplineBlockStep } = useHeroSplineSource();
+  const showReloadCue = heroSplineBlockStep >= 2 && heroSplineBlockStep <= HERO_SPLINE_BLOCK_SIZE;
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "production") {
+      console.info(`[HeroSpline] Active hero scene: ${heroSplineScene}`);
+    }
+  }, [heroSplineScene]);
 
   // Global Theme Context - syncs across entire app
   const { activeThemeId, setTheme, accentColor } = useGlobalTheme();
@@ -1046,6 +1283,28 @@ const HeroParallax = () => {
               pointerEvents: 'auto',
             }}
           >
+            <AnimatePresence mode="popLayout">
+              {showReloadCue && (
+                <motion.div
+                  key={`hero-reload-cue-${heroSplineScene}-${heroSplineBlockStep}`}
+                  initial={{ opacity: 0, y: -12, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -12, scale: 0.95 }}
+                  transition={{ duration: 0.45, ease: 'easeOut' }}
+                  className="pointer-events-none absolute top-6 right-6 z-30"
+                >
+                  <motion.div
+                    animate={{ opacity: [0.8, 1, 0.8], scale: [0.98, 1, 0.98] }}
+                    transition={{ duration: 1.8, repeat: Infinity }}
+                    className="rounded-full px-4 py-2 bg-black/70 backdrop-blur border border-white/10 text-white text-xs md:text-sm font-semibold tracking-wide shadow-lg flex items-center gap-2"
+                  >
+                    <span aria-hidden="true">↻</span>
+                    Reloading changes Spline scenes
+                    <span className="text-[10px] text-white/70">{heroSplineBlockStep}/{HERO_SPLINE_BLOCK_SIZE}</span>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <div className="w-full h-full flex items-center justify-center">
               {/* CLS FIX: Fixed dimensions prevent layout shift */}
               <div
@@ -1065,23 +1324,13 @@ const HeroParallax = () => {
                   aspectRatio: 'unset',
                 }}
               >
-                {/* MOBILE-SAFE HERO LOADING: Uses dynamic settings to prevent crashes */}
-                {/* WITH 20 UNIQUE AUDIO INTERACTIONS: click, doubleClick, longPress, hover, hoverExit,
-                    drag, dragStart, dragEnd, scroll, zoom, rotate, touch, touchEnd,
-                    swipeLeft, swipeRight, swipeUp, swipeDown, pinch, spread, objectSelect */}
+                {/* MOBILE-SAFE HERO EMBED: Prefer custom viewer when possible, fallback to iframe everywhere else */}
                 {splineSettings.shouldRender ? (
-                  <SplineWithAudio 
-                    scene="/scene1.splinecode" 
-                    placeholder={undefined} 
-                    className="!w-full !h-full"
-                    priority={true}
-                    isHero={true}
-                    targetFPS={splineSettings.targetFPS}
-                    maxDpr={splineSettings.maxDpr}
-                    minDpr={splineSettings.minDpr}
-                    audioEnabled={!isMuted}
-                    audioProfile={audioProfile === 'MECHANICAL' ? 'MECHANICAL' : audioProfile === 'SCI-FI' ? 'CYBER' : audioProfile === 'SOROS' ? 'ORGANIC' : 'SILENT'}
-                    audioVolume={0.4}
+                  <SplineSceneEmbed
+                    key={heroSplineScene}
+                    preferViewer={heroSplineSource.preferViewer !== false}
+                    runtimeUrl={heroSplineSource.runtimeUrl}
+                    viewerUrl={heroSplineSource.viewerUrl}
                   />
                 ) : (
                   // Fallback for very low-end devices

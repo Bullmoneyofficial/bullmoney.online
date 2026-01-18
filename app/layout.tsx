@@ -33,7 +33,6 @@ import { AdvancedSEO } from "@/components/AdvancedSEO";
 import { GoogleSEOBoost } from "@/components/GoogleSEOBoost";
 
 import { ThemeProvider } from "@/context/providers";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StudioProvider } from "@/context/StudioContext";
 import { GlobalThemeProvider } from "@/contexts/GlobalThemeProvider";
 import { AudioSettingsProvider } from "@/contexts/AudioSettingsProvider";
@@ -1022,9 +1021,8 @@ export default function RootLayout({
       >
         {/* Global Shimmer Styles - ensures all shimmers are synchronized */}
         <ShimmerStylesProvider />
-        <ErrorBoundary>
-          {/* Cache Manager - Handles version-based cache invalidation */}
-          <CacheManagerProvider>
+        {/* Cache Manager - Handles version-based cache invalidation */}
+        <CacheManagerProvider>
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"
@@ -1057,8 +1055,7 @@ export default function RootLayout({
               </ViewportStateProvider>
             </GlobalThemeProvider>
           </ThemeProvider>
-          </CacheManagerProvider>
-        </ErrorBoundary>
+        </CacheManagerProvider>
         
         {/* ✅ VERCEL TRACKING - Enhanced Analytics & Speed Insights
             - Analytics: Tracks page views (unlimited on free plan)

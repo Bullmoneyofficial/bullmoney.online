@@ -167,6 +167,7 @@ export function PerformanceProvider({
   const [isMobile, setIsMobile] = React.useState(false);
   const [isHighEndDesktop, setIsHighEndDesktop] = React.useState(true);
   const [isInAppBrowser, setIsInAppBrowser] = React.useState(false);
+  const [lenisFailed, setLenisFailed] = React.useState(false);
   
   // Detect device type and capabilities on mount
   React.useEffect(() => {
@@ -256,6 +257,12 @@ export function PerformanceProvider({
       }
     }
   }, []);
+
+  React.useEffect(() => {
+    if (isMobile && lenisFailed) {
+      setLenisFailed(false);
+    }
+  }, [isMobile, lenisFailed]);
   
   // Initialize performance monitoring
   usePerformanceInit();
@@ -301,7 +308,59 @@ export function PerformanceProvider({
   const isInstagram = ua.includes('instagram') || ua.includes('ig_');
   const hasPremiumExperience = isAppleDevice || isInstagram;
   
-  const shouldUseSmoothScroll = enableSmoothScroll && !isMobile && (!isInAppBrowser || hasPremiumExperience);
+  const shouldUseSmoothScroll = enableSmoothScroll && !isMobile && (!isInAppBrowser || hasPremiumExperience) && !lenisFailed;
+
+  React.useEffect(() => {
+    if (!shouldUseSmoothScroll) {
+      return;
+    }
+
+    const scrollingElement = document.scrollingElement || document.documentElement;
+    let failureCount = 0;
+    let rafId: number | null = null;
+
+    const handleWheel = (event: WheelEvent) => {
+      const maxScrollable = scrollingElement.scrollHeight - scrollingElement.clientHeight;
+      if (maxScrollable <= 4) {
+        return;
+      }
+
+      const start = scrollingElement.scrollTop;
+      const atTop = start <= 1;
+      const atBottom = start >= maxScrollable - 1;
+
+      if ((atTop && event.deltaY < 0) || (atBottom && event.deltaY > 0)) {
+        failureCount = 0;
+        return;
+      }
+
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+
+      rafId = requestAnimationFrame(() => {
+        const delta = Math.abs(scrollingElement.scrollTop - start);
+        if (delta < 0.5) {
+          failureCount += 1;
+          if (failureCount >= 3 && !lenisFailed) {
+            console.warn('[PerformanceProvider] Lenis failed to move after wheel input, falling back to native scroll.');
+            setLenisFailed(true);
+          }
+        } else {
+          failureCount = 0;
+        }
+      });
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: true });
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+    };
+  }, [shouldUseSmoothScroll, lenisFailed]);
   
   if (shouldUseSmoothScroll) {
     return (

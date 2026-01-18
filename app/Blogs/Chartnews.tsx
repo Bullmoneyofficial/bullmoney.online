@@ -40,11 +40,10 @@ const GLOBAL_STYLES = `
   }
 
   .animate-gradient-xy {
-    animation: gradient-xy 15s ease infinite;
     background-size: 200% 200%;
   }
   .animate-float-slow {
-    animation: float-particle 6s ease-in-out infinite;
+        animation: none;
   }
   
   /* CYBER BLUE TEXT SHIMMER (Sky -> White -> Indigo) */
@@ -56,12 +55,13 @@ const GLOBAL_STYLES = `
       #818cf8 52%,   /* Indigo 400 */
       #38bdf8 80%    /* Sky 400 */
     );
-    background-size: 200% auto;
+        background-size: 200% auto;
+        background-position: 0% 50%;
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
-    animation: text-shimmer 3s linear infinite;
+        animation: none;
   }
 
   .gpu-layer {
@@ -86,6 +86,7 @@ interface ShimmerBorderProps {
     speed?: number;
     colorOverride?: string;
     innerClassName?: string;
+    animated?: boolean;
 }
 
 const ShimmerBorder = ({ 
@@ -95,23 +96,32 @@ const ShimmerBorder = ({
     borderWidth = 'inset-[2px]', 
     speed = 3, 
     colorOverride, 
-    innerClassName 
+    innerClassName,
+    animated = false
 }: ShimmerBorderProps) => {
     const finalGradient = colorOverride || shimmerGradient;
+    const gradientLayer = animated ? (
+        <motion.div
+            className="absolute inset-[-100%]" 
+            animate={{ rotate: 360 }}
+            transition={{ 
+                duration: speed, 
+                repeat: Infinity, 
+                ease: "linear" 
+            }}
+            style={{ background: finalGradient }}
+        />
+    ) : (
+        <div
+            className="absolute inset-[-100%]"
+            style={{ background: finalGradient, opacity: 0.6 }}
+        />
+    );
     
     return (
         <div className={cn("relative overflow-hidden group/shimmer", borderRadius, className)}>
-            {/* Layer 1: The Spinning Gradient */}
-            <motion.div
-                className="absolute inset-[-100%]" 
-                animate={{ rotate: 360 }}
-                transition={{ 
-                    duration: speed, 
-                    repeat: Infinity, 
-                    ease: "linear" 
-                }}
-                style={{ background: finalGradient }}
-            />
+            {/* Layer 1: Gradient Glow */}
+            {gradientLayer}
 
             {/* Layer 2: Inner Mask */}
             <div className={cn("absolute bg-neutral-950 flex items-center justify-center z-10", borderRadius, borderWidth, innerClassName)}>
@@ -139,10 +149,8 @@ const HelperTip = ({ label, className }: { label: string; className?: string }) 
   >
     {/* The Bubble */}
     <div className="relative p-[1.5px] overflow-hidden rounded-full shadow-lg shadow-sky-500/20">
-        <motion.div 
+        <div 
             className="absolute inset-[-100%]"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
             style={{ background: shimmerGradient }}
         />
         <div className="relative z-10 px-3 py-1 bg-[#020611] rounded-full flex items-center justify-center border border-sky-500/20">
@@ -160,12 +168,11 @@ const HelperTip = ({ label, className }: { label: string; className?: string }) 
 
 const Particle = memo(({ delay }: { delay: number }) => (
     <div 
-        className="absolute h-[2px] w-[2px] rounded-full bg-sky-400/60 animate-float-slow"
+        className="absolute h-[2px] w-[2px] rounded-full bg-sky-400/60"
         style={{
             top: `${Math.random() * 100}%`,
             left: `${Math.random() * 100}%`,
-            animationDelay: `${delay}s`,
-            animationDuration: `${4 + Math.random() * 4}s`
+            opacity: 0.5 + Math.random() * 0.4
         }}
     />
 ));
@@ -203,11 +210,11 @@ const HighAestheticCard = memo(({
             whileTap={{ scale: 0.99 }}
             onClick={onShow}
         >
-            <div className="absolute inset-0 bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#1e1b4b] opacity-90 animate-gradient-xy" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#1e1b4b] opacity-90" />
 
             {!isMobile && (
                 <>
-                    <div className="absolute inset-0 opacity-30 blur-3xl bg-[radial-gradient(circle_at_50%_60%,rgba(56,189,248,0.3),transparent_60%)] animate-float-slow" />
+                    <div className="absolute inset-0 opacity-30 blur-3xl bg-[radial-gradient(circle_at_50%_60%,rgba(56,189,248,0.3),transparent_60%)]" />
                     <div className="absolute inset-0 pointer-events-none">{particles}</div>
                 </>
             )}
@@ -220,7 +227,7 @@ const HighAestheticCard = memo(({
                     )}
                 </AnimatePresence>
 
-                <div className={`flex h-16 w-16 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 ring-1 ring-sky-500/50 mb-4 shadow-[0_0_20px_rgba(56,189,248,0.3)] ${!isChart && !isMobile ? "animate-float-slow" : ""}`}>
+                <div className={`flex h-16 w-16 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 ring-1 ring-sky-500/50 mb-4 shadow-[0_0_20px_rgba(56,189,248,0.3)]`}>
                     <Icon className="h-8 w-8" />
                 </div>
 
@@ -540,7 +547,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
 
                     <div className="mt-3 grid gap-3 md:grid-cols-5">
                         {loading
-                            ? Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-24 animate-pulse rounded-lg bg-white/5 ring-1 ring-white/10" />)
+                            ? Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-24 rounded-lg bg-white/5 ring-1 ring-white/10 opacity-70" />)
                             : top5.map((item, i) => (
                                 <a
                                     key={`${item.link}-${i}`}
@@ -572,7 +579,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                     </div>
                     <ul className="divide-y divide-white/5">
                         {loading && Array.from({ length: 8 }).map((_, i) => (
-                            <li key={i} className="animate-pulse p-4">
+                            <li key={i} className="p-4 opacity-80">
                                 <div className="h-3 w-1/3 rounded bg-white/5" />
                                 <div className="mt-2 h-4 w-2/3 rounded bg-white/5" />
                             </li>
@@ -635,7 +642,7 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                     >
                         <div className="relative flex items-center justify-between rounded-[9px] bg-[#0a0a0a] px-4 py-3 md:px-6 md:py-4">
                             <div className="flex items-center gap-4">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-900/10 text-sky-400 ring-1 ring-sky-500/20 animate-float-slow">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-900/10 text-sky-400 ring-1 ring-sky-500/20">
                                     <Newspaper className="h-5 w-5" />
                                 </div>
                                 <div className="text-left truncate">
@@ -721,10 +728,10 @@ export function CTA() {
                 Real-time institutional grade data covering <span className="text-sky-400">Crypto</span>, <span className="text-sky-400">Stocks</span>, <span className="text-sky-400">Forex</span>, and <span className="text-sky-400">Metals</span>.
             </p>
              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-sky-500/20 bg-sky-900/10 text-sky-400 text-[10px] font-mono tracking-widest uppercase mb-4">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-full w-full bg-sky-500"></span>
-                </span>
+                                <span className="relative flex h-2 w-2">
+                                    <span className="absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-40"></span>
+                                    <span className="relative inline-flex rounded-full h-full w-full bg-sky-500"></span>
+                                </span>
                 System Online
             </div>
         </header>
