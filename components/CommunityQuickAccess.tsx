@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageSquare,
@@ -10,9 +10,15 @@ import {
   Crown,
   ChevronRight,
   ExternalLink,
-  Loader
+  Loader,
+  ShoppingBag,
+  Lock,
+  Star,
+  Shield
 } from 'lucide-react';
+
 import { useUIState } from '@/contexts/UIStateContext';
+import { createSupabaseClient } from '@/lib/supabase';
 
 // Telegram message interface
 interface TelegramPost {
@@ -23,17 +29,67 @@ interface TelegramPost {
   hasMedia: boolean;
 }
 
+// Channel configuration
+const CHANNELS = {
+  main: { name: 'LIVESTREAMS', handle: 'bullmoneyfx', icon: MessageCircle, color: 'blue', requiresVip: false },
+  shop: { name: 'NEWS', handle: 'Bullmoneyshop', icon: ShoppingBag, color: 'blue', requiresVip: false },
+  vip: { name: 'VIP TRADES', handle: 'bullmoneyvip', icon: Crown, color: 'blue', requiresVip: true },
+} as const;
+
+type ChannelKey = keyof typeof CHANNELS;
+
+// VIP status hook (simplified inline version)
+function useVipCheck(userId?: string) {
+  const [isVip, setIsVip] = useState(false);
+  const [loading, setLoading] = useState(true);
+  
+  const checkStatus = useCallback(async () => {
+    if (!userId) {
+      setIsVip(false);
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      const res = await fetch(`/api/vip/status?userId=${userId}`, { cache: 'no-store' });
+      const data = await res.json();
+      setIsVip(data.isVip ?? false);
+    } catch (e) {
+      console.error('VIP check failed:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+  
+  useEffect(() => {
+    checkStatus();
+    // Poll every 5 seconds
+    const interval = setInterval(checkStatus, 5000);
+    return () => clearInterval(interval);
+  }, [checkStatus]);
+  
+  return { isVip, loading };
+}
+
 // Live Telegram Channel Feed Component - Fetches from API
-function TelegramChannelEmbed() {
+function TelegramChannelEmbed({ channel = 'main', isVip = false }: { channel?: ChannelKey; isVip?: boolean }) {
   const [posts, setPosts] = useState<TelegramPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  
+  const channelConfig = CHANNELS[channel];
+  const requiresVip = channelConfig.requiresVip && !isVip;
 
   useEffect(() => {
+    if (requiresVip) {
+      setLoading(false);
+      return;
+    }
+    
     const fetchPosts = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/telegram/channel');
+        const response = await fetch(`/api/telegram/channel?channel=${channel}`);
         const data = await response.json();
         
         if (data.success && data.posts) {
@@ -54,7 +110,31 @@ function TelegramChannelEmbed() {
     // Refresh every 2 minutes
     const interval = setInterval(fetchPosts, 120000);
     return () => clearInterval(interval);
-  }, []);
+  }, [channel, requiresVip]);
+
+  // VIP locked state
+  if (requiresVip) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+        <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mb-4">
+          <Lock className="w-8 h-8 text-amber-400" />
+        </div>
+        <h4 className="text-sm font-bold text-white mb-2">VIP Content</h4>
+        <p className="text-[10px] text-zinc-400 mb-4 max-w-[200px]">
+          Upgrade to VIP to access exclusive signals, analysis, and premium content.
+        </p>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => window.dispatchEvent(new CustomEvent('openProductsModal'))}
+          className="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-amber-500/30 flex items-center gap-2"
+        >
+          <Crown className="w-3.5 h-3.5" />
+          Unlock VIP Access
+        </motion.button>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -71,7 +151,7 @@ function TelegramChannelEmbed() {
         <MessageCircle className="w-10 h-10 text-blue-400/30 mb-3" />
         <p className="text-[11px] text-zinc-400 mb-2">Live feed loading...</p>
         <a
-          href="https://t.me/bullmoneyfx"
+          href={`https://t.me/${channelConfig.handle}`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-1"
@@ -88,7 +168,7 @@ function TelegramChannelEmbed() {
       {posts.map((post, idx) => (
         <motion.a
           key={post.id}
-          href={`https://t.me/bullmoneyfx/${post.id}`}
+          href={`https://t.me/${channelConfig.handle}/${post.id}`}
           target="_blank"
           rel="noopener noreferrer"
           initial={{ opacity: 0, y: 10 }}
@@ -97,12 +177,18 @@ function TelegramChannelEmbed() {
           className="block bg-white/5 hover:bg-white/10 rounded-lg p-3 border border-white/10 hover:border-blue-500/40 transition-all group"
         >
           <div className="flex items-start gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-              B
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${
+              channel === 'vip' 
+                ? 'bg-gradient-to-br from-amber-500 to-orange-500' 
+                : channel === 'shop'
+                ? 'bg-gradient-to-br from-emerald-500 to-teal-500'
+                : 'bg-gradient-to-br from-blue-500 to-cyan-500'
+            }`}>
+              {channel === 'vip' ? <Star className="w-4 h-4" /> : channel === 'shop' ? <ShoppingBag className="w-4 h-4" /> : 'B'}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-1">
-                <span className="text-[10px] font-semibold text-white">BullMoney</span>
+                <span className="text-[10px] font-semibold text-white">{channelConfig.name}</span>
                 <span className="text-[8px] text-zinc-500">{post.date}</span>
               </div>
               <p className="text-[10px] text-zinc-300 line-clamp-3 leading-relaxed">
@@ -131,12 +217,62 @@ export function CommunityQuickAccess() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [otherMenuOpen, setOtherMenuOpen] = useState(false);
+  const [activeChannel, setActiveChannel] = useState<ChannelKey>('main');
+  const [userId, setUserId] = useState<string | undefined>();
+  const [isAdmin, setIsAdmin] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const { isAnyModalOpen, isMobileMenuOpen, isUltimatePanelOpen, isV2Unlocked } = useUIState();
+  const { isVip } = useVipCheck(userId);
   
+  // Detect if logged-in user is the admin by checking Supabase session
   useEffect(() => {
     setMounted(true);
+    const supabase = createSupabaseClient();
+    
+    const checkAdmin = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user?.email) {
+          const userEmail = session.user.email;
+          const isAdminUser = userEmail === 'mrbullmoney@gmail.com' || userEmail?.toLowerCase() === 'mrbullmoney@gmail.com'.toLowerCase();
+          setIsAdmin(isAdminUser);
+          setUserId(session.user.id);
+          if (isAdminUser) {
+            console.log('✅ Admin user detected:', userEmail);
+          }
+        } else {
+          setIsAdmin(false);
+          setUserId(undefined);
+        }
+      } catch (e) {
+        console.error('Error checking admin status:', e);
+        setIsAdmin(false);
+      }
+    };
+    
+    checkAdmin();
+    
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user?.email) {
+        const userEmail = session.user.email;
+        const isAdminUser = userEmail === 'mrbullmoney@gmail.com' || userEmail?.toLowerCase() === 'mrbullmoney@gmail.com'.toLowerCase();
+        setIsAdmin(isAdminUser);
+        setUserId(session.user.id);
+        if (isAdminUser) {
+          console.log('✅ Admin user detected:', userEmail);
+        }
+      } else {
+        setIsAdmin(false);
+        setUserId(undefined);
+      }
+    });
+    
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -382,16 +518,65 @@ export function CommunityQuickAccess() {
                     Real-time updates from Telegram
                   </p>
                 </div>
+                
+                {/* Channel Tabs */}
+                <div className="flex items-center gap-1 p-2 border-b border-white/10 overflow-x-auto flex-shrink-0">
+                  {(Object.keys(CHANNELS) as ChannelKey[]).map((key) => {
+                    const ch = CHANNELS[key];
+                    const Icon = ch.icon;
+                    const isActive = activeChannel === key;
+                    const isLocked = ch.requiresVip && !isVip;
+                    
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setActiveChannel(key)}
+                        className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-medium transition-all whitespace-nowrap ${
+                          isActive
+                            ? ch.color === 'amber'
+                              ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
+                              : ch.color === 'emerald'
+                              ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/40'
+                              : 'bg-blue-500/30 text-blue-300 border border-blue-500/40'
+                            : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10'
+                        }`}
+                      >
+                        <Icon className="w-3 h-3" />
+                        {ch.name}
+                        {isLocked && <Lock className="w-2.5 h-2.5 ml-0.5 opacity-60" />}
+                      </button>
+                    );
+                  })}
+                  
+                  {/* Admin Button - Only visible for mrbullmoney@gmail.com */}
+                  {isAdmin && (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.2 }}
+                      onClick={() => {
+                        console.log('Opening admin panel...');
+                        window.dispatchEvent(new CustomEvent('openAdminVIPPanel'));
+                        setIsExpanded(false);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white border border-blue-400/60 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 ml-auto"
+                      title="Admin Panel - Manage VIP Status & Users (Cmd+Shift+A)"
+                    >
+                      <Shield className="w-3.5 h-3.5" />
+                      Admin Panel
+                    </motion.button>
+                  )}
+                </div>
 
                 {/* Scrollable Feed Section */}
                 <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
-                  <TelegramChannelEmbed />
+                  <TelegramChannelEmbed channel={activeChannel} isVip={isVip} />
                 </div>
 
                 {/* View All Link */}
                 <div className="px-2 sm:px-3 py-1.5 border-t border-blue-500/10 flex-shrink-0">
                   <a
-                    href="https://t.me/bullmoneyfx"
+                    href={`https://t.me/${CHANNELS[activeChannel].handle}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-1 text-[9px] text-blue-400 hover:text-blue-300 transition-colors"

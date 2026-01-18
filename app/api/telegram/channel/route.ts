@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 interface TelegramPost {
   id: string;
@@ -6,21 +6,30 @@ interface TelegramPost {
   date: string;
   views?: string;
   hasMedia: boolean;
+  channel: string;
+  channelName: string;
 }
 
-// Channel username (without @)
-const CHANNEL_USERNAME = 'bullmoneyfx';
+// Available channels
+const CHANNELS = {
+  main: { username: 'bullmoneyfx', name: 'BullMoney FX' },
+  shop: { username: 'Bullmoneyshop', name: 'BullMoney Shop' },
+  vip: { username: 'bullmoneyvip', name: 'VIP Updates' }, // VIP only
+};
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const channelParam = request.nextUrl.searchParams.get('channel') || 'main';
+    const channel = CHANNELS[channelParam as keyof typeof CHANNELS] || CHANNELS.main;
+    
     // Fetch the public channel preview page
-    const response = await fetch(`https://t.me/s/${CHANNEL_USERNAME}`, {
+    const response = await fetch(`https://t.me/s/${channel.username}`, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.5',
       },
-      next: { revalidate: 60 }, // Cache for 60 seconds
+      next: { revalidate: 60 },
     });
 
     if (!response.ok) {
@@ -28,14 +37,13 @@ export async function GET() {
     }
 
     const html = await response.text();
-    
-    // Parse the HTML to extract messages
-    const posts = parseChannelHTML(html);
+    const posts = parseChannelHTML(html, channel.username, channel.name);
 
     return NextResponse.json({
       success: true,
-      posts: posts.slice(0, 10), // Return last 10 posts
-      channel: CHANNEL_USERNAME,
+      posts: posts.slice(0, 10),
+      channel: channel.username,
+      channelName: channel.name,
       lastUpdated: new Date().toISOString(),
     }, {
       headers: {
@@ -52,36 +60,21 @@ export async function GET() {
   }
 }
 
-function parseChannelHTML(html: string): TelegramPost[] {
+function parseChannelHTML(html: string, channelUsername: string, channelName: string): TelegramPost[] {
   const posts: TelegramPost[] = [];
   
   try {
-    // Extract message blocks using regex patterns
-    // Telegram uses specific class names for messages
-    
-    // Pattern to find message containers
-    const messagePattern = /class="tgme_widget_message_wrap[^"]*"[^>]*data-post="([^"]+)"[^>]*>([\s\S]*?)(?=class="tgme_widget_message_wrap|$)/gi;
-    
-    // Alternative: simpler pattern for message text
-    const textPattern = /class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/gi;
-    const datePattern = /class="tgme_widget_message_date[^"]*"[^>]*><time[^>]*datetime="([^"]+)"[^>]*>([^<]+)<\/time>/gi;
-    const viewsPattern = /class="tgme_widget_message_views"[^>]*>([^<]+)</gi;
-    const mediaPattern = /class="tgme_widget_message_photo|class="tgme_widget_message_video/gi;
-    
-    // Find all data-post attributes (message IDs)
-    const postIdPattern = /data-post="bullmoneyfx\/(\d+)"/gi;
+    const postIdPattern = new RegExp(`data-post="${channelUsername}\\/(\\d+)"`, 'gi');
     const postIds: string[] = [];
     let idMatch;
     while ((idMatch = postIdPattern.exec(html)) !== null) {
       postIds.push(idMatch[1]);
     }
     
-    // Extract message texts
     const texts: string[] = [];
     let textMatch;
     const textRegex = /class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/gi;
     while ((textMatch = textRegex.exec(html)) !== null) {
-      // Clean HTML tags and decode entities
       let text = textMatch[1]
         .replace(/<br\s*\/?>/gi, '\n')
         .replace(/<[^>]+>/g, '')
@@ -95,7 +88,6 @@ function parseChannelHTML(html: string): TelegramPost[] {
       texts.push(text);
     }
     
-    // Extract dates
     const dates: string[] = [];
     let dateMatch;
     const dateRegex = /<time[^>]*datetime="([^"]+)"[^>]*>([^<]+)<\/time>/gi;
@@ -103,7 +95,6 @@ function parseChannelHTML(html: string): TelegramPost[] {
       dates.push(formatDate(dateMatch[1]) || dateMatch[2]);
     }
     
-    // Extract view counts
     const views: string[] = [];
     let viewMatch;
     const viewRegex = /class="tgme_widget_message_views"[^>]*>([^<]+)</gi;
@@ -111,16 +102,13 @@ function parseChannelHTML(html: string): TelegramPost[] {
       views.push(viewMatch[1].trim());
     }
     
-    // Check for media
-    const hasMediaList: boolean[] = [];
-    const mediaCheckPattern = /data-post="bullmoneyfx\/(\d+)"[\s\S]*?(?:tgme_widget_message_photo|tgme_widget_message_video|tgme_widget_message_document)/gi;
     const mediaIds = new Set<string>();
+    const mediaCheckPattern = new RegExp(`data-post="${channelUsername}\\/(\\d+)"[\\s\\S]*?(?:tgme_widget_message_photo|tgme_widget_message_video|tgme_widget_message_document)`, 'gi');
     let mediaMatch;
     while ((mediaMatch = mediaCheckPattern.exec(html)) !== null) {
       mediaIds.add(mediaMatch[1]);
     }
     
-    // Combine data into posts
     const maxPosts = Math.min(postIds.length, texts.length);
     for (let i = 0; i < maxPosts; i++) {
       posts.push({
@@ -129,10 +117,11 @@ function parseChannelHTML(html: string): TelegramPost[] {
         date: dates[i] || 'Recently',
         views: views[i],
         hasMedia: mediaIds.has(postIds[i]),
+        channel: channelUsername,
+        channelName: channelName,
       });
     }
     
-    // Reverse to show newest first
     posts.reverse();
     
   } catch (parseError) {
@@ -156,10 +145,7 @@ function formatDate(isoDate: string): string {
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
     
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    });
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   } catch {
     return 'Recently';
   }

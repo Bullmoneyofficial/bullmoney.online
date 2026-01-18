@@ -10,6 +10,15 @@ import { useUIState } from "@/contexts/UIStateContext";
 // CRITICAL: Import FPS scroll optimizer for pause-during-scroll behavior
 import { FpsScrollOptimizer } from "@/components/FpsScrollOptimizer";
 
+// Admin Panel Provider (lazy loaded)
+const AdminVIPPanelProvider = dynamic(
+  () => import("@/components/AdminVIPPanelProvider").then((mod) => ({ default: mod.AdminVIPPanelProvider })),
+  { ssr: false }
+);
+
+// Admin Button (only visible for mrbullmoney@gmail.com)
+const AdminButton = dynamic(() => import("@/components/AdminButton"), { ssr: false });
+
 // Theme overlay for global filter effects
 const ThemeOverlay = dynamic(
   () => import("@/components/ThemeOverlay").then((mod) => ({ default: mod.ThemeOverlay })),
@@ -213,6 +222,22 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
                 - EXCEPTION: AudioWidget stays mounted for audio persistence
               */}
               <LazyGlobalModals />
+              
+              {/* 
+                ADMIN VIP PANEL PROVIDER:
+                - Opens via window.dispatchEvent(new CustomEvent('openAdminVIPPanel'))
+                - Or keyboard shortcut: Ctrl+Shift+A (Cmd+Shift+A on Mac)
+                - Lazy loaded - zero cost until first opened
+              */}
+              <AdminVIPPanelProvider />
+              
+              {/* 
+                ADMIN BUTTON:
+                - Only visible when mrbullmoney@gmail.com is logged in
+                - Fixed position bottom-right corner
+                - Opens the Admin VIP Panel
+              */}
+              <AdminButton />
             </PerformanceProvider>
           </FpsOptimizerProvider>
         </CrashTrackerProvider>
