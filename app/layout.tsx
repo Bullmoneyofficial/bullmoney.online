@@ -55,6 +55,9 @@ import { CacheManagerProvider } from "@/components/CacheManagerProvider";
 // ✅ ADDED: Browser Switch Tab - Encourages traders to use Chrome/Desktop
 import { BrowserSwitchTab } from "@/components/BrowserSwitchTab";
 
+// ✅ ADDED: Trading Quick Access - Live prices, charts, Forex Factory, Discord
+import { TradingQuickAccess } from "@/components/TradingQuickAccess";
+
 // Navigation component
 import { Navbar } from "@/components/navbar";
 
@@ -1035,6 +1038,8 @@ export default function RootLayout({
                           <Navbar />
                           {/* ✅ ADDED: Browser Switch Tab - Pull tab for Chrome/Desktop */}
                           <BrowserSwitchTab />
+                          {/* ✅ ADDED: Trading Quick Access - Live prices, charts & tools */}
+                          <TradingQuickAccess />
                           {/* ✅ LAZY LOADED: All performance providers bundled */}
                           <ClientProviders modal={modal}>
                             {children}
