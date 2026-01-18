@@ -525,7 +525,7 @@ export function TradingQuickAccess() {
               }}
             />
             
-            <div className="px-2 py-1.5 sm:px-2.5 sm:py-1.5 md:px-4 md:py-2.5 flex items-center gap-1 sm:gap-1.5 md:gap-2 relative z-10">
+            <div className="px-1.5 py-1.5 sm:px-2 sm:py-1.5 md:px-3 md:py-2.5 flex items-center gap-0.5 sm:gap-1 md:gap-1.5 relative z-10">
               {/* Live Indicator */}
               <motion.div
                 className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-400 rounded-full"
@@ -542,7 +542,7 @@ export function TradingQuickAccess() {
               />
 
               {/* Prices */}
-              <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
+              <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
                 <div className="flex items-center gap-0.5 sm:gap-1">
                   <Coins className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-blue-300 drop-shadow-[0_0_3px_rgba(147,197,253,0.5)]" />
                   <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold text-blue-200">
@@ -962,7 +962,7 @@ export function TradingQuickAccess() {
                 }}
               />
               
-              <div className="px-2 py-1.5 sm:px-2.5 sm:py-1.5 md:px-4 md:py-2.5 flex items-center gap-1 sm:gap-1.5 md:gap-2 relative z-10">
+              <div className="px-1.5 py-1.5 sm:px-2 sm:py-1.5 md:px-3 md:py-2.5 flex items-center gap-0.5 sm:gap-1 md:gap-1.5 relative z-10">
                 {/* Live Indicator */}
                 <motion.div
                   className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-purple-400 rounded-full"
@@ -979,7 +979,7 @@ export function TradingQuickAccess() {
                 />
 
                 {/* Text */}
-                <div className="flex items-center gap-0.5 sm:gap-1">
+                <div className="flex items-center gap-0.5 sm:gap-0.5 md:gap-1">
                   <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-purple-300 drop-shadow-[0_0_3px_rgba(216,180,254,0.5)]" />
                   <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold text-purple-200">
                     LIVE STAGE

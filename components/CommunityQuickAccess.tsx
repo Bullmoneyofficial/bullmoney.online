@@ -335,10 +335,10 @@ function LiveTradesTicker() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
     >
-      <div className="px-2.5 py-2 bg-gradient-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/90 backdrop-blur-xl rounded-b-xl border-x border-b border-cyan-500/30 hover:border-cyan-400/50 hover:bg-zinc-800/95 transition-all overflow-hidden w-[220px] md:w-[280px]">
+      <div className="px-1.5 py-1.5 bg-gradient-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/90 backdrop-blur-xl rounded-b-xl border-x border-b border-cyan-500/30 hover:border-cyan-400/50 hover:bg-zinc-800/95 transition-all overflow-hidden w-[200px] md:w-[240px]">
         {/* Header row */}
-        <div className="flex items-center justify-between mb-1.5">
-          <div className="flex items-center gap-1.5">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-1">
             <motion.div
               className="w-1.5 h-1.5 bg-green-400 rounded-full"
               animate={{ 
@@ -347,19 +347,19 @@ function LiveTradesTicker() {
               }}
               transition={{ duration: 1, repeat: Infinity }}
             />
-            <span className="text-[7px] font-bold text-cyan-400/80 uppercase tracking-wider">Live Signal</span>
+            <span className="text-[6px] font-bold text-cyan-400/80 uppercase tracking-wider">Live Signal</span>
           </div>
           {/* Views & Stats */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             {currentMessage.views && (
               <div className="flex items-center gap-0.5">
-                <span className="text-[7px] text-zinc-500">👁</span>
-                <span className="text-[7px] text-zinc-400 font-medium">{currentMessage.views}</span>
+                <span className="text-[6px] text-zinc-500">👁</span>
+                <span className="text-[6px] text-zinc-400 font-medium">{currentMessage.views}</span>
               </div>
             )}
             <div className="flex items-center gap-0.5">
-              <Zap className="w-2 h-2 text-amber-400" />
-              <span className="text-[7px] text-zinc-500">{currentIndex + 1}/{messages.length}</span>
+              <Zap className="w-1.5 h-1.5 text-amber-400" />
+              <span className="text-[6px] text-zinc-500">{currentIndex + 1}/{messages.length}</span>
             </div>
           </div>
         </div>
@@ -372,15 +372,15 @@ function LiveTradesTicker() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="space-y-1"
+            className="space-y-0.5"
           >
             {/* Primary line */}
-            <p className="text-[10px] text-white font-semibold leading-normal truncate emoji-text">
+            <p className="text-[9px] text-white font-semibold leading-tight truncate emoji-text">
               {line1}
             </p>
             {/* Secondary line */}
             {line2 && (
-              <p className="text-[9px] text-cyan-200/80 leading-normal truncate emoji-text">
+              <p className="text-[8px] text-cyan-200/80 leading-tight truncate emoji-text">
                 {line2}
               </p>
             )}
@@ -388,10 +388,10 @@ function LiveTradesTicker() {
         </AnimatePresence>
         
         {/* Footer with time & progress */}
-        <div className="mt-1.5 flex items-center justify-between">
-          <span className="text-[7px] text-zinc-500">{currentMessage.date || 'Just now'}</span>
+        <div className="mt-1 flex items-center justify-between">
+          <span className="text-[6px] text-zinc-500">{currentMessage.date || 'Just now'}</span>
           {currentMessage.hasMedia && (
-            <span className="text-[7px] text-blue-400">📷 Media</span>
+            <span className="text-[6px] text-blue-400">📷 Media</span>
           )}
         </div>
         
@@ -1009,7 +1009,7 @@ export function CommunityQuickAccess() {
               }}
             />
             
-            <div className="px-2 py-1.5 sm:px-2.5 sm:py-1.5 md:px-4 md:py-2.5 flex items-center gap-1 sm:gap-1.5 md:gap-2 relative z-10">
+            <div className="px-1.5 py-1.5 sm:px-2 sm:py-1.5 md:px-3 md:py-2.5 flex items-center gap-0.5 sm:gap-1 md:gap-1.5 relative z-10">
               {/* Live Indicator */}
               <motion.div
                 className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-cyan-400 rounded-full"
@@ -1026,7 +1026,7 @@ export function CommunityQuickAccess() {
               />
 
               {/* Text */}
-              <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2">
+              <div className="flex items-center gap-0.5 sm:gap-0.5 md:gap-1">
                 <TrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-cyan-300 drop-shadow-[0_0_3px_rgba(34,211,238,0.5)]" />
                 <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold text-cyan-200">
                   Live Trades
