@@ -62,6 +62,30 @@ export function TradingQuickAccess() {
   const [isSpinning, setIsSpinning] = useState(false);
   const [secretUnlocked, setSecretUnlocked] = useState(false);
   const [secretHovered, setSecretHovered] = useState(false);
+  const [activeTab, setActiveTab] = useState<'featured' | 'live'>('featured');
+  const [playerKey, setPlayerKey] = useState(0);
+  const [featuredIndex, setFeaturedIndex] = useState(0);
+  const [isLive, setIsLive] = useState(false);
+  const [liveChannelId, setLiveChannelId] = useState<string>('UCTd2Y1DjefTH6bOAvFcJ34Q');
+  const [tradingChannelIndex, setTradingChannelIndex] = useState(0);
+  const featuredVideos = ['Q3dSjSP3t8I', 'xvP1FJt-Qto'];
+  
+  // Popular trading/forex YouTube channels to pull live streams from when BullMoney isn't live
+  const tradingLiveChannels = [
+    { id: 'UCrp_UI8XtuYfpiqluWLD7Lw', name: 'The Trading Channel' },
+    { id: 'UCGnHwBJHZ0JCN8t8EA0PLQA', name: 'Rayner Teo' },
+    { id: 'UC2C_jShtL725hvbm1arSV9w', name: 'Matt Kohrs' },
+    { id: 'UCduLPLzWNkL-8aCJohrmJhw', name: 'Ziptrader' },
+    { id: 'UCnqZ2hx679O1JBIRDlJNzKA', name: 'TradeZella' },
+    { id: 'UCU8WjbDkHFUfIGBnrkA6zRg', name: 'Humbled Trader' },
+    { id: 'UCpmAlqg4X-UdHcSL4aPTPqw', name: 'Warrior Trading' },
+  ];
+  
+  // YouTube channels to check for live streams
+  const youtubeChannels = [
+    { id: 'UCTd2Y1DjefTH6bOAvFcJ34Q', name: 'BullMoney Streams' },
+    { id: 'UC_gaming_channel', name: 'BullMoney Gaming' } // Gaming channel
+  ];
   const panelRef = useRef<HTMLDivElement>(null);
   const secretButtonRef = useRef<HTMLDivElement>(null);
 
@@ -165,10 +189,78 @@ export function TradingQuickAccess() {
     }
   }, [isExpanded]);
   
-  // Secret modal state tracking - UIState handles mutual exclusion
+  // Secret modal state tracking - Trigger video play when modal opens
   useEffect(() => {
-    // Modal open/close is fully managed by UIState
+    if (isDiscordStageModalOpen) {
+      // Reset state when modal opens
+      setFeaturedIndex(0);
+      setPlayerKey(prev => prev + 1);
+      
+      // Check if any channel is live - if yes, show live tab; otherwise featured
+      const checkLiveStatus = async () => {
+        // Check both channels for live status (using channel IDs)
+        // @bullmoney.streams = UCTd2Y1DjefTH6bOAvFcJ34Q
+        // @bullmoney.gaming = need to get this ID, using handle for now
+        const channelsToCheck = [
+          { id: 'UCTd2Y1DjefTH6bOAvFcJ34Q', handle: 'bullmoney.streams' },
+          { id: null, handle: 'bullmoney.gaming' }
+        ];
+        
+        for (const channel of channelsToCheck) {
+          try {
+            // Try channel ID first, then handle
+            const url = channel.id 
+              ? `https://www.youtube.com/oembed?url=https://www.youtube.com/channel/${channel.id}/live&format=json`
+              : `https://www.youtube.com/oembed?url=https://www.youtube.com/@${channel.handle}/live&format=json`;
+            
+            const response = await fetch(url);
+            if (response.ok) {
+              const data = await response.json();
+              // Check if it's actually a live stream (not just a video)
+              if (data.title) {
+                setIsLive(true);
+                // Store the channel ID or handle for the embed
+                setLiveChannelId(channel.id || channel.handle);
+                setActiveTab('live'); // Auto-switch to live when streaming
+                return; // Found a live stream, stop checking
+              }
+            }
+          } catch {
+            // This channel not live, continue checking
+          }
+        }
+        
+        // No channels are live - pick a random trading channel for the live tab
+        setIsLive(false);
+        setTradingChannelIndex(Math.floor(Math.random() * tradingLiveChannels.length));
+        setActiveTab('featured'); // Default to featured when not live
+      };
+      
+      checkLiveStatus();
+    }
   }, [isDiscordStageModalOpen]);
+
+  // Build the YouTube embed URL based on active tab
+  const youtubeEmbedUrl = useMemo(() => {
+    if (activeTab === 'live') {
+      if (isLive) {
+        // Actually live - use the channel that's currently live
+        const isChannelId = liveChannelId.startsWith('UC');
+        if (isChannelId) {
+          return `https://www.youtube.com/embed/live_stream?channel=${liveChannelId}&autoplay=1&mute=0&rel=0&modestbranding=1`;
+        } else {
+          return `https://www.youtube.com/embed?listType=user_uploads&list=${liveChannelId}&autoplay=1&mute=0&rel=0&modestbranding=1`;
+        }
+      } else {
+        // Not live - pull live stream from a trading channel
+        const channel = tradingLiveChannels[tradingChannelIndex] || tradingLiveChannels[0];
+        return `https://www.youtube.com/embed/live_stream?channel=${channel.id}&autoplay=1&mute=0&rel=0&modestbranding=1`;
+      }
+    }
+    // Featured tab - show the selected featured video
+    const videoId = featuredVideos[featuredIndex] || 'Q3dSjSP3t8I';
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&rel=0&modestbranding=1`;
+  }, [activeTab, featuredIndex, liveChannelId, isLive, tradingChannelIndex]);
   
   // Unlock secret permanently on hover - stable without closing other menus
   const handleSecretHover = () => {
@@ -378,10 +470,22 @@ export function TradingQuickAccess() {
               <div className="p-3 sm:p-4 border-b border-purple-500/30 bg-purple-900/40">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
                     <h3 className="text-xs sm:text-sm md:text-base font-bold text-purple-100">
-                      Live Discord Stage
+                      BullMoney TV
                     </h3>
+                    {isLive && (
+                      <motion.div
+                        className="flex items-center gap-1 px-1.5 py-0.5 bg-red-500/20 rounded-full"
+                        animate={{ opacity: [1, 0.7, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      >
+                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+                        <span className="text-[8px] font-bold text-red-400">LIVE NOW</span>
+                      </motion.div>
+                    )}
                   </div>
                   <motion.button
                     whileHover={{ scale: 1.1, rotate: 90 }}
@@ -392,136 +496,243 @@ export function TradingQuickAccess() {
                     <span className="text-purple-200 text-sm sm:text-base font-bold">×</span>
                   </motion.button>
                 </div>
-                <p className="text-[10px] sm:text-xs text-purple-300/70 mt-1">
-                  Join the live stream and discussion
-                </p>
-              </div>
-
-              {/* Discord Stage UI - Clean custom design */}
-              <div className="relative w-full flex flex-col bg-[#36393f]">
-                {/* Stage Visual Header */}
-                <div className="relative w-full h-[200px] sm:h-[250px] bg-gradient-to-b from-[#5865F2] via-[#4752C4] to-[#36393f] flex flex-col items-center justify-center overflow-hidden">
-                  {/* Animated background circles */}
-                  <motion.div
-                    className="absolute w-[300px] h-[300px] rounded-full bg-purple-500/20 blur-3xl"
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-                    transition={{ duration: 4, repeat: Infinity }}
-                  />
-                  
-                  {/* Discord Logo */}
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="relative z-10 mb-3"
+                
+                {/* Tab Buttons - Featured First, Live Second */}
+                <div className="flex gap-2 mt-3">
+                  <motion.button
+                    onClick={() => {
+                      setActiveTab('featured');
+                      setPlayerKey(prev => prev + 1);
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                      activeTab === 'featured'
+                        ? 'bg-yellow-400 text-black shadow-lg shadow-yellow-500/30'
+                        : 'bg-white/10 text-white/70 hover:bg-white/20'
+                    }`}
                   >
-                    <svg className="w-16 h-16 sm:w-20 sm:h-20 text-white drop-shadow-lg" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8 5v14l11-7z"/>
                     </svg>
-                  </motion.div>
-
-                  {/* Live Pulse Indicator */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center gap-2 mb-2 z-10"
+                    Featured
+                    <span className="text-[10px] opacity-70">({featuredIndex + 1}/{featuredVideos.length})</span>
+                  </motion.button>
+                  
+                  <motion.button
+                    onClick={() => {
+                      setActiveTab('live');
+                      // Pick a new random channel each time they click if not live
+                      if (!isLive) {
+                        setTradingChannelIndex(Math.floor(Math.random() * tradingLiveChannels.length));
+                      }
+                      setPlayerKey(prev => prev + 1);
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                      activeTab === 'live'
+                        ? isLive ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' : 'bg-purple-500 text-white shadow-lg shadow-purple-500/30'
+                        : 'bg-white/10 text-white/70 hover:bg-white/20'
+                    }`}
                   >
                     <motion.div
-                      className="w-3 h-3 bg-red-500 rounded-full shadow-lg shadow-red-500/50"
-                      animate={{ 
-                        scale: [1, 1.3, 1],
-                        boxShadow: ['0 0 0 0 rgba(239,68,68,0.7)', '0 0 0 8px rgba(239,68,68,0)', '0 0 0 0 rgba(239,68,68,0)']
-                      }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className={`w-2 h-2 rounded-full ${isLive ? 'bg-red-400' : 'bg-white/50'}`}
+                      animate={isLive ? { scale: [1, 1.3, 1], opacity: [1, 0.7, 1] } : {}}
+                      transition={{ duration: 1, repeat: Infinity }}
                     />
-                    <span className="text-white font-bold text-sm uppercase tracking-wider">Live Stage</span>
-                  </motion.div>
+                    {isLive ? 'Live Stream' : 'Trading'}
+                    {isLive && <span className="text-[10px] text-red-200">• ON AIR</span>}
+                  </motion.button>
+                </div>
+              </div>
 
-                  {/* Stage Title */}
-                  <h4 className="text-white text-lg sm:text-xl font-bold text-center z-10">
-                    BullMoney Trading Stage
-                  </h4>
-                  <p className="text-white/70 text-xs sm:text-sm text-center mt-1 z-10">
-                    Live market analysis & trading calls
-                  </p>
+              {/* Single Smart Video Player */}
+              <div className="relative w-full flex flex-col bg-[#0f0f0f]">
+                {/* Video Player - switches between Featured and Live based on tab */}
+                <div className="w-full bg-black relative" style={{ minHeight: '280px' }}>
+                  {isDiscordStageModalOpen && (
+                    <iframe 
+                      key={`discord-player-${playerKey}-${activeTab}-${featuredIndex}`}
+                      src={`${youtubeEmbedUrl}&t=${playerKey}`}
+                      width="100%" 
+                      height="280"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      style={{ border: 'none' }}
+                      title="BullMoney Stream"
+                    />
+                  )}
+                  
+                  {/* Next/Prev for Featured Videos - only show on Featured tab */}
+                  {activeTab === 'featured' && (
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2">
+                      <motion.button
+                        onClick={() => {
+                          setFeaturedIndex(prev => (prev - 1 + featuredVideos.length) % featuredVideos.length);
+                          setPlayerKey(prev => prev + 1);
+                        }}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="w-8 h-8 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center text-white"
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                      </motion.button>
+                      <span className="text-white/70 text-xs font-semibold bg-black/50 px-2 py-1 rounded">
+                        {featuredIndex + 1} / {featuredVideos.length}
+                      </span>
+                      <motion.button
+                        onClick={() => {
+                          setFeaturedIndex(prev => (prev + 1) % featuredVideos.length);
+                          setPlayerKey(prev => prev + 1);
+                        }}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="w-8 h-8 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center text-white"
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+                      </motion.button>
+                    </div>
+                  )}
+                  
+                  {/* Live indicator overlay when on Live tab */}
+                  {activeTab === 'live' && (
+                    <div className={`absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-bold text-white ${isLive ? 'bg-red-600/90' : 'bg-purple-600/90'}`}>
+                      {isLive ? (
+                        <>
+                          <motion.div
+                            className="w-2 h-2 bg-white rounded-full"
+                            animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
+                            transition={{ duration: 1, repeat: Infinity }}
+                          />
+                          LIVE NOW
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                          </svg>
+                          {tradingLiveChannels[tradingChannelIndex]?.name || 'Trading Live'}
+                        </>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Next channel button for trading when not live */}
+                  {activeTab === 'live' && !isLive && (
+                    <div className="absolute bottom-2 right-2">
+                      <motion.button
+                        onClick={() => {
+                          setTradingChannelIndex(prev => (prev + 1) % tradingLiveChannels.length);
+                          setPlayerKey(prev => prev + 1);
+                        }}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 bg-purple-600/90 hover:bg-purple-500 rounded text-[10px] font-bold text-white"
+                      >
+                        Next Channel
+                        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+                      </motion.button>
+                    </div>
+                  )}
                 </div>
 
-                {/* Stage Info Cards */}
-                <div className="p-4 space-y-3">
-                  {/* Quick Stats */}
-                  <div className="flex gap-2">
-                    <div className="flex-1 bg-[#2f3136] rounded-lg p-3 text-center">
-                      <svg className="w-5 h-5 mx-auto text-[#5865F2]" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
-                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                        <path d="M12 19v3"/>
-                      </svg>
-                      <div className="text-white/60 text-xs mt-1">Stage Channel</div>
-                    </div>
-                    <div className="flex-1 bg-[#2f3136] rounded-lg p-3 text-center">
-                      <svg className="w-5 h-5 mx-auto text-red-500" viewBox="0 0 24 24" fill="currentColor">
-                        <circle cx="12" cy="12" r="10"/>
-                      </svg>
-                      <div className="text-white/60 text-xs mt-1">Go Live</div>
-                    </div>
-                    <div className="flex-1 bg-[#2f3136] rounded-lg p-3 text-center">
-                      <svg className="w-5 h-5 mx-auto text-yellow-400" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                      </svg>
-                      <div className="text-white/60 text-xs mt-1">Trading</div>
-                    </div>
-                  </div>
+                {/* Platform Tabs */}
+                <div className="flex bg-[#1a1a1a] border-b border-white/10">
+                  <a 
+                    href="https://youtube.com/@bullmoney.streams" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex-1 py-2 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-red-600/20 transition-all"
+                  >
+                    <svg className="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                    YouTube
+                  </a>
+                  <a 
+                    href="https://discord.gg/vfxHPpCeQ" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex-1 py-2 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-[#5865F2]/20 transition-all"
+                  >
+                    <svg className="w-4 h-4 text-[#5865F2]" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                    </svg>
+                    Discord
+                  </a>
+                </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex flex-col gap-2">
-                    {/* Join Stage Button - Primary */}
+                {/* Action Buttons */}
+                <div className="p-3 space-y-2 bg-[#1a1a1a]">
+                  {/* Primary Buttons Row */}
+                  <div className="flex gap-2">
                     <motion.a
-                      href="https://discord.com/channels/1293532691542708276/1410093730131873893"
+                      href="https://youtube.com/@bullmoney.streams?sub_confirmation=1"
                       target="_blank"
                       rel="noopener noreferrer"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full px-4 py-3 bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold rounded-lg flex items-center justify-center gap-2 text-sm transition-all"
+                      className="flex-1 px-3 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg flex items-center justify-center gap-2 text-xs transition-all"
                     >
-                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M15 10l5 5-5 5"/>
-                        <path d="M4 4v7a4 4 0 004 4h12"/>
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                       </svg>
-                      Join Live Stage
+                      Subscribe
                     </motion.a>
-
-                    {/* Secondary Buttons Row */}
-                    <div className="flex gap-2">
-                      <motion.a
-                        href="https://discord.gg/bullmoney"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="flex-1 px-3 py-2.5 bg-[#3ba55c] hover:bg-[#2d7d46] text-white font-semibold rounded-lg flex items-center justify-center gap-2 text-xs transition-all"
-                      >
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.36-.698.772-1.362 1.225-1.993a.076.076 0 0 0-.041-.107 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.025-.02.05-.041.075-.062a.074.074 0 0 1 .078-.01c3.927 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.01c.025.02.05.042.075.063a.077.077 0 0 1-.007.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
-                        </svg>
-                        Join Server
-                      </motion.a>
-                      <motion.a
-                        href="discord://discord.com/channels/1293532691542708276/1410093730131873893"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="flex-1 px-3 py-2.5 bg-[#4f545c] hover:bg-[#5d6269] text-white font-semibold rounded-lg flex items-center justify-center gap-2 text-xs transition-all"
-                      >
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <rect x="5" y="2" width="14" height="20" rx="2"/>
-                          <path d="M12 18h.01"/>
-                        </svg>
-                        Open App
-                      </motion.a>
-                    </div>
+                    <motion.a
+                      href="https://discord.gg/vfxHPpCeQ"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex-1 px-3 py-2.5 bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold rounded-lg flex items-center justify-center gap-2 text-xs transition-all"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.36-.698.772-1.362 1.225-1.993a.076.076 0 0 0-.041-.107 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.025-.02.05-.041.075-.062a.074.074 0 0 1 .078-.01c3.927 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.01c.025.02.05.042.075.063a.077.077 0 0 1-.007.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
+                      </svg>
+                      Join Discord
+                    </motion.a>
                   </div>
 
-                  {/* Help Text */}
-                  <p className="text-white/40 text-[10px] text-center">
-                    Click &quot;Join Live Stage&quot; when stream is active to listen in
+                  {/* Live Stream Link */}
+                  <motion.a
+                    href="https://youtube.com/@bullmoney.streams/live"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full px-3 py-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-white/90 font-semibold rounded-lg flex items-center justify-center gap-2 text-xs transition-all"
+                  >
+                    <motion.div
+                      className="w-2 h-2 bg-red-500 rounded-full"
+                      animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    />
+                    Watch Live Stream
+                  </motion.a>
+
+                  {/* Stage Channel Link */}
+                  <motion.a
+                    href="https://discord.com/channels/1293532691542708276/1410093730131873893"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full px-3 py-2 bg-[#2f2f2f] hover:bg-[#3f3f3f] border border-white/10 text-white/80 font-semibold rounded-lg flex items-center justify-center gap-2 text-xs transition-all"
+                  >
+                    <svg className="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                      <path d="M12 19v3"/>
+                    </svg>
+                    Discord Stage Channel
+                  </motion.a>
+
+                  {/* Info */}
+                  <p className="text-white/40 text-[10px] text-center pt-1">
+                    Watch live on YouTube or join Discord Stage for audio
                   </p>
                 </div>
               </div>
