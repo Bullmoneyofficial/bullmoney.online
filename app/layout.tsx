@@ -52,9 +52,6 @@ import { ShimmerStylesProvider } from "@/components/ui/UnifiedShimmer";
 // ✅ ADDED: Import the Cache Manager Provider for version-based cache invalidation
 import { CacheManagerProvider } from "@/components/CacheManagerProvider";
 
-// ✅ ADDED: Browser Switch Tab - Optimal browser recommendations
-import { BrowserSwitchTab } from "@/components/BrowserSwitchTab";
-
 // ✅ ADDED: Trading Quick Access - Live prices, charts, Forex Factory, Discord
 import { TradingQuickAccess } from "@/components/TradingQuickAccess";
 import { CommunityQuickAccess } from "@/components/CommunityQuickAccess";
@@ -1037,8 +1034,6 @@ export default function RootLayout({
                         <ShopProvider>
                           {/* Navbar rendered outside ClientProviders for fixed positioning */}
                           <Navbar />
-                          {/* ✅ ADDED: Browser Switch Tab - Optimal browser recommendations */}
-                          <BrowserSwitchTab />
                           {/* ✅ ADDED: Trading Quick Access - Live prices, charts & tools */}
                           <TradingQuickAccess />
                           <CommunityQuickAccess />

@@ -433,28 +433,60 @@ export function CommunityQuickAccess() {
       name: 'Chrome',
       fullName: 'Google Chrome',
       icon: Chrome,
-      getUrl: (url: string) => `googlechrome://${url.replace(/^https?:\/\//, '')}`
+      deepLink: {
+        ios: (url: string) => url.startsWith('https') 
+          ? `googlechromes://${url.replace(/^https:\/\//, '')}` 
+          : `googlechrome://${url.replace(/^http:\/\//, '')}`,
+        android: (url: string) => `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`,
+        desktop: (url: string) => url // Desktop: will open in default browser with fallback to download
+      },
+      downloadUrl: 'https://www.google.com/chrome/',
+      iosAppStore: 'https://apps.apple.com/app/id535886823',
+      androidPlayStore: 'https://play.google.com/store/apps/details?id=com.android.chrome'
     },
     {
       id: 'firefox',
       name: 'Firefox',
       fullName: 'Firefox',
       icon: Globe,
-      getUrl: (url: string) => `firefox://open-url?url=${encodeURIComponent(url)}`
+      deepLink: {
+        ios: (url: string) => `firefox://open-url?url=${encodeURIComponent(url)}`,
+        android: (url: string) => `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=org.mozilla.firefox;end`,
+        desktop: (url: string) => url
+      },
+      downloadUrl: 'https://www.mozilla.org/firefox/browsers/mobile/',
+      iosAppStore: 'https://apps.apple.com/app/id989804926',
+      androidPlayStore: 'https://play.google.com/store/apps/details?id=org.mozilla.firefox'
     },
     {
       id: 'safari',
       name: 'Safari',
       fullName: 'Safari',
       icon: Globe,
-      getUrl: (url: string) => url
+      deepLink: {
+        ios: (url: string) => url, // Safari is default on iOS
+        android: (url: string) => url, // Not available on Android
+        desktop: (url: string) => url // Default on Mac
+      },
+      downloadUrl: 'https://support.apple.com/downloads/safari',
+      iosAppStore: '', // Pre-installed on iOS
+      androidPlayStore: '' // Not available on Android
     },
     {
       id: 'edge',
       name: 'Edge',
       fullName: 'Microsoft Edge',
       icon: Globe,
-      getUrl: (url: string) => `microsoft-edge:${url}`
+      deepLink: {
+        ios: (url: string) => url.startsWith('https')
+          ? `microsoft-edge-https://${url.replace(/^https:\/\//, '')}`
+          : `microsoft-edge-http://${url.replace(/^http:\/\//, '')}`,
+        android: (url: string) => `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.microsoft.emmx;end`,
+        desktop: (url: string) => url
+      },
+      downloadUrl: 'https://www.microsoft.com/edge',
+      iosAppStore: 'https://apps.apple.com/app/id1288723196',
+      androidPlayStore: 'https://play.google.com/store/apps/details?id=com.microsoft.emmx'
     },
   ];
 
@@ -748,7 +780,7 @@ export function CommunityQuickAccess() {
     setTimeout(() => setIsExpanded(false), 100);
   };
 
-  // Browser opener function
+  // Browser opener function with device detection and smart fallbacks
   const handleOpenBrowser = (browserId: string) => {
     const currentUrl = window.location.href;
     const browser = browsers.find(b => b.id === browserId);
@@ -757,22 +789,132 @@ export function CommunityQuickAccess() {
     
     setOpeningBrowser(browserId);
     
-    const browserUrl = browser.getUrl(currentUrl);
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
+    // Detect device type
+    const userAgent = navigator.userAgent || navigator.vendor;
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
+    const isAndroid = /android/i.test(userAgent);
+    const isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(userAgent);
+    const isWindows = /Win32|Win64|Windows|WinCE/.test(userAgent);
+    const isMobile = isIOS || isAndroid;
     
-    try {
-      iframe.contentWindow?.location.replace(browserUrl);
-    } catch (e) {
-      // URL scheme failed
+    // Get the appropriate deep link based on platform
+    let deepLinkUrl = '';
+    if (isIOS) {
+      deepLinkUrl = browser.deepLink.ios(currentUrl);
+    } else if (isAndroid) {
+      deepLinkUrl = browser.deepLink.android(currentUrl);
+    } else {
+      deepLinkUrl = browser.deepLink.desktop(currentUrl);
     }
     
-    setTimeout(() => {
-      window.open(currentUrl, '_blank', 'noopener,noreferrer');
-      document.body.removeChild(iframe);
+    // For mobile: Try deep link with app detection
+    if (isMobile) {
+      let appOpened = false;
+      let startTime = Date.now();
+      
+      // For Android, use direct window.location for intent:// URIs (they work better)
+      if (isAndroid && deepLinkUrl.startsWith('intent://')) {
+        try {
+          window.location.href = deepLinkUrl;
+          appOpened = true;
+        } catch (e) {
+          console.log('Android intent failed:', e);
+        }
+        
+        // If app didn't open, show Play Store after delay
+        setTimeout(() => {
+          if (!document.hidden && Date.now() - startTime < 2000) {
+            if (browser.androidPlayStore) {
+              window.location.href = browser.androidPlayStore;
+            } else {
+              window.open(browser.downloadUrl, '_blank', 'noopener,noreferrer');
+            }
+          }
+          setOpeningBrowser(null);
+        }, 1500);
+        
+      } else {
+        // iOS: Use iframe technique for custom schemes
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = 'none';
+        document.body.appendChild(iframe);
+        
+        // Detect if user leaves page (app opened)
+        const visibilityHandler = () => {
+          if (document.hidden) {
+            appOpened = true;
+          }
+        };
+        document.addEventListener('visibilitychange', visibilityHandler);
+        
+        // Try the deep link
+        try {
+          if (deepLinkUrl !== currentUrl) {
+            iframe.src = deepLinkUrl;
+            
+            // Also try window.location as backup
+            setTimeout(() => {
+              if (!appOpened) {
+                try {
+                  window.location.href = deepLinkUrl;
+                } catch (e) {
+                  console.log('Deep link fallback failed:', e);
+                }
+              }
+            }, 100);
+          }
+        } catch (e) {
+          console.log('Deep link failed:', e);
+        }
+        
+        // If app didn't open after delay, redirect to App Store or download page
+        setTimeout(() => {
+          document.removeEventListener('visibilitychange', visibilityHandler);
+          
+          // Check if page went to background (app opened)
+          if (!appOpened && !document.hidden) {
+            let fallbackUrl = '';
+            
+            if (isIOS && browser.iosAppStore) {
+              fallbackUrl = browser.iosAppStore;
+            } else if (browser.downloadUrl) {
+              fallbackUrl = browser.downloadUrl;
+            }
+            
+            if (fallbackUrl) {
+              window.location.href = fallbackUrl;
+            }
+          }
+          
+          // Cleanup iframe
+          try {
+            document.body.removeChild(iframe);
+          } catch (e) {
+            // Already removed
+          }
+          setOpeningBrowser(null);
+        }, 1500);
+      }
+      
+    } else {
+      // Desktop (Mac/Windows/Linux)
+      // Note: Cannot programmatically open specific browser from web due to security
+      // Best we can do is open download page in new tab
+      
+      if (browserId === 'safari' && isMac) {
+        // Safari on Mac: just open the URL (Safari will handle it)
+        window.open(currentUrl, '_blank', 'noopener,noreferrer');
+      } else {
+        // For other browsers: Open their download/info page
+        // User will need to install the browser if they don't have it
+        window.open(browser.downloadUrl, '_blank', 'noopener,noreferrer');
+      }
+      
       setOpeningBrowser(null);
-    }, 500);
+    }
   };
 
   const handleCopyLink = async () => {
