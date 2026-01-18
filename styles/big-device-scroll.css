@@ -1,0 +1,193 @@
+/* ============================================
+   BIG DEVICE SCROLL OPTIMIZATIONS (2026)
+   Fixes for displays >= 1440px width
+   ============================================ */
+
+@media (min-width: 1440px) {
+  /* Root scroll optimizations for big devices */
+  html.big-display {
+    scroll-behavior: smooth !important;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    scroll-padding-top: 80px; /* Account for navbar */
+    scroll-margin: 0;
+    height: auto !important;
+    min-height: 100vh !important;
+    /* Enhanced scrolling performance */
+    will-change: scroll-position;
+    scroll-snap-type: none !important;
+  }
+
+  body.big-display-body {
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    min-height: 100vh !important;
+    height: auto !important;
+    /* Ensure smooth scrolling inheritance */
+    scroll-behavior: inherit;
+    scroll-snap-type: none !important;
+  }
+
+  /* Hero section optimizations for big displays */
+  .big-display .hero {
+    height: auto !important;
+    min-height: calc(100vh - 80px) !important;
+    max-height: none !important;
+    overflow: visible !important;
+    contain: layout style !important; /* Less restrictive */
+  }
+
+  .big-display .hero-spline-wrapper {
+    height: calc(100vh - 80px) !important;
+    min-height: calc(100vh - 80px) !important;
+    max-height: none !important;
+    position: relative !important;
+    overflow: visible !important;
+    contain: layout style !important; /* Less restrictive */
+  }
+
+  /* Main page sections for big devices */
+  .big-display #experience {
+    min-height: 1000px !important;
+    height: auto !important;
+    overflow: visible !important;
+    contain: layout style !important;
+  }
+
+  /* Spline containers for big devices */
+  .big-display .spline-container,
+  .big-display [data-spline-scene] {
+    contain: layout style !important; /* Less restrictive containment */
+    overflow: visible !important;
+  }
+
+  /* Navigation scroll optimizations */
+  .big-display .navbar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9999 !important;
+  }
+
+  /* Parallax sections on big devices */
+  .big-display .hero-parallax-container {
+    overflow: visible !important;
+    transform: translateZ(0); /* GPU acceleration */
+    will-change: transform;
+  }
+
+  /* Container scroll animations */
+  .big-display .container-scroll {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Fix for theme overlays blocking scroll */
+  .big-display #theme-global-overlay,
+  .big-display #theme-edge-glow,
+  .big-display #theme-filter-overlay {
+    pointer-events: none !important;
+    touch-action: none !important;
+    z-index: -1 !important; /* Ensure they don't interfere */
+  }
+
+  /* Vertical page scroll adjustments */
+  .big-display .vertical-page-scroll {
+    right: 2rem !important; /* More space from edge on big screens */
+  }
+
+  /* Shop hero optimizations */
+  .big-display .shop-hero-parallax {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Blog hero optimizations */
+  .big-display .blog-hero {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Ensure all content sections can scroll */
+  .big-display section[data-allow-scroll] {
+    overflow: visible !important;
+    contain: layout style !important;
+    height: auto !important;
+  }
+
+  /* Fix any fixed heights that might interfere */
+  .big-display .h-screen {
+    height: auto !important;
+    min-height: calc(100vh - 80px) !important;
+  }
+
+  /* Draggable split optimizations */
+  .big-display .draggable-split {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Testimonials and carousels */
+  .big-display .testimonials-carousel {
+    overflow: visible !important;
+    height: auto !important;
+  }
+}
+
+/* Ultra-wide display optimizations (>=1920px) */
+@media (min-width: 1920px) {
+  html.big-display {
+    scroll-padding-top: 100px; /* More space for ultra-wide */
+  }
+
+  .big-display .hero-spline-wrapper {
+    max-width: 1920px;
+    margin: 0 auto;
+  }
+
+  .big-display .hero canvas {
+    max-width: 1920px !important;
+    max-height: calc(100vh - 100px) !important;
+    margin: 0 auto;
+  }
+}
+
+/* 4K display optimizations (>=2560px) */
+@media (min-width: 2560px) {
+  .big-display .hero-spline-wrapper {
+    max-width: 2560px;
+    height: calc(100vh - 120px) !important;
+    min-height: calc(100vh - 120px) !important;
+  }
+
+  html.big-display {
+    scroll-padding-top: 120px;
+  }
+}
+
+/* Performance optimizations for all big devices */
+@media (min-width: 1440px) {
+  .big-display * {
+    /* Enable hardware acceleration for smooth scrolling */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  .big-display img,
+  .big-display video,
+  .big-display canvas {
+    /* Optimize media for smooth scrolling */
+    will-change: transform;
+    transform: translateZ(0);
+  }
+
+  /* Reduce motion for performance if needed */
+  @media (prefers-reduced-motion: reduce) {
+    .big-display * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

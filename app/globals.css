@@ -124,7 +124,7 @@ html {
   scroll-behavior: auto !important;
   /* Enable high refresh rate scrolling on iOS */
   -webkit-overflow-scrolling: touch;
-  overflow-y: scroll !important; /* FIXED: Use scroll not auto to ensure scrollbar is always present */
+  overflow-y: auto !important; /* FIXED: Use auto for big devices to prevent forced scrollbars */
   overflow-x: hidden;
   /* Prevent accidental overscroll bounce causing issues - but allow natural scrolling */
   overscroll-behavior-y: auto;
@@ -139,9 +139,22 @@ html {
   height: auto !important;
 }
 
+/* Big device specific optimizations */
+@media (min-width: 1440px) {
+  html {
+    overflow-y: auto !important;
+    scroll-behavior: smooth !important; /* Enable smooth scrolling on big devices */
+  }
+  
+  .big-display html {
+    scroll-padding-top: 0;
+    scroll-margin: 0;
+  }
+}
+
 body {
   /* Body must be scrollable - CRITICAL for macOS trackpad */
-  overflow-y: visible !important; /* FIXED: visible allows content to extend naturally */
+  overflow-y: auto !important; /* FIXED: auto for proper scroll behavior */
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   /* Prevent overscroll bounce on iOS but allow on desktop */
@@ -156,6 +169,19 @@ body {
   position: relative;
   /* CRITICAL: Don't restrict height - allow natural content flow */
   height: auto !important;
+}
+
+/* Big device body optimizations */
+@media (min-width: 1440px) {
+  body {
+    overflow-y: auto !important;
+    min-height: 100vh !important;
+    height: auto !important;
+  }
+  
+  .big-display body {
+    scroll-behavior: inherit;
+  }
 }
 
 /* ============================================
@@ -214,6 +240,30 @@ html[data-active-theme]::after {
   height: 100dvh;
   width: 100%;
   contain: layout size style;
+}
+
+/* Big device hero optimizations */
+@media (min-width: 1440px) {
+  .hero-spline-wrapper,
+  .hero [data-spline],
+  .hero canvas {
+    height: calc(100vh - 80px); /* Account for navbar on big screens */
+    min-height: calc(100vh - 80px);
+    max-height: none;
+    contain: layout style; /* Less restrictive containment */
+  }
+  
+  .hero {
+    height: auto !important;
+    min-height: calc(100vh - 80px);
+    overflow: visible;
+  }
+  
+  /* Ensure scroll containers work properly */
+  .big-display .hero-spline-wrapper {
+    position: relative;
+    overflow: visible;
+  }
 }
 
 /* 3D Experience section - fixed 800px height */

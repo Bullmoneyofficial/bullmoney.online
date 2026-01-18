@@ -81,6 +81,9 @@ const FpsMonitor = ({ show = false }: { show?: boolean }) => {
     return () => cancelAnimationFrame(animationId);
   }, []);
 
+  // Track previous stats to prevent unnecessary updates
+  const prevStatsRef = useRef<string>('');
+  
   // Update stats display every 500ms
   useEffect(() => {
     const interval = setInterval(() => {
@@ -92,7 +95,7 @@ const FpsMonitor = ({ show = false }: { show?: boolean }) => {
         // Calculate FPS from frame time
         const calculatedFps = Math.round(1000 / avgFrameTime);
 
-        setStats({
+        const newStats = {
           fps: currentFps,
           frameTime: Math.round(avgFrameTime * 10) / 10,
           avgFps: calculatedFps,
@@ -103,7 +106,14 @@ const FpsMonitor = ({ show = false }: { show?: boolean }) => {
             1000 / Math.min(...frameTimeRef.current)
           ),
           dropped: droppedRef.current,
-        });
+        };
+        
+        // Only update if stats actually changed (prevents infinite loop)
+        const statsKey = JSON.stringify(newStats);
+        if (statsKey !== prevStatsRef.current) {
+          prevStatsRef.current = statsKey;
+          setStats(newStats);
+        }
       }
     }, 500);
 

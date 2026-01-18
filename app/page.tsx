@@ -27,6 +27,7 @@ import { useCacheContext } from "@/components/CacheManagerProvider";
 import { useUnifiedPerformance, useVisibility, useObserver, useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
 import { useComponentTracking, useCrashTracker } from "@/lib/CrashTracker";
 import { useScrollOptimization } from "@/hooks/useScrollOptimization";
+import { useBigDeviceScrollOptimizer } from "@/lib/bigDeviceScrollOptimizer";
 // Use optimized ticker for 120Hz performance - lazy load
 const LiveMarketTicker = dynamic(() => import("@/components/LiveMarketTickerOptimized").then(mod => ({ default: mod.LiveMarketTickerOptimized })), { ssr: false });
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
@@ -55,28 +56,50 @@ const TestimonialsCarousel = dynamic(() => import('@/components/Testimonial').th
 // 3. Using CSS visibility instead of conditional rendering for FPS savings
 // 4. CLS FIX: Fixed dimensions prevent layout shift during load
 // 5. ENHANCED: Advanced device detection prevents performance issues
+// 6. MOBILE CRASH FIX: Conservative settings for mobile devices
 function LazySplineContainer({ scene }: { scene: string }) {
   const [isInView, setIsInView] = useState(false);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [canRender, setCanRender] = useState(true);
   const [fpsMonitorActive, setFpsMonitorActive] = useState(false);
   const [emergencyFallback, setEmergencyFallback] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [mobileSplineSettings, setMobileSplineSettings] = useState({ targetFPS: 60, maxDpr: 1.5 });
   const containerRef = useRef<HTMLDivElement>(null);
   const deviceCheckDone = useRef(false);
   const fpsHistory = useRef<number[]>([]);
-  const performanceCheckInterval = useRef<NodeJS.Timeout>();
+  const performanceCheckInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Use unified observer pool instead of individual IntersectionObserver
   const { observe, deviceTier, averageFps } = useUnifiedPerformance();
 
+  // MOBILE CRASH FIX: Detect mobile and set conservative settings
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const ua = navigator.userAgent.toLowerCase();
+    const isMobile = /iphone|ipad|ipod|android|mobile/i.test(ua);
+    const memory = (navigator as any).deviceMemory || 4;
+    const isLowEnd = isMobile && (memory < 3 || window.innerWidth < 375);
+    
+    setIsMobileDevice(isMobile);
+    setMobileSplineSettings({
+      targetFPS: isLowEnd ? 24 : (isMobile ? 30 : 60),
+      maxDpr: isLowEnd ? 0.75 : (isMobile ? 1.0 : 1.5),
+    });
+    
+    if (isMobile) {
+      console.log('[LazySpline] Mobile device detected - using crash-safe settings');
+    }
+  }, []);
+
   // HERO SPLINE: ALWAYS RENDERS ON ALL DEVICES - NO RESTRICTIONS
-  // Target: 50ms load time with zero lag
+  // Target: 50ms load time with zero lag (with mobile safety)
   useEffect(() => {
     if (deviceCheckDone.current) return;
     deviceCheckDone.current = true;
 
     // HERO OVERRIDE: Always render, optimize quality instead of blocking
-    console.log('[LazySpline] HERO MODE: Enabled on ALL devices for 50ms target');
+    console.log('[LazySpline] HERO MODE: Enabled on ALL devices' + (isMobileDevice ? ' (MOBILE SAFE)' : ''));
     setCanRender(true);
     
     // Ultra-aggressive preloading for 50ms target
@@ -287,6 +310,9 @@ function LazySplineContainer({ scene }: { scene: string }) {
 }
 
 function HomeContent() {
+  // Initialize big device scroll optimization
+  const { optimizeSection } = useBigDeviceScrollOptimizer();
+  
   const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'content'>('pagemode');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -335,22 +361,41 @@ function HomeContent() {
     }
   }, [preloadQueue, unloadQueue]);
   
+  // Track if components are registered to prevent duplicate registrations
+  const componentsRegisteredRef = useRef(false);
+  
   // Register main content components with unified system
   useEffect(() => {
-    if (currentView === 'content') {
+    if (currentView === 'content' && !componentsRegisteredRef.current) {
+      componentsRegisteredRef.current = true;
       registerComponent('hero', 9);
       registerComponent('features', 5);
       registerComponent('chartnews', 6);
       registerComponent('ticker', 7);
       trackCustom('content_loaded', { deviceTier, shimmerQuality });
+      
+      // Apply big device scroll optimizations to main sections
+      if (typeof window !== 'undefined' && window.innerWidth >= 1440) {
+        setTimeout(() => {
+          optimizeSection('hero');
+          optimizeSection('experience');
+          optimizeSection('cta');
+          optimizeSection('features');
+        }, 100);
+      }
     }
     return () => {
-      unregisterComponent('hero');
-      unregisterComponent('features');
-      unregisterComponent('chartnews');
-      unregisterComponent('ticker');
+      // Only unregister if we actually registered
+      if (componentsRegisteredRef.current) {
+        componentsRegisteredRef.current = false;
+        unregisterComponent('hero');
+        unregisterComponent('features');
+        unregisterComponent('chartnews');
+        unregisterComponent('ticker');
+      }
     };
-  }, [currentView, registerComponent, unregisterComponent, trackCustom, deviceTier, shimmerQuality]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentView]); // Only depend on currentView to prevent infinite loops
   
   useEffect(() => {
     if (currentView === 'content') {
@@ -513,8 +558,9 @@ function HomeContent() {
               data-theme-aware 
               style={{ 
                 touchAction: 'pan-y',
-                minHeight: '900px', /* CLS FIX: Reserve exact space */
-                contain: 'layout',
+                minHeight: typeof window !== 'undefined' && window.innerWidth >= 1440 ? '1000px' : '900px', /* Enhanced for big devices */
+                contain: typeof window !== 'undefined' && window.innerWidth >= 1440 ? 'layout style' : 'layout',
+                overflow: 'visible', /* Allow content to flow naturally */
               }}
             >
               {/* Section Header - Fixed height to prevent CLS */}

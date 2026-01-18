@@ -10,6 +10,7 @@ import "../styles/no-spin.css"; // Disable rotation-based spin animations
 import "../styles/fps-optimization.css"; // FPS optimization & frame skipping
 import "../styles/mobile-scroll-optimization.css"; // Mobile & scroll performance optimizations
 import "../styles/smart-mount.css"; // Smart mount/unmount freeze styles
+import "../styles/big-device-scroll.css"; // Big device scroll optimizations
 import { cn } from "@/lib/utils";
 
 // ✅ CUSTOM EVENT TRACKING - Track user interactions across the site
@@ -419,9 +420,15 @@ export default function RootLayout({
     
     console.log('[DesktopScroll] Desktop scroll fixes applied early');
     
+    // Enhanced big device detection
     if (window.innerWidth >= 1440) {
       html.classList.add('big-display');
-      console.log('[DesktopScroll] Big display detected');
+      body.classList.add('big-display-body');
+      console.log('[DesktopScroll] Big display detected - enhanced scroll mode enabled');
+      
+      // Apply big device scroll optimizations
+      html.style.scrollPaddingTop = '80px'; // Account for sticky navbar
+      body.style.scrollSnapType = 'none';
     }
   }
   

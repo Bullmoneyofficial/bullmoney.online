@@ -18,6 +18,7 @@ import utc from "dayjs/plugin/utc";
 import { ContainerScroll } from "./container-scroll-animation";
 import { EncryptedText } from "./encrypted-text";
 import { SparklesCore } from "./sparkles"; 
+import { useBigDeviceScrollOptimizer } from "@/lib/bigDeviceScrollOptimizer"; 
 
 dayjs.extend(duration);
 dayjs.extend(utc);
@@ -245,11 +246,24 @@ const calcParts = (deadlineISO: string): Parts => {
 
 // ========== HERO ==========
 export function Hero() {
+  // Use comprehensive big device scroll optimization
+  const { fixHeroHeight, optimizeSection } = useBigDeviceScrollOptimizer({
+    enableSmoothScroll: true,
+    optimizeContainment: true,
+    fixHeroHeight: true,
+    enhancePerformance: true,
+  });
   
   const parentRef = useRef<HTMLDivElement>(null);
 
   const [trade, setTrade] = useState<Trade | null>(null);
   const [_parts, setParts] = useState<Parts>({ totalMs: 0, d: 0, h: 0, m: 0, s: 0 });
+
+  // Apply hero-specific optimizations
+  useEffect(() => {
+    fixHeroHeight();
+    optimizeSection('hero-section');
+  }, [fixHeroHeight, optimizeSection]);
 
   useEffect(() => {
     (async () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo, useEffect, useState, createContext, useContext } from 'react';
+import React, { memo, useEffect, useState, createContext, useContext, useRef } from 'react';
 
 /**
  * ╔═══════════════════════════════════════════════════════════════════════════╗
@@ -86,6 +86,9 @@ export function useOptimizedShimmer() {
     fps: 60,
   });
   
+  // FIX: Use ref to prevent infinite loops by tracking previous settings
+  const prevSettingsRef = useRef<string>('');
+  
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const root = document.documentElement;
@@ -100,9 +103,11 @@ export function useOptimizedShimmer() {
       // UPDATED 2026: All devices get 60 FPS minimum
       const fps = isAppleSilicon ? 120 : 60;
       
+      let newSettings: typeof settings;
+      
       // 🖥️ UPDATED 2026: All devices get full shimmer effects
       if (isUltra || isAppleSilicon) {
-        setSettings({ 
+        newSettings = { 
           disabled: false, 
           speed: 'ultra', 
           intensity: 'max',
@@ -110,9 +115,9 @@ export function useOptimizedShimmer() {
           isAppleSilicon,
           enableAdvanced: true,
           fps,
-        });
+        };
       } else if (isHigh) {
-        setSettings({ 
+        newSettings = { 
           disabled: false, 
           speed: 'fast', 
           intensity: 'ultra',
@@ -120,9 +125,9 @@ export function useOptimizedShimmer() {
           isAppleSilicon,
           enableAdvanced: true,
           fps,
-        });
+        };
       } else if (root.classList.contains('shimmer-quality-disabled')) {
-        setSettings({ 
+        newSettings = { 
           disabled: true, 
           speed: 'slow', 
           intensity: 'low', 
@@ -130,10 +135,10 @@ export function useOptimizedShimmer() {
           isAppleSilicon: false,
           enableAdvanced: false,
           fps: 30,
-        });
+        };
       } else {
         // UPDATED 2026: All devices get high quality shimmers
-        setSettings({ 
+        newSettings = { 
           disabled: false, 
           speed: 'normal', 
           intensity: 'high', 
@@ -141,7 +146,14 @@ export function useOptimizedShimmer() {
           isAppleSilicon: false,
           enableAdvanced: true, // UPDATED 2026: Advanced features for all
           fps,
-        });
+        };
+      }
+      
+      // FIX: Only update state if settings actually changed (prevents infinite loop)
+      const newSettingsKey = JSON.stringify(newSettings);
+      if (newSettingsKey !== prevSettingsRef.current) {
+        prevSettingsRef.current = newSettingsKey;
+        setSettings(newSettings);
       }
     };
     

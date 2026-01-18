@@ -1028,6 +1028,9 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
     };
   }, []);
   
+  // Track previous FPS values to prevent unnecessary updates
+  const prevFpsRef = useRef({ instant: 0, average: 0 });
+  
   // Subscribe to FPS monitor - ENHANCED with game-like quality management
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -1037,8 +1040,15 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
       const unsubscribe = fpsMonitor.subscribe((data: FPSData) => {
         const { instant, average, shortAverage, isRecovering, isInCrisis, consecutiveGoodFrames, consecutiveBadFrames, frameTimeP95 } = data;
 
-        setCurrentFps(instant);
-        setAverageFps(average);
+        // Only update state if values actually changed (prevents infinite loop)
+        if (prevFpsRef.current.instant !== instant) {
+          prevFpsRef.current.instant = instant;
+          setCurrentFps(instant);
+        }
+        if (prevFpsRef.current.average !== average) {
+          prevFpsRef.current.average = average;
+          setAverageFps(average);
+        }
 
         // Feed FPS into DeviceMonitor (avoids a second RAF loop).
         try {
@@ -1338,13 +1348,19 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
   
   const registerComponent = useCallback((id: TrackedComponent, priority?: number) => {
     smartCache.register(id, priority);
-    setLoadedComponents(prev => new Set([...prev, id]));
+    setLoadedComponents(prev => {
+      // Only update if component isn't already registered (prevents infinite loop)
+      if (prev.has(id)) return prev;
+      return new Set([...prev, id]);
+    });
     document.documentElement.classList.remove(`component-inactive-${id}`);
   }, [smartCache]);
   
   const unregisterComponent = useCallback((id: TrackedComponent) => {
     smartCache.unregister(id);
     setLoadedComponents(prev => {
+      // Only update if component is actually registered (prevents infinite loop)
+      if (!prev.has(id)) return prev;
       const next = new Set(prev);
       next.delete(id);
       return next;

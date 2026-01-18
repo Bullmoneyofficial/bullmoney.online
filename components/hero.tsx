@@ -379,16 +379,38 @@ const HeroParallax = () => {
   const currentTheme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   const displayTheme = hoverThemeId ? ALL_THEMES.find(t => t.id === hoverThemeId) : currentTheme;
   const [heroSize, setHeroSize] = useState({ width: 0, height: 0 });
+  
+  // MOBILE CRASH FIX: State for mobile-safe Spline settings
+  const [splineSettings, setSplineSettings] = useState({
+    targetFPS: 60,
+    maxDpr: 1.5,
+    minDpr: 0.5,
+    shouldRender: true,
+  });
 
-  // Track viewport size to size the hero spline to the device resolution/window.
+  // Track viewport size and set mobile-safe Spline settings
   useEffect(() => {
     const calcSize = () => {
       const w = typeof window !== 'undefined' ? window.innerWidth : 1200;
       const h = typeof window !== 'undefined' ? window.innerHeight : 800;
+      const isBigDevice = w >= 1440;
+      const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
+      const isMobileDevice = /iphone|ipad|ipod|android|mobile/i.test(ua);
+      const memory = typeof navigator !== 'undefined' ? (navigator as any).deviceMemory || 4 : 4;
+      const isLowEndMobile = isMobileDevice && (memory < 3 || w < 375);
+      
       setHeroSize({
-        // Closer to full viewport while keeping a safe clamp on massive displays
-        width: Math.max(320, Math.min(w, 1600)),
-        height: Math.max(320, Math.min(h * 0.95, 1000)),
+        // Enhanced sizing - smaller on mobile to prevent crashes
+        width: Math.max(320, isMobileDevice ? Math.min(w, 768) : (isBigDevice ? Math.min(w, 2560) : Math.min(w, 1600))),
+        height: Math.max(260, isMobileDevice ? Math.min(h * 0.7, 600) : (isBigDevice ? Math.min(h * 0.9, 1200) : Math.min(h * 0.95, 1000))),
+      });
+      
+      // MOBILE CRASH FIX: Set conservative settings for mobile
+      setSplineSettings({
+        targetFPS: isLowEndMobile ? 24 : (isMobileDevice ? 30 : 60),
+        maxDpr: isLowEndMobile ? 0.75 : (isMobileDevice ? 1.0 : 1.5),
+        minDpr: isLowEndMobile ? 0.5 : 0.5,
+        shouldRender: !isLowEndMobile || memory >= 2, // Only disable on very low-end devices
       });
     };
     calcSize();
@@ -979,9 +1001,10 @@ const HeroParallax = () => {
         ref={ref}
         className="h-screen pt-10 pb-0 antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d] hero"
         style={{ 
-          contain: 'layout', 
+          contain: typeof window !== 'undefined' && window.innerWidth >= 1440 ? 'layout style' : 'layout', 
           touchAction: 'pan-y',
-          minHeight: '100dvh',
+          minHeight: typeof window !== 'undefined' && window.innerWidth >= 1440 ? 'calc(100vh - 80px)' : '100dvh',
+          height: typeof window !== 'undefined' && window.innerWidth >= 1440 ? 'auto' : '100vh',
         }}
         data-allow-scroll
         data-content
@@ -1031,17 +1054,27 @@ const HeroParallax = () => {
                   pointerEvents: 'auto',
                 }}
               >
-                {/* ULTRA-FAST HERO LOADING: 50ms target with perfect scroll handling */}
-                <Spline 
-                  scene="/scene1.splinecode" 
-                  placeholder={undefined} 
-                  className="!w-full !h-full"
-                  priority={true}
-                  isHero={true}
-                  targetFPS={120} // Maximum performance for hero
-                  maxDpr={1.5} // High quality but performant
-                  minDpr={0.75} // Fallback for low-end devices
-                />
+                {/* MOBILE-SAFE HERO LOADING: Uses dynamic settings to prevent crashes */}
+                {splineSettings.shouldRender ? (
+                  <Spline 
+                    scene="/scene1.splinecode" 
+                    placeholder={undefined} 
+                    className="!w-full !h-full"
+                    priority={true}
+                    isHero={true}
+                    targetFPS={splineSettings.targetFPS}
+                    maxDpr={splineSettings.maxDpr}
+                    minDpr={splineSettings.minDpr}
+                  />
+                ) : (
+                  // Fallback for very low-end devices
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black">
+                    <div className="text-center">
+                      <div className="text-4xl mb-4">🐂</div>
+                      <div className="text-white/60 text-sm">BullMoney</div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

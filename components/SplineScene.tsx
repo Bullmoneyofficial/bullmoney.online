@@ -174,14 +174,28 @@ function SplineSceneComponent({
             onError={handleError} 
             placeholder={placeholder}
             className="w-full h-full"
-            targetFPS={targetFPS ?? (
-              perf.deviceTier === 'ultra' ? perf.refreshRate : 
-              perf.deviceTier === 'high' ? Math.min(90, perf.refreshRate) : 
-              perf.deviceTier === 'medium' ? 60 : 
-              45
-            )}
+            targetFPS={targetFPS ?? (() => {
+              // MOBILE CRASH FIX: Cap FPS much lower on mobile
+              const isMobile = typeof window !== 'undefined' && /iphone|ipad|ipod|android|mobile/i.test(navigator.userAgent.toLowerCase());
+              if (isMobile) return 30; // MOBILE: Always cap at 30fps to prevent crashes
+              return perf.deviceTier === 'ultra' ? perf.refreshRate : 
+                perf.deviceTier === 'high' ? Math.min(90, perf.refreshRate) : 
+                perf.deviceTier === 'medium' ? 60 : 
+                45;
+            })()}
             maxDpr={(() => {
               const browserInfo = detectBrowser();
+              // MOBILE CRASH FIX: Much more conservative DPR on mobile
+              const isMobile = typeof window !== 'undefined' && /iphone|ipad|ipod|android|mobile/i.test(navigator.userAgent.toLowerCase());
+              const memory = typeof navigator !== 'undefined' ? (navigator as any).deviceMemory || 4 : 4;
+              
+              if (isMobile) {
+                // Very conservative on mobile to prevent crashes
+                if (memory < 3) return 0.5;
+                if (memory < 4) return 0.75;
+                return 1.0; // Max 1.0 on mobile
+              }
+              
               if (browserInfo.isSmallViewport) return 0.75;
               if (browserInfo.isTinyViewport) return 0.5;
               if (browserInfo.gpuTier === 'low') return 0.8;
