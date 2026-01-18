@@ -223,13 +223,19 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   // Derived state: is any component currently open?
   const isAnyOpen = isMobileMenuOpen || isAudioWidgetOpen || isUltimatePanelOpen || isAnyModalOpen;
 
+  // Derived state: modals that DO NOT require audio widget to minimize
+  // Discord Stage modal should keep audio widget visible so users can control Discord volume
+  const shouldNotMinimizeForThisModal = isDiscordStageModalOpen;
+
   // Derived state: should audio widget minimize (not unmount)?
   // True when any other UI component is open that would overlay the player
+  // EXCEPTION: Audio widget stays visible during Discord Stage modal so users can control Discord volume
   // NOTE: ChartNews is explicitly included in isAnyModalOpen, so audio widget will minimize when ChartNews opens
-  const shouldMinimizeAudioWidget = isMobileMenuOpen || isUltimatePanelOpen || isAnyModalOpen;
+  const shouldMinimizeAudioWidget = isMobileMenuOpen || isUltimatePanelOpen || 
+    (isAnyModalOpen && !shouldNotMinimizeForThisModal);
 
   // Derived state: is there UI overlaying the floating player area?
-  const hasOverlayingUI = isMobileMenuOpen || isAnyModalOpen;
+  const hasOverlayingUI = isMobileMenuOpen || (isAnyModalOpen && !shouldNotMinimizeForThisModal);
 
   // Derived state: which component is active?
   const activeComponent: UIComponentType | null =

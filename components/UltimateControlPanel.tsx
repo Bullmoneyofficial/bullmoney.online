@@ -643,6 +643,12 @@ export function UltimateControlPanel({
   // This hook is always called unconditionally - we handle missing context via default values
   const uiStateContext = useUIStateContext();
   
+  // Check if Discord modal is open - if so, hide the ultimate panel
+  const isDiscordModalOpen = useMemo(() => {
+    if (!uiStateContext) return false;
+    return uiStateContext.isDiscordStageModalOpen;
+  }, [uiStateContext?.isDiscordStageModalOpen]);
+  
   // Determine if FPS button should be minimized based on UI state
   const shouldMinimizeFromUI = useMemo(() => {
     if (!uiStateContext) return false;
@@ -651,6 +657,9 @@ export function UltimateControlPanel({
 
   // Combined minimized state - scroll OR UI triggered
   const effectiveMinimized = isMinimized || shouldMinimizeFromUI;
+
+  // Should the entire panel be hidden (Discord modal open)?
+  const shouldHidePanel = isDiscordModalOpen;
 
   // Ensure component only renders on client
   useEffect(() => {
@@ -1292,7 +1301,7 @@ export function UltimateControlPanel({
 
       {/* Panel */}
       <AnimatePresence mode="wait">
-        {isOpen && (
+        {isOpen && !shouldHidePanel && (
           <React.Fragment key="panel-wrapper">
             {/* Backdrop */}
             <motion.div
