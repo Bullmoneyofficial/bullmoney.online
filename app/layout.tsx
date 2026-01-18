@@ -57,6 +57,7 @@ import { BrowserSwitchTab } from "@/components/BrowserSwitchTab";
 
 // ✅ ADDED: Trading Quick Access - Live prices, charts, Forex Factory, Discord
 import { TradingQuickAccess } from "@/components/TradingQuickAccess";
+import { CommunityQuickAccess } from "@/components/CommunityQuickAccess";
 
 // Navigation component
 import { Navbar } from "@/components/navbar";
@@ -1040,6 +1041,7 @@ export default function RootLayout({
                           <BrowserSwitchTab />
                           {/* ✅ ADDED: Trading Quick Access - Live prices, charts & tools */}
                           <TradingQuickAccess />
+                          <CommunityQuickAccess />
                           {/* ✅ LAZY LOADED: All performance providers bundled */}
                           <ClientProviders modal={modal}>
                             {children}

@@ -65,6 +65,7 @@ const browsers = [
 
 export function BrowserSwitchTab() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [otherMenuOpen, setOtherMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [openingBrowser, setOpeningBrowser] = useState<string | null>(null);
   const [showPulse, setShowPulse] = useState(true);
@@ -97,7 +98,39 @@ export function BrowserSwitchTab() {
   useEffect(() => {
     if (isExpanded) {
       window.dispatchEvent(new CustomEvent('browserSwitchOpened'));
+    } else {
+      window.dispatchEvent(new CustomEvent('browserSwitchClosed'));
     }
+  }, [isExpanded]);
+
+  // Hide when other menus open
+  useEffect(() => {
+    const handleTradingOpen = () => setOtherMenuOpen(true);
+    const handleTradingClose = () => setOtherMenuOpen(false);
+    const handleCommunityOpen = () => setOtherMenuOpen(true);
+    const handleCommunityClose = () => setOtherMenuOpen(false);
+    
+    window.addEventListener('tradingQuickAccessOpened', handleTradingOpen);
+    window.addEventListener('tradingQuickAccessClosed', handleTradingClose);
+    window.addEventListener('communityQuickAccessOpened', handleCommunityOpen);
+    window.addEventListener('communityQuickAccessClosed', handleCommunityClose);
+    
+    return () => {
+      window.removeEventListener('tradingQuickAccessOpened', handleTradingOpen);
+      window.removeEventListener('tradingQuickAccessClosed', handleTradingClose);
+      window.removeEventListener('communityQuickAccessOpened', handleCommunityOpen);
+      window.removeEventListener('communityQuickAccessClosed', handleCommunityClose);
+    };
+  }, []);
+
+  // Reset otherMenuOpen when they close
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isExpanded) {
+        setOtherMenuOpen(false);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
   }, [isExpanded]);
   
   useEffect(() => {
@@ -109,7 +142,7 @@ export function BrowserSwitchTab() {
   // Hide when not mounted, v2 not unlocked, or any modal/UI is open
   const shouldHide = !mounted || !isV2Unlocked || isMobileMenuOpen || isUltimatePanelOpen || isAnyModalOpen;
 
-  if (shouldHide) {
+  if (shouldHide || otherMenuOpen) {
     return null;
   }
 
@@ -164,7 +197,7 @@ export function BrowserSwitchTab() {
         animate={{ x: 0, opacity: 1 }}
         className="fixed left-0 z-[250000] pointer-events-none"
         style={{
-          top: 'calc(5rem + env(safe-area-inset-top, 0px))',
+          top: 'calc(5rem + env(safe-area-inset-top, 0px) - 17px)',
           paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 8px)',
         }}
       >
