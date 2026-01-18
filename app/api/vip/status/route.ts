@@ -31,13 +31,13 @@ export async function GET(request: Request) {
 
     if (userId) {
       response = await supabase
-        .from('user_profiles')
+        .from('recruits')
         .select('id, is_vip, vip_updated_at, email')
         .eq('id', userId)
         .single();
     } else if (email) {
       response = await supabase
-        .from('user_profiles')
+        .from('recruits')
         .select('id, is_vip, vip_updated_at, email')
         .eq('email', email)
         .single();

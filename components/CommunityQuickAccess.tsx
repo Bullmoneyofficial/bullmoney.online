@@ -14,7 +14,14 @@ import {
   ShoppingBag,
   Lock,
   Star,
-  Shield
+  Shield,
+  TrendingUp,
+  Zap,
+  Chrome,
+  Globe,
+  Monitor,
+  Copy,
+  Check
 } from 'lucide-react';
 
 import { useUIState } from '@/contexts/UIStateContext';
@@ -31,6 +38,7 @@ interface TelegramPost {
 
 // Channel configuration
 const CHANNELS = {
+  trades: { name: 'FREE TRADES', handle: 'bullmoneywebsite', icon: TrendingUp, color: 'cyan' as const, requiresVip: false },
   main: { name: 'LIVESTREAMS', handle: 'bullmoneyfx', icon: MessageCircle, color: 'blue' as const, requiresVip: false },
   shop: { name: 'NEWS', handle: 'Bullmoneyshop', icon: ShoppingBag, color: 'emerald' as const, requiresVip: false },
   vip: { name: 'VIP TRADES', handle: 'bullmoneyvip', icon: Crown, color: 'amber' as const, requiresVip: true },
@@ -38,28 +46,35 @@ const CHANNELS = {
 
 type ChannelKey = keyof typeof CHANNELS;
 
-// VIP status hook (simplified inline version)
-function useVipCheck(userId?: string) {
+// VIP status hook (supports userId or email lookup)
+function useVipCheck(userId?: string, userEmail?: string) {
   const [isVip, setIsVip] = useState(false);
   const [loading, setLoading] = useState(true);
   
   const checkStatus = useCallback(async () => {
-    if (!userId) {
+    // Try userId first, then email
+    if (!userId && !userEmail) {
+      console.log('🔒 VIP check: No userId or email available');
       setIsVip(false);
       setLoading(false);
       return;
     }
     
     try {
-      const res = await fetch(`/api/vip/status?userId=${userId}`, { cache: 'no-store' });
+      const params = userId 
+        ? `userId=${userId}` 
+        : `email=${encodeURIComponent(userEmail!)}`;
+      console.log('🔍 VIP check: Fetching with params:', params);
+      const res = await fetch(`/api/vip/status?${params}`, { cache: 'no-store' });
       const data = await res.json();
+      console.log('✨ VIP check result:', data);
       setIsVip(data.isVip ?? false);
     } catch (e) {
       console.error('VIP check failed:', e);
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, userEmail]);
   
   useEffect(() => {
     checkStatus();
@@ -182,9 +197,11 @@ function TelegramChannelEmbed({ channel = 'main', isVip = false }: { channel?: C
                 ? 'bg-gradient-to-br from-amber-500 to-orange-500' 
                 : channel === 'shop'
                 ? 'bg-gradient-to-br from-emerald-500 to-teal-500'
+                : channel === 'trades'
+                ? 'bg-gradient-to-br from-cyan-500 to-blue-500'
                 : 'bg-gradient-to-br from-blue-500 to-cyan-500'
             }`}>
-              {channel === 'vip' ? <Star className="w-4 h-4" /> : channel === 'shop' ? <ShoppingBag className="w-4 h-4" /> : 'B'}
+              {channel === 'vip' ? <Star className="w-4 h-4" /> : channel === 'shop' ? <ShoppingBag className="w-4 h-4" /> : channel === 'trades' ? <TrendingUp className="w-4 h-4" /> : 'B'}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-1">
@@ -213,18 +230,236 @@ function TelegramChannelEmbed({ channel = 'main', isVip = false }: { channel?: C
   );
 }
 
+// Live Trades Ticker - Shows scrolling messages from public trades channel
+function LiveTradesTicker() {
+  const [messages, setMessages] = useState<TelegramPost[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  // Fetch messages from the public trades channel - FAST hydration
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        // Add cache-busting for fresh data
+        const response = await fetch(`/api/telegram/channel?channel=trades&t=${Date.now()}`, {
+          cache: 'no-store',
+        });
+        const data = await response.json();
+        
+        if (data.success && data.posts && data.posts.length > 0) {
+          setMessages(data.posts);
+          setLastUpdate(new Date());
+        }
+      } catch (err) {
+        console.error('Failed to fetch trades:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Fetch immediately on mount
+    fetchMessages();
+    
+    // Refresh messages every 5 seconds for near real-time updates
+    const refreshInterval = setInterval(fetchMessages, 5000);
+    return () => clearInterval(refreshInterval);
+  }, []);
+
+  // Cycle through messages every 3 seconds
+  useEffect(() => {
+    if (messages.length === 0) return;
+    
+    const cycleInterval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % messages.length);
+    }, 3000);
+    
+    return () => clearInterval(cycleInterval);
+  }, [messages.length]);
+
+  const currentMessage = messages[currentIndex];
+
+  // Format message for better display - extract key info (preserves all characters including !, @, #, emojis etc)
+  const formatMessage = (text: string) => {
+    if (!text) return { line1: '', line2: '' };
+    
+    // Split into lines, preserve all characters
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+    
+    // Get first line (usually the pair/signal)
+    let line1 = lines[0] || '';
+    let line2 = '';
+    
+    // Truncate if needed but preserve all special characters
+    if ([...line1].length > 45) {
+      // Use spread to properly handle unicode/emojis
+      line1 = [...line1].slice(0, 42).join('') + '...';
+    }
+    
+    // Get second meaningful line (usually entry/TP/SL info)
+    if (lines.length > 1) {
+      // Look for entry, TP, or key info
+      const keyLine = lines.slice(1).find(l => 
+        l.includes('BUY') || l.includes('SELL') || l.includes('Entry') || 
+        l.includes('TP') || l.includes('📈') || l.includes('📉') ||
+        l.includes('@') || l.includes('Target') || l.includes('!')
+      ) || lines[1];
+      
+      // Use spread for proper unicode handling
+      line2 = [...keyLine].length > 50 ? [...keyLine].slice(0, 47).join('') + '...' : keyLine;
+    }
+    
+    return { line1, line2 };
+  };
+
+  if (loading || !currentMessage) {
+    return (
+      <div className="mt-0 -translate-y-0.5 px-2.5 py-2 bg-zinc-900/80 rounded-b-xl border-x border-b border-cyan-500/20">
+        <div className="flex items-center gap-2">
+          <Loader className="w-2.5 h-2.5 text-cyan-400 animate-spin" />
+          <span className="text-[8px] text-zinc-500">Loading live trades...</span>
+        </div>
+      </div>
+    );
+  }
+
+  const { line1, line2 } = formatMessage(currentMessage.text);
+
+  return (
+    <motion.a
+      href="https://t.me/bullmoneywebsite"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block mt-0 -translate-y-0.5"
+      initial={{ opacity: 0, y: -5 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+    >
+      <div className="px-2.5 py-2 bg-gradient-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/90 backdrop-blur-xl rounded-b-xl border-x border-b border-cyan-500/30 hover:border-cyan-400/50 hover:bg-zinc-800/95 transition-all overflow-hidden w-[220px] md:w-[280px]">
+        {/* Header row */}
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1.5">
+            <motion.div
+              className="w-1.5 h-1.5 bg-green-400 rounded-full"
+              animate={{ 
+                opacity: [1, 0.3, 1],
+                boxShadow: ['0 0 0px rgba(74,222,128,0.8)', '0 0 6px rgba(74,222,128,0.8)', '0 0 0px rgba(74,222,128,0.8)']
+              }}
+              transition={{ duration: 1, repeat: Infinity }}
+            />
+            <span className="text-[7px] font-bold text-cyan-400/80 uppercase tracking-wider">Live Signal</span>
+          </div>
+          {/* Views & Stats */}
+          <div className="flex items-center gap-2">
+            {currentMessage.views && (
+              <div className="flex items-center gap-0.5">
+                <span className="text-[7px] text-zinc-500">👁</span>
+                <span className="text-[7px] text-zinc-400 font-medium">{currentMessage.views}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-0.5">
+              <Zap className="w-2 h-2 text-amber-400" />
+              <span className="text-[7px] text-zinc-500">{currentIndex + 1}/{messages.length}</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Message content */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentIndex}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-1"
+          >
+            {/* Primary line */}
+            <p className="text-[10px] text-white font-semibold leading-normal truncate emoji-text">
+              {line1}
+            </p>
+            {/* Secondary line */}
+            {line2 && (
+              <p className="text-[9px] text-cyan-200/80 leading-normal truncate emoji-text">
+                {line2}
+              </p>
+            )}
+          </motion.div>
+        </AnimatePresence>
+        
+        {/* Footer with time & progress */}
+        <div className="mt-1.5 flex items-center justify-between">
+          <span className="text-[7px] text-zinc-500">{currentMessage.date || 'Just now'}</span>
+          {currentMessage.hasMedia && (
+            <span className="text-[7px] text-blue-400">📷 Media</span>
+          )}
+        </div>
+        
+        {/* Progress bar */}
+        <div className="mt-1 h-[2px] bg-zinc-700/40 rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-400"
+            initial={{ width: '0%' }}
+            animate={{ width: '100%' }}
+            transition={{ duration: 3, ease: 'linear' }}
+            key={currentIndex}
+          />
+        </div>
+      </div>
+    </motion.a>
+  );
+}
+
 export function CommunityQuickAccess() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [otherMenuOpen, setOtherMenuOpen] = useState(false);
   const [otherHovered, setOtherHovered] = useState(false);
-  const [activeChannel, setActiveChannel] = useState<ChannelKey>('main');
+  const [activeChannel, setActiveChannel] = useState<ChannelKey>('trades');
   const [userId, setUserId] = useState<string | undefined>();
+  const [userEmail, setUserEmail] = useState<string | undefined>();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [openingBrowser, setOpeningBrowser] = useState<string | null>(null);
+  const [browserMenuOpen, setBrowserMenuOpen] = useState(false);
+  const [browserButtonRect, setBrowserButtonRect] = useState<DOMRect | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const browserButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Browser configuration
+  const browsers = [
+    {
+      id: 'chrome',
+      name: 'Chrome',
+      fullName: 'Google Chrome',
+      icon: Chrome,
+      getUrl: (url: string) => `googlechrome://${url.replace(/^https?:\/\//, '')}`
+    },
+    {
+      id: 'firefox',
+      name: 'Firefox',
+      fullName: 'Firefox',
+      icon: Globe,
+      getUrl: (url: string) => `firefox://open-url?url=${encodeURIComponent(url)}`
+    },
+    {
+      id: 'safari',
+      name: 'Safari',
+      fullName: 'Safari',
+      icon: Globe,
+      getUrl: (url: string) => url
+    },
+    {
+      id: 'edge',
+      name: 'Edge',
+      fullName: 'Microsoft Edge',
+      icon: Globe,
+      getUrl: (url: string) => `microsoft-edge:${url}`
+    },
+  ];
 
   const { isAnyModalOpen, isMobileMenuOpen, isUltimatePanelOpen, isV2Unlocked } = useUIState();
-  const { isVip } = useVipCheck(userId);
+  const { isVip } = useVipCheck(userId, userEmail);
   
   // Memoize Supabase client to avoid recreating it
   const supabase = useMemo(() => createSupabaseClient(), []);
@@ -244,7 +479,9 @@ export function CommunityQuickAccess() {
           const isAdminUser = userEmail === 'mrbullmoney@gmail.com';
           console.log('📧 Supabase session email:', userEmail, 'isAdmin:', isAdminUser);
           setIsAdmin(isAdminUser);
+          // Always set userId and email for VIP checks (not just for admins)
           setUserId(session.user.id);
+          setUserEmail(userEmail);
           if (isAdminUser) {
             console.log('✅ Admin user detected via Supabase session');
           }
@@ -254,10 +491,16 @@ export function CommunityQuickAccess() {
           if (savedSession) {
             try {
               const session = JSON.parse(savedSession);
+              // Always set userId and email for VIP checks regardless of admin status
+              if (session?.id) {
+                setUserId(session.id);
+              }
+              if (session?.email) {
+                setUserEmail(session.email);
+              }
               if (session?.email === 'mrbullmoney@gmail.com' || session?.isAdmin) {
                 console.log('📱 Admin detected via localStorage:', session.email);
                 setIsAdmin(true);
-                setUserId(session.id);
               } else {
                 setIsAdmin(false);
               }
@@ -276,9 +519,15 @@ export function CommunityQuickAccess() {
         if (savedSession) {
           try {
             const session = JSON.parse(savedSession);
+            // Always set userId and email for VIP checks regardless of admin status
+            if (session?.id) {
+              setUserId(session.id);
+            }
+            if (session?.email) {
+              setUserEmail(session.email);
+            }
             if (session?.email === 'mrbullmoney@gmail.com' || session?.isAdmin) {
               setIsAdmin(true);
-              setUserId(session.id);
             }
           } catch (err) {
             setIsAdmin(false);
@@ -299,7 +548,9 @@ export function CommunityQuickAccess() {
         const isAdminUser = userEmail === 'mrbullmoney@gmail.com';
         console.log('📧 Auth change email:', userEmail, 'isAdmin:', isAdminUser);
         setIsAdmin(isAdminUser);
+        // Always set userId and email for VIP checks (not just for admins)
         setUserId(session.user.id);
+        setUserEmail(userEmail);
         if (isAdminUser) {
           console.log('✅ Admin user detected via auth change');
         }
@@ -309,10 +560,16 @@ export function CommunityQuickAccess() {
         if (savedSession) {
           try {
             const sess = JSON.parse(savedSession);
+            // Always set userId and email for VIP checks regardless of admin status
+            if (sess?.id) {
+              setUserId(sess.id);
+            }
+            if (sess?.email) {
+              setUserEmail(sess.email);
+            }
             if (sess?.email === 'mrbullmoney@gmail.com' || sess?.isAdmin) {
               console.log('📱 Admin from localStorage on auth change');
               setIsAdmin(true);
-              setUserId(sess.id);
             } else {
               setIsAdmin(false);
             }
@@ -330,10 +587,16 @@ export function CommunityQuickAccess() {
       if (e.key === 'bullmoney_session' && e.newValue) {
         try {
           const session = JSON.parse(e.newValue);
+          // Always set userId and email for VIP checks
+          if (session?.id) {
+            setUserId(session.id);
+          }
+          if (session?.email) {
+            setUserEmail(session.email);
+          }
           if (session?.email === 'mrbullmoney@gmail.com' || session?.isAdmin) {
             console.log('💾 Admin detected via localStorage change');
             setIsAdmin(true);
-            setUserId(session.id);
           }
         } catch (err) {
           console.error('Failed to parse localStorage change');
@@ -469,7 +732,7 @@ export function CommunityQuickAccess() {
   };
 
   const handleTelegramClick = () => {
-    window.open('https://t.me/bullmoneyfx', '_blank', 'noopener,noreferrer');
+    window.open('https://t.me/bullmoneywebsite', '_blank', 'noopener,noreferrer');
   };
 
   const handleInstagramClick = () => {
@@ -483,6 +746,50 @@ export function CommunityQuickAccess() {
   const handleVIPClick = () => {
     window.dispatchEvent(new CustomEvent('openProductsModal'));
     setTimeout(() => setIsExpanded(false), 100);
+  };
+
+  // Browser opener function
+  const handleOpenBrowser = (browserId: string) => {
+    const currentUrl = window.location.href;
+    const browser = browsers.find(b => b.id === browserId);
+    
+    if (!browser) return;
+    
+    setOpeningBrowser(browserId);
+    
+    const browserUrl = browser.getUrl(currentUrl);
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    
+    try {
+      iframe.contentWindow?.location.replace(browserUrl);
+    } catch (e) {
+      // URL scheme failed
+    }
+    
+    setTimeout(() => {
+      window.open(currentUrl, '_blank', 'noopener,noreferrer');
+      document.body.removeChild(iframe);
+      setOpeningBrowser(null);
+    }, 500);
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      const textArea = document.createElement('textarea');
+      textArea.value = window.location.href;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
@@ -527,10 +834,10 @@ export function CommunityQuickAccess() {
           }}
         >
           {/* Pill Content */}
-          <div className="relative rounded-r-full bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-blue-500/50 shadow-2xl hover:border-blue-400/70 hover:shadow-blue-600/40">
+          <div className="relative rounded-r-2xl bg-gradient-to-br from-cyan-600/30 via-cyan-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-cyan-500/50 shadow-2xl hover:border-cyan-400/70 hover:shadow-cyan-600/40">
             {/* Enhanced pulsing glow background */}
             <motion.div
-              className="absolute inset-0 rounded-r-full bg-gradient-to-r from-blue-500/20 via-cyan-500/10 to-transparent opacity-0"
+              className="absolute inset-0 rounded-r-2xl bg-gradient-to-r from-cyan-500/20 via-blue-500/10 to-transparent opacity-0"
               animate={{
                 opacity: [0.3, 0.8, 0.3],
                 scale: [1, 1.05, 1],
@@ -545,12 +852,12 @@ export function CommunityQuickAccess() {
             
             {/* Subtle shine effect */}
             <motion.div
-              className="absolute inset-0 rounded-r-full"
+              className="absolute inset-0 rounded-r-2xl"
               animate={{
                 boxShadow: [
-                  '0 0 10px rgba(96, 165, 250, 0)',
-                  '0 0 20px rgba(96, 165, 250, 0.4)',
-                  '0 0 10px rgba(96, 165, 250, 0)'
+                  '0 0 10px rgba(34, 211, 238, 0)',
+                  '0 0 20px rgba(34, 211, 238, 0.4)',
+                  '0 0 10px rgba(34, 211, 238, 0)'
                 ]
               }}
               transition={{
@@ -563,14 +870,14 @@ export function CommunityQuickAccess() {
             <div className="px-3 py-2 md:px-4 md:py-2.5 flex items-center gap-2 relative z-10">
               {/* Live Indicator */}
               <motion.div
-                className="w-2 h-2 bg-blue-400 rounded-full"
+                className="w-2 h-2 bg-cyan-400 rounded-full"
                 animate={{ 
                   opacity: [1, 0.4, 1],
                   scale: [1, 1.2, 1],
                   boxShadow: [
-                    '0 0 0px rgba(96, 165, 250, 1)',
-                    '0 0 8px rgba(96, 165, 250, 0.8)',
-                    '0 0 0px rgba(96, 165, 250, 1)'
+                    '0 0 0px rgba(34, 211, 238, 1)',
+                    '0 0 8px rgba(34, 211, 238, 0.8)',
+                    '0 0 0px rgba(34, 211, 238, 1)'
                   ]
                 }}
                 transition={{ duration: 1, repeat: Infinity }}
@@ -578,9 +885,9 @@ export function CommunityQuickAccess() {
 
               {/* Text */}
               <div className="flex items-center gap-2">
-                <MessageSquare className="w-3 h-3 md:w-4 md:h-4 text-blue-300 drop-shadow-[0_0_3px_rgba(147,197,253,0.5)]" />
-                <span className="text-[9px] md:text-[10px] font-bold text-blue-200">
-                  Community
+                <TrendingUp className="w-3 h-3 md:w-4 md:h-4 text-cyan-300 drop-shadow-[0_0_3px_rgba(34,211,238,0.5)]" />
+                <span className="text-[9px] md:text-[10px] font-bold text-cyan-200">
+                  Live Trades
                 </span>
               </div>
 
@@ -589,9 +896,12 @@ export function CommunityQuickAccess() {
                 animate={{ rotate: isExpanded ? 180 : 0 }}
                 transition={{ type: "spring", stiffness: 400 }}
               >
-                <ChevronRight className="w-3 h-3 text-blue-400/70" />
+                <ChevronRight className="w-3 h-3 text-cyan-400/70" />
               </motion.div>
             </div>
+            
+            {/* Live Trades Ticker - Below the pill */}
+            <LiveTradesTicker />
           </div>
         </motion.div>
       </motion.div>
@@ -671,6 +981,8 @@ export function CommunityQuickAccess() {
                               ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
                               : ch.color === 'emerald'
                               ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/40'
+                              : ch.color === 'cyan'
+                              ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/40'
                               : 'bg-blue-500/30 text-blue-300 border border-blue-500/40'
                             : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10'
                         }`}
@@ -720,6 +1032,61 @@ export function CommunityQuickAccess() {
                     <ExternalLink className="w-2.5 h-2.5" />
                     View all on Telegram
                   </a>
+                </div>
+
+                {/* Divider */}
+                <div className="h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent mx-2" />
+
+                {/* Browser Switcher Section - Compact with detached hover menu */}
+                <div className="p-2 sm:p-2.5 md:p-3 flex-shrink-0">
+                  <div className="flex gap-2">
+                    {/* Open in Browser Button */}
+                    <motion.button
+                      ref={browserButtonRef}
+                      onClick={() => {
+                        setBrowserMenuOpen(true);
+                        setIsExpanded(false); // Close the dropdown
+                      }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 py-1.5 sm:py-2 px-2 sm:px-2.5 md:px-3 rounded-lg
+                        bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500
+                        text-white font-semibold text-[10px] sm:text-xs md:text-xs whitespace-nowrap
+                        border border-blue-500/30
+                        shadow-lg shadow-blue-500/25
+                        transition-all duration-300"
+                    >
+                      <Monitor className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
+                      <span className="hidden sm:inline">Open in Browser</span>
+                      <span className="sm:hidden text-[9px]">Browser</span>
+                      <ChevronRight className={`w-2.5 h-2.5 transition-transform ${browserMenuOpen ? 'rotate-90' : ''}`} />
+                    </motion.button>
+
+                    {/* Copy Link Button */}
+                    <motion.button
+                      onClick={handleCopyLink}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`
+                        flex items-center justify-center gap-1.5 py-1.5 sm:py-2 px-3 sm:px-4 rounded-lg
+                        ${copied 
+                          ? 'bg-gradient-to-r from-blue-600 to-cyan-600' 
+                          : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500'
+                        }
+                        text-white font-semibold text-[10px] sm:text-xs
+                        border border-blue-500/30
+                        shadow-lg shadow-blue-500/25
+                        transition-all duration-300
+                      `}
+                    >
+                      {copied ? (
+                        <Check className="w-3 h-3" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                      <span className="hidden sm:inline">{copied ? 'Copied!' : 'Copy'}</span>
+                    </motion.button>
+                  </div>
                 </div>
 
                 {/* Divider */}
@@ -826,6 +1193,101 @@ export function CommunityQuickAccess() {
                     <span className="hidden sm:inline relative z-10">Join VIP</span>
                     <span className="sm:hidden text-[9px] relative z-10">VIP</span>
                   </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Detached Browser Menu - Centered Modal on top of everything */}
+      <AnimatePresence>
+        {browserMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setBrowserMenuOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999998]"
+            />
+            
+            {/* Browser Menu Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 400 }}
+              className="fixed z-[999999] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-[320px]"
+            >
+              <div className="bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl rounded-2xl border border-blue-500/40 shadow-2xl shadow-blue-900/30 overflow-hidden">
+                {/* Header */}
+                <div className="p-4 border-b border-blue-500/20 bg-gradient-to-r from-blue-500/10 to-cyan-500/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Monitor className="w-5 h-5 text-blue-400" />
+                      <h3 className="text-sm font-bold text-white">Open in Browser</h3>
+                    </div>
+                    <motion.button
+                      onClick={() => setBrowserMenuOpen(false)}
+                      whileHover={{ scale: 1.1, rotate: 90 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="w-6 h-6 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+                    >
+                      ✕
+                    </motion.button>
+                  </div>
+                  <p className="text-[10px] text-zinc-400 mt-1">
+                    Select your preferred browser
+                  </p>
+                </div>
+                
+                {/* Browser List */}
+                <div className="p-3 space-y-2 max-h-[60vh] overflow-y-auto">
+                  {browsers.map((browser, index) => {
+                    const Icon = browser.icon;
+                    const isLoading = openingBrowser === browser.id;
+                    
+                    return (
+                      <motion.button
+                        key={browser.id}
+                        onClick={() => {
+                          handleOpenBrowser(browser.id);
+                          setBrowserMenuOpen(false);
+                        }}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        whileHover={{ scale: 1.02, x: 4 }}
+                        whileTap={{ scale: 0.98 }}
+                        disabled={isLoading}
+                        className="w-full flex items-center justify-between p-3 rounded-lg
+                          bg-gradient-to-r from-blue-500/10 to-cyan-500/10 hover:from-blue-500/20 hover:to-cyan-500/20
+                          text-white font-medium text-xs
+                          border border-blue-500/30 hover:border-blue-400/50
+                          transition-all duration-200
+                          disabled:opacity-50"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
+                            <Icon className="w-4 h-4 text-blue-400" />
+                          </div>
+                          <span>{browser.fullName}</span>
+                        </div>
+                        
+                        {isLoading ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            className="w-4 h-4 border-2 border-t-transparent border-blue-400 rounded-full"
+                          />
+                        ) : (
+                          <ExternalLink className="w-4 h-4 text-blue-400 opacity-50" />
+                        )}
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </div>
             </motion.div>

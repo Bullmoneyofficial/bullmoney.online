@@ -90,6 +90,11 @@
   }
 }
 
+/* Emoji support for text elements */
+.emoji-text {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+}
+
 @theme {
   --shadow-derek:
     0px 0px 0px 1px rgb(0 0 0 / 0.06),
