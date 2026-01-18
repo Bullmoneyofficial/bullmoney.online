@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { detectBrowser } from '@/lib/browserDetection';
 
 const Spline = dynamic(() => import('@/lib/spline-wrapper'), { ssr: false });
+const SplineWithAudio = dynamic(() => import('@/components/SplineWithAudio'), { ssr: false });
 import {
   motion,
   useScroll,
@@ -1055,8 +1056,11 @@ const HeroParallax = () => {
                 }}
               >
                 {/* MOBILE-SAFE HERO LOADING: Uses dynamic settings to prevent crashes */}
+                {/* WITH 20 UNIQUE AUDIO INTERACTIONS: click, doubleClick, longPress, hover, hoverExit,
+                    drag, dragStart, dragEnd, scroll, zoom, rotate, touch, touchEnd,
+                    swipeLeft, swipeRight, swipeUp, swipeDown, pinch, spread, objectSelect */}
                 {splineSettings.shouldRender ? (
-                  <Spline 
+                  <SplineWithAudio 
                     scene="/scene1.splinecode" 
                     placeholder={undefined} 
                     className="!w-full !h-full"
@@ -1065,6 +1069,9 @@ const HeroParallax = () => {
                     targetFPS={splineSettings.targetFPS}
                     maxDpr={splineSettings.maxDpr}
                     minDpr={splineSettings.minDpr}
+                    audioEnabled={!isMuted}
+                    audioProfile={audioProfile === 'MECHANICAL' ? 'MECHANICAL' : audioProfile === 'SCI-FI' ? 'CYBER' : audioProfile === 'SOROS' ? 'ORGANIC' : 'SILENT'}
+                    audioVolume={0.4}
                   />
                 ) : (
                   // Fallback for very low-end devices

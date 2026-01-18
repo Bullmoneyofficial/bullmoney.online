@@ -1,10 +1,11 @@
 "use client";
 
 import dynamic from 'next/dynamic';
-import { Suspense, useState, useEffect, memo } from 'react';
+import { Suspense, useState, useEffect, memo, useRef, useCallback } from 'react';
 import { detectBrowser } from '@/lib/browserDetection';
 import { ShimmerSpinner, ShimmerRadialGlow, ShimmerBorder } from '@/components/ui/UnifiedShimmer';
 import { useUnifiedPerformance } from '@/lib/UnifiedPerformanceSystem';
+import { useSplineAudio, useSplineAudioHandlers, SplineAudioProfile } from '@/app/hooks/useSplineAudio';
 
 interface SplineWrapperProps {
   scene: string;
@@ -47,6 +48,23 @@ function SplineSceneComponent({
   const [isVisible, setIsVisible] = useState(false);
   const [shouldRender, setShouldRender] = useState(true);
   const perf = useUnifiedPerformance();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Initialize Spline audio with 20 unique interaction sounds
+  // Profiles: CYBER (futuristic), ORGANIC (natural), MECHANICAL (industrial), SILENT
+  const audioPlayer = useSplineAudio({
+    enabled: true,
+    profile: 'CYBER',
+    volume: 0.35,
+  });
+  
+  // Get all audio event handlers for interactions
+  const audioHandlers = useSplineAudioHandlers(audioPlayer, containerRef);
+  
+  // Initialize audio on first user interaction
+  useEffect(() => {
+    audioPlayer.init();
+  }, [audioPlayer]);
 
   // HERO MODE: Always render on ALL devices, optimize quality instead of blocking
   useEffect(() => {
@@ -131,6 +149,7 @@ function SplineSceneComponent({
 
   return (
     <div 
+      ref={containerRef}
       className={`w-full h-full relative group spline-container ${className}`}
       data-spline-scene
       style={{ 
@@ -138,6 +157,18 @@ function SplineSceneComponent({
         height: '100%',
         contain: 'layout',
       }}
+      // Audio event handlers for 20 unique interaction sounds
+      onMouseDown={audioHandlers.onMouseDown}
+      onMouseUp={audioHandlers.onMouseUp}
+      onMouseEnter={audioHandlers.onMouseEnter}
+      onMouseLeave={audioHandlers.onMouseLeave}
+      onMouseMove={audioHandlers.onMouseMove}
+      onTouchStart={audioHandlers.onTouchStart}
+      onTouchEnd={audioHandlers.onTouchEnd}
+      onTouchMove={audioHandlers.onTouchMove}
+      onWheel={audioHandlers.onWheel}
+      onDoubleClick={audioHandlers.onDoubleClick}
+      onContextMenu={audioHandlers.onContextMenu}
     >
       
       {/* Sparkles Layer - Only on high-end devices */}
