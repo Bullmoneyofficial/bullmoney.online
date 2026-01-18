@@ -397,62 +397,132 @@ export function TradingQuickAccess() {
                 </p>
               </div>
 
-              {/* Discord Embedded Chat + Stage UI */}
-              <div className="relative w-full flex flex-col bg-gradient-to-b from-purple-900/20 to-zinc-900/40">
-                {/* WidgetBot Discord Embed */}
-                <div className="w-full bg-[#36393f] overflow-hidden">
-                  <iframe 
-                    src="https://e.widgetbot.io/channels/1293532691542708276/1410093730131873893" 
-                    width="100%" 
-                    height="400" 
-                    frameBorder="0"
-                    allow="clipboard-write; fullscreen"
-                    style={{ border: 'none' }}
-                    title="Discord Stage Channel"
+              {/* Discord Stage UI - Clean custom design */}
+              <div className="relative w-full flex flex-col bg-[#36393f]">
+                {/* Stage Visual Header */}
+                <div className="relative w-full h-[200px] sm:h-[250px] bg-gradient-to-b from-[#5865F2] via-[#4752C4] to-[#36393f] flex flex-col items-center justify-center overflow-hidden">
+                  {/* Animated background circles */}
+                  <motion.div
+                    className="absolute w-[300px] h-[300px] rounded-full bg-purple-500/20 blur-3xl"
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+                    transition={{ duration: 4, repeat: Infinity }}
                   />
+                  
+                  {/* Discord Logo */}
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="relative z-10 mb-3"
+                  >
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20 text-white drop-shadow-lg" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                    </svg>
+                  </motion.div>
+
+                  {/* Live Pulse Indicator */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center gap-2 mb-2 z-10"
+                  >
+                    <motion.div
+                      className="w-3 h-3 bg-red-500 rounded-full shadow-lg shadow-red-500/50"
+                      animate={{ 
+                        scale: [1, 1.3, 1],
+                        boxShadow: ['0 0 0 0 rgba(239,68,68,0.7)', '0 0 0 8px rgba(239,68,68,0)', '0 0 0 0 rgba(239,68,68,0)']
+                      }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    />
+                    <span className="text-white font-bold text-sm uppercase tracking-wider">Live Stage</span>
+                  </motion.div>
+
+                  {/* Stage Title */}
+                  <h4 className="text-white text-lg sm:text-xl font-bold text-center z-10">
+                    BullMoney Trading Stage
+                  </h4>
+                  <p className="text-white/70 text-xs sm:text-sm text-center mt-1 z-10">
+                    Live market analysis & trading calls
+                  </p>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="p-3 sm:p-4 flex flex-col items-center bg-[#2f3136]">
-                  <div className="flex flex-col sm:flex-row gap-2 w-full max-w-[320px]">
-                    {/* Join Server Button */}
-                    <motion.a
-                      href="https://discord.gg/bullmoney"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
-                      whileHover={{ scale: 1.03, boxShadow: '0 0 20px rgba(88, 101, 242, 0.4)' }}
-                      whileTap={{ scale: 0.97 }}
-                      className="flex-1 px-4 py-2.5 bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold rounded-lg shadow-lg flex items-center justify-center gap-2 text-sm transition-all"
-                    >
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                {/* Stage Info Cards */}
+                <div className="p-4 space-y-3">
+                  {/* Quick Stats */}
+                  <div className="flex gap-2">
+                    <div className="flex-1 bg-[#2f3136] rounded-lg p-3 text-center">
+                      <svg className="w-5 h-5 mx-auto text-[#5865F2]" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <path d="M12 19v3"/>
                       </svg>
-                      Join Server
-                    </motion.a>
+                      <div className="text-white/60 text-xs mt-1">Stage Channel</div>
+                    </div>
+                    <div className="flex-1 bg-[#2f3136] rounded-lg p-3 text-center">
+                      <svg className="w-5 h-5 mx-auto text-red-500" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="12" r="10"/>
+                      </svg>
+                      <div className="text-white/60 text-xs mt-1">Go Live</div>
+                    </div>
+                    <div className="flex-1 bg-[#2f3136] rounded-lg p-3 text-center">
+                      <svg className="w-5 h-5 mx-auto text-yellow-400" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                      </svg>
+                      <div className="text-white/60 text-xs mt-1">Trading</div>
+                    </div>
+                  </div>
 
-                    {/* Open in Discord App */}
+                  {/* Action Buttons */}
+                  <div className="flex flex-col gap-2">
+                    {/* Join Stage Button - Primary */}
                     <motion.a
                       href="https://discord.com/channels/1293532691542708276/1410093730131873893"
                       target="_blank"
                       rel="noopener noreferrer"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      className="flex-1 px-4 py-2.5 bg-[#4f545c] hover:bg-[#5d6269] text-white font-semibold rounded-lg flex items-center justify-center gap-2 text-sm transition-all"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full px-4 py-3 bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold rounded-lg flex items-center justify-center gap-2 text-sm transition-all"
                     >
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
-                        <path d="M15 3h6v6"/>
-                        <path d="M10 14L21 3"/>
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M15 10l5 5-5 5"/>
+                        <path d="M4 4v7a4 4 0 004 4h12"/>
                       </svg>
-                      Open in App
+                      Join Live Stage
                     </motion.a>
+
+                    {/* Secondary Buttons Row */}
+                    <div className="flex gap-2">
+                      <motion.a
+                        href="https://discord.gg/bullmoney"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex-1 px-3 py-2.5 bg-[#3ba55c] hover:bg-[#2d7d46] text-white font-semibold rounded-lg flex items-center justify-center gap-2 text-xs transition-all"
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.36-.698.772-1.362 1.225-1.993a.076.076 0 0 0-.041-.107 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.025-.02.05-.041.075-.062a.074.074 0 0 1 .078-.01c3.927 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.01c.025.02.05.042.075.063a.077.077 0 0 1-.007.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
+                        </svg>
+                        Join Server
+                      </motion.a>
+                      <motion.a
+                        href="discord://discord.com/channels/1293532691542708276/1410093730131873893"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex-1 px-3 py-2.5 bg-[#4f545c] hover:bg-[#5d6269] text-white font-semibold rounded-lg flex items-center justify-center gap-2 text-xs transition-all"
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="5" y="2" width="14" height="20" rx="2"/>
+                          <path d="M12 18h.01"/>
+                        </svg>
+                        Open App
+                      </motion.a>
+                    </div>
                   </div>
+
+                  {/* Help Text */}
+                  <p className="text-white/40 text-[10px] text-center">
+                    Click &quot;Join Live Stage&quot; when stream is active to listen in
+                  </p>
                 </div>
               </div>
             </div>
@@ -719,7 +789,7 @@ export function TradingQuickAccess() {
                               repeatDelay: 1
                             }}
                           >
-                            💡 {tradingTips[tipIndex]}
+                            <Sparkles className="w-3 h-3 inline mr-1" /> {tradingTips[tipIndex]}
                           </motion.span>
                         </motion.div>
                       )}
