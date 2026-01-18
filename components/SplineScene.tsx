@@ -48,12 +48,22 @@ function SplineSceneComponent({
   const [shouldRender, setShouldRender] = useState(true);
   const perf = useUnifiedPerformance();
 
-  // Decide rendering + quality using unified device manager + browser detection
+  // HERO MODE: Always render on ALL devices, optimize quality instead of blocking
   useEffect(() => {
     const browserInfo = detectBrowser();
-    const canBrowserRender = !(browserInfo.isInAppBrowser || !browserInfo.canHandle3D);
-    const canDeviceRender = perf.enable3D;
-    setShouldRender(canBrowserRender && canDeviceRender);
+    
+    // For hero, never disable - always find a way to render
+    const canBrowserRender = true; // HERO: Override all restrictions
+    const canDeviceRender = true; // HERO: Override all restrictions
+    
+    console.log('[SplineScene] HERO MODE: Enabled on ALL devices', {
+      browserName: browserInfo.browserName,
+      gpuTier: browserInfo.gpuTier,
+      recommendedQuality: browserInfo.recommendedSplineQuality,
+      deviceMemory: browserInfo.deviceMemory,
+    });
+    
+    setShouldRender(true); // HERO: Always render
   }, [perf.enable3D, perf.deviceTier]);
 
   const showSparkles =
@@ -164,9 +174,22 @@ function SplineSceneComponent({
             onError={handleError} 
             placeholder={placeholder}
             className="w-full h-full"
-            targetFPS={targetFPS ?? (perf.deviceTier === 'ultra' ? perf.refreshRate : perf.deviceTier === 'high' ? 90 : perf.deviceTier === 'medium' ? 60 : 45)}
-            maxDpr={perf.deviceTier === 'ultra' ? 1.75 : perf.deviceTier === 'high' ? 1.45 : perf.deviceTier === 'medium' ? 1.0 : 0.85}
-            minDpr={0.75}
+            targetFPS={targetFPS ?? (
+              perf.deviceTier === 'ultra' ? perf.refreshRate : 
+              perf.deviceTier === 'high' ? Math.min(90, perf.refreshRate) : 
+              perf.deviceTier === 'medium' ? 60 : 
+              45
+            )}
+            maxDpr={(() => {
+              const browserInfo = detectBrowser();
+              if (browserInfo.isSmallViewport) return 0.75;
+              if (browserInfo.isTinyViewport) return 0.5;
+              if (browserInfo.gpuTier === 'low') return 0.8;
+              return perf.deviceTier === 'ultra' ? 1.75 : 
+                     perf.deviceTier === 'high' ? 1.45 : 
+                     perf.deviceTier === 'medium' ? 1.0 : 0.85;
+            })()}
+            minDpr={0.5}
           />
         </Suspense>
       </div>

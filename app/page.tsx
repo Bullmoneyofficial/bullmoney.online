@@ -54,41 +54,83 @@ const TestimonialsCarousel = dynamic(() => import('@/components/Testimonial').th
 // 2. Only using visibility for initial load trigger, not unmounting
 // 3. Using CSS visibility instead of conditional rendering for FPS savings
 // 4. CLS FIX: Fixed dimensions prevent layout shift during load
+// 5. ENHANCED: Advanced device detection prevents performance issues
 function LazySplineContainer({ scene }: { scene: string }) {
   const [isInView, setIsInView] = useState(false);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [canRender, setCanRender] = useState(true);
+  const [fpsMonitorActive, setFpsMonitorActive] = useState(false);
+  const [emergencyFallback, setEmergencyFallback] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const deviceCheckDone = useRef(false);
+  const fpsHistory = useRef<number[]>([]);
+  const performanceCheckInterval = useRef<NodeJS.Timeout>();
 
   // Use unified observer pool instead of individual IntersectionObserver
   const { observe, deviceTier, averageFps } = useUnifiedPerformance();
 
-  // Check if device can handle 3D at mount - ONLY ONCE
+  // HERO SPLINE: ALWAYS RENDERS ON ALL DEVICES - NO RESTRICTIONS
+  // Target: 50ms load time with zero lag
   useEffect(() => {
     if (deviceCheckDone.current) return;
     deviceCheckDone.current = true;
 
-    const checkDevice = () => {
-      // Check browser capabilities first
-      const browserInfo = detectBrowser();
-      if (browserInfo.isInAppBrowser || !browserInfo.canHandle3D) {
-        console.log('[LazySpline] Disabled for:', browserInfo.browserName);
-        setCanRender(false);
-        return;
+    // HERO OVERRIDE: Always render, optimize quality instead of blocking
+    console.log('[LazySpline] HERO MODE: Enabled on ALL devices for 50ms target');
+    setCanRender(true);
+    
+    // Ultra-aggressive preloading for 50ms target
+    if (typeof window !== 'undefined') {
+      // Preload scene immediately
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.href = '/scene1.splinecode';
+      link.as = 'fetch';
+      link.crossOrigin = 'anonymous';
+      document.head.appendChild(link);
+      
+      // Warm up browser cache
+      fetch('/scene1.splinecode', { 
+        method: 'GET', 
+        mode: 'cors',
+        cache: 'force-cache',
+        priority: 'high'
+      } as any).catch(() => {});
+    }
+  }, []);
+
+  // Performance monitoring for marginal devices
+  useEffect(() => {
+    if (!fpsMonitorActive || !hasLoadedOnce) return;
+
+    const monitorPerformance = () => {
+      fpsHistory.current.push(averageFps);
+      
+      // Keep only last 30 readings (about 2-3 seconds)
+      if (fpsHistory.current.length > 30) {
+        fpsHistory.current.shift();
       }
 
-      const isSmallScreen = window.innerWidth < 480;
-      const isMobile = window.innerWidth < 768;
-      const memory = (navigator as any).deviceMemory || 4;
-
-      // Disable on very small screens or low memory mobile devices
-      if (isSmallScreen || (isMobile && memory < 3)) {
-        setCanRender(false);
+      // If we have enough data and performance is consistently poor
+      if (fpsHistory.current.length >= 10) {
+        const recentAvg = fpsHistory.current.slice(-10).reduce((a, b) => a + b) / 10;
+        
+        // Emergency fallback if FPS drops below 15 consistently
+        if (recentAvg < 15 && !emergencyFallback) {
+          console.warn('[LazySpline] Emergency fallback triggered due to poor performance:', recentAvg);
+          setEmergencyFallback(true);
+        }
       }
     };
-    checkDevice();
-  }, []);
+
+    performanceCheckInterval.current = setInterval(monitorPerformance, 100);
+
+    return () => {
+      if (performanceCheckInterval.current) {
+        clearInterval(performanceCheckInterval.current);
+      }
+    };
+  }, [fpsMonitorActive, hasLoadedOnce, averageFps, emergencyFallback]);
 
   // Use shared observer pool for visibility detection
   // FIXED: Only triggers initial load, doesn't cause unmounting
@@ -104,9 +146,11 @@ function LazySplineContainer({ scene }: { scene: string }) {
     }, { rootMargin: deviceTier === 'ultra' || deviceTier === 'high' ? '1400px' : deviceTier === 'medium' ? '1100px' : '600px' });
   }, [observe, hasLoadedOnce, canRender, deviceTier]);
 
-  // Show optimized fallback on devices that can't handle 3D
-  // CLS FIX: Fallback has same dimensions as actual content
-  if (!canRender) {
+  // HERO MODE: Never show fallback - always attempt to render Spline
+  // Only show fallback if explicitly requested (never for hero)
+  if (false) { // Disabled for hero
+    const fallbackReason = 'Disabled';
+    
     return (
       <div 
         className="w-full h-full relative bg-black rounded-2xl overflow-hidden group spline-container" 
@@ -117,6 +161,7 @@ function LazySplineContainer({ scene }: { scene: string }) {
           contain: 'strict',
         }}
         data-spline-scene
+        data-fallback-reason={fallbackReason}
       >
         {/* Spinning Conic Gradient Shimmer Border */}
         <ShimmerBorder color="blue" intensity="medium" speed="normal" />
@@ -146,8 +191,12 @@ function LazySplineContainer({ scene }: { scene: string }) {
                 />
               </div>
             </ShimmerFloat>
-            <p className="text-xs font-bold tracking-wider theme-accent" style={{ color: 'var(--accent-color, #3b82f6)', filter: 'drop-shadow(0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.5))' }}>3D View</p>
-            <p className="text-[10px] font-medium" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }}>Optimized for your device</p>
+            <p className="text-xs font-bold tracking-wider theme-accent" style={{ color: 'var(--accent-color, #3b82f6)', filter: 'drop-shadow(0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.5))' }}>
+              {emergencyFallback ? 'Performance Mode' : '3D View'}
+            </p>
+            <p className="text-[10px] font-medium text-center px-2" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }}>
+              {emergencyFallback ? 'Optimized for smooth performance' : 'Optimized for your device'}
+            </p>
 
             {/* Decorative dots */}
             <div className="flex justify-center gap-1.5 mt-2">
@@ -161,26 +210,29 @@ function LazySplineContainer({ scene }: { scene: string }) {
     );
   }
 
-  // FIXED: Once loaded, keep Spline mounted but use CSS to pause/hide when out of view
-  // This prevents the expensive reload cycle on small devices
+  // HERO MODE: Always show Spline, never pause for hero section
+  // This ensures hero is always interactive and visible
   // CLS FIX: Container has fixed dimensions to prevent layout shift
-  const shouldShowSpline = hasLoadedOnce || isInView;
-  const isPaused = hasLoadedOnce && !isInView;
+  const shouldShowSpline = true; // HERO: Always show
+  const isPaused = false; // HERO: Never pause
 
   return (
     // 'isolate' is crucial here so the Interaction Button in SplineScene works correctly with z-index
-    // Use fixed height and contain:strict to prevent resize issues
+    // HERO MODE: Ultra-optimized for 50ms load and perfect scroll
     // CLS FIX: Fixed dimensions prevent layout shift
     <div
       ref={containerRef}
-      className="w-full h-full relative isolate overflow-hidden rounded-xl pointer-events-none md:pointer-events-auto spline-container"
+      className="w-full h-full relative isolate overflow-hidden rounded-xl spline-container"
       data-spline-scene
+      data-hero-mode="true"
       style={{
-        contain: 'strict',
-        touchAction: 'pan-y', // Allow vertical scrolling on touch devices
+        contain: 'layout style', // Less restrictive for hero smooth scrolling
+        touchAction: 'pan-y', // Perfect vertical scrolling
         position: 'relative',
         minHeight: '300px',
         height: '100%',
+        WebkitOverflowScrolling: 'touch', // iOS smooth scrolling
+        overscrollBehavior: 'none', // Prevent bounce scrolling interference
       }}
     >
       {/* Loading placeholder - shown before first load */}

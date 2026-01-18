@@ -45,6 +45,13 @@ export interface BrowserInfo {
   isIOS: boolean;
   isAndroid: boolean;
   hasApplePremiumExperience: boolean;
+  // Enhanced device capabilities for Spline optimization
+  isUltraLowMemoryDevice: boolean; // < 1GB or heavily constrained
+  isSmallViewport: boolean; // < 400px width
+  isTinyViewport: boolean; // < 320px width
+  gpuTier: 'high' | 'medium' | 'low' | 'minimal';
+  recommendedSplineQuality: 'high' | 'medium' | 'low' | 'disabled';
+  shouldDisableSpline: boolean; // Emergency flag for problematic devices
 }
 
 // Cache the result to avoid repeated detection
@@ -116,6 +123,62 @@ export function detectBrowser(): BrowserInfo {
   const isVeryLowMemoryDevice = deviceMemory < 2;
   const isLowMemoryDevice = deviceMemory < 4;
   
+  // Enhanced device capability detection for Spline optimization
+  const isUltraLowMemoryDevice = deviceMemory < 1 || hardwareConcurrency < 2;
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const isSmallViewport = viewportWidth < 400;
+  const isTinyViewport = viewportWidth < 320;
+  
+  // GPU tier detection based on device characteristics
+  let gpuTier: 'high' | 'medium' | 'low' | 'minimal' = 'medium';
+  
+  if (isAppleDevice) {
+    // Apple devices generally have good GPU performance
+    if (isMac) {
+      gpuTier = deviceMemory >= 8 ? 'high' : 'medium';
+    } else if (isIOS) {
+      // iOS devices: iPhone 12+ and iPad Air 4+ have good 3D performance
+      const isModernIOS = /iphone.*os (1[4-9]|[2-9][0-9])/.test(ua) || /ipad.*os (1[4-9]|[2-9][0-9])/.test(ua);
+      gpuTier = isModernIOS && !isSmallViewport ? 'medium' : 'low';
+    }
+  } else if (isAndroid) {
+    // Android GPU performance varies widely
+    if (deviceMemory >= 6 && hardwareConcurrency >= 8) {
+      gpuTier = 'high';
+    } else if (deviceMemory >= 4 && hardwareConcurrency >= 4) {
+      gpuTier = 'medium';
+    } else if (deviceMemory >= 2) {
+      gpuTier = 'low';
+    } else {
+      gpuTier = 'minimal';
+    }
+  } else {
+    // Desktop devices
+    if (deviceMemory >= 8 && hardwareConcurrency >= 8) {
+      gpuTier = 'high';
+    } else if (deviceMemory >= 4) {
+      gpuTier = 'medium';
+    } else {
+      gpuTier = 'low';
+    }
+  }
+  
+  // Recommended Spline quality based on device capabilities
+  let recommendedSplineQuality: 'high' | 'medium' | 'low' | 'disabled' = 'medium';
+  let shouldDisableSpline = false;
+  
+  if (gpuTier === 'minimal' || isUltraLowMemoryDevice || isTinyViewport) {
+    recommendedSplineQuality = 'disabled';
+    shouldDisableSpline = true;
+  } else if (gpuTier === 'low' || isVeryLowMemoryDevice || isSmallViewport) {
+    recommendedSplineQuality = 'low';
+  } else if (gpuTier === 'medium' || isLowMemoryDevice) {
+    recommendedSplineQuality = 'medium';
+  } else {
+    recommendedSplineQuality = 'high';
+  }
+  
   // ALL FEATURES ENABLED for all devices
   const canHandleWebGL = true;
   const canHandle3D = true;
@@ -161,8 +224,8 @@ export function detectBrowser(): BrowserInfo {
     isMobileChrome,
     isLowMemoryDevice,        // For analytics only
     isVeryLowMemoryDevice,    // For analytics only
-    canHandle3D: true,        // ALWAYS TRUE
-    canHandleWebGL: true,     // ALWAYS TRUE
+    canHandle3D: !shouldDisableSpline, // Now respects device capabilities
+    canHandleWebGL: !shouldDisableSpline, // Tied to Spline capability
     canHandleWebSocket: true, // ALWAYS TRUE
     canHandleAudio: true,     // ALWAYS TRUE
     shouldReduceAnimations,   // Only respects user preference
@@ -175,6 +238,13 @@ export function detectBrowser(): BrowserInfo {
     isIOS,
     isAndroid,
     hasApplePremiumExperience: true, // Everyone gets premium
+    // Enhanced device capabilities
+    isUltraLowMemoryDevice,
+    isSmallViewport,
+    isTinyViewport,
+    gpuTier,
+    recommendedSplineQuality,
+    shouldDisableSpline,
   };
   
   // Log detection for debugging
@@ -216,6 +286,13 @@ function getDefaultInfo(): BrowserInfo {
     isIOS: false,
     isAndroid: false,
     hasApplePremiumExperience: true, // Everyone gets premium
+    // Enhanced device capabilities (safe defaults)
+    isUltraLowMemoryDevice: false,
+    isSmallViewport: false,
+    isTinyViewport: false,
+    gpuTier: 'medium',
+    recommendedSplineQuality: 'medium',
+    shouldDisableSpline: false,
   };
 }
 

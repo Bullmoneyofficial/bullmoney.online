@@ -1031,13 +1031,16 @@ const HeroParallax = () => {
                   pointerEvents: 'auto',
                 }}
               >
-                {/* LCP FIX: priority=true + isHero=true for fastest load */}
+                {/* ULTRA-FAST HERO LOADING: 50ms target with perfect scroll handling */}
                 <Spline 
                   scene="/scene1.splinecode" 
                   placeholder={undefined} 
                   className="!w-full !h-full"
                   priority={true}
                   isHero={true}
+                  targetFPS={120} // Maximum performance for hero
+                  maxDpr={1.5} // High quality but performant
+                  minDpr={0.75} // Fallback for low-end devices
                 />
               </div>
             </div>
