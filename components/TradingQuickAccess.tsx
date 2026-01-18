@@ -41,6 +41,8 @@ export function TradingQuickAccess() {
     xauusd: '...',
     btcusd: '...'
   });
+  const [calendarImportance, setCalendarImportance] = useState<string[]>(['2', '3']); // High and Medium
+  const [calendarCurrencies, setCalendarCurrencies] = useState<string[]>(['USD', 'EUR', 'GBP', 'JPY']);
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Simulated price updates - in production, connect to real WebSocket/API
