@@ -392,18 +392,26 @@ const HeroParallax = () => {
   // Track viewport size and set mobile-safe Spline settings
   useEffect(() => {
     const calcSize = () => {
-      const w = typeof window !== 'undefined' ? window.innerWidth : 1200;
-      const h = typeof window !== 'undefined' ? window.innerHeight : 800;
+      // Use visualViewport for in-app browsers (Instagram, TikTok, etc.)
+      const vv = window.visualViewport;
+      const w = vv?.width || window.innerWidth;
+      const h = vv?.height || window.innerHeight;
       const isBigDevice = w >= 1440;
       const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
       const isMobileDevice = /iphone|ipad|ipod|android|mobile/i.test(ua);
+      const isInAppBrowser = /instagram|fban|fbav|twitter|tiktok|snapchat|linkedin|wechat|line|kakaotalk/i.test(ua);
       const memory = typeof navigator !== 'undefined' ? (navigator as any).deviceMemory || 4 : 4;
       const isLowEndMobile = isMobileDevice && (memory < 3 || w < 375);
       
+      // IN-APP BROWSER FIX: Use full viewport dimensions
+      // In-app browsers often report wrong dimensions, so use 100% of available space
+      const mobileWidth = isInAppBrowser ? w : Math.min(w, 768);
+      const mobileHeight = isInAppBrowser ? h : Math.min(h * 0.85, 700);
+      
       setHeroSize({
-        // Enhanced sizing - smaller on mobile to prevent crashes
-        width: Math.max(320, isMobileDevice ? Math.min(w, 768) : (isBigDevice ? Math.min(w, 2560) : Math.min(w, 1600))),
-        height: Math.max(260, isMobileDevice ? Math.min(h * 0.7, 600) : (isBigDevice ? Math.min(h * 0.9, 1200) : Math.min(h * 0.95, 1000))),
+        // FIXED: Full width/height for mobile and in-app browsers
+        width: Math.max(320, isMobileDevice ? mobileWidth : (isBigDevice ? Math.min(w, 2560) : Math.min(w, 1600))),
+        height: Math.max(400, isMobileDevice ? mobileHeight : (isBigDevice ? Math.min(h * 0.9, 1200) : Math.min(h * 0.95, 1000))),
       });
       
       // MOBILE CRASH FIX: Set conservative settings for mobile
@@ -1044,15 +1052,17 @@ const HeroParallax = () => {
                 className="w-full h-full spline-container"
                 data-spline-scene
                 style={{
-                  width: `${heroSize.width}px`,
-                  height: `${heroSize.height}px`,
-                  maxWidth: '100%',
-                  maxHeight: '100%',
+                  width: heroSize.width > 0 ? `${heroSize.width}px` : '100%',
+                  height: heroSize.height > 0 ? `${heroSize.height}px` : '100%',
+                  maxWidth: '100vw',
+                  maxHeight: '100dvh', // Dynamic viewport height for in-app browsers
                   minWidth: 320,
-                  minHeight: 260,
-                  contain: 'strict',
+                  minHeight: 400,
+                  contain: 'layout style',
                   touchAction: 'pan-y',
                   pointerEvents: 'auto',
+                  // In-app browser fix: ensure full coverage
+                  aspectRatio: 'unset',
                 }}
               >
                 {/* MOBILE-SAFE HERO LOADING: Uses dynamic settings to prevent crashes */}

@@ -17,6 +17,10 @@ declare module '@/lib/spline-wrapper' {
     maxDpr?: number;
     /** Optional: floor devicePixelRatio used for canvas resolution */
     minDpr?: number;
+    /** Callback to receive Spline app instance for external animation control */
+    onSplineApp?: (app: any) => void;
+    /** Animation progress (0-100) for timeline scrubbing control */
+    animationProgress?: number;
   }
   
   const SplineWrapper: ComponentType<SplineWrapperProps>;
