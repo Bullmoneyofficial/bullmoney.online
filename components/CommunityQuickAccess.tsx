@@ -31,9 +31,9 @@ interface TelegramPost {
 
 // Channel configuration
 const CHANNELS = {
-  main: { name: 'LIVESTREAMS', handle: 'bullmoneyfx', icon: MessageCircle, color: 'blue', requiresVip: false },
-  shop: { name: 'NEWS', handle: 'Bullmoneyshop', icon: ShoppingBag, color: 'blue', requiresVip: false },
-  vip: { name: 'VIP TRADES', handle: 'bullmoneyvip', icon: Crown, color: 'blue', requiresVip: true },
+  main: { name: 'LIVESTREAMS', handle: 'bullmoneyfx', icon: MessageCircle, color: 'blue' as const, requiresVip: false },
+  shop: { name: 'NEWS', handle: 'Bullmoneyshop', icon: ShoppingBag, color: 'emerald' as const, requiresVip: false },
+  vip: { name: 'VIP TRADES', handle: 'bullmoneyvip', icon: Crown, color: 'amber' as const, requiresVip: true },
 } as const;
 
 type ChannelKey = keyof typeof CHANNELS;
@@ -217,6 +217,7 @@ export function CommunityQuickAccess() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [otherMenuOpen, setOtherMenuOpen] = useState(false);
+  const [otherHovered, setOtherHovered] = useState(false);
   const [activeChannel, setActiveChannel] = useState<ChannelKey>('main');
   const [userId, setUserId] = useState<string | undefined>();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -225,61 +226,171 @@ export function CommunityQuickAccess() {
   const { isAnyModalOpen, isMobileMenuOpen, isUltimatePanelOpen, isV2Unlocked } = useUIState();
   const { isVip } = useVipCheck(userId);
   
+  // Memoize Supabase client to avoid recreating it
+  const supabase = useMemo(() => createSupabaseClient(), []);
+  
   // Detect if logged-in user is the admin by checking Supabase session
   useEffect(() => {
     setMounted(true);
-    const supabase = createSupabaseClient();
     
+    // Initial check on mount - check both Supabase and localStorage
     const checkAdmin = async () => {
       try {
+        // First try Supabase auth
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user?.email) {
           const userEmail = session.user.email;
-          const isAdminUser = userEmail === 'mrbullmoney@gmail.com' || userEmail?.toLowerCase() === 'mrbullmoney@gmail.com'.toLowerCase();
+          const isAdminUser = userEmail === 'mrbullmoney@gmail.com';
+          console.log('📧 Supabase session email:', userEmail, 'isAdmin:', isAdminUser);
           setIsAdmin(isAdminUser);
           setUserId(session.user.id);
           if (isAdminUser) {
-            console.log('✅ Admin user detected:', userEmail);
+            console.log('✅ Admin user detected via Supabase session');
+          }
+        } else {
+          // Fallback to localStorage bullmoney_session
+          const savedSession = localStorage.getItem('bullmoney_session');
+          if (savedSession) {
+            try {
+              const session = JSON.parse(savedSession);
+              if (session?.email === 'mrbullmoney@gmail.com' || session?.isAdmin) {
+                console.log('📱 Admin detected via localStorage:', session.email);
+                setIsAdmin(true);
+                setUserId(session.id);
+              } else {
+                setIsAdmin(false);
+              }
+            } catch (e) {
+              console.error('Failed to parse localStorage session');
+              setIsAdmin(false);
+            }
+          } else {
+            setIsAdmin(false);
+          }
+        }
+      } catch (e) {
+        console.error('❌ Error checking admin status:', e);
+        // Try localStorage as fallback
+        const savedSession = localStorage.getItem('bullmoney_session');
+        if (savedSession) {
+          try {
+            const session = JSON.parse(savedSession);
+            if (session?.email === 'mrbullmoney@gmail.com' || session?.isAdmin) {
+              setIsAdmin(true);
+              setUserId(session.id);
+            }
+          } catch (err) {
+            setIsAdmin(false);
           }
         } else {
           setIsAdmin(false);
-          setUserId(undefined);
         }
-      } catch (e) {
-        console.error('Error checking admin status:', e);
-        setIsAdmin(false);
       }
     };
     
     checkAdmin();
     
-    // Subscribe to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Subscribe to auth state changes for real-time detection
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('🔄 Auth state changed:', event);
       if (session?.user?.email) {
         const userEmail = session.user.email;
-        const isAdminUser = userEmail === 'mrbullmoney@gmail.com' || userEmail?.toLowerCase() === 'mrbullmoney@gmail.com'.toLowerCase();
+        const isAdminUser = userEmail === 'mrbullmoney@gmail.com';
+        console.log('📧 Auth change email:', userEmail, 'isAdmin:', isAdminUser);
         setIsAdmin(isAdminUser);
         setUserId(session.user.id);
         if (isAdminUser) {
-          console.log('✅ Admin user detected:', userEmail);
+          console.log('✅ Admin user detected via auth change');
         }
       } else {
-        setIsAdmin(false);
-        setUserId(undefined);
+        // Check localStorage too
+        const savedSession = localStorage.getItem('bullmoney_session');
+        if (savedSession) {
+          try {
+            const sess = JSON.parse(savedSession);
+            if (sess?.email === 'mrbullmoney@gmail.com' || sess?.isAdmin) {
+              console.log('📱 Admin from localStorage on auth change');
+              setIsAdmin(true);
+              setUserId(sess.id);
+            } else {
+              setIsAdmin(false);
+            }
+          } catch (e) {
+            setIsAdmin(false);
+          }
+        } else {
+          setIsAdmin(false);
+        }
       }
     });
     
+    // Also watch localStorage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'bullmoney_session' && e.newValue) {
+        try {
+          const session = JSON.parse(e.newValue);
+          if (session?.email === 'mrbullmoney@gmail.com' || session?.isAdmin) {
+            console.log('💾 Admin detected via localStorage change');
+            setIsAdmin(true);
+            setUserId(session.id);
+          }
+        } catch (err) {
+          console.error('Failed to parse localStorage change');
+        }
+      }
+      // Also check for adminToken (set after successful admin login)
+      if (e.key === 'adminToken' && e.newValue) {
+        console.log('🔑 Admin token detected via localStorage change');
+        setIsAdmin(true);
+      }
+    };
+    
+    // Check if adminToken already exists (user previously logged into admin panel)
+    const existingAdminToken = localStorage.getItem('adminToken');
+    if (existingAdminToken) {
+      console.log('🔑 Existing admin token found, enabling admin mode');
+      setIsAdmin(true);
+    }
+    
+    // Keyboard shortcut: Cmd+Shift+A (Mac) or Ctrl+Shift+A (Windows) to open admin panel directly
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        console.log('⌨️ Admin shortcut triggered (Cmd/Ctrl+Shift+A)');
+        window.dispatchEvent(new CustomEvent('openAdminVIPPanel'));
+        setIsExpanded(false);
+      }
+    };
+    
+    // Listen for manual admin enable event (can be triggered from console: window.dispatchEvent(new CustomEvent('enableAdminMode')))
+    const handleEnableAdmin = () => {
+      console.log('🔓 Admin mode enabled via custom event');
+      setIsAdmin(true);
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('enableAdminMode', handleEnableAdmin);
+    
     return () => {
       subscription?.unsubscribe();
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('enableAdminMode', handleEnableAdmin);
     };
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     if (isAnyModalOpen || isMobileMenuOpen || isUltimatePanelOpen) {
       setIsExpanded(false);
     }
   }, [isAnyModalOpen, isMobileMenuOpen, isUltimatePanelOpen]);
+  
+  // Debug isAdmin state
+  useEffect(() => {
+    console.log('🔍 isAdmin state:', isAdmin, 'isExpanded:', isExpanded, 'mounted:', mounted);
+  }, [isAdmin, isExpanded, mounted]);
   
   useEffect(() => {
     const handleTradingOpen = () => setIsExpanded(false);
@@ -295,23 +406,33 @@ export function CommunityQuickAccess() {
     }
   }, [isExpanded]);
 
-  // Hide when other menus open
+  // Hide when other menus open or are being hovered
   useEffect(() => {
-    const handleBrowserOpen = () => setOtherMenuOpen(true);
+    const handleBrowserOpen = () => { setOtherMenuOpen(true); setIsExpanded(false); };
     const handleBrowserClose = () => setOtherMenuOpen(false);
-    const handleTradingOpen = () => setOtherMenuOpen(true);
+    const handleTradingOpen = () => { setOtherMenuOpen(true); setIsExpanded(false); };
     const handleTradingClose = () => setOtherMenuOpen(false);
+    const handleOtherHoverStart = () => { setOtherHovered(true); setIsExpanded(false); };
+    const handleOtherHoverEnd = () => setOtherHovered(false);
     
     window.addEventListener('browserSwitchOpened', handleBrowserOpen);
     window.addEventListener('browserSwitchClosed', handleBrowserClose);
     window.addEventListener('tradingQuickAccessOpened', handleTradingOpen);
     window.addEventListener('tradingQuickAccessClosed', handleTradingClose);
+    window.addEventListener('browserSwitchHovered', handleOtherHoverStart);
+    window.addEventListener('browserSwitchUnhovered', handleOtherHoverEnd);
+    window.addEventListener('tradingQuickAccessHovered', handleOtherHoverStart);
+    window.addEventListener('tradingQuickAccessUnhovered', handleOtherHoverEnd);
     
     return () => {
       window.removeEventListener('browserSwitchOpened', handleBrowserOpen);
       window.removeEventListener('browserSwitchClosed', handleBrowserClose);
       window.removeEventListener('tradingQuickAccessOpened', handleTradingOpen);
       window.removeEventListener('tradingQuickAccessClosed', handleTradingClose);
+      window.removeEventListener('browserSwitchHovered', handleOtherHoverStart);
+      window.removeEventListener('browserSwitchUnhovered', handleOtherHoverEnd);
+      window.removeEventListener('tradingQuickAccessHovered', handleOtherHoverStart);
+      window.removeEventListener('tradingQuickAccessUnhovered', handleOtherHoverEnd);
     };
   }, []);
 
@@ -326,6 +447,18 @@ export function CommunityQuickAccess() {
   }, [isExpanded]);
 
   const shouldHide = !mounted || !isV2Unlocked || isMobileMenuOpen || isUltimatePanelOpen || isAnyModalOpen;
+  
+  // Prevent hover-open when another panel is active
+  const canOpen = !otherMenuOpen && !otherHovered;
+  
+  // Dispatch hover events for coordination
+  const handleMouseEnter = () => {
+    window.dispatchEvent(new CustomEvent('communityQuickAccessHovered'));
+    if (canOpen) setIsExpanded(true);
+  };
+  const handleMouseLeave = () => {
+    window.dispatchEvent(new CustomEvent('communityQuickAccessUnhovered'));
+  };
 
   if (shouldHide || otherMenuOpen) {
     return null;
@@ -379,8 +512,9 @@ export function CommunityQuickAccess() {
             boxShadow: '0 0 30px rgba(96, 165, 250, 0.6)'
           }}
           className="relative pointer-events-auto cursor-pointer"
-          onClick={() => setIsExpanded(!isExpanded)}
-          onMouseEnter={() => setIsExpanded(true)}
+          onClick={() => canOpen && setIsExpanded(!isExpanded)}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           animate={{
             x: [0, 8, 0, 6, 0],
           }}
@@ -548,24 +682,26 @@ export function CommunityQuickAccess() {
                     );
                   })}
                   
-                  {/* Admin Button - Only visible for mrbullmoney@gmail.com */}
-                  {isAdmin && (
-                    <motion.button
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.2 }}
-                      onClick={() => {
-                        console.log('Opening admin panel...');
-                        window.dispatchEvent(new CustomEvent('openAdminVIPPanel'));
-                        setIsExpanded(false);
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white border border-blue-400/60 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 ml-auto"
-                      title="Admin Panel - Manage VIP Status & Users (Cmd+Shift+A)"
-                    >
-                      <Shield className="w-3.5 h-3.5" />
-                      Admin Panel
-                    </motion.button>
-                  )}
+                  {/* Admin Button - Always visible, opens admin panel for login */}
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.2 }}
+                    onClick={() => {
+                      console.log('Opening admin panel...');
+                      window.dispatchEvent(new CustomEvent('openAdminVIPPanel'));
+                      setIsExpanded(false);
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ml-auto ${
+                      isAdmin 
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white border border-blue-400/60 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50'
+                        : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-300 hover:text-white border border-zinc-600/40 hover:border-zinc-500/60'
+                    }`}
+                    title="Admin Panel - Manage VIP Status & Users (Cmd+Shift+A)"
+                  >
+                    <Shield className="w-3.5 h-3.5" />
+                    {isAdmin ? 'Admin Panel' : 'Admin'}
+                  </motion.button>
                 </div>
 
                 {/* Scrollable Feed Section */}

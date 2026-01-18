@@ -50,6 +50,7 @@ export function TradingQuickAccess() {
   const [activeChart, setActiveChart] = useState('xauusd');
   const [showForexFactory, setShowForexFactory] = useState(false);
   const [otherMenuOpen, setOtherMenuOpen] = useState(false);
+  const [otherHovered, setOtherHovered] = useState(false);
   const [prices, setPrices] = useState<Record<string, string>>({
     xauusd: '...',
     btcusd: '...'
@@ -146,23 +147,33 @@ export function TradingQuickAccess() {
     }
   }, [isExpanded]);
 
-  // Hide when other menus open
+  // Hide when other menus open or are being hovered
   useEffect(() => {
-    const handleBrowserOpen = () => setOtherMenuOpen(true);
+    const handleBrowserOpen = () => { setOtherMenuOpen(true); setIsExpanded(false); };
     const handleBrowserClose = () => setOtherMenuOpen(false);
-    const handleCommunityOpen = () => setOtherMenuOpen(true);
+    const handleCommunityOpen = () => { setOtherMenuOpen(true); setIsExpanded(false); };
     const handleCommunityClose = () => setOtherMenuOpen(false);
+    const handleOtherHoverStart = () => { setOtherHovered(true); setIsExpanded(false); };
+    const handleOtherHoverEnd = () => setOtherHovered(false);
     
     window.addEventListener('browserSwitchOpened', handleBrowserOpen);
     window.addEventListener('browserSwitchClosed', handleBrowserClose);
     window.addEventListener('communityQuickAccessOpened', handleCommunityOpen);
     window.addEventListener('communityQuickAccessClosed', handleCommunityClose);
+    window.addEventListener('browserSwitchHovered', handleOtherHoverStart);
+    window.addEventListener('browserSwitchUnhovered', handleOtherHoverEnd);
+    window.addEventListener('communityQuickAccessHovered', handleOtherHoverStart);
+    window.addEventListener('communityQuickAccessUnhovered', handleOtherHoverEnd);
     
     return () => {
       window.removeEventListener('browserSwitchOpened', handleBrowserOpen);
       window.removeEventListener('browserSwitchClosed', handleBrowserClose);
       window.removeEventListener('communityQuickAccessOpened', handleCommunityOpen);
       window.removeEventListener('communityQuickAccessClosed', handleCommunityClose);
+      window.removeEventListener('browserSwitchHovered', handleOtherHoverStart);
+      window.removeEventListener('browserSwitchUnhovered', handleOtherHoverEnd);
+      window.removeEventListener('communityQuickAccessHovered', handleOtherHoverStart);
+      window.removeEventListener('communityQuickAccessUnhovered', handleOtherHoverEnd);
     };
   }, []);
 
@@ -208,6 +219,18 @@ export function TradingQuickAccess() {
 
   // Hide when not mounted, v2 not unlocked, or any modal/UI is open
   const shouldHide = !mounted || !isV2Unlocked || isMobileMenuOpen || isUltimatePanelOpen || isAnyModalOpen;
+  
+  // Prevent hover-open when another panel is active
+  const canOpen = !otherMenuOpen && !otherHovered;
+  
+  // Dispatch hover events for coordination
+  const handleMouseEnter = () => {
+    window.dispatchEvent(new CustomEvent('tradingQuickAccessHovered'));
+    if (canOpen) setIsExpanded(true);
+  };
+  const handleMouseLeave = () => {
+    window.dispatchEvent(new CustomEvent('tradingQuickAccessUnhovered'));
+  };
 
   if (shouldHide || otherMenuOpen) {
     return null;
@@ -270,8 +293,9 @@ export function TradingQuickAccess() {
             boxShadow: '0 0 30px rgba(96, 165, 250, 0.6)'
           }}
           className="relative pointer-events-auto cursor-pointer"
-          onClick={() => setIsExpanded(!isExpanded)}
-          onMouseEnter={() => setIsExpanded(true)}
+          onClick={() => canOpen && setIsExpanded(!isExpanded)}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           animate={{
             x: [0, 8, 0, 6, 0],
           }}

@@ -12,6 +12,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, password, action, userId, updates, isVip } = body;
 
+    // Fail fast with clear errors if server env is misconfigured
+    if (!ADMIN_PASSWORD) {
+      console.error('Admin API: ADMIN_PASSWORD is not configured on the server.');
+      return NextResponse.json({ error: 'Server admin password not configured. Set ADMIN_PASSWORD on the server.' }, { status: 500 });
+    }
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Admin API: Supabase URL or service role key missing (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY).');
+      return NextResponse.json({ error: 'Server Supabase configuration missing. Ensure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set.' }, { status: 500 });
+    }
+
     // Verify admin credentials
     if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });

@@ -25,6 +25,7 @@ import {
   DollarSign,
   Hash,
 } from 'lucide-react';
+import { useUIState } from '@/contexts/UIStateContext';
 
 interface User {
   id: string;
@@ -74,6 +75,20 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   const [editForm, setEditForm] = useState<Partial<User>>({});
   const [imageModal, setImageModal] = useState<{ url: string; title: string } | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  
+  // UIState awareness - sync admin modal state
+  const { setAdminModalOpen } = useUIState();
+  
+  // Sync with UIState when panel opens/closes
+  useEffect(() => {
+    setAdminModalOpen(isOpen);
+    if (isOpen) {
+      // Dispatch event so other components know admin panel is open
+      window.dispatchEvent(new CustomEvent('adminPanelOpened'));
+    } else {
+      window.dispatchEvent(new CustomEvent('adminPanelClosed'));
+    }
+  }, [isOpen, setAdminModalOpen]);
 
   // Double-tap to close
   const [lastTap, setLastTap] = useState(0);
@@ -254,42 +269,44 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     <AnimatePresence>
       {/* Backdrop */}
       <motion.div
+        key="admin-backdrop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+        className="fixed inset-0 z-[9999998] bg-black/70 backdrop-blur-2xl"
         onClick={handleDoubleTap}
       />
       {/* Modal Container */}
       <motion.div
+        key="admin-modal-container"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[51] flex items-center justify-center p-2 sm:p-3 md:p-4 pointer-events-none"
+        className="fixed inset-0 z-[9999999] flex items-center justify-center p-2 sm:p-3 md:p-4 pointer-events-none"
       >
         {/* Modal Content */}
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="relative w-full max-w-4xl md:max-w-5xl lg:max-w-6xl max-h-[93vh] sm:max-h-[92vh] bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 rounded-xl sm:rounded-2xl border border-blue-500/30 shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
+          className="relative w-full max-w-4xl md:max-w-5xl lg:max-w-6xl max-h-[93vh] sm:max-h-[92vh] bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl rounded-xl sm:rounded-2xl border border-blue-500/50 shadow-2xl shadow-blue-900/30 overflow-hidden flex flex-col pointer-events-auto"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-2.5 sm:p-3 md:p-4 border-b border-white/10 flex-shrink-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10">
+          <div className="flex items-center justify-between p-2.5 sm:p-3 md:p-4 border-b border-blue-500/30 flex-shrink-0 bg-gradient-to-r from-blue-500/20 via-blue-600/15 to-cyan-500/15">
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1">
-              <Shield className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-blue-400 flex-shrink-0" />
-              <h2 className="text-sm sm:text-base md:text-xl font-bold text-white truncate">Admin Panel</h2>
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-cyan-400 flex-shrink-0 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]" />
+              <h2 className="text-sm sm:text-base md:text-xl font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)] truncate">Admin Panel</h2>
               {isAuthenticated && (
-                <span className="text-[9px] sm:text-xs text-green-400 bg-green-500/20 px-2 py-0.5 rounded-full flex-shrink-0">
+                <span className="text-[9px] sm:text-xs text-cyan-300 bg-cyan-500/25 px-2 py-0.5 rounded-full flex-shrink-0 border border-cyan-400/40">
                   ✓ Auth
                 </span>
               )}
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0 ml-2"
+              className="p-1.5 sm:p-2 hover:bg-blue-500/20 border border-transparent hover:border-blue-500/30 rounded-lg transition-all flex-shrink-0 ml-2"
             >
-              <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hover:text-white" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5 text-blue-300/60 hover:text-blue-200" />
             </button>
           </div>
 
@@ -298,37 +315,36 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
             <div className="flex-1 flex items-center justify-center p-3 sm:p-6 md:p-8">
               <form onSubmit={handleLogin} className="w-full max-w-xs sm:max-w-sm space-y-4">
                 <div className="text-center mb-6">
-                  <Lock className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-blue-400 mb-3" />
-                  <h3 className="text-lg sm:text-xl font-bold text-white">Admin Login</h3>
-                  <p className="text-xs sm:text-sm text-zinc-400 mt-1">Enter your credentials</p>
+                  <Lock className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-cyan-400 mb-3 drop-shadow-[0_0_12px_rgba(34,211,238,0.7)]" />
+                  <h3 className="text-lg sm:text-xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Admin Login</h3>
+                  <p className="text-xs sm:text-sm text-cyan-200/90 mt-1">Enter your credentials</p>
                 </div>
 
                 {loginError && (
-                  <div className="p-2 sm:p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-xs sm:text-sm flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <div className="p-2 sm:p-3 bg-slate-700/50 border border-blue-400/40 rounded-lg text-blue-200 text-xs sm:text-sm flex items-center gap-2">\n                    <AlertCircle className="w-4 h-4 flex-shrink-0 text-blue-400" />
                     <span className="line-clamp-2">{loginError}</span>
                   </div>
                 )}
 
                 <div>
-                  <label className="text-[11px] sm:text-xs text-zinc-400 mb-1 block">Email</label>
+                  <label className="text-[11px] sm:text-xs text-cyan-300 font-medium mb-1.5 block drop-shadow-[0_0_4px_rgba(34,211,238,0.4)]">Email</label>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-900/80 border border-cyan-500/40 rounded-lg text-white text-sm placeholder-slate-400 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)]"
                     placeholder="admin@example.com"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="text-[11px] sm:text-xs text-zinc-400 mb-1 block">Password</label>
+                  <label className="text-[11px] sm:text-xs text-cyan-300 font-medium mb-1.5 block drop-shadow-[0_0_4px_rgba(34,211,238,0.4)]">Password</label>
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-900/80 border border-cyan-500/40 rounded-lg text-white text-sm placeholder-slate-400 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)]"
                     placeholder="••••••••"
                     required
                   />
@@ -354,39 +370,39 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
             /* Admin Dashboard */
             <div className="flex-1 flex flex-col overflow-hidden">
               {/* Tabs */}
-              <div className="flex items-center gap-1 sm:gap-2 p-2 sm:p-3 border-b border-white/10 flex-shrink-0 overflow-x-auto scrollbar-hide">
+              <div className="flex items-center gap-1 sm:gap-2 p-2 sm:p-3 border-b border-cyan-500/30 flex-shrink-0 overflow-x-auto scrollbar-hide bg-slate-900/50">
                 <button
                   onClick={() => setActiveTab('users')}
-                  className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                  className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
                     activeTab === 'users'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-zinc-400 hover:bg-white/10'
+                      ? 'bg-cyan-500/30 border border-cyan-400/60 text-white shadow-lg shadow-cyan-500/20'
+                      : 'text-slate-300 border border-transparent hover:bg-cyan-500/20 hover:border-cyan-500/40 hover:text-white'
                   }`}
                 >
-                  <Users className="w-4 h-4" />
-                  All Users ({users.length})
+                  <Users className={`w-4 h-4 ${activeTab === 'users' ? 'text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.6)]' : 'text-cyan-400'}`} />
+                  <span>All Users ({users.length})</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('recruits')}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
                     activeTab === 'recruits'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-zinc-400 hover:bg-white/10'
+                      ? 'bg-blue-500/30 border border-blue-400/60 text-white shadow-lg shadow-blue-500/20'
+                      : 'text-slate-300 border border-transparent hover:bg-blue-500/20 hover:border-blue-500/40 hover:text-white'
                   }`}
                 >
-                  <UserCheck className="w-4 h-4" />
-                  Recruits ({recruits.length})
+                  <UserCheck className={`w-4 h-4 ${activeTab === 'recruits' ? 'text-blue-300 drop-shadow-[0_0_6px_rgba(59,130,246,0.6)]' : 'text-blue-400'}`} />
+                  <span>Recruits ({recruits.length})</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('vip')}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
                     activeTab === 'vip'
-                      ? 'bg-amber-600 text-white'
-                      : 'text-zinc-400 hover:bg-white/10'
+                      ? 'bg-indigo-500/30 border border-indigo-400/60 text-white shadow-lg shadow-indigo-500/20'
+                      : 'text-slate-300 border border-transparent hover:bg-indigo-500/20 hover:border-indigo-500/40 hover:text-white'
                   }`}
                 >
-                  <Crown className="w-4 h-4" />
-                  VIP ({vipUsers.length + vipRecruits.length})
+                  <Crown className={`w-4 h-4 ${activeTab === 'vip' ? 'text-indigo-300 drop-shadow-[0_0_6px_rgba(129,140,248,0.6)]' : 'text-indigo-400'}`} />
+                  <span>VIP ({vipUsers.length + vipRecruits.length})</span>
                 </button>
 
                 <div className="flex-1" />
@@ -394,30 +410,30 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                 <button
                   onClick={fetchAllData}
                   disabled={refreshing}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  className="p-2 hover:bg-cyan-500/25 rounded-lg transition-all border border-transparent hover:border-cyan-500/40"
                 >
-                  <RefreshCw className={`w-4 h-4 text-zinc-400 ${refreshing ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-4 h-4 text-cyan-400 drop-shadow-[0_0_4px_rgba(34,211,238,0.5)] ${refreshing ? 'animate-spin' : ''}`} />
                 </button>
               </div>
 
               {/* Search */}
-              <div className="p-2 sm:p-3 border-b border-white/10 flex-shrink-0">
+              <div className="p-2 sm:p-3 border-b border-cyan-500/30 flex-shrink-0 bg-slate-900/30">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-400 drop-shadow-[0_0_4px_rgba(34,211,238,0.5)]" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search by email, name, or username..."
-                    className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-blue-500"
+                    className="w-full pl-10 pr-4 py-2 bg-slate-900/80 border border-cyan-500/40 rounded-lg text-white text-sm placeholder-slate-400 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30"
                   />
                 </div>
               </div>
 
               {/* Content */}
-              <div className="flex-1 overflow-hidden flex">
+              <div className="flex-1 min-h-0 overflow-hidden flex">
                 {/* Users List */}
-                <div className={`flex-1 overflow-y-auto p-2 sm:p-3 ${selectedUser ? 'hidden sm:block sm:w-1/2 lg:w-2/5' : ''}`}>
+                <div className={`flex-1 overflow-y-auto overscroll-contain p-2 sm:p-3 ${selectedUser ? 'hidden sm:block sm:w-1/2 lg:w-2/5' : ''}`}>
                   <div className="space-y-2">
                     {(activeTab === 'vip' 
                       ? [...vipUsers, ...vipRecruits] 
@@ -431,10 +447,10 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                         key={`${isRecruit ? 'recruit' : 'user'}-${user.id}`}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`p-3 bg-white/5 hover:bg-white/10 border rounded-lg cursor-pointer transition-all ${
+                        className={`p-3 bg-gradient-to-br from-blue-600/10 via-blue-500/5 to-zinc-900/30 hover:from-blue-600/20 hover:via-blue-500/10 hover:to-zinc-900/40 border rounded-lg cursor-pointer transition-all ${
                           selectedUser?.id === user.id
-                            ? 'border-blue-500'
-                            : 'border-white/10 hover:border-white/20'
+                            ? 'border-blue-400/60 shadow-lg shadow-blue-500/10'
+                            : 'border-blue-500/20 hover:border-blue-400/40'
                         }`}
                         onClick={() => {
                           setSelectedUser({ ...user, _isRecruit: isRecruit } as any);
@@ -445,8 +461,8 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${
                             isRecruit 
-                              ? 'bg-gradient-to-br from-emerald-500 to-teal-500' 
-                              : 'bg-gradient-to-br from-blue-500 to-purple-500'
+                              ? 'bg-gradient-to-br from-blue-500 to-indigo-500' 
+                              : 'bg-gradient-to-br from-cyan-500 to-blue-600'
                           }`}>
                             {user.avatar_url || user.image_url ? (
                               <img src={user.avatar_url || user.image_url} alt="" className="w-full h-full rounded-full object-cover" />
@@ -460,20 +476,20 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                 {user.full_name || user.username || user.social_handle || 'User'}
                               </p>
                               {user.is_vip && (
-                                <Crown className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                                <Crown className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0 drop-shadow-[0_0_4px_rgba(129,140,248,0.6)]" />
                               )}
                               {isRecruit && (
-                                <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded">
+                                <span className="text-[9px] bg-blue-500/25 text-blue-300 px-1.5 py-0.5 rounded border border-blue-400/30">
                                   Recruit
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-zinc-400 truncate">{user.email}</p>
+                            <p className="text-xs text-slate-300 truncate">{user.email}</p>
                             {isRecruit && user.mt5_id && (
-                              <p className="text-[10px] text-zinc-500 truncate">MT5: {user.mt5_id}</p>
+                              <p className="text-[10px] text-cyan-400/80 truncate drop-shadow-[0_0_3px_rgba(34,211,238,0.4)]">MT5: {user.mt5_id}</p>
                             )}
                           </div>
-                          <ChevronRight className="w-4 h-4 text-zinc-500 flex-shrink-0" />
+                          <ChevronRight className="w-4 h-4 text-cyan-400 flex-shrink-0 drop-shadow-[0_0_4px_rgba(34,211,238,0.5)]" />
                         </div>
                       </motion.div>
                     )})}
@@ -481,9 +497,9 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                     {((activeTab === 'users' && filteredUsers.length === 0) || 
                       (activeTab === 'recruits' && filteredRecruits.length === 0) ||
                       (activeTab === 'vip' && vipUsers.length === 0 && vipRecruits.length === 0)) && (
-                      <div className="text-center py-12 text-zinc-500">
-                        <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                        <p>No {activeTab} found</p>
+                      <div className="text-center py-12 text-cyan-300">
+                        <Users className="w-12 h-12 mx-auto mb-3 text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
+                        <p className="font-medium drop-shadow-[0_0_6px_rgba(34,211,238,0.3)]">No {activeTab} found</p>
                       </div>
                     )}
                   </div>
@@ -491,12 +507,12 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
                 {/* User Details Panel */}
                 {selectedUser && (
-                  <div className="flex-1 sm:w-1/2 lg:w-3/5 border-l border-white/10 overflow-y-auto">
+                  <div className="flex-1 sm:w-1/2 lg:w-3/5 border-l border-blue-500/20 overflow-y-auto overscroll-contain">
                     <div className="p-3 sm:p-4">
                       {/* Back button on mobile */}
                       <button
                         onClick={() => setSelectedUser(null)}
-                        className="sm:hidden flex items-center gap-1 text-sm text-blue-400 mb-4"
+                        className="sm:hidden flex items-center gap-1.5 text-sm text-blue-300 hover:text-blue-200 mb-4 transition-colors"
                       >
                         <ChevronLeft className="w-4 h-4" />
                         Back to list
@@ -505,46 +521,46 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                       {/* User Header */}
                       <div className="flex items-start justify-between mb-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xl font-bold">
+                          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-cyan-500/30">
                             {selectedUser.avatar_url ? (
                               <img
                                 src={selectedUser.avatar_url || selectedUser.image_url}
                                 alt=""
-                                className="w-full h-full rounded-full object-cover cursor-pointer"
+                                className="w-full h-full rounded-full object-cover cursor-pointer ring-2 ring-cyan-400/50"
                                 onClick={() => setImageModal({ url: (selectedUser.avatar_url || selectedUser.image_url)!, title: 'Profile Photo' })}
                               />
                             ) : (
-                              selectedUser.email?.charAt(0).toUpperCase() || 'U'
+                              <span className="drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">{selectedUser.email?.charAt(0).toUpperCase() || 'U'}</span>
                             )}
                           </div>
                           <div>
-                            <h3 className="text-lg font-bold text-white">
+                            <h3 className="text-lg font-bold text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
                               {selectedUser.full_name || selectedUser.username || selectedUser.social_handle || 'User'}
                             </h3>
-                            <p className="text-sm text-zinc-400">{selectedUser.email}</p>
-                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <p className="text-sm text-slate-300">{selectedUser.email}</p>
+                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                               {selectedUser.is_vip ? (
-                                <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                  <Crown className="w-3 h-3" />
+                                <span className="text-xs bg-indigo-500/25 text-indigo-300 px-2 py-0.5 rounded-full flex items-center gap-1 border border-indigo-400/40 shadow-sm shadow-indigo-500/20">
+                                  <Crown className="w-3 h-3 drop-shadow-[0_0_4px_rgba(129,140,248,0.6)]" />
                                   VIP Member
                                 </span>
                               ) : (
-                                <span className="text-xs bg-zinc-500/20 text-zinc-400 px-2 py-0.5 rounded-full">
+                                <span className="text-xs bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full border border-cyan-400/30">
                                   Standard
                                 </span>
                               )}
                               {(selectedUser as any)._isRecruit && (
-                                <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">
+                                <span className="text-xs bg-blue-500/25 text-blue-300 px-2 py-0.5 rounded-full border border-blue-400/40">
                                   Recruit
                                 </span>
                               )}
                               {selectedUser.status && (
-                                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                <span className={`text-xs px-2 py-0.5 rounded-full border ${
                                   selectedUser.status === 'Active' 
-                                    ? 'bg-green-500/20 text-green-400'
+                                    ? 'bg-cyan-500/25 text-cyan-300 border-cyan-400/40'
                                     : selectedUser.status === 'Pending'
-                                    ? 'bg-yellow-500/20 text-yellow-400'
-                                    : 'bg-zinc-500/20 text-zinc-400'
+                                    ? 'bg-sky-500/25 text-sky-300 border-sky-400/40'
+                                    : 'bg-slate-500/20 text-slate-300 border-slate-400/30'
                                 }`}>
                                   {selectedUser.status}
                                 </span>
@@ -556,34 +572,34 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => toggleVipStatus(selectedUser.id, selectedUser.is_vip, (selectedUser as any)._isRecruit)}
-                            className={`p-1.5 sm:p-2 rounded-lg transition-all font-medium flex items-center gap-1.5 px-2.5 sm:px-3 whitespace-nowrap text-xs sm:text-sm ${
+                            className={`p-1.5 sm:p-2 rounded-lg transition-all font-semibold flex items-center gap-1.5 px-2.5 sm:px-3 whitespace-nowrap text-xs sm:text-sm ${
                               selectedUser.is_vip
-                                ? 'bg-gradient-to-r from-red-600 to-red-500 text-white hover:from-red-500 hover:to-red-400 shadow-lg shadow-red-500/20'
-                                : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/20'
+                                ? 'bg-gradient-to-r from-slate-600 to-slate-500 text-white hover:from-slate-500 hover:to-slate-400 shadow-lg shadow-slate-500/30'
+                                : 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white hover:from-indigo-500 hover:to-indigo-400 shadow-lg shadow-indigo-500/30'
                             }`}
                             title={selectedUser.is_vip ? 'Remove VIP Status' : 'Make VIP'}
                           >
                             {selectedUser.is_vip ? (
                               <>
-                                <UserX className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-                                <span>Remove VIP</span>
+                                <UserX className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 drop-shadow-[0_0_4px_rgba(255,255,255,0.5)]" />
+                                <span className="drop-shadow-[0_0_4px_rgba(255,255,255,0.3)]">Remove VIP</span>
                               </>
                             ) : (
                               <>
-                                <Crown className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-                                <span>Make VIP</span>
+                                <Crown className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 drop-shadow-[0_0_6px_rgba(129,140,248,0.7)]" />
+                                <span className="drop-shadow-[0_0_4px_rgba(255,255,255,0.3)]">Make VIP</span>
                               </>
                             )}
                           </button>
                           <button
                             onClick={() => setIsEditing(!isEditing)}
-                            className={`p-1.5 sm:p-2 rounded-lg transition-all flex items-center gap-1.5 px-2.5 sm:px-3 whitespace-nowrap text-xs sm:text-sm font-medium ${
+                            className={`p-1.5 sm:p-2 rounded-lg transition-all flex items-center gap-1.5 px-2.5 sm:px-3 whitespace-nowrap text-xs sm:text-sm font-semibold ${
                               isEditing
-                                ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/20'
-                                : 'bg-white/10 text-zinc-400 hover:bg-white/20'
+                                ? 'bg-gradient-to-r from-cyan-600 to-cyan-500 text-white shadow-lg shadow-cyan-500/30'
+                                : 'bg-slate-800/70 border border-cyan-500/40 text-white hover:bg-slate-700/70 hover:border-cyan-400/60'
                             }`}
                           >
-                            <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                            <Edit3 className={`w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 ${isEditing ? 'drop-shadow-[0_0_4px_rgba(255,255,255,0.5)]' : 'text-cyan-400 drop-shadow-[0_0_4px_rgba(34,211,238,0.5)]'}`} />
                             <span>{isEditing ? 'Editing' : 'Edit'}</span>
                           </button>
                         </div>
@@ -596,16 +612,16 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                           <>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
-                                <label className="text-xs text-zinc-400 mb-1 block">Full Name</label>
+                                <label className="text-xs text-cyan-300 font-medium mb-1.5 block drop-shadow-[0_0_3px_rgba(34,211,238,0.4)]">Full Name</label>
                                 <input
                                   type="text"
                                   value={editForm.full_name || ''}
                                   onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                                  className="w-full px-3 py-2 bg-slate-900/80 border border-cyan-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30"
                                 />
                               </div>
                               <div>
-                                <label className="text-xs text-zinc-400 mb-1 block">{(selectedUser as any)._isRecruit ? 'Social Handle' : 'Username'}</label>
+                                <label className="text-xs text-cyan-300 font-medium mb-1.5 block drop-shadow-[0_0_3px_rgba(34,211,238,0.4)]">{(selectedUser as any)._isRecruit ? 'Social Handle' : 'Username'}</label>
                                 <input
                                   type="text"
                                   value={(selectedUser as any)._isRecruit ? (editForm.social_handle || '') : (editForm.username || '')}
@@ -613,80 +629,123 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                     ...editForm, 
                                     [(selectedUser as any)._isRecruit ? 'social_handle' : 'username']: e.target.value 
                                   })}
-                                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                                  className="w-full px-3 py-2 bg-slate-900/80 border border-cyan-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30"
                                 />
                               </div>
                               {(selectedUser as any)._isRecruit && (
                                 <>
                                   <div>
-                                    <label className="text-xs text-zinc-400 mb-1 block">MT5 ID</label>
+                                    <label className="text-xs text-cyan-300 font-medium mb-1.5 block drop-shadow-[0_0_3px_rgba(34,211,238,0.4)]">MT5 ID</label>
                                     <input
                                       type="text"
                                       value={editForm.mt5_id || ''}
                                       onChange={(e) => setEditForm({ ...editForm, mt5_id: e.target.value })}
-                                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                                      className="w-full px-3 py-2 bg-slate-900/80 border border-cyan-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30"
                                     />
                                   </div>
                                   <div>
-                                    <label className="text-xs text-zinc-400 mb-1 block">Status</label>
+                                    <label className="text-xs text-cyan-300 font-medium mb-1.5 block drop-shadow-[0_0_3px_rgba(34,211,238,0.4)]">Status</label>
                                     <select
                                       value={editForm.status || 'Pending'}
                                       onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                                      className="w-full px-3 py-2 bg-slate-900/80 border border-cyan-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30"
                                     >
                                       <option value="Pending">Pending</option>
                                       <option value="Active">Active</option>
                                       <option value="Rejected">Rejected</option>
                                       <option value="Suspended">Suspended</option>
                                     </select>
-n                                  </div>
+                                  </div>
                                   <div>
-                                    <label className="text-xs text-zinc-400 mb-1 block">Commission Balance</label>
+                                    <label className="text-xs text-cyan-300 font-medium mb-1.5 block drop-shadow-[0_0_3px_rgba(34,211,238,0.4)]">Commission Balance</label>
                                     <input
                                       type="text"
                                       value={editForm.commission_balance || '0.00'}
                                       onChange={(e) => setEditForm({ ...editForm, commission_balance: e.target.value })}
-                                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                                      className="w-full px-3 py-2 bg-slate-900/80 border border-cyan-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30"
                                     />
+                                  </div>
+                                  <div>
+                                    <label className="text-xs text-cyan-300 font-medium mb-1.5 block drop-shadow-[0_0_3px_rgba(34,211,238,0.4)]">Affiliate Code</label>
+                                    <input
+                                      type="text"
+                                      value={editForm.affiliate_code || ''}
+                                      onChange={(e) => setEditForm({ ...editForm, affiliate_code: e.target.value })}
+                                      className="w-full px-3 py-2 bg-slate-900/80 border border-cyan-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30"
+                                      placeholder="e.g. bmt_username"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-xs text-cyan-300 font-medium mb-1.5 block drop-shadow-[0_0_3px_rgba(34,211,238,0.4)]">Referred By Code</label>
+                                    <input
+                                      type="text"
+                                      value={editForm.referred_by_code || ''}
+                                      onChange={(e) => setEditForm({ ...editForm, referred_by_code: e.target.value })}
+                                      className="w-full px-3 py-2 bg-slate-900/80 border border-cyan-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30"
+                                      placeholder="Referral code used"
+                                    />
+                                  </div>
+                                  <div className="sm:col-span-2">
+                                    <label className="text-xs text-cyan-300 font-medium mb-2 block drop-shadow-[0_0_3px_rgba(34,211,238,0.4)]">Task Verifications</label>
+                                    <div className="flex flex-wrap gap-3">
+                                      <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                          type="checkbox"
+                                          checked={editForm.task_broker_verified || false}
+                                          onChange={(e) => setEditForm({ ...editForm, task_broker_verified: e.target.checked })}
+                                          className="w-4 h-4 rounded bg-slate-800 border-cyan-500/40 text-cyan-500 focus:ring-cyan-500/30"
+                                        />
+                                        <span className="text-sm text-white">Broker Verified</span>
+                                      </label>
+                                      <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                          type="checkbox"
+                                          checked={editForm.task_social_verified || false}
+                                          onChange={(e) => setEditForm({ ...editForm, task_social_verified: e.target.checked })}
+                                          className="w-4 h-4 rounded bg-slate-800 border-cyan-500/40 text-cyan-500 focus:ring-cyan-500/30"
+                                        />
+                                        <span className="text-sm text-white">Social Verified</span>
+                                      </label>
+                                    </div>
                                   </div>
                                 </>
                               )}
                               <div>
-                                <label className="text-xs text-zinc-400 mb-1 block">Phone</label>
+                                <label className="text-xs text-cyan-300 font-medium mb-1.5 block drop-shadow-[0_0_3px_rgba(34,211,238,0.4)]">Phone</label>
                                 <input
                                   type="text"
                                   value={editForm.phone || ''}
                                   onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                                  className="w-full px-3 py-2 bg-slate-900/80 border border-cyan-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30"
                                 />
                               </div>
                               <div>
-                                <label className="text-xs text-zinc-400 mb-1 block">Telegram</label>
+                                <label className="text-xs text-cyan-300 font-medium mb-1.5 block drop-shadow-[0_0_3px_rgba(34,211,238,0.4)]">Telegram</label>
                                 <input
                                   type="text"
                                   value={editForm.telegram_username || ''}
                                   onChange={(e) => setEditForm({ ...editForm, telegram_username: e.target.value })}
-                                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                                  className="w-full px-3 py-2 bg-slate-900/80 border border-cyan-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30"
                                 />
                               </div>
                               <div>
-                                <label className="text-xs text-zinc-400 mb-1 block">Discord</label>
+                                <label className="text-xs text-cyan-300 font-medium mb-1.5 block drop-shadow-[0_0_3px_rgba(34,211,238,0.4)]">Discord</label>
                                 <input
                                   type="text"
                                   value={editForm.discord_username || ''}
                                   onChange={(e) => setEditForm({ ...editForm, discord_username: e.target.value })}
-                                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                                  className="w-full px-3 py-2 bg-slate-900/80 border border-cyan-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30"
                                 />
                               </div>
                             </div>
 
                             <div>
-                              <label className="text-xs text-zinc-400 mb-1 block">Notes</label>
+                              <label className="text-xs text-cyan-300 font-medium mb-1.5 block drop-shadow-[0_0_3px_rgba(34,211,238,0.4)]">Notes</label>
                               <textarea
                                 value={editForm.notes || ''}
                                 onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                                 rows={3}
-                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 resize-none"
+                                className="w-full px-3 py-2 bg-slate-900/80 border border-cyan-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 resize-none"
                               />
                             </div>
 
@@ -694,17 +753,17 @@ n                                  </div>
                               <button
                                 onClick={() => saveUserEdits((selectedUser as any)._isRecruit)}
                                 disabled={loading}
-                                className="flex-1 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white text-xs sm:text-sm font-medium rounded-lg transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 py-2 sm:py-2.5 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white text-xs sm:text-sm font-semibold rounded-lg transition-all shadow-lg shadow-cyan-500/30 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                {loading ? <Loader className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                                Save Changes
+                                {loading ? <Loader className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 drop-shadow-[0_0_4px_rgba(255,255,255,0.5)]" />}
+                                <span className="drop-shadow-[0_0_4px_rgba(255,255,255,0.3)]">Save Changes</span>
                               </button>
                               <button
                                 onClick={() => {
                                   setIsEditing(false);
                                   setEditForm(selectedUser);
                                 }}
-                                className="px-3 sm:px-4 py-2 sm:py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors"
+                                className="px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-600/50 hover:border-slate-500/60 text-white text-xs sm:text-sm font-medium rounded-lg transition-all"
                               >
                                 Cancel
                               </button>
@@ -732,17 +791,17 @@ n                                  </div>
                             {/* Verification Status for Recruits */}
                             {(selectedUser as any)._isRecruit && (
                               <div className="flex gap-3 flex-wrap">
-                                <span className={`text-xs px-2 py-1 rounded ${
+                                <span className={`text-xs px-2.5 py-1 rounded-full font-medium border ${
                                   selectedUser.task_broker_verified 
-                                    ? 'bg-green-500/20 text-green-400' 
-                                    : 'bg-zinc-500/20 text-zinc-400'
+                                    ? 'bg-cyan-500/25 text-cyan-300 border-cyan-400/50 shadow-sm shadow-cyan-500/20' 
+                                    : 'bg-slate-800/60 text-slate-300 border-slate-600/50'
                                 }`}>
                                   {selectedUser.task_broker_verified ? '✓' : '○'} Broker Verified
                                 </span>
-                                <span className={`text-xs px-2 py-1 rounded ${
+                                <span className={`text-xs px-2.5 py-1 rounded-full font-medium border ${
                                   selectedUser.task_social_verified 
-                                    ? 'bg-green-500/20 text-green-400' 
-                                    : 'bg-zinc-500/20 text-zinc-400'
+                                    ? 'bg-cyan-500/25 text-cyan-300 border-cyan-400/50 shadow-sm shadow-cyan-500/20' 
+                                    : 'bg-slate-800/60 text-slate-300 border-slate-600/50'
                                 }`}>
                                   {selectedUser.task_social_verified ? '✓' : '○'} Social Verified
                                 </span>
@@ -750,45 +809,45 @@ n                                  </div>
                             )}
 
                             {selectedUser.notes && (
-                              <div className="p-3 bg-white/5 rounded-lg">
-                                <p className="text-xs text-zinc-400 mb-1">Notes</p>
-                                <p className="text-sm text-zinc-300">{selectedUser.notes}</p>
+                              <div className="p-3.5 bg-slate-800/60 border border-slate-600/50 rounded-lg">
+                                <p className="text-xs text-cyan-300 font-medium mb-1.5 drop-shadow-[0_0_3px_rgba(34,211,238,0.3)]">Notes</p>
+                                <p className="text-sm text-white leading-relaxed">{selectedUser.notes}</p>
                               </div>
                             )}
 
                             {/* Documents */}
-                            <div className="pt-4 border-t border-white/10">
-                              <h4 className="text-sm font-semibold text-white mb-3">Documents & Images</h4>
+                            <div className="pt-4 border-t border-cyan-500/30">
+                              <h4 className="text-sm font-bold text-white mb-3 drop-shadow-[0_0_6px_rgba(255,255,255,0.2)]">Documents & Images</h4>
                               <div className="grid grid-cols-2 gap-3">
                                 {selectedUser.payment_screenshot_url && (
                                   <button
                                     onClick={() => setImageModal({ url: selectedUser.payment_screenshot_url!, title: 'Payment Screenshot' })}
-                                    className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-colors flex flex-col items-center gap-2"
+                                    className="p-4 bg-slate-800/60 hover:bg-slate-700/60 border border-cyan-500/40 hover:border-cyan-400/60 rounded-lg transition-all flex flex-col items-center gap-2 group"
                                   >
-                                    <ImageIcon className="w-8 h-8 text-blue-400" />
-                                    <span className="text-xs text-zinc-400">Payment Screenshot</span>
+                                    <ImageIcon className="w-8 h-8 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] group-hover:drop-shadow-[0_0_12px_rgba(34,211,238,0.7)]" />
+                                    <span className="text-xs text-white font-medium">Payment Screenshot</span>
                                   </button>
                                 )}
                                 {selectedUser.id_document_url && (
                                   <button
                                     onClick={() => setImageModal({ url: selectedUser.id_document_url!, title: 'ID Document' })}
-                                    className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-colors flex flex-col items-center gap-2"
+                                    className="p-4 bg-slate-800/60 hover:bg-slate-700/60 border border-blue-500/40 hover:border-blue-400/60 rounded-lg transition-all flex flex-col items-center gap-2 group"
                                   >
-                                    <ImageIcon className="w-8 h-8 text-purple-400" />
-                                    <span className="text-xs text-zinc-400">ID Document</span>
+                                    <ImageIcon className="w-8 h-8 text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)] group-hover:drop-shadow-[0_0_12px_rgba(59,130,246,0.7)]" />
+                                    <span className="text-xs text-white font-medium">ID Document</span>
                                   </button>
                                 )}
                                 {selectedUser.image_url && (
                                   <button
                                     onClick={() => setImageModal({ url: selectedUser.image_url!, title: 'Face Scan / ID' })}
-                                    className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-colors flex flex-col items-center gap-2"
+                                    className="p-4 bg-slate-800/60 hover:bg-slate-700/60 border border-indigo-500/40 hover:border-indigo-400/60 rounded-lg transition-all flex flex-col items-center gap-2 group"
                                   >
-                                    <ImageIcon className="w-8 h-8 text-emerald-400" />
-                                    <span className="text-xs text-zinc-400">Face Scan / ID</span>
+                                    <ImageIcon className="w-8 h-8 text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)] group-hover:drop-shadow-[0_0_12px_rgba(129,140,248,0.7)]" />
+                                    <span className="text-xs text-white font-medium">Face Scan / ID</span>
                                   </button>
                                 )}
                                 {!selectedUser.payment_screenshot_url && !selectedUser.id_document_url && !selectedUser.image_url && (
-                                  <p className="text-sm text-zinc-500 col-span-2">No documents uploaded</p>
+                                  <p className="text-sm text-slate-400 col-span-2 text-center py-4">No documents uploaded</p>
                                 )}
                               </div>
                             </div>
@@ -807,6 +866,7 @@ n                                  </div>
         <AnimatePresence>
           {imageModal && (
             <motion.div
+              key="image-modal-backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -814,6 +874,7 @@ n                                  </div>
               onClick={() => setImageModal(null)}
             >
               <motion.div
+                key="image-modal-content"
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.9 }}
@@ -822,11 +883,11 @@ n                                  </div>
               >
                 <button
                   onClick={() => setImageModal(null)}
-                  className="absolute -top-10 right-0 p-2 text-white hover:text-zinc-300"
+                  className="absolute -top-10 right-0 p-2 text-blue-200 hover:text-blue-100 transition-colors"
                 >
                   <X className="w-6 h-6" />
                 </button>
-                <h3 className="absolute -top-10 left-0 text-white font-medium">{imageModal.title}</h3>
+                <h3 className="absolute -top-10 left-0 text-blue-100 font-medium">{imageModal.title}</h3>
                 <img
                   src={imageModal.url}
                   alt={imageModal.title}
@@ -844,11 +905,11 @@ n                                  </div>
 function InfoItem({ icon: Icon, label, value }: { icon?: any; label: string; value?: string }) {
   if (!value) return null;
   return (
-    <div className="flex items-start gap-2">
-      {Icon && <Icon className="w-4 h-4 text-zinc-500 mt-0.5" />}
+    <div className="flex items-start gap-2.5 p-2 rounded-lg bg-slate-800/40 border border-slate-700/50">
+      {Icon && <Icon className="w-4 h-4 text-cyan-400 mt-0.5 drop-shadow-[0_0_4px_rgba(34,211,238,0.5)]" />}
       <div>
-        <p className="text-xs text-zinc-500">{label}</p>
-        <p className="text-sm text-zinc-300">{value}</p>
+        <p className="text-xs text-cyan-300 font-medium drop-shadow-[0_0_3px_rgba(34,211,238,0.3)]">{label}</p>
+        <p className="text-sm text-white font-medium">{value}</p>
       </div>
     </div>
   );
