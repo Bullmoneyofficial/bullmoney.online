@@ -25,26 +25,113 @@ type HeroSplineSource = {
   preferViewer?: boolean;
 };
 
-const HERO_SPLINE_SCENES = {
-  primary: {
+type HeroSplineSceneConfig = HeroSplineSource & {
+  id: string;
+  label: string;
+  weight: number;
+};
+
+const HERO_SPLINE_SCENES: readonly HeroSplineSceneConfig[] = [
+  {
+    id: "timefold",
+    label: "Timefold Odyssey",
     runtimeUrl: "https://prod.spline.design/S-nBNkFCGU9KbFxY/scene.splinecode",
     viewerUrl: "https://my.spline.design/timefoldodyssey-s3vKRBOk0ESLxu0qgZIB1IOD/",
     preferViewer: true,
+    weight: 35,
   },
-  secondary: {
+  {
+    id: "nexbot",
+    label: "Nexbot Vanguard",
     runtimeUrl: "https://prod.spline.design/iWLVJpgyHSJpuCnD/scene.splinecode",
     viewerUrl: "https://my.spline.design/nexbotrobotcharacterconcept-pJvW8Dq4jVXayg6xUDiM8nPp/",
     preferViewer: true,
+    weight: 35,
   },
-} as const;
-
-type HeroSplineScene = keyof typeof HERO_SPLINE_SCENES;
+  {
+    id: "followers-focus",
+    label: "100 Followers Focus",
+    runtimeUrl: "https://prod.spline.design/IomoYEa50DmuiTXE/scene.splinecode",
+    viewerUrl: "https://my.spline.design/100followersfocus-55tpQJYDbng5lAQ3P1tq5abx/",
+    preferViewer: true,
+    weight: 6,
+  },
+  {
+    id: "loading-bar",
+    label: "The Loading Bar",
+    runtimeUrl: "https://prod.spline.design/TOPNo0pcBjY8u6Ls/scene.splinecode",
+    viewerUrl: "https://my.spline.design/theloadingbarvertical-J0jRfhBsRDUAUKzNRxMvZXak/",
+    preferViewer: true,
+    weight: 6,
+  },
+  {
+    id: "cannon",
+    label: "Cannon Dynamics",
+    runtimeUrl: "https://prod.spline.design/C0mBZel0m7zXQaoD/scene.splinecode",
+    viewerUrl: "https://my.spline.design/cannon-vOk1Cc5VyFBvcSq1ozXuhK1n/",
+    preferViewer: true,
+    weight: 6,
+  },
+  {
+    id: "xgamer",
+    label: "XGamer Flux",
+    runtimeUrl: "https://prod.spline.design/1HGlyIYtYszh-B-r/scene.splinecode",
+    viewerUrl: "https://my.spline.design/xgamer-RZ9X6L57SHESs7L04p6IDisA/",
+    preferViewer: true,
+    weight: 6,
+  },
+  {
+    id: "r4xbot",
+    label: "R4X Bot Sentinel",
+    runtimeUrl: "https://prod.spline.design/G3yn-KsfkIAbK2Mz/scene.splinecode",
+    viewerUrl: "https://my.spline.design/r4xbot-2RZeOpfgJ0Vr36G9Jd9EHlFB/",
+    preferViewer: true,
+    weight: 6,
+  },
+] as const;
 
 const HERO_SPLINE_BLOCK_SIZE = 5;
 const HERO_SPLINE_STORAGE_KEY = "heroSplineCycleIndex";
 const HERO_SPLINE_LEGACY_KEY = "heroSplineReloadCount";
-const HERO_SPLINE_CYCLE_LENGTH = HERO_SPLINE_BLOCK_SIZE * 2;
 const HERO_SPLINE_DEFAULT_INDEX = 0;
+
+const createHeroSplineSchedule = (
+  scenes: readonly HeroSplineSceneConfig[],
+): HeroSplineSceneConfig[] => {
+  if (!scenes.length) {
+    return [];
+  }
+
+  const normalizedScenes = scenes.map((scene) => ({
+    scene,
+    remaining: Number.isFinite(scene.weight)
+      ? Math.max(1, Math.round(scene.weight))
+      : 1,
+  }));
+
+  const totalSlots = normalizedScenes.reduce((sum, entry) => sum + entry.remaining, 0);
+  if (totalSlots <= 0) {
+    return [scenes[0]];
+  }
+
+  const schedule: HeroSplineSceneConfig[] = [];
+  let remaining = totalSlots;
+
+  while (remaining > 0) {
+    for (const entry of normalizedScenes) {
+      if (entry.remaining > 0) {
+        schedule.push(entry.scene);
+        entry.remaining -= 1;
+        remaining -= 1;
+      }
+    }
+  }
+
+  return schedule;
+};
+
+const HERO_SPLINE_SCHEDULE = createHeroSplineSchedule(HERO_SPLINE_SCENES);
+const HERO_SPLINE_CYCLE_LENGTH = Math.max(HERO_SPLINE_SCHEDULE.length, 1);
 let heroSplineResolvedThisLoad = false;
 let heroSplineCachedResolution: HeroSplineResolution | null = null;
 
@@ -85,20 +172,26 @@ const setStoredHeroSplineIndex = (index: number) => {
   }
 };
 
-const sceneFromIndex = (index: number): HeroSplineScene =>
-  index < HERO_SPLINE_BLOCK_SIZE ? "primary" : "secondary";
+const sceneFromIndex = (index: number): HeroSplineSceneConfig => {
+  if (!HERO_SPLINE_SCHEDULE.length) {
+    return HERO_SPLINE_SCENES[0]!;
+  }
+
+  const normalizedIndex = index % HERO_SPLINE_CYCLE_LENGTH;
+  return HERO_SPLINE_SCHEDULE[normalizedIndex] ?? HERO_SPLINE_SCHEDULE[0]!;
+};
 
 const blockStepFromIndex = (index: number): number =>
   (index % HERO_SPLINE_BLOCK_SIZE) + 1;
 
 type HeroSplineResolution = {
-  scene: HeroSplineScene;
+  scene: HeroSplineSceneConfig;
   blockStep: number;
 };
 
 const resolveHeroSplineScene = (): HeroSplineResolution => {
   if (typeof window === "undefined") {
-    return { scene: "primary", blockStep: 1 };
+    return { scene: HERO_SPLINE_SCENES[0]!, blockStep: 1 };
   }
 
   if (heroSplineResolvedThisLoad && heroSplineCachedResolution) {
@@ -121,9 +214,10 @@ const resolveHeroSplineScene = (): HeroSplineResolution => {
 const useHeroSplineSource = () => {
   const [resolution] = useState(() => resolveHeroSplineScene());
   return {
-    scene: resolution.scene,
+    scene: resolution.scene.id,
+    label: resolution.scene.label,
     blockStep: resolution.blockStep,
-    source: HERO_SPLINE_SCENES[resolution.scene],
+    source: resolution.scene,
   } as const;
 };
 
@@ -560,14 +654,19 @@ const HeroParallax = () => {
   const willChange = useWillChange();
 
   const buttonText = hero?.button_text || "View Trading Setups";
-  const { scene: heroSplineScene, source: heroSplineSource, blockStep: heroSplineBlockStep } = useHeroSplineSource();
+  const {
+    scene: heroSplineScene,
+    label: heroSplineSceneLabel,
+    source: heroSplineSource,
+    blockStep: heroSplineBlockStep,
+  } = useHeroSplineSource();
   const showReloadCue = heroSplineBlockStep >= 2 && heroSplineBlockStep <= HERO_SPLINE_BLOCK_SIZE;
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") {
-      console.info(`[HeroSpline] Active hero scene: ${heroSplineScene}`);
+      console.info(`[HeroSpline] Active hero scene: ${heroSplineSceneLabel} (${heroSplineScene})`);
     }
-  }, [heroSplineScene]);
+  }, [heroSplineScene, heroSplineSceneLabel]);
 
   // Global Theme Context - syncs across entire app
   const { activeThemeId, setTheme, accentColor } = useGlobalTheme();

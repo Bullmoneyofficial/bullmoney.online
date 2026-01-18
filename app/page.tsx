@@ -67,8 +67,8 @@ const DRAGGABLE_SPLIT_SCENES: Record<'glassCurtain' | 'orbScroll', RemoteSplineM
     id: 'glassCurtain',
     runtime: "https://prod.spline.design/pERFMZP1PEeizk2N/scene.splinecode",
     viewer: "https://my.spline.design/glasscurtain-a6oJvU7009VpSevqPvEeVyI7/",
-    title: "Glass Curtain Command",
-    subtitle: "Dual-panel control room",
+    title: "Market Depth Analyzer",
+    subtitle: "Dual-chart order book monitoring",
     accent: '#38bdf8',
     aspectRatio: '4 / 3'
   },
@@ -76,8 +76,8 @@ const DRAGGABLE_SPLIT_SCENES: Record<'glassCurtain' | 'orbScroll', RemoteSplineM
     id: 'orbScroll',
     runtime: "https://prod.spline.design/QfpAnXg8I-cL9KnC/scene.splinecode",
     viewer: "https://my.spline.design/orbscrolltriggerforhero-cukhAyxazfE0BSBUcFrD8NBf/",
-    title: "Orb Scroll Trigger",
-    subtitle: "Vertical motion study",
+    title: "Price Action Indicator",
+    subtitle: "Real-time volatility tracking",
     accent: '#a855f7',
     aspectRatio: '4 / 3'
   }
@@ -86,54 +86,54 @@ const DRAGGABLE_SPLIT_SCENES: Record<'glassCurtain' | 'orbScroll', RemoteSplineM
 const ADDITIONAL_SPLINE_PAGES: RemoteSplineMeta[] = [
   {
     id: 'followers-focus',
-    title: '100 Followers Focus',
-    subtitle: 'Signal lattice + focus ring',
+    title: 'Liquidity Scanner',
+    subtitle: 'Live trading signal detection network',
     viewer: 'https://my.spline.design/100followersfocus-55tpQJYDbng5lAQ3P1tq5abx/',
     runtime: 'https://prod.spline.design/IomoYEa50DmuiTXE/scene.splinecode',
     accent: '#22d3ee',
-    badge: 'Live Social HUD',
+    badge: 'Live Trading',
     aspectRatio: '16 / 9'
   },
   {
     id: 'loading-bar-vertical',
-    title: 'Vertical Loading Bar',
-    subtitle: 'Cinematic progress pillar',
+    title: 'Portfolio Progress Tracker',
+    subtitle: 'Vertical growth momentum visualization',
     viewer: 'https://my.spline.design/theloadingbarvertical-J0jRfhBsRDUAUKzNRxMvZXak/',
     runtime: 'https://prod.spline.design/TOPNo0pcBjY8u6Ls/scene.splinecode',
     accent: '#fbbf24',
-    badge: 'Motion Study',
+    badge: 'Portfolio',
     aspectRatio: '9 / 16'
   },
   {
     id: 'cannon-lab',
-    title: 'Cannon Lab',
-    subtitle: 'Physics-based launch room',
+    title: 'Launch Momentum Engine',
+    subtitle: 'Breakout detection and entry signals',
     viewer: 'https://my.spline.design/cannon-vOk1Cc5VyFBvcSq1ozXuhK1n/',
     runtime: 'https://prod.spline.design/C0mBZel0m7zXQaoD/scene.splinecode',
     accent: '#f472b6',
-    badge: 'Experimental',
+    badge: 'Advanced',
     aspectRatio: '16 / 9'
   },
   {
     id: 'x-gamer',
-    title: 'X Gamer Arena',
-    subtitle: 'Esports-inspired cockpit',
+    title: 'Trading Arena Dashboard',
+    subtitle: 'Multi-asset performance battle station',
     viewer: 'https://my.spline.design/xgamer-RZ9X6L57SHESs7L04p6IDisA/',
     runtime: 'https://prod.spline.design/1HGlyIYtYszh-B-r/scene.splinecode',
     accent: '#4ade80',
-    badge: 'Immersive',
+    badge: 'Competitive',
     aspectRatio: '16 / 9'
   }
 ];
 
 const R4X_BOT_SCENE: RemoteSplineMeta = {
   id: 'r4x-bot',
-  title: 'R4X Autonomous Bot',
-  subtitle: 'AI scout companion',
+  title: 'Market Scout AI Bot',
+  subtitle: 'Autonomous trading opportunity analyzer',
   viewer: 'https://my.spline.design/r4xbot-2RZeOpfgJ0Vr36G9Jd9EHlFB/',
   runtime: 'https://prod.spline.design/G3yn-KsfkIAbK2Mz/scene.splinecode',
   accent: '#60a5fa',
-  badge: 'Prototype',
+  badge: 'AI Trading',
   aspectRatio: '16 / 9'
 };
 
@@ -531,10 +531,10 @@ function SplitExperienceCard({ onOpen }: { onOpen: () => void }) {
       onClick={onOpen}
     >
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-sky-500/5 to-transparent group-hover:via-sky-500/10 transition-all duration-500 pointer-events-none" />
-      <span className="relative text-xs uppercase tracking-[0.3em] font-bold" style={{ color: blueAccent }}>▪ Split Arcade</span>
-      <h3 className="relative text-2xl font-bold text-white" style={{ textShadow: `0 0 15px ${blueAccent}66` }}>Interactive Split Lab</h3>
+      <span className="relative text-xs uppercase tracking-[0.3em] font-bold" style={{ color: blueAccent }}>▪ Dual Chart Monitor</span>
+      <h3 className="relative text-2xl font-bold text-white" style={{ textShadow: `0 0 15px ${blueAccent}66` }}>Trading Split View</h3>
       <p className="relative text-sm" style={{ color: '#94a3b8' }}>
-        Compare two premium 3D environments side-by-side with tactile controls.
+        Compare real-time charts side-by-side with advanced trading controls and instant execution.
       </p>
       <div className="flex-1" />
       <button
@@ -546,7 +546,7 @@ function SplitExperienceCard({ onOpen }: { onOpen: () => void }) {
           boxShadow: `0 0 20px ${blueAccent}44`,
         }}
       >
-        Launch Split Lab
+        Launch Trading View
       </button>
     </div>
   );
@@ -619,7 +619,7 @@ function ModalShell({
         >
           <div>
             <p className="text-xs uppercase tracking-[0.3em] font-bold" style={{ color: blueAccent }}>
-              ▪ Live Experience
+              ▪ Trading Terminal
             </p>
             <h3 className="text-2xl font-bold text-white mt-2" style={{ textShadow: `0 0 20px ${blueAccent}66` }}>
               {title}
@@ -970,9 +970,9 @@ function HomeContent() {
             >
               <div className="relative text-center mb-8" style={{ minHeight: '80px' }}>
                 <h2 className="text-xl md:text-2xl font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #3b82f6), white)', filter: 'drop-shadow(0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.5))' }}>
-                  Interactive 3D Experience
+                  Trading Tools & Analytics
                 </h2>
-                <p className="text-xs mt-2 uppercase tracking-widest font-medium" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }}>Launch immersive scenes on-demand</p>
+                <p className="text-xs mt-2 uppercase tracking-widest font-medium" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }}>Advanced market intelligence platforms</p>
                 <div className="flex justify-center mt-4">
                   <div className="w-24 h-[2px]" style={{ background: 'linear-gradient(to right, transparent, var(--accent-color, #3b82f6), transparent)' }} />
                 </div>
@@ -996,7 +996,7 @@ function HomeContent() {
             >
               <div className="relative text-center mb-8 flex flex-col items-center gap-3" style={{ minHeight: '70px' }}>
                 <p className="text-xs uppercase tracking-[0.4em] font-semibold" style={{ color: R4X_BOT_SCENE.accent }}>
-                  Prototype Drop
+                  ▪ AI-Powered Trading
                 </p>
                 <h2 className="text-2xl font-bold text-white">{R4X_BOT_SCENE.title}</h2>
                 {R4X_BOT_SCENE.subtitle && (
@@ -1007,7 +1007,7 @@ function HomeContent() {
                   className="inline-flex items-center justify-center px-5 py-2 rounded-2xl border text-sm font-semibold text-white transition-colors"
                   style={{ borderColor: R4X_BOT_SCENE.accent, boxShadow: `0 0 20px ${R4X_BOT_SCENE.accent}33` }}
                 >
-                  Launch Modal View
+                  Launch AI Bot View
                 </button>
               </div>
 
