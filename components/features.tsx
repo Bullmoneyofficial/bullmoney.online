@@ -15,9 +15,11 @@ import { isMobileDevice } from "@/lib/mobileDetection";
 // ✅ LOADING FALLBACKS - Mobile optimized
 import { MinimalFallback, CardSkeleton } from "@/components/MobileLazyLoadingFallback";
 
-// --- THEME CONSTANTS ---
-const GOLD_SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #D9BD6A 50%, #00000000 100%)";
-const GOLD_TEXT_GRADIENT = "bg-[linear-gradient(90deg,#F6E7B6,#D9BD6A_35%,#B8983A_65%,#F6E7B6)]";
+// --- THEME CONSTANTS - NEON BLUE EDITION ---
+const NEON_SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #3b82f6 50%, #00000000 100%)";
+const NEON_TEXT_GRADIENT = "bg-[linear-gradient(90deg,#93c5fd,#60a5fa_35%,#3b82f6_65%,#93c5fd)]";
+const NEON_GLOW = "0 0 5px #60a5fa, 0 0 10px #60a5fa, 0 0 20px #3b82f6";
+const NEON_BORDER_GLOW = "0 0 10px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.2)";
 
 /* =====================================================================================
    HELPER TIP COMPONENT (GOLD EDITION)
@@ -32,21 +34,21 @@ const HelperTip = ({ label, className }: { label: string; className?: string }) 
     className={cn("absolute z-50 flex flex-col items-center pointer-events-none", className)}
   >
     {/* The Bubble */}
-    <div className="relative p-[1.5px] overflow-hidden rounded-full shadow-lg shadow-[#B8983A]/20">
+    <div className="relative p-[1.5px] overflow-hidden rounded-full" style={{ boxShadow: NEON_BORDER_GLOW }}>
         <motion.div 
             className="absolute inset-[-100%]"
             animate={{ rotate: 360 }}
             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            style={{ background: GOLD_SHIMMER_GRADIENT }}
+            style={{ background: NEON_SHIMMER_GRADIENT }}
         />
-        <div className="relative z-10 px-3 py-1 bg-[#0a0a0a] rounded-full flex items-center justify-center border border-[#B8983A]/40">
-            <span className={cn("bg-clip-text text-transparent text-[10px] font-bold whitespace-nowrap", GOLD_TEXT_GRADIENT)}>
+        <div className="relative z-10 px-3 py-1 bg-[#0a0a0a] rounded-full flex items-center justify-center border border-blue-500/50" style={{ boxShadow: 'inset ' + NEON_BORDER_GLOW }}>
+            <span className={cn("bg-clip-text text-transparent text-[10px] font-bold whitespace-nowrap", NEON_TEXT_GRADIENT)} style={{ textShadow: NEON_GLOW }}>
                 {label}
             </span>
         </div>
     </div>
     {/* The Triangle Pointer (pointing down) */}
-    <div className="w-2 h-2 bg-[#0a0a0a] rotate-45 -translate-y-[4px] relative z-10 border-b border-r border-[#B8983A]/40" />
+    <div className="w-2 h-2 bg-[#0a0a0a] rotate-45 -translate-y-[4px] relative z-10 border-b border-r border-blue-500/50" style={{ boxShadow: NEON_BORDER_GLOW }} />
   </motion.div>
 );
 
@@ -91,14 +93,25 @@ export function Features() {
       className="w-full full-bleed viewport-full mx-auto bg-black dark:bg-black py-20 px-4 md:px-8"
     >
       <Header>
-        <h2
+        <motion.h2
           className={cn(
             "font-sans text-bold text-xl text-center md:text-4xl w-fit mx-auto font-bold tracking-tight",
-            GOLD_TEXT_GRADIENT, "bg-clip-text text-transparent"
+            NEON_TEXT_GRADIENT, "bg-clip-text text-transparent"
           )}
+          style={{
+            textShadow: NEON_GLOW,
+          }}
+          animate={{
+            textShadow: [
+              NEON_GLOW,
+              "0 0 2px #60a5fa, 0 0 5px #60a5fa, 0 0 10px #3b82f6",
+              NEON_GLOW,
+            ],
+          }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
         >
           Bullmoney Prop Firms
-        </h2>
+        </motion.h2>
       </Header>
 
       <p className="max-w-lg text-sm text-neutral-300 text-center mx-auto mt-4">
@@ -108,22 +121,31 @@ export function Features() {
       <div className="mt-20 grid cols-1 md:grid-cols-5 gap-4 md:auto-rows-[25rem] max-w-7xl mx-auto">
         
         {/* Left – 3 cols :: JOIN US */}
-        <Card className="flex flex-col justify-between md:col-span-3 bg-gradient-to-br from-black via-neutral-950 to-black border border-[#B8983A]/60">
+        <Card className="flex flex-col justify-between md:col-span-3 bg-gradient-to-br from-black via-neutral-950 to-black border border-blue-500/50" style={{ boxShadow: NEON_BORDER_GLOW }}>
           <CardSkeletonBody>
             <SkeletonOne />
           </CardSkeletonBody>
 
           <CardContent className="h-40 [&_*]:font-extrabold relative">
-            <h3
+            <motion.h3
               className={cn(
                 "font-sans text-base md:text-lg font-extrabold tracking-tight",
-                GOLD_TEXT_GRADIENT, "bg-clip-text text-transparent"
+                NEON_TEXT_GRADIENT, "bg-clip-text text-transparent"
               )}
+              style={{ textShadow: NEON_GLOW }}
+              animate={{
+                textShadow: [
+                  NEON_GLOW,
+                  "0 0 2px #60a5fa, 0 0 5px #60a5fa, 0 0 10px #3b82f6",
+                  NEON_GLOW,
+                ],
+              }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
             >
               JOIN US ON GOAT FUNDED
-            </h3>
+            </motion.h3>
 
-            <div className="mt-2 text-sm leading-relaxed text-neutral-200 font-extrabold">
+            <div className="mt-2 text-sm leading-relaxed font-extrabold" style={{ color: '#fff', textShadow: '0 0 5px #fff, 0 0 10px #93c5fd' }}>
               Trade With Our Community Using Partner Code{" "}
               <span className="relative inline-block">
                   {/* TIP 0: Partner Code */}
@@ -133,65 +155,95 @@ export function Features() {
                     )}
                   </AnimatePresence>
                   
-                  <button
+                  <motion.button
                     type="button"
                     onClick={copyPartnerCode}
                     className={cn(
                       "inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-xs md:text-sm font-bold",
-                      "ring-1 ring-inset ring-[#B8983A]/40 text-black transition",
-                      GOLD_TEXT_GRADIENT,
-                      "hover:ring-[#B8983A]/60"
+                      "ring-1 ring-inset ring-blue-500/50 text-black transition",
+                      NEON_TEXT_GRADIENT
                     )}
+                    style={{ boxShadow: NEON_BORDER_GLOW }}
+                    whileHover={{ boxShadow: "0 0 15px rgba(59, 130, 246, 0.5), 0 0 30px rgba(59, 130, 246, 0.3)" }}
                   >
                     BM15
                     <span
                       className={`ml-1 inline-block h-2 w-2 rounded-full ${
-                        copied ? "bg-blue-400" : "bg-[#B8983A]"
+                        copied ? "bg-green-400" : "bg-blue-400"
                       }`}
+                      style={{ boxShadow: copied ? '0 0 5px #4ade80' : '0 0 5px #60a5fa' }}
                     />
-                  </button>
+                  </motion.button>
               </span>
               .
             </div>
 
             <div className="mt-3 flex items-center gap-3">
-              <a
+              <motion.a
                 href="https://checkout.goatfundedtrader.com/aff/Bullmoney/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold text-black shadow",
-                  GOLD_TEXT_GRADIENT,
-                  "hover:shadow-lg active:scale-[0.98] transition"
+                  "inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold text-black",
+                  NEON_TEXT_GRADIENT
                 )}
+                style={{ boxShadow: NEON_BORDER_GLOW }}
+                whileHover={{ 
+                  boxShadow: "0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3)",
+                  scale: 1.02
+                }}
+                whileTap={{ scale: 0.98 }}
               >
                 Open with code <span className="font-mono font-semibold">BM15</span>
-              </a>
+              </motion.a>
 
-              <button
+              <motion.button
                 type="button"
                 onClick={copyPartnerCode}
-                className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-semibold text-[#D9BD6A] ring-1 ring-inset ring-[#B8983A]/40 hover:bg-[#F6E7B6]/10 hover:ring-[#B8983A]/60 active:scale-[0.98] transition"
+                className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-semibold ring-1 ring-inset ring-blue-500/50 hover:bg-blue-500/10 transition"
+                style={{ 
+                  color: '#60a5fa', 
+                  textShadow: NEON_GLOW,
+                  boxShadow: NEON_BORDER_GLOW 
+                }}
+                whileHover={{ 
+                  boxShadow: "0 0 15px rgba(59, 130, 246, 0.5), 0 0 30px rgba(59, 130, 246, 0.3)",
+                  scale: 1.02
+                }}
+                whileTap={{ scale: 0.98 }}
               >
                 {copied ? "Copied!" : "Copy code"}
-              </button>
+              </motion.button>
             </div>
           </CardContent>
         </Card>
 
         {/* Top-right – 2 cols :: Goat Funded info */}
-        <Card className="flex flex-col justify-between md:col-span-2 bg-gradient-to-br from-black via-neutral-950 to-black border border-[#B8983A]/60">
+        <Card className="flex flex-col justify-between md:col-span-2 bg-gradient-to-br from-black via-neutral-950 to-black border border-blue-500/50" style={{ boxShadow: NEON_BORDER_GLOW }}>
           <CardContent className="h-40">
-            <CardTitle className={cn(GOLD_TEXT_GRADIENT, "bg-clip-text text-transparent")}>
-              Goat Funded Trader
-            </CardTitle>
+            <motion.div
+              style={{ textShadow: NEON_GLOW }}
+              animate={{
+                textShadow: [
+                  NEON_GLOW,
+                  "0 0 2px #60a5fa, 0 0 5px #60a5fa, 0 0 10px #3b82f6",
+                  NEON_GLOW,
+                ],
+              }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <CardTitle className={cn(NEON_TEXT_GRADIENT, "bg-clip-text text-transparent")}>
+                Goat Funded Trader
+              </CardTitle>
+            </motion.div>
 
-            <CardDescription className="!max-w-none text-neutral-200">
+            <CardDescription className="!max-w-none">
               <div className="group/line inline-block font-semibold">
                 <motion.span
                   whileHover={{ scale: 1.01, filter: "brightness(1.08)" }}
                   transition={{ type: "spring", stiffness: 260, damping: 22 }}
                   className="text-sm md:text-[15px] leading-snug"
+                  style={{ color: '#fff', textShadow: '0 0 5px #fff, 0 0 10px #93c5fd' }}
                 >
                   <ShimmerText className="font-extrabold">
                     Become a funded trader with Goat Funded
@@ -199,13 +251,16 @@ export function Features() {
                   pass a multi‑step challenge, trade company capital, and keep a high profit
                   split with flexible trading conditions.
                 </motion.span>
-                <span className={cn("mt-1 block h-[2px] w-0 rounded-full transition-all duration-500 group-hover/line:w-full", GOLD_TEXT_GRADIENT)} />
+                <motion.span 
+                  className={cn("mt-1 block h-[2px] w-0 rounded-full transition-all duration-500 group-hover/line:w-full", NEON_TEXT_GRADIENT)} 
+                  style={{ boxShadow: '0 0 5px #60a5fa' }}
+                />
               </div>
             </CardDescription>
           </CardContent>
 
           <CardSkeletonBody>
-            <div className="w-full h-full p-4 rounded-lg bg-neutral-950 border border-[#B8983A]/60 ml-6 mt-2 flex items-center justify-center relative">
+            <div className="w-full h-full p-4 rounded-lg bg-neutral-950 border border-blue-500/50 ml-6 mt-2 flex items-center justify-center relative" style={{ boxShadow: NEON_BORDER_GLOW }}>
                {/* TIP 1: Goat Logo */}
                <AnimatePresence>
                     {activeTipIndex === 1 && (
@@ -224,13 +279,24 @@ export function Features() {
         </Card>
 
         {/* Bottom-left – 2 cols :: Community links */}
-        <Card className="flex flex-col justify-between md:col-span-2 bg-gradient-to-br from-black via-neutral-950 to-black border border-[#B8983A]/60">
+        <Card className="flex flex-col justify-between md:col-span-2 bg-gradient-to-br from-black via-neutral-950 to-black border border-blue-500/50" style={{ boxShadow: NEON_BORDER_GLOW }}>
           <CardContent className="h-40">
-            <h3 className={cn("font-sans text-base md:text-lg font-extrabold tracking-tight", GOLD_TEXT_GRADIENT, "bg-clip-text text-transparent")}>
+            <motion.h3 
+              className={cn("font-sans text-base md:text-lg font-extrabold tracking-tight", NEON_TEXT_GRADIENT, "bg-clip-text text-transparent")}
+              style={{ textShadow: NEON_GLOW }}
+              animate={{
+                textShadow: [
+                  NEON_GLOW,
+                  "0 0 2px #60a5fa, 0 0 5px #60a5fa, 0 0 10px #3b82f6",
+                  NEON_GLOW,
+                ],
+              }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            >
               Find Our Links Below
-            </h3>
+            </motion.h3>
 
-            <p className="mt-2 text-sm leading-snug text-neutral-200 font-semibold">
+            <p className="mt-2 text-sm leading-snug font-semibold" style={{ color: '#fff', textShadow: '0 0 5px #fff, 0 0 10px #93c5fd' }}>
               Explore official communities, updates and live content from Goat Funded and FTMO.
             </p>
 
@@ -241,13 +307,13 @@ export function Features() {
                   label: "Goat Funded Trader",
                   href: "https://www.goatfundedtrader.com",
                   icon: (<Image src="/GTFLOGO.png" alt="Goat Funded" width={20} height={20} />),
-                  gradient: cn(GOLD_TEXT_GRADIENT, "text-black"),
+                  gradient: cn(NEON_TEXT_GRADIENT, "text-black"),
                 },
                 {
                   label: "FTMO",
                   href: "https://trader.ftmo.com/?affiliates=fGDPMCcFOXviWzowTyxV",
                   icon: (<Image src="/FTMO_LOGOB.png" alt="FTMO" width={20} height={20} />),
-                  gradient: cn(GOLD_TEXT_GRADIENT, "text-black"),
+                  gradient: cn(NEON_TEXT_GRADIENT, "text-black"),
                 },
               ]}
             />
@@ -259,31 +325,47 @@ export function Features() {
         </Card>
 
         {/* Bottom-right – 3 cols :: FTMO info */}
-        <Card className="flex flex-col justify-between md:col-span-3 bg-gradient-to-br from-black via-neutral-950 to-black border border-[#B8983A]/60">
+        <Card className="flex flex-col justify-between md:col-span-3 bg-gradient-to-br from-black via-neutral-950 to-black border border-blue-500/50" style={{ boxShadow: NEON_BORDER_GLOW }}>
           <CardContent className="h-auto">
-            <CardTitle className={cn(GOLD_TEXT_GRADIENT, "bg-clip-text text-transparent")}>
-              FTMO
-            </CardTitle>
+            <motion.div
+              style={{ textShadow: NEON_GLOW }}
+              animate={{
+                textShadow: [
+                  NEON_GLOW,
+                  "0 0 2px #60a5fa, 0 0 5px #60a5fa, 0 0 10px #3b82f6",
+                  NEON_GLOW,
+                ],
+              }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <CardTitle className={cn(NEON_TEXT_GRADIENT, "bg-clip-text text-transparent")}>
+                FTMO
+              </CardTitle>
+            </motion.div>
 
-            <CardDescription className="!max-w-none text-neutral-200">
+            <CardDescription className="!max-w-none">
               <div className="group/line inline-block font-semibold">
                 <motion.span
                   whileHover={{ scale: 1.01, filter: "brightness(1.08)" }}
                   transition={{ type: "spring", stiffness: 260, damping: 22 }}
                   className="text-sm md:text-[15px] leading-snug"
+                  style={{ color: '#fff', textShadow: '0 0 5px #fff, 0 0 10px #93c5fd' }}
                 >
                   <ShimmerText className="font-extrabold">
                     Take the FTMO Challenge 
                   </ShimmerText>{" "}
                   validate your trading strategy, access funded company capital, and earn profit shares while using advanced professional tools trusted by a global community of successful traders.
                 </motion.span>
-                <span className={cn("mt-1 block h-[2px] w-0 rounded-full transition-all duration-500 group-hover/line:w-full", GOLD_TEXT_GRADIENT)} />
+                <motion.span 
+                  className={cn("mt-1 block h-[2px] w-0 rounded-full transition-all duration-500 group-hover/line:w-full", NEON_TEXT_GRADIENT)} 
+                  style={{ boxShadow: '0 0 5px #60a5fa' }}
+                />
               </div>
             </CardDescription>
           </CardContent>
 
           <CardSkeletonBody>
-            <div className="w-full h-full p-4 rounded-lg bg-neutral-950 border border-[#B8983A]/60 ml-6 mt-2 flex items-center justify-center relative">
+            <div className="w-full h-full p-4 rounded-lg bg-neutral-950 border border-blue-500/50 ml-6 mt-2 flex items-center justify-center relative" style={{ boxShadow: NEON_BORDER_GLOW }}>
                {/* TIP 2: FTMO Logo */}
                <AnimatePresence>
                     {activeTipIndex === 2 && (
@@ -315,33 +397,37 @@ const Header = ({ children }: { children: React.ReactNode }) => {
       <motion.div
         initial={{ width: 0, height: 0, borderRadius: 0 }}
         whileInView={{ width: "100%", height: "100%" }}
-        style={{ transformOrigin: "top-left" }}
+        style={{ transformOrigin: "top-left", boxShadow: NEON_BORDER_GLOW }}
         transition={{ duration: 1, ease: "easeInOut" }}
-        className="absolute inset-0 h-full border border-[#B8983A]/60 w-full"
+        className="absolute inset-0 h-full border border-blue-500/50 w-full"
       >
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.1, ease: "easeInOut" }}
-          className="absolute -top-1 -left-1 h-2 w-2 bg-neutral-900"
+          className="absolute -top-1 -left-1 h-2 w-2 bg-neutral-900 rounded-full"
+          style={{ boxShadow: '0 0 8px #60a5fa' }}
         />
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.1, ease: "easeInOut" }}
-          className="absolute -top-1 -right-1 h-2 w-2 bg-neutral-900"
+          className="absolute -top-1 -right-1 h-2 w-2 bg-neutral-900 rounded-full"
+          style={{ boxShadow: '0 0 8px #60a5fa' }}
         />
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.1, ease: "easeInOut" }}
-          className="absolute -bottom-1 -left-1 h-2 w-2 bg-neutral-900"
+          className="absolute -bottom-1 -left-1 h-2 w-2 bg-neutral-900 rounded-full"
+          style={{ boxShadow: '0 0 8px #60a5fa' }}
         />
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.1, ease: "easeInOut" }}
-          className="absolute -bottom-1 -right-1 h-2 w-2 bg-neutral-900"
+          className="absolute -bottom-1 -right-1 h-2 w-2 bg-neutral-900 rounded-full"
+          style={{ boxShadow: '0 0 8px #60a5fa' }}
         />
       </motion.div>
       {children}
@@ -353,34 +439,52 @@ const Header = ({ children }: { children: React.ReactNode }) => {
    Local Evervault-style Card (no external imports)
 ===================================================================================== */
 
-const EvervaultCard = ({ text, className }: { text?: string; className?: string }) => {
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
+const EvervaultCard = ({
+  text,
+  className,
+}: {
+  text?: string;
+  className?: string;
+}) => {
+  let mouseX = useMotionValue(0);
+  let mouseY = useMotionValue(0);
+
   const [randomString, setRandomString] = useState("");
 
-  useEffect(() => setRandomString(generateRandomString(1200)), []);
+  useEffect(() => {
+    let str = generateRandomString(1500);
+    setRandomString(str);
+  }, []);
 
-  function onMouseMove(e: React.MouseEvent<HTMLDivElement>) {
-    const { left, top } = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-    mouseX.set(e.clientX - left);
-    mouseY.set(e.clientY - top);
-    // optional: mutate text cloud on hover
-    setRandomString(generateRandomString(1200));
+  function onMouseMove({ currentTarget, clientX, clientY }: any) {
+    let { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+
+    const str = generateRandomString(1500);
+    setRandomString(str);
   }
 
   return (
-    <div className={cn("p-0.5 bg-transparent w-full h-full relative", className)}>
+    <div
+      className={cn(
+        "p-0.5 bg-transparent aspect-square flex items-center justify-center w-full h-full relative",
+        className
+      )}
+    >
       <div
         onMouseMove={onMouseMove}
-        className="group/card rounded-3xl w-full h-full relative overflow-hidden bg-transparent flex items-center justify-center"
+        className="group/card rounded-3xl w-full relative overflow-hidden bg-transparent flex items-center justify-center h-full"
       >
-        <CardPattern mouseX={mouseX} mouseY={mouseY} randomString={randomString} />
+        <CardPattern
+          mouseX={mouseX}
+          mouseY={mouseY}
+          randomString={randomString}
+        />
         <div className="relative z-10 flex items-center justify-center">
-          <div className="relative h-24 w-24 md:h-28 md:w-28 rounded-full flex items-center justify-center">
-            <div className="absolute inset-0 rounded-full bg-white/80 dark:bg-black/80 blur-md" />
-            <span className="relative z-20 font-extrabold text-2xl md:text-3xl text-black dark:text-white">
-              {text}
-            </span>
+          <div className="relative h-44 w-44 rounded-full flex items-center justify-center text-white font-bold text-4xl">
+            <div className="absolute w-full h-full bg-white/[0.8] dark:bg-black/[0.8] blur-sm rounded-full" />
+            <span className="dark:text-white text-black z-20">{text}</span>
           </div>
         </div>
       </div>
@@ -388,48 +492,54 @@ const EvervaultCard = ({ text, className }: { text?: string; className?: string 
   );
 };
 
-const CardPattern = ({ mouseX, mouseY, randomString }: any) => {
-  const mask = useMotionTemplate`radial-gradient(200px at ${mouseX}px ${mouseY}px, white, transparent)`;
-  const style = { maskImage: mask as any, WebkitMaskImage: mask as any };
+export function CardPattern({ mouseX, mouseY, randomString }: any) {
+  let maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
+  let style = { maskImage, WebkitMaskImage: maskImage };
 
   return (
-    <div className="pointer-events-none absolute inset-0">
-      <div className="absolute inset-0 rounded-2xl [mask-image:linear-gradient(white,transparent)] group-hover/card:opacity-50" />
+    <div className="pointer-events-none">
+      <div className="absolute inset-0 rounded-2xl [mask-image:linear-gradient(white,transparent)] group-hover/card:opacity-50"></div>
       <motion.div
-        className="absolute inset-0 rounded-2xl opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
+        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
         style={style}
-      >
-        <div className={cn("w-full h-full", GOLD_TEXT_GRADIENT)} />
-      </motion.div>
+      />
       <motion.div
         className="absolute inset-0 rounded-2xl opacity-0 mix-blend-overlay group-hover/card:opacity-100"
         style={style}
       >
-        <div className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white/80 font-mono font-bold">
+        <p className="absolute inset-x-0 text-xs h-full break-words whitespace-pre-wrap text-white font-mono font-bold transition duration-500">
           {randomString}
-        </div>
+        </p>
       </motion.div>
     </div>
   );
+}
+
+export const Icon = ({ className, ...rest }: any) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth="1.5"
+      stroke="currentColor"
+      className={className}
+      {...rest}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m6-6H6" />
+    </svg>
+  );
 };
 
-const Icon = ({ className, ...rest }: any) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth="1.5"
-    stroke="currentColor"
-    className={className}
-    {...rest}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m6-6H6" />
-  </svg>
-);
-
-const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-const generateRandomString = (length: number) =>
-  Array.from({ length }, () => characters[Math.floor(Math.random() * characters.length)]).join("");
+const characters =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+export const generateRandomString = (length: number) => {
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+};
 
 /* =====================================================================================
    SkeletonOne
@@ -480,9 +590,9 @@ export const SkeletonOne = () => {
             id="gradient-2"
             transition={{ duration: Math.random() * (7 - 2) + 2, ease: "linear", repeat: Infinity }}
           >
-            <stop stopColor="#F6E7B6" stopOpacity={`0`} />
-            <stop offset="1" stopColor="#B8983A" />
-            <stop offset="1" stopColor="#B8983A" stopOpacity="0" />
+            <stop stopColor="#93c5fd" stopOpacity={`0`} />
+            <stop offset="1" stopColor="#60a5fa" />
+            <stop offset="1" stopColor="#60a5fa" stopOpacity="0" />
           </motion.linearGradient>
         </defs>
       </svg>
@@ -512,9 +622,9 @@ export const SkeletonOne = () => {
             id="gradient-1"
             transition={{ duration: Math.random() * (7 - 2) + 2, ease: "linear", repeat: Infinity }}
           >
-            <stop stopColor="#F6E7B6" stopOpacity={`0`} />
-            <stop offset="1" stopColor="#B8983A" />
-            <stop offset="1" stopColor="#B8983A" stopOpacity="0" />
+            <stop stopColor="#93c5fd" stopOpacity={`0`} />
+            <stop offset="1" stopColor="#60a5fa" />
+            <stop offset="1" stopColor="#60a5fa" stopOpacity="0" />
           </motion.linearGradient>
         </defs>
       </svg>
@@ -534,11 +644,11 @@ export const SkeletonOne = () => {
             rel="noopener noreferrer"
             className="block w-full h-full"
           >
-            <div className="relative w-full h-full rounded-lg border border-[#B8983A]/60 overflow-hidden flex items-center justify-center bg-black">
-              <Icon className="absolute h-4 w-4 -top-2 -left-2 text-[#B8983A]" />
-              <Icon className="absolute h-4 w-4 -bottom-2 -left-2 text-[#B8983A]" />
-              <Icon className="absolute h-4 w-4 -top-2 -right-2 text-[#B8983A]" />
-              <Icon className="absolute h-4 w-4 -bottom-2 -right-2 text-[#B8983A]" />
+            <div className="relative w-full h-full rounded-lg border border-blue-500/50 overflow-hidden flex items-center justify-center bg-black" style={{ boxShadow: NEON_BORDER_GLOW }}>
+              <Icon className="absolute h-6 w-6 -top-3 -left-3 text-blue-400" />
+              <Icon className="absolute h-6 w-6 -bottom-3 -left-3 text-blue-400" />
+              <Icon className="absolute h-6 w-6 -top-3 -right-3 text-blue-400" />
+              <Icon className="absolute h-6 w-6 -bottom-3 -right-3 text-blue-400" />
               <div className="w-full h-full flex items-center justify-center">
                 <EvervaultCard text="BM15" />
               </div>
@@ -620,9 +730,9 @@ export const Globe = ({ className }: { className?: string }) => {
         diffuse: 1.2,
         mapSamples: isLowEnd ? 6000 : 16000, // Reduce for low-end devices
         mapBrightness: 6,
-        baseColor: [0.85, 0.78, 0.55], // ~ #D9BD6A
-        markerColor: [0.72, 0.60, 0.23], // ~ #B8983A
-        glowColor: [1, 1, 1],
+        baseColor: [0.38, 0.65, 0.96], // ~ #60a5fa (neon blue)
+        markerColor: [0.23, 0.51, 0.96], // ~ #3b82f6 (deeper blue)
+        glowColor: [0.58, 0.77, 0.99], // ~ #93c5fd (light blue glow)
         markers: [
           { location: [37.7595, -122.4367], size: 0.03 },
           { location: [40.7128, -74.006], size: 0.1 },
@@ -657,8 +767,8 @@ export const Globe = ({ className }: { className?: string }) => {
         className={cn("pointer-events-none flex items-center justify-center bg-gradient-to-br from-neutral-900 to-black rounded-full", className)}
         style={{ width: 600, height: 600, maxWidth: "100%", aspectRatio: 1 }}
       >
-        <div className="w-48 h-48 rounded-full bg-gradient-to-br from-[#D9BD6A]/30 to-[#B8983A]/20 border border-[#B8983A]/40 flex items-center justify-center">
-          <span className="text-[#D9BD6A] text-4xl">🌍</span>
+        <div className="w-48 h-48 rounded-full bg-gradient-to-br from-blue-400/30 to-blue-600/20 border border-blue-500/40 flex items-center justify-center" style={{ boxShadow: NEON_BORDER_GLOW }}>
+          <span className="text-blue-400 text-4xl" style={{ filter: 'drop-shadow(0 0 10px #60a5fa)' }}>🌍</span>
         </div>
       </div>
     );
@@ -765,12 +875,23 @@ const ShimmerText = ({
   <motion.span
     className={cn(
       "bg-clip-text text-transparent",
-      GOLD_TEXT_GRADIENT,
+      NEON_TEXT_GRADIENT,
       "bg-[length:200%_100%]",
       className
     )}
-    animate={{ backgroundPositionX: ["0%", "100%"] }}
-    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+    style={{ textShadow: NEON_GLOW }}
+    animate={{ 
+      backgroundPositionX: ["0%", "100%"],
+      textShadow: [
+        NEON_GLOW,
+        "0 0 2px #60a5fa, 0 0 5px #60a5fa, 0 0 10px #3b82f6",
+        NEON_GLOW,
+      ],
+    }}
+    transition={{ 
+      backgroundPositionX: { duration: 8, repeat: Infinity, ease: "linear" },
+      textShadow: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+    }}
   >
     {children}
   </motion.span>
@@ -788,22 +909,24 @@ const SocialsDropdown = ({
 
   return (
     <div className={cn("w-full max-w-sm relative z-30", triggerClassName)}>
-      <button
+      <motion.button
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
           "group inline-flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold",
-          "ring-1 ring-inset ring-[#B8983A]/30 text-black hover:ring-[#B8983A]/50 transition",
-          "bg-[linear-gradient(90deg,#F6E7B6_0%,#D9BD6A_35%,#B8983A_65%,#F6E7B6_100%)]"
+          "ring-1 ring-inset ring-blue-500/50 text-black transition",
+          NEON_TEXT_GRADIENT
         )}
+        style={{ boxShadow: NEON_BORDER_GLOW }}
+        whileHover={{ boxShadow: "0 0 15px rgba(59, 130, 246, 0.5), 0 0 30px rgba(59, 130, 246, 0.3)" }}
         aria-expanded={open}
       >
         <span className="inline-flex items-center gap-2">
-          <Sparkle className="h-4 w-4" />
+          <Sparkle className="h-4 w-4" style={{ filter: 'drop-shadow(0 0 3px #000)' }} />
           Official links
         </span>
-        <Chevron className={cn("h-4 w-4 transition-transform", open && "rotate-180")} />
-      </button>
+        <Chevron className={cn("h-4 w-4 transition-transform", open && "rotate-180")} style={{ filter: 'drop-shadow(0 0 3px #000)' }} />
+      </motion.button>
 
       <motion.div
         initial={false}
@@ -819,19 +942,23 @@ const SocialsDropdown = ({
               href={it.href}
               target="_blank"
               rel="noopener noreferrer"
-              whileHover={{ scale: 1.015 }}
+              whileHover={{ 
+                scale: 1.015,
+                boxShadow: "0 0 15px rgba(59, 130, 246, 0.5), 0 0 30px rgba(59, 130, 246, 0.3)"
+              }}
               whileTap={{ scale: 0.98 }}
               className={cn(
-                "group relative block w-full rounded-xl px-3 py-2 text-sm font-semibold shadow",
-                "ring-1 ring-white/10 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B8983A]",
+                "group relative block w-full rounded-xl px-3 py-2 text-sm font-semibold",
+                "ring-1 ring-blue-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400",
                 it.gradient
               )}
+              style={{ boxShadow: NEON_BORDER_GLOW }}
             >
               <span className="inline-flex items-center gap-2">
                 {it.icon}
                 <span>{it.label}</span>
               </span>
-              <span className="pointer-events-none absolute inset-y-0 right-0 w-1/4 rounded-xl bg-white/10 blur-md" />
+              <span className="pointer-events-none absolute inset-y-0 right-0 w-1/4 rounded-xl bg-blue-400/10 blur-md" />
               <span
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(to_bottom,rgba(0,0,0,0)_0%,rgba(0,0,0,0.10)_25%,rgba(0,0,0,0.30)_100%)]"

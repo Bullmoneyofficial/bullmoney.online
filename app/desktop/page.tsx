@@ -14,7 +14,7 @@ import { trackEvent, BullMoneyAnalytics } from "@/lib/analytics";
 // LAZY-LOAD HEAVY COMPONENTS FOR FAST INITIAL COMPILE
 const HeroDesktop = dynamic(() => import("@/components/HeroDesktop"), { ssr: false }) as any;
 const CTA = dynamic(() => import("@/components/Chartnews"), { ssr: false }) as any;
-const Features = dynamic(() => import("@/components/features").then(mod => ({ default: mod.Features })), { ssr: false }) as any;
+import { Features } from "@/components/features";
 
 // UNIFIED SHIMMER SYSTEM
 import {

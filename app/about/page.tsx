@@ -58,7 +58,7 @@ const Pricing = dynamic(
 );
 
 const Why = dynamic(
-  () => import("@/components/Mainpage/features").then((mod) => ({ default: mod.Features })),
+import { Features } from "@/components/Mainpage/features";
   { ssr: false, loading: () => <ContentSkeleton lines={4} /> }
 );
 

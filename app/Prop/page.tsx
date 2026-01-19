@@ -16,7 +16,7 @@ import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components
 import { safeGetItem, safeSetItem } from '@/lib/localStorage';
 
 // --- DYNAMIC IMPORTS (Page Content) ---
-const Features = dynamic(() => import("@/components/Mainpage/features").then(mod => mod.Features), { ssr: false });
+import { Features } from "@/components/Mainpage/features";
 const Hero = dynamic(() => import("@/app/Prop/Prophero").then(mod => mod.Hero), { ssr: false });
 const AboutContent = dynamic(() => import("../Testimonial").then(mod => mod.AboutContent), { ssr: false });
 import Socials from "@/components/Mainpage/Socialsfooter"; 

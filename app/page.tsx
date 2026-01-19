@@ -38,10 +38,7 @@ const CTA = dynamic(
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
-const Features = dynamic(
-  () => import("@/components/features").then(mod => ({ default: mod.Features })),
-  { ssr: false, loading: () => <FeaturesSkeleton /> }
-);
+import { Features } from "@/components/features";
 
 // UNIFIED SHIMMER SYSTEM - Import from single source
 import {

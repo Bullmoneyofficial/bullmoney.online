@@ -32,7 +32,7 @@ const AboutContent = lazy(() => import("@/components/AboutContent").then(m => ({
 const Pricing = lazy(() => import("@/components/Mainpage/pricing").then(m => ({ default: m.Pricing })));
 const VipHeroMain = lazy(() => import("@/app/VIP/heromain"));
 const Orb = lazy(() => import("@/components/Mainpage/Orb"));
-const Features = lazy(() => import("@/components/Mainpage/features").then(m => ({ default: m.Features })));
+import { Features } from "@/components/Mainpage/features";
 const ProductsSection = lazy(() => import("@/app/VIP/ProductsSection"));
 const GameBoyPacman = lazy(() => import("@/app/shop/ShopScrollFunnel"));
 const Testimonial = lazy(() => import("@/app/Testimonial").then(m => ({ default: m.AboutContent })));
@@ -393,9 +393,7 @@ const ModalContentWrapper = memo(function ModalContentWrapper({
 
         {/* Features */}
         <FreezeZone>
-          <Suspense fallback={<LoadingSpinner text="Loading features..." />}>
-            <Features />
-          </Suspense>
+          <Features />
         </FreezeZone>
 
         {/* Products Section */}
