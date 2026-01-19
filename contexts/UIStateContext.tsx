@@ -78,6 +78,7 @@ export type UIComponentType =
   | 'authModal'           // Bull Feed: Auth/Login/Signup modal
   | 'bullFeedModal'       // Bull Feed: Main feed modal
   | 'postComposerModal'   // Bull Feed: Create post modal
+  | 'heroSceneModal'      // Hero scene selector modal
   | 'discordStageModal';  // Discord Stage live stream modal
 
 // Legacy type for backwards compatibility
@@ -105,6 +106,7 @@ interface UIStateContextType {
   isAuthModalOpen: boolean;        // Bull Feed: Auth modal
   isBullFeedModalOpen: boolean;    // Bull Feed: Main feed
   isPostComposerModalOpen: boolean; // Bull Feed: Create post
+  isHeroSceneModalOpen: boolean;   // Hero scene picker modal
   isDiscordStageModalOpen: boolean; // Discord Stage modal
   isV2Unlocked: boolean;
 
@@ -138,6 +140,7 @@ interface UIStateContextType {
   setAuthModalOpen: (open: boolean) => void;
   setBullFeedModalOpen: (open: boolean) => void;
   setPostComposerModalOpen: (open: boolean) => void;
+  setHeroSceneModalOpen: (open: boolean) => void;
   setDiscordStageModalOpen: (open: boolean) => void;
   setV2Unlocked: (unlocked: boolean) => void;
 
@@ -156,6 +159,7 @@ interface UIStateContextType {
   openAuthModal: () => void;
   openBullFeedModal: () => void;
   openPostComposerModal: () => void;
+  openHeroSceneModal: () => void;
   openDiscordStageModal: () => void;
   closeNavbarModal: () => void;
 
@@ -200,6 +204,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const [isAuthModalOpen, setIsAuthModalOpenState] = useState(false);
   const [isBullFeedModalOpen, setIsBullFeedModalOpenState] = useState(false);
   const [isPostComposerModalOpen, setIsPostComposerModalOpenState] = useState(false);
+  const [isHeroSceneModalOpen, setIsHeroSceneModalOpenState] = useState(false);
   const [isDiscordStageModalOpen, setIsDiscordStageModalOpenState] = useState(false);
   const [isV2Unlocked, setIsV2UnlockedState] = useState(
     () => typeof window !== 'undefined' && sessionStorage.getItem('affiliate_unlock_complete') === 'true'
@@ -218,7 +223,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isLiveStreamModalOpen || isProductsModalOpen || isServicesModalOpen || isAffiliateModalOpen ||
     isThemeSelectorModalOpen || isAdminModalOpen || isFaqModalOpen ||
     isAppsModalOpen || isDisclaimerModalOpen || isPagemodeOpen || isLoaderv2Open ||
-    isAuthModalOpen || isBullFeedModalOpen || isPostComposerModalOpen || isDiscordStageModalOpen;
+    isAuthModalOpen || isBullFeedModalOpen || isPostComposerModalOpen || isHeroSceneModalOpen || isDiscordStageModalOpen;
 
   // Derived state: is any component currently open?
   const isAnyOpen = isMobileMenuOpen || isAudioWidgetOpen || isUltimatePanelOpen || isAnyModalOpen;
@@ -259,6 +264,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isAuthModalOpen ? 'authModal' :
     isBullFeedModalOpen ? 'bullFeedModal' :
     isPostComposerModalOpen ? 'postComposerModal' :
+    isHeroSceneModalOpen ? 'heroSceneModal' :
     isDiscordStageModalOpen ? 'discordStageModal' :
     null;
 
@@ -284,6 +290,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (except !== 'authModal') setIsAuthModalOpenState(false);
     if (except !== 'bullFeedModal') setIsBullFeedModalOpenState(false);
     if (except !== 'postComposerModal') setIsPostComposerModalOpenState(false);
+    if (except !== 'heroSceneModal') setIsHeroSceneModalOpenState(false);
     if (except !== 'discordStageModal') setIsDiscordStageModalOpenState(false);
   }, []);
 
@@ -306,6 +313,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsAuthModalOpenState(false);
     setIsBullFeedModalOpenState(false);
     setIsPostComposerModalOpenState(false);
+    setIsHeroSceneModalOpenState(false);
     setIsDiscordStageModalOpenState(false);
   }, []);
 
@@ -518,6 +526,16 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsPostComposerModalOpenState(open);
   }, [closeOthers]);
 
+  const setHeroSceneModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('heroSceneModal');
+      trackUIStateChange('heroSceneModal', 'open');
+    } else {
+      trackUIStateChange('heroSceneModal', 'close');
+    }
+    setIsHeroSceneModalOpenState(open);
+  }, [closeOthers]);
+
   const setDiscordStageModalOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('discordStageModal');
@@ -580,6 +598,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const openAuthModal = useCallback(() => setAuthModalOpen(true), [setAuthModalOpen]);
   const openBullFeedModal = useCallback(() => setBullFeedModalOpen(true), [setBullFeedModalOpen]);
   const openPostComposerModal = useCallback(() => setPostComposerModalOpen(true), [setPostComposerModalOpen]);
+  const openHeroSceneModal = useCallback(() => setHeroSceneModalOpen(true), [setHeroSceneModalOpen]);
   const openDiscordStageModal = useCallback(() => setDiscordStageModalOpen(true), [setDiscordStageModalOpen]);
   const closeNavbarModal = useCallback(() => {
     setIsAdminModalOpenState(false);
@@ -621,6 +640,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isAuthModalOpen,
     isBullFeedModalOpen,
     isPostComposerModalOpen,
+    isHeroSceneModalOpen,
     isDiscordStageModalOpen,
     isV2Unlocked,
     activeNavbarModal,
@@ -651,6 +671,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setAuthModalOpen,
     setBullFeedModalOpen,
     setPostComposerModalOpen,
+    setHeroSceneModalOpen,
     setDiscordStageModalOpen,
     setV2Unlocked,
     setNavbarModal,
@@ -667,6 +688,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     openAuthModal,
     openBullFeedModal,
     openPostComposerModal,
+    openHeroSceneModal,
     openDiscordStageModal,
     closeNavbarModal,
     closeAll,
@@ -881,6 +903,11 @@ export function useBullFeedModalUI() {
 export function usePostComposerModalUI() {
   const { isPostComposerModalOpen, setPostComposerModalOpen, openPostComposerModal } = useUIState();
   return { isOpen: isPostComposerModalOpen, setIsOpen: setPostComposerModalOpen, open: openPostComposerModal };
+}
+
+export function useHeroSceneModalUI() {
+  const { isHeroSceneModalOpen, setHeroSceneModalOpen, openHeroSceneModal } = useUIState();
+  return { isOpen: isHeroSceneModalOpen, setIsOpen: setHeroSceneModalOpen, open: openHeroSceneModal };
 }
 
 export function useDiscordStageModalUI() {

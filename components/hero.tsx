@@ -94,6 +94,22 @@ const HERO_SPLINE_BLOCK_SIZE = 5;
 const HERO_SPLINE_STORAGE_KEY = "heroSplineCycleIndex";
 const HERO_SPLINE_LEGACY_KEY = "heroSplineReloadCount";
 const HERO_SPLINE_DEFAULT_INDEX = 0;
+const clampNumber = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, value));
+const MOBILE_SPLINE_MIN_WIDTH = 320;
+const MOBILE_SPLINE_MAX_WIDTH = 720;
+const MOBILE_SPLINE_MIN_HEIGHT = 420;
+const MOBILE_SPLINE_MAX_HEIGHT = 900;
+const MOBILE_SPLINE_PORTRAIT_ASPECT = 0.78; // width / height ~ 4:5
+const MOBILE_SPLINE_LANDSCAPE_ASPECT = 1.15;
+const MOBILE_SPLINE_PORTRAIT_SCALE = 0.82;
+const MOBILE_SPLINE_LANDSCAPE_SCALE = 0.72;
+const MOBILE_SPLINE_MAX_HEIGHT_RATIO = 0.78;
+const HERO_PREVIEW_MIN_WIDTH = 220;
+const HERO_PREVIEW_MIN_HEIGHT = 200;
+const HERO_PREVIEW_MAX_WIDTH = 640;
+const HERO_PREVIEW_MAX_HEIGHT = 480;
+const HERO_PREVIEW_SCALE = 0.4;
 
 const createHeroSplineSchedule = (
   scenes: readonly HeroSplineSceneConfig[],
@@ -132,8 +148,6 @@ const createHeroSplineSchedule = (
 
 const HERO_SPLINE_SCHEDULE = createHeroSplineSchedule(HERO_SPLINE_SCENES);
 const HERO_SPLINE_CYCLE_LENGTH = Math.max(HERO_SPLINE_SCHEDULE.length, 1);
-let heroSplineResolvedThisLoad = false;
-let heroSplineCachedResolution: HeroSplineResolution | null = null;
 
 const getStoredHeroSplineIndex = (): number => {
   if (typeof window === "undefined") {
@@ -189,35 +203,60 @@ type HeroSplineResolution = {
   blockStep: number;
 };
 
-const resolveHeroSplineScene = (): HeroSplineResolution => {
+const resolveHeroSplineScene = (options?: { advance?: boolean }): HeroSplineResolution => {
   if (typeof window === "undefined") {
     return { scene: HERO_SPLINE_SCENES[0]!, blockStep: 1 };
   }
 
-  if (heroSplineResolvedThisLoad && heroSplineCachedResolution) {
-    return heroSplineCachedResolution;
+  const currentIndex = getStoredHeroSplineIndex();
+
+  if (options?.advance !== false) {
+    const nextIndex = (currentIndex + 1) % HERO_SPLINE_CYCLE_LENGTH;
+    setStoredHeroSplineIndex(nextIndex);
   }
 
-  const currentIndex = getStoredHeroSplineIndex();
-  const nextIndex = (currentIndex + 1) % HERO_SPLINE_CYCLE_LENGTH;
-  setStoredHeroSplineIndex(nextIndex);
-
-  heroSplineResolvedThisLoad = true;
-  heroSplineCachedResolution = {
+  return {
     scene: sceneFromIndex(currentIndex),
     blockStep: blockStepFromIndex(currentIndex),
   };
-
-  return heroSplineCachedResolution;
 };
 
 const useHeroSplineSource = () => {
-  const [resolution] = useState(() => resolveHeroSplineScene());
+  const [resolution, setResolution] = useState(() => resolveHeroSplineScene());
+  const advanceScene = useCallback((reason?: string) => {
+    const nextResolution = resolveHeroSplineScene();
+    if (process.env.NODE_ENV !== "production" && reason) {
+      console.info(`[HeroSpline] Scene advanced via ${reason}: ${nextResolution.scene.label}`);
+    }
+    setResolution(nextResolution);
+  }, [setResolution]);
+  const setSceneById = useCallback((sceneId: string, reason?: string) => {
+    const scheduledScene = HERO_SPLINE_SCHEDULE.find((scene) => scene.id === sceneId);
+    const fallbackScene = HERO_SPLINE_SCENES.find((scene) => scene.id === sceneId);
+    const selectedScene = scheduledScene ?? fallbackScene ?? HERO_SPLINE_SCENES[0];
+    if (!selectedScene) {
+      return;
+    }
+
+    const scheduleIndex = HERO_SPLINE_SCHEDULE.findIndex((scene) => scene.id === selectedScene.id);
+    if (scheduleIndex >= 0) {
+      const nextIndex = (scheduleIndex + 1) % HERO_SPLINE_CYCLE_LENGTH;
+      setStoredHeroSplineIndex(nextIndex);
+    }
+
+    const blockStep = scheduleIndex >= 0 ? blockStepFromIndex(scheduleIndex) : 1;
+    if (process.env.NODE_ENV !== "production") {
+      console.info(`[HeroSpline] Scene manually set${reason ? ` via ${reason}` : ""}: ${selectedScene.label}`);
+    }
+    setResolution({ scene: selectedScene, blockStep });
+  }, [setResolution]);
   return {
     scene: resolution.scene.id,
     label: resolution.scene.label,
     blockStep: resolution.blockStep,
     source: resolution.scene,
+    advanceScene,
+    setSceneById,
   } as const;
 };
 
@@ -235,7 +274,7 @@ declare global {
 
 // --- CONTEXT INTEGRATION ---
 import { useStudio, type Project } from "@/context/StudioContext";
-import { useMobileMenu, useServicesModalUI, useUltimatePanelUI } from "@/contexts/UIStateContext";
+import { useMobileMenu, useServicesModalUI, useUltimatePanelUI, useHeroSceneModalUI, useUIState as useGlobalUIState } from "@/contexts/UIStateContext";
 
 // --- CRASH TRACKING ---
 import { useComponentTracking, useTrackModal } from "@/lib/CrashTracker";
@@ -607,6 +646,7 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
     <div className="relative w-full h-full" aria-label="BullMoney hero spline">
       <div className="absolute inset-0 w-full h-full">
         {shouldUseViewer ? (
+          // @ts-ignore - spline-viewer is a web component
           <spline-viewer
             url={runtimeUrl}
             loading="lazy"
@@ -650,8 +690,9 @@ const HeroParallax = () => {
   const { projects, serviceItems, hero, loading, isAuthenticated, isAdmin } = state;
   
   const isMobile = useIsMobile();
-  const { isMobileMenuOpen } = useMobileMenu();
+  const { isMobileMenuOpen, setIsMobileMenuOpen } = useMobileMenu();
   const willChange = useWillChange();
+  const { isAnyModalOpen, activeComponent } = useGlobalUIState();
 
   const buttonText = hero?.button_text || "View Trading Setups";
   const {
@@ -659,14 +700,39 @@ const HeroParallax = () => {
     label: heroSplineSceneLabel,
     source: heroSplineSource,
     blockStep: heroSplineBlockStep,
+    advanceScene: advanceHeroSplineScene,
+    setSceneById: setHeroSplineSceneManually,
   } = useHeroSplineSource();
+  const { isOpen: isHeroSceneModalOpen, setIsOpen: setHeroSceneModalOpen } = useHeroSceneModalUI();
+  const [scenePreviewId, setScenePreviewId] = useState(heroSplineScene);
   const showReloadCue = heroSplineBlockStep >= 2 && heroSplineBlockStep <= HERO_SPLINE_BLOCK_SIZE;
+  const uiStateModalKey = isHeroSceneModalOpen
+    ? "heroSceneModal"
+    : (isAnyModalOpen ? activeComponent ?? "modal" : "none");
+  const uiStateModalChangeInitRef = useRef(false);
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") {
       console.info(`[HeroSpline] Active hero scene: ${heroSplineSceneLabel} (${heroSplineScene})`);
     }
   }, [heroSplineScene, heroSplineSceneLabel]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const interval = window.setInterval(() => advanceHeroSplineScene("interval"), 120000);
+    return () => window.clearInterval(interval);
+  }, [advanceHeroSplineScene]);
+
+  useEffect(() => {
+    if (!uiStateModalChangeInitRef.current) {
+      uiStateModalChangeInitRef.current = true;
+      return;
+    }
+    const reason = uiStateModalKey === "none"
+      ? "ui-state-modal-close"
+      : `ui-state-${uiStateModalKey}`;
+    advanceHeroSplineScene(reason);
+  }, [uiStateModalKey, advanceHeroSplineScene]);
 
   // Global Theme Context - syncs across entire app
   const { activeThemeId, setTheme, accentColor } = useGlobalTheme();
@@ -705,6 +771,16 @@ const HeroParallax = () => {
     }
   }, [shouldHideUcp, isUcpOpen]);
 
+    useEffect(() => {
+      if (isHeroSceneModalOpen && isUcpOpen) {
+        setIsUcpOpenLocal(false);
+        setUltimatePanelOpen(false);
+      }
+      if (isHeroSceneModalOpen && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    }, [isHeroSceneModalOpen, isUcpOpen, isMobileMenuOpen, setUltimatePanelOpen, setIsMobileMenuOpen]);
+
   // Load saved sound preferences from localStorage
   useEffect(() => {
     const savedSound = localStorage.getItem('bullmoney_sound_profile') as SoundProfile | null;
@@ -715,7 +791,8 @@ const HeroParallax = () => {
 
   const currentTheme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   const displayTheme = hoverThemeId ? ALL_THEMES.find(t => t.id === hoverThemeId) : currentTheme;
-  const [heroSize, setHeroSize] = useState({ width: 0, height: 0 });
+  const [heroSize, setHeroSize] = useState({ width: 0, height: 0, aspect: 1 });
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   
   // MOBILE CRASH FIX: State for mobile-safe Spline settings
   const [splineSettings, setSplineSettings] = useState({
@@ -724,6 +801,7 @@ const HeroParallax = () => {
     minDpr: 0.5,
     shouldRender: true,
   });
+  const [isCompactModalViewport, setIsCompactModalViewport] = useState(false);
 
   // Track viewport size and set mobile-safe Spline settings
   useEffect(() => {
@@ -732,22 +810,64 @@ const HeroParallax = () => {
       const vv = window.visualViewport;
       const w = vv?.width || window.innerWidth;
       const h = vv?.height || window.innerHeight;
+      setViewportSize({ width: Math.round(w), height: Math.round(h) });
       const isBigDevice = w >= 1440;
       const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
       const isMobileDevice = /iphone|ipad|ipod|android|mobile/i.test(ua);
       const isInAppBrowser = /instagram|fban|fbav|twitter|tiktok|snapchat|linkedin|wechat|line|kakaotalk/i.test(ua);
       const memory = typeof navigator !== 'undefined' ? (navigator as any).deviceMemory || 4 : 4;
       const isLowEndMobile = isMobileDevice && (memory < 3 || w < 375);
-      
-      // IN-APP BROWSER FIX: Use full viewport dimensions
-      // In-app browsers often report wrong dimensions, so use 100% of available space
-      const mobileWidth = isInAppBrowser ? w : Math.min(w, 768);
-      const mobileHeight = isInAppBrowser ? h : Math.min(h * 0.85, 700);
-      
+      const isPortrait = h >= w;
+
+      let nextWidth = Math.max(320, Math.min(w, 1920));
+      let nextHeight = Math.max(400, Math.min(h, 1280));
+      let nextAspect = nextWidth / nextHeight;
+
+      if (isMobileDevice) {
+        const aspect = isPortrait ? MOBILE_SPLINE_PORTRAIT_ASPECT : MOBILE_SPLINE_LANDSCAPE_ASPECT;
+        const minWidthBound = Math.min(MOBILE_SPLINE_MIN_WIDTH, w);
+        const maxWidthBound = Math.max(minWidthBound, Math.min(MOBILE_SPLINE_MAX_WIDTH, w));
+        let width = clampNumber(
+          isInAppBrowser
+            ? w
+            : w * (isPortrait ? MOBILE_SPLINE_PORTRAIT_SCALE : MOBILE_SPLINE_LANDSCAPE_SCALE),
+          minWidthBound,
+          maxWidthBound
+        );
+        const minHeightBound = Math.min(MOBILE_SPLINE_MIN_HEIGHT, h);
+        const maxHeightCandidate = isInAppBrowser ? h : h * MOBILE_SPLINE_MAX_HEIGHT_RATIO;
+        const maxHeightBound = Math.max(minHeightBound, Math.min(MOBILE_SPLINE_MAX_HEIGHT, maxHeightCandidate));
+        let height = width / aspect;
+
+        if (height > maxHeightBound) {
+          height = maxHeightBound;
+          width = clampNumber(height * aspect, minWidthBound, maxWidthBound);
+        } else if (height < minHeightBound) {
+          height = minHeightBound;
+          width = clampNumber(height * aspect, minWidthBound, maxWidthBound);
+        }
+
+        if (width > w) {
+          width = w;
+          height = clampNumber(width / aspect, minHeightBound, maxHeightBound);
+        }
+
+        nextWidth = Math.round(width);
+        nextHeight = Math.round(height);
+        nextAspect = aspect;
+      } else {
+        const desktopWidth = isBigDevice ? Math.min(w, 2560) : Math.min(w, 1600);
+        const desktopHeight = isBigDevice ? Math.min(h * 0.9, 1200) : Math.min(h * 0.95, 1000);
+        nextWidth = Math.round(Math.max(640, desktopWidth));
+        nextHeight = Math.round(Math.max(480, desktopHeight));
+        nextAspect = nextWidth / Math.max(nextHeight, 1);
+      }
+
+      const safeAspect = nextHeight > 0 ? nextWidth / nextHeight : nextAspect;
       setHeroSize({
-        // FIXED: Full width/height for mobile and in-app browsers
-        width: Math.max(320, isMobileDevice ? mobileWidth : (isBigDevice ? Math.min(w, 2560) : Math.min(w, 1600))),
-        height: Math.max(400, isMobileDevice ? mobileHeight : (isBigDevice ? Math.min(h * 0.9, 1200) : Math.min(h * 0.95, 1000))),
+        width: nextWidth,
+        height: nextHeight,
+        aspect: Number.isFinite(safeAspect) && safeAspect > 0 ? safeAspect : 1,
       });
       
       // MOBILE CRASH FIX: Set conservative settings for mobile
@@ -761,6 +881,32 @@ const HeroParallax = () => {
     calcSize();
     window.addEventListener('resize', calcSize);
     return () => window.removeEventListener('resize', calcSize);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const evaluateViewport = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const shortEdge = Math.min(width, height);
+      const longEdge = Math.max(width, height);
+      const iphone11Width = 414;
+      const iphone11Height = 896;
+      const compactWidthThreshold = 430;
+
+      setIsCompactModalViewport(
+        shortEdge <= compactWidthThreshold ||
+        (shortEdge <= 480 && longEdge <= iphone11Height + 40) ||
+        (width <= iphone11Width && height <= iphone11Height)
+      );
+    };
+
+    evaluateViewport();
+    window.addEventListener("resize", evaluateViewport);
+    return () => window.removeEventListener("resize", evaluateViewport);
   }, []);
 
   const parallaxItems = useMemo(() => {
@@ -844,6 +990,30 @@ const HeroParallax = () => {
   const quickEditFileInputRef = useRef<HTMLInputElement>(null);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const { isOpen: isServicesModalOpen, setIsOpen: setIsServicesModalOpen } = useServicesModalUI();
+  const isProjectModalOpen = Boolean(activeProject);
+  const isScenePickerCompact = isCompactModalViewport;
+  const scenePickerShortEdge = viewportSize.width && viewportSize.height
+    ? Math.min(viewportSize.width, viewportSize.height)
+    : viewportSize.width || viewportSize.height;
+  const isScenePickerUltraCompact = Boolean(
+    isScenePickerCompact && scenePickerShortEdge > 0 && scenePickerShortEdge <= 430
+  );
+  const localModalChangeInitRef = useRef(false);
+
+  useEffect(() => {
+    if (!localModalChangeInitRef.current) {
+      localModalChangeInitRef.current = true;
+      return;
+    }
+    advanceHeroSplineScene("local-overlay-change");
+  }, [
+    isAdminOpen,
+    isContactModalOpen,
+    isThemeModalOpen,
+    isReflectiveCardOpen,
+    isProjectModalOpen,
+    advanceHeroSplineScene,
+  ]);
 
   const [editForm, setEditForm] = useState<ProjectFormData>({
     title: "",
@@ -875,6 +1045,52 @@ const HeroParallax = () => {
     setActiveLayoutId(null);
     setIsEditing(false);
   }, []);
+
+  const handleOpenScenePicker = useCallback(() => {
+    setScenePreviewId(heroSplineScene);
+    setHeroSceneModalOpen(true);
+  }, [heroSplineScene, setHeroSceneModalOpen]);
+
+  const previewScene = useMemo(() => {
+    return HERO_SPLINE_SCENES.find((scene) => scene.id === scenePreviewId) ?? heroSplineSource;
+  }, [scenePreviewId, heroSplineSource]);
+
+  useEffect(() => {
+    setScenePreviewId(heroSplineScene);
+  }, [heroSplineScene]);
+
+  const handleSceneSelect = useCallback((sceneId: string) => {
+    if (!sceneId) return;
+    setHeroSplineSceneManually(sceneId, "user-select");
+    setScenePreviewId(sceneId);
+    setHeroSceneModalOpen(false);
+  }, [setHeroSplineSceneManually, setHeroSceneModalOpen]);
+
+  const previewDimensions = useMemo(() => {
+    const fallbackWidth = 600;
+    const fallbackHeight = 420;
+    const baseWidth = heroSize.width ? heroSize.width * HERO_PREVIEW_SCALE : fallbackWidth;
+    const baseHeight = heroSize.height ? heroSize.height * HERO_PREVIEW_SCALE : fallbackHeight;
+    const width = clampNumber(baseWidth, HERO_PREVIEW_MIN_WIDTH, HERO_PREVIEW_MAX_WIDTH);
+    const height = clampNumber(baseHeight, HERO_PREVIEW_MIN_HEIGHT, HERO_PREVIEW_MAX_HEIGHT);
+    return { width, height };
+  }, [heroSize.width, heroSize.height]);
+
+  const scenePickerPreviewSize = useMemo(() => {
+    if (!isCompactModalViewport) {
+      return previewDimensions;
+    }
+    if (isScenePickerUltraCompact) {
+      return {
+        width: clampNumber(previewDimensions.width, 180, 260),
+        height: clampNumber(previewDimensions.height, 140, 200),
+      };
+    }
+    return {
+      width: Math.min(previewDimensions.width, 360),
+      height: Math.min(previewDimensions.height, 260),
+    };
+  }, [previewDimensions, isCompactModalViewport, isScenePickerUltraCompact]);
 
   const sanitizeData = (form: ProjectFormData) => {
       return {
@@ -975,13 +1191,13 @@ const HeroParallax = () => {
     // Only disable scroll on mobile/tablet when a modal is open
     // On desktop, keep scroll enabled so user can see content behind modal
     const isMobileViewport = window.innerWidth < 768;
-    if (isMobileViewport && (activeProject || isAdminOpen || isContactModalOpen || isServicesModalOpen || isThemeModalOpen)) {
+    if (isMobileViewport && (activeProject || isAdminOpen || isContactModalOpen || isServicesModalOpen || isThemeModalOpen || isHeroSceneModalOpen)) {
         document.body.style.overflow = "hidden";
     } else {
         document.body.style.overflow = "auto";
     }
     return () => { document.body.style.overflow = "auto"; }
-  }, [activeProject, isAdminOpen, isContactModalOpen, isServicesModalOpen, isThemeModalOpen]);
+  }, [activeProject, isAdminOpen, isContactModalOpen, isServicesModalOpen, isThemeModalOpen, isHeroSceneModalOpen]);
 
   if (loading) {
       return (
@@ -1025,6 +1241,7 @@ const HeroParallax = () => {
       isOpen={isServicesModalOpen}
       onOpenChange={setIsServicesModalOpen}
       showTrigger={false}
+      compactMode={isCompactModalViewport}
     />
 
     {/* UltimateControlPanel - Always mounted, internal content mounts/unmounts based on isOpen */}
@@ -1398,8 +1615,8 @@ const HeroParallax = () => {
                     className="rounded-full px-4 py-2 bg-black/70 backdrop-blur border border-white/10 text-white text-xs md:text-sm font-semibold tracking-wide shadow-lg flex items-center gap-2"
                   >
                     <span aria-hidden="true">↻</span>
-                    Reloading changes Spline scenes
-                    <span className="text-[10px] text-white/70">{heroSplineBlockStep}/{HERO_SPLINE_BLOCK_SIZE}</span>
+                    Modals & timer rotate scenes
+                    <span className="text-[10px] text-white/70">auto • {heroSplineBlockStep}/{HERO_SPLINE_BLOCK_SIZE}</span>
                   </motion.div>
                 </motion.div>
               )}
@@ -1420,7 +1637,7 @@ const HeroParallax = () => {
                   touchAction: 'pan-y',
                   pointerEvents: 'auto',
                   // In-app browser fix: ensure full coverage
-                  aspectRatio: 'unset',
+                  aspectRatio: heroSize.aspect ? `${heroSize.aspect}` : undefined,
                 }}
               >
                 {/* MOBILE-SAFE HERO EMBED: Prefer custom viewer when possible, fallback to iframe everywhere else */}
@@ -1445,13 +1662,164 @@ const HeroParallax = () => {
           </div>
         </div>
         <div className="max-w-7xl relative mx-auto pt-32 pb-12 md:py-32 px-4 w-full z-20 mb-10 md:mb-32">
-            
             {/* SwipableButtons (Actions Panel) REMOVED here */}
-            
+        </div>
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-10 z-40 flex justify-center px-4">
+          <div className="pointer-events-auto flex flex-col items-center gap-2">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={handleOpenScenePicker}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-xs font-semibold uppercase tracking-[0.25em] bg-black/50 text-white/90 border border-white/10 shadow-[0_10px_25px_rgba(0,0,0,0.35)] backdrop-blur"
+            >
+              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: 'var(--accent-color, #3b82f6)' }} />
+              Choose Scene
+            </motion.button>
+            <p className="text-[10px] tracking-[0.3em] text-white/60 bg-black/30 backdrop-blur px-3 py-1 rounded-full border border-white/5">
+              Viewing · {heroSplineSceneLabel}
+            </p>
+          </div>
         </div>
     </div>
 
     <div ref={containerRef} className="absolute bottom-0 w-full h-px" />
+
+    <AnimatePresence>
+      {isHeroSceneModalOpen && (
+        <motion.div
+          className={cn(
+            "fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 px-2 py-6 overflow-y-auto",
+            isScenePickerCompact && "px-3",
+            isScenePickerCompact && !isScenePickerUltraCompact && "items-start pt-10 pb-8",
+            isScenePickerUltraCompact && "py-4"
+          )}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setHeroSceneModalOpen(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.92, opacity: 0 }}
+            className={cn(
+              "relative w-full bg-neutral-950 text-white border border-white/10 rounded-3xl shadow-2xl mx-auto flex flex-col",
+              isScenePickerUltraCompact ? "overflow-y-auto overscroll-contain" : "overflow-hidden",
+              isScenePickerCompact
+                ? (isScenePickerUltraCompact
+                    ? "max-w-[360px] rounded-2xl border-white/5 h-auto max-h-[82vh]"
+                    : "max-w-[480px] rounded-2xl border-white/5 h-auto max-h-[90vh]")
+                : "max-w-4xl h-[70vh] max-h-[85vh]"
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={cn(
+              "flex flex-col lg:flex-row flex-1 overflow-hidden",
+              isScenePickerCompact && "gap-4"
+            )}>
+              <div
+                className={cn(
+                  "w-full lg:w-1/2 p-6 border-b lg:border-b-0 lg:border-r border-white/10 overflow-y-auto",
+                  isScenePickerCompact && "p-4 max-h-[38vh]",
+                  isScenePickerUltraCompact && "p-3 max-h-[32vh]"
+                )}
+              >
+                <h3 className="text-lg font-semibold tracking-wide uppercase text-white/70 mb-4">Select Scene</h3>
+                <div className={cn("space-y-2", isScenePickerUltraCompact && "space-y-1.5")}>
+                  {HERO_SPLINE_SCENES.map((scene) => (
+                    <button
+                      key={scene.id}
+                      onClick={() => setScenePreviewId(scene.id)}
+                      className={cn(
+                        'w-full flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-colors',
+                        scenePreviewId === scene.id
+                          ? 'bg-white text-black border-white'
+                          : 'bg-white/5 text-white/80 border-white/10 hover:border-white/40'
+                      )}
+                    >
+                      <div>
+                        <p className="font-semibold text-sm">{scene.label}</p>
+                        <p className="text-xs text-white/60">{scene.id}</p>
+                      </div>
+                      <span className="text-[10px] uppercase tracking-widest text-white/60">Preview</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div
+                className={cn(
+                  "w-full lg:w-1/2 p-6 flex flex-col gap-4 flex-1 overflow-hidden",
+                  isScenePickerCompact && "p-4 gap-3 flex-none",
+                  isScenePickerUltraCompact && "p-3 gap-2 overflow-visible"
+                )}
+              >
+                <div className={cn(
+                  "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between",
+                  isScenePickerCompact && "gap-2",
+                  isScenePickerUltraCompact && "gap-1.5"
+                )}>
+                  <div>
+                    <p className="text-xs uppercase text-white/60 tracking-[0.3em]">Previewing</p>
+                    <p className="text-lg font-semibold">{previewScene?.label || heroSplineSceneLabel}</p>
+                  </div>
+                  <div className={cn(
+                    "flex flex-wrap gap-3 justify-end",
+                    isScenePickerCompact && "gap-2",
+                    isScenePickerUltraCompact && "w-full justify-between"
+                  )}>
+                    <button
+                      onClick={() => handleSceneSelect(scenePreviewId)}
+                      className={cn(
+                        "px-4 py-2 rounded-full bg-white text-black font-semibold text-xs uppercase tracking-[0.2em]",
+                        isScenePickerCompact && "px-3 py-1.5 text-[11px]"
+                      )}
+                    >
+                      Set Scene
+                    </button>
+                    <button
+                      onClick={() => setHeroSceneModalOpen(false)}
+                      className={cn(
+                        "px-4 py-2 rounded-full border border-white/30 text-xs uppercase tracking-[0.2em]",
+                        isScenePickerCompact && "px-3 py-1.5 text-[11px]"
+                      )}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+                <div
+                  className={cn(
+                    "relative w-full rounded-2xl bg-black border border-white/10 overflow-hidden flex items-center justify-center lg:flex-1",
+                    isScenePickerCompact && "min-h-[200px]",
+                    isScenePickerUltraCompact && "min-h-[150px]"
+                  )}
+                >
+                  <div
+                    className="relative"
+                    style={{
+                      width: `${scenePickerPreviewSize.width}px`,
+                      height: `${scenePickerPreviewSize.height}px`,
+                      maxWidth: '100%',
+                      maxHeight: isScenePickerUltraCompact ? '38vh' : (isScenePickerCompact ? '50vh' : '70vh'),
+                      minWidth: isScenePickerUltraCompact ? 160 : (isScenePickerCompact ? 180 : 220),
+                      minHeight: isScenePickerUltraCompact ? 140 : (isScenePickerCompact ? 160 : 200),
+                    }}
+                  >
+                    <SplineSceneEmbed
+                      key={scenePreviewId}
+                      preferViewer={previewScene?.preferViewer !== false}
+                      runtimeUrl={previewScene?.runtimeUrl || heroSplineSource.runtimeUrl}
+                      viewerUrl={previewScene?.viewerUrl || heroSplineSource.viewerUrl}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
     </>
   );
 };

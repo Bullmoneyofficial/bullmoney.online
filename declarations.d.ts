@@ -21,3 +21,10 @@ declare module '@react-three/fiber' {
     meshLineMaterial: Object3DNode<MeshLineMaterial, typeof MeshLineMaterial>;
   }
 }
+
+// Spline Viewer Web Component
+declare namespace JSX {
+  interface IntrinsicElements {
+    'spline-viewer': any;
+  }
+}

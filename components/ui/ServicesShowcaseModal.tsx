@@ -328,6 +328,7 @@ interface ServicesShowcaseModalProps {
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   showTrigger?: boolean;
+  compactMode?: boolean;
 }
 
 // Memoized modal content wrapper - prevents re-renders when not needed
@@ -336,21 +337,26 @@ const ModalContentWrapper = memo(function ModalContentWrapper({
   freezeState,
   isScrolling,
   handlePlayGame,
+  compact,
 }: {
   contentReady: boolean;
   freezeState: AnimationFreezeState;
   isScrolling: boolean;
   handlePlayGame: () => void;
+  compact?: boolean;
 }) {
   if (!contentReady) {
     return <LoadingSpinner text="Loading services..." />;
   }
 
+  const isCompact = Boolean(compact);
+
   return (
     <AnimationFreezeContext.Provider value={freezeState}>
       <div className={cn(
         "relative z-10 flex flex-col gap-10 px-3 py-6 sm:px-5 sm:py-8 md:px-8 services-modal-content",
-        isScrolling && "is-scrolling"
+        isScrolling && "is-scrolling",
+        isCompact && "gap-6 px-2 py-4 sm:px-4"
       )}
       style={{
         // Optimize compositing
@@ -424,6 +430,7 @@ export default function ServicesShowcaseModal({
   isOpen: externalIsOpen,
   onOpenChange,
   showTrigger = true,
+  compactMode,
 }: ServicesShowcaseModalProps) {
   // Use UIState for centralized state management
   const { 
@@ -438,6 +445,7 @@ export default function ServicesShowcaseModal({
   const [showPacMan, setShowPacMan] = useState(false); // Pac-Man game state
   const [isScrolling, setIsScrolling] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [detectedCompactViewport, setDetectedCompactViewport] = useState(false);
   const styleRef = useRef<HTMLStyleElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -481,6 +489,8 @@ export default function ServicesShowcaseModal({
     isGameOpen: showPacMan,
     prefersReducedMotion,
   };
+
+  const isCompactViewport = compactMode ?? detectedCompactViewport;
   
   const setOpen = useCallback((value: boolean) => {
     // Update UIState (handles mutual exclusion automatically)
@@ -549,6 +559,31 @@ export default function ServicesShowcaseModal({
         clearTimeout(scrollTimeoutRef.current);
       }
     };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const evaluateViewport = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const shortEdge = Math.min(width, height);
+      const longEdge = Math.max(width, height);
+      const iphone11Width = 414;
+      const iphone11Height = 896;
+
+      setDetectedCompactViewport(
+        shortEdge <= 430 ||
+        (shortEdge <= 480 && longEdge <= iphone11Height + 40) ||
+        (width <= iphone11Width && height <= iphone11Height)
+      );
+    };
+
+    evaluateViewport();
+    window.addEventListener("resize", evaluateViewport);
+    return () => window.removeEventListener("resize", evaluateViewport);
   }, []);
 
   // Inject/remove smart freeze styles based on modal state
@@ -644,7 +679,10 @@ export default function ServicesShowcaseModal({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm services-modal-portal"
+              className={cn(
+                "fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm services-modal-portal",
+                isCompactViewport && "items-start pt-8"
+              )}
               style={{ zIndex: UI_Z_INDEX.MODAL_BACKDROP }}
               onClick={() => setOpen(false)}
             >
@@ -654,14 +692,23 @@ export default function ServicesShowcaseModal({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: 20 }}
                 transition={{ type: "spring", stiffness: 260, damping: 24 }}
-                className="relative w-[95vw] max-w-6xl rounded-3xl border border-white/10 bg-neutral-950 text-white shadow-2xl"
-                style={{ zIndex: UI_Z_INDEX.MODAL_CONTENT }}
+                className={cn(
+                  "relative w-[95vw] max-w-6xl rounded-3xl border border-white/10 bg-neutral-950 text-white shadow-2xl",
+                  isCompactViewport && "w-full max-w-[480px] rounded-2xl border-white/5"
+                )}
+                style={{
+                  zIndex: UI_Z_INDEX.MODAL_CONTENT,
+                  ...(isCompactViewport ? { margin: "0 auto" } : undefined),
+                }}
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="absolute right-4 top-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+                  className={cn(
+                    "absolute right-4 top-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20",
+                    isCompactViewport && "right-3 top-3 h-9 w-9"
+                  )}
                 >
                   <X size={18} />
                 </button>
@@ -669,7 +716,10 @@ export default function ServicesShowcaseModal({
                 <div 
                   ref={scrollContainerRef}
                   onScroll={handleScroll}
-                  className="max-h-[85dvh] overflow-y-auto overscroll-contain scroll-smooth"
+                  className={cn(
+                    "max-h-[85dvh] overflow-y-auto overscroll-contain scroll-smooth",
+                    isCompactViewport && "max-h-[78dvh]"
+                  )}
                   style={{
                     // GPU acceleration for smooth scrolling
                     transform: 'translateZ(0)',
@@ -681,6 +731,7 @@ export default function ServicesShowcaseModal({
                     freezeState={freezeState}
                     isScrolling={isScrolling}
                     handlePlayGame={handlePlayGame}
+                    compact={isCompactViewport}
                   />
                 </div>
               </motion.div>
