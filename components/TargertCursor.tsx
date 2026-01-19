@@ -39,13 +39,18 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
   const spinTl = useRef<gsap.core.Timeline | null>(null);
 
   // --- Mutable Physics State ---
+  // Initialize to center of screen to avoid top-left stuck issue
   const state = useRef({
-    x: 0, y: 0, tx: 0, ty: 0,         
-    isIdle: false,
+    x: typeof window !== 'undefined' ? window.innerWidth / 2 : 500, 
+    y: typeof window !== 'undefined' ? window.innerHeight / 2 : 500, 
+    tx: typeof window !== 'undefined' ? window.innerWidth / 2 : 500, 
+    ty: typeof window !== 'undefined' ? window.innerHeight / 2 : 500,         
+    isIdle: true, // Start as idle until first mouse move
     isHovering: false,
     lastInputTime: Date.now(),
     hoverEl: null as Element | null,
-    ghostRect: null as DOMRect | null 
+    ghostRect: null as DOMRect | null,
+    hasReceivedInput: false // Track if we've received real mouse input
   });
 
   // --- Configuration ---
@@ -77,7 +82,19 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
       document.documentElement.style.cursor = 'none';
       document.body.style.cursor = 'none';
     }
-    gsap.set(cursor, { xPercent: 0, yPercent: 0, force3D: true }); 
+    
+    // Initialize cursor at center of screen (not top-left)
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    state.current.x = centerX;
+    state.current.y = centerY;
+    state.current.tx = centerX;
+    state.current.ty = centerY;
+    
+    // Hide cursor until first mouse move to prevent flash at center
+    cursor.style.opacity = '0';
+    
+    gsap.set(cursor, { xPercent: 0, yPercent: 0, force3D: true, x: centerX, y: centerY }); 
 
     spinTl.current = gsap.timeline({ repeat: -1, paused: false })
       .to(cursor, { rotation: 360, duration: spinDuration, ease: 'none' });
@@ -139,6 +156,16 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     const updateInput = (x: number, y: number) => {
         state.current.lastInputTime = Date.now();
         state.current.tx = x; state.current.ty = y;
+        
+        // Show cursor on first input (was hidden to prevent top-left flash)
+        if (!state.current.hasReceivedInput) {
+            state.current.hasReceivedInput = true;
+            cursor.style.opacity = '1';
+            // Instantly jump to mouse position on first move
+            state.current.x = x;
+            state.current.y = y;
+        }
+        
         if (state.current.isIdle) {
             state.current.isIdle = false; state.current.ghostRect = null;
             state.current.x = x; state.current.y = y;
@@ -267,7 +294,7 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     <>
       <div 
         ref={cursorRef} 
-        className={`target-cursor-wrapper fixed inset-0 z-[999998] ${isTouching ? 'touching' : ''} ${isLocked ? 'locked' : ''}`} 
+        className={`target-cursor-wrapper ${isTouching ? 'touching' : ''} ${isLocked ? 'locked' : ''}`} 
         style={{ pointerEvents: 'none' }}
       >
         {/* Center dot */}

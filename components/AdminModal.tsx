@@ -1218,31 +1218,57 @@ export default function AdminModal({ isOpen, onClose }: { isOpen: boolean; onClo
   return (
     <AnimatePresence>
       {isOpen && (
-        <div 
-          className="fixed inset-0"
-          style={{ zIndex: 2147483647, isolation: 'isolate' }}
+        <motion.div 
+          initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+          animate={{ opacity: 1, backdropFilter: 'blur(16px)' }}
+          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+          className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+          onClick={onClose}
         >
-          <motion.div
+          {/* Animated tap to close hints */}
+          <motion.div 
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/90 backdrop-blur-xl"
-            style={{ zIndex: 0 }}
-            onClick={onClose}
-          />
-          <div 
-            className="relative h-full flex items-center justify-center p-4 pointer-events-none"
-            style={{ zIndex: 10 }}
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
           >
-            <div className="pointer-events-auto">
-              {!authenticated ? (
-                <AdminLogin onLogin={() => setAuthenticated(true)} />
-              ) : (
-                <AdminDashboard onClose={onClose} />
-              )}
-            </div>
+            <span>↑</span> Tap anywhere to close <span>↑</span>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+          >
+            <span>↓</span> Tap anywhere to close <span>↓</span>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+          >
+            ← Tap to close
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+          >
+            Tap to close →
+          </motion.div>
+          
+          <div onClick={(e) => e.stopPropagation()}>
+            {!authenticated ? (
+              <AdminLogin onLogin={() => setAuthenticated(true)} />
+            ) : (
+              <AdminDashboard onClose={onClose} />
+            )}
           </div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

@@ -618,6 +618,57 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('keydown', handleEscape);
   }, [isAnyOpen, closeAll]);
 
+  // DESKTOP FIX: Add/remove body classes and data attributes for CSS targeting
+  // This helps the desktop z-index fix CSS work properly
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    
+    const body = document.body;
+    const html = document.documentElement;
+    
+    // Add data attributes for CSS targeting
+    if (isAnyModalOpen) {
+      body.classList.add('modal-open');
+      body.setAttribute('data-modal-open', 'true');
+      html.setAttribute('data-modal-open', 'true');
+      // Prevent scroll when modal is open
+      body.style.overflow = 'hidden';
+    } else {
+      body.classList.remove('modal-open');
+      body.removeAttribute('data-modal-open');
+      html.removeAttribute('data-modal-open');
+      // Restore scroll
+      body.style.overflow = '';
+    }
+    
+    if (isMobileMenuOpen) {
+      body.classList.add('menu-open');
+      body.setAttribute('data-menu-open', 'true');
+      html.setAttribute('data-menu-open', 'true');
+    } else {
+      body.classList.remove('menu-open');
+      body.removeAttribute('data-menu-open');
+      html.removeAttribute('data-menu-open');
+    }
+    
+    // Set active component data attribute for debugging
+    if (activeComponent) {
+      body.setAttribute('data-active-ui', activeComponent);
+    } else {
+      body.removeAttribute('data-active-ui');
+    }
+    
+    return () => {
+      // Cleanup on unmount
+      body.classList.remove('modal-open', 'menu-open');
+      body.removeAttribute('data-modal-open');
+      body.removeAttribute('data-menu-open');
+      body.removeAttribute('data-active-ui');
+      html.removeAttribute('data-modal-open');
+      html.removeAttribute('data-menu-open');
+      body.style.overflow = '';
+    };
+  }, [isAnyModalOpen, isMobileMenuOpen, activeComponent]);
   const value: UIStateContextType = {
     // States
     isMobileMenuOpen,

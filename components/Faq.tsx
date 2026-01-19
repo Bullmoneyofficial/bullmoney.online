@@ -689,23 +689,60 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
           initial={{ opacity: 0 }}
           animate={{ opacity: 1, backdropFilter: 'blur(10px)' }}
           exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center h-full w-full bg-black/60"
+          className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+          onClick={onClose}
         >
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-transparent" onClick={onClose} />
+          {/* Animated tap to close hints */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+          >
+            <span>↑</span> Tap anywhere to close <span>↑</span>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+          >
+            <span>↓</span> Tap anywhere to close <span>↓</span>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+          >
+            ← Tap to close
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+          >
+            Tap to close →
+          </motion.div>
           
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-            className="relative w-[98%] md:w-[90%] max-w-6xl max-h-[95%] bg-black border border-blue-500/20 rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.15)] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-[98%] md:w-[90%] max-w-6xl max-h-[90vh] bg-black border border-blue-500/20 rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.15)] overflow-hidden flex flex-col"
           >
             <button
                 onClick={onClose}
-                className="absolute top-6 right-6 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                className="absolute top-6 right-6 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors group"
+                title="Close (ESC)"
             >
                 <X className="w-5 h-5 text-white" />
+                <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-white/50 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">ESC</span>
             </button>
             
             <FaqModalContent onClose={onClose} />

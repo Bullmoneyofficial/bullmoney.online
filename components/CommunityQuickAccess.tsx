@@ -314,7 +314,7 @@ const LiveTradesTicker = React.memo(() => {
 
   if (loading || !currentMessage) {
     return (
-      <div className="mt-0 -translate-y-0.5 px-1 py-0.5 bg-zinc-900/80 rounded-b-lg border-x border-b border-cyan-500/20 w-[100px] xs:w-[120px] sm:w-[150px] md:w-[180px]">
+      <div className="mt-0 -translate-y-0.5 px-1 py-0.5 bg-zinc-900/80 rounded-b-lg border-x border-b border-cyan-500/20 min-w-[100px] xs:min-w-[120px] sm:min-w-[150px] md:min-w-[180px] lg:min-w-[220px] xl:min-w-[260px] 2xl:min-w-[300px] max-w-[100px] xs:max-w-[120px] sm:max-w-[150px] md:max-w-[180px] lg:max-w-[220px] xl:max-w-[260px] 2xl:max-w-[300px]">
         <div className="flex items-center gap-1">
           <Loader className="w-2 h-2 text-cyan-400 animate-spin" />
           <span className="text-[5px] text-zinc-500">Loading...</span>
@@ -335,7 +335,7 @@ const LiveTradesTicker = React.memo(() => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
     >
-      <div className="px-1 py-0.5 xs:py-1 bg-gradient-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/90 backdrop-blur-xl rounded-b-lg border-x border-b border-cyan-500/30 hover:border-cyan-400/50 hover:bg-zinc-800/95 transition-all overflow-hidden w-[100px] xs:w-[120px] sm:w-[150px] md:w-[180px]">
+      <div className="px-1 py-0.5 xs:py-1 bg-gradient-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/90 backdrop-blur-xl rounded-b-lg border-x border-b border-cyan-500/30 hover:border-cyan-400/50 hover:bg-zinc-800/95 transition-all overflow-hidden min-w-[100px] xs:min-w-[120px] sm:min-w-[150px] md:min-w-[180px] lg:min-w-[220px] xl:min-w-[260px] 2xl:min-w-[300px] max-w-[100px] xs:max-w-[120px] sm:max-w-[150px] md:max-w-[180px] lg:max-w-[220px] xl:max-w-[260px] 2xl:max-w-[300px]">
         {/* Header row */}
         <div className="flex items-center justify-between mb-0.5">
           <div className="flex items-center gap-0.5">
@@ -964,7 +964,7 @@ export function CommunityQuickAccess() {
           }}
         >
           {/* Pill Content */}
-          <div className="relative rounded-r-2xl bg-gradient-to-br from-cyan-600/30 via-cyan-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-cyan-500/50 shadow-2xl hover:border-cyan-400/70 hover:shadow-cyan-600/40">
+          <div className="relative rounded-r-2xl bg-gradient-to-br from-cyan-600/30 via-cyan-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-cyan-500/50 shadow-2xl hover:border-cyan-400/70 hover:shadow-cyan-600/40 min-w-[100px] xs:min-w-[120px] sm:min-w-[150px] md:min-w-[180px] lg:min-w-[220px] xl:min-w-[260px] 2xl:min-w-[300px]">
             {/* Enhanced pulsing glow background - OPTIMIZED: reduced animation speed to 3s */}
             <motion.div
               className="absolute inset-0 rounded-r-2xl bg-gradient-to-r from-cyan-500/20 via-blue-500/10 to-transparent opacity-0"
@@ -1039,40 +1039,71 @@ export function CommunityQuickAccess() {
       {/* Expanded Dropdown - CENTERED MODAL LIKE DISCORD */}
       <AnimatePresence>
         {isExpanded && (
-          <>
-            {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
+            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            className="fixed inset-0 z-[2147483645] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+          >
+            {/* Click overlay - transparent, just for click handling */}
+            <div className="absolute inset-0 bg-transparent" onClick={() => setIsExpanded(false)} />
+
+            {/* Tap to close hints - Top */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsExpanded(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[249999]"
-              style={{ touchAction: 'manipulation' }}
-            />
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
+              transition={{ opacity: { duration: 2, repeat: Infinity }, y: { duration: 0.3 } }}
+              className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-blue-300/50 text-xs sm:text-sm pointer-events-none"
+            >
+              <span>↑</span>
+              <span>Tap anywhere to close</span>
+              <span>↑</span>
+            </motion.div>
+
+            {/* Tap to close hints - Bottom */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
+              transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.5 }, y: { duration: 0.3 } }}
+              className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-blue-300/50 text-xs sm:text-sm pointer-events-none"
+            >
+              <span>↓</span>
+              <span>Tap anywhere to close</span>
+              <span>↓</span>
+            </motion.div>
+
+            {/* Tap to close hints - Left */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
+              transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.25 }, x: { duration: 0.3 } }}
+              className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-blue-300/40 text-[10px] sm:text-xs pointer-events-none"
+            >
+              <span>←</span>
+              <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Tap to close</span>
+            </motion.div>
+
+            {/* Tap to close hints - Right */}
+            <motion.div
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
+              transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.75 }, x: { duration: 0.3 } }}
+              className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-blue-300/40 text-[10px] sm:text-xs pointer-events-none"
+            >
+              <span>→</span>
+              <span style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
+            </motion.div>
 
             {/* Centered Modal Dropdown - Optimized for small screens */}
             <motion.div
               ref={panelRef}
-              initial={{ opacity: 0, scale: 0.95, y: -20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              transition={{ 
-                type: 'spring', 
-                damping: 25, 
-                stiffness: 400,
-                mass: 0.8
-              }}
-              className="fixed z-[250000] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] xs:w-[90vw] sm:w-[85vw] md:max-w-[520px] lg:max-w-[580px]"
-              style={{
-                maxHeight: 'min(90vh, calc(100vh - 40px))',
-                maxWidth: 'min(95vw, 520px)',
-                paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 8px)',
-                paddingRight: 'calc(env(safe-area-inset-right, 0px) + 8px)',
-                paddingTop: 'calc(env(safe-area-inset-top, 0px) + 8px)',
-                paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 8px)',
-              }}
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-[520px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl border border-blue-500/30 shadow-2xl shadow-blue-900/20"
             >
-              <div className="bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl rounded-2xl border border-blue-500/30 shadow-2xl shadow-blue-900/20 overflow-hidden flex flex-col h-full max-h-[inherit]">
                 {/* Header */}
                 <div className="p-2 sm:p-3 md:p-4 border-b border-blue-500/20 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 flex-shrink-0">
                   <div className="flex items-center justify-between gap-2">
@@ -1080,7 +1111,8 @@ export function CommunityQuickAccess() {
                       <MessageSquare className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-blue-400 flex-shrink-0" />
                       <h3 className="text-[10px] sm:text-xs md:text-sm font-bold text-white truncate">Live Community</h3>
                     </div>
-                    <div className="flex items-center gap-1 flex-shrink-0">
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <span className="text-[8px] sm:text-[9px] text-zinc-500 hidden sm:inline">Click outside to close</span>
                       <motion.div
                         className="w-1.5 h-1.5 bg-green-400 rounded-full"
                         animate={{ opacity: [1, 0.4, 1] }}
@@ -1316,24 +1348,22 @@ export function CommunityQuickAccess() {
                     <span className="hidden xs:inline">VIP</span>
                   </motion.button>
                 </div>
-              </div>
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
 
       {/* Detached Browser Menu - Centered Modal on top of everything */}
       <AnimatePresence>
         {browserMenuOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setBrowserMenuOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999998]"
-            />
+          <motion.div
+            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
+            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/60"
+          >
+            {/* Click overlay - transparent, just for click handling */}
+            <div className="absolute inset-0 bg-transparent" onClick={() => setBrowserMenuOpen(false)} />
             
             {/* Browser Menu Modal */}
             <motion.div
@@ -1341,7 +1371,8 @@ export function CommunityQuickAccess() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 400 }}
-              className="fixed z-[999999] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-[320px]"
+              className="relative w-[90vw] max-w-[320px] pointer-events-auto"
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl rounded-2xl border border-blue-500/40 shadow-2xl shadow-blue-900/30 overflow-hidden">
                 {/* Header */}
@@ -1413,7 +1444,7 @@ export function CommunityQuickAccess() {
                 </div>
               </div>
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
     </>

@@ -1141,35 +1141,47 @@ const LiveStreamContent = memo(() => {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-center p-3 sm:p-6"
-      style={{ 
-        zIndex: 2147483647, // Maximum possible z-index
-        isolation: 'isolate',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-      }}
+      initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+      animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
+      exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+      className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+      onClick={handleClose}
     >
-      {/* Cinematic dark backdrop - covers everything */}
+      {/* Animated tap to close hints */}
       <motion.div 
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="absolute inset-0 bg-black/95 backdrop-blur-lg"
-        style={{ 
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 0,
-        }}
-        onClick={handleClose}
-      />
+        animate={{ opacity: [0.4, 0.8, 0.4] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+      >
+        <span>↑</span> Tap anywhere to close <span>↑</span>
+      </motion.div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0.4, 0.8, 0.4] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+      >
+        <span>↓</span> Tap anywhere to close <span>↓</span>
+      </motion.div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0.4, 0.8, 0.4] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
+        className="absolute left-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+        style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+      >
+        ← Tap to close
+      </motion.div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0.4, 0.8, 0.4] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
+        className="absolute right-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+        style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+      >
+        Tap to close →
+      </motion.div>
       
       {/* Modal Container - Contained modal with Netflix styling */}
       <motion.div
@@ -1179,7 +1191,6 @@ const LiveStreamContent = memo(() => {
         transition={{ type: 'spring', damping: 30, stiffness: 400 }}
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-neutral-900 border border-white/10 shadow-2xl shadow-black/50"
-        style={{ zIndex: 1 }}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0 bg-black/40">
@@ -1293,9 +1304,11 @@ const LiveStreamContent = memo(() => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleClose}
-              className="p-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all"
+              className="p-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all group relative"
+              title="Close (ESC)"
             >
               <X className="w-5 h-5" />
+              <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-white/50 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">ESC</span>
             </motion.button>
           </div>
         </div>

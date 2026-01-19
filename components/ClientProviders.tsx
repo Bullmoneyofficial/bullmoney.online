@@ -65,10 +65,8 @@ const FpsMonitor = dynamic(
   { ssr: false }
 );
 
-const ClientCursor = dynamic(
-  () => import("@/components/ClientCursor"),
-  { ssr: false }
-);
+// NOTE: ClientCursor is now rendered in LayoutProviders (LAST in DOM)
+// to ensure it appears above MultiStepLoaderv2, pagemode, and all modals
 
 // AudioWidget stays loaded - NOT lazy unmounted - for audio persistence
 const AudioWidget = dynamic(
@@ -196,7 +194,7 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
             <FpsOptimizerProvider enableMonitoring={true} monitoringInterval={500} startDelay={1000}>
               <PerformanceProvider enableSmoothScroll={true}>
               <FpsMonitor show={false} />
-              <ClientCursor />
+              {/* NOTE: ClientCursor moved to LayoutProviders - rendered LAST in DOM */}
               {/* AudioWidget stays mounted - NOT lazy unmounted - for audio persistence */}
               <AudioWidget />
               <AutoRefreshPrompt />
@@ -216,26 +214,32 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
                 - touchAction: auto allows all scroll interactions
                 - overflowY: visible prevents scroll context issues
                 - CRITICAL: No height constraints to allow natural scrolling
+                - DESKTOP FIX: isolation: auto prevents z-index stacking context issues
               */}
-              <main 
-                className="min-h-screen"
-                style={{ 
-                  // Filter is now applied via ThemeOverlay and CSS ::before
-                  // No direct filter here to avoid scroll issues
-                  touchAction: 'auto', // FIXED: Allow ALL interactions including scroll
-                  overflow: 'visible', // FIXED: Allow content to overflow naturally
-                  // Ensure proper stacking
-                  position: 'relative',
-                  zIndex: 1,
-                  // CRITICAL: No height constraints
-                  height: 'auto',
-                }}
-                data-allow-scroll
-                data-scrollable
-              >
-                {children}
-              </main>
-              <FooterComponent />
+              <div data-lenis-content>
+                <main 
+                  className="min-h-screen"
+                  style={{ 
+                    // Filter is now applied via ThemeOverlay and CSS ::before
+                    // No direct filter here to avoid scroll issues
+                    touchAction: 'auto', // FIXED: Allow ALL interactions including scroll
+                    overflow: 'visible', // FIXED: Allow content to overflow naturally
+                    // Ensure proper stacking - but don't create barrier
+                    position: 'relative',
+                    zIndex: 1,
+                    // CRITICAL: No height constraints
+                    height: 'auto',
+                    // DESKTOP FIX: Don't create stacking context
+                    isolation: 'auto',
+                    contain: 'none',
+                  }}
+                  data-allow-scroll
+                  data-scrollable
+                >
+                  {children}
+                </main>
+                <FooterComponent />
+              </div>
               <FPSCounter />
               
               {/* 

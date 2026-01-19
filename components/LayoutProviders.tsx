@@ -48,6 +48,13 @@ const Navbar = dynamic(
   { ssr: false, loading: () => <NavbarSkeleton /> }
 );
 
+// ✅ CLIENT CURSOR - Must be LAST in DOM to render above EVERYTHING
+// Including MultiStepLoaderv2 (z-[9999999]), pagemode (z-[99999999]), and all modals
+const ClientCursor = dynamic(
+  () => import("@/components/ClientCursor"),
+  { ssr: false }
+);
+
 interface LayoutProvidersProps {
   children: ReactNode;
   modal?: ReactNode;
@@ -90,6 +97,20 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
 
       {/* ✅ GOOGLE SEO BOOST - Maximum ranking power */}
       <GoogleSEOBoost />
+      
+      {/* ============================================
+          ✅ CLIENT CURSOR - MUST BE LAST IN DOM
+          ============================================
+          Rendered AFTER everything else to ensure it appears
+          ABOVE all content including:
+          - MultiStepLoaderv2 (z-[9999999] - z-[999999999])
+          - pagemode (z-[99999999])
+          - All modals (z-[2147483647])
+          
+          DOM order matters for same z-index elements.
+          Being last in DOM = renders on top.
+          ============================================ */}
+      <ClientCursor />
     </>
   );
 }

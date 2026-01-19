@@ -27,7 +27,7 @@ interface ThemeOverlayProps {
 
 export const ThemeOverlay = memo(function ThemeOverlay({ 
   enableFilter = true,
-  zIndex = 99998 
+  zIndex = 0  // FIXED: Was 99998, now 0 - overlays should never be above content
 }: ThemeOverlayProps) {
   const { activeTheme, isMobile } = useGlobalTheme();
   const [isVisible, setIsVisible] = useState(false);
@@ -76,6 +76,7 @@ export const ThemeOverlay = memo(function ThemeOverlay({
     <div
       id="theme-filter-overlay"
       aria-hidden="true"
+      data-theme-overlay
       style={{
         position: 'fixed',
         inset: 0,
@@ -95,11 +96,11 @@ export const ThemeOverlay = memo(function ThemeOverlay({
         // GPU acceleration
         transform: 'translateZ(0)',
         willChange: 'opacity, filter',
-        // Prevent creating scroll context
-        contain: 'strict',
+        // FIXED: Don't use contain:strict - it creates stacking context issues
+        contain: 'none',
         overflow: 'visible',
         // Ensure it's truly invisible to interactions
-        isolation: 'isolate',
+        isolation: 'auto',
       }}
     />
   );

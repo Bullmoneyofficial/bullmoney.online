@@ -494,7 +494,15 @@ canvas {
   will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  contain: layout style paint;
+}
+
+/* Avoid forcing containment on interactive layers to preserve stacking order */
+nav,
+footer,
+.modal,
+[data-spline],
+canvas {
+  contain: none;
 }
 
 /* Disable will-change on elements not currently animating */
@@ -614,6 +622,20 @@ canvas {
   contain: strict;
   isolation: isolate;
   image-rendering: optimizeSpeed;
+}
+
+/* Desktop: relax containment to avoid stacking-context issues for overlays/modals */
+@media (min-width: 1024px) {
+  canvas,
+  video,
+  iframe,
+  [data-spline],
+  [data-spline-scene] {
+    contain: none !important;
+    isolation: auto !important;
+    will-change: auto !important;
+    transform: translateZ(0);
+  }
 }
 
 /* Reduce canvas quality at low FPS */

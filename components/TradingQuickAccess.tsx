@@ -10,7 +10,8 @@ import {
   Bitcoin,
   Coins,
   ExternalLink,
-  Sparkles
+  Sparkles,
+  X
 } from 'lucide-react';
 import { useUIState } from '@/contexts/UIStateContext';
 
@@ -433,39 +434,70 @@ export function TradingQuickAccess() {
   const discordStageModal = (
     <AnimatePresence>
       {isDiscordStageModalOpen && (
-        <>
-          {/* Backdrop - highest z-index */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setDiscordStageModalOpen(false)}
-            className="fixed inset-0 bg-black/80 backdrop-blur-lg z-[2147483640]"
-          />
+        <motion.div
+          initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+          animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
+          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+          className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+        >
+          {/* Click overlay - transparent, just for click handling */}
+          <div className="absolute inset-0 bg-transparent" onClick={() => setDiscordStageModalOpen(false)} />
           
-          {/* Centered Modal Panel - highest z-index */}
+          {/* Tap to close hints - Top */}
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ 
-              type: 'spring',
-              stiffness: 300,
-              damping: 25,
-              mass: 0.8
-            }}
-            className="fixed inset-0 z-[2147483645] pointer-events-none flex items-center justify-center p-4"
-            style={{
-              paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)',
-              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
-            }}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
+            transition={{ opacity: { duration: 2, repeat: Infinity }, y: { duration: 0.3 } }}
+            className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-purple-300/50 text-xs sm:text-sm pointer-events-none"
           >
-            <div 
-              className="bg-gradient-to-br from-purple-950/98 via-purple-900/95 to-zinc-900/98 backdrop-blur-2xl rounded-2xl border border-purple-500/50 shadow-2xl shadow-purple-900/50 overflow-hidden pointer-events-auto w-full max-w-[340px] sm:max-w-[400px] md:max-w-[500px]"
-              style={{
-                maxHeight: 'calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 32px)',
-              }}
-            >
+            <span>↑</span>
+            <span>Tap anywhere to close</span>
+            <span>↑</span>
+          </motion.div>
+
+          {/* Tap to close hints - Bottom */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
+            transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.5 }, y: { duration: 0.3 } }}
+            className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-purple-300/50 text-xs sm:text-sm pointer-events-none"
+          >
+            <span>↓</span>
+            <span>Tap anywhere to close</span>
+            <span>↓</span>
+          </motion.div>
+
+          {/* Tap to close hints - Left */}
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
+            transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.25 }, x: { duration: 0.3 } }}
+            className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-purple-300/40 text-[10px] sm:text-xs pointer-events-none"
+          >
+            <span>←</span>
+            <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Tap to close</span>
+          </motion.div>
+
+          {/* Tap to close hints - Right */}
+          <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
+            transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.75 }, x: { duration: 0.3 } }}
+            className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-purple-300/40 text-[10px] sm:text-xs pointer-events-none"
+          >
+            <span>→</span>
+            <span style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
+          </motion.div>
+          
+          {/* Centered Modal Panel */}
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-purple-950/98 via-purple-900/95 to-zinc-900/98 backdrop-blur-2xl border border-purple-500/50 shadow-2xl shadow-purple-900/50"
+          >
               {/* Header */}
               <div className="p-3 sm:p-4 border-b border-purple-500/30 bg-purple-900/40">
                 <div className="flex items-center justify-between">
@@ -491,11 +523,12 @@ export function TradingQuickAccess() {
                     whileHover={{ scale: 1.1, rotate: 90 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setDiscordStageModalOpen(false)}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-purple-500/30 hover:bg-purple-500/50 border border-purple-400/40 flex items-center justify-center transition-colors"
+                    className="flex items-center gap-1.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-purple-500/30 hover:bg-purple-500/50 border border-purple-400/40 justify-center transition-colors group"
                   >
                     <span className="text-purple-200 text-sm sm:text-base font-bold">×</span>
                   </motion.button>
                 </div>
+                <p className="text-[9px] sm:text-[10px] text-purple-300/60 mt-1">Click outside or press ESC to close</p>
                 
                 {/* Tab Buttons - Featured First, Live Second */}
                 <div className="flex gap-2 mt-3">
@@ -736,9 +769,8 @@ export function TradingQuickAccess() {
                   </p>
                 </div>
               </div>
-            </div>
           </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );
@@ -908,10 +940,10 @@ export function TradingQuickAccess() {
                 damping: 25,
                 delay: 0.5
               }}
-              className="mt-1 sm:mt-1.5"
+              className="mt-1 sm:mt-1.5 trading-tip-pill-container"
             >
               {/* Pill Container - Same style as price UI */}
-              <div className="relative rounded-r-full bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-blue-500/50 shadow-2xl hover:border-blue-400/70 hover:shadow-blue-600/40 transition-all duration-300 px-1.5 py-1 xs:px-2 xs:py-1 sm:px-3 sm:py-1.5 overflow-hidden max-w-[150px] xs:max-w-[180px] sm:max-w-none">
+              <div className="trading-tip-pill relative rounded-r-full bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-blue-500/50 shadow-2xl hover:border-blue-400/70 hover:shadow-blue-600/40 transition-all duration-300 px-1.5 py-1 xs:px-2 xs:py-1 sm:px-3 sm:py-1.5 overflow-hidden max-w-[150px] xs:max-w-[180px] sm:max-w-none lg:min-w-[140px] xl:min-w-[160px] 2xl:min-w-[180px]">
                 {/* Animated tip pulse background */}
                 <motion.div
                   className="absolute inset-0 rounded-r-full bg-gradient-to-r from-cyan-500/15 via-blue-500/10 to-transparent"
@@ -1019,48 +1051,88 @@ export function TradingQuickAccess() {
       {/* Expanded Dropdown */}
       <AnimatePresence>
         {isExpanded && (
-          <>
-            {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
+            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            className="fixed inset-0 z-[2147483645] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+            onClick={() => setIsExpanded(false)}
+          >
+            {/* Tap to close hints - Top */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsExpanded(false)}
-              className="fixed inset-0 bg-transparent z-[249999]"
-              style={{ touchAction: 'manipulation' }}
-            />
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
+              transition={{ opacity: { duration: 2, repeat: Infinity }, y: { duration: 0.3 } }}
+              className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-blue-300/50 text-xs sm:text-sm pointer-events-none"
+            >
+              <span>↑</span>
+              <span>Tap anywhere to close</span>
+              <span>↑</span>
+            </motion.div>
 
-            {/* Compact Dropdown */}
+            {/* Tap to close hints - Bottom */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
+              transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.5 }, y: { duration: 0.3 } }}
+              className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-blue-300/50 text-xs sm:text-sm pointer-events-none"
+            >
+              <span>↓</span>
+              <span>Tap anywhere to close</span>
+              <span>↓</span>
+            </motion.div>
+
+            {/* Tap to close hints - Left */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
+              transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.25 }, x: { duration: 0.3 } }}
+              className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-blue-300/40 text-[10px] sm:text-xs pointer-events-none"
+            >
+              <span>←</span>
+              <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Tap to close</span>
+            </motion.div>
+
+            {/* Tap to close hints - Right */}
+            <motion.div
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
+              transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.75 }, x: { duration: 0.3 } }}
+              className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-blue-300/40 text-[10px] sm:text-xs pointer-events-none"
+            >
+              <span>→</span>
+              <span style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
+            </motion.div>
+
+            {/* Centered Modal */}
             <motion.div
               ref={panelRef}
-              initial={{ opacity: 0, x: -30, scale: 0.9 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: -30, scale: 0.9 }}
-              transition={{ 
-                type: 'spring', 
-                damping: 22, 
-                stiffness: 300,
-                mass: 0.8
-              }}
-              className="fixed z-[250000] w-[85vw] xs:w-[90vw] sm:w-[340px] md:w-[420px] lg:w-[480px] max-w-[90vw]"
-              style={{
-                left: 'max(6px, calc(env(safe-area-inset-left, 0px) + 6px))',
-                right: 'auto',
-                top: 'clamp(4.5rem, calc(5rem + env(safe-area-inset-top, 0px) + 50px), calc(100vh - 300px))',
-                maxHeight: 'clamp(300px, calc(100vh - 80px), 85vh)',
-                overflowY: 'auto'
-              }}
-              onMouseLeave={() => setIsExpanded(false)}
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-[520px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl border border-blue-500/30 shadow-2xl shadow-blue-900/20"
             >
-              <div className="bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl rounded-2xl border border-blue-500/30 shadow-2xl shadow-blue-900/20 overflow-hidden flex flex-col">
                 {/* Header */}
                 <div className="p-2 sm:p-3 md:p-4 border-b border-blue-500/20 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 flex-shrink-0">
-                  <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1 md:mb-2">
-                    <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400 flex-shrink-0" />
-                    <h3 className="text-[11px] sm:text-xs md:text-sm font-bold text-white truncate">Trading Quick Access</h3>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400 flex-shrink-0" />
+                      <h3 className="text-[11px] sm:text-xs md:text-sm font-bold text-white truncate">Trading Quick Access</h3>
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.1, rotate: 90 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setIsExpanded(false)}
+                      className="flex items-center gap-1 p-1.5 sm:p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 border border-blue-400/30 transition-colors group"
+                    >
+                      <span className="text-[8px] sm:text-[10px] text-blue-300/70 group-hover:text-blue-200 hidden sm:inline">ESC</span>
+                      <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-300 group-hover:text-white" />
+                    </motion.button>
                   </div>
-                  <p className="text-[8px] sm:text-[9px] md:text-[10px] text-zinc-400">
-                    Live charts & community
+                  <p className="text-[8px] sm:text-[9px] md:text-[10px] text-zinc-400 mt-0.5">
+                    Live charts & community • Click outside to close
                   </p>
                 </div>
 
@@ -1209,9 +1281,8 @@ export function TradingQuickAccess() {
                     </span>
                   </motion.button>
                 </div>
-              </div>
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
       

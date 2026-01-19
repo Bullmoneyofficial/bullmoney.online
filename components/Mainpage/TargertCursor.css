@@ -4,9 +4,11 @@
   left: 0;
   width: 0;
   height: 0;
-  z-index: 99999;
-  pointer-events: none;
+  z-index: 2147483647 !important;
+  pointer-events: none !important;
   will-change: transform;
+  /* CRITICAL: Cursor must be above ALL modals on desktop */
+  isolation: isolate;
 }
 
 /* Center dot - Glowing core */

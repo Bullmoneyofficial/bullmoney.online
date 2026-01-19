@@ -1241,7 +1241,7 @@ function CardPatternRed({ mouseX, mouseY, randomString }: any) {
   return (
     <div className="pointer-events-none absolute inset-0">
       <motion.div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-600 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
-      <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
+      <motion.div className="absolute inset-0 opacity-0 mix-blend-overlathe y group-hover/card:opacity-100" style={style}>
         <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-violet-100/90 font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>
     </div>

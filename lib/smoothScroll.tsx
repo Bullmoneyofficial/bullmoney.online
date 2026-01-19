@@ -142,6 +142,7 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
 
     // Lenis option surface varies by version; keep config flexible.
     // FIXED: Improved wheel and trackpad handling for better desktop scrolling
+    const lenisContent = document.querySelector('[data-lenis-content]') as HTMLElement | null;
     const lenisOptions: any = {
       lerp: adjustedLerp, // FIXED: Use adjusted lerp for big displays
       duration: isBigDisplay ? 0.6 : appliedDuration, // Shorter duration for snappier feel
@@ -166,7 +167,7 @@ export function LenisProvider({ children, options = {} }: LenisProviderProps) {
 
       // FIXED: Ensure wheel events are captured
       wrapper: window,
-      content: document.documentElement,
+      content: lenisContent ?? document.documentElement,
     };
 
     lenisRef.current = new Lenis(lenisOptions);

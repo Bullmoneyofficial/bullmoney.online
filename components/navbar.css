@@ -3,6 +3,7 @@
  * - Uses CSS variables set by GlobalThemeProvider
  * - Theme colors applied via var(--accent-color) and var(--accent-rgb)
  * - No direct filter on navbar - uses color variables instead
+ * - DESKTOP FIX: Added proper z-index isolation for desktop screens
  */
 
 /* ============================================================================
@@ -26,10 +27,11 @@
    NAVBAR CONTAINER - THEME INTEGRATION
    - No filter applied (preserves fixed positioning)
    - Uses CSS variables for color theming
+   - DESKTOP FIX: Uses isolation to create proper stacking context
    ============================================================================ */
 
 .navbar-themed {
-  z-index: 40;
+  z-index: 9999;
   /* NO FILTER - use color variables instead */
   transition: border-color 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
   position: fixed;
@@ -43,6 +45,8 @@
   box-shadow: 
     0 0 20px var(--navbar-glow),
     inset 0 0 30px rgba(var(--navbar-accent-rgb), 0.03);
+  /* DESKTOP FIX: Create isolated stacking context */
+  isolation: isolate;
 }
 
 /* Navbar elements use theme accent color */
@@ -68,6 +72,7 @@
 /* ============================================================================
    Z-INDEX STACKING CONTEXT
    Ensures proper layering across the application
+   DESKTOP FIX: Higher z-index values for modals to ensure proper layering
    ============================================================================ */
 
 /* Lowest layer - Page content */
@@ -75,37 +80,47 @@ body {
   z-index: 1;
 }
 
-/* Navbar - Below loaders */
+/* Navbar - Fixed navigation */
 [data-navbar-container],
 .navbar-themed {
-  z-index: 40;
+  z-index: 9999;
+  isolation: isolate;
 }
 
-/* Loaders & Modals - Above navbar */
+/* Loaders & Modals - MUCH higher than navbar */
 .multi-step-loader,
 [role="dialog"],
 .modal,
 .loader {
-  z-index: 50;
+  z-index: 99999;
 }
 
 /* Fixed overlays and high-priority elements */
 .fixed-overlay,
 .backdrop,
 [class*="backdrop"] {
-  z-index: 45;
+  z-index: 99990;
 }
 
 /* Top-level UI elements */
 .tooltip,
 .popover,
 .dropdown {
-  z-index: 55;
+  z-index: 100000;
 }
 
-/* Control panel - Highest priority */
+/* Control panel - Above tooltips */
 .control-panel-themed {
-  z-index: 60;
+  z-index: 100001;
+}
+
+/* DESKTOP: Ensure modals are truly on top of everything */
+@media (min-width: 1024px) {
+  [role="dialog"],
+  [aria-modal="true"],
+  .modal {
+    z-index: 2147483647 !important;
+  }
 }
 
 /* ============================================================================

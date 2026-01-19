@@ -233,21 +233,47 @@ const ProductsContent = memo(() => {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-center p-2 sm:p-4"
-      style={{ 
-        zIndex: 2147483647,
-        isolation: 'isolate',
-      }}
+      initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+      animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
+      exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+      className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+      onClick={handleClose}
     >
-      {/* Backdrop for click-outside-to-close */}
-      <div 
-        className="absolute inset-0 bg-black/95 backdrop-blur-lg"
-        style={{ zIndex: 0 }}
-        onClick={handleClose}
-      />
+      {/* Animated tap to close hints */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0.4, 0.8, 0.4] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+      >
+        <span>↑</span> Tap anywhere to close <span>↑</span>
+      </motion.div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0.4, 0.8, 0.4] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+      >
+        <span>↓</span> Tap anywhere to close <span>↓</span>
+      </motion.div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0.4, 0.8, 0.4] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
+        className="absolute left-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+        style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+      >
+        ← Tap to close
+      </motion.div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0.4, 0.8, 0.4] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
+        className="absolute right-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+        style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+      >
+        Tap to close →
+      </motion.div>
       
       {/* Modal */}
       <motion.div
@@ -257,7 +283,6 @@ const ProductsContent = memo(() => {
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-2xl"
-        style={{ zIndex: 1 }}
       >
         {/* Shimmer Border */}
         <div className="absolute inset-[-2px] overflow-hidden rounded-2xl pointer-events-none z-0">
@@ -282,9 +307,11 @@ const ProductsContent = memo(() => {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleClose}
-              className="p-2 rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition-colors"
+              className="p-2 rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition-colors group relative"
+              title="Close (ESC)"
             >
               <X className="w-5 h-5" />
+              <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-white/50 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">ESC</span>
             </motion.button>
           </div>
           

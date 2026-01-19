@@ -168,6 +168,8 @@ export function PerformanceProvider({
   const [isHighEndDesktop, setIsHighEndDesktop] = React.useState(true);
   const [isInAppBrowser, setIsInAppBrowser] = React.useState(false);
   const [lenisFailed, setLenisFailed] = React.useState(false);
+  // Force native scroll on desktop to avoid stacking-context side effects from Lenis
+  const [forceNativeScroll, setForceNativeScroll] = React.useState(false);
   
   // Detect device type and capabilities on mount
   React.useEffect(() => {
@@ -258,6 +260,20 @@ export function PerformanceProvider({
     }
   }, []);
 
+  // Desktop-only: disable Lenis smoothing so fixed/modals stay pinned to viewport
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const updateScrollMode = () => {
+      setForceNativeScroll(window.innerWidth >= 1024);
+    };
+
+    updateScrollMode();
+    window.addEventListener('resize', updateScrollMode, { passive: true });
+
+    return () => window.removeEventListener('resize', updateScrollMode);
+  }, []);
+
   React.useEffect(() => {
     if (isMobile && lenisFailed) {
       setLenisFailed(false);
@@ -308,7 +324,7 @@ export function PerformanceProvider({
   const isInstagram = ua.includes('instagram') || ua.includes('ig_');
   const hasPremiumExperience = isAppleDevice || isInstagram;
   
-  const shouldUseSmoothScroll = enableSmoothScroll && !isMobile && (!isInAppBrowser || hasPremiumExperience) && !lenisFailed;
+  const shouldUseSmoothScroll = enableSmoothScroll && !isMobile && !forceNativeScroll && (!isInAppBrowser || hasPremiumExperience) && !lenisFailed;
 
   React.useEffect(() => {
     if (!shouldUseSmoothScroll) {

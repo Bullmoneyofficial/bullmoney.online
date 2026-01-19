@@ -1,6 +1,8 @@
 /* ============================================
    BIG DEVICE SCROLL OPTIMIZATIONS (2026)
    Fixes for displays >= 1440px width
+   
+   UPDATED: Removed contain: strict which breaks z-index
    ============================================ */
 
 @media (min-width: 1440px) {
@@ -13,8 +15,8 @@
     scroll-margin: 0;
     height: auto !important;
     min-height: 100vh !important;
-    /* Enhanced scrolling performance */
-    will-change: scroll-position;
+    /* FIXED: Use 'none' instead of anything that creates stacking context */
+    contain: none !important;
     scroll-snap-type: none !important;
   }
 
@@ -26,6 +28,8 @@
     /* Ensure smooth scrolling inheritance */
     scroll-behavior: inherit;
     scroll-snap-type: none !important;
+    /* FIXED: Don't create stacking context barrier */
+    contain: none !important;
   }
 
   /* Hero section optimizations for big displays */
@@ -34,7 +38,7 @@
     min-height: calc(100vh - 80px) !important;
     max-height: none !important;
     overflow: visible !important;
-    contain: layout style !important; /* Less restrictive */
+    /* FIXED: Removed contain - was breaking modal z-index */
   }
 
   .big-display .hero-spline-wrapper {
@@ -43,7 +47,7 @@
     max-height: none !important;
     position: relative !important;
     overflow: visible !important;
-    contain: layout style !important; /* Less restrictive */
+    /* FIXED: Removed contain - was breaking modal z-index */
   }
 
   /* Main page sections for big devices */
@@ -51,28 +55,29 @@
     min-height: 1000px !important;
     height: auto !important;
     overflow: visible !important;
-    contain: layout style !important;
+    /* FIXED: Removed contain */
   }
 
   /* Spline containers for big devices */
   .big-display .spline-container,
   .big-display [data-spline-scene] {
-    contain: layout style !important; /* Less restrictive containment */
+    /* FIXED: Removed contain - was creating stacking context barrier */
     overflow: visible !important;
   }
 
   /* Navigation scroll optimizations */
   .big-display .navbar {
-    position: sticky !important;
+    position: fixed !important;
     top: 0 !important;
     z-index: 9999 !important;
+    /* ADDED: Ensure navbar stays on top */
+    isolation: isolate !important;
   }
 
   /* Parallax sections on big devices */
   .big-display .hero-parallax-container {
     overflow: visible !important;
     transform: translateZ(0); /* GPU acceleration */
-    will-change: transform;
   }
 
   /* Container scroll animations */
@@ -87,7 +92,7 @@
   .big-display #theme-filter-overlay {
     pointer-events: none !important;
     touch-action: none !important;
-    z-index: -1 !important; /* Ensure they don't interfere */
+    z-index: 0 !important; /* FIXED: Was -1, now 0 to be valid */
   }
 
   /* Vertical page scroll adjustments */
@@ -111,7 +116,6 @@
   /* Ensure all content sections can scroll */
   .big-display section[data-allow-scroll] {
     overflow: visible !important;
-    contain: layout style !important;
     height: auto !important;
   }
 
@@ -167,18 +171,33 @@
 
 /* Performance optimizations for all big devices */
 @media (min-width: 1440px) {
-  .big-display * {
-    /* Enable hardware acceleration for smooth scrolling */
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
+  /* Do NOT blanket-apply transforms; it creates stacking contexts that break fixed elements */
+  .big-display body,
+  .big-display-body,
+  .big-display .fixed,
+  .big-display [role="dialog"],
+  .big-display [aria-modal="true"],
+  .big-display .modal,
+  .big-display [data-portal],
+  .big-display [data-radix-portal],
+  .big-display [data-backdrop],
+  .big-display .backdrop {
+    transform: none !important;
   }
 
+  /* Targeted GPU acceleration for media/animated elements only */
   .big-display img,
   .big-display video,
-  .big-display canvas {
-    /* Optimize media for smooth scrolling */
-    will-change: transform;
+  .big-display canvas,
+  .big-display .animated,
+  .big-display [data-animated],
+  .big-display .gpu-accelerated,
+  .big-display [data-gpu],
+  .big-display .parallax,
+  .big-display .parallax-layer {
+    -webkit-transform: translateZ(0);
     transform: translateZ(0);
+    will-change: transform;
   }
 
   /* Reduce motion for performance if needed */

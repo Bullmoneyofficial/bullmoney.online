@@ -59,22 +59,12 @@ const FooterModal = memo(({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 flex items-center justify-center p-2 sm:p-4"
-          style={{ 
-            zIndex: 2147483647,
-            isolation: 'isolate',
-          }}
+          initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+          animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
+          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+          className="fixed inset-0 z-[2147483647] flex items-center justify-center p-2 sm:p-4 bg-black/95"
           onClick={onClose}
         >
-          {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-black/95 backdrop-blur-lg"
-            style={{ zIndex: 0 }}
-          />
-          
           {/* Modal */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 50 }}
@@ -83,7 +73,6 @@ const FooterModal = memo(({
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             onClick={(e) => e.stopPropagation()}
             className="relative w-full max-w-lg max-h-[90vh] overflow-hidden rounded-2xl"
-            style={{ zIndex: 1 }}
           >
             {/* Shimmer Border */}
             <ShimmerBorder color="blue" intensity="low" />

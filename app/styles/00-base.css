@@ -209,6 +209,25 @@
 }
 
 /* ============================================================================
+   DESKTOP STACKING CONTEXT FIX
+   Ensure modals work correctly on desktop screens (1024px+)
+   ============================================================================ */
+
+@media (min-width: 1024px) {
+  /* Root elements should not create stacking context barriers */
+  html, body {
+    isolation: auto !important;
+    contain: none !important;
+  }
+  
+  /* Ensure html allows scroll */
+  html.desktop-optimized {
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+  }
+}
+
+/* ============================================================================
    ACCESSIBILITY & INPUT MODES
    ============================================================================ */
 

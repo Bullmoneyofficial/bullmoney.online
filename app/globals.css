@@ -9,5 +9,6 @@
 @import "./styles/30-performance-scroll.css";
 @import "./styles/40-theme-overlays.css";
 @import "./styles/50-fps-overrides.css";
+@import "./styles/60-desktop-zindex-fix.css";
 
 

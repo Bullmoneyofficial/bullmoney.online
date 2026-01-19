@@ -34,35 +34,81 @@ export function TelegramModal({ isOpen, onClose }: TelegramModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+          animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
+          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+          className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+          onClick={onClose}
+        >
+          {/* Tap to close hints - Top */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[999]"
-          />
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
+            transition={{ opacity: { duration: 2, repeat: Infinity }, y: { duration: 0.3 } }}
+            className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/50 text-xs sm:text-sm pointer-events-none"
+          >
+            <span>↑</span>
+            <span>Tap anywhere to close</span>
+            <span>↑</span>
+          </motion.div>
+
+          {/* Tap to close hints - Bottom */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
+            transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.5 }, y: { duration: 0.3 } }}
+            className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/50 text-xs sm:text-sm pointer-events-none"
+          >
+            <span>↓</span>
+            <span>Tap anywhere to close</span>
+            <span>↓</span>
+          </motion.div>
+
+          {/* Tap to close hints - Left */}
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
+            transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.25 }, x: { duration: 0.3 } }}
+            className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-white/40 text-[10px] sm:text-xs pointer-events-none"
+          >
+            <span>←</span>
+            <span className="writing-mode-vertical rotate-180" style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
+          </motion.div>
+
+          {/* Tap to close hints - Right */}
+          <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
+            transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.75 }, x: { duration: 0.3 } }}
+            className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-white/40 text-[10px] sm:text-xs pointer-events-none"
+          >
+            <span>→</span>
+            <span style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
+          </motion.div>
 
           {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-4 sm:inset-8 md:inset-12 lg:inset-20 z-[1000] flex items-center justify-center pointer-events-auto"
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-white/10 shadow-2xl shadow-black/50"
           >
-            <div className="w-full max-w-4xl bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 rounded-2xl border border-white/10 shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-white/10 flex-shrink-0">
-                <h2 className="text-2xl font-bold text-white">Telegram Feed</h2>
-                <button
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10 flex-shrink-0">
+                <h2 className="text-lg sm:text-2xl font-bold text-white">Telegram Feed</h2>
+                <motion.button
                   onClick={onClose}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="flex items-center gap-2 p-2 hover:bg-white/10 rounded-lg transition-colors group"
                   aria-label="Close modal"
                 >
-                  <X className="w-6 h-6 text-gray-400 hover:text-white" />
-                </button>
+                  <span className="text-[10px] sm:text-xs text-gray-500 group-hover:text-gray-300 hidden sm:inline">ESC to close</span>
+                  <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 group-hover:text-white" />
+                </motion.button>
               </div>
 
               {/* Content */}
@@ -74,9 +120,8 @@ export function TelegramModal({ isOpen, onClose }: TelegramModalProps) {
                   compact={false}
                 />
               </div>
-            </div>
           </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, memo } from 'react';
+import React, { useEffect, useState, useMemo, memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
@@ -28,6 +28,8 @@ export const MovingTradingTip = memo(({
   
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isReady, setIsReady] = useState(false);
+  const [hasValidPosition, setHasValidPosition] = useState(false);
+  const [tipWidth, setTipWidth] = useState(240); // Approximate tip width for centering
   
   // Get theme filter for consistency with navbar
   // Use mobileFilter for both mobile and desktop to ensure consistent theming
@@ -44,30 +46,72 @@ export const MovingTradingTip = memo(({
         const buttonRect = button.getBoundingClientRect();
         const dockRect = dock.getBoundingClientRect();
         
-        setPosition({
-          x: buttonRect.left + buttonRect.width / 2,
-          y: dockRect.bottom + 16
-        });
-        setIsReady(true);
+        // Validate that we have real position data (not 0,0 or off-screen)
+        if (buttonRect.width > 0 && dockRect.width > 0 && dockRect.bottom > 0) {
+          // Calculate the center position of the button
+          const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+          
+          // Calculate tip position - center under the button with viewport clamping
+          const viewportWidth = window.innerWidth;
+          const halfTipWidth = tipWidth / 2;
+          
+          // Clamp the x position to keep tip within viewport with padding
+          const minX = halfTipWidth + 16; // 16px padding from left edge
+          const maxX = viewportWidth - halfTipWidth - 16; // 16px padding from right edge
+          const clampedX = Math.max(minX, Math.min(maxX, buttonCenterX));
+          
+          setPosition({
+            x: clampedX,
+            y: dockRect.bottom + 16
+          });
+          setIsReady(true);
+          setHasValidPosition(true);
+        }
       }
     };
     
-    updatePosition();
+    // Initial delay to ensure refs are populated
+    const initialDelay = setTimeout(() => {
+      updatePosition();
+    }, 100);
+    
+    // Also update on resize
     window.addEventListener('resize', updatePosition);
-    return () => window.removeEventListener('resize', updatePosition);
-  }, [tip.buttonIndex, buttonRefs, dockRef]);
+    
+    // Retry a few times if refs aren't ready yet
+    const retryIntervals = [200, 500, 1000];
+    const retryTimeouts = retryIntervals.map((delay) => 
+      setTimeout(updatePosition, delay)
+    );
+    
+    return () => {
+      clearTimeout(initialDelay);
+      retryTimeouts.forEach(clearTimeout);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [tip.buttonIndex, buttonRefs, dockRef, tipWidth]);
   
-  if (tipsMuted || !isVisible || !isReady) return null;
+  if (tipsMuted || !isVisible || !isReady || !hasValidPosition) return null;
+  
+  // Don't render if position is invalid (would appear at top-left)
+  if (position.x === 0 && position.y === 0) return null;
+  if (position.y < 50) return null; // Too high, navbar hasn't been measured properly
+  
+  // Calculate the left offset to center the tip (half tip width)
+  // Clamp to keep within viewport
+  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
+  const minLeft = 16; // 16px padding from left
+  const maxLeft = viewportWidth - tipWidth - 16; // 16px padding from right
+  const centeredLeft = Math.max(minLeft, Math.min(maxLeft, position.x - (tipWidth / 2)));
   
   return (
     <motion.div
       key={tip.buttonIndex}
-      initial={{ opacity: 0, scale: 0.75, y: position.y + 15 }}
+      initial={{ opacity: 0, scale: 0.75, y: 15 }}
       animate={{ 
         opacity: 1, 
         scale: 1,
-        x: position.x - 120,
-        y: position.y,
+        y: 0,
         transition: {
           type: "spring",
           stiffness: 380,
@@ -75,7 +119,7 @@ export const MovingTradingTip = memo(({
           mass: 0.5
         }
       }}
-      exit={{ opacity: 0, scale: 0.75, y: position.y + 15 }}
+      exit={{ opacity: 0, scale: 0.75, y: 15 }}
       transition={{ 
         opacity: { duration: 0.2, ease: "easeOut" },
         scale: { duration: 0.35, ease: [0.34, 1.56, 0.64, 1] },
@@ -86,12 +130,12 @@ export const MovingTradingTip = memo(({
           mass: 0.5
         }
       }}
-      className="fixed z-30 pointer-events-none hidden lg:block gpu-accelerated"
+      className="fixed z-[999999] pointer-events-none hidden lg:block gpu-accelerated"
       style={{ 
-        left: 0,
-        top: 0,
+        left: `${centeredLeft}px`,
+        top: `${position.y}px`,
         filter: themeFilter,
-        transition: 'filter 0.5s ease-in-out'
+        transition: 'filter 0.5s ease-in-out, left 0.3s ease-out, top 0.3s ease-out'
       }}
     >
       <motion.div 

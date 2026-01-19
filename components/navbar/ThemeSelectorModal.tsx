@@ -71,11 +71,44 @@ export const ThemeSelectorModal = ({ isOpen, onClose }: ThemeSelectorModalProps)
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+        className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95"
         onClick={onClose}
       >
-        {/* Backdrop */}
-        <div className="absolute inset-0 bg-black/80" />
+        {/* Animated tap to close hints */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+        >
+          <span>↑</span> Tap anywhere to close <span>↑</span>
+        </motion.div>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+        >
+          <span>↓</span> Tap anywhere to close <span>↓</span>
+        </motion.div>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
+          className="absolute left-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+          style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+        >
+          ← Tap to close
+        </motion.div>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+          style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+        >
+          Tap to close →
+        </motion.div>
         
         {/* Modal container - Theme-aware styling */}
         <motion.div
@@ -111,9 +144,11 @@ export const ThemeSelectorModal = ({ isOpen, onClose }: ThemeSelectorModalProps)
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
+              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all group relative"
+              title="Close (ESC)"
             >
               <IconX className="w-5 h-5 text-gray-400" />
+              <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-white/50 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">ESC</span>
             </button>
           </div>
           
