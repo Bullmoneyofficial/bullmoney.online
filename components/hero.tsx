@@ -24,6 +24,9 @@ import { isMobileDevice } from '@/lib/mobileDetection';
 // ✅ LOADING FALLBACKS - Mobile optimized
 import { MinimalFallback, ContentSkeleton } from '@/components/MobileLazyLoadingFallback';
 
+// ✅ SPLINE PRELOADER - Optimize scene load times
+import { useSplinePreload, useEnsureSplineViewer } from '@/hooks/useSplinePreload';
+
 const SPLINE_VIEWER_SCRIPT_SRC = "https://unpkg.com/@splinetool/viewer@1.12.36/build/spline-viewer.js";
 
 type HeroSplineSource = {
@@ -695,6 +698,11 @@ const HeroParallax = () => {
   } = useStudio();
   
   const { projects, serviceItems, hero, loading, isAuthenticated, isAdmin } = state;
+  
+  // ✅ SPLINE PRELOAD - Optimize scene load times
+  const sceneUrls = useMemo(() => HERO_SPLINE_SCENES.map(s => s.runtimeUrl), []);
+  useSplinePreload({ sceneUrls, priority: 'high', delay: 0 });
+  useEnsureSplineViewer();
   
   const isMobile = useIsMobile();
   const { isMobileMenuOpen, setIsMobileMenuOpen } = useMobileMenu();

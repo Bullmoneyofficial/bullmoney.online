@@ -50,12 +50,12 @@ import {
 
 const SplineSkeleton = dynamic(
   () => import("@/components/ui/LoadingSkeleton").then(mod => ({ default: mod.SplineSkeleton })),
-  { ssr: false }
+  { ssr: true }
 );
 
 const LoadingSkeleton = dynamic(
   () => import("@/components/ui/LoadingSkeleton").then(mod => ({ default: mod.LoadingSkeleton })),
-  { ssr: false }
+  { ssr: true }
 );
 
 import { useCacheContext } from "@/components/CacheManagerProvider";
@@ -103,20 +103,20 @@ const MultiStepLoaderv2 = dynamic(
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
-// Lazy imports for heavy 3D components - with optimized loading states
+// Lazy imports for heavy 3D components - LOADED IMMEDIATELY for better scene performance
 const DraggableSplit = dynamic(
   () => import('@/components/DraggableSplit'),
-  { ssr: false, loading: () => <ContentSkeleton lines={5} /> }
+  { ssr: true, loading: () => <ContentSkeleton lines={5} /> }
 );
 
 const SplineScene = dynamic(
   () => import('@/components/SplineScene'),
-  { ssr: false, loading: () => <ContentSkeleton lines={4} /> }
+  { ssr: true, loading: () => <ContentSkeleton lines={4} /> }
 );
 
 const TestimonialsCarousel = dynamic(
   () => import('@/components/Testimonial').then(mod => ({ default: mod.TestimonialsCarousel })),
-  { ssr: false, loading: () => <CardSkeleton /> }
+  { ssr: true, loading: () => <CardSkeleton /> }
 );
 
 type RemoteSplineMeta = {
