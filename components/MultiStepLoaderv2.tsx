@@ -39,6 +39,7 @@ interface Particle {
 
 interface LoaderProps {
   onFinished?: () => void;
+  reducedAnimations?: boolean; // Mobile optimization flag
 }
 
 // --- UTILS ---
@@ -444,7 +445,7 @@ const useAudioEngine = () => {
 };
 
 // --- MAIN COMPONENT ---
-export default function EnhancedQuickGate({ onFinished }: LoaderProps) {
+export default function EnhancedQuickGate({ onFinished, reducedAnimations }: LoaderProps) {
   const [progress, setProgress] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);

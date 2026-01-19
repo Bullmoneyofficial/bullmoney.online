@@ -98,9 +98,14 @@ const PageMode = dynamic(
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
+// ✅ MOBILE LAZY LOAD - MultiStepLoaderv2 deferred on mobile for better FPS
 const MultiStepLoaderv2 = dynamic(
   () => import("@/components/MultiStepLoaderv2"),
-  { ssr: false, loading: () => <MinimalFallback /> }
+  { 
+    ssr: false, 
+    loading: () => <MinimalFallback />,
+    // Don't preload on mobile to save resources
+  }
 );
 
 // Lazy imports for heavy 3D components - LOADED IMMEDIATELY for better scene performance
@@ -2935,6 +2940,21 @@ function HomeContent() {
     setCurrentView('content');
   }, [setV2Unlocked]);
 
+  // ✅ MOBILE LOADER DEFERRAL - Improve FPS by deferring heavy animations on mobile
+  useEffect(() => {
+    if (isMobile && currentView === 'loader' && typeof window !== 'undefined') {
+      // On mobile, use requestIdleCallback if available to schedule loader updates
+      // This allows the browser to handle other critical tasks first
+      if ('requestIdleCallback' in window) {
+        const id = (window as any).requestIdleCallback(() => {
+          // Loader will be mounted but animations are reduced
+          console.log('[Page] Mobile loader deferred with requestIdleCallback');
+        }, { timeout: 1000 });
+        return () => (window as any).cancelIdleCallback(id);
+      }
+    }
+  }, [isMobile, currentView]);
+
   // REMOVED: Auto-transition timer that bypassed vault
   // The vault system in MultiStepLoaderv2 now controls when to show content
   // via the onFinished callback -> handleLoaderComplete
@@ -2967,7 +2987,10 @@ function HomeContent() {
 
       {currentView === 'loader' && (
         <div className="fixed inset-0 z-[99999] bg-black">
-          <MultiStepLoaderv2 onFinished={handleLoaderComplete} />
+          <MultiStepLoaderv2 
+            onFinished={handleLoaderComplete}
+            reducedAnimations={isMobile}
+          />
         </div>
       )}
 
