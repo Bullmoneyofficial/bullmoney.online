@@ -19,8 +19,35 @@ export const MobileStaticHelper = memo(() => {
   const [tipIndex, setTipIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const [isScrollMinimized, setIsScrollMinimized] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
   const soundPlayedRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const unpinTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Handle interaction to pin the helper, then unpin after random delay
+  const handleInteraction = useCallback(() => {
+    setIsPinned(true);
+    
+    // Clear any existing timeout
+    if (unpinTimeoutRef.current) {
+      clearTimeout(unpinTimeoutRef.current);
+    }
+    
+    // Unpin after random 1-10 seconds
+    const unpinDelay = Math.random() * 9000 + 1000;
+    unpinTimeoutRef.current = setTimeout(() => {
+      setIsPinned(false);
+    }, unpinDelay);
+  }, []);
+  
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (unpinTimeoutRef.current) {
+        clearTimeout(unpinTimeoutRef.current);
+      }
+    };
+  }, []);
   
   // Scroll detection - sync with FPS button scroll behavior
   useEffect(() => {
@@ -104,29 +131,53 @@ export const MobileStaticHelper = memo(() => {
       transition={{ type: 'spring', damping: 25, stiffness: 450, mass: 0.6 }}
       style={{ 
         right: 0,
-        paddingRight: 'calc(env(safe-area-inset-right, 0px) + 8px)',
+        paddingRight: 'calc(env(safe-area-inset-right, 0px))',
         filter: themeFilter,
         transition: 'filter 0.5s ease-in-out'
       }}
     >
-      <motion.div 
-        initial={{ opacity: 0, x: 20, scale: 0.9 }}
-        animate={{ opacity: isVisible ? 1 : 0, x: isVisible ? 0 : 20, scale: isVisible ? 1 : 0.9 }}
-        transition={{ 
-          duration: 0.3,
-          ease: [0.34, 1.56, 0.64, 1]
-        }}
-        className="relative w-fit px-2.5 py-1.5 rounded-l-2xl bg-black/95 gpu-accelerated overflow-hidden static-tip-shimmer"
-        data-theme-aware
-        style={{
-          background: 'linear-gradient(to bottom right, rgba(var(--accent-rgb, 59, 130, 246), 0.3), rgba(var(--accent-rgb, 59, 130, 246), 0.15), rgba(15, 23, 42, 0.4))',
-          borderTop: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
-          borderLeft: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
-          borderBottom: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
-          boxShadow: '0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.2), inset 0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.08)',
-          transition: 'background 0.4s ease-out, border-color 0.4s ease-out, box-shadow 0.4s ease-out',
-        }}
+      <motion.div
+        className="relative pointer-events-auto cursor-pointer"
+        onHoverStart={handleInteraction}
+        onTap={handleInteraction}
       >
+        <motion.div 
+          initial={{ x: 60, opacity: 0 }}
+          animate={
+            isPinned 
+              ? { x: 0, scale: 1, opacity: isVisible ? 1 : 0 }
+              : {
+                  x: [60, 0, 0, 60],
+                  opacity: isVisible ? [0, 1, 1, 0] : 0,
+                  scale: [0.95, 1, 1, 0.95],
+                }
+          }
+          whileHover={{ x: -8, scale: 1.02, opacity: 1 }}
+          transition={
+            isPinned 
+              ? { duration: 0.2 }
+              : { 
+                  duration: 2.5,
+                  repeat: Infinity, 
+                  ease: "easeInOut",
+                  repeatDelay: 0.5,
+                  times: [0, 0.2, 0.8, 1]
+                }
+          }
+          className="relative w-fit px-2.5 py-1.5 rounded-l-2xl gpu-accelerated overflow-hidden static-tip-shimmer"
+          data-theme-aware
+          style={{
+            background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.1) 100%)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderTop: '2px solid #3b82f6',
+            borderLeft: '2px solid #3b82f6',
+            borderBottom: '2px solid #3b82f6',
+            boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6',
+            transition: 'background 0.4s ease-out, border-color 0.4s ease-out, box-shadow 0.4s ease-out',
+          }}
+          onClick={handleInteraction}
+        >
         {/* Unified Shimmer - Left to Right using theme-aware colors */}
         {shimmerEnabled && (
           <div className="absolute inset-0 overflow-hidden rounded-l-2xl pointer-events-none">
@@ -180,6 +231,7 @@ export const MobileStaticHelper = memo(() => {
               {MOBILE_HELPER_TIPS[tipIndex]}
             </motion.span>
           </AnimatePresence>
+        </motion.div>
         </motion.div>
       </motion.div>
     </motion.div>
