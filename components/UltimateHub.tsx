@@ -371,6 +371,35 @@ const useHub = () => {
 // UTILITY FUNCTIONS
 // ============================================================================
 
+// Neon blue glow styles for trading theme
+const NEON_STYLES = {
+  blueText: 'text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.9)]',
+  blueTextBright: 'text-blue-300 drop-shadow-[0_0_12px_rgba(59,130,246,1)]',
+  cyanText: 'text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.9)]',
+  amberText: 'text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.9)]',
+  orangeText: 'text-orange-400 drop-shadow-[0_0_8px_rgba(251,146,60,0.9)]',
+  purpleText: 'text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.9)]',
+  emeraldText: 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]',
+  whiteGlow: 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]',
+  
+  blueBorder: 'border-blue-500/60 shadow-[0_0_12px_rgba(59,130,246,0.6),inset_0_0_8px_rgba(59,130,246,0.3)]',
+  cyanBorder: 'border-cyan-500/60 shadow-[0_0_12px_rgba(6,182,212,0.6),inset_0_0_8px_rgba(6,182,212,0.3)]',
+  purpleBorder: 'border-purple-500/60 shadow-[0_0_12px_rgba(168,85,247,0.6),inset_0_0_8px_rgba(168,85,247,0.3)]',
+  emeraldBorder: 'border-emerald-500/60 shadow-[0_0_12px_rgba(52,211,153,0.6),inset_0_0_8px_rgba(52,211,153,0.3)]',
+  
+  blueBg: 'bg-gradient-to-br from-blue-600/40 via-blue-500/25 to-cyan-600/30 shadow-[0_0_20px_rgba(59,130,246,0.4)]',
+  cyanBg: 'bg-gradient-to-br from-cyan-600/40 via-cyan-500/25 to-blue-600/30 shadow-[0_0_20px_rgba(6,182,212,0.4)]',
+  purpleBg: 'bg-gradient-to-br from-purple-600/40 via-purple-500/25 to-fuchsia-600/30 shadow-[0_0_20px_rgba(168,85,247,0.4)]',
+  darkBg: 'bg-gradient-to-br from-zinc-900/98 via-zinc-800/95 to-black/98 backdrop-blur-3xl',
+  
+  iconGlow: 'drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]',
+  iconGlowCyan: 'drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]',
+  iconGlowPurple: 'drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]',
+  iconGlowAmber: 'drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]',
+  iconGlowOrange: 'drop-shadow-[0_0_8px_rgba(251,146,60,0.8)]',
+  iconGlowEmerald: 'drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]',
+};
+
 const SoundEffects = {
   click: () => {
     if (typeof window !== 'undefined' && 'AudioContext' in window) {
@@ -3335,11 +3364,11 @@ BrowserModal.displayName = 'BrowserModal';
 // UNIFIED HUB TAB TYPE - All features in one pill
 // ============================================================================
 
-type UnifiedHubTab = 'trading' | 'community' | 'tv' | 'device';
+type UnifiedHubTab = 'community' | 'trading' | 'tv' | 'device';
 
 const UNIFIED_HUB_TABS: { id: UnifiedHubTab; label: string; icon: typeof TrendingUp; color: string }[] = [
-  { id: 'trading', label: 'Trade', icon: TrendingUp, color: 'blue' },
   { id: 'community', label: 'Social', icon: MessageSquare, color: 'cyan' },
+  { id: 'trading', label: 'Trade', icon: TrendingUp, color: 'blue' },
   { id: 'tv', label: 'TV', icon: Play, color: 'purple' },
   { id: 'device', label: 'Device', icon: Smartphone, color: 'emerald' },
 ];
@@ -3369,7 +3398,7 @@ const UnifiedHubPanel = memo(({
   userEmail?: string;
   prices: { xauusd: string; btcusd: string };
 }) => {
-  const [activeTab, setActiveTab] = useState<UnifiedHubTab>('trading');
+  const [activeTab, setActiveTab] = useState<UnifiedHubTab>('community');
   const [isDragging, setIsDragging] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   
@@ -3406,7 +3435,7 @@ const UnifiedHubPanel = memo(({
 
   // Handle swipe to close
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (info.offset.x > 100) {
+    if (info.offset.x < -100) {
       SoundEffects.swoosh();
       onClose();
     }
@@ -3486,16 +3515,16 @@ const UnifiedHubPanel = memo(({
           {/* Panel */}
           <motion.div
             ref={panelRef}
-            initial={{ x: '100%', opacity: 0 }}
+            initial={{ x: '-100%', opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '100%', opacity: 0 }}
+            exit={{ x: '-100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={{ left: 0, right: 0.3 }}
+            dragElastic={{ left: 0.3, right: 0 }}
             onDragStart={() => setIsDragging(true)}
             onDragEnd={handleDragEnd}
-            className="fixed right-0 top-0 bottom-0 z-[2147483647] w-full sm:w-[380px] md:w-[420px] flex flex-col bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl border-l border-blue-500/30 shadow-2xl overflow-hidden"
+            className="fixed left-0 top-0 bottom-0 z-[2147483647] w-full sm:w-[380px] md:w-[420px] flex flex-col bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl border-r border-blue-500/30 shadow-2xl overflow-hidden"
             style={{ touchAction: 'pan-y' }}
           >
             {/* Header with FPS Display */}
@@ -3543,11 +3572,11 @@ const UnifiedHubPanel = memo(({
               {/* Swipe hint for mobile */}
               <motion.div 
                 className="flex items-center justify-center gap-1 mt-2 text-[9px] text-blue-400/60 sm:hidden"
-                animate={{ x: [0, 5, 0] }}
+                animate={{ x: [0, -5, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               >
-                <ChevronRight className="w-3 h-3" />
-                <span>Swipe right to close</span>
+                <ChevronRight className="w-3 h-3 rotate-180" />
+                <span>Swipe left to close</span>
               </motion.div>
             </div>
             
@@ -4081,6 +4110,56 @@ UnifiedHubPanel.displayName = 'UnifiedHubPanel';
 // UNIFIED FPS PILL - One button for everything
 // ============================================================================
 
+// Mini TradingView Gold Chart for the button
+const MiniGoldChart = memo(() => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    // Clear any existing content
+    containerRef.current.innerHTML = '';
+    
+    // Create TradingView mini widget
+    const script = document.createElement('script');
+    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
+    script.async = true;
+    script.innerHTML = JSON.stringify({
+      symbol: "OANDA:XAUUSD",
+      width: "100%",
+      height: "100%",
+      locale: "en",
+      dateRange: "1D",
+      colorTheme: "dark",
+      isTransparent: true,
+      autosize: true,
+      largeChartUrl: "",
+      chartOnly: true,
+      noTimeScale: true
+    });
+    
+    containerRef.current.appendChild(script);
+    
+    return () => {
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+      }
+    };
+  }, []);
+  
+  return (
+    <div 
+      ref={containerRef} 
+      className="w-[80px] h-[33.5px] overflow-hidden rounded-sm mx-auto pointer-events-none"
+      style={{ 
+        filter: 'saturate(0) brightness(2) sepia(1) hue-rotate(190deg) saturate(3)',
+        background: '#000000'
+      }}
+    />
+  );
+});
+MiniGoldChart.displayName = 'MiniGoldChart';
+
 const UnifiedFpsPill = memo(({ 
   fps, 
   deviceTier, 
@@ -4096,45 +4175,99 @@ const UnifiedFpsPill = memo(({
   onToggleMinimized: () => void;
   onOpenPanel: () => void;
 }) => {
-  const colors = getFpsColor(fps);
+  const [isPinned, setIsPinned] = useState(false);
+  const [randomDelay] = useState(() => Math.random() * 5 + 5); // Random 5-10 seconds
+  const unpinTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Handle interaction to pin the button, then unpin after random delay
+  const handleInteraction = useCallback(() => {
+    setIsPinned(true);
+    
+    // Clear any existing timeout
+    if (unpinTimeoutRef.current) {
+      clearTimeout(unpinTimeoutRef.current);
+    }
+    
+    // Unpin after random 1-10 seconds
+    const unpinDelay = Math.random() * 9000 + 1000; // 1-10 seconds in ms
+    unpinTimeoutRef.current = setTimeout(() => {
+      setIsPinned(false);
+    }, unpinDelay);
+  }, []);
+  
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (unpinTimeoutRef.current) {
+        clearTimeout(unpinTimeoutRef.current);
+      }
+    };
+  }, []);
   
   return (
     <motion.div
-      initial={{ x: 100, opacity: 0 }}
-      animate={{ x: 0, opacity: 1, scale: isMinimized ? 0.9 : 1 }}
-      className="fixed right-0 z-[250000] pointer-events-none"
-      style={{ top: '50%', transform: 'translateY(-50%)', paddingRight: 'calc(env(safe-area-inset-right, 0px) + 4px)' }}
+      initial={{ x: -100, opacity: 0 }}
+      animate={{ 
+        x: 0, 
+        opacity: 1, 
+        scale: isMinimized ? 0.9 : 1 
+      }}
+      className="fixed left-0 z-[250000] pointer-events-none"
+      style={{ top: '15%', paddingLeft: 'calc(env(safe-area-inset-left, 0px))' }}
     >
       <motion.div
-        whileHover="hover"
-        animate={isMinimized ? "minimized" : "initial"}
         className="relative pointer-events-auto cursor-pointer"
+        onHoverStart={handleInteraction}
+        onTap={handleInteraction}
       >
         <motion.div
-          variants={{
-            initial: { x: 0, scale: 1 },
-            hover: { x: -8, scale: 1.02 },
-            minimized: { x: 2, scale: 0.95 }
+          initial={{ x: -60, opacity: 0 }}
+          animate={
+            isMinimized 
+              ? { x: -70, scale: 0.95, opacity: 0.1 }
+              : isPinned 
+                ? { x: 0, scale: 1, opacity: 1 }
+                : {
+                    x: [-60, 0, 0, -60],
+                    opacity: [0, 1, 1, 0],
+                    scale: [0.95, 1, 1, 0.95],
+                  }
+          }
+          whileHover={{ x: 8, scale: 1.02, opacity: 1 }}
+          transition={
+            isMinimized || isPinned 
+              ? { duration: 0.2 }
+              : { 
+                  duration: 2.5,
+                  repeat: Infinity, 
+                  ease: "easeInOut",
+                  repeatDelay: 0.5,
+                  times: [0, 0.2, 0.8, 1]
+                }
+          }
+          className="relative rounded-r-3xl transition-all duration-300"
+          style={{
+            background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.1) 100%)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '2px solid #3b82f6',
+            boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6',
+            animation: 'neon-glow 2s ease-in-out infinite'
           }}
-          className="relative rounded-l-3xl bg-gradient-to-br from-blue-600/40 via-cyan-500/20 to-purple-600/30 backdrop-blur-2xl border-y border-l border-blue-500/60 shadow-2xl hover:border-blue-400/80 hover:shadow-blue-600/50"
           onClick={(e) => {
             e.preventDefault();
             SoundEffects.click();
+            handleInteraction();
             if (isMinimized) onToggleMinimized();
             else onOpenPanel();
           }}
           onMouseEnter={() => {
             SoundEffects.hover();
+            handleInteraction();
             if (isMinimized) onToggleMinimized();
           }}
         >
-          {/* Animated glow effect */}
-          <motion.div
-            className="absolute inset-0 rounded-l-3xl bg-gradient-to-r from-blue-500/30 via-cyan-500/20 to-purple-500/30"
-            animate={{ opacity: [0.3, 0.7, 0.3] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            style={{ filter: 'blur(8px)' }}
-          />
+
           
           <AnimatePresence mode="popLayout">
             {isMinimized ? (
@@ -4145,7 +4278,10 @@ const UnifiedFpsPill = memo(({
                 exit={{ opacity: 0, scale: 0.7 }}
                 className="px-2 py-1.5 relative z-10"
               >
-                <MinimizedFpsDisplay fps={fps} />
+                {/* Minimized: White neon icon */}
+                <div className="flex items-center gap-1">
+                  <TrendingUp className="w-4 h-4 text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' }} />
+                </div>
               </motion.div>
             ) : (
               <motion.div
@@ -4153,55 +4289,67 @@ const UnifiedFpsPill = memo(({
                 initial={{ opacity: 0, scale: 0.85 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.85 }}
-                className="px-2.5 py-2.5 relative z-10"
+                className="px-3 py-2 relative z-10"
               >
-                <div className="flex items-center gap-2">
-                  {/* Expand Arrow */}
-                  <motion.div 
-                    animate={{ x: [-2, 2, -2] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  >
-                    <ChevronRight size={14} className="text-blue-400 rotate-180" />
-                  </motion.div>
-                  
-                  {/* FPS Chart */}
-                  <FpsCandlestickChart fps={fps} width={50} height={32} candleCount={5} />
-                  
-                  {/* Stats Column */}
-                  <div className="flex flex-col gap-0.5">
-                    {/* FPS */}
-                    <div className="flex items-center gap-1">
-                      <Activity size={10} className="text-blue-400" />
-                      <span className="text-sm font-black tabular-nums" style={{ color: colors.text }}>{fps}</span>
-                      <span className="text-[7px] text-blue-400/80 font-bold">FPS</span>
-                    </div>
-                    
-                    {/* Live Prices Mini */}
-                    <div className="flex items-center gap-1">
-                      <div className="flex items-center gap-0.5">
-                        <Coins className="w-2.5 h-2.5 text-amber-400" />
-                        <span className="text-[8px] font-bold text-amber-300">{prices.xauusd}</span>
-                      </div>
-                      <div className="w-px h-2 bg-blue-500/30" />
-                      <div className="flex items-center gap-0.5">
-                        <Bitcoin className="w-2.5 h-2.5 text-orange-400" />
-                        <span className="text-[8px] font-bold text-orange-300">{prices.btcusd}</span>
-                      </div>
-                    </div>
-                    
-                    {/* Tier */}
-                    <div className="text-[7px] font-mono font-bold uppercase text-blue-300/80 tracking-wide">{deviceTier}</div>
+                <div className="flex flex-col gap-1.5 min-w-[140px]">
+                  {/* TRADING HUB Label - Chartnews Neon Blue Style */}
+                  <div className="flex items-center justify-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5 text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' }} />
+                    <span 
+                      className="text-[11px] font-black tracking-wider uppercase"
+                      style={{ 
+                        color: '#3b82f6',
+                        textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6',
+                        animation: 'neon-pulse 2s ease-in-out infinite'
+                      }}
+                    >
+                      TRADING HUB
+                    </span>
                   </div>
                   
-                  {/* Feature Icons */}
-                  <div className="flex flex-col gap-0.5 ml-1 border-l border-blue-500/20 pl-1.5">
-                    <div className="flex items-center gap-0.5">
-                      <TrendingUp className="w-2.5 h-2.5 text-blue-400" />
-                      <MessageSquare className="w-2.5 h-2.5 text-cyan-400" />
+                  {/* Mini TradingView Gold Chart - Chartnews Style (Taller, Narrower) */}
+                  <div 
+                    className="w-[80px] h-[33.5px] rounded-sm overflow-hidden mx-auto"
+                    style={{
+                      background: '#000000',
+                      border: '1px solid #3b82f6',
+                      boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6'
+                    }}
+                  >
+                    <MiniGoldChart />
+                  </div>
+                  
+                  {/* Live Prices - Chartnews Neon Blue Style */}
+                  <div className="flex items-center justify-center gap-2">
+                    {/* Gold Price */}
+                    <div className="flex items-center gap-1">
+                      <Coins className="w-3 h-3 text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' }} />
+                      <span 
+                        className="text-[10px] font-bold tabular-nums"
+                        style={{ 
+                          color: '#3b82f6',
+                          textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6'
+                        }}
+                      >
+                        {prices.xauusd}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-0.5">
-                      <Play className="w-2.5 h-2.5 text-purple-400" />
-                      <Smartphone className="w-2.5 h-2.5 text-emerald-400" />
+                    
+                    {/* Divider */}
+                    <div className="w-px h-3" style={{ background: '#3b82f6', boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }} />
+                    
+                    {/* BTC Price */}
+                    <div className="flex items-center gap-1">
+                      <Bitcoin className="w-3 h-3 text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' }} />
+                      <span 
+                        className="text-[10px] font-bold tabular-nums"
+                        style={{ 
+                          color: '#3b82f6',
+                          textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6'
+                        }}
+                      >
+                        {prices.btcusd}
+                      </span>
                     </div>
                   </div>
                 </div>
