@@ -1,0 +1,717 @@
+/**
+ * 60FPS ULTRA MODE - Comprehensive Performance Optimizations
+ * Target: Stable 60fps across entire application
+ * 
+ * Optimization Strategy:
+ * 1. GPU Layer Promotion for all animated elements
+ * 2. CSS Containment to prevent layout thrashing
+ * 3. will-change hints for predictable animations
+ * 4. Transform-only animations (no layout/paint changes)
+ * 5. Passive event listeners hints
+ * 6. Content-visibility for off-screen rendering
+ */
+
+/* ========================================
+   CRITICAL: ROOT OPTIMIZATIONS
+   ======================================== */
+
+:root {
+  /* Enable high-precision rendering */
+  --fps-target: 60;
+  --frame-time: 16.67ms;
+  
+  /* Animation easing optimized for 60fps */
+  --ease-gpu: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-fast: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+html {
+  /* Disable smooth scroll - use RAF-based JS scroll instead */
+  scroll-behavior: auto;
+  
+  /* Enable GPU rasterization */
+  transform: translateZ(0);
+  
+  /* Hint to browser for high refresh rate */
+  font-feature-settings: "kern" 1;
+  text-rendering: optimizeSpeed;
+}
+
+body {
+  /* Optimize font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  
+  /* Create stacking context for better GPU usage */
+  transform: translateZ(0);
+  
+  /* Prevent overscroll bounce that causes repaints */
+  overscroll-behavior: none;
+}
+
+/* ========================================
+   GPU LAYER PROMOTION
+   ======================================== */
+
+/* Promote all interactive elements to GPU */
+a,
+button,
+input,
+select,
+textarea,
+[role="button"],
+[tabindex] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Animated elements get dedicated GPU layers */
+[class*="animate-"],
+[class*="transition-"],
+.animated {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Remove will-change after animation completes */
+@media (prefers-reduced-motion: no-preference) {
+  [class*="animate-"]:not(:hover):not(:focus):not(.animating) {
+    will-change: auto;
+  }
+}
+
+/* ========================================
+   CSS CONTAINMENT - Prevent Layout Thrashing
+   ======================================== */
+
+/* Contain layout calculations within components */
+.card,
+.modal,
+.dropdown,
+.tooltip,
+.popover,
+[role="dialog"],
+[role="menu"],
+[role="listbox"] {
+  contain: layout style paint;
+}
+
+/* Strict containment for isolated components */
+.carousel,
+.slider,
+.tabs,
+.accordion {
+  contain: layout style paint;
+  isolation: isolate;
+}
+
+/* Size containment for fixed-size elements */
+.avatar,
+.icon,
+.badge,
+.chip {
+  contain: size layout style paint;
+}
+
+/* ========================================
+   CONTENT-VISIBILITY - Lazy Rendering
+   ======================================== */
+
+/* Auto-hide off-screen content */
+.lazy-section,
+.fold-section,
+article,
+section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+/* Maintain aspect ratios for better CLS */
+.video-container,
+.image-container,
+.embed-container {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 400px;
+}
+
+/* ========================================
+   ANIMATION OPTIMIZATIONS
+   ======================================== */
+
+/* Use transform and opacity ONLY - composited properties */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateZ(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateZ(0);
+  }
+}
+
+/* GPU-accelerated shimmer */
+@keyframes shimmer-gpu {
+  0% {
+    transform: translate3d(-100%, 0, 0);
+  }
+  100% {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+
+/* Optimized pulse */
+@keyframes pulse-gpu {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1) translateZ(0);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.05) translateZ(0);
+  }
+}
+
+/* ========================================
+   DISABLE EXPENSIVE EFFECTS
+   ======================================== */
+
+/* Remove ALL backdrop filters - very expensive */
+.backdrop-blur,
+.backdrop-blur-sm,
+.backdrop-blur-md,
+.backdrop-blur-lg,
+.backdrop-blur-xl,
+.backdrop-blur-2xl,
+.backdrop-blur-3xl,
+[class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Replace with semi-transparent backgrounds */
+.glass-effect,
+.frosted-glass {
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Disable box-shadows on scroll for better perf */
+@media (prefers-reduced-motion: no-preference) {
+  .scroll-container::-webkit-scrollbar-thumb,
+  .overflow-auto::-webkit-scrollbar-thumb {
+    box-shadow: none !important;
+  }
+}
+
+/* ========================================
+   CANVAS & WEBGL OPTIMIZATIONS
+   ======================================== */
+
+canvas {
+  /* Force GPU compositing */
+  transform: translate3d(0, 0, 0);
+  
+  /* High-quality rendering */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  
+  /* Isolate from document flow */
+  isolation: isolate;
+  
+  /* Enable touch-action for better scrolling */
+  touch-action: pan-y;
+}
+
+/* Spline containers - RESPONSIVE: iPhone 4 (320px) to 8K TV (7680px) */
+[data-spline],
+[data-spline-scene],
+.spline-container {
+  /* Dedicated GPU layer */
+  transform: translate3d(0, 0, 0);
+  will-change: contents;
+  
+  /* Prevent reflows */
+  contain: strict;
+  
+  /* Allow scrolling */
+  touch-action: pan-y;
+  
+  /* Responsive sizing */
+  width: 100%;
+  height: 100%;
+  max-width: 100vw;
+  max-height: 100vh;
+  max-height: 100dvh; /* Dynamic viewport height for mobile */
+  
+  /* Ensure proper scaling on all screens */
+  object-fit: contain;
+  
+  /* GPU acceleration */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  
+  /* Smooth rendering */
+  image-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Very small screens (iPhone 4, SE 1st gen) - 320px and below */
+@media screen and (max-width: 320px), screen and (max-height: 480px) {
+  [data-spline],
+  [data-spline-scene],
+  .spline-container {
+    /* Reduce quality for performance */
+    image-rendering: pixelated;
+    
+    /* Ensure full coverage */
+    min-width: 280px;
+    min-height: 380px;
+  }
+  
+  /* Spline viewer specific */
+  spline-viewer,
+  .spline-container iframe {
+    transform-origin: center center;
+  }
+}
+
+/* Small mobile (iPhone SE 2nd gen, older phones) - 375px */
+@media screen and (min-width: 321px) and (max-width: 374px) {
+  [data-spline],
+  [data-spline-scene],
+  .spline-container {
+    min-width: 300px;
+    min-height: 400px;
+  }
+}
+
+/* Standard mobile (iPhone, Galaxy) - up to 768px */
+@media screen and (max-width: 767px) {
+  [data-spline],
+  [data-spline-scene],
+  .spline-container {
+    /* Optimize for mobile GPU */
+    will-change: transform;
+    contain: layout style paint;
+  }
+}
+
+/* Tablet (iPad Mini, small tablets) - 768-1023px */
+@media screen and (min-width: 768px) and (max-width: 1023px) {
+  [data-spline],
+  [data-spline-scene],
+  .spline-container {
+    /* Better quality on tablets */
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+/* Laptop / Small Desktop - 1024-1439px */
+@media screen and (min-width: 1024px) and (max-width: 1439px) {
+  [data-spline],
+  [data-spline-scene],
+  .spline-container {
+    /* High quality rendering */
+    image-rendering: high-quality;
+  }
+}
+
+/* Standard Desktop / 1440p - 1440-2559px */
+@media screen and (min-width: 1440px) and (max-width: 2559px) {
+  [data-spline],
+  [data-spline-scene],
+  .spline-container {
+    /* Crisp rendering on high DPI */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* QHD / 1440p monitors - 2560-3839px */
+@media screen and (min-width: 2560px) and (max-width: 3839px) {
+  [data-spline],
+  [data-spline-scene],
+  .spline-container {
+    /* Ultra quality for QHD */
+    image-rendering: high-quality;
+    
+    /* Allow larger dimensions */
+    max-width: 3840px;
+    max-height: 2160px;
+  }
+}
+
+/* 4K displays - 3840-5119px */
+@media screen and (min-width: 3840px) and (max-width: 5119px) {
+  [data-spline],
+  [data-spline-scene],
+  .spline-container {
+    /* Optimize for 4K */
+    max-width: 5120px;
+    max-height: 2880px;
+    
+    /* High quality at 4K */
+    image-rendering: high-quality;
+  }
+}
+
+/* 5K displays - 5120-7679px */
+@media screen and (min-width: 5120px) and (max-width: 7679px) {
+  [data-spline],
+  [data-spline-scene],
+  .spline-container {
+    max-width: 7680px;
+    max-height: 4320px;
+  }
+}
+
+/* 8K displays - 7680px and above */
+@media screen and (min-width: 7680px) {
+  [data-spline],
+  [data-spline-scene],
+  .spline-container {
+    /* Full 8K support */
+    max-width: 7680px;
+    max-height: 4320px;
+    
+    /* Crisp edges at 8K */
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+/* Portrait mode optimization for all sizes */
+@media screen and (orientation: portrait) {
+  [data-spline],
+  [data-spline-scene],
+  .spline-container {
+    /* Optimize aspect ratio for portrait */
+    aspect-ratio: auto;
+  }
+}
+
+/* Landscape mode optimization */
+@media screen and (orientation: landscape) {
+  [data-spline],
+  [data-spline-scene],
+  .spline-container {
+    /* Wider aspect for landscape */
+    aspect-ratio: auto;
+  }
+}
+
+/* High pixel density displays */
+@media screen and (-webkit-min-device-pixel-ratio: 2),
+       screen and (min-resolution: 192dpi) {
+  [data-spline],
+  [data-spline-scene],
+  .spline-container {
+    /* Optimize for Retina/HiDPI */
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  [data-spline],
+  [data-spline-scene],
+  .spline-container {
+    /* Reduce animations */
+    will-change: auto;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ========================================
+   IMAGE OPTIMIZATIONS
+   ======================================== */
+
+img,
+picture,
+video {
+  /* GPU acceleration */
+  transform: translateZ(0);
+  
+  /* Optimize rendering */
+  image-rendering: -webkit-optimize-contrast;
+  
+  /* Prevent layout shifts */
+  contain: layout;
+}
+
+/* Lazy-loaded images */
+img[loading="lazy"],
+img[data-src] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 200px;
+}
+
+/* ========================================
+   SCROLL OPTIMIZATIONS
+   ======================================== */
+
+/* Optimize scroll containers */
+.overflow-auto,
+.overflow-scroll,
+.overflow-y-auto,
+.overflow-x-auto {
+  /* Enable momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+  
+  /* Prevent overscroll bounce */
+  overscroll-behavior: contain;
+  
+  /* Hint for passive listeners */
+  touch-action: pan-y;
+  
+  /* Isolate scroll calculations */
+  isolation: isolate;
+}
+
+/* Smooth scrollbar on modern browsers */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  /* No box-shadow for performance */
+}
+
+/* ========================================
+   TEXT RENDERING OPTIMIZATIONS
+   ======================================== */
+
+/* Optimize text rendering for performance */
+p,
+span,
+div,
+h1, h2, h3, h4, h5, h6 {
+  /* Subpixel rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  /* Contain text layout */
+  contain: layout style;
+}
+
+/* Prevent text selection from causing repaints */
+::selection {
+  background: rgba(59, 130, 246, 0.3);
+  text-shadow: none;
+}
+
+/* ========================================
+   HOVER & INTERACTION OPTIMIZATIONS
+   ======================================== */
+
+/* GPU-accelerated hover states */
+@media (hover: hover) {
+  button:hover,
+  a:hover,
+  [role="button"]:hover {
+    /* Use transform instead of position changes */
+    transform: translateY(-1px) translateZ(0);
+    transition: transform 0.2s var(--ease-fast);
+  }
+  
+  .card:hover {
+    transform: translateY(-2px) translateZ(0);
+    transition: transform 0.3s var(--ease-smooth);
+  }
+}
+
+/* Active states */
+button:active,
+a:active,
+[role="button"]:active {
+  transform: scale(0.98) translateZ(0);
+  transition: transform 0.1s var(--ease-fast);
+}
+
+/* ========================================
+   PREVENT LAYOUT SHIFTS
+   ======================================== */
+
+/* Reserve space for dynamic content */
+.dynamic-content,
+.loading-placeholder {
+  min-height: 100px;
+  contain: layout size;
+}
+
+/* Aspect ratio boxes */
+.aspect-video {
+  aspect-ratio: 16 / 9;
+  contain: size layout;
+}
+
+.aspect-square {
+  aspect-ratio: 1 / 1;
+  contain: size layout;
+}
+
+/* ========================================
+   MODAL & OVERLAY OPTIMIZATIONS
+   ======================================== */
+
+.modal-overlay,
+.dialog-backdrop,
+[role="dialog"]::backdrop {
+  /* Dedicated GPU layer */
+  transform: translateZ(0);
+  will-change: opacity;
+  
+  /* Isolate from document */
+  isolation: isolate;
+  
+  /* Prevent body scroll */
+  overscroll-behavior: none;
+}
+
+/* Modal content */
+.modal-content,
+[role="dialog"] {
+  /* GPU acceleration */
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+  
+  /* Contain layout */
+  contain: layout style paint;
+}
+
+/* ========================================
+   MOBILE-SPECIFIC OPTIMIZATIONS
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Reduce animation complexity on mobile */
+  * {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+  }
+  
+  /* Disable parallax on mobile */
+  .parallax {
+    transform: none !important;
+  }
+  
+  /* Simplify shadows */
+  .shadow-lg,
+  .shadow-xl,
+  .shadow-2xl {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+  }
+}
+
+/* ========================================
+   REDUCED MOTION
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========================================
+   HIGH REFRESH RATE DISPLAYS
+   ======================================== */
+
+@media (min-resolution: 2dppx) {
+  /* Optimize for 120Hz displays */
+  html.display-120hz *[class*="animate-"],
+  html.display-120hz *[class*="transition-"] {
+    /* Faster, smoother transitions */
+    transition-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
+  }
+  
+  /* Higher quality rendering */
+  html.display-120hz img,
+  html.display-120hz canvas {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+/* ========================================
+   PERFORMANCE DEBUG UTILITIES
+   ======================================== */
+
+/* Highlight repainting elements (dev mode only) */
+html.debug-paint * {
+  outline: 1px solid rgba(255, 0, 0, 0.3);
+}
+
+/* Highlight GPU-accelerated elements */
+html.debug-gpu *[style*="transform"],
+html.debug-gpu *[class*="animate-"] {
+  outline: 2px solid rgba(0, 255, 0, 0.5);
+}
+
+/* ========================================
+   TAILWIND COMPATIBILITY
+   ======================================== */
+
+/* Override Tailwind defaults for better performance */
+.transition {
+  transition-timing-function: var(--ease-fast) !important;
+}
+
+.transition-all {
+  /* Limit to composited properties only */
+  transition-property: transform, opacity !important;
+}
+
+/* Force GPU acceleration on Tailwind animations */
+.animate-spin,
+.animate-ping,
+.animate-pulse,
+.animate-bounce {
+  transform: translateZ(0);
+  will-change: transform;
+}

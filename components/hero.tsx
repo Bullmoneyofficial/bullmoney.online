@@ -106,20 +106,72 @@ const HERO_SPLINE_LEGACY_KEY = "heroSplineReloadCount";
 const HERO_SPLINE_DEFAULT_INDEX = 0;
 const clampNumber = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
-const MOBILE_SPLINE_MIN_WIDTH = 320;
+
+// ============================================================================
+// RESPONSIVE SPLINE DIMENSIONS - iPhone 4 (320px) to 8K TV (7680px)
+// ============================================================================
+
+// Screen size breakpoints (width)
+const BREAKPOINTS = {
+  IPHONE4: 320,      // iPhone 4/SE 1st gen
+  SMALL_MOBILE: 375, // iPhone SE 2nd gen, iPhone 6/7/8
+  MOBILE: 428,       // iPhone 14 Pro Max, large phones
+  TABLET: 768,       // iPad Mini, small tablets
+  LAPTOP: 1024,      // iPad Pro, small laptops
+  DESKTOP: 1440,     // Standard desktop monitors
+  QHD: 2560,         // 1440p monitors
+  UHD_4K: 3840,      // 4K monitors/TVs
+  UHD_5K: 5120,      // 5K iMac, ultra-wide monitors
+  UHD_8K: 7680,      // 8K TVs
+} as const;
+
+// Mobile spline settings
+const MOBILE_SPLINE_MIN_WIDTH = 280;  // iPhone 4 support
 const MOBILE_SPLINE_MAX_WIDTH = 720;
-const MOBILE_SPLINE_MIN_HEIGHT = 420;
+const MOBILE_SPLINE_MIN_HEIGHT = 380; // Shorter for iPhone 4
 const MOBILE_SPLINE_MAX_HEIGHT = 900;
 const MOBILE_SPLINE_PORTRAIT_ASPECT = 0.78; // width / height ~ 4:5
 const MOBILE_SPLINE_LANDSCAPE_ASPECT = 1.15;
 const MOBILE_SPLINE_PORTRAIT_SCALE = 0.82;
 const MOBILE_SPLINE_LANDSCAPE_SCALE = 0.72;
 const MOBILE_SPLINE_MAX_HEIGHT_RATIO = 0.78;
+
+// Desktop/TV spline settings
+const DESKTOP_SPLINE_MAX_WIDTH = 7680;  // 8K support
+const DESKTOP_SPLINE_MAX_HEIGHT = 4320; // 8K support
+const DESKTOP_SPLINE_SCALE = 0.95;      // Fill most of viewport
+
+// Preview modal settings
 const HERO_PREVIEW_MIN_WIDTH = 220;
 const HERO_PREVIEW_MIN_HEIGHT = 200;
 const HERO_PREVIEW_MAX_WIDTH = 640;
 const HERO_PREVIEW_MAX_HEIGHT = 480;
 const HERO_PREVIEW_SCALE = 0.4;
+
+// Device tier for quality settings
+type SplineDeviceTier = 'minimal' | 'low' | 'medium' | 'high' | 'ultra' | '4k' | '8k';
+
+const getSplineDeviceTier = (width: number, height: number, memory: number): SplineDeviceTier => {
+  const longEdge = Math.max(width, height);
+  const isMobile = width < BREAKPOINTS.TABLET;
+  
+  // 8K display
+  if (longEdge >= BREAKPOINTS.UHD_8K) return '8k';
+  // 4K/5K display
+  if (longEdge >= BREAKPOINTS.UHD_4K) return '4k';
+  // QHD display
+  if (longEdge >= BREAKPOINTS.QHD && memory >= 8) return 'ultra';
+  // Desktop HD
+  if (longEdge >= BREAKPOINTS.DESKTOP && memory >= 4) return 'high';
+  // Laptop/Tablet
+  if (longEdge >= BREAKPOINTS.LAPTOP && memory >= 4) return 'medium';
+  // Large phones
+  if (!isMobile && memory >= 3) return 'medium';
+  // Standard mobile
+  if (memory >= 2) return 'low';
+  // Very low-end (iPhone 4 era)
+  return 'minimal';
+};
 
 const createHeroSplineSchedule = (
   scenes: readonly HeroSplineSceneConfig[],
@@ -626,9 +678,99 @@ const ProductCard = React.memo(({
 });
 ProductCard.displayName = "ProductCard";
 
+/**
+ * SplineSceneEmbed - Real-time Responsive 3D scene embed
+ * Detects viewport every 16ms (60fps) for instant resize response
+ * Supports ALL screen sizes: iPhone 4 (320×480) to 8K TV (7680×4320)
+ * 
+ * Device Support:
+ * - iPhone 4/4S: 320×480 (640×960 @2x)
+ * - iPhone SE 1st: 320×568 (640×1136 @2x)
+ * - iPhone 6/7/8: 375×667 (750×1334 @2x)
+ * - iPhone 6+/7+/8+: 414×736 (1242×2208 @3x)
+ * - iPhone X/XS/11 Pro: 375×812 (1125×2436 @3x)
+ * - iPhone XR/11: 414×896 (828×1792 @2x)
+ * - iPhone 12/13/14: 390×844 (1170×2532 @3x)
+ * - iPhone 12/13/14 Pro: 390×844 (1170×2532 @3x)
+ * - iPhone 14 Pro Max: 430×932 (1290×2796 @3x)
+ * - iPhone 15/16 Pro Max: 430×932 (1290×2796 @3x)
+ * - iPhone 17 Pro Max: ~440×950 (estimated)
+ * - iPad Mini: 768×1024
+ * - iPad Pro 11": 834×1194
+ * - iPad Pro 12.9": 1024×1366
+ * - HD: 1280×720, 1366×768, 1920×1080
+ * - QHD: 2560×1440
+ * - 4K: 3840×2160
+ * - 5K: 5120×2880
+ * - 8K: 7680×4320
+ */
 const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { preferViewer: boolean; runtimeUrl: string; viewerUrl: string }) => {
   const viewerReady = useSplineViewerScript();
   const [forceIframeFallback, setForceIframeFallback] = useState(false);
+  const [viewportSize, setViewportSize] = useState({ 
+    width: typeof window !== 'undefined' ? window.innerWidth : 1920,
+    height: typeof window !== 'undefined' ? window.innerHeight : 1080,
+    dpr: typeof window !== 'undefined' ? window.devicePixelRatio : 1,
+  });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const lastSizeRef = useRef({ width: 0, height: 0 });
+
+  // REAL-TIME VIEWPORT DETECTION - Updates every frame for instant response
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    let isActive = true;
+    
+    const updateViewportSize = () => {
+      if (!isActive) return;
+      
+      // Use visualViewport for accurate size in mobile browsers / in-app browsers
+      const vv = window.visualViewport;
+      const newWidth = Math.round(vv?.width || window.innerWidth);
+      const newHeight = Math.round(vv?.height || window.innerHeight);
+      const newDpr = window.devicePixelRatio || 1;
+      
+      // Only update state if size actually changed (prevents unnecessary re-renders)
+      if (newWidth !== lastSizeRef.current.width || newHeight !== lastSizeRef.current.height) {
+        lastSizeRef.current = { width: newWidth, height: newHeight };
+        setViewportSize({ width: newWidth, height: newHeight, dpr: newDpr });
+      }
+      
+      // Schedule next check (16ms = ~60fps monitoring)
+      rafRef.current = requestAnimationFrame(updateViewportSize);
+    };
+    
+    // Start monitoring
+    updateViewportSize();
+    
+    // Also listen to events for immediate response
+    const handleResize = () => {
+      const vv = window.visualViewport;
+      const newWidth = Math.round(vv?.width || window.innerWidth);
+      const newHeight = Math.round(vv?.height || window.innerHeight);
+      lastSizeRef.current = { width: newWidth, height: newHeight };
+      setViewportSize({ 
+        width: newWidth, 
+        height: newHeight, 
+        dpr: window.devicePixelRatio || 1 
+      });
+    };
+    
+    window.addEventListener('resize', handleResize, { passive: true });
+    window.addEventListener('orientationchange', handleResize, { passive: true });
+    window.visualViewport?.addEventListener('resize', handleResize, { passive: true });
+    window.visualViewport?.addEventListener('scroll', handleResize, { passive: true });
+    
+    return () => {
+      isActive = false;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+      window.visualViewport?.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('scroll', handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     setForceIframeFallback(false);
@@ -651,10 +793,62 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
   }, [preferViewer, runtimeUrl]);
 
   const shouldUseViewer = preferViewer && viewerReady && !forceIframeFallback;
+  
+  // Calculate dimensions to fill viewport completely
+  const { width: vw, height: vh, dpr } = viewportSize;
+  
+  // Full viewport fill styles - works on ALL screen sizes
+  const fullViewportStyles: React.CSSProperties = {
+    width: `${vw}px`,
+    height: `${vh}px`,
+    minWidth: `${vw}px`,
+    minHeight: `${vh}px`,
+    maxWidth: `${vw}px`,
+    maxHeight: `${vh}px`,
+    border: "none",
+    background: "transparent",
+    display: "block",
+    objectFit: "cover" as const,
+    overflow: "hidden",
+    // GPU acceleration for all devices
+    WebkitTransform: "translate3d(0,0,0)",
+    transform: "translate3d(0,0,0)",
+    WebkitBackfaceVisibility: "hidden",
+    backfaceVisibility: "hidden",
+    // Crisp rendering on high-DPI
+    imageRendering: dpr > 1 ? "-webkit-optimize-contrast" as const : "auto" as const,
+  };
 
   return (
-    <div className="relative w-full h-full" aria-label="BullMoney hero spline">
-      <div className="absolute inset-0 w-full h-full">
+    <div 
+      ref={containerRef}
+      className="spline-viewport-fill" 
+      aria-label="BullMoney hero spline"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: `${vw}px`,
+        height: `${vh}px`,
+        overflow: "hidden",
+        zIndex: 0,
+        // GPU layer
+        transform: "translate3d(0,0,0)",
+        willChange: "transform",
+      }}
+    >
+      <div 
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: `${vw}px`,
+          height: `${vh}px`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         {shouldUseViewer ? (
           // @ts-ignore - spline-viewer is a web component
           <spline-viewer
@@ -662,12 +856,7 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
             loading="lazy"
             data-testid="hero-spline-viewer"
             events-target="global"
-            style={{
-              width: "100%",
-              height: "100%",
-              border: "none",
-              background: "transparent",
-            }}
+            style={fullViewportStyles}
           />
         ) : (
           <iframe
@@ -676,8 +865,16 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
             frameBorder="0"
             allow="fullscreen; autoplay; xr-spatial-tracking"
             loading="lazy"
-            className="w-full h-full border-0"
             data-testid="hero-spline-iframe"
+            style={{
+              ...responsiveStyles,
+              // Additional iframe-specific styles for cross-browser support
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
           />
         )}
       </div>
@@ -819,62 +1016,111 @@ const HeroParallax = () => {
   const [isCompactModalViewport, setIsCompactModalViewport] = useState(false);
 
   // Track viewport size and set mobile-safe Spline settings
+  // SUPPORTS: iPhone 4 (320×480) to 8K TV (7680×4320)
   useEffect(() => {
     const calcSize = () => {
       // Use visualViewport for in-app browsers (Instagram, TikTok, etc.)
       const vv = window.visualViewport;
       const w = vv?.width || window.innerWidth;
       const h = vv?.height || window.innerHeight;
+      const dpr = window.devicePixelRatio || 1;
       setViewportSize({ width: Math.round(w), height: Math.round(h) });
-      const isBigDevice = w >= 1440;
+      
       const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
       const isMobileDevice = /iphone|ipad|ipod|android|mobile/i.test(ua);
       const isInAppBrowser = /instagram|fban|fbav|twitter|tiktok|snapchat|linkedin|wechat|line|kakaotalk/i.test(ua);
       const memory = typeof navigator !== 'undefined' ? (navigator as any).deviceMemory || 4 : 4;
-      const isLowEndMobile = isMobileDevice && (memory < 3 || w < 375);
       const isPortrait = h >= w;
-
-      let nextWidth = Math.max(320, Math.min(w, 1920));
-      let nextHeight = Math.max(400, Math.min(h, 1280));
-      let nextAspect = nextWidth / nextHeight;
-
-      if (isMobileDevice) {
+      const longEdge = Math.max(w, h);
+      
+      // Get device tier for quality settings
+      const deviceTier = getSplineDeviceTier(w, h, memory);
+      
+      // ========================================
+      // CALCULATE SPLINE DIMENSIONS BY DEVICE TYPE
+      // ========================================
+      
+      let nextWidth: number;
+      let nextHeight: number;
+      let nextAspect: number;
+      
+      // MOBILE DEVICES (under 768px width)
+      if (isMobileDevice || w < BREAKPOINTS.TABLET) {
+        const isVerySmallScreen = w <= BREAKPOINTS.IPHONE4 || h <= 480;
         const aspect = isPortrait ? MOBILE_SPLINE_PORTRAIT_ASPECT : MOBILE_SPLINE_LANDSCAPE_ASPECT;
-        const minWidthBound = Math.min(MOBILE_SPLINE_MIN_WIDTH, w);
-        const maxWidthBound = Math.max(minWidthBound, Math.min(MOBILE_SPLINE_MAX_WIDTH, w));
-        let width = clampNumber(
-          isInAppBrowser
-            ? w
-            : w * (isPortrait ? MOBILE_SPLINE_PORTRAIT_SCALE : MOBILE_SPLINE_LANDSCAPE_SCALE),
-          minWidthBound,
-          maxWidthBound
-        );
-        const minHeightBound = Math.min(MOBILE_SPLINE_MIN_HEIGHT, h);
-        const maxHeightCandidate = isInAppBrowser ? h : h * MOBILE_SPLINE_MAX_HEIGHT_RATIO;
-        const maxHeightBound = Math.max(minHeightBound, Math.min(MOBILE_SPLINE_MAX_HEIGHT, maxHeightCandidate));
-        let height = width / aspect;
+        
+        // iPhone 4 / very small screens: use full viewport
+        if (isVerySmallScreen) {
+          nextWidth = Math.round(w * 0.95);
+          nextHeight = Math.round(Math.min(h * 0.85, nextWidth / aspect));
+        } else {
+          // Standard mobile calculation
+          const minWidthBound = Math.min(MOBILE_SPLINE_MIN_WIDTH, w);
+          const maxWidthBound = Math.max(minWidthBound, Math.min(MOBILE_SPLINE_MAX_WIDTH, w));
+          let width = clampNumber(
+            isInAppBrowser
+              ? w
+              : w * (isPortrait ? MOBILE_SPLINE_PORTRAIT_SCALE : MOBILE_SPLINE_LANDSCAPE_SCALE),
+            minWidthBound,
+            maxWidthBound
+          );
+          const minHeightBound = Math.min(MOBILE_SPLINE_MIN_HEIGHT, h);
+          const maxHeightCandidate = isInAppBrowser ? h : h * MOBILE_SPLINE_MAX_HEIGHT_RATIO;
+          const maxHeightBound = Math.max(minHeightBound, Math.min(MOBILE_SPLINE_MAX_HEIGHT, maxHeightCandidate));
+          let height = width / aspect;
 
-        if (height > maxHeightBound) {
-          height = maxHeightBound;
-          width = clampNumber(height * aspect, minWidthBound, maxWidthBound);
-        } else if (height < minHeightBound) {
-          height = minHeightBound;
-          width = clampNumber(height * aspect, minWidthBound, maxWidthBound);
+          if (height > maxHeightBound) {
+            height = maxHeightBound;
+            width = clampNumber(height * aspect, minWidthBound, maxWidthBound);
+          } else if (height < minHeightBound) {
+            height = minHeightBound;
+            width = clampNumber(height * aspect, minWidthBound, maxWidthBound);
+          }
+
+          if (width > w) {
+            width = w;
+            height = clampNumber(width / aspect, minHeightBound, maxHeightBound);
+          }
+
+          nextWidth = Math.round(width);
+          nextHeight = Math.round(height);
         }
-
-        if (width > w) {
-          width = w;
-          height = clampNumber(width / aspect, minHeightBound, maxHeightBound);
-        }
-
-        nextWidth = Math.round(width);
-        nextHeight = Math.round(height);
         nextAspect = aspect;
-      } else {
-        const desktopWidth = isBigDevice ? Math.min(w, 2560) : Math.min(w, 1600);
-        const desktopHeight = isBigDevice ? Math.min(h * 0.9, 1200) : Math.min(h * 0.95, 1000);
-        nextWidth = Math.round(Math.max(640, desktopWidth));
-        nextHeight = Math.round(Math.max(480, desktopHeight));
+      }
+      // 8K TV (7680×4320 and above)
+      else if (longEdge >= BREAKPOINTS.UHD_8K) {
+        nextWidth = Math.round(Math.min(w * DESKTOP_SPLINE_SCALE, DESKTOP_SPLINE_MAX_WIDTH));
+        nextHeight = Math.round(Math.min(h * DESKTOP_SPLINE_SCALE, DESKTOP_SPLINE_MAX_HEIGHT));
+        nextAspect = nextWidth / Math.max(nextHeight, 1);
+      }
+      // 4K/5K TV (3840-7679px)
+      else if (longEdge >= BREAKPOINTS.UHD_4K) {
+        nextWidth = Math.round(Math.min(w * DESKTOP_SPLINE_SCALE, 5120));
+        nextHeight = Math.round(Math.min(h * DESKTOP_SPLINE_SCALE, 2880));
+        nextAspect = nextWidth / Math.max(nextHeight, 1);
+      }
+      // QHD / 1440p (2560-3839px)
+      else if (longEdge >= BREAKPOINTS.QHD) {
+        nextWidth = Math.round(Math.min(w * DESKTOP_SPLINE_SCALE, 3840));
+        nextHeight = Math.round(Math.min(h * DESKTOP_SPLINE_SCALE, 2160));
+        nextAspect = nextWidth / Math.max(nextHeight, 1);
+      }
+      // Standard desktop/laptop (1440-2559px)
+      else if (w >= BREAKPOINTS.DESKTOP) {
+        nextWidth = Math.round(Math.min(w * DESKTOP_SPLINE_SCALE, 2560));
+        nextHeight = Math.round(Math.min(h * 0.9, 1440));
+        nextAspect = nextWidth / Math.max(nextHeight, 1);
+      }
+      // Laptop / small desktop (1024-1439px)
+      else if (w >= BREAKPOINTS.LAPTOP) {
+        nextWidth = Math.round(Math.min(w * 0.95, 1600));
+        nextHeight = Math.round(Math.min(h * 0.92, 1000));
+        nextAspect = nextWidth / Math.max(nextHeight, 1);
+      }
+      // Tablet (768-1023px)
+      else {
+        nextWidth = Math.round(Math.min(w * 0.95, 1024));
+        nextHeight = Math.round(Math.min(h * 0.9, 768));
         nextAspect = nextWidth / Math.max(nextHeight, 1);
       }
 
@@ -885,17 +1131,103 @@ const HeroParallax = () => {
         aspect: Number.isFinite(safeAspect) && safeAspect > 0 ? safeAspect : 1,
       });
       
-      // MOBILE CRASH FIX: Set conservative settings for mobile
-      setSplineSettings({
-        targetFPS: isLowEndMobile ? 24 : (isMobileDevice ? 30 : 60),
-        maxDpr: isLowEndMobile ? 0.75 : (isMobileDevice ? 1.0 : 1.5),
-        minDpr: isLowEndMobile ? 0.5 : 0.5,
-        shouldRender: !isLowEndMobile || memory >= 2, // Only disable on very low-end devices
-      });
+      // ========================================
+      // SET SPLINE QUALITY SETTINGS BY DEVICE TIER
+      // ========================================
+      const isLowEndMobile = isMobileDevice && (memory < 3 || w < 375);
+      const isVeryLowEnd = memory < 2 || (w <= BREAKPOINTS.IPHONE4 && memory < 3);
+      
+      const splineQualitySettings: Record<SplineDeviceTier, typeof splineSettings> = {
+        'minimal': {
+          targetFPS: 24,
+          maxDpr: 0.75,
+          minDpr: 0.5,
+          shouldRender: memory >= 1.5, // Only render if has at least 1.5GB RAM
+        },
+        'low': {
+          targetFPS: 30,
+          maxDpr: 1.0,
+          minDpr: 0.5,
+          shouldRender: true,
+        },
+        'medium': {
+          targetFPS: 45,
+          maxDpr: 1.25,
+          minDpr: 0.75,
+          shouldRender: true,
+        },
+        'high': {
+          targetFPS: 60,
+          maxDpr: 1.5,
+          minDpr: 0.75,
+          shouldRender: true,
+        },
+        'ultra': {
+          targetFPS: 90,
+          maxDpr: 2.0,
+          minDpr: 1.0,
+          shouldRender: true,
+        },
+        '4k': {
+          targetFPS: 60, // Cap at 60 for 4K to maintain smoothness
+          maxDpr: Math.min(2.0, dpr), // Use native DPR up to 2x
+          minDpr: 1.0,
+          shouldRender: true,
+        },
+        '8k': {
+          targetFPS: 60, // Cap at 60 for 8K - very demanding
+          maxDpr: Math.min(1.5, dpr), // Lower DPR for 8K to maintain performance
+          minDpr: 1.0,
+          shouldRender: true,
+        },
+      };
+      
+      // Apply settings based on device tier, with overrides for edge cases
+      let settings = splineQualitySettings[deviceTier] || splineQualitySettings.medium;
+      
+      // Override for very low-end devices
+      if (isVeryLowEnd) {
+        settings = {
+          ...settings,
+          targetFPS: Math.min(settings.targetFPS, 24),
+          maxDpr: Math.min(settings.maxDpr, 0.75),
+          shouldRender: memory >= 1.5,
+        };
+      }
+      
+      // Override for in-app browsers (often have limited WebGL support)
+      if (isInAppBrowser && !isMobileDevice) {
+        settings = {
+          ...settings,
+          targetFPS: Math.min(settings.targetFPS, 45),
+          maxDpr: Math.min(settings.maxDpr, 1.25),
+        };
+      }
+      
+      setSplineSettings(settings);
     };
+    
     calcSize();
     window.addEventListener('resize', calcSize);
-    return () => window.removeEventListener('resize', calcSize);
+    
+    // Also listen to orientation changes for mobile
+    window.addEventListener('orientationchange', () => {
+      // Delay to allow viewport to settle
+      setTimeout(calcSize, 100);
+    });
+    
+    // Listen to visualViewport changes for in-app browsers
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', calcSize);
+    }
+    
+    return () => {
+      window.removeEventListener('resize', calcSize);
+      window.removeEventListener('orientationchange', calcSize);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', calcSize);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -1241,23 +1573,7 @@ const HeroParallax = () => {
       .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--accent-color, #3b82f6); border-radius: 3px; }
     `}</style>
 
-    {isAdmin && <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />}
-
-    <ContactSelectionModal
-        isOpen={isContactModalOpen}
-        onClose={() => setIsContactModalOpen(false)}
-        instagramLink="https://www.instagram.com/bullmoney.online/"
-        telegramLink="https://t.me/addlist/gg09afc4lp45YjQ0"
-    />
-
-    {/* Services Modal - Controlled externally */}
-    <ServicesShowcaseModal
-      btnText={buttonText}
-      isOpen={isServicesModalOpen}
-      onOpenChange={setIsServicesModalOpen}
-      showTrigger={false}
-      compactMode={isCompactModalViewport}
-    />
+    {/* modals removed from hero for simplified UI */}
 
     {/* UltimateControlPanel - Always mounted, internal content mounts/unmounts based on isOpen */}
     <UltimateControlPanel 
@@ -1331,23 +1647,7 @@ const HeroParallax = () => {
       />
     )}
     
-    <AnimatePresence>
-        {isReflectiveCardOpen && (
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="fixed inset-0 z-[999] grid place-items-center bg-black/80"
-                onClick={() => setIsReflectiveCardOpen(false)}
-            >
-                <div onClick={(e) => e.stopPropagation()}>
-                    <ReflectiveCard onVerificationComplete={() => {
-                        setTimeout(() => setIsReflectiveCardOpen(false), 2000);
-                    }} />
-                </div>
-            </motion.div>
-        )}
-    </AnimatePresence>
+    {/* reflective card modal removed from hero */}
 
     <AnimatePresence>
       {activeProject && activeLayoutId && (
@@ -1614,48 +1914,42 @@ const HeroParallax = () => {
               pointerEvents: 'auto',
             }}
           >
-            <AnimatePresence mode="popLayout">
-              {showReloadCue && (
-                <motion.div
-                  key={`hero-reload-cue-${heroSplineScene}-${heroSplineBlockStep}`}
-                  initial={{ opacity: 0, y: -12, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -12, scale: 0.95 }}
-                  transition={{ duration: 0.45, ease: 'easeOut' }}
-                  className="pointer-events-none absolute top-6 right-6 z-30"
-                >
-                  <motion.div
-                    animate={{ opacity: [0.8, 1, 0.8], scale: [0.98, 1, 0.98] }}
-                    transition={{ duration: 1.8, repeat: Infinity }}
-                    className="rounded-full px-4 py-2 bg-black/70 backdrop-blur border border-white/10 text-white text-xs md:text-sm font-semibold tracking-wide shadow-lg flex items-center gap-2"
-                  >
-                    <span aria-hidden="true">↻</span>
-                    Modals & timer rotate scenes
-                    <span className="text-[10px] text-white/70">auto • {heroSplineBlockStep}/{HERO_SPLINE_BLOCK_SIZE}</span>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* reload cue removed */}
             <div className="w-full h-full flex items-center justify-center">
-              {/* CLS FIX: Fixed dimensions prevent layout shift */}
+              {/* 
+                RESPONSIVE SPLINE CONTAINER
+                Supports: iPhone 4 (320×480) to 8K TV (7680×4320)
+                - Uses calculated heroSize for optimal dimensions per device
+                - Falls back to 100% for SSR/initial render
+                - minWidth/minHeight ensure visibility on all screens
+              */}
               <div
                 className="w-full h-full spline-container"
                 data-spline-scene
                 style={{
+                  // Responsive width: use calculated size or fill container
                   width: heroSize.width > 0 ? `${heroSize.width}px` : '100%',
                   height: heroSize.height > 0 ? `${heroSize.height}px` : '100%',
+                  // Ensure proper bounds for all screen sizes
                   maxWidth: '100vw',
-                  maxHeight: '100dvh', // Dynamic viewport height for in-app browsers
-                  minWidth: 320,
-                  minHeight: 400,
+                  maxHeight: '100dvh',
+                  // Support very small screens (iPhone 4: 320×480)
+                  minWidth: Math.min(280, typeof window !== 'undefined' ? window.innerWidth : 280),
+                  minHeight: Math.min(380, typeof window !== 'undefined' ? window.innerHeight * 0.8 : 380),
+                  // Layout containment for performance
                   contain: 'layout style',
                   touchAction: 'pan-y',
                   pointerEvents: 'auto',
-                  // In-app browser fix: ensure full coverage
-                  aspectRatio: heroSize.aspect ? `${heroSize.aspect}` : undefined,
+                  // Aspect ratio for proper scaling
+                  aspectRatio: heroSize.aspect && heroSize.aspect > 0 ? `${heroSize.aspect}` : 'auto',
+                  // Ensure centered positioning
+                  margin: 'auto',
+                  // GPU acceleration for smooth rendering on all devices
+                  transform: 'translateZ(0)',
+                  WebkitTransform: 'translateZ(0)',
                 }}
               >
-                {/* MOBILE-SAFE HERO EMBED: Prefer custom viewer when possible, fallback to iframe everywhere else */}
+                {/* RESPONSIVE HERO EMBED: Adapts quality from iPhone 4 to 8K TV */}
                 {splineSettings.shouldRender ? (
                   <SplineSceneEmbed
                     key={heroSplineScene}
@@ -1664,11 +1958,18 @@ const HeroParallax = () => {
                     viewerUrl={heroSplineSource.viewerUrl}
                   />
                 ) : (
-                  // Fallback for very low-end devices
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black">
-                    <div className="text-center">
-                      <div className="text-4xl mb-4">🐂</div>
-                      <div className="text-white/60 text-sm">BullMoney</div>
+                  // Elegant fallback for very low-end devices
+                  <div 
+                    className="w-full h-full flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, #000 0%, #111 50%, #000 100%)',
+                      borderRadius: '12px',
+                    }}
+                  >
+                    <div className="text-center p-4">
+                      <div className="text-4xl sm:text-5xl md:text-6xl mb-4 animate-pulse">🐂</div>
+                      <div className="text-white/60 text-xs sm:text-sm">BullMoney</div>
+                      <div className="text-white/40 text-[10px] mt-2">3D loading...</div>
                     </div>
                   </div>
                 )}
@@ -1691,9 +1992,7 @@ const HeroParallax = () => {
               <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: 'var(--accent-color, #3b82f6)' }} />
               Choose Scene
             </motion.button>
-            <p className="text-[10px] tracking-[0.3em] text-white/60 bg-black/30 backdrop-blur px-3 py-1 rounded-full border border-white/5">
-              Viewing · {heroSplineSceneLabel}
-            </p>
+            {/* viewing label removed */}
           </div>
         </div>
     </div>

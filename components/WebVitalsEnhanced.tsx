@@ -268,8 +268,18 @@ function WebVitalsInner() {
     if (typeof window === 'undefined' || isBot()) return;
 
     const handleError = (event: ErrorEvent) => {
+      // Suppress noisy syntax errors from untranspiled third-party modules
+      // (e.g. Unexpected token 'export') which can occur in some bundler/runtime combos.
+      const msg = event?.message || '';
+      if (/Unexpected token\s+\'export\'/i.test(msg)) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[WebVitals] Ignored syntax error (likely ESM module):', msg);
+        }
+        return;
+      }
+
       if (process.env.NODE_ENV === 'development') {
-        console.error('[WebVitals] Error caught:', event.message);
+        console.error('[WebVitals] Error caught:', msg);
       }
       // Note: We don't send errors via Analytics to save quota
       // Vercel captures errors in the Logs tab automatically
