@@ -403,7 +403,7 @@ function MinimizedFpsNumber() {
 /**
  * FPS Performance Panel - Detailed metrics from FpsOptimizer
  */
-function FpsPerformancePanel({ deviceInfo }: { deviceInfo: DeviceInfo }) {
+function FpsPerformancePanel({ deviceInfo }: { deviceInfo: DeviceInfo | null }) {
   const {
     currentFps,
     averageFps,
@@ -495,8 +495,8 @@ function FpsPerformancePanel({ deviceInfo }: { deviceInfo: DeviceInfo }) {
             </div>
             <div>
               <span className="text-blue-200/60">Frame Time:</span>
-              <span className={`ml-2 font-semibold drop-shadow-lg ${deviceInfo.live.frameTime > (1000 / targetFrameRate) * 1.1 ? 'text-orange-300' : 'text-green-300'}`}>
-                {deviceInfo.live.frameTime.toFixed(2)}ms
+              <span className={`ml-2 font-semibold drop-shadow-lg ${(deviceInfo?.live?.frameTime ?? 0) > (1000 / targetFrameRate) * 1.1 ? 'text-orange-300' : 'text-green-300'}`}>
+                {(deviceInfo?.live?.frameTime ?? 0).toFixed(2)}ms
               </span>
             </div>
             <div>
@@ -868,21 +868,34 @@ export function UltimateControlPanel({
     }
   }, [uiStateContext?.isServicesModalOpen, activeModal, uiStateContext]);
 
-  if (!deviceInfo || !mounted) {
-    return null;
-  }
+  const hasDeviceInfo = !!deviceInfo && mounted;
+  // Provide a safe non-null device object for rendering while deviceInfo is still loading.
+  const device: DeviceInfo = deviceInfo ?? {
+    device: { model: 'Unknown', manufacturer: 'Unknown', os: 'Unknown', osVersion: '', browser: '', browserVersion: '' },
+    performance: {
+      gpu: { tier: 'medium', score: 50, vendor: '', renderer: '', vram: 0 },
+      cpu: { name: '', cores: 4, threads: 4, architecture: '' },
+      memory: { percentage: 50, total: 8, used: 1024, limit: 2048, type: '' },
+      storage: { available: 0, total: 0 }
+    } as any,
+    screen: { physicalWidth: (typeof window !== 'undefined' ? window.screen.width : 0), physicalHeight: (typeof window !== 'undefined' ? window.screen.height : 0), ppi: 96, diagonal: 0, refreshRate: 60, hdr: false },
+    battery: { level: -1, charging: false },
+    network: { type: 'unknown', effectiveType: '4g', downlink: 0, measuredDownlink: 0, measuredUpload: 0, saveData: false, rtt: 0, jitter: 0, ip: '', isp: '', location: '', testTimestamp: 0 },
+    live: { fps: 60, frameTime: 1000 / 60, networkSpeed: 0, uploadSpeed: 0, latency: 0, jitter: 0 },
+    app: { sessionMs: 0, cacheUsageMB: 0, cacheQuotaMB: 0, buildId: '' }
+  } as DeviceInfo;
 
-  const performanceScore = calculate3DPerformance(deviceInfo);
+  const performanceScore = hasDeviceInfo ? calculate3DPerformance(device) : 0;
   const queueStats = queueManager.getStats();
-  const liveSpeed = Math.max(0, deviceInfo.live.networkSpeed || deviceInfo.network.measuredDownlink || deviceInfo.network.downlink || 0);
-  const liveUpload = Math.max(0, deviceInfo.live.uploadSpeed || deviceInfo.network.measuredUpload || 0);
-  const liveLatency = Math.max(0, deviceInfo.live.latency || deviceInfo.network.rtt || 0);
-  const liveJitter = Math.max(0, deviceInfo.live.jitter || deviceInfo.network.jitter || 0);
-  const reportedDownlink = deviceInfo.network.downlink || 0;
-  const measuredType = (deviceInfo.network.effectiveType || '4g').toUpperCase();
-  const sessionMs = deviceInfo.app?.sessionMs ?? 0;
-  const cacheUsageMB = deviceInfo.app?.cacheUsageMB;
-  const cacheQuotaMB = deviceInfo.app?.cacheQuotaMB;
+  const liveSpeed = hasDeviceInfo ? Math.max(0, device.live.networkSpeed || device.network.measuredDownlink || device.network.downlink || 0) : 0;
+  const liveUpload = hasDeviceInfo ? Math.max(0, device.live.uploadSpeed || device.network.measuredUpload || 0) : 0;
+  const liveLatency = hasDeviceInfo ? Math.max(0, device.live.latency || device.network.rtt || 0) : 0;
+  const liveJitter = hasDeviceInfo ? Math.max(0, device.live.jitter || device.network.jitter || 0) : 0;
+  const reportedDownlink = hasDeviceInfo ? (device.network.downlink || 0) : 0;
+  const measuredType = hasDeviceInfo ? ((device.network.effectiveType || '4g').toUpperCase()) : '4G';
+  const sessionMs = hasDeviceInfo ? (device.app?.sessionMs ?? 0) : 0;
+  const cacheUsageMB = hasDeviceInfo ? device.app?.cacheUsageMB : undefined;
+  const cacheQuotaMB = hasDeviceInfo ? device.app?.cacheQuotaMB : undefined;
 
   // Default handlers for buttons - now with smart tapping (toggle behavior)
   const handleServicesClick = () => {
@@ -1550,30 +1563,30 @@ export function UltimateControlPanel({
                       <div className="grid grid-cols-2 gap-3">
                         <StatCard
                           icon={Smartphone}
-                          label="Device"
-                          value={deviceInfo?.device?.model || 'Unknown'}
-                          sublabel={deviceInfo?.device?.manufacturer || 'Unknown'}
+                            label="Device"
+                            value={device.device.model || 'Unknown'}
+                            sublabel={device.device.manufacturer || 'Unknown'}
                           color="#3b82f6"
                         />
                         <StatCard
                           icon={Monitor}
-                          label="OS"
-                          value={deviceInfo?.device?.os || 'Unknown'}
-                          sublabel={`v${deviceInfo?.device?.osVersion || '?'}`}
+                            label="OS"
+                            value={device.device.os || 'Unknown'}
+                            sublabel={`v${device.device.osVersion || '?'}`}
                           color="#8b5cf6"
                         />
                         <StatCard
                           icon={Cpu}
-                          label="CPU"
-                          value={deviceInfo?.performance?.cpu?.name || `${deviceInfo?.performance?.cpu?.cores || 4} Cores`}
-                          sublabel={`${deviceInfo?.performance?.cpu?.cores || 4}C/${deviceInfo?.performance?.cpu?.threads || 4}T • ${deviceInfo?.performance?.cpu?.architecture || 'Unknown'}`}
+                            label="CPU"
+                            value={device.performance.cpu.name || `${device.performance.cpu.cores || 4} Cores`}
+                            sublabel={`${device.performance.cpu.cores || 4}C/${device.performance.cpu.threads || 4}T • ${device.performance.cpu.architecture || 'Unknown'}`}
                           color="#22c55e"
                         />
                         <StatCard
                           icon={HardDrive}
-                          label="RAM"
-                          value={`${memoryStats.jsHeapUsed}MB / ${memoryStats.jsHeapLimit}MB`}
-                          sublabel={`Browser: ${memoryStats.percentage}% • Device: ${deviceInfo?.performance?.memory?.total || memoryStats.deviceRam}GB (${deviceInfo?.performance?.memory?.type || 'DDR'})`}
+                            label="RAM"
+                            value={`${memoryStats.jsHeapUsed}MB / ${memoryStats.jsHeapLimit}MB`}
+                            sublabel={`Browser: ${memoryStats.percentage}% • Device: ${device.performance.memory.total || memoryStats.deviceRam}GB (${device.performance.memory.type || 'DDR'})`}
                           color="#f59e0b"
                         />
                       </div>
@@ -1649,25 +1662,25 @@ export function UltimateControlPanel({
                             <div>
                               <span className="text-blue-200/60">Display:</span>
                               <span className="text-white font-semibold ml-2 drop-shadow-lg">
-                                {deviceInfo.screen.physicalWidth}×{deviceInfo.screen.physicalHeight}
+                                {device.screen.physicalWidth}×{device.screen.physicalHeight}
                               </span>
                             </div>
                             <div>
                               <span className="text-blue-200/60">PPI:</span>
                               <span className="text-white font-semibold ml-2 drop-shadow-lg">
-                                {deviceInfo.screen.ppi || Math.round(deviceInfo.screen.physicalWidth / 6)} ppi
+                                {device.screen.ppi || Math.round(device.screen.physicalWidth / 6)} ppi
                               </span>
                             </div>
                             <div>
                               <span className="text-blue-200/60">Screen:</span>
                               <span className="text-white font-semibold ml-2 drop-shadow-lg">
-                                {deviceInfo.screen.diagonal || '?'}&quot; @ {deviceInfo.screen.refreshRate || 60}Hz
+                                {device.screen.diagonal || '?'}&quot; @ {device.screen.refreshRate || 60}Hz
                               </span>
                             </div>
                             <div>
                               <span className="text-blue-200/60">HDR:</span>
                               <span className="text-white font-semibold ml-2 drop-shadow-lg">
-                                {deviceInfo.screen.hdr ? 'Yes' : 'No'}
+                                {device.screen.hdr ? 'Yes' : 'No'}
                               </span>
                             </div>
                           </div>
@@ -1675,7 +1688,7 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Battery */}
-                      {deviceInfo.battery.level >= 0 && (
+                      {deviceInfo && deviceInfo.battery.level >= 0 && (
                         <div className="relative p-4 rounded-xl overflow-hidden group">
                           <div className="absolute inset-0 bg-gradient-to-br from-green-950/40 via-slate-900/50 to-blue-900/40 border border-green-400/40 rounded-xl transition-all duration-300 group-hover:border-green-300/60 shadow-lg shadow-green-500/10" />
                           <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
@@ -1695,10 +1708,10 @@ export function UltimateControlPanel({
                             <div className="flex items-center gap-2">
                               <Battery size={18} className="text-green-400 drop-shadow-lg" />
                               <span className="text-white font-semibold drop-shadow-lg">
-                                {deviceInfo.battery.level}%
+                                {device.battery.level}%
                               </span>
                             </div>
-                            {deviceInfo.battery.charging && (
+                            {device.battery.charging && (
                               <div className="text-xs text-green-400 flex items-center gap-1 drop-shadow-lg">
                                 <Zap size={12} />
                                 Charging
@@ -1760,14 +1773,14 @@ export function UltimateControlPanel({
                           <Wifi size={24} className="text-blue-400 drop-shadow-lg" />
                           <div className="flex-1">
                             <div className="text-sm text-blue-200/60">Connection</div>
-                            <div className="text-lg font-bold text-white drop-shadow-lg">
+                              <div className="text-lg font-bold text-white drop-shadow-lg">
                               {measuredType}
                             </div>
                             <div className="text-xs text-blue-300/50">
-                              {deviceInfo.network.type}
+                              {device.network.type}
                             </div>
                           </div>
-                          {deviceInfo.network.saveData && (
+                          {device.network.saveData && (
                             <div className="px-2 py-1 rounded-md bg-orange-500/20 border border-orange-500/30 text-orange-300 text-xs font-semibold">
                               Data Saver
                             </div>
@@ -1789,7 +1802,7 @@ export function UltimateControlPanel({
                           <div className="flex items-center justify-between mb-3">
                             <span className="text-sm text-blue-200/70">Link quality</span>
                             <span className="text-xs text-blue-300/50">
-                              Last test: {deviceInfo.network.testTimestamp ? new Date(deviceInfo.network.testTimestamp).toLocaleTimeString() : 'Just now'}
+                              Last test: {device.network.testTimestamp ? new Date(device.network.testTimestamp).toLocaleTimeString() : 'Just now'}
                             </span>
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-sm">
@@ -1868,19 +1881,19 @@ export function UltimateControlPanel({
                               <span className="text-sm text-blue-200/60">Location</span>
                             </div>
                             <div className="text-white font-semibold mb-1 drop-shadow-lg">
-                              {showSensitive ? deviceInfo.network.location : '••••••'}
+                              {showSensitive ? device.network.location : '••••••'}
                             </div>
                             <div className="text-xs text-blue-300/50">
-                              IP: {showSensitive ? deviceInfo.network.ip : '•••.•••.•••.•••'}
+                              IP: {showSensitive ? device.network.ip : '•••.•••.•••.•••'}
                             </div>
                             <div className="text-xs text-blue-300/50">
-                              ISP: {deviceInfo.network.isp}
+                              ISP: {device.network.isp}
                             </div>
                             <div className="text-xs text-blue-300/50">
-                              Browser: {deviceInfo.device.browser} {deviceInfo.device.browserVersion}
+                              Browser: {device.device.browser} {device.device.browserVersion}
                             </div>
                             <div className="text-xs text-blue-300/50">
-                              App Build: {deviceInfo.app?.buildId || 'n/a'}
+                              App Build: {device.app?.buildId || 'n/a'}
                             </div>
                           </div>
                           <button
@@ -1915,17 +1928,17 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* FPS Performance Panel */}
-                      <FpsPerformancePanel deviceInfo={deviceInfo} />
+                      <FpsPerformancePanel deviceInfo={device} />
 
                       {/* GPU */}
                       <StatCard
                         icon={Monitor}
                         label="GPU"
-                        value={deviceInfo.performance.gpu.tier.toUpperCase() + ' Tier'}
-                        sublabel={`Score ${Math.round(deviceInfo.performance.gpu.score ?? 0) || 0}/100 • ${deviceInfo.performance.gpu.vendor || ''} ${deviceInfo.performance.gpu.renderer || ''}`}
+                        value={device.performance.gpu.tier.toUpperCase() + ' Tier'}
+                        sublabel={`Score ${Math.round(device.performance.gpu.score ?? 0) || 0}/100 • ${device.performance.gpu.vendor || ''} ${device.performance.gpu.renderer || ''}`}
                         color={
-                          deviceInfo.performance.gpu.tier === 'high' ? '#22c55e' :
-                          deviceInfo.performance.gpu.tier === 'medium' ? '#f59e0b' : '#ef4444'
+                          device.performance.gpu.tier === 'high' ? '#22c55e' :
+                          device.performance.gpu.tier === 'medium' ? '#f59e0b' : '#ef4444'
                         }
                       />
 
@@ -1941,14 +1954,14 @@ export function UltimateControlPanel({
                         </div>
                         <div className="relative z-10 text-sm text-blue-200/80 mb-3">Device Snapshot</div>
                         <div className="relative z-10 grid grid-cols-2 gap-2 text-sm">
-                          <div className="text-blue-200/60">CPU: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.performance.cpu.name || `${deviceInfo.performance.cpu.cores} cores`}</span></div>
-                          <div className="text-blue-200/60">Threads: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.performance.cpu.threads}</span></div>
-                          <div className="text-blue-200/60">RAM: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.performance.memory.total}GB {deviceInfo.performance.memory.type || ''}</span></div>
-                          <div className="text-blue-200/60">VRAM: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.performance.gpu.vram ? `${deviceInfo.performance.gpu.vram}GB` : 'Unknown'}</span></div>
-                          <div className="text-blue-200/60">Display: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.screen.physicalWidth}×{deviceInfo.screen.physicalHeight}</span></div>
-                          <div className="text-blue-200/60">Refresh: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.screen.refreshRate || 60}Hz</span></div>
-                          <div className="text-blue-200/60">Storage: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.performance.storage ? `${deviceInfo.performance.storage.available}/${deviceInfo.performance.storage.total}GB` : 'Unknown'}</span></div>
-                          <div className="text-blue-200/60">Battery: <span className="text-white font-semibold drop-shadow-lg">{deviceInfo.battery.level >= 0 ? `${deviceInfo.battery.level}%` : 'N/A'}</span></div>
+                          <div className="text-blue-200/60">CPU: <span className="text-white font-semibold drop-shadow-lg">{device.performance.cpu.name || `${device.performance.cpu.cores} cores`}</span></div>
+                          <div className="text-blue-200/60">Threads: <span className="text-white font-semibold drop-shadow-lg">{device.performance.cpu.threads}</span></div>
+                          <div className="text-blue-200/60">RAM: <span className="text-white font-semibold drop-shadow-lg">{device.performance.memory.total}GB {device.performance.memory.type || ''}</span></div>
+                          <div className="text-blue-200/60">VRAM: <span className="text-white font-semibold drop-shadow-lg">{device.performance.gpu.vram ? `${device.performance.gpu.vram}GB` : 'Unknown'}</span></div>
+                          <div className="text-blue-200/60">Display: <span className="text-white font-semibold drop-shadow-lg">{device.screen.physicalWidth}×{device.screen.physicalHeight}</span></div>
+                          <div className="text-blue-200/60">Refresh: <span className="text-white font-semibold drop-shadow-lg">{device.screen.refreshRate || 60}Hz</span></div>
+                          <div className="text-blue-200/60">Storage: <span className="text-white font-semibold drop-shadow-lg">{device.performance.storage ? `${device.performance.storage.available}/${device.performance.storage.total}GB` : 'Unknown'}</span></div>
+                          <div className="text-blue-200/60">Battery: <span className="text-white font-semibold drop-shadow-lg">{device.battery.level >= 0 ? `${device.battery.level}%` : 'N/A'}</span></div>
                         </div>
                       </div>
 
@@ -1967,18 +1980,18 @@ export function UltimateControlPanel({
                         <div className="relative z-10 flex items-center justify-between mb-3">
                           <span className="text-sm text-blue-200/60">Memory Usage</span>
                           <span className="text-sm font-semibold text-white drop-shadow-lg">
-                            {deviceInfo.performance.memory.percentage}%
+                            {device.performance.memory.percentage}%
                           </span>
                         </div>
                         <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
                           <motion.div
                             initial={{ width: 0 }}
-                            animate={{ width: `${deviceInfo.performance.memory.percentage}%` }}
+                            animate={{ width: `${device.performance.memory.percentage}%` }}
                             className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
                           />
                         </div>
                         <div className="text-xs text-blue-200/50 mt-2">
-                          {deviceInfo.performance.memory.used}MB / {deviceInfo.performance.memory.limit}MB
+                          {device.performance.memory.used}MB / {device.performance.memory.limit}MB
                         </div>
                       </div>
 
@@ -2068,13 +2081,13 @@ export function UltimateControlPanel({
                           <div className="p-3 rounded-lg bg-black/30 backdrop-blur-sm border border-blue-500/20">
                             <div className="text-xs text-blue-200/60">IP</div>
                             <div className="text-sm font-semibold text-white truncate drop-shadow-lg">
-                              {showSensitive ? deviceInfo.network.ip : '•••.•••.•••.•••'}
+                              {showSensitive ? device.network.ip : '•••.•••.•••.•••'}
                             </div>
                           </div>
                           <div className="p-3 rounded-lg bg-black/30 backdrop-blur-sm border border-blue-500/20">
                             <div className="text-xs text-blue-200/60">ISP</div>
                             <div className="text-sm font-semibold text-white truncate drop-shadow-lg">
-                              {deviceInfo.network.isp || 'Unknown'}
+                              {device.network.isp || 'Unknown'}
                             </div>
                           </div>
                         </div>

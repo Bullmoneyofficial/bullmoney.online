@@ -354,8 +354,7 @@ import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 
 // UltimateControlPanel - direct import, it handles its own internal mount/unmount
-// UltimateControlPanel will be mounted in LayoutProviders (root layout)
-// import UltimateControlPanel from "@/components/UltimateControlPanel";
+import UltimateControlPanel from "@/components/UltimateControlPanel";
 
 // --- TYPE EXTENSION FOR GRID ---
 type GridItem = Project & {
