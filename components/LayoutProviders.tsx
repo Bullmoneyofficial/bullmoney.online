@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, ReactNode } from "react";
+import { Suspense, ReactNode, useState } from "react";
 
 // ✅ IMPORT CRITICAL SEO/ANALYTICS DIRECTLY - These are lightweight and critical
 import WebVitalsEnhanced from "@/components/WebVitalsEnhanced";
@@ -55,6 +55,12 @@ const ClientCursor = dynamic(
   { ssr: false }
 );
 
+// Ultimate Control Panel - mount in root layout so it's always available
+const UltimateControlPanel = dynamic(
+  () => import("@/components/UltimateControlPanel").then(mod => ({ default: mod.UltimateControlPanel })),
+  { ssr: false }
+);
+
 interface LayoutProvidersProps {
   children: ReactNode;
   modal?: ReactNode;
@@ -65,6 +71,8 @@ interface LayoutProvidersProps {
  * Handles all lazy-loaded providers and components with ssr: false
  */
 export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
+  const [ucpOpen, setUcpOpen] = useState(false);
+
   return (
     <>
       {/* Global Shimmer Styles - ensures all shimmers are synchronized */}
@@ -85,6 +93,12 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
             {children}
           </div>
         </ClientProviders>
+
+          {/* Ultimate Control Panel - fixed UI for FPS & device center */}
+              <UltimateControlPanel
+                isOpen={ucpOpen}
+                onOpenChange={setUcpOpen}
+              />
       </CacheManagerProvider>
 
       {/* ✅ VERCEL TRACKING - Enhanced Analytics & Speed Insights */}
