@@ -1,0 +1,4564 @@
+"use client";
+
+/**
+ * UltimateHub - Unified Control Center
+ * Combines: UltimateControlPanel + TradingQuickAccess + CommunityQuickAccess
+ * 
+ * Features:
+ * - Right side: FPS monitor with candlestick chart, Device Center Panel (4 tabs)
+ * - Left side: Live prices pill, Community pill with Telegram feed
+ * - Modals: Trading charts, Community/Telegram, BullMoney TV, Theme settings
+ * - Real device data: Memory, Browser, Storage, Network, Performance
+ * - Admin access, Browser switcher, VIP integration
+ */
+
+import React, { 
+  useState, 
+  useEffect, 
+  useRef, 
+  useCallback, 
+  useMemo,
+  createContext,
+  useContext,
+  memo
+} from 'react';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import {
+  Activity,
+  TrendingUp,
+  ChevronRight,
+  ChevronDown,
+  BarChart3,
+  Globe,
+  Bitcoin,
+  Coins,
+  ExternalLink,
+  Sparkles,
+  X,
+  MessageSquare,
+  MessageCircle,
+  Instagram,
+  Youtube,
+  Crown,
+  Loader,
+  ShoppingBag,
+  Lock,
+  Star,
+  Shield,
+  Zap,
+  Chrome,
+  Monitor,
+  Copy,
+  Check,
+  Settings,
+  Send,
+  User,
+  Palette,
+  Cpu,
+  HardDrive,
+  Wifi,
+  WifiOff,
+  Smartphone,
+  Battery,
+  Clock,
+  Database,
+  Server,
+  MemoryStick,
+  Gauge,
+  RefreshCw,
+  Play,
+  AlertTriangle,
+  CheckCircle,
+  Info,
+  Calendar,
+  Filter,
+  Radio
+} from 'lucide-react';
+import { useUIState } from '@/contexts/UIStateContext';
+import { createSupabaseClient } from '@/lib/supabase';
+
+// ============================================================================
+// TYPES & INTERFACES
+// ============================================================================
+
+interface CandleData {
+  timestamp: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+}
+
+interface TelegramPost {
+  id: string;
+  text: string;
+  date: string;
+  views?: string;
+  hasMedia: boolean;
+}
+
+// Real Device Data Types
+interface MemoryStats {
+  jsHeapUsed: number;
+  jsHeapLimit: number;
+  deviceRam: number;
+  browserAllocated: number;
+  percentage: number;
+  external: number;
+  updateTime: number;
+}
+
+interface BrowserInfo {
+  name: string;
+  version: string;
+  engine: string;
+  platform: string;
+  locale: string;
+  onLine: boolean;
+  cores: number;
+  deviceMemory: number;
+  connection: {
+    effectiveType: string;
+    downlink: number;
+    rtt: number;
+    saveData: boolean;
+  };
+}
+
+interface StorageStats {
+  total: number;
+  available: number;
+  used: number;
+  percentage: number;
+  type: string;
+  cache: number;
+  quota: number;
+  loading: boolean;
+}
+
+interface CacheStats {
+  usage: number;
+  quota: number;
+  percentage: number;
+  updateTime: number;
+}
+
+interface NetworkStats {
+  latency: number;
+  downloadSpeed: number;
+  uploadSpeed: number;
+  effectiveType: string;
+  downlink: number;
+  rtt: number;
+  saveData: boolean;
+  isOnline: boolean;
+  connectionType: string;
+  testing: boolean;
+  lastTest: number;
+}
+
+interface PerformanceStats {
+  loadTime: number;
+  domContentLoaded: number;
+  firstPaint: number;
+  firstContentfulPaint: number;
+  largestContentfulPaint: number;
+  timeToInteractive: number;
+  cumulativeLayoutShift: number;
+  totalBlockingTime: number;
+  jsExecutionTime: number;
+}
+
+// GPU Info from WebGL
+interface GpuInfo {
+  vendor: string;
+  renderer: string;
+  tier: 'ultra' | 'high' | 'medium' | 'low';
+  score: number;
+  webglVersion: string;
+  maxTextureSize: number;
+  maxViewportDims: number[];
+}
+
+// Battery Info from Battery API
+interface BatteryInfo {
+  level: number;
+  charging: boolean;
+  chargingTime: number;
+  dischargingTime: number;
+  supported: boolean;
+}
+
+// Screen Info
+interface ScreenInfo {
+  width: number;
+  height: number;
+  pixelRatio: number;
+  refreshRate: number;
+  colorDepth: number;
+  orientation: string;
+  touchPoints: number;
+  hdr: boolean;
+}
+
+interface HubContextType {
+  // FPS State
+  currentFps: number;
+  deviceTier: string;
+  shimmerEnabled: boolean;
+  setShimmerEnabled: (v: boolean) => void;
+  
+  // UI State
+  activeModal: ModalType | null;
+  setActiveModal: (m: ModalType | null) => void;
+  isMinimized: boolean;
+  setIsMinimized: (v: boolean) => void;
+  
+  // User State
+  isAdmin: boolean;
+  isVip: boolean;
+  userId?: string;
+  userEmail?: string;
+}
+
+type ModalType = 
+  | 'trading' 
+  | 'community' 
+  | 'bullmoneyTV' 
+  | 'theme' 
+  | 'contact' 
+  | 'services' 
+  | 'admin'
+  | 'browser'
+  | 'devicePanel';
+
+type ChannelKey = 'trades' | 'main' | 'shop' | 'vip';
+type DevicePanelTab = 'overview' | 'network' | 'performance' | 'account';
+
+// Calendar filter types
+type CalendarImpact = 'all' | 'high' | 'medium' | 'low';
+type CalendarCountry = 'all' | 'USD' | 'EUR' | 'GBP' | 'JPY' | 'AUD' | 'CAD' | 'CHF' | 'NZD';
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const TRADING_SYMBOLS = [
+  { id: 'xauusd', name: 'XAUUSD', displayName: 'Gold', abbr: 'Gold', symbol: 'OANDA:XAUUSD', icon: Coins },
+  { id: 'btcusd', name: 'BTCUSD', displayName: 'Bitcoin', abbr: 'BTC', symbol: 'BITSTAMP:BTCUSD', icon: Bitcoin },
+  { id: 'eurusd', name: 'EURUSD', displayName: 'EUR/USD', abbr: 'EUR', symbol: 'FX:EURUSD', icon: Globe },
+  { id: 'gbpusd', name: 'GBPUSD', displayName: 'GBP/USD', abbr: 'GBP', symbol: 'FX:GBPUSD', icon: Globe },
+  { id: 'usdjpy', name: 'USDJPY', displayName: 'USD/JPY', abbr: 'JPY', symbol: 'FX:USDJPY', icon: Globe },
+  { id: 'ethusd', name: 'ETHUSD', displayName: 'Ethereum', abbr: 'ETH', symbol: 'BITSTAMP:ETHUSD', icon: Coins },
+] as const;
+
+const TELEGRAM_CHANNELS = {
+  trades: { name: 'FREE TRADES', handle: 'bullmoneywebsite', icon: TrendingUp, color: 'cyan', requiresVip: false },
+  main: { name: 'LIVESTREAMS', handle: 'bullmoneyfx', icon: MessageCircle, color: 'blue', requiresVip: false },
+  shop: { name: 'NEWS', handle: 'Bullmoneyshop', icon: ShoppingBag, color: 'emerald', requiresVip: false },
+  vip: { name: 'VIP TRADES', handle: 'bullmoneyvip', icon: Crown, color: 'amber', requiresVip: true },
+} as const;
+
+const BROWSERS = [
+  {
+    id: 'chrome', name: 'Chrome', fullName: 'Google Chrome', icon: Chrome,
+    deepLink: {
+      ios: (url: string) => url.startsWith('https') ? `googlechromes://${url.replace(/^https:\/\//, '')}` : `googlechrome://${url.replace(/^http:\/\//, '')}`,
+      android: (url: string) => `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`,
+      desktop: (url: string) => url
+    },
+    downloadUrl: 'https://www.google.com/chrome/',
+    iosAppStore: 'https://apps.apple.com/app/id535886823',
+    androidPlayStore: 'https://play.google.com/store/apps/details?id=com.android.chrome'
+  },
+  {
+    id: 'firefox', name: 'Firefox', fullName: 'Firefox', icon: Globe,
+    deepLink: {
+      ios: (url: string) => `firefox://open-url?url=${encodeURIComponent(url)}`,
+      android: (url: string) => `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=org.mozilla.firefox;end`,
+      desktop: (url: string) => url
+    },
+    downloadUrl: 'https://www.mozilla.org/firefox/browsers/mobile/',
+    iosAppStore: 'https://apps.apple.com/app/id989804926',
+    androidPlayStore: 'https://play.google.com/store/apps/details?id=org.mozilla.firefox'
+  },
+  {
+    id: 'safari', name: 'Safari', fullName: 'Safari', icon: Globe,
+    deepLink: { ios: (url: string) => url, android: (url: string) => url, desktop: (url: string) => url },
+    downloadUrl: 'https://support.apple.com/downloads/safari',
+    iosAppStore: '', androidPlayStore: ''
+  },
+  {
+    id: 'edge', name: 'Edge', fullName: 'Microsoft Edge', icon: Globe,
+    deepLink: {
+      ios: (url: string) => url.startsWith('https') ? `microsoft-edge-https://${url.replace(/^https:\/\//, '')}` : `microsoft-edge-http://${url.replace(/^http:\/\//, '')}`,
+      android: (url: string) => `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.microsoft.emmx;end`,
+      desktop: (url: string) => url
+    },
+    downloadUrl: 'https://www.microsoft.com/edge',
+    iosAppStore: 'https://apps.apple.com/app/id1288723196',
+    androidPlayStore: 'https://play.google.com/store/apps/details?id=com.microsoft.emmx'
+  },
+] as const;
+
+const TRADING_TIPS = [
+  "Check the price out! 📈", "Gold often moves inverse to USD 💰", "Watch for support & resistance levels",
+  "Use RSI for overbought/oversold signals", "MACD crossovers signal trend changes", "Volume confirms price movements",
+  "Higher highs = bullish trend 🟢", "Lower lows = bearish trend 🔴", "200+ chart analysis tools inside!",
+  "Set stop losses to manage risk", "News events move markets fast ⚡", "Fibonacci levels mark key zones",
+  "Bollinger Bands show volatility", "Moving averages smooth price action", "Candlestick patterns reveal sentiment",
+  "Doji = market indecision", "Engulfing candles signal reversals", "Head & shoulders = trend reversal",
+  "Double tops/bottoms are key patterns", "Triangles precede breakouts", "Always check the daily timeframe",
+  "Correlation: Gold vs DXY inverse 📊", "BTC leads crypto market moves", "London & NY sessions = high volume",
+  "Asian session = range-bound trading", "NFP Fridays = major USD moves", "FOMC meetings = volatility spikes",
+  "Risk management > prediction", "1% risk per trade is wise", "Trend is your friend 🎯",
+  "Don't fight the Fed", "Buy the rumor, sell the news", "Patience is a trader's virtue",
+  "Emotions kill trading accounts", "Journal every trade you make", "Backtest before going live",
+  "Paper trade to learn first", "ATR measures true volatility", "Pivot points mark intraday levels",
+  "VWAP is institutional favorite", "Order flow reveals big players", "Liquidity pools attract price",
+  "Fair value gaps get filled", "Market structure = key concept", "Break of structure = momentum",
+  "Change of character = reversal", "Smart money concepts work", "ICT methodology is powerful",
+  "Supply & demand zones matter", "Imbalances create opportunities"
+];
+
+const FEATURED_VIDEOS = ['Q3dSjSP3t8I', 'xvP1FJt-Qto'];
+
+const TRADING_LIVE_CHANNELS = [
+  { id: 'UCrp_UI8XtuYfpiqluWLD7Lw', name: 'The Trading Channel' },
+  { id: 'UCGnHwBJHZ0JCN8t8EA0PLQA', name: 'Rayner Teo' },
+  { id: 'UC2C_jShtL725hvbm1arSV9w', name: 'Matt Kohrs' },
+  { id: 'UCduLPLzWNkL-8aCJohrmJhw', name: 'Ziptrader' },
+  { id: 'UCnqZ2hx679O1JBIRDlJNzKA', name: 'TradeZella' },
+  { id: 'UCU8WjbDkHFUfIGBnrkA6zRg', name: 'Humbled Trader' },
+  { id: 'UCpmAlqg4X-UdHcSL4aPTPqw', name: 'Warrior Trading' },
+];
+
+// Device Panel Tab Config
+const DEVICE_PANEL_TABS: { id: DevicePanelTab; label: string; icon: typeof Cpu }[] = [
+  { id: 'overview', label: 'Overview', icon: Smartphone },
+  { id: 'network', label: 'Network', icon: Wifi },
+  { id: 'performance', label: 'Performance', icon: Gauge },
+  { id: 'account', label: 'Account', icon: User },
+];
+
+// Calendar Countries
+const CALENDAR_COUNTRIES: { id: CalendarCountry; name: string; flag: string }[] = [
+  { id: 'all', name: 'All', flag: '🌍' },
+  { id: 'USD', name: 'USD', flag: '🇺🇸' },
+  { id: 'EUR', name: 'EUR', flag: '🇪🇺' },
+  { id: 'GBP', name: 'GBP', flag: '🇬🇧' },
+  { id: 'JPY', name: 'JPY', flag: '🇯🇵' },
+  { id: 'AUD', name: 'AUD', flag: '🇦🇺' },
+  { id: 'CAD', name: 'CAD', flag: '🇨🇦' },
+  { id: 'CHF', name: 'CHF', flag: '🇨🇭' },
+  { id: 'NZD', name: 'NZD', flag: '🇳🇿' },
+];
+
+// ============================================================================
+// CONTEXT
+// ============================================================================
+
+const HubContext = createContext<HubContextType | null>(null);
+
+const useHub = () => {
+  const ctx = useContext(HubContext);
+  if (!ctx) throw new Error('useHub must be used within HubProvider');
+  return ctx;
+};
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+const SoundEffects = {
+  click: () => {
+    if (typeof window !== 'undefined' && 'AudioContext' in window) {
+      try {
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 800;
+        gain.gain.value = 0.05;
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        osc.stop(ctx.currentTime + 0.1);
+      } catch {}
+    }
+  },
+  hover: () => {
+    if (typeof window !== 'undefined' && 'AudioContext' in window) {
+      try {
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 600;
+        gain.gain.value = 0.02;
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+        osc.stop(ctx.currentTime + 0.05);
+      } catch {}
+    }
+  },
+  swoosh: () => {
+    if (typeof window !== 'undefined' && 'AudioContext' in window) {
+      try {
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.15);
+      } catch {}
+    }
+  },
+  swipe: () => {
+    if (typeof window !== 'undefined' && 'AudioContext' in window) {
+      try {
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.06, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.1);
+      } catch {}
+    }
+  },
+  success: () => {
+    if (typeof window !== 'undefined' && 'AudioContext' in window) {
+      try {
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); // E5
+        osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2); // G5
+        gain.gain.setValueAtTime(0.06, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+      } catch {}
+    }
+  }
+};
+
+const getFpsColor = (fps: number) => {
+  if (fps >= 58) return { text: '#34d399', glow: 'rgba(52, 211, 153, 0.9)', bg: 'rgba(52, 211, 153, 0.15)' };
+  if (fps >= 50) return { text: '#60a5fa', glow: 'rgba(96, 165, 250, 0.9)', bg: 'rgba(96, 165, 250, 0.15)' };
+  if (fps >= 40) return { text: '#fbbf24', glow: 'rgba(251, 191, 36, 0.8)', bg: 'rgba(251, 191, 36, 0.15)' };
+  if (fps >= 30) return { text: '#fb923c', glow: 'rgba(251, 146, 60, 0.8)', bg: 'rgba(251, 146, 60, 0.15)' };
+  return { text: '#f87171', glow: 'rgba(248, 113, 113, 0.8)', bg: 'rgba(248, 113, 113, 0.15)' };
+};
+
+// ============================================================================
+// CUSTOM HOOKS
+// ============================================================================
+
+function useFpsMonitor() {
+  const [fps, setFps] = useState(60);
+  const [deviceTier, setDeviceTier] = useState('high');
+  const frameTimesRef = useRef<number[]>([]);
+  const lastFrameRef = useRef(performance.now());
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const measureFps = () => {
+      const now = performance.now();
+      const delta = now - lastFrameRef.current;
+      lastFrameRef.current = now;
+      
+      frameTimesRef.current.push(delta);
+      if (frameTimesRef.current.length > 30) frameTimesRef.current.shift();
+      
+      const avgDelta = frameTimesRef.current.reduce((a, b) => a + b, 0) / frameTimesRef.current.length;
+      const currentFps = Math.round(1000 / avgDelta);
+      setFps(Math.min(currentFps, 120));
+      
+      // Determine device tier
+      if (currentFps >= 55) setDeviceTier('ultra');
+      else if (currentFps >= 45) setDeviceTier('high');
+      else if (currentFps >= 35) setDeviceTier('medium');
+      else if (currentFps >= 25) setDeviceTier('low');
+      else setDeviceTier('minimal');
+      
+      rafRef.current = requestAnimationFrame(measureFps);
+    };
+    
+    rafRef.current = requestAnimationFrame(measureFps);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, []);
+
+  return { fps, deviceTier };
+}
+
+// ============================================================================
+// REAL DEVICE DATA HOOKS - Using actual browser APIs
+// ============================================================================
+
+/**
+ * Hook for real-time JavaScript heap memory monitoring + device RAM detection
+ * Uses Performance.memory API and Navigator.deviceMemory
+ */
+function useRealTimeMemory(): MemoryStats {
+  const [memoryStats, setMemoryStats] = useState<MemoryStats>({
+    jsHeapUsed: 0,
+    jsHeapLimit: 0,
+    deviceRam: 4,
+    browserAllocated: 0,
+    percentage: 0,
+    external: 0,
+    updateTime: Date.now(),
+  });
+
+  const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    
+    // Get REAL device memory from Navigator API
+    const deviceMemory = typeof (navigator as any).deviceMemory === 'number' 
+      ? (navigator as any).deviceMemory 
+      : 4;
+
+    const updateMemory = () => {
+      if (!isMountedRef.current) return;
+      
+      const now = Date.now();
+      // Use REAL Performance.memory API (Chrome/Edge only)
+      const jsMemory = (performance as any).memory;
+
+      if (jsMemory) {
+        const jsHeapUsedMB = Math.round(jsMemory.usedJSHeapSize / 1024 / 1024);
+        const jsHeapLimitMB = Math.round(jsMemory.jsHeapSizeLimit / 1024 / 1024);
+        const externalMB = Math.round(jsMemory.totalJSHeapSize ? 
+          (jsMemory.totalJSHeapSize - jsMemory.usedJSHeapSize) / 1024 / 1024 : 0);
+        
+        const browserAllocatedMB = jsHeapUsedMB + externalMB;
+        const percentage = Math.round((jsHeapUsedMB / jsHeapLimitMB) * 100);
+
+        if (isMountedRef.current) {
+          setMemoryStats(prev => {
+            if (prev.jsHeapUsed === jsHeapUsedMB && prev.percentage === percentage) return prev;
+            return {
+              jsHeapUsed: jsHeapUsedMB,
+              jsHeapLimit: jsHeapLimitMB,
+              deviceRam: deviceMemory,
+              browserAllocated: browserAllocatedMB,
+              percentage,
+              external: externalMB,
+              updateTime: now,
+            };
+          });
+        }
+      }
+    };
+
+    updateMemory();
+    updateIntervalRef.current = setInterval(updateMemory, 500);
+
+    return () => {
+      isMountedRef.current = false;
+      if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
+    };
+  }, []);
+
+  return memoryStats;
+}
+
+/**
+ * Hook for detecting REAL browser and device information
+ * Uses Navigator API, UserAgent, and Network Information API
+ */
+function useBrowserInfo(): BrowserInfo {
+  const [browserInfo, setBrowserInfo] = useState<BrowserInfo>({
+    name: 'Detecting...',
+    version: '',
+    engine: 'Unknown',
+    platform: 'Unknown',
+    locale: typeof navigator !== 'undefined' ? navigator.language || 'en-US' : 'en-US',
+    onLine: typeof navigator !== 'undefined' ? navigator.onLine : true,
+    cores: 1,
+    deviceMemory: 4,
+    connection: {
+      effectiveType: '4g',
+      downlink: 10,
+      rtt: 50,
+      saveData: false,
+    },
+  });
+
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const nav = navigator as any;
+
+    // Detect REAL browser name and version from UserAgent
+    let name = 'Unknown';
+    let version = '';
+
+    if (/OPR\/([\d.]+)/.test(ua)) {
+      name = 'Opera';
+      version = RegExp.$1;
+    } else if (/Edg\/([\d.]+)/.test(ua)) {
+      name = 'Edge';
+      version = RegExp.$1;
+    } else if (/Chrome\/([\d.]+)/.test(ua) && !/Edge|OPR|UCWEB/.test(ua)) {
+      name = 'Chrome';
+      version = RegExp.$1;
+    } else if (/Version\/([\d.]+).*Safari/.test(ua) && !/Chrome|CriOS|OPR|Edg/.test(ua)) {
+      name = 'Safari';
+      version = RegExp.$1;
+    } else if (/Firefox\/([\d.]+)/.test(ua)) {
+      name = 'Firefox';
+      version = RegExp.$1;
+    } else if (/MSIE ([\d.]+)|Trident.*rv:([\d.]+)/.test(ua)) {
+      name = 'Internet Explorer';
+      version = RegExp.$1 || RegExp.$2;
+    }
+
+    // Detect REAL rendering engine
+    let engine = 'Unknown';
+    if (/Trident/.test(ua)) engine = 'Trident';
+    else if (/like Gecko/.test(ua) && !/WebKit/.test(ua)) engine = 'Gecko';
+    else if (/WebKit/.test(ua)) engine = /Chrome|Edge|Opera/.test(ua) ? 'Blink' : 'WebKit';
+
+    // Detect REAL platform
+    let platform = 'Unknown';
+    const platformUA = (nav.userAgentData?.platform || nav.platform || '').toLowerCase();
+    if (/win/.test(platformUA) || /windows/.test(ua.toLowerCase())) platform = 'Windows';
+    else if (/mac/.test(platformUA) || /macintosh|macintel|macosx|darwin/.test(ua.toLowerCase())) {
+      platform = /iphone|ios|ipad/.test(ua.toLowerCase()) ? 'iOS' : 'macOS';
+    } else if (/linux/.test(platformUA) || /linux|x11/.test(ua.toLowerCase())) {
+      platform = /android/.test(ua.toLowerCase()) ? 'Android' : 'Linux';
+    } else if (/iphone|ios/.test(ua.toLowerCase())) platform = 'iOS';
+    else if (/ipad/.test(ua.toLowerCase())) platform = 'iPadOS';
+    else if (/android/.test(ua.toLowerCase())) platform = 'Android';
+
+    // Get REAL hardware info
+    const cores = nav.hardwareConcurrency || 1;
+    const deviceMemory = nav.deviceMemory || 4;
+
+    // Get REAL network connection info
+    const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
+    const connectionInfo = connection ? {
+      effectiveType: connection.effectiveType || '4g',
+      downlink: connection.downlink || 10,
+      rtt: connection.rtt || 50,
+      saveData: connection.saveData || false,
+    } : { effectiveType: '4g', downlink: 10, rtt: 50, saveData: false };
+
+    setBrowserInfo({
+      name,
+      version,
+      engine,
+      platform,
+      locale: navigator.language || 'en-US',
+      onLine: navigator.onLine,
+      cores,
+      deviceMemory,
+      connection: connectionInfo,
+    });
+
+    // Listen for online/offline changes
+    const handleOnline = () => setBrowserInfo(prev => ({ ...prev, onLine: true }));
+    const handleOffline = () => setBrowserInfo(prev => ({ ...prev, onLine: false }));
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return browserInfo;
+}
+
+/**
+ * Hook for detecting REAL storage space using Storage API
+ */
+function useStorageInfo(): StorageStats {
+  const [storageStats, setStorageStats] = useState<StorageStats>({
+    total: 64,
+    available: 32,
+    used: 32,
+    percentage: 50,
+    type: 'Detecting...',
+    cache: 0,
+    quota: 0,
+    loading: true,
+  });
+
+  useEffect(() => {
+    const detectStorage = async () => {
+      try {
+        // Use REAL Storage API
+        if ('storage' in navigator && 'estimate' in navigator.storage) {
+          const estimate = await navigator.storage.estimate();
+          const quota = estimate.quota || 0;
+          const usage = estimate.usage || 0;
+
+          const estimatedTotal = Math.round((quota / 0.6) / 1024 / 1024 / 1024);
+          const available = Math.round((quota - usage) / 1024 / 1024 / 1024);
+          const used = Math.round(usage / 1024 / 1024 / 1024);
+          const percentage = quota > 0 ? Math.round((usage / quota) * 100) : 0;
+
+          const cacheUsageMB = Math.round((usage / 1024 / 1024) * 100) / 100;
+          const cacheQuotaMB = Math.round((quota / 1024 / 1024) * 100) / 100;
+
+          // Estimate storage type based on quota size
+          let type = 'Storage';
+          const totalGB = Math.max(estimatedTotal, 64);
+          if (totalGB >= 512) type = 'NVMe SSD';
+          else if (totalGB >= 256) type = 'SSD';
+          else if (totalGB >= 128) type = 'SSD/Flash';
+
+          setStorageStats({
+            total: Math.max(totalGB, 64),
+            available: Math.max(available, 1),
+            used: Math.max(used, 1),
+            percentage,
+            type,
+            cache: cacheUsageMB,
+            quota: cacheQuotaMB,
+            loading: false,
+          });
+        } else {
+          setStorageStats(prev => ({ ...prev, type: 'API Unavailable', loading: false }));
+        }
+      } catch (error) {
+        console.warn('[useStorageInfo] Storage detection failed:', error);
+        setStorageStats(prev => ({ ...prev, type: 'Error detecting', loading: false }));
+      }
+    };
+
+    detectStorage();
+  }, []);
+
+  return storageStats;
+}
+
+/**
+ * Hook for real-time cache usage monitoring using Storage API
+ */
+function useRealTimeCache(): CacheStats {
+  const [cacheStats, setCacheStats] = useState<CacheStats>({
+    usage: 0,
+    quota: 0,
+    percentage: 0,
+    updateTime: Date.now(),
+  });
+
+  useEffect(() => {
+    const updateCache = async () => {
+      try {
+        if ('storage' in navigator && 'estimate' in navigator.storage) {
+          const estimate = await navigator.storage.estimate();
+          const quota = estimate.quota || 0;
+          const usage = estimate.usage || 0;
+
+          const usageMB = Math.round((usage / 1024 / 1024) * 100) / 100;
+          const quotaMB = Math.round((quota / 1024 / 1024) * 100) / 100;
+          const percentage = quota > 0 ? Math.round((usage / quota) * 100) : 0;
+
+          setCacheStats({ usage: usageMB, quota: quotaMB, percentage, updateTime: Date.now() });
+        }
+      } catch (error) {
+        console.warn('[useRealTimeCache] Cache detection failed:', error);
+      }
+    };
+
+    updateCache();
+    const interval = setInterval(updateCache, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return cacheStats;
+}
+
+/**
+ * Hook for REAL network speed testing using Resource Timing API
+ */
+function useNetworkStats(): NetworkStats {
+  const [networkStats, setNetworkStats] = useState<NetworkStats>({
+    latency: 0,
+    downloadSpeed: 0,
+    uploadSpeed: 0,
+    effectiveType: '4g',
+    downlink: 10,
+    rtt: 50,
+    saveData: false,
+    isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+    connectionType: 'unknown',
+    testing: false,
+    lastTest: 0,
+  });
+
+  const runSpeedTest = useCallback(async () => {
+    setNetworkStats(prev => ({ ...prev, testing: true }));
+    
+    try {
+      // Test latency with real request
+      const latencyStart = performance.now();
+      await fetch('/api/health', { method: 'HEAD', cache: 'no-store' }).catch(() => {});
+      const latency = Math.round(performance.now() - latencyStart);
+
+      // Test download speed with real data
+      const downloadStart = performance.now();
+      const response = await fetch(`/api/speed-test?t=${Date.now()}`, { cache: 'no-store' }).catch(() => null);
+      const downloadTime = (performance.now() - downloadStart) / 1000;
+      
+      let downloadSpeed = 0;
+      if (response) {
+        const blob = await response.blob().catch(() => new Blob());
+        const sizeKB = blob.size / 1024;
+        downloadSpeed = Math.round((sizeKB / downloadTime) * 8); // kbps
+      }
+
+      // Get REAL connection info from Network Information API
+      const nav = navigator as any;
+      const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
+      
+      setNetworkStats(prev => ({
+        ...prev,
+        latency,
+        downloadSpeed: downloadSpeed || (connection?.downlink ? connection.downlink * 1000 : 0),
+        effectiveType: connection?.effectiveType || '4g',
+        downlink: connection?.downlink || 10,
+        rtt: connection?.rtt || latency,
+        saveData: connection?.saveData || false,
+        isOnline: navigator.onLine,
+        connectionType: connection?.type || 'unknown',
+        testing: false,
+        lastTest: Date.now(),
+      }));
+    } catch (error) {
+      setNetworkStats(prev => ({ ...prev, testing: false }));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Initial connection info
+    const nav = navigator as any;
+    const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
+    
+    if (connection) {
+      setNetworkStats(prev => ({
+        ...prev,
+        effectiveType: connection.effectiveType || '4g',
+        downlink: connection.downlink || 10,
+        rtt: connection.rtt || 50,
+        saveData: connection.saveData || false,
+        connectionType: connection.type || 'unknown',
+      }));
+    }
+
+    // Listen for connection changes
+    const handleChange = () => {
+      if (connection) {
+        setNetworkStats(prev => ({
+          ...prev,
+          effectiveType: connection.effectiveType || '4g',
+          downlink: connection.downlink || 10,
+          rtt: connection.rtt || 50,
+          saveData: connection.saveData || false,
+        }));
+      }
+    };
+
+    const handleOnline = () => setNetworkStats(prev => ({ ...prev, isOnline: true }));
+    const handleOffline = () => setNetworkStats(prev => ({ ...prev, isOnline: false }));
+
+    connection?.addEventListener?.('change', handleChange);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      connection?.removeEventListener?.('change', handleChange);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return { ...networkStats, runSpeedTest } as NetworkStats & { runSpeedTest: () => Promise<void> };
+}
+
+/**
+ * Hook for REAL performance metrics using Performance API
+ */
+function usePerformanceStats(): PerformanceStats {
+  const [perfStats, setPerfStats] = useState<PerformanceStats>({
+    loadTime: 0,
+    domContentLoaded: 0,
+    firstPaint: 0,
+    firstContentfulPaint: 0,
+    largestContentfulPaint: 0,
+    timeToInteractive: 0,
+    cumulativeLayoutShift: 0,
+    totalBlockingTime: 0,
+    jsExecutionTime: 0,
+  });
+
+  useEffect(() => {
+    const measurePerformance = () => {
+      try {
+        // Get REAL navigation timing
+        const navTiming = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+        
+        // Get REAL paint timing
+        const paintEntries = performance.getEntriesByType('paint');
+        const fpEntry = paintEntries.find(e => e.name === 'first-paint');
+        const fcpEntry = paintEntries.find(e => e.name === 'first-contentful-paint');
+
+        // Calculate REAL metrics
+        const loadTime = navTiming ? Math.round(navTiming.loadEventEnd - navTiming.startTime) : 0;
+        const domContentLoaded = navTiming ? Math.round(navTiming.domContentLoadedEventEnd - navTiming.startTime) : 0;
+        const firstPaint = fpEntry ? Math.round(fpEntry.startTime) : 0;
+        const firstContentfulPaint = fcpEntry ? Math.round(fcpEntry.startTime) : 0;
+
+        // Measure JS execution time
+        const resourceEntries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+        const jsResources = resourceEntries.filter(r => r.name.includes('.js') || r.initiatorType === 'script');
+        const jsExecutionTime = jsResources.reduce((acc, r) => acc + (r.duration || 0), 0);
+
+        setPerfStats({
+          loadTime,
+          domContentLoaded,
+          firstPaint,
+          firstContentfulPaint,
+          largestContentfulPaint: 0,
+          timeToInteractive: domContentLoaded,
+          cumulativeLayoutShift: 0,
+          totalBlockingTime: 0,
+          jsExecutionTime: Math.round(jsExecutionTime),
+        });
+
+        // Observe LCP
+        if ('PerformanceObserver' in window) {
+          try {
+            const lcpObserver = new PerformanceObserver((list) => {
+              const entries = list.getEntries();
+              const lastEntry = entries[entries.length - 1];
+              if (lastEntry) {
+                setPerfStats(prev => ({
+                  ...prev,
+                  largestContentfulPaint: Math.round(lastEntry.startTime),
+                }));
+              }
+            });
+            lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
+
+            // Observe CLS
+            const clsObserver = new PerformanceObserver((list) => {
+              let clsValue = 0;
+              for (const entry of list.getEntries()) {
+                if (!(entry as any).hadRecentInput) {
+                  clsValue += (entry as any).value || 0;
+                }
+              }
+              setPerfStats(prev => ({
+                ...prev,
+                cumulativeLayoutShift: Math.round(clsValue * 1000) / 1000,
+              }));
+            });
+            clsObserver.observe({ entryTypes: ['layout-shift'] });
+
+            return () => {
+              lcpObserver.disconnect();
+              clsObserver.disconnect();
+            };
+          } catch {}
+        }
+      } catch (error) {
+        console.warn('[usePerformanceStats] Performance measurement failed:', error);
+      }
+    };
+
+    // Wait for page load
+    if (document.readyState === 'complete') {
+      measurePerformance();
+    } else {
+      window.addEventListener('load', measurePerformance);
+      return () => window.removeEventListener('load', measurePerformance);
+    }
+  }, []);
+
+  return perfStats;
+}
+
+/**
+ * Hook for REAL GPU info using WebGL API
+ */
+function useGpuInfo(): GpuInfo {
+  const [gpuInfo, setGpuInfo] = useState<GpuInfo>({
+    vendor: 'Detecting...',
+    renderer: 'Detecting...',
+    tier: 'medium',
+    score: 50,
+    webglVersion: 'Unknown',
+    maxTextureSize: 0,
+    maxViewportDims: [0, 0],
+  });
+
+  useEffect(() => {
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl') as WebGLRenderingContext | null;
+      
+      if (gl) {
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        let vendor = 'Unknown';
+        let renderer = 'Unknown';
+        
+        if (debugInfo) {
+          vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || 'Unknown';
+          renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || 'Unknown';
+        }
+        
+        const webglVersion = canvas.getContext('webgl2') ? 'WebGL 2.0' : 'WebGL 1.0';
+        const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) || 0;
+        const maxViewportDims = gl.getParameter(gl.MAX_VIEWPORT_DIMS) || [0, 0];
+        
+        // Determine GPU tier based on renderer string
+        let tier: 'ultra' | 'high' | 'medium' | 'low' = 'medium';
+        let score = 50;
+        const rendererLower = renderer.toLowerCase();
+        
+        // Ultra tier GPUs
+        if (rendererLower.includes('rtx 40') || rendererLower.includes('rtx 30') || 
+            rendererLower.includes('radeon rx 7') || rendererLower.includes('radeon rx 6') ||
+            rendererLower.includes('apple m2') || rendererLower.includes('apple m3') ||
+            rendererLower.includes('a17') || rendererLower.includes('a16')) {
+          tier = 'ultra';
+          score = 95;
+        }
+        // High tier GPUs
+        else if (rendererLower.includes('rtx 20') || rendererLower.includes('gtx 16') ||
+                 rendererLower.includes('radeon rx 5') || rendererLower.includes('apple m1') ||
+                 rendererLower.includes('a15') || rendererLower.includes('a14') ||
+                 rendererLower.includes('adreno 7') || rendererLower.includes('mali-g7')) {
+          tier = 'high';
+          score = 75;
+        }
+        // Low tier GPUs
+        else if (rendererLower.includes('intel hd') || rendererLower.includes('intel uhd') ||
+                 rendererLower.includes('adreno 5') || rendererLower.includes('mali-4') ||
+                 rendererLower.includes('powervr')) {
+          tier = 'low';
+          score = 30;
+        }
+        
+        setGpuInfo({
+          vendor,
+          renderer,
+          tier,
+          score,
+          webglVersion,
+          maxTextureSize,
+          maxViewportDims: maxViewportDims as number[],
+        });
+      }
+    } catch (error) {
+      console.warn('[useGpuInfo] GPU detection failed:', error);
+    }
+  }, []);
+
+  return gpuInfo;
+}
+
+/**
+ * Hook for REAL battery info using Battery API
+ */
+function useBatteryInfo(): BatteryInfo {
+  const [batteryInfo, setBatteryInfo] = useState<BatteryInfo>({
+    level: -1,
+    charging: false,
+    chargingTime: Infinity,
+    dischargingTime: Infinity,
+    supported: false,
+  });
+
+  useEffect(() => {
+    let battery: any = null;
+
+    const updateBatteryInfo = () => {
+      if (battery) {
+        setBatteryInfo({
+          level: Math.round(battery.level * 100),
+          charging: battery.charging,
+          chargingTime: battery.chargingTime || Infinity,
+          dischargingTime: battery.dischargingTime || Infinity,
+          supported: true,
+        });
+      }
+    };
+
+    const initBattery = async () => {
+      try {
+        if ('getBattery' in navigator) {
+          battery = await (navigator as any).getBattery();
+          updateBatteryInfo();
+          
+          battery.addEventListener('levelchange', updateBatteryInfo);
+          battery.addEventListener('chargingchange', updateBatteryInfo);
+          battery.addEventListener('chargingtimechange', updateBatteryInfo);
+          battery.addEventListener('dischargingtimechange', updateBatteryInfo);
+        }
+      } catch (error) {
+        console.warn('[useBatteryInfo] Battery API not supported:', error);
+      }
+    };
+
+    initBattery();
+
+    return () => {
+      if (battery) {
+        battery.removeEventListener('levelchange', updateBatteryInfo);
+        battery.removeEventListener('chargingchange', updateBatteryInfo);
+        battery.removeEventListener('chargingtimechange', updateBatteryInfo);
+        battery.removeEventListener('dischargingtimechange', updateBatteryInfo);
+      }
+    };
+  }, []);
+
+  return batteryInfo;
+}
+
+/**
+ * Hook for REAL screen info
+ */
+function useScreenInfo(): ScreenInfo {
+  const [screenInfo, setScreenInfo] = useState<ScreenInfo>({
+    width: typeof window !== 'undefined' ? window.screen.width : 0,
+    height: typeof window !== 'undefined' ? window.screen.height : 0,
+    pixelRatio: typeof window !== 'undefined' ? window.devicePixelRatio : 1,
+    refreshRate: 60,
+    colorDepth: typeof window !== 'undefined' ? window.screen.colorDepth : 24,
+    orientation: 'portrait',
+    touchPoints: 0,
+    hdr: false,
+  });
+
+  useEffect(() => {
+    const updateScreenInfo = () => {
+      const nav = navigator as any;
+      
+      // Detect refresh rate (estimate based on requestAnimationFrame)
+      let refreshRate = 60;
+      let frameCount = 0;
+      let lastTime = performance.now();
+      
+      const measureRefreshRate = (timestamp: number) => {
+        frameCount++;
+        if (frameCount >= 60) {
+          const elapsed = timestamp - lastTime;
+          refreshRate = Math.round((frameCount / elapsed) * 1000);
+          setScreenInfo(prev => ({ ...prev, refreshRate: Math.min(refreshRate, 240) }));
+          return;
+        }
+        requestAnimationFrame(measureRefreshRate);
+      };
+      requestAnimationFrame(measureRefreshRate);
+
+      // Check for HDR support
+      const hdr = window.matchMedia('(dynamic-range: high)').matches;
+      
+      setScreenInfo({
+        width: window.screen.width,
+        height: window.screen.height,
+        pixelRatio: window.devicePixelRatio,
+        refreshRate,
+        colorDepth: window.screen.colorDepth,
+        orientation: window.screen.orientation?.type?.includes('portrait') ? 'portrait' : 'landscape',
+        touchPoints: nav.maxTouchPoints || 0,
+        hdr,
+      });
+    };
+
+    updateScreenInfo();
+    window.addEventListener('resize', updateScreenInfo);
+    
+    return () => window.removeEventListener('resize', updateScreenInfo);
+  }, []);
+
+  return screenInfo;
+}
+
+/**
+ * Calculate 3D Performance Score (0-100)
+ */
+function calculate3DPerformanceScore(fps: number, memoryPercentage: number, gpuScore: number, cores: number): number {
+  let score = 0;
+  
+  // GPU tier (40 points)
+  score += Math.min(40, Math.round((gpuScore / 100) * 40));
+  
+  // FPS (30 points)
+  if (fps >= 60) score += 30;
+  else if (fps >= 45) score += 20;
+  else if (fps >= 30) score += 10;
+  else score += 5;
+  
+  // Memory (20 points)
+  if (memoryPercentage < 50) score += 20;
+  else if (memoryPercentage < 70) score += 15;
+  else if (memoryPercentage < 85) score += 10;
+  else score += 5;
+  
+  // CPU cores (10 points)
+  if (cores >= 8) score += 10;
+  else if (cores >= 4) score += 7;
+  else score += 3;
+  
+  return Math.min(100, score);
+}
+
+/**
+ * Get Performance Grade from Score
+ */
+function getPerformanceGrade(score: number): { grade: string; color: string; label: string } {
+  if (score >= 90) return { grade: 'S', color: '#22c55e', label: 'Excellent' };
+  if (score >= 80) return { grade: 'A', color: '#3b82f6', label: 'Great' };
+  if (score >= 70) return { grade: 'B', color: '#a855f7', label: 'Good' };
+  if (score >= 60) return { grade: 'C', color: '#f59e0b', label: 'Fair' };
+  if (score >= 50) return { grade: 'D', color: '#ef4444', label: 'Poor' };
+  return { grade: 'F', color: '#dc2626', label: 'Critical' };
+}
+
+function useVipCheck(userId?: string, userEmail?: string) {
+  const [isVip, setIsVip] = useState(false);
+  const [loading, setLoading] = useState(true);
+  
+  const checkStatus = useCallback(async () => {
+    if (!userId && !userEmail) {
+      setIsVip(false);
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      const params = userId ? `userId=${userId}` : `email=${encodeURIComponent(userEmail!)}`;
+      const res = await fetch(`/api/vip/status?${params}`, { cache: 'no-store' });
+      const data = await res.json();
+      setIsVip(data.isVip ?? false);
+    } catch {
+      setIsVip(false);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, userEmail]);
+  
+  useEffect(() => {
+    checkStatus();
+    const interval = setInterval(checkStatus, 30000);
+    return () => clearInterval(interval);
+  }, [checkStatus]);
+  
+  return { isVip, loading };
+}
+
+function useLivePrices() {
+  const [prices, setPrices] = useState({ xauusd: '...', btcusd: '...' });
+  
+  useEffect(() => {
+    let mounted = true;
+    
+    const fetchPrices = async () => {
+      try {
+        const res = await fetch(`/api/prices/live?t=${Date.now()}`, { 
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (mounted && data) {
+          setPrices(prev => {
+            if (prev.xauusd === data.xauusd && prev.btcusd === data.btcusd) return prev;
+            return { xauusd: data.xauusd || prev.xauusd, btcusd: data.btcusd || prev.btcusd };
+          });
+        }
+      } catch {}
+    };
+
+    const timeout = setTimeout(fetchPrices, 500);
+    const interval = setInterval(fetchPrices, 3000);
+    
+    return () => { mounted = false; clearTimeout(timeout); clearInterval(interval); };
+  }, []);
+  
+  return prices;
+}
+
+function useAdminCheck() {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userId, setUserId] = useState<string>();
+  const [userEmail, setUserEmail] = useState<string>();
+  const supabase = useMemo(() => createSupabaseClient(), []);
+  
+  useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email) {
+          const email = session.user.email;
+          setIsAdmin(email === 'mrbullmoney@gmail.com');
+          setUserId(session.user.id);
+          setUserEmail(email);
+        } else {
+          const saved = localStorage.getItem('bullmoney_session');
+          if (saved) {
+            const sess = JSON.parse(saved);
+            if (sess?.id) setUserId(sess.id);
+            if (sess?.email) setUserEmail(sess.email);
+            setIsAdmin(sess?.email === 'mrbullmoney@gmail.com' || sess?.isAdmin);
+          }
+        }
+      } catch {
+        const saved = localStorage.getItem('bullmoney_session');
+        if (saved) {
+          try {
+            const sess = JSON.parse(saved);
+            if (sess?.id) setUserId(sess.id);
+            if (sess?.email) setUserEmail(sess.email);
+            setIsAdmin(sess?.email === 'mrbullmoney@gmail.com' || sess?.isAdmin);
+          } catch {}
+        }
+      }
+    };
+    
+    checkAdmin();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      if (session?.user?.email) {
+        setIsAdmin(session.user.email === 'mrbullmoney@gmail.com');
+        setUserId(session.user.id);
+        setUserEmail(session.user.email);
+      }
+    });
+    
+    // Check for admin token
+    if (localStorage.getItem('adminToken')) setIsAdmin(true);
+    
+    return () => subscription?.unsubscribe();
+  }, [supabase]);
+  
+  return { isAdmin, userId, userEmail };
+}
+
+// ============================================================================
+// SUB-COMPONENTS: FPS Display
+// ============================================================================
+
+const FpsCandlestickChart = memo(({ fps, width = 80, height = 48, candleCount = 8 }: {
+  fps: number; width?: number; height?: number; candleCount?: number;
+}) => {
+  const [candles, setCandles] = useState<CandleData[]>([]);
+  const fpsBufferRef = useRef<number[]>([]);
+  const lastCandleTimeRef = useRef(Date.now());
+  const fpsRef = useRef(fps);
+  const mountedRef = useRef(true);
+
+  useEffect(() => { fpsRef.current = fps; });
+  
+  useEffect(() => {
+    mountedRef.current = true;
+    setCandles(Array(candleCount).fill(null).map((_, i) => ({
+      timestamp: Date.now() - (candleCount - i) * 1000,
+      open: 60, high: 60, low: 60, close: 60,
+    })));
+    return () => { mountedRef.current = false; };
+  }, [candleCount]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!mountedRef.current) return;
+      fpsBufferRef.current.push(fpsRef.current);
+
+      if (Date.now() - lastCandleTimeRef.current >= 500) {
+        if (fpsBufferRef.current.length > 0) {
+          const open = fpsBufferRef.current[0];
+          const close = fpsBufferRef.current[fpsBufferRef.current.length - 1];
+          const high = Math.max(...fpsBufferRef.current);
+          const low = Math.min(...fpsBufferRef.current);
+
+          if (mountedRef.current) {
+            setCandles(prev => [...prev.slice(1), { timestamp: Date.now(), open, high, low, close }]);
+          }
+          fpsBufferRef.current = [];
+          lastCandleTimeRef.current = Date.now();
+        }
+      }
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const candleWidth = (width - 8) / candleCount;
+  const padding = 4;
+  const maxFps = 120;
+
+  return (
+    <div className="relative overflow-hidden rounded-lg" style={{ width, height }}>
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-600/15 via-blue-500/5 to-slate-900/25 border border-blue-500/20" />
+      <svg width={width} height={height} className="relative z-10">
+        {/* Grid lines */}
+        {[0.25, 0.5, 0.75].map(pct => (
+          <line key={pct} x1={padding} y1={height * pct} x2={width - padding} y2={height * pct}
+            stroke="rgba(209, 213, 219, 0.08)" strokeWidth="0.5" />
+        ))}
+        
+        {/* Candles */}
+        {candles.map((candle, i) => {
+          const x = padding + i * candleWidth + candleWidth / 2;
+          const isBullish = candle.close >= candle.open;
+          const color = isBullish ? '#FFFFFF' : '#9CA3AF';
+          
+          const yHigh = padding + ((maxFps - candle.high) / maxFps) * (height - padding * 2);
+          const yLow = padding + ((maxFps - candle.low) / maxFps) * (height - padding * 2);
+          const yOpen = padding + ((maxFps - candle.open) / maxFps) * (height - padding * 2);
+          const yClose = padding + ((maxFps - candle.close) / maxFps) * (height - padding * 2);
+          
+          return (
+            <g key={i}>
+              <line x1={x} y1={yHigh} x2={x} y2={yLow} stroke="#D1D5DB" strokeWidth="1" />
+              <rect
+                x={x - candleWidth * 0.3}
+                y={Math.min(yOpen, yClose)}
+                width={candleWidth * 0.6}
+                height={Math.max(Math.abs(yClose - yOpen), 1)}
+                fill={color}
+                rx="1"
+              />
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+});
+FpsCandlestickChart.displayName = 'FpsCandlestickChart';
+
+const FpsDisplay = memo(({ fps, deviceTier }: { fps: number; deviceTier: string }) => {
+  const colors = getFpsColor(fps);
+  
+  return (
+    <div className="relative">
+      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-slate-900/40 border border-blue-500/40" />
+      <div className="relative px-2 py-1.5 flex items-center gap-2">
+        <FpsCandlestickChart fps={fps} />
+        <div className="flex flex-col gap-0.5 min-w-[40px]">
+          <div className="flex items-center gap-1">
+            <Activity size={10} className="text-blue-400" />
+            <span className="text-sm font-black" style={{ color: colors.text }}>{fps}</span>
+          </div>
+          <div className="text-[8px] font-mono font-bold uppercase text-blue-300 tracking-wide">{deviceTier}</div>
+        </div>
+      </div>
+    </div>
+  );
+});
+FpsDisplay.displayName = 'FpsDisplay';
+
+const MinimizedFpsDisplay = memo(({ fps }: { fps: number }) => {
+  const colors = getFpsColor(fps);
+  const digits = String(fps).padStart(2, '0').split('');
+  
+  return (
+    <div className="flex items-center gap-0.5">
+      <motion.div
+        animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+      >
+        <Activity size={11} className="text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.9)]" />
+      </motion.div>
+      <div className="flex overflow-hidden rounded" style={{ background: colors.bg }}>
+        {digits.map((digit, idx) => (
+          <div key={idx} className="relative w-[10px] h-[16px] overflow-hidden">
+            <span className="absolute inset-0 flex items-center justify-center text-[13px] font-black tabular-nums"
+              style={{ color: colors.text, textShadow: `0 0 8px ${colors.glow}` }}>
+              {digit}
+            </span>
+          </div>
+        ))}
+      </div>
+      <span className="text-[7px] text-blue-400/90 font-bold uppercase tracking-wider ml-0.5">fps</span>
+    </div>
+  );
+});
+MinimizedFpsDisplay.displayName = 'MinimizedFpsDisplay';
+
+// ============================================================================
+// SUB-COMPONENTS: Device Panel Components (Real Data)
+// ============================================================================
+
+const StatCard = memo(({ 
+  label, 
+  value, 
+  unit, 
+  icon: Icon, 
+  color = 'blue',
+  subValue,
+  animate = true 
+}: {
+  label: string;
+  value: string | number;
+  unit?: string;
+  icon: typeof Cpu;
+  color?: 'blue' | 'green' | 'amber' | 'red' | 'cyan' | 'purple';
+  subValue?: string;
+  animate?: boolean;
+}) => {
+  const colorClasses = {
+    blue: 'from-blue-500/20 to-blue-600/10 border-blue-500/30 text-blue-400',
+    green: 'from-emerald-500/20 to-emerald-600/10 border-emerald-500/30 text-emerald-400',
+    amber: 'from-amber-500/20 to-amber-600/10 border-amber-500/30 text-amber-400',
+    red: 'from-red-500/20 to-red-600/10 border-red-500/30 text-red-400',
+    cyan: 'from-cyan-500/20 to-cyan-600/10 border-cyan-500/30 text-cyan-400',
+    purple: 'from-purple-500/20 to-purple-600/10 border-purple-500/30 text-purple-400',
+  };
+
+  return (
+    <motion.div
+      initial={animate ? { opacity: 0, y: 10 } : false}
+      animate={{ opacity: 1, y: 0 }}
+      className={`relative p-2.5 rounded-xl bg-gradient-to-br ${colorClasses[color]} border backdrop-blur-sm`}
+    >
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[9px] font-medium text-zinc-400 uppercase tracking-wide">{label}</span>
+        <Icon className={`w-3.5 h-3.5 ${colorClasses[color].split(' ').pop()}`} />
+      </div>
+      <div className="flex items-baseline gap-1">
+        <span className="text-lg font-black text-white tabular-nums">{value}</span>
+        {unit && <span className="text-[9px] text-zinc-500 font-medium">{unit}</span>}
+      </div>
+      {subValue && <div className="text-[8px] text-zinc-500 mt-0.5">{subValue}</div>}
+    </motion.div>
+  );
+});
+StatCard.displayName = 'StatCard';
+
+const PerformanceRing = memo(({ 
+  value, 
+  maxValue = 100, 
+  label, 
+  color = 'blue',
+  size = 60 
+}: {
+  value: number;
+  maxValue?: number;
+  label: string;
+  color?: 'blue' | 'green' | 'amber' | 'red' | 'cyan';
+  size?: number;
+}) => {
+  const percentage = Math.min((value / maxValue) * 100, 100);
+  const strokeWidth = 4;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  const colors = {
+    blue: { stroke: '#3b82f6', glow: 'rgba(59, 130, 246, 0.5)' },
+    green: { stroke: '#22c55e', glow: 'rgba(34, 197, 94, 0.5)' },
+    amber: { stroke: '#f59e0b', glow: 'rgba(245, 158, 11, 0.5)' },
+    red: { stroke: '#ef4444', glow: 'rgba(239, 68, 68, 0.5)' },
+    cyan: { stroke: '#06b6d4', glow: 'rgba(6, 182, 212, 0.5)' },
+  };
+
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} className="transform -rotate-90">
+          {/* Background ring */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="rgba(255,255,255,0.1)"
+            strokeWidth={strokeWidth}
+          />
+          {/* Progress ring */}
+          <motion.circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={colors[color].stroke}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset }}
+            transition={{ duration: 1, ease: 'easeOut' }}
+            style={{ filter: `drop-shadow(0 0 6px ${colors[color].glow})` }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-xs font-black text-white tabular-nums">{Math.round(percentage)}%</span>
+        </div>
+      </div>
+      <span className="text-[8px] text-zinc-400 mt-1 font-medium">{label}</span>
+    </div>
+  );
+});
+PerformanceRing.displayName = 'PerformanceRing';
+
+const ConnectionStatusBadge = memo(({ isOnline, effectiveType }: { isOnline: boolean; effectiveType: string }) => {
+  const getSpeedColor = () => {
+    if (!isOnline) return 'red';
+    if (effectiveType === '4g') return 'green';
+    if (effectiveType === '3g') return 'amber';
+    return 'red';
+  };
+
+  const color = getSpeedColor();
+  const colorClasses = {
+    green: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
+    amber: 'bg-amber-500/20 text-amber-400 border-amber-500/40',
+    red: 'bg-red-500/20 text-red-400 border-red-500/40',
+  };
+
+  return (
+    <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full border ${colorClasses[color]}`}>
+      <motion.div
+        className={`w-2 h-2 rounded-full ${color === 'green' ? 'bg-emerald-400' : color === 'amber' ? 'bg-amber-400' : 'bg-red-400'}`}
+        animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+      />
+      <span className="text-[10px] font-bold uppercase">
+        {isOnline ? effectiveType.toUpperCase() : 'OFFLINE'}
+      </span>
+      {isOnline ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+    </div>
+  );
+});
+ConnectionStatusBadge.displayName = 'ConnectionStatusBadge';
+
+// ============================================================================
+// DEVICE CENTER PANEL - 4 Tabs with Real Data
+// ============================================================================
+
+const DeviceCenterPanel = memo(({ 
+  isOpen, 
+  onClose,
+  fps,
+  deviceTier,
+  isAdmin,
+  isVip,
+  userId,
+  userEmail
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  fps: number;
+  deviceTier: string;
+  isAdmin: boolean;
+  isVip: boolean;
+  userId?: string;
+  userEmail?: string;
+}) => {
+  const [activeTab, setActiveTab] = useState<DevicePanelTab>('overview');
+  const [isDragging, setIsDragging] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Get REAL device data from hooks
+  const memoryStats = useRealTimeMemory();
+  const browserInfo = useBrowserInfo();
+  const storageInfo = useStorageInfo();
+  const cacheStats = useRealTimeCache();
+  const networkStats = useNetworkStats() as NetworkStats & { runSpeedTest: () => Promise<void> };
+  const perfStats = usePerformanceStats();
+  const gpuInfo = useGpuInfo();
+  const batteryInfo = useBatteryInfo();
+  const screenInfo = useScreenInfo();
+  
+  // Calculate 3D Performance Score
+  const performanceScore = calculate3DPerformanceScore(fps, memoryStats.percentage, gpuInfo.score, browserInfo.cores);
+  const performanceGrade = getPerformanceGrade(performanceScore);
+
+  // Handle swipe to close
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (info.offset.x > 100) {
+      SoundEffects.swipe();
+      onClose();
+    }
+    setIsDragging(false);
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          ref={panelRef}
+          initial={{ x: '100%', opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: '100%', opacity: 0 }}
+          transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.2}
+          onDragStart={() => setIsDragging(true)}
+          onDragEnd={handleDragEnd}
+          className="fixed right-0 top-0 bottom-0 z-[2147483646] w-[320px] max-w-[90vw] bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl border-l border-blue-500/30 shadow-2xl shadow-blue-900/30 flex flex-col"
+          style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
+          {/* Drag Handle */}
+          <div className="flex justify-center pt-2 pb-1">
+            <div className="w-10 h-1 rounded-full bg-zinc-600" />
+          </div>
+
+          {/* Header */}
+          <div className="px-4 pb-3 border-b border-blue-500/20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                  <Smartphone className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Device Center</h3>
+                  <p className="text-[9px] text-zinc-400">Real-time system info</p>
+                </div>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={onClose}
+                className="w-8 h-8 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 border border-blue-400/30 flex items-center justify-center"
+              >
+                <X className="w-4 h-4 text-blue-300" />
+              </motion.button>
+            </div>
+
+            {/* FPS Display */}
+            <div className="mt-3 flex items-center justify-between">
+              <FpsDisplay fps={fps} deviceTier={deviceTier} />
+              <ConnectionStatusBadge 
+                isOnline={browserInfo.onLine} 
+                effectiveType={browserInfo.connection.effectiveType} 
+              />
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex border-b border-blue-500/20">
+            {DEVICE_PANEL_TABS.map(tab => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[10px] font-semibold transition-all ${
+                    activeTab === tab.id
+                      ? 'text-blue-400 border-b-2 border-blue-400 bg-blue-500/10'
+                      : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Tab Content */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-3">
+            <AnimatePresence mode="wait">
+              {/* OVERVIEW TAB */}
+              {activeTab === 'overview' && (
+                <motion.div
+                  key="overview"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-3"
+                >
+                  {/* Device Info */}
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/20">
+                    <h4 className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-2">Device</h4>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Platform</span>
+                        <span className="text-white font-semibold">{browserInfo.platform}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Browser</span>
+                        <span className="text-white font-semibold">{browserInfo.name} {browserInfo.version.split('.')[0]}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Engine</span>
+                        <span className="text-white font-semibold">{browserInfo.engine}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">CPU Cores</span>
+                        <span className="text-white font-semibold">{browserInfo.cores}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Device RAM</span>
+                        <span className="text-white font-semibold">{browserInfo.deviceMemory} GB</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Locale</span>
+                        <span className="text-white font-semibold">{browserInfo.locale}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3D Performance Grade */}
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
+                    <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3">3D Performance Score</h4>
+                    <div className="flex items-center justify-center">
+                      <div className="relative w-[100px] h-[100px]">
+                        <svg className="w-full h-full transform -rotate-90">
+                          <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="6" />
+                          <motion.circle
+                            cx="50" cy="50" r="42" fill="none"
+                            stroke={performanceGrade.color}
+                            strokeWidth="6" strokeLinecap="round"
+                            strokeDasharray={264}
+                            initial={{ strokeDashoffset: 264 }}
+                            animate={{ strokeDashoffset: 264 - (performanceScore / 100) * 264 }}
+                            transition={{ duration: 1, ease: 'easeOut' }}
+                            style={{ filter: `drop-shadow(0 0 8px ${performanceGrade.color}80)` }}
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-3xl font-black" style={{ color: performanceGrade.color, textShadow: `0 0 15px ${performanceGrade.color}50` }}>
+                            {performanceGrade.grade}
+                          </span>
+                          <span className="text-[9px] text-zinc-400">{performanceGrade.label}</span>
+                          <span className="text-[8px] text-zinc-500">{performanceScore}/100</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* GPU Info */}
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/10 to-fuchsia-500/5 border border-purple-500/20">
+                    <h4 className="text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-2">Graphics</h4>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">GPU</span>
+                        <span className="text-white font-semibold truncate max-w-[160px]" title={gpuInfo.renderer}>
+                          {gpuInfo.renderer.length > 25 ? gpuInfo.renderer.slice(0, 25) + '...' : gpuInfo.renderer}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Vendor</span>
+                        <span className="text-white font-semibold">{gpuInfo.vendor}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">WebGL</span>
+                        <span className="text-white font-semibold">{gpuInfo.webglVersion}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">GPU Tier</span>
+                        <span className={`font-semibold uppercase ${
+                          gpuInfo.tier === 'ultra' ? 'text-purple-400' :
+                          gpuInfo.tier === 'high' ? 'text-emerald-400' :
+                          gpuInfo.tier === 'medium' ? 'text-amber-400' : 'text-red-400'
+                        }`}>
+                          {gpuInfo.tier}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Max Texture</span>
+                        <span className="text-white font-semibold">{gpuInfo.maxTextureSize}px</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Screen Info */}
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20">
+                    <h4 className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider mb-2">Display</h4>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Resolution</span>
+                        <span className="text-white font-semibold">{screenInfo.width} × {screenInfo.height}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Pixel Ratio</span>
+                        <span className="text-white font-semibold">{screenInfo.pixelRatio}x</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Refresh Rate</span>
+                        <span className="text-white font-semibold">{screenInfo.refreshRate} Hz</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Color Depth</span>
+                        <span className="text-white font-semibold">{screenInfo.colorDepth}-bit</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">HDR</span>
+                        <span className={`font-semibold ${screenInfo.hdr ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                          {screenInfo.hdr ? 'Supported' : 'Not supported'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Touch Points</span>
+                        <span className="text-white font-semibold">{screenInfo.touchPoints}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Battery Info (if supported) */}
+                  {batteryInfo.supported && (
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20">
+                      <h4 className="text-[10px] font-bold text-green-400 uppercase tracking-wider mb-2">Battery</h4>
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-[10px]">
+                          <span className="text-zinc-400">Level</span>
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-16 h-2 bg-zinc-700 rounded-full overflow-hidden">
+                              <motion.div
+                                className={`h-full rounded-full ${
+                                  batteryInfo.level > 50 ? 'bg-emerald-500' :
+                                  batteryInfo.level > 20 ? 'bg-amber-500' : 'bg-red-500'
+                                }`}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${batteryInfo.level}%` }}
+                                transition={{ duration: 0.5 }}
+                              />
+                            </div>
+                            <span className="text-white font-semibold">{batteryInfo.level}%</span>
+                          </div>
+                        </div>
+                        <div className="flex justify-between text-[10px]">
+                          <span className="text-zinc-400">Status</span>
+                          <span className={`font-semibold flex items-center gap-1 ${batteryInfo.charging ? 'text-emerald-400' : 'text-zinc-400'}`}>
+                            {batteryInfo.charging ? (
+                              <>
+                                <Zap className="w-3 h-3" />
+                                Charging
+                              </>
+                            ) : (
+                              <>
+                                <Battery className="w-3 h-3" />
+                                Discharging
+                              </>
+                            )}
+                          </span>
+                        </div>
+                        {batteryInfo.charging && batteryInfo.chargingTime !== Infinity && (
+                          <div className="flex justify-between text-[10px]">
+                            <span className="text-zinc-400">Full in</span>
+                            <span className="text-white font-semibold">
+                              {Math.round(batteryInfo.chargingTime / 60)} min
+                            </span>
+                          </div>
+                        )}
+                        {!batteryInfo.charging && batteryInfo.dischargingTime !== Infinity && (
+                          <div className="flex justify-between text-[10px]">
+                            <span className="text-zinc-400">Time Left</span>
+                            <span className="text-white font-semibold">
+                              {Math.round(batteryInfo.dischargingTime / 60)} min
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Memory Usage */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <StatCard
+                      label="JS Heap"
+                      value={memoryStats.jsHeapUsed}
+                      unit="MB"
+                      icon={MemoryStick}
+                      color="cyan"
+                      subValue={`${memoryStats.percentage}% of ${memoryStats.jsHeapLimit}MB`}
+                    />
+                    <StatCard
+                      label="Device RAM"
+                      value={browserInfo.deviceMemory}
+                      unit="GB"
+                      icon={Database}
+                      color="blue"
+                    />
+                  </div>
+
+                  {/* Storage */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <StatCard
+                      label="Storage Type"
+                      value={storageInfo.type}
+                      icon={HardDrive}
+                      color="purple"
+                    />
+                    <StatCard
+                      label="Cache Used"
+                      value={cacheStats.usage.toFixed(1)}
+                      unit="MB"
+                      icon={Database}
+                      color="amber"
+                      subValue={`${cacheStats.percentage}% of quota`}
+                    />
+                  </div>
+
+                  {/* Performance Rings */}
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
+                    <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3">Real-Time Metrics</h4>
+                    <div className="flex justify-around">
+                      <PerformanceRing
+                        value={fps}
+                        maxValue={120}
+                        label="FPS"
+                        color={fps >= 50 ? 'green' : fps >= 30 ? 'amber' : 'red'}
+                      />
+                      <PerformanceRing
+                        value={memoryStats.percentage}
+                        maxValue={100}
+                        label="Memory"
+                        color={memoryStats.percentage < 50 ? 'green' : memoryStats.percentage < 80 ? 'amber' : 'red'}
+                      />
+                      <PerformanceRing
+                        value={cacheStats.percentage}
+                        maxValue={100}
+                        label="Cache"
+                        color={cacheStats.percentage < 50 ? 'cyan' : cacheStats.percentage < 80 ? 'amber' : 'red'}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* NETWORK TAB */}
+              {activeTab === 'network' && (
+                <motion.div
+                  key="network"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-3"
+                >
+                  {/* Connection Status */}
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/20">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Connection</h4>
+                      <ConnectionStatusBadge 
+                        isOnline={networkStats.isOnline} 
+                        effectiveType={networkStats.effectiveType} 
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Type</span>
+                        <span className="text-white font-semibold">{networkStats.connectionType || 'Unknown'}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Downlink</span>
+                        <span className="text-white font-semibold">{networkStats.downlink} Mbps</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">RTT (Latency)</span>
+                        <span className="text-white font-semibold">{networkStats.rtt} ms</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Data Saver</span>
+                        <span className={`font-semibold ${networkStats.saveData ? 'text-amber-400' : 'text-emerald-400'}`}>
+                          {networkStats.saveData ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Speed Test */}
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Speed Test</h4>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={networkStats.runSpeedTest}
+                        disabled={networkStats.testing}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-[9px] font-semibold text-blue-400 disabled:opacity-50"
+                      >
+                        {networkStats.testing ? (
+                          <Loader className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <Play className="w-3 h-3" />
+                        )}
+                        {networkStats.testing ? 'Testing...' : 'Run Test'}
+                      </motion.button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <StatCard
+                        label="Latency"
+                        value={networkStats.latency || networkStats.rtt}
+                        unit="ms"
+                        icon={Clock}
+                        color={networkStats.latency < 50 ? 'green' : networkStats.latency < 100 ? 'amber' : 'red'}
+                        animate={false}
+                      />
+                      <StatCard
+                        label="Download"
+                        value={networkStats.downloadSpeed > 0 ? (networkStats.downloadSpeed / 1000).toFixed(1) : networkStats.downlink}
+                        unit="Mbps"
+                        icon={TrendingUp}
+                        color="cyan"
+                        animate={false}
+                      />
+                    </div>
+
+                    {networkStats.lastTest > 0 && (
+                      <div className="mt-2 text-[8px] text-zinc-500 text-center">
+                        Last test: {new Date(networkStats.lastTest).toLocaleTimeString()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Network Quality */}
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
+                    <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3">Quality Assessment</h4>
+                    <div className="flex justify-around">
+                      <PerformanceRing
+                        value={networkStats.isOnline ? (networkStats.effectiveType === '4g' ? 90 : networkStats.effectiveType === '3g' ? 60 : 30) : 0}
+                        maxValue={100}
+                        label="Quality"
+                        color={networkStats.effectiveType === '4g' ? 'green' : networkStats.effectiveType === '3g' ? 'amber' : 'red'}
+                      />
+                      <PerformanceRing
+                        value={Math.min(100, Math.max(0, 100 - (networkStats.rtt / 5)))}
+                        maxValue={100}
+                        label="Latency"
+                        color={networkStats.rtt < 50 ? 'green' : networkStats.rtt < 100 ? 'amber' : 'red'}
+                      />
+                      <PerformanceRing
+                        value={Math.min(100, (networkStats.downlink / 50) * 100)}
+                        maxValue={100}
+                        label="Speed"
+                        color={networkStats.downlink > 10 ? 'green' : networkStats.downlink > 5 ? 'amber' : 'red'}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* PERFORMANCE TAB */}
+              {activeTab === 'performance' && (
+                <motion.div
+                  key="performance"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-3"
+                >
+                  {/* Core Web Vitals */}
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/20">
+                    <h4 className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-2">Core Web Vitals</h4>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">First Contentful Paint</span>
+                        <span className={`font-semibold ${perfStats.firstContentfulPaint < 1800 ? 'text-emerald-400' : perfStats.firstContentfulPaint < 3000 ? 'text-amber-400' : 'text-red-400'}`}>
+                          {perfStats.firstContentfulPaint}ms
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Largest Contentful Paint</span>
+                        <span className={`font-semibold ${perfStats.largestContentfulPaint < 2500 ? 'text-emerald-400' : perfStats.largestContentfulPaint < 4000 ? 'text-amber-400' : 'text-red-400'}`}>
+                          {perfStats.largestContentfulPaint || 'Measuring...'}ms
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Cumulative Layout Shift</span>
+                        <span className={`font-semibold ${perfStats.cumulativeLayoutShift < 0.1 ? 'text-emerald-400' : perfStats.cumulativeLayoutShift < 0.25 ? 'text-amber-400' : 'text-red-400'}`}>
+                          {perfStats.cumulativeLayoutShift.toFixed(3)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Load Metrics */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <StatCard
+                      label="Page Load"
+                      value={perfStats.loadTime}
+                      unit="ms"
+                      icon={Clock}
+                      color={perfStats.loadTime < 2000 ? 'green' : perfStats.loadTime < 4000 ? 'amber' : 'red'}
+                    />
+                    <StatCard
+                      label="DOM Ready"
+                      value={perfStats.domContentLoaded}
+                      unit="ms"
+                      icon={Server}
+                      color={perfStats.domContentLoaded < 1500 ? 'green' : perfStats.domContentLoaded < 3000 ? 'amber' : 'red'}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <StatCard
+                      label="First Paint"
+                      value={perfStats.firstPaint}
+                      unit="ms"
+                      icon={Zap}
+                      color={perfStats.firstPaint < 1000 ? 'green' : perfStats.firstPaint < 2000 ? 'amber' : 'red'}
+                    />
+                    <StatCard
+                      label="JS Execution"
+                      value={perfStats.jsExecutionTime}
+                      unit="ms"
+                      icon={Cpu}
+                      color="purple"
+                    />
+                  </div>
+
+                  {/* Real-Time Performance */}
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
+                    <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3">Runtime Performance</h4>
+                    <div className="flex justify-around">
+                      <PerformanceRing
+                        value={fps}
+                        maxValue={60}
+                        label="FPS"
+                        color={fps >= 50 ? 'green' : fps >= 30 ? 'amber' : 'red'}
+                      />
+                      <PerformanceRing
+                        value={100 - memoryStats.percentage}
+                        maxValue={100}
+                        label="Memory Free"
+                        color={memoryStats.percentage < 50 ? 'green' : memoryStats.percentage < 80 ? 'amber' : 'red'}
+                      />
+                      <PerformanceRing
+                        value={Math.min(100, Math.max(0, 100 - (perfStats.loadTime / 50)))}
+                        maxValue={100}
+                        label="Speed Score"
+                        color={perfStats.loadTime < 2000 ? 'green' : perfStats.loadTime < 4000 ? 'amber' : 'red'}
+                      />
+                    </div>
+                  </div>
+
+                  {/* FPS Candlestick Chart */}
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
+                    <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">FPS History</h4>
+                    <div className="flex justify-center">
+                      <FpsCandlestickChart fps={fps} width={260} height={80} candleCount={15} />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ACCOUNT TAB */}
+              {activeTab === 'account' && (
+                <motion.div
+                  key="account"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-3"
+                >
+                  {/* User Info */}
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/20">
+                    <h4 className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-2">Account Status</h4>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Status</span>
+                        <span className={`font-semibold ${userId ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                          {userId ? 'Signed In' : 'Guest'}
+                        </span>
+                      </div>
+                      {userEmail && (
+                        <div className="flex justify-between text-[10px]">
+                          <span className="text-zinc-400">Email</span>
+                          <span className="text-white font-semibold truncate max-w-[150px]">{userEmail}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">VIP Status</span>
+                        <span className={`font-semibold flex items-center gap-1 ${isVip ? 'text-amber-400' : 'text-zinc-500'}`}>
+                          {isVip ? <Crown className="w-3 h-3" /> : null}
+                          {isVip ? 'VIP Member' : 'Standard'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Role</span>
+                        <span className={`font-semibold flex items-center gap-1 ${isAdmin ? 'text-blue-400' : 'text-zinc-400'}`}>
+                          {isAdmin ? <Shield className="w-3 h-3" /> : null}
+                          {isAdmin ? 'Admin' : 'User'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="space-y-2">
+                    {!userId && (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => window.location.href = '/login'}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold text-xs"
+                      >
+                        <User className="w-4 h-4" />
+                        Sign In / Register
+                      </motion.button>
+                    )}
+
+                    {!isVip && (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => window.dispatchEvent(new CustomEvent('openProductsModal'))}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-bold text-xs"
+                      >
+                        <Crown className="w-4 h-4" />
+                        Upgrade to VIP
+                      </motion.button>
+                    )}
+
+                    {isAdmin && (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => window.dispatchEvent(new CustomEvent('openAdminVIPPanel'))}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold text-xs"
+                      >
+                        <Shield className="w-4 h-4" />
+                        Admin Panel
+                      </motion.button>
+                    )}
+                  </div>
+
+                  {/* Session Info */}
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
+                    <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Session Info</h4>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Device Tier</span>
+                        <span className={`font-semibold uppercase ${
+                          deviceTier === 'ultra' ? 'text-emerald-400' :
+                          deviceTier === 'high' ? 'text-blue-400' :
+                          deviceTier === 'medium' ? 'text-amber-400' : 'text-red-400'
+                        }`}>
+                          {deviceTier}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Session Start</span>
+                        <span className="text-white font-semibold">
+                          {new Date().toLocaleTimeString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-zinc-400">Page Loads</span>
+                        <span className="text-white font-semibold">
+                          {typeof window !== 'undefined' ? (performance.getEntriesByType('navigation').length || 1) : 1}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Footer */}
+          <div className="p-3 border-t border-blue-500/20 bg-gradient-to-r from-blue-500/5 to-cyan-500/5">
+            <div className="text-[8px] text-zinc-500 text-center">
+              All data from real device APIs • Auto-refreshing
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+});
+DeviceCenterPanel.displayName = 'DeviceCenterPanel';
+
+// ============================================================================
+// SUB-COMPONENTS: Telegram Feed
+// ============================================================================
+
+const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channel?: ChannelKey; isVip?: boolean }) => {
+  const [posts, setPosts] = useState<TelegramPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  
+  const channelConfig = TELEGRAM_CHANNELS[channel];
+  const requiresVip = channelConfig.requiresVip && !isVip;
+
+  useEffect(() => {
+    if (requiresVip) { setLoading(false); return; }
+    
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/telegram/channel?channel=${channel}`);
+        const data = await response.json();
+        if (data.success && data.posts) { setPosts(data.posts); setError(false); }
+        else setError(true);
+      } catch { setError(true); }
+      finally { setLoading(false); }
+    };
+
+    fetchPosts();
+    const interval = setInterval(fetchPosts, 300000);
+    return () => clearInterval(interval);
+  }, [channel, requiresVip]);
+
+  if (requiresVip) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+        <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mb-4">
+          <Lock className="w-8 h-8 text-amber-400" />
+        </div>
+        <h4 className="text-sm font-bold text-white mb-2">VIP Content</h4>
+        <p className="text-[10px] text-zinc-400 mb-4 max-w-[200px]">
+          Upgrade to VIP to access exclusive signals and premium content.
+        </p>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => window.dispatchEvent(new CustomEvent('openProductsModal'))}
+          className="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-amber-500/30 flex items-center gap-2"
+        >
+          <Crown className="w-3.5 h-3.5" />
+          Unlock VIP Access
+        </motion.button>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <Loader className="w-5 h-5 text-blue-400 animate-spin mb-2" />
+        <span className="text-[10px] text-zinc-400">Loading live feed...</span>
+      </div>
+    );
+  }
+
+  if (error || posts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8">
+        <MessageCircle className="w-10 h-10 text-blue-400/30 mb-3" />
+        <p className="text-[11px] text-zinc-400 mb-2">Live feed loading...</p>
+        <a href={`https://t.me/${channelConfig.handle}`} target="_blank" rel="noopener noreferrer"
+          className="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-1">
+          <ExternalLink className="w-3 h-3" /> Open in Telegram
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2 p-2">
+      {posts.map((post, idx) => (
+        <motion.a
+          key={post.id}
+          href={`https://t.me/${channelConfig.handle}/${post.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: idx * 0.05 }}
+          className="block bg-white/5 hover:bg-white/10 rounded-lg p-3 border border-white/10 hover:border-blue-500/40 transition-all group"
+        >
+          <div className="flex items-start gap-2">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 bg-gradient-to-br ${
+              channel === 'vip' ? 'from-amber-500 to-orange-500' :
+              channel === 'shop' ? 'from-emerald-500 to-teal-500' :
+              channel === 'trades' ? 'from-cyan-500 to-blue-500' :
+              'from-blue-500 to-cyan-500'
+            }`}>
+              {channel === 'vip' ? <Star className="w-4 h-4" /> : 
+               channel === 'shop' ? <ShoppingBag className="w-4 h-4" /> : 
+               channel === 'trades' ? <TrendingUp className="w-4 h-4" /> : 'B'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <span className="text-[10px] font-semibold text-white">{channelConfig.name}</span>
+                <span className="text-[8px] text-zinc-500">{post.date}</span>
+              </div>
+              <p className="text-[10px] text-zinc-300 line-clamp-3 leading-relaxed">{post.text}</p>
+              {post.hasMedia && (
+                <span className="inline-block mt-1.5 text-[8px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded">📷 Media</span>
+              )}
+            </div>
+            <ExternalLink className="w-3 h-3 text-zinc-600 group-hover:text-blue-400 transition-colors flex-shrink-0" />
+          </div>
+        </motion.a>
+      ))}
+    </div>
+  );
+});
+TelegramChannelEmbed.displayName = 'TelegramChannelEmbed';
+
+const LiveTradesTicker = memo(() => {
+  const [messages, setMessages] = useState<TelegramPost[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await fetch(`/api/telegram/channel?channel=trades&t=${Date.now()}`, { cache: 'no-store' });
+        const data = await response.json();
+        if (data.success && data.posts?.length) setMessages(data.posts);
+      } catch {}
+      finally { setLoading(false); }
+    };
+
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!messages.length) return;
+    const interval = setInterval(() => setCurrentIndex(p => (p + 1) % messages.length), 4000);
+    return () => clearInterval(interval);
+  }, [messages.length]);
+
+  const currentMessage = messages[currentIndex];
+  
+  if (loading || !currentMessage) {
+    return (
+      <div className="mt-0 -translate-y-0.5 px-1 py-0.5 bg-zinc-900/80 rounded-b-lg border-x border-b border-cyan-500/20">
+        <div className="flex items-center gap-1">
+          <Loader className="w-2 h-2 text-cyan-400 animate-spin" />
+          <span className="text-[5px] text-zinc-500">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  const text = currentMessage.text || '';
+  const line1 = [...text].length > 45 ? [...text].slice(0, 42).join('') + '...' : text.split('\n')[0] || '';
+
+  return (
+    <motion.a
+      href="https://t.me/bullmoneywebsite"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block mt-0 -translate-y-0.5"
+    >
+      <div className="px-1 py-0.5 bg-gradient-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/90 backdrop-blur-xl rounded-b-lg border-x border-b border-cyan-500/30 hover:border-cyan-400/50 transition-all overflow-hidden">
+        <div className="flex items-center justify-between mb-0.5">
+          <div className="flex items-center gap-0.5">
+            <motion.div className="w-1 h-1 bg-green-400 rounded-full"
+              animate={{ opacity: [1, 0.3, 1], boxShadow: ['0 0 0px rgba(74,222,128,0.8)', '0 0 6px rgba(74,222,128,0.8)', '0 0 0px rgba(74,222,128,0.8)'] }}
+              transition={{ duration: 1, repeat: Infinity }} />
+            <span className="text-[4px] font-bold text-cyan-400/80 uppercase tracking-wider">Live</span>
+          </div>
+          <span className="text-[5px] text-zinc-500">{currentIndex + 1}/{messages.length}</span>
+        </div>
+        
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={currentIndex}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="text-[6px] text-white font-semibold leading-tight truncate"
+          >
+            {line1}
+          </motion.p>
+        </AnimatePresence>
+        
+        <div className="mt-0.5 h-[1px] bg-zinc-700/40 rounded-full overflow-hidden">
+          <motion.div className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-400"
+            initial={{ width: '0%' }}
+            animate={{ width: '100%' }}
+            transition={{ duration: 4, ease: 'linear' }}
+            key={currentIndex} />
+        </div>
+      </div>
+    </motion.a>
+  );
+});
+LiveTradesTicker.displayName = 'LiveTradesTicker';
+
+// ============================================================================
+// SUB-COMPONENTS: Trading Tips
+// ============================================================================
+
+const TradingTipPill = memo(() => {
+  const [tipIndex, setTipIndex] = useState(0);
+  const [isSpinning, setIsSpinning] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsSpinning(true);
+      setTimeout(() => {
+        setTipIndex(p => (p + 1) % TRADING_TIPS.length);
+        setIsSpinning(false);
+      }, 800);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="relative rounded-r-full bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-blue-500/50 shadow-2xl px-1.5 py-1 overflow-hidden max-w-[180px]">
+      <div className="flex items-center gap-1.5 relative z-10">
+        <motion.div animate={isSpinning ? { rotate: 360, scale: [1, 1.2, 1] } : {}} transition={{ duration: 0.5 }}>
+          <Sparkles className="w-2.5 h-2.5 text-blue-400" />
+        </motion.div>
+        <div className="h-3 flex-1 overflow-hidden relative">
+          <AnimatePresence mode="wait">
+            <motion.span
+              key={tipIndex}
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -20, opacity: 0 }}
+              className="absolute inset-0 flex items-center text-[7px] text-blue-200/90 font-medium whitespace-nowrap truncate"
+            >
+              {TRADING_TIPS[tipIndex]}
+            </motion.span>
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
+  );
+});
+TradingTipPill.displayName = 'TradingTipPill';
+
+// ============================================================================
+// MODAL COMPONENTS
+// ============================================================================
+
+const ModalWrapper = memo(({ 
+  isOpen, 
+  onClose, 
+  children, 
+  maxWidth = '520px',
+  color = 'blue'
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  children: React.ReactNode;
+  maxWidth?: string;
+  color?: 'blue' | 'purple' | 'cyan';
+}) => {
+  const colorClasses = {
+    blue: 'border-blue-500/30 shadow-blue-900/20',
+    purple: 'border-purple-500/50 shadow-purple-900/50',
+    cyan: 'border-cyan-500/30 shadow-cyan-900/20'
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+          animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
+          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+          className="fixed inset-0 z-[2147483645] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+          onClick={onClose}
+        >
+          {/* Tap hints */}
+          {['top', 'bottom', 'left', 'right'].map(pos => (
+            <motion.div
+              key={pos}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.4, 0.7, 0.4] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className={`absolute text-${color}-300/50 text-xs pointer-events-none ${
+                pos === 'top' ? 'top-4 left-1/2 -translate-x-1/2' :
+                pos === 'bottom' ? 'bottom-4 left-1/2 -translate-x-1/2' :
+                pos === 'left' ? 'left-2 top-1/2 -translate-y-1/2' :
+                'right-2 top-1/2 -translate-y-1/2'
+              }`}
+            >
+              {pos === 'top' || pos === 'bottom' ? (
+                <span>↑ Tap anywhere to close ↑</span>
+              ) : (
+                <span style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
+              )}
+            </motion.div>
+          ))}
+
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+            onClick={e => e.stopPropagation()}
+            className={`relative w-full max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl border shadow-2xl ${colorClasses[color]}`}
+            style={{ maxWidth }}
+          >
+            {children}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+});
+ModalWrapper.displayName = 'ModalWrapper';
+
+const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const [activeChart, setActiveChart] = useState('xauusd');
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [calendarImpact, setCalendarImpact] = useState<CalendarImpact>('all');
+  const [calendarCountry, setCalendarCountry] = useState<CalendarCountry>('all');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Build calendar URL with filters
+  const calendarUrl = useMemo(() => {
+    let url = 'https://www.tradingview.com/embed-widget/events/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Afalse%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22';
+    
+    if (calendarCountry !== 'all') {
+      url += `%2C%22currencyFilter%22%3A%22${calendarCountry}%22`;
+    }
+    if (calendarImpact !== 'all') {
+      const impactMap = { high: '3', medium: '2', low: '1' };
+      url += `%2C%22importanceFilter%22%3A%22${impactMap[calendarImpact]}%22`;
+    }
+    
+    return url + '%7D';
+  }, [calendarCountry, calendarImpact]);
+
+  return (
+    <ModalWrapper isOpen={isOpen} onClose={onClose}>
+      {/* Header */}
+      <div className="p-3 border-b border-blue-500/20 bg-gradient-to-r from-blue-500/10 to-cyan-500/10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-blue-400" />
+            <h3 className="text-sm font-bold text-white">Trading Quick Access</h3>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: 90 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={onClose}
+            className="p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 border border-blue-400/30"
+          >
+            <X className="w-4 h-4 text-blue-300" />
+          </motion.button>
+        </div>
+      </div>
+
+      {/* Chart Tabs */}
+      <div className="p-3 border-b border-blue-500/20">
+        <div className="flex gap-2">
+          {TRADING_SYMBOLS.map(sym => {
+            const Icon = sym.icon;
+            return (
+              <button
+                key={sym.id}
+                onClick={() => { setActiveChart(sym.id); setShowCalendar(false); }}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+                  activeChart === sym.id && !showCalendar
+                    ? 'bg-blue-500/30 border border-blue-400/50'
+                    : 'bg-zinc-800/50 border border-blue-500/20 hover:border-blue-400/40'
+                }`}
+              >
+                <Icon className="w-4 h-4 text-blue-400" />
+                <span className="text-white">{sym.displayName}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Chart */}
+      <div className="relative bg-zinc-950 flex-1 min-h-0">
+        <div className="w-full h-[300px]">
+          {!showCalendar ? (
+            <iframe
+              src={`https://www.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=${TRADING_SYMBOLS.find(s => s.id === activeChart)?.symbol}&interval=15&hidesidetoolbar=0&theme=dark&style=1&timezone=Etc%2FUTC`}
+              style={{ width: '100%', height: '100%', border: 'none' }}
+              allowFullScreen
+            />
+          ) : (
+            <iframe
+              key={`calendar-${calendarCountry}-${calendarImpact}`}
+              src={calendarUrl}
+              style={{ width: '100%', height: '100%', border: 'none' }}
+              allowFullScreen
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Calendar Toggle & Filters */}
+      <div className="p-3 border-t border-blue-500/20 space-y-2">
+        <div className="flex gap-2">
+          <motion.button
+            onClick={() => setShowCalendar(!showCalendar)}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+              showCalendar ? 'bg-blue-500/30 border border-blue-400/50' : 'bg-zinc-700 hover:bg-zinc-600 border border-blue-500/20'
+            }`}
+          >
+            <Calendar className="w-4 h-4 text-blue-400" />
+            <span className="text-white">{showCalendar ? 'Show Charts' : 'Economic Calendar'}</span>
+          </motion.button>
+          
+          {showCalendar && (
+            <motion.button
+              onClick={() => setShowFilters(!showFilters)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+                showFilters ? 'bg-cyan-500/30 border border-cyan-400/50' : 'bg-zinc-700 hover:bg-zinc-600 border border-zinc-500/20'
+              }`}
+            >
+              <Filter className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="text-white">Filters</span>
+            </motion.button>
+          )}
+        </div>
+
+        {/* Filter Options */}
+        <AnimatePresence>
+          {showCalendar && showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-2 overflow-hidden"
+            >
+              {/* Impact Filter */}
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-zinc-400 w-14">Impact:</span>
+                <div className="flex gap-1 flex-1">
+                  {(['all', 'high', 'medium', 'low'] as CalendarImpact[]).map(impact => (
+                    <button
+                      key={impact}
+                      onClick={() => setCalendarImpact(impact)}
+                      className={`flex-1 py-1 px-2 rounded text-[9px] font-semibold transition-all ${
+                        calendarImpact === impact
+                          ? impact === 'high' ? 'bg-red-500/30 text-red-300 border border-red-500/40'
+                          : impact === 'medium' ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
+                          : impact === 'low' ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/40'
+                          : 'bg-blue-500/30 text-blue-300 border border-blue-500/40'
+                          : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40 hover:bg-zinc-700/50'
+                      }`}
+                    >
+                      {impact === 'all' ? 'All' : impact.charAt(0).toUpperCase() + impact.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Country Filter */}
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-zinc-400 w-14">Currency:</span>
+                <div className="flex gap-1 flex-1 overflow-x-auto pb-1">
+                  {CALENDAR_COUNTRIES.map(country => (
+                    <button
+                      key={country.id}
+                      onClick={() => setCalendarCountry(country.id)}
+                      className={`flex items-center gap-0.5 py-1 px-1.5 rounded text-[9px] font-semibold transition-all whitespace-nowrap ${
+                        calendarCountry === country.id
+                          ? 'bg-blue-500/30 text-blue-300 border border-blue-500/40'
+                          : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40 hover:bg-zinc-700/50'
+                      }`}
+                    >
+                      <span>{country.flag}</span>
+                      <span>{country.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </ModalWrapper>
+  );
+});
+TradingModal.displayName = 'TradingModal';
+
+const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: { 
+  isOpen: boolean; onClose: () => void; isVip: boolean; isAdmin: boolean;
+}) => {
+  const [activeChannel, setActiveChannel] = useState<ChannelKey>('trades');
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = window.location.href;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const socialLinks = [
+    { name: 'Discord', icon: MessageSquare, url: 'https://discord.com/invite/9vVB44ZrNA', color: 'from-blue-600 to-cyan-600' },
+    { name: 'Telegram', icon: MessageCircle, url: 'https://t.me/bullmoneywebsite', color: 'from-blue-600 to-blue-500' },
+    { name: 'Instagram', icon: Instagram, url: 'https://www.instagram.com/bullmoney.online/', color: 'from-blue-600 to-cyan-600' },
+    { name: 'YouTube', icon: Youtube, url: 'https://youtube.com/@bullmoney.online', color: 'from-blue-600 to-cyan-600' },
+  ];
+
+  return (
+    <ModalWrapper isOpen={isOpen} onClose={onClose} color="cyan">
+      {/* Header */}
+      <div className="p-3 border-b border-blue-500/20 bg-gradient-to-r from-blue-500/10 to-cyan-500/10">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-blue-400" />
+            <h3 className="text-sm font-bold text-white">Live Community</h3>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <motion.div className="w-1.5 h-1.5 bg-green-400 rounded-full"
+              animate={{ opacity: [1, 0.4, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }} />
+            <span className="text-[8px] text-green-400 font-medium">LIVE</span>
+            <motion.button
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={onClose}
+              className="ml-1 w-6 h-6 rounded-full bg-blue-500/30 hover:bg-blue-500/50 border border-blue-400/40 flex items-center justify-center"
+            >
+              <span className="text-blue-200 text-sm font-bold">×</span>
+            </motion.button>
+          </div>
+        </div>
+      </div>
+
+      {/* Channel Tabs */}
+      <div className="flex items-center gap-1 p-2 border-b border-white/10 overflow-x-auto">
+        {(Object.keys(TELEGRAM_CHANNELS) as ChannelKey[]).map(key => {
+          const ch = TELEGRAM_CHANNELS[key];
+          const Icon = ch.icon;
+          const isActive = activeChannel === key;
+          const isLocked = ch.requiresVip && !isVip;
+          
+          return (
+            <button
+              key={key}
+              onClick={() => setActiveChannel(key)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-medium transition-all whitespace-nowrap flex-shrink-0 ${
+                isActive
+                  ? ch.color === 'amber' ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
+                  : ch.color === 'emerald' ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/40'
+                  : ch.color === 'cyan' ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/40'
+                  : 'bg-blue-500/30 text-blue-300 border border-blue-500/40'
+                  : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10'
+              }`}
+            >
+              <Icon className="w-3 h-3" />
+              <span>{ch.name}</span>
+              {isLocked && <Lock className="w-2.5 h-2.5 opacity-60" />}
+            </button>
+          );
+        })}
+        
+        {/* Admin Button */}
+        <motion.button
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('openAdminVIPPanel'));
+            onClose();
+          }}
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ml-auto flex-shrink-0 ${
+            isAdmin 
+              ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white border border-blue-400/60'
+              : 'bg-zinc-800/80 text-zinc-300 border border-zinc-600/40'
+          }`}
+        >
+          <Shield className="w-3.5 h-3.5" />
+          <span>Admin</span>
+        </motion.button>
+      </div>
+
+      {/* Feed */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <TelegramChannelEmbed channel={activeChannel} isVip={isVip} />
+      </div>
+
+      {/* View All Link */}
+      <div className="px-3 py-1.5 border-t border-blue-500/10">
+        <a href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
+          target="_blank" rel="noopener noreferrer"
+          className="flex items-center justify-center gap-1 text-[9px] text-blue-400 hover:text-blue-300">
+          <ExternalLink className="w-2.5 h-2.5" /> View all on Telegram
+        </a>
+      </div>
+
+      {/* Social Links */}
+      <div className="p-3 space-y-1.5 border-t border-blue-500/20">
+        <div className="flex gap-2">
+          <motion.button
+            onClick={handleCopyLink}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold text-xs"
+          >
+            {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+            {copied ? 'Copied!' : 'Copy Link'}
+          </motion.button>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-1.5">
+          {socialLinks.map(link => {
+            const Icon = link.icon;
+            return (
+              <motion.a
+                key={link.name}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-gradient-to-r ${link.color} text-white font-semibold text-xs`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {link.name}
+              </motion.a>
+            );
+          })}
+        </div>
+        
+        <motion.button
+          onClick={() => window.dispatchEvent(new CustomEvent('openProductsModal'))}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold text-xs"
+        >
+          <Crown className="w-3.5 h-3.5" /> Join VIP
+        </motion.button>
+      </div>
+    </ModalWrapper>
+  );
+});
+CommunityModal.displayName = 'CommunityModal';
+
+const BullMoneyTVModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const [activeTab, setActiveTab] = useState<'featured' | 'live'>('featured');
+  const [featuredIndex, setFeaturedIndex] = useState(0);
+  const [tradingChannelIndex, setTradingChannelIndex] = useState(0);
+  const [isLive, setIsLive] = useState(false);
+  const [playerKey, setPlayerKey] = useState(0);
+
+  useEffect(() => {
+    if (isOpen) {
+      setFeaturedIndex(0);
+      setPlayerKey(p => p + 1);
+      setTradingChannelIndex(Math.floor(Math.random() * TRADING_LIVE_CHANNELS.length));
+    }
+  }, [isOpen]);
+
+  const youtubeEmbedUrl = useMemo(() => {
+    if (activeTab === 'live') {
+      if (isLive) {
+        return `https://www.youtube.com/embed/live_stream?channel=UCTd2Y1DjefTH6bOAvFcJ34Q&autoplay=1&mute=0`;
+      }
+      const channel = TRADING_LIVE_CHANNELS[tradingChannelIndex];
+      return `https://www.youtube.com/embed/live_stream?channel=${channel.id}&autoplay=1&mute=0`;
+    }
+    return `https://www.youtube.com/embed/${FEATURED_VIDEOS[featuredIndex]}?autoplay=1&mute=0`;
+  }, [activeTab, featuredIndex, tradingChannelIndex, isLive]);
+
+  return (
+    <ModalWrapper isOpen={isOpen} onClose={onClose} maxWidth="500px" color="purple">
+      {/* Header */}
+      <div className="p-3 border-b border-purple-500/30 bg-purple-900/40">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-purple-400" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+            <h3 className="text-sm font-bold text-purple-100">BullMoney TV</h3>
+            {isLive && (
+              <motion.div
+                className="flex items-center gap-1 px-1.5 py-0.5 bg-red-500/20 rounded-full"
+                animate={{ opacity: [1, 0.7, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+                <span className="text-[8px] font-bold text-red-400">LIVE NOW</span>
+              </motion.div>
+            )}
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: 90 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-purple-500/30 hover:bg-purple-500/50 border border-purple-400/40 flex items-center justify-center"
+          >
+            <span className="text-purple-200 font-bold">×</span>
+          </motion.button>
+        </div>
+        
+        {/* Tabs */}
+        <div className="flex gap-2 mt-3">
+          <motion.button
+            onClick={() => { setActiveTab('featured'); setPlayerKey(p => p + 1); }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold ${
+              activeTab === 'featured'
+                ? 'bg-yellow-400 text-black'
+                : 'bg-white/10 text-white/70 hover:bg-white/20'
+            }`}
+          >
+            Featured ({featuredIndex + 1}/{FEATURED_VIDEOS.length})
+          </motion.button>
+          
+          <motion.button
+            onClick={() => {
+              setActiveTab('live');
+              if (!isLive) setTradingChannelIndex(Math.floor(Math.random() * TRADING_LIVE_CHANNELS.length));
+              setPlayerKey(p => p + 1);
+            }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold ${
+              activeTab === 'live'
+                ? isLive ? 'bg-red-500 text-white' : 'bg-purple-500 text-white'
+                : 'bg-white/10 text-white/70 hover:bg-white/20'
+            }`}
+          >
+            <motion.div
+              className={`w-2 h-2 rounded-full ${isLive ? 'bg-red-400' : 'bg-white/50'}`}
+              animate={isLive ? { scale: [1, 1.3, 1], opacity: [1, 0.7, 1] } : {}}
+              transition={{ duration: 1, repeat: Infinity }}
+            />
+            {isLive ? 'Live Stream' : 'Trading'}
+          </motion.button>
+        </div>
+      </div>
+
+      {/* Video Player */}
+      <div className="relative w-full bg-black" style={{ minHeight: '280px' }}>
+        {isOpen && (
+          <iframe
+            key={`player-${playerKey}-${activeTab}-${featuredIndex}`}
+            src={`${youtubeEmbedUrl}&t=${playerKey}`}
+            width="100%"
+            height="280"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            style={{ border: 'none' }}
+          />
+        )}
+        
+        {/* Navigation for Featured */}
+        {activeTab === 'featured' && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2">
+            <motion.button
+              onClick={() => { setFeaturedIndex(p => (p - 1 + FEATURED_VIDEOS.length) % FEATURED_VIDEOS.length); setPlayerKey(p => p + 1); }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="w-8 h-8 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center text-white"
+            >
+              ◀
+            </motion.button>
+            <span className="text-white/70 text-xs font-semibold bg-black/50 px-2 py-1 rounded">
+              {featuredIndex + 1} / {FEATURED_VIDEOS.length}
+            </span>
+            <motion.button
+              onClick={() => { setFeaturedIndex(p => (p + 1) % FEATURED_VIDEOS.length); setPlayerKey(p => p + 1); }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="w-8 h-8 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center text-white"
+            >
+              ▶
+            </motion.button>
+          </div>
+        )}
+        
+        {/* Next channel for live when not streaming */}
+        {activeTab === 'live' && !isLive && (
+          <div className="absolute bottom-2 right-2">
+            <motion.button
+              onClick={() => { setTradingChannelIndex(p => (p + 1) % TRADING_LIVE_CHANNELS.length); setPlayerKey(p => p + 1); }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-purple-600/90 hover:bg-purple-500 rounded text-[10px] font-bold text-white"
+            >
+              Next Channel ▶
+            </motion.button>
+          </div>
+        )}
+      </div>
+
+      {/* Platform Links */}
+      <div className="flex bg-[#1a1a1a] border-t border-white/10">
+        <a href="https://youtube.com/@bullmoney.streams" target="_blank" rel="noopener noreferrer"
+          className="flex-1 py-2 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-red-600/20">
+          <Youtube className="w-4 h-4 text-red-500" /> YouTube
+        </a>
+        <a href="https://discord.gg/vfxHPpCeQ" target="_blank" rel="noopener noreferrer"
+          className="flex-1 py-2 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-[#5865F2]/20">
+          <MessageSquare className="w-4 h-4 text-[#5865F2]" /> Discord
+        </a>
+      </div>
+    </ModalWrapper>
+  );
+});
+BullMoneyTVModal.displayName = 'BullMoneyTVModal';
+
+const BrowserModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const [openingBrowser, setOpeningBrowser] = useState<string | null>(null);
+
+  const handleOpenBrowser = (browserId: string) => {
+    const currentUrl = window.location.href;
+    const browser = BROWSERS.find(b => b.id === browserId);
+    if (!browser) return;
+    
+    setOpeningBrowser(browserId);
+    
+    const userAgent = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+    const isAndroid = /android/i.test(userAgent);
+    const isMac = /Macintosh/.test(userAgent);
+    
+    let deepLinkUrl = '';
+    if (isIOS) deepLinkUrl = browser.deepLink.ios(currentUrl);
+    else if (isAndroid) deepLinkUrl = browser.deepLink.android(currentUrl);
+    else deepLinkUrl = browser.deepLink.desktop(currentUrl);
+    
+    if (isIOS || isAndroid) {
+      window.location.href = deepLinkUrl;
+      setTimeout(() => {
+        if (!document.hidden) {
+          window.location.href = isIOS ? browser.iosAppStore : browser.androidPlayStore || browser.downloadUrl;
+        }
+        setOpeningBrowser(null);
+      }, 1500);
+    } else {
+      if (browserId === 'safari' && isMac) {
+        window.open(currentUrl, '_blank');
+      } else {
+        window.open(browser.downloadUrl, '_blank');
+      }
+      setOpeningBrowser(null);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/60"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            onClick={e => e.stopPropagation()}
+            className="w-[90vw] max-w-[320px] bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl rounded-2xl border border-blue-500/40 shadow-2xl overflow-hidden"
+          >
+            <div className="p-4 border-b border-blue-500/20 bg-gradient-to-r from-blue-500/10 to-cyan-500/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Monitor className="w-5 h-5 text-blue-400" />
+                  <h3 className="text-sm font-bold text-white">Open in Browser</h3>
+                </div>
+                <motion.button
+                  onClick={onClose}
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  className="w-6 h-6 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-white"
+                >
+                  ✕
+                </motion.button>
+              </div>
+            </div>
+            
+            <div className="p-3 space-y-2 max-h-[60vh] overflow-y-auto">
+              {BROWSERS.map((browser, index) => {
+                const Icon = browser.icon;
+                const isLoading = openingBrowser === browser.id;
+                
+                return (
+                  <motion.button
+                    key={browser.id}
+                    onClick={() => handleOpenBrowser(browser.id)}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ scale: 1.02, x: 4 }}
+                    whileTap={{ scale: 0.98 }}
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-cyan-500/10 hover:from-blue-500/20 hover:to-cyan-500/20 text-white font-medium text-xs border border-blue-500/30 hover:border-blue-400/50 disabled:opacity-50"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
+                        <Icon className="w-4 h-4 text-blue-400" />
+                      </div>
+                      <span>{browser.fullName}</span>
+                    </div>
+                    
+                    {isLoading ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="w-4 h-4 border-2 border-t-transparent border-blue-400 rounded-full"
+                      />
+                    ) : (
+                      <ExternalLink className="w-4 h-4 text-blue-400 opacity-50" />
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+});
+BrowserModal.displayName = 'BrowserModal';
+
+// ============================================================================
+// UNIFIED HUB TAB TYPE - All features in one pill
+// ============================================================================
+
+type UnifiedHubTab = 'trading' | 'community' | 'tv' | 'device';
+
+const UNIFIED_HUB_TABS: { id: UnifiedHubTab; label: string; icon: typeof TrendingUp; color: string }[] = [
+  { id: 'trading', label: 'Trade', icon: TrendingUp, color: 'blue' },
+  { id: 'community', label: 'Social', icon: MessageSquare, color: 'cyan' },
+  { id: 'tv', label: 'TV', icon: Play, color: 'purple' },
+  { id: 'device', label: 'Device', icon: Smartphone, color: 'emerald' },
+];
+
+// ============================================================================
+// UNIFIED HUB PANEL - All features in one panel
+// ============================================================================
+
+const UnifiedHubPanel = memo(({
+  isOpen,
+  onClose,
+  fps,
+  deviceTier,
+  isAdmin,
+  isVip,
+  userId,
+  userEmail,
+  prices,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  fps: number;
+  deviceTier: string;
+  isAdmin: boolean;
+  isVip: boolean;
+  userId?: string;
+  userEmail?: string;
+  prices: { xauusd: string; btcusd: string };
+}) => {
+  const [activeTab, setActiveTab] = useState<UnifiedHubTab>('trading');
+  const [isDragging, setIsDragging] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  
+  // Trading tab state
+  const [selectedSymbol, setSelectedSymbol] = useState<typeof TRADING_SYMBOLS[number]>(TRADING_SYMBOLS[0]);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [calendarImpact, setCalendarImpact] = useState<CalendarImpact>('all');
+  const [calendarCountry, setCalendarCountry] = useState<CalendarCountry>('all');
+  const [showFilters, setShowFilters] = useState(false);
+  
+  // Community tab state
+  const [activeChannel, setActiveChannel] = useState<ChannelKey>('trades');
+  const [copied, setCopied] = useState(false);
+  
+  // TV tab state
+  const [tvTab, setTvTab] = useState<'featured' | 'live'>('featured');
+  const [featuredIndex, setFeaturedIndex] = useState(0);
+  const [tradingChannelIndex, setTradingChannelIndex] = useState(0);
+  const [isLive, setIsLive] = useState(false);
+  
+  // Device tab state - Get REAL device data from hooks
+  const memoryStats = useRealTimeMemory();
+  const browserInfo = useBrowserInfo();
+  const storageInfo = useStorageInfo();
+  const networkStats = useNetworkStats() as NetworkStats & { runSpeedTest: () => Promise<void> };
+  const perfStats = usePerformanceStats();
+  const gpuInfo = useGpuInfo();
+  const batteryInfo = useBatteryInfo();
+  const screenInfo = useScreenInfo();
+  
+  // Calculate 3D Performance Score
+  const performanceScore = calculate3DPerformanceScore(fps, memoryStats.percentage, gpuInfo.score, browserInfo.cores);
+  const performanceGrade = getPerformanceGrade(performanceScore);
+
+  // Handle swipe to close
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (info.offset.x > 100) {
+      SoundEffects.swoosh();
+      onClose();
+    }
+    setIsDragging(false);
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      SoundEffects.success();
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = window.location.href;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const socialLinks = [
+    { name: 'Discord', icon: MessageSquare, url: 'https://discord.com/invite/9vVB44ZrNA', color: 'from-indigo-600 to-blue-600' },
+    { name: 'Telegram', icon: MessageCircle, url: 'https://t.me/bullmoneywebsite', color: 'from-blue-500 to-cyan-500' },
+    { name: 'Instagram', icon: Instagram, url: 'https://www.instagram.com/bullmoney.online/', color: 'from-pink-500 to-purple-500' },
+    { name: 'YouTube', icon: Youtube, url: 'https://youtube.com/@bullmoney.online', color: 'from-red-600 to-red-500' },
+  ];
+
+  const youtubeEmbedUrl = useMemo(() => {
+    if (tvTab === 'live') {
+      if (isLive) {
+        return `https://www.youtube.com/embed/live_stream?channel=UCTd2Y1DjefTH6bOAvFcJ34Q&autoplay=1&mute=0`;
+      }
+      const channel = TRADING_LIVE_CHANNELS[tradingChannelIndex];
+      return `https://www.youtube.com/embed/live_stream?channel=${channel.id}&autoplay=1&mute=0`;
+    }
+    return `https://www.youtube.com/embed/${FEATURED_VIDEOS[featuredIndex]}?autoplay=1&mute=0`;
+  }, [tvTab, featuredIndex, tradingChannelIndex, isLive]);
+
+  // Calendar URL builder
+  const calendarUrl = useMemo(() => {
+    let url = 'https://www.tradingview.com/embed-widget/events/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22importanceFilter%22%3A%22';
+    
+    if (calendarImpact === 'high') url += '2';
+    else if (calendarImpact === 'medium') url += '1%2C2';
+    else if (calendarImpact === 'low') url += '0%2C1%2C2';
+    else url += '-1%2C0%2C1%2C2';
+    
+    url += '%22';
+    
+    if (calendarCountry !== 'all') {
+      url += `%2C%22countryFilter%22%3A%22${calendarCountry}%22`;
+    }
+    
+    url += '%7D';
+    return url;
+  }, [calendarImpact, calendarCountry]);
+
+  const colors = getFpsColor(fps);
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[2147483640] bg-black/60 backdrop-blur-sm"
+            onClick={onClose}
+          />
+          
+          {/* Panel */}
+          <motion.div
+            ref={panelRef}
+            initial={{ x: '100%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '100%', opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={{ left: 0, right: 0.3 }}
+            onDragStart={() => setIsDragging(true)}
+            onDragEnd={handleDragEnd}
+            className="fixed right-0 top-0 bottom-0 z-[2147483647] w-full sm:w-[380px] md:w-[420px] flex flex-col bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl border-l border-blue-500/30 shadow-2xl overflow-hidden"
+            style={{ touchAction: 'pan-y' }}
+          >
+            {/* Header with FPS Display */}
+            <div className="p-3 border-b border-blue-500/20 bg-gradient-to-r from-blue-600/20 via-cyan-600/10 to-purple-600/10">
+              <div className="flex items-center justify-between gap-2">
+                {/* FPS Badge */}
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <FpsCandlestickChart fps={fps} width={60} height={36} candleCount={6} />
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-1">
+                      <Activity size={12} className="text-blue-400" />
+                      <span className="text-lg font-black tabular-nums" style={{ color: colors.text }}>{fps}</span>
+                      <span className="text-[8px] text-blue-400 font-bold">FPS</span>
+                    </div>
+                    <div className="text-[9px] font-mono font-bold uppercase text-blue-300 tracking-wide">{deviceTier}</div>
+                  </div>
+                </div>
+                
+                {/* Live Prices */}
+                <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                  <div className="flex items-center gap-1">
+                    <Coins className="w-3 h-3 text-amber-400" />
+                    <span className="text-[10px] font-bold text-amber-300">${prices.xauusd}</span>
+                  </div>
+                  <div className="w-px h-3 bg-blue-500/30" />
+                  <div className="flex items-center gap-1">
+                    <Bitcoin className="w-3 h-3 text-orange-400" />
+                    <span className="text-[10px] font-bold text-orange-300">${prices.btcusd}</span>
+                  </div>
+                </div>
+                
+                {/* Close Button */}
+                <motion.button
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={onClose}
+                  className="w-8 h-8 rounded-full bg-blue-500/20 hover:bg-blue-500/40 border border-blue-400/40 flex items-center justify-center"
+                >
+                  <X className="w-4 h-4 text-blue-200" />
+                </motion.button>
+              </div>
+              
+              {/* Swipe hint for mobile */}
+              <motion.div 
+                className="flex items-center justify-center gap-1 mt-2 text-[9px] text-blue-400/60 sm:hidden"
+                animate={{ x: [0, 5, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                <ChevronRight className="w-3 h-3" />
+                <span>Swipe right to close</span>
+              </motion.div>
+            </div>
+            
+            {/* Tab Navigation */}
+            <div className="flex items-stretch border-b border-blue-500/20 bg-black/20">
+              {UNIFIED_HUB_TABS.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                const colorClasses = {
+                  blue: isActive ? 'bg-blue-500/30 text-blue-300 border-blue-400' : 'text-blue-400/60 border-transparent',
+                  cyan: isActive ? 'bg-cyan-500/30 text-cyan-300 border-cyan-400' : 'text-cyan-400/60 border-transparent',
+                  purple: isActive ? 'bg-purple-500/30 text-purple-300 border-purple-400' : 'text-purple-400/60 border-transparent',
+                  emerald: isActive ? 'bg-emerald-500/30 text-emerald-300 border-emerald-400' : 'text-emerald-400/60 border-transparent',
+                };
+                
+                return (
+                  <motion.button
+                    key={tab.id}
+                    onClick={() => {
+                      SoundEffects.click();
+                      setActiveTab(tab.id);
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 px-2 border-b-2 transition-all ${colorClasses[tab.color as keyof typeof colorClasses]}`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="text-[9px] font-bold uppercase tracking-wide">{tab.label}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
+            
+            {/* Tab Content */}
+            <div className="flex-1 overflow-y-auto min-h-0">
+              <AnimatePresence mode="wait">
+                {/* TRADING TAB */}
+                {activeTab === 'trading' && (
+                  <motion.div
+                    key="trading"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="h-full flex flex-col"
+                  >
+                    {/* Symbol Selector */}
+                    <div className="flex gap-1 p-2 overflow-x-auto border-b border-blue-500/10">
+                      {TRADING_SYMBOLS.map(symbol => {
+                        const Icon = symbol.icon;
+                        const isActive = selectedSymbol.id === symbol.id;
+                        return (
+                          <motion.button
+                            key={symbol.id}
+                            onClick={() => setSelectedSymbol(symbol)}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold whitespace-nowrap transition-all ${
+                              isActive
+                                ? 'bg-blue-500/30 text-blue-300 border border-blue-400/50'
+                                : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40 hover:bg-zinc-700/50'
+                            }`}
+                          >
+                            <Icon className="w-3 h-3" />
+                            <span>{symbol.abbr}</span>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Chart/Calendar */}
+                    <div className="flex-1 min-h-[280px]">
+                      {showCalendar ? (
+                        <iframe
+                          key={calendarUrl}
+                          src={calendarUrl}
+                          className="w-full h-full border-0"
+                          title="Economic Calendar"
+                        />
+                      ) : (
+                        <iframe
+                          key={selectedSymbol.symbol}
+                          src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=${selectedSymbol.symbol}&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=%5B%5D&theme=dark&style=1&timezone=exchange&withdateranges=1&showpopupbutton=1&studies_overrides=%7B%7D&overrides=%7B%7D&enabled_features=%5B%5D&disabled_features=%5B%5D&locale=en&utm_source=localhost&utm_medium=widget&utm_campaign=chart`}
+                          className="w-full h-full border-0"
+                          title={`${selectedSymbol.name} Chart`}
+                          allow="clipboard-write"
+                        />
+                      )}
+                    </div>
+                    
+                    {/* Toggle & Filters */}
+                    <div className="p-2 space-y-2 border-t border-blue-500/20">
+                      <div className="flex gap-2">
+                        <motion.button
+                          onClick={() => setShowCalendar(!showCalendar)}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+                            showCalendar ? 'bg-blue-500/30 border border-blue-400/50' : 'bg-zinc-700 hover:bg-zinc-600 border border-blue-500/20'
+                          }`}
+                        >
+                          <Calendar className="w-4 h-4 text-blue-400" />
+                          <span className="text-white">{showCalendar ? 'Show Charts' : 'Calendar'}</span>
+                        </motion.button>
+                        
+                        {showCalendar && (
+                          <motion.button
+                            onClick={() => setShowFilters(!showFilters)}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+                              showFilters ? 'bg-cyan-500/30 border border-cyan-400/50' : 'bg-zinc-700 hover:bg-zinc-600 border border-zinc-500/20'
+                            }`}
+                          >
+                            <Filter className="w-3.5 h-3.5 text-cyan-400" />
+                            <span className="text-white">Filters</span>
+                          </motion.button>
+                        )}
+                      </div>
+                      
+                      {/* Filter Options */}
+                      <AnimatePresence>
+                        {showCalendar && showFilters && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="space-y-2 overflow-hidden"
+                          >
+                            {/* Impact Filter */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-zinc-400 w-14">Impact:</span>
+                              <div className="flex gap-1 flex-1">
+                                {(['all', 'high', 'medium', 'low'] as CalendarImpact[]).map(impact => (
+                                  <button
+                                    key={impact}
+                                    onClick={() => setCalendarImpact(impact)}
+                                    className={`flex-1 py-1 px-2 rounded text-[9px] font-semibold transition-all ${
+                                      calendarImpact === impact
+                                        ? impact === 'high' ? 'bg-red-500/30 text-red-300 border border-red-500/40'
+                                        : impact === 'medium' ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
+                                        : impact === 'low' ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/40'
+                                        : 'bg-blue-500/30 text-blue-300 border border-blue-500/40'
+                                        : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40 hover:bg-zinc-700/50'
+                                    }`}
+                                  >
+                                    {impact === 'all' ? 'All' : impact.charAt(0).toUpperCase() + impact.slice(1)}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            {/* Country Filter */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-zinc-400 w-14">Currency:</span>
+                              <div className="flex gap-1 flex-1 overflow-x-auto pb-1">
+                                {CALENDAR_COUNTRIES.map(country => (
+                                  <button
+                                    key={country.id}
+                                    onClick={() => setCalendarCountry(country.id)}
+                                    className={`flex items-center gap-0.5 py-1 px-1.5 rounded text-[9px] font-semibold transition-all whitespace-nowrap ${
+                                      calendarCountry === country.id
+                                        ? 'bg-blue-500/30 text-blue-300 border border-blue-500/40'
+                                        : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40 hover:bg-zinc-700/50'
+                                    }`}
+                                  >
+                                    <span>{country.flag}</span>
+                                    <span>{country.name}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      
+                      {/* Trading Tip */}
+                      <TradingTipPill />
+                    </div>
+                  </motion.div>
+                )}
+                
+                {/* COMMUNITY TAB */}
+                {activeTab === 'community' && (
+                  <motion.div
+                    key="community"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="h-full flex flex-col"
+                  >
+                    {/* Channel Tabs */}
+                    <div className="flex items-center gap-1 p-2 border-b border-white/10 overflow-x-auto">
+                      {(Object.keys(TELEGRAM_CHANNELS) as ChannelKey[]).map(key => {
+                        const ch = TELEGRAM_CHANNELS[key];
+                        const Icon = ch.icon;
+                        const isActive = activeChannel === key;
+                        const isLocked = ch.requiresVip && !isVip;
+                        
+                        return (
+                          <button
+                            key={key}
+                            onClick={() => setActiveChannel(key)}
+                            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-medium transition-all whitespace-nowrap flex-shrink-0 ${
+                              isActive
+                                ? ch.color === 'amber' ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
+                                : ch.color === 'emerald' ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/40'
+                                : ch.color === 'cyan' ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/40'
+                                : 'bg-blue-500/30 text-blue-300 border border-blue-500/40'
+                                : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10'
+                            }`}
+                          >
+                            <Icon className="w-3 h-3" />
+                            <span>{ch.name}</span>
+                            {isLocked && <Lock className="w-2.5 h-2.5 opacity-60" />}
+                          </button>
+                        );
+                      })}
+                      
+                      {/* Admin Button */}
+                      <motion.button
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent('openAdminVIPPanel'));
+                          onClose();
+                        }}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ml-auto flex-shrink-0 ${
+                          isAdmin 
+                            ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white border border-blue-400/60'
+                            : 'bg-zinc-800/80 text-zinc-300 border border-zinc-600/40'
+                        }`}
+                      >
+                        <Shield className="w-3.5 h-3.5" />
+                        <span>Admin</span>
+                      </motion.button>
+                    </div>
+                    
+                    {/* Feed */}
+                    <div className="flex-1 overflow-y-auto min-h-0 min-h-[200px]">
+                      <TelegramChannelEmbed channel={activeChannel} isVip={isVip} />
+                    </div>
+                    
+                    {/* View All Link */}
+                    <div className="px-3 py-1.5 border-t border-blue-500/10">
+                      <a href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-1 text-[9px] text-cyan-400 hover:text-cyan-300">
+                        <ExternalLink className="w-2.5 h-2.5" /> View all on Telegram
+                      </a>
+                    </div>
+                    
+                    {/* Social Links */}
+                    <div className="p-3 space-y-2 border-t border-cyan-500/20">
+                      <div className="flex gap-2">
+                        <motion.button
+                          onClick={handleCopyLink}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold text-xs"
+                        >
+                          {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          {copied ? 'Copied!' : 'Copy Link'}
+                        </motion.button>
+                        
+                        <motion.button
+                          onClick={() => window.dispatchEvent(new CustomEvent('openProductsModal'))}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-gradient-to-r from-amber-600 to-amber-500 text-white font-bold text-xs"
+                        >
+                          <Crown className="w-3.5 h-3.5" /> Join VIP
+                        </motion.button>
+                      </div>
+                      
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {socialLinks.map(link => {
+                          const Icon = link.icon;
+                          return (
+                            <motion.a
+                              key={link.name}
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className={`flex flex-col items-center justify-center gap-1 py-2 px-2 rounded-lg bg-gradient-to-r ${link.color} text-white font-semibold text-[10px]`}
+                            >
+                              <Icon className="w-4 h-4" />
+                              <span className="hidden sm:block">{link.name}</span>
+                            </motion.a>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+                
+                {/* TV TAB */}
+                {activeTab === 'tv' && (
+                  <motion.div
+                    key="tv"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="h-full flex flex-col"
+                  >
+                    {/* TV Tabs */}
+                    <div className="flex gap-2 p-2 border-b border-purple-500/20">
+                      {(['featured', 'live'] as const).map(tab => (
+                        <motion.button
+                          key={tab}
+                          onClick={() => setTvTab(tab)}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+                            tvTab === tab
+                              ? 'bg-purple-500/30 text-purple-300 border border-purple-400/50'
+                              : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40 hover:bg-zinc-700/50'
+                          }`}
+                        >
+                          {tab === 'featured' ? <Play className="w-3.5 h-3.5" /> : <Radio className="w-3.5 h-3.5" />}
+                          <span>{tab === 'featured' ? 'Featured' : 'Live Streams'}</span>
+                        </motion.button>
+                      ))}
+                    </div>
+                    
+                    {/* Video Player */}
+                    <div className="relative aspect-video bg-black">
+                      <iframe
+                        key={youtubeEmbedUrl}
+                        src={youtubeEmbedUrl}
+                        className="absolute inset-0 w-full h-full"
+                        title="BullMoney TV"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                    
+                    {/* Video Controls */}
+                    <div className="p-2 space-y-2">
+                      {tvTab === 'featured' && (
+                        <div className="flex gap-2">
+                          {FEATURED_VIDEOS.map((_, idx) => (
+                            <motion.button
+                              key={idx}
+                              onClick={() => setFeaturedIndex(idx)}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className={`flex-1 py-2 rounded-lg text-xs font-semibold ${
+                                featuredIndex === idx
+                                  ? 'bg-purple-500/30 text-purple-300 border border-purple-400/50'
+                                  : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40'
+                              }`}
+                            >
+                              Video {idx + 1}
+                            </motion.button>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {tvTab === 'live' && (
+                        <div className="flex gap-1 overflow-x-auto pb-1">
+                          {TRADING_LIVE_CHANNELS.map((channel, idx) => (
+                            <motion.button
+                              key={channel.id}
+                              onClick={() => setTradingChannelIndex(idx)}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold whitespace-nowrap ${
+                                tradingChannelIndex === idx
+                                  ? 'bg-red-500/30 text-red-300 border border-red-400/50'
+                                  : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40'
+                              }`}
+                            >
+                              <Radio className="w-3 h-3" />
+                              {channel.name}
+                            </motion.button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Platform Links */}
+                    <div className="flex border-t border-purple-500/20 mt-auto">
+                      <a href="https://youtube.com/@bullmoney.streams" target="_blank" rel="noopener noreferrer"
+                        className="flex-1 py-2 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-red-600/20">
+                        <Youtube className="w-4 h-4 text-red-500" /> YouTube
+                      </a>
+                      <a href="https://discord.gg/vfxHPpCeQ" target="_blank" rel="noopener noreferrer"
+                        className="flex-1 py-2 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-[#5865F2]/20">
+                        <MessageSquare className="w-4 h-4 text-[#5865F2]" /> Discord
+                      </a>
+                    </div>
+                  </motion.div>
+                )}
+                
+                {/* DEVICE TAB */}
+                {activeTab === 'device' && (
+                  <motion.div
+                    key="device"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="p-3 space-y-3"
+                  >
+                    {/* Performance Grade */}
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/10 border border-blue-500/30">
+                      <div className="flex items-center gap-3">
+                        <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-black"
+                          style={{ backgroundColor: `${performanceGrade.color}20`, color: performanceGrade.color, border: `2px solid ${performanceGrade.color}40` }}>
+                          {performanceGrade.grade}
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-white">Performance Grade</div>
+                          <div className="text-[10px] text-zinc-400">{performanceGrade.label} • Score: {performanceScore}/100</div>
+                        </div>
+                      </div>
+                      <PerformanceRing value={performanceScore} label="" color={performanceScore >= 70 ? 'green' : performanceScore >= 50 ? 'amber' : 'red'} size={50} />
+                    </div>
+                    
+                    {/* Quick Stats Grid */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <StatCard label="FPS" value={fps} icon={Activity} color={fps >= 50 ? 'green' : fps >= 30 ? 'amber' : 'red'} />
+                      <StatCard label="Memory" value={memoryStats.jsHeapUsed} unit="MB" icon={MemoryStick} color={memoryStats.percentage < 70 ? 'blue' : 'amber'} subValue={`${memoryStats.percentage}% used`} />
+                      <StatCard label="CPU Cores" value={browserInfo.cores} icon={Cpu} color="cyan" />
+                      <StatCard label="Device RAM" value={browserInfo.deviceMemory} unit="GB" icon={HardDrive} color="purple" />
+                    </div>
+                    
+                    {/* GPU Info */}
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">GPU</span>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                          gpuInfo.tier === 'ultra' ? 'bg-emerald-500/20 text-emerald-300' :
+                          gpuInfo.tier === 'high' ? 'bg-blue-500/20 text-blue-300' :
+                          gpuInfo.tier === 'medium' ? 'bg-amber-500/20 text-amber-300' :
+                          'bg-red-500/20 text-red-300'
+                        }`}>{gpuInfo.tier.toUpperCase()}</span>
+                      </div>
+                      <div className="text-xs font-semibold text-white truncate">{gpuInfo.renderer}</div>
+                      <div className="text-[9px] text-zinc-500 mt-0.5">{gpuInfo.vendor} • {gpuInfo.webglVersion}</div>
+                    </div>
+                    
+                    {/* Network & Battery Row */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {/* Network */}
+                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] font-medium text-zinc-400">Network</span>
+                          {networkStats.isOnline ? <Wifi className="w-3 h-3 text-cyan-400" /> : <WifiOff className="w-3 h-3 text-red-400" />}
+                        </div>
+                        <div className="text-sm font-bold text-white">{networkStats.effectiveType.toUpperCase()}</div>
+                        <div className="text-[9px] text-zinc-500">{networkStats.downlink} Mbps • {networkStats.rtt}ms</div>
+                      </div>
+                      
+                      {/* Battery */}
+                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] font-medium text-zinc-400">Battery</span>
+                          {batteryInfo.charging ? <Zap className="w-3 h-3 text-amber-400" /> : <Battery className="w-3 h-3 text-amber-400" />}
+                        </div>
+                        {batteryInfo.supported && batteryInfo.level >= 0 ? (
+                          <>
+                            <div className="text-sm font-bold text-white">{Math.round(batteryInfo.level * 100)}%</div>
+                            <div className="text-[9px] text-zinc-500">{batteryInfo.charging ? 'Charging' : 'On Battery'}</div>
+                          </>
+                        ) : (
+                          <div className="text-xs text-zinc-500">Not available</div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Screen Info */}
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Display</span>
+                        <Monitor className="w-3.5 h-3.5 text-blue-400" />
+                      </div>
+                      <div className="text-xs font-semibold text-white">{screenInfo.width} × {screenInfo.height}</div>
+                      <div className="text-[9px] text-zinc-500">
+                        {screenInfo.pixelRatio}x DPR • {screenInfo.refreshRate}Hz • {screenInfo.colorDepth}-bit
+                        {screenInfo.hdr && <span className="ml-1 text-amber-400">HDR</span>}
+                      </div>
+                    </div>
+                    
+                    {/* Browser Info */}
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-zinc-500/20 to-zinc-600/10 border border-zinc-500/30">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Browser</span>
+                        <Globe className="w-3.5 h-3.5 text-zinc-400" />
+                      </div>
+                      <div className="text-xs font-semibold text-white">{browserInfo.name} {browserInfo.version.split('.')[0]}</div>
+                      <div className="text-[9px] text-zinc-500">{browserInfo.engine} • {browserInfo.platform}</div>
+                    </div>
+                    
+                    {/* Account Info */}
+                    {userId && (
+                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Account</span>
+                          <User className="w-3.5 h-3.5 text-emerald-400" />
+                        </div>
+                        <div className="text-xs font-semibold text-white truncate">{userEmail || 'Signed In'}</div>
+                        <div className="flex items-center gap-2 mt-1">
+                          {isVip && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                              <Crown className="w-2.5 h-2.5 inline mr-0.5" />VIP
+                            </span>
+                          )}
+                          {isAdmin && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30">
+                              <Shield className="w-2.5 h-2.5 inline mr-0.5" />Admin
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+});
+UnifiedHubPanel.displayName = 'UnifiedHubPanel';
+
+// ============================================================================
+// UNIFIED FPS PILL - One button for everything
+// ============================================================================
+
+const UnifiedFpsPill = memo(({ 
+  fps, 
+  deviceTier, 
+  prices,
+  isMinimized, 
+  onToggleMinimized,
+  onOpenPanel
+}: {
+  fps: number;
+  deviceTier: string;
+  prices: { xauusd: string; btcusd: string };
+  isMinimized: boolean;
+  onToggleMinimized: () => void;
+  onOpenPanel: () => void;
+}) => {
+  const colors = getFpsColor(fps);
+  
+  return (
+    <motion.div
+      initial={{ x: 100, opacity: 0 }}
+      animate={{ x: 0, opacity: 1, scale: isMinimized ? 0.9 : 1 }}
+      className="fixed right-0 z-[250000] pointer-events-none"
+      style={{ top: '50%', transform: 'translateY(-50%)', paddingRight: 'calc(env(safe-area-inset-right, 0px) + 4px)' }}
+    >
+      <motion.div
+        whileHover="hover"
+        animate={isMinimized ? "minimized" : "initial"}
+        className="relative pointer-events-auto cursor-pointer"
+      >
+        <motion.div
+          variants={{
+            initial: { x: 0, scale: 1 },
+            hover: { x: -8, scale: 1.02 },
+            minimized: { x: 2, scale: 0.95 }
+          }}
+          className="relative rounded-l-3xl bg-gradient-to-br from-blue-600/40 via-cyan-500/20 to-purple-600/30 backdrop-blur-2xl border-y border-l border-blue-500/60 shadow-2xl hover:border-blue-400/80 hover:shadow-blue-600/50"
+          onClick={(e) => {
+            e.preventDefault();
+            SoundEffects.click();
+            if (isMinimized) onToggleMinimized();
+            else onOpenPanel();
+          }}
+          onMouseEnter={() => {
+            SoundEffects.hover();
+            if (isMinimized) onToggleMinimized();
+          }}
+        >
+          {/* Animated glow effect */}
+          <motion.div
+            className="absolute inset-0 rounded-l-3xl bg-gradient-to-r from-blue-500/30 via-cyan-500/20 to-purple-500/30"
+            animate={{ opacity: [0.3, 0.7, 0.3] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            style={{ filter: 'blur(8px)' }}
+          />
+          
+          <AnimatePresence mode="popLayout">
+            {isMinimized ? (
+              <motion.div
+                key="minimized"
+                initial={{ opacity: 0, scale: 0.7 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.7 }}
+                className="px-2 py-1.5 relative z-10"
+              >
+                <MinimizedFpsDisplay fps={fps} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="full"
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.85 }}
+                className="px-2.5 py-2.5 relative z-10"
+              >
+                <div className="flex items-center gap-2">
+                  {/* Expand Arrow */}
+                  <motion.div 
+                    animate={{ x: [-2, 2, -2] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    <ChevronRight size={14} className="text-blue-400 rotate-180" />
+                  </motion.div>
+                  
+                  {/* FPS Chart */}
+                  <FpsCandlestickChart fps={fps} width={50} height={32} candleCount={5} />
+                  
+                  {/* Stats Column */}
+                  <div className="flex flex-col gap-0.5">
+                    {/* FPS */}
+                    <div className="flex items-center gap-1">
+                      <Activity size={10} className="text-blue-400" />
+                      <span className="text-sm font-black tabular-nums" style={{ color: colors.text }}>{fps}</span>
+                      <span className="text-[7px] text-blue-400/80 font-bold">FPS</span>
+                    </div>
+                    
+                    {/* Live Prices Mini */}
+                    <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-0.5">
+                        <Coins className="w-2.5 h-2.5 text-amber-400" />
+                        <span className="text-[8px] font-bold text-amber-300">{prices.xauusd}</span>
+                      </div>
+                      <div className="w-px h-2 bg-blue-500/30" />
+                      <div className="flex items-center gap-0.5">
+                        <Bitcoin className="w-2.5 h-2.5 text-orange-400" />
+                        <span className="text-[8px] font-bold text-orange-300">{prices.btcusd}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Tier */}
+                    <div className="text-[7px] font-mono font-bold uppercase text-blue-300/80 tracking-wide">{deviceTier}</div>
+                  </div>
+                  
+                  {/* Feature Icons */}
+                  <div className="flex flex-col gap-0.5 ml-1 border-l border-blue-500/20 pl-1.5">
+                    <div className="flex items-center gap-0.5">
+                      <TrendingUp className="w-2.5 h-2.5 text-blue-400" />
+                      <MessageSquare className="w-2.5 h-2.5 text-cyan-400" />
+                    </div>
+                    <div className="flex items-center gap-0.5">
+                      <Play className="w-2.5 h-2.5 text-purple-400" />
+                      <Smartphone className="w-2.5 h-2.5 text-emerald-400" />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+        
+        {/* Tap hint on mobile */}
+        {!isMinimized && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] text-blue-400/60 whitespace-nowrap sm:hidden"
+          >
+            Tap to open
+          </motion.div>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+});
+UnifiedFpsPill.displayName = 'UnifiedFpsPill';
+
+// ============================================================================
+// LEGACY PILL COMPONENTS (kept for compatibility)
+// ============================================================================
+
+const FpsPill = memo(({ 
+  fps, 
+  deviceTier, 
+  isMinimized, 
+  onTogglePanel,
+  onToggleMinimized,
+  onOpenDevicePanel
+}: {
+  fps: number;
+  deviceTier: string;
+  isMinimized: boolean;
+  onTogglePanel: () => void;
+  onToggleMinimized: () => void;
+  onOpenDevicePanel: () => void;
+}) => {
+  return (
+    <motion.div
+      initial={{ x: 100, opacity: 0 }}
+      animate={{ x: 0, opacity: 1, scale: isMinimized ? 0.9 : 1 }}
+      className="fixed right-0 z-[250000] pointer-events-none"
+      style={{ top: '50%', transform: 'translateY(-50%)', paddingRight: 'calc(env(safe-area-inset-right, 0px) + 8px)' }}
+    >
+      <motion.div
+        whileHover="hover"
+        animate={isMinimized ? "minimized" : "initial"}
+        className="relative pointer-events-auto cursor-pointer"
+      >
+        <motion.div
+          variants={{
+            initial: { x: 0, scale: 1 },
+            hover: { x: -8, scale: 1.02 },
+            minimized: { x: 2, scale: 0.95 }
+          }}
+          className="relative rounded-l-3xl bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-slate-900/40 backdrop-blur-2xl border-y border-l border-blue-500/50 shadow-2xl hover:border-blue-400/70 hover:shadow-blue-600/40"
+          onClick={(e) => {
+            e.preventDefault();
+            SoundEffects.click();
+            if (isMinimized) onToggleMinimized();
+            else onOpenDevicePanel();
+          }}
+          onMouseEnter={() => {
+            SoundEffects.hover();
+            if (isMinimized) onToggleMinimized();
+          }}
+        >
+          <AnimatePresence mode="popLayout">
+            {isMinimized ? (
+              <motion.div
+                key="minimized"
+                initial={{ opacity: 0, scale: 0.7 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.7 }}
+                className="px-2 py-1.5"
+              >
+                <MinimizedFpsDisplay fps={fps} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="full"
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.85 }}
+                className="px-2 py-2"
+              >
+                <div className="flex items-center gap-1">
+                  <ChevronRight size={14} className="text-blue-500 rotate-180" />
+                  <FpsDisplay fps={fps} deviceTier={deviceTier} />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </motion.div>
+    </motion.div>
+  );
+});
+FpsPill.displayName = 'FpsPill';
+
+const TradingPill = memo(({ prices, isExpanded, onToggle }: {
+  prices: { xauusd: string; btcusd: string };
+  isExpanded: boolean;
+  onToggle: () => void;
+}) => {
+  return (
+    <motion.div
+      initial={{ x: -300, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      className="fixed left-0 z-[250000] pointer-events-none"
+      style={{ top: 'calc(5rem + env(safe-area-inset-top, 0px) + 28px)', paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 2px)' }}
+    >
+      <motion.div
+        whileHover={{ x: 12, scale: 1.05, boxShadow: '0 0 30px rgba(96, 165, 250, 0.6)' }}
+        className="relative pointer-events-auto cursor-pointer"
+        onClick={onToggle}
+        animate={{ x: [0, 8, 0, 6, 0] }}
+        transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: 'easeInOut' }}
+      >
+        <div className="relative rounded-r-full bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-blue-500/50 shadow-2xl hover:border-blue-400/70">
+          <motion.div
+            className="absolute inset-0 rounded-r-full bg-gradient-to-r from-blue-500/20 via-cyan-500/10 to-transparent"
+            animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.05, 1] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            style={{ filter: 'blur(8px)' }}
+          />
+          
+          <div className="px-2 py-1.5 flex items-center gap-1.5 relative z-10">
+            <motion.div
+              className="w-2 h-2 bg-blue-400 rounded-full"
+              animate={{ opacity: [1, 0.4, 1], scale: [1, 1.2, 1], boxShadow: ['0 0 0px rgba(96, 165, 250, 1)', '0 0 8px rgba(96, 165, 250, 0.8)', '0 0 0px rgba(96, 165, 250, 1)'] }}
+              transition={{ duration: 1, repeat: Infinity }}
+            />
+
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-0.5">
+                <Coins className="w-3 h-3 text-blue-300" />
+                <span className="text-[9px] font-bold text-blue-200">${prices.xauusd}</span>
+              </div>
+              <div className="w-px h-2.5 bg-blue-500/30" />
+              <div className="flex items-center gap-0.5">
+                <Bitcoin className="w-3 h-3 text-blue-300" />
+                <span className="text-[9px] font-bold text-blue-200">${prices.btcusd}</span>
+              </div>
+            </div>
+
+            <motion.div animate={{ rotate: isExpanded ? 180 : 0 }}>
+              <ChevronRight className="w-3 h-3 text-blue-400/70" />
+            </motion.div>
+          </div>
+        </div>
+        
+        {!isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-1.5"
+          >
+            <TradingTipPill />
+          </motion.div>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+});
+TradingPill.displayName = 'TradingPill';
+
+const CommunityPill = memo(({ isExpanded, onToggle }: { isExpanded: boolean; onToggle: () => void }) => {
+  return (
+    <motion.div
+      initial={{ x: -300, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ delay: 0.2 }}
+      className="fixed left-0 z-[250000] pointer-events-none"
+      style={{ top: 'calc(5rem + env(safe-area-inset-top, 0px) + 126px)', paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 2px)' }}
+    >
+      <motion.div
+        whileHover={{ x: 12, scale: 1.05, boxShadow: '0 0 30px rgba(34, 211, 238, 0.6)' }}
+        className="relative pointer-events-auto cursor-pointer"
+        onClick={onToggle}
+        animate={{ x: [0, 8, 0, 6, 0] }}
+        transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: 'easeInOut' }}
+      >
+        <div className="relative rounded-r-2xl bg-gradient-to-br from-cyan-600/30 via-cyan-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-cyan-500/50 shadow-2xl hover:border-cyan-400/70 min-w-[150px]">
+          <motion.div
+            className="absolute inset-0 rounded-r-2xl bg-gradient-to-r from-cyan-500/20 via-blue-500/10 to-transparent"
+            animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.05, 1] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            style={{ filter: 'blur(8px)' }}
+          />
+          
+          <div className="px-2 py-1.5 flex items-center gap-1.5 relative z-10">
+            <motion.div
+              className="w-2 h-2 bg-cyan-400 rounded-full"
+              animate={{ opacity: [1, 0.4, 1], scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            />
+
+            <div className="flex items-center gap-1">
+              <TrendingUp className="w-3 h-3 text-cyan-300" />
+              <span className="text-[9px] font-bold text-cyan-200">Live Trades</span>
+            </div>
+
+            <motion.div animate={{ rotate: isExpanded ? 180 : 0 }}>
+              <ChevronRight className="w-3 h-3 text-cyan-400/70" />
+            </motion.div>
+          </div>
+          
+          <LiveTradesTicker />
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+});
+CommunityPill.displayName = 'CommunityPill';
+
+const BullMoneyTVPill = memo(({ isExpanded, onToggle }: { isExpanded: boolean; onToggle: () => void }) => {
+  return (
+    <motion.div
+      initial={{ x: -300, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ delay: 0.4 }}
+      className="fixed left-0 z-[250000] pointer-events-none"
+      style={{ top: 'calc(5rem + env(safe-area-inset-top, 0px) + 238px)', paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 8px)' }}
+    >
+      <motion.div
+        whileHover={{ x: 12, scale: 1.05, boxShadow: '0 0 30px rgba(168, 85, 247, 0.6)' }}
+        className="relative pointer-events-auto cursor-pointer"
+        onClick={onToggle}
+        animate={{ x: [0, 8, 0, 6, 0] }}
+        transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: 'easeInOut' }}
+      >
+        <div className="relative rounded-r-full bg-gradient-to-br from-purple-600/30 via-purple-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-purple-500/50 shadow-2xl hover:border-purple-400/70">
+          <motion.div
+            className="absolute inset-0 rounded-r-full bg-gradient-to-r from-purple-500/20 via-fuchsia-500/10 to-transparent"
+            animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.05, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            style={{ filter: 'blur(8px)' }}
+          />
+          
+          <div className="px-2 py-1.5 flex items-center gap-1.5 relative z-10">
+            <motion.div
+              className="w-2 h-2 bg-purple-400 rounded-full"
+              animate={{ opacity: [1, 0.4, 1], scale: [1, 1.2, 1] }}
+              transition={{ duration: 1, repeat: Infinity }}
+            />
+
+            <div className="flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-purple-300" />
+              <span className="text-[9px] font-bold text-purple-200">LIVE STAGE</span>
+            </div>
+
+            <motion.div animate={{ rotate: isExpanded ? 180 : 0 }}>
+              <ChevronRight className="w-3 h-3 text-purple-400/70" />
+            </motion.div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+});
+BullMoneyTVPill.displayName = 'BullMoneyTVPill';
+
+// ============================================================================
+// MAIN COMPONENT - UNIFIED SINGLE PILL APPROACH
+// ============================================================================
+
+export function UltimateHub() {
+  const [mounted, setMounted] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [hubPanelOpen, setHubPanelOpen] = useState(false);
+  
+  const { fps, deviceTier } = useFpsMonitor();
+  const prices = useLivePrices();
+  const { isAdmin, userId, userEmail } = useAdminCheck();
+  const { isVip } = useVipCheck(userId, userEmail);
+  
+  const { 
+    isAnyModalOpen, 
+    isMobileMenuOpen, 
+    isUltimatePanelOpen,
+    isV2Unlocked 
+  } = useUIState();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Auto-close panel when other UI elements open
+  useEffect(() => {
+    if (isAnyModalOpen || isMobileMenuOpen || isUltimatePanelOpen) {
+      setHubPanelOpen(false);
+    }
+  }, [isAnyModalOpen, isMobileMenuOpen, isUltimatePanelOpen]);
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setHubPanelOpen(false);
+      }
+      // Quick open with Cmd/Ctrl + Shift + H
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'h') {
+        e.preventDefault();
+        setHubPanelOpen(prev => !prev);
+      }
+      // Admin panel shortcut
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('openAdminVIPPanel'));
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Don't render until mounted and V2 unlocked
+  if (!mounted || !isV2Unlocked) return null;
+
+  // Hide pill when mobile menu, panel open, or other modals
+  const shouldHidePill = isMobileMenuOpen || isUltimatePanelOpen || isAnyModalOpen || hubPanelOpen;
+
+  return (
+    <>
+      {/* Single Unified FPS Pill - All features in one button */}
+      {!shouldHidePill && (
+        <UnifiedFpsPill
+          fps={fps}
+          deviceTier={deviceTier}
+          prices={prices}
+          isMinimized={isMinimized}
+          onToggleMinimized={() => setIsMinimized(!isMinimized)}
+          onOpenPanel={() => setHubPanelOpen(true)}
+        />
+      )}
+
+      {/* Unified Hub Panel - Trading, Community, TV, Device all in one */}
+      <UnifiedHubPanel
+        isOpen={hubPanelOpen}
+        onClose={() => setHubPanelOpen(false)}
+        fps={fps}
+        deviceTier={deviceTier}
+        isAdmin={isAdmin}
+        isVip={isVip}
+        userId={userId}
+        userEmail={userEmail}
+        prices={prices}
+      />
+    </>
+  );
+}
+
+export default UltimateHub;

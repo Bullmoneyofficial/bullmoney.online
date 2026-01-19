@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, ReactNode, useState } from "react";
+import { Suspense, ReactNode } from "react";
 
 // ✅ IMPORT CRITICAL SEO/ANALYTICS DIRECTLY - These are lightweight and critical
 import WebVitalsEnhanced from "@/components/WebVitalsEnhanced";
@@ -32,13 +32,10 @@ const CacheManagerProvider = dynamic(
   { ssr: false }
 );
 
-const TradingQuickAccess = dynamic(
-  () => import("@/components/TradingQuickAccess").then(mod => ({ default: mod.TradingQuickAccess })),
-  { ssr: false }
-);
-
-const CommunityQuickAccess = dynamic(
-  () => import("@/components/CommunityQuickAccess").then(mod => ({ default: mod.CommunityQuickAccess })),
+// ✅ ULTIMATE HUB - Unified component replacing TradingQuickAccess, CommunityQuickAccess, UltimateControlPanel
+// Contains: Left side pills (Trading, Community, TV) + Right side FPS pill with Device Center Panel
+const UltimateHub = dynamic(
+  () => import("@/components/UltimateHub").then(mod => ({ default: mod.UltimateHub })),
   { ssr: false }
 );
 
@@ -55,12 +52,6 @@ const ClientCursor = dynamic(
   { ssr: false }
 );
 
-// Ultimate Control Panel - mount in root layout so it's always available
-const UltimateControlPanel = dynamic(
-  () => import("@/components/UltimateControlPanel").then(mod => ({ default: mod.UltimateControlPanel })),
-  { ssr: false }
-);
-
 interface LayoutProvidersProps {
   children: ReactNode;
   modal?: ReactNode;
@@ -71,8 +62,6 @@ interface LayoutProvidersProps {
  * Handles all lazy-loaded providers and components with ssr: false
  */
 export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
-  const [ucpOpen, setUcpOpen] = useState(false);
-
   return (
     <>
       {/* Global Shimmer Styles - ensures all shimmers are synchronized */}
@@ -83,9 +72,11 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
         {/* Navbar rendered outside ClientProviders for fixed positioning */}
         <Navbar />
         
-        {/* ✅ ADDED: Trading Quick Access - Live prices, charts & tools */}
-        <TradingQuickAccess />
-        <CommunityQuickAccess />
+        {/* ✅ ULTIMATE HUB - All-in-one unified component
+            - Left side: Trading pill (prices), Community pill (Telegram), TV pill
+            - Right side: FPS pill with Device Center Panel (4 tabs: Overview, Network, Performance, Account)
+            - All real device data from browser APIs */}
+        <UltimateHub />
         
         {/* ✅ LAZY LOADED: All performance providers bundled */}
         <ClientProviders modal={modal}>
@@ -93,12 +84,6 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
             {children}
           </div>
         </ClientProviders>
-
-          {/* Ultimate Control Panel - fixed UI for FPS & device center */}
-              <UltimateControlPanel
-                isOpen={ucpOpen}
-                onOpenChange={setUcpOpen}
-              />
       </CacheManagerProvider>
 
       {/* ✅ VERCEL TRACKING - Enhanced Analytics & Speed Insights */}
