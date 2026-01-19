@@ -1,0 +1,625 @@
+/* Desktop-specific fixes - only apply to larger screens */
+@media (min-width: 1024px) {
+  
+  /* ============================================
+     PREMIUM VISUAL ENHANCEMENTS
+     ============================================ */
+  
+  /* Smooth transitions for all elements */
+  * {
+    transition: box-shadow 0.3s ease, transform 0.3s ease, opacity 0.3s ease !important;
+  }
+  
+  /* Premium glass morphism for cards and containers */
+  .card,
+  .container,
+  section,
+  article,
+  [class*="card"],
+  [class*="panel"] {
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow: 
+      0 8px 32px 0 rgba(0, 0, 0, 0.37),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+      0 0 20px rgba(139, 92, 246, 0.1) !important;
+  }
+  
+  /* Shiny hover effects for interactive elements */
+  button:hover,
+  a:hover,
+  [role="button"]:hover,
+  .cursor-pointer:hover {
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 
+      0 12px 40px rgba(139, 92, 246, 0.4),
+      0 0 30px rgba(139, 92, 246, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    filter: brightness(1.1) !important;
+  }
+  
+  /* Premium glow animation */
+  @keyframes premium-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.3), 0 0 40px rgba(59, 130, 246, 0.2);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(139, 92, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.3);
+    }
+  }
+  
+  /* Shimmer effect */
+  @keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+  }
+  
+  /* Floating animation */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(2deg); }
+  }
+  
+  /* Pulse glow */
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+  
+  /* ============================================
+     CRITICAL: Remove stacking context breakers
+     ============================================ */
+  
+  /* Remove contain: strict which breaks z-index inheritance */
+  html, body {
+    contain: none !important;
+    isolation: auto !important;
+    position: static !important;
+    transform: none !important;
+    filter: none !important;
+    backface-visibility: visible !important;
+    perspective: none !important;
+  }
+  
+  /* Root app wrapper must not create stacking contexts */
+  #__next {
+    position: static !important;
+    isolation: auto !important;
+    contain: none !important;
+    transform: none !important;
+  }
+  
+  /* Main content should not create a stacking context barrier */
+  main,
+  #__next,
+  [data-allow-scroll],
+  [data-scrollable] {
+    contain: none !important;
+    isolation: auto !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+
+  /* Keep overlays and loaders perfectly centered on desktop */
+  [data-pagemode],
+  .pagemode,
+  [data-loader],
+  .loader-overlay,
+  [data-multistep-loader],
+  [data-multistep-overlay],
+  .multi-step-loader-v2,
+  .multi-step-loader,
+  .fixed.inset-0.flex.items-center.justify-center,
+  .fixed.inset-0.flex.flex-col.items-center.justify-center {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transform: none !important;
+  }
+  
+  [data-pagemode] > *,
+  .pagemode > *,
+  [data-loader] > *,
+  .loader-overlay > *,
+  [data-multistep-loader] > *,
+  [data-multistep-overlay] > *,
+  .multi-step-loader-v2 > *,
+  .multi-step-loader > *,
+  .fixed.inset-0.flex.items-center.justify-center > *,
+  .fixed.inset-0.flex.flex-col.items-center.justify-center > * {
+    margin: 0 auto !important;
+  }
+
+  /* Center pagemode/register flows on desktop */
+  .register-container {
+    display: grid !important;
+    place-items: center !important;
+    align-content: center !important;
+    min-height: 100vh !important;
+    height: 100vh !important;
+    padding: clamp(1.5rem, 4vh, 3rem) clamp(1.5rem, 3vw, 3rem) !important;
+    width: min(960px, 100vw - 48px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    gap: 1.5rem !important;
+  }
+
+  .register-container > *,
+  .register-card {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    justify-self: center !important;
+    align-self: center !important;
+  }
+
+  .register-card {
+    max-width: min(720px, 90vw) !important;
+    width: 100% !important;
+  }
+
+  /* Lift the BullMoney title slightly while keeping the shell centered */
+  .register-container h1 {
+    margin-top: -1.25rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* Lenis content wrapper must not trap stacking contexts */
+  [data-lenis-content] {
+    position: relative !important;
+    z-index: 0 !important;
+    contain: none !important;
+    isolation: auto !important;
+  }
+  
+  /* ============================================
+     NAVBAR - Fixed navigation layer
+     ============================================ */
+  
+  [data-navbar-container],
+  .navbar-themed,
+  nav[role="navigation"],
+  header.fixed,
+  .navbar {
+    position: fixed !important;
+    z-index: 9999 !important;
+    transform: translateZ(0) !important; /* Force GPU layer */
+    isolation: isolate !important; /* Create its own stacking context */
+    contain: layout style !important; /* Not 'strict' - allows z-index to work */
+    /* Premium navbar effects */
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%) !important;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2) !important;
+    box-shadow: 
+      0 4px 30px rgba(0, 0, 0, 0.5),
+      0 0 20px rgba(139, 92, 246, 0.1),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.05) !important;
+  }
+  
+  /* Mobile menu controls in navbar */
+  .navbar [data-menu-controls],
+  .navbar button[aria-label*="menu"],
+  .navbar button[aria-label*="Menu"] {
+    z-index: 10000 !important;
+    position: relative !important;
+    pointer-events: auto !important;
+  }
+  
+  /* ============================================
+     PORTAL ROOT - All modals portal here
+     ============================================ */
+  
+  /* Ensure portaled content appears above everything */
+  body > [data-portal],
+  body > [data-radix-portal],
+  body > [role="dialog"],
+  body > [aria-modal="true"],
+  body > .fixed[class*="z-"],
+  body > div[style*="z-index"] {
+    z-index: 99999 !important;
+    isolation: isolate !important;
+  }
+  
+  /* ============================================
+     MODAL BACKDROPS - Overlay layer
+     ============================================ */
+  
+  /* All backdrop elements */
+  [data-backdrop],
+  .backdrop,
+  [class*="backdrop"],
+  .fixed.inset-0.bg-black,
+  .fixed.inset-0[class*="bg-black"],
+  .fixed.inset-0[class*="backdrop"],
+  div[class*="bg-black/"][class*="fixed"][class*="inset-0"] {
+    z-index: 99990 !important;
+    position: fixed !important;
+    isolation: isolate !important;
+  }
+  
+  /* ============================================
+     MODALS & DIALOGS - Content layer
+     CRITICAL: Content must be ABOVE backdrop
+     ============================================ */
+  
+  /* All modal dialogs - MUST be above backdrops */
+  [role="dialog"],
+  [aria-modal="true"],
+  .modal,
+  [data-modal],
+  div[class*="modal"] {
+    z-index: 250000 !important;
+    isolation: isolate !important;
+    position: fixed !important;
+    /* Premium modal entrance animation */
+    animation: modal-entrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+  
+  @keyframes modal-entrance {
+    0% {
+      opacity: 0;
+      transform: scale(0.95) translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+  
+  /* Modal wrapper containers that hold both backdrop and content */
+  .fixed[class*="flex"][class*="items-center"][class*="justify-center"]:not([class*="bg-black"]):not([class*="backdrop"]) {
+    z-index: 250000 !important;
+    isolation: isolate !important;
+  }
+  
+  /* Modal content containers - ensure they're above any sibling backdrops */
+  [role="dialog"] > div:not([class*="bg-black"]):not([class*="backdrop"]),
+  [aria-modal="true"] > div:not([class*="bg-black"]):not([class*="backdrop"]),
+  .modal-content {
+    z-index: 250001 !important;
+    position: relative !important;
+    pointer-events: auto !important;
+    /* Premium modal styling */
+    backdrop-filter: blur(40px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
+    background: linear-gradient(135deg, rgba(30,20,50,0.95), rgba(15,10,30,0.98)) !important;
+    border: 1px solid rgba(139, 92, 246, 0.3) !important;
+    box-shadow: 
+      0 20px 60px rgba(0, 0, 0, 0.8),
+      0 0 40px rgba(139, 92, 246, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 100px rgba(59, 130, 246, 0.1) !important;
+    animation: premium-glow 3s ease-in-out infinite !important;
+  }
+  
+  /* ============================================
+     SPECIFIC MODAL Z-INDEX OVERRIDES
+     Match the UI_Z_INDEX values from UIStateContext
+     CRITICAL: Content z-index > Backdrop z-index
+     ============================================ */
+  
+  /* ChartNews Modal - z-index: 9999999 */
+  [data-chartnews-modal],
+  .chartnews-modal,
+  div[class*="z-[9999999]"]:not([class*="bg-black"]):not([class*="backdrop"]) {
+    z-index: 9999999 !important;
+  }
+  
+  /* Affiliate Modal - z-index: 999999 */
+  [data-affiliate-modal],
+  .affiliate-modal,
+  div[class*="z-[999999]"]:not([class*="bg-black"]):not([class*="backdrop"]) {
+    z-index: 999999 !important;
+  }
+  
+  /* PageMode/Loader - z-index: 99999999 */
+  [data-pagemode],
+  [data-loader],
+  .pagemode,
+  .loader-overlay,
+  div[class*="z-[99999999]"] {
+    z-index: 99999999 !important;
+  }
+  
+  /* Mobile Menu - HIGHEST - z-index: 2147483647 */
+  [data-mobile-menu],
+  .mobile-menu,
+  [class*="z-[999999999]"],
+  [data-state="open"][data-menu] {
+    z-index: 2147483647 !important;
+  }
+  
+  /* Analysis Modal - Maximum z-index (content above backdrop) */
+  [data-analysis-modal],
+  .analysis-modal,
+  div[class*="z-[2147483647]"]:not([class*="bg-black"]):not([class*="backdrop"]),
+  div[class*="z-[2147483645]"]:not([class*="bg-black"]):not([class*="backdrop"]) {
+    z-index: 2147483645 !important;
+  }
+  
+  /* Discord Stage / LiveStream Modal content */
+  div[class*="z-[2147483645]"].pointer-events-none > div,
+  div[class*="z-[2147483645]"] .bg-gradient-to-br {
+    z-index: 2147483646 !important;
+  }
+  
+  /* ============================================
+     FLOATING ELEMENTS - Player, Controls
+     EDGE-ANCHORED: Use left: 0 or right: 0 to prevent drift
+     ============================================ */
+  
+  /* Audio widget floating player */
+  [data-audio-widget],
+  .audio-widget,
+  .floating-player {
+    z-index: 2147483610 !important;
+    position: fixed !important;
+    isolation: isolate !important;
+    /* Premium floating effect */
+    animation: float 6s ease-in-out infinite !important;
+    backdrop-filter: blur(30px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.15)) !important;
+    border: 1px solid rgba(139, 92, 246, 0.4) !important;
+    box-shadow: 
+      0 8px 32px rgba(139, 92, 246, 0.3),
+      0 0 40px rgba(139, 92, 246, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  /* Ultimate Control Panel - FIXED to RIGHT EDGE at all resolutions */
+  [data-control-panel],
+  .control-panel-themed,
+  .ultimate-control-panel,
+  .fixed.right-0.z-\[250000\].pointer-events-none.control-panel-themed {
+    z-index: 250000 !important;
+    position: fixed !important;
+    /* CRITICAL: Anchor to right edge - prevents drift at high resolutions */
+    right: 0 !important;
+    left: auto !important;
+    /* Transform only allowed for peek animation - ensure it doesn't break positioning */
+    transform-origin: right center !important;
+    /* Let content determine width */
+    width: auto !important;
+    max-width: none !important;
+    /* Premium control panel styling */
+    backdrop-filter: blur(25px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
+    box-shadow: 
+      -4px 0 30px rgba(139, 92, 246, 0.2),
+      -2px 0 15px rgba(59, 130, 246, 0.15),
+      inset 1px 0 0 rgba(255, 255, 255, 0.1) !important;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease !important;
+  }
+  
+  .control-panel-themed:hover {
+    box-shadow: 
+      -8px 0 50px rgba(139, 92, 246, 0.4),
+      -4px 0 25px rgba(59, 130, 246, 0.3),
+      inset 1px 0 0 rgba(255, 255, 255, 0.15) !important;
+  }
+
+  /* Desktop-only: ensure control panel stays at right edge across ALL resolutions */
+  .control-panel-themed.pointer-events-none {
+    position: fixed !important;
+    right: 0 !important;
+    left: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    overflow: visible !important;
+    /* Override any inline transforms that might drift the panel */
+    transform: none !important;
+  }
+  
+  /* But allow child elements to have transforms for animations */
+  .control-panel-themed.pointer-events-none > * {
+    transform: unset;
+  }
+  
+  /* Control panel interactive elements */
+  .control-panel-themed .pointer-events-auto {
+    pointer-events: auto !important;
+  }
+  
+  /* ============================================
+     TRADING QUICK ACCESS PILLS - LEFT EDGE ANCHORED
+     Prevents pills from overlapping at high resolutions
+     ============================================ */
+  
+  /* TradingQuickAccess main container - anchor to LEFT edge */
+  .fixed.left-0.z-\[250000\].pointer-events-none {
+    position: fixed !important;
+    left: 0 !important;
+    right: auto !important;
+    /* Prevent shrinking at high resolutions */
+    min-width: max-content !important;
+  }
+  
+  /* Trading pills - maintain minimum size at all resolutions */
+  .rounded-r-full.bg-gradient-to-br {
+    /* Prevent shrinking */
+    min-width: max-content !important;
+    flex-shrink: 0 !important;
+    /* Premium interactive styling */
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+  
+  /* Premium button effects */
+  button:not(.unstyled),
+  [role="button"]:not(.unstyled) {
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    box-shadow: 
+      0 4px 15px rgba(139, 92, 246, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  button:active:not(.unstyled),
+  [role="button"]:active:not(.unstyled) {
+    transform: translateY(1px) scale(0.98) !important;
+    box-shadow: 
+      0 2px 8px rgba(139, 92, 246, 0.4),
+      inset 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+    /* Ensure content doesn't wrap */
+    white-space: nowrap !important;
+  }
+  
+  /* Trading tip pill container - maintain proper margin from price pill */
+  .trading-tip-pill-container {
+    margin-top: 6px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* Trading tip pill - fixed minimum width prevents overlap */
+  .trading-tip-pill {
+    min-width: 140px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* Second pill (trading tips) - maintain spacing from first pill */
+  .mt-1.sm\:mt-1\.5 .rounded-r-full,
+  .mt-1 .rounded-r-full {
+    /* Fixed minimum width prevents overlap */
+    min-width: 120px !important;
+    /* Maintain margin */
+    margin-top: 0.375rem !important;
+  }
+  
+  /* ============================================
+     DROPDOWNS & TOOLTIPS
+     ============================================ */
+  
+  [role="menu"],
+  [role="listbox"],
+  [data-radix-popper-content-wrapper],
+  .dropdown,
+  .tooltip,
+  .popover,
+  [data-state="open"][data-radix-menu-content] {
+    z-index: 100000 !important;
+    isolation: isolate !important;
+  }
+  
+  /* ============================================
+     BUTTONS & INTERACTIVE ELEMENTS
+     Ensure clickability on desktop
+     ============================================ */
+  
+  button,
+  a,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  [tabindex]:not([tabindex="-1"]) {
+    pointer-events: auto !important;
+    position: relative;
+    /* Ensure they're above any pseudo-elements */
+    z-index: 1;
+  }
+  
+  /* Button containers that need to be clickable */
+  .cursor-pointer,
+  [data-clickable],
+  [onclick],
+  [data-action] {
+    pointer-events: auto !important;
+  }
+  
+  /* ============================================
+     FIX: Theme overlays should never block
+     ============================================ */
+  
+  #theme-global-overlay,
+  #theme-edge-glow,
+  #theme-filter-overlay,
+  [data-theme-overlay],
+  .theme-overlay {
+    pointer-events: none !important;
+    z-index: 0 !important;
+    isolation: auto !important;
+  }
+  
+  /* ============================================
+     FIX: Decorative elements should not block
+     ============================================ */
+  
+  .shimmer-border,
+  .shimmer-glow,
+  [class*="shimmer"],
+  [class*="gradient-overlay"],
+  [class*="decorative"],
+  .pointer-events-none {
+    pointer-events: none !important;
+  }
+  
+  /* ============================================
+     FIX: Scroll containers on desktop
+     ============================================ */
+  
+  /* Ensure scroll works on desktop */
+  html.desktop-optimized,
+  html.big-display {
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    /* Don't use contain: strict - it breaks z-index */
+    contain: none !important;
+  }
+  
+  body.big-display-body {
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    contain: none !important;
+  }
+  
+  /* ============================================
+     FIX: Transform/will-change breaking z-index
+     ============================================ */
+  
+  /* Remove problematic transforms from non-modal content */
+  section,
+  article,
+  .card,
+  .container {
+    /* Only use transform on hover/interaction, not always */
+    will-change: auto;
+  }
+  
+  /* When hovering, temporarily enable GPU acceleration */
+  section:hover,
+  article:hover,
+  .card:hover {
+    will-change: transform;
+  }
+  
+  /* ============================================
+     FIX: Sticky elements on desktop
+     ============================================ */
+  
+  .sticky,
+  [class*="sticky"] {
+    position: sticky !important;
+    z-index: 50 !important;
+    /* Create isolated stacking context */
+    isolation: isolate !important;
+  }
+  
+  /* ============================================
+     FIX: Fixed elements on desktop
+     ============================================ */
+  
+  .fixed:not([role="dialog"]):not([aria-modal]):not([data-backdrop]) {
+    position: fixed !important;
+    /* Ensure fixed elements stay fixed */
+    transform: translateZ(0) !important;
+  }
+}

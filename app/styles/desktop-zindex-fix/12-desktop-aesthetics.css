@@ -1,0 +1,170 @@
+/* ============================================
+   DESKTOP AESTHETICS (2026)
+   Cohesive visual tokens + subtle polish
+   Targets desktop only; minimal specificity.
+   ============================================ */
+
+:root {
+  /* Color tokens (light theme defaults) */
+  --desktop-bg: #0b0f14;
+  --surface-0: rgba(255,255,255,0.02);
+  --surface-1: rgba(255,255,255,0.04);
+  --surface-2: rgba(255,255,255,0.06);
+  --surface-3: rgba(255,255,255,0.08);
+  --text-primary: rgba(255,255,255,0.92);
+  --text-secondary: rgba(255,255,255,0.64);
+  --border: rgba(255,255,255,0.10);
+  --accent: #4CC9F0; /* Bullmoney blue */
+
+  /* Elevation tokens */
+  --shadow-1: 0 1px 2px rgba(0,0,0,0.18);
+  --shadow-2: 0 2px 8px rgba(0,0,0,0.18);
+  --shadow-3: 0 8px 24px rgba(0,0,0,0.22);
+  --shadow-4: 0 16px 48px rgba(0,0,0,0.30);
+
+  /* Radii + blur */
+  --radius-1: 10px;
+  --radius-2: 14px;
+  --radius-3: 18px;
+  --blur-1: 8px;
+  --blur-2: 14px;
+
+  /* Motion */
+  --ease-1: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-2: cubic-bezier(0.18, 0.85, 0.2, 1);
+  --duration-1: 160ms;
+  --duration-2: 260ms;
+}
+
+@media (min-width: 1024px) {
+  /* Base backdrop and typography polish */
+  body {
+    color: var(--text-primary);
+    background: radial-gradient(1200px 600px at 12% -12%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 64%),
+                radial-gradient(1200px 600px at 88% -12%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 64%),
+                var(--desktop-bg);
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--accent) 65%, black 35%);
+    color: white;
+  }
+
+  /* Smooth but restrained motion for interactive elements */
+  :where(button, .btn, a, [role="button"]) {
+    transition: background var(--duration-1) var(--ease-1),
+                color var(--duration-1) var(--ease-1),
+                box-shadow var(--duration-2) var(--ease-2),
+                transform var(--duration-1) var(--ease-1);
+    will-change: transform, box-shadow;
+  }
+
+  :where(button, .btn):hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-2);
+  }
+
+  :where(button, .btn):active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-1);
+  }
+
+  :where(button, .btn) {
+    border-radius: var(--radius-1);
+  }
+
+  /* Navigation: subtle glass + elevation */
+  :where(header.sticky, [role="navigation"], nav) {
+    backdrop-filter: saturate(1.15) blur(var(--blur-1));
+    background: linear-gradient(180deg, var(--surface-3), var(--surface-1));
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-2);
+  }
+
+  /* Cards / panels */
+  :where(.card, .panel, .section, .surface) {
+    background: linear-gradient(180deg, var(--surface-2), var(--surface-0));
+    border: 1px solid var(--border);
+    border-radius: var(--radius-2);
+    box-shadow: var(--shadow-2);
+  }
+
+  :where(.card, .panel, .section, .surface):hover {
+    box-shadow: var(--shadow-3);
+  }
+
+  /* Dropdowns / tooltips */
+  :where(.dropdown-menu, .tooltip, [data-popover]) {
+    background: linear-gradient(180deg, var(--surface-3), var(--surface-1));
+    border: 1px solid var(--border);
+    border-radius: var(--radius-1);
+    box-shadow: var(--shadow-3);
+    backdrop-filter: saturate(1.1) blur(var(--blur-1));
+  }
+
+  /* Modals */
+  :where(.modal-backdrop, [data-backdrop]) {
+    backdrop-filter: blur(var(--blur-2)) saturate(1.05);
+    background: rgba(8, 10, 14, 0.45);
+  }
+
+  :where(.modal, [data-modal]) {
+    background: linear-gradient(180deg, var(--surface-3), var(--surface-1));
+    border: 1px solid var(--border);
+    border-radius: var(--radius-3);
+    box-shadow: var(--shadow-4);
+  }
+
+  /* Links */
+  a {
+    color: var(--text-primary);
+    text-decoration-color: color-mix(in oklab, var(--accent) 70%, white 30%);
+    text-underline-offset: 3px;
+  }
+
+  a:hover {
+    color: color-mix(in oklab, var(--accent) 85%, white 15%);
+    text-decoration-thickness: 2px;
+  }
+
+  /* Focus visibility */
+  :where(button, a, input, textarea, select):focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent);
+  }
+
+  /* Desktop scrollbars */
+  :where(html)::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  :where(html)::-webkit-scrollbar-track {
+    background: var(--surface-0);
+  }
+  :where(html)::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--surface-3), var(--surface-1));
+    border-radius: 999px;
+    border: 2px solid transparent;
+    box-shadow: inset 0 0 0 1px var(--border);
+  }
+
+  /* Larger desktop refinements */
+  @media (min-width: 1440px) {
+    :where(.container, .page-wrap) {
+      max-width: 1280px;
+      margin-inline: auto;
+      padding-inline: 24px;
+    }
+
+    h1, .h1 {
+      letter-spacing: 0.2px;
+    }
+    h2, .h2 {
+      letter-spacing: 0.15px;
+    }
+    h3, .h3 {
+      letter-spacing: 0.1px;
+    }
+  }
+}

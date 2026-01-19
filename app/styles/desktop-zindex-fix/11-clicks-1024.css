@@ -1,0 +1,29 @@
+/* ============================================
+   ENSURE CLICKS WORK ON DESKTOP MODALS
+   Pointer events must be properly set
+   ============================================ */
+
+@media (min-width: 1024px) {
+  /* Backdrop should capture clicks to close modal */
+  .fixed.inset-0[class*="bg-black"],
+  .fixed.inset-0[class*="backdrop"] {
+    pointer-events: auto !important;
+  }
+  
+  /* Modal content should also have pointer events */
+  [role="dialog"],
+  [aria-modal="true"],
+  .modal-content {
+    pointer-events: auto !important;
+  }
+  
+  /* Wrapper containers that hold both may need pointer-events: none to allow backdrop clicks */
+  .fixed.inset-0.flex.items-center.justify-center.pointer-events-none {
+    pointer-events: none !important;
+  }
+  
+  /* But their direct children (the actual modal panel) need pointer-events: auto */
+  .fixed.inset-0.flex.items-center.justify-center.pointer-events-none > * {
+    pointer-events: auto !important;
+  }
+}

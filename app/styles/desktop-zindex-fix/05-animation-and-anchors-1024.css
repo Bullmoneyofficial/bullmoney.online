@@ -1,0 +1,94 @@
+/* ============================================
+   ANIMATION PERFORMANCE ON DESKTOP
+   ============================================ */
+
+@media (min-width: 1024px) {
+  /* Ensure animations don't break z-index */
+  [data-framer-appear],
+  [data-framer-exit],
+  [data-motion-pop-id] {
+    isolation: isolate !important;
+  }
+  
+  /* AnimatePresence portaled content */
+  [data-framer-portal] {
+    z-index: 250000 !important;
+    position: fixed !important;
+    inset: 0 !important;
+  }
+  
+  /* ============================================
+     Premium scroll-triggered animations */
+  section {
+    animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+  }
+  
+  @keyframes fade-in-up {
+    0% {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Stagger animation for list items */
+  section > *:nth-child(1) { animation-delay: 0.1s !important; }
+  section > *:nth-child(2) { animation-delay: 0.2s !important; }
+  section > *:nth-child(3) { animation-delay: 0.3s !important; }
+  section > *:nth-child(4) { animation-delay: 0.4s !important; }
+  section > *:nth-child(5) { animation-delay: 0.5s !important; }
+  
+  /* ULTIMATE CONTROL PANEL - RIGHT EDGE ANCHORED
+     Prevents drift at high resolutions
+     ============================================ */
+  
+  /* Force control panel to anchor to right edge at ALL resolutions */
+  .control-panel-themed.pointer-events-none,
+  .control-panel-themed {
+    position: fixed !important;
+    right: 0 !important;
+    left: auto !important;
+    /* Allow the peek animation x transform to work */
+    z-index: 250000 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    /* Don't constrain width - let content size it */
+    width: auto !important;
+    max-width: none !important;
+  }
+  
+  /* Ensure the interactive part is clickable and can animate */
+  .control-panel-themed .pointer-events-auto {
+    pointer-events: auto !important;
+  }
+  
+  /* ============================================
+     TRADING QUICK ACCESS - LEFT EDGE ANCHORED
+     Prevents pills from shrinking/overlapping
+     ============================================ */
+  
+  /* TradingQuickAccess container - anchor to left */
+  div[style*="top: calc(5rem"][class*="fixed"][class*="left-0"] {
+    position: fixed !important;
+    left: 0 !important;
+    right: auto !important;
+  }
+  
+  /* Price pill - maintain size */
+  .rounded-r-full[class*="bg-gradient-to-br"][class*="from-blue-600"] {
+    min-width: max-content !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* Tips pill (second pill) - prevent collision with price pill */
+  .mt-1 > .rounded-r-full,
+  .mt-1\.5 > .rounded-r-full,
+  div[class*="mt-1"] > .relative.rounded-r-full {
+    min-width: 120px !important;
+    margin-top: 6px !important;
+    flex-shrink: 0 !important;
+  }
+}

@@ -1,0 +1,34 @@
+/* ============================================
+   4K FIXES (3840px+)
+   ============================================ */
+
+@media (min-width: 3840px) {
+  .control-panel-themed.pointer-events-none,
+  .control-panel-themed,
+  .fixed.right-0.z-\[250000\].pointer-events-none {
+    right: 0 !important;
+    left: auto !important;
+    transform: none !important;
+  }
+  
+  /* Even larger minimum for tips pill at 4K */
+  .trading-tip-pill,
+  .mt-1 > .rounded-r-full,
+  div[class*="mt-1"] > .relative.rounded-r-full {
+    min-width: 180px !important;
+  }
+}
+
+/* ============================================
+   8K FIXES (7680px+)
+   ============================================ */
+
+@media (min-width: 7680px) {
+  .control-panel-themed.pointer-events-none,
+  .control-panel-themed,
+  .fixed.right-0.z-\[250000\].pointer-events-none {
+    right: 0 !important;
+    left: auto !important;
+    transform: none !important;
+  }
+}

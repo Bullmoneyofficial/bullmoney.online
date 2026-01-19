@@ -1,0 +1,22 @@
+/* ============================================
+   QUICK ACCESS MENUS (Trading & Community)
+   Ensure expanded dropdowns render properly on desktop
+   ============================================ */
+
+@media (min-width: 1024px) {
+  /* TradingQuickAccess and CommunityQuickAccess expanded panels */
+  .fixed.inset-0.z-\[2147483645\] {
+    z-index: 2147483645 !important;
+    isolation: isolate !important;
+    /* Enable backdrop filter on desktop */
+    -webkit-backdrop-filter: blur(8px) !important;
+    backdrop-filter: blur(8px) !important;
+  }
+  
+  /* The dropdown content panels */
+  .fixed.inset-0.z-\[2147483645\] > .absolute,
+  .fixed.inset-0.z-\[2147483645\] > .relative {
+    z-index: 1 !important;
+    pointer-events: auto !important;
+  }
+}

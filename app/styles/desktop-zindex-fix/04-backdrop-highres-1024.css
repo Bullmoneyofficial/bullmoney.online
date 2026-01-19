@@ -1,0 +1,112 @@
+/* ============================================
+   MODAL BACKDROP FIXES FOR HIGH RESOLUTION
+   CRITICAL: Backdrops MUST be BELOW modal content
+   Ensure backdrop-blur and dims render on desktop but DON'T cover modals
+   ============================================ */
+
+@media (min-width: 1024px) {
+  
+  /* ============================================
+     BACKDROP Z-INDEX - MUST BE BELOW CONTENT
+     Pattern: backdrop = 249998, content = 250000+
+     ============================================ */
+  
+  /* All backdrop/dim elements - BELOW modal content */
+  .fixed.inset-0[class*="bg-black"],
+  .fixed.inset-0[class*="backdrop-blur"],
+  div[class*="bg-black/"][class*="fixed"][class*="inset-0"],
+  div[class*="backdrop-blur"][class*="fixed"][class*="inset-0"],
+  .fixed.inset-0.bg-black\/80,
+  .fixed.inset-0.bg-black\/60 {
+    /* CRITICAL: Must be BELOW modal content z-index */
+    z-index: 249998 !important;
+    position: fixed !important;
+    /* Force GPU compositing for backdrop effects */
+    transform: translateZ(0) !important;
+    -webkit-transform: translateZ(0) !important;
+    /* Enable backdrop-filter explicitly */
+    -webkit-backdrop-filter: blur(20px) saturate(120%) !important;
+    backdrop-filter: blur(20px) saturate(120%) !important;
+    /* Ensure proper isolation */
+    isolation: isolate !important;
+    /* Force the backdrop to be visible */
+    will-change: opacity, backdrop-filter !important;
+    /* Premium backdrop animation */
+    animation: backdrop-fade-in 0.3s ease-out !important;
+  }
+  
+  @keyframes backdrop-fade-in {
+    0% {
+      opacity: 0;
+      backdrop-filter: blur(0px) saturate(100%);
+      -webkit-backdrop-filter: blur(0px) saturate(100%);
+    }
+    100% {
+      opacity: 1;
+      backdrop-filter: blur(20px) saturate(120%);
+      -webkit-backdrop-filter: blur(20px) saturate(120%);
+    }
+  }
+  
+  /* Discord Stage modal backdrop - high z but still below content */
+  div[class*="z-[2147483640]"][class*="bg-black"],
+  .fixed.inset-0.bg-black\/80.backdrop-blur-lg.z-\[2147483640\] {
+    z-index: 2147483640 !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    backdrop-filter: blur(12px) !important;
+  }
+  
+  /* Analysis/LiveStream modal backdrops */
+  div[class*="z-[2147483639]"],
+  [data-analysis-modal] ~ .fixed.inset-0,
+  [data-livestream-modal] ~ .fixed.inset-0 {
+    z-index: 2147483639 !important;
+  }
+  
+  /* ============================================
+     MODAL CONTENT - MUST BE ABOVE BACKDROPS
+     ============================================ */
+  
+  /* Standard modal content containers */
+  [role="dialog"],
+  [aria-modal="true"],
+  .modal,
+  div[class*="z-[250000]"]:not(.fixed.inset-0):not([class*="bg-black"]) {
+    z-index: 250000 !important;
+    isolation: isolate !important;
+  }
+  
+  /* High-priority modal content (ChartNews, Analysis, etc.) */
+  [data-chartnews-modal] > *:not(.fixed.inset-0),
+  [data-analysis-modal] > *:not(.fixed.inset-0),
+  div[class*="z-[9999999]"] > *:not(.fixed.inset-0),
+  div[class*="z-[2147483645]"] > *:not(.fixed.inset-0),
+  div[class*="z-[2147483647]"]:not([class*="bg-black"]) > * {
+    z-index: inherit !important;
+    position: relative !important;
+  }
+  
+  /* Discord Stage / LiveStream modal CONTENT - above backdrop */
+  div[class*="z-[2147483645]"].pointer-events-none.flex.items-center.justify-center > div,
+  .fixed.inset-0.z-\[2147483645\].pointer-events-none > div {
+    z-index: 2147483646 !important;
+    pointer-events: auto !important;
+  }
+  
+  /* Community Quick Access backdrop - below content */
+  .fixed.inset-0.bg-black\/60,
+  div[class*="bg-black/60"][class*="fixed"][class*="inset-0"] {
+    z-index: 249997 !important;
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    backdrop-filter: blur(4px) !important;
+  }
+  
+  /* Ensure modal panels/cards inside fixed containers are above backdrops */
+  .fixed.inset-0 > .bg-gradient-to-br,
+  .fixed.inset-0 > div[class*="rounded"],
+  .fixed.inset-0 > div[class*="shadow"] {
+    position: relative !important;
+    z-index: 1 !important;
+  }
+}

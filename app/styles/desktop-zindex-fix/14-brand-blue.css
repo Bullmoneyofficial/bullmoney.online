@@ -1,0 +1,29 @@
+/* ============================================
+   BRAND BLUE TOKENS (Bullmoney Blue Only)
+   Centralized brand shades for consistent aesthetics.
+   ============================================ */
+
+:root {
+  /* Primary brand blue */
+  --brand-blue: #4CC9F0; /* Bullmoney blue */
+  /* Tints and shades used across UI */
+  --brand-blue-soft: color-mix(in oklab, var(--brand-blue) 16%, transparent);
+  --brand-blue-softer: color-mix(in oklab, var(--brand-blue) 10%, transparent);
+  --brand-blue-ink: color-mix(in oklab, var(--brand-blue) 92%, black 8%);
+
+  /* Map accent to brand for global consumption */
+  --accent: var(--brand-blue);
+}
+
+@media (min-width: 1024px) {
+  body {
+    /* Ensure desktop background uses brand-only tints */
+    background: radial-gradient(1200px 600px at 12% -12%, var(--brand-blue-soft), transparent 64%),
+                radial-gradient(1200px 600px at 88% -12%, var(--brand-blue-softer), transparent 64%),
+                var(--desktop-bg);
+  }
+
+  a:hover {
+    color: color-mix(in oklab, var(--brand-blue) 85%, white 15%);
+  }
+}

@@ -1,0 +1,201 @@
+/* ============================================
+   COMPREHENSIVE MODAL FIXES FOR ALL UI STATE MODALS
+   Ensures ALL modals from UIStateContext work correctly on desktop
+   ============================================ */
+
+@media (min-width: 1024px) {
+  
+  /* ============================================
+     SPECIFIC MODAL FIXES BY TYPE
+     Each modal's content must be above its backdrop
+     ============================================ */
+  
+  /* Analysis Modal - EnhancedAnalysisModal */
+  [data-analysis-modal] .fixed.inset-0[class*="bg-black"],
+  div[class*="analysis"] .fixed.inset-0[class*="bg-black"] {
+    z-index: 2147483639 !important;
+  }
+  
+  [data-analysis-modal] [role="dialog"],
+  [data-analysis-modal] .modal-content,
+  div[class*="analysis"] [role="dialog"] {
+    z-index: 2147483645 !important;
+  }
+  
+  /* LiveStream Modal */
+  [data-livestream-modal] .fixed.inset-0[class*="bg-black"],
+  div[class*="livestream"] .fixed.inset-0[class*="bg-black"] {
+    z-index: 2147483639 !important;
+  }
+  
+  [data-livestream-modal] [role="dialog"],
+  [data-livestream-modal] .modal-content,
+  div[class*="livestream"] [role="dialog"] {
+    z-index: 2147483645 !important;
+  }
+  
+  /* Products Modal */
+  [data-products-modal] .fixed.inset-0[class*="bg-black"] {
+    z-index: 249998 !important;
+  }
+  
+  [data-products-modal] [role="dialog"],
+  [data-products-modal] .modal-content {
+    z-index: 250000 !important;
+  }
+  
+  /* Services Modal */
+  [data-services-modal] .fixed.inset-0[class*="bg-black"] {
+    z-index: 249998 !important;
+  }
+  
+  [data-services-modal] [role="dialog"],
+  [data-services-modal] .modal-content {
+    z-index: 250000 !important;
+  }
+  
+  /* Theme Selector Modal */
+  [data-theme-modal] .fixed.inset-0[class*="bg-black"],
+  [data-theme-selector] .fixed.inset-0[class*="bg-black"] {
+    z-index: 249998 !important;
+  }
+  
+  [data-theme-modal] [role="dialog"],
+  [data-theme-selector] [role="dialog"] {
+    z-index: 250000 !important;
+  }
+  
+  /* Admin Modal */
+  [data-admin-modal] .fixed.inset-0[class*="bg-black"] {
+    z-index: 249998 !important;
+  }
+  
+  [data-admin-modal] [role="dialog"],
+  [data-admin-modal] .modal-content {
+    z-index: 250000 !important;
+  }
+  
+  /* FAQ Modal */
+  [data-faq-modal] .fixed.inset-0[class*="bg-black"] {
+    z-index: 249998 !important;
+  }
+  
+  [data-faq-modal] [role="dialog"],
+  [data-faq-modal] .modal-content {
+    z-index: 250000 !important;
+  }
+  
+  /* Bull Feed Modal */
+  [data-bullfeed-modal] .fixed.inset-0[class*="bg-black"],
+  [data-feed-modal] .fixed.inset-0[class*="bg-black"] {
+    z-index: 249998 !important;
+  }
+  
+  [data-bullfeed-modal] [role="dialog"],
+  [data-feed-modal] [role="dialog"] {
+    z-index: 250000 !important;
+  }
+  
+  /* Auth Modal */
+  [data-auth-modal] .fixed.inset-0[class*="bg-black"] {
+    z-index: 249998 !important;
+  }
+  
+  [data-auth-modal] [role="dialog"],
+  [data-auth-modal] .modal-content {
+    z-index: 250000 !important;
+  }
+  
+  /* Discord Stage Modal - uses very high z-index */
+  [data-discord-stage] .fixed.inset-0[class*="bg-black"],
+  .discord-stage-modal .fixed.inset-0[class*="bg-black"] {
+    z-index: 2147483640 !important;
+  }
+  
+  [data-discord-stage] [role="dialog"],
+  [data-discord-stage] .modal-content,
+  .discord-stage-modal [role="dialog"] {
+    z-index: 2147483645 !important;
+  }
+  
+  /* Hero Scene Modal */
+  [data-hero-scene-modal] .fixed.inset-0[class*="bg-black"] {
+    z-index: 249998 !important;
+  }
+  
+  [data-hero-scene-modal] [role="dialog"],
+  [data-hero-scene-modal] .modal-content {
+    z-index: 250000 !important;
+  }
+  
+  /* Post Composer Modal */
+  [data-post-composer] .fixed.inset-0[class*="bg-black"] {
+    z-index: 249998 !important;
+  }
+  
+  [data-post-composer] [role="dialog"],
+  [data-post-composer] .modal-content {
+    z-index: 250000 !important;
+  }
+  
+  /* Apps & Tools Modal (Footer) */
+  [data-apps-modal] .fixed.inset-0[class*="bg-black"] {
+    z-index: 249998 !important;
+  }
+  
+  [data-apps-modal] [role="dialog"],
+  [data-apps-modal] .modal-content {
+    z-index: 250000 !important;
+  }
+  
+  /* Legal Disclaimer Modal (Footer) */
+  [data-disclaimer-modal] .fixed.inset-0[class*="bg-black"] {
+    z-index: 249998 !important;
+  }
+  
+  [data-disclaimer-modal] [role="dialog"],
+  [data-disclaimer-modal] .modal-content {
+    z-index: 250000 !important;
+  }
+  
+  /* ============================================
+     GENERIC PORTAL MODAL FIXES
+     Catch-all for dynamically created modals
+     ============================================ */
+  
+  /* Body-level portaled modals */
+  body > .fixed.inset-0 {
+    /* If it has bg-black, it's a backdrop */
+    &[class*="bg-black"],
+    &[class*="backdrop"] {
+      z-index: 249998 !important;
+    }
+  }
+  
+  /* Portaled modal content that's NOT a backdrop */
+  body > .fixed.inset-0.flex.items-center.justify-center:not([class*="bg-black"]):not([class*="backdrop"]) {
+    z-index: 250000 !important;
+  }
+  
+  /* Radix UI portals */
+  [data-radix-portal] {
+    z-index: 250000 !important;
+  }
+  
+  [data-radix-portal] [data-radix-dialog-overlay] {
+    z-index: 249998 !important;
+  }
+  
+  [data-radix-portal] [data-radix-dialog-content] {
+    z-index: 250000 !important;
+  }
+  
+  /* Framer Motion AnimatePresence portals */
+  [data-framer-portal] > .fixed.inset-0[class*="bg-black"] {
+    z-index: 249998 !important;
+  }
+  
+  [data-framer-portal] > .fixed:not([class*="bg-black"]) {
+    z-index: 250000 !important;
+  }
+}

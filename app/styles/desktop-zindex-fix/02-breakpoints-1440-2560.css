@@ -1,0 +1,39 @@
+/* ============================================
+   LARGER DESKTOP FIXES (1440px+)
+   Additional fixes for big displays
+   ============================================ */
+
+@media (min-width: 1440px) {
+  
+  /* Ensure modals are centered properly on large screens */
+  [role="dialog"],
+  [aria-modal="true"],
+  .modal {
+    max-width: 90vw !important;
+    max-height: 90vh !important;
+  }
+  
+  /* Large screen modal positioning */
+  .fixed.inset-0.flex.items-center.justify-center {
+    padding: 2rem !important;
+  }
+}
+
+/* ULTRA WIDE / 4K+ FIXES (2560px+) */
+
+@media (min-width: 2560px) {
+  
+  /* Ensure navbar stays properly positioned */
+  [data-navbar-container],
+  .navbar-themed {
+    max-width: 2560px;
+    left: 50% !important;
+    transform: translateX(-50%) translateZ(0) !important;
+  }
+  
+  /* Modal max widths for 4K */
+  [role="dialog"],
+  [aria-modal="true"] {
+    max-width: min(90vw, 1920px) !important;
+  }
+}

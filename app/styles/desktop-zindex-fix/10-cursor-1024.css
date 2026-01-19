@@ -1,0 +1,101 @@
+/* ============================================
+   CRITICAL: Custom cursor MUST be on top of EVERYTHING
+   Including all modals with z-index 2147483647
+   ============================================ */
+@media (min-width: 1024px) {
+  .target-cursor-wrapper {
+    z-index: 2147483647 !important;
+    pointer-events: none !important;
+    isolation: isolate !important;
+    /* DO NOT override transform - GSAP uses it for positioning!
+       The cursor uses transform: translate(x, y) to move.
+       Using translateZ here would break cursor movement. */
+  }
+  
+  /* Ensure cursor elements inside wrapper are visible */
+  .target-cursor-wrapper * {
+    z-index: inherit !important;
+  }
+  
+  /* ============================================
+     CRITICAL: FORCE REAL MOUSE CURSOR VISIBLE
+     Ensures the device's actual mouse pointer is NEVER hidden
+     on desktop, especially inside modals and overlays
+     ============================================ */
+  html,
+  body,
+  *,
+  *::before,
+  *::after {
+    cursor: auto !important;
+  }
+  
+  /* Allow specific interactive elements to show pointer cursor */
+  a, button, [role="button"], .cursor-pointer, .cursor-target,
+  input[type="button"], input[type="submit"], input[type="reset"],
+  select, label[for], summary {
+    cursor: pointer !important;
+  }
+  
+  /* Text inputs should show text cursor */
+  input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  [contenteditable="true"] {
+    cursor: text !important;
+  }
+  
+  /* Modals MUST show cursor - override any cursor:none */
+  .fixed.inset-0,
+  .fixed.inset-0 *,
+  [role="dialog"],
+  [role="dialog"] *,
+  [aria-modal="true"],
+  [aria-modal="true"] * {
+    cursor: auto !important;
+  }
+  
+  /* Interactive elements in modals should show pointer */
+  .fixed.inset-0 a,
+  .fixed.inset-0 button,
+  .fixed.inset-0 [role="button"],
+  .fixed.inset-0 .cursor-pointer,
+  [role="dialog"] a,
+  [role="dialog"] button {
+    cursor: pointer !important;
+  }
+  
+  /* Discord Stage and Telegram modals - highest priority (but below cursor) */
+  .fixed.inset-0.z-\[2147483647\]:not(.target-cursor-wrapper) {
+    z-index: 2147483647 !important;
+    isolation: isolate !important;
+    /* Enable backdrop filter on desktop */
+    -webkit-backdrop-filter: blur(12px) !important;
+    backdrop-filter: blur(12px) !important;
+    /* FORCE cursor visible in high-z modals */
+    cursor: auto !important;
+  }
+  
+  .fixed.inset-0.z-\[2147483647\]:not(.target-cursor-wrapper) * {
+    cursor: auto !important;
+  }
+  
+  .fixed.inset-0.z-\[2147483647\]:not(.target-cursor-wrapper) a,
+  .fixed.inset-0.z-\[2147483647\]:not(.target-cursor-wrapper) button,
+  .fixed.inset-0.z-\[2147483647\]:not(.target-cursor-wrapper) [role="button"] {
+    cursor: pointer !important;
+  }
+  
+  /* Content inside max-z modals */
+  .fixed.inset-0.z-\[2147483647\] > .relative {
+    z-index: 1 !important;
+    pointer-events: auto !important;
+  }
+  
+  /* Ensure gradient backgrounds in modals render correctly */
+  .bg-gradient-to-br.from-zinc-900\/98,
+  .bg-gradient-to-br.from-blue-950\/98 {
+    /* Force GPU rendering for gradient + blur */
+    transform: translateZ(0) !important;
+    -webkit-transform: translateZ(0) !important;
+  }
+}

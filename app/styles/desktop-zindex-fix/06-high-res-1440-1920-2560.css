@@ -1,0 +1,67 @@
+/* ============================================
+   HIGH RESOLUTION FIXES - 1440px+
+   Ensure edge anchoring works at all sizes
+   ============================================ */
+
+@media (min-width: 1440px) {
+  /* Control panel - still right-anchored with forced positioning */
+  .control-panel-themed.pointer-events-none,
+  .control-panel-themed,
+  .fixed.right-0.z-\[250000\].pointer-events-none {
+    right: 0 !important;
+    left: auto !important;
+    transform: none !important;
+  }
+  
+  /* Allow children to animate but parent stays anchored */
+  .control-panel-themed > * {
+    transform: unset;
+  }
+  
+  /* Trading pills - still left-anchored, maintain size */
+  .rounded-r-full.bg-gradient-to-br {
+    min-width: max-content !important;
+  }
+}
+
+/* ============================================
+   FULL HD FIXES (1920px+)
+   ============================================ */
+
+@media (min-width: 1920px) {
+  .control-panel-themed.pointer-events-none,
+  .control-panel-themed,
+  .fixed.right-0.z-\[250000\].pointer-events-none {
+    right: 0 !important;
+    left: auto !important;
+    transform: none !important;
+  }
+  
+  /* Ensure trading tips pill doesn't shrink */
+  .trading-tip-pill,
+  .mt-1 > .rounded-r-full,
+  div[class*="mt-1"] > .relative.rounded-r-full {
+    min-width: 140px !important;
+  }
+}
+
+/* ============================================
+   2K/QHD FIXES (2560px+)
+   ============================================ */
+
+@media (min-width: 2560px) {
+  .control-panel-themed.pointer-events-none,
+  .control-panel-themed,
+  .fixed.right-0.z-\[250000\].pointer-events-none {
+    right: 0 !important;
+    left: auto !important;
+    transform: none !important;
+  }
+  
+  /* Larger minimum for tips pill at 2K */
+  .trading-tip-pill,
+  .mt-1 > .rounded-r-full,
+  div[class*="mt-1"] > .relative.rounded-r-full {
+    min-width: 160px !important;
+  }
+}

@@ -1,0 +1,81 @@
+/* ============================================
+   THEME-AWARE AESTHETICS (2026)
+   Dark/Light tokens + accessibility refinements
+   Compatible with data-theme and Tailwind's .dark/.light.
+   ============================================ */
+
+/* Dark theme overrides (default look of site) */
+:root[data-theme="dark"], html.dark {
+  --desktop-bg: #0b0f14;
+  --surface-0: rgba(255,255,255,0.02);
+  --surface-1: rgba(255,255,255,0.04);
+  --surface-2: rgba(255,255,255,0.06);
+  --surface-3: rgba(255,255,255,0.08);
+  --text-primary: rgba(255,255,255,0.92);
+  --text-secondary: rgba(255,255,255,0.64);
+  --border: rgba(255,255,255,0.10);
+  --accent: #4CC9F0;
+}
+
+/* Light theme tokens */
+:root[data-theme="light"], html.light {
+  --desktop-bg: #f7f9fb;
+  --surface-0: rgba(0,0,0,0.02);
+  --surface-1: rgba(0,0,0,0.04);
+  --surface-2: rgba(0,0,0,0.06);
+  --surface-3: rgba(0,0,0,0.08);
+  --text-primary: rgba(0,0,0,0.88);
+  --text-secondary: rgba(0,0,0,0.62);
+  --border: rgba(0,0,0,0.12);
+  --accent: #4CC9F0; /* Bullmoney blue */
+}
+
+/* System preference fallback when no explicit theme is set */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]), html:not(.dark):not([data-theme="dark"]) {
+    --desktop-bg: #f7f9fb;
+    --surface-0: rgba(0,0,0,0.02);
+    --surface-1: rgba(0,0,0,0.04);
+    --surface-2: rgba(0,0,0,0.06);
+    --surface-3: rgba(0,0,0,0.08);
+    --text-primary: rgba(0,0,0,0.88);
+    --text-secondary: rgba(0,0,0,0.62);
+    --border: rgba(0,0,0,0.12);
+    --accent: #4CC9F0;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Header/nav theme polish */
+  :where(header.sticky, [role="navigation"], nav) {
+    background: linear-gradient(180deg, var(--surface-3), var(--surface-1));
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Selection color adapts to theme */
+  ::selection {
+    background: color-mix(in oklab, var(--accent) 65%, black 35%);
+    color: white;
+  }
+
+  :root[data-theme="light"] ::selection, html.light ::selection {
+    background: color-mix(in oklab, var(--accent) 55%, white 45%);
+    color: black;
+  }
+
+  /* Focus rings: accessible, theme-aware */
+  :where(button, a, input, textarea, select):focus-visible {
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent);
+  }
+
+  /* High contrast users */
+  @media (prefers-contrast: more) {
+    :where(button, a, input, textarea, select):focus-visible {
+      box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 60%, white 40%);
+    }
+    :where(.card, .panel, .section, .surface) {
+      border-color: color-mix(in oklab, var(--border) 60%, var(--text-primary) 40%);
+      box-shadow: 0 0 0 1px color-mix(in oklab, var(--border) 40%, var(--text-primary) 60%);
+    }
+  }
+}
