@@ -71,6 +71,8 @@ export interface PerformanceStore {
   _transientScrollY: number;
   _transientVelocity: number;
   _transientFps: number;
+  _lastFrameUpdate: number;
+  _lastScrollUpdate: number;
 }
 
 export const usePerformanceStore = create<PerformanceStore>()(
