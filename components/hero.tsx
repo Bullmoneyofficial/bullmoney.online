@@ -867,13 +867,10 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
             loading="lazy"
             data-testid="hero-spline-iframe"
             style={{
-              ...responsiveStyles,
-              // Additional iframe-specific styles for cross-browser support
+              ...fullViewportStyles,
               position: "absolute",
               top: 0,
               left: 0,
-              right: 0,
-              bottom: 0,
             }}
           />
         )}
@@ -1881,7 +1878,7 @@ const HeroParallax = () => {
           contain: typeof window !== 'undefined' && window.innerWidth >= 1440 ? 'layout style' : 'layout', 
           touchAction: 'pan-y',
           minHeight: typeof window !== 'undefined' && window.innerWidth >= 1440 ? 'calc(100vh - 80px)' : '100dvh',
-          height: typeof window !== 'undefined' && window.innerWidth >= 1440 ? 'auto' : '100vh',
+          height: '100dvh',
         }}
         data-allow-scroll
         data-content
@@ -1915,41 +1912,54 @@ const HeroParallax = () => {
             }}
           >
             {/* reload cue removed */}
-            <div className="w-full h-full flex items-center justify-center">
+            <div className="w-full h-full">
               {/* 
-                RESPONSIVE SPLINE CONTAINER
-                Supports: iPhone 4 (320×480) to 8K TV (7680×4320)
-                - Uses calculated heroSize for optimal dimensions per device
-                - Falls back to 100% for SSR/initial render
-                - minWidth/minHeight ensure visibility on all screens
+                FULL VIEWPORT SPLINE CONTAINER
+                Real-time viewport detection every 16ms
+                Supports ALL screen sizes:
+                - iPhone 4/4S: 320×480
+                - iPhone SE: 320×568 / 375×667
+                - iPhone X-15: 375×812 to 430×932
+                - iPhone 16/17 Pro Max: ~440×950
+                - iPad: 768×1024 to 1024×1366
+                - HD: 1920×1080
+                - QHD: 2560×1440
+                - 4K: 3840×2160
+                - 5K: 5120×2880
+                - 8K: 7680×4320
               */}
               <div
-                className="w-full h-full spline-container"
+                className="spline-container spline-fullscreen"
                 data-spline-scene
                 style={{
-                  // Responsive width: use calculated size or fill container
-                  width: heroSize.width > 0 ? `${heroSize.width}px` : '100%',
-                  height: heroSize.height > 0 ? `${heroSize.height}px` : '100%',
-                  // Ensure proper bounds for all screen sizes
+                  // FULL VIEWPORT COVERAGE
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100vw',
+                  height: '100dvh', // Dynamic viewport for mobile browsers (falls back to 100vh)
+                  // No constraints - fill entire viewport
+                  minWidth: '100vw',
+                  minHeight: '100vh',
                   maxWidth: '100vw',
                   maxHeight: '100dvh',
-                  // Support very small screens (iPhone 4: 320×480)
-                  minWidth: Math.min(280, typeof window !== 'undefined' ? window.innerWidth : 280),
-                  minHeight: Math.min(380, typeof window !== 'undefined' ? window.innerHeight * 0.8 : 380),
-                  // Layout containment for performance
-                  contain: 'layout style',
+                  // Remove any padding/margin
+                  margin: 0,
+                  padding: 0,
+                  // Performance
+                  contain: 'strict',
                   touchAction: 'pan-y',
                   pointerEvents: 'auto',
-                  // Aspect ratio for proper scaling
-                  aspectRatio: heroSize.aspect && heroSize.aspect > 0 ? `${heroSize.aspect}` : 'auto',
-                  // Ensure centered positioning
-                  margin: 'auto',
-                  // GPU acceleration for smooth rendering on all devices
-                  transform: 'translateZ(0)',
-                  WebkitTransform: 'translateZ(0)',
+                  overflow: 'hidden',
+                  // GPU acceleration
+                  transform: 'translate3d(0,0,0)',
+                  WebkitTransform: 'translate3d(0,0,0)',
+                  willChange: 'transform',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
                 }}
               >
-                {/* RESPONSIVE HERO EMBED: Adapts quality from iPhone 4 to 8K TV */}
+                {/* FULL VIEWPORT HERO EMBED - Fills 100% of screen on ALL devices */}
                 {splineSettings.shouldRender ? (
                   <SplineSceneEmbed
                     key={heroSplineScene}
@@ -1963,7 +1973,8 @@ const HeroParallax = () => {
                     className="w-full h-full flex items-center justify-center"
                     style={{
                       background: 'linear-gradient(135deg, #000 0%, #111 50%, #000 100%)',
-                      borderRadius: '12px',
+                      width: '100vw',
+                      height: '100dvh',
                     }}
                   >
                     <div className="text-center p-4">

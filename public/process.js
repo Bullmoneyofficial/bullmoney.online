@@ -13,4 +13,4 @@ var Module=moduleArg;var readyPromiseResolve,readyPromiseReject;Module["ready"]=
 
 );
 })();
-export default Module;
+if (typeof window !== "undefined") { window.ProcessModule = Module; }
