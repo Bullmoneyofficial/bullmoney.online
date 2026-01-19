@@ -278,6 +278,14 @@ function WebVitalsInner() {
         return;
       }
 
+      // Suppress Spline viewer errors - these are harmless internal errors from
+      // the @splinetool/viewer library during scene initialization
+      if (/Cannot read properties of undefined \(reading 'position'\)/i.test(msg) ||
+          /spline-viewer\.js/i.test(event?.filename || '')) {
+        // Spline internal errors during animation frames - safe to ignore
+        return;
+      }
+
       if (process.env.NODE_ENV === 'development') {
         console.error('[WebVitals] Error caught:', msg);
       }

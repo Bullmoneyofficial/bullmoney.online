@@ -134,10 +134,15 @@ const DEFAULT_TICKER_DATA: TickerItem[] = [
 // Hook to fetch real prices from Binance and other sources
 const useRealTimePrices = () => {
   const [tickerData, setTickerData] = useState<TickerItem[]>(DEFAULT_TICKER_DATA);
-  const [lastPrices, setLastPrices] = useState<Record<string, number>>({});
+  const lastPricesRef = useRef<Record<string, number>>({});
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
+    
     const fetchPrices = async () => {
+      if (!isMountedRef.current) return;
+      
       try {
         // Fetch from multiple sources in parallel
         const [binanceRes, marketDataRes, livePricesRes] = await Promise.allSettled([
@@ -169,7 +174,7 @@ const useRealTimePrices = () => {
         updatedTicker.forEach((item, index) => {
           const newPrice = newPrices[item.symbol];
           if (newPrice) {
-            const lastPrice = lastPrices[item.symbol] || newPrice;
+            const lastPrice = lastPricesRef.current[item.symbol] || newPrice;
             const changePercent = ((newPrice - lastPrice) / lastPrice) * 100;
             const isPositive = changePercent >= 0;
             
@@ -184,8 +189,12 @@ const useRealTimePrices = () => {
           }
         });
 
-        setLastPrices(newPrices);
-        setTickerData(updatedTicker);
+        // Update ref (not state) to prevent re-renders
+        lastPricesRef.current = newPrices;
+        
+        if (isMountedRef.current) {
+          setTickerData(updatedTicker);
+        }
       } catch (error) {
         console.error('Error fetching prices:', error);
       }
@@ -193,8 +202,11 @@ const useRealTimePrices = () => {
 
     fetchPrices();
     const interval = setInterval(fetchPrices, 5000); // Update every 5 seconds
-    return () => clearInterval(interval);
-  }, [lastPrices]);
+    return () => {
+      isMountedRef.current = false;
+      clearInterval(interval);
+    };
+  }, []); // Empty deps - refs don't cause re-renders
 
   return tickerData;
 };
@@ -366,12 +378,26 @@ const useSplineViewerScript = () => {
 
 const useMousePosition = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const rafRef = useRef<number | null>(null);
+  const lastUpdateRef = useRef(0);
+  
   useEffect(() => {
     const updateMousePosition = (ev: MouseEvent) => {
-      setMousePosition({ x: ev.clientX, y: ev.clientY });
+      // Throttle to ~60fps to prevent excessive re-renders
+      const now = Date.now();
+      if (now - lastUpdateRef.current < 16) return;
+      lastUpdateRef.current = now;
+      
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        setMousePosition({ x: ev.clientX, y: ev.clientY });
+      });
     };
-    window.addEventListener('mousemove', updateMousePosition);
-    return () => window.removeEventListener('mousemove', updateMousePosition);
+    window.addEventListener('mousemove', updateMousePosition, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', updateMousePosition);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, []);
   return mousePosition;
 };
@@ -844,35 +870,116 @@ const GraphOverlay = () => (
 // ============================================================================
 
 const DecryptionText = ({ text, className, delay = 0 }: { text: string; className?: string; delay?: number }) => {
-  const [displayText, setDisplayText] = useState(text.split('').map(() => '$'));
+  const [displayText, setDisplayText] = useState(() => text.split('').map(() => '$'));
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ$%&@#';
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const iterationRef = useRef(0);
+  const isMountedRef = useRef(true);
+  const textRef = useRef(text);
+  
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      let iteration = 0;
-      const interval = setInterval(() => {
-        setDisplayText(prev => prev.map((char, i) => i < iteration ? text[i] : chars[Math.floor(Math.random() * chars.length)]));
-        iteration += 1/3;
-        if (iteration >= text.length) clearInterval(interval);
+    isMountedRef.current = true;
+    textRef.current = text;
+    iterationRef.current = 0;
+    
+    // Clear any existing timers
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    
+    // Set initial display
+    setDisplayText(text.split('').map(() => '$'));
+    
+    timeoutRef.current = setTimeout(() => {
+      if (!isMountedRef.current) return;
+      
+      intervalRef.current = setInterval(() => {
+        if (!isMountedRef.current) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          return;
+        }
+        
+        const iteration = iterationRef.current;
+        const currentText = textRef.current;
+        
+        if (iteration >= currentText.length) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          return;
+        }
+        
+        const newText = currentText.split('').map((char, i) => 
+          i < iteration ? currentText[i] : chars[Math.floor(Math.random() * chars.length)]
+        );
+        setDisplayText(newText);
+        iterationRef.current += 1/3;
       }, 30);
-      return () => clearInterval(interval);
     }, delay * 1000);
-    return () => clearTimeout(timeout);
+    
+    return () => {
+      isMountedRef.current = false;
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, [text, delay]);
+  
   return <span className={className}>{displayText.join('')}</span>;
 };
 
 const SlotMachineNumber = ({ value, duration = 2 }: { value: number; duration?: number }) => {
   const [displayValue, setDisplayValue] = useState(0);
+  const valueRef = useRef(value);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
+  
   useEffect(() => {
-    let start = 0;
+    isMountedRef.current = true;
+    valueRef.current = value;
+    
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    // Handle edge cases
+    if (value <= 0) {
+      setDisplayValue(0);
+      return;
+    }
+    
+    let current = 0;
     const end = value;
-    const incrementTime = (duration * 1000) / end;
-    const timer = setInterval(() => {
-      start += Math.ceil(end / 50);
-      if (start >= end) { setDisplayValue(end); clearInterval(timer); } else { setDisplayValue(start); }
-    }, incrementTime);
-    return () => clearInterval(timer);
+    const steps = Math.min(50, end); // Max 50 steps
+    const increment = Math.max(1, Math.ceil(end / steps));
+    const intervalMs = Math.max(20, (duration * 1000) / steps);
+    
+    timerRef.current = setInterval(() => {
+      if (!isMountedRef.current) {
+        if (timerRef.current) clearInterval(timerRef.current);
+        return;
+      }
+      
+      current += increment;
+      if (current >= end) {
+        setDisplayValue(end);
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+      } else {
+        setDisplayValue(current);
+      }
+    }, intervalMs);
+    
+    return () => {
+      isMountedRef.current = false;
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [value, duration]);
+  
   return <span className="font-mono tabular-nums">{displayValue.toLocaleString()}</span>;
 };
 

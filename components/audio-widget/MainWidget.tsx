@@ -128,6 +128,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
   // Scroll detection for auto-minimizing
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollY = useRef(0);
+  const isMinimizedRef = useRef(false);
   
   useEffect(() => {
     const handleScroll = () => {
@@ -135,7 +136,9 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
       const scrollDelta = Math.abs(currentScrollY - lastScrollY.current);
       
       // Trigger minimization on significant scroll when widget is not open (whether hidden or visible)
-      if (scrollDelta > 15 && !open) {
+      // Use ref to prevent multiple setState calls
+      if (scrollDelta > 15 && !open && !isMinimizedRef.current) {
+        isMinimizedRef.current = true;
         setIsScrollMinimized(true);
         lastScrollY.current = currentScrollY;
         
@@ -146,8 +149,12 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
         
         // Set timeout to expand back after scroll stops
         scrollTimeoutRef.current = setTimeout(() => {
+          isMinimizedRef.current = false;
           setIsScrollMinimized(false);
         }, 1200); // Expand back 1.2s after scroll stops
+      } else if (scrollDelta > 15) {
+        // Update lastScrollY even if already minimized
+        lastScrollY.current = currentScrollY;
       }
     };
 

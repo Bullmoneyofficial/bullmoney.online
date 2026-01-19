@@ -14,6 +14,65 @@ import { useFpsOptimizer } from "@/lib/FpsOptimizer";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { useFooterModalsUI } from "@/contexts/UIStateContext";
 
+// Neon Blue Sign Style from Chartnews
+const NEON_STYLES = `
+  @keyframes neon-pulse {
+    0%, 100% { 
+      text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+      filter: brightness(1);
+    }
+    50% { 
+      text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
+      filter: brightness(1.1);
+    }
+  }
+
+  @keyframes neon-glow {
+    0%, 100% { 
+      box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    }
+    50% { 
+      box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
+    }
+  }
+
+  .neon-blue-text {
+    color: #3b82f6;
+    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+    animation: neon-pulse 2s ease-in-out infinite;
+  }
+
+  .neon-white-text {
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
+  }
+
+  .neon-white-icon {
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
+  }
+
+  .neon-blue-icon {
+    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+  }
+
+  .neon-blue-border {
+    border: 2px solid #3b82f6;
+    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    animation: neon-glow 2s ease-in-out infinite;
+  }
+
+  .neon-blue-bg {
+    background: #3b82f6;
+    box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+  }
+
+  .gpu-layer {
+    transform: translateZ(0);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+  }
+`;
+
 // Unified Modal Wrapper for Footer - Fixes display issues on all devices
 const FooterModal = memo(({ 
   isOpen, 
@@ -74,21 +133,20 @@ const FooterModal = memo(({
             onClick={(e) => e.stopPropagation()}
             className="relative w-full max-w-lg max-h-[90vh] overflow-hidden rounded-2xl"
           >
-            {/* Shimmer Border */}
-            <ShimmerBorder color="blue" intensity="low" />
+            {/* Neon Border Effect */}
+            <div className="absolute inset-0 neon-blue-border rounded-2xl" />
             
             {/* Inner Container */}
-            <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-blue-500/30 overflow-hidden">
-              <ShimmerLine color="blue" />
+            <div className="relative z-10 bg-black rounded-2xl overflow-hidden">
               
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-blue-500/20">
-                <h2 className="text-lg font-bold text-white">{title}</h2>
+              <div className="flex items-center justify-between p-4 border-b neon-blue-border">
+                <h2 className="text-lg font-bold neon-blue-text">{title}</h2>
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => { SoundEffects.click(); onClose(); }}
-                  className="p-2 rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition-colors"
+                  className="p-2 rounded-full bg-black neon-blue-border neon-white-text hover:neon-blue-bg transition-all"
                 >
                   <X className="w-5 h-5" />
                 </motion.button>
@@ -129,14 +187,14 @@ const AppsToolsContent = memo(() => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => SoundEffects.click()}
-          className="flex items-center gap-4 p-4 bg-neutral-800/50 rounded-xl border border-blue-500/20 hover:border-blue-500/40 transition-colors"
+          className="flex items-center gap-4 p-4 bg-black rounded-xl neon-blue-border transition-all hover:neon-blue-bg group"
         >
           <span className="text-2xl">{app.icon}</span>
           <div className="flex-1">
-            <p className="font-medium text-white">{app.name}</p>
+            <p className="font-medium neon-blue-text group-hover:neon-white-text transition-all">{app.name}</p>
             <p className="text-xs text-neutral-500">{app.desc}</p>
           </div>
-          <ExternalLink className="w-4 h-4 text-blue-400" />
+          <ExternalLink className="w-4 h-4 neon-blue-icon" />
         </motion.a>
       ))}
     </div>
@@ -175,6 +233,7 @@ export function Footer() {
 
   return (
     <>
+      <style dangerouslySetInnerHTML={{ __html: NEON_STYLES }} />
       {/* Modal Components */}
       <BullMoneyModal isOpen={isDisclaimerOpen} onClose={() => setDisclaimerOpen(false)} />
 
@@ -215,7 +274,7 @@ export function Footer() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleDisclaimerClick}
-              className="px-4 py-2 text-sm font-medium text-white/70 hover:text-white bg-neutral-800/50 rounded-full border border-blue-500/20 hover:border-blue-500/40 transition-all"
+              className="px-4 py-2 text-sm font-medium neon-blue-text bg-black rounded-full neon-blue-border hover:neon-blue-bg hover:neon-white-text transition-all"
             >
               Disclaimer
             </motion.button>
@@ -223,7 +282,7 @@ export function Footer() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleAppsClick}
-              className="px-4 py-2 text-sm font-medium text-white/70 hover:text-white bg-neutral-800/50 rounded-full border border-blue-500/20 hover:border-blue-500/40 transition-all"
+              className="px-4 py-2 text-sm font-medium neon-blue-text bg-black rounded-full neon-blue-border hover:neon-blue-bg hover:neon-white-text transition-all"
             >
               Apps & Tools
             </motion.button>
@@ -235,7 +294,7 @@ export function Footer() {
           </div>
 
           {/* Copyright */}
-          <p className="text-[10px] sm:text-xs text-neutral-400 dark:text-neutral-500 font-light tracking-wide text-center mt-4 sm:mt-6">
+          <p className="text-[10px] sm:text-xs neon-white-text font-light tracking-wide text-center mt-4 sm:mt-6">
             &copy; {currentYear} BullMoney. All rights reserved.
           </p>
         </div>

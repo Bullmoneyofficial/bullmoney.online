@@ -15,14 +15,74 @@ import { isMobileDevice } from "@/lib/mobileDetection";
 // ✅ LOADING FALLBACKS - Mobile optimized
 import { MinimalFallback, CardSkeleton } from "@/components/MobileLazyLoadingFallback";
 
+// --- GLOBAL NEON STYLES ---
+const GLOBAL_STYLES = `
+  @keyframes neon-pulse {
+    0%, 100% { 
+      text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+      filter: brightness(1);
+    }
+    50% { 
+      text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
+      filter: brightness(1.1);
+    }
+  }
+
+  @keyframes neon-glow {
+    0%, 100% { 
+      box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    }
+    50% { 
+      box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
+    }
+  }
+
+  .neon-blue-text {
+    color: #3b82f6;
+    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+    animation: neon-pulse 2s ease-in-out infinite;
+  }
+
+  .neon-white-text {
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
+  }
+
+  .neon-white-icon {
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
+  }
+
+  .neon-blue-icon {
+    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+  }
+
+  .neon-blue-border {
+    border: 2px solid #3b82f6;
+    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    animation: neon-glow 2s ease-in-out infinite;
+  }
+
+  .neon-blue-bg {
+    background: #3b82f6;
+    box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+  }
+
+  .gpu-layer {
+    transform: translateZ(0);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+  }
+`;
+
 // --- THEME CONSTANTS - NEON BLUE EDITION ---
 const NEON_SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #3b82f6 50%, #00000000 100%)";
 const NEON_TEXT_GRADIENT = "bg-[linear-gradient(90deg,#93c5fd,#60a5fa_35%,#3b82f6_65%,#93c5fd)]";
-const NEON_GLOW = "0 0 5px #60a5fa, 0 0 10px #60a5fa, 0 0 20px #3b82f6";
-const NEON_BORDER_GLOW = "0 0 10px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.2)";
+const NEON_GLOW = "0 0 4px #3b82f6, 0 0 8px #3b82f6";
+const NEON_BORDER_GLOW = "0 0 6px rgba(59, 130, 246, 0.6), 0 0 12px rgba(59, 130, 246, 0.4), inset 0 0 6px rgba(59, 130, 246, 0.3)";
+const NEON_CARD_GLOW = "0 0 8px rgba(59, 130, 246, 0.5), 0 0 16px rgba(59, 130, 246, 0.3)";
 
 /* =====================================================================================
-   HELPER TIP COMPONENT (GOLD EDITION)
+   HELPER TIP COMPONENT (NEON BLUE SIGN STYLE)
 ===================================================================================== */
 
 const HelperTip = ({ label, className }: { label: string; className?: string }) => (
@@ -34,21 +94,13 @@ const HelperTip = ({ label, className }: { label: string; className?: string }) 
     className={cn("absolute z-50 flex flex-col items-center pointer-events-none", className)}
   >
     {/* The Bubble */}
-    <div className="relative p-[1.5px] overflow-hidden rounded-full" style={{ boxShadow: NEON_BORDER_GLOW }}>
-        <motion.div 
-            className="absolute inset-[-100%]"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            style={{ background: NEON_SHIMMER_GRADIENT }}
-        />
-        <div className="relative z-10 px-3 py-1 bg-[#0a0a0a] rounded-full flex items-center justify-center border border-blue-500/50" style={{ boxShadow: 'inset ' + NEON_BORDER_GLOW }}>
-            <span className={cn("bg-clip-text text-transparent text-[10px] font-bold whitespace-nowrap", NEON_TEXT_GRADIENT)} style={{ textShadow: NEON_GLOW }}>
-                {label}
-            </span>
-        </div>
+    <div className="relative px-3 py-1 bg-black rounded-full flex items-center justify-center neon-blue-border">
+        <span className="neon-white-text text-[10px] font-bold whitespace-nowrap">
+            {label}
+        </span>
     </div>
     {/* The Triangle Pointer (pointing down) */}
-    <div className="w-2 h-2 bg-[#0a0a0a] rotate-45 -translate-y-[4px] relative z-10 border-b border-r border-blue-500/50" style={{ boxShadow: NEON_BORDER_GLOW }} />
+    <div className="w-2 h-2 bg-black rotate-45 -translate-y-[4px] relative z-10 neon-blue-border" />
   </motion.div>
 );
 
@@ -58,6 +110,17 @@ const HelperTip = ({ label, className }: { label: string; className?: string }) 
 
 export function Features() {
   const [copied, setCopied] = React.useState(false);
+  
+  // --- INJECT GLOBAL NEON STYLES ---
+  useEffect(() => {
+    const styleId = 'neon-glow-styles';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = GLOBAL_STYLES;
+      document.head.appendChild(style);
+    }
+  }, []);
   
   // --- TIP LOGIC ---
   const [activeTipIndex, setActiveTipIndex] = useState(0);
@@ -104,7 +167,7 @@ export function Features() {
           animate={{
             textShadow: [
               NEON_GLOW,
-              "0 0 2px #60a5fa, 0 0 5px #60a5fa, 0 0 10px #3b82f6",
+              "0 0 2px #3b82f6, 0 0 4px #3b82f6",
               NEON_GLOW,
             ],
           }}
@@ -114,14 +177,14 @@ export function Features() {
         </motion.h2>
       </Header>
 
-      <p className="max-w-lg text-sm text-neutral-300 text-center mx-auto mt-4">
+      <p className="max-w-lg text-sm text-center mx-auto mt-4 neon-white-text">
         Trade With The Bull, Funded By The Goats.
       </p>
 
       <div className="mt-20 grid cols-1 md:grid-cols-5 gap-4 md:auto-rows-[25rem] max-w-7xl mx-auto">
         
         {/* Left – 3 cols :: JOIN US */}
-        <Card className="flex flex-col justify-between md:col-span-3 bg-gradient-to-br from-black via-neutral-950 to-black border border-blue-500/50" style={{ boxShadow: NEON_BORDER_GLOW }}>
+        <Card className="flex flex-col justify-between md:col-span-3 bg-gradient-to-br from-black via-neutral-950 to-black neon-blue-border" style={{ boxShadow: NEON_CARD_GLOW }}>
           <CardSkeletonBody>
             <SkeletonOne />
           </CardSkeletonBody>
@@ -136,7 +199,7 @@ export function Features() {
               animate={{
                 textShadow: [
                   NEON_GLOW,
-                  "0 0 2px #60a5fa, 0 0 5px #60a5fa, 0 0 10px #3b82f6",
+                  "0 0 2px #3b82f6, 0 0 4px #3b82f6",
                   NEON_GLOW,
                 ],
               }}
@@ -145,7 +208,7 @@ export function Features() {
               JOIN US ON GOAT FUNDED
             </motion.h3>
 
-            <div className="mt-2 text-sm leading-relaxed font-extrabold" style={{ color: '#fff', textShadow: '0 0 5px #fff, 0 0 10px #93c5fd' }}>
+            <div className="mt-2 text-sm leading-relaxed font-extrabold" style={{ color: '#fff', textShadow: '0 0 4px #fff, 0 0 8px #93c5fd' }}>
               Trade With Our Community Using Partner Code{" "}
               <span className="relative inline-block">
                   {/* TIP 0: Partner Code */}
@@ -160,18 +223,18 @@ export function Features() {
                     onClick={copyPartnerCode}
                     className={cn(
                       "inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-xs md:text-sm font-bold",
-                      "ring-1 ring-inset ring-blue-500/50 text-black transition",
+                      "neon-blue-border text-black transition",
                       NEON_TEXT_GRADIENT
                     )}
                     style={{ boxShadow: NEON_BORDER_GLOW }}
-                    whileHover={{ boxShadow: "0 0 15px rgba(59, 130, 246, 0.5), 0 0 30px rgba(59, 130, 246, 0.3)" }}
+                    whileHover={{ boxShadow: "0 0 12px rgba(59, 130, 246, 0.8), 0 0 24px rgba(59, 130, 246, 0.6)" }}
                   >
                     BM15
                     <span
                       className={`ml-1 inline-block h-2 w-2 rounded-full ${
                         copied ? "bg-green-400" : "bg-blue-400"
                       }`}
-                      style={{ boxShadow: copied ? '0 0 5px #4ade80' : '0 0 5px #60a5fa' }}
+                      style={{ boxShadow: copied ? '0 0 4px #4ade80' : '0 0 4px #60a5fa' }}
                     />
                   </motion.button>
               </span>
@@ -189,7 +252,7 @@ export function Features() {
                 )}
                 style={{ boxShadow: NEON_BORDER_GLOW }}
                 whileHover={{ 
-                  boxShadow: "0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3)",
+                  boxShadow: "0 0 12px rgba(59, 130, 246, 0.8), 0 0 24px rgba(59, 130, 246, 0.6)",
                   scale: 1.02
                 }}
                 whileTap={{ scale: 0.98 }}
@@ -200,14 +263,14 @@ export function Features() {
               <motion.button
                 type="button"
                 onClick={copyPartnerCode}
-                className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-semibold ring-1 ring-inset ring-blue-500/50 hover:bg-blue-500/10 transition"
+                className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-semibold neon-blue-border hover:bg-blue-500/10 transition"
                 style={{ 
                   color: '#60a5fa', 
                   textShadow: NEON_GLOW,
                   boxShadow: NEON_BORDER_GLOW 
                 }}
                 whileHover={{ 
-                  boxShadow: "0 0 15px rgba(59, 130, 246, 0.5), 0 0 30px rgba(59, 130, 246, 0.3)",
+                  boxShadow: "0 0 12px rgba(59, 130, 246, 0.8), 0 0 24px rgba(59, 130, 246, 0.6)",
                   scale: 1.02
                 }}
                 whileTap={{ scale: 0.98 }}
@@ -219,14 +282,14 @@ export function Features() {
         </Card>
 
         {/* Top-right – 2 cols :: Goat Funded info */}
-        <Card className="flex flex-col justify-between md:col-span-2 bg-gradient-to-br from-black via-neutral-950 to-black border border-blue-500/50" style={{ boxShadow: NEON_BORDER_GLOW }}>
+        <Card className="flex flex-col justify-between md:col-span-2 bg-gradient-to-br from-black via-neutral-950 to-black neon-blue-border" style={{ boxShadow: NEON_CARD_GLOW }}>
           <CardContent className="h-40">
             <motion.div
               style={{ textShadow: NEON_GLOW }}
               animate={{
                 textShadow: [
                   NEON_GLOW,
-                  "0 0 2px #60a5fa, 0 0 5px #60a5fa, 0 0 10px #3b82f6",
+                  "0 0 2px #3b82f6, 0 0 4px #3b82f6",
                   NEON_GLOW,
                 ],
               }}
@@ -243,7 +306,7 @@ export function Features() {
                   whileHover={{ scale: 1.01, filter: "brightness(1.08)" }}
                   transition={{ type: "spring", stiffness: 260, damping: 22 }}
                   className="text-sm md:text-[15px] leading-snug"
-                  style={{ color: '#fff', textShadow: '0 0 5px #fff, 0 0 10px #93c5fd' }}
+                  style={{ color: '#fff', textShadow: '0 0 4px #fff, 0 0 8px #93c5fd' }}
                 >
                   <ShimmerText className="font-extrabold">
                     Become a funded trader with Goat Funded
@@ -253,14 +316,14 @@ export function Features() {
                 </motion.span>
                 <motion.span 
                   className={cn("mt-1 block h-[2px] w-0 rounded-full transition-all duration-500 group-hover/line:w-full", NEON_TEXT_GRADIENT)} 
-                  style={{ boxShadow: '0 0 5px #60a5fa' }}
+                  style={{ boxShadow: '0 0 4px #3b82f6' }}
                 />
               </div>
             </CardDescription>
           </CardContent>
 
           <CardSkeletonBody>
-            <div className="w-full h-full p-4 rounded-lg bg-neutral-950 border border-blue-500/50 ml-6 mt-2 flex items-center justify-center relative" style={{ boxShadow: NEON_BORDER_GLOW }}>
+            <div className="w-full h-full p-4 rounded-lg bg-neutral-950 neon-blue-border ml-6 mt-2 flex items-center justify-center relative" style={{ boxShadow: NEON_BORDER_GLOW }}>
                {/* TIP 1: Goat Logo */}
                <AnimatePresence>
                     {activeTipIndex === 1 && (
@@ -279,7 +342,7 @@ export function Features() {
         </Card>
 
         {/* Bottom-left – 2 cols :: Community links */}
-        <Card className="flex flex-col justify-between md:col-span-2 bg-gradient-to-br from-black via-neutral-950 to-black border border-blue-500/50" style={{ boxShadow: NEON_BORDER_GLOW }}>
+        <Card className="flex flex-col justify-between md:col-span-2 bg-gradient-to-br from-black via-neutral-950 to-black neon-blue-border" style={{ boxShadow: NEON_CARD_GLOW }}>
           <CardContent className="h-40">
             <motion.h3 
               className={cn("font-sans text-base md:text-lg font-extrabold tracking-tight", NEON_TEXT_GRADIENT, "bg-clip-text text-transparent")}
@@ -287,7 +350,7 @@ export function Features() {
               animate={{
                 textShadow: [
                   NEON_GLOW,
-                  "0 0 2px #60a5fa, 0 0 5px #60a5fa, 0 0 10px #3b82f6",
+                  "0 0 2px #3b82f6, 0 0 4px #3b82f6",
                   NEON_GLOW,
                 ],
               }}
@@ -296,7 +359,7 @@ export function Features() {
               Find Our Links Below
             </motion.h3>
 
-            <p className="mt-2 text-sm leading-snug font-semibold" style={{ color: '#fff', textShadow: '0 0 5px #fff, 0 0 10px #93c5fd' }}>
+            <p className="mt-2 text-sm leading-snug font-semibold" style={{ color: '#fff', textShadow: '0 0 4px #fff, 0 0 8px #93c5fd' }}>
               Explore official communities, updates and live content from Goat Funded and FTMO.
             </p>
 
@@ -325,14 +388,14 @@ export function Features() {
         </Card>
 
         {/* Bottom-right – 3 cols :: FTMO info */}
-        <Card className="flex flex-col justify-between md:col-span-3 bg-gradient-to-br from-black via-neutral-950 to-black border border-blue-500/50" style={{ boxShadow: NEON_BORDER_GLOW }}>
+        <Card className="flex flex-col justify-between md:col-span-3 bg-gradient-to-br from-black via-neutral-950 to-black neon-blue-border" style={{ boxShadow: NEON_CARD_GLOW }}>
           <CardContent className="h-auto">
             <motion.div
               style={{ textShadow: NEON_GLOW }}
               animate={{
                 textShadow: [
                   NEON_GLOW,
-                  "0 0 2px #60a5fa, 0 0 5px #60a5fa, 0 0 10px #3b82f6",
+                  "0 0 2px #3b82f6, 0 0 4px #3b82f6",
                   NEON_GLOW,
                 ],
               }}
@@ -349,7 +412,7 @@ export function Features() {
                   whileHover={{ scale: 1.01, filter: "brightness(1.08)" }}
                   transition={{ type: "spring", stiffness: 260, damping: 22 }}
                   className="text-sm md:text-[15px] leading-snug"
-                  style={{ color: '#fff', textShadow: '0 0 5px #fff, 0 0 10px #93c5fd' }}
+                  style={{ color: '#fff', textShadow: '0 0 4px #fff, 0 0 8px #93c5fd' }}
                 >
                   <ShimmerText className="font-extrabold">
                     Take the FTMO Challenge 
@@ -358,14 +421,14 @@ export function Features() {
                 </motion.span>
                 <motion.span 
                   className={cn("mt-1 block h-[2px] w-0 rounded-full transition-all duration-500 group-hover/line:w-full", NEON_TEXT_GRADIENT)} 
-                  style={{ boxShadow: '0 0 5px #60a5fa' }}
+                  style={{ boxShadow: '0 0 4px #3b82f6' }}
                 />
               </div>
             </CardDescription>
           </CardContent>
 
           <CardSkeletonBody>
-            <div className="w-full h-full p-4 rounded-lg bg-neutral-950 border border-blue-500/50 ml-6 mt-2 flex items-center justify-center relative" style={{ boxShadow: NEON_BORDER_GLOW }}>
+            <div className="w-full h-full p-4 rounded-lg bg-neutral-950 neon-blue-border ml-6 mt-2 flex items-center justify-center relative" style={{ boxShadow: NEON_BORDER_GLOW }}>
                {/* TIP 2: FTMO Logo */}
                <AnimatePresence>
                     {activeTipIndex === 2 && (
@@ -399,35 +462,35 @@ const Header = ({ children }: { children: React.ReactNode }) => {
         whileInView={{ width: "100%", height: "100%" }}
         style={{ transformOrigin: "top-left", boxShadow: NEON_BORDER_GLOW }}
         transition={{ duration: 1, ease: "easeInOut" }}
-        className="absolute inset-0 h-full border border-blue-500/50 w-full"
+        className="absolute inset-0 h-full neon-blue-border w-full"
       >
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.1, ease: "easeInOut" }}
-          className="absolute -top-1 -left-1 h-2 w-2 bg-neutral-900 rounded-full"
-          style={{ boxShadow: '0 0 8px #60a5fa' }}
+          className="absolute -top-1 -left-1 h-2 w-2 bg-neutral-900 rounded-full neon-blue-border"
+          style={{ boxShadow: '0 0 12px #60a5fa, 0 0 24px #3b82f6' }}
         />
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.1, ease: "easeInOut" }}
-          className="absolute -top-1 -right-1 h-2 w-2 bg-neutral-900 rounded-full"
-          style={{ boxShadow: '0 0 8px #60a5fa' }}
+          className="absolute -top-1 -right-1 h-2 w-2 bg-neutral-900 rounded-full neon-blue-border"
+          style={{ boxShadow: '0 0 12px #60a5fa, 0 0 24px #3b82f6' }}
         />
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.1, ease: "easeInOut" }}
-          className="absolute -bottom-1 -left-1 h-2 w-2 bg-neutral-900 rounded-full"
-          style={{ boxShadow: '0 0 8px #60a5fa' }}
+          className="absolute -bottom-1 -left-1 h-2 w-2 bg-neutral-900 rounded-full neon-blue-border"
+          style={{ boxShadow: '0 0 12px #60a5fa, 0 0 24px #3b82f6' }}
         />
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.1, ease: "easeInOut" }}
-          className="absolute -bottom-1 -right-1 h-2 w-2 bg-neutral-900 rounded-full"
-          style={{ boxShadow: '0 0 8px #60a5fa' }}
+          className="absolute -bottom-1 -right-1 h-2 w-2 bg-neutral-900 rounded-full neon-blue-border"
+          style={{ boxShadow: '0 0 12px #60a5fa, 0 0 24px #3b82f6' }}
         />
       </motion.div>
       {children}
@@ -515,7 +578,7 @@ export function CardPattern({ mouseX, mouseY, randomString }: any) {
   );
 }
 
-export const Icon = ({ className, ...rest }: any) => {
+export const Icon = ({ className, style, ...rest }: { className?: string; style?: React.CSSProperties; [key: string]: any }) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -524,6 +587,7 @@ export const Icon = ({ className, ...rest }: any) => {
       strokeWidth="1.5"
       stroke="currentColor"
       className={className}
+      style={style}
       {...rest}
     >
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m6-6H6" />
@@ -644,11 +708,11 @@ export const SkeletonOne = () => {
             rel="noopener noreferrer"
             className="block w-full h-full"
           >
-            <div className="relative w-full h-full rounded-lg border border-blue-500/50 overflow-hidden flex items-center justify-center bg-black" style={{ boxShadow: NEON_BORDER_GLOW }}>
-              <Icon className="absolute h-6 w-6 -top-3 -left-3 text-blue-400" />
-              <Icon className="absolute h-6 w-6 -bottom-3 -left-3 text-blue-400" />
-              <Icon className="absolute h-6 w-6 -top-3 -right-3 text-blue-400" />
-              <Icon className="absolute h-6 w-6 -bottom-3 -right-3 text-blue-400" />
+            <div className="relative w-full h-full rounded-lg neon-blue-border overflow-hidden flex items-center justify-center bg-black" style={{ boxShadow: NEON_BORDER_GLOW }}>
+              <Icon className="absolute h-6 w-6 -top-3 -left-3 neon-blue-icon" />
+              <Icon className="absolute h-6 w-6 -bottom-3 -left-3 neon-blue-icon" />
+              <Icon className="absolute h-6 w-6 -top-3 -right-3 neon-blue-icon" />
+              <Icon className="absolute h-6 w-6 -bottom-3 -right-3 neon-blue-icon" />
               <div className="w-full h-full flex items-center justify-center">
                 <EvervaultCard text="BM15" />
               </div>
@@ -767,7 +831,7 @@ export const Globe = ({ className }: { className?: string }) => {
         className={cn("pointer-events-none flex items-center justify-center bg-gradient-to-br from-neutral-900 to-black rounded-full", className)}
         style={{ width: 600, height: 600, maxWidth: "100%", aspectRatio: 1 }}
       >
-        <div className="w-48 h-48 rounded-full bg-gradient-to-br from-blue-400/30 to-blue-600/20 border border-blue-500/40 flex items-center justify-center" style={{ boxShadow: NEON_BORDER_GLOW }}>
+        <div className="w-48 h-48 rounded-full bg-gradient-to-br from-blue-400/30 to-blue-600/20 neon-blue-border flex items-center justify-center" style={{ boxShadow: NEON_BORDER_GLOW }}>
           <span className="text-blue-400 text-4xl" style={{ filter: 'drop-shadow(0 0 10px #60a5fa)' }}>🌍</span>
         </div>
       </div>
@@ -848,9 +912,11 @@ const CardDescription = ({
 const Card = ({
   children,
   className,
+  style,
 }: {
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 }) => {
   return (
     <motion.div
@@ -859,6 +925,7 @@ const Card = ({
         "group isolate flex flex-col rounded-2xl bg-neutral-950 shadow-[0_1px_1px_rgba(0,0,0,0.25),0_8px_24px_rgba(0,0,0,0.35)] overflow-hidden",
         className
       )}
+      style={style}
     >
       {children}
     </motion.div>
@@ -884,7 +951,7 @@ const ShimmerText = ({
       backgroundPositionX: ["0%", "100%"],
       textShadow: [
         NEON_GLOW,
-        "0 0 2px #60a5fa, 0 0 5px #60a5fa, 0 0 10px #3b82f6",
+        "0 0 2px #3b82f6, 0 0 4px #3b82f6",
         NEON_GLOW,
       ],
     }}
@@ -914,11 +981,11 @@ const SocialsDropdown = ({
         onClick={() => setOpen((o) => !o)}
         className={cn(
           "group inline-flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold",
-          "ring-1 ring-inset ring-blue-500/50 text-black transition",
+          "neon-blue-border text-black transition",
           NEON_TEXT_GRADIENT
         )}
         style={{ boxShadow: NEON_BORDER_GLOW }}
-        whileHover={{ boxShadow: "0 0 15px rgba(59, 130, 246, 0.5), 0 0 30px rgba(59, 130, 246, 0.3)" }}
+        whileHover={{ boxShadow: "0 0 20px rgba(59, 130, 246, 0.8), 0 0 40px rgba(59, 130, 246, 0.6)" }}
         aria-expanded={open}
       >
         <span className="inline-flex items-center gap-2">
@@ -944,12 +1011,12 @@ const SocialsDropdown = ({
               rel="noopener noreferrer"
               whileHover={{ 
                 scale: 1.015,
-                boxShadow: "0 0 15px rgba(59, 130, 246, 0.5), 0 0 30px rgba(59, 130, 246, 0.3)"
+                boxShadow: "0 0 20px rgba(59, 130, 246, 0.8), 0 0 40px rgba(59, 130, 246, 0.6)"
               }}
               whileTap={{ scale: 0.98 }}
               className={cn(
                 "group relative block w-full rounded-xl px-3 py-2 text-sm font-semibold",
-                "ring-1 ring-blue-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400",
+                "neon-blue-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400",
                 it.gradient
               )}
               style={{ boxShadow: NEON_BORDER_GLOW }}
@@ -971,13 +1038,13 @@ const SocialsDropdown = ({
   );
 };
 
-const Chevron = ({ className = "" }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2">
+const Chevron = ({ className = "", style }: { className?: string; style?: React.CSSProperties }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" style={style}>
     <path d="M6 9l6 6 6-6" />
   </svg>
 );
-const Sparkle = ({ className = "" }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+const Sparkle = ({ className = "", style }: { className?: string; style?: React.CSSProperties }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor" style={style}>
     <path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8L5 16zm14 0l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16z" />
   </svg>
 );

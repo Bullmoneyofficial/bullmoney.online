@@ -7,6 +7,65 @@ import { motion, AnimatePresence  } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 
+// Neon Blue Sign Style from Chartnews
+const NEON_STYLES = `
+  @keyframes neon-pulse {
+    0%, 100% { 
+      text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+      filter: brightness(1);
+    }
+    50% { 
+      text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
+      filter: brightness(1.1);
+    }
+  }
+
+  @keyframes neon-glow {
+    0%, 100% { 
+      box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    }
+    50% { 
+      box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
+    }
+  }
+
+  .neon-blue-text {
+    color: #3b82f6;
+    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+    animation: neon-pulse 2s ease-in-out infinite;
+  }
+
+  .neon-white-text {
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
+  }
+
+  .neon-white-icon {
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
+  }
+
+  .neon-blue-icon {
+    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+  }
+
+  .neon-blue-border {
+    border: 2px solid #3b82f6;
+    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    animation: neon-glow 2s ease-in-out infinite;
+  }
+
+  .neon-blue-bg {
+    background: #3b82f6;
+    box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+  }
+
+  .gpu-layer {
+    transform: translateZ(0);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+  }
+`;
+
 const fade = {
   initial: { opacity: 0, y: 12 },
   whileInView: { opacity: 1, y: 0 },
@@ -17,6 +76,7 @@ const fade = {
 export function AboutContent() {
   return (
     <main className="px-4 md:px-6">
+      <style dangerouslySetInnerHTML={{ __html: NEON_STYLES }} />
       <section
         className={cn(
           "relative mx-auto w-full max-w-5xl overflow-hidden rounded-3xl p-6 md:p-10",
@@ -105,11 +165,12 @@ export function TestimonialsCarousel() {
       {...fade}
       className="relative mt-16 w-full max-w-4xl mx-auto"
     >
-      <h2 className="text-xl font-extrabold text-white text-center mb-8">
+      <style dangerouslySetInnerHTML={{ __html: NEON_STYLES }} />
+      <h2 className="text-xl font-extrabold neon-blue-text text-center mb-8">
         Testimonials
       </h2>
 
-      <div className="relative h-[320px] overflow-hidden rounded-3xl ring-1 ring-white/10 bg-neutral-900/60 backdrop-blur-md shadow-lg">
+      <div className="relative h-[320px] overflow-hidden rounded-3xl neon-blue-border bg-black backdrop-blur-md shadow-lg">
         <AnimatePresence mode="wait">
           <motion.div
             key={index}
@@ -134,7 +195,7 @@ export function TestimonialsCarousel() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
             <div className="absolute bottom-10 left-8 text-white max-w-sm space-y-3">
               <div className="flex items-center gap-3">
-                <div className="relative w-10 h-10 rounded-full overflow-hidden ring-1 ring-white/10 bg-neutral-800">
+                <div className="relative w-10 h-10 rounded-full overflow-hidden neon-blue-border bg-black">
                   <Image
                     src={currentTestimonial.icon}
                     alt={`${currentTestimonial.name} icon`}
@@ -142,9 +203,9 @@ export function TestimonialsCarousel() {
                     className="object-contain p-1.5"
                   />
                 </div>
-                <p className="text-lg font-semibold">{currentTestimonial.name}</p>
+                <p className="text-lg font-semibold neon-blue-text">{currentTestimonial.name}</p>
               </div>
-              <p className="text-sm text-neutral-200 italic leading-relaxed">
+              <p className="text-sm neon-white-text italic leading-relaxed">
                 &ldquo;{currentTestimonial.text}&rdquo;
               </p>
             </div>
@@ -154,13 +215,13 @@ export function TestimonialsCarousel() {
         {/* Navigation Arrows */}
         <button
           onClick={prevSlide}
-          className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 p-2 rounded-full text-white"
+          className="absolute left-3 top-1/2 -translate-y-1/2 bg-black neon-blue-border hover:neon-blue-bg p-2 rounded-full neon-white-text transition-all"
         >
           <ChevronLeft size={20} />
         </button>
         <button
           onClick={nextSlide}
-          className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 p-2 rounded-full text-white"
+          className="absolute right-3 top-1/2 -translate-y-1/2 bg-black neon-blue-border hover:neon-blue-bg p-2 rounded-full neon-white-text transition-all"
         >
           <ChevronRight size={20} />
         </button>
@@ -174,7 +235,7 @@ export function TestimonialsCarousel() {
             onClick={() => setIndex(i)}
             className={`h-2 w-2 rounded-full transition-all ${
               i === index
-                ? "bg-sky-400 w-4"
+                ? "neon-blue-bg w-4"
                 : "bg-white/30 hover:bg-white/50"
             }`}
           />

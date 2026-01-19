@@ -50,10 +50,29 @@ const FpsCandlestickChart: React.FC<FpsCandlestickChartProps> = ({
     );
   }, [candleCount]);
 
-  // Update FPS data and create candles
+  // Track mounted state to prevent updates after unmount
+  const isMountedRef = useRef(true);
+  const fpsRef = useRef(fps);
+  
+  // Keep fps ref updated without triggering effect re-run
+  useEffect(() => {
+    fpsRef.current = fps;
+  });
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // Update FPS data and create candles - empty deps, uses refs
   useEffect(() => {
     const interval = setInterval(() => {
-      fpsBufferRef.current.push(fps);
+      if (!isMountedRef.current) return;
+      
+      fpsBufferRef.current.push(fpsRef.current);
 
       // Create a new candle every 500ms (faster updates)
       if (Date.now() - lastCandleTimeRef.current >= 500) {
@@ -63,10 +82,12 @@ const FpsCandlestickChart: React.FC<FpsCandlestickChartProps> = ({
           const high = Math.max(...fpsBufferRef.current);
           const low = Math.min(...fpsBufferRef.current);
 
-          setCandles((prev) => {
-            const newCandles = [...prev.slice(1), { timestamp: Date.now(), open, high, low, close }];
-            return newCandles;
-          });
+          if (isMountedRef.current) {
+            setCandles((prev) => {
+              const newCandles = [...prev.slice(1), { timestamp: Date.now(), open, high, low, close }];
+              return newCandles;
+            });
+          }
 
           fpsBufferRef.current = [];
           lastCandleTimeRef.current = Date.now();
@@ -75,7 +96,7 @@ const FpsCandlestickChart: React.FC<FpsCandlestickChartProps> = ({
     }, 50);
 
     return () => clearInterval(interval);
-  }, [fps]);
+  }, []); // Empty deps - uses refs for fps value
 
   const getColorForCandle = (candle: CandleData) => {
     // Bullish (close > open) = bright white, Bearish (close < open) = light gray

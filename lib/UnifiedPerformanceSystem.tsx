@@ -921,10 +921,11 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
   children,
   startDelay = 3000,
 }: UnifiedPerformanceProviderProps) {
-  // Get singletons
+  // Get singletons - use refs to avoid dependency issues in callbacks
   const fpsMonitor = useMemo(() => FPSMonitor.getInstance(), []);
   const observerPool = useMemo(() => ObserverPool.getInstance(), []);
-  const smartCache = useMemo(() => SmartCache.getInstance(), []);
+  const smartCacheRef = useRef(SmartCache.getInstance());
+  const smartCache = smartCacheRef.current;
   
   // Device capabilities (computed once)
   const [device, setDevice] = useState<DeviceCapabilities | null>(null);
@@ -1291,19 +1292,19 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
     
     const checkCacheState = setInterval(() => {
       const visibleComponents = Array.from(loadedComponents).filter(id => {
-        const entry = smartCache.getEntry(id);
+        const entry = smartCacheRef.current.getEntry(id);
         return entry?.isVisible;
       });
       
       // Get preload suggestions
-      const toPreload = smartCache.getPreloadSuggestions(visibleComponents as TrackedComponent[]);
+      const toPreload = smartCacheRef.current.getPreloadSuggestions(visibleComponents as TrackedComponent[]);
       if (toPreload.length > 0) {
         setPreloadQueue(toPreload);
       }
       
       // Get unload suggestions when FPS is struggling
       if (averageFps < 45) {
-        const toUnload = smartCache.getUnloadSuggestions(loadedComponents, averageFps);
+        const toUnload = smartCacheRef.current.getUnloadSuggestions(loadedComponents, averageFps);
         if (toUnload.length > 0) {
           setUnloadQueue(toUnload);
           console.log('[UnifiedPerformance] Suggesting unload:', toUnload);
@@ -1312,7 +1313,7 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
     }, 10000);
     
     return () => clearInterval(checkCacheState);
-  }, [loadedComponents, averageFps, smartCache]);
+  }, [loadedComponents, averageFps]);
   
   // Apply device tier CSS on mount
   useEffect(() => {
@@ -1347,17 +1348,17 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
   // ==================== CALLBACKS ====================
   
   const registerComponent = useCallback((id: TrackedComponent, priority?: number) => {
-    smartCache.register(id, priority);
+    smartCacheRef.current.register(id, priority);
     setLoadedComponents(prev => {
       // Only update if component isn't already registered (prevents infinite loop)
       if (prev.has(id)) return prev;
       return new Set([...prev, id]);
     });
     document.documentElement.classList.remove(`component-inactive-${id}`);
-  }, [smartCache]);
+  }, []);
   
   const unregisterComponent = useCallback((id: TrackedComponent) => {
-    smartCache.unregister(id);
+    smartCacheRef.current.unregister(id);
     setLoadedComponents(prev => {
       // Only update if component is actually registered (prevents infinite loop)
       if (!prev.has(id)) return prev;
@@ -1366,17 +1367,17 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
       return next;
     });
     document.documentElement.classList.add(`component-inactive-${id}`);
-  }, [smartCache]);
+  }, []);
   
   const trackInteraction = useCallback((id?: TrackedComponent) => {
     lastIdleCheckRef.current = Date.now();
     if (id) {
-      smartCache.trackInteraction(id);
+      smartCacheRef.current.trackInteraction(id);
     }
-  }, [smartCache]);
+  }, []);
   
   const setComponentVisibility = useCallback((id: TrackedComponent, visible: boolean) => {
-    smartCache.trackVisibility(id, visible);
+    smartCacheRef.current.trackVisibility(id, visible);
     if (typeof document !== 'undefined') {
       if (visible) {
         document.documentElement.classList.remove(`component-inactive-${id}`);
@@ -1384,7 +1385,7 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
         document.documentElement.classList.add(`component-inactive-${id}`);
       }
     }
-  }, [smartCache]);
+  }, []);
   
   const shouldRenderComponent = useCallback((id: TrackedComponent): boolean => {
     // Always render high priority components
@@ -1403,7 +1404,7 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
   const shouldEnableShimmer = useCallback((id: TrackedComponent): boolean => {
     if (qualityOverride === 'disabled' || shimmerQuality === 'disabled') return false;
     
-    const entry = smartCache.getEntry(id);
+    const entry = smartCacheRef.current.getEntry(id);
     if (entry && !entry.isVisible) return false;
     
     const priority = COMPONENT_PRIORITIES[id] ?? 5;
@@ -1418,7 +1419,7 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
     if (shimmerQuality === 'medium') return priority >= 4;
     
     return true;
-  }, [shimmerQuality, qualityOverride, averageFps, smartCache]);
+  }, [shimmerQuality, qualityOverride, averageFps]);
   
   const getComponentPriority = useCallback((id: TrackedComponent): number => {
     return COMPONENT_PRIORITIES[id] ?? 5;
@@ -1465,7 +1466,7 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
     enableParticles: (device?.tier ?? 'high') === 'ultra' || (device?.tier ?? 'high') === 'high',
     enableHoverAnimations: shimmerQuality !== 'disabled',
     enableScrollAnimations: shimmerQuality !== 'disabled' && shimmerQuality !== 'low',
-    componentCache: smartCache.getAllEntries(),
+    componentCache: smartCacheRef.current.getAllEntries(),
     loadedComponents,
     preloadQueue,
     unloadQueue,
@@ -1482,7 +1483,7 @@ export const UnifiedPerformanceProvider = memo(function UnifiedPerformanceProvid
   }), [
     device, currentFps, averageFps, isScrolling, isIdle,
     shimmerQuality, qualityOverride, splineQuality, performanceMode,
-    loadedComponents, preloadQueue, unloadQueue, smartCache,
+    loadedComponents, preloadQueue, unloadQueue,
     registerComponent, unregisterComponent, trackInteraction,
     setComponentVisibility, shouldRenderComponent, shouldEnableShimmer,
     getComponentPriority, observe, forceQuality, resetQuality,

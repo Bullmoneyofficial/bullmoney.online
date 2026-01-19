@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface MemoryStats {
   jsHeapUsed: number; // MB - Current JS heap
@@ -28,14 +28,19 @@ export function useRealTimeMemory(): MemoryStats {
   });
 
   const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
+    
     // Get device memory API value (actual device RAM)
     const deviceMemory = typeof (navigator as any).deviceMemory === 'number' 
       ? (navigator as any).deviceMemory 
       : 4;
 
     const updateMemory = () => {
+      if (!isMountedRef.current) return;
+      
       const now = Date.now();
       const jsMemory = (performance as any).memory;
 
@@ -50,15 +55,25 @@ export function useRealTimeMemory(): MemoryStats {
         // Calculate percentage based on heap limit
         const percentage = Math.round((jsHeapUsedMB / jsHeapLimitMB) * 100);
 
-        setMemoryStats({
-          jsHeapUsed: jsHeapUsedMB,
-          jsHeapLimit: jsHeapLimitMB,
-          deviceRam: deviceMemory,
-          browserAllocated: browserAllocatedMB,
-          percentage,
-          external: externalMB,
-          updateTime: now,
-        });
+        // Only update if mounted and values actually changed (prevents infinite loop)
+        if (isMountedRef.current) {
+          setMemoryStats(prev => {
+            if (prev.jsHeapUsed === jsHeapUsedMB && 
+                prev.percentage === percentage &&
+                prev.external === externalMB) {
+              return prev;
+            }
+            return {
+              jsHeapUsed: jsHeapUsedMB,
+              jsHeapLimit: jsHeapLimitMB,
+              deviceRam: deviceMemory,
+              browserAllocated: browserAllocatedMB,
+              percentage,
+              external: externalMB,
+              updateTime: now,
+            };
+          });
+        }
       }
     };
 
@@ -69,8 +84,10 @@ export function useRealTimeMemory(): MemoryStats {
     updateIntervalRef.current = setInterval(updateMemory, 500);
 
     return () => {
+      isMountedRef.current = false;
       if (updateIntervalRef.current) {
         clearInterval(updateIntervalRef.current);
+        updateIntervalRef.current = null;
       }
     };
   }, []);

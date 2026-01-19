@@ -26,46 +26,56 @@ const useIsMobile = () => {
     return isMobile;
 };
 
-// --- GLOBAL STYLES (Includes Shimmer Animations) ---
+// --- GLOBAL STYLES (Neon Blue Sign Style) ---
 const GLOBAL_STYLES = `
-  @keyframes gradient-xy {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  @keyframes float-particle {
-    0% { transform: translateY(0) scale(1); opacity: 0.4; }
-    50% { transform: translateY(-10px) scale(1.2); opacity: 1; }
-    100% { transform: translateY(0) scale(1); opacity: 0.4; }
-  }
-  @keyframes text-shimmer {
-    0% { background-position: 0% 50%; }
-    100% { background-position: -200% 50%; }
+  @keyframes neon-pulse {
+    0%, 100% { 
+      text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+      filter: brightness(1);
+    }
+    50% { 
+      text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
+      filter: brightness(1.1);
+    }
   }
 
-  .animate-gradient-xy {
-    animation: gradient-xy 15s ease infinite;
-    background-size: 200% 200%;
+  @keyframes neon-glow {
+    0%, 100% { 
+      box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    }
+    50% { 
+      box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
+    }
   }
-  .animate-float-slow {
-    animation: float-particle 6s ease-in-out infinite;
+
+  .neon-blue-text {
+    color: #3b82f6;
+    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+    animation: neon-pulse 2s ease-in-out infinite;
   }
-  
-  /* CYBER BLUE TEXT SHIMMER (Sky -> White -> Indigo) */
-  .animate-text-shimmer {
-    background: linear-gradient(
-      110deg, 
-      #38bdf8 20%,   /* Sky 400 */
-      #ffffff 48%,   /* White Peak */
-      #818cf8 52%,   /* Indigo 400 */
-      #38bdf8 80%    /* Sky 400 */
-    );
-    background-size: 200% auto;
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-    animation: text-shimmer 3s linear infinite;
+
+  .neon-white-text {
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
+  }
+
+  .neon-white-icon {
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
+  }
+
+  .neon-blue-icon {
+    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+  }
+
+  .neon-blue-border {
+    border: 2px solid #3b82f6;
+    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    animation: neon-glow 2s ease-in-out infinite;
+  }
+
+  .neon-blue-bg {
+    background: #3b82f6;
+    box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
   }
 
   .gpu-layer {
@@ -76,56 +86,23 @@ const GLOBAL_STYLES = `
 `;
 
 // ==========================================
-// SHIMMER BORDER COMPONENT
+// NEON BORDER COMPONENT
 // ==========================================
 
-// Matches the Sky/Indigo Theme — horizontal shimmer for a smoother feel
-const shimmerGradient = "linear-gradient(90deg, rgba(59,130,246,0) 0%, rgba(59,130,246,0.55) 50%, rgba(59,130,246,0) 100%)";
-
-interface ShimmerBorderProps {
+interface NeonBorderProps {
     children: ReactNode;
     className?: string;
-    borderRadius?: string; 
-    borderWidth?: string; 
-    speed?: number;
-    colorOverride?: string;
-    innerClassName?: string;
+    borderRadius?: string;
 }
 
-const ShimmerBorder = ({ 
+const NeonBorder = ({ 
     children, 
     className, 
-    borderRadius = 'rounded-xl', 
-    borderWidth = 'inset-[2px]', 
-    speed = 3, 
-    colorOverride, 
-    innerClassName 
-}: ShimmerBorderProps) => {
-    const finalGradient = colorOverride || shimmerGradient;
-    
+    borderRadius = 'rounded-xl'
+}: NeonBorderProps) => {
     return (
-        <div className={cn("relative overflow-hidden group/shimmer", borderRadius, className)}>
-            {/* Layer 1: Horizontal shimmer sweep */}
-            <motion.div
-                className="absolute top-0 bottom-0 left-0 w-[200%] pointer-events-none"
-                animate={{ x: ["-50%", "50%"] }}
-                transition={{ 
-                    duration: speed, 
-                    repeat: Infinity,
-                    repeatType: 'reverse',
-                    ease: "linear" 
-                }}
-                style={{ background: finalGradient }}
-            />
-
-            {/* Layer 2: Inner Mask - pointer-events-none so it doesn't block clicks */}
-            <div className={cn("absolute bg-neutral-950 flex items-center justify-center z-10 pointer-events-none", borderRadius, borderWidth, innerClassName)}>
-            </div>
-            
-            {/* Content - ensure pointer events work */}
-            <div className="relative z-20 h-full w-full pointer-events-auto">
-                {children}
-            </div>
+        <div className={cn("relative neon-blue-border", borderRadius, className)}>
+            {children}
         </div>
     );
 };
@@ -143,38 +120,17 @@ const HelperTip = ({ label, className }: { label: string; className?: string }) 
     className={cn("absolute z-50 flex flex-col items-center pointer-events-none", className)}
   >
     {/* The Bubble */}
-    <div className="relative p-[1.5px] overflow-hidden rounded-full shadow-lg shadow-sky-500/20">
-        <motion.div 
-            className="absolute top-0 bottom-0 left-0 w-[200%]"
-            animate={{ x: ["-50%", "50%"] }}
-            transition={{ duration: 3, repeat: Infinity, repeatType: 'reverse', ease: "linear" }}
-            style={{ background: shimmerGradient }}
-        />
-        <div className="relative z-10 px-3 py-1 bg-[#020611] rounded-full flex items-center justify-center border border-sky-500/20">
-            <span className="text-white text-[10px] font-bold whitespace-nowrap">
-                {label}
-            </span>
-        </div>
+    <div className="relative px-3 py-1 bg-black rounded-full flex items-center justify-center neon-blue-border">
+        <span className="neon-white-text text-[10px] font-bold whitespace-nowrap">
+            {label}
+        </span>
     </div>
     {/* The Triangle Pointer (pointing down) */}
-    <div className="w-2 h-2 bg-[#020611] rotate-45 -translate-y-[4px] relative z-10 border-b border-r border-blue-600/30" />
+    <div className="w-2 h-2 bg-black rotate-45 -translate-y-[4px] relative z-10 neon-blue-border" />
   </motion.div>
 );
 
 /* --------------------------- OPTIMIZED HIGH AESTHETIC CARD --------------------------- */
-
-const Particle = memo(({ delay }: { delay: number }) => (
-    <div 
-        className="absolute h-[2px] w-[2px] rounded-full bg-sky-400/60 animate-float-slow"
-        style={{
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            animationDelay: `${delay}s`,
-            animationDuration: `${4 + Math.random() * 4}s`
-        }}
-    />
-));
-Particle.displayName = "Particle";
 
 const HighAestheticCard = memo(({ 
     title, 
@@ -182,8 +138,8 @@ const HighAestheticCard = memo(({
     icon: Icon, 
     onShow, 
     isChart = false,
-    showTip = false, // Added prop
-    tipLabel = "Click Here" // Added prop
+    showTip = false,
+    tipLabel = "Click Here"
 }: { 
     title: string, 
     subtitle: string, 
@@ -194,29 +150,16 @@ const HighAestheticCard = memo(({
     tipLabel?: string
 }) => {
     const isMobile = useIsMobile();
-    
-    const particles = useMemo(() => Array.from({ length: 12 }).map((_, i) => (
-        <Particle key={i} delay={Math.random() * 2} />
-    )), []);
 
     return (
         <motion.div
-            className="relative flex flex-col items-center justify-center overflow-hidden rounded-3xl py-12 md:py-16 cursor-pointer gpu-layer"
+            className="relative flex flex-col items-center justify-center overflow-hidden rounded-3xl py-12 md:py-16 cursor-pointer gpu-layer bg-black"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ scale: isMobile ? 1.0 : 1.01 }}
             whileTap={{ scale: 0.99 }}
             onClick={onShow}
         >
-            <div className="absolute inset-0 bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#1e1b4b] opacity-90 animate-gradient-xy" />
-
-            {!isMobile && (
-                <>
-                    <div className="absolute inset-0 opacity-30 blur-3xl bg-[radial-gradient(circle_at_50%_60%,rgba(59,130,246,0.3),transparent_60%)] animate-float-slow" />
-                    <div className="absolute inset-0 pointer-events-none">{particles}</div>
-                </>
-            )}
-
             <div className="relative z-10 flex flex-col items-center justify-center text-center">
                 {/* TIP FOR CARD ICON/TITLE */}
                 <AnimatePresence>
@@ -225,15 +168,15 @@ const HighAestheticCard = memo(({
                     )}
                 </AnimatePresence>
 
-                <div className={`flex h-16 w-16 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400 ring-1 ring-blue-600/50 mb-4 shadow-[0_0_20px_rgba(59,130,246,0.3)] ${!isChart && !isMobile ? "animate-float-slow" : ""}`}>
-                    <Icon className="h-8 w-8" />
+                <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-black mb-4 neon-blue-border">
+                    <Icon className="h-8 w-8 text-white neon-white-icon" />
                 </div>
 
-                <h2 className="mt-2 text-3xl font-black tracking-tight md:text-4xl animate-text-shimmer">
+                <h2 className="mt-2 text-3xl font-black tracking-tight md:text-4xl neon-blue-text">
                     {title}
                 </h2>
                 
-                <p className="mt-2 text-sm text-sky-200/60 max-w-sm px-4">
+                <p className="mt-2 text-sm neon-blue-text max-w-sm px-4">
                     {subtitle}
                 </p>
 
@@ -245,14 +188,12 @@ const HighAestheticCard = memo(({
                         )}
                     </AnimatePresence>
 
-                    <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[2px]" speed={3}>
-                        <div className="relative z-10 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-bold text-white 
-                                    shadow-[0_0_25px_rgba(59,130,246,0.25)] 
-                                    bg-neutral-900/80 transition-all duration-300 group hover:bg-neutral-900">
-                            <span className="animate-text-shimmer bg-[length:200%_auto]">Launch Terminal</span>
-                            <ArrowRight className="h-4 w-4 text-sky-400 transition-transform group-hover:translate-x-1" />
+                    <NeonBorder borderRadius="rounded-full">
+                        <div className="relative z-10 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-bold neon-blue-bg transition-all duration-300 group hover:brightness-110">
+                            <span className="neon-white-text">Launch Terminal</span>
+                            <ArrowRight className="h-4 w-4 neon-white-text transition-transform group-hover:translate-x-1" />
                         </div>
-                    </ShimmerBorder>
+                    </NeonBorder>
                 </div>
             </div>
         </motion.div>
@@ -326,7 +267,7 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
   if (!selected) return null;
 
   return (
-    <div className="relative mx-auto w-full max-w-screen-xl rounded-3xl border border-white/5 bg-black/40 p-4 md:p-6 shadow-2xl backdrop-blur-sm">
+    <div className="relative mx-auto w-full max-w-screen-xl rounded-3xl neon-blue-border bg-black p-4 md:p-6">
       {!showChart && (
         <HighAestheticCard
             title="Show Live Market Charts"
@@ -334,7 +275,7 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
             icon={ChartBar}
             onShow={() => setShowChart(true)}
             isChart={true}
-            showTip={showTip} // Pass tip prop
+            showTip={showTip}
             tipLabel="Open Charts"
         />
       )}
@@ -350,15 +291,15 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
             className="will-change-transform"
           >
             <div className="mb-4 flex items-center justify-between">
-                <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[2px]" speed={2}>
+                <NeonBorder borderRadius="rounded-full">
                     <button
                       onClick={() => setOpen((p) => !p)}
-                      className="group relative flex items-center gap-3 rounded-full bg-neutral-950 px-6 py-2 text-sm font-semibold text-white shadow-lg transition"
+                      className="group relative flex items-center gap-3 rounded-full bg-black px-6 py-2 text-sm font-semibold neon-white-text"
                     >
-                      <span className="relative z-10 animate-text-shimmer">{selected.label}</span>
-                      <ChevronDown className={`h-4 w-4 relative z-10 text-sky-400 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
+                      <span className="relative z-10">{selected.label}</span>
+                      <ChevronDown className={`h-4 w-4 relative z-10 neon-blue-text transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
                     </button>
-                </ShimmerBorder>
+                </NeonBorder>
             </div>
 
             <AnimatePresence>
@@ -368,15 +309,15 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute z-20 mt-2 w-64 overflow-hidden rounded-xl border border-white/10 bg-[#0a0a0a] shadow-2xl"
+                  className="absolute z-20 mt-2 w-64 overflow-hidden rounded-xl neon-blue-border bg-black"
                 >
                   {CHARTS.map((chart, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleSelect(chart)}
                       className={cn(
-                        "block w-full px-4 py-3 text-left text-sm text-neutral-400 transition-all duration-200 hover:text-white hover:bg-white/5",
-                        selected.label === chart.label && "text-sky-400 bg-sky-900/20 font-bold"
+                        "block w-full px-4 py-3 text-left text-sm neon-blue-text transition-all duration-200 hover:neon-white-text",
+                        selected.label === chart.label && "neon-white-text neon-blue-bg font-bold"
                       )}
                     >
                       {chart.label}
@@ -386,14 +327,14 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
               )}
             </AnimatePresence>
 
-            <div className="relative mt-4 w-full rounded-2xl border border-white/10 bg-neutral-950 p-1 md:p-2" style={{ minHeight: chartHeight }}>
+            <div className="relative mt-4 w-full rounded-2xl neon-blue-border bg-black p-1 md:p-2" style={{ minHeight: chartHeight }}>
               <TradingViewMarketOverview height={chartHeight} tabs={selected.tabConfig} />
             </div>
 
             <div className="mt-6 flex justify-center">
                 <button
                     onClick={() => { setOpen(false); setShowChart(false); }}
-                    className="text-xs text-neutral-500 hover:text-white uppercase tracking-widest transition-colors py-2"
+                    className="text-xs neon-blue-text hover:neon-white-text uppercase tracking-widest transition-colors py-2"
                 >
                     Close Chart Viewer
                 </button>
@@ -634,20 +575,20 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
     return (
         <div className="relative flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-black" data-lenis-prevent>
             {/* Masthead (mini news site header) */}
-            <div className="shrink-0 border-b border-white/10 bg-black/50 backdrop-blur-md">
+            <div className="shrink-0 neon-blue-border bg-black">
                 <div className="flex items-center justify-between px-4 md:px-6 py-4">
                     <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500/10 ring-1 ring-sky-500/20">
-                                <Newspaper className="h-5 w-5 text-sky-400" />
+                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-black neon-blue-border">
+                                <Newspaper className="h-5 w-5 text-white neon-white-icon" />
                             </div>
                             <div className="min-w-0">
                                 <div className="flex items-center gap-2">
-                                    <span className="font-black tracking-tight text-white truncate max-w-[220px] sm:max-w-none animate-text-shimmer">BULLMONEY NEWSROOM</span>
-                                    <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-500 border border-red-500/20">Live</span>
+                                    <span className="font-black tracking-tight truncate max-w-[220px] sm:max-w-none neon-blue-text">BULLMONEY NEWSROOM</span>
+                                    <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-500 neon-blue-border">Live</span>
                                 </div>
-                                <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-neutral-500">
-                                    <span className="text-sky-400/90">{marketTitle}</span>
+                                <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[10px] font-mono uppercase tracking-widest neon-blue-text">
+                                    <span>{marketTitle}</span>
                                     <span className="hidden sm:inline">•</span>
                                     <span className="hidden sm:inline">Institutional headlines</span>
                                 </div>
@@ -657,7 +598,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
 
                     <div className="flex items-center gap-3">
                         {lastUpdated && (
-                            <span className="hidden md:block text-xs text-neutral-600 font-mono">
+                            <span className="hidden md:block text-xs neon-blue-text font-mono">
                                 Updated {lastUpdated.toLocaleTimeString()}
                             </span>
                         )}
@@ -667,7 +608,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                             aria-label="Refresh news"
                             title="Refresh"
                         >
-                            <IconRefresh className={cn("h-4 w-4 text-neutral-500 group-hover:text-white", loading && "animate-spin")} />
+                            <IconRefresh className={cn("h-4 w-4 neon-blue-text group-hover:neon-white-text", loading && "animate-spin")} />
                         </button>
                         <button
                             onClick={(e) => {
@@ -675,7 +616,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                 e.stopPropagation();
                                 onClose();
                             }}
-                            className="relative rounded-full p-2.5 text-white bg-white/5 transition-all hover:bg-white/10 border border-white/10"
+                            className="relative rounded-full p-2.5 neon-white-text neon-blue-border bg-black transition-all hover:brightness-110"
                             aria-label="Close news feed"
                             title="Close (ESC)"
                         >
@@ -694,17 +635,17 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                 <span
                                     key={m}
                                     className={cn(
-                                        "rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ring-1",
+                                        "rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest",
                                         active
-                                            ? "bg-sky-500/15 text-sky-300 ring-sky-500/30"
-                                            : "bg-white/[0.03] text-neutral-500 ring-white/10"
+                                            ? "neon-blue-bg neon-white-text"
+                                            : "bg-black neon-blue-text neon-blue-border"
                                     )}
                                 >
                                     {label}
                                 </span>
                             );
                         })}
-                        <span className="ml-auto hidden md:inline text-[10px] font-mono uppercase tracking-widest text-neutral-600">
+                        <span className="ml-auto hidden md:inline text-[10px] font-mono uppercase tracking-widest neon-blue-text">
                             Filter controlled by dashboard
                         </span>
                     </div>
@@ -713,23 +654,22 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                 {/* Breaking banner */}
                 {!error && featured && isBreaking && (
                     <div className="px-4 md:px-6 pb-3">
-                        <div className="relative overflow-hidden rounded-xl border border-red-500/20 bg-gradient-to-r from-red-600/25 via-black/40 to-black/40">
-                            <div className="absolute inset-0 opacity-40 [background:linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:18px_18px]" />
+                        <div className="relative overflow-hidden rounded-xl neon-blue-border bg-black">
                             <div className="relative flex items-center gap-3 px-3 py-2">
                                 <span className="relative inline-flex h-2.5 w-2.5">
                                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-50" />
-                                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_14px_rgba(239,68,68,.65)]" />
+                                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" style={{ boxShadow: '0 0 6px rgba(239,68,68,.5)' }} />
                                 </span>
                                 <span className="shrink-0 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-white">Breaking</span>
                                 <a
                                     href={featured.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="min-w-0 flex-1 truncate text-xs font-semibold text-white/90 hover:text-white"
+                                    className="min-w-0 flex-1 truncate text-xs font-semibold neon-white-text hover:brightness-110"
                                 >
                                     {featured.title}
                                 </a>
-                                <span className="hidden sm:inline text-[10px] font-mono uppercase tracking-widest text-red-200/70">
+                                <span className="hidden sm:inline text-[10px] font-mono uppercase tracking-widest neon-blue-text">
                                     {timeAgo(featured.published_at) || "NOW"}
                                 </span>
                                 <button
@@ -739,7 +679,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                         e.stopPropagation();
                                         setPreviewUrl(featured.link);
                                     }}
-                                    className="shrink-0 rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white ring-1 ring-white/20 hover:bg-white/15"
+                                    className="shrink-0 rounded-full neon-blue-border bg-black px-3 py-1 text-[10px] font-black uppercase tracking-widest neon-white-text hover:brightness-110"
                                 >
                                     Preview
                                 </button>
@@ -750,15 +690,15 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
 
                 {/* Ticker */}
                 {!error && (
-                    <div className="border-t border-white/5 bg-black/60">
+                    <div className="neon-blue-border bg-black">
                         <div className="flex items-center gap-3 px-4 md:px-6 py-2">
                             <span className="shrink-0 text-[10px] font-black uppercase tracking-widest text-red-300">Urgent Wire</span>
-                            <div className="h-px flex-1 bg-gradient-to-r from-red-500/30 via-sky-500/10 to-transparent" />
+                            <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, rgba(239,68,68,0.3) 0%, transparent 100%)' }} />
                         </div>
                         <div className="overflow-hidden px-4 md:px-6 pb-3">
-                            <div className="whitespace-nowrap text-xs text-neutral-300">
+                            <div className="whitespace-nowrap text-xs neon-blue-text">
                                 {loading ? (
-                                    <span className="text-neutral-600 font-mono">Loading headlines…</span>
+                                    <span className="font-mono">Loading headlines…</span>
                                 ) : (
                                     tickerItems.map((n, i) => (
                                         <a
@@ -766,9 +706,9 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                             href={n.link}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="mr-4 inline-flex items-center gap-2 rounded-full bg-red-500/[0.08] px-3 py-1 ring-1 ring-red-500/20 hover:ring-red-400/40 hover:text-white transition"
+                                            className="mr-4 inline-flex items-center gap-2 rounded-full bg-black px-3 py-1 neon-blue-border hover:neon-white-text transition"
                                         >
-                                            <span className="text-[10px] font-mono text-red-200/70">{timeAgo(n.published_at) || "NOW"}</span>
+                                            <span className="text-[10px] font-mono">{timeAgo(n.published_at) || "NOW"}</span>
                                             <span className="max-w-[40ch] truncate">{n.title}</span>
                                         </a>
                                     ))
@@ -786,14 +726,14 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                 {/* Error State */}
                 {error && !loading && (
                     <div className="flex flex-col items-center justify-center p-10 text-center">
-                        <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-4 ring-1 ring-red-500/20">
-                            <X className="h-8 w-8 text-red-500" />
+                        <div className="w-16 h-16 rounded-2xl bg-black flex items-center justify-center mb-4 neon-blue-border">
+                            <X className="h-8 w-8 text-red-500" style={{ filter: 'drop-shadow(0 0 4px #ef4444)' }} />
                         </div>
                         <p className="text-red-300 font-semibold">{error}</p>
-                        <p className="mt-1 text-sm text-neutral-500">The feed can time out. Refresh to try again.</p>
+                        <p className="mt-1 text-sm neon-blue-text">The feed can time out. Refresh to try again.</p>
                         <button
                             onClick={() => setRefreshKey((p) => p + 1)}
-                            className="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-sky-500/15 text-sky-300 rounded-lg hover:bg-sky-500/20 transition-colors text-sm font-black ring-1 ring-sky-500/20"
+                            className="mt-5 inline-flex items-center gap-2 px-4 py-2 neon-blue-bg neon-white-text rounded-lg hover:brightness-110 transition-colors text-sm font-black"
                         >
                             <IconRefresh className="h-4 w-4" />
                             Retry
@@ -807,15 +747,15 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                             {/* Main column */}
                             <div className="lg:col-span-8">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Featured</h3>
-                                    <div className="h-px w-1/2 bg-gradient-to-r from-sky-500/20 to-transparent ml-4 hidden md:block" />
+                                    <h3 className="text-[10px] font-black uppercase tracking-widest neon-blue-text">Featured</h3>
+                                    <div className="h-px w-1/2 ml-4 hidden md:block" style={{ background: 'linear-gradient(90deg, #3b82f6 0%, transparent 100%)', boxShadow: '0 0 4px #3b82f6' }} />
                                 </div>
 
                                 <div className="mt-3">
                                     {loading ? (
-                                        <div className="h-40 md:h-52 animate-pulse rounded-2xl bg-white/5 ring-1 ring-white/10" />
+                                        <div className="h-40 md:h-52 animate-pulse rounded-2xl bg-black neon-blue-border" />
                                     ) : !featured ? (
-                                        <div className="rounded-2xl bg-white/[0.03] ring-1 ring-white/10 p-6 text-center text-neutral-500">
+                                        <div className="rounded-2xl neon-blue-border bg-black p-6 text-center neon-blue-text">
                                             No featured story available.
                                         </div>
                                     ) : (
@@ -823,7 +763,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                             href={featured.link}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="group block overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.06] to-white/[0.02] ring-1 ring-white/10 hover:ring-sky-500/30 transition"
+                                            className="group block overflow-hidden rounded-2xl neon-blue-border bg-black hover:brightness-110 transition"
                                         >
                                             <div className="relative">
                                                 {previews[featured.link]?.image ? (
@@ -835,7 +775,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                                         referrerPolicy="no-referrer"
                                                     />
                                                 ) : (
-                                                    <div className="h-44 w-full bg-white/[0.03] animate-pulse" />
+                                                    <div className="h-44 w-full bg-black animate-pulse" />
                                                 )}
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                                                 <button
@@ -845,30 +785,30 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                                         e.stopPropagation();
                                                         setPreviewUrl(featured.link);
                                                     }}
-                                                    className="absolute right-3 top-3 z-10 rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white ring-1 ring-white/20 hover:bg-white/15"
+                                                    className="absolute right-3 top-3 z-10 rounded-full neon-blue-border bg-black px-3 py-1 text-[10px] font-black uppercase tracking-widest neon-white-text hover:brightness-110"
                                                 >
                                                     Preview
                                                 </button>
                                             </div>
                                             <div className="p-5 md:p-6">
                                                 <div className="flex flex-wrap items-center gap-2">
-                                                    <span className="rounded-full bg-sky-500/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-sky-300 ring-1 ring-sky-500/20">
+                                                    <span className="rounded-full neon-blue-bg px-2.5 py-1 text-[10px] font-black uppercase tracking-widest neon-white-text">
                                                         {(featured.category || "Market").toString()}
                                                     </span>
-                                                    <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-600">
+                                                    <span className="text-[10px] font-mono uppercase tracking-widest neon-blue-text">
                                                         {featured.source || "Unknown"}
                                                     </span>
                                                     {featured.published_at && (
-                                                        <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-600">• {timeAgo(featured.published_at)}</span>
+                                                        <span className="text-[10px] font-mono uppercase tracking-widest neon-blue-text">• {timeAgo(featured.published_at)}</span>
                                                     )}
                                                 </div>
-                                                <h2 className="mt-3 text-lg md:text-2xl font-black tracking-tight text-white group-hover:text-sky-200 transition-colors">
+                                                <h2 className="mt-3 text-lg md:text-2xl font-black tracking-tight neon-blue-text group-hover:neon-white-text transition-colors">
                                                     {featured.title}
                                                 </h2>
-                                                <p className="mt-2 text-sm text-neutral-400 line-clamp-2">
+                                                <p className="mt-2 text-sm neon-blue-text line-clamp-2">
                                                     {previews[featured.link]?.description || "Click to open full story."}
                                                 </p>
-                                                <div className="mt-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-sky-300">
+                                                <div className="mt-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest neon-blue-text">
                                                     Read story
                                                     <IconExternalLink className="h-3.5 w-3.5" />
                                                 </div>
@@ -880,24 +820,24 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                 {/* Top stories */}
                                 <div className="mt-6">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Top Stories</h3>
-                                        <div className="h-px w-1/2 bg-gradient-to-r from-sky-500/20 to-transparent ml-4 hidden md:block" />
+                                        <h3 className="text-[10px] font-black uppercase tracking-widest neon-blue-text">Top Stories</h3>
+                                        <div className="h-px w-1/2 ml-4 hidden md:block" style={{ background: 'linear-gradient(90deg, #3b82f6 0%, transparent 100%)', boxShadow: '0 0 4px #3b82f6' }} />
                                     </div>
 
                                     <div className="mt-3 grid gap-3 md:grid-cols-2">
                                         {loading
                                             ? Array.from({ length: 4 }).map((_, i) => (
-                                                  <div key={i} className="h-24 animate-pulse rounded-xl bg-white/5 ring-1 ring-white/10" />
+                                                  <div key={i} className="h-24 animate-pulse rounded-xl bg-black neon-blue-border" />
                                               ))
                                             : secondaryTop.length === 0
-                                              ? <div className="rounded-xl bg-white/[0.03] ring-1 ring-white/10 p-6 text-center text-neutral-500">No top stories.</div>
+                                              ? <div className="rounded-xl neon-blue-border bg-black p-6 text-center neon-blue-text">No top stories.</div>
                                               : secondaryTop.map((item, i) => (
                                                     <a
                                                         key={`${item.link}-${i}`}
                                                         href={item.link}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="group rounded-xl bg-[#0a0a0a] p-4 ring-1 ring-white/5 transition hover:ring-sky-500/30 hover:-translate-y-0.5 duration-200"
+                                                        className="group rounded-xl bg-black p-4 neon-blue-border transition hover:brightness-110 duration-200"
                                                     >
                                                         <div className="flex items-start gap-4">
                                                             <div className="shrink-0 w-24">
@@ -905,27 +845,27 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                                                     <img
                                                                         src={previews[item.link]?.image}
                                                                         alt=""
-                                                                        className="h-16 w-24 rounded-lg object-cover ring-1 ring-white/10"
+                                                                        className="h-16 w-24 rounded-lg object-cover neon-blue-border"
                                                                         loading="lazy"
                                                                         referrerPolicy="no-referrer"
                                                                     />
                                                                 ) : (
-                                                                    <div className="h-16 w-24 rounded-lg bg-white/[0.03] ring-1 ring-white/10 animate-pulse" />
+                                                                    <div className="h-16 w-24 rounded-lg bg-black neon-blue-border animate-pulse" />
                                                                 )}
                                                             </div>
                                                             <div className="min-w-0 flex-1">
-                                                                <div className="text-[9px] font-black uppercase tracking-widest text-neutral-500">
+                                                                <div className="text-[9px] font-black uppercase tracking-widest neon-blue-text">
                                                                     {item.source || "Unknown"} • {(item.category || "Market").toString()}
                                                                 </div>
-                                                                <div className="mt-2 line-clamp-2 text-sm font-semibold text-neutral-200 group-hover:text-white transition-colors">
+                                                                <div className="mt-2 line-clamp-2 text-sm font-semibold neon-blue-text group-hover:neon-white-text transition-colors">
                                                                     {item.title}
                                                                 </div>
-                                                                <p className="mt-1 text-xs text-neutral-500 line-clamp-2">
+                                                                <p className="mt-1 text-xs neon-blue-text line-clamp-2">
                                                                     {previews[item.link]?.description || ""}
                                                                 </p>
                                                             </div>
                                                             <div className="shrink-0 flex flex-col items-end gap-2">
-                                                                <div className="text-[10px] font-mono text-neutral-600">{timeAgo(item.published_at)}</div>
+                                                                <div className="text-[10px] font-mono neon-blue-text">{timeAgo(item.published_at)}</div>
                                                                 <button
                                                                     type="button"
                                                                     onClick={(e) => {
@@ -933,7 +873,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                                                         e.stopPropagation();
                                                                         setPreviewUrl(item.link);
                                                                     }}
-                                                                    className="rounded-full bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-neutral-200 ring-1 ring-white/10 hover:ring-sky-500/30"
+                                                                    className="rounded-full bg-black px-3 py-1 text-[10px] font-black uppercase tracking-widest neon-white-text neon-blue-border hover:brightness-110"
                                                                 >
                                                                     Preview
                                                                 </button>
@@ -945,14 +885,14 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                 </div>
 
                                 {/* Latest feed */}
-                                <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
-                                    <div className="sticky top-0 z-10 bg-black/80 px-4 py-3 border-b border-white/10 backdrop-blur">
+                                <div className="mt-6 overflow-hidden rounded-2xl neon-blue-border bg-black">
+                                    <div className="sticky top-0 z-10 bg-black px-4 py-3 neon-blue-border">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Latest Feed ({allItemsCount})</h3>
+                                            <h3 className="text-[10px] font-black uppercase tracking-widest neon-blue-text">Latest Feed ({allItemsCount})</h3>
                                             <select
                                                 value={count}
                                                 onChange={(e) => setCount(Number(e.target.value))}
-                                                className="rounded-lg bg-white/5 px-2 py-1 text-[10px] text-neutral-300 ring-1 ring-white/10 outline-none uppercase font-black"
+                                                className="rounded-lg bg-black px-2 py-1 text-[10px] neon-blue-text neon-blue-border outline-none uppercase font-black"
                                             >
                                                 {[5, 10, 20, 50].map((n) => (
                                                     <option key={n} value={n}>
@@ -962,20 +902,20 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                             </select>
                                         </div>
                                     </div>
-                                    <ul className="divide-y divide-white/5">
+                                    <ul className="divide-y divide-black">
                                         {loading &&
                                             Array.from({ length: 8 }).map((_, i) => (
                                                 <li key={i} className="animate-pulse p-4">
-                                                    <div className="h-3 w-1/3 rounded bg-white/5" />
-                                                    <div className="mt-2 h-4 w-2/3 rounded bg-white/5" />
+                                                    <div className="h-3 w-1/3 rounded bg-black" />
+                                                    <div className="mt-2 h-4 w-2/3 rounded bg-black" />
                                                 </li>
                                             ))}
-                                        {!loading && rest.length === 0 && <li className="p-10 text-center text-neutral-500">No additional news items</li>}
+                                        {!loading && rest.length === 0 && <li className="p-10 text-center neon-blue-text">No additional news items</li>}
                                         {!loading &&
                                             rest.map((n, i) => (
                                                 <li key={`${n.link}-${i}`} className="group px-4 py-3 transition hover:bg-white/[0.03]">
                                                     <div className="flex items-start gap-3">
-                                                        <span className="mt-2 h-2 w-2 rounded-full bg-sky-500/50 shadow-[0_0_10px_rgba(56,189,248,.55)] group-hover:bg-sky-400 transition-colors" />
+                                                        <span className="mt-2 h-2 w-2 rounded-full neon-blue-bg group-hover:brightness-110 transition-colors" />
                                                         <div className="min-w-0 flex-1">
                                                             <div className="flex items-start gap-3">
                                                                 <div className="hidden sm:block shrink-0">
@@ -983,26 +923,26 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                                                         <img
                                                                             src={previews[n.link]?.image}
                                                                             alt=""
-                                                                            className="h-12 w-16 rounded-lg object-cover ring-1 ring-white/10"
+                                                                            className="h-12 w-16 rounded-lg object-cover neon-blue-border"
                                                                             loading="lazy"
                                                                             referrerPolicy="no-referrer"
                                                                         />
                                                                     ) : (
-                                                                        <div className="h-12 w-16 rounded-lg bg-white/[0.03] ring-1 ring-white/10" />
+                                                                        <div className="h-12 w-16 rounded-lg bg-black neon-blue-border" />
                                                                     )}
                                                                 </div>
                                                                 <div className="min-w-0 flex-1">
                                                                     <a href={n.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-start gap-2 group/link w-full">
-                                                                        <h3 className="truncate text-sm font-semibold text-neutral-300 group-hover/link:text-sky-300 transition-colors">{n.title}</h3>
-                                                                        <IconExternalLink className="mt-1 h-3 w-3 text-neutral-600 opacity-0 transition group-hover/link:opacity-100" />
+                                                                        <h3 className="truncate text-sm font-semibold neon-blue-text group-hover/link:neon-white-text transition-colors">{n.title}</h3>
+                                                                        <IconExternalLink className="mt-1 h-3 w-3 neon-blue-text opacity-0 transition group-hover/link:opacity-100" />
                                                                     </a>
-                                                                    <p className="mt-1 text-xs text-neutral-500 line-clamp-2">
+                                                                    <p className="mt-1 text-xs neon-blue-text line-clamp-2">
                                                                         {previews[n.link]?.description || ""}
                                                                     </p>
-                                                                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-neutral-600 font-mono uppercase">
+                                                                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] neon-blue-text font-mono uppercase">
                                                                         {previews[n.link]?.siteName && <span>{previews[n.link]?.siteName}</span>}
                                                                         {n.source && <span>{previews[n.link]?.siteName ? "•" : ""} {n.source}</span>}
-                                                                        {n.category && n.category !== "other" && <span className="text-sky-700">• {n.category}</span>}
+                                                                        {n.category && n.category !== "other" && <span>• {n.category}</span>}
                                                                         {n.published_at && <time dateTime={n.published_at}>• {timeAgo(n.published_at)}</time>}
                                                                     </div>
                                                                 </div>
@@ -1014,15 +954,15 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                                                             e.stopPropagation();
                                                                             setPreviewUrl(n.link);
                                                                         }}
-                                                                        className="rounded-full bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-neutral-200 ring-1 ring-white/10 hover:ring-sky-500/30"
+                                                                        className="rounded-full bg-black px-3 py-1 text-[10px] font-black uppercase tracking-widest neon-white-text neon-blue-border hover:brightness-110"
                                                                     >
                                                                         Preview
                                                                     </button>
                                                                 </div>
                                                             </div>
-                                                            <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-neutral-600 font-mono uppercase">
+                                                            <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] neon-blue-text font-mono uppercase">
                                                                 {n.source && <span>{n.source}</span>}
-                                                                {n.category && n.category !== "other" && <span className="text-sky-700">• {n.category}</span>}
+                                                                {n.category && n.category !== "other" && <span>• {n.category}</span>}
                                                                 {n.published_at && <time dateTime={n.published_at}>• {timeAgo(n.published_at)}</time>}
                                                             </div>
                                                         </div>
@@ -1036,54 +976,54 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                             {/* Sidebar */}
                             <div className="lg:col-span-4">
                                 <div className="space-y-4">
-                                    <div className="rounded-2xl bg-white/[0.02] ring-1 ring-white/10 p-4">
+                                    <div className="rounded-2xl neon-blue-border bg-black p-4">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Market Pulse</h3>
-                                            <span className="text-[10px] font-mono text-neutral-600">{allItemsCount} items</span>
+                                            <h3 className="text-[10px] font-black uppercase tracking-widest neon-blue-text">Market Pulse</h3>
+                                            <span className="text-[10px] font-mono neon-blue-text">{allItemsCount} items</span>
                                         </div>
                                         <div className="mt-3 grid grid-cols-2 gap-3">
-                                            <div className="rounded-xl bg-black/40 p-3 ring-1 ring-white/5">
-                                                <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-600">Top</div>
-                                                <div className="mt-1 text-sm font-black text-white">{top5.length}</div>
+                                            <div className="rounded-xl bg-black p-3 neon-blue-border">
+                                                <div className="text-[10px] font-mono uppercase tracking-widest neon-blue-text">Top</div>
+                                                <div className="mt-1 text-sm font-black neon-white-text">{top5.length}</div>
                                             </div>
-                                            <div className="rounded-xl bg-black/40 p-3 ring-1 ring-white/5">
-                                                <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-600">Shown</div>
-                                                <div className="mt-1 text-sm font-black text-white">{Math.min(count + 5, allItemsCount)}</div>
+                                            <div className="rounded-xl bg-black p-3 neon-blue-border">
+                                                <div className="text-[10px] font-mono uppercase tracking-widest neon-blue-text">Shown</div>
+                                                <div className="mt-1 text-sm font-black neon-white-text">{Math.min(count + 5, allItemsCount)}</div>
                                             </div>
                                         </div>
-                                        <p className="mt-3 text-xs text-neutral-500">
+                                        <p className="mt-3 text-xs neon-blue-text">
                                             Stories are ranked by recency + keyword relevance.
                                         </p>
                                     </div>
 
-                                    <div className="rounded-2xl bg-white/[0.02] ring-1 ring-white/10 p-4">
-                                        <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Sources</h3>
+                                    <div className="rounded-2xl neon-blue-border bg-black p-4">
+                                        <h3 className="text-[10px] font-black uppercase tracking-widest neon-blue-text">Sources</h3>
                                         <div className="mt-3 space-y-2">
                                             {loading ? (
-                                                <div className="h-20 animate-pulse rounded-xl bg-white/5 ring-1 ring-white/10" />
+                                                <div className="h-20 animate-pulse rounded-xl bg-black neon-blue-border" />
                                             ) : (
                                                 sources.map(([s, c]) => (
-                                                    <div key={s} className="flex items-center justify-between rounded-xl bg-black/40 px-3 py-2 ring-1 ring-white/5">
-                                                        <span className="text-xs font-semibold text-neutral-300 truncate">{s}</span>
-                                                        <span className="text-[10px] font-mono text-neutral-600">{c}</span>
+                                                    <div key={s} className="flex items-center justify-between rounded-xl bg-black px-3 py-2 neon-blue-border">
+                                                        <span className="text-xs font-semibold neon-blue-text truncate">{s}</span>
+                                                        <span className="text-[10px] font-mono neon-blue-text">{c}</span>
                                                     </div>
                                                 ))
                                             )}
                                         </div>
                                     </div>
 
-                                    <div className="rounded-2xl bg-white/[0.02] ring-1 ring-white/10 p-4">
-                                        <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Trending</h3>
+                                    <div className="rounded-2xl neon-blue-border bg-black p-4">
+                                        <h3 className="text-[10px] font-black uppercase tracking-widest neon-blue-text">Trending</h3>
                                         <div className="mt-3 flex flex-wrap gap-2">
                                             {loading ? (
                                                 Array.from({ length: 6 }).map((_, i) => (
-                                                    <div key={i} className="h-7 w-20 animate-pulse rounded-full bg-white/5 ring-1 ring-white/10" />
+                                                    <div key={i} className="h-7 w-20 animate-pulse rounded-full bg-black neon-blue-border" />
                                                 ))
                                             ) : trendingKeywords.length === 0 ? (
-                                                <span className="text-xs text-neutral-600">No trend setups.</span>
+                                                <span className="text-xs neon-blue-text">No trend setups.</span>
                                             ) : (
                                                 trendingKeywords.map((w) => (
-                                                    <span key={w} className="rounded-full bg-sky-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-sky-300 ring-1 ring-sky-500/20">
+                                                    <span key={w} className="rounded-full neon-blue-bg px-3 py-1 text-[10px] font-black uppercase tracking-widest neon-white-text">
                                                         {w}
                                                     </span>
                                                 ))
@@ -1282,32 +1222,21 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                     aria-expanded={isOpen}
                     className="relative w-full max-w-xl cursor-pointer group focus:outline-none focus:ring-2 focus:ring-sky-500/50 rounded-xl"
                 >
-                    {/* Shimmer border effect - purely decorative */}
-                    <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
-                        <motion.div
-                            className="absolute inset-[-100%]"
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                            style={{ background: shimmerGradient }}
-                        />
-                        <div className="absolute inset-[2px] bg-neutral-950 rounded-xl" />
-                    </div>
-
                     {/* Button content */}
-                    <div className="relative z-10 overflow-hidden rounded-xl bg-[#0a0a0a] p-1 transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-sky-500/10 group-hover:-translate-y-1">
-                        <div className="relative flex items-center justify-between rounded-[9px] bg-[#0a0a0a] px-4 py-3 md:px-6 md:py-4">
+                    <div className="relative z-10 overflow-hidden rounded-xl neon-blue-border bg-black p-1 transition-all duration-300 group-hover:brightness-110">
+                        <div className="relative flex items-center justify-between rounded-[9px] bg-black px-4 py-3 md:px-6 md:py-4">
                             <div className="flex items-center gap-4">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-900/10 text-sky-400 ring-1 ring-sky-500/20">
-                                    <Newspaper className="h-5 w-5" />
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-black neon-blue-border">
+                                    <Newspaper className="h-5 w-5 text-white neon-white-icon" />
                                 </div>
                                 <div className="text-left truncate">
-                                    <h4 className="text-lg font-black text-white truncate animate-text-shimmer">Open News Feed</h4>
-                                    <p className="text-xs text-neutral-500 truncate max-w-[200px] sm:max-w-none font-mono uppercase tracking-wide">
+                                    <h4 className="text-lg font-black neon-blue-text truncate">Open News Feed</h4>
+                                    <p className="text-xs neon-blue-text truncate max-w-[200px] sm:max-w-none font-mono uppercase tracking-wide">
                                         {activeMarket !== "all" ? `LIVE ${activeMarket} HEADLINES` : "GLOBAL MARKET INTELLIGENCE"}
                                     </p>
                                 </div>
                             </div>
-                            <div className="text-neutral-600 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-sky-400">
+                            <div className="neon-blue-text transition-transform duration-300 group-hover:translate-x-1">
                                 <ArrowRight className="h-5 w-5" />
                             </div>
                         </div>
@@ -1354,30 +1283,19 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                                     className="relative z-10 w-full max-w-6xl h-[90vh] md:h-[85vh] min-h-0"
                                     data-lenis-prevent
                                 >
-                                    {/* Shimmer border - decorative */}
-                                    <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
-                                        <motion.div
-                                            className="absolute top-0 bottom-0 left-0 w-[200%]"
-                                            animate={{ x: ["-50%", "50%"] }}
-                                            transition={{ duration: 5, repeat: Infinity, repeatType: 'reverse', ease: "linear" }}
-                                            style={{ background: shimmerGradient }}
-                                        />
-                                        <div className="absolute inset-[2px] bg-black rounded-3xl" />
-                                    </div>
-
                                     {/* Close button */}
                                     <button
                                         ref={closeButtonRef}
                                         type="button"
                                         onClick={handleCloseModal}
-                                        className="absolute right-3 top-3 z-30 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white ring-1 ring-white/10 backdrop-blur-md transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                                        className="absolute right-3 top-3 z-30 inline-flex h-10 w-10 items-center justify-center rounded-full neon-blue-border bg-black neon-white-text transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
                                         aria-label="Close news modal"
                                     >
                                         <X className="h-5 w-5" />
                                     </button>
 
                                     {/* Modal content */}
-                                    <div className="relative z-20 w-full h-full min-h-0 overflow-hidden rounded-3xl border border-sky-500/20 bg-black shadow-2xl" data-lenis-prevent>
+                                    <div className="relative z-20 w-full h-full min-h-0 overflow-hidden rounded-3xl neon-blue-border bg-black" data-lenis-prevent>
                                         <NewsFeedContent activeMarket={activeMarket as MarketFilter} onClose={handleCloseModal} />
                                     </div>
                                 </motion.div>
@@ -1411,16 +1329,16 @@ export function CTA() {
         <header className="text-center mb-12">
            
             
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-neutral-500 animate-text-shimmer drop-shadow-2xl">
+            <h1 className="text-4xl md:text-6xl font-black tracking-tighter neon-blue-text">
                 MARKET DASHBOARD
             </h1>
-            <p className="mt-4 text-sm text-neutral-400 md:text-base max-w-2xl mx-auto">
-                Real-time institutional grade data covering <span className="text-sky-400">Crypto</span>, <span className="text-sky-400">Stocks</span>, <span className="text-sky-400">Forex</span>, and <span className="text-sky-400">Metals</span>.
+            <p className="mt-4 text-sm neon-blue-text md:text-base max-w-2xl mx-auto">
+                Real-time institutional grade data covering <span className="neon-white-text">Crypto</span>, <span className="neon-white-text">Stocks</span>, <span className="neon-white-text">Forex</span>, and <span className="neon-white-text">Metals</span>.
             </p>
-             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-sky-500/20 bg-sky-900/10 text-sky-400 text-[10px] font-mono tracking-widest uppercase mb-4">
+             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full neon-blue-border bg-black neon-blue-text text-[10px] font-mono tracking-widest uppercase mb-4">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-full w-full bg-sky-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full neon-blue-bg opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-full w-full neon-blue-bg"></span>
                 </span>
                 System Online
             </div>

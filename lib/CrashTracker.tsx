@@ -749,12 +749,14 @@ export const CrashTrackerProvider = memo(function CrashTrackerProvider({
     
     // Check if offline
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      setSyncState(prev => ({ ...prev, status: 'offline' }));
+      // Only update if status actually changed
+      setSyncState(prev => prev.status === 'offline' ? prev : { ...prev, status: 'offline' });
       return;
     }
     
     isFlushingRef.current = true;
-    setSyncState(prev => ({ ...prev, status: 'sending', lastError: null }));
+    // Only update if not already sending
+    setSyncState(prev => prev.status === 'sending' ? prev : { ...prev, status: 'sending', lastError: null });
     
     const events = eventQueueRef.current.slice(0, BATCH_SIZE);
     eventQueueRef.current = eventQueueRef.current.slice(BATCH_SIZE);

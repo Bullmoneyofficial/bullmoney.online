@@ -358,11 +358,19 @@ export function TradingQuickAccess() {
         const data = await response.json();
         
         if (isMounted && data) {
-          // Update prices if valid data received
-          setPrices(prev => ({
-            xauusd: data.xauusd || prev.xauusd,
-            btcusd: data.btcusd || prev.btcusd
-          }));
+          // Update prices only if values actually changed (prevents infinite loops)
+          setPrices(prev => {
+            const newXauusd = data.xauusd || prev.xauusd;
+            const newBtcusd = data.btcusd || prev.btcusd;
+            // Only update state if values changed
+            if (prev.xauusd === newXauusd && prev.btcusd === newBtcusd) {
+              return prev; // Return same reference to prevent re-render
+            }
+            return {
+              xauusd: newXauusd,
+              btcusd: newBtcusd
+            };
+          });
           
           // Reset retry count on success
           retryCount = 0;

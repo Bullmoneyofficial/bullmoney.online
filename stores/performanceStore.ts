@@ -116,15 +116,32 @@ export const usePerformanceStore = create<PerformanceStore>()(
     _transientScrollY: 0,
     _transientVelocity: 0,
     _transientFps: 60,
+    _lastFrameUpdate: 0,
+    _lastScrollUpdate: 0,
     
     // Frame update (batched, throttled to 10fps for React state)
     updateFrame: (metrics) => {
       const store = get();
+      const now = Date.now();
+      
       // Update transient value directly (zero re-render)
       if (metrics.currentFps !== undefined) {
         store._transientFps = metrics.currentFps;
       }
-      // Only update React state every 100ms to avoid thrashing
+      
+      // Throttle React state updates to every 100ms to prevent infinite loops
+      if (now - store._lastFrameUpdate < 100) {
+        return; // Skip this update
+      }
+      store._lastFrameUpdate = now;
+      
+      // Only update React state if values actually changed
+      const currentFrame = store.frame;
+      const hasChanges = Object.keys(metrics).some(
+        key => metrics[key as keyof typeof metrics] !== currentFrame[key as keyof typeof currentFrame]
+      );
+      if (!hasChanges) return;
+      
       set((state) => ({
         frame: { ...state.frame, ...metrics }
       }));
