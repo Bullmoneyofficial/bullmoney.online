@@ -3,14 +3,14 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import "../styles/performance-optimizations.css";
 import "../styles/gpu-animations.css";
-import "../styles/120hz-performance.css"; // Critical 120Hz optimizations
-import "../styles/device-tier-optimizations.css"; // Device-tier aware CSS
-import "../styles/safari-optimizations.css"; // Safari-specific fixes
-import "../styles/no-spin.css"; // Disable rotation-based spin animations
-import "../styles/fps-optimization.css"; // FPS optimization & frame skipping
-import "../styles/mobile-scroll-optimization.css"; // Mobile & scroll performance optimizations
-import "../styles/smart-mount.css"; // Smart mount/unmount freeze styles
-import "../styles/big-device-scroll.css"; // Big device scroll optimizations
+import "../styles/120hz-performance.css";
+import "../styles/device-tier-optimizations.css";
+import "../styles/safari-optimizations.css";
+import "../styles/no-spin.css";
+import "../styles/fps-optimization.css";
+import "../styles/mobile-scroll-optimization.css";
+import "../styles/smart-mount.css";
+import "../styles/big-device-scroll.css";
 import { cn } from "@/lib/utils";
 import { Suspense } from "react";
 

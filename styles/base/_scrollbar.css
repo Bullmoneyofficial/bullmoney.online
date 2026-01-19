@@ -1,0 +1,86 @@
+/**
+ * BULLMONEY - Custom Scrollbar Styles
+ * ====================================
+ * Unified scrollbar styling across browsers
+ */
+
+/* ============================================
+   CUSTOM SCROLLBAR - COMMUNITY FEED
+   ============================================ */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.3);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.5);
+}
+
+/* ============================================
+   WEBKIT SCROLLBAR (Chrome/Edge)
+   ============================================ */
+@supports (-webkit-appearance: none) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* ============================================
+   FIREFOX SCROLLBAR
+   ============================================ */
+@-moz-document url-prefix() {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  }
+}
+
+/* ============================================
+   BIG DISPLAY SCROLLBAR
+   ============================================ */
+html.big-display::-webkit-scrollbar {
+  width: 10px;
+}
+
+html.big-display::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+html.big-display::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 5px;
+}
+
+html.big-display::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.7);
+}

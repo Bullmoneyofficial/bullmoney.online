@@ -1,0 +1,551 @@
+/* =================================================================
+   GLOBAL FPS QUALITY CONTROL
+   Applied by PerformanceProvider based on measured FPS
+   Works with UnifiedShimmer.tsx for centralized animation control
+   ================================================================= */
+
+/* FPS Medium - reduce complexity */
+html.shimmer-quality-medium {
+  /* Slower animations use less CPU */
+  --animation-duration-multiplier: 0.4;
+}
+
+/* NO BLUR - disabled globally */
+html.shimmer-quality-medium [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+}
+
+/* FPS Low - minimal effects */
+html.shimmer-quality-low {
+  --animation-duration-multiplier: 0.2;
+}
+
+/* NO BLUR - disabled globally */
+html.shimmer-quality-low [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+}
+
+html.shimmer-quality-low .shadow-lg,
+html.shimmer-quality-low .shadow-xl,
+html.shimmer-quality-low .shadow-2xl {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+}
+
+/* FPS Disabled - essential only */
+html.shimmer-quality-disabled {
+  --animation-duration-multiplier: 0.1;
+}
+
+html.shimmer-quality-disabled [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Never dim/blur canvases based on FPS quality; handle quality via DPR/FPS caps instead. */
+
+/* Text glow effect for active theme elements */
+.text-glow {
+  text-shadow:
+    0 0 5px var(--accent-color, #3b82f6),
+    0 0 10px var(--theme-accent-light, rgba(59, 130, 246, 0.5)),
+    0 0 20px var(--theme-accent-subtle, rgba(59, 130, 246, 0.3));
+}
+
+/* =================================================================
+   GAME-ENGINE STYLE FPS-BASED QUALITY REDUCTION
+   These classes are applied by UnifiedPerformanceSystem based on real FPS
+   fps-ultra (70+), fps-high (55+), fps-medium (45+), fps-low (30+), fps-minimal (<30)
+
+   IMPORTANT: ONLY slow down animations - NEVER touch blur, shadows, or filters!
+   ================================================================= */
+
+/* FPS MINIMAL: EMERGENCY MODE - Ultra slow animations only */
+html.fps-minimal [class*="shimmer"] {
+  animation-duration: 30s !important;
+}
+
+html.fps-minimal [class*="glow"],
+html.fps-minimal [class*="pulse"] {
+  animation-duration: 25s !important;
+}
+
+html.fps-minimal .text-shimmer-effect {
+  animation-duration: 22s !important;
+}
+
+html.fps-minimal [data-theme-illusion="CRT"]::after,
+html.fps-minimal [data-theme-illusion="GLITCH"]::after {
+  animation-duration: 30s !important;
+}
+
+/* FPS LOW: Very slow animations */
+html.fps-low [class*="shimmer"] {
+  animation-duration: 22s !important;
+}
+
+html.fps-low [class*="glow"],
+html.fps-low [class*="pulse"] {
+  animation-duration: 18s !important;
+}
+
+html.fps-low .text-shimmer-effect {
+  animation-duration: 18s !important;
+}
+
+html.fps-low [data-theme-illusion="CRT"]::after,
+html.fps-low [data-theme-illusion="GLITCH"]::after {
+  animation-duration: 24s !important;
+}
+
+/* FPS MEDIUM: Moderate animation slowdown */
+html.fps-medium [class*="shimmer"] {
+  animation-duration: 14s !important;
+}
+
+html.fps-medium [class*="glow"],
+html.fps-medium [class*="pulse"] {
+  animation-duration: 12s !important;
+}
+
+html.fps-medium .text-shimmer-effect {
+  animation-duration: 12s !important;
+}
+
+/* FPS HIGH: Moderate shimmer speed */
+html.fps-high [class*="shimmer"] {
+  animation-duration: 10s !important;
+}
+
+/* FPS ULTRA: FULL QUALITY - Still slow and smooth */
+html.fps-ultra [class*="shimmer"] {
+  animation-duration: 8s !important;
+}
+
+/* =================================================================
+   UPDATED 2026: Full speed animations for all devices including mobile
+   ================================================================= */
+html.is-mobile [class*="shimmer"] {
+  animation-duration: 4s !important; /* Same as desktop */
+}
+
+html.is-mobile.fps-low [class*="shimmer"] {
+  animation-duration: 6s !important; /* Slight slowdown only for very low FPS */
+}
+
+html.is-mobile.fps-minimal [class*="shimmer"] {
+  animation-duration: 8s !important; /* Minimal slowdown */
+}
+
+/* =================================================================
+   SPLINE-SPECIFIC QUALITY CLASSES
+   Applied by spline-wrapper.js based on FPS readings
+   ================================================================= */
+html.spline-quality-low canvas {
+  /* Hint to browser that canvas can use less resources */
+  image-rendering: optimizeSpeed;
+}
+
+/* When Spline is paused (out of view), fully stop GPU work */
+.spline-paused canvas {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* =================================================================
+   IPHONE-SPECIFIC PERFORMANCE OPTIMIZATIONS
+   Aggressive animation slowdown for smooth 60fps on iPhone
+   ================================================================= */
+
+/* iPhone base - slow all animations */
+html.is-ios {
+  --shimmer-base-speed: 16s;
+}
+
+html.is-ios [class*="animate-"] {
+  animation-duration: 16s !important;
+}
+
+/* iPhone low FPS - ultra slow */
+html.is-ios.fps-low,
+html.is-ios.fps-minimal {
+  --shimmer-base-speed: 30s;
+}
+
+html.is-ios.fps-low [class*="animate-"],
+html.is-ios.fps-minimal [class*="animate-"] {
+  animation-duration: 30s !important;
+}
+
+/* Disable complex effects on iPhone when FPS drops */
+html.is-ios.fps-low .shimmer-glow,
+html.is-ios.fps-minimal .shimmer-glow,
+html.is-ios.fps-low .shimmer-float,
+html.is-ios.fps-minimal .shimmer-float {
+  animation: none !important;
+  opacity: 0.3;
+}
+
+/* Ensure pure black backgrounds on all devices */
+html, body {
+  background-color: #000000 !important;
+}
+
+.dark {
+  background-color: #000000 !important;
+}
+
+/* =================================================================
+   CRITICAL PERFORMANCE FIX - GLOBAL OVERRIDE
+   Forces all expensive effects off to prevent lag
+   ================================================================= */
+
+/* FORCE DISABLE ALL BACKDROP BLUR - #1 cause of lag */
+* {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Replace backdrop-blur with solid backgrounds */
+.backdrop-blur,
+.backdrop-blur-sm,
+.backdrop-blur-md,
+.backdrop-blur-lg,
+.backdrop-blur-xl,
+.backdrop-blur-2xl,
+.backdrop-blur-3xl {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: rgba(0, 0, 0, 0.9) !important;
+}
+
+/* DISABLE SPINNING ANIMATIONS - Major GPU hog */
+[class*="animate-[spin"],
+.animate-spin,
+[style*="animation"][style*="spin"] {
+  animation: none !important;
+}
+
+/* Replace conic-gradient spinning borders with static gradients */
+[class*="conic-gradient"],
+[style*="conic-gradient"] {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.5), rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.5)) !important;
+  animation: none !important;
+}
+
+/* Disable expensive box-shadows */
+.shadow-2xl,
+.shadow-xl,
+[class*="shadow-[0_0"] {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* EXCEPTION: Allow shadows inside fps-chart-container */
+.fps-chart-container .shadow-lg,
+.fps-chart-container .shadow-xl,
+.fps-chart-container [class*="shadow-"],
+[data-fps-chart] .shadow-lg,
+[data-fps-chart] [class*="shadow-"] {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Disable drop-shadow filters */
+[class*="drop-shadow"],
+[style*="drop-shadow"] {
+  filter: none !important;
+}
+
+/* EXCEPTION: Allow drop-shadow inside fps-chart-container */
+.fps-chart-container [class*="drop-shadow"],
+[data-fps-chart] [class*="drop-shadow"] {
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8)) !important;
+}
+
+/* Optimize will-change - don't over-use it */
+[style*="will-change"]:not(.critical-animation) {
+  will-change: auto !important;
+}
+
+/* Pause animations during scroll - CRITICAL for smoothness */
+html.is-scrolling * {
+  animation-play-state: paused !important;
+  transition: none !important;
+}
+
+/* EXCEPTION: Keep FPS chart animating during scroll */
+html.is-scrolling .fps-chart-container,
+html.is-scrolling .fps-chart-container *,
+html.is-scrolling [data-fps-chart],
+html.is-scrolling [data-fps-chart] * {
+  animation-play-state: running !important;
+  transition: all 0.2s ease !important;
+}
+
+/* GPU compositing for critical elements */
+nav,
+footer,
+.modal,
+[data-spline],
+canvas {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout style paint;
+}
+
+/* Disable Framer Motion hover effects during scroll */
+html.is-scrolling [data-framer-component-type],
+html.is-scrolling [style*="transform"] {
+  transform: none !important;
+  transition: none !important;
+}
+
+/* EXCEPTION: Keep FPS chart transforms */
+html.is-scrolling .fps-chart-container [style*="transform"],
+html.is-scrolling [data-fps-chart] [style*="transform"] {
+  transform: unset !important;
+}
+
+/* =================================================================
+   MOBILE PERFORMANCE - Extra aggressive
+   ================================================================= */
+@media (max-width: 768px) {
+  /* No blur on mobile ever */
+  * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  
+  /* EXCEPTION: Allow FPS chart on mobile */
+  .fps-chart-container,
+  .fps-chart-container *,
+  [data-fps-chart],
+  [data-fps-chart] * {
+    backdrop-filter: unset !important;
+    -webkit-backdrop-filter: unset !important;
+    filter: unset !important;
+    box-shadow: unset !important;
+    transform: unset !important;
+    animation-play-state: running !important;
+  }
+  
+  /* Simpler shadows on mobile */
+  [class*="shadow-"] {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  }
+  
+  /* EXCEPTION: Allow shadows for FPS chart */
+  .fps-chart-container [class*="shadow-"],
+  [data-fps-chart] [class*="shadow-"] {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  /* No filter effects on mobile */
+  [class*="filter"],
+  [style*="filter"] {
+    filter: none !important;
+  }
+  
+  /* EXCEPTION: Allow filter effects for FPS chart */
+  .fps-chart-container [class*="filter"],
+  .fps-chart-container [class*="drop-shadow"],
+  [data-fps-chart] [class*="filter"],
+  [data-fps-chart] [class*="drop-shadow"] {
+    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8)) !important;
+  }
+  
+  /* Disable 3D transforms on mobile for battery */
+  [style*="transform3d"],
+  [style*="translateZ"] {
+    transform: none !important;
+  }
+}
+
+/* =================================================================
+   NAVBAR MODAL FREEZE SYSTEM - Same as ServicesShowcaseModal
+   Controls animation freeze during scroll for optimal FPS
+   ================================================================= */
+
+/* Freeze Zone - viewport-aware content optimization */
+.freeze-zone {
+  contain: content;
+}
+
+.freeze-zone.in-viewport {
+  contain: layout style;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.freeze-zone:not(.in-viewport) {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 300px;
+}
+
+/* Aggressive freeze for off-screen modal content */
+.freeze-zone:not(.in-viewport) * {
+  animation: none !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+
+/* Freeze-exempt elements stay interactive */
+.freeze-exempt,
+.freeze-exempt * {
+  animation-play-state: running !important;
+  transition-duration: 0.15s !important;
+  pointer-events: auto !important;
+}
+
+/* Modal scroll performance mode */
+.navbar-modal-content.is-scrolling *,
+.services-modal-content.is-scrolling * {
+  animation-play-state: paused !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+
+.navbar-modal-content.is-scrolling [class*="backdrop-blur"],
+.navbar-modal-content.is-scrolling [class*="backdrop-filter"],
+.services-modal-content.is-scrolling [class*="backdrop-blur"],
+.services-modal-content.is-scrolling [class*="backdrop-filter"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* =================================================================
+   FPS CHART EXCEPTION - HIGHEST SPECIFICITY (AT END OF FILE)
+   These rules MUST come last to override everything above
+   ================================================================= */
+.fps-chart-container,
+.fps-chart-container *,
+[data-fps-chart],
+[data-fps-chart] * {
+  /* Reset ALL performance overrides */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  animation-play-state: running !important;
+}
+
+/* SVG must be visible */
+.fps-chart-container svg,
+.fps-chart-container svg *,
+[data-fps-chart] svg,
+[data-fps-chart] svg * {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+}
+
+/* Keep FPS chart working even during scroll */
+html.is-scrolling .fps-chart-container,
+html.is-scrolling .fps-chart-container *,
+html.is-scrolling [data-fps-chart],
+html.is-scrolling [data-fps-chart] * {
+  animation-play-state: running !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* ============================================================================
+   CRITICAL: DESKTOP BIG SCREEN SCROLL FIX (HIGHEST PRIORITY)
+   This MUST be at the end to override any conflicting rules
+   ============================================================================ */
+@media (min-width: 769px) {
+  html, html.desktop-optimized, html.big-display, html.mouse-device, html.macos {
+    height: auto !important;
+    max-height: none !important;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    scroll-behavior: auto !important;
+    scroll-snap-type: none !important;
+    overscroll-behavior: auto !important;
+  }
+  
+  body, body.desktop-optimized, body.big-display {
+    height: auto !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: auto !important;
+    position: relative !important;
+  }
+  
+  /* Ensure main content can scroll */
+  main, main[data-allow-scroll], main[data-scrollable] {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  
+  /* Remove any fixed height on sections that could block scroll */
+  section {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  
+  /* Ensure all theme overlays don't block scroll */
+  #theme-global-overlay,
+  #theme-edge-glow,
+  #theme-transition-reveal,
+  #theme-filter-overlay,
+  html::before,
+  html::after,
+  body::before,
+  body::after {
+    pointer-events: none !important;
+    touch-action: none !important;
+    position: fixed !important;
+    overflow: visible !important;
+  }
+}
+
+/* ============================================================================
+   ULTRA PRIORITY: Safari macOS Desktop Scroll Fix
+   This overrides ANY @supports (-webkit-touch-callout: none) rules
+   ============================================================================ */
+@media (min-width: 769px) {
+  @supports (-webkit-touch-callout: none) {
+    /* Safari on desktop MUST have these scroll settings */
+    html {
+      height: auto !important;
+      overflow-y: scroll !important;
+      overflow-x: hidden !important;
+    }
+    
+    body {
+      height: auto !important;
+      overflow-y: visible !important;
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: auto !important;
+    }
+  }
+}
+
+/* ============================================================================
+   FINAL OVERRIDE: Ensure document can scroll regardless of any other rules
+   ============================================================================ */
+@media screen and (min-width: 769px) {
+  :root {
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+  }
+  
+  /* Added by performanceSystem.tsx - highest priority scroll enforcement */
+  html.desktop-scroll-enabled {
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    scroll-behavior: auto !important;
+    scroll-snap-type: none !important;
+  }
+  
+  body.desktop-scroll-enabled {
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    position: relative !important;
+  }
+}

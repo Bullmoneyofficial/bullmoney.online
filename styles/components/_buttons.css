@@ -1,0 +1,388 @@
+/**
+ * BULLMONEY - Buttons Component
+ * ==============================
+ * Button styles and variants
+ */
+
+/* ============================================
+   BUTTON BASE
+   ============================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transform: translateZ(0);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ============================================
+   BUTTON SIZES
+   ============================================ */
+.btn-xs {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  border-radius: 6px;
+  gap: 4px;
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 0.8125rem;
+  border-radius: 8px;
+  gap: 6px;
+}
+
+.btn-lg {
+  padding: 16px 32px;
+  font-size: 1rem;
+  border-radius: 12px;
+  gap: 10px;
+}
+
+.btn-xl {
+  padding: 20px 40px;
+  font-size: 1.125rem;
+  border-radius: 14px;
+  gap: 12px;
+}
+
+/* ============================================
+   PRIMARY BUTTON
+   ============================================ */
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-foreground, white);
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover, hsl(from var(--primary) h s calc(l - 5)));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(var(--primary-rgb), 0.3);
+}
+
+/* ============================================
+   SECONDARY BUTTON
+   ============================================ */
+.btn-secondary {
+  background: var(--secondary);
+  color: var(--secondary-foreground, white);
+}
+
+.btn-secondary:hover {
+  background: var(--secondary-hover, hsl(from var(--secondary) h s calc(l - 5)));
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   OUTLINE BUTTON
+   ============================================ */
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--foreground);
+}
+
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-outline-primary {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+  background: rgba(var(--primary-rgb), 0.1);
+}
+
+/* ============================================
+   GHOST BUTTON
+   ============================================ */
+.btn-ghost {
+  background: transparent;
+  color: var(--foreground);
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+   GLASS BUTTON
+   ============================================ */
+.btn-glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.btn-glass:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================
+   GRADIENT BUTTON
+   ============================================ */
+.btn-gradient {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  border: none;
+}
+
+.btn-gradient:hover {
+  background: linear-gradient(135deg, 
+    hsl(from var(--primary) h s calc(l + 5)),
+    hsl(from var(--secondary) h s calc(l + 5))
+  );
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(var(--primary-rgb), 0.3);
+}
+
+.btn-gradient-gold {
+  background: linear-gradient(135deg, #ffd700, #ffa500);
+  color: black;
+}
+
+.btn-gradient-gold:hover {
+  box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+}
+
+/* ============================================
+   GLOW BUTTON
+   ============================================ */
+.btn-glow {
+  position: relative;
+  z-index: 1;
+}
+
+.btn-glow::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: inherit;
+  filter: blur(12px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+  border-radius: inherit;
+}
+
+.btn-glow:hover::before {
+  opacity: 0.6;
+}
+
+/* ============================================
+   ICON BUTTON
+   ============================================ */
+.btn-icon {
+  padding: 12px;
+  aspect-ratio: 1;
+}
+
+.btn-icon-sm {
+  padding: 8px;
+}
+
+.btn-icon-lg {
+  padding: 16px;
+}
+
+/* ============================================
+   LOADING STATE
+   ============================================ */
+.btn-loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: btn-spin 0.8s linear infinite;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   BUTTON GROUP
+   ============================================ */
+.btn-group {
+  display: inline-flex;
+}
+
+.btn-group .btn {
+  border-radius: 0;
+}
+
+.btn-group .btn:first-child {
+  border-radius: 10px 0 0 10px;
+}
+
+.btn-group .btn:last-child {
+  border-radius: 0 10px 10px 0;
+}
+
+.btn-group .btn:not(:last-child) {
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+   PILL BUTTON
+   ============================================ */
+.btn-pill {
+  border-radius: 9999px;
+}
+
+/* ============================================
+   BLOCK BUTTON
+   ============================================ */
+.btn-block {
+  width: 100%;
+}
+
+/* ============================================
+   ANIMATED BUTTONS
+   ============================================ */
+/* Pulse animation */
+.btn-pulse {
+  animation: btn-pulse 2s ease-in-out infinite;
+}
+
+@keyframes btn-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(var(--primary-rgb), 0);
+  }
+}
+
+/* Shine animation */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transform: skewX(-25deg);
+}
+
+.btn-shine:hover::after {
+  animation: btn-shine 0.6s ease;
+}
+
+@keyframes btn-shine {
+  to {
+    left: 150%;
+  }
+}
+
+/* ============================================
+   DESTRUCTIVE BUTTON
+   ============================================ */
+.btn-destructive {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
+.btn-destructive:hover {
+  background: hsl(from var(--destructive) h s calc(l - 5));
+}
+
+/* ============================================
+   SUCCESS BUTTON
+   ============================================ */
+.btn-success {
+  background: #22c55e;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #16a34a;
+}
+
+/* ============================================
+   PERFORMANCE
+   ============================================ */
+.btn {
+  will-change: transform;
+  contain: layout style;
+}
+
+.perf-low .btn-glow::before,
+.perf-low .btn-shine::after {
+  display: none;
+}
+
+.perf-low .btn-pulse {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
+  }
+  
+  .btn-pulse,
+  .btn-shine::after,
+  .btn-loading::after {
+    animation: none;
+  }
+  
+  .btn:hover {
+    transform: none;
+  }
+}

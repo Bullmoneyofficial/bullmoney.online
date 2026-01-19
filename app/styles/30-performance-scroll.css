@@ -1,0 +1,442 @@
+/* ============================================================================
+   2026 ULTRA FPS OPTIMIZATION LAYER
+   Critical performance rules for 60fps minimum
+   ============================================================================ */
+
+/* CRITICAL: Force GPU compositing for frequently painted elements */
+nav,
+footer,
+.modal,
+dialog,
+canvas,
+[data-spline],
+video {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* CRITICAL: Content visibility for off-screen optimization */
+section,
+article,
+.content-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 400px;
+}
+
+/* CRITICAL: Scroll state classes - added by useUltraFpsOptimization */
+/* FIXED: Don't completely disable transitions - just pause heavy animations */
+html.is-scrolling .shimmer-line,
+html.is-scrolling .shimmer-border,
+html.is-scrolling [data-shimmer],
+html.is-scrolling [class*="animate-"] {
+  animation-play-state: paused !important;
+}
+
+/* Only hide shimmer effects during scroll, not all transitions */
+html.is-scrolling .shimmer-line,
+html.is-scrolling .shimmer-border,
+html.is-scrolling [data-shimmer] {
+  opacity: 0 !important;
+}
+
+/* CRITICAL: Page hidden state - pause everything */
+html.page-hidden * {
+  animation-play-state: paused !important;
+}
+
+/* CRITICAL: Interaction state - simplify during active touch/drag */
+html.is-interacting .shimmer-line,
+html.is-interacting .shimmer-border {
+  opacity: 0 !important;
+}
+
+/* 120Hz ProMotion Display Optimizations */
+.display-120hz {
+  /* Hint to browser for smoother 120Hz animations */
+  --animation-smoothing: 0.5;
+}
+
+.display-90hz {
+  --animation-smoothing: 0.65;
+}
+
+/* FPS Confirmed Classes */
+.fps-120 {
+  --confirmed-fps: 120;
+}
+
+.fps-90 {
+  --confirmed-fps: 90;
+}
+
+/* High refresh rate canvas and 3D scene optimizations */
+.display-120hz canvas,
+.display-90hz canvas,
+.fps-120 canvas,
+.fps-90 canvas {
+  /* Force GPU compositing for smooth 120Hz rendering */
+  transform: translateZ(0);
+  will-change: contents;
+}
+
+/* Spline scenes at 120Hz */
+.display-120hz [data-spline],
+.display-90hz [data-spline],
+.fps-120 [data-spline],
+.fps-90 [data-spline] {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+/* ============================================================================
+   DESKTOP PERFORMANCE OPTIMIZATIONS
+   For Apple Silicon M1+ Macs and high-performance Windows/Linux desktops
+   ============================================================================ */
+
+/* Base desktop optimizations */
+@media (min-width: 769px) and (hover: hover) {
+  html.desktop-optimized,
+  html.high-performance {
+    /* Smooth scroll behavior for desktop */
+    scroll-behavior: auto;
+  }
+  
+  /* Enhanced font rendering on desktop */
+  body.desktop-optimized,
+  body.high-performance {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  /* GPU acceleration for all interactive elements */
+  .desktop-optimized button,
+  .desktop-optimized a,
+  .desktop-optimized [role="button"],
+  .high-performance button,
+  .high-performance a,
+  .high-performance [role="button"] {
+    transform: translateZ(0);
+    transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+  }
+}
+
+/* Apple Silicon Mac specific optimizations */
+.apple-silicon,
+.desktop-optimized.display-120hz {
+  /* Ultra-smooth animations for ProMotion displays */
+  --animation-smoothing: 0.4;
+  --transition-speed-multiplier: 0.8;
+}
+
+/* High-spec desktop (discrete GPU, 16GB+ RAM) */
+.high-performance.perf-ultra {
+  /* Enable all visual effects */
+  --blur-enabled: 1;
+  --shadows-enabled: 1;
+  --glow-enabled: 1;
+  --particles-enabled: 1;
+  
+  /* Enhanced backdrop blur */
+  --backdrop-blur-amount: 24px;
+}
+
+/* Desktop canvas/WebGL optimizations */
+@media (min-width: 769px) {
+  .desktop-optimized canvas,
+  .high-performance canvas {
+    /* Force hardware acceleration */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* Optimize rendering */
+    image-rendering: -webkit-optimize-contrast;
+  }
+  
+  /* 3D scenes on high-end desktop */
+  .desktop-optimized [data-spline],
+  .high-performance [data-spline] {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    contain: layout paint;
+  }
+}
+
+/* ============================================================================
+   BIG DISPLAY MOUSE WHEEL SCROLL FIXES (1440px+)
+   Ensures smooth, responsive mouse wheel scrolling on large monitors
+   ============================================================================ */
+@media (min-width: 1440px) {
+  /* Mouse users on big displays should have instant scroll response */
+  html.mouse-device,
+  html.big-display {
+    scroll-behavior: auto !important;
+  }
+  
+  /* Disable scroll-snap for mouse users - it causes jerky scrolling */
+  html.mouse-device body,
+  html.mouse-device main,
+  html.big-display body,
+  html.big-display main {
+    scroll-snap-type: none !important;
+  }
+  
+  html.mouse-device section,
+  html.big-display section {
+    scroll-snap-align: none !important;
+    scroll-snap-stop: normal !important;
+  }
+  
+  /* Ensure smooth scrollbar on big displays */
+  html.big-display::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  html.big-display::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+  }
+  
+  html.big-display::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.5);
+    border-radius: 5px;
+  }
+  
+  html.big-display::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.7);
+  }
+}
+
+/* ============================================================================
+   DESKTOP & MAC SCROLL OPTIMIZATIONS (769px+)
+   Critical fixes for macOS Safari trackpad and desktop mouse wheel
+   ============================================================================ */
+@media (min-width: 769px) {
+  /* Desktop scroll foundation */
+  html {
+    scroll-behavior: auto !important;
+    overflow-y: scroll !important;
+    overscroll-behavior: auto;
+  }
+  
+  body {
+    overflow-y: visible !important;
+    overscroll-behavior: auto;
+    /* Allow momentum scrolling on macOS */
+    -webkit-overflow-scrolling: auto;
+  }
+  
+  /* Remove any scroll-snap that could interfere with smooth scrolling */
+  html, body, main, section {
+    scroll-snap-type: none !important;
+    scroll-snap-align: none !important;
+  }
+  
+  /* Ensure content sections don't block scroll */
+  section, main, article {
+    overflow: visible;
+  }
+}
+
+/* macOS Safari specific optimizations */
+@supports (-webkit-appearance: none) and (not (-moz-appearance: none)) {
+  @media (min-width: 769px) and (hover: hover) {
+    html {
+      /* Safari-specific smooth momentum scrolling */
+      -webkit-overflow-scrolling: auto;
+      scroll-behavior: auto !important;
+    }
+    
+    /* Ensure Safari trackpad gestures work */
+    body {
+      overscroll-behavior: auto;
+    }
+  }
+}
+
+/* Mobile Touch Scrolling Improvements */
+html {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+  overflow-y: auto !important;
+  touch-action: pan-y;
+}
+
+body {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+  overflow-y: auto !important;
+  touch-action: pan-y;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Allow scrolling in main content and sections */
+main, section, [data-allow-scroll], [data-scrollable] {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y !important;
+  overscroll-behavior-y: contain;
+}
+
+/* CRITICAL: Ensure canvas and 3D elements don't block scrolling on mobile */
+canvas {
+  touch-action: pan-y !important;
+  pointer-events: none;
+}
+
+/* Allow pointer events on desktop only */
+@media (min-width: 769px) and (hover: hover) {
+  canvas {
+    pointer-events: auto;
+    touch-action: none;
+  }
+}
+
+/* Fix for iOS Safari - MOBILE ONLY */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 768px) {
+    body {
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+    }
+    
+    html {
+      height: -webkit-fill-available;
+    }
+  }
+  
+  /* Desktop Safari needs auto height for proper scrolling */
+  @media (min-width: 769px) {
+    html {
+      height: auto !important;
+    }
+  }
+  
+  /* iOS Safari specific: ensure overlays don't capture touches */
+  html[data-active-theme]::before {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* ============================================
+   BROWSER-SPECIFIC SCROLL FIXES
+   Safari, Samsung Browser, Firefox, Chrome
+   ============================================ */
+
+/* Safari (macOS and iOS) */
+html.is-safari,
+html.is-ios-safari {
+  /* Safari needs explicit scroll setup */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* macOS Safari DESKTOP - trackpad scrolling fixes */
+html.is-safari.macos,
+html.is-safari.desktop-optimized {
+  scroll-behavior: auto !important;
+  overflow-y: scroll !important;
+  overscroll-behavior: auto;
+}
+
+html.is-safari.macos body,
+html.is-safari.desktop-optimized body {
+  overflow-y: visible !important;
+  overscroll-behavior: auto;
+  /* Enable momentum scrolling */
+  -webkit-overflow-scrolling: auto;
+}
+
+html.is-safari body,
+html.is-ios-safari body {
+  /* Prevent Safari rubber-banding issues */
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Samsung Browser (Android) */
+@media screen and (-webkit-min-device-pixel-ratio: 0) 
+  and (min-resolution: 0.001dpcm) {
+  body {
+    /* Samsung Browser scroll optimization */
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+}
+
+/* Firefox Mobile */
+@-moz-document url-prefix() {
+  html, body {
+    scroll-behavior: auto;
+    overflow-y: auto;
+  }
+}
+
+/* In-App Browsers (Instagram, Facebook, TikTok, etc.) */
+/* These often have restricted scroll behavior */
+html.is-in-app-browser body {
+  /* Force scroll to work in webviews */
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: auto !important;
+}
+
+/* ============================================
+   THEME OVERLAY SCROLL SAFETY
+   Ensures the theme overlay NEVER blocks scrolling
+   ============================================ */
+
+/* The CSS pseudo-element overlay */
+html::before,
+html::after,
+body::before,
+body::after {
+  /* CRITICAL: These must never block scrolling */
+  pointer-events: none !important;
+  touch-action: none !important;
+}
+
+/* The JS-injected overlay component */
+#theme-filter-overlay {
+  /* Redundant safety - also set in JS */
+  pointer-events: none !important;
+  touch-action: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+/* Spline container - ensure scroll passthrough */
+.spline-container {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  touch-action: pan-y !important;
+  -webkit-overflow-scrolling: touch;
+  pointer-events: none;
+}
+
+@media (min-width: 769px) and (hover: hover) {
+  .spline-container {
+    pointer-events: auto;
+  }
+}
+
+/* Fixed elements should not block scrolling */
+/* FIXED: Only apply touch-action: none on mobile - desktop needs to pass through scroll events */
+@media (max-width: 768px) {
+  .fixed, [style*="position: fixed"] {
+    touch-action: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .fixed, [style*="position: fixed"] {
+    /* Allow scroll pass-through on desktop */
+    pointer-events: auto;
+  }
+}
+
+/* Ensure hero section doesn't block scroll */
+.h-screen {
+  touch-action: pan-y !important;
+}

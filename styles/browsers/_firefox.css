@@ -1,0 +1,367 @@
+/**
+ * BULLMONEY - Firefox Browser Optimizations
+ * ==========================================
+ * Mozilla Firefox specific fixes and optimizations
+ */
+
+/* ============================================
+   FIREFOX DETECTION
+   ============================================ */
+@-moz-document url-prefix() {
+  /* Firefox-only styles */
+  
+  /* Fix hardware acceleration */
+  .firefox-optimized {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  
+  /* Enable smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+    scrollbar-width: thin;
+  }
+}
+
+/* ============================================
+   FIREFOX SCROLLBAR
+   ============================================ */
+@supports (scrollbar-width: thin) {
+  /* Modern Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  }
+  
+  .scrollbar-hidden {
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-auto {
+    scrollbar-width: auto;
+  }
+}
+
+/* ============================================
+   FIREFOX BACKDROP FILTER
+   ============================================ */
+/* Firefox now supports backdrop-filter, but enable just in case */
+@supports (backdrop-filter: blur(1px)) {
+  .firefox-blur {
+    backdrop-filter: blur(10px);
+  }
+}
+
+/* Fallback for older Firefox */
+@supports not (backdrop-filter: blur(1px)) {
+  .firefox-blur {
+    background-color: rgba(0, 0, 0, 0.85);
+  }
+  
+  .firefox-blur-fallback {
+    background-color: rgba(0, 0, 0, 0.9);
+  }
+}
+
+/* ============================================
+   FIREFOX FLEX/GRID FIXES
+   ============================================ */
+@-moz-document url-prefix() {
+  /* Fix flex min-height bug */
+  .flex-fix {
+    min-height: 0;
+  }
+  
+  /* Fix grid auto-fill/auto-fit */
+  .grid-fix {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  }
+  
+  /* Fix aspect-ratio fallback */
+  .aspect-fix::before {
+    float: left;
+    padding-top: 56.25%;
+    content: '';
+  }
+  
+  .aspect-fix::after {
+    display: block;
+    content: '';
+    clear: both;
+  }
+}
+
+/* ============================================
+   FIREFOX ANIMATION PERFORMANCE
+   ============================================ */
+@-moz-document url-prefix() {
+  /* Optimize animations for Firefox */
+  .animate-smooth {
+    animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+    will-change: transform, opacity;
+  }
+  
+  /* Force layer creation */
+  .layer-promote {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+  
+  /* Reduce paint areas */
+  .contain-paint {
+    contain: paint;
+  }
+}
+
+/* ============================================
+   FIREFOX TEXT RENDERING
+   ============================================ */
+@-moz-document url-prefix() {
+  body {
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  /* Fix font weight rendering on Windows */
+  .font-fix {
+    -moz-osx-font-smoothing: auto;
+  }
+  
+  /* Better subpixel rendering */
+  .text-crisp {
+    text-rendering: geometricPrecision;
+  }
+}
+
+/* ============================================
+   FIREFOX FORM ELEMENTS
+   ============================================ */
+@-moz-document url-prefix() {
+  /* Remove default focus ring */
+  :focus {
+    outline: none;
+  }
+  
+  ::-moz-focus-inner {
+    border: 0;
+  }
+  
+  /* Custom focus styles */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  
+  /* Fix select styling */
+  select {
+    -moz-appearance: none;
+    appearance: none;
+  }
+  
+  /* Fix number input spinners */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+  
+  /* Fix range input */
+  input[type="range"]::-moz-range-track {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    height: 4px;
+  }
+  
+  input[type="range"]::-moz-range-thumb {
+    background: white;
+    border: none;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+  
+  input[type="range"]::-moz-range-progress {
+    background: var(--primary);
+    border-radius: 4px;
+    height: 4px;
+  }
+}
+
+/* ============================================
+   FIREFOX MASK & CLIP PATH
+   ============================================ */
+@-moz-document url-prefix() {
+  /* Firefox mask support */
+  .mask-gradient {
+    mask-image: linear-gradient(to bottom, black 60%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent);
+  }
+  
+  /* Fix clip-path animations */
+  .clip-animated {
+    will-change: clip-path;
+  }
+}
+
+/* ============================================
+   FIREFOX TRANSFORMS
+   ============================================ */
+@-moz-document url-prefix() {
+  /* Fix transform-style preserve-3d */
+  .preserve-3d {
+    transform-style: preserve-3d;
+    perspective: 1000px;
+  }
+  
+  /* Fix backface-visibility */
+  .backface-hidden {
+    backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+  }
+  
+  /* 3D transforms */
+  .transform-3d {
+    transform: perspective(1000px) rotateX(0deg);
+    transform-origin: center center;
+  }
+}
+
+/* ============================================
+   FIREFOX MEDIA QUERIES
+   ============================================ */
+@-moz-document url-prefix() {
+  /* High DPI displays */
+  @media (-moz-device-pixel-ratio: 2),
+         (min-resolution: 192dpi) {
+    .retina-fix {
+      image-rendering: -moz-crisp-edges;
+    }
+  }
+  
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  
+  /* Dark mode */
+  @media (prefers-color-scheme: dark) {
+    .dark-mode-fix {
+      color-scheme: dark;
+    }
+  }
+}
+
+/* ============================================
+   FIREFOX POINTER EVENTS
+   ============================================ */
+@-moz-document url-prefix() {
+  /* Fix pointer events on overlays */
+  .pointer-pass-through {
+    pointer-events: none;
+  }
+  
+  .pointer-pass-through > * {
+    pointer-events: auto;
+  }
+  
+  /* Touch events */
+  .touch-enabled {
+    touch-action: manipulation;
+  }
+}
+
+/* ============================================
+   FIREFOX IMAGE RENDERING
+   ============================================ */
+@-moz-document url-prefix() {
+  /* Crisp image rendering */
+  .image-crisp {
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+  
+  /* Smooth image scaling */
+  .image-smooth {
+    image-rendering: auto;
+  }
+  
+  /* SVG rendering */
+  svg {
+    shape-rendering: geometricPrecision;
+  }
+}
+
+/* ============================================
+   FIREFOX PRINT STYLES
+   ============================================ */
+@-moz-document url-prefix() {
+  @media print {
+    * {
+      background: transparent !important;
+      color: black !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+    
+    .no-print {
+      display: none !important;
+    }
+  }
+}
+
+/* ============================================
+   FIREFOX CONTAINER QUERIES
+   ============================================ */
+@supports (container-type: inline-size) {
+  .container-query {
+    container-type: inline-size;
+    container-name: card;
+  }
+  
+  @container card (max-width: 400px) {
+    .container-responsive {
+      flex-direction: column;
+    }
+  }
+}
+
+/* ============================================
+   FIREFOX SELECTION
+   ============================================ */
+@-moz-document url-prefix() {
+  ::-moz-selection {
+    background-color: rgba(59, 130, 246, 0.5);
+    color: white;
+  }
+  
+  ::selection {
+    background-color: rgba(59, 130, 246, 0.5);
+    color: white;
+  }
+}
+
+/* ============================================
+   FIREFOX PLACEHOLDER
+   ============================================ */
+@-moz-document url-prefix() {
+  ::-moz-placeholder {
+    color: rgba(255, 255, 255, 0.5);
+    opacity: 1;
+  }
+  
+  :-moz-placeholder {
+    color: rgba(255, 255, 255, 0.5);
+    opacity: 1;
+  }
+}

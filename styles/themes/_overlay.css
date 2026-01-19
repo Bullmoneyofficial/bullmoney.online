@@ -1,0 +1,214 @@
+/**
+ * BULLMONEY - Theme Overlay System
+ * =================================
+ * Full-coverage theme overlays and color application
+ */
+
+/* ============================================
+   DOM-BASED THEME OVERLAYS
+   Injected by GlobalThemeProvider
+   ============================================ */
+#theme-global-overlay,
+#theme-edge-glow {
+  pointer-events: none !important;
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-touch-callout: none !important;
+  overflow: visible !important;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout style;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  #theme-global-overlay {
+    opacity: 0.4 !important;
+  }
+  #theme-edge-glow {
+    opacity: 0.3 !important;
+  }
+}
+
+/* Low-performance devices */
+html.fps-minimal #theme-global-overlay,
+html.fps-low #theme-global-overlay {
+  opacity: 0.2 !important;
+}
+
+html.fps-minimal #theme-edge-glow,
+html.fps-low #theme-edge-glow {
+  display: none !important;
+}
+
+/* ============================================
+   CSS FALLBACK OVERLAY (::before pseudo)
+   ============================================ */
+html[data-active-theme]::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.08) 0%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.04) 40%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.02) 70%,
+    transparent 100%
+  );
+  pointer-events: none !important;
+  touch-action: none !important;
+  mix-blend-mode: soft-light;
+  opacity: var(--theme-overlay-opacity, 0.6);
+  transition: opacity 0.5s ease-in-out, background 0.5s ease-in-out;
+  transform: translateZ(0);
+  will-change: opacity;
+  contain: strict;
+  overflow: visible !important;
+}
+
+/* Mobile overlay reduction */
+@media (max-width: 768px) {
+  html[data-active-theme]::before {
+    background: radial-gradient(
+      ellipse at 50% 20%,
+      rgba(var(--accent-rgb, 59, 130, 246), 0.06) 0%,
+      rgba(var(--accent-rgb, 59, 130, 246), 0.02) 50%,
+      transparent 100%
+    );
+    opacity: 0.4;
+  }
+}
+
+/* Low-performance devices */
+html.fps-minimal[data-active-theme]::before,
+html.fps-low[data-active-theme]::before {
+  opacity: 0.2;
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.02);
+}
+
+/* Light theme inversion */
+html[data-active-theme][data-theme-light="true"]::before {
+  mix-blend-mode: multiply;
+  opacity: 0.3;
+}
+
+/* ============================================
+   SCROLL SAFETY FOR OVERLAYS
+   ============================================ */
+#theme-global-overlay,
+#theme-edge-glow,
+html::before,
+html::after,
+body::before,
+body::after,
+[id*="theme-overlay"],
+[class*="theme-overlay"] {
+  pointer-events: none !important;
+  touch-action: none !important;
+  -webkit-overflow-scrolling: unset !important;
+  overflow: visible !important;
+}
+
+/* iOS Safari fixes */
+@supports (-webkit-touch-callout: none) {
+  #theme-global-overlay,
+  #theme-edge-glow {
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+}
+
+/* Samsung Browser fixes */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  #theme-global-overlay,
+  #theme-edge-glow {
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+}
+
+/* In-App Browsers */
+html.is-in-app-browser #theme-global-overlay,
+html.is-in-app-browser #theme-edge-glow {
+  z-index: 99990 !important;
+}
+
+/* ============================================
+   THEME-AWARE BORDER GLOW
+   ============================================ */
+html[data-active-theme] nav,
+html[data-active-theme] .modal,
+html[data-active-theme] [role="dialog"],
+html[data-active-theme] .card,
+html[data-active-theme] .theme-glow-border {
+  box-shadow: 
+    0 0 1px rgba(var(--accent-rgb, 59, 130, 246), 0.3),
+    0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.05),
+    inset 0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.02);
+  border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.2) !important;
+}
+
+html[data-active-theme] nav:hover,
+html[data-active-theme] .theme-glow-border:hover {
+  box-shadow: 
+    0 0 2px rgba(var(--accent-rgb, 59, 130, 246), 0.5),
+    0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.1),
+    inset 0 0 40px rgba(var(--accent-rgb, 59, 130, 246), 0.03);
+}
+
+/* ============================================
+   FIXED ELEMENT THEMING
+   ============================================ */
+html[data-active-theme] nav[class*="fixed"],
+html[data-active-theme] header[class*="fixed"] {
+  border-bottom-color: rgba(var(--accent-rgb, 59, 130, 246), 0.15) !important;
+}
+
+html[data-active-theme] [class*="fixed"][class*="z-"] {
+  --modal-border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.25);
+}
+
+html[data-active-theme] button:not([data-no-theme]),
+html[data-active-theme] [role="button"]:not([data-no-theme]) {
+  --btn-accent: var(--accent-color, #3b82f6);
+  --btn-accent-rgb: var(--accent-rgb, 59, 130, 246);
+}
+
+/* ============================================
+   SPLINE & CANVAS THEME OVERLAY
+   ============================================ */
+[data-spline],
+.spline-container {
+  position: relative;
+}
+
+[data-spline]::after,
+.spline-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.08) 0%,
+    transparent 60%
+  );
+  mix-blend-mode: screen;
+  z-index: 1;
+  border-radius: inherit;
+  transition: background 0.5s ease;
+}
+
+/* Hero spline stronger glow */
+.hero [data-spline]::after,
+section#hero [data-spline]::after {
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.12) 0%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.05) 40%,
+    transparent 70%
+  );
+}

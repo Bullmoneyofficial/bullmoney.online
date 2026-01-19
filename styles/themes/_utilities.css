@@ -1,0 +1,255 @@
+/**
+ * BULLMONEY - Theme Utility Classes
+ * ==================================
+ * Theme-aware utility classes for dynamic color application
+ */
+
+/* ============================================
+   THEME-AWARE ACCENT COLORS
+   ============================================ */
+.theme-accent {
+  color: var(--accent-color, #3b82f6);
+}
+
+.theme-accent-bg {
+  background-color: var(--accent-color, #3b82f6);
+}
+
+.theme-accent-border {
+  border-color: var(--accent-color, #3b82f6);
+}
+
+.theme-accent-glow {
+  box-shadow: 0 0 20px var(--theme-accent-light, rgba(59, 130, 246, 0.25)),
+              0 0 40px var(--theme-accent-glow, rgba(59, 130, 246, 0.15));
+}
+
+/* ============================================
+   THEME-AWARE GRADIENTS
+   ============================================ */
+.theme-gradient {
+  background: linear-gradient(135deg, 
+    var(--theme-accent-dark, rgba(59, 130, 246, 0.5)) 0%, 
+    transparent 50%,
+    var(--theme-accent-light, rgba(59, 130, 246, 0.25)) 100%);
+}
+
+.theme-gradient-overlay {
+  position: relative;
+}
+
+.theme-gradient-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    var(--theme-accent-subtle, rgba(59, 130, 246, 0.1)) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ============================================
+   THEME-AWARE BORDERS
+   ============================================ */
+.theme-border-glow {
+  border: 1px solid var(--theme-accent-border, rgba(59, 130, 246, 0.3));
+  box-shadow: 0 0 15px var(--theme-accent-subtle, rgba(59, 130, 246, 0.1)),
+              inset 0 0 15px var(--theme-accent-subtle, rgba(59, 130, 246, 0.05));
+}
+
+/* ============================================
+   THEME-AWARE BUTTONS
+   ============================================ */
+.theme-button {
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.1);
+  border: 1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.2);
+  color: var(--accent-color, #3b82f6);
+  transition: all 0.3s ease;
+}
+
+.theme-button:hover {
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.2);
+  border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.5);
+  box-shadow: 0 0 20px var(--theme-accent-glow, rgba(59, 130, 246, 0.3));
+}
+
+/* ============================================
+   THEME-AWARE CARDS
+   ============================================ */
+.theme-card {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid var(--theme-accent-border, rgba(59, 130, 246, 0.2));
+}
+
+.theme-card:hover {
+  border-color: var(--theme-accent-border, rgba(59, 130, 246, 0.4));
+  box-shadow: 0 0 30px var(--theme-accent-subtle, rgba(59, 130, 246, 0.1));
+}
+
+/* ============================================
+   THEME-AWARE INPUTS
+   ============================================ */
+.theme-input {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.2);
+  color: white;
+}
+
+.theme-input:focus {
+  border-color: var(--accent-color, #3b82f6);
+  box-shadow: 0 0 0 2px var(--theme-accent-subtle, rgba(59, 130, 246, 0.2));
+  outline: none;
+}
+
+/* ============================================
+   AUDIO WIDGET SLIDER THEMING
+   ============================================ */
+[data-audio-widget] input[type="range"]::-webkit-slider-thumb {
+  background-color: var(--accent-color, #60a5fa);
+  box-shadow: 0 10px 15px -3px rgba(var(--accent-rgb, 59, 130, 246), 0.3);
+  border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.5);
+}
+
+[data-audio-widget] input[type="range"]::-moz-range-thumb {
+  background-color: var(--accent-color, #60a5fa);
+  box-shadow: 0 10px 15px -3px rgba(var(--accent-rgb, 59, 130, 246), 0.3);
+  border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.5);
+}
+
+/* ============================================
+   GLOBAL THEME COLOR APPLICATION
+   Converts Tailwind blue classes to theme accent
+   ============================================ */
+
+/* TEXT COLORS */
+html[data-active-theme] .text-blue-400,
+html[data-active-theme] .text-blue-500,
+html[data-active-theme] .text-blue-600,
+[data-active-theme] .text-blue-400,
+[data-active-theme] .text-blue-500,
+[data-active-theme] .text-blue-600,
+html[data-active-theme] [class*="text-blue-4"],
+html[data-active-theme] [class*="text-blue-5"] {
+  color: var(--accent-color, #3b82f6) !important;
+}
+
+/* BORDER COLORS */
+html[data-active-theme] .border-blue-400,
+html[data-active-theme] .border-blue-500,
+html[data-active-theme] .border-blue-600,
+[data-active-theme] .border-blue-400,
+[data-active-theme] .border-blue-500,
+[data-active-theme] .border-blue-600,
+html[data-active-theme] [class*="border-blue-4"],
+html[data-active-theme] [class*="border-blue-5"] {
+  border-color: rgba(var(--accent-rgb, 59, 130, 246), var(--tw-border-opacity, 0.3)) !important;
+}
+
+/* BACKGROUND COLORS */
+html[data-active-theme] .bg-blue-400,
+html[data-active-theme] .bg-blue-500,
+html[data-active-theme] .bg-blue-600,
+[data-active-theme] .bg-blue-400,
+[data-active-theme] .bg-blue-500,
+[data-active-theme] .bg-blue-600,
+html[data-active-theme] [class*="bg-blue-4"],
+html[data-active-theme] [class*="bg-blue-5"] {
+  background-color: rgba(var(--accent-rgb, 59, 130, 246), var(--tw-bg-opacity, 0.2)) !important;
+}
+
+/* RING COLORS */
+html[data-active-theme] .ring-blue-400,
+html[data-active-theme] .ring-blue-500,
+html[data-active-theme] .ring-blue-600,
+html[data-active-theme] [class*="focus\\:ring-blue-4"]:focus,
+html[data-active-theme] [class*="focus\\:ring-blue-5"]:focus {
+  --tw-ring-color: var(--accent-color, #3b82f6) !important;
+}
+
+/* GRADIENT COLORS */
+html[data-active-theme] .from-blue-400,
+html[data-active-theme] .from-blue-500,
+html[data-active-theme] .from-blue-600,
+html[data-active-theme] [class*="from-blue-"] {
+  --tw-gradient-from: var(--accent-color, #3b82f6) !important;
+}
+
+html[data-active-theme] .to-blue-400,
+html[data-active-theme] .to-blue-500,
+html[data-active-theme] .to-blue-600,
+html[data-active-theme] [class*="to-blue-"] {
+  --tw-gradient-to: var(--accent-color, #3b82f6) !important;
+}
+
+html[data-active-theme] .via-blue-400,
+html[data-active-theme] .via-blue-500,
+html[data-active-theme] [class*="via-blue-"] {
+  --tw-gradient-via: var(--accent-color, #3b82f6) !important;
+}
+
+/* SHADOW COLORS */
+html[data-active-theme] [class*="shadow-blue"] {
+  --tw-shadow-color: rgba(var(--accent-rgb, 59, 130, 246), 0.3) !important;
+}
+
+/* DROP SHADOW */
+html[data-active-theme] [class*="drop-shadow"][class*="blue"],
+html[data-active-theme] [style*="drop-shadow"][style*="59"][style*="130"][style*="246"] {
+  filter: drop-shadow(0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.5)) !important;
+}
+
+/* HOVER STATES */
+html[data-active-theme] [class*="hover\\:text-blue-4"]:hover,
+html[data-active-theme] [class*="hover\\:text-blue-5"]:hover,
+html[data-active-theme] [class*="hover\\:border-blue-4"]:hover,
+html[data-active-theme] [class*="hover\\:border-blue-5"]:hover,
+html[data-active-theme] [class*="hover\\:bg-blue-4"]:hover,
+html[data-active-theme] [class*="hover\\:bg-blue-5"]:hover {
+  color: var(--accent-color, #3b82f6) !important;
+  border-color: var(--accent-color, #3b82f6) !important;
+}
+
+/* FOCUS STATES */
+html[data-active-theme] [class*="focus\\:border-blue-5"]:focus,
+html[data-active-theme] [class*="focus\\:border-blue-4"]:focus {
+  border-color: var(--accent-color, #3b82f6) !important;
+}
+
+/* ============================================
+   CRYPTO CATEGORY ANIMATION
+   ============================================ */
+[data-theme-category="CRYPTO"] .theme-accent-glow {
+  animation: crypto-pulse 2s ease-in-out infinite;
+}
+
+@keyframes crypto-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* SENTIMENT CATEGORY */
+[data-theme-category="SENTIMENT"] {
+  transition: filter 0.8s ease-in-out;
+}
+
+/* GLITCH CATEGORY */
+[data-theme-category="GLITCH"] .theme-text-accent {
+  animation: text-jitter 0.3s infinite;
+}
+
+@keyframes text-jitter {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-1px); }
+  75% { transform: translateX(1px); }
+}
+
+/* ============================================
+   THEME TEXT COLORS
+   ============================================ */
+html[data-active-theme] {
+  --theme-text-primary: white;
+  --theme-text-secondary: rgba(255, 255, 255, 0.7);
+}

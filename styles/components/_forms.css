@@ -1,0 +1,461 @@
+/**
+ * BULLMONEY - Forms Component
+ * ============================
+ * Form inputs, labels, and form elements
+ */
+
+/* ============================================
+   FORM BASE
+   ============================================ */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+/* ============================================
+   LABELS
+   ============================================ */
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.form-label-required::after {
+  content: ' *';
+  color: var(--destructive);
+}
+
+/* ============================================
+   INPUT BASE
+   ============================================ */
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 1rem;
+  color: var(--foreground);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.form-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.form-input:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15);
+}
+
+/* Input sizes */
+.form-input-sm {
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  border-radius: 8px;
+}
+
+.form-input-lg {
+  padding: 16px 20px;
+  font-size: 1.125rem;
+  border-radius: 12px;
+}
+
+/* ============================================
+   TEXTAREA
+   ============================================ */
+.form-textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.form-textarea-no-resize {
+  resize: none;
+}
+
+/* ============================================
+   SELECT
+   ============================================ */
+.form-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+.form-select::-ms-expand {
+  display: none;
+}
+
+/* ============================================
+   CHECKBOX & RADIO
+   ============================================ */
+.form-checkbox,
+.form-radio {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.form-checkbox input,
+.form-radio input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.form-checkbox-box,
+.form-radio-box {
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.form-checkbox-box {
+  border-radius: 6px;
+}
+
+.form-radio-box {
+  border-radius: 50%;
+}
+
+.form-checkbox input:checked + .form-checkbox-box,
+.form-radio input:checked + .form-radio-box {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.form-checkbox-box::after {
+  content: '';
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform 0.2s ease;
+}
+
+.form-checkbox input:checked + .form-checkbox-box::after {
+  transform: rotate(45deg) scale(1);
+}
+
+.form-radio-box::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+  transform: scale(0);
+  transition: transform 0.2s ease;
+}
+
+.form-radio input:checked + .form-radio-box::after {
+  transform: scale(1);
+}
+
+.form-checkbox input:focus-visible + .form-checkbox-box,
+.form-radio input:focus-visible + .form-radio-box {
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.3);
+}
+
+/* ============================================
+   SWITCH/TOGGLE
+   ============================================ */
+.form-switch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.form-switch input {
+  position: absolute;
+  opacity: 0;
+}
+
+.form-switch-track {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 13px;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.form-switch-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.form-switch input:checked + .form-switch-track {
+  background: var(--primary);
+}
+
+.form-switch input:checked + .form-switch-track .form-switch-thumb {
+  transform: translateX(22px);
+}
+
+.form-switch input:focus-visible + .form-switch-track {
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.3);
+}
+
+/* ============================================
+   RANGE INPUT
+   ============================================ */
+.form-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  outline: none;
+}
+
+.form-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.form-range::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.form-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--primary);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* ============================================
+   INPUT STATES
+   ============================================ */
+.form-input-error {
+  border-color: var(--destructive) !important;
+}
+
+.form-input-error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+.form-input-success {
+  border-color: #22c55e !important;
+}
+
+.form-input-success:focus {
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15) !important;
+}
+
+.form-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ============================================
+   HELPER TEXT
+   ============================================ */
+.form-helper {
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 4px;
+}
+
+.form-error {
+  font-size: 0.8125rem;
+  color: var(--destructive);
+  margin-top: 4px;
+}
+
+.form-success {
+  font-size: 0.8125rem;
+  color: #22c55e;
+  margin-top: 4px;
+}
+
+/* ============================================
+   INPUT WITH ICON
+   ============================================ */
+.form-input-wrapper {
+  position: relative;
+}
+
+.form-input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+}
+
+.form-input-wrapper .form-input {
+  padding-left: 44px;
+}
+
+.form-input-icon-right {
+  left: auto;
+  right: 14px;
+}
+
+.form-input-wrapper.icon-right .form-input {
+  padding-left: 16px;
+  padding-right: 44px;
+}
+
+/* ============================================
+   INPUT ADDONS
+   ============================================ */
+.form-input-group {
+  display: flex;
+}
+
+.form-input-addon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+}
+
+.form-input-addon:first-child {
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+}
+
+.form-input-addon:last-child {
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+}
+
+.form-input-group .form-input {
+  border-radius: 0;
+}
+
+.form-input-group .form-input:first-child {
+  border-radius: 10px 0 0 10px;
+}
+
+.form-input-group .form-input:last-child {
+  border-radius: 0 10px 10px 0;
+}
+
+.form-input-group .form-input:only-child {
+  border-radius: 10px;
+}
+
+/* ============================================
+   GLASS INPUT VARIANT
+   ============================================ */
+.form-input-glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.form-input-glass:focus {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ============================================
+   FLOATING LABEL
+   ============================================ */
+.form-floating {
+  position: relative;
+}
+
+.form-floating .form-input {
+  padding-top: 24px;
+  padding-bottom: 8px;
+}
+
+.form-floating .form-label {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.4);
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.form-floating .form-input:focus ~ .form-label,
+.form-floating .form-input:not(:placeholder-shown) ~ .form-label {
+  top: 12px;
+  transform: translateY(0);
+  font-size: 0.75rem;
+  color: var(--primary);
+}
+
+/* ============================================
+   PERFORMANCE
+   ============================================ */
+.perf-low .form-input-glass {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: rgba(20, 20, 20, 0.9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .form-input,
+  .form-checkbox-box,
+  .form-radio-box,
+  .form-switch-track,
+  .form-switch-thumb {
+    transition: none;
+  }
+}

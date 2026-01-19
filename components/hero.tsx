@@ -835,6 +835,8 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
         // GPU layer
         transform: "translate3d(0,0,0)",
         willChange: "transform",
+        touchAction: 'pan-y',
+        WebkitOverflowScrolling: 'touch',
       }}
     >
       <div 
@@ -847,6 +849,7 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          touchAction: 'pan-y',
         }}
       >
         {shouldUseViewer ? (
@@ -856,7 +859,11 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
             loading="lazy"
             data-testid="hero-spline-viewer"
             events-target="global"
-            style={fullViewportStyles}
+            style={{
+              ...fullViewportStyles,
+              touchAction: 'pan-y',
+              pointerEvents: 'auto',
+            }}
           />
         ) : (
           <iframe
@@ -871,6 +878,8 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
               position: "absolute",
               top: 0,
               left: 0,
+              touchAction: 'pan-y',
+              pointerEvents: 'auto',
             }}
           />
         )}

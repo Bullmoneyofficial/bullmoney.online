@@ -1,0 +1,417 @@
+/**
+ * BULLMONEY - Shimmer & Loading States
+ * =====================================
+ * Unified shimmer effects and skeleton loaders
+ */
+
+/* ============================================
+   SHIMMER VARIABLES
+   ============================================ */
+:root {
+  --shimmer-bg: rgba(255, 255, 255, 0.05);
+  --shimmer-highlight: rgba(255, 255, 255, 0.1);
+  --shimmer-speed: 1.5s;
+  --shimmer-size: 200%;
+}
+
+/* ============================================
+   BASE SHIMMER
+   ============================================ */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+  background: var(--shimmer-bg);
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--shimmer-highlight) 50%,
+    transparent 100%
+  );
+  animation: shimmer var(--shimmer-speed) infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ============================================
+   SHIMMER VARIANTS
+   ============================================ */
+.shimmer-fast {
+  --shimmer-speed: 1s;
+}
+
+.shimmer-slow {
+  --shimmer-speed: 2.5s;
+}
+
+.shimmer-bright {
+  --shimmer-highlight: rgba(255, 255, 255, 0.2);
+}
+
+.shimmer-subtle {
+  --shimmer-highlight: rgba(255, 255, 255, 0.05);
+}
+
+.shimmer-gold {
+  --shimmer-bg: rgba(255, 215, 0, 0.1);
+  --shimmer-highlight: rgba(255, 215, 0, 0.2);
+}
+
+.shimmer-primary {
+  --shimmer-bg: rgba(var(--primary-rgb), 0.1);
+  --shimmer-highlight: rgba(var(--primary-rgb), 0.2);
+}
+
+/* ============================================
+   SKELETON LOADERS
+   ============================================ */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--shimmer-bg) 25%,
+    var(--shimmer-highlight) 50%,
+    var(--shimmer-bg) 75%
+  );
+  background-size: var(--shimmer-size) 100%;
+  animation: skeleton-loading var(--shimmer-speed) ease-in-out infinite;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Skeleton shapes */
+.skeleton-text {
+  height: 1em;
+  border-radius: 4px;
+}
+
+.skeleton-text-sm {
+  height: 0.75em;
+}
+
+.skeleton-text-lg {
+  height: 1.25em;
+}
+
+.skeleton-title {
+  height: 1.5em;
+  width: 60%;
+  border-radius: 6px;
+}
+
+.skeleton-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+.skeleton-circle-sm {
+  width: 32px;
+  height: 32px;
+}
+
+.skeleton-circle-lg {
+  width: 64px;
+  height: 64px;
+}
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.skeleton-button {
+  height: 44px;
+  border-radius: 8px;
+}
+
+.skeleton-card {
+  height: 200px;
+  border-radius: 12px;
+}
+
+.skeleton-image {
+  aspect-ratio: 16/9;
+  border-radius: 8px;
+}
+
+/* ============================================
+   SKELETON LAYOUTS
+   ============================================ */
+.skeleton-card-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.skeleton-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.skeleton-list-item + .skeleton-list-item {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ============================================
+   PULSE LOADING
+   ============================================ */
+.pulse {
+  animation: pulse-loading 2s ease-in-out infinite;
+}
+
+@keyframes pulse-loading {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ============================================
+   LOADING DOTS
+   ============================================ */
+.loading-dots {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.loading-dots span {
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  border-radius: 50%;
+  animation: loading-dots 1.4s ease-in-out infinite;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: 0s; }
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes loading-dots {
+  0%, 80%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================
+   LOADING SPINNER
+   ============================================ */
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-spinner-sm {
+  width: 16px;
+  height: 16px;
+  border-width: 1.5px;
+}
+
+.loading-spinner-lg {
+  width: 40px;
+  height: 40px;
+  border-width: 3px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   LOADING OVERLAY
+   ============================================ */
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+/* ============================================
+   PROGRESS BAR LOADING
+   ============================================ */
+.loading-progress {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.loading-progress-bar {
+  height: 100%;
+  background: var(--primary);
+  animation: loading-progress 2s ease-in-out infinite;
+  transform-origin: left;
+}
+
+@keyframes loading-progress {
+  0% {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  50% {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+  50.1% {
+    transform-origin: right;
+  }
+  100% {
+    transform: scaleX(0);
+    transform-origin: right;
+  }
+}
+
+/* ============================================
+   SHIMMER TEXT
+   ============================================ */
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0.3) 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-text 2s linear infinite;
+}
+
+@keyframes shimmer-text {
+  to {
+    background-position: -200% center;
+  }
+}
+
+/* ============================================
+   CONTENT LOADER
+   ============================================ */
+.content-loader {
+  opacity: 0;
+  animation: content-load-in 0.4s ease-out forwards;
+}
+
+.content-loader.loaded {
+  animation: none;
+  opacity: 1;
+}
+
+@keyframes content-load-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   FPS TIER OPTIMIZATIONS
+   ============================================ */
+/* High quality - Full shimmer */
+.fps-tier-ultra .shimmer::after,
+.fps-tier-high .shimmer::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 25%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.15) 75%,
+    transparent 100%
+  );
+}
+
+/* Medium quality - Simpler shimmer */
+.fps-tier-medium .shimmer::after {
+  --shimmer-speed: 2s;
+}
+
+/* Low quality - Minimal shimmer */
+.fps-tier-low .shimmer::after {
+  animation-duration: 3s;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 100%
+  );
+}
+
+/* Ultra low - Pulse only */
+.fps-tier-minimal .shimmer::after {
+  display: none;
+}
+
+.fps-tier-minimal .shimmer {
+  animation: pulse-loading 2s ease-in-out infinite;
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  .shimmer::after,
+  .skeleton,
+  .pulse,
+  .loading-dots span,
+  .loading-spinner,
+  .loading-progress-bar,
+  .shimmer-text {
+    animation: none;
+  }
+  
+  .shimmer {
+    background: var(--shimmer-bg);
+  }
+  
+  .skeleton {
+    background: var(--shimmer-bg);
+  }
+}

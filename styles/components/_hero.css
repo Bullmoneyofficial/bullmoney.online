@@ -1,0 +1,431 @@
+/**
+ * BULLMONEY - Hero & Spline Sections
+ * ====================================
+ * Hero area and 3D Spline scene styles
+ */
+
+/* ============================================
+   HERO BASE
+   ============================================ */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  contain: layout style;
+}
+
+.hero-fullscreen {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.hero-half {
+  min-height: 50vh;
+}
+
+/* ============================================
+   HERO CONTENT
+   ============================================ */
+.hero-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 100px 24px 60px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.hero-content-center {
+  align-items: center;
+  text-align: center;
+}
+
+.hero-content-left {
+  align-items: flex-start;
+  text-align: left;
+}
+
+/* ============================================
+   HERO TEXT
+   ============================================ */
+.hero-title {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+}
+
+.hero-subtitle {
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  max-width: 600px;
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.hero-description {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.6);
+  max-width: 500px;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+/* ============================================
+   HERO ACTIONS
+   ============================================ */
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.hero-actions-center {
+  justify-content: center;
+}
+
+/* ============================================
+   HERO BACKGROUND
+   ============================================ */
+.hero-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.hero-background-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-background-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-gradient-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, 
+    rgba(0, 0, 0, 0.6) 0%,
+    rgba(0, 0, 0, 0.3) 50%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+  pointer-events: none;
+}
+
+/* ============================================
+   SPLINE CONTAINER
+   ============================================ */
+.spline-container {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  contain: layout style paint;
+  pointer-events: auto;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.spline-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Spline scene wrapper */
+.spline-scene {
+  position: absolute;
+  inset: 0;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.spline-scene > div {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ============================================
+   HERO SPLINE WRAPPER
+   ============================================ */
+.hero-spline-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 600px;
+  overflow: hidden;
+  contain: layout style;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.hero-spline-wrapper canvas {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* ============================================
+   SPLINE LOADING STATE
+   ============================================ */
+.spline-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background);
+  z-index: 5;
+  transition: opacity 0.5s ease;
+}
+
+.spline-loading.loaded {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.spline-loader {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* ============================================
+   HERO PARALLAX
+   ============================================ */
+.hero-parallax-container {
+  position: relative;
+  overflow: hidden;
+  perspective: 1000px;
+}
+
+.hero-parallax-layer {
+  position: absolute;
+  inset: -20%;
+  transition: transform 0.1s ease-out;
+  will-change: transform;
+}
+
+.hero-parallax-layer-slow {
+  transform: translateZ(-200px) scale(1.4);
+}
+
+.hero-parallax-layer-fast {
+  transform: translateZ(-100px) scale(1.2);
+}
+
+/* ============================================
+   HERO SCROLL INDICATOR
+   ============================================ */
+.hero-scroll-indicator {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  animation: scroll-bounce 2s ease-in-out infinite;
+  z-index: 20;
+}
+
+.hero-scroll-indicator-text {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.hero-scroll-indicator-icon {
+  width: 24px;
+  height: 36px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  position: relative;
+}
+
+.hero-scroll-indicator-icon::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 2px;
+  animation: scroll-dot 2s ease-in-out infinite;
+}
+
+@keyframes scroll-bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-8px); }
+}
+
+@keyframes scroll-dot {
+  0%, 100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+  50% { transform: translateX(-50%) translateY(10px); opacity: 0.3; }
+}
+
+/* ============================================
+   HERO BADGE
+   ============================================ */
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(var(--primary-rgb), 0.15);
+  border: 1px solid rgba(var(--primary-rgb), 0.3);
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--primary);
+  margin-bottom: 20px;
+}
+
+.hero-badge-dot {
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ============================================
+   HERO STATS
+   ============================================ */
+.hero-stats {
+  display: flex;
+  gap: 48px;
+  margin-top: 48px;
+}
+
+.hero-stat {
+  text-align: center;
+}
+
+.hero-stat-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.hero-stat-label {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ============================================
+   HERO MOBILE RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+  .hero {
+    min-height: calc(100vh - 64px);
+    min-height: calc(100dvh - 64px);
+  }
+  
+  .hero-content {
+    padding: 80px 16px 40px;
+    justify-content: flex-start;
+    padding-top: 100px;
+  }
+  
+  .hero-spline-wrapper {
+    height: calc(100vh - 64px);
+    height: calc(100dvh - 64px);
+    min-height: 500px;
+  }
+  
+  .hero-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .hero-actions > * {
+    width: 100%;
+  }
+  
+  .hero-stats {
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: center;
+  }
+  
+  .hero-stat {
+    min-width: 100px;
+  }
+  
+  .hero-scroll-indicator {
+    bottom: 20px;
+  }
+}
+
+/* ============================================
+   SPLINE PERFORMANCE
+   ============================================ */
+.spline-container,
+.spline-scene,
+.hero-spline-wrapper {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Low performance - reduce Spline quality */
+.perf-low .spline-container canvas {
+  image-rendering: optimizeSpeed;
+}
+
+.perf-low .hero-parallax-layer {
+  transform: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-scroll-indicator,
+  .hero-scroll-indicator-icon::before,
+  .hero-badge-dot {
+    animation: none;
+  }
+  
+  .hero-parallax-layer {
+    transition: none;
+  }
+}
+
+/* ============================================
+   BIG DISPLAY HERO
+   ============================================ */
+@media (min-width: 1440px) {
+  .hero {
+    height: auto !important;
+    min-height: calc(100vh - 80px) !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  
+  .hero-spline-wrapper {
+    height: calc(100vh - 80px) !important;
+    min-height: calc(100vh - 80px) !important;
+  }
+}

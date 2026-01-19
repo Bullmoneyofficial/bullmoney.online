@@ -1,0 +1,101 @@
+/* ============================================
+   CRITICAL: GLOBAL SCROLL FOUNDATION
+   These rules ensure scrolling works on ALL devices:
+   - iPhone (Safari, Chrome, Firefox, In-App browsers)
+   - Android (Chrome, Samsung Browser, Firefox)
+   - Desktop (Safari macOS, Chrome, Firefox, Edge)
+   - Mac trackpad (momentum scrolling, two-finger scroll)
+   ============================================ */
+
+html {
+  /* CRITICAL: Use native scroll for 120Hz - do NOT use scroll-behavior: smooth */
+  scroll-behavior: auto !important;
+  /* Enable high refresh rate scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto !important; /* FIXED: Use auto for big devices to prevent forced scrollbars */
+  overflow-x: hidden;
+  /* Prevent accidental overscroll bounce causing issues - but allow natural scrolling */
+  overscroll-behavior-y: auto;
+  overscroll-behavior-x: none;
+  /* Ensure proper height calculation on mobile browsers */
+  min-height: 100%;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  /* CRITICAL: Allow all scroll inputs including trackpad */
+  scroll-snap-type: none !important;
+  /* CRITICAL: Do not constrain height on desktop - allow content to overflow */
+  height: auto !important;
+}
+
+/* Big device specific optimizations */
+@media (min-width: 1440px) {
+  html {
+    overflow-y: auto !important;
+    scroll-behavior: smooth !important; /* Enable smooth scrolling on big devices */
+  }
+  
+  .big-display html {
+    scroll-padding-top: 0;
+    scroll-margin: 0;
+  }
+}
+
+body {
+  /* Body must be scrollable - CRITICAL for macOS trackpad */
+  overflow-y: auto !important; /* FIXED: auto for proper scroll behavior */
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  /* Prevent overscroll bounce on iOS but allow on desktop */
+  overscroll-behavior-y: auto;
+  /* Use dynamic viewport height for mobile address bar */
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  /* Allow all scrolling gestures including trackpad */
+  touch-action: pan-x pan-y;
+  /* Ensure proper scroll context */
+  position: relative;
+  /* CRITICAL: Don't restrict height - allow natural content flow */
+  height: auto !important;
+}
+
+/* Big device body optimizations */
+@media (min-width: 1440px) {
+  body {
+    overflow-y: auto !important;
+    min-height: 100vh !important;
+    height: auto !important;
+  }
+  
+  .big-display body {
+    scroll-behavior: inherit;
+  }
+}
+
+/* ============================================
+   SCROLL PASSTHROUGH FOR OVERLAYS
+   Ensures theme overlays don't block scroll
+   ============================================ */
+
+/* Any overlay with pointer-events:none should not affect scroll */
+[style*="pointer-events: none"],
+[style*="pointer-events:none"],
+.pointer-events-none {
+  /* Double ensure scroll passthrough */
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* Theme overlay elements - CRITICAL for scroll */
+#theme-global-overlay,
+#theme-edge-glow,
+#theme-filter-overlay,
+html[data-active-theme]::before,
+html[data-active-theme]::after {
+  /* These are set inline but ensure CSS backup */
+  pointer-events: none !important;
+  touch-action: none !important;
+  -webkit-touch-callout: none !important;
+  overflow: visible !important;
+}

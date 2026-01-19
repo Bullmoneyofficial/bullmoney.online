@@ -1,0 +1,368 @@
+/**
+ * BULLMONEY - Desktop Optimizations
+ * ==================================
+ * Desktop and big screen specific optimizations
+ */
+
+/* ============================================
+   DESKTOP BASE (min-width: 769px)
+   ============================================ */
+@media (min-width: 769px) {
+  html {
+    scroll-behavior: auto !important;
+    overflow-y: scroll !important;
+    overscroll-behavior: auto;
+    height: auto !important;
+    max-height: none !important;
+    overflow-x: hidden !important;
+    scroll-snap-type: none !important;
+  }
+  
+  body {
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: auto;
+    -webkit-overflow-scrolling: auto;
+    height: auto !important;
+    max-height: none !important;
+    position: relative !important;
+  }
+  
+  /* Remove scroll-snap for smooth scrolling */
+  html, body, main, section {
+    scroll-snap-type: none !important;
+    scroll-snap-align: none !important;
+  }
+  
+  /* Ensure content sections don't block scroll */
+  section, main, article {
+    overflow: visible;
+    max-height: none !important;
+  }
+  
+  /* Ensure main content can scroll */
+  main, main[data-allow-scroll], main[data-scrollable] {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  
+  /* Page sections - auto height on desktop */
+  .page-section {
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  /* Desktop optimized elements */
+  .desktop-optimized button,
+  .desktop-optimized a,
+  .desktop-optimized [role="button"],
+  .high-performance button,
+  .high-performance a,
+  .high-performance [role="button"] {
+    transform: translateZ(0);
+    transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+  }
+  
+  /* Canvas optimizations */
+  .desktop-optimized canvas,
+  .high-performance canvas {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    image-rendering: -webkit-optimize-contrast;
+  }
+  
+  /* 3D scenes */
+  .desktop-optimized [data-spline],
+  .high-performance [data-spline] {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    contain: layout paint;
+  }
+  
+  /* Fixed elements scroll passthrough */
+  .fixed, [style*="position: fixed"] {
+    pointer-events: auto;
+  }
+  
+  /* Ensure all theme overlays don't block scroll */
+  #theme-global-overlay,
+  #theme-edge-glow,
+  #theme-transition-reveal,
+  #theme-filter-overlay,
+  html::before,
+  html::after,
+  body::before,
+  body::after {
+    pointer-events: none !important;
+    touch-action: none !important;
+    position: fixed !important;
+    overflow: visible !important;
+  }
+}
+
+/* ============================================
+   BIG DISPLAY OPTIMIZATIONS (1440px+)
+   ============================================ */
+@media (min-width: 1440px) {
+  html {
+    overflow-y: auto !important;
+    scroll-behavior: smooth !important;
+    scroll-padding-top: 80px;
+    scroll-margin: 0;
+    height: auto !important;
+    min-height: 100vh !important;
+    will-change: scroll-position;
+    scroll-snap-type: none !important;
+  }
+  
+  body {
+    overflow-y: auto !important;
+    min-height: 100vh !important;
+    height: auto !important;
+    scroll-snap-type: none !important;
+  }
+
+  /* Mouse users - instant scroll response */
+  html.mouse-device,
+  html.big-display {
+    scroll-behavior: auto !important;
+  }
+  
+  /* Disable scroll-snap for mouse users */
+  html.mouse-device body,
+  html.mouse-device main,
+  html.big-display body,
+  html.big-display main {
+    scroll-snap-type: none !important;
+  }
+  
+  html.mouse-device section,
+  html.big-display section {
+    scroll-snap-align: none !important;
+    scroll-snap-stop: normal !important;
+  }
+
+  /* Hero optimizations */
+  .big-display .hero {
+    height: auto !important;
+    min-height: calc(100vh - 80px) !important;
+    max-height: none !important;
+    overflow: visible !important;
+    contain: layout style !important;
+  }
+
+  .big-display .hero-spline-wrapper {
+    height: calc(100vh - 80px) !important;
+    min-height: calc(100vh - 80px) !important;
+    max-height: none !important;
+    position: relative !important;
+    overflow: visible !important;
+    contain: layout style !important;
+  }
+
+  /* Main sections */
+  .big-display #experience {
+    min-height: 1000px !important;
+    height: auto !important;
+    overflow: visible !important;
+    contain: layout style !important;
+  }
+
+  /* Spline containers */
+  .big-display .spline-container,
+  .big-display [data-spline-scene] {
+    contain: layout style !important;
+    overflow: visible !important;
+  }
+
+  /* Navigation */
+  .big-display .navbar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9999 !important;
+  }
+
+  /* Parallax sections */
+  .big-display .hero-parallax-container {
+    overflow: visible !important;
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  /* Container scroll */
+  .big-display .container-scroll {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Theme overlays must not block scroll */
+  .big-display #theme-global-overlay,
+  .big-display #theme-edge-glow,
+  .big-display #theme-filter-overlay {
+    pointer-events: none !important;
+    touch-action: none !important;
+    z-index: -1 !important;
+  }
+
+  /* Vertical page scroll */
+  .big-display .vertical-page-scroll {
+    right: 2rem !important;
+  }
+
+  /* Shop hero */
+  .big-display .shop-hero-parallax {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Blog hero */
+  .big-display .blog-hero {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Content sections */
+  .big-display section[data-allow-scroll] {
+    overflow: visible !important;
+    contain: layout style !important;
+    height: auto !important;
+  }
+
+  /* Fixed heights override */
+  .big-display .h-screen {
+    height: auto !important;
+    min-height: calc(100vh - 80px) !important;
+  }
+
+  /* Draggable split */
+  .big-display .draggable-split {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Testimonials */
+  .big-display .testimonials-carousel {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Hardware acceleration */
+  .big-display * {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  .big-display img,
+  .big-display video,
+  .big-display canvas {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+}
+
+/* Ultra-wide (1920px+) */
+@media (min-width: 1920px) {
+  html.big-display {
+    scroll-padding-top: 100px;
+  }
+
+  .big-display .hero-spline-wrapper {
+    max-width: 1920px;
+    margin: 0 auto;
+  }
+
+  .big-display .hero canvas {
+    max-width: 1920px !important;
+    max-height: calc(100vh - 100px) !important;
+    margin: 0 auto;
+  }
+}
+
+/* 4K (2560px+) */
+@media (min-width: 2560px) {
+  .big-display .hero-spline-wrapper {
+    max-width: 2560px;
+    height: calc(100vh - 120px) !important;
+    min-height: calc(100vh - 120px) !important;
+  }
+
+  html.big-display {
+    scroll-padding-top: 120px;
+  }
+}
+
+/* ============================================
+   APPLE SILICON OPTIMIZATIONS
+   ============================================ */
+.apple-silicon,
+.desktop-optimized.display-120hz {
+  --animation-smoothing: 0.4;
+  --transition-speed-multiplier: 0.8;
+}
+
+.high-performance.perf-ultra {
+  --blur-enabled: 0;
+  --shadows-enabled: 1;
+  --glow-enabled: 1;
+  --particles-enabled: 1;
+  --backdrop-blur-amount: 0;
+}
+
+/* ============================================
+   macOS SAFARI TRACKPAD FIX
+   ============================================ */
+@supports (-webkit-appearance: none) and (not (-moz-appearance: none)) {
+  @media (min-width: 769px) and (hover: hover) {
+    html {
+      -webkit-overflow-scrolling: auto;
+      scroll-behavior: auto !important;
+    }
+    
+    body {
+      overscroll-behavior: auto;
+    }
+  }
+}
+
+/* ============================================
+   DESKTOP SCROLL ENABLED CLASS
+   ============================================ */
+@media screen and (min-width: 769px) {
+  :root {
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+  }
+  
+  html.desktop-scroll-enabled {
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    scroll-behavior: auto !important;
+    scroll-snap-type: none !important;
+  }
+  
+  body.desktop-scroll-enabled {
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    position: relative !important;
+  }
+}
+
+/* ============================================
+   REDUCED MOTION FOR BIG DISPLAYS
+   ============================================ */
+@media (min-width: 1440px) {
+  @media (prefers-reduced-motion: reduce) {
+    .big-display * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

@@ -1,0 +1,406 @@
+/**
+ * BULLMONEY - Cards & Reflective Cards
+ * ======================================
+ * Card components with 3D effects and reflections
+ */
+
+/* ============================================
+   BASE CARD
+   ============================================ */
+.card {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.card-padding {
+  padding: 24px;
+}
+
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   REFLECTIVE CARD
+   ============================================ */
+.reflective-card {
+  position: relative;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+/* Reflection overlay */
+.reflective-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: skewX(-25deg);
+  transition: left 0.5s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.reflective-card:hover::before {
+  left: 150%;
+}
+
+/* Top shine */
+.reflective-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3) 20%,
+    rgba(255, 255, 255, 0.3) 80%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* ============================================
+   3D CARD TILT
+   ============================================ */
+.card-3d {
+  transition: transform 0.3s ease;
+  transform-style: preserve-3d;
+}
+
+.card-3d:hover {
+  transform: perspective(1000px) rotateX(5deg) rotateY(-5deg) scale(1.02);
+}
+
+.card-3d-content {
+  transform: translateZ(20px);
+}
+
+/* ============================================
+   GRADIENT BORDER CARD
+   ============================================ */
+.card-gradient-border {
+  position: relative;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 1px;
+}
+
+.card-gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, 
+    var(--primary) 0%, 
+    var(--secondary) 50%,
+    var(--primary) 100%
+  );
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* ============================================
+   GLOW CARD
+   ============================================ */
+.card-glow {
+  position: relative;
+}
+
+.card-glow::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: linear-gradient(135deg, 
+    var(--primary), 
+    var(--secondary)
+  );
+  border-radius: inherit;
+  filter: blur(20px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.card-glow:hover::before {
+  opacity: 0.5;
+}
+
+/* ============================================
+   STATS CARD
+   ============================================ */
+.stats-card {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.stats-card-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.stats-card-label {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.stats-card-trend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.stats-card-trend-up {
+  color: #22c55e;
+}
+
+.stats-card-trend-down {
+  color: #ef4444;
+}
+
+/* ============================================
+   FEATURE CARD
+   ============================================ */
+.feature-card {
+  display: flex;
+  flex-direction: column;
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  transition: all 0.4s ease;
+}
+
+.feature-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-8px);
+}
+
+.feature-card-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-radius: 14px;
+  margin-bottom: 20px;
+}
+
+.feature-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.feature-card-description {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+}
+
+/* ============================================
+   PRICING CARD
+   ============================================ */
+.pricing-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.pricing-card-featured {
+  background: rgba(var(--primary-rgb), 0.1);
+  border-color: var(--primary);
+}
+
+.pricing-card-badge {
+  position: absolute;
+  top: 0;
+  right: 32px;
+  padding: 8px 16px;
+  background: var(--primary);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 0 0 8px 8px;
+}
+
+.pricing-card-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.pricing-card-price {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.pricing-card-price span {
+  font-size: 1rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.pricing-card-features {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 24px 0;
+  flex: 1;
+}
+
+.pricing-card-feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ============================================
+   TESTIMONIAL CARD
+   ============================================ */
+.testimonial-card {
+  display: flex;
+  flex-direction: column;
+  padding: 28px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+}
+
+.testimonial-card-quote {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 24px;
+  flex: 1;
+}
+
+.testimonial-card-author {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.testimonial-card-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.testimonial-card-name {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.testimonial-card-role {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ============================================
+   INTERACTIVE CARD ANIMATIONS
+   ============================================ */
+.card-tilt-wrapper {
+  perspective: 1000px;
+}
+
+.card-tilt {
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+}
+
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+.card,
+.reflective-card,
+.card-3d {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout paint;
+}
+
+/* Low performance mode */
+.perf-low .reflective-card::before,
+.perf-low .card-glow::before {
+  display: none;
+}
+
+.perf-low .card-3d:hover {
+  transform: scale(1.02);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reflective-card::before,
+  .card-glow::before {
+    transition: none;
+    animation: none;
+  }
+  
+  .card-hover:hover,
+  .feature-card:hover,
+  .card-3d:hover {
+    transform: none;
+  }
+}

@@ -1,0 +1,105 @@
+/**
+ * BULLMONEY - Scroll Performance Optimizations
+ * ============================================
+ * Optimizations during scroll state
+ */
+
+/* ============================================
+   SCROLL STATE CLASSES
+   Added by useUltraFpsOptimization
+   ============================================ */
+
+/* Pause animations during scroll */
+html.is-scrolling .shimmer-line,
+html.is-scrolling .shimmer-border,
+html.is-scrolling [data-shimmer],
+html.is-scrolling [class*="animate-"],
+html.is-scrolling .shimmer-spin,
+html.is-scrolling .shimmer-pulse,
+html.is-scrolling .shimmer-glow,
+html.is-scrolling .page-spin,
+html.is-scrolling .page-shimmer-ltr,
+html.is-scrolling .shimmer-ping {
+  animation-play-state: paused !important;
+}
+
+/* Hide shimmer effects during scroll */
+html.is-scrolling .shimmer-line,
+html.is-scrolling .shimmer-border,
+html.is-scrolling [data-shimmer] {
+  opacity: 0 !important;
+}
+
+/* Reduce GPU load on Spline during scroll */
+html.is-scrolling canvas {
+  pointer-events: none;
+}
+
+html.is-scrolling .spline-container canvas,
+html.is-scrolling [data-spline] canvas {
+  will-change: auto;
+}
+
+/* Pause parallax during scroll */
+html.is-scrolling .parallax,
+html.is-scrolling [data-parallax] {
+  transform: none !important;
+}
+
+/* Disable Framer Motion hover effects during scroll */
+html.is-scrolling [data-framer-component-type],
+html.is-scrolling [style*="transform"]:not(.fps-chart-container *) {
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Reduce filter effects during scroll */
+html.is-scrolling [style*="filter"]:not(.fps-chart-container *) {
+  filter: none !important;
+}
+
+/* ============================================
+   PAGE HIDDEN STATE
+   Pause everything when page not visible
+   ============================================ */
+html.page-hidden * {
+  animation-play-state: paused !important;
+}
+
+/* ============================================
+   INTERACTION STATE
+   Simplify during active touch/drag
+   ============================================ */
+html.is-interacting .shimmer-line,
+html.is-interacting .shimmer-border {
+  opacity: 0 !important;
+}
+
+/* ============================================
+   MODAL SCROLL PERFORMANCE
+   ============================================ */
+.navbar-modal-content.is-scrolling *,
+.services-modal-content.is-scrolling * {
+  animation-play-state: paused !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+
+/* ============================================
+   SCROLL EXCEPTIONS
+   Keep FPS chart animating during scroll
+   ============================================ */
+html.is-scrolling .fps-chart-container,
+html.is-scrolling .fps-chart-container *,
+html.is-scrolling [data-fps-chart],
+html.is-scrolling [data-fps-chart] * {
+  animation-play-state: running !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transition: all 0.2s ease !important;
+}
+
+html.is-scrolling .fps-chart-container [style*="transform"],
+html.is-scrolling [data-fps-chart] [style*="transform"] {
+  transform: unset !important;
+}

@@ -1,0 +1,115 @@
+/**
+ * BULLMONEY - Theme Illusion Effects
+ * ===================================
+ * Visual illusion effects based on theme type
+ */
+
+/* ============================================
+   SCANLINES EFFECT
+   ============================================ */
+[data-theme-illusion="SCANLINES"]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.1) 0px,
+    rgba(0, 0, 0, 0.1) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  opacity: 0.3;
+}
+
+/* ============================================
+   VIGNETTE EFFECT
+   ============================================ */
+[data-theme-illusion="VIGNETTE"]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+}
+
+/* ============================================
+   NOISE EFFECT
+   ============================================ */
+[data-theme-illusion="NOISE"]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* ============================================
+   CRT EFFECT
+   ============================================ */
+[data-theme-illusion="CRT"]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.15) 0px,
+      rgba(0, 0, 0, 0.15) 1px,
+      transparent 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      ellipse at center,
+      transparent 50%,
+      rgba(0, 0, 0, 0.3) 100%
+    );
+  animation: crt-flicker 0.15s infinite;
+}
+
+@keyframes crt-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.97; }
+}
+
+/* ============================================
+   GLITCH EFFECT
+   ============================================ */
+[data-theme-illusion="GLITCH"]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: transparent;
+  animation: glitch-overlay 5s infinite;
+}
+
+@keyframes glitch-overlay {
+  0%, 90%, 100% { 
+    clip-path: none;
+    transform: none;
+  }
+  92% {
+    clip-path: inset(20% 0 60% 0);
+    transform: translateX(-2px);
+  }
+  94% {
+    clip-path: inset(50% 0 30% 0);
+    transform: translateX(2px);
+  }
+  96% {
+    clip-path: inset(10% 0 70% 0);
+    transform: translateX(-1px);
+  }
+}

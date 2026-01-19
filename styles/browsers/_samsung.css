@@ -1,0 +1,300 @@
+/**
+ * BULLMONEY - Samsung Browser Optimizations
+ * ==========================================
+ * Samsung Internet and Android Webview specific fixes
+ */
+
+/* ============================================
+   SAMSUNG INTERNET BASE FIXES
+   ============================================ */
+@supports (-webkit-appearance: none) and (not (-webkit-touch-callout: none)) {
+  /* Android WebView/Samsung Internet */
+  
+  /* Fix hardware acceleration */
+  .samsung-optimized {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  
+  /* Fix over-scroll glow */
+  html, body {
+    overscroll-behavior: contain;
+  }
+}
+
+/* ============================================
+   SAMSUNG REALTIME CACHE FIX
+   ============================================ */
+/* Samsung Internet has aggressive caching - add cache busters */
+.cache-bust {
+  background-image: var(--bg-image);
+}
+
+/* Force reflow for cached animations */
+.samsung-anim-fix {
+  animation: samsung-fix 0.01s;
+}
+
+@keyframes samsung-fix {
+  from { opacity: 0.999; }
+  to { opacity: 1; }
+}
+
+/* ============================================
+   SAMSUNG SCROLL PERFORMANCE
+   ============================================ */
+/* Samsung has smooth scroll issues on some devices */
+.samsung-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto;
+  overscroll-behavior-y: contain;
+}
+
+/* Fix fling scroll */
+.samsung-scroll-fix {
+  touch-action: pan-y;
+  will-change: scroll-position;
+}
+
+/* Momentum scroll optimization */
+.momentum-scroll-samsung {
+  scroll-snap-type: none;
+  -webkit-scroll-snap-type: none;
+}
+
+/* ============================================
+   SAMSUNG BACKDROP BLUR FIX
+   ============================================ */
+/* Samsung Internet has backdrop-filter issues */
+@supports (backdrop-filter: blur(1px)) {
+  .samsung-blur {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Fallback for older Samsung Internet */
+@supports not (backdrop-filter: blur(1px)) {
+  .samsung-blur {
+    background-color: rgba(0, 0, 0, 0.85);
+  }
+}
+
+/* ============================================
+   SAMSUNG ANIMATION PERFORMANCE
+   ============================================ */
+/* Reduce animation complexity */
+.samsung-anim-simple {
+  animation-timing-function: ease-out;
+  animation-duration: 200ms;
+}
+
+/* Disable complex animations on low-end */
+.samsung-low-end .complex-animation {
+  animation: none !important;
+}
+
+.samsung-low-end .shimmer {
+  animation-duration: 2s;
+  animation-iteration-count: 1;
+}
+
+/* ============================================
+   SAMSUNG FLEX/GRID FIXES
+   ============================================ */
+/* Fix flexbox bugs in older Samsung Internet */
+.flex-samsung-fix {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+}
+
+.flex-row-samsung {
+  -webkit-box-orient: horizontal;
+  -webkit-flex-direction: row;
+  flex-direction: row;
+}
+
+/* Fix flex gap fallback */
+.flex-gap-samsung > * + * {
+  margin-left: var(--gap, 8px);
+}
+
+.flex-gap-samsung.flex-col > * + * {
+  margin-left: 0;
+  margin-top: var(--gap, 8px);
+}
+
+/* ============================================
+   SAMSUNG TOUCH OPTIMIZATIONS
+   ============================================ */
+/* Improve touch response */
+.samsung-touch {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Fix touch delay */
+.samsung-fast-tap {
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+/* Touch feedback */
+.samsung-touch-feedback:active {
+  transform: scale(0.98);
+  transition: transform 50ms ease-out;
+}
+
+/* ============================================
+   SAMSUNG VIDEO FIXES
+   ============================================ */
+/* Fix video inline playback */
+video {
+  -webkit-playsinline: true;
+}
+
+/* Fix video controls */
+video::-webkit-media-controls {
+  display: none !important;
+}
+
+video::-webkit-media-controls-enclosure {
+  display: none !important;
+}
+
+/* ============================================
+   SAMSUNG NOTCH/CUTOUT HANDLING
+   ============================================ */
+/* Handle various Samsung notch/punch-hole designs */
+.samsung-safe-area {
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+.samsung-notch-aware {
+  padding-top: max(20px, env(safe-area-inset-top));
+}
+
+/* ============================================
+   SAMSUNG HIGH REFRESH RATE
+   ============================================ */
+/* Support 120Hz Samsung displays */
+@media (min-resolution: 2dppx) {
+  .samsung-120hz {
+    --animation-multiplier: 0.8;
+    --transition-speed: 150ms;
+  }
+  
+  .samsung-120hz .animate-smooth {
+    animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+}
+
+/* ============================================
+   SAMSUNG ONE UI INTEGRATION
+   ============================================ */
+/* Match One UI design language */
+.samsung-oneui-card {
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.samsung-oneui-button {
+  border-radius: 24px;
+  padding: 12px 24px;
+  font-weight: 500;
+  transition: all 150ms ease-out;
+}
+
+.samsung-oneui-button:active {
+  transform: scale(0.96);
+}
+
+/* ============================================
+   SAMSUNG DARK MODE
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  .samsung-dark-mode {
+    color-scheme: dark;
+  }
+  
+  .samsung-dark-mode .card {
+    background: rgba(30, 30, 30, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* ============================================
+   SAMSUNG FOLD/FLIP SUPPORT
+   ============================================ */
+/* Handle foldable screens */
+@media (horizontal-viewport-segments: 2) {
+  /* Galaxy Fold opened */
+  .fold-aware {
+    display: grid;
+    grid-template-columns: env(viewport-segment-width 0 0) env(viewport-segment-width 1 0);
+    column-gap: calc(env(viewport-segment-left 1 0) - env(viewport-segment-right 0 0));
+  }
+}
+
+@media (vertical-viewport-segments: 2) {
+  /* Galaxy Flip opened */
+  .flip-aware {
+    display: grid;
+    grid-template-rows: env(viewport-segment-height 0 0) env(viewport-segment-height 0 1);
+    row-gap: calc(env(viewport-segment-top 0 1) - env(viewport-segment-bottom 0 0));
+  }
+}
+
+/* Fallback for foldables */
+@media (max-aspect-ratio: 1/2) {
+  /* Likely a folded phone */
+  .fold-compact {
+    padding: 8px;
+  }
+}
+
+@media (min-aspect-ratio: 2/1) {
+  /* Likely an unfolded tablet */
+  .fold-expanded {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ============================================
+   SAMSUNG INTERNET SECRET SAUCE
+   ============================================ */
+/* Force GPU compositing */
+.samsung-gpu {
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+/* Prevent font boost */
+.samsung-no-boost {
+  max-height: 999999px;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+/* Fix position sticky */
+.samsung-sticky {
+  position: -webkit-sticky;
+  position: sticky;
+  transform: translateZ(0);
+}

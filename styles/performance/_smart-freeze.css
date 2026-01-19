@@ -1,0 +1,212 @@
+/**
+ * BULLMONEY - Smart Freeze System
+ * ================================
+ * Zero-resource consumption when components are closed
+ */
+
+/* ============================================
+   SMART FREEZE STATES
+   ============================================ */
+
+/* FROZEN STATE: Component is closed/hidden */
+.smart-frozen,
+.smart-frozen *,
+[data-smart-frozen="true"],
+[data-smart-frozen="true"] * {
+  animation: none !important;
+  animation-play-state: paused !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+
+/* Freeze box shadows */
+.smart-frozen [class*="shadow-"],
+[data-smart-frozen="true"] [class*="shadow-"] {
+  box-shadow: none !important;
+}
+
+/* Freeze shimmer animations */
+.smart-frozen .shimmer-line,
+.smart-frozen .shimmer-border,
+.smart-frozen .shimmer-glow,
+.smart-frozen .shimmer-ping,
+.smart-frozen .shimmer-ltr,
+[data-smart-frozen="true"] .shimmer-line,
+[data-smart-frozen="true"] .shimmer-border,
+[data-smart-frozen="true"] .shimmer-glow,
+[data-smart-frozen="true"] .shimmer-ping,
+[data-smart-frozen="true"] .shimmer-ltr {
+  animation: none !important;
+  opacity: 0 !important;
+}
+
+/* Freeze Framer Motion portals */
+.smart-frozen [data-framer-portal-id],
+.smart-frozen [data-motion-pop-id],
+[data-smart-frozen="true"] [data-framer-portal-id],
+[data-smart-frozen="true"] [data-motion-pop-id] {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* ============================================
+   ACTIVE STATE
+   ============================================ */
+
+/* Keep interactive elements working when active */
+.smart-active button,
+.smart-active [role="button"],
+.smart-active a,
+.smart-active input,
+.smart-active textarea {
+  pointer-events: auto;
+  animation-play-state: running !important;
+}
+
+/* ============================================
+   CONTENT VISIBILITY OPTIMIZATION
+   ============================================ */
+
+/* Off-screen content should not be rendered */
+.smart-offscreen {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 300px;
+}
+
+/* Force GPU layers for visible content */
+.smart-visible {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ============================================
+   MODAL CLOSED OPTIMIZATIONS
+   ============================================ */
+
+[data-modal-closed="true"] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  animation: none !important;
+}
+
+.modal-portal-unmounted {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* ============================================
+   COMPONENT-SPECIFIC FREEZE STATES
+   ============================================ */
+
+/* Mobile Menu Freeze */
+[data-mobile-menu-closed="true"] {
+  display: none;
+  animation: none !important;
+}
+
+/* Audio Widget Menu Freeze */
+[data-audio-widget-menu-closed="true"] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Ultimate Control Panel Freeze */
+[data-ultimate-panel-closed="true"] {
+  display: none;
+  animation: none !important;
+}
+
+/* Navbar Modal Freeze */
+[data-navbar-modal-closed="true"] {
+  display: none;
+  animation: none !important;
+}
+
+/* ============================================
+   SCROLL PERFORMANCE - FREEZE ANIMATIONS
+   ============================================ */
+
+.is-scrolling .shimmer-line,
+.is-scrolling .shimmer-border,
+.is-scrolling .shimmer-glow,
+.is-scrolling .shimmer-ping,
+.is-scrolling .shimmer-ltr {
+  animation-play-state: paused !important;
+}
+
+/* ============================================
+   STRICT CONTAINMENT FOR CLOSED MODALS
+   ============================================ */
+
+.modal-portal-container[data-open="false"] {
+  contain: strict;
+  content-visibility: hidden;
+}
+
+.modal-container-closed {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  contain: strict;
+}
+
+/* ============================================
+   FREEZE ZONE SYSTEM
+   ============================================ */
+
+.freeze-zone {
+  contain: content;
+}
+
+.freeze-zone.in-viewport {
+  contain: layout style;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.freeze-zone:not(.in-viewport) {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 300px;
+}
+
+.freeze-zone:not(.in-viewport) * {
+  animation: none !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+
+/* Freeze-exempt elements stay interactive */
+.freeze-exempt,
+.freeze-exempt * {
+  animation-play-state: running !important;
+  transition-duration: 0.15s !important;
+  pointer-events: auto !important;
+}
+
+/* ============================================
+   REDUCED MOTION SUPPORT
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .smart-frozen *,
+  .smart-active * {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

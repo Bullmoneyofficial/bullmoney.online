@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
-import GlassSurface from './GlassSurface'; 
+import GlassSurface from './GlassSurface';
 import './ShopScrollFunnel.css';
 import { EvervaultCard } from '@/components/Mainpage/evervault-card';
 

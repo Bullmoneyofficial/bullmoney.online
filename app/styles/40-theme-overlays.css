@@ -1,0 +1,833 @@
+/* ============================================
+   GLOBAL THEME OVERLAY SYSTEM v4.0
+   BOTTOM-TO-TOP THEME TRANSITION SYSTEM
+   Full-coverage overlay that tints EVERYTHING including Spline/Canvas
+   Theme changes animate from BOTTOM to TOP like a futuristic wave
+   WITHOUT breaking scroll, fixed elements, or cross-browser compat
+   ============================================ */
+
+/* Bottom-to-Top Theme Transition Reveal Overlay */
+#theme-transition-reveal {
+  pointer-events: none !important;
+  touch-action: none !important;
+  user-select: none !important;
+  overflow: visible !important;
+  /* Extra glow effects */
+  filter: blur(0px);
+}
+
+/* Theme transition animation keyframes */
+@keyframes themeRevealBottomToTop {
+  0% {
+    height: 0%;
+    opacity: 1;
+  }
+  70% {
+    height: 100%;
+    opacity: 1;
+  }
+  100% {
+    height: 100%;
+    opacity: 0;
+  }
+}
+
+/* Theme transition glow pulse */
+@keyframes themeTransitionGlow {
+  0%, 100% {
+    box-shadow: 
+      0 -20px 60px rgba(var(--accent-rgb, 59, 130, 246), 0.4),
+      0 -10px 30px rgba(var(--accent-rgb, 59, 130, 246), 0.3);
+  }
+  50% {
+    box-shadow: 
+      0 -30px 80px rgba(var(--accent-rgb, 59, 130, 246), 0.6),
+      0 -15px 45px rgba(var(--accent-rgb, 59, 130, 246), 0.5);
+  }
+}
+
+/* Apply theme transition to all visual elements - bottom to top stagger */
+.theme-transition-element {
+  transition: 
+    background-color 0.5s ease-out,
+    border-color 0.5s ease-out,
+    box-shadow 0.5s ease-out,
+    color 0.4s ease-out;
+  /* Elements at top of viewport transition last (stagger from bottom) */
+}
+
+/* Staggered transition for navbar (at top - transitions last) */
+nav, 
+header,
+[data-navbar],
+.dock-glass,
+.navbar {
+  transition-delay: 0.35s;
+}
+
+/* Staggered transition for middle content */
+main,
+section,
+[data-content],
+.hero {
+  transition-delay: 0.2s;
+}
+
+/* Staggered transition for bottom elements (transitions first) */
+footer,
+[data-footer],
+.audio-widget,
+[data-audio-widget],
+.floating-player {
+  transition-delay: 0.05s;
+}
+
+/* Theme-aware component transitions */
+[data-theme-aware] {
+  transition: 
+    background-color 0.4s ease-out,
+    border-color 0.4s ease-out,
+    box-shadow 0.4s ease-out !important;
+}
+
+/* Theme-aware slider thumb styling */
+[data-audio-widget] input[type="range"]::-webkit-slider-thumb {
+  background-color: var(--accent-color, #60a5fa);
+  box-shadow: 0 10px 15px -3px rgba(var(--accent-rgb, 59, 130, 246), 0.3);
+  border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.5);
+}
+
+[data-audio-widget] input[type="range"]::-moz-range-thumb {
+  background-color: var(--accent-color, #60a5fa);
+  box-shadow: 0 10px 15px -3px rgba(var(--accent-rgb, 59, 130, 246), 0.3);
+  border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.5);
+}
+
+/* 
+   ARCHITECTURE:
+   1. #theme-global-overlay = DOM element injected by GlobalThemeProvider
+   2. #theme-edge-glow = Vignette glow effect around edges
+   3. html::before = Fallback CSS overlay
+   4. CSS variables = component-level theming
+   5. data attributes = selector-based theme effects
+   
+   CRITICAL: All overlays use pointer-events: none to allow interactions through
+*/
+
+html, body {
+  transition: background-color 0.5s ease-in-out;
+  /* NEVER apply filter here - breaks fixed positioning */
+  filter: none !important;
+  -webkit-filter: none !important;
+  /* Ensure scrolling works on all devices */
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  /* Touch handling */
+  touch-action: pan-y pan-x;
+  /* Prevent scroll blocking */
+  overscroll-behavior: auto;
+}
+
+/* ============================================
+   DOM-BASED THEME OVERLAYS (Injected by JS)
+   These cover EVERYTHING including canvas/WebGL
+   ============================================ */
+
+#theme-global-overlay,
+#theme-edge-glow {
+  /* CRITICAL: Never block any interactions */
+  pointer-events: none !important;
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-touch-callout: none !important;
+  /* Don't create scroll container */
+  overflow: visible !important;
+  /* GPU layer */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  /* Prevent layout shift */
+  contain: layout style;
+}
+
+/* Mobile-specific overlay adjustments */
+@media (max-width: 768px) {
+  #theme-global-overlay {
+    /* Lighter overlay on mobile for performance */
+    opacity: 0.4 !important;
+  }
+  #theme-edge-glow {
+    opacity: 0.3 !important;
+  }
+}
+
+/* Reduce overlay for low-performance devices */
+html.fps-minimal #theme-global-overlay,
+html.fps-low #theme-global-overlay {
+  opacity: 0.2 !important;
+}
+
+html.fps-minimal #theme-edge-glow,
+html.fps-low #theme-edge-glow {
+  display: none !important;
+}
+
+/* ============================================
+   CSS FALLBACK OVERLAY (::before pseudo-element)
+   Used when DOM overlay isn't available yet
+   ============================================ */
+
+/* Theme color overlay - appears on top of everything as color tint */
+html[data-active-theme]::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  /* Color overlay using theme's accent color */
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.08) 0%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.04) 40%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.02) 70%,
+    transparent 100%
+  );
+  /* CRITICAL: Allow clicks/touches to pass through */
+  pointer-events: none !important;
+  touch-action: none !important;
+  /* Blend naturally with underlying content */
+  mix-blend-mode: soft-light;
+  opacity: var(--theme-overlay-opacity, 0.6);
+  transition: opacity 0.5s ease-in-out, background 0.5s ease-in-out;
+  /* GPU acceleration without blocking scroll */
+  transform: translateZ(0);
+  will-change: opacity;
+  /* Prevent this layer from causing scroll issues */
+  contain: strict;
+  /* Ensure it doesn't create a new scroll context */
+  overflow: visible !important;
+}
+
+/* Reduce overlay on mobile for performance */
+@media (max-width: 768px) {
+  html[data-active-theme]::before {
+    background: radial-gradient(
+      ellipse at 50% 20%,
+      rgba(var(--accent-rgb, 59, 130, 246), 0.06) 0%,
+      rgba(var(--accent-rgb, 59, 130, 246), 0.02) 50%,
+      transparent 100%
+    );
+    opacity: 0.4;
+  }
+}
+
+/* Disable overlay for low-performance devices */
+html.fps-minimal[data-active-theme]::before,
+html.fps-low[data-active-theme]::before {
+  opacity: 0.2;
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.02);
+}
+
+/* Light themes need inverted overlay */
+html[data-active-theme][data-theme-light="true"]::before {
+  mix-blend-mode: multiply;
+  opacity: 0.3;
+}
+
+/* ============================================
+   SCROLL SAFETY FOR ALL OVERLAY ELEMENTS
+   Ensures overlays NEVER block scrolling on ANY device
+   ============================================ */
+
+/* Universal overlay scroll passthrough */
+#theme-global-overlay,
+#theme-edge-glow,
+html::before,
+html::after,
+body::before,
+body::after,
+[id*="theme-overlay"],
+[class*="theme-overlay"] {
+  pointer-events: none !important;
+  touch-action: none !important;
+  -webkit-overflow-scrolling: unset !important;
+  overflow: visible !important;
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  #theme-global-overlay,
+  #theme-edge-glow {
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+  
+  /* Ensure body can scroll on iOS - MOBILE ONLY */
+  @media (max-width: 768px) {
+    body {
+      -webkit-overflow-scrolling: touch !important;
+      overflow-y: auto !important;
+    }
+  }
+  
+  /* Desktop Safari must NOT have overflow:auto on body - it needs visible */
+  @media (min-width: 769px) {
+    body {
+      overflow-y: visible !important;
+    }
+    html {
+      overflow-y: scroll !important;
+    }
+  }
+}
+
+/* Samsung Browser / Android WebView fixes */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  #theme-global-overlay,
+  #theme-edge-glow {
+    /* Force hardware acceleration */
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+}
+
+/* In-App Browsers (Instagram, TikTok, Facebook, etc.) */
+html.is-in-app-browser #theme-global-overlay,
+html.is-in-app-browser #theme-edge-glow {
+  /* Reduce z-index in webviews which have quirky stacking */
+  z-index: 99990 !important;
+}
+
+/* ============================================
+   THEME-AWARE BORDER GLOW SYSTEM
+   Adds colored glow to borders based on theme
+   ============================================ */
+
+/* Apply subtle theme border glow to key containers */
+html[data-active-theme] nav,
+html[data-active-theme] .modal,
+html[data-active-theme] [role="dialog"],
+html[data-active-theme] .card,
+html[data-active-theme] .theme-glow-border {
+  box-shadow: 
+    0 0 1px rgba(var(--accent-rgb, 59, 130, 246), 0.3),
+    0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.05),
+    inset 0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.02);
+  border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.2) !important;
+}
+
+/* Enhanced glow on hover */
+html[data-active-theme] nav:hover,
+html[data-active-theme] .theme-glow-border:hover {
+  box-shadow: 
+    0 0 2px rgba(var(--accent-rgb, 59, 130, 246), 0.5),
+    0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.1),
+    inset 0 0 40px rgba(var(--accent-rgb, 59, 130, 246), 0.03);
+}
+
+/* ============================================
+   FIXED ELEMENT THEME AWARENESS
+   Ensures fixed elements receive theme styling
+   ============================================ */
+
+/* Fixed navbar theming */
+html[data-active-theme] nav[class*="fixed"],
+html[data-active-theme] header[class*="fixed"] {
+  /* Subtle colored border on bottom */
+  border-bottom-color: rgba(var(--accent-rgb, 59, 130, 246), 0.15) !important;
+}
+
+/* Fixed modals and dialogs */
+html[data-active-theme] [class*="fixed"][class*="z-"] {
+  /* Theme-colored borders for visibility */
+  --modal-border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.25);
+}
+
+/* Buttons across the app get theme awareness */
+html[data-active-theme] button:not([data-no-theme]),
+html[data-active-theme] [role="button"]:not([data-no-theme]) {
+  --btn-accent: var(--accent-color, #3b82f6);
+  --btn-accent-rgb: var(--accent-rgb, 59, 130, 246);
+}
+
+/* Links get theme color on hover */
+html[data-active-theme] a:not([data-no-theme]):hover {
+  color: var(--accent-color, #3b82f6);
+  text-shadow: 0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.3);
+}
+
+/* Disable filter blur on any element */
+[style*="blur"],
+.blur,
+.blur-sm,
+.blur-md,
+.blur-lg,
+.blur-xl,
+.blur-2xl,
+.blur-3xl {
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
+/* Theme filter wrapper - applies filter only to main content, preserving fixed elements */
+.theme-filter-wrapper {
+  filter: var(--theme-filter, none);
+  transition: filter 0.5s ease-in-out;
+  /* Ensure proper stacking context */
+  position: relative;
+  z-index: 0;
+}
+
+/* Theme filter overlay - applies to entire viewport */
+html[data-active-theme] {
+  /* CSS variables are applied via JS for dynamic control */
+  isolation: isolate;
+}
+
+/* Theme background overlay when theme has bgImage */
+body[data-theme]::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--theme-bg-image, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: var(--theme-bg-opacity, 0);
+  mix-blend-mode: var(--theme-bg-blend, overlay);
+  pointer-events: none;
+  transition: opacity 0.5s ease-in-out;
+}
+
+/* ============================================
+   THEME-AWARE UTILITY CLASSES v2.0
+   Use these classes throughout the app for automatic theme adaptation
+   All colors automatically update when theme changes
+   ============================================ */
+
+/* Theme-aware accent colors */
+.theme-accent {
+  color: var(--accent-color, #3b82f6);
+}
+
+.theme-accent-bg {
+  background-color: var(--accent-color, #3b82f6);
+}
+
+.theme-accent-border {
+  border-color: var(--accent-color, #3b82f6);
+}
+
+.theme-accent-glow {
+  box-shadow: 0 0 20px var(--theme-accent-light, rgba(59, 130, 246, 0.25)),
+              0 0 40px var(--theme-accent-glow, rgba(59, 130, 246, 0.15));
+}
+
+/* Theme-aware text with accent */
+.theme-text-accent {
+  color: var(--accent-color, #3b82f6);
+  text-shadow: 0 0 10px var(--theme-accent-light, rgba(59, 130, 246, 0.25));
+}
+
+/* Theme-aware gradients */
+.theme-gradient {
+  background: linear-gradient(135deg, 
+    var(--theme-accent-dark, rgba(59, 130, 246, 0.5)) 0%, 
+    transparent 50%,
+    var(--theme-accent-light, rgba(59, 130, 246, 0.25)) 100%);
+}
+
+/* Theme gradient overlays */
+.theme-gradient-overlay {
+  position: relative;
+}
+
+.theme-gradient-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    var(--theme-accent-subtle, rgba(59, 130, 246, 0.1)) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ============================================
+   SPLINE & CANVAS THEME OVERLAY
+   Applies theme color tint to 3D scenes
+   ============================================ */
+
+/* Spline container gets theme color glow */
+[data-spline],
+.spline-container {
+  position: relative;
+}
+
+[data-spline]::after,
+.spline-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.08) 0%,
+    transparent 60%
+  );
+  mix-blend-mode: screen;
+  z-index: 1;
+  border-radius: inherit;
+  transition: background 0.5s ease;
+}
+
+/* Hero spline special treatment - stronger glow */
+.hero [data-spline]::after,
+section#hero [data-spline]::after {
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.12) 0%,
+    rgba(var(--accent-rgb, 59, 130, 246), 0.05) 40%,
+    transparent 70%
+  );
+}
+
+/* Theme-aware borders with glow */
+.theme-border-glow {
+  border: 1px solid var(--theme-accent-border, rgba(59, 130, 246, 0.3));
+  box-shadow: 0 0 15px var(--theme-accent-subtle, rgba(59, 130, 246, 0.1)),
+              inset 0 0 15px var(--theme-accent-subtle, rgba(59, 130, 246, 0.05));
+}
+
+/* Theme-aware button hover states */
+.theme-button {
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.1);
+  border: 1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.2);
+  color: var(--accent-color, #3b82f6);
+  transition: all 0.3s ease;
+}
+
+.theme-button:hover {
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.2);
+  border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.5);
+  box-shadow: 0 0 20px var(--theme-accent-glow, rgba(59, 130, 246, 0.3));
+}
+
+/* Theme-aware cards - NO BLUR */
+.theme-card {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid var(--theme-accent-border, rgba(59, 130, 246, 0.2));
+  /* NO BLUR - removed for performance */
+}
+
+.theme-card:hover {
+  border-color: var(--theme-accent-border, rgba(59, 130, 246, 0.4));
+  box-shadow: 0 0 30px var(--theme-accent-subtle, rgba(59, 130, 246, 0.1));
+}
+
+/* Theme-aware inputs */
+.theme-input {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.2);
+  color: white;
+}
+
+.theme-input:focus {
+  border-color: var(--accent-color, #3b82f6);
+  box-shadow: 0 0 0 2px var(--theme-accent-subtle, rgba(59, 130, 246, 0.2));
+  outline: none;
+}
+
+/* ============================================
+   GLOBAL THEME COLOR APPLICATION v2.0
+   Automatically converts Tailwind blue classes to use theme accent color
+   Supports opacity variants like blue-400/60, blue-500/30, etc.
+   ============================================ */
+
+/* TEXT COLORS - All blue text becomes theme color */
+html[data-active-theme] .text-blue-400,
+html[data-active-theme] .text-blue-500,
+html[data-active-theme] .text-blue-600,
+[data-active-theme] .text-blue-400,
+[data-active-theme] .text-blue-500,
+[data-active-theme] .text-blue-600 {
+  color: var(--accent-color, #3b82f6) !important;
+}
+
+/* Text with opacity variants - uses wildcard to match all variants */
+html[data-active-theme] [class*="text-blue-4"],
+html[data-active-theme] [class*="text-blue-5"] {
+  color: var(--accent-color, #3b82f6) !important;
+}
+
+/* BORDER COLORS - All blue borders become theme color */
+html[data-active-theme] .border-blue-400,
+html[data-active-theme] .border-blue-500,
+html[data-active-theme] .border-blue-600,
+[data-active-theme] .border-blue-400,
+[data-active-theme] .border-blue-500,
+[data-active-theme] .border-blue-600 {
+  border-color: var(--accent-color, #3b82f6) !important;
+}
+
+/* Border with opacity variants - uses wildcard to match all variants */
+html[data-active-theme] [class*="border-blue-4"],
+html[data-active-theme] [class*="border-blue-5"] {
+  border-color: rgba(var(--accent-rgb, 59, 130, 246), var(--tw-border-opacity, 0.3)) !important;
+}
+
+/* BACKGROUND COLORS - All blue backgrounds become theme color */
+html[data-active-theme] .bg-blue-400,
+html[data-active-theme] .bg-blue-500,
+html[data-active-theme] .bg-blue-600,
+[data-active-theme] .bg-blue-400,
+[data-active-theme] .bg-blue-500,
+[data-active-theme] .bg-blue-600 {
+  background-color: var(--accent-color, #3b82f6) !important;
+}
+
+/* Background with opacity variants - uses wildcard to match all variants */
+html[data-active-theme] [class*="bg-blue-4"],
+html[data-active-theme] [class*="bg-blue-5"] {
+  background-color: rgba(var(--accent-rgb, 59, 130, 246), var(--tw-bg-opacity, 0.2)) !important;
+}
+
+/* RING COLORS */
+html[data-active-theme] .ring-blue-400,
+html[data-active-theme] .ring-blue-500,
+html[data-active-theme] .ring-blue-600,
+html[data-active-theme] [class*="focus\:ring-blue-4"]:focus,
+html[data-active-theme] [class*="focus\:ring-blue-5"]:focus {
+  --tw-ring-color: var(--accent-color, #3b82f6) !important;
+}
+
+/* GRADIENT COLORS */
+html[data-active-theme] .from-blue-400,
+html[data-active-theme] .from-blue-500,
+html[data-active-theme] .from-blue-600,
+html[data-active-theme] [class*="from-blue-"] {
+  --tw-gradient-from: var(--accent-color, #3b82f6) !important;
+}
+
+html[data-active-theme] .to-blue-400,
+html[data-active-theme] .to-blue-500,
+html[data-active-theme] .to-blue-600,
+html[data-active-theme] [class*="to-blue-"] {
+  --tw-gradient-to: var(--accent-color, #3b82f6) !important;
+}
+
+html[data-active-theme] .via-blue-400,
+html[data-active-theme] .via-blue-500,
+html[data-active-theme] [class*="via-blue-"] {
+  --tw-gradient-via: var(--accent-color, #3b82f6) !important;
+}
+
+/* SHADOW COLORS */
+html[data-active-theme] [class*="shadow-blue"] {
+  --tw-shadow-color: rgba(var(--accent-rgb, 59, 130, 246), 0.3) !important;
+}
+
+/* DROP SHADOW - Override inline and class-based blue drop-shadows */
+html[data-active-theme] [class*="drop-shadow"][class*="blue"],
+html[data-active-theme] [style*="drop-shadow"][style*="59"][style*="130"][style*="246"] {
+  filter: drop-shadow(0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.5)) !important;
+}
+
+/* HOVER STATES - Blue hover colors become theme color */
+html[data-active-theme] [class*="hover\:text-blue-4"]:hover,
+html[data-active-theme] [class*="hover\:text-blue-5"]:hover,
+html[data-active-theme] [class*="hover\:border-blue-4"]:hover,
+html[data-active-theme] [class*="hover\:border-blue-5"]:hover,
+html[data-active-theme] [class*="hover\:bg-blue-4"]:hover,
+html[data-active-theme] [class*="hover\:bg-blue-5"]:hover {
+  color: var(--accent-color, #3b82f6) !important;
+  border-color: var(--accent-color, #3b82f6) !important;
+}
+
+/* FOCUS STATES */
+html[data-active-theme] [class*="focus\:border-blue-5"]:focus,
+html[data-active-theme] [class*="focus\:border-blue-4"]:focus {
+  border-color: var(--accent-color, #3b82f6) !important;
+}
+
+/* Theme-aware links */
+.theme-link {
+  color: var(--accent-color, #3b82f6);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.theme-link:hover {
+  text-shadow: 0 0 10px var(--theme-accent-glow, rgba(59, 130, 246, 0.5));
+}
+
+/* ============================================
+   ILLUSION EFFECTS (Applied based on theme illusion type)
+   ============================================ */
+
+/* Scanlines effect */
+[data-theme-illusion="SCANLINES"]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.1) 0px,
+    rgba(0, 0, 0, 0.1) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  opacity: 0.3;
+}
+
+/* Vignette effect */
+[data-theme-illusion="VIGNETTE"]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+}
+
+/* Noise effect */
+[data-theme-illusion="NOISE"]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* CRT effect */
+[data-theme-illusion="CRT"]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.15) 0px,
+      rgba(0, 0, 0, 0.15) 1px,
+      transparent 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      ellipse at center,
+      transparent 50%,
+      rgba(0, 0, 0, 0.3) 100%
+    );
+  animation: crt-flicker 0.15s infinite;
+}
+
+@keyframes crt-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.97; }
+}
+
+/* Glitch effect */
+[data-theme-illusion="GLITCH"]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: transparent;
+  animation: glitch-overlay 5s infinite;
+}
+
+@keyframes glitch-overlay {
+  0%, 90%, 100% { 
+    clip-path: none;
+    transform: none;
+  }
+  92% {
+    clip-path: inset(20% 0 60% 0);
+    transform: translateX(-2px);
+  }
+  94% {
+    clip-path: inset(50% 0 30% 0);
+    transform: translateX(2px);
+  }
+  96% {
+    clip-path: inset(10% 0 70% 0);
+    transform: translateX(-1px);
+  }
+}
+
+/* ============================================
+   CATEGORY-SPECIFIC THEME OVERRIDES
+   ============================================ */
+
+/* Crypto category - add subtle animation */
+[data-theme-category="CRYPTO"] .theme-accent-glow {
+  animation: crypto-pulse 2s ease-in-out infinite;
+}
+
+@keyframes crypto-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Sentiment category - emotional color shifts */
+[data-theme-category="SENTIMENT"] {
+  transition: filter 0.8s ease-in-out;
+}
+
+/* Glitch category - add jitter */
+[data-theme-category="GLITCH"] .theme-text-accent {
+  animation: text-jitter 0.3s infinite;
+}
+
+@keyframes text-jitter {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-1px); }
+  75% { transform: translateX(1px); }
+}
+
+/* Light theme adjustments */
+html[data-active-theme] {
+  --theme-text-primary: white;
+  --theme-text-secondary: rgba(255, 255, 255, 0.7);
+}
+
+/* ============================================
+   SHIMMER TEXT EFFECT (Used in theme UI) - ENHANCED AESTHETIC
+   ============================================ */
+
+.text-shimmer-effect {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    var(--accent-color, #3b82f6) 25%,
+    rgba(147, 197, 253, 1) 50%,
+    var(--accent-color, #3b82f6) 75%,
+    rgba(255, 255, 255, 0.9) 100%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-shimmer-sweep 5s linear infinite;
+}
+
+@keyframes text-shimmer-sweep {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* Text shimmer now uses unified-shimmer-ltr from UnifiedShimmer.tsx */

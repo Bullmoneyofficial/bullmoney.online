@@ -1,0 +1,234 @@
+/**
+ * BULLMONEY - Base Reset & Mobile-First Defaults
+ * ===============================================
+ * Global reset styles and cross-browser normalization
+ */
+
+/* ============================================
+   GLOBAL BOX MODEL RESET
+   ============================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  /* Prevent text size adjustment after orientation changes in iOS */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Remove tap highlight on mobile */
+  -webkit-tap-highlight-color: transparent;
+  /* Prevent layout thrashing */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* ============================================
+   ROOT & HTML SCROLL FOUNDATION
+   CRITICAL: Ensures scrolling works on ALL devices
+   ============================================ */
+html {
+  /* CRITICAL: Use native scroll for 120Hz - do NOT use scroll-behavior: smooth */
+  scroll-behavior: auto !important;
+  /* Enable high refresh rate scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  /* Prevent accidental overscroll bounce */
+  overscroll-behavior-y: auto;
+  overscroll-behavior-x: none;
+  /* Ensure proper height calculation on mobile browsers */
+  min-height: 100%;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  /* CRITICAL: Allow all scroll inputs including trackpad */
+  scroll-snap-type: none !important;
+  /* CRITICAL: Do not constrain height on desktop */
+  height: auto !important;
+  /* Font smoothing */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  /* Touch handling */
+  touch-action: pan-y pan-x;
+}
+
+/* ============================================
+   BODY FOUNDATION
+   ============================================ */
+body {
+  /* Body must be scrollable - CRITICAL for macOS trackpad */
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  /* Prevent overscroll bounce on iOS */
+  overscroll-behavior-y: auto;
+  /* Use dynamic viewport height for mobile address bar */
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  /* Allow all scrolling gestures */
+  touch-action: pan-y;
+  /* Ensure proper scroll context */
+  position: relative;
+  /* CRITICAL: Don't restrict height */
+  height: auto !important;
+  /* Font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* Pure black background */
+  background-color: #000000 !important;
+}
+
+/* ============================================
+   TOUCH INTERACTIVE ELEMENTS
+   Minimum touch targets (44px Apple HIG)
+   ============================================ */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+[tabindex]:not([tabindex="-1"]) {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  /* Prevent callout on long press (iOS) */
+  -webkit-touch-callout: none;
+  /* Disable user selection for better touch UX */
+  user-select: none;
+  -webkit-user-select: none;
+  /* Ensure proper touch handling */
+  touch-action: manipulation;
+  /* GPU layer for instant response */
+  transform: translateZ(0);
+  transition: transform 0.15s var(--spring-snappy),
+              opacity 0.15s ease-out,
+              background-color 0.15s ease-out;
+  /* No tap highlight */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Allow text selection in input fields */
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Remove default button styles */
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+/* Active state for touch feedback */
+button:active,
+a:active,
+[role="button"]:active {
+  opacity: 0.7;
+  transform: scale(0.97) translateZ(0);
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
+
+/* ============================================
+   RESPONSIVE IMAGES & MEDIA
+   ============================================ */
+img,
+video,
+iframe,
+canvas,
+svg {
+  max-width: 100%;
+  height: auto;
+  /* Prevent layout shifts */
+  display: block;
+  /* GPU acceleration */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Lazy loading images */
+img[loading="lazy"] {
+  aspect-ratio: attr(width) / attr(height);
+}
+
+/* Images with aspect ratio - prevent CLS */
+img[width][height] {
+  aspect-ratio: attr(width) / attr(height);
+  height: auto;
+}
+
+/* ============================================
+   CANVAS SPECIFIC
+   ============================================ */
+canvas {
+  /* Enable GPU compositing */
+  transform: translateZ(0);
+  /* Optimize for retina + high refresh rate */
+  image-rendering: -webkit-optimize-contrast;
+  /* Allow touch scrolling to pass through */
+  touch-action: pan-y !important;
+  /* Force new stacking context */
+  isolation: isolate;
+  /* Canvas should not change size after initial render */
+  contain: strict;
+  /* Mobile: don't block scrolling */
+  pointer-events: none;
+}
+
+/* Allow pointer events on desktop only */
+@media (min-width: 769px) and (hover: hover) {
+  canvas {
+    pointer-events: auto;
+    touch-action: none;
+  }
+}
+
+/* ============================================
+   SCROLL PASSTHROUGH FOR OVERLAYS
+   ============================================ */
+[style*="pointer-events: none"],
+[style*="pointer-events:none"],
+.pointer-events-none {
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* Theme overlay elements - CRITICAL for scroll */
+#theme-global-overlay,
+#theme-edge-glow,
+#theme-filter-overlay,
+html[data-active-theme]::before,
+html[data-active-theme]::after {
+  pointer-events: none !important;
+  touch-action: none !important;
+  -webkit-touch-callout: none !important;
+  overflow: visible !important;
+}
+
+/* ============================================
+   MAIN CONTENT SCROLLING
+   ============================================ */
+main, section, [data-allow-scroll], [data-scrollable] {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y !important;
+  overscroll-behavior-y: contain;
+}
+
+/* h-screen elements must allow scroll */
+.h-screen {
+  touch-action: pan-y !important;
+}
+
+/* ============================================
+   EMOJI SUPPORT
+   ============================================ */
+.emoji-text {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+}

@@ -1,0 +1,182 @@
+/**
+ * BULLMONEY - GPU Acceleration Utilities
+ * ======================================
+ * Optimized layer utilities for smooth performance
+ */
+
+/* ============================================
+   GPU LAYER UTILITIES
+   ============================================ */
+
+/* Force GPU layer - use sparingly */
+.gpu-layer,
+.gpu-accelerated {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* GPU layer with containment */
+.gpu-layer-contained {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout paint style;
+}
+
+/* Animate-ready (add will-change on hover/focus) */
+.will-animate {
+  transition: transform 0.2s var(--spring-smooth),
+              opacity 0.2s var(--spring-smooth);
+}
+
+.will-animate:hover,
+.will-animate:focus-within {
+  will-change: transform, opacity;
+}
+
+/* Animated elements */
+[class*="animate-"],
+[class*="transition-"],
+.animated,
+.animated-element {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Remove will-change after animation completes */
+@media (prefers-reduced-motion: no-preference) {
+  [class*="animate-"]:not(:hover):not(:focus):not(.animating) {
+    will-change: auto;
+  }
+}
+
+/* ============================================
+   LAYOUT CONTAINMENT
+   ============================================ */
+
+/* Prevent layout thrashing */
+.no-layout-shift {
+  contain: layout style paint;
+}
+
+/* Isolate expensive sections */
+.perf-contain {
+  contain: layout style paint;
+}
+
+/* Strict containment only where explicitly needed */
+.perf-contain-strict {
+  contain: strict;
+}
+
+/* ============================================
+   GPU PROMOTION FOR CRITICAL ELEMENTS
+   ============================================ */
+nav,
+footer,
+.modal,
+dialog,
+[data-spline],
+video {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  contain: layout style paint;
+}
+
+/* ============================================
+   CONTENT VISIBILITY - LAZY RENDERING
+   ============================================ */
+
+/* Auto-hide off-screen content */
+section,
+article,
+.content-section,
+.lazy-section,
+.fold-section,
+[data-section] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 400px;
+}
+
+/* Maintain aspect ratios for better CLS */
+.video-container,
+.image-container,
+.embed-container {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 400px;
+}
+
+/* ============================================
+   GPU COMPOSITING FOR HIGH REFRESH DISPLAYS
+   ============================================ */
+.display-120hz canvas,
+.display-90hz canvas,
+.fps-120 canvas,
+.fps-90 canvas {
+  transform: translateZ(0);
+  will-change: contents;
+}
+
+.display-120hz [data-spline],
+.display-90hz [data-spline],
+.fps-120 [data-spline],
+.fps-90 [data-spline] {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+/* ============================================
+   HIGH-DPI & RETINA OPTIMIZATIONS
+   ============================================ */
+@media screen and (min-resolution: 2dppx) {
+  .animated-element,
+  .transition-all,
+  [class*="hover:"] {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+  }
+  
+  img {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+/* ============================================
+   SMOOTH SCROLL PERFORMANCE
+   ============================================ */
+.smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+
+/* Optimize scroll containers */
+[data-scroll-container],
+.overflow-y-auto,
+.overflow-auto {
+  contain: layout style paint;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Unified scroll behavior */
+.unified-scroll {
+  scroll-behavior: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: auto;
+}
+
+.unified-scroll.touch-device {
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+}
+
+.unified-scroll.non-touch-device {
+  scroll-snap-type: none !important;
+  scroll-behavior: auto !important;
+  overscroll-behavior: auto;
+}

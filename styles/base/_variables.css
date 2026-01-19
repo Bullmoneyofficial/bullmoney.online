@@ -1,0 +1,145 @@
+/**
+ * BULLMONEY - CSS Variables & Custom Properties
+ * ==============================================
+ * Core design tokens and CSS custom properties
+ * Used throughout the application
+ */
+
+:root {
+  /* ============================================
+     DISPLAY & REFRESH RATE
+     ============================================ */
+  --native-refresh-rate: 60;
+  --target-fps: 60;
+  --frame-duration: 16.67ms;
+  --animation-speed: 1;
+  
+  /* Frame budgets by refresh rate */
+  --frame-budget-120: 8.33ms;
+  --frame-budget-90: 11.11ms;
+  --frame-budget-60: 16.67ms;
+  
+  /* ============================================
+     VIEWPORT & SAFE AREAS
+     ============================================ */
+  --vh: 1vh;
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  
+  /* ============================================
+     TOUCH & INTERACTION
+     ============================================ */
+  --touch-target-min: 44px;
+  
+  /* ============================================
+     SPACING SYSTEM
+     ============================================ */
+  --spacing-mobile: 16px;
+  --spacing-tablet: 24px;
+  --spacing-desktop: 32px;
+  
+  /* ============================================
+     THEME OVERLAY VARIABLES
+     Default to BullMoney Blue signature color
+     Set by GlobalThemeProvider & Early Theme Script
+     ============================================ */
+  --accent-color: #3b82f6;
+  --accent-rgb: 59, 130, 246;
+  --theme-id: 'bullmoney-blue';
+  --theme-name: 'BullMoney Blue';
+  --theme-accent-light: rgba(59, 130, 246, 0.25);
+  --theme-accent-dark: rgba(59, 130, 246, 0.5);
+  --theme-accent-glow: rgba(59, 130, 246, 0.4);
+  --theme-accent-subtle: rgba(59, 130, 246, 0.1);
+  --theme-accent-border: rgba(59, 130, 246, 0.3);
+  
+  /* ============================================
+     ANIMATION EASING CURVES
+     Spring animations optimized for 120Hz
+     ============================================ */
+  --spring-stiff: cubic-bezier(0.5, 1.8, 0.4, 0.8);
+  --spring-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring-snappy: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-gpu: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-fast: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.6, 1);
+  
+  /* GPU animation base */
+  --gpu-translate: translate3d(0, 0, 0);
+  
+  /* ============================================
+     SHIMMER & ANIMATION SPEEDS
+     Modified by device tier
+     ============================================ */
+  --shimmer-speed: 3s;
+  --spin-speed: 4s;
+  --pulse-speed: 3s;
+  --glow-speed: 3s;
+  --animation-duration-multiplier: 1;
+  
+  /* Animation quality */
+  --animation-quality: high;
+  --blur-amount: 0px; /* Always 0 for performance */
+  --shadow-quality: full;
+  
+  /* 3D quality */
+  --spline-quality: high;
+  --spline-enabled: 1;
+  
+  /* ============================================
+     PERFORMANCE MODE FLAGS
+     ============================================ */
+  --blur-enabled: 0;
+  --shadows-enabled: 1;
+  --glow-enabled: 1;
+  --particles-enabled: 1;
+  
+  /* ============================================
+     NAVBAR DERIVED COLORS
+     ============================================ */
+  --navbar-accent: var(--accent-color, #3b82f6);
+  --navbar-accent-rgb: var(--accent-rgb, 59, 130, 246);
+  --navbar-border: rgba(var(--navbar-accent-rgb), 0.3);
+  --navbar-glow: rgba(var(--navbar-accent-rgb), 0.15);
+  --navbar-hover: rgba(var(--navbar-accent-rgb), 0.2);
+  --navbar-active: rgba(var(--navbar-accent-rgb), 0.25);
+}
+
+/* ============================================
+   PERFORMANCE MODE CLASSES
+   ============================================ */
+.perf-ultra {
+  --blur-enabled: 0;
+  --shadows-enabled: 1;
+  --glow-enabled: 1;
+  --particles-enabled: 1;
+}
+
+.perf-balanced {
+  --blur-enabled: 0;
+  --shadows-enabled: 1;
+  --glow-enabled: 0.5;
+  --particles-enabled: 0.5;
+}
+
+.perf-power-saver {
+  --blur-enabled: 0;
+  --shadows-enabled: 0.5;
+  --glow-enabled: 0;
+  --particles-enabled: 0;
+}
+
+/* ============================================
+   120Hz DISPLAY SPECIFIC
+   ============================================ */
+.display-120hz {
+  --frame-budget: 8.33ms;
+  --vsync-interval: 8.33ms;
+}
+
+.display-90hz {
+  --frame-budget: 11.11ms;
+  --vsync-interval: 11.11ms;
+}

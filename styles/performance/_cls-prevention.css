@@ -1,0 +1,177 @@
+/**
+ * BULLMONEY - CLS Prevention Styles
+ * =================================
+ * Prevent Cumulative Layout Shift for Core Web Vitals
+ */
+
+/* ============================================
+   SPLINE 3D CONTAINERS - FIXED DIMENSIONS
+   ============================================ */
+.spline-container,
+[data-spline-scene],
+.lazy-spline-container {
+  aspect-ratio: 16 / 9;
+  min-height: 300px;
+  width: 100%;
+  contain: strict;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+/* Hero Spline - exact height reservation */
+.hero-spline-wrapper,
+.hero [data-spline],
+.hero canvas {
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  width: 100%;
+  contain: layout size style;
+}
+
+/* 3D Experience section - fixed 800px height */
+#experience .spline-container,
+#experience [data-spline-scene] {
+  height: 800px;
+  min-height: 800px;
+  max-height: 800px;
+}
+
+/* Skeleton/Placeholder must match final content size */
+.spline-skeleton,
+.loading-skeleton-spline {
+  aspect-ratio: 16 / 9;
+  min-height: 300px;
+  width: 100%;
+}
+
+/* ============================================
+   DYNAMIC CONTENT CONTAINERS
+   ============================================ */
+.dynamic-content,
+[data-dynamic],
+.lazy-load-wrapper {
+  min-height: 100px;
+  contain: layout;
+}
+
+/* Image containers - prevent CLS */
+.image-container,
+[data-image-container] {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ============================================
+   LCP OPTIMIZATION - ABOVE THE FOLD
+   ============================================ */
+
+/* Hero section LCP priority */
+.hero,
+#hero,
+[data-hero] {
+  contain: none;
+  content-visibility: visible;
+}
+
+/* Hero canvas - LCP element priority */
+.hero canvas,
+#hero canvas,
+[data-hero] canvas {
+  content-visibility: visible;
+  contain: none;
+}
+
+/* Defer non-critical content rendering */
+section:not(.hero):not(#hero),
+#cta,
+#features,
+#experience,
+#testimonials,
+#ticker {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+/* ============================================
+   SUSPENSE & LAZY LOADING
+   ============================================ */
+
+/* Suspense fallback containers */
+.suspense-fallback,
+[data-suspense-fallback] {
+  min-height: inherit;
+  height: 100%;
+  width: 100%;
+}
+
+/* Lazy-loaded component wrappers */
+.lazy-wrapper,
+[data-lazy] {
+  min-height: 100px;
+  contain: layout;
+}
+
+/* Dynamic imports container */
+.dynamic-import,
+[data-dynamic-import] {
+  min-height: 100px;
+  contain: layout size;
+}
+
+/* ============================================
+   NEXT.JS IMAGE OPTIMIZATION
+   ============================================ */
+[data-nimg] {
+  contain: layout;
+}
+
+/* ============================================
+   PRODUCT/CARD GRIDS
+   ============================================ */
+.product-grid,
+.card-grid,
+[data-grid] {
+  contain: layout;
+}
+
+.product-grid > *,
+.card-grid > *,
+[data-grid] > * {
+  min-height: 200px;
+  contain: layout;
+}
+
+/* ============================================
+   MODAL CONTAINERS
+   ============================================ */
+.modal-container,
+[data-modal] {
+  contain: layout style;
+}
+
+/* ============================================
+   BIG DEVICE HERO OPTIMIZATIONS
+   ============================================ */
+@media (min-width: 1440px) {
+  .hero-spline-wrapper,
+  .hero [data-spline],
+  .hero canvas {
+    height: calc(100vh - 80px);
+    min-height: calc(100vh - 80px);
+    max-height: none;
+    contain: layout style;
+  }
+  
+  .hero {
+    height: auto !important;
+    min-height: calc(100vh - 80px);
+    overflow: visible;
+  }
+  
+  .big-display .hero-spline-wrapper {
+    position: relative;
+    overflow: visible;
+  }
+}

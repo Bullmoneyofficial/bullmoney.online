@@ -1,0 +1,268 @@
+/**
+ * BULLMONEY - Mobile Device Optimizations
+ * ========================================
+ * Device-specific optimizations for mobile browsers
+ */
+
+/* ============================================
+   MOBILE BASE (max-width: 768px)
+   ============================================ */
+@media (max-width: 768px) {
+  html {
+    height: 100%;
+    height: calc(var(--vh, 1vh) * 100);
+    overscroll-behavior-y: none;
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    min-height: 100%;
+    min-height: calc(var(--vh, 1vh) * 100);
+    position: relative;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    /* Fix for iOS Safari viewport */
+    min-height: -webkit-fill-available;
+  }
+
+  /* Reduce animation complexity */
+  .mobile-simple * {
+    animation-duration: 0.3s !important;
+    transition-duration: 0.3s !important;
+  }
+  
+  /* Shorter transition durations */
+  * {
+    transition-duration: 0.2s !important;
+  }
+
+  /* Disable expensive parallax on mobile */
+  [data-parallax],
+  .parallax,
+  .parallax-scroll {
+    transform: none !important;
+  }
+
+  /* Simpler shadows */
+  [class*="shadow-"] {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  .shadow-lg,
+  .shadow-xl,
+  .shadow-2xl {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* No filter effects */
+  [class*="filter"]:not(.fps-chart-container *),
+  [style*="filter"]:not(.fps-chart-container *) {
+    filter: none !important;
+  }
+
+  /* Disable 3D transforms for battery */
+  [style*="transform3d"],
+  [style*="translateZ"] {
+    transform: none !important;
+  }
+
+  /* Optimize for single-threaded mobile */
+  html {
+    font-size: 16px; /* Prevent auto-zoom on iOS */
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Lower quality images */
+  img.mobile-optimized {
+    image-rendering: auto;
+    image-rendering: crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+  }
+
+  /* Reduce shadows */
+  .mobile-light-shadow {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  /* Page sections - fixed height on mobile */
+  .page-section {
+    height: 100dvh;
+  }
+}
+
+/* ============================================
+   LOW-END DEVICE OPTIMIZATIONS
+   ============================================ */
+@media (max-width: 768px) and (max-resolution: 1.5dppx) {
+  .low-end-no-animate * {
+    animation-duration: 12s !important;
+    transition-duration: 100ms !important;
+  }
+
+  *:not(canvas) {
+    will-change: auto !important;
+  }
+}
+
+/* ============================================
+   MOBILE TOUCH OPTIMIZATION
+   ============================================ */
+@media (hover: none) and (pointer: coarse) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .unified-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  button, a, .cursor-target {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .overflow-auto,
+  .overflow-scroll,
+  .overflow-y-auto,
+  .overflow-x-auto,
+  [class*="scroll"] {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+/* ============================================
+   IOS SAFARI SPECIFIC
+   ============================================ */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari viewport units fix - MOBILE ONLY */
+  @media (max-width: 768px) {
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      height: 100vh;
+    }
+
+    body {
+      overscroll-behavior-y: contain;
+      min-height: -webkit-fill-available;
+    }
+  }
+  
+  /* Desktop Safari must use auto height */
+  @media (min-width: 769px) {
+    html, body {
+      height: auto !important;
+    }
+    html {
+      overflow-y: scroll !important;
+    }
+  }
+
+  /* iOS Safari font smoothing */
+  body,
+  button,
+  input,
+  select,
+  textarea {
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  .animate {
+    -webkit-animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* iOS Safari specific: ensure overlays don't capture touches */
+  html[data-active-theme]::before {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* ============================================
+   INSTAGRAM WEBVIEW OPTIMIZATION
+   ============================================ */
+.is-instagram-webview,
+[data-browser*="instagram"] {
+  --max-animation-duration: 300ms;
+}
+
+/* In-App Browsers (Instagram, Facebook, TikTok, etc.) */
+html.is-in-app-browser body {
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: auto !important;
+}
+
+/* ============================================
+   MOBILE CONTAINERS
+   ============================================ */
+.container-mobile {
+  width: 100%;
+  padding-left: var(--spacing-mobile);
+  padding-right: var(--spacing-mobile);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.container-safe {
+  padding-left: max(var(--spacing-mobile), var(--safe-area-inset-left));
+  padding-right: max(var(--spacing-mobile), var(--safe-area-inset-right));
+  padding-top: max(var(--spacing-mobile), var(--safe-area-inset-top));
+  padding-bottom: max(var(--spacing-mobile), var(--safe-area-inset-bottom));
+}
+
+/* Responsive container sizes */
+@media (min-width: 640px) {
+  .container-mobile {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --spacing: var(--spacing-tablet);
+  }
+
+  .container-mobile {
+    max-width: 768px;
+    padding-left: var(--spacing-tablet);
+    padding-right: var(--spacing-tablet);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --spacing: var(--spacing-desktop);
+  }
+}

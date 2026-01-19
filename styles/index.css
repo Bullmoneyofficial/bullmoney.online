@@ -1,0 +1,244 @@
+/**
+ * ============================================
+ * BULLMONEY - Unified CSS Architecture
+ * ============================================
+ * 
+ * Professional CSS organization with modular imports.
+ * This is the main entry point that imports all partials.
+ * 
+ * Architecture:
+ * ├── base/          - Core variables, reset, typography
+ * ├── performance/   - GPU, FPS tiers, scroll optimizations
+ * ├── animations/    - Keyframes, transitions, effects
+ * ├── themes/        - Overlays, utilities, illusions
+ * ├── components/    - UI component styles
+ * ├── responsive/    - Mobile, desktop, big screen
+ * └── browsers/      - Safari, Firefox, Samsung fixes
+ * 
+ * @version 2.0.0
+ * @author BullMoney
+ * ============================================
+ */
+
+/* ============================================
+   TAILWIND CSS
+   ============================================ */
+@import "tailwindcss";
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+/* CSS Variables - Colors, spacing, animations */
+@import "./base/_variables.css";
+
+/* Reset & Foundation - Global resets, scroll setup */
+@import "./base/_reset.css";
+
+/* Typography - Font rendering, text utilities */
+@import "./base/_typography.css";
+
+/* Scrollbar - Custom scrollbar styles */
+@import "./base/_scrollbar.css";
+
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+/* GPU Acceleration - Hardware acceleration utilities */
+@import "./performance/_gpu-layers.css";
+
+/* FPS Tiers - Quality settings based on device */
+@import "./performance/_fps-tiers.css";
+
+/* Scroll Performance - Smooth scroll optimizations */
+@import "./performance/_scroll-performance.css";
+
+/* CLS Prevention - Layout shift prevention */
+@import "./performance/_cls-prevention.css";
+
+/* Smart Freeze - Zero-resource freeze system */
+@import "./performance/_smart-freeze.css";
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+/* Keyframes - Core animation definitions */
+@import "./animations/_keyframes.css";
+
+/* Game Effects - Cinematic & game animations */
+@import "./animations/_game-effects.css";
+
+/* Transitions - Transition utilities */
+@import "./animations/_transitions.css";
+
+/* ============================================
+   THEMES
+   ============================================ */
+/* Overlay System - Theme overlay effects */
+@import "./themes/_overlay.css";
+
+/* Theme Utilities - Helper classes */
+@import "./themes/_utilities.css";
+
+/* Illusions - Scanlines, CRT, glitch effects */
+@import "./themes/_illusions.css";
+
+/* ============================================
+   COMPONENTS
+   ============================================ */
+/* Navigation - Navbar & mobile menu */
+@import "./components/_navbar.css";
+
+/* Glass Surface - Glassmorphism effects */
+@import "./components/_glass.css";
+
+/* Shimmer - Loading states & skeletons */
+@import "./components/_shimmer.css";
+
+/* Cards - Card & reflective components */
+@import "./components/_cards.css";
+
+/* Buttons - Button variants */
+@import "./components/_buttons.css";
+
+/* Forms - Input & form elements */
+@import "./components/_forms.css";
+
+/* Modals - Dialog & sheet components */
+@import "./components/_modals.css";
+
+/* Hero - Hero & Spline sections */
+@import "./components/_hero.css";
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+/* Mobile - Mobile-first responsive styles */
+@import "./responsive/_mobile.css";
+
+/* Desktop - Desktop & big display styles */
+@import "./responsive/_desktop.css";
+
+/* ============================================
+   BROWSER SPECIFIC
+   ============================================ */
+/* Safari - Webkit-specific fixes */
+@import "./browsers/_safari.css";
+
+/* Firefox - Mozilla-specific fixes */
+@import "./browsers/_firefox.css";
+
+/* Samsung - Samsung Internet fixes */
+@import "./browsers/_samsung.css";
+
+/* ============================================
+   TAILWIND ANIMATION PLUGIN
+   ============================================ */
+@import "tw-animate-css";
+
+/* ============================================
+   UTILITY LAYER
+   ============================================ */
+@layer utilities {
+  /* Hide scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* No select */
+  .no-select {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  
+  /* GPU optimize */
+  .gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  
+  /* Safe area padding */
+  .safe-top { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-left { padding-left: env(safe-area-inset-left); }
+  .safe-right { padding-right: env(safe-area-inset-right); }
+  
+  /* Animation control */
+  .pause-animations * {
+    animation-play-state: paused !important;
+  }
+  
+  /* Contain utilities */
+  .contain-strict { contain: strict; }
+  .contain-layout { contain: layout; }
+  .contain-paint { contain: paint; }
+  .contain-content { contain: content; }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+@media print {
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  a,
+  a:visited {
+    text-decoration: underline;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+/* Skip link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--primary);
+  color: white;
+  padding: 8px 16px;
+  z-index: 100000;
+  transition: top 0.3s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Focus visible */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Screen reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ============================================
+   END OF UNIFIED STYLES
+   ============================================ */

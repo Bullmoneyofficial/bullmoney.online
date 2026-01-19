@@ -1,0 +1,325 @@
+/**
+ * BULLMONEY - FPS Quality Tiers
+ * =============================
+ * Device-tier-aware rendering styles
+ * Applied by PerformanceProvider based on measured FPS
+ */
+
+/* ============================================
+   FPS TIER CLASSES
+   Applied by UnifiedPerformanceSystem
+   ============================================ */
+
+/* FPS ULTRA (70+) - Full quality, smooth animations */
+html.fps-ultra {
+  --animation-duration-multiplier: 0.8;
+}
+
+html.fps-ultra [class*="shimmer"] {
+  animation-duration: 8s !important;
+}
+
+/* FPS HIGH (55+) - Normal quality */
+html.fps-high {
+  --animation-duration-multiplier: 0.7;
+}
+
+html.fps-high [class*="shimmer"] {
+  animation-duration: 10s !important;
+}
+
+/* FPS MEDIUM (45+) - Reduced animations */
+html.fps-medium {
+  --animation-duration-multiplier: 0.5;
+}
+
+html.fps-medium .animated {
+  animation: none;
+}
+
+html.fps-medium [class*="shimmer"] {
+  animation-duration: 14s !important;
+}
+
+html.fps-medium [class*="glow"],
+html.fps-medium [class*="pulse"] {
+  animation-duration: 12s !important;
+}
+
+html.fps-medium .text-shimmer-effect {
+  animation-duration: 12s !important;
+}
+
+/* FPS LOW (30+) - Minimal animations */
+html.fps-low {
+  --animation-duration-multiplier: 0.3;
+}
+
+html.fps-low .animated,
+html.fps-low [data-animated] {
+  animation: none !important;
+}
+
+html.fps-low [class*="shimmer"] {
+  animation-duration: 22s !important;
+}
+
+html.fps-low [class*="glow"],
+html.fps-low [class*="pulse"] {
+  animation-duration: 18s !important;
+}
+
+html.fps-low .text-shimmer-effect {
+  animation-duration: 18s !important;
+}
+
+html.fps-low [data-theme-illusion="CRT"]::after,
+html.fps-low [data-theme-illusion="GLITCH"]::after {
+  animation-duration: 24s !important;
+}
+
+/* FPS MINIMAL (<30) - Emergency mode */
+html.fps-minimal {
+  --animation-duration-multiplier: 0.1;
+}
+
+html.fps-minimal .animated,
+html.fps-minimal [data-animated],
+html.fps-minimal .shimmer-animated {
+  animation: none !important;
+}
+
+html.fps-minimal [data-shimmer] {
+  display: none !important;
+}
+
+html.fps-minimal [class*="shimmer"] {
+  animation-duration: 30s !important;
+}
+
+html.fps-minimal [class*="glow"],
+html.fps-minimal [class*="pulse"] {
+  animation-duration: 25s !important;
+}
+
+html.fps-minimal .text-shimmer-effect {
+  animation-duration: 22s !important;
+}
+
+html.fps-minimal [data-theme-illusion="CRT"]::after,
+html.fps-minimal [data-theme-illusion="GLITCH"]::after {
+  animation-duration: 30s !important;
+}
+
+/* ============================================
+   SHIMMER QUALITY TIERS
+   ============================================ */
+
+/* High shimmer - normal speed */
+html.shimmer-quality-high [data-shimmer] {
+  opacity: 1;
+}
+
+/* Medium shimmer - slower animation */
+html.shimmer-quality-medium [data-shimmer] {
+  opacity: 0.7;
+  animation-duration: 3s !important;
+}
+
+html.shimmer-quality-medium {
+  --animation-duration-multiplier: 0.4;
+}
+
+/* Low shimmer - very slow */
+html.shimmer-quality-low [data-shimmer] {
+  opacity: 0.5;
+  animation-duration: 5s !important;
+}
+
+html.shimmer-quality-low {
+  --animation-duration-multiplier: 0.2;
+}
+
+/* Disabled - hide all shimmers */
+html.shimmer-quality-disabled [data-shimmer] {
+  display: none !important;
+}
+
+html.shimmer-quality-disabled {
+  --animation-duration-multiplier: 0.1;
+}
+
+html.shimmer-quality-disabled * {
+  animation-duration: 0.1s !important;
+  transition-duration: 0.1s !important;
+}
+
+html.shimmer-quality-disabled .shimmer-spin,
+html.shimmer-quality-disabled .shimmer-line,
+html.shimmer-quality-disabled .shimmer-pulse,
+html.shimmer-quality-disabled .shimmer-ping,
+html.shimmer-quality-disabled .page-spin,
+html.shimmer-quality-disabled .page-shimmer-ltr {
+  animation: none !important;
+}
+
+/* ============================================
+   DEVICE TIER CLASSES
+   Applied by CacheManagerProvider
+   ============================================ */
+
+/* ULTRA TIER - Full quality */
+html.device-ultra,
+html[data-device-tier="ultra"] {
+  --shimmer-speed: 2.5s;
+  --spin-speed: 3s;
+  --animation-quality: ultra;
+  --spline-quality: ultra;
+}
+
+html.device-ultra .spline-container canvas {
+  image-rendering: high-quality;
+}
+
+/* HIGH TIER - Most effects */
+html.device-high,
+html[data-device-tier="high"] {
+  --shimmer-speed: 3s;
+  --spin-speed: 4s;
+  --animation-quality: high;
+  --spline-quality: high;
+}
+
+/* MEDIUM TIER - Reduced */
+html.device-medium,
+html[data-device-tier="medium"] {
+  --shimmer-speed: 4s;
+  --spin-speed: 5s;
+  --pulse-speed: 4s;
+  --glow-speed: 4s;
+  --animation-quality: medium;
+  --blur-amount: 0;
+  --spline-quality: medium;
+}
+
+html.device-medium .shimmer-line,
+html.device-medium .shimmer-spin,
+html.device-medium .shimmer-pulse,
+html.device-medium .shimmer-glow {
+  animation-duration: var(--shimmer-speed) !important;
+}
+
+/* LOW TIER - Simplified */
+html.device-low,
+html[data-device-tier="low"] {
+  --shimmer-speed: 6s;
+  --spin-speed: 8s;
+  --pulse-speed: 6s;
+  --animation-quality: low;
+  --blur-amount: 0;
+  --shadow-quality: reduced;
+  --spline-quality: low;
+  --spline-enabled: 0;
+}
+
+html.device-low .shimmer-spin,
+html.device-low .shimmer-glow,
+html.device-low .shimmer-float {
+  animation-duration: 12s !important;
+}
+
+html.device-low .shimmer-pulse {
+  animation-duration: 10s !important;
+}
+
+html.device-low .shimmer-line,
+html.device-low .shimmer-ltr {
+  animation-duration: 10s !important;
+}
+
+html.device-low [class*="shadow-"] {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.device-low .shimmer-border {
+  animation-duration: 14s !important;
+  opacity: 0.5 !important;
+}
+
+html.device-low .sparkles-container {
+  opacity: 0.3 !important;
+}
+
+html.device-low *:not(canvas):not(video) {
+  transition-duration: 100ms !important;
+}
+
+/* MINIMAL TIER - Bare essentials */
+html.device-minimal,
+html[data-device-tier="minimal"] {
+  --animation-quality: minimal;
+  --blur-amount: 0;
+  --shadow-quality: minimal;
+  --spline-quality: disabled;
+  --spline-enabled: 0;
+}
+
+html.device-minimal *:not(canvas):not(video) {
+  transition-duration: 0ms !important;
+}
+
+/* ============================================
+   SPLINE-SPECIFIC QUALITY
+   ============================================ */
+html.spline-quality-low canvas {
+  image-rendering: optimizeSpeed;
+}
+
+.spline-paused canvas {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* ============================================
+   MOBILE FPS OPTIMIZATION
+   ============================================ */
+html.is-mobile [class*="shimmer"] {
+  animation-duration: 4s !important;
+}
+
+html.is-mobile.fps-low [class*="shimmer"] {
+  animation-duration: 6s !important;
+}
+
+html.is-mobile.fps-minimal [class*="shimmer"] {
+  animation-duration: 8s !important;
+}
+
+/* ============================================
+   IPHONE-SPECIFIC OPTIMIZATIONS
+   ============================================ */
+html.is-ios {
+  --shimmer-base-speed: 16s;
+}
+
+html.is-ios [class*="animate-"] {
+  animation-duration: 16s !important;
+}
+
+html.is-ios.fps-low,
+html.is-ios.fps-minimal {
+  --shimmer-base-speed: 30s;
+}
+
+html.is-ios.fps-low [class*="animate-"],
+html.is-ios.fps-minimal [class*="animate-"] {
+  animation-duration: 30s !important;
+}
+
+html.is-ios.fps-low .shimmer-glow,
+html.is-ios.fps-minimal .shimmer-glow,
+html.is-ios.fps-low .shimmer-float,
+html.is-ios.fps-minimal .shimmer-float {
+  animation: none !important;
+  opacity: 0.3;
+}
