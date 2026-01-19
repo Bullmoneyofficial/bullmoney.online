@@ -1,6 +1,8 @@
 // Big Device Scroll Optimization Utilities (2026)
 // Fixes scrolling issues specifically for displays >= 1440px
 
+import React from 'react';
+
 export interface ScrollOptimizationConfig {
   enableSmoothScroll?: boolean;
   optimizeContainment?: boolean;
@@ -238,8 +240,5 @@ export const useBigDeviceScrollOptimizer = (config?: ScrollOptimizationConfig) =
     reset: () => optimizer.reset(),
   };
 };
-
-// Import React for the hook
-import React from 'react';
 
 export default BigDeviceScrollOptimizer;

@@ -3,37 +3,18 @@
 import dynamic from "next/dynamic";
 import { Suspense, ReactNode } from "react";
 
+// ✅ IMPORT CRITICAL SEO/ANALYTICS DIRECTLY - These are lightweight and critical
+import WebVitalsEnhanced from "@/components/WebVitalsEnhanced";
+import AllSEOSchemas from "@/components/SEOSchemas";
+import AdvancedSEO from "@/components/AdvancedSEO";
+import GoogleSEOBoost from "@/components/GoogleSEOBoost";
+import VercelAnalyticsWrapper from "@/components/VercelAnalyticsWrapper";
+
 // ✅ LOADING FALLBACKS - Mobile optimized
 import {
   NavbarSkeleton,
   MinimalFallback,
 } from "@/components/MobileLazyLoadingFallback";
-
-// ✅ LAZY LOADED COMPONENTS FOR MOBILE - All heavy components
-const VercelAnalyticsWrapper = dynamic(
-  () => import("@/components/VercelAnalyticsWrapper"),
-  { ssr: false }
-);
-
-const WebVitalsEnhanced = dynamic(
-  () => import("@/components/WebVitalsEnhanced"),
-  { ssr: false }
-);
-
-const AllSEOSchemas = dynamic(
-  () => import("@/components/SEOSchemas"),
-  { ssr: false }
-);
-
-const AdvancedSEO = dynamic(
-  () => import("@/components/AdvancedSEO"),
-  { ssr: false }
-);
-
-const GoogleSEOBoost = dynamic(
-  () => import("@/components/GoogleSEOBoost"),
-  { ssr: false }
-);
 
 // ✅ LAZY LOADED: Performance components
 const ClientProviders = dynamic(

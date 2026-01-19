@@ -3,6 +3,8 @@
  * Detects mobile devices for conditional lazy loading
  */
 
+import { useState, useEffect } from 'react';
+
 export const isMobileDevice = (): boolean => {
   if (typeof window === 'undefined') return false;
   
@@ -45,8 +47,6 @@ export const getDeviceType = (): 'mobile' | 'tablet' | 'desktop' => {
 
 // Hook for React components
 export const useIsMobile = () => {
-  if (typeof window === 'undefined') return false;
-  
   const [isMobile, setIsMobile] = useState(false);
   
   useEffect(() => {
@@ -62,5 +62,3 @@ export const useIsMobile = () => {
   
   return isMobile;
 };
-
-import { useState, useEffect } from 'react';
