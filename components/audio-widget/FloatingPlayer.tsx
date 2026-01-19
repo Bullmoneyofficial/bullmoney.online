@@ -240,6 +240,26 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pullTabScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollY = useRef(0);
+  
+  // Pin state for pull tab animations (matching UnifiedFpsPill behavior)
+  const [isPulltabPinned, setIsPulltabPinned] = useState(false);
+  const pulltabUnpinTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Handle interaction to pin the pull tabs, then unpin after random delay
+  const handlePulltabInteraction = useCallback(() => {
+    setIsPulltabPinned(true);
+    
+    // Clear any existing timeout
+    if (pulltabUnpinTimeoutRef.current) {
+      clearTimeout(pulltabUnpinTimeoutRef.current);
+    }
+    
+    // Unpin after random 1-10 seconds
+    const unpinDelay = Math.random() * 9000 + 1000;
+    pulltabUnpinTimeoutRef.current = setTimeout(() => {
+      setIsPulltabPinned(false);
+    }, unpinDelay);
+  }, []);
 
   // Sync with parent's playerMinimized prop (e.g., on reload when localStorage sets it true)
   useEffect(() => {
@@ -252,6 +272,15 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
   useEffect(() => {
     const timer = setTimeout(() => setShowFirstTimeHelp(false), 8000);
     return () => clearTimeout(timer);
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (pulltabUnpinTimeoutRef.current) {
+        clearTimeout(pulltabUnpinTimeoutRef.current);
+      }
+    };
   }, []);
 
   // Scroll detection for iframe auto-minimizing on mobile
@@ -435,289 +464,311 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
         {(isMinimized || playerMinimized) && !open && (
           forceMinimize ? (
             /* Compact pill button when modals/UI is open - matches scroll-minimized design */
-            <motion.button
-              key="compact-pill-tab"
-              initial={{ opacity: 0, scale: 0.7, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.7, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 500, mass: 0.6 }}
-              onClick={handleExpandPlayer}
-              onMouseEnter={() => setHoveredButton('expand')}
-              onMouseLeave={() => setHoveredButton(null)}
-              className={cn(
-                "fixed left-3 bottom-14 flex items-center gap-1.5 px-2.5 py-2 rounded-xl",
-                "backdrop-blur-2xl transition-all duration-200",
-                "pointer-events-auto"
-              )}
-              data-theme-aware
-              style={{
-                zIndex: 100201, // Just above MainWidget z-[100200]
-                background: 'linear-gradient(to bottom right, rgba(var(--accent-rgb, 59, 130, 246), 0.4), rgba(var(--accent-rgb, 59, 130, 246), 0.25), rgba(15, 23, 42, 0.5))',
-                border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
-                boxShadow: '0 10px 15px -3px rgba(var(--accent-rgb, 59, 130, 246), 0.2)',
-              }}
-              whileHover={{ scale: 1.05, x: 2 }}
-              whileTap={{ scale: 0.95 }}
+            <motion.div
+              key="compact-pill-div"
+              className="fixed left-3 bottom-14 pointer-events-none"
+              style={{ zIndex: 100201 }}
             >
-              {/* Music Icon with pulse - Theme-aware */}
-              <motion.div
-                animate={isPlaying ? { scale: [1, 1.1, 1] } : {}}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                className="relative"
+              <motion.button
+                initial={{ x: -100, opacity: 0 }}
+                animate={
+                  isPulltabPinned 
+                    ? { x: 0, scale: 1, opacity: 1 }
+                    : {
+                        x: [-100, 0, 0, -100],
+                        opacity: [0, 1, 1, 0],
+                        scale: [0.95, 1, 1, 0.95],
+                      }
+                }
+                transition={
+                  isPulltabPinned 
+                    ? { duration: 0.2 }
+                    : { 
+                        duration: 2.5,
+                        repeat: Infinity, 
+                        ease: "easeInOut",
+                        repeatDelay: 0.5,
+                        times: [0, 0.2, 0.8, 1]
+                      }
+                }
+                onClick={() => {
+                  SoundEffects.click();
+                  handlePulltabInteraction();
+                  handleExpandPlayer();
+                }}
+                onHoverStart={() => {
+                  setHoveredButton('expand');
+                  handlePulltabInteraction();
+                }}
+                onTap={handlePulltabInteraction}
+                onMouseLeave={() => setHoveredButton(null)}
+                className="relative flex items-center justify-center h-10 w-10 rounded-full transition-all pointer-events-auto"
+                data-theme-aware
+                style={{
+                  background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.1) 100%)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '2px solid #3b82f6',
+                  boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6',
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <IconMusic 
-                  className="w-4 h-4"
-                  style={{ 
-                    color: isPlaying ? 'var(--accent-color, #93c5fd)' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)',
-                    filter: isPlaying ? 'drop-shadow(0 0 6px rgba(var(--accent-rgb, 96, 165, 250), 0.8))' : 'none'
-                  }}
-                />
-                {/* Playing indicator dot */}
-                {isPlaying && (
-                  <motion.div
-                    animate={{ scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                    className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-green-400"
-                    style={{ boxShadow: "0 0 4px rgba(74, 222, 128, 0.8)" }}
-                  />
-                )}
-              </motion.div>
-              
-              {/* Animated Music Wave Bars - Theme-aware */}
-              <div className="flex items-end gap-[2px] h-[14px]">
-                {[0, 1, 2, 3].map((i) => (
-                  <motion.div
-                    key={i}
-                    className="w-[3px] rounded-full origin-bottom"
+                {/* Music Icon with pulse - Theme-aware */}
+                <motion.div
+                  animate={isPlaying ? { scale: [1, 1.1, 1] } : {}}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                  className="relative"
+                >
+                  <IconMusic 
+                    className="w-4 h-4"
                     style={{ 
-                      backgroundColor: isPlaying ? "#34d399" : "var(--accent-color, #60a5fa)",
-                      boxShadow: isPlaying 
-                        ? "0 0 4px rgba(52, 211, 153, 0.6)"
-                        : "0 0 4px rgba(var(--accent-rgb, 96, 165, 250), 0.6)",
+                      color: isPlaying ? 'var(--accent-color, #93c5fd)' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)',
+                      filter: isPlaying ? 'drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6)' : 'drop-shadow(0 0 4px #3b82f6)'
                     }}
-                    animate={isPlaying ? {
-                      height: [
-                        4 + Math.random() * 4,
-                        8 + Math.random() * 6,
-                        3 + Math.random() * 5,
-                        10 + Math.random() * 4,
-                        5 + Math.random() * 3,
-                      ],
-                    } : { height: 4 }}
-                    transition={isPlaying ? {
-                      duration: 0.4 + i * 0.05,
-                      repeat: Infinity,
-                      repeatType: "reverse",
-                      ease: "easeInOut",
-                      delay: i * 0.08,
-                    } : { duration: 0.2 }}
                   />
-                ))}
-              </div>
-
-              <ButtonTooltip
-                show={hoveredButton === 'expand'}
-                text="🎵 Tap to Expand"
-                position={playerSide === 'left' ? 'right' : 'left'}
-                color="blue"
-              />
-            </motion.button>
+                  {/* Playing indicator dot */}
+                  {isPlaying && (
+                    <motion.div
+                      animate={{ scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                      className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-green-400"
+                      style={{ boxShadow: "0 0 4px rgba(74, 222, 128, 0.8)" }}
+                    />
+                  )}
+                </motion.div>
+              </motion.button>
+            </motion.div>
           ) : isPullTabCompact ? (
             /* Compact pill version when scrolling - same as forceMinimize pill */
-            <motion.button
-              key="scroll-compact-pill-tab"
-              initial={{ opacity: 0, scale: 0.7, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.7, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 500, mass: 0.6 }}
-              onClick={handleExpandPlayer}
-              onMouseEnter={() => {
-                setHoveredButton('expand');
-                // Expand on hover for desktop
-                if (window.matchMedia('(hover: hover)').matches) {
-                  setIsPullTabCompact(false);
-                }
-              }}
-              onMouseLeave={() => setHoveredButton(null)}
-              className={cn(
-                "fixed left-3 bottom-14 flex items-center gap-1.5 px-2.5 py-2 rounded-xl",
-                "backdrop-blur-2xl transition-all duration-200",
-                "pointer-events-auto"
-              )}
-              data-theme-aware
-              style={{
-                zIndex: 100201, // Just above MainWidget z-[100200]
-                background: 'linear-gradient(to bottom right, rgba(var(--accent-rgb, 59, 130, 246), 0.4), rgba(var(--accent-rgb, 59, 130, 246), 0.25), rgba(15, 23, 42, 0.5))',
-                border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
-                boxShadow: '0 10px 15px -3px rgba(var(--accent-rgb, 59, 130, 246), 0.2)',
-              }}
-              whileHover={{ scale: 1.05, x: 2 }}
-              whileTap={{ scale: 0.95 }}
+            <motion.div
+              key="scroll-compact-pill-div"
+              className="fixed left-3 bottom-14 pointer-events-none"
+              style={{ zIndex: 100201 }}
             >
-              {/* Music Icon with pulse - Theme-aware */}
-              <motion.div
-                animate={isPlaying ? { scale: [1, 1.1, 1] } : {}}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                className="relative"
+              <motion.button
+                initial={{ x: -100, opacity: 0 }}
+                animate={
+                  isPulltabPinned 
+                    ? { x: 0, scale: 1, opacity: 1 }
+                    : {
+                        x: [-100, 0, 0, -100],
+                        opacity: [0, 1, 1, 0],
+                        scale: [0.95, 1, 1, 0.95],
+                      }
+                }
+                transition={
+                  isPulltabPinned 
+                    ? { duration: 0.2 }
+                    : { 
+                        duration: 2.5,
+                        repeat: Infinity, 
+                        ease: "easeInOut",
+                        repeatDelay: 0.5,
+                        times: [0, 0.2, 0.8, 1]
+                      }
+                }
+                onClick={() => {
+                  SoundEffects.click();
+                  handlePulltabInteraction();
+                  handleExpandPlayer();
+                }}
+                onHoverStart={() => {
+                  setHoveredButton('expand');
+                  handlePulltabInteraction();
+                  // Expand on hover for desktop
+                  if (window.matchMedia('(hover: hover)').matches) {
+                    setIsPullTabCompact(false);
+                  }
+                }}
+                onTap={handlePulltabInteraction}
+                onMouseLeave={() => setHoveredButton(null)}
+                className="relative flex items-center justify-center h-10 w-10 rounded-full transition-all pointer-events-auto"
+                data-theme-aware
+                style={{
+                  background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.1) 100%)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '2px solid #3b82f6',
+                  boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6',
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <IconMusic 
-                  className="w-4 h-4"
-                  style={{ 
-                    color: isPlaying ? 'var(--accent-color, #93c5fd)' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)',
-                    filter: isPlaying ? 'drop-shadow(0 0 6px rgba(var(--accent-rgb, 96, 165, 250), 0.8))' : 'none'
-                  }}
-                />
-                {/* Playing indicator dot */}
-                {isPlaying && (
-                  <motion.div
-                    animate={{ scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                    className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-green-400"
-                    style={{ boxShadow: "0 0 4px rgba(74, 222, 128, 0.8)" }}
-                  />
-                )}
-              </motion.div>
-              
-              {/* Animated Music Wave Bars - Theme-aware */}
-              <div className="flex items-end gap-[2px] h-[14px]">
-                {[0, 1, 2, 3].map((i) => (
-                  <motion.div
-                    key={i}
-                    className="w-[3px] rounded-full origin-bottom"
+                {/* Music Icon with pulse - Theme-aware */}
+                <motion.div
+                  animate={isPlaying ? { scale: [1, 1.1, 1] } : {}}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                  className="relative"
+                >
+                  <IconMusic 
+                    className="w-4 h-4"
                     style={{ 
-                      backgroundColor: isPlaying ? "#34d399" : "var(--accent-color, #60a5fa)",
-                      boxShadow: isPlaying 
-                        ? "0 0 4px rgba(52, 211, 153, 0.6)"
-                        : "0 0 4px rgba(var(--accent-rgb, 96, 165, 250), 0.6)",
+                      color: isPlaying ? 'var(--accent-color, #93c5fd)' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)',
+                      filter: isPlaying ? 'drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6)' : 'drop-shadow(0 0 4px #3b82f6)'
                     }}
-                    animate={isPlaying ? {
-                      height: [
-                        4 + Math.random() * 4,
-                        8 + Math.random() * 6,
-                        3 + Math.random() * 5,
-                        10 + Math.random() * 4,
-                        5 + Math.random() * 3,
-                      ],
-                    } : { height: 4 }}
-                    transition={isPlaying ? {
-                      duration: 0.4 + i * 0.05,
-                      repeat: Infinity,
-                      repeatType: "reverse",
-                      ease: "easeInOut",
-                      delay: i * 0.08,
-                    } : { duration: 0.2 }}
                   />
-                ))}
-              </div>
-
-              <ButtonTooltip
-                show={hoveredButton === 'expand'}
-                text="🎵 Tap to Expand"
-                position={playerSide === 'left' ? 'right' : 'left'}
-                color="blue"
-              />
-            </motion.button>
+                  {/* Playing indicator dot */}
+                  {isPlaying && (
+                    <motion.div
+                      animate={{ scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                      className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-green-400"
+                      style={{ boxShadow: "0 0 4px rgba(74, 222, 128, 0.8)" }}
+                    />
+                  )}
+                </motion.div>
+              </motion.button>
+            </motion.div>
           ) : (
             /* Full pull tab when no UI is overlaying - Theme-aware */
-            <motion.button
-              key="full-tab"
-              initial={{ opacity: 0, x: playerSide === 'left' ? -100 : 100, scale: 0.8 }}
-              animate={{ opacity: 1, x: 0, scale: 1, bottom: 140 }}
-              exit={{ opacity: 0, x: playerSide === 'left' ? -100 : 100, scale: 0.8 }}
-              transition={{ type: "spring", damping: 22, stiffness: 300 }}
-              onClick={handleExpandPlayer}
-              onMouseEnter={() => setHoveredButton('expand')}
-              onMouseLeave={() => setHoveredButton(null)}
-              className={cn(
-                "fixed flex items-center gap-3 py-3.5 backdrop-blur-2xl",
-                "bg-gradient-to-br from-slate-900/98 via-gray-900/98 to-black/98",
-                "border-2 shadow-2xl",
-                "active:scale-95",
-                isPlaying && "animate-pulse-subtle",
-                playerSide === 'left'
-                  ? "left-0 pl-3 pr-5 rounded-r-3xl border-l-0"
-                  : "right-0 pr-3 pl-5 rounded-l-3xl border-r-0"
-              )}
-              data-theme-aware
+            <motion.div
+              key="full-tab-div"
+              className="fixed pointer-events-none"
               style={{
                 zIndex: Z_INDEX.PULL_TAB,
-                borderColor: 'rgba(var(--accent-rgb, 100, 116, 139), 0.6)',
-                boxShadow: isPlaying
-                  ? '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.3), 0 10px 40px rgba(0,0,0,0.5)'
-                  : '0 10px 40px rgba(0,0,0,0.5)',
+                [playerSide === 'left' ? 'left' : 'right']: -50,
+                bottom: 140,
               }}
             >
-              {/* Left chevron for right side */}
-              {playerSide === 'right' && (
-                <motion.div
-                  animate={{ x: [-3, 0, -3] }}
-                  transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <IconChevronLeft className="w-5 h-5 text-white/70" />
-                </motion.div>
-              )}
-
-              {/* Pulsing indicator - Theme-aware */}
-              <div className="relative">
-                <motion.div
-                  className="absolute -inset-2 rounded-2xl blur-lg"
-                  style={{ backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.25)' }}
-                  animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
-                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                />
-                <div className={cn(
-                  "relative w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden",
-                  "bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800",
-                  "border border-slate-500/50 shadow-inner"
-                )}>
-                  <SourceIcon className="w-6 h-6 text-white/95" />
-                  <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-[3px]">
-                    {[1, 2, 3, 4].map(i => (
-                      <motion.div
-                        key={i}
-                        className="w-[3px] rounded-full origin-bottom"
-                        style={{ height: 10, backgroundColor: 'var(--accent-color, #60a5fa)' }}
-                        animate={{ scaleY: isPlaying ? [0.3, 1, 0.3] : 0.3 }}
-                        transition={{
-                          duration: 0.5,
-                          repeat: Infinity,
-                          delay: i * 0.08,
-                          ease: "easeInOut"
-                        }}
-                      />
-                    ))}
-                  </div>
+              <motion.button
+                initial={{ x: playerSide === 'left' ? -200 : 200, opacity: 0, scale: 0.5 }}
+                animate={
+                  isPulltabPinned || isPlaying
+                    ? { x: 0, scale: 0.5, opacity: 1 }
+                    : {
+                        x: playerSide === 'left' 
+                          ? [-200, 0, 0, -200]
+                          : [200, 0, 0, 200],
+                        opacity: [0, 1, 1, 0],
+                        scale: [0.475, 0.5, 0.5, 0.475],
+                      }
+                }
+                transition={
+                  isPulltabPinned || isPlaying
+                    ? { duration: 0.2 }
+                    : { 
+                        duration: 10,
+                        repeat: Infinity, 
+                        ease: "easeInOut",
+                        repeatDelay: 0,
+                        times: [0, 0.05, 0.1, 0.15]
+                      }
+                }
+                onClick={() => {
+                  SoundEffects.click();
+                  handlePulltabInteraction();
+                  handleExpandPlayer();
+                }}
+                onHoverStart={() => {
+                  setHoveredButton('expand');
+                  handlePulltabInteraction();
+                }}
+                onTap={handlePulltabInteraction}
+                onMouseLeave={() => setHoveredButton(null)}
+                className={cn(
+                  "flex items-center gap-3 py-3.5",
+                  "active:scale-95",
+                  playerSide === 'left'
+                    ? "pl-3 pr-5 rounded-r-3xl"
+                    : "pr-3 pl-5 rounded-l-3xl"
+                )}
+                data-theme-aware
+                style={{
+                  background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.1) 100%)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '2px solid #3b82f6',
+                  boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6',
+                  transition: 'box-shadow 0.4s ease-out',
+                }}
+                whileHover={{ scale: 0.8 }}
+                whileTap={{ scale: 0.7 }}
+              >
+                {/* Left chevron for right side */}
+                {playerSide === 'right' && (
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"
-                    animate={{ x: ['-100%', '200%'] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    animate={{ x: [-3, 0, -3] }}
+                    transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <IconChevronLeft className="w-5 h-5 text-white/70" />
+                  </motion.div>
+                )}
+
+                {/* Pulsing indicator - Theme-aware */}
+                <div className="relative">
+                  <motion.div
+                    className="absolute -inset-2 rounded-2xl blur-lg"
+                    style={{ backgroundColor: 'rgba(59, 130, 246, 0.3)' }}
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
                   />
+                  <div className={cn(
+                    "relative w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden",
+                    "bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800",
+                    "border border-blue-400/50 shadow-inner"
+                  )}>
+                    <SourceIcon className="w-6 h-6 text-white/95" />
+                    <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-[3px]">
+                      {[1, 2, 3, 4].map(i => (
+                        <motion.div
+                          key={i}
+                          className="w-[3px] rounded-full origin-bottom"
+                          style={{ height: 10, backgroundColor: '#3b82f6' }}
+                          animate={{ scaleY: isPlaying ? [0.3, 1, 0.3] : 0.3 }}
+                          transition={{
+                            duration: 0.5,
+                            repeat: Infinity,
+                            delay: i * 0.08,
+                            ease: "easeInOut"
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"
+                      animate={{ x: ['-100%', '200%'] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* Text label - Theme-aware */}
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-white/90">{sourceLabel[musicSource]}</span>
-                <span className="text-[8px] font-medium" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)' }}>♪ Playing</span>
-              </div>
+                {/* Text label - Theme-aware */}
+                <div className="flex flex-col">
+                  <span 
+                    className="text-[10px] font-bold text-white/90"
+                    style={{ 
+                      color: '#3b82f6',
+                      textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6'
+                    }}
+                  >{sourceLabel[musicSource]}</span>
+                  <span 
+                    className="text-[8px] font-medium"
+                    style={{ 
+                      color: '#3b82f6',
+                      textShadow: '0 0 4px #3b82f6'
+                    }}
+                  >♪ Playing</span>
+                </div>
 
-              {/* Right chevron for left side */}
-              {playerSide === 'left' && (
-                <motion.div
-                  animate={{ x: [0, 3, 0] }}
-                  transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <IconChevronRight className="w-5 h-5 text-white/70" />
-                </motion.div>
-              )}
+                {/* Right chevron for left side */}
+                {playerSide === 'left' && (
+                  <motion.div
+                    animate={{ x: [0, 3, 0] }}
+                    transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <IconChevronRight className="w-5 h-5 text-white/70" />
+                  </motion.div>
+                )}
 
-              <ButtonTooltip
-                show={hoveredButton === 'expand'}
-                text="🎵 Tap to Expand"
-                position={playerSide === 'left' ? 'right' : 'left'}
-                color="blue"
-              />
-            </motion.button>
+                <ButtonTooltip
+                  show={hoveredButton === 'expand'}
+                  text="🎵 Tap to Expand"
+                  position={playerSide === 'left' ? 'right' : 'left'}
+                  color="blue"
+                />
+              </motion.button>
+            </motion.div>
           )
         )}
       </AnimatePresence>
