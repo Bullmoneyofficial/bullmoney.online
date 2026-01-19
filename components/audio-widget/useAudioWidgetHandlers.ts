@@ -26,7 +26,7 @@ export function useAudioWidgetHandlers({ state, audioSettings, gameHook }: UseAu
     setHasStartedCatchGame, setShowCatchGameTutorial, catchGameTutorialTimerRef,
     setShowCatchGameDemo, tutorialStep, setTutorialStep, setHasCompletedTutorial,
     setIframeKey, setStreamingActive, setPlayerHidden, setShowFirstTimeHelp,
-    isTutorialHovered,
+    isTutorialHovered, setPlayerMinimized,
   } = state;
   
   const { musicSource, setMusicSource, setMusicEnabled, musicVolume } = audioSettings;
@@ -96,12 +96,18 @@ export function useAudioWidgetHandlers({ state, audioSettings, gameHook }: UseAu
       setIframeKey((k) => k + 1);
       setMusicSource(newSource);
     }
-    setStreamingActive(true);
+    // First: Expand the iPhone shell
+    setPlayerMinimized(false);
     setMusicEnabled(true);
     setPlayerHidden(false);
     setShowFirstTimeHelp(false);
     localStorage.setItem('audioWidgetSavedSource', newSource);
-  }, [musicSource, setMusicSource, setMusicEnabled, setIframeKey, setStreamingActive, setPlayerHidden, setShowFirstTimeHelp]);
+    
+    // Then: Activate streaming after a small delay so the shell opens first
+    setTimeout(() => {
+      setStreamingActive(true);
+    }, 300);
+  }, [musicSource, setMusicSource, setMusicEnabled, setIframeKey, setStreamingActive, setPlayerHidden, setShowFirstTimeHelp, setPlayerMinimized]);
 
   const handleStopGame = useCallback(() => {
     if (isWandering) {

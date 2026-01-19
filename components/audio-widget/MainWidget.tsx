@@ -487,7 +487,8 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                 border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
                 boxShadow: '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.15)',
                 transition: 'border-color 0.4s ease-out, box-shadow 0.4s ease-out',
-                transitionDelay: '0.05s', // Audio widget transitions first (bottom element)
+                transitionDelay: '0.05s',
+                zIndex: open ? 2147483700 : 'auto',
               }}
             >
               {shimmerEnabled && <ShimmerLine color="blue" intensity={shimmerSettings.intensity as any} speed={shimmerSettings.speed as any} />}

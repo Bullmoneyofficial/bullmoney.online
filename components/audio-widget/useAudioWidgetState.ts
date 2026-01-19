@@ -226,8 +226,10 @@ export function useAudioWidgetEffects(
       const savedSource = localStorage.getItem('audioWidgetSavedSource');
       if (savedSource && ['SPOTIFY', 'APPLE_MUSIC', 'YOUTUBE'].includes(savedSource)) {
         setMusicSource(savedSource as MusicSource);
-        setStreamingActive(true);
-        setMusicEnabled(true);
+        // DO NOT auto-activate streaming on reload - only restore the source
+        // streamingActive should only be set when user explicitly clicks to open
+        // This prevents iframe from auto-showing
+        setMusicEnabled(false);
         // Keep player minimized on reload - only show pull tab
         // User can expand by clicking the pull tab
         setPlayerMinimized(true);
@@ -241,7 +243,7 @@ export function useAudioWidgetEffects(
       // New user - hasn't completed tutorial, allow full player to show
       setPlayerMinimized(false);
     }
-  }, [setMusicSource, setMusicEnabled, setHasCompletedTutorial, setShowFirstTimeHelp, setStreamingActive, setPlayerMinimized, setShowReturnUserHint]);
+  }, [setMusicSource, setMusicEnabled, setHasCompletedTutorial, setShowFirstTimeHelp, setPlayerMinimized, setShowReturnUserHint]);
 
   // Hide first time help after 15 seconds
   useEffect(() => {

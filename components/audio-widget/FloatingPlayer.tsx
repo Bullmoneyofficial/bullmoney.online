@@ -444,7 +444,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
     setShowCameraModal(true);
   }, []);
 
-  if (!isStreamingSource || !streamingEmbedUrl || !streamingActive) return null;
+  if (!isStreamingSource || !streamingEmbedUrl) return null;
 
   const SourceIcon = musicSource === 'SPOTIFY' ? IconBrandSpotify : 
                      musicSource === 'APPLE_MUSIC' ? IconBrandApple : IconBrandYoutube;
