@@ -1,6 +1,7 @@
 "use client";
 import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { createPortal } from 'react-dom';
+import dynamic from 'next/dynamic';
 import { detectBrowser } from '@/lib/browserDetection';
 import {
   motion,
@@ -16,6 +17,12 @@ import Image from "next/image";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Loader2, Edit2, Save, X, Trash2, Upload, Instagram, Send } from "lucide-react";
+
+// ✅ MOBILE DETECTION - For conditional lazy loading
+import { isMobileDevice } from '@/lib/mobileDetection';
+
+// ✅ LOADING FALLBACKS - Mobile optimized
+import { MinimalFallback, ContentSkeleton } from '@/components/MobileLazyLoadingFallback';
 
 const SPLINE_VIEWER_SCRIPT_SRC = "https://unpkg.com/@splinetool/viewer@1.12.36/build/spline-viewer.js";
 

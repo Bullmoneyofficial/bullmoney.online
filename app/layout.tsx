@@ -12,26 +12,46 @@ import "../styles/mobile-scroll-optimization.css"; // Mobile & scroll performanc
 import "../styles/smart-mount.css"; // Smart mount/unmount freeze styles
 import "../styles/big-device-scroll.css"; // Big device scroll optimizations
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
 
 // ✅ CUSTOM EVENT TRACKING - Track user interactions across the site
 import { trackEvent } from "@/lib/analytics";
 
-// ✅ VERCEL ANALYTICS & SPEED INSIGHTS - Track all pages from root layout
-// Works with Vercel Free Plan - page views are unlimited, custom events limited to 2,500/month
-import { VercelAnalyticsWrapper } from "@/components/VercelAnalyticsWrapper";
+// ✅ LOADING FALLBACKS - Optimized skeletons for mobile
+import {
+  NavbarSkeleton,
+  FooterSkeleton,
+  MinimalFallback,
+} from "@/components/MobileLazyLoadingFallback";
 
-// ✅ ENHANCED WEB VITALS - Report Core Web Vitals to Vercel dashboard with bot filtering
-import { WebVitalsEnhanced } from "@/components/WebVitalsEnhanced";
+// ✅ LAZY LOADED COMPONENTS FOR MOBILE - All heavy components
+const VercelAnalyticsWrapper = dynamic(
+  () => import("@/components/VercelAnalyticsWrapper").then((mod) => ({ default: mod.VercelAnalyticsWrapper })),
+  { ssr: false }
+);
 
-// ✅ SEO STRUCTURED DATA - JSON-LD for rich search results (stars, FAQs, courses)
-import { AllSEOSchemas } from "@/components/SEOSchemas";
+const WebVitalsEnhanced = dynamic(
+  () => import("@/components/WebVitalsEnhanced").then((mod) => ({ default: mod.WebVitalsEnhanced })),
+  { ssr: false }
+);
 
-// ✅ ADVANCED SEO - HowTo, Event, Service, Video schemas for Google #1 ranking
-import { AdvancedSEO } from "@/components/AdvancedSEO";
+const AllSEOSchemas = dynamic(
+  () => import("@/components/SEOSchemas").then((mod) => ({ default: mod.AllSEOSchemas })),
+  { ssr: false }
+);
 
-// ✅ GOOGLE SEO BOOST - Maximum ranking power with all schema types
-import { GoogleSEOBoost } from "@/components/GoogleSEOBoost";
+const AdvancedSEO = dynamic(
+  () => import("@/components/AdvancedSEO").then((mod) => ({ default: mod.AdvancedSEO })),
+  { ssr: false }
+);
 
+const GoogleSEOBoost = dynamic(
+  () => import("@/components/GoogleSEOBoost").then((mod) => ({ default: mod.GoogleSEOBoost })),
+  { ssr: false }
+);
+
+// ✅ PROVIDERS - Lazy load context providers for mobile
 import { ThemeProvider } from "@/context/providers";
 import { StudioProvider } from "@/context/StudioContext";
 import { GlobalThemeProvider } from "@/contexts/GlobalThemeProvider";
@@ -39,25 +59,39 @@ import { AudioSettingsProvider } from "@/contexts/AudioSettingsProvider";
 import { MobileMenuProvider } from "@/contexts/MobileMenuContext";
 import { RecruitAuthProvider } from "@/contexts/RecruitAuthContext";
 import { ViewportStateProvider } from "@/contexts/ViewportStateContext";
-
-// ✅ ADDED: Import the ShopProvider
 import { ShopProvider } from "@/components/ShopContext";
 
-// ✅ LAZY LOADED: All performance providers bundled in client wrapper
-import { ClientProviders, Footer } from "@/components/ClientProviders";
+// ✅ LAZY LOADED: Performance components
+const ClientProviders = dynamic(
+  () => import("@/components/ClientProviders").then((mod) => ({ default: mod.ClientProviders })),
+  { ssr: false }
+);
 
-// ✅ ADDED: Import the Unified Shimmer Styles Provider
-import { ShimmerStylesProvider } from "@/components/ui/UnifiedShimmer";
+const ShimmerStylesProvider = dynamic(
+  () => import("@/components/ui/UnifiedShimmer").then((mod) => ({ default: mod.ShimmerStylesProvider })),
+  { ssr: false }
+);
 
-// ✅ ADDED: Import the Cache Manager Provider for version-based cache invalidation
-import { CacheManagerProvider } from "@/components/CacheManagerProvider";
+const CacheManagerProvider = dynamic(
+  () => import("@/components/CacheManagerProvider").then((mod) => ({ default: mod.CacheManagerProvider })),
+  { ssr: false }
+);
 
-// ✅ ADDED: Trading Quick Access - Live prices, charts, Forex Factory, Discord
-import { TradingQuickAccess } from "@/components/TradingQuickAccess";
-import { CommunityQuickAccess } from "@/components/CommunityQuickAccess";
+const TradingQuickAccess = dynamic(
+  () => import("@/components/TradingQuickAccess").then((mod) => ({ default: mod.TradingQuickAccess })),
+  { ssr: false }
+);
 
-// Navigation component
-import { Navbar } from "@/components/navbar";
+const CommunityQuickAccess = dynamic(
+  () => import("@/components/CommunityQuickAccess").then((mod) => ({ default: mod.CommunityQuickAccess })),
+  { ssr: false }
+);
+
+// ✅ NAVBAR - Lazy load for mobile
+const Navbar = dynamic(
+  () => import("@/components/navbar").then((mod) => ({ default: mod.Navbar })),
+  { ssr: false, loading: () => <NavbarSkeleton /> }
+);
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 

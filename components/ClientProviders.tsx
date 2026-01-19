@@ -5,20 +5,28 @@ import { ReactNode, Suspense, memo } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useUIState } from "@/contexts/UIStateContext";
-// RecruitAuthProvider is now in layout.tsx to wrap Navbar
-// REMOVED: UIStateProvider - already provided by MobileMenuProvider in layout.tsx
+
+// ✅ LOADING FALLBACKS - Mobile optimized
+import { MinimalFallback, FooterSkeleton } from "@/components/MobileLazyLoadingFallback";
 
 // CRITICAL: Import FPS scroll optimizer for pause-during-scroll behavior
-import { FpsScrollOptimizer } from "@/components/FpsScrollOptimizer";
-
-// Admin Panel Provider (lazy loaded)
-const AdminVIPPanelProvider = dynamic(
-  () => import("@/components/AdminVIPPanelProvider").then((mod) => ({ default: mod.AdminVIPPanelProvider })),
+const FpsScrollOptimizer = dynamic(
+  () => import("@/components/FpsScrollOptimizer").then((mod) => ({ default: mod.FpsScrollOptimizer })),
   { ssr: false }
 );
 
+// ✅ MOBILE-OPTIMIZED LAZY LOADING - All heavy components lazy loaded
+// Admin Panel Provider (lazy loaded)
+const AdminVIPPanelProvider = dynamic(
+  () => import("@/components/AdminVIPPanelProvider").then((mod) => ({ default: mod.AdminVIPPanelProvider })),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
+
 // Admin Button (only visible for mrbullmoney@gmail.com)
-const AdminButton = dynamic(() => import("@/components/AdminButton"), { ssr: false });
+const AdminButton = dynamic(
+  () => import("@/components/AdminButton"),
+  { ssr: false }
+);
 
 // Theme overlay for global filter effects
 const ThemeOverlay = dynamic(
@@ -52,17 +60,31 @@ const CrashTrackerProvider = dynamic(
   { ssr: false }
 );
 
-const FpsMonitor = dynamic(() => import("@/components/FpsMonitor"), { ssr: false });
-const ClientCursor = dynamic(() => import("@/components/ClientCursor"), { ssr: false });
+const FpsMonitor = dynamic(
+  () => import("@/components/FpsMonitor"),
+  { ssr: false }
+);
+
+const ClientCursor = dynamic(
+  () => import("@/components/ClientCursor"),
+  { ssr: false }
+);
+
 // AudioWidget stays loaded - NOT lazy unmounted - for audio persistence
-const AudioWidget = dynamic(() => import("@/components/audio-widget/AudioWidget"), { ssr: false });
+const AudioWidget = dynamic(
+  () => import("@/components/audio-widget/AudioWidget"),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
+
 const AutoRefreshPrompt = dynamic(
   () => import("@/components/AutoRefreshPrompt").then((mod) => ({ default: mod.AutoRefreshPrompt })),
   { ssr: false }
 );
+
+// ✅ FOOTER - Lazy loaded with skeleton fallback for mobile
 const FooterComponent = dynamic(
   () => import("@/components/Mainpage/footer").then((mod) => ({ default: mod.Footer })),
-  { ssr: false }
+  { ssr: false, loading: () => <FooterSkeleton /> }
 );
 
 // SMART MOUNT: Import lazy modal wrappers (mount/unmount with zero cost when closed)

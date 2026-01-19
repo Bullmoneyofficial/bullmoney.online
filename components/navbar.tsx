@@ -19,6 +19,7 @@ import React, {
 } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 
 import { useCalEmbed } from "@/app/hooks/useCalEmbed";
 import { CONSTANTS } from "@/constants/links";
@@ -29,7 +30,13 @@ import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useCacheContext } from "@/components/CacheManagerProvider";
 import { useMobileMenu, useNavbarModals } from "@/contexts/UIStateContext";
 
-// --- IMPORT LAZY MODAL SYSTEM (optimized loading/unloading like ServicesModal) ---
+// ✅ MOBILE DETECTION - For conditional lazy loading
+import { isMobileDevice } from "@/lib/mobileDetection";
+
+// ✅ LOADING FALLBACKS - Mobile optimized
+import { MinimalFallback } from "@/components/MobileLazyLoadingFallback";
+
+// --- LAZY LOADED MODAL SYSTEM - All modals lazy loaded for mobile ---
 import { 
   LazyAdminModal, 
   LazyAffiliateModal, 
@@ -42,13 +49,32 @@ import { SoundEffects } from "@/app/hooks/useSoundEffects";
 // --- IMPORT SCROLL OPTIMIZATION ---
 import { useScrollOptimization } from "@/hooks/useScrollOptimization";
 
-// --- IMPORT MODULAR NAVBAR COMPONENTS ---
-import { DesktopNavbar } from "./navbar/DesktopNavbar";
-import { MobileStaticHelper } from "./navbar/MobileStaticHelper";
-import { MobileDropdownMenu } from "./navbar/MobileDropdownMenu";
-import { MovingTradingTip } from "./navbar/MovingTradingTip";
-import { ThemeSelectorModal } from "./navbar/ThemeSelectorModal";
-// LazyThemeSelectorModal available but ThemeSelectorModal is lightweight enough to use directly
+// --- LAZY LOADED MODULAR NAVBAR COMPONENTS ---
+const DesktopNavbar = dynamic(
+  () => import("./navbar/DesktopNavbar").then((mod) => ({ default: mod.DesktopNavbar })),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
+
+const MobileStaticHelper = dynamic(
+  () => import("./navbar/MobileStaticHelper").then((mod) => ({ default: mod.MobileStaticHelper })),
+  { ssr: false }
+);
+
+const MobileDropdownMenu = dynamic(
+  () => import("./navbar/MobileDropdownMenu").then((mod) => ({ default: mod.MobileDropdownMenu })),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
+
+const MovingTradingTip = dynamic(
+  () => import("./navbar/MovingTradingTip").then((mod) => ({ default: mod.MovingTradingTip })),
+  { ssr: false }
+);
+
+const ThemeSelectorModal = dynamic(
+  () => import("./navbar/ThemeSelectorModal").then((mod) => ({ default: mod.ThemeSelectorModal })),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
+
 import { NAVBAR_TRADING_TIPS } from "./navbar/navbar.utils";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 

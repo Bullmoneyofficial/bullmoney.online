@@ -9,6 +9,12 @@ import { detectBrowser } from "@/lib/browserDetection";
 import { useComponentTracking } from "@/lib/CrashTracker";
 import { useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
 
+// ✅ MOBILE DETECTION - For conditional lazy loading
+import { isMobileDevice } from "@/lib/mobileDetection";
+
+// ✅ LOADING FALLBACKS - Mobile optimized
+import { MinimalFallback, CardSkeleton } from "@/components/MobileLazyLoadingFallback";
+
 // --- THEME CONSTANTS ---
 const GOLD_SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #D9BD6A 50%, #00000000 100%)";
 const GOLD_TEXT_GRADIENT = "bg-[linear-gradient(90deg,#F6E7B6,#D9BD6A_35%,#B8983A_65%,#F6E7B6)]";

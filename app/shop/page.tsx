@@ -5,33 +5,72 @@ import dynamic from 'next/dynamic';
 import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube'; 
 import { MessageCircle, Volume2, Volume1, VolumeX, X, Palette, Sparkles } from 'lucide-react'; 
 
+// ✅ MOBILE DETECTION & FALLBACKS
+import { isMobileDevice } from '@/lib/mobileDetection';
+import { MinimalFallback, ContentSkeleton, CardSkeleton } from '@/components/MobileLazyLoadingFallback';
+
 // --- STATIC IMPORTS ---
 import { ShopProvider } from "@/app/VIP/ShopContext";
-import { Navbar } from "@/components/Mainpage/navbar"; 
 import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
 import { safeGetItem, safeSetItem } from '@/lib/localStorage';
 
-// --- ONBOARDING IMPORTS ---
-import RegisterPage from "@/app/register/pagemode";
-import BullMoneyGate from "@/components/Mainpage/TradingHoldUnlock"; 
-import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2"; 
+// --- LAZY LOADED NAVBAR ---
+const Navbar = dynamic(
+  () => import("@/components/Mainpage/navbar").then((mod) => ({ default: mod.Navbar })),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
 
-// --- DYNAMIC IMPORTS ---
-const HeroShop = dynamic(() => import("@/app/shop/ShopHero"), { ssr: false });
-const ProductsSection = dynamic(() => import("@/app/VIP/ProductsSection"), { ssr: false });
-const ShopFunnel = dynamic(() => import("@/app/shop/ShopFunnel"), { ssr: false });
-const Shopmain = dynamic(() => import("@/components/Mainpage/ShopMainpage"), { ssr: false });
-const Socials = dynamic(() => import("@/components/Mainpage/Socialsfooter"), { ssr: false });
+// --- LAZY LOADED ONBOARDING COMPONENTS ---
+const RegisterPage = dynamic(
+  () => import("@/app/register/pagemode"),
+  { ssr: false, loading: () => <ContentSkeleton lines={5} /> }
+);
+
+const BullMoneyGate = dynamic(
+  () => import("@/components/Mainpage/TradingHoldUnlock"),
+  { ssr: false, loading: () => <ContentSkeleton lines={4} /> }
+);
+
+const MultiStepLoaderV2 = dynamic(
+  () => import("@/components/Mainpage/MultiStepLoaderv2"),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
+
+// --- LAZY LOADED SHOP COMPONENTS - Mobile optimized ---
+const HeroShop = dynamic(
+  () => import("@/app/shop/ShopHero"),
+  { ssr: false, loading: () => <ContentSkeleton lines={5} /> }
+);
+
+const ProductsSection = dynamic(
+  () => import("@/app/VIP/ProductsSection"),
+  { ssr: false, loading: () => <CardSkeleton /> }
+);
+
+const ShopFunnel = dynamic(
+  () => import("@/app/shop/ShopFunnel"),
+  { ssr: false, loading: () => <ContentSkeleton lines={6} /> }
+);
+
+const Shopmain = dynamic(
+  () => import("@/components/Mainpage/ShopMainpage"),
+  { ssr: false, loading: () => <ContentSkeleton lines={4} /> }
+);
+
+const Socials = dynamic(
+  () => import("@/components/Mainpage/Socialsfooter"),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
 
 const FixedThemeConfigurator = dynamic(
     () => import('@/components/Mainpage/ThemeComponents').then((mod) => mod.default), 
-    { ssr: false }
+    { ssr: false, loading: () => <MinimalFallback /> }
 );
 
-const TargetCursor = dynamic(() => import('@/components/Mainpage/TargertCursor'), { 
-  ssr: false,
-  loading: () => <div className="hidden"></div> 
-});
+const TargetCursor = dynamic(
+  () => import('@/components/Mainpage/TargertCursor'), 
+  { ssr: false, loading: () => <div className="hidden"></div> }
+);
 
 // --- FALLBACK THEME ---
 const FALLBACK_THEME: Partial<Theme> = {

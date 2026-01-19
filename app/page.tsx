@@ -7,12 +7,35 @@ import dynamic from "next/dynamic";
 import { detectBrowser } from "@/lib/browserDetection";
 import { trackEvent, BullMoneyAnalytics } from "@/lib/analytics";
 
+// ✅ MOBILE DETECTION - Conditional lazy loading for mobile optimization
+import { isMobileDevice } from "@/lib/mobileDetection";
+
+// ✅ LOADING FALLBACKS - Mobile-optimized loading states
+import {
+  HeroSkeleton,
+  FeaturesSkeleton,
+  MinimalFallback,
+  ContentSkeleton,
+  CardSkeleton,
+} from "@/components/MobileLazyLoadingFallback";
+
 // ==========================================
-// LAZY-LOAD HEAVY COMPONENTS FOR FAST INITIAL COMPILE
+// ✅ MOBILE-OPTIMIZED LAZY LOADING - All components lazy loaded for mobile performance
 // ==========================================
-const Hero = dynamic(() => import("@/components/hero"), { ssr: false });
-const CTA = dynamic(() => import("@/components/Chartnews"), { ssr: false });
-const Features = dynamic(() => import("@/components/features").then(mod => ({ default: mod.Features })), { ssr: false });
+const Hero = dynamic(
+  () => import("@/components/hero"),
+  { ssr: false, loading: () => <HeroSkeleton /> }
+);
+
+const CTA = dynamic(
+  () => import("@/components/Chartnews"),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
+
+const Features = dynamic(
+  () => import("@/components/features").then(mod => ({ default: mod.Features })),
+  { ssr: false, loading: () => <FeaturesSkeleton /> }
+);
 
 // UNIFIED SHIMMER SYSTEM - Import from single source
 import {
@@ -24,32 +47,77 @@ import {
   ShimmerRadialGlow,
   ShimmerContainer
 } from "@/components/ui/UnifiedShimmer";
-import { SplineSkeleton, LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
+
+const SplineSkeleton = dynamic(
+  () => import("@/components/ui/LoadingSkeleton").then(mod => ({ default: mod.SplineSkeleton })),
+  { ssr: false }
+);
+
+const LoadingSkeleton = dynamic(
+  () => import("@/components/ui/LoadingSkeleton").then(mod => ({ default: mod.LoadingSkeleton })),
+  { ssr: false }
+);
+
 import { useCacheContext } from "@/components/CacheManagerProvider";
 import { useUnifiedPerformance, useVisibility, useObserver, useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
 import { useComponentTracking, useCrashTracker } from "@/lib/CrashTracker";
 import { useScrollOptimization } from "@/hooks/useScrollOptimization";
 import { useBigDeviceScrollOptimizer } from "@/lib/bigDeviceScrollOptimizer";
+
 // Use optimized ticker for 120Hz performance - lazy load
-const LiveMarketTicker = dynamic(() => import("@/components/LiveMarketTickerOptimized").then(mod => ({ default: mod.LiveMarketTickerOptimized })), { ssr: false });
+const LiveMarketTicker = dynamic(
+  () => import("@/components/LiveMarketTickerOptimized").then(mod => ({ default: mod.LiveMarketTickerOptimized })),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
+
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useUIState } from "@/contexts/UIStateContext";
-const HiddenYoutubePlayer = dynamic(() => import("@/components/Mainpage/HiddenYoutubePlayer"), { ssr: false });
+
+const HiddenYoutubePlayer = dynamic(
+  () => import("@/components/Mainpage/HiddenYoutubePlayer"),
+  { ssr: false }
+);
+
 import { ALL_THEMES } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 import Image from "next/image";
 
-const MobileSwipeNavigator = dynamic(() => import("@/components/navigation/MobileSwipeNavigator"), { ssr: false });
-const DesktopKeyNavigator = dynamic(() => import("@/components/navigation/DesktopKeyNavigator"), { ssr: false });
+const MobileSwipeNavigator = dynamic(
+  () => import("@/components/navigation/MobileSwipeNavigator"),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
+
+const DesktopKeyNavigator = dynamic(
+  () => import("@/components/navigation/DesktopKeyNavigator"),
+  { ssr: false }
+);
 
 // Import loaders - lazy
-const PageMode = dynamic(() => import("@/components/REGISTER USERS/pagemode"), { ssr: false });
-const MultiStepLoaderv2 = dynamic(() => import("@/components/MultiStepLoaderv2"), { ssr: false });
+const PageMode = dynamic(
+  () => import("@/components/REGISTER USERS/pagemode"),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
 
-// Lazy imports for heavy 3D components
-const DraggableSplit = dynamic(() => import('@/components/DraggableSplit'), { ssr: false });
-const SplineScene = dynamic(() => import('@/components/SplineScene'), { ssr: false });
-const TestimonialsCarousel = dynamic(() => import('@/components/Testimonial').then(mod => ({ default: mod.TestimonialsCarousel })), { ssr: false });
+const MultiStepLoaderv2 = dynamic(
+  () => import("@/components/MultiStepLoaderv2"),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
+
+// Lazy imports for heavy 3D components - with optimized loading states
+const DraggableSplit = dynamic(
+  () => import('@/components/DraggableSplit'),
+  { ssr: false, loading: () => <ContentSkeleton lines={5} /> }
+);
+
+const SplineScene = dynamic(
+  () => import('@/components/SplineScene'),
+  { ssr: false, loading: () => <ContentSkeleton lines={4} /> }
+);
+
+const TestimonialsCarousel = dynamic(
+  () => import('@/components/Testimonial').then(mod => ({ default: mod.TestimonialsCarousel })),
+  { ssr: false, loading: () => <CardSkeleton /> }
+);
 
 type RemoteSplineMeta = {
   id: string;
