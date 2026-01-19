@@ -137,7 +137,7 @@ export function Pricing() {
   return (
     <section
       id="pricing"
-      className="relative isolate w-full bg-blue dark:bg-neutral-950 px-4 py-12 sm:py-16 lg:px-4"
+      className="relative isolate w-full full-bleed viewport-full bg-blue dark:bg-neutral-950 px-4 py-12 sm:py-16 lg:px-4"
     >
       
       {/* SEO / Hero Header */}

@@ -400,7 +400,7 @@ export const Dock = memo(React.forwardRef<HTMLDivElement, DockProps>(
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         className={cn(
-          "mx-auto flex h-24 items-center gap-5 rounded-3xl px-6 shadow-2xl transform translateZ-0 dock-glass bg-black/90",
+          "mx-auto flex h-24 items-center gap-5 rounded-3xl px-6 shadow-2xl transform translateZ-0 dock-glass bg-black/90 glass",
           className
         )}
         data-navbar

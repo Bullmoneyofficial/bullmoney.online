@@ -79,8 +79,8 @@ const GLOBAL_STYLES = `
 // SHIMMER BORDER COMPONENT
 // ==========================================
 
-// Matches the Sky/Indigo Theme
-const shimmerGradient = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #38bdf8 50%, #00000000 100%)";
+// Matches the Sky/Indigo Theme — horizontal shimmer for a smoother feel
+const shimmerGradient = "linear-gradient(90deg, rgba(59,130,246,0) 0%, rgba(59,130,246,0.55) 50%, rgba(59,130,246,0) 100%)";
 
 interface ShimmerBorderProps {
     children: ReactNode;
@@ -105,13 +105,14 @@ const ShimmerBorder = ({
     
     return (
         <div className={cn("relative overflow-hidden group/shimmer", borderRadius, className)}>
-            {/* Layer 1: The Spinning Gradient - pointer-events-none so it doesn't block clicks */}
+            {/* Layer 1: Horizontal shimmer sweep */}
             <motion.div
-                className="absolute inset-[-100%] pointer-events-none" 
-                animate={{ rotate: 360 }}
+                className="absolute top-0 bottom-0 left-0 w-[200%] pointer-events-none"
+                animate={{ x: ["-50%", "50%"] }}
                 transition={{ 
                     duration: speed, 
-                    repeat: Infinity, 
+                    repeat: Infinity,
+                    repeatType: 'reverse',
                     ease: "linear" 
                 }}
                 style={{ background: finalGradient }}
@@ -144,19 +145,19 @@ const HelperTip = ({ label, className }: { label: string; className?: string }) 
     {/* The Bubble */}
     <div className="relative p-[1.5px] overflow-hidden rounded-full shadow-lg shadow-sky-500/20">
         <motion.div 
-            className="absolute inset-[-100%]"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            className="absolute top-0 bottom-0 left-0 w-[200%]"
+            animate={{ x: ["-50%", "50%"] }}
+            transition={{ duration: 3, repeat: Infinity, repeatType: 'reverse', ease: "linear" }}
             style={{ background: shimmerGradient }}
         />
         <div className="relative z-10 px-3 py-1 bg-[#020611] rounded-full flex items-center justify-center border border-sky-500/20">
-            <span className="text-sky-100 text-[10px] font-bold whitespace-nowrap">
+            <span className="text-white text-[10px] font-bold whitespace-nowrap">
                 {label}
             </span>
         </div>
     </div>
     {/* The Triangle Pointer (pointing down) */}
-    <div className="w-2 h-2 bg-[#020611] rotate-45 -translate-y-[4px] relative z-10 border-b border-r border-sky-500/20" />
+    <div className="w-2 h-2 bg-[#020611] rotate-45 -translate-y-[4px] relative z-10 border-b border-r border-blue-600/30" />
   </motion.div>
 );
 
@@ -211,7 +212,7 @@ const HighAestheticCard = memo(({
 
             {!isMobile && (
                 <>
-                    <div className="absolute inset-0 opacity-30 blur-3xl bg-[radial-gradient(circle_at_50%_60%,rgba(56,189,248,0.3),transparent_60%)] animate-float-slow" />
+                    <div className="absolute inset-0 opacity-30 blur-3xl bg-[radial-gradient(circle_at_50%_60%,rgba(59,130,246,0.3),transparent_60%)] animate-float-slow" />
                     <div className="absolute inset-0 pointer-events-none">{particles}</div>
                 </>
             )}
@@ -224,7 +225,7 @@ const HighAestheticCard = memo(({
                     )}
                 </AnimatePresence>
 
-                <div className={`flex h-16 w-16 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 ring-1 ring-sky-500/50 mb-4 shadow-[0_0_20px_rgba(56,189,248,0.3)] ${!isChart && !isMobile ? "animate-float-slow" : ""}`}>
+                <div className={`flex h-16 w-16 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400 ring-1 ring-blue-600/50 mb-4 shadow-[0_0_20px_rgba(59,130,246,0.3)] ${!isChart && !isMobile ? "animate-float-slow" : ""}`}>
                     <Icon className="h-8 w-8" />
                 </div>
 
@@ -246,7 +247,7 @@ const HighAestheticCard = memo(({
 
                     <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[2px]" speed={3}>
                         <div className="relative z-10 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-bold text-white 
-                                    shadow-[0_0_25px_rgba(56,189,248,0.25)] 
+                                    shadow-[0_0_25px_rgba(59,130,246,0.25)] 
                                     bg-neutral-900/80 transition-all duration-300 group hover:bg-neutral-900">
                             <span className="animate-text-shimmer bg-[length:200%_auto]">Launch Terminal</span>
                             <ArrowRight className="h-4 w-4 text-sky-400 transition-transform group-hover:translate-x-1" />
@@ -314,7 +315,7 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
   const [open, setOpen] = useState(false);
   const [showChart, setShowChart] = useState(false);
   const isMobile = useIsMobile();
-  const chartHeight = isMobile ? 300 : 560;
+    const chartHeight = isMobile ? 300 : 680;
 
   const handleSelect = useCallback((chart: any) => {
     setSelected(chart);
@@ -1296,7 +1297,7 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                     <div className="relative z-10 overflow-hidden rounded-xl bg-[#0a0a0a] p-1 transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-sky-500/10 group-hover:-translate-y-1">
                         <div className="relative flex items-center justify-between rounded-[9px] bg-[#0a0a0a] px-4 py-3 md:px-6 md:py-4">
                             <div className="flex items-center gap-4">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-900/10 text-sky-400 ring-1 ring-sky-500/20 animate-float-slow">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-900/10 text-sky-400 ring-1 ring-sky-500/20">
                                     <Newspaper className="h-5 w-5" />
                                 </div>
                                 <div className="text-left truncate">
@@ -1356,9 +1357,9 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                                     {/* Shimmer border - decorative */}
                                     <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
                                         <motion.div
-                                            className="absolute inset-[-100%]"
-                                            animate={{ rotate: 360 }}
-                                            transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+                                            className="absolute top-0 bottom-0 left-0 w-[200%]"
+                                            animate={{ x: ["-50%", "50%"] }}
+                                            transition={{ duration: 5, repeat: Infinity, repeatType: 'reverse', ease: "linear" }}
                                             style={{ background: shimmerGradient }}
                                         />
                                         <div className="absolute inset-[2px] bg-black rounded-3xl" />
@@ -1403,10 +1404,10 @@ export function CTA() {
     return () => clearInterval(interval);
   }, []);
 
-  return (
-    <div id="market-dashboard" className="w-full overflow-x-hidden bg-black px-0 md:px-8 py-10">
+    return (
+        <div id="market-dashboard" className="w-full full-bleed viewport-full overflow-x-hidden bg-black px-0 md:px-8 py-10">
       <style>{GLOBAL_STYLES}</style>
-      <div className="mx-auto max-w-7xl px-4 md:px-0">
+            <div className="mx-auto w-full xl:max-w-none px-4 md:px-0">
         <header className="text-center mb-12">
            
             
@@ -1430,7 +1431,7 @@ export function CTA() {
           <NewsFeedModal activeMarket={activeMarket} showTip={activeTipIndex === 0} />
         </div>
 
-        <div className="mt-10">
+                <div className="mt-10 flex justify-center">
           {/* Tip Index 1: Charts */}
           <TradingViewDropdown onMarketChange={setActiveMarket} showTip={activeTipIndex === 1} />
         </div>

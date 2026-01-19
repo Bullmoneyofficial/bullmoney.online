@@ -81,7 +81,9 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
         
         {/* ✅ LAZY LOADED: All performance providers bundled */}
         <ClientProviders modal={modal}>
-          {children}
+          <div className="page-full">
+            {children}
+          </div>
         </ClientProviders>
       </CacheManagerProvider>
 

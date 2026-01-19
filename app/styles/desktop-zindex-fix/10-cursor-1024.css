@@ -16,6 +16,58 @@
   .target-cursor-wrapper * {
     z-index: inherit !important;
   }
+
+  /* ============================================
+     Subtle visual polish for custom cursor parts
+     Uses filter: drop-shadow for glow without
+     interfering with transforms. No transform set.
+     ============================================ */
+  .target-cursor-wrapper .target-cursor-dot,
+  .target-cursor-wrapper .target-cursor-ring,
+  .target-cursor-wrapper .target-cursor-crosshair-h,
+  .target-cursor-wrapper .target-cursor-crosshair-v,
+  .target-cursor-wrapper .target-cursor-corner,
+  .target-cursor-wrapper [data-cursor],
+  .target-cursor-wrapper [data-cursor-element] {
+    pointer-events: none !important;
+    will-change: filter;
+    /* Fallback glow */
+    filter: drop-shadow(0 2px 6px rgba(76, 201, 240, 0.18))
+            drop-shadow(0 0 10px rgba(76, 201, 240, 0.10));
+    -webkit-filter: drop-shadow(0 2px 6px rgba(76, 201, 240, 0.18))
+                    drop-shadow(0 0 10px rgba(76, 201, 240, 0.10));
+    mix-blend-mode: normal;
+  }
+
+  /* Theme-aware glow when CSS color-mix is available */
+  @supports (color: color-mix(in oklab, red, red)) {
+    .target-cursor-wrapper .target-cursor-dot,
+    .target-cursor-wrapper .target-cursor-ring,
+    .target-cursor-wrapper .target-cursor-crosshair-h,
+    .target-cursor-wrapper .target-cursor-crosshair-v,
+    .target-cursor-wrapper .target-cursor-corner,
+    .target-cursor-wrapper [data-cursor],
+    .target-cursor-wrapper [data-cursor-element] {
+      filter: drop-shadow(0 2px 8px color-mix(in oklab, var(--accent) 24%, transparent))
+              drop-shadow(0 0 12px color-mix(in oklab, var(--accent-glow, var(--accent)) 22%, transparent));
+      -webkit-filter: drop-shadow(0 2px 8px color-mix(in oklab, var(--accent) 24%, transparent))
+                      drop-shadow(0 0 12px color-mix(in oklab, var(--accent-glow, var(--accent)) 22%, transparent));
+    }
+  }
+
+  /* Respect reduced motion users: soften the effect */
+  @media (prefers-reduced-motion: reduce) {
+    .target-cursor-wrapper .target-cursor-dot,
+    .target-cursor-wrapper .target-cursor-ring,
+    .target-cursor-wrapper .target-cursor-crosshair-h,
+    .target-cursor-wrapper .target-cursor-crosshair-v,
+    .target-cursor-wrapper .target-cursor-corner,
+    .target-cursor-wrapper [data-cursor],
+    .target-cursor-wrapper [data-cursor-element] {
+      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.18));
+      -webkit-filter: drop-shadow(0 1px 3px rgba(0,0,0,0.18));
+    }
+  }
   
   /* ============================================
      CRITICAL: FORCE REAL MOUSE CURSOR VISIBLE

@@ -15,17 +15,20 @@
   --text-secondary: rgba(255,255,255,0.64);
   --border: rgba(255,255,255,0.10);
   --accent: #4CC9F0; /* Bullmoney blue */
+  --accent-glow: color-mix(in oklab, var(--accent) 40%, white 10%);
 
   /* Elevation tokens */
   --shadow-1: 0 1px 2px rgba(0,0,0,0.18);
   --shadow-2: 0 2px 8px rgba(0,0,0,0.18);
   --shadow-3: 0 8px 24px rgba(0,0,0,0.22);
   --shadow-4: 0 16px 48px rgba(0,0,0,0.30);
+  --shadow-accent: 0 0 24px color-mix(in oklab, var(--accent) 22%, transparent);
 
   /* Radii + blur */
   --radius-1: 10px;
   --radius-2: 14px;
   --radius-3: 18px;
+  --radius-pill: 999px;
   --blur-1: 8px;
   --blur-2: 14px;
 
@@ -34,6 +37,10 @@
   --ease-2: cubic-bezier(0.18, 0.85, 0.2, 1);
   --duration-1: 160ms;
   --duration-2: 260ms;
+
+  /* Rings */
+  --ring-soft: color-mix(in oklab, var(--accent) 30%, transparent);
+  --ring-strong: color-mix(in oklab, var(--accent) 60%, white 10%);
 }
 
 @media (min-width: 1024px) {
@@ -74,11 +81,35 @@
     border-radius: var(--radius-1);
   }
 
-  /* Navigation: subtle glass + elevation */
-  :where(header.sticky, [role="navigation"], nav) {
-    backdrop-filter: saturate(1.15) blur(var(--blur-1));
+  /* Navigation: removed dim blur rectangle behind navbar
+     The dock has its own styling via .dock-glass in navbar.css */
+
+  /* ============================================
+     Viewport fill + full-bleed utilities (desktop)
+     ============================================ */
+  .page-full {
+    width: 100%;
+    min-height: 100vh;
+    display: block;
+  }
+
+  .viewport-full {
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  .full-bleed {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+  }
+
+  /* Glass utilities */
+  :where(.glass, .glass-surface) {
     background: linear-gradient(180deg, var(--surface-3), var(--surface-1));
-    border-bottom: 1px solid var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-2);
+    backdrop-filter: saturate(1.15) blur(var(--blur-1));
     box-shadow: var(--shadow-2);
   }
 
@@ -94,6 +125,16 @@
     box-shadow: var(--shadow-3);
   }
 
+  /* Elevation utilities */
+  .elevate-1 { box-shadow: var(--shadow-1); }
+  .elevate-2 { box-shadow: var(--shadow-2); }
+  .elevate-3 { box-shadow: var(--shadow-3); }
+  .elevate-4 { box-shadow: var(--shadow-4); }
+
+  /* Accent utilities */
+  .accent-border { border-color: color-mix(in oklab, var(--accent) 35%, var(--border) 65%); }
+  .accent-text { color: color-mix(in oklab, var(--accent) 80%, var(--text-primary) 20%); }
+
   /* Dropdowns / tooltips */
   :where(.dropdown-menu, .tooltip, [data-popover]) {
     background: linear-gradient(180deg, var(--surface-3), var(--surface-1));
@@ -101,6 +142,28 @@
     border-radius: var(--radius-1);
     box-shadow: var(--shadow-3);
     backdrop-filter: saturate(1.1) blur(var(--blur-1));
+  }
+
+  /* Button variants */
+  .btn-primary {
+    background: color-mix(in oklab, var(--accent) 24%, var(--surface-3) 76%);
+    color: white;
+    border: 1px solid color-mix(in oklab, var(--accent) 38%, var(--border) 62%);
+    box-shadow: var(--shadow-2), var(--shadow-accent);
+  }
+  .btn-primary:hover {
+    background: color-mix(in oklab, var(--accent) 32%, var(--surface-3) 68%);
+    box-shadow: var(--shadow-3), var(--shadow-accent);
+  }
+  .btn-primary:active { box-shadow: var(--shadow-2); }
+
+  .btn-outline {
+    background: linear-gradient(180deg, var(--surface-2), var(--surface-0));
+    color: var(--text-primary);
+    border: 1px solid color-mix(in oklab, var(--accent) 32%, var(--border) 68%);
+  }
+  .btn-outline:hover {
+    background: color-mix(in oklab, var(--accent) 10%, var(--surface-2) 90%);
   }
 
   /* Modals */
@@ -121,6 +184,9 @@
     color: var(--text-primary);
     text-decoration-color: color-mix(in oklab, var(--accent) 70%, white 30%);
     text-underline-offset: 3px;
+    text-decoration-skip-ink: auto;
+    transition: color var(--duration-1) var(--ease-1),
+                text-decoration-color var(--duration-1) var(--ease-1);
   }
 
   a:hover {
@@ -131,7 +197,7 @@
   /* Focus visibility */
   :where(button, a, input, textarea, select):focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent);
+    box-shadow: 0 0 0 3px var(--ring-soft);
   }
 
   /* Desktop scrollbars */
@@ -148,6 +214,9 @@
     border: 2px solid transparent;
     box-shadow: inset 0 0 0 1px var(--border);
   }
+  :where(html)::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--surface-3), var(--surface-2));
+  }
 
   /* Larger desktop refinements */
   @media (min-width: 1440px) {
@@ -159,12 +228,61 @@
 
     h1, .h1 {
       letter-spacing: 0.2px;
+      font-feature-settings: "liga" 1, "kern" 1;
+      text-rendering: optimizeLegibility;
     }
     h2, .h2 {
       letter-spacing: 0.15px;
+      font-feature-settings: "liga" 1, "kern" 1;
     }
     h3, .h3 {
       letter-spacing: 0.1px;
+      font-feature-settings: "liga" 1, "kern" 1;
+    }
+  }
+
+  /* ============================================
+     Container queries (progressive enhancement)
+     Enable responsive spacing/typography per card width.
+     ============================================ */
+  @supports (container-type: inline-size) {
+    :where(.card, .panel, .section, .surface) {
+      container-type: inline-size;
+      container-name: component;
+    }
+
+    @container component (min-width: 480px) {
+      :where(.card, .panel, .section, .surface) {
+        padding: 20px;
+      }
+      :where(.card h2, .panel h2, .section h2) { font-size: 1.35rem; }
+    }
+
+    @container component (min-width: 720px) {
+      :where(.card, .panel, .section, .surface) {
+        padding: 24px;
+      }
+      :where(.card h2, .panel h2, .section h2) { font-size: 1.5rem; }
+    }
+  }
+
+  /* Reduce hover effects on non-hover devices */
+  @media (hover: none) {
+    :where(button, .btn):hover {
+      transform: none;
+      box-shadow: var(--shadow-1);
+    }
+  }
+
+  /* Forced colors mode accessibility */
+  @media (forced-colors: active) {
+    :where(button, a, input, textarea, select):focus-visible {
+      outline: 2px solid CanvasText;
+      box-shadow: none;
+    }
+    :where(.card, .panel, .section, .surface) {
+      border-color: CanvasText;
+      background: Canvas;
     }
   }
 }

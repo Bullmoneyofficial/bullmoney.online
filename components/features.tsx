@@ -88,7 +88,7 @@ export function Features() {
   return (
     <div
       id="features"
-      className="w-full mx-auto bg-black dark:bg-black py-20 px-4 md:px-8"
+      className="w-full full-bleed viewport-full mx-auto bg-black dark:bg-black py-20 px-4 md:px-8"
     >
       <Header>
         <h2

@@ -27,6 +27,12 @@ const Hero = dynamic(
   { ssr: false, loading: () => <HeroSkeleton /> }
 );
 
+// Desktop-optimized Hero with new layout
+const HeroDesktop = dynamic(
+  () => import("@/components/HeroDesktop"),
+  { ssr: false, loading: () => <HeroSkeleton /> }
+);
+
 const CTA = dynamic(
   () => import("@/components/Chartnews"),
   { ssr: false, loading: () => <MinimalFallback /> }
@@ -2999,15 +3005,15 @@ function HomeContent() {
           <main className="min-h-screen flex flex-col w-full" data-allow-scroll data-scrollable data-content data-theme-aware style={{ overflow: 'visible', height: 'auto' }}>
             <div id="top" />
 
-            <section id="hero" className="w-full" data-allow-scroll data-content data-theme-aware>
-              <Hero />
+            <section id="hero" className="w-full full-bleed viewport-full" data-allow-scroll data-content data-theme-aware>
+              <HeroDesktop />
             </section>
 
-            <section id="cta" className="w-full" data-allow-scroll data-content data-theme-aware>
+            <section id="cta" className="w-full full-bleed viewport-full" data-allow-scroll data-content data-theme-aware>
               <CTA />
             </section>
 
-            <section id="features" className="w-full" data-allow-scroll data-content data-theme-aware>
+            <section id="features" className="w-full full-bleed viewport-full" data-allow-scroll data-content data-theme-aware>
               <Features />
             </section>
 
@@ -3043,7 +3049,7 @@ function HomeContent() {
             {/* Dedicated R4X Bot Showcase */}
             <section
               id="r4x-bot"
-              className="w-full max-w-6xl mx-auto px-4 pb-16"
+              className="w-full full-bleed viewport-full mx-auto px-4 pb-16"
               data-allow-scroll
               data-content
               data-theme-aware

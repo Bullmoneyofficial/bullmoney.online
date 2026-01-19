@@ -12,7 +12,7 @@ import { trackEvent, BullMoneyAnalytics } from "@/lib/analytics";
 // ==========================================
 
 // LAZY-LOAD HEAVY COMPONENTS FOR FAST INITIAL COMPILE
-const Hero = dynamic(() => import("@/components/hero"), { ssr: false }) as any;
+const HeroDesktop = dynamic(() => import("@/components/HeroDesktop"), { ssr: false }) as any;
 const CTA = dynamic(() => import("@/components/Chartnews"), { ssr: false }) as any;
 const Features = dynamic(() => import("@/components/features").then(mod => ({ default: mod.Features })), { ssr: false }) as any;
 
@@ -401,7 +401,7 @@ function DesktopHomeContent() {
             <div id="top" />
 
             <section id="hero" className="w-full" data-allow-scroll data-content data-theme-aware>
-              <Hero />
+              <HeroDesktop />
             </section>
 
             <section id="cta" className="w-full" data-allow-scroll data-content data-theme-aware>

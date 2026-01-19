@@ -390,7 +390,7 @@ const EvervaultCard = ({ children, className = "" }: { children: React.ReactNode
     <div 
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      className={`group/card relative overflow-hidden bg-transparent ${className}`}
+      className={`group/card relative overflow-hidden bg-transparent surface elevate-2 accent-border ${className}`}
     >
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-black/80" />

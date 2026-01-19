@@ -269,3 +269,28 @@ spline-viewer {
 spline-viewer canvas {
   touch-action: pan-y !important;
 }
+
+/* Hide Spline watermark/logo for spline-viewer web component */
+spline-viewer #logo,
+spline-viewer [id*="logo"],
+spline-viewer a[href*="spline.design"],
+spline-viewer div[style*="position: absolute"][style*="bottom"],
+spline-viewer > div:last-child a,
+spline-viewer::part(logo),
+spline-viewer::part(watermark) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* For iframe-based Spline embeds - clip the bottom to hide watermark */
+.spline-iframe-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.spline-iframe-wrapper iframe {
+  margin-bottom: -50px;
+  height: calc(100% + 50px);
+}

@@ -866,22 +866,26 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
             }}
           />
         ) : (
-          <iframe
-            src={viewerUrl}
-            title="BullMoney hero scene"
-            frameBorder="0"
-            allow="fullscreen; autoplay; xr-spatial-tracking"
-            loading="lazy"
-            data-testid="hero-spline-iframe"
-            style={{
-              ...fullViewportStyles,
-              position: "absolute",
-              top: 0,
-              left: 0,
-              touchAction: 'pan-y',
-              pointerEvents: 'auto',
-            }}
-          />
+          <div className="spline-iframe-wrapper" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'hidden' }}>
+            <iframe
+              src={viewerUrl}
+              title="BullMoney hero scene"
+              frameBorder="0"
+              allow="fullscreen; autoplay; xr-spatial-tracking"
+              loading="lazy"
+              data-testid="hero-spline-iframe"
+              style={{
+                ...fullViewportStyles,
+                position: "absolute",
+                top: 0,
+                left: 0,
+                height: 'calc(100% + 60px)',
+                marginBottom: '-60px',
+                touchAction: 'pan-y',
+                pointerEvents: 'auto',
+              }}
+            />
+          </div>
         )}
       </div>
     </div>

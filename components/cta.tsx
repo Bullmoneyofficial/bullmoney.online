@@ -558,7 +558,7 @@ export function CTA() {
                             setActiveCard(null); // Close the expanded card modal
                             setIsContactModalOpen(true); // Open the contact selection modal
                         }}
-                        className="w-full py-3.5 px-6 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-medium rounded-xl hover:opacity-90 transition-opacity text-center flex items-center justify-center gap-2"
+                        className="w-full py-3.5 px-6 font-medium rounded-xl hover:opacity-90 transition-opacity text-center flex items-center justify-center gap-2 btn-primary"
                       >
                         Get This Trading Setup
                         <BsArrowRight className="w-4 h-4" />

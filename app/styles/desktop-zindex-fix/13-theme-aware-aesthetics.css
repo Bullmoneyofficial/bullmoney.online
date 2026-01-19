@@ -68,6 +68,37 @@
     box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent);
   }
 
+  /* Theme-aware buttons */
+  :root[data-theme="dark"] .btn-primary, html.dark .btn-primary {
+    background: color-mix(in oklab, var(--accent) 24%, var(--surface-3) 76%);
+    color: white;
+    border: 1px solid color-mix(in oklab, var(--accent) 38%, var(--border) 62%);
+  }
+  :root[data-theme="light"] .btn-primary, html.light .btn-primary {
+    background: color-mix(in oklab, var(--accent) 32%, white 68%);
+    color: black;
+    border: 1px solid color-mix(in oklab, var(--accent) 45%, var(--border) 55%);
+  }
+
+  :root[data-theme="dark"] .btn-outline, html.dark .btn-outline {
+    border-color: color-mix(in oklab, var(--accent) 32%, var(--border) 68%);
+    color: var(--text-primary);
+  }
+  :root[data-theme="light"] .btn-outline, html.light .btn-outline {
+    border-color: color-mix(in oklab, var(--accent) 45%, var(--border) 55%);
+    color: var(--text-primary);
+    background: color-mix(in oklab, white 92%, var(--surface-1) 8%);
+  }
+
+  /* Theme-aware links */
+  :root[data-theme="light"] a, html.light a {
+    color: rgba(0,0,0,0.88);
+    text-decoration-color: color-mix(in oklab, var(--accent) 65%, black 35%);
+  }
+  :root[data-theme="light"] a:hover, html.light a:hover {
+    color: color-mix(in oklab, var(--accent) 55%, black 45%);
+  }
+
   /* High contrast users */
   @media (prefers-contrast: more) {
     :where(button, a, input, textarea, select):focus-visible {
