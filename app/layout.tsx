@@ -12,46 +12,12 @@ import "../styles/mobile-scroll-optimization.css"; // Mobile & scroll performanc
 import "../styles/smart-mount.css"; // Smart mount/unmount freeze styles
 import "../styles/big-device-scroll.css"; // Big device scroll optimizations
 import { cn } from "@/lib/utils";
-import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
 // ✅ CUSTOM EVENT TRACKING - Track user interactions across the site
 import { trackEvent } from "@/lib/analytics";
 
-// ✅ LOADING FALLBACKS - Optimized skeletons for mobile
-import {
-  NavbarSkeleton,
-  FooterSkeleton,
-  MinimalFallback,
-} from "@/components/MobileLazyLoadingFallback";
-
-// ✅ LAZY LOADED COMPONENTS FOR MOBILE - All heavy components
-const VercelAnalyticsWrapper = dynamic(
-  () => import("@/components/VercelAnalyticsWrapper").then((mod) => ({ default: mod.VercelAnalyticsWrapper })),
-  { ssr: false }
-);
-
-const WebVitalsEnhanced = dynamic(
-  () => import("@/components/WebVitalsEnhanced").then((mod) => ({ default: mod.WebVitalsEnhanced })),
-  { ssr: false }
-);
-
-const AllSEOSchemas = dynamic(
-  () => import("@/components/SEOSchemas").then((mod) => ({ default: mod.AllSEOSchemas })),
-  { ssr: false }
-);
-
-const AdvancedSEO = dynamic(
-  () => import("@/components/AdvancedSEO").then((mod) => ({ default: mod.AdvancedSEO })),
-  { ssr: false }
-);
-
-const GoogleSEOBoost = dynamic(
-  () => import("@/components/GoogleSEOBoost").then((mod) => ({ default: mod.GoogleSEOBoost })),
-  { ssr: false }
-);
-
-// ✅ PROVIDERS - Lazy load context providers for mobile
+// ✅ PROVIDERS - Context providers for root layout
 import { ThemeProvider } from "@/context/providers";
 import { StudioProvider } from "@/context/StudioContext";
 import { GlobalThemeProvider } from "@/contexts/GlobalThemeProvider";
@@ -61,37 +27,8 @@ import { RecruitAuthProvider } from "@/contexts/RecruitAuthContext";
 import { ViewportStateProvider } from "@/contexts/ViewportStateContext";
 import { ShopProvider } from "@/components/ShopContext";
 
-// ✅ LAZY LOADED: Performance components
-const ClientProviders = dynamic(
-  () => import("@/components/ClientProviders").then((mod) => ({ default: mod.ClientProviders })),
-  { ssr: false }
-);
-
-const ShimmerStylesProvider = dynamic(
-  () => import("@/components/ui/UnifiedShimmer").then((mod) => ({ default: mod.ShimmerStylesProvider })),
-  { ssr: false }
-);
-
-const CacheManagerProvider = dynamic(
-  () => import("@/components/CacheManagerProvider").then((mod) => ({ default: mod.CacheManagerProvider })),
-  { ssr: false }
-);
-
-const TradingQuickAccess = dynamic(
-  () => import("@/components/TradingQuickAccess").then((mod) => ({ default: mod.TradingQuickAccess })),
-  { ssr: false }
-);
-
-const CommunityQuickAccess = dynamic(
-  () => import("@/components/CommunityQuickAccess").then((mod) => ({ default: mod.CommunityQuickAccess })),
-  { ssr: false }
-);
-
-// ✅ NAVBAR - Lazy load for mobile
-const Navbar = dynamic(
-  () => import("@/components/navbar").then((mod) => ({ default: mod.Navbar })),
-  { ssr: false, loading: () => <NavbarSkeleton /> }
-);
+// ✅ LAYOUT PROVIDERS - Client component wrapper for dynamic imports
+import { LayoutProviders } from "@/components/LayoutProviders";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
@@ -1054,87 +991,33 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         {/* Global Shimmer Styles - ensures all shimmers are synchronized */}
-        <ShimmerStylesProvider />
         {/* Cache Manager - Handles version-based cache invalidation */}
-        <CacheManagerProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <GlobalThemeProvider>
-              <ViewportStateProvider>
-                <MobileMenuProvider>
-                  <RecruitAuthProvider>
-                    <AudioSettingsProvider>
-                      <StudioProvider>
-                        {/* ✅ ADDED: ShopProvider starts here */}
-                        <ShopProvider>
-                          {/* Navbar rendered outside ClientProviders for fixed positioning */}
-                          <Navbar />
-                          {/* ✅ ADDED: Trading Quick Access - Live prices, charts & tools */}
-                          <TradingQuickAccess />
-                          <CommunityQuickAccess />
-                          {/* ✅ LAZY LOADED: All performance providers bundled */}
-                          <ClientProviders modal={modal}>
-                            {children}
-                          </ClientProviders>
-                        </ShopProvider>
-                        {/* ✅ ADDED: ShopProvider ends here */}
-                      </StudioProvider>
-                    </AudioSettingsProvider>
-                  </RecruitAuthProvider>
-                </MobileMenuProvider>
-              </ViewportStateProvider>
-            </GlobalThemeProvider>
-          </ThemeProvider>
-        </CacheManagerProvider>
-        
-        {/* ✅ VERCEL TRACKING - Enhanced Analytics & Speed Insights
-            - Analytics: Tracks page views (unlimited on free plan)
-            - SpeedInsights: Tracks Core Web Vitals (LCP, FID, CLS, TTFB, INP)
-            - WebVitalsEnhanced: Additional metrics + bot filtering
-            
-            Free Plan Limits:
-            - Page views: Unlimited
-            - Custom events: 2,500/month
-            - Speed Insights: Included
-        */}
-        <VercelAnalyticsWrapper />
-        <WebVitalsEnhanced />
-        
-        {/* ✅ SEO STRUCTURED DATA - JSON-LD Schemas for Rich Search Results
-            - Organization: Brand info + social links
-            - Website: Site search capability
-            - FAQ: Rich FAQ snippets
-            - Course: Trading education schema
-            - LocalBusiness: Rating stars
-            - Software: App schema
-        */}
-        <AllSEOSchemas />
-        
-        {/* ✅ ADVANCED SEO - Additional schemas for Google #1 ranking
-            - HowTo: "How to start trading" rich snippets
-            - Event: Live trading sessions
-            - Service: Mentorship service
-            - Video: Trading tutorials
-            - Review: Star ratings
-            - ItemList: Market coverage
-        */}
-        <AdvancedSEO />
-        
-        {/* ✅ GOOGLE SEO BOOST - Maximum ranking power
-            - Breadcrumb: Site navigation structure
-            - CollectionPage: Blog/news sections
-            - FinancialService: Trading mentorship
-            - LearningResource: Education content
-            - Speakable: Voice search optimization
-            - WebsiteSearch: Site search action
-            - SoftwareApp: Trading platform schema
-            - NewsArticleList: News section schema
-        */}
-        <GoogleSEOBoost />
+        {/* All providers and lazy-loaded components are in LayoutProviders */}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <GlobalThemeProvider>
+            <ViewportStateProvider>
+              <MobileMenuProvider>
+                <RecruitAuthProvider>
+                  <AudioSettingsProvider>
+                    <StudioProvider>
+                      {/* ✅ ShopProvider with LayoutProviders wrapper */}
+                      <ShopProvider>
+                        <LayoutProviders modal={modal}>
+                          {children}
+                        </LayoutProviders>
+                      </ShopProvider>
+                    </StudioProvider>
+                  </AudioSettingsProvider>
+                </RecruitAuthProvider>
+              </MobileMenuProvider>
+            </ViewportStateProvider>
+          </GlobalThemeProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
