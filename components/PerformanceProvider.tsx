@@ -850,46 +850,76 @@ export function FPSCounter({
       setUploadSpeed(0);
 
       try {
-        // Light init so DeviceMonitor can use its own speed-test API without enabling background polling
-        await deviceMonitor.start('light', { enableNetworkSpeedTest: false });
-      } catch (error) {
-        console.warn('[PerformanceProvider] deviceMonitor.start failed (non-blocking)', error);
-      }
-
-      try {
-        // Use a heavier, longer test to mirror Ookla more closely
-        const result = await deviceMonitor.runSpeedTest({
-          quick: false,
-          // Larger payloads to mirror Ookla's multi-second, multi-connection runs
-          downloadBytes: 25_000_000, // ~25MB
-          uploadBytes: 15_000_000,   // ~15MB
-          latencySamples: 8,
-        });
-        if (!cancelled && result) {
-          setLatency(Math.round(result.latency ?? 0));
-          setDownloadSpeed(result.downMbps ?? 0);
-          setUploadSpeed(result.upMbps ?? 0);
-          setTestPhase('idle');
-          setIsTesting(false);
-          return;
+          // Try server-side Ookla CLI first (EXACT speedtest.net match)
+          console.log('[PerformanceProvider] Running server-side Ookla speedtest...');
+          const response = await fetch('/api/speedtest?quick=false');
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (!cancelled && result && !result.error) {
+              setLatency(Math.round(result.latency ?? 0));
+              setDownloadSpeed(result.downMbps ?? 0);
+              setUploadSpeed(result.upMbps ?? 0);
+              setTestPhase('idle');
+              setIsTesting(false);
+              console.log('[PerformanceProvider] ✅ Ookla speedtest complete:', {
+                down: result.downMbps,
+                up: result.upMbps,
+                ping: result.latency,
+                server: result.server?.name,
+              });
+              return;
+            } else if (result.error) {
+              console.warn('[PerformanceProvider] Ookla CLI not available:', result.message);
+            }
+          }
+        } catch (error) {
+          console.warn('[PerformanceProvider] Server-side speedtest failed, using fallback', error);
         }
-      } catch (error) {
-        console.warn('[PerformanceProvider] deviceMonitor.runSpeedTest failed, using fallback', error);
-      }
 
-      if (cancelled) return;
+        if (cancelled) return;
 
-      try {
-        await runFallbackSpeedTest();
-      } catch (error) {
-        console.warn('[PerformanceProvider] Fallback speed test failed', error);
-      } finally {
-        if (!cancelled) {
-          setTestPhase('idle');
-          setIsTesting(false);
+        // Fallback to deviceMonitor speed test
+        try {
+          await deviceMonitor.start('light', { enableNetworkSpeedTest: false });
+        } catch (error) {
+          console.warn('[PerformanceProvider] deviceMonitor.start failed (non-blocking)', error);
         }
-      }
-    };
+
+        try {
+          const result = await deviceMonitor.runSpeedTest({
+            quick: false,
+            downloadBytes: 25_000_000,
+            uploadBytes: 15_000_000,
+            latencySamples: 8,
+          });
+          if (!cancelled && result) {
+            setLatency(Math.round(result.latency ?? 0));
+            setDownloadSpeed(result.downMbps ?? 0);
+            setUploadSpeed(result.upMbps ?? 0);
+            setTestPhase('idle');
+            setIsTesting(false);
+            console.log('[PerformanceProvider] Fallback speedtest complete');
+            return;
+          }
+        } catch (error) {
+          console.warn('[PerformanceProvider] deviceMonitor.runSpeedTest failed, using browser fallback', error);
+        }
+
+        if (cancelled) return;
+
+        // Final fallback to browser-based test
+        try {
+          await runFallbackSpeedTest();
+        } catch (error) {
+          console.warn('[PerformanceProvider] Browser fallback speed test failed', error);
+        } finally {
+          if (!cancelled) {
+            setTestPhase('idle');
+            setIsTesting(false);
+          }
+        }
+      };
 
     // Initial measurement after a short delay
     const initialTimeout = setTimeout(runSpeedTest, 2000);
