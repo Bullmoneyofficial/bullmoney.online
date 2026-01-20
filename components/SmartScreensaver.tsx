@@ -450,7 +450,7 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
     idleCheckIntervalRef.current = setInterval(() => {
       const now = Date.now();
       const idleTime = now - lastActivityRef.current;
-      const IDLE_THRESHOLD = 10000; // 10 seconds
+      const IDLE_THRESHOLD = 300000; // 5 minutes (300 seconds)
       
       if (idleTime >= IDLE_THRESHOLD && !isScreensaverActive) {
         console.log('[BULLMONEY] User idle detected - triggering cleanup and screensaver');
@@ -462,11 +462,11 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
     const initialCheckTimeout = setTimeout(() => {
       const now = Date.now();
       const idleTime = now - lastActivityRef.current;
-      if (idleTime >= 10000 && !isScreensaverActive) {
+      if (idleTime >= 300000 && !isScreensaverActive) {
         console.log('[BULLMONEY] Initial idle check - triggering screensaver');
         performIdleCleanup();
       }
-    }, 10000);
+    }, 300000);
     
     // Page visibility handler
     const handleVisibilityChange = () => {
@@ -524,7 +524,7 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
             onClick={dismissScreensaver}
             onTouchStart={dismissScreensaver}
             style={{
-              background: 'rgba(0, 0, 0, 0.96)',
+              background: '#000000',
               zIndex: 2147483647, // Maximum z-index - same as target cursor to ensure we're on top
               isolation: 'isolate',
             }}

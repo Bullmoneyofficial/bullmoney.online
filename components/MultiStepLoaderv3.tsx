@@ -100,6 +100,7 @@ const NEON_STYLES = `
 
   .neon-border {
     border: 2px solid #3b82f6;
+    border-radius: 9999px;
     box-shadow: 
       0 0 4px #3b82f6,
       0 0 8px #3b82f6,
@@ -568,7 +569,58 @@ const useLivePrice = (assetKey: AssetKey) => {
 };
 
 // ============================================================================
-// AUDIO ENGINE - MINIMAL FOR PERFORMANCE
+// HAPTIC FEEDBACK - VIBRATION API
+// ============================================================================
+const useHaptics = () => {
+  const vibrate = useCallback((pattern: number | number[]) => {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(pattern);
+      } catch {
+        // Silently fail
+      }
+    }
+  }, []);
+
+  // Light tap - quick feedback
+  const lightTap = useCallback(() => vibrate(10), [vibrate]);
+  
+  // Medium tap - standard interaction
+  const mediumTap = useCallback(() => vibrate(25), [vibrate]);
+  
+  // Heavy tap - important actions
+  const heavyTap = useCallback(() => vibrate(50), [vibrate]);
+  
+  // Double pulse - confirmations
+  const doublePulse = useCallback(() => vibrate([30, 50, 30]), [vibrate]);
+  
+  // Success pattern - completion
+  const successPattern = useCallback(() => vibrate([50, 100, 50, 100, 100]), [vibrate]);
+  
+  // Error/warning pattern
+  const errorPattern = useCallback(() => vibrate([100, 50, 100]), [vibrate]);
+  
+  // Rhythm pattern for pulse mode
+  const rhythmPulse = useCallback(() => vibrate([20, 80, 20]), [vibrate]);
+  
+  // Shake pattern
+  const shakePattern = useCallback(() => vibrate([15, 30, 15, 30, 15]), [vibrate]);
+
+  return { 
+    lightTap, 
+    mediumTap, 
+    heavyTap, 
+    doublePulse, 
+    successPattern, 
+    errorPattern, 
+    rhythmPulse,
+    shakePattern,
+    vibrate 
+  };
+};
+
+// ============================================================================
+// AUDIO ENGINE - ENHANCED WITH MORE SOUNDS
 // ============================================================================
 const useAudioEngine = () => {
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -589,6 +641,7 @@ const useAudioEngine = () => {
     return ctx;
   }, []);
 
+  // Standard tick sound
   const playTick = useCallback(() => {
     const ctx = initAudio();
     if (!ctx) return;
@@ -611,6 +664,178 @@ const useAudioEngine = () => {
     osc.stop(now + 0.06);
   }, [initAudio]);
 
+  // Higher pitch tick for taps
+  const playTap = useCallback(() => {
+    const ctx = initAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.exponentialRampToValueAtTime(600, now + 0.03);
+
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.04);
+  }, [initAudio]);
+
+  // Swipe whoosh sound
+  const playSwipe = useCallback(() => {
+    const ctx = initAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(200, now);
+    osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(1000, now);
+    filter.frequency.exponentialRampToValueAtTime(3000, now + 0.1);
+
+    gain.gain.setValueAtTime(0.05, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.15);
+  }, [initAudio]);
+
+  // Key press sound (keyboard modes)
+  const playKey = useCallback(() => {
+    const ctx = initAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "square";
+    osc.frequency.setValueAtTime(600, now);
+
+    gain.gain.setValueAtTime(0.06, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.03);
+  }, [initAudio]);
+
+  // Piano note sound
+  const playNote = useCallback((noteIndex: number) => {
+    const ctx = initAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    // C major scale frequencies
+    const notes = [261.63, 293.66, 329.63, 349.23, 392.00];
+    const freq = notes[noteIndex % notes.length];
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, now);
+
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.35);
+  }, [initAudio]);
+
+  // Scroll/slide sound
+  const playSlide = useCallback(() => {
+    const ctx = initAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(300, now);
+    osc.frequency.linearRampToValueAtTime(500, now + 0.05);
+
+    gain.gain.setValueAtTime(0.04, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.06);
+  }, [initAudio]);
+
+  // Shake rattle sound
+  const playShake = useCallback(() => {
+    const ctx = initAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    // Create noise-like effect
+    for (let i = 0; i < 3; i++) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(200 + Math.random() * 400, now + i * 0.02);
+
+      gain.gain.setValueAtTime(0.03, now + i * 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.02 + 0.03);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + i * 0.02);
+      osc.stop(now + i * 0.02 + 0.04);
+    }
+  }, [initAudio]);
+
+  // Click sound for buttons
+  const playClick = useCallback(() => {
+    const ctx = initAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(1000, now);
+    osc.frequency.exponentialRampToValueAtTime(500, now + 0.02);
+
+    gain.gain.setValueAtTime(0.1, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.025);
+  }, [initAudio]);
+
+  // Completion success sound
   const playSuccess = useCallback(() => {
     const ctx = initAudio();
     if (!ctx) return;
@@ -640,7 +865,115 @@ const useAudioEngine = () => {
     });
   }, [initAudio]);
 
-  return { playTick, playSuccess };
+  return { 
+    playTick, 
+    playTap, 
+    playSwipe, 
+    playKey, 
+    playNote, 
+    playSlide, 
+    playShake, 
+    playClick, 
+    playSuccess 
+  };
+};
+
+// ============================================================================
+// COMBINED FEEDBACK SYSTEM (AUDIO + HAPTICS)
+// ============================================================================
+const useFeedback = () => {
+  const audio = useAudioEngine();
+  const haptics = useHaptics();
+  
+  // Tick feedback - general progress
+  const tickFeedback = useCallback(() => {
+    audio.playTick();
+    haptics.lightTap();
+  }, [audio, haptics]);
+  
+  // Tap feedback - button presses, taps
+  const tapFeedback = useCallback(() => {
+    audio.playTap();
+    haptics.mediumTap();
+  }, [audio, haptics]);
+  
+  // Swipe feedback - swipe actions
+  const swipeFeedback = useCallback(() => {
+    audio.playSwipe();
+    haptics.mediumTap();
+  }, [audio, haptics]);
+  
+  // Key feedback - keyboard presses
+  const keyFeedback = useCallback(() => {
+    audio.playKey();
+    haptics.lightTap();
+  }, [audio, haptics]);
+  
+  // Piano note feedback
+  const noteFeedback = useCallback((noteIndex: number) => {
+    audio.playNote(noteIndex);
+    haptics.mediumTap();
+  }, [audio, haptics]);
+  
+  // Slide feedback - slider, scroll
+  const slideFeedback = useCallback(() => {
+    audio.playSlide();
+    haptics.lightTap();
+  }, [audio, haptics]);
+  
+  // Shake feedback
+  const shakeFeedback = useCallback(() => {
+    audio.playShake();
+    haptics.shakePattern();
+  }, [audio, haptics]);
+  
+  // Click feedback - double click, right click
+  const clickFeedback = useCallback(() => {
+    audio.playClick();
+    haptics.heavyTap();
+  }, [audio, haptics]);
+  
+  // Success feedback - completion
+  const successFeedback = useCallback(() => {
+    audio.playSuccess();
+    haptics.successPattern();
+  }, [audio, haptics]);
+  
+  // Rhythm feedback - pulse mode
+  const rhythmFeedback = useCallback(() => {
+    audio.playTick();
+    haptics.rhythmPulse();
+  }, [audio, haptics]);
+  
+  // Double pulse feedback - confirmations
+  const doublePulseFeedback = useCallback(() => {
+    audio.playTap();
+    haptics.doublePulse();
+  }, [audio, haptics]);
+  
+  // Hold feedback - long press start
+  const holdFeedback = useCallback(() => {
+    audio.playTick();
+    haptics.heavyTap();
+  }, [audio, haptics]);
+  
+  return {
+    tickFeedback,
+    tapFeedback,
+    swipeFeedback,
+    keyFeedback,
+    noteFeedback,
+    slideFeedback,
+    shakeFeedback,
+    clickFeedback,
+    successFeedback,
+    rhythmFeedback,
+    doublePulseFeedback,
+    holdFeedback,
+    // Also expose raw functions
+    audio,
+    haptics
+  };
 };
 
 // ============================================================================
@@ -699,17 +1032,17 @@ const CandlestickBars: React.FC<{ progress: number }> = ({ progress }) => {
 // BACKGROUND CANDLESTICKS
 // ============================================================================
 const BackgroundCandlesticks: React.FC = () => {
-  // Generate random candlestick data for background
+  // Generate random candlestick data for background - larger and more spread out
   const candlesticks = useMemo(() => {
     const sticks = [];
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 20; i++) {
       const isGreen = Math.random() > 0.45;
-      const bodyHeight = 20 + Math.random() * 60;
-      const wickTop = 5 + Math.random() * 20;
-      const wickBottom = 5 + Math.random() * 20;
+      const bodyHeight = 60 + Math.random() * 150; // Larger bodies (60-210px)
+      const wickTop = 15 + Math.random() * 50; // Larger wicks
+      const wickBottom = 15 + Math.random() * 50;
       const delay = Math.random() * 2;
-      const xPos = (i / 30) * 100;
-      const yOffset = Math.random() * 40 - 20;
+      const xPos = (i / 20) * 100;
+      const yOffset = Math.random() * 100 - 50; // More vertical spread
       
       sticks.push({
         id: i,
@@ -741,25 +1074,28 @@ const BackgroundCandlesticks: React.FC = () => {
           >
             {/* Top wick */}
             <div
-              className="w-0.5 rounded-full"
+              className="rounded-full"
               style={{
+                width: 3,
                 height: stick.wickTop,
                 backgroundColor: "#3b82f6",
               }}
             />
             {/* Body */}
             <div
-              className="w-3 rounded-sm"
+              className="rounded-sm"
               style={{
+                width: 12, // Wider bodies
                 height: stick.bodyHeight,
                 backgroundColor: "#3b82f6",
-                boxShadow: "0 0 10px rgba(59, 130, 246, 0.5)",
+                boxShadow: "0 0 15px rgba(59, 130, 246, 0.5)",
               }}
             />
             {/* Bottom wick */}
             <div
-              className="w-0.5 rounded-full"
+              className="rounded-full"
               style={{
+                width: 3,
                 height: stick.wickBottom,
                 backgroundColor: "#3b82f6",
               }}
@@ -918,6 +1254,26 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
   const [touchCount, setTouchCount] = useState(0);
   const [pinchCount, setPinchCount] = useState(0);
   const [lastPinchDistance, setLastPinchDistance] = useState(0);
+  
+  // Visual feedback states
+  const [cursorPos, setCursorPos] = useState<{x: number, y: number}>({ x: 0, y: 0 });
+  const [trailPoints, setTrailPoints] = useState<{x: number, y: number, id: number}[]>([]);
+  const [tapRipples, setTapRipples] = useState<{x: number, y: number, id: number}[]>([]);
+  const [deviceTilt, setDeviceTilt] = useState<{x: number, y: number}>({ x: 0, y: 0 });
+  const [keyPressVisuals, setKeyPressVisuals] = useState<{key: string, id: number}[]>([]);
+  const [scrollPulse, setScrollPulse] = useState(0);
+  const [shakeIntensity, setShakeIntensity] = useState(0);
+  
+  // Retry/Failure states
+  const [failureCount, setFailureCount] = useState(0);
+  const [showRetryButton, setShowRetryButton] = useState(false);
+  const [lastInteractionTime, setLastInteractionTime] = useState(Date.now());
+  const [isTimedOut, setIsTimedOut] = useState(false);
+  const [inactivityWarning, setInactivityWarning] = useState(false);
+  const inactivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const INACTIVITY_TIMEOUT = 180000; // 3 minutes of no progress (2-5 min range)
+  const WARNING_TIMEOUT = 150000; // Show warning at 2.5 minutes
 
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -930,9 +1286,17 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
   const isDraggingRef = useRef(false);
   const morseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const morseTapStartRef = useRef(0);
+  const trailIdRef = useRef(0);
+  const rippleIdRef = useRef(0);
+  const keyVisualIdRef = useRef(0);
 
   const { price, change24h } = useLivePrice(selectedAsset);
-  const { playTick, playSuccess } = useAudioEngine();
+  const feedback = useFeedback();
+  const { tickFeedback, tapFeedback, swipeFeedback, keyFeedback, noteFeedback, slideFeedback, shakeFeedback, clickFeedback, successFeedback, rhythmFeedback, doublePulseFeedback, holdFeedback } = feedback;
+  
+  // Also keep individual access for specific use cases
+  const { playTick, playSuccess } = feedback.audio;
+  const { lightTap, mediumTap, heavyTap, doublePulse, successPattern, rhythmPulse, shakePattern } = feedback.haptics;
   
   // Spring animations
   const progressSpring = useSpring(0, { stiffness: 100, damping: 20 });
@@ -974,7 +1338,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
   useEffect(() => {
     if (progress >= 100 && !completedRef.current) {
       completedRef.current = true;
-      playSuccess();
+      successFeedback(); // Audio + Haptic
       setIsUnlocked(true);
       
       setTimeout(() => {
@@ -982,7 +1346,229 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
         onFinished?.();
       }, 1500);
     }
-  }, [progress, onFinished, playSuccess]);
+  }, [progress, onFinished, successFeedback]);
+
+  // ============================================================================
+  // RETRY/FAILURE HANDLING SYSTEM
+  // ============================================================================
+  
+  // Track activity and detect inactivity timeout
+  useEffect(() => {
+    // Clear any existing timeouts
+    if (inactivityTimeoutRef.current) {
+      clearTimeout(inactivityTimeoutRef.current);
+    }
+    if (warningTimeoutRef.current) {
+      clearTimeout(warningTimeoutRef.current);
+    }
+    
+    // Don't set timeout if already completed or showing retry
+    if (progress >= 100 || showRetryButton || isUnlocked) {
+      setInactivityWarning(false);
+      return;
+    }
+    
+    // Set warning timeout (shows before retry button)
+    warningTimeoutRef.current = setTimeout(() => {
+      if (hasInteractedRef.current && progress < 100 && progress > 0) {
+        setInactivityWarning(true);
+      }
+    }, WARNING_TIMEOUT);
+    
+    // Set full inactivity timeout
+    inactivityTimeoutRef.current = setTimeout(() => {
+      // Only trigger if user has started interacting but stopped making progress
+      if (hasInteractedRef.current && progress < 100 && progress > 0) {
+        setIsTimedOut(true);
+        setShowRetryButton(true);
+        setInactivityWarning(false);
+      } else if (!hasInteractedRef.current && progress === 0) {
+        // User never started - also show retry after longer timeout
+        setIsTimedOut(true);
+        setShowRetryButton(true);
+        setInactivityWarning(false);
+      }
+    }, INACTIVITY_TIMEOUT);
+    
+    return () => {
+      if (inactivityTimeoutRef.current) {
+        clearTimeout(inactivityTimeoutRef.current);
+      }
+      if (warningTimeoutRef.current) {
+        clearTimeout(warningTimeoutRef.current);
+      }
+    };
+  }, [progress, showRetryButton, isUnlocked, lastInteractionTime]);
+
+  // Update last interaction time when progress changes
+  useEffect(() => {
+    if (progress > 0) {
+      setLastInteractionTime(Date.now());
+      setIsTimedOut(false);
+      setShowRetryButton(false);
+      setInactivityWarning(false);
+    }
+  }, [progress]);
+
+  // Detect failure (progress drops significantly or resets)
+  const lastProgressRef = useRef(0);
+  useEffect(() => {
+    // If progress dropped by more than 30% from peak, consider it a failure hint
+    if (lastProgressRef.current > 30 && progress < lastProgressRef.current - 30 && progress < 100) {
+      // Progress dropped significantly - might be failing
+    }
+    lastProgressRef.current = Math.max(lastProgressRef.current, progress);
+  }, [progress]);
+
+  // Reset interaction state for retry
+  const resetInteractionState = useCallback(() => {
+    setProgress(0);
+    setIsHolding(false);
+    setTapCount(0);
+    setSwipeProgress(0);
+    setRotationAngle(0);
+    setPatternPoints([]);
+    setShakeCount(0);
+    setLastTapTime(0);
+    setZigzagDirection(null);
+    setZigzagCount(0);
+    setPulseTaps([]);
+    setBreathPhase("hold");
+    setBreathCount(0);
+    setMorseTaps([]);
+    setAlternateSide(null);
+    setAlternateCount(0);
+    setCornersHit(new Set());
+    setSliderProgress(0);
+    setCountdownValue(5);
+    setSpeedTapCount(0);
+    setSpeedTapStartTime(0);
+    setTripleTapTimes([]);
+    setScratchArea(new Set());
+    setTiltProgress(0);
+    setFlipState("normal");
+    setCompassHeading(0);
+    setProximityTriggered(0);
+    setKonamiSequence([]);
+    setTypedWord("");
+    setPianoSequence([]);
+    setWasdSequence([]);
+    setArrowSequence([]);
+    setSpaceCount(0);
+    setCtrlBCount(0);
+    setDoubleClickCount(0);
+    setRightClickCount(0);
+    setScrollAmount(0);
+    setDragStartPos(null);
+    setDragComplete(false);
+    setHoverZones(new Set());
+    setFaceDownProgress(0);
+    setStepCount(0);
+    setTouchCount(0);
+    setPinchCount(0);
+    lastProgressRef.current = 0;
+    hasInteractedRef.current = false;
+    setLastInteractionTime(Date.now());
+  }, []);
+
+  // Handle retry button click
+  const handleRetry = useCallback(() => {
+    const newFailureCount = failureCount + 1;
+    setFailureCount(newFailureCount);
+    setShowRetryButton(false);
+    setIsTimedOut(false);
+    
+    // If failed twice, auto-unlock
+    if (newFailureCount >= 2) {
+      completedRef.current = true;
+      setIsUnlocked(true);
+      successFeedback();
+      
+      setTimeout(() => {
+        setGateVisible(false);
+        onFinished?.();
+      }, 1000);
+    } else {
+      // Reset and try same interaction again
+      resetInteractionState();
+      tapFeedback(); // Feedback for retry
+    }
+  }, [failureCount, onFinished, resetInteractionState, successFeedback, tapFeedback]);
+
+  // ============================================================================
+  // VISUAL FEEDBACK HELPERS
+  // ============================================================================
+  
+  // Add tap ripple effect
+  const addTapRipple = useCallback((x: number, y: number) => {
+    const id = rippleIdRef.current++;
+    setTapRipples(prev => [...prev, { x, y, id }]);
+    setTimeout(() => {
+      setTapRipples(prev => prev.filter(r => r.id !== id));
+    }, 600);
+  }, []);
+
+  // Add trail point for drag interactions
+  const addTrailPoint = useCallback((x: number, y: number) => {
+    const id = trailIdRef.current++;
+    setTrailPoints(prev => [...prev.slice(-15), { x, y, id }]);
+  }, []);
+
+  // Clear old trail points periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTrailPoints(prev => prev.slice(-10));
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Add key press visual
+  const addKeyVisual = useCallback((key: string) => {
+    const id = keyVisualIdRef.current++;
+    setKeyPressVisuals(prev => [...prev.slice(-5), { key, id }]);
+    setTimeout(() => {
+      setKeyPressVisuals(prev => prev.filter(k => k.id !== id));
+    }, 500);
+  }, []);
+
+  // Handle device tilt for visual feedback
+  useEffect(() => {
+    if (!isMobile) return;
+    
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      const beta = e.beta || 0; // Front-back tilt
+      const gamma = e.gamma || 0; // Left-right tilt
+      // Clamp and normalize tilt values for visual effect
+      setDeviceTilt({
+        x: Math.max(-15, Math.min(15, gamma / 3)),
+        y: Math.max(-15, Math.min(15, beta / 3))
+      });
+    };
+
+    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+      (DeviceOrientationEvent as any).requestPermission()
+        .then((response: string) => {
+          if (response === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation);
+          }
+        })
+        .catch(console.error);
+    } else {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+
+    return () => window.removeEventListener('deviceorientation', handleOrientation);
+  }, [isMobile]);
+
+  // Shake intensity decay
+  useEffect(() => {
+    if (shakeIntensity > 0) {
+      const timeout = setTimeout(() => {
+        setShakeIntensity(prev => Math.max(0, prev - 2));
+      }, 50);
+      return () => clearTimeout(timeout);
+    }
+  }, [shakeIntensity]);
 
   // ============================================================================
   // INTERACTION HANDLERS
@@ -1182,6 +1768,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     if (movement > 50 && shakeDetectorRef.current.length > 3) {
       hasInteractedRef.current = true;
       setShakeCount(c => c + 1);
+      setShakeIntensity(10); // Trigger visual shake
       setProgress(p => Math.min(p + 3, 100));
       playTick();
       shakeDetectorRef.current = []; // Reset after counting
@@ -1209,6 +1796,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
       if (deltaX > threshold || deltaY > threshold || deltaZ > threshold) {
         hasInteractedRef.current = true;
         setShakeCount(c => c + 1);
+        setShakeIntensity(12); // Trigger visual shake
         setProgress(p => Math.min(p + 3, 100));
         playTick();
       }
@@ -1841,6 +2429,9 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       hasInteractedRef.current = true;
       const key = e.code;
+      // Show visual for arrow keys and letters
+      const keyLabel = key.replace('Arrow', '').replace('Key', '');
+      addKeyVisual(keyLabel === 'Up' ? '↑' : keyLabel === 'Down' ? '↓' : keyLabel === 'Left' ? '←' : keyLabel === 'Right' ? '→' : keyLabel);
       
       setKonamiSequence(prev => {
         const newSeq = [...prev, key];
@@ -1889,6 +2480,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
       const key = e.key.toUpperCase();
       
       if (key.length === 1 && /[A-Z]/.test(key)) {
+        addKeyVisual(key);
         setTypedWord(prev => {
           const newWord = prev + key;
           // Check if matches target so far
@@ -1922,6 +2514,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
       const key = e.code;
       
       if (PIANO_KEYS.includes(key)) {
+        addKeyVisual(key.replace('Key', ''));
         setPianoSequence(prev => {
           const nextExpected = PIANO_KEYS[prev.length];
           if (key === nextExpected) {
@@ -1955,6 +2548,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
       const key = e.code;
       
       if (WASD_KEYS.includes(key)) {
+        addKeyVisual(key.replace('Key', ''));
         setWasdSequence(prev => {
           const nextExpected = WASD_KEYS[prev.length];
           if (key === nextExpected) {
@@ -1989,6 +2583,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
       
       if (ARROW_KEYS.includes(key)) {
         e.preventDefault();
+        const arrow = key === 'ArrowUp' ? '↑' : key === 'ArrowRight' ? '→' : key === 'ArrowDown' ? '↓' : '←';
+        addKeyVisual(arrow);
         setArrowSequence(prev => {
           const nextExpected = ARROW_KEYS[prev.length];
           if (key === nextExpected) {
@@ -2019,10 +2615,12 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
       if (e.code === "Space") {
         e.preventDefault();
         hasInteractedRef.current = true;
+        addKeyVisual("SPACE");
         setSpaceCount(prev => {
           const newCount = prev + 1;
           playTick();
           scaleSpring.set(0.9);
+          setShakeIntensity(8);
           setTimeout(() => scaleSpring.set(1), 50);
           setProgress(Math.min((newCount / 15) * 100, 100));
           return newCount;
@@ -2032,7 +2630,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentMode.mode, playTick, scaleSpring]);
+  }, [currentMode.mode, playTick, scaleSpring, addKeyVisual]);
 
   // CTRL+B MODE (Bulls!): Press Ctrl+B 3 times
   useEffect(() => {
@@ -2042,6 +2640,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
       if ((e.ctrlKey || e.metaKey) && e.code === "KeyB") {
         e.preventDefault();
         hasInteractedRef.current = true;
+        addKeyVisual("Ctrl+B");
         setCtrlBCount(prev => {
           const newCount = prev + 1;
           playTick();
@@ -2053,7 +2652,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentMode.mode, playTick]);
+  }, [currentMode.mode, playTick, addKeyVisual]);
 
   // ============================================================================
   // DESKTOP MOUSE MODES
@@ -2063,6 +2662,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
   const handleDoubleClick = useCallback((e: React.MouseEvent) => {
     if (currentMode.mode !== "doubleClick") return;
     hasInteractedRef.current = true;
+    addTapRipple(e.clientX, e.clientY);
     setDoubleClickCount(prev => {
       const newCount = prev + 1;
       playTick();
@@ -2071,13 +2671,14 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
       setProgress(Math.min((newCount / 5) * 100, 100));
       return newCount;
     });
-  }, [currentMode.mode, playTick, scaleSpring]);
+  }, [currentMode.mode, playTick, scaleSpring, addTapRipple]);
 
   // RIGHT CLICK MODE
   const handleRightClick = useCallback((e: React.MouseEvent) => {
     if (currentMode.mode !== "rightClick") return;
     e.preventDefault();
     hasInteractedRef.current = true;
+    addTapRipple(e.clientX, e.clientY);
     setRightClickCount(prev => {
       const newCount = prev + 1;
       playTick();
@@ -2086,7 +2687,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
       setProgress(Math.min((newCount / 3) * 100, 100));
       return newCount;
     });
-  }, [currentMode.mode, playTick, scaleSpring]);
+  }, [currentMode.mode, playTick, scaleSpring, addTapRipple]);
 
   // SCROLL WHEEL MODE
   useEffect(() => {
@@ -2096,6 +2697,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
       hasInteractedRef.current = true;
       // Scroll up (negative deltaY) adds progress
       if (e.deltaY < 0) {
+        setScrollPulse(1);
+        setTimeout(() => setScrollPulse(0), 200);
         setScrollAmount(prev => {
           const newAmount = prev + Math.abs(e.deltaY);
           playTick();
@@ -2411,6 +3014,11 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
   };
 
   const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
+    // Add ripple visual feedback on any click/tap
+    const clientX = 'touches' in e ? e.changedTouches?.[0]?.clientX || 0 : e.clientX;
+    const clientY = 'touches' in e ? e.changedTouches?.[0]?.clientY || 0 : e.clientY;
+    addTapRipple(clientX, clientY);
+    
     if (currentMode.mode === "tap") handleTap();
     else if (currentMode.mode === "doubleTap") handleDoubleTap();
     else if (currentMode.mode === "pulse") handlePulseTap();
@@ -2420,6 +3028,20 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     else if (currentMode.mode === "speedTap") handleSpeedTap();
     else if (currentMode.mode === "proximity") handleProximityTap();
     else if (currentMode.mode === "lightSensor") handleProximityTap(); // Fallback
+  };
+
+  // Track cursor/touch position and add trail
+  const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
+    const clientX = 'touches' in e ? e.touches[0]?.clientX || 0 : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0]?.clientY || 0 : e.clientY;
+    setCursorPos({ x: clientX, y: clientY });
+    
+    // Add trail for drag-type interactions
+    if (isDraggingRef.current || ['swipe', 'pattern', 'zigzag', 'spiral', 'circle', 'scratch', 'infinity', 'slider', 'dragDrop'].includes(currentMode.mode)) {
+      addTrailPoint(clientX, clientY);
+    }
+    
+    handleInteractionMove(e);
   };
 
   // Touch-specific handlers for mobile modes
@@ -2432,24 +3054,191 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     <AnimatePresence>
       <motion.div
         ref={containerRef}
-        className="fixed inset-0 z-[99999] flex flex-col items-center justify-center select-none"
-        style={{ backgroundColor: "#000", cursor: "pointer" }} // OLED Black
+        className="fixed inset-0 z-[99999] flex flex-col items-center justify-center select-none overflow-hidden"
+        style={{ 
+          backgroundColor: "#000", 
+          cursor: "pointer",
+          // Apply device tilt effect (iPhone-like parallax)
+          transform: isMobile ? `perspective(1000px) rotateX(${deviceTilt.y}deg) rotateY(${-deviceTilt.x}deg)` : undefined,
+          transition: "transform 0.1s ease-out",
+          minHeight: "100dvh", // Use dynamic viewport height
+        }}
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        animate={{ 
+          opacity: 1,
+          // Shake effect
+          x: shakeIntensity > 0 ? [0, -shakeIntensity, shakeIntensity, -shakeIntensity/2, 0] : 0,
+        }}
+        transition={{ x: { duration: 0.3 } }}
         exit={{ opacity: 0 }}
         onTouchStart={handleTouchStartMobile}
-        onTouchMove={handleInteractionMove}
+        onTouchMove={handlePointerMove}
         onTouchEnd={handleInteractionEnd}
         onMouseDown={handleInteractionStart}
+        onMouseMove={handlePointerMove}
         onMouseUp={handleInteractionEnd}
         onMouseLeave={handleInteractionEnd}
-        onMouseMove={handleInteractionMove}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
         onContextMenu={handleRightClick}
       >
         {/* Background Candlesticks */}
         <BackgroundCandlesticks />
+
+        {/* ===== VISUAL FEEDBACK ELEMENTS ===== */}
+        
+        {/* Tap Ripples - expanding circles on click/tap */}
+        {tapRipples.map(ripple => (
+          <motion.div
+            key={ripple.id}
+            className="absolute pointer-events-none"
+            style={{
+              left: ripple.x,
+              top: ripple.y,
+              transform: "translate(-50%, -50%)",
+            }}
+            initial={{ width: 0, height: 0, opacity: 0.8 }}
+            animate={{ width: 100, height: 100, opacity: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          >
+            <div
+              className="w-full h-full rounded-full"
+              style={{
+                border: "2px solid #3b82f6",
+                boxShadow: "0 0 20px #3b82f6, inset 0 0 10px rgba(59, 130, 246, 0.3)",
+              }}
+            />
+          </motion.div>
+        ))}
+
+        {/* Drag Trail - glowing dots following cursor */}
+        {trailPoints.length > 0 && (
+          <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }}>
+            <defs>
+              <linearGradient id="trailGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="rgba(59, 130, 246, 0)" />
+                <stop offset="100%" stopColor="#3b82f6" />
+              </linearGradient>
+            </defs>
+            {trailPoints.length > 1 && (
+              <motion.path
+                d={`M ${trailPoints.map(p => `${p.x},${p.y}`).join(' L ')}`}
+                stroke="url(#trailGradient)"
+                strokeWidth="3"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{
+                  filter: "drop-shadow(0 0 6px #3b82f6)",
+                }}
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ duration: 0.1 }}
+              />
+            )}
+            {/* Trail dots */}
+            {trailPoints.slice(-8).map((point, i) => (
+              <motion.circle
+                key={point.id}
+                cx={point.x}
+                cy={point.y}
+                r={2 + i * 0.5}
+                fill="#3b82f6"
+                style={{
+                  filter: "drop-shadow(0 0 4px #3b82f6)",
+                }}
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 0.3 + i * 0.1, scale: 1 }}
+                exit={{ opacity: 0 }}
+              />
+            ))}
+          </svg>
+        )}
+
+        {/* Cursor glow for desktop */}
+        {!isMobile && cursorPos.x > 0 && (
+          <motion.div
+            className="absolute pointer-events-none"
+            style={{
+              left: cursorPos.x,
+              top: cursorPos.y,
+              transform: "translate(-50%, -50%)",
+              width: 60,
+              height: 60,
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)",
+              filter: "blur(5px)",
+            }}
+            animate={{
+              scale: isDraggingRef.current ? 1.5 : 1,
+            }}
+            transition={{ duration: 0.15 }}
+          />
+        )}
+
+        {/* Key Press Visuals - floating key indicators */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 pointer-events-none" style={{ zIndex: 100 }}>
+          <AnimatePresence>
+            {keyPressVisuals.map((kp, i) => (
+              <motion.div
+                key={kp.id}
+                className="absolute px-3 py-2 rounded-lg font-bold text-sm"
+                style={{
+                  backgroundColor: "rgba(59, 130, 246, 0.3)",
+                  border: "2px solid #3b82f6",
+                  boxShadow: "0 0 15px #3b82f6",
+                  color: "#fff",
+                  left: `${i * 10 - 20}px`,
+                }}
+                initial={{ y: 0, opacity: 1, scale: 1.2 }}
+                animate={{ y: -50, opacity: 0, scale: 0.8 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                {kp.key}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+
+        {/* Scroll Pulse Effect */}
+        {currentMode.mode === "scrollWheel" && scrollPulse > 0 && (
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: `radial-gradient(circle at center, rgba(59, 130, 246, ${scrollPulse * 0.1}) 0%, transparent 50%)`,
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          />
+        )}
+
+        {/* Hold/Press visual feedback ring */}
+        {isHolding && (
+          <motion.div
+            className="absolute pointer-events-none"
+            style={{
+              left: "50%",
+              top: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 250,
+              height: 250,
+              borderRadius: "50%",
+              border: "3px solid rgba(59, 130, 246, 0.5)",
+              boxShadow: "0 0 40px rgba(59, 130, 246, 0.4), inset 0 0 40px rgba(59, 130, 246, 0.2)",
+            }}
+            animate={{
+              scale: [1, 1.1, 1],
+              opacity: [0.5, 0.8, 0.5],
+            }}
+            transition={{
+              duration: 1,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        )}
 
         {/* Subtle grid background */}
         <div 
@@ -2463,45 +3252,36 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
           }}
         />
 
-        {/* Live Price Ticker */}
+        {/* Live Price Ticker - Compact */}
         <motion.div
-          className="absolute top-8 left-1/2 -translate-x-1/2"
+          className="absolute top-2 sm:top-4 left-1/2 -translate-x-1/2 z-10"
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
           <div 
-            className="px-6 py-3 rounded-2xl flex flex-col items-center gap-2"
+            className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl flex items-center gap-2 sm:gap-3"
             style={{
               backgroundColor: "rgba(0, 0, 0, 0.8)",
-              border: "2px solid rgba(59, 130, 246, 0.4)",
-              boxShadow: "0 0 20px rgba(59, 130, 246, 0.2)",
+              border: "1px solid rgba(59, 130, 246, 0.4)",
+              boxShadow: "0 0 15px rgba(59, 130, 246, 0.15)",
             }}
           >
-            {/* Choose your crypto label */}
-            <span 
-              className="text-xs font-medium uppercase tracking-wider"
-              style={{ color: "rgba(59, 130, 246, 0.7)" }}
-            >
-              Choose your crypto
-            </span>
-            
-            <div className="flex items-center gap-4">
-            {/* Asset selector */}
-            <div className="flex gap-2">
+            {/* Asset selector - smaller buttons */}
+            <div className="flex gap-1">
               {(Object.keys(ASSETS) as AssetKey[]).map((key) => (
                 <button
                   key={key}
                   onClick={() => setSelectedAsset(key)}
                   className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold transition-all",
+                    "w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold transition-all",
                     selectedAsset === key && "scale-110"
                   )}
                   style={{
                     backgroundColor: selectedAsset === key ? "rgba(59, 130, 246, 0.2)" : "transparent",
-                    border: `2px solid ${selectedAsset === key ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                    border: `1px solid ${selectedAsset === key ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
                     color: selectedAsset === key ? "#fff" : "#3b82f6",
-                    boxShadow: selectedAsset === key ? "0 0 10px #3b82f6" : "none",
+                    boxShadow: selectedAsset === key ? "0 0 8px #3b82f6" : "none",
                   }}
                 >
                   {ASSETS[key].icon}
@@ -2509,51 +3289,84 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               ))}
             </div>
 
-            {/* Price display */}
-            <div className="flex flex-col items-end">
+            {/* Price display - compact */}
+            <div className="flex items-center gap-2">
               <span 
-                className="text-lg font-bold neon-text"
+                className="text-sm font-bold neon-text"
                 style={{ 
                   fontFamily: "monospace",
-                  textShadow: "0 0 10px #fff, 0 0 20px #3b82f6",
+                  textShadow: "0 0 8px #fff, 0 0 15px #3b82f6",
                 }}
               >
-                {price > 0 ? formatPrice(price) : "Loading..."}
+                {price > 0 ? formatPrice(price) : "..."}
               </span>
               <span 
-                className="text-xs flex items-center gap-1"
+                className="text-xs flex items-center"
                 style={{ color: change24h >= 0 ? "#22c55e" : "#ef4444" }}
               >
-                {change24h >= 0 ? <TrendingUp size={12} /> : <ArrowUpRight size={12} className="rotate-90" />}
-                {change24h.toFixed(2)}%
+                {change24h >= 0 ? <TrendingUp size={10} /> : <ArrowUpRight size={10} className="rotate-90" />}
+                {change24h.toFixed(1)}%
               </span>
-            </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Main Unlock Circle */}
-        <motion.div
-          className="relative flex items-center justify-center"
-          style={{ scale: scaleSpring }}
-        >
-          {/* Outer glow ring */}
-          <div 
-            className="absolute w-44 h-44 rounded-full"
-            style={{
-              background: "radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)",
-              animation: isHolding ? "none" : "ring-rotate 10s linear infinite",
+        {/* Main Unlock Circle - hide when unlocked */}
+        {!isUnlocked && (
+          <motion.div
+            className="relative flex items-center justify-center flex-shrink-0"
+            style={{ 
+              scale: scaleSpring,
+              marginTop: "clamp(1rem, 5vh, 3rem)", // Responsive margin
+              marginBottom: "clamp(0.5rem, 2vh, 1rem)",
             }}
-          />
+          >
+            {/* Outer glow ring */}
+            <div 
+              className="absolute w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 rounded-full"
+              style={{
+                background: "radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)",
+                animation: isHolding ? "none" : "ring-rotate 10s linear infinite",
+              }}
+            />
 
-          {/* Progress ring */}
-          <NeonRing progress={progress} size={160} />
+            {/* Progress ring */}
+            <NeonRing progress={progress} size={160} />
+
+            {/* Inactivity Warning Indicator */}
+            <AnimatePresence>
+              {inactivityWarning && !showRetryButton && (
+                <motion.div
+                  className="absolute -top-12 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1.5 rounded-full"
+                  style={{
+                    backgroundColor: "rgba(234, 179, 8, 0.2)",
+                    border: "1px solid rgba(234, 179, 8, 0.5)",
+                    boxShadow: "0 0 15px rgba(234, 179, 8, 0.3)",
+                  }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                >
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  >
+                    <Timer size={14} style={{ color: "#eab308" }} />
+                  </motion.div>
+                  <span className="text-xs font-medium" style={{ color: "#eab308" }}>
+                    Keep going!
+                  </span>
+                </motion.div>
+              )}
+          </AnimatePresence>
 
           {/* Center button */}
           <motion.button
-            className="relative w-32 h-32 rounded-full flex flex-col items-center justify-center gap-2 neon-border"
+            className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full flex flex-col items-center justify-center gap-1 sm:gap-2 neon-border"
             style={{
               backgroundColor: "rgba(0, 0, 0, 0.9)",
+              borderRadius: "9999px",
+              aspectRatio: "1 / 1",
             }}
             onPointerDown={() => {
               if (currentMode.mode === "hold") handleHoldStart();
@@ -2576,23 +3389,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             }}
             whileTap={["tap", "doubleTap", "pulse"].includes(currentMode.mode) ? { scale: 0.9 } : undefined}
           >
-            {/* Icon */}
-            {isUnlocked ? (
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring", stiffness: 200, damping: 15 }}
-              >
-                <Unlock 
-                  size={40} 
-                  className="neon-icon"
-                  style={{
-                    color: "#3b82f6",
-                    filter: "drop-shadow(0 0 10px #3b82f6) drop-shadow(0 0 20px #3b82f6)",
-                  }}
-                />
-              </motion.div>
-            ) : (
+            {/* Icon - only show when not unlocked */}
+            {!isUnlocked && (
               <div 
                 className="neon-icon"
                 style={{
@@ -2604,112 +3402,362 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               </div>
             )}
 
-            {/* Progress text */}
-            <span 
-              className="text-xl font-bold neon-text"
-              style={{ 
-                fontFamily: "monospace",
-                textShadow: "0 0 10px #fff, 0 0 20px #3b82f6",
-              }}
-            >
-              {Math.round(progress)}%
-            </span>
-          </motion.button>
-
-          {/* Candlestick animation */}
-          <div className="absolute -bottom-20">
-            <CandlestickBars progress={progress} />
-          </div>
-        </motion.div>
-
-        {/* Instruction text */}
-        <motion.div
-          className="mt-24 text-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <p 
-            className="text-xl font-bold mb-2 neon-text"
-            style={{
-              textShadow: "0 0 10px #fff, 0 0 20px #3b82f6, 0 0 40px #3b82f6",
-            }}
-          >
-            {isUnlocked ? "ACCESS GRANTED" : currentMode.mode === "breath" 
-              ? `${currentMode.instruction} (${breathPhase === "hold" ? "HOLD" : "RELEASE"})` 
-              : currentMode.instruction}
-          </p>
-          <p 
-            className="text-sm opacity-70"
-            style={{ color: "#3b82f6" }}
-          >
-            {currentMode.tradingMetaphor}
-          </p>
-        </motion.div>
-
-        {/* Current mode indicator - VIP unlock explanation */}
-        <motion.div
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-md px-4"
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.7 }}
-        >
-          <div
-            className="px-6 py-4 rounded-2xl flex flex-col items-center gap-2"
-            style={{
-              backgroundColor: "rgba(0, 0, 0, 0.9)",
-              border: "2px solid #3b82f6",
-              boxShadow: "0 0 20px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(59, 130, 246, 0.1)",
-            }}
-          >
-            <div className="flex items-center gap-3">
-              <div
-                style={{
-                  color: "#3b82f6",
-                  filter: "drop-shadow(0 0 4px #3b82f6)",
+            {/* Progress text - only show when not unlocked */}
+            {!isUnlocked && (
+              <span 
+                className="text-xl font-bold neon-text"
+                style={{ 
+                  fontFamily: "monospace",
+                  textShadow: "0 0 10px #fff, 0 0 20px #3b82f6",
                 }}
               >
-                <currentMode.icon size={24} />
-              </div>
-              <span 
-                className="text-base font-bold uppercase tracking-wide"
-                style={{ color: "#fff", textShadow: "0 0 10px rgba(59, 130, 246, 0.5)" }}
-              >
-                {currentMode.label}
+                {Math.round(progress)}%
               </span>
-            </div>
-            <p 
-              className="text-center text-xs"
-              style={{ color: "rgba(59, 130, 246, 0.8)" }}
-            >
-              Complete this interaction to unlock exclusive access to our
-            </p>
-            <p 
-              className="text-center text-sm font-bold neon-text"
-              style={{ textShadow: "0 0 8px #3b82f6, 0 0 16px #3b82f6" }}
-            >
-              VIP TRADING WEBSITE
-            </p>
-          </div>
-        </motion.div>
+            )}
+          </motion.button>
 
-        {/* Trading wisdom quote */}
-        <motion.div
-          className="absolute bottom-28 left-1/2 -translate-x-1/2 w-full max-w-sm px-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-        >
-          <p 
-            className="text-center text-xs italic"
-            style={{ 
-              color: "rgba(59, 130, 246, 0.5)",
-              textShadow: "0 0 5px rgba(59, 130, 246, 0.3)",
-            }}
-          >
-            "{quote}"
-          </p>
+          {/* SUCCESS OVERLAY - Beautiful unlock screen with Bull Logo */}
+          <AnimatePresence>
+            {isUnlocked && (
+              <motion.div
+                className="absolute inset-0 flex items-center justify-center z-[100]"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+                style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: 'rgba(0, 0, 0, 0.95)',
+                  backdropFilter: 'blur(20px)',
+                }}
+              >
+                {/* Animated background particles */}
+                <div className="absolute inset-0 overflow-hidden">
+                  {[...Array(20)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-1 h-1 rounded-full"
+                      style={{
+                        backgroundColor: '#3b82f6',
+                        boxShadow: '0 0 10px #3b82f6, 0 0 20px #3b82f6',
+                        left: `${Math.random() * 100}%`,
+                        top: `${Math.random() * 100}%`,
+                      }}
+                      animate={{
+                        y: [0, -100, 0],
+                        opacity: [0, 1, 0],
+                        scale: [0, 1.5, 0],
+                      }}
+                      transition={{
+                        duration: 2 + Math.random() * 2,
+                        repeat: Infinity,
+                        delay: Math.random() * 2,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Radiating rings */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  {[1, 2, 3].map((ring) => (
+                    <motion.div
+                      key={ring}
+                      className="absolute rounded-full"
+                      style={{
+                        width: 150 + ring * 80,
+                        height: 150 + ring * 80,
+                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                        boxShadow: `0 0 ${20 + ring * 10}px rgba(59, 130, 246, 0.1)`,
+                      }}
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ 
+                        scale: [1, 1.2, 1], 
+                        opacity: [0.3, 0.1, 0.3],
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        delay: ring * 0.3,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Main content container */}
+                <motion.div
+                  className="relative flex flex-col items-center gap-6 z-10"
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.2 }}
+                >
+                  {/* Bull Logo with neon glow */}
+                  <motion.div
+                    className="relative"
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    {/* Glow backdrop */}
+                    <motion.div
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        background: 'radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%)',
+                        filter: 'blur(30px)',
+                        transform: 'scale(2)',
+                      }}
+                      animate={{
+                        opacity: [0.5, 1, 0.5],
+                        scale: [1.8, 2.2, 1.8],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                      }}
+                    />
+                    
+                    {/* Bull SVG Logo */}
+                    <motion.img
+                      src="/BULL.svg"
+                      alt="Bull Money"
+                      className="relative z-10"
+                      style={{
+                        width: 120,
+                        height: 120,
+                        filter: 'drop-shadow(0 0 15px #3b82f6) drop-shadow(0 0 30px #3b82f6) drop-shadow(0 0 45px rgba(59, 130, 246, 0.5))',
+                      }}
+                      animate={{
+                        filter: [
+                          'drop-shadow(0 0 15px #3b82f6) drop-shadow(0 0 30px #3b82f6) drop-shadow(0 0 45px rgba(59, 130, 246, 0.5))',
+                          'drop-shadow(0 0 25px #3b82f6) drop-shadow(0 0 50px #3b82f6) drop-shadow(0 0 75px rgba(59, 130, 246, 0.7))',
+                          'drop-shadow(0 0 15px #3b82f6) drop-shadow(0 0 30px #3b82f6) drop-shadow(0 0 45px rgba(59, 130, 246, 0.5))',
+                        ],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                      }}
+                    />
+                  </motion.div>
+
+                  {/* Success Text */}
+                  <motion.div
+                    className="text-center"
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <motion.h2
+                      className="text-3xl md:text-4xl font-bold mb-2"
+                      style={{
+                        color: '#fff',
+                        textShadow: '0 0 10px #fff, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 60px rgba(59, 130, 246, 0.5)',
+                      }}
+                      animate={{
+                        textShadow: [
+                          '0 0 10px #fff, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 60px rgba(59, 130, 246, 0.5)',
+                          '0 0 15px #fff, 0 0 30px #3b82f6, 0 0 60px #3b82f6, 0 0 90px rgba(59, 130, 246, 0.7)',
+                          '0 0 10px #fff, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 60px rgba(59, 130, 246, 0.5)',
+                        ],
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      ACCESS GRANTED
+                    </motion.h2>
+                    <motion.p
+                      className="text-lg"
+                      style={{
+                        color: '#3b82f6',
+                        textShadow: '0 0 10px rgba(59, 130, 246, 0.5)',
+                      }}
+                    >
+                      Welcome to Bull Money
+                    </motion.p>
+                  </motion.div>
+
+                  {/* Loading indicator */}
+                  <motion.div
+                    className="flex items-center gap-2"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.8 }}
+                  >
+                    <motion.div
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: '#3b82f6', boxShadow: '0 0 10px #3b82f6' }}
+                      animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+                    />
+                    <motion.div
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: '#3b82f6', boxShadow: '0 0 10px #3b82f6' }}
+                      animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
+                    />
+                    <motion.div
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: '#3b82f6', boxShadow: '0 0 10px #3b82f6' }}
+                      animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
+                    />
+                  </motion.div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
+        )}
+
+        {/* Instruction text - hide when unlocked */}
+        {!isUnlocked && (
+          <motion.div
+            className="mt-4 sm:mt-8 md:mt-12 text-center px-4 max-w-md"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <p 
+              className="text-base sm:text-lg md:text-xl font-bold mb-2 neon-text"
+              style={{
+                textShadow: "0 0 10px #fff, 0 0 20px #3b82f6, 0 0 40px #3b82f6",
+              }}
+            >
+              {currentMode.mode === "breath" 
+                ? `${currentMode.instruction} (${breathPhase === "hold" ? "HOLD" : "RELEASE"})` 
+                : currentMode.instruction}
+            </p>
+            <p 
+              className="text-xs sm:text-sm opacity-70"
+              style={{ color: "#3b82f6" }}
+            >
+              {currentMode.tradingMetaphor}
+            </p>
+          </motion.div>
+        )}
+
+        {/* Trading wisdom quote - patience metaphors - hide when unlocked */}
+        {!isUnlocked && (
+          <motion.div
+            className="absolute bottom-4 sm:bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 w-full max-w-sm px-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+          >
+            <p 
+              className="text-center text-[10px] sm:text-xs italic"
+              style={{ 
+                color: "rgba(59, 130, 246, 0.5)",
+                textShadow: "0 0 5px rgba(59, 130, 246, 0.3)",
+              }}
+            >
+              "{quote}"
+            </p>
+          </motion.div>
+        )}
+
+        {/* RETRY BUTTON - Shows on timeout or failure */}
+        <AnimatePresence>
+          {showRetryButton && !isUnlocked && (
+            <motion.div
+              className="absolute inset-0 flex items-center justify-center z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{ backgroundColor: "rgba(0, 0, 0, 0.7)" }}
+            >
+              <motion.div
+                className="flex flex-col items-center gap-4 p-8 rounded-2xl"
+                style={{
+                  background: "linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(0, 0, 0, 0.9))",
+                  border: "1px solid rgba(59, 130, 246, 0.3)",
+                  boxShadow: "0 0 30px rgba(59, 130, 246, 0.2), inset 0 0 20px rgba(59, 130, 246, 0.05)",
+                }}
+                initial={{ scale: 0.8, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.8, y: 20 }}
+              >
+                {/* Timeout/Failure message */}
+                <div className="text-center">
+                  <p 
+                    className="text-lg font-bold mb-2"
+                    style={{ 
+                      color: "#3b82f6",
+                      textShadow: "0 0 10px rgba(59, 130, 246, 0.5)",
+                    }}
+                  >
+                    {isTimedOut ? "Taking too long?" : "Need another try?"}
+                  </p>
+                  <p className="text-sm opacity-70" style={{ color: "#94a3b8" }}>
+                    {failureCount === 0 
+                      ? "Don't worry, try again!" 
+                      : "One more attempt available"}
+                  </p>
+                </div>
+
+                {/* Attempt indicator */}
+                <div className="flex gap-2">
+                  {[0, 1].map((i) => (
+                    <div
+                      key={i}
+                      className="w-3 h-3 rounded-full transition-all"
+                      style={{
+                        backgroundColor: i < failureCount ? "rgba(239, 68, 68, 0.8)" : "rgba(59, 130, 246, 0.3)",
+                        boxShadow: i < failureCount ? "0 0 10px rgba(239, 68, 68, 0.5)" : "0 0 5px rgba(59, 130, 246, 0.2)",
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Retry button */}
+                <motion.button
+                  onClick={handleRetry}
+                  className="px-8 py-3 rounded-xl font-bold text-white transition-all"
+                  style={{
+                    background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+                    boxShadow: "0 0 20px rgba(59, 130, 246, 0.4), 0 4px 15px rgba(0, 0, 0, 0.3)",
+                    border: "1px solid rgba(59, 130, 246, 0.5)",
+                  }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    boxShadow: "0 0 30px rgba(59, 130, 246, 0.6), 0 4px 20px rgba(0, 0, 0, 0.4)",
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <span className="flex items-center gap-2">
+                    <RefreshCw size={18} />
+                    {failureCount >= 1 ? "Enter Site" : "Try Again"}
+                  </span>
+                </motion.button>
+
+                {/* Skip button for first failure */}
+                {failureCount === 0 && (
+                  <motion.button
+                    onClick={() => {
+                      // Skip directly to site
+                      setFailureCount(2);
+                      completedRef.current = true;
+                      setIsUnlocked(true);
+                      successFeedback();
+                      setTimeout(() => {
+                        setGateVisible(false);
+                        onFinished?.();
+                      }, 800);
+                    }}
+                    className="text-xs underline opacity-50 hover:opacity-80 transition-opacity"
+                    style={{ color: "#64748b" }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Skip interaction
+                  </motion.button>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Pattern trail visualization */}
         {currentMode.mode === "pattern" && patternPoints.length > 1 && (
@@ -2762,32 +3810,70 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
           </motion.div>
         )}
 
-        {/* Rotation indicator */}
+        {/* Rotation indicator with visual rotating ring */}
         {currentMode.mode === "rotate" && (
-          <motion.div
-            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <p className="text-4xl font-bold neon-text">
-              {Math.floor(rotationAngle)}°
-            </p>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>rotation</p>
-          </motion.div>
+          <>
+            <motion.div
+              className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <motion.div
+                className="w-24 h-24 mx-auto mb-2 rounded-full flex items-center justify-center relative"
+                style={{
+                  border: "3px dashed rgba(59, 130, 246, 0.5)",
+                }}
+                animate={{ rotate: rotationAngle }}
+              >
+                <div 
+                  className="absolute w-3 h-3 rounded-full -top-1"
+                  style={{ 
+                    backgroundColor: "#3b82f6",
+                    boxShadow: "0 0 10px #3b82f6, 0 0 20px #3b82f6" 
+                  }}
+                />
+                <RefreshCw size={32} style={{ color: "#3b82f6" }} />
+              </motion.div>
+              <p className="text-4xl font-bold neon-text">
+                {Math.floor(rotationAngle)}°
+              </p>
+              <p className="text-xs" style={{ color: "#3b82f6" }}>rotation</p>
+            </motion.div>
+          </>
         )}
 
-        {/* Zigzag indicator */}
+        {/* Zigzag indicator with animated direction arrows */}
         {currentMode.mode === "zigzag" && (
           <motion.div
             className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
+            <div className="flex items-center justify-center gap-4 mb-2">
+              <motion.div
+                animate={{ 
+                  x: zigzagDirection === "left" ? [-5, 0] : [0, -5],
+                  opacity: zigzagDirection === "left" ? 1 : 0.3
+                }}
+                transition={{ duration: 0.2 }}
+              >
+                <ArrowLeft size={32} style={{ color: "#3b82f6" }} />
+              </motion.div>
+              <motion.div
+                animate={{ 
+                  x: zigzagDirection === "right" ? [5, 0] : [0, 5],
+                  opacity: zigzagDirection === "right" ? 1 : 0.3
+                }}
+                transition={{ duration: 0.2 }}
+              >
+                <ArrowRight size={32} style={{ color: "#3b82f6" }} />
+              </motion.div>
+            </div>
             <p className="text-4xl font-bold neon-text">
               {zigzagCount}/6
             </p>
             <p className="text-xs" style={{ color: "#3b82f6" }}>
-              {zigzagDirection ? `→ ${zigzagDirection === "right" ? "LEFT" : "RIGHT"}` : "Swipe left or right"}
+              {zigzagDirection ? `→ Now go ${zigzagDirection === "right" ? "LEFT" : "RIGHT"}` : "Swipe left or right"}
             </p>
           </motion.div>
         )}
