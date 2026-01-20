@@ -1,0 +1,184 @@
+/* MovingTradingTip CSS - Neon Blue Sign Style */
+
+.moving-trading-tip {
+  position: fixed;
+  z-index: 999999;
+  pointer-events: none;
+  transform: translateZ(0);
+  contain: layout style;
+  will-change: auto;
+}
+
+/* Entry animation */
+.moving-trading-tip-enter {
+  opacity: 0;
+  transform: translateY(10px) scale(0.95) translateZ(0);
+}
+
+.moving-trading-tip-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1) translateZ(0);
+  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+}
+
+.moving-trading-tip-exit {
+  opacity: 0;
+  transform: translateY(10px) scale(0.95) translateZ(0);
+  transition: opacity 0.1s ease-out, transform 0.1s ease-out;
+}
+
+/* Arrow pointing up - neon style */
+.trading-tip-arrow {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #3b82f6;
+  filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+}
+
+/* Main container - full neon glow */
+.trading-tip-container {
+  position: relative;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.95);
+  border: 2px solid #3b82f6;
+  box-shadow: 
+    0 0 4px #3b82f6,
+    0 0 8px #3b82f6,
+    0 0 16px rgba(59, 130, 246, 0.5),
+    inset 0 0 4px rgba(59, 130, 246, 0.3);
+  overflow: hidden;
+}
+
+/* Shimmer effect */
+.trading-tip-shimmer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+.trading-tip-shimmer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(59, 130, 246, 0.15) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: tip-shimmer 4s ease-in-out infinite;
+}
+
+@keyframes tip-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Content wrapper */
+.trading-tip-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 10;
+}
+
+/* Pulse indicator */
+.trading-tip-pulse {
+  position: relative;
+  display: flex;
+  height: 8px;
+  width: 8px;
+  flex-shrink: 0;
+}
+
+.trading-tip-pulse-ring {
+  position: absolute;
+  display: inline-flex;
+  height: 100%;
+  width: 100%;
+  border-radius: 50%;
+  background-color: #3b82f6;
+  opacity: 0.75;
+  animation: tip-pulse 2s ease-in-out infinite;
+}
+
+.trading-tip-pulse-dot {
+  position: relative;
+  display: inline-flex;
+  border-radius: 50%;
+  height: 8px;
+  width: 8px;
+  background-color: #3b82f6;
+  box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+}
+
+@keyframes tip-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* Target label - neon text */
+.trading-tip-target {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: #60a5fa;
+  text-shadow: 
+    0 0 4px #3b82f6,
+    0 0 8px #3b82f6;
+  flex-shrink: 0;
+}
+
+/* Divider - neon line */
+.trading-tip-divider {
+  width: 1px;
+  height: 16px;
+  flex-shrink: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(59, 130, 246, 0.8),
+    rgba(59, 130, 246, 0.4),
+    rgba(59, 130, 246, 0.8)
+  );
+  box-shadow: 0 0 4px #3b82f6;
+}
+
+/* Tip text - neon glow */
+.trading-tip-text {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: #93c5fd;
+  text-shadow: 
+    0 0 2px rgba(59, 130, 246, 0.8),
+    0 0 4px rgba(59, 130, 246, 0.4);
+}
+
+/* Hide on mobile */
+@media (max-width: 1023px) {
+  .moving-trading-tip {
+    display: none;
+  }
+}

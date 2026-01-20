@@ -34,10 +34,10 @@ export const NAVBAR_THEME_FILTER_MAP: Record<string, string> = {
 // --- TRADING TIPS ---
 export const NAVBAR_TRADING_TIPS = [
   { target: 'Home', text: 'Market overview & latest updates', buttonIndex: 0 },
-  { target: 'Setups', text: 'Daily setups & chart analysis', buttonIndex: 1 },
+  { target: 'Live', text: 'Watch live trading sessions', buttonIndex: 1 },
   { target: 'Affiliates', text: 'Join our affiliate program', buttonIndex: 2 },
   { target: 'FAQ', text: 'Trading guides & support', buttonIndex: 3 },
-  { target: 'Rewards', text: 'Earn points on every trade', buttonIndex: 4 },
+  { target: 'Analysis', text: 'Expert market analysis', buttonIndex: 4 },
   { target: 'Products', text: 'Pro tools & indicators', buttonIndex: 5 },
   { target: 'Theme', text: 'Customize your interface', buttonIndex: 6 },
 ];

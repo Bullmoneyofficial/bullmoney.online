@@ -409,8 +409,8 @@ export const Navbar = memo(() => {
         } else {
           soundPlayedRef.current = true;
         }
-      }, 300);
-    }, 10000);
+      }, 150);
+    }, 4000);
     
     return () => {
       clearInterval(intervalId);
@@ -448,17 +448,15 @@ export const Navbar = memo(() => {
       <ThemeSelectorModal isOpen={isThemeSelectorOpen} onClose={closeNavbarModal} />
       
       {/* Desktop Moving Trading Tips */}
-      <AnimatePresence mode="wait">
-        {mounted && showTip && !isDockHovered && (
-          <MovingTradingTip 
-            key={`desktop-tip-${currentTipIndex}`}
-            tip={NAVBAR_TRADING_TIPS[currentTipIndex]} 
-            buttonRefs={buttonRefs}
-            dockRef={dockRef}
-            isVisible={showTip} 
-          />
-        )}
-      </AnimatePresence>
+      {mounted && showTip && !isDockHovered && (
+        <MovingTradingTip 
+          key={`desktop-tip-${currentTipIndex}`}
+          tip={NAVBAR_TRADING_TIPS[currentTipIndex]} 
+          buttonRefs={buttonRefs}
+          dockRef={dockRef}
+          isVisible={showTip} 
+        />
+      )}
       
       {/* Mobile Static Helper */}
       {mounted && <MobileStaticHelper />}

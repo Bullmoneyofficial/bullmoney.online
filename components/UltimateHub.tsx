@@ -5399,14 +5399,37 @@ const UnifiedFpsPill = memo(({
           </AnimatePresence>
         </motion.div>
         
-        {/* Tap hint on mobile */}
+        {/* Tap hint on mobile - pull tab from left */}
         {!isMinimized && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] text-blue-400/60 whitespace-nowrap sm:hidden"
+            initial={{ x: -50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.3, ease: "easeOut" }}
+            className="absolute -bottom-6 left-0 whitespace-nowrap sm:hidden flex items-center gap-0.5 cursor-pointer pointer-events-auto px-2 py-1 rounded-r-full"
+            style={{
+              background: 'rgba(0, 0, 0, 0.5)',
+              borderTop: '1px solid rgba(59, 130, 246, 0.3)',
+              borderRight: '1px solid rgba(59, 130, 246, 0.3)',
+              borderBottom: '1px solid rgba(59, 130, 246, 0.3)',
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenPanel();
+            }}
+            onTouchEnd={(e) => {
+              e.stopPropagation();
+              onOpenPanel();
+            }}
           >
-            Tap to open
+            <span className="text-[7px] text-blue-400/80 font-medium">Tap to open</span>
+            <svg 
+              className="w-2 h-2 text-blue-400/80" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+            </svg>
           </motion.div>
         )}
       </motion.div>

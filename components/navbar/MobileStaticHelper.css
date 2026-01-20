@@ -1,0 +1,174 @@
+/* MobileStaticHelper CSS - Neon Blue Sign Style */
+/* Space-aware: Positioned below UltimateHub button on left side */
+
+.mobile-static-tip {
+  position: fixed;
+  z-index: 30;
+  pointer-events: none;
+  left: 0;
+  /* top is set dynamically via inline style based on UltimateHub position */
+  padding-left: env(safe-area-inset-left, 0px);
+  transform: translateZ(0);
+  contain: layout style;
+  will-change: auto;
+  transition: top 0.3s ease-out, opacity 0.25s ease-out;
+}
+
+/* Hide on desktop */
+@media (min-width: 1024px) {
+  .mobile-static-tip {
+    display: none;
+  }
+}
+
+/* When scrolling - slightly more transparent */
+.mobile-static-tip.mobile-tip-scrolling {
+  opacity: 0.8;
+}
+
+/* Main container - neon glow */
+.mobile-static-tip-container {
+  position: relative;
+  padding: 6px 12px;
+  border-radius: 0 12px 12px 0;
+  background: rgba(0, 0, 0, 0.95);
+  border: 2px solid #3b82f6;
+  border-left: none;
+  box-shadow: 
+    0 0 4px #3b82f6,
+    0 0 8px #3b82f6,
+    0 0 12px rgba(59, 130, 246, 0.4),
+    inset 0 0 4px rgba(59, 130, 246, 0.3);
+  overflow: hidden;
+  cursor: pointer;
+  pointer-events: auto;
+  transform: translateZ(0);
+}
+
+/* Slide animation - simple fade in, no bounce */
+.mobile-static-tip-container.mobile-tip-animate {
+  animation: mobileStaticTipFadeIn 0.5s ease-out forwards;
+}
+
+.mobile-static-tip-container.mobile-tip-pinned {
+  animation: none;
+  transform: translateX(0) translateZ(0);
+  opacity: 1;
+}
+
+.mobile-static-tip-container.mobile-tip-hidden {
+  opacity: 0;
+  transform: translateX(-10px) translateZ(0);
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+
+@keyframes mobileStaticTipFadeIn {
+  0% {
+    transform: translateX(-20px) translateZ(0);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0) translateZ(0);
+    opacity: 1;
+  }
+}
+
+/* Shimmer effect */
+.mobile-static-tip-shimmer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 0 12px 12px 0;
+  pointer-events: none;
+}
+
+.mobile-static-tip-shimmer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(59, 130, 246, 0.15) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: mobileStaticTipShimmer 4s ease-in-out infinite;
+}
+
+@keyframes mobileStaticTipShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Content wrapper */
+.mobile-static-tip-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 10;
+}
+
+/* Pulse indicator */
+.mobile-static-tip-pulse {
+  position: relative;
+  display: flex;
+  height: 6px;
+  width: 6px;
+  flex-shrink: 0;
+}
+
+.mobile-static-tip-pulse-ring {
+  position: absolute;
+  display: inline-flex;
+  height: 100%;
+  width: 100%;
+  border-radius: 50%;
+  background-color: #3b82f6;
+  opacity: 0.75;
+  animation: mobileStaticTipPulse 2s ease-in-out infinite;
+}
+
+.mobile-static-tip-pulse-dot {
+  position: relative;
+  display: inline-flex;
+  border-radius: 50%;
+  height: 6px;
+  width: 6px;
+  background-color: #3b82f6;
+  box-shadow: 0 0 4px #3b82f6, 0 0 6px #3b82f6;
+}
+
+@keyframes mobileStaticTipPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* Tip text - neon glow */
+.mobile-static-tip-text {
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+  white-space: nowrap;
+  color: #93c5fd;
+  text-shadow: 
+    0 0 2px rgba(59, 130, 246, 0.8),
+    0 0 4px rgba(59, 130, 246, 0.4);
+  transition: opacity 0.2s ease-out;
+}
+
+/* Text fade transition */
+.mobile-static-tip-text.tip-fade-out {
+  opacity: 0;
+}

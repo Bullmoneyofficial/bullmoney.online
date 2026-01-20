@@ -522,8 +522,138 @@ body {
 /* Reduce animation cost for mobile tips */
 .mobile-helper-optimized {
   contain: layout paint style;
-  will-change: transform, opacity;
+  will-change: transform;
   transform: translateZ(0);
+}
+
+/* ============================================================================
+   MOBILE TIP LIGHTWEIGHT CSS ANIMATIONS
+   Performance-optimized animations for mobile static helper tip
+   ============================================================================ */
+
+/* Container positioning with CSS transition */
+.mobile-tip-container {
+  top: calc(9rem + env(safe-area-inset-top, 0px));
+  transition: top 0.25s ease-out;
+}
+
+.mobile-tip-container.mobile-tip-minimized {
+  top: calc(5.5rem + env(safe-area-inset-top, 0px));
+}
+
+/* Slide animation - GPU accelerated bounce */
+.mobile-tip-slide {
+  animation: mobileTipBounce 3s ease-in-out infinite;
+  transform: translateZ(0);
+}
+
+.mobile-tip-slide.mobile-tip-pinned {
+  animation: none;
+  transform: translateX(0) translateZ(0);
+}
+
+.mobile-tip-slide.mobile-tip-hidden {
+  opacity: 0;
+}
+
+.mobile-tip-slide:hover {
+  animation-play-state: paused;
+  transform: translateX(-8px) translateZ(0);
+}
+
+/* Simple bounce keyframe - translateX only for performance */
+@keyframes mobileTipBounce {
+  0%, 100% {
+    transform: translateX(50px) translateZ(0);
+    opacity: 0;
+  }
+  15%, 85% {
+    transform: translateX(0) translateZ(0);
+    opacity: 1;
+  }
+}
+
+/* Lightweight shimmer line */
+.mobile-shimmer-line {
+  background: linear-gradient(to right, transparent, rgba(var(--accent-rgb, 59, 130, 246), 0.25), transparent);
+  animation: mobileShimmerSlide 4s ease-in-out infinite;
+  transform: translateZ(0);
+}
+
+@keyframes mobileShimmerSlide {
+  0% { transform: translateX(-100%) translateZ(0); }
+  100% { transform: translateX(200%) translateZ(0); }
+}
+
+/* Lightweight pulse ping */
+.mobile-pulse-ping {
+  animation: mobilePulsePing 2s ease-in-out infinite;
+}
+
+@keyframes mobilePulsePing {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Mobile tip text fade */
+.mobile-tip-text {
+  transition: opacity 0.2s ease-out;
+}
+
+/* Reduce mobile dropdown menu animations on scroll */
+@media (max-width: 768px) {
+  .mobile-tip-slide {
+    /* Reduce animation complexity for better performance */
+    animation-timing-function: linear;
+  }
+  
+  /* Disable shimmer during scroll for performance */
+  html.is-scrolling .mobile-shimmer-line {
+    animation-play-state: paused;
+  }
+  
+  html.is-scrolling .mobile-pulse-ping {
+    animation: none;
+  }
+}
+
+/* ============================================================================
+   MOBILE MENU BUTTON OPTIMIZATIONS
+   CSS-based hover/tap effects instead of JS animations
+   ============================================================================ */
+
+.mobile-menu-optimized {
+  contain: layout paint style;
+  transform: translateZ(0);
+}
+
+.mobile-menu-btn {
+  transition: transform 0.15s ease-out, background-color 0.15s ease-out;
+  transform: translateZ(0);
+}
+
+.mobile-menu-btn:hover {
+  transform: scale(1.03) translateZ(0);
+}
+
+.mobile-menu-btn:active {
+  transform: scale(0.98) translateZ(0);
+}
+
+/* XM User pulse indicator - CSS only */
+.xm-pulse-indicator {
+  animation: xmPulse 2s ease-in-out infinite;
+}
+
+@keyframes xmPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
 }
 
 /* GPU-accelerated animations */
@@ -559,6 +689,29 @@ body {
   
   .mobile-helper-optimized {
     animation: none !important;
+  }
+  
+  /* Disable mobile tip animations for reduced motion */
+  .mobile-tip-slide {
+    animation: none !important;
+    transform: translateX(0) !important;
+    opacity: 1 !important;
+  }
+  
+  .mobile-shimmer-line {
+    animation: none !important;
+  }
+  
+  .mobile-pulse-ping {
+    animation: none !important;
+  }
+  
+  .xm-pulse-indicator {
+    animation: none !important;
+  }
+  
+  .mobile-menu-btn {
+    transition: none !important;
   }
 }
 

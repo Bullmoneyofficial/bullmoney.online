@@ -163,19 +163,18 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
       <AnimatePresence>
         <motion.div
           ref={ref}
-          initial={{ opacity: 0, y: -15, scale: 0.92 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -15, scale: 0.92 }}
-          transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
-          className="lg:hidden fixed top-28 sm:top-32 left-3 right-3 rounded-2xl bg-black/98 p-5 sm:p-6 menu-glass overflow-hidden"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className="lg:hidden fixed top-28 sm:top-32 left-3 right-3 rounded-2xl bg-black/98 p-5 sm:p-6 menu-glass overflow-hidden mobile-menu-optimized\"
           data-theme-aware
           data-navbar
           style={{
             touchAction: 'auto',
             pointerEvents: 'auto',
             filter: themeFilter,
-            transition: 'filter 0.5s ease-in-out, border-color 0.4s ease-out, box-shadow 0.4s ease-out',
-            transitionDelay: '0.35s', // Navbar transitions last (bottom-to-top)
+            transition: 'filter 0.3s ease-out, border-color 0.3s ease-out, box-shadow 0.3s ease-out',
             border: `2px solid rgba(var(--accent-rgb, ${isXMUser ? '239, 68, 68' : '59, 130, 246'}), 0.5)`,
             boxShadow: `0 0 50px rgba(var(--accent-rgb, ${isXMUser ? '239, 68, 68' : '59, 130, 246'}), 0.4), inset 0 0 30px rgba(var(--accent-rgb, ${isXMUser ? '239, 68, 68' : '59, 130, 246'}), 0.08)`,
             position: 'fixed',
@@ -250,10 +249,8 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                 <IconUsersGroup className="h-5 w-5" stroke={1.5} style={{ color: isXMUser ? '#f87171' : 'var(--accent-color, #60a5fa)' }} />
                 Affiliates
                 {isXMUser && (
-                  <motion.span
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="inline-flex h-2.5 w-2.5 rounded-full bg-red-500"
+                  <span
+                    className="inline-flex h-2.5 w-2.5 rounded-full bg-red-500 xm-pulse-indicator"
                   />
                 )}
               </motion.button>

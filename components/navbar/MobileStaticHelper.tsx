@@ -1,28 +1,67 @@
 import React, { useEffect, useState, useRef, useMemo, memo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { MOBILE_HELPER_TIPS } from './navbar.utils';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
 import { useComponentLifecycle } from '@/lib/UnifiedPerformanceSystem';
-import { useComponentTracking } from '@/lib/CrashTracker';
+import './MobileStaticHelper.css';
 
 export const MobileStaticHelper = memo(() => {
   const { activeTheme } = useGlobalTheme();
   const { tipsMuted } = useAudioSettings();
   
-  // Use unified performance system for lifecycle & shimmer optimization
+  // Use unified performance system for shimmer optimization
   const perf = useComponentLifecycle('staticTip', 3);
   const shimmerEnabled = perf.shimmerEnabled;
-  const shimmerSettings = perf.shimmerSettings;
   
   const [tipIndex, setTipIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const [isScrollMinimized, setIsScrollMinimized] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
+  const [topPosition, setTopPosition] = useState(192); // Default ~12rem in px
   const soundPlayedRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const unpinTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Space-aware positioning - detect UltimateHub pill and position below it
+  useEffect(() => {
+    let positionTimeout: NodeJS.Timeout | null = null;
+    
+    const calculatePosition = () => {
+      // Find the UltimateHub pill element
+      const ultimateHubPill = document.querySelector('.ultimate-hub-scroll-effect');
+      
+      if (ultimateHubPill) {
+        const rect = ultimateHubPill.getBoundingClientRect();
+        // Position 32px below the UltimateHub pill (extra spacing)
+        const newTop = rect.bottom + 32;
+        // Only update if position changed significantly (prevents micro-flickering)
+        setTopPosition(prev => Math.abs(prev - newTop) > 2 ? newTop : prev);
+      } else {
+        // Fallback: position at 15% + estimated pill height + gap
+        const viewportHeight = window.innerHeight;
+        const fallbackTop = (viewportHeight * 0.15) + 80 + 32; // 15% + pill height + gap
+        setTopPosition(fallbackTop);
+      }
+    };
+    
+    // Initial calculation with slight delay to ensure DOM is ready
+    const initialTimeout = setTimeout(calculatePosition, 100);
+    
+    // Debounced recalculation on resize only (not scroll - too frequent)
+    const handleResize = () => {
+      if (positionTimeout) clearTimeout(positionTimeout);
+      positionTimeout = setTimeout(calculatePosition, 150);
+    };
+    
+    window.addEventListener('resize', handleResize, { passive: true });
+    
+    return () => {
+      clearTimeout(initialTimeout);
+      if (positionTimeout) clearTimeout(positionTimeout);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
   
   // Handle interaction to pin the helper, then unpin after random delay
   const handleInteraction = useCallback(() => {
@@ -49,7 +88,7 @@ export const MobileStaticHelper = memo(() => {
     };
   }, []);
   
-  // Scroll detection - sync with FPS button scroll behavior
+  // Scroll detection - sync with navbar scroll behavior
   useEffect(() => {
     let lastScrollY = window.scrollY;
     
@@ -57,7 +96,7 @@ export const MobileStaticHelper = memo(() => {
       const currentScrollY = window.scrollY;
       const scrollDelta = Math.abs(currentScrollY - lastScrollY);
       
-      // Only trigger minimization on significant scroll (matches FPS button behavior)
+      // Only trigger minimization on significant scroll
       if (scrollDelta > 10) {
         setIsScrollMinimized(true);
         lastScrollY = currentScrollY;
@@ -91,9 +130,9 @@ export const MobileStaticHelper = memo(() => {
   }, []);
   
   // Get theme filter for consistency with navbar
-  // Use mobileFilter for both mobile and desktop to ensure consistent theming
   const themeFilter = useMemo(() => activeTheme?.mobileFilter || 'none', [activeTheme?.mobileFilter]);
   
+  // Rotate tips with sound
   useEffect(() => {
     if (tipsMuted) return;
 
@@ -105,7 +144,7 @@ export const MobileStaticHelper = memo(() => {
       timeoutId = setTimeout(() => {
         setTipIndex((prev) => (prev + 1) % MOBILE_HELPER_TIPS.length);
         setIsVisible(true);
-        // Play sound only after first render and prevent double play
+        // Play sound only after first render
         if (soundPlayedRef.current) {
           if (!tipsMuted) SoundEffects.tipChange();
         } else {
@@ -123,118 +162,41 @@ export const MobileStaticHelper = memo(() => {
   if (tipsMuted) return null;
   
   return (
-    <motion.div
-      className="fixed z-30 pointer-events-none lg:hidden mobile-helper-optimized"
-      animate={{
-        top: isScrollMinimized ? 'calc(5.5rem + env(safe-area-inset-top, 0px))' : 'calc(9rem + env(safe-area-inset-top, 0px))',
-      }}
-      transition={{ type: 'spring', damping: 25, stiffness: 450, mass: 0.6 }}
+    <div
+      className={`mobile-static-tip lg:hidden ${isScrollMinimized ? 'mobile-tip-scrolling' : ''}`}
       style={{ 
-        right: 0,
-        paddingRight: 'calc(env(safe-area-inset-right, 0px))',
         filter: themeFilter,
-        transition: 'filter 0.5s ease-in-out'
+        top: `${topPosition}px`,
       }}
     >
-      <motion.div
-        className="relative pointer-events-auto cursor-pointer"
-        onHoverStart={handleInteraction}
-        onTap={handleInteraction}
+      <div
+        className={`mobile-static-tip-container ${isPinned ? 'mobile-tip-pinned' : 'mobile-tip-animate'} ${isVisible ? '' : 'mobile-tip-hidden'}`}
+        onMouseEnter={handleInteraction}
+        onClick={handleInteraction}
+        data-theme-aware
       >
-        <motion.div 
-          initial={{ x: 60, opacity: 0 }}
-          animate={
-            isPinned 
-              ? { x: 0, scale: 1, opacity: isVisible ? 1 : 0 }
-              : {
-                  x: [60, 0, 0, 60],
-                  opacity: isVisible ? [0, 1, 1, 0] : 0,
-                  scale: [0.95, 1, 1, 0.95],
-                }
-          }
-          whileHover={{ x: -8, scale: 1.02, opacity: 1 }}
-          transition={
-            isPinned 
-              ? { duration: 0.2 }
-              : { 
-                  duration: 2.5,
-                  repeat: Infinity, 
-                  ease: "easeInOut",
-                  repeatDelay: 0.5,
-                  times: [0, 0.2, 0.8, 1]
-                }
-          }
-          className="relative w-fit px-2.5 py-1.5 rounded-l-2xl gpu-accelerated overflow-hidden static-tip-shimmer"
-          data-theme-aware
-          style={{
-            background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.1) 100%)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            borderTop: '2px solid #3b82f6',
-            borderLeft: '2px solid #3b82f6',
-            borderBottom: '2px solid #3b82f6',
-            boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6',
-            transition: 'background 0.4s ease-out, border-color 0.4s ease-out, box-shadow 0.4s ease-out',
-          }}
-          onClick={handleInteraction}
-        >
-        {/* Unified Shimmer - Left to Right using theme-aware colors */}
+        {/* Shimmer effect */}
         {shimmerEnabled && (
-          <div className="absolute inset-0 overflow-hidden rounded-l-2xl pointer-events-none">
-            <div 
-              className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%]"
-              style={{
-                background: 'linear-gradient(to right, transparent, rgba(var(--accent-rgb, 59, 130, 246), 0.3), transparent)',
-                animationDuration: shimmerSettings.speed === 'slow' ? '5s' : '3s',
-              }}
-            />
-          </div>
+          <div className="mobile-static-tip-shimmer" />
         )}
         
-        <motion.div 
-          className="flex items-center gap-1.5 justify-end relative z-10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1, duration: 0.2 }}
-        >
-          {/* Pulse indicator - Theme-aware */}
-          <motion.div 
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.05, duration: 0.25 }}
-            className="relative flex h-1.5 w-1.5 shrink-0"
-          >
-            <span 
-              className="shimmer-ping absolute inline-flex h-full w-full rounded-full opacity-75" 
-              style={{ backgroundColor: 'var(--accent-color, #3b82f6)' }}
-            />
-            <span 
-              className="relative inline-flex rounded-full h-1.5 w-1.5" 
-              style={{ backgroundColor: 'var(--accent-color, #3b82f6)' }}
-            />
-          </motion.div>
+        <div className="mobile-static-tip-content">
+          {/* Pulse indicator */}
+          <div className="mobile-static-tip-pulse">
+            <span className="mobile-static-tip-pulse-ring" />
+            <span className="mobile-static-tip-pulse-dot" />
+          </div>
           
-          {/* Rotating tip text - Theme-aware */}
-          <AnimatePresence mode="wait">
-            <motion.span 
-              key={tipIndex}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ 
-                duration: 0.25,
-                ease: [0.34, 1.56, 0.64, 1]
-              }}
-              className="text-[9px] tracking-wide font-medium text-right leading-tight whitespace-nowrap"
-              style={{ color: 'var(--accent-color, #93c5fd)' }}
-            >
-              {MOBILE_HELPER_TIPS[tipIndex]}
-            </motion.span>
-          </AnimatePresence>
-        </motion.div>
-        </motion.div>
-      </motion.div>
-    </motion.div>
+          {/* Tip text - neon glow */}
+          <span 
+            key={tipIndex}
+            className={`mobile-static-tip-text ${isVisible ? '' : 'tip-fade-out'}`}
+          >
+            {MOBILE_HELPER_TIPS[tipIndex]}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 });
 

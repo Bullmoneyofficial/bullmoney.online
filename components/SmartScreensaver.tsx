@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
+import React, { useState, useEffect, useCallback, useRef, createContext, useContext, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FPSCounter } from './PerformanceProvider';
+import { useBrowserDetection } from '@/lib/browserDetection';
 
 // ============================================================================
 // SMART SCREENSAVER CONTEXT
@@ -43,6 +44,10 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
   const [isScreensaverActive, setIsScreensaverActive] = useState(false);
   const [isScreensaverPermanent, setIsScreensaverPermanent] = useState(false);
   const [screensaverFadingOut, setScreensaverFadingOut] = useState(false);
+  
+  // Get browser detection for reduce animations preference
+  const browserInfo = useBrowserDetection();
+  const shouldReduceAnimations = browserInfo.shouldReduceAnimations;
   
   const idleCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const screensaverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -435,18 +440,20 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
       window.addEventListener(event, updateActivity, { passive: true });
     });
     
-    // Check idle status every 5 seconds
+    // Check idle status every 5 seconds (1 second in dev for faster testing)
+    const checkInterval = process.env.NODE_ENV === 'development' ? 1000 : 5000;
     idleCheckIntervalRef.current = setInterval(() => {
       const now = Date.now();
       const idleTime = now - lastActivityRef.current;
-      const IDLE_THRESHOLD = 300000; // 5 minutes (300 seconds) - desktop users need longer time
+      // 10 seconds in dev, 5 minutes in production
+      const IDLE_THRESHOLD = process.env.NODE_ENV === 'development' ? 10000 : 300000;
       
       if (idleTime >= IDLE_THRESHOLD && !isScreensaverActive) {
         console.log('[BULLMONEY] User idle detected - triggering cleanup and screensaver');
         performIdleCleanup();
         
         // Only show screensaver after the actual idle threshold is met
-        console.log('[BULLMONEY] 🖥️ Showing screensaver - user idle for 5+ minutes');
+        console.log(`[BULLMONEY] 🖥️ Showing screensaver - user idle for ${process.env.NODE_ENV === 'development' ? '10 seconds (dev)' : '5+ minutes'}`);
         setIsScreensaverActive(true);
         setIsScreensaverPermanent(false);
         setScreensaverFadingOut(false);
@@ -457,7 +464,7 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
           console.log('[BULLMONEY] 🖥️ Screensaver mode activated - battery saver on');
         }, 10000);
       }
-    }, 5000);
+    }, checkInterval);
     
     // Initial check after mount - only run cleanup, not screensaver
     // Screensaver will only activate through the interval check after real idle time
@@ -516,13 +523,13 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
             initial={{ opacity: 0 }}
             animate={{ 
               opacity: screensaverFadingOut 
-                ? [1, 0.6, 0.3, 0] 
-                : [0, 0.4, 0.7, 1]
+                ? (shouldReduceAnimations ? 0 : [1, 0.6, 0.3, 0])
+                : (shouldReduceAnimations ? 1 : [0, 0.4, 0.7, 1])
             }}
             exit={{ opacity: 0 }}
             transition={{ 
-              duration: screensaverFadingOut ? 0.5 : 0.8,
-              ease: [0.4, 0, 0.2, 1],
+              duration: shouldReduceAnimations ? 0.1 : (screensaverFadingOut ? 0.5 : 0.8),
+              ease: shouldReduceAnimations ? 'linear' : [0.4, 0, 0.2, 1],
             }}
             className="fixed inset-0 flex items-center justify-center cursor-pointer bullmoney-screensaver-active"
             onClick={dismissScreensaver}
@@ -533,22 +540,34 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
               isolation: 'isolate',
             }}
           >
-            {/* Subtle ambient glow */}
-            <motion.div 
-              className="absolute inset-0"
-              animate={{
-                background: [
-                  'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.08) 0%, transparent 60%)',
-                  'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.12) 0%, transparent 55%)',
-                  'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.08) 0%, transparent 60%)',
-                ]
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-            />
+            {/* Subtle ambient glow - disabled when reduce animations is on */}
+            {!shouldReduceAnimations && (
+              <motion.div 
+                className="absolute inset-0"
+                animate={{
+                  background: [
+                    'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.08) 0%, transparent 60%)',
+                    'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.12) 0%, transparent 55%)',
+                    'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.08) 0%, transparent 60%)',
+                  ]
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              />
+            )}
+            
+            {/* Static ambient glow for reduced motion */}
+            {shouldReduceAnimations && (
+              <div 
+                className="absolute inset-0"
+                style={{
+                  background: 'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.1) 0%, transparent 60%)',
+                }}
+              />
+            )}
             
             {/* Gentle scan lines */}
             <div 
@@ -560,15 +579,18 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
             
             {/* Main Content */}
             <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 30 }}
-              animate={{ 
-                scale: screensaverFadingOut ? [1, 0.95] : [0.9, 1.02, 1],
-                opacity: screensaverFadingOut ? [1, 0] : [0, 0.7, 1],
-                y: screensaverFadingOut ? [0, 20] : [30, -5, 0],
-              }}
+              initial={shouldReduceAnimations ? { opacity: 0 } : { scale: 0.9, opacity: 0, y: 30 }}
+              animate={shouldReduceAnimations 
+                ? { opacity: screensaverFadingOut ? 0 : 1 }
+                : { 
+                    scale: screensaverFadingOut ? [1, 0.95] : [0.9, 1.02, 1],
+                    opacity: screensaverFadingOut ? [1, 0] : [0, 0.7, 1],
+                    y: screensaverFadingOut ? [0, 20] : [30, -5, 0],
+                  }
+              }
               transition={{ 
-                duration: screensaverFadingOut ? 0.4 : 0.6,
-                ease: [0.34, 1.56, 0.64, 1],
+                duration: shouldReduceAnimations ? 0.1 : (screensaverFadingOut ? 0.4 : 0.6),
+                ease: shouldReduceAnimations ? 'linear' : [0.34, 1.56, 0.64, 1],
               }}
               className="relative select-none flex flex-col items-center gap-3 sm:gap-5 px-4"
             >
@@ -585,43 +607,58 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                 >
                   BULLMONEY
                 </span>
-                <motion.span 
-                  className="relative text-4xl sm:text-6xl md:text-7xl font-black tracking-widest"
-                  animate={{
-                    textShadow: [
-                      '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.3)',
-                      '0 0 30px #3b82f6, 0 0 60px rgba(59, 130, 246, 0.7), 0 0 90px rgba(59, 130, 246, 0.4)',
-                      '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.3)',
-                    ],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                  }}
-                  style={{
-                    color: '#3b82f6',
-                  }}
-                >
-                  BULLMONEY
-                </motion.span>
+                {shouldReduceAnimations ? (
+                  <span 
+                    className="relative text-4xl sm:text-6xl md:text-7xl font-black tracking-widest"
+                    style={{
+                      color: '#3b82f6',
+                      textShadow: '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.3)',
+                    }}
+                  >
+                    BULLMONEY
+                  </span>
+                ) : (
+                  <motion.span 
+                    className="relative text-4xl sm:text-6xl md:text-7xl font-black tracking-widest"
+                    animate={{
+                      textShadow: [
+                        '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.3)',
+                        '0 0 30px #3b82f6, 0 0 60px rgba(59, 130, 246, 0.7), 0 0 90px rgba(59, 130, 246, 0.4)',
+                        '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.3)',
+                      ],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }}
+                    style={{
+                      color: '#3b82f6',
+                    }}
+                  >
+                    BULLMONEY
+                  </motion.span>
+                )}
               </div>
               
               {/* Boost message */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: shouldReduceAnimations ? 0 : 20 }}
                 animate={{ 
                   opacity: screensaverFadingOut ? 0 : 1,
-                  y: screensaverFadingOut ? 10 : 0,
+                  y: screensaverFadingOut ? (shouldReduceAnimations ? 0 : 10) : 0,
                 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
+                transition={{ duration: shouldReduceAnimations ? 0.1 : 0.5, delay: shouldReduceAnimations ? 0 : 0.2 }}
                 className="flex flex-col items-center gap-2"
               >
                 {/* Checkmark icon */}
                 <motion.div
-                  initial={{ scale: 0 }}
+                  initial={{ scale: shouldReduceAnimations ? 1 : 0 }}
                   animate={{ scale: screensaverFadingOut ? 0 : 1 }}
-                  transition={{ duration: 0.4, delay: 0.3, type: 'spring', stiffness: 200 }}
+                  transition={shouldReduceAnimations 
+                    ? { duration: 0.1 } 
+                    : { duration: 0.4, delay: 0.3, type: 'spring', stiffness: 200 }
+                  }
                   className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-2"
                   style={{
                     background: 'rgba(59, 130, 246, 0.15)',
@@ -636,14 +673,22 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                     stroke="currentColor" 
                     strokeWidth={3}
                   >
-                    <motion.path
-                      initial={{ pathLength: 0 }}
-                      animate={{ pathLength: screensaverFadingOut ? 0 : 1 }}
-                      transition={{ duration: 0.5, delay: 0.4 }}
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      d="M5 13l4 4L19 7" 
-                    />
+                    {shouldReduceAnimations ? (
+                      <path
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        d="M5 13l4 4L19 7" 
+                      />
+                    ) : (
+                      <motion.path
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: screensaverFadingOut ? 0 : 1 }}
+                        transition={{ duration: 0.5, delay: 0.4 }}
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        d="M5 13l4 4L19 7" 
+                      />
+                    )}
                   </svg>
                 </motion.div>
                 
@@ -658,10 +703,10 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                 </span>
                 
                 <motion.span
-                  animate={{
+                  animate={shouldReduceAnimations ? {} : {
                     opacity: [0.5, 0.8, 0.5],
                   }}
-                  transition={{
+                  transition={shouldReduceAnimations ? {} : {
                     duration: 2,
                     repeat: Infinity,
                     ease: 'easeInOut',
@@ -680,14 +725,14 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
+                  transition={{ delay: shouldReduceAnimations ? 0 : 0.5 }}
                   className="absolute bottom-[-80px] flex items-center gap-2"
                 >
                   <motion.div
-                    animate={{
+                    animate={shouldReduceAnimations ? {} : {
                       opacity: [0.4, 0.7, 0.4],
                     }}
-                    transition={{
+                    transition={shouldReduceAnimations ? {} : {
                       duration: 2,
                       repeat: Infinity,
                       ease: 'easeInOut',
@@ -696,6 +741,7 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                     style={{
                       background: 'rgba(59, 130, 246, 0.1)',
                       border: '1px solid rgba(59, 130, 246, 0.2)',
+                      opacity: shouldReduceAnimations ? 0.6 : undefined,
                     }}
                   >
                     <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
