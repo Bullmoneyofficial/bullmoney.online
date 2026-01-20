@@ -242,11 +242,28 @@ export function usePerformanceInit() {
       startFPSMonitoring();
     };
 
-    initAsync();
+    let idleHandle: number | null = null;
+    let timeoutHandle: number | null = null;
+
+    if ('requestIdleCallback' in window) {
+      idleHandle = (window as any).requestIdleCallback(() => {
+        initAsync();
+      }, { timeout: 2000 });
+    } else {
+      timeoutHandle = window.setTimeout(() => {
+        initAsync();
+      }, 0);
+    }
 
     // Cleanup
     return () => {
       motionMediaQuery.removeEventListener('change', handleMotionChange);
+      if (idleHandle !== null && 'cancelIdleCallback' in window) {
+        (window as any).cancelIdleCallback(idleHandle);
+      }
+      if (timeoutHandle !== null) {
+        clearTimeout(timeoutHandle);
+      }
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
       }

@@ -18,9 +18,10 @@ import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
-// Cache results for 10 seconds to prevent abuse
-const cache = new Map<string, { result: any; timestamp: number }>();
+// Cache results to prevent abuse
+const cache = new Map<string, { result: any; timestamp: number; ttl: number }>();
 const CACHE_TTL = 10000; // 10 seconds
+const ERROR_CACHE_TTL = 60000; // 60 seconds for unavailable CLI
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
     // Check cache
     const cacheKey = `${quick}-${serverId || 'auto'}`;
     const cached = cache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    if (cached && Date.now() - cached.timestamp < cached.ttl) {
       return NextResponse.json(cached.result);
     }
 
@@ -83,11 +84,11 @@ export async function GET(request: NextRequest) {
     };
 
     // Cache the result
-    cache.set(cacheKey, { result: transformed, timestamp: Date.now() });
+    cache.set(cacheKey, { result: transformed, timestamp: Date.now(), ttl: CACHE_TTL });
 
     // Clean up old cache entries
     for (const [key, value] of cache.entries()) {
-      if (Date.now() - value.timestamp > CACHE_TTL) {
+      if (Date.now() - value.timestamp > value.ttl) {
         cache.delete(key);
       }
     }
@@ -105,18 +106,25 @@ export async function GET(request: NextRequest) {
     
     // Check if speedtest CLI is not installed
     if (error.message.includes('not found') || error.message.includes('command not found')) {
-      return NextResponse.json(
-        {
-          error: 'Speedtest CLI not installed',
-          message: 'Install from: https://www.speedtest.net/apps/cli',
-          instructions: {
-            macOS: 'brew install speedtest-cli',
-            linux: 'apt-get install speedtest-cli or download from https://install.speedtest.net',
-            windows: 'Download from https://install.speedtest.net',
-          },
+      const unavailable = {
+        available: false,
+        error: 'Speedtest CLI not installed',
+        message: 'Server-side speedtest is unavailable in this environment.',
+        instructions: {
+          macOS: 'brew install speedtest-cli',
+          linux: 'apt-get install speedtest-cli or download from https://install.speedtest.net',
+          windows: 'Download from https://install.speedtest.net',
         },
-        { status: 503 }
-      );
+        timestamp: Date.now(),
+      };
+
+      cache.set(`${request.nextUrl.searchParams.get('quick') === 'true'}-${request.nextUrl.searchParams.get('server') || 'auto'}`, {
+        result: unavailable,
+        timestamp: Date.now(),
+        ttl: ERROR_CACHE_TTL,
+      });
+
+      return NextResponse.json(unavailable);
     }
 
     // Timeout error

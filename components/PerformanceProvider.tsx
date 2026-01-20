@@ -293,13 +293,21 @@ export function PerformanceProvider({
   // Set up performance observers
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const debugEnabled = process.env.NODE_ENV !== 'production' || localStorage.getItem('bullmoney_perf_debug') === 'true';
+    if (!debugEnabled) return;
+    let lastLogTime = 0;
 
     // Report long tasks that exceed frame budget
     if ('PerformanceObserver' in window) {
       try {
         const longTaskObserver = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            if (entry.duration > 50) { // 50ms = potential frame drop
+            if (entry.duration > 200) { // Focus on truly blocking tasks
+              const now = performance.now();
+              if (now - lastLogTime < 5000) {
+                continue;
+              }
+              lastLogTime = now;
               console.warn('[Performance] Long task detected:', {
                 duration: `${entry.duration.toFixed(2)}ms`,
                 startTime: entry.startTime,
@@ -789,6 +797,7 @@ export function FPSCounter({
   const [latency, setLatency] = React.useState<number>(0);
   const [isTesting, setIsTesting] = React.useState(false);
   const [testPhase, setTestPhase] = React.useState<'idle' | 'ping' | 'download' | 'upload'>('idle');
+  const speedtestDisabledRef = React.useRef(false);
 
   // FPS measurement
   useEffect(() => {
@@ -824,6 +833,7 @@ export function FPSCounter({
     let cancelled = false;
 
     const runSpeedTest = async () => {
+      if (speedtestDisabledRef.current) return;
       setIsTesting(true);
       setTestPhase('ping');
       setDownloadSpeed(0);
@@ -836,6 +846,14 @@ export function FPSCounter({
         
         if (response.ok) {
           const result = await response.json();
+          if (result?.available === false) {
+            speedtestDisabledRef.current = true;
+            if (!cancelled) {
+              setTestPhase('idle');
+              setIsTesting(false);
+            }
+            return;
+          }
           if (!cancelled && result && !result.error) {
             setLatency(Math.round(result.latency ?? 0));
             setDownloadSpeed(result.downMbps ?? 0);
@@ -852,9 +870,6 @@ export function FPSCounter({
             return;
           } else if (result.error) {
             console.error('[PerformanceProvider] Ookla CLI error:', result.message);
-            console.error('[PerformanceProvider] Make sure Ookla speedtest is installed:');
-            console.error('[PerformanceProvider]   macOS: brew install speedtest-cli');
-            console.error('[PerformanceProvider]   Linux: apt-get install speedtest-cli');
             if (!cancelled) {
               setTestPhase('idle');
               setIsTesting(false);

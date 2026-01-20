@@ -13,6 +13,7 @@ import "../styles/smart-mount.css";
 import "../styles/big-device-scroll.css";
 import { cn } from "@/lib/utils";
 import { Suspense } from "react";
+import { APP_VERSION, PRESERVED_KEYS } from "@/lib/appVersion";
 
 // ✅ CUSTOM EVENT TRACKING - Track user interactions across the site
 import { trackEvent } from "@/lib/analytics";
@@ -492,7 +493,7 @@ export default function RootLayout({
             __html: `
 (function() {
   // App version for cache invalidation - MUST MATCH lib/appVersion.ts
-  var APP_VERSION = '3.0.0';
+  var APP_VERSION = '${APP_VERSION}';
   var storedVersion = localStorage.getItem('bullmoney_app_version');
   
   // Force cache clear on version mismatch
@@ -511,8 +512,8 @@ export default function RootLayout({
       });
     }
     
-    // Clear storage except the version key
-    var keysToKeep = ['bullmoney_app_version'];
+    // Clear storage except preserved keys
+    var keysToKeep = ['bullmoney_app_version'].concat(${JSON.stringify(PRESERVED_KEYS)});
     for (var i = localStorage.length - 1; i >= 0; i--) {
       var key = localStorage.key(i);
       if (key && key.startsWith('bullmoney') && !keysToKeep.includes(key)) {
@@ -530,6 +531,11 @@ export default function RootLayout({
     }
   }
   
+  // Initialize version on first load
+  if (!storedVersion) {
+    try { localStorage.setItem('bullmoney_app_version', APP_VERSION); } catch (e) {}
+  }
+
   // Track failed chunk loads
   var failedLoads = 0;
   var hasReloaded = sessionStorage.getItem('_bm_reloaded');

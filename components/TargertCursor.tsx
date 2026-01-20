@@ -22,9 +22,9 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
   spinDuration = 2,
   hideDefaultCursor = true,
   idleTimeout = 3,
-  // 🎯 GOOGLE / CDN AIM SOUNDS
-  clickSoundUrl = 'https://assets.codepen.io/127738/click_mech.mp3',
-  lockSoundUrl = 'https://assets.codepen.io/127738/ui_hover.mp3', // High pitch "Lock-on" blip
+  // 🎯 Audio disabled - CodePen assets no longer available
+  clickSoundUrl = '',
+  lockSoundUrl = '',
   enableOnMobile = true
 }) => {
   const cursorRef = useRef<HTMLDivElement>(null);
@@ -316,9 +316,9 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
         {/* Touch indicator - larger circle for mobile touch feedback */}
         <div className="target-cursor-touch-indicator" />
       </div>
-      {/* Remote Audio Files - Zero setup required */}
-      <audio ref={clickAudioRef} src={clickSoundUrl} crossOrigin="anonymous" preload="auto" />
-      <audio ref={lockAudioRef} src={lockSoundUrl} crossOrigin="anonymous" preload="auto" />
+      {/* Remote Audio Files - Only render if URLs provided */}
+      {clickSoundUrl && <audio ref={clickAudioRef} src={clickSoundUrl} crossOrigin="anonymous" preload="auto" />}
+      {lockSoundUrl && <audio ref={lockAudioRef} src={lockSoundUrl} crossOrigin="anonymous" preload="auto" />}
     </>
   );
 };
