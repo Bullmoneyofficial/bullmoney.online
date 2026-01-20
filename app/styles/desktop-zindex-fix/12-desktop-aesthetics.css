@@ -286,3 +286,285 @@
     }
   }
 }
+
+/* ============================================
+   ULTIMATE HUB SCROLL EFFECT - HIGHEST Z-INDEX
+   Premium scroll-reactive animations for the unified hub
+   ============================================ */
+
+@media (min-width: 1024px) {
+  /* Base scroll effect class */
+  .ultimate-hub-scroll-effect {
+    z-index: 999999999 !important;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+    backface-visibility: hidden;
+    will-change: transform, box-shadow, filter;
+  }
+
+  /* Scroll-triggered glow pulse animation */
+  @keyframes hub-scroll-pulse {
+    0%, 100% {
+      box-shadow: 
+        0 0 8px #3b82f6,
+        0 0 16px #3b82f6,
+        0 0 24px rgba(59, 130, 246, 0.4),
+        inset 0 0 8px rgba(59, 130, 246, 0.2);
+      filter: brightness(1);
+    }
+    50% {
+      box-shadow: 
+        0 0 16px #3b82f6,
+        0 0 32px #3b82f6,
+        0 0 48px rgba(59, 130, 246, 0.6),
+        0 0 64px rgba(59, 130, 246, 0.4),
+        inset 0 0 16px rgba(59, 130, 246, 0.4);
+      filter: brightness(1.1);
+    }
+  }
+
+  /* Scroll-triggered 3D tilt animation */
+  @keyframes hub-scroll-tilt {
+    0%, 100% {
+      transform: perspective(1000px) rotateY(0deg) rotateX(0deg);
+    }
+    25% {
+      transform: perspective(1000px) rotateY(-8deg) rotateX(2deg);
+    }
+    75% {
+      transform: perspective(1000px) rotateY(8deg) rotateX(-2deg);
+    }
+  }
+
+  /* Scroll-triggered border sweep animation */
+  @keyframes hub-border-sweep {
+    0% {
+      border-image: linear-gradient(0deg, #3b82f6, #3b82f6, #3b82f6) 1;
+    }
+    25% {
+      border-image: linear-gradient(90deg, #3b82f6, #3b82f6, #3b82f6) 1;
+    }
+    50% {
+      border-image: linear-gradient(180deg, #3b82f6, #3b82f6, #3b82f6) 1;
+    }
+    75% {
+      border-image: linear-gradient(270deg, #3b82f6, #3b82f6, #3b82f6) 1;
+    }
+    100% {
+      border-image: linear-gradient(360deg, #3b82f6, #3b82f6, #3b82f6) 1;
+    }
+  }
+
+  /* Neon trail effect on scroll */
+  @keyframes hub-neon-trail {
+    0% {
+      text-shadow: 
+        0 0 4px #3b82f6,
+        0 0 8px #3b82f6;
+    }
+    50% {
+      text-shadow: 
+        0 0 8px #3b82f6,
+        0 0 16px #3b82f6,
+        0 0 24px #3b82f6,
+        -2px 0 8px #3b82f6,
+        2px 0 8px #3b82f6;
+    }
+    100% {
+      text-shadow: 
+        0 0 4px #3b82f6,
+        0 0 8px #3b82f6;
+    }
+  }
+
+  /* Active scroll state - apply animations */
+  .ultimate-hub-scroll-effect[data-scrolling="true"],
+  .ultimate-hub-scroll-effect:where(:hover) {
+    animation: hub-scroll-pulse 0.8s ease-in-out;
+  }
+
+  /* Hover state enhancements */
+  .ultimate-hub-scroll-effect:hover {
+    transform: perspective(1000px) translateX(8px) rotateY(5deg) scale(1.02) !important;
+    box-shadow: 
+      0 0 20px #3b82f6,
+      0 0 40px #3b82f6,
+      0 0 60px rgba(59, 130, 246, 0.5),
+      0 0 80px rgba(59, 130, 246, 0.4),
+      inset 0 0 20px rgba(59, 130, 246, 0.3) !important;
+    filter: brightness(1.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  /* Scroll + hover combined mega effect */
+  .ultimate-hub-scroll-effect:hover::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    background: linear-gradient(
+      45deg,
+      transparent 30%,
+      rgba(59, 130, 246, 0.3) 50%,
+      transparent 70%
+    );
+    background-size: 200% 200%;
+    animation: hub-shine-sweep 1.5s ease-in-out infinite;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* Shine sweep animation */
+  @keyframes hub-shine-sweep {
+    0% {
+      background-position: -100% -100%;
+    }
+    100% {
+      background-position: 200% 200%;
+    }
+  }
+
+  /* Electric border effect on hover */
+  .ultimate-hub-scroll-effect:hover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(
+      var(--hub-border-angle, 0deg),
+      #3b82f6,
+      #60a5fa,
+      #93c5fd,
+      #60a5fa,
+      #3b82f6
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: hub-border-rotate 2s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes hub-border-rotate {
+    to {
+      --hub-border-angle: 360deg;
+    }
+  }
+
+  /* Register the custom property for animation */
+  @property --hub-border-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+}
+
+/* Global neon glow keyframes (EXTREME INTENSITY - PURE BLUE) */
+@keyframes neon-glow {
+  0%, 100% {
+    box-shadow: 
+      0 0 4px #3b82f6,
+      0 0 8px #3b82f6,
+      0 0 16px rgba(59, 130, 246, 0.5),
+      inset 0 0 4px rgba(59, 130, 246, 0.2);
+    filter: brightness(1);
+  }
+  25% {
+    box-shadow: 
+      0 0 8px #3b82f6,
+      0 0 16px #3b82f6,
+      0 0 32px rgba(59, 130, 246, 0.6),
+      0 0 48px rgba(59, 130, 246, 0.3),
+      inset 0 0 8px rgba(59, 130, 246, 0.3);
+    filter: brightness(1.05);
+  }
+  50% {
+    box-shadow: 
+      0 0 12px #3b82f6,
+      0 0 24px #3b82f6,
+      0 0 48px rgba(59, 130, 246, 0.7),
+      0 0 64px rgba(59, 130, 246, 0.5),
+      0 0 80px rgba(59, 130, 246, 0.3),
+      inset 0 0 12px rgba(59, 130, 246, 0.4);
+    filter: brightness(1.1);
+  }
+  75% {
+    box-shadow: 
+      0 0 8px #3b82f6,
+      0 0 16px #3b82f6,
+      0 0 32px rgba(59, 130, 246, 0.6),
+      0 0 48px rgba(59, 130, 246, 0.3),
+      inset 0 0 8px rgba(59, 130, 246, 0.3);
+    filter: brightness(1.05);
+  }
+}
+
+/* EXTREME neon glow for heavy scroll - PURE BLUE */
+@keyframes neon-glow-extreme {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px #3b82f6,
+      0 0 40px #3b82f6,
+      0 0 60px #3b82f6,
+      0 0 80px rgba(59, 130, 246, 0.5),
+      inset 0 0 20px rgba(59, 130, 246, 0.4);
+    filter: brightness(1.1) saturate(1.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 40px #3b82f6,
+      0 0 80px #3b82f6,
+      0 0 120px #3b82f6,
+      0 0 160px rgba(59, 130, 246, 0.6),
+      0 0 200px rgba(59, 130, 246, 0.4),
+      inset 0 0 40px rgba(59, 130, 246, 0.5);
+    filter: brightness(1.3) saturate(1.4);
+  }
+}
+
+@keyframes neon-pulse {
+  0%, 100% {
+    text-shadow: 
+      0 0 6px #3b82f6,
+      0 0 12px #3b82f6,
+      0 0 18px #3b82f6,
+      0 0 24px rgba(59, 130, 246, 0.5);
+    opacity: 1;
+  }
+  50% {
+    text-shadow: 
+      0 0 12px #3b82f6,
+      0 0 24px #3b82f6,
+      0 0 36px #3b82f6,
+      0 0 48px rgba(59, 130, 246, 0.8),
+      0 0 64px rgba(59, 130, 246, 0.6),
+      0 0 80px rgba(59, 130, 246, 0.4);
+    opacity: 0.95;
+  }
+}
+
+/* BLINDING pulse for extreme scroll - PURE BLUE */
+@keyframes neon-pulse-extreme {
+  0%, 100% {
+    text-shadow: 
+      0 0 10px #3b82f6,
+      0 0 20px #3b82f6,
+      0 0 30px #3b82f6,
+      0 0 40px rgba(59, 130, 246, 0.7);
+    opacity: 1;
+    filter: brightness(1.1);
+  }
+  50% {
+    text-shadow: 
+      0 0 20px #3b82f6,
+      0 0 40px #3b82f6,
+      0 0 60px #3b82f6,
+      0 0 80px rgba(59, 130, 246, 0.8),
+      0 0 100px rgba(59, 130, 246, 0.6),
+      0 0 120px rgba(59, 130, 246, 0.5);
+    opacity: 0.98;
+    filter: brightness(1.3);
+  }
+}
