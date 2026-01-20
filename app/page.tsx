@@ -997,11 +997,81 @@ function HomeContent() {
     const hasSession = localStorage.getItem("bullmoney_session");
     const hasCompletedPagemode = localStorage.getItem("bullmoney_pagemode_completed");
     const hasCompletedLoader = localStorage.getItem("bullmoney_loader_completed");
-    
-    console.log('[Page] Session check:', { hasSession: !!hasSession, hasCompletedPagemode, hasCompletedLoader });
-    
-    // Skip directly to content if user has completed the full flow before
-    if (hasCompletedLoader === "true") {
+
+    const now = Date.now();
+    let shouldForceLoader = false;
+    const forceReasons: string[] = [];
+
+    // ===== Refresh/session-based loader triggers =====
+    try {
+      const sessionCountKey = "bullmoney_refresh_count";
+      const refreshTimesKey = "bullmoney_refresh_times";
+      const showProbability = 0.35;
+      const rapidShownKey = "bullmoney_refresh_rapid_last";
+
+      const getRandomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+      const buildShowIndices = () => {
+        const showCount = getRandomInt(2, 4);
+        const set = new Set<number>();
+        while (set.size < showCount) {
+          set.add(getRandomInt(1, 10));
+        }
+        return Array.from(set);
+      };
+
+      // Session refresh counter
+      const sessionCount = Number(sessionStorage.getItem(sessionCountKey) || "0") + 1;
+      sessionStorage.setItem(sessionCountKey, String(sessionCount));
+
+      // Track refresh timestamps for rapid-refresh detection (2-minute window)
+      const rawTimes = sessionStorage.getItem(refreshTimesKey);
+      const parsedTimes = JSON.parse(rawTimes || "[]");
+      const times = Array.isArray(parsedTimes) ? parsedTimes : [];
+      const recentTimes = (times as number[]).filter(t => now - t <= 120000);
+      recentTimes.push(now);
+      sessionStorage.setItem(refreshTimesKey, JSON.stringify(recentTimes));
+
+      const lastRapidShown = Number(sessionStorage.getItem(rapidShownKey) || "0");
+      const rapidCooldownMs = 120000;
+      if (recentTimes.length >= 3 && now - lastRapidShown >= rapidCooldownMs) {
+        shouldForceLoader = true;
+        forceReasons.push("rapid_refresh_3_in_2min");
+        sessionStorage.setItem(rapidShownKey, String(now));
+      }
+
+      // Randomized probability: show 35% of refreshes
+      if (Math.random() < showProbability) {
+        shouldForceLoader = true;
+        forceReasons.push("random_refresh_35_percent");
+      }
+    } catch (error) {
+      console.warn('[Page] Refresh trigger check failed', error);
+    }
+
+    // ===== Daily 23:59:50 TTL trigger =====
+    try {
+      const dailyKey = "bullmoney_loader_daily_last";
+      const lastDaily = Number(localStorage.getItem(dailyKey) || "0");
+      const target = new Date(now);
+      target.setHours(23, 59, 50, 0);
+      const targetTime = target.getTime();
+
+      if (now >= targetTime && lastDaily < targetTime) {
+        shouldForceLoader = true;
+        forceReasons.push("daily_23_59_50");
+        localStorage.setItem(dailyKey, String(targetTime));
+      }
+    } catch (error) {
+      console.warn('[Page] Daily trigger check failed', error);
+    }
+
+    console.log('[Page] Session check:', { hasSession: !!hasSession, hasCompletedPagemode, hasCompletedLoader, shouldForceLoader, forceReasons });
+
+    if (shouldForceLoader) {
+      console.log('[Page] Forcing loader due to refresh policy');
+      setCurrentView('loader');
+    } else if (hasCompletedLoader === "true") {
+      // Skip directly to content if user has completed the full flow before
       console.log('[Page] Skipping to content - loader previously completed');
       setV2Unlocked(true);
       setCurrentView('content');
@@ -1015,7 +1085,7 @@ function HomeContent() {
       setCurrentView('pagemode');
     }
     setIsInitialized(true);
-     
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Mobile Check
