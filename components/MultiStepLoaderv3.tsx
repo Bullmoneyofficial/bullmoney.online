@@ -298,7 +298,7 @@ const isInAppBrowser = () => {
 const checkSensorSupport = () => {
   const hasMotion = typeof DeviceMotionEvent !== 'undefined';
   const hasOrientation = typeof DeviceOrientationEvent !== 'undefined';
-  const needsPermission = typeof (DeviceMotionEvent as any)?.requestPermission === 'function';
+  const needsPermission = hasMotion && typeof (DeviceMotionEvent as any)?.requestPermission === 'function';
   const isSecure = typeof window !== 'undefined' && (window.isSecureContext || location.protocol === 'https:');
   const inApp = isInAppBrowser();
   

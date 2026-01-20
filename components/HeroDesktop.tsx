@@ -1121,7 +1121,7 @@ const LiveTickerTape = ({ tickerData }: { tickerData: TickerItem[] }) => {
     
     let animationId: number;
     let position = 0;
-    const speed = 0.5; // pixels per frame - adjust for smoothness
+    const speed = 0.1; // pixels per frame - much slower for readability
     
     const animate = () => {
       position -= speed;
@@ -1142,10 +1142,10 @@ const LiveTickerTape = ({ tickerData }: { tickerData: TickerItem[] }) => {
   
   return (
     <div 
-      className="w-full overflow-hidden bg-black/60 rounded-lg sm:rounded-xl"
+      className="w-full overflow-hidden bg-black rounded-lg sm:rounded-xl"
       style={{ 
-        border: '1px solid rgba(59, 130, 246, 0.5)',
-        boxShadow: '0 0 10px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(59, 130, 246, 0.1)',
+        border: '2px solid rgba(59, 130, 246, 0.6)',
+        boxShadow: '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3), 0 0 30px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(59, 130, 246, 0.1)',
       }}
     >
       <div 
@@ -1740,20 +1740,8 @@ const HeroDesktop = () => {
       {currentTheme?.youtubeId && <HiddenYoutubePlayer videoId={currentTheme.youtubeId} isPlaying={!isMuted} volume={isMuted ? 0 : 15} />}
 
       <div ref={ref} className="relative min-h-[100dvh] h-[100dvh] bg-black overflow-hidden hero-section" data-allow-scroll data-content data-theme-aware data-hero>
-        <PerspectiveGrid />
+        {/* Removed all background animations for cleaner look */}
         <VignetteOverlay />
-        <NoiseTexture />
-        <SpotlightTracking mouseX={mousePosition.x} mouseY={mousePosition.y} />
-        <OrbitalParticles />
-        <AuroraBorealis />
-        <Scanlines />
-        <DepthLayers />
-        <FloatingCoins />
-        <GraphOverlay />
-        <CornerAccents />
-        <VerticalText />
-        <BlurGraduation />
-        <SceneGlitchOverlay active={isGlitching} />
 
 
 
@@ -1764,107 +1752,52 @@ const HeroDesktop = () => {
                 <div className="lg:col-span-6 relative order-1 lg:order-1 mb-2 lg:mb-0 text-center lg:text-left">
                   <VelocitySkewText>
                     <MaskedText delay={0.2}>
-                      <motion.p 
+                      <p 
                         className="font-mono text-[10px] sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase mb-1 sm:mb-4"
-                        onHoverStart={playHover}
                         style={{
                           color: '#60a5fa',
                           textShadow: `0 0 5px #60a5fa, 0 0 10px #60a5fa, 0 0 20px #3b82f6, 0 0 40px #3b82f6`,
                         }}
-                        animate={{
-                          textShadow: [
-                            `0 0 5px #60a5fa, 0 0 10px #60a5fa, 0 0 20px #3b82f6, 0 0 40px #3b82f6`,
-                            `0 0 2px #60a5fa, 0 0 5px #60a5fa, 0 0 10px #3b82f6, 0 0 20px #3b82f6`,
-                            `0 0 5px #60a5fa, 0 0 10px #60a5fa, 0 0 20px #3b82f6, 0 0 40px #3b82f6`,
-                          ],
-                          opacity: [1, 0.85, 1],
-                        }}
-                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                       >
-                        <DecryptionText text="EST. 2024 • TRADING EXCELLENCE" delay={0.5} />
-                      </motion.p>
+                        EST. 2024 • TRADING EXCELLENCE
+                      </p>
                     </MaskedText>
                     <MaskedText delay={0.4}>
                       <h1 className="relative">
-                        <motion.span 
+                        <span 
                           className="block text-[clamp(2rem,5vw,4.5rem)] font-sans font-normal tracking-tight leading-tight"
                           style={{
                             color: '#fff',
                             textShadow: `0 0 5px #fff, 0 0 10px #fff, 0 0 20px #93c5fd, 0 0 40px #60a5fa, 0 0 60px #3b82f6`,
                           }}
-                          initial={{ opacity: 0, y: 20 }} 
-                          animate={{ 
-                            opacity: 1, 
-                            y: 0,
-                            textShadow: [
-                              `0 0 5px #fff, 0 0 10px #fff, 0 0 20px #93c5fd, 0 0 40px #60a5fa, 0 0 60px #3b82f6`,
-                              `0 0 2px #fff, 0 0 5px #fff, 0 0 10px #93c5fd, 0 0 20px #60a5fa, 0 0 30px #3b82f6`,
-                              `0 0 5px #fff, 0 0 10px #fff, 0 0 20px #93c5fd, 0 0 40px #60a5fa, 0 0 60px #3b82f6`,
-                            ],
-                          }} 
-                          transition={{ 
-                            opacity: { delay: 0.6, duration: 0.8 },
-                            y: { delay: 0.6, duration: 0.8 },
-                            textShadow: { duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 1.4 }
-                          }}
                         >
                           The path to
-                        </motion.span>
-                        <motion.span 
+                        </span>
+                        <span 
                           className="block text-[clamp(2.25rem,6vw,5.5rem)] font-serif italic mt-1 sm:mt-2 leading-tight"
                           style={{ 
                             color: '#3b82f6',
                             textShadow: `0 0 5px #3b82f6, 0 0 15px #3b82f6, 0 0 30px #2563eb, 0 0 50px #1d4ed8, 0 0 70px #1e40af`,
                           }}
-                          initial={{ opacity: 0, y: 30 }} 
-                          animate={{ 
-                            opacity: 1, 
-                            y: 0,
-                            textShadow: [
-                              `0 0 5px #3b82f6, 0 0 15px #3b82f6, 0 0 30px #2563eb, 0 0 50px #1d4ed8, 0 0 70px #1e40af`,
-                              `0 0 2px #3b82f6, 0 0 8px #3b82f6, 0 0 15px #2563eb, 0 0 25px #1d4ed8, 0 0 35px #1e40af`,
-                              `0 0 5px #3b82f6, 0 0 15px #3b82f6, 0 0 30px #2563eb, 0 0 50px #1d4ed8, 0 0 70px #1e40af`,
-                            ],
-                          }} 
-                          transition={{ 
-                            opacity: { delay: 1, duration: 0.8 },
-                            y: { delay: 1, duration: 0.8 },
-                            textShadow: { duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 1.8 }
-                          }}
                         >
                           consistent profit
-                        </motion.span>
+                        </span>
                       </h1>
                     </MaskedText>
                   </VelocitySkewText>
-                  <motion.p 
+                  <p 
                     className="mt-2 sm:mt-6 text-xs sm:text-base md:text-lg max-w-md leading-relaxed hidden sm:block mx-auto lg:mx-0"
                     style={{
                       color: 'rgba(147, 197, 253, 0.8)',
                       textShadow: `0 0 5px rgba(147, 197, 253, 0.5), 0 0 10px rgba(96, 165, 250, 0.3)`,
                     }}
-                    initial={{ opacity: 0, y: 20 }} 
-                    animate={{ 
-                      opacity: 1, 
-                      y: 0,
-                      textShadow: [
-                        `0 0 5px rgba(147, 197, 253, 0.5), 0 0 10px rgba(96, 165, 250, 0.3)`,
-                        `0 0 2px rgba(147, 197, 253, 0.3), 0 0 5px rgba(96, 165, 250, 0.2)`,
-                        `0 0 5px rgba(147, 197, 253, 0.5), 0 0 10px rgba(96, 165, 250, 0.3)`,
-                      ],
-                    }} 
-                    transition={{ 
-                      opacity: { delay: 1.2 },
-                      y: { delay: 1.2 },
-                      textShadow: { duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 2 }
-                    }}
                   >
-                    Join <span className="font-semibold" style={{ color: '#fff', textShadow: '0 0 5px #fff, 0 0 10px #93c5fd' }}><SlotMachineNumber value={500} />+</span> profitable traders. Real-time Trades, expert analysis, and a community built for success.
-                  </motion.p>
+                    Join <span className="font-semibold" style={{ color: '#fff', textShadow: '0 0 5px #fff, 0 0 10px #93c5fd' }}>500+</span> profitable traders. Real-time Trades, expert analysis, and a community built for success.
+                  </p>
                 </div>
 
                 <div className="lg:col-span-6 order-2 lg:order-2 mt-12 lg:mt-0">
-                  <div className="relative w-full aspect-square sm:aspect-[4/3] lg:aspect-[4/3] max-h-[40vh] sm:max-h-[40vh] lg:max-h-[60vh] rounded-xl sm:rounded-2xl overflow-hidden bg-black border border-blue-500/30" style={{ boxShadow: '0 0 15px rgba(59, 130, 246, 0.3), 0 0 30px rgba(59, 130, 246, 0.15)' }}>
+                  <div className="relative w-full aspect-square sm:aspect-[4/3] lg:aspect-[4/3] max-h-[40vh] sm:max-h-[40vh] lg:max-h-[60vh] rounded-xl sm:rounded-2xl overflow-hidden bg-black border-2 border-blue-500/60" style={{ boxShadow: '0 0 10px rgba(59, 130, 246, 0.6), 0 0 20px rgba(59, 130, 246, 0.4), 0 0 40px rgba(59, 130, 246, 0.2), inset 0 0 20px rgba(59, 130, 246, 0.1)' }}>
                     <SplineSceneEmbed 
                       key={heroSplineScene} 
                       preferViewer={heroSplineSource.preferViewer !== false} 

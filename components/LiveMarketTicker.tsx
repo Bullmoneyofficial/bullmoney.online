@@ -178,7 +178,7 @@ export const LiveMarketTicker: React.FC = () => {
     // FIX APPLIED HERE:
     // Changed 'relative' to 'fixed bottom-0 left-0 z-50'
     // This pins it to the bottom of the viewport
-    <div className="fixed bottom-0 left-0 right-0 z-50 w-full overflow-hidden bg-gradient-to-r from-black via-gray-900 to-black border-t border-white/10 shadow-2xl backdrop-blur-sm">
+    <div className="fixed bottom-0 left-0 right-0 z-50 w-full overflow-hidden bg-black border-t-2 border-blue-500/60" style={{ boxShadow: '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3), inset 0 0 15px rgba(59, 130, 246, 0.1)' }}>
       
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
@@ -191,19 +191,18 @@ export const LiveMarketTicker: React.FC = () => {
         />
       </div>
 
-      {/* Top accent line */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-green-500/50 to-transparent" />
+      {/* Top accent line - static glow */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-blue-500/50" style={{ boxShadow: '0 0 10px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.5)' }} />
 
       {/* Ticker content */}
       <div className="relative flex items-center h-10 px-4">
-        {/* Live indicator */}
+        {/* Live indicator - static dot */}
         <div className="flex items-center gap-2 mr-4 shrink-0 hidden sm:flex">
-          <motion.div
+          <div
             className="w-2 h-2 rounded-full bg-green-500"
-            animate={{ opacity: [1, 0.3, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+            style={{ boxShadow: '0 0 5px #22c55e, 0 0 10px #22c55e' }}
           />
-          <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider">
+          <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider" style={{ textShadow: '0 0 5px #4ade80' }}>
             LIVE
           </span>
         </div>
@@ -217,7 +216,7 @@ export const LiveMarketTicker: React.FC = () => {
               x: ['0%', '-50%'], 
             }}
             transition={{
-              duration: 30, // Smooth consistent speed
+              duration: 60, // Slower for better readability
               repeat: Infinity,
               ease: 'linear',
               repeatType: 'loop',
