@@ -817,31 +817,11 @@ export function FPSCounter({
     return () => cancelAnimationFrame(rafId);
   }, [show]);
 
-  // Network speed measurement - use shared speed-test APIs for accuracy
+  // Network speed measurement - OOKLA CLI ONLY (matches speedtest.net exactly)
   useEffect(() => {
     if (!show) return;
 
     let cancelled = false;
-
-    const runFallbackSpeedTest = async () => {
-      setTestPhase('ping');
-      const ping = await measureLatency();
-      if (!cancelled) setLatency(ping);
-
-      setTestPhase('download');
-      const downResult = await measureDownloadSpeed((speed) => {
-        if (!cancelled) setDownloadSpeed(speed);
-      });
-      if (!cancelled) setDownloadSpeed(downResult.speed);
-
-      await new Promise(r => setTimeout(r, 300));
-
-      setTestPhase('upload');
-      const upResult = await measureUploadSpeed((speed) => {
-        if (!cancelled) setUploadSpeed(speed);
-      });
-      if (!cancelled) setUploadSpeed(upResult.speed);
-    };
 
     const runSpeedTest = async () => {
       setIsTesting(true);
@@ -850,76 +830,55 @@ export function FPSCounter({
       setUploadSpeed(0);
 
       try {
-          // Try server-side Ookla CLI first (EXACT speedtest.net match)
-          console.log('[PerformanceProvider] Running server-side Ookla speedtest...');
-          const response = await fetch('/api/speedtest?quick=false');
-          
-          if (response.ok) {
-            const result = await response.json();
-            if (!cancelled && result && !result.error) {
-              setLatency(Math.round(result.latency ?? 0));
-              setDownloadSpeed(result.downMbps ?? 0);
-              setUploadSpeed(result.upMbps ?? 0);
-              setTestPhase('idle');
-              setIsTesting(false);
-              console.log('[PerformanceProvider] ✅ Ookla speedtest complete:', {
-                down: result.downMbps,
-                up: result.upMbps,
-                ping: result.latency,
-                server: result.server?.name,
-              });
-              return;
-            } else if (result.error) {
-              console.warn('[PerformanceProvider] Ookla CLI not available:', result.message);
-            }
-          }
-        } catch (error) {
-          console.warn('[PerformanceProvider] Server-side speedtest failed, using fallback', error);
-        }
-
-        if (cancelled) return;
-
-        // Fallback to deviceMonitor speed test
-        try {
-          await deviceMonitor.start('light', { enableNetworkSpeedTest: false });
-        } catch (error) {
-          console.warn('[PerformanceProvider] deviceMonitor.start failed (non-blocking)', error);
-        }
-
-        try {
-          const result = await deviceMonitor.runSpeedTest({
-            quick: false,
-            downloadBytes: 25_000_000,
-            uploadBytes: 15_000_000,
-            latencySamples: 8,
-          });
-          if (!cancelled && result) {
+        // Use server-side Ookla CLI ONLY (EXACT speedtest.net match)
+        console.log('[PerformanceProvider] Running server-side Ookla speedtest (no fallback)...');
+        const response = await fetch('/api/speedtest?quick=false');
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (!cancelled && result && !result.error) {
             setLatency(Math.round(result.latency ?? 0));
             setDownloadSpeed(result.downMbps ?? 0);
             setUploadSpeed(result.upMbps ?? 0);
             setTestPhase('idle');
             setIsTesting(false);
-            console.log('[PerformanceProvider] Fallback speedtest complete');
+            console.log('[PerformanceProvider] ✅ Ookla speedtest complete:', {
+              down: result.downMbps,
+              up: result.upMbps,
+              ping: result.latency,
+              server: result.server?.name,
+              isp: result.client?.isp,
+            });
+            return;
+          } else if (result.error) {
+            console.error('[PerformanceProvider] Ookla CLI error:', result.message);
+            console.error('[PerformanceProvider] Make sure Ookla speedtest is installed:');
+            console.error('[PerformanceProvider]   macOS: brew install speedtest-cli');
+            console.error('[PerformanceProvider]   Linux: apt-get install speedtest-cli');
+            if (!cancelled) {
+              setTestPhase('idle');
+              setIsTesting(false);
+            }
             return;
           }
-        } catch (error) {
-          console.warn('[PerformanceProvider] deviceMonitor.runSpeedTest failed, using browser fallback', error);
-        }
-
-        if (cancelled) return;
-
-        // Final fallback to browser-based test
-        try {
-          await runFallbackSpeedTest();
-        } catch (error) {
-          console.warn('[PerformanceProvider] Browser fallback speed test failed', error);
-        } finally {
+        } else {
+          console.error(`[PerformanceProvider] API returned status ${response.status}`);
+          const errorData = await response.json().catch(() => ({}));
+          console.error('[PerformanceProvider] Error details:', errorData);
           if (!cancelled) {
             setTestPhase('idle');
             setIsTesting(false);
           }
+          return;
         }
-      };
+      } catch (error) {
+        console.error('[PerformanceProvider] Speed test failed:', error);
+        if (!cancelled) {
+          setTestPhase('idle');
+          setIsTesting(false);
+        }
+      }
+    };
 
     // Initial measurement after a short delay
     const initialTimeout = setTimeout(runSpeedTest, 2000);
