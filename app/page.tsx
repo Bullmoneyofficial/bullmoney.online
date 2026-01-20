@@ -814,7 +814,7 @@ function HomeContent() {
   const [isMobile, setIsMobile] = useState(false);
   // Legacy flag retained for older bundles; default keeps desktop on 3D hero.
   const desktopHeroVariant = 'spline';
-  const useDesktopVideoVariant = desktopHeroVariant === 'video';
+  const useDesktopVideoVariant = desktopHeroVariant === 'spline';
   const { shouldRender: allowMobileLazyRender } = useMobileLazyRender(240);
   const [isMuted, setIsMuted] = useState(false);
   const [activeRemoteScene, setActiveRemoteScene] = useState<RemoteSplineMeta | null>(null);
