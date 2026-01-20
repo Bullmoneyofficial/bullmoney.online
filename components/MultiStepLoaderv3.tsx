@@ -89,6 +89,59 @@ const NEON_STYLES = `
     100% { transform: translateY(-100%); opacity: 0; }
   }
 
+  @keyframes confetti-fall {
+    0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  @keyframes confetti-sway {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(20px); }
+  }
+
+  @keyframes combo-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+  }
+
+  @keyframes streak-glow {
+    0%, 100% { box-shadow: 0 0 5px #3b82f6, 0 0 10px #3b82f6; }
+    50% { box-shadow: 0 0 15px #3b82f6, 0 0 30px #3b82f6, 0 0 45px #3b82f6; }
+  }
+
+  @keyframes achievement-pop {
+    0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+    60% { transform: scale(1.3) rotate(10deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  @keyframes float-up {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-100px) scale(0.5); opacity: 0; }
+  }
+
+  @keyframes rainbow-shift {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+  }
+
+  @keyframes electric-pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes bounce-in {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+
   .neon-text {
     color: #fff;
     text-shadow: 
@@ -116,7 +169,89 @@ const NEON_STYLES = `
   .candlestick {
     animation: candlestick-bounce 1s ease-in-out infinite;
   }
+
+  .combo-active {
+    animation: combo-pulse 0.5s ease-in-out infinite;
+  }
+
+  .streak-glow {
+    animation: streak-glow 1s ease-in-out infinite;
+  }
+
+  .rainbow-text {
+    animation: rainbow-shift 3s linear infinite;
+  }
+
+  .shimmer-bg {
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
 `;
+
+// Confetti particle component
+const ConfettiParticle: React.FC<{ delay: number; left: number; color: string }> = ({ delay, left, color }) => (
+  <div
+    className="fixed pointer-events-none"
+    style={{
+      left: `${left}%`,
+      top: -20,
+      width: 10,
+      height: 10,
+      backgroundColor: color,
+      borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+      animation: `confetti-fall ${2 + Math.random() * 2}s linear ${delay}s forwards`,
+      zIndex: 100,
+    }}
+  />
+);
+
+// Achievement badge component
+const AchievementBadge: React.FC<{ icon: React.ReactNode; label: string; show: boolean }> = ({ icon, label, show }) => (
+  <AnimatePresence>
+    {show && (
+      <motion.div
+        className="fixed top-20 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl"
+        style={{
+          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(0, 0, 0, 0.9))',
+          border: '2px solid #3b82f6',
+          boxShadow: '0 0 30px rgba(59, 130, 246, 0.5)',
+        }}
+        initial={{ x: 100, opacity: 0, scale: 0.5 }}
+        animate={{ x: 0, opacity: 1, scale: 1 }}
+        exit={{ x: 100, opacity: 0, scale: 0.5 }}
+        transition={{ type: 'spring', bounce: 0.5 }}
+      >
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+          {icon}
+        </div>
+        <div>
+          <p className="text-xs text-blue-400 font-medium">ACHIEVEMENT</p>
+          <p className="text-white font-bold">{label}</p>
+        </div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
+
+// Floating score popup
+const FloatingScore: React.FC<{ value: string; x: number; y: number; id: number }> = ({ value, x, y }) => (
+  <motion.div
+    className="fixed pointer-events-none font-bold text-xl"
+    style={{
+      left: x,
+      top: y,
+      color: '#3b82f6',
+      textShadow: '0 0 10px #3b82f6, 0 0 20px #3b82f6',
+      zIndex: 60,
+    }}
+    initial={{ opacity: 1, y: 0, scale: 1 }}
+    animate={{ opacity: 0, y: -60, scale: 1.5 }}
+    transition={{ duration: 0.8, ease: 'easeOut' }}
+  >
+    {value}
+  </motion.div>
+);
 
 // ============================================================================
 // TYPES & CONFIG
@@ -150,6 +285,30 @@ const isMobileDevice = () => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
     ('ontouchstart' in window) ||
     (navigator.maxTouchPoints > 0);
+};
+
+// Check if running in Instagram/Facebook in-app browser
+const isInAppBrowser = () => {
+  if (typeof window === "undefined") return false;
+  const ua = navigator.userAgent || navigator.vendor;
+  return /FBAN|FBAV|Instagram|FB_IAB|FB4A|FBIOS|WebView/i.test(ua);
+};
+
+// Check if device motion/orientation is supported and available
+const checkSensorSupport = () => {
+  const hasMotion = typeof DeviceMotionEvent !== 'undefined';
+  const hasOrientation = typeof DeviceOrientationEvent !== 'undefined';
+  const needsPermission = typeof (DeviceMotionEvent as any)?.requestPermission === 'function';
+  const isSecure = typeof window !== 'undefined' && (window.isSecureContext || location.protocol === 'https:');
+  const inApp = isInAppBrowser();
+  
+  return {
+    motion: hasMotion && isSecure && !inApp,
+    orientation: hasOrientation && isSecure && !inApp,
+    needsPermission,
+    isSecure,
+    isInAppBrowser: inApp,
+  };
 };
 
 interface InteractionModeConfig { 
@@ -511,6 +670,14 @@ const TRADING_QUOTES = [
   "Master yourself, master the market",
   "Quick fingers lose money, patient minds make it",
 ];
+
+// Encouraging messages that appear at different progress levels
+const ENCOURAGEMENT_MESSAGES: Record<number, string[]> = {
+  25: ["Nice start!", "You're getting it!", "Keep going!", "That's the spirit!"],
+  50: ["Halfway there!", "You're crushing it!", "Almost there!", "Looking good!"],
+  75: ["So close!", "Final stretch!", "You've got this!", "Don't stop now!"],
+  90: ["ALMOST!", "Just a bit more!", "Victory is near!", "FINISH STRONG!"],
+};
 
 // ============================================================================
 // UTILS
@@ -1171,27 +1338,59 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
   const [quote, setQuote] = useState(TRADING_QUOTES[0]);
   const [selectedAsset, setSelectedAsset] = useState<AssetKey>("BTC");
   const [isMobile, setIsMobile] = useState(false);
+  const [sensorSupport, setSensorSupport] = useState<{
+    motion: boolean;
+    orientation: boolean;
+    needsPermission: boolean;
+    isSecure: boolean;
+    isInAppBrowser: boolean;
+  }>({ motion: false, orientation: false, needsPermission: false, isSecure: true, isInAppBrowser: false });
+  const [sensorPermissionGranted, setSensorPermissionGranted] = useState(false);
   
-  // Filter modes based on device type
+  // Sensor-based modes that need device motion/orientation
+  const SENSOR_MODES: InteractionMode[] = ['shake', 'tilt', 'flip', 'compass', 'faceDown', 'stepCounter'];
+  
+  // Filter modes based on device type and sensor support
   const availableModes = useMemo(() => {
+    let modes: InteractionModeConfig[];
+    
     if (isMobile) {
       // Mobile: include mobile-only and universal, exclude desktop-only
-      return INTERACTION_MODES.filter(mode => !mode.desktopOnly);
+      modes = INTERACTION_MODES.filter(mode => !mode.desktopOnly);
+      
+      // If sensors not supported (in-app browser, insecure context), filter out sensor modes
+      if (!sensorSupport.motion || !sensorSupport.orientation || sensorSupport.isInAppBrowser) {
+        modes = modes.filter(mode => !SENSOR_MODES.includes(mode.mode));
+      }
+    } else {
+      // Desktop: include desktop-only and universal, exclude mobile-only
+      modes = INTERACTION_MODES.filter(mode => !mode.mobileOnly);
     }
-    // Desktop: include desktop-only and universal, exclude mobile-only
-    return INTERACTION_MODES.filter(mode => !mode.mobileOnly);
-  }, [isMobile]);
+    
+    return modes;
+  }, [isMobile, sensorSupport]);
   
   // Randomly select interaction mode on mount (from available modes)
   const [currentModeIndex, setCurrentModeIndex] = useState(0);
   
-  // Initialize mode after device detection
+  // Initialize mode after device detection and sensor check
   useEffect(() => {
     const mobile = isMobileDevice();
+    const sensors = checkSensorSupport();
     setIsMobile(mobile);
-    const modes = mobile 
-      ? INTERACTION_MODES.filter(m => !m.desktopOnly)
-      : INTERACTION_MODES.filter(m => !m.mobileOnly);
+    setSensorSupport(sensors);
+    
+    // Filter modes based on capabilities
+    let modes: InteractionModeConfig[];
+    if (mobile) {
+      modes = INTERACTION_MODES.filter(m => !m.desktopOnly);
+      if (!sensors.motion || !sensors.orientation || sensors.isInAppBrowser) {
+        modes = modes.filter(m => !SENSOR_MODES.includes(m.mode));
+      }
+    } else {
+      modes = INTERACTION_MODES.filter(m => !m.mobileOnly);
+    }
+    
     setCurrentModeIndex(Math.floor(Math.random() * modes.length));
   }, []);
   
@@ -1264,6 +1463,33 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
   const [scrollPulse, setScrollPulse] = useState(0);
   const [shakeIntensity, setShakeIntensity] = useState(0);
   
+  // ===== COMBO & GAMIFICATION SYSTEM =====
+  const [comboCount, setComboCount] = useState(0);
+  const [comboMultiplier, setComboMultiplier] = useState(1);
+  const [lastActionTime, setLastActionTime] = useState(0);
+  const [streakActive, setStreakActive] = useState(false);
+  const [totalScore, setTotalScore] = useState(0);
+  const [floatingScores, setFloatingScores] = useState<{value: string, x: number, y: number, id: number}[]>([]);
+  const floatingScoreIdRef = useRef(0);
+  const comboTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // ===== ACHIEVEMENT SYSTEM =====
+  const [achievements, setAchievements] = useState<Set<string>>(new Set());
+  const [showAchievement, setShowAchievement] = useState<{icon: React.ReactNode, label: string} | null>(null);
+  
+  // ===== CONFETTI CELEBRATION =====
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [confettiParticles, setConfettiParticles] = useState<{id: number, left: number, color: string, delay: number}[]>([]);
+  
+  // ===== POWER-UP STATES =====
+  const [isPowerUpActive, setIsPowerUpActive] = useState(false);
+  const [powerUpType, setPowerUpType] = useState<'speed' | 'multiplier' | 'magnet' | null>(null);
+  
+  // ===== MILESTONE CELEBRATIONS =====
+  const [milestoneReached, setMilestoneReached] = useState<number | null>(null);
+  const [encouragementText, setEncouragementText] = useState<string | null>(null);
+  const lastMilestoneRef = useRef(0);
+  
   // Retry/Failure states
   const [failureCount, setFailureCount] = useState(0);
   const [showRetryButton, setShowRetryButton] = useState(false);
@@ -1333,20 +1559,6 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     }, 4000);
     return () => clearInterval(interval);
   }, []);
-
-  // Check completion
-  useEffect(() => {
-    if (progress >= 100 && !completedRef.current) {
-      completedRef.current = true;
-      successFeedback(); // Audio + Haptic
-      setIsUnlocked(true);
-      
-      setTimeout(() => {
-        setGateVisible(false);
-        onFinished?.();
-      }, 1500);
-    }
-  }, [progress, onFinished, successFeedback]);
 
   // ============================================================================
   // RETRY/FAILURE HANDLING SYSTEM
@@ -1531,6 +1743,165 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     }, 500);
   }, []);
 
+  // ===== COMBO SYSTEM =====
+  const triggerComboAction = useCallback((x?: number, y?: number) => {
+    const now = Date.now();
+    const timeSinceLastAction = now - lastActionTime;
+    
+    // Combo window: 1.5 seconds between actions
+    if (timeSinceLastAction < 1500 && lastActionTime > 0) {
+      setComboCount(prev => {
+        const newCount = prev + 1;
+        // Update multiplier based on combo
+        const newMultiplier = Math.min(1 + Math.floor(newCount / 3) * 0.5, 5);
+        setComboMultiplier(newMultiplier);
+        setStreakActive(true);
+        
+        // Add floating score
+        if (x !== undefined && y !== undefined) {
+          const scoreId = floatingScoreIdRef.current++;
+          const scoreValue = newMultiplier > 1 ? `+${Math.floor(newMultiplier * 10)}` : '+10';
+          setFloatingScores(prev => [...prev.slice(-5), { value: scoreValue, x, y, id: scoreId }]);
+          setTimeout(() => {
+            setFloatingScores(prev => prev.filter(s => s.id !== scoreId));
+          }, 800);
+        }
+        
+        // Milestone combos trigger achievements
+        if (newCount === 5 && !achievements.has('combo5')) {
+          unlockAchievement('combo5', <Zap size={20} className="text-white" />, 'Combo x5!');
+        } else if (newCount === 10 && !achievements.has('combo10')) {
+          unlockAchievement('combo10', <Star size={20} className="text-white" />, 'Combo Master!');
+        } else if (newCount === 20 && !achievements.has('combo20')) {
+          unlockAchievement('combo20', <Sparkles size={20} className="text-white" />, 'LEGENDARY!');
+        }
+        
+        return newCount;
+      });
+    } else {
+      // Reset combo
+      setComboCount(1);
+      setComboMultiplier(1);
+      setStreakActive(false);
+    }
+    
+    setLastActionTime(now);
+    
+    // Reset combo timeout
+    if (comboTimeoutRef.current) {
+      clearTimeout(comboTimeoutRef.current);
+    }
+    comboTimeoutRef.current = setTimeout(() => {
+      setStreakActive(false);
+      setComboCount(0);
+      setComboMultiplier(1);
+    }, 2000);
+    
+    // Update total score
+    setTotalScore(prev => prev + Math.floor(10 * comboMultiplier));
+  }, [lastActionTime, comboMultiplier, achievements]);
+
+  // ===== ACHIEVEMENT SYSTEM =====
+  const unlockAchievement = useCallback((id: string, icon: React.ReactNode, label: string) => {
+    setAchievements(prev => {
+      if (prev.has(id)) return prev;
+      const newSet = new Set(prev);
+      newSet.add(id);
+      
+      // Show achievement popup
+      setShowAchievement({ icon, label });
+      feedback.audio.playSuccess();
+      feedback.haptics.successPattern();
+      
+      setTimeout(() => setShowAchievement(null), 3000);
+      
+      return newSet;
+    });
+  }, [feedback]);
+
+  // ===== CONFETTI EXPLOSION =====
+  const triggerConfetti = useCallback(() => {
+    setShowConfetti(true);
+    const colors = ['#3b82f6', '#60a5fa', '#93c5fd', '#2563eb', '#1d4ed8', '#818cf8', '#a5b4fc'];
+    const particles = Array.from({ length: 50 }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      delay: Math.random() * 0.5,
+    }));
+    setConfettiParticles(particles);
+    
+    setTimeout(() => {
+      setShowConfetti(false);
+      setConfettiParticles([]);
+    }, 4000);
+  }, []);
+
+  // ===== MILESTONE CELEBRATIONS =====
+  const checkMilestone = useCallback((currentProgress: number) => {
+    const milestones = [25, 50, 75, 90];
+    for (const milestone of milestones) {
+      if (currentProgress >= milestone && lastMilestoneRef.current < milestone) {
+        lastMilestoneRef.current = milestone;
+        setMilestoneReached(milestone);
+        feedback.audio.playTap();
+        feedback.haptics.doublePulse();
+        
+        // Show random encouragement message
+        const messages = ENCOURAGEMENT_MESSAGES[milestone];
+        if (messages) {
+          const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+          setEncouragementText(randomMessage);
+          setTimeout(() => setEncouragementText(null), 2000);
+        }
+        
+        // Small celebration for milestones
+        setTimeout(() => setMilestoneReached(null), 1500);
+        
+        // Achievement for first milestone
+        if (milestone === 25 && !achievements.has('first25')) {
+          unlockAchievement('first25', <TrendingUp size={20} className="text-white" />, 'Quarter Way!');
+        } else if (milestone === 50 && !achievements.has('halfway')) {
+          unlockAchievement('halfway', <Target size={20} className="text-white" />, 'Halfway There!');
+        } else if (milestone === 75 && !achievements.has('almostThere')) {
+          unlockAchievement('almostThere', <Star size={20} className="text-white" />, 'Almost There!');
+        }
+        break;
+      }
+    }
+  }, [feedback, achievements, unlockAchievement]);
+
+  // Check completion - triggers confetti and final achievements
+  useEffect(() => {
+    if (progress >= 100 && !completedRef.current) {
+      completedRef.current = true;
+      successFeedback(); // Audio + Haptic
+      setIsUnlocked(true);
+      
+      // 🎉 CELEBRATION TIME!
+      triggerConfetti();
+      
+      // Final achievement based on performance
+      if (comboCount >= 10) {
+        unlockAchievement('perfectRun', <Star size={20} className="text-white" />, 'Perfect Run!');
+      } else if (totalScore >= 200) {
+        unlockAchievement('highScore', <TrendingUp size={20} className="text-white" />, 'High Scorer!');
+      }
+      
+      setTimeout(() => {
+        setGateVisible(false);
+        onFinished?.();
+      }, 2000);
+    }
+  }, [progress, onFinished, successFeedback, triggerConfetti, comboCount, totalScore, unlockAchievement]);
+
+  // Check milestones on progress change
+  useEffect(() => {
+    if (progress > 0 && progress < 100) {
+      checkMilestone(progress);
+    }
+  }, [progress, checkMilestone]);
+
   // Handle device tilt for visual feedback
   useEffect(() => {
     if (!isMobile) return;
@@ -1612,16 +1983,39 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     }
   }, [progress, scaleSpring]);
 
-  // TAP MODE
-  const handleTap = useCallback(() => {
+  // TAP MODE - Enhanced with combo system
+  const handleTap = useCallback((e?: React.TouchEvent | React.MouseEvent) => {
     if (currentMode.mode !== "tap") return;
     hasInteractedRef.current = true;
+    
+    // Get tap position for visual effects
+    let x = window.innerWidth / 2;
+    let y = window.innerHeight / 2;
+    if (e) {
+      if ('touches' in e && e.touches[0]) {
+        x = e.touches[0].clientX;
+        y = e.touches[0].clientY;
+      } else if ('clientX' in e) {
+        x = e.clientX;
+        y = e.clientY;
+      }
+    }
+    
+    // Trigger combo system
+    triggerComboAction(x, y);
+    addTapRipple(x, y);
+    
     setTapCount(c => c + 1);
-    setProgress(p => Math.min(p + 2, 100));
+    // Progress boost based on combo multiplier!
+    const progressGain = Math.floor(2 * comboMultiplier);
+    setProgress(p => Math.min(p + progressGain, 100));
     playTick();
-    scaleSpring.set(0.9);
+    
+    // Enhanced scale animation based on combo
+    const scaleAmount = streakActive ? 0.85 : 0.9;
+    scaleSpring.set(scaleAmount);
     setTimeout(() => scaleSpring.set(1), 100);
-  }, [currentMode.mode, playTick, scaleSpring]);
+  }, [currentMode.mode, playTick, scaleSpring, triggerComboAction, addTapRipple, comboMultiplier, streakActive]);
 
   // SWIPE MODE (touch + mouse)
   const handlePointerStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
@@ -2279,27 +2673,51 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     });
   }, [currentMode.mode, playTick, scaleSpring]);
 
-  // SPEED TAP MODE - 20 taps in 5 seconds
+  // SPEED TAP MODE - 20 taps in 5 seconds with combo bonuses
   const handleSpeedTap = useCallback(() => {
     if (currentMode.mode !== "speedTap") return;
     const now = Date.now();
     
     if (speedTapStartTime === 0 || now - speedTapStartTime > 5000) {
+      // Starting fresh
       setSpeedTapStartTime(now);
       setSpeedTapCount(1);
       setProgress(5);
+      triggerComboAction();
     } else {
       setSpeedTapCount(c => {
         const newCount = c + 1;
         hasInteractedRef.current = true;
-        setProgress(Math.min((newCount / 20) * 100, 100));
-        if (newCount % 5 === 0) playTick();
+        
+        // Apply combo multiplier for faster progress!
+        const baseProgress = (newCount / 20) * 100;
+        const bonusProgress = streakActive ? baseProgress * 1.2 : baseProgress;
+        setProgress(Math.min(bonusProgress, 100));
+        
+        // More frequent feedback at higher speeds
+        if (newCount % 3 === 0) {
+          playTick();
+          triggerComboAction();
+        }
+        
+        // Achievement for completing in under 3 seconds
+        if (newCount >= 20 && !achievements.has('speedDemon')) {
+          const timeElapsed = now - speedTapStartTime;
+          if (timeElapsed < 3000) {
+            unlockAchievement('speedDemon', <Zap size={20} className="text-white" />, 'Speed Demon!');
+          }
+        }
+        
         return newCount;
       });
     }
-    scaleSpring.set(0.92);
+    
+    // Enhanced visual feedback - more intense at higher counts
+    const intensity = Math.min(0.92 - (speedTapCount * 0.002), 0.85);
+    scaleSpring.set(intensity);
+    setShakeIntensity(Math.min(speedTapCount / 3, 8));
     setTimeout(() => scaleSpring.set(1), 50);
-  }, [currentMode.mode, speedTapStartTime, playTick, scaleSpring]);
+  }, [currentMode.mode, speedTapStartTime, playTick, scaleSpring, speedTapCount, triggerComboAction, streakActive, achievements, unlockAchievement]);
 
   // ============================================================================
   // MOBILE-ONLY SENSOR HANDLERS
@@ -3019,7 +3437,12 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     const clientY = 'touches' in e ? e.changedTouches?.[0]?.clientY || 0 : e.clientY;
     addTapRipple(clientX, clientY);
     
-    if (currentMode.mode === "tap") handleTap();
+    // Trigger combo system for all tap-based interactions
+    if (['tap', 'doubleTap', 'pulse', 'tripleTap', 'speedTap'].includes(currentMode.mode)) {
+      triggerComboAction(clientX, clientY);
+    }
+    
+    if (currentMode.mode === "tap") handleTap(e);
     else if (currentMode.mode === "doubleTap") handleDoubleTap();
     else if (currentMode.mode === "pulse") handlePulseTap();
     else if (currentMode.mode === "alternate") handleAlternateTap(e);
@@ -3084,6 +3507,218 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
       >
         {/* Background Candlesticks */}
         <BackgroundCandlesticks />
+
+        {/* ===== CONFETTI CELEBRATION ===== */}
+        {showConfetti && confettiParticles.map(particle => (
+          <ConfettiParticle
+            key={particle.id}
+            delay={particle.delay}
+            left={particle.left}
+            color={particle.color}
+          />
+        ))}
+
+        {/* ===== ACHIEVEMENT POPUP ===== */}
+        <AchievementBadge
+          icon={showAchievement?.icon}
+          label={showAchievement?.label || ''}
+          show={!!showAchievement}
+        />
+
+        {/* ===== FLOATING SCORE POPUPS ===== */}
+        {floatingScores.map(score => (
+          <FloatingScore
+            key={score.id}
+            value={score.value}
+            x={score.x}
+            y={score.y}
+            id={score.id}
+          />
+        ))}
+
+        {/* ===== COMBO COUNTER DISPLAY ===== */}
+        <AnimatePresence>
+          {streakActive && comboCount > 1 && !isUnlocked && (
+            <motion.div
+              className="fixed top-4 left-4 z-50 flex flex-col items-center"
+              initial={{ scale: 0, opacity: 0, x: -50 }}
+              animate={{ scale: 1, opacity: 1, x: 0 }}
+              exit={{ scale: 0, opacity: 0, x: -50 }}
+              transition={{ type: 'spring', bounce: 0.5 }}
+            >
+              <div 
+                className="relative px-4 py-2 rounded-xl"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(0, 0, 0, 0.8))',
+                  border: '2px solid #3b82f6',
+                  boxShadow: streakActive ? '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.3)' : '0 0 10px #3b82f6',
+                }}
+              >
+                {/* Electric effect on high combos */}
+                {comboCount >= 5 && (
+                  <div className="absolute inset-0 rounded-xl overflow-hidden">
+                    <div 
+                      className="absolute inset-0"
+                      style={{
+                        background: 'linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), transparent)',
+                        animation: 'shimmer 1s linear infinite',
+                        backgroundSize: '200% 100%',
+                      }}
+                    />
+                  </div>
+                )}
+                
+                <div className="flex items-center gap-2 relative">
+                  <motion.div
+                    animate={{ 
+                      rotate: comboCount >= 10 ? [0, 360] : 0,
+                      scale: [1, 1.2, 1],
+                    }}
+                    transition={{ 
+                      rotate: { duration: 2, repeat: Infinity, ease: 'linear' },
+                      scale: { duration: 0.5, repeat: Infinity },
+                    }}
+                  >
+                    <Zap 
+                      size={24} 
+                      style={{ 
+                        color: comboCount >= 10 ? '#60a5fa' : '#3b82f6',
+                        filter: `drop-shadow(0 0 ${Math.min(comboCount * 2, 20)}px #3b82f6)`,
+                      }} 
+                    />
+                  </motion.div>
+                  <div className="text-center">
+                    <motion.p 
+                      className="text-2xl font-black text-white"
+                      style={{ 
+                        textShadow: '0 0 10px #3b82f6',
+                      }}
+                      key={comboCount}
+                      initial={{ scale: 1.5, y: -10 }}
+                      animate={{ scale: 1, y: 0 }}
+                      transition={{ type: 'spring', bounce: 0.6 }}
+                    >
+                      x{comboCount}
+                    </motion.p>
+                    <p className="text-[10px] font-medium" style={{ color: '#3b82f6' }}>
+                      {comboMultiplier > 1 ? `${comboMultiplier.toFixed(1)}x MULTI` : 'COMBO'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Combo tier indicator */}
+              {comboCount >= 5 && (
+                <motion.div
+                  className="mt-1 flex items-center gap-1"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  {comboCount >= 20 ? (
+                    <>
+                      <Sparkles size={14} style={{ color: '#60a5fa', filter: 'drop-shadow(0 0 4px #60a5fa)' }} />
+                      <span className="text-xs font-bold" style={{ color: '#60a5fa', textShadow: '0 0 10px #60a5fa' }}>LEGENDARY</span>
+                    </>
+                  ) : comboCount >= 10 ? (
+                    <>
+                      <Zap size={14} style={{ color: '#3b82f6', filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+                      <span className="text-xs font-bold" style={{ color: '#3b82f6', textShadow: '0 0 10px #3b82f6' }}>ON FIRE</span>
+                    </>
+                  ) : (
+                    <>
+                      <Star size={14} style={{ color: '#3b82f6', filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+                      <span className="text-xs font-bold" style={{ color: '#3b82f6', textShadow: '0 0 10px #3b82f6' }}>NICE</span>
+                    </>
+                  )}
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ===== MILESTONE CELEBRATION ===== */}
+        <AnimatePresence>
+          {milestoneReached && (
+            <motion.div
+              className="fixed inset-0 pointer-events-none flex items-center justify-center z-40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div
+                className="text-center"
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                exit={{ scale: 0, rotate: 180 }}
+                transition={{ type: 'spring', bounce: 0.6 }}
+              >
+                <p 
+                  className="text-6xl sm:text-8xl font-black"
+                  style={{
+                    color: '#3b82f6',
+                    textShadow: '0 0 30px #3b82f6, 0 0 60px #3b82f6, 0 0 90px rgba(59, 130, 246, 0.5)',
+                  }}
+                >
+                  {milestoneReached}%
+                </p>
+                <motion.p
+                  className="text-lg sm:text-xl font-bold text-white mt-2"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  {milestoneReached === 25 ? 'Quarter Way!' : milestoneReached === 50 ? 'Halfway There!' : milestoneReached === 90 ? 'ALMOST!' : 'Almost There!'}
+                </motion.p>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ===== ENCOURAGEMENT TEXT POPUP ===== */}
+        <AnimatePresence>
+          {encouragementText && !milestoneReached && (
+            <motion.div
+              className="fixed top-1/3 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+              initial={{ opacity: 0, y: 20, scale: 0.8 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.8 }}
+              transition={{ type: 'spring', bounce: 0.5 }}
+            >
+              <p 
+                className="text-xl sm:text-2xl font-bold text-center px-4"
+                style={{
+                  color: '#fff',
+                  textShadow: '0 0 15px #3b82f6, 0 0 30px #3b82f6, 0 0 45px rgba(59, 130, 246, 0.5)',
+                }}
+              >
+                {encouragementText}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ===== SCORE DISPLAY (Top Right) ===== */}
+        {totalScore > 0 && !isUnlocked && (
+          <motion.div
+            className="fixed top-4 right-4 z-40 px-3 py-2 rounded-lg"
+            style={{
+              background: 'rgba(0, 0, 0, 0.7)',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+            }}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <p className="text-xs text-blue-400 font-medium">SCORE</p>
+            <motion.p 
+              className="text-lg font-bold text-white"
+              key={totalScore}
+              initial={{ scale: 1.2 }}
+              animate={{ scale: 1 }}
+            >
+              {totalScore.toLocaleString()}
+            </motion.p>
+          </motion.div>
+        )}
 
         {/* ===== VISUAL FEEDBACK ELEMENTS ===== */}
         
@@ -3339,9 +3974,9 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 <motion.div
                   className="absolute -top-12 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1.5 rounded-full"
                   style={{
-                    backgroundColor: "rgba(234, 179, 8, 0.2)",
-                    border: "1px solid rgba(234, 179, 8, 0.5)",
-                    boxShadow: "0 0 15px rgba(234, 179, 8, 0.3)",
+                    backgroundColor: "rgba(59, 130, 246, 0.2)",
+                    border: "1px solid rgba(59, 130, 246, 0.5)",
+                    boxShadow: "0 0 15px rgba(59, 130, 246, 0.3)",
                   }}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -3351,9 +3986,9 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                     animate={{ scale: [1, 1.2, 1] }}
                     transition={{ duration: 1, repeat: Infinity }}
                   >
-                    <Timer size={14} style={{ color: "#eab308" }} />
+                    <Timer size={14} style={{ color: "#60a5fa" }} />
                   </motion.div>
-                  <span className="text-xs font-medium" style={{ color: "#eab308" }}>
+                  <span className="text-xs font-medium" style={{ color: "#60a5fa" }}>
                     Keep going!
                   </span>
                 </motion.div>
@@ -3568,7 +4203,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                       ACCESS GRANTED
                     </motion.h2>
                     <motion.p
-                      className="text-lg"
+                      className="text-lg mb-4"
                       style={{
                         color: '#3b82f6',
                         textShadow: '0 0 10px rgba(59, 130, 246, 0.5)',
@@ -3576,6 +4211,59 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                     >
                       Welcome to Bull Money
                     </motion.p>
+                    
+                    {/* Performance Summary */}
+                    {totalScore > 0 && (
+                      <motion.div
+                        className="flex flex-wrap gap-3 justify-center items-center"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.8 }}
+                      >
+                        {/* Final Score */}
+                        <div 
+                          className="px-4 py-2 rounded-lg flex items-center gap-2"
+                          style={{
+                            background: 'rgba(59, 130, 246, 0.2)',
+                            border: '1px solid rgba(59, 130, 246, 0.4)',
+                          }}
+                        >
+                          <Star size={16} className="text-blue-400" />
+                          <span className="text-white font-bold">{totalScore}</span>
+                          <span className="text-blue-400 text-sm">pts</span>
+                        </div>
+                        
+                        {/* Max Combo */}
+                        {comboCount > 1 && (
+                          <div 
+                            className="px-4 py-2 rounded-lg flex items-center gap-2"
+                            style={{
+                              background: 'rgba(59, 130, 246, 0.2)',
+                              border: '1px solid rgba(59, 130, 246, 0.4)',
+                            }}
+                          >
+                            <Zap size={16} className="text-blue-400" />
+                            <span className="text-white font-bold">x{comboCount}</span>
+                            <span className="text-blue-400 text-sm">combo</span>
+                          </div>
+                        )}
+                        
+                        {/* Achievements count */}
+                        {achievements.size > 0 && (
+                          <div 
+                            className="px-4 py-2 rounded-lg flex items-center gap-2"
+                            style={{
+                              background: 'rgba(59, 130, 246, 0.2)',
+                              border: '1px solid rgba(59, 130, 246, 0.4)',
+                            }}
+                          >
+                            <Heart size={16} className="text-blue-400" />
+                            <span className="text-white font-bold">{achievements.size}</span>
+                            <span className="text-blue-400 text-sm">{achievements.size === 1 ? 'badge' : 'badges'}</span>
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
                   </motion.div>
 
                   {/* Loading indicator */}
@@ -3878,13 +4566,49 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
           </motion.div>
         )}
 
-        {/* Pulse rhythm indicator */}
+        {/* Pulse rhythm indicator - Enhanced with visual beat guide */}
         {currentMode.mode === "pulse" && (
           <motion.div
             className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
+            {/* Pulsing beat guide */}
+            <motion.div
+              className="w-20 h-20 mx-auto mb-3 rounded-full flex items-center justify-center relative"
+              style={{
+                border: '3px solid rgba(59, 130, 246, 0.5)',
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              }}
+            >
+              {/* Inner pulse ring - shows timing */}
+              <motion.div
+                className="absolute inset-2 rounded-full"
+                style={{
+                  border: '2px solid #3b82f6',
+                  boxShadow: '0 0 15px #3b82f6, inset 0 0 15px rgba(59, 130, 246, 0.3)',
+                }}
+                animate={{
+                  scale: [1, 1.3, 1],
+                  opacity: [1, 0.5, 1],
+                }}
+                transition={{
+                  duration: 0.5, // 500ms rhythm
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              />
+              <Heart 
+                size={28} 
+                className="relative z-10"
+                style={{ 
+                  color: '#3b82f6',
+                  filter: 'drop-shadow(0 0 8px #3b82f6)',
+                }} 
+              />
+            </motion.div>
+            
+            {/* Beat indicator dots */}
             <div className="flex gap-2 justify-center mb-2">
               {[0, 1, 2, 3, 4].map((i) => (
                 <motion.div
@@ -3899,7 +4623,12 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 />
               ))}
             </div>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Tap in rhythm (~500ms apart)</p>
+            <p className="text-sm font-medium" style={{ color: "#3b82f6" }}>
+              Tap with the pulse!
+            </p>
+            <p className="text-[10px] mt-1" style={{ color: "rgba(59, 130, 246, 0.6)" }}>
+              Stay in rhythm for bonus points
+            </p>
           </motion.div>
         )}
 
