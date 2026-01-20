@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback, useRef, createContext, useCont
 import { motion, AnimatePresence } from 'framer-motion';
 import { FPSCounter } from './PerformanceProvider';
 import { useBrowserDetection } from '@/lib/browserDetection';
+import { getFpsEngine, initializeFpsMeasurement } from '@/lib/FpsMeasurement';
+import { detectBrowserCapabilities, selectOptimalMeasurementConfig } from '@/lib/FpsCompatibility';
 
 // ============================================================================
 // SMART SCREENSAVER CONTEXT

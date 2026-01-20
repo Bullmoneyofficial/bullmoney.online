@@ -24,6 +24,8 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import { getFpsEngine, initializeFpsMeasurement } from '@/lib/FpsMeasurement';
+import { detectBrowserCapabilities, selectOptimalMeasurementConfig } from '@/lib/FpsCompatibility';
 
 // --- GLOBAL NEON BLUE STYLES (Neon Blue Sign Style) ---
 const GLOBAL_NEON_STYLES = `
@@ -547,16 +549,39 @@ const getFpsColor = (fps: number) => {
 function useFpsMonitor() {
   const [fps, setFps] = useState(60);
   const [deviceTier, setDeviceTier] = useState('high');
-  const frameTimesRef = useRef<number[]>([]);
-  const lastFrameRef = useRef(performance.now());
-  const rafRef = useRef<number | null>(null);
+  const [jankScore, setJankScore] = useState(0);
+  const engineRef = useRef<ReturnType<typeof getFpsEngine> | null>(null);
   const isFrozenRef = useRef(false);
 
+  // Initialize advanced FPS measurement
   useEffect(() => {
-    // Listen for battery saver freeze/unfreeze events
+    if (typeof window === 'undefined') return;
+
+    try {
+      // Detect browser capabilities
+      const capabilities = detectBrowserCapabilities();
+      
+      // Get optimal config for this device
+      const config = selectOptimalMeasurementConfig(capabilities, false);
+
+      // Initialize FPS engine
+      if (!engineRef.current) {
+        engineRef.current = initializeFpsMeasurement(config);
+      }
+    } catch (err) {
+      console.warn('[useFpsMonitor] Failed to initialize advanced measurement:', err);
+      // Fallback to basic engine
+      if (!engineRef.current) {
+        engineRef.current = getFpsEngine();
+      }
+    }
+  }, []);
+
+  // Listen for battery saver freeze/unfreeze events
+  useEffect(() => {
     const handleFreeze = () => {
       isFrozenRef.current = true;
-      console.log('[useFpsMonitor] 🔋 Frozen - continuing FPS measurement');
+      console.log('[useFpsMonitor] 🔋 Frozen - continuing FPS measurement with new engine');
     };
     const handleUnfreeze = () => {
       isFrozenRef.current = false;
@@ -572,42 +597,37 @@ function useFpsMonitor() {
     };
   }, []);
 
+  // Update FPS from advanced engine
   useEffect(() => {
-    const measureFps = () => {
-      // CRITICAL FIX: Keep RAF alive during battery saver freeze
-      // Force a minimal style update to prevent RAF throttling
+    if (!engineRef.current) return;
+
+    const updateInterval = setInterval(() => {
+      const metrics = engineRef.current?.getMetrics();
+      if (!metrics) return;
+
+      // Force style update during freeze to prevent RAF throttling
       if (isFrozenRef.current) {
         try {
           document.documentElement.style.setProperty('--fps-monitor-hub-active', '1');
         } catch (e) {}
       }
 
-      const now = performance.now();
-      const delta = now - lastFrameRef.current;
-      lastFrameRef.current = now;
-      
-      frameTimesRef.current.push(delta);
-      if (frameTimesRef.current.length > 30) frameTimesRef.current.shift();
-      
-      const avgDelta = frameTimesRef.current.reduce((a, b) => a + b, 0) / frameTimesRef.current.length;
-      const currentFps = Math.round(1000 / avgDelta);
-      setFps(Math.min(currentFps, 120));
-      
-      // Determine device tier
-      if (currentFps >= 55) setDeviceTier('ultra');
-      else if (currentFps >= 45) setDeviceTier('high');
-      else if (currentFps >= 35) setDeviceTier('medium');
-      else if (currentFps >= 25) setDeviceTier('low');
+      setFps(metrics.averageFps);
+      setJankScore(metrics.jankScore);
+
+      // Determine device tier from FPS
+      const avgFps = metrics.averageFps;
+      if (avgFps >= 55) setDeviceTier('ultra');
+      else if (avgFps >= 45) setDeviceTier('high');
+      else if (avgFps >= 35) setDeviceTier('medium');
+      else if (avgFps >= 25) setDeviceTier('low');
       else setDeviceTier('minimal');
-      
-      rafRef.current = requestAnimationFrame(measureFps);
-    };
-    
-    rafRef.current = requestAnimationFrame(measureFps);
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+    }, 1000);
+
+    return () => clearInterval(updateInterval);
   }, []);
 
-  return { fps, deviceTier };
+  return { fps, deviceTier, jankScore, engine: engineRef.current };
 }
 
 // ============================================================================
@@ -1558,7 +1578,7 @@ const FpsCandlestickChart = memo(({ fps, width = 80, height = 48, candleCount = 
 });
 FpsCandlestickChart.displayName = 'FpsCandlestickChart';
 
-const FpsDisplay = memo(({ fps, deviceTier }: { fps: number; deviceTier: string }) => {
+const FpsDisplay = memo(({ fps, deviceTier, jankScore }: { fps: number; deviceTier: string; jankScore?: number }) => {
   const colors = getFpsColor(fps);
   
   return (
@@ -1571,7 +1591,12 @@ const FpsDisplay = memo(({ fps, deviceTier }: { fps: number; deviceTier: string 
             <Activity size={10} className="text-blue-400 neon-blue-icon" />
             <span className="text-sm font-black neon-blue-text" style={{ color: colors.text }}>{fps}</span>
           </div>
-          <div className="text-[8px] font-mono font-bold uppercase neon-blue-text tracking-wide">{deviceTier}</div>
+          <div className="text-[8px] font-mono font-bold uppercase neon-blue-text tracking-wide">
+            {deviceTier}
+            {jankScore && jankScore > 0.1 && (
+              <span className="text-orange-400 ml-1">↓{Math.round(jankScore * 100)}%</span>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -1763,6 +1788,7 @@ const DeviceCenterPanel = memo(({
   onClose,
   fps,
   deviceTier,
+  jankScore,
   isAdmin,
   isVip,
   userId,
@@ -1772,6 +1798,7 @@ const DeviceCenterPanel = memo(({
   onClose: () => void;
   fps: number;
   deviceTier: string;
+  jankScore?: number;
   isAdmin: boolean;
   isVip: boolean;
   userId?: string;
@@ -1851,7 +1878,7 @@ const DeviceCenterPanel = memo(({
 
             {/* FPS Display */}
             <div className="mt-3 flex items-center justify-between">
-              <FpsDisplay fps={fps} deviceTier={deviceTier} />
+              <FpsDisplay fps={fps} deviceTier={deviceTier} jankScore={jankScore} />
               <ConnectionStatusBadge 
                 isOnline={browserInfo.onLine} 
                 effectiveType={browserInfo.connection.effectiveType} 
@@ -5710,7 +5737,7 @@ const FpsPill = memo(({
               >
                 <div className="flex items-center gap-1">
                   <ChevronRight size={14} className="text-blue-500 rotate-180" />
-                  <FpsDisplay fps={fps} deviceTier={deviceTier} />
+                  <FpsDisplay fps={fps} deviceTier={deviceTier} jankScore={jankScore} />
                 </div>
               </motion.div>
             )}
@@ -5893,7 +5920,7 @@ export function UltimateHub() {
   const [mounted, setMounted] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   
-  const { fps, deviceTier } = useFpsMonitor();
+  const { fps, deviceTier, jankScore } = useFpsMonitor();
   const prices = useLivePrices();
   const { isAdmin, userId, userEmail } = useAdminCheck();
   const { isVip } = useVipCheck(userId, userEmail);

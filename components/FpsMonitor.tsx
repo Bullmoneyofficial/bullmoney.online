@@ -1,31 +1,33 @@
 "use client";
 
 /**
- * FPS Monitor - Real-time Performance Display
+ * FPS Monitor - Real-time Performance Display (Enhanced)
  * 
- * Displays FPS, frame time, and quality metrics in top-right corner
- * Helps debug performance issues during development
- * 
- * Shows:
- * - Current FPS
- * - Average FPS
- * - Frame time (ms)
- * - Quality settings
- * - Memory usage (optional)
- * - Device tier
+ * Uses advanced FPS measurement system for accurate cross-browser metrics
+ * Displays:
+ * - Current & average FPS
+ * - Frame time (min/max/p95/p99)
+ * - Jank detection and scoring
+ * - GPU/CPU bottleneck detection
+ * - Quality recommendations
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useFpsOptimizer } from '@/lib/FpsOptimizer';
-
-interface FpsStats {
-  fps: number;
-  frameTime: number;
-  avgFps: number;
-  minFps: number;
-  maxFps: number;
-  dropped: number;
-}
+import {
+  getFpsEngine,
+  initializeFpsMeasurement,
+  FrameMetrics,
+} from '@/lib/FpsMeasurement';
+import {
+  detectBrowserCapabilities,
+  selectOptimalMeasurementConfig,
+  analyzeFpsMetrics,
+  diagnoseFps,
+  formatFpsMetrics,
+  FpsRecommendation,
+  FrameDiagnostics,
+} from '@/lib/FpsCompatibility';
 
 const FpsMonitor = ({ show = false }: { show?: boolean }) => {
   const {
@@ -38,104 +40,119 @@ const FpsMonitor = ({ show = false }: { show?: boolean }) => {
     enable3D,
   } = useFpsOptimizer();
 
-  const [stats, setStats] = useState<FpsStats>({
-    fps: 60,
-    frameTime: 16.67,
-    avgFps: 60,
-    minFps: 60,
-    maxFps: 60,
-    dropped: 0,
-  });
-
+  // New advanced metrics
+  const [metrics, setMetrics] = useState<FrameMetrics | null>(null);
+  const [recommendation, setRecommendation] = useState<FpsRecommendation | null>(null);
+  const [diagnosis, setDiagnosis] = useState<FrameDiagnostics | null>(null);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
+  
+  const engineRef = useRef<ReturnType<typeof getFpsEngine> | null>(null);
   const fpsHistoryRef = useRef<number[]>([]);
-  const frameTimeRef = useRef<number[]>([]);
-  const lastTimeRef = useRef(0);
-  const droppedRef = useRef(0);
+  const prevMetricsRef = useRef<string>('');
 
-  // Monitor frame performance
+  // Initialize advanced FPS measurement
   useEffect(() => {
-    let animationId: number;
+    if (typeof window === 'undefined') return;
 
-    const monitor = (timestamp: number) => {
-      if (lastTimeRef.current === 0) {
-        lastTimeRef.current = timestamp;
-      } else {
-        const frameTime = timestamp - lastTimeRef.current;
-        frameTimeRef.current.push(frameTime);
+    try {
+      // Detect browser capabilities
+      const capabilities = detectBrowserCapabilities();
+      
+      // Check for low battery
+      const nav = navigator as any;
+      const lowBattery = nav.getBattery
+        ? nav.getBattery().then((b: any) => b.level < 0.3)
+        : Promise.resolve(false);
 
-        // Track dropped frames (>33ms for 30fps, >16.67ms for 60fps)
-        if (frameTime > 33) {
-          droppedRef.current++;
+      lowBattery.then((isLowBattery) => {
+        // Get optimal config for this device
+        const config = selectOptimalMeasurementConfig(
+          capabilities,
+          isLowBattery
+        );
+
+        // Initialize or get engine
+        if (!engineRef.current) {
+          engineRef.current = initializeFpsMeasurement(config);
         }
+      });
+    } catch (err) {
+      console.warn('[FpsMonitor] Failed to initialize advanced measurement:', err);
+      // Fallback to basic measurement
+      engineRef.current = getFpsEngine();
+    }
 
-        if (frameTimeRef.current.length > 120) {
-          frameTimeRef.current.shift();
-        }
-      }
-
-      lastTimeRef.current = timestamp;
-      animationId = requestAnimationFrame(monitor);
+    return () => {
+      // Engine cleanup handled by module
     };
-
-    animationId = requestAnimationFrame(monitor);
-    return () => cancelAnimationFrame(animationId);
   }, []);
 
-  // Track previous stats to prevent unnecessary updates
-  const prevStatsRef = useRef<string>('');
-  
-  // Update stats display every 500ms
+  // Update metrics periodically
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (frameTimeRef.current.length > 0) {
-        const avgFrameTime =
-          frameTimeRef.current.reduce((a, b) => a + b, 0) /
-          frameTimeRef.current.length;
+    if (!show || !engineRef.current) return;
 
-        // Calculate FPS from frame time
-        const calculatedFps = Math.round(1000 / avgFrameTime);
+    const updateInterval = setInterval(() => {
+      const currentMetrics = engineRef.current?.getMetrics();
+      if (!currentMetrics) return;
 
-        const newStats = {
-          fps: currentFps,
-          frameTime: Math.round(avgFrameTime * 10) / 10,
-          avgFps: calculatedFps,
-          minFps: Math.round(
-            1000 / Math.max(...frameTimeRef.current)
-          ),
-          maxFps: Math.round(
-            1000 / Math.min(...frameTimeRef.current)
-          ),
-          dropped: droppedRef.current,
-        };
-        
-        // Only update if stats actually changed (prevents infinite loop)
-        const statsKey = JSON.stringify(newStats);
-        if (statsKey !== prevStatsRef.current) {
-          prevStatsRef.current = statsKey;
-          setStats(newStats);
-        }
+      // Track FPS history for graph
+      fpsHistoryRef.current.push(currentMetrics.averageFps);
+      if (fpsHistoryRef.current.length > 60) {
+        fpsHistoryRef.current.shift();
       }
-    }, 500);
 
-    return () => clearInterval(interval);
-  }, [currentFps]);
+      // Only update if metrics changed
+      const metricsKey = JSON.stringify(currentMetrics);
+      if (metricsKey !== prevMetricsRef.current) {
+        prevMetricsRef.current = metricsKey;
+        setMetrics(currentMetrics);
 
-  if (!show) return null;
+        // Analyze metrics
+        const rec = analyzeFpsMetrics(currentMetrics);
+        setRecommendation(rec);
 
-  // Color coding based on FPS - Neon Blue/Red theme
-  const getColor = (fps: number) => {
-    if (fps >= 58) return 'text-blue-400'; // Neon Blue - Good
-    if (fps >= 50) return 'text-blue-300'; // Neon Blue - OK
-    if (fps >= 40) return 'text-yellow-400'; // Warning
-    if (fps >= 30) return 'text-orange-500'; // Bad
-    return 'text-red-500'; // Critical Red
+        const diag = diagnoseFps(currentMetrics);
+        setDiagnosis(diag);
+      }
+    }, 1000);
+
+    return () => clearInterval(updateInterval);
+  }, [show]);
+
+  if (!show || !metrics) return null;
+
+  // Determine color based on quality recommendation
+  const getQualityColor = () => {
+    if (!recommendation) return 'text-blue-400';
+    switch (recommendation.quality) {
+      case 'excellent':
+        return 'text-green-400';
+      case 'good':
+        return 'text-blue-400';
+      case 'fair':
+        return 'text-yellow-400';
+      case 'poor':
+        return 'text-orange-500';
+      case 'critical':
+        return 'text-red-500';
+    }
   };
 
-  const getHealthIcon = (fps: number) => {
-    if (fps >= 58) return '●';
-    if (fps >= 50) return '◐';
-    if (fps >= 30) return '◑';
-    return '○';
+  const getHealthIcon = (quality: string) => {
+    switch (quality) {
+      case 'excellent':
+        return '✓';
+      case 'good':
+        return '●';
+      case 'fair':
+        return '◐';
+      case 'poor':
+        return '◑';
+      case 'critical':
+        return '○';
+      default:
+        return '?';
+    }
   };
 
   return (
@@ -143,107 +160,138 @@ const FpsMonitor = ({ show = false }: { show?: boolean }) => {
       className="fixed bottom-4 right-4 z-[10000] pointer-events-none"
       style={{
         fontFamily: 'monospace',
-        fontSize: '11px',
-        lineHeight: '1.4',
+        fontSize: '10px',
+        lineHeight: '1.3',
       }}
     >
-      {/* FPS Display - Neon Blue/Red Aesthetic */}
       <style>{`
         @keyframes neon-pulse {
-          0%, 100% { 
-            text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
-          }
-          50% { 
-            text-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
-          }
+          0%, 100% { text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6; }
+          50% { text-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6; }
         }
-        @keyframes neon-red-pulse {
-          0%, 100% { 
-            text-shadow: 0 0 4px #ef4444, 0 0 8px #ef4444;
-          }
-          50% { 
-            text-shadow: 0 0 8px #ef4444, 0 0 16px #ef4444;
-          }
+        @keyframes neon-warn {
+          0%, 100% { text-shadow: 0 0 4px #ef4444, 0 0 8px #ef4444; }
+          50% { text-shadow: 0 0 8px #ef4444, 0 0 16px #ef4444; }
         }
-        .neon-fps-text {
-          animation: neon-pulse 1s ease-in-out infinite;
-        }
-        .neon-red-text {
-          animation: neon-red-pulse 1s ease-in-out infinite;
-        }
+        .neon-good { animation: neon-pulse 1s ease-in-out infinite; }
+        .neon-bad { animation: neon-warn 1s ease-in-out infinite; }
+        .fps-panel { cursor: pointer; transition: all 0.2s; }
+        .fps-panel:hover { box-shadow: 0 0 24px rgba(59, 130, 246, 0.7), 0 0 48px rgba(59, 130, 246, 0.4) !important; }
       `}</style>
-      <div className="bg-black/90 border-2 border-blue-500/50 rounded-lg p-3 text-white shadow-2xl" style={{
-        boxShadow: '0 0 12px rgba(59, 130, 246, 0.5), 0 0 24px rgba(59, 130, 246, 0.3)'
-      }}>
-        {/* Header */}
-        <div className={`flex items-center gap-2 font-bold mb-2 ${getColor(stats.fps)} ${stats.fps < 40 ? 'neon-red-text' : 'neon-fps-text'}`}>
-          <span>{getHealthIcon(stats.fps)}</span>
+
+      <div
+        className="fps-panel bg-black/95 border-2 border-blue-500/50 rounded-lg p-2.5 text-white shadow-2xl"
+        style={{
+          boxShadow: '0 0 12px rgba(59, 130, 246, 0.5)',
+          maxWidth: '320px',
+        }}
+        onClick={() => setShowDiagnostics(!showDiagnostics)}
+      >
+        {/* Header with quality */}
+        <div className={`flex items-center gap-2 font-bold mb-2 ${getQualityColor()} ${metrics.averageFps < 40 ? 'neon-bad' : 'neon-good'}`}>
+          <span>{getHealthIcon(recommendation?.quality || 'fair')}</span>
           <span>FPS Monitor</span>
+          <span className="text-xs opacity-70">(Click for diagnostics)</span>
         </div>
 
-        {/* Current FPS - Main metric */}
-        <div className="mb-2 border-t border-blue-500/30 pt-2">
-          <div className="flex justify-between items-center">
-            <span className="text-blue-300/70">FPS:</span>
-            <span className={`font-bold text-lg ${getColor(stats.fps)} ${stats.fps < 40 ? 'neon-red-text' : 'neon-fps-text'}`}>
-              {stats.fps}
-            </span>
+        {/* Main metrics grid */}
+        <div className="grid grid-cols-2 gap-2 mb-2 border-t border-blue-500/30 pt-2">
+          {/* FPS */}
+          <div>
+            <div className="text-blue-300/70 text-xs">FPS</div>
+            <div className={`font-bold text-lg ${getQualityColor()}`}>
+              {metrics.averageFps}
+            </div>
+            <div className="text-xs text-blue-300/50">
+              min: {Math.round(metrics.minFrameTime ? 1000 / metrics.maxFrameTime : 0)} | max: {Math.round(metrics.maxFrameTime ? 1000 / metrics.minFrameTime : 0)}
+            </div>
           </div>
-          <div className="text-xs text-blue-300/50 mt-1">
-            avg: {stats.avgFps} | min: {stats.minFps} | max: {stats.maxFps}
+
+          {/* Frame Time */}
+          <div>
+            <div className="text-blue-300/70 text-xs">Frame Time</div>
+            <div className={metrics.averageFrameTime > 16.67 ? 'text-red-400 font-bold' : 'text-blue-400 font-bold'}>
+              {metrics.averageFrameTime.toFixed(2)}ms
+            </div>
+            <div className="text-xs text-blue-300/50">
+              p95: {metrics.p95FrameTime.toFixed(1)}ms
+            </div>
+          </div>
+
+          {/* Bottleneck */}
+          <div>
+            <div className="text-blue-300/70 text-xs">Bottleneck</div>
+            <div className="font-bold">
+              {metrics.isGpuBound ? (
+                <span className="text-orange-400">GPU</span>
+              ) : metrics.isCpuBound ? (
+                <span className="text-yellow-400">CPU</span>
+              ) : (
+                <span className="text-green-400">Balanced</span>
+              )}
+            </div>
+          </div>
+
+          {/* Jank */}
+          <div>
+            <div className="text-blue-300/70 text-xs">Jank</div>
+            <div className={metrics.jankScore > 0.3 ? 'text-red-400 font-bold' : 'text-blue-400 font-bold'}>
+              {(metrics.jankScore * 100).toFixed(1)}%
+            </div>
+            <div className="text-xs text-blue-300/50">
+              {metrics.jankEvents} events
+            </div>
           </div>
         </div>
 
-        {/* Frame Time */}
-        <div className="flex justify-between items-center text-blue-300/70 mb-1 text-xs">
-          <span>Frame:</span>
-          <span className={stats.frameTime > 16.67 ? 'text-red-500 font-bold' : 'text-blue-400'}>
-            {stats.frameTime}ms
-          </span>
-        </div>
-
-        {/* Target */}
-        <div className="flex justify-between items-center text-blue-300/70 mb-2 text-xs">
-          <span>Target:</span>
-          <span className="text-blue-400">{targetFrameRate}fps</span>
-        </div>
-
-        {/* Dropped Frames */}
-        {stats.dropped > 0 && (
-          <div className="flex justify-between items-center text-red-500 mb-2 text-xs border-t border-red-500/30 pt-2 font-bold">
-            <span>Dropped:</span>
-            <span>{stats.dropped}</span>
+        {/* Quality & Recommendations */}
+        {recommendation && (
+          <div className="border-t border-blue-500/30 pt-2 mb-2 text-xs">
+            <div className="text-blue-300/70 font-bold mb-1">
+              Quality: <span className="text-blue-400 capitalize">{recommendation.quality}</span>
+            </div>
+            {recommendation.issues.length > 0 && (
+              <div className="text-red-300/70 mb-1">
+                ⚠️ {recommendation.issues[0]}
+              </div>
+            )}
+            {recommendation.recommendations.length > 0 && (
+              <div className="text-yellow-300/70">
+                💡 {recommendation.recommendations[0]}
+              </div>
+            )}
           </div>
         )}
 
-        {/* Quality Settings */}
-        <div className="border-t border-blue-500/30 pt-2 text-xs">
-          <div className="text-blue-300/70 mb-1 font-bold">Quality:</div>
-          <div className="flex justify-between mb-1">
-            <span className="text-blue-300/60">Tier:</span>
-            <span className="text-blue-400 font-mono capitalize">
-              {deviceTier}
-            </span>
+        {/* Diagnostics Panel */}
+        {showDiagnostics && diagnosis && (
+          <div className="border-t border-blue-500/30 pt-2 text-xs bg-blue-950/30 rounded p-2">
+            <div className="font-bold text-blue-300 mb-1 capitalize">
+              {diagnosis.category}
+            </div>
+            <div className="text-blue-300/70 mb-1 text-xs">
+              {diagnosis.diagnosis}
+            </div>
+            <div className="text-xs space-y-0.5">
+              {diagnosis.nextSteps.slice(0, 3).map((step, i) => (
+                <div key={i} className="text-green-300/70">
+                  • {step}
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="flex justify-between">
-            <span className="text-blue-300/60">3D:</span>
-            <span className={enable3D ? 'text-blue-400' : 'text-red-500'}>
-              {enable3D ? 'ON' : 'OFF'}
-            </span>
-          </div>
-        </div>
+        )}
 
-        {/* FPS Graph (mini sparkline) */}
-        <div className="border-t border-blue-500/30 pt-2 mt-2">
-          <div className="text-blue-300/70 text-xs mb-1 font-bold">Graph:</div>
-          <div className="flex gap-px h-5">
-            {fpsHistoryRef.current.slice(-20).map((fps, i) => {
-              const height = Math.max(1, Math.round((fps / 60) * 20));
+        {/* Compact FPS Graph */}
+        <div className="border-t border-blue-500/30 pt-2">
+          <div className="flex gap-px h-4">
+            {fpsHistoryRef.current.slice(-40).map((fps, i) => {
+              const height = Math.max(1, Math.round((fps / 60) * 16));
               const color =
                 fps >= 58
-                  ? 'bg-blue-500'
+                  ? 'bg-green-500'
                   : fps >= 50
-                  ? 'bg-blue-400'
+                  ? 'bg-blue-500'
                   : fps >= 40
                   ? 'bg-yellow-500'
                   : fps >= 30
@@ -252,16 +300,18 @@ const FpsMonitor = ({ show = false }: { show?: boolean }) => {
               return (
                 <div
                   key={i}
-                  className={`${color} flex-1 opacity-100`}
-                  style={{ 
-                    height: `${height}px`,
-                    boxShadow: fps < 40 ? 'inset 0 0 2px rgba(239, 68, 68, 0.8)' : 'inset 0 0 2px rgba(59, 130, 246, 0.8)'
-                  }}
+                  className={`${color} flex-1 opacity-80`}
+                  style={{ height: `${height}px` }}
                   title={`${fps} FPS`}
                 />
               );
             })}
           </div>
+        </div>
+
+        {/* Status Footer */}
+        <div className="text-xs text-blue-300/50 mt-2 pt-2 border-t border-blue-500/30">
+          Samples: {metrics.sampleCount} | {metrics.isReliable ? '✓ Reliable' : '⚠ Low sample'}
         </div>
       </div>
     </div>
