@@ -1507,15 +1507,20 @@ function useBatteryInfo(): BatteryInfo {
     const initBattery = async () => {
       try {
         const nav = navigator as any;
+        const isDev = process.env.NODE_ENV !== 'production';
         
-        console.log('[useBatteryInfo] 🔍 Initializing battery API...');
-        console.log('[useBatteryInfo] Browser:', navigator.userAgent);
-        console.log('[useBatteryInfo] getBattery available:', !!nav.getBattery);
+        if (isDev) {
+          console.log('[useBatteryInfo] 🔍 Initializing battery API...');
+          console.log('[useBatteryInfo] Browser:', navigator.userAgent);
+          console.log('[useBatteryInfo] getBattery available:', !!nav.getBattery);
+        }
         
         // Use only the standard Battery Status API - this pulls REAL device battery info
         if (!nav.getBattery || typeof nav.getBattery !== 'function') {
-          console.error('[useBatteryInfo] ❌ Battery API not supported in this browser');
-          console.log('[useBatteryInfo] Battery API requires: Chromium browser (Chrome/Edge/Brave) on a device with battery');
+          if (isDev) {
+            console.warn('[useBatteryInfo] Battery API not supported in this browser');
+            console.log('[useBatteryInfo] Battery API requires: Chromium browser (Chrome/Edge/Brave) on a device with battery');
+          }
           if (isMounted) {
             setBatteryInfo({
               level: 0,
@@ -1528,17 +1533,21 @@ function useBatteryInfo(): BatteryInfo {
           return;
         }
 
-        console.log('[useBatteryInfo] ⏳ Requesting device battery...');
+        if (isDev) {
+          console.log('[useBatteryInfo] ⏳ Requesting device battery...');
+        }
         
         // Get real device battery
         battery = await nav.getBattery();
         
-        console.log('[useBatteryInfo] ✅ Battery object received:', {
-          level: battery.level,
-          charging: battery.charging,
-          chargingTime: battery.chargingTime,
-          dischargingTime: battery.dischargingTime
-        });
+        if (isDev) {
+          console.log('[useBatteryInfo] ✅ Battery object received:', {
+            level: battery.level,
+            charging: battery.charging,
+            chargingTime: battery.chargingTime,
+            dischargingTime: battery.dischargingTime
+          });
+        }
         
         // Update battery info from real device data
         const updateFromDevice = () => {
@@ -1552,7 +1561,9 @@ function useBatteryInfo(): BatteryInfo {
             supported: true,
           };
           
-          console.log('[useBatteryInfo] 🔋 Battery update:', batteryData);
+          if (isDev) {
+            console.log('[useBatteryInfo] 🔋 Battery update:', batteryData);
+          }
           setBatteryInfo(batteryData);
         };
         
@@ -1565,13 +1576,17 @@ function useBatteryInfo(): BatteryInfo {
         battery.addEventListener('chargingtimechange', updateFromDevice);
         battery.addEventListener('dischargingtimechange', updateFromDevice);
         
-        console.log('[useBatteryInfo] ✅ Successfully connected to device battery:', {
-          level: Math.round(battery.level * 100) + '%',
-          charging: battery.charging
-        });
+        if (isDev) {
+          console.log('[useBatteryInfo] ✅ Successfully connected to device battery:', {
+            level: Math.round(battery.level * 100) + '%',
+            charging: battery.charging
+          });
+        }
         
       } catch (error) {
-        console.warn('[useBatteryInfo] Failed to access device battery:', error);
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[useBatteryInfo] Failed to access device battery:', error);
+        }
         if (isMounted) {
           setBatteryInfo({
             level: 0,
