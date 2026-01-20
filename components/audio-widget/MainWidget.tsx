@@ -224,7 +224,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
         <AnimatePresence mode="wait">
         {widgetHidden && !isScrollMinimized && (
           <motion.div
-            className="fixed right-0 bottom-[70px] z-[100200] pointer-events-none"
+            className="fixed bottom-[70px] z-[100200] pointer-events-none md:left-3 md:right-auto right-[max(0px,calc((100vw-1600px)/2))]"
           >
             <motion.button
               key="normal-pull-tab"
@@ -276,7 +276,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
         {/* Minimized pull tab on scroll when widget is hidden */}
         {widgetHidden && isScrollMinimized && (
           <motion.div
-            className="fixed right-0 bottom-[70px] z-[100200] pointer-events-none"
+            className="fixed bottom-[70px] z-[100200] pointer-events-none md:left-3 md:right-auto right-[clamp(0px,calc((100vw-1600px)/2),100px)]"
           >
             <motion.button
               key="minimized-pull-tab"
@@ -354,7 +354,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
             {/* MINIMIZED PILL STATE - Cool Music icon with animated wave bars */}
             {isScrollMinimized && !open && (
               <motion.div
-                className="fixed right-3 bottom-[70px] z-[100200] pointer-events-none"
+                className="fixed bottom-[70px] z-[100200] pointer-events-none md:left-3 md:right-auto right-[clamp(12px,calc((100vw-1600px)/2+12px),112px)]"
               >
                 <motion.button
                   key="minimized-audio"
@@ -436,7 +436,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.25 }}
-                className="fixed right-3 bottom-[70px] z-[100200] pointer-events-auto"
+                className="fixed bottom-[70px] z-[100200] pointer-events-auto md:left-3 md:right-auto right-[clamp(12px,calc((100vw-1600px)/2+12px),112px)]"
                 drag="x"
                 dragConstraints={{ left: 0, right: 150 }}
                 dragElastic={0.1}
@@ -489,7 +489,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                 boxShadow: '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
                 transition: 'border-color 0.4s ease-out, box-shadow 0.4s ease-out',
                 transitionDelay: '0.05s',
-                zIndex: open ? 2147483700 : 'auto',
+                zIndex: 2147483700,
               }}
             >
               {shimmerEnabled && <ShimmerLine color="blue" intensity={shimmerSettings.intensity as any} speed={shimmerSettings.speed as any} />}

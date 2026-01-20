@@ -41,6 +41,9 @@ import { ALL_THEMES } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 import Image from "next/image";
 
+// Import dev utilities
+import { useDevSkipShortcut } from "@/hooks/useDevSkipShortcut";
+
 // Desktop-only keyboard navigation
 const DesktopKeyNavigator = dynamic(() => import("@/components/navigation/DesktopKeyNavigator"), { ssr: false }) as any;
 
@@ -183,7 +186,14 @@ function DesktopHomeContent() {
   const [screenCategory, setScreenCategory] = useState<string>('FHD');
   const [isDesktop, setIsDesktop] = useState(true);
   const splinePreloadRanRef = useRef(false);
-  const { setLoaderv2Open, setV2Unlocked } = useUIState();
+  const { setLoaderv2Open, setV2Unlocked, devSkipPageModeAndLoader, setDevSkipPageModeAndLoader } = useUIState();
+
+  // Dev keyboard shortcut to skip pagemode and loader
+  useDevSkipShortcut(() => {
+    setDevSkipPageModeAndLoader(true);
+    setCurrentView('content');
+    setV2Unlocked(true);
+  });
 
   const { 
     deviceTier, 

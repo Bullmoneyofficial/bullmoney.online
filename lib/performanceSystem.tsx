@@ -266,12 +266,38 @@ export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: 
   const frameCountRef = useRef(0);
   const lastTimeRef = useRef(performance.now());
   const rafIdRef = useRef<number | null>(null);
+  const isFrozenRef = useRef(false);
+
+  useEffect(() => {
+    // Listen for battery saver freeze/unfreeze events
+    const handleFreeze = () => {
+      isFrozenRef.current = true;
+    };
+    const handleUnfreeze = () => {
+      isFrozenRef.current = false;
+    };
+
+    window.addEventListener('bullmoney-freeze', handleFreeze);
+    window.addEventListener('bullmoney-unfreeze', handleUnfreeze);
+
+    return () => {
+      window.removeEventListener('bullmoney-freeze', handleFreeze);
+      window.removeEventListener('bullmoney-unfreeze', handleUnfreeze);
+    };
+  }, []);
 
   useEffect(() => {
     if (!enabled) return;
 
     // Use a more efficient measurement approach - sample every 2 seconds instead of continuous
     const measureFPS = () => {
+      // CRITICAL FIX: Keep RAF alive during battery saver freeze
+      if (isFrozenRef.current) {
+        try {
+          document.documentElement.style.setProperty('--fps-monitor-perf-active', '1');
+        } catch (e) {}
+      }
+
       frameCountRef.current++;
       const now = performance.now();
       const elapsed = now - lastTimeRef.current;

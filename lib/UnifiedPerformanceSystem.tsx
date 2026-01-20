@@ -293,6 +293,7 @@ class FPSMonitor {
   private rafId: number | null = null;
   private isRunning = false;
   private lastVisibilityState: boolean | null = null;
+  private isFrozen = false; // Track if battery saver has frozen the page
 
   // Jank detection: count frames that exceeded budget
   private jankFrames = 0;
@@ -324,6 +325,11 @@ class FPSMonitor {
     if (this.isRunning || typeof window === 'undefined') return;
     this.isRunning = true;
     this.lastFrameTime = performance.now();
+    
+    // Listen for battery saver freeze/unfreeze events
+    window.addEventListener('bullmoney-freeze', this.handleFreeze);
+    window.addEventListener('bullmoney-unfreeze', this.handleUnfreeze);
+    
     this.loop(performance.now());
   }
 
@@ -332,8 +338,20 @@ class FPSMonitor {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
+    window.removeEventListener('bullmoney-freeze', this.handleFreeze);
+    window.removeEventListener('bullmoney-unfreeze', this.handleUnfreeze);
     this.isRunning = false;
   }
+
+  private handleFreeze = () => {
+    this.isFrozen = true;
+    console.log('[FPSMonitor] 🔋 Frozen state detected - continuing FPS measurement');
+  };
+
+  private handleUnfreeze = () => {
+    this.isFrozen = false;
+    console.log('[FPSMonitor] ✓ Unfrozen - resuming normal FPS measurement');
+  };
 
   private loop = (timestamp: number) => {
     // If tab is hidden, hold last values to avoid fake spikes/drops.
@@ -352,6 +370,15 @@ class FPSMonitor {
     if (isHidden) {
       this.rafId = requestAnimationFrame(this.loop);
       return;
+    }
+
+    // CRITICAL FIX: Continue measuring FPS even when battery saver freezes the page
+    // When frozen, RAF may not fire frequently due to browser optimization
+    // Force a minimal update to keep RAF alive by setting a style property
+    if (this.isFrozen) {
+      try {
+        document.documentElement.style.setProperty('--fps-monitor-active', '1');
+      } catch (e) {}
     }
 
     // Calculate frame delta for budget tracking

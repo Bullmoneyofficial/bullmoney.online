@@ -217,7 +217,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
   const [isPlaying, setIsPlaying] = useState(true);
   
   // Position state - left or right side of screen
-  const [playerSide, setPlayerSide] = useState<'left' | 'right'>('left');
+  const [playerSide, setPlayerSide] = useState<'left' | 'right'>('right');
   // Initialize from parent's playerMinimized prop (true on reload for pull-tab-only behavior)
   const [isMinimized, setIsMinimizedInternal] = useState(playerMinimized);
   const [isDragging, setIsDragging] = useState(false);
@@ -466,16 +466,16 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             /* Compact pill button when modals/UI is open - matches scroll-minimized design */
             <motion.div
               key="compact-pill-div"
-              className="fixed left-3 bottom-14 pointer-events-none"
-              style={{ zIndex: 100201 }}
+              className="fixed bottom-[70px] pointer-events-none"
+              style={{ zIndex: 100201, right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }}
             >
               <motion.button
-                initial={{ x: -100, opacity: 0 }}
+                initial={{ x: 100, opacity: 0 }}
                 animate={
                   isPulltabPinned 
                     ? { x: 0, scale: 1, opacity: 1 }
                     : {
-                        x: [-100, 0, 0, -100],
+                        x: [100, 0, 0, 100],
                         opacity: [0, 1, 1, 0],
                         scale: [0.95, 1, 1, 0.95],
                       }
@@ -543,16 +543,16 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             /* Compact pill version when scrolling - same as forceMinimize pill */
             <motion.div
               key="scroll-compact-pill-div"
-              className="fixed left-3 bottom-14 pointer-events-none"
-              style={{ zIndex: 100201 }}
+              className="fixed bottom-[70px] pointer-events-none"
+              style={{ zIndex: 100201, right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }}
             >
               <motion.button
-                initial={{ x: -100, opacity: 0 }}
+                initial={{ x: 100, opacity: 0 }}
                 animate={
                   isPulltabPinned 
                     ? { x: 0, scale: 1, opacity: 1 }
                     : {
-                        x: [-100, 0, 0, -100],
+                        x: [100, 0, 0, 100],
                         opacity: [0, 1, 1, 0],
                         scale: [0.95, 1, 1, 0.95],
                       }
@@ -627,8 +627,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               className="fixed pointer-events-none"
               style={{
                 zIndex: Z_INDEX.PULL_TAB,
-                [playerSide === 'left' ? 'left' : 'right']: -50,
-                bottom: 140,
+                right: 'clamp(-50px, calc((100vw - 1600px) / 2 - 50px), 50px)',
+                bottom: 70,
               }}
             >
               <motion.button
@@ -793,7 +793,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               }
             }}
             className={cn(
-              "fixed left-3 bottom-14 flex items-center gap-1.5 px-2.5 py-2 rounded-xl",
+              "fixed bottom-[70px] flex items-center gap-1.5 px-2.5 py-2 rounded-xl",
               "bg-gradient-to-br from-blue-600/40 via-blue-500/25 to-slate-900/50",
               "backdrop-blur-2xl border border-blue-500/50",
               "shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30",
@@ -802,6 +802,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             )}
             style={{
               zIndex: 100201, // Just above MainWidget z-[100200]
+              right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)',
             }}
             whileHover={{ scale: 1.05, x: 2 }}
             whileTap={{ scale: 0.95 }}
@@ -935,16 +936,16 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
       {/* Pull tab when hidden (original hide feature) */}
       {playerHidden && !open && !isMinimized && (
         <motion.button
-          initial={{ x: -30, opacity: 0 }}
+          initial={{ x: 30, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          exit={{ x: -30, opacity: 0 }}
+          exit={{ x: 30, opacity: 0 }}
           onClick={() => { SoundEffects.click(); setPlayerHidden(false); }}
           className={cn(
-            "fixed left-0 flex items-center py-8 pl-0.5 pr-2 rounded-r-2xl backdrop-blur-md transition-colors",
-            "bg-gradient-to-r from-slate-800/95 to-slate-700/95 hover:from-slate-700/95 hover:to-slate-600/95",
-            "border-r border-y border-slate-500/40 shadow-xl"
+            "fixed flex items-center py-8 pr-0.5 pl-2 rounded-l-2xl backdrop-blur-md transition-colors",
+            "bg-gradient-to-l from-slate-800/95 to-slate-700/95 hover:from-slate-700/95 hover:to-slate-600/95",
+            "border-l border-y border-slate-500/40 shadow-xl"
           )}
-          style={{ bottom: 180, zIndex: Z_INDEX.PULL_TAB }}
+          style={{ bottom: 70, zIndex: Z_INDEX.PULL_TAB, right: 'clamp(0px, calc((100vw - 1600px) / 2), 100px)' }}
         >
           <motion.div animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
             <IconGripVertical className="w-4 h-4 text-white/70" />

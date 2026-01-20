@@ -114,16 +114,17 @@ export function MinimizedPlayer({
               !isScrolling && "gap-3 py-3.5",
               !isScrolling && (playerSide === 'left' 
                 ? "left-0 pl-3 pr-5 border-l-0" 
-                : "right-0 pr-3 pl-5 border-r-0"),
+                : "pr-3 pl-5 border-r-0"),
               // Minimized pill state styles - much smaller
               isScrolling && "gap-0 justify-center",
               isScrolling && (playerSide === 'left' 
                 ? "left-0 border-l-0" 
-                : "right-0 border-r-0"),
+                : "border-r-0"),
             )}
             style={{ 
-              bottom: 140, 
+              bottom: 70, 
               zIndex: Z_INDEX.PULL_TAB,
+              right: playerSide === 'right' ? 'clamp(0px, calc((100vw - 1600px) / 2), 100px)' : undefined,
               boxShadow: isPlaying 
                 ? '0 0 30px rgba(34, 197, 94, 0.3), 0 10px 40px rgba(0,0,0,0.5)' 
                 : '0 10px 40px rgba(0,0,0,0.5)',

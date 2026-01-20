@@ -99,20 +99,20 @@ const MobileMenuControls = memo(({
   isScrollMinimized = false,
 }: any) => (
   <motion.div 
-    className="relative group rounded-full overflow-hidden shadow-2xl z-50 flex items-center flex-grow"
+    animate={{
+      y: [0, -8, 0],
+      scale: [1, 1.02, 1],
+    }}
+    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+    className="relative group rounded-full overflow-visible z-50 flex items-center flex-grow"
     data-theme-aware
     data-navbar
-    animate={{
-      height: isScrollMinimized ? 32 : undefined,
-      maxWidth: isScrollMinimized ? '7rem' : '100%',
-      scale: isScrollMinimized ? 0.85 : 1,
-    }}
-    transition={{ type: 'spring', damping: 25, stiffness: 450, mass: 0.6 }}
     style={{ 
       height: isScrollMinimized ? 32 : 'auto',
       maxWidth: isScrollMinimized ? '7rem' : 'none',
-      transition: 'border-color 0.4s ease-out, box-shadow 0.4s ease-out',
+      transition: 'border-color 0.4s ease-out, box-shadow 0.4s ease-out, filter 0.4s ease-out, height 0.4s ease-out, max-width 0.4s ease-out',
       transitionDelay: '0.35s',
+      filter: 'drop-shadow(0 0 12px rgba(59,130,246,1)) drop-shadow(0 0 24px rgba(59,130,246,0.8)) drop-shadow(0 0 36px rgba(59,130,246,0.6))',
     }}
   >
     {/* UNIFIED SHIMMER - Border glow effect, theme-aware via CSS variables */}
@@ -123,15 +123,15 @@ const MobileMenuControls = memo(({
       <div className="shimmer-glow shimmer-gpu absolute inset-0 rounded-full pointer-events-none" />
     )}
 
-    {/* Inner Content Container - Theme-aware borders and shadows */}
+    {/* Neon Inner Content Container - Theme-aware borders and shadows */}
     <motion.div 
       className={cn(
         "relative h-full w-full bg-black/95 rounded-full flex items-center justify-center gap-0.5 sm:gap-1 transition-all duration-200 z-10",
         isScrollMinimized ? "p-[1px] px-1" : "p-[2px] px-1 xs:px-1.5 sm:px-2"
       )}
       style={{
-        border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.6)',
-        boxShadow: '0 0 25px rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+        border: '2px solid rgba(59, 130, 246, 0.9)',
+        boxShadow: '0 0 10px rgba(59, 130, 246, 0.8), inset 0 0 10px rgba(59, 130, 246, 0.3)',
       }}
     >
       {/* Theme Selector Button - With text label */}
@@ -492,9 +492,33 @@ export const Navbar = memo(() => {
         />
 
         {/* MOBILE NAVBAR */}
-        <div className="lg:hidden flex flex-row items-center justify-between w-full px-2 sm:px-4 pointer-events-auto gap-2">
-          {/* Logo + Brand Name */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="lg:hidden flex flex-col items-center w-full gap-2 pointer-events-auto">
+          {/* Floating Glowing BULLMONEY Text - Mobile Only */}
+          <motion.div
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            className="flex flex-col items-center"
+          >
+            <motion.h1
+              animate={{ 
+                scale: [1, 1.05, 1],
+                opacity: [0.8, 1, 0.8]
+              }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="text-2xl font-black tracking-wider bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 bg-clip-text text-transparent pointer-events-none"
+              style={{
+                textShadow: '0 0 20px rgba(59, 130, 246, 1), 0 0 40px rgba(59, 130, 246, 0.8), 0 0 60px rgba(59, 130, 246, 0.6)',
+                filter: 'drop-shadow(0 0 10px rgba(59,130,246,0.9)) drop-shadow(0 0 20px rgba(59,130,246,0.6))',
+              }}
+            >
+              BULLMONEY
+            </motion.h1>
+          </motion.div>
+
+          {/* Mobile Navbar Controls Container */}
+          <div className={cn("flex flex-row items-center w-full px-2 sm:px-4 pointer-events-auto gap-2", isScrollMinimized ? "justify-center" : "justify-between")}>
+          {/* Logo + Brand Name - Hidden on mobile */}
+          <div className="hidden flex items-center gap-2 flex-shrink-0">
             {/* Logo - shrinks on scroll */}
             <motion.div 
               className="relative flex items-center justify-center overflow-hidden z-50 flex-shrink-0"
@@ -571,6 +595,7 @@ export const Navbar = memo(() => {
             shimmerSettings={shimmerSettings}
             isScrollMinimized={isScrollMinimized}
           />
+          </div>
         </div>
       </motion.div>
       

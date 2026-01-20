@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 // ==========================================
 // MOBILE PERFORMANCE OPTIMIZER
@@ -265,6 +265,25 @@ export const usePerformanceMonitor = () => {
     memory: 0,
     isOverloaded: false,
   });
+  const isFrozenRef = useRef(false);
+
+  useEffect(() => {
+    // Listen for battery saver freeze/unfreeze events
+    const handleFreeze = () => {
+      isFrozenRef.current = true;
+    };
+    const handleUnfreeze = () => {
+      isFrozenRef.current = false;
+    };
+
+    window.addEventListener('bullmoney-freeze', handleFreeze);
+    window.addEventListener('bullmoney-unfreeze', handleUnfreeze);
+
+    return () => {
+      window.removeEventListener('bullmoney-freeze', handleFreeze);
+      window.removeEventListener('bullmoney-unfreeze', handleUnfreeze);
+    };
+  }, []);
 
   useEffect(() => {
     let frameCount = 0;
@@ -272,6 +291,13 @@ export const usePerformanceMonitor = () => {
     let animationFrameId: number;
 
     const measureFPS = () => {
+      // CRITICAL FIX: Keep RAF alive during battery saver freeze
+      if (isFrozenRef.current) {
+        try {
+          document.documentElement.style.setProperty('--fps-monitor-mobile-active', '1');
+        } catch (e) {}
+      }
+
       frameCount++;
       const currentTime = performance.now();
 

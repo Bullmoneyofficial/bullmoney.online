@@ -124,6 +124,9 @@ import { ALL_THEMES } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 import Image from "next/image";
 
+// Import dev utilities
+import { useDevSkipShortcut } from "@/hooks/useDevSkipShortcut";
+
 // Import loaders - lazy
 const PageMode = dynamic(
   () => import("@/components/REGISTER USERS/pagemode"),
@@ -688,7 +691,14 @@ function HomeContent() {
   const [activeRemoteScene, setActiveRemoteScene] = useState<RemoteSplineMeta | null>(null);
   const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
   const splinePreloadRanRef = useRef(false);
-  const { setLoaderv2Open, setV2Unlocked } = useUIState();
+  const { setLoaderv2Open, setV2Unlocked, devSkipPageModeAndLoader, setDevSkipPageModeAndLoader } = useUIState();
+
+  // Dev keyboard shortcut to skip pagemode and loader
+  useDevSkipShortcut(() => {
+    setDevSkipPageModeAndLoader(true);
+    setCurrentView('content');
+    setV2Unlocked(true);
+  });
 
   // Use unified performance for tracking
   const { 

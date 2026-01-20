@@ -508,9 +508,38 @@ function useFpsMonitor() {
   const frameTimesRef = useRef<number[]>([]);
   const lastFrameRef = useRef(performance.now());
   const rafRef = useRef<number | null>(null);
+  const isFrozenRef = useRef(false);
+
+  useEffect(() => {
+    // Listen for battery saver freeze/unfreeze events
+    const handleFreeze = () => {
+      isFrozenRef.current = true;
+      console.log('[useFpsMonitor] 🔋 Frozen - continuing FPS measurement');
+    };
+    const handleUnfreeze = () => {
+      isFrozenRef.current = false;
+      console.log('[useFpsMonitor] ✓ Unfrozen - resuming normal FPS measurement');
+    };
+
+    window.addEventListener('bullmoney-freeze', handleFreeze);
+    window.addEventListener('bullmoney-unfreeze', handleUnfreeze);
+
+    return () => {
+      window.removeEventListener('bullmoney-freeze', handleFreeze);
+      window.removeEventListener('bullmoney-unfreeze', handleUnfreeze);
+    };
+  }, []);
 
   useEffect(() => {
     const measureFps = () => {
+      // CRITICAL FIX: Keep RAF alive during battery saver freeze
+      // Force a minimal style update to prevent RAF throttling
+      if (isFrozenRef.current) {
+        try {
+          document.documentElement.style.setProperty('--fps-monitor-hub-active', '1');
+        } catch (e) {}
+      }
+
       const now = performance.now();
       const delta = now - lastFrameRef.current;
       lastFrameRef.current = now;

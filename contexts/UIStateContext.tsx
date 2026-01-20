@@ -109,6 +109,7 @@ interface UIStateContextType {
   isHeroSceneModalOpen: boolean;   // Hero scene picker modal
   isDiscordStageModalOpen: boolean; // Discord Stage modal
   isV2Unlocked: boolean;
+  devSkipPageModeAndLoader: boolean; // Dev flag to skip pagemode and loader
 
   // Legacy: activeNavbarModal (maps to specific modal states)
   activeNavbarModal: NavbarModalType;
@@ -143,6 +144,7 @@ interface UIStateContextType {
   setHeroSceneModalOpen: (open: boolean) => void;
   setDiscordStageModalOpen: (open: boolean) => void;
   setV2Unlocked: (unlocked: boolean) => void;
+  setDevSkipPageModeAndLoader: (skip: boolean) => void;
 
   // Legacy: setNavbarModal (for backwards compatibility)
   setNavbarModal: (modal: NavbarModalType) => void;
@@ -209,6 +211,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const [isV2Unlocked, setIsV2UnlockedState] = useState(
     () => typeof window !== 'undefined' && sessionStorage.getItem('affiliate_unlock_complete') === 'true'
   );
+  const [devSkipPageModeAndLoader, setDevSkipPageModeAndLoaderState] = useState(false);
 
   // Derived state: Legacy activeNavbarModal (maps to individual states)
   const activeNavbarModal: NavbarModalType =
@@ -553,6 +556,13 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const setDevSkipPageModeAndLoader = useCallback((skip: boolean) => {
+    setDevSkipPageModeAndLoaderState(skip);
+    if (skip) {
+      console.log('[DevSkip] Skipping pagemode and loader - going directly to content');
+    }
+  }, []);
+
   // Legacy: setNavbarModal for backwards compatibility
   const setNavbarModal = useCallback((modal: NavbarModalType) => {
     // Close all navbar-type modals first
@@ -694,6 +704,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isHeroSceneModalOpen,
     isDiscordStageModalOpen,
     isV2Unlocked,
+    devSkipPageModeAndLoader,
     activeNavbarModal,
     isAnyOpen,
     isAnyModalOpen,
@@ -725,6 +736,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setHeroSceneModalOpen,
     setDiscordStageModalOpen,
     setV2Unlocked,
+    setDevSkipPageModeAndLoader,
     setNavbarModal,
 
     // Convenience methods

@@ -1759,7 +1759,7 @@ const HeroDesktop = () => {
 
         <GravityMode active={gravityMode}>
           <motion.div className="relative z-20 pt-[12vh] sm:pt-[18vh] lg:pt-[20vh]" style={{ x: horizontalScroll }} onMouseEnter={() => setIsUIHovered(true)} onMouseLeave={() => setIsUIHovered(false)}>
-            <div className="px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto min-h-[calc(100dvh-12vh)] sm:min-h-[calc(100dvh-18vh)] lg:h-[calc(100dvh-20vh)] flex flex-col justify-start lg:justify-center">
+            <div className="px-4 sm:px-6 lg:px-12 w-full sm:max-w-7xl mx-auto min-h-auto sm:min-h-[calc(100dvh-18vh)] lg:h-[calc(100dvh-20vh)] flex flex-col justify-start lg:justify-center">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6 lg:gap-8 items-center lg:items-center">
                 <div className="lg:col-span-6 relative order-1 lg:order-1 mb-2 lg:mb-0 text-center lg:text-left">
                   <VelocitySkewText>
