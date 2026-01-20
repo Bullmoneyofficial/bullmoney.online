@@ -809,19 +809,10 @@ function SplitSceneModal({ open, onClose }: { open: boolean; onClose: () => void
 function HomeContent() {
   const { optimizeSection } = useBigDeviceScrollOptimizer();
   
-  // Initialize currentView from localStorage synchronously to prevent pagemode flash on reload
-  const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'content'>(() => {
-    if (typeof window === 'undefined') return 'pagemode'; // SSR fallback
-    const hasSession = localStorage.getItem("bullmoney_session");
-    const hasCompletedPagemode = localStorage.getItem("bullmoney_pagemode_completed");
-    // Skip pagemode if user has session OR has ever completed pagemode
-    return (hasSession || hasCompletedPagemode === "true") ? 'loader' : 'pagemode';
-  });
-  const [isInitialized, setIsInitialized] = useState(() => {
-    // Mark as initialized if we already determined the view from localStorage
-    if (typeof window === 'undefined') return false;
-    return true;
-  });
+  // Start uninitialized - useEffect will check localStorage on client mount
+  // This ensures SSR hydration works correctly in production
+  const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'content'>('pagemode');
+  const [isInitialized, setIsInitialized] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   // Legacy flag retained for older bundles; default keeps desktop on 3D hero.
   const desktopHeroVariant = 'spline';
@@ -1000,22 +991,26 @@ function HomeContent() {
     preloadSplineEngine();
   }, [deviceTier, currentView]);
 
-  // Session check is now done in useState initializer for instant determination
-  // This useEffect only serves as a fallback for SSR hydration
+  // Check localStorage on client mount to determine the correct view
+  // This runs once on mount and sets the view based on user's previous progress
   useEffect(() => {
-    if (!isInitialized) {
-      const hasSession = localStorage.getItem("bullmoney_session");
-      const hasCompletedPagemode = localStorage.getItem("bullmoney_pagemode_completed");
-      
+    const hasSession = localStorage.getItem("bullmoney_session");
+    const hasCompletedPagemode = localStorage.getItem("bullmoney_pagemode_completed");
+    const hasCompletedLoader = localStorage.getItem("bullmoney_loader_completed");
+    
+    // Skip directly to content if user has completed the full flow before
+    if (hasCompletedLoader === "true") {
+      setV2Unlocked(true);
+      setCurrentView('content');
+    } else if (hasSession || hasCompletedPagemode === "true") {
       // Skip pagemode if user has session OR has ever completed pagemode
-      if (hasSession || hasCompletedPagemode === "true") {
-        setCurrentView('loader');
-      } else {
-        setCurrentView('pagemode');
-      }
-      setIsInitialized(true);
+      setCurrentView('loader');
+    } else {
+      // First time visitor - show pagemode
+      setCurrentView('pagemode');
     }
-  }, [isInitialized]);
+    setIsInitialized(true);
+  }, [setV2Unlocked]);
 
   // Mobile Check
   useEffect(() => {
@@ -1031,6 +1026,8 @@ function HomeContent() {
 
   // Called when user completes the vault
   const handleLoaderComplete = useCallback(() => {
+    // Mark loader as completed so user skips directly to content on reload
+    localStorage.setItem("bullmoney_loader_completed", "true");
     setV2Unlocked(true);
     setCurrentView('content');
   }, [setV2Unlocked]);

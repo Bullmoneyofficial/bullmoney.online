@@ -45,6 +45,7 @@ export const PRESERVED_KEYS = [
   'bullmoney_recruit_auth',      // Recruit auth session
   'bullmoney_tracking_session',  // Tracking session ID
   'bullmoney_pagemode_completed', // User has completed pagemode (skip on return)
+  'bullmoney_loader_completed',  // User has completed loader (skip to content on return)
   'bullmoney_draft',             // Partial registration progress
   
   // ===== USER PREFERENCES =====
