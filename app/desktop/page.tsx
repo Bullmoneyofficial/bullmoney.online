@@ -180,8 +180,17 @@ function DesktopHomeContent() {
   const router = useRouter();
   const { optimizeSection } = useBigDeviceScrollOptimizer();
   
-  const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'content'>('pagemode');
-  const [isInitialized, setIsInitialized] = useState(false);
+  // Initialize currentView from localStorage synchronously to prevent pagemode flash on reload
+  const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'content'>(() => {
+    if (typeof window === 'undefined') return 'pagemode'; // SSR fallback
+    const hasSession = localStorage.getItem("bullmoney_session");
+    const hasCompletedPagemode = localStorage.getItem("bullmoney_pagemode_completed");
+    return (hasSession || hasCompletedPagemode === "true") ? 'loader' : 'pagemode';
+  });
+  const [isInitialized, setIsInitialized] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return true;
+  });
   const [isMuted, setIsMuted] = useState(false);
   const [screenCategory, setScreenCategory] = useState<string>('FHD');
   const [isDesktop, setIsDesktop] = useState(true);
@@ -348,19 +357,22 @@ function DesktopHomeContent() {
     preloadSplineEngine();
   }, [deviceTier, currentView]);
 
-  // Session Check - Skip pagemode if user has EVER completed it
+  // Session check is now done in useState initializer for instant determination
+  // This useEffect only serves as a fallback for SSR hydration
   useEffect(() => {
-    const hasSession = localStorage.getItem("bullmoney_session");
-    const hasCompletedPagemode = localStorage.getItem("bullmoney_pagemode_completed");
-    
-    // Skip pagemode if user has session OR has ever completed pagemode
-    if (hasSession || hasCompletedPagemode === "true") {
-      setCurrentView('loader');
-    } else {
-      setCurrentView('pagemode');
+    if (!isInitialized) {
+      const hasSession = localStorage.getItem("bullmoney_session");
+      const hasCompletedPagemode = localStorage.getItem("bullmoney_pagemode_completed");
+      
+      // Skip pagemode if user has session OR has ever completed pagemode
+      if (hasSession || hasCompletedPagemode === "true") {
+        setCurrentView('loader');
+      } else {
+        setCurrentView('pagemode');
+      }
+      setIsInitialized(true);
     }
-    setIsInitialized(true);
-  }, []);
+  }, [isInitialized]);
 
   const handlePageModeUnlock = () => {
     setCurrentView('loader');
