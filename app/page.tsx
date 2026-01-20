@@ -233,7 +233,7 @@ function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sourc
             textShadow: '0 0 5px rgba(147, 197, 253, 0.5), 0 0 10px rgba(96, 165, 250, 0.3)',
           }}
         >
-          Watch the Discord stage streams and featured videos right here on mobile. No heavy 3D — just fast video and the same glow as desktop.
+          Tap into live trade ideas, callouts, and coaching with 10,000+ traders. Join the community that shares real-time setups, risk plans, and recap videos so you can trade with confidence.
         </p>
       </div>
 
@@ -871,7 +871,7 @@ function HomeContent() {
   const unregisterComponentRef = useRef(unregisterComponent);
   const trackCustomRef = useRef(trackCustom);
   const optimizeSectionRef = useRef(optimizeSection);
-  
+
   // Keep refs updated
   useEffect(() => {
     registerComponentRef.current = registerComponent;
@@ -1066,7 +1066,9 @@ function HomeContent() {
             {canRenderMobileSections && (
               <section
                 id="hero"
-                className="w-full full-bleed viewport-full min-h-[100dvh] flex items-center justify-center"
+                className={isMobile
+                  ? "w-full full-bleed viewport-full min-h-[100dvh] flex items-center justify-center"
+                  : "w-full full-bleed viewport-full"}
                 data-allow-scroll
                 data-content
                 data-theme-aware
@@ -1075,6 +1077,7 @@ function HomeContent() {
                   <MobileDiscordHero
                     sources={DISCORD_STAGE_FEATURED_VIDEOS}
                     onOpenModal={openDiscordStageModal}
+                    variant="mobile"
                   />
                 ) : (
                   <HeroDesktop />

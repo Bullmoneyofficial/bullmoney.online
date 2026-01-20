@@ -1244,7 +1244,7 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="fixed inset-0 z-[9999999] flex items-center justify-center p-3 md:p-6"
+                                className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 md:p-6"
                             >
                                 {/* Backdrop */}
                                 <motion.div
@@ -1255,7 +1255,7 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                                     transition={{ duration: 0.18 }}
                                     onPointerDown={handleCloseModal}
                                     aria-hidden="true"
-                                    className="absolute inset-0 bg-black/95 backdrop-blur-md"
+                                    className="absolute inset-0 bg-black/85"
                                 />
 
                                 {/* Modal */}
