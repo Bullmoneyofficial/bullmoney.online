@@ -78,7 +78,6 @@ import {
   Bitcoin,
   Coins,
   ExternalLink,
-  Sparkles,
   X,
   MessageSquare,
   MessageCircle,
@@ -92,7 +91,6 @@ import {
   Shield,
   Zap,
   Chrome,
-  Monitor,
   Copy,
   Check,
   Settings,
@@ -118,7 +116,9 @@ import {
   Info,
   Calendar,
   Filter,
-  Radio
+  Radio,
+  Monitor,
+  Sparkles
 } from 'lucide-react';
 import { useUIState } from '@/contexts/UIStateContext';
 import { createSupabaseClient } from '@/lib/supabase';
@@ -1210,9 +1210,11 @@ function usePerformanceStats(): PerformanceStats {
  * Hook for REAL GPU info using WebGL API
  */
 function useGpuInfo(): GpuInfo {
-  // Compute GPU info synchronously
+  // Compute GPU info synchronously with enhanced detection
   const computeGpuInfo = useCallback((): GpuInfo => {
     try {
+      console.log('[useGpuInfo] 🎮 Detecting GPU (PC/Mobile universal)...');
+      
       const canvas = document.createElement('canvas');
       const gl = canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl') as WebGLRenderingContext | null;
       
@@ -1224,40 +1226,232 @@ function useGpuInfo(): GpuInfo {
         if (debugInfo) {
           vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || 'Unknown';
           renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || 'Unknown';
+          console.log('[useGpuInfo] ✅ GPU Detected:', { vendor, renderer });
+        } else {
+          // Fallback: Try to get vendor from regular WebGL parameters
+          vendor = gl.getParameter(gl.VENDOR) || 'Unknown';
+          renderer = gl.getParameter(gl.RENDERER) || 'Unknown';
+          console.log('[useGpuInfo] ⚠️ WEBGL_debug_renderer_info not available, using fallback:', { vendor, renderer });
         }
         
         const webglVersion = canvas.getContext('webgl2') ? 'WebGL 2.0' : 'WebGL 1.0';
         const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) || 0;
         const maxViewportDims = gl.getParameter(gl.MAX_VIEWPORT_DIMS) || [0, 0];
         
-        // Determine GPU tier based on renderer string
+        // Enhanced GPU tier detection with custom PC GPUs and mobile GPUs
         let tier: 'ultra' | 'high' | 'medium' | 'low' = 'medium';
         let score = 50;
         const rendererLower = renderer.toLowerCase();
+        const vendorLower = vendor.toLowerCase();
         
-        // Ultra tier GPUs
-        if (rendererLower.includes('rtx 40') || rendererLower.includes('rtx 30') || 
-            rendererLower.includes('radeon rx 7') || rendererLower.includes('radeon rx 6') ||
-            rendererLower.includes('apple m2') || rendererLower.includes('apple m3') ||
-            rendererLower.includes('a17') || rendererLower.includes('a16')) {
-          tier = 'ultra';
-          score = 95;
+        console.log('[useGpuInfo] 🔍 Analyzing GPU tier...');
+        
+        // === NVIDIA GPUs (Desktop & Laptop) ===
+        if (rendererLower.includes('nvidia') || rendererLower.includes('geforce') || rendererLower.includes('quadro') || rendererLower.includes('rtx')) {
+          // RTX 40 Series (Ultra)
+          if (rendererLower.includes('rtx 40') || rendererLower.includes('4090') || rendererLower.includes('4080') || rendererLower.includes('4070')) {
+            tier = 'ultra'; score = 98;
+          }
+          // RTX 30 Series (Ultra)
+          else if (rendererLower.includes('rtx 30') || rendererLower.includes('3090') || rendererLower.includes('3080') || rendererLower.includes('3070')) {
+            tier = 'ultra'; score = 95;
+          }
+          // RTX 20 Series (High)
+          else if (rendererLower.includes('rtx 20') || rendererLower.includes('2080') || rendererLower.includes('2070') || rendererLower.includes('2060')) {
+            tier = 'high'; score = 85;
+          }
+          // GTX 16 Series (High)
+          else if (rendererLower.includes('gtx 16') || rendererLower.includes('1660') || rendererLower.includes('1650')) {
+            tier = 'high'; score = 75;
+          }
+          // GTX 10 Series (Medium-High)
+          else if (rendererLower.includes('gtx 10') || rendererLower.includes('1080') || rendererLower.includes('1070') || rendererLower.includes('1060')) {
+            tier = 'high'; score = 70;
+          }
+          // Quadro/Professional (High)
+          else if (rendererLower.includes('quadro') || rendererLower.includes('titan')) {
+            tier = 'high'; score = 80;
+          }
+          else {
+            tier = 'medium'; score = 60;
+          }
         }
-        // High tier GPUs
-        else if (rendererLower.includes('rtx 20') || rendererLower.includes('gtx 16') ||
-                 rendererLower.includes('radeon rx 5') || rendererLower.includes('apple m1') ||
-                 rendererLower.includes('a15') || rendererLower.includes('a14') ||
-                 rendererLower.includes('adreno 7') || rendererLower.includes('mali-g7')) {
-          tier = 'high';
-          score = 75;
+        
+        // === AMD GPUs (Desktop & Laptop) ===
+        else if (rendererLower.includes('amd') || rendererLower.includes('radeon') || rendererLower.includes('ati')) {
+          // RX 7000 Series (Ultra)
+          if (rendererLower.includes('rx 7') || rendererLower.includes('7900') || rendererLower.includes('7800') || rendererLower.includes('7700')) {
+            tier = 'ultra'; score = 96;
+          }
+          // RX 6000 Series (Ultra)
+          else if (rendererLower.includes('rx 6') || rendererLower.includes('6900') || rendererLower.includes('6800') || rendererLower.includes('6700')) {
+            tier = 'ultra'; score = 92;
+          }
+          // RX 5000 Series (High)
+          else if (rendererLower.includes('rx 5') || rendererLower.includes('5700') || rendererLower.includes('5600')) {
+            tier = 'high'; score = 78;
+          }
+          // Vega (Medium-High)
+          else if (rendererLower.includes('vega')) {
+            tier = 'high'; score = 72;
+          }
+          else {
+            tier = 'medium'; score = 55;
+          }
         }
-        // Low tier GPUs
-        else if (rendererLower.includes('intel hd') || rendererLower.includes('intel uhd') ||
-                 rendererLower.includes('adreno 5') || rendererLower.includes('mali-4') ||
-                 rendererLower.includes('powervr')) {
-          tier = 'low';
-          score = 30;
+        
+        // === Intel GPUs (Integrated & Arc) ===
+        else if (rendererLower.includes('intel')) {
+          // Intel Arc (High - Dedicated)
+          if (rendererLower.includes('arc')) {
+            tier = 'high'; score = 75;
+          }
+          // Intel Iris Xe (Medium - Good integrated)
+          else if (rendererLower.includes('iris xe') || rendererLower.includes('xe')) {
+            tier = 'medium'; score = 55;
+          }
+          // Intel UHD/Iris Plus (Low-Medium)
+          else if (rendererLower.includes('uhd') || rendererLower.includes('iris plus')) {
+            tier = 'medium'; score = 45;
+          }
+          // Intel HD Graphics (Low)
+          else if (rendererLower.includes('hd graphics')) {
+            tier = 'low'; score = 30;
+          }
+          else {
+            tier = 'low'; score = 35;
+          }
         }
+        
+        // === Apple GPUs (Mac & iOS) - Updated for 2026 ===
+        else if (rendererLower.includes('apple') || vendorLower.includes('apple')) {
+          // M4 Series (Ultra) - 2024+
+          if (rendererLower.includes('m4') || rendererLower.includes('m4 pro') || rendererLower.includes('m4 max') || rendererLower.includes('m4 ultra')) {
+            tier = 'ultra'; score = 98;
+          }
+          // M3 Series (Ultra) - 2023-2024
+          else if (rendererLower.includes('m3') || rendererLower.includes('m3 pro') || rendererLower.includes('m3 max') || rendererLower.includes('m3 ultra')) {
+            tier = 'ultra'; score = 95;
+          }
+          // M2 Series (Ultra) - 2022-2023
+          else if (rendererLower.includes('m2') || rendererLower.includes('m2 pro') || rendererLower.includes('m2 max') || rendererLower.includes('m2 ultra')) {
+            tier = 'ultra'; score = 92;
+          }
+          // M1 Series (High) - 2020-2021
+          else if (rendererLower.includes('m1') || rendererLower.includes('m1 pro') || rendererLower.includes('m1 max') || rendererLower.includes('m1 ultra')) {
+            tier = 'high'; score = 88;
+          }
+          // A18 Pro (iPhone 16 Pro, 2024) (Ultra)
+          else if (rendererLower.includes('a18 pro') || rendererLower.includes('a18pro')) {
+            tier = 'ultra'; score = 92;
+          }
+          // A18 (iPhone 16, 2024) (High)
+          else if (rendererLower.includes('a18')) {
+            tier = 'high'; score = 88;
+          }
+          // A17 Pro (iPhone 15 Pro, 2023) (Ultra)
+          else if (rendererLower.includes('a17 pro') || rendererLower.includes('a17pro')) {
+            tier = 'ultra'; score = 90;
+          }
+          // A17 (2023) (High)
+          else if (rendererLower.includes('a17')) {
+            tier = 'high'; score = 86;
+          }
+          // A16 Bionic (iPhone 14 Pro/15/15 Plus, 2022) (High)
+          else if (rendererLower.includes('a16')) {
+            tier = 'high'; score = 84;
+          }
+          // A15 Bionic (iPhone 13/14, 2021) (High)
+          else if (rendererLower.includes('a15')) {
+            tier = 'high'; score = 80;
+          }
+          // A14 Bionic (iPhone 12, iPad Air 4, 2020) (High)
+          else if (rendererLower.includes('a14')) {
+            tier = 'high'; score = 75;
+          }
+          // A13 Bionic (iPhone 11, 2019) (Medium-High)
+          else if (rendererLower.includes('a13')) {
+            tier = 'medium'; score = 68;
+          }
+          // A12Z/A12X Bionic (iPad Pro 2018/2020) (Medium-High)
+          else if (rendererLower.includes('a12z') || rendererLower.includes('a12x')) {
+            tier = 'medium'; score = 70;
+          }
+          // A12 Bionic (iPhone XS/XR, 2018) (Medium)
+          else if (rendererLower.includes('a12')) {
+            tier = 'medium'; score = 65;
+          }
+          // A11 Bionic (iPhone X/8, 2017) (Medium)
+          else if (rendererLower.includes('a11')) {
+            tier = 'medium'; score = 60;
+          }
+          // A10X Fusion (iPad Pro 2017) (Medium)
+          else if (rendererLower.includes('a10x')) {
+            tier = 'medium'; score = 58;
+          }
+          // A10 Fusion (iPhone 7, 2016) (Low-Medium)
+          else if (rendererLower.includes('a10')) {
+            tier = 'medium'; score = 50;
+          }
+          // A9X (iPad Pro 2015) (Low-Medium)
+          else if (rendererLower.includes('a9x')) {
+            tier = 'medium'; score = 48;
+          }
+          // A9 and older (Low)
+          else if (rendererLower.includes('a9') || rendererLower.includes('a8') || rendererLower.includes('a7')) {
+            tier = 'low'; score = 40;
+          }
+          else {
+            tier = 'medium'; score = 60;
+          }
+        }
+        
+        // === Qualcomm Adreno (Android Mobile) ===
+        else if (rendererLower.includes('adreno')) {
+          // Adreno 7xx (High-end Android - Snapdragon 8 Gen series)
+          if (rendererLower.includes('adreno 7') || rendererLower.includes('740') || rendererLower.includes('730')) {
+            tier = 'high'; score = 82;
+          }
+          // Adreno 6xx (Mid-high Android)
+          else if (rendererLower.includes('adreno 6') || rendererLower.includes('660') || rendererLower.includes('650') || rendererLower.includes('640')) {
+            tier = 'medium'; score = 65;
+          }
+          // Adreno 5xx (Mid-range Android)
+          else if (rendererLower.includes('adreno 5')) {
+            tier = 'medium'; score = 50;
+          }
+          // Older Adreno (Low)
+          else {
+            tier = 'low'; score = 35;
+          }
+        }
+        
+        // === ARM Mali (Android Mobile & Tablets) ===
+        else if (rendererLower.includes('mali')) {
+          // Mali-G7x (High-end - Samsung Exynos, etc.)
+          if (rendererLower.includes('mali-g7') || rendererLower.includes('g78') || rendererLower.includes('g77')) {
+            tier = 'high'; score = 78;
+          }
+          // Mali-G6x (Medium-high)
+          else if (rendererLower.includes('mali-g6')) {
+            tier = 'medium'; score = 62;
+          }
+          // Mali-G5x (Medium)
+          else if (rendererLower.includes('mali-g5')) {
+            tier = 'medium'; score = 50;
+          }
+          // Older Mali (Low)
+          else {
+            tier = 'low'; score = 35;
+          }
+        }
+        
+        // === PowerVR (Some mobile devices) ===
+        else if (rendererLower.includes('powervr')) {
+          tier = 'low'; score = 40;
+        }
+        
+        console.log('[useGpuInfo] ✅ GPU Tier:', tier, '| Score:', score);
         
         return {
           vendor: vendor || 'Unknown',
@@ -1270,7 +1464,7 @@ function useGpuInfo(): GpuInfo {
         };
       }
     } catch (error) {
-      console.warn('[useGpuInfo] GPU detection failed:', error);
+      console.warn('[useGpuInfo] ❌ GPU detection failed:', error);
     }
 
     return {
@@ -2053,7 +2247,8 @@ const StatCard = memo(({
   icon: Icon, 
   color = 'blue',
   subValue,
-  animate = true 
+  animate = true,
+  dataSource
 }: {
   label: string;
   value: string | number;
@@ -2062,6 +2257,7 @@ const StatCard = memo(({
   color?: 'blue' | 'green' | 'amber' | 'red' | 'cyan' | 'purple';
   subValue?: string;
   animate?: boolean;
+  dataSource?: 'device' | 'browser' | 'estimated';
 }) => {
   const colorClasses = {
     blue: 'from-blue-500/20 to-blue-600/10 border-blue-500/30 text-blue-400',
@@ -2071,22 +2267,41 @@ const StatCard = memo(({
     cyan: 'from-cyan-500/20 to-cyan-600/10 border-cyan-500/30 text-cyan-400',
     purple: 'from-purple-500/20 to-purple-600/10 border-purple-500/30 text-purple-400',
   };
+  
+  const sourceLabels = {
+    device: 'Real Device',
+    browser: 'Browser API',
+    estimated: 'Estimated'
+  };
+  
+  const sourceColors = {
+    device: 'text-blue-400',
+    browser: 'text-blue-400',
+    estimated: 'text-blue-400'
+  };
+  
+  const sourceGlow = '0 0 6px #3b82f6';
 
   return (
     <motion.div
       initial={animate ? { opacity: 0, y: 10 } : false}
       animate={{ opacity: 1, y: 0 }}
-      className={`relative p-2.5 rounded-xl bg-gradient-to-br ${colorClasses[color]} border backdrop-blur-sm`}
+      className={`relative p-2.5 rounded-xl bg-gradient-to-br ${colorClasses[color]} border backdrop-blur-sm overflow-hidden`}
     >
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[9px] font-medium text-zinc-400 uppercase tracking-wide">{label}</span>
-        <Icon className={`w-3.5 h-3.5 ${colorClasses[color].split(' ').pop()}`} />
+        <span className="text-[9px] font-medium text-zinc-400 uppercase tracking-wide truncate">{label}</span>
+        <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${colorClasses[color].split(' ').pop()}`} style={{ filter: `drop-shadow(${sourceGlow})` }} />
       </div>
       <div className="flex items-baseline gap-1">
         <span className="text-lg font-black text-white tabular-nums">{value}</span>
         {unit && <span className="text-[9px] text-zinc-500 font-medium">{unit}</span>}
       </div>
-      {subValue && <div className="text-[8px] text-zinc-500 mt-0.5">{subValue}</div>}
+      {subValue && <div className="text-[8px] text-zinc-500 mt-0.5 truncate">{subValue}</div>}
+      {dataSource && (
+        <div className={`text-[7px] font-medium mt-1 truncate ${sourceColors[dataSource]}`} style={{ textShadow: sourceGlow }}>
+          {sourceLabels[dataSource]}
+        </div>
+      )}
     </motion.div>
   );
 });
@@ -4141,7 +4356,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             dragElastic={{ top: 0.2, bottom: 0.2 }}
             onDragStart={() => setIsDragging(true)}
             onDragEnd={handleDragEnd}
-            className="fixed left-1/2 top-1/2 z-[2147483647] -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[85vh] sm:w-[80vw] sm:h-[80vh] md:w-[65vw] md:h-[65vh] max-w-sm sm:max-w-md md:max-w-xl flex flex-col bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-blue-500/30 shadow-2xl overflow-hidden rounded-2xl"
+            className="fixed left-1/2 top-1/2 z-[2147483647] -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[85vh] sm:w-[80vw] sm:h-[80vh] md:w-[75vw] md:h-[75vh] lg:w-[1200px] lg:h-[700px] max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-6xl flex flex-col bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-blue-500/30 shadow-2xl overflow-hidden rounded-2xl"
             style={{ touchAction: 'pan-y' }}
           >
             {/* Header with FPS Display */}
@@ -4639,35 +4854,27 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                       <PerformanceRing value={performanceScore} label="" color={performanceScore >= 70 ? 'green' : performanceScore >= 50 ? 'amber' : 'red'} size={50} />
                     </div>
                     
-                    {/* Quick Stats Grid */}
+                    {/* Quick Stats Grid - 2x3 */}
                     <div className="grid grid-cols-2 gap-2">
-                      <StatCard label="FPS" value={fps} icon={Activity} color={fps >= 50 ? 'green' : fps >= 30 ? 'amber' : 'red'} />
-                      <StatCard label="Memory" value={memoryStats.jsHeapUsed} unit="MB" icon={MemoryStick} color={memoryStats.percentage < 70 ? 'blue' : 'amber'} subValue={`${memoryStats.percentage}% used`} />
-                      <StatCard label="CPU Cores" value={browserInfo.cores} icon={Cpu} color="cyan" />
-                      <StatCard label="Device RAM" value={browserInfo.deviceMemory} unit="GB" icon={HardDrive} color="purple" />
+                      <StatCard label="FPS" value={fps} icon={Activity} color={fps >= 50 ? 'green' : fps >= 30 ? 'amber' : 'red'} dataSource="browser" />
+                      <StatCard label="Memory" value={memoryStats.jsHeapUsed} unit="MB" icon={MemoryStick} color={memoryStats.percentage < 70 ? 'blue' : 'amber'} subValue={`${memoryStats.percentage}% used`} dataSource={(performance as any).memory ? 'device' : 'estimated'} />
+                      <StatCard label="CPU Cores" value={browserInfo.cores} icon={Cpu} color="cyan" dataSource="device" />
+                      <StatCard label="Device RAM" value={browserInfo.deviceMemory} unit="GB" icon={HardDrive} color="purple" dataSource={(navigator as any).deviceMemory ? 'device' : 'estimated'} />
+                      <StatCard label="GPU" value={gpuInfo.tier.toUpperCase()} icon={Monitor} color="blue" subValue={gpuInfo.renderer} dataSource="browser" />
+                      <StatCard label="WebGL" value={gpuInfo.webglVersion} icon={Sparkles} color="blue" subValue={gpuInfo.vendor} dataSource="browser" />
                     </div>
                     
-                    {/* GPU Info */}
-                    <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">GPU</span>
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${
-                          gpuInfo.tier === 'ultra' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' :
-                          gpuInfo.tier === 'high' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' :
-                          gpuInfo.tier === 'medium' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' :
-                          'bg-blue-500/20 text-blue-300 border-blue-500/30'
-                        }`}>{gpuInfo.tier.toUpperCase()}</span>
-                      </div>
-                      <div className="text-xs font-semibold text-blue-200">{gpuInfo.renderer}</div>
-                      <div className="text-[9px] text-blue-300/70 mt-0.5">{gpuInfo.vendor} • {gpuInfo.webglVersion}</div>
-                    </div>
+
                     
                     {/* Network & Battery Row */}
                     <div className="grid grid-cols-2 gap-2">
                       {/* Network */}
                       <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] font-medium text-zinc-400">Network</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-medium text-zinc-400">Network</span>
+                            <span className="text-[7px] font-medium text-blue-400" style={{ textShadow: '0 0 4px #3b82f6' }}>Browser API</span>
+                          </div>
                           {networkStats.connectionType === 'wifi' ? (
                             <Wifi className="w-3 h-3 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
                           ) : !networkStats.isOnline ? (
@@ -4685,7 +4892,10 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                       {/* Battery */}
                       <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] font-medium text-zinc-400">Battery</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-medium text-zinc-400">Battery</span>
+                            {batteryInfo.supported && <span className="text-[7px] font-medium text-blue-400" style={{ textShadow: '0 0 4px #3b82f6' }}>Device API</span>}
+                          </div>
                           {batteryInfo.charging ? <Zap className="w-3 h-3 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> : <Battery className="w-3 h-3 text-blue-400" />}
                         </div>
                         {batteryInfo.supported && batteryInfo.level >= 0 ? (
@@ -6412,6 +6622,29 @@ const FpsPill = memo(({
       className="fixed right-0 z-[250000] pointer-events-none"
       style={{ top: '50%', transform: 'translateY(-50%)', paddingRight: 'calc(env(safe-area-inset-right, 0px) + 8px)' }}
     >
+      {/* Desktop Info Label - To the right of button */}
+      <div className="hidden lg:block absolute left-full top-1/2 -translate-y-1/2 ml-4 pointer-events-none z-[250001]">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: isMinimized ? 0 : 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.5 }}
+          className="text-left"
+        >
+          <div 
+            className="text-base font-bold text-blue-400 whitespace-nowrap mb-1"
+            style={{ textShadow: '0 0 10px #3b82f6, 0 0 20px #3b82f6, 0 0 30px #3b82f6' }}
+          >
+            📊 Click for Device Info
+          </div>
+          <div 
+            className="text-sm text-blue-300 whitespace-nowrap font-medium"
+            style={{ textShadow: '0 0 8px #3b82f6, 0 0 16px #3b82f6' }}
+          >
+            Trades • Live Streams • Performance
+          </div>
+        </motion.div>
+      </div>
+
       <motion.div
         whileHover="hover"
         animate={isMinimized ? "minimized" : "initial"}
