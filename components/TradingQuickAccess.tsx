@@ -46,6 +46,13 @@ const currencies = [
   'USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'NZD', 'CNY', 'USDT', 'USDC', 'BUSD', 'PAXG'
 ];
 
+// Shared featured video list (usable by other components like the mobile hero)
+export const DISCORD_STAGE_FEATURED_VIDEOS = [
+  'https://www.youtube.com/watch?v=Q3dSjSP3t8I',
+  'https://www.youtube.com/watch?v=xvP1FJt-Qto',
+  'https://www.youtube.com/watch?v=Q3dSjSP3t8I&t=45',
+];
+
 export function TradingQuickAccess() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeChart, setActiveChart] = useState('xauusd');
@@ -69,7 +76,7 @@ export function TradingQuickAccess() {
   const [isLive, setIsLive] = useState(false);
   const [liveChannelId, setLiveChannelId] = useState<string>('UCTd2Y1DjefTH6bOAvFcJ34Q');
   const [tradingChannelIndex, setTradingChannelIndex] = useState(0);
-  const featuredVideos = ['Q3dSjSP3t8I', 'xvP1FJt-Qto'];
+  const featuredVideos = DISCORD_STAGE_FEATURED_VIDEOS;
   
   // Popular trading/forex YouTube channels to pull live streams from when BullMoney isn't live
   const tradingLiveChannels = [
@@ -243,6 +250,18 @@ export function TradingQuickAccess() {
 
   // Build the YouTube embed URL based on active tab
   const youtubeEmbedUrl = useMemo(() => {
+    const toId = (input: string) => {
+      if (!input) return 'Q3dSjSP3t8I';
+      if (!input.includes('http')) return input;
+      try {
+        const u = new URL(input);
+        if (u.searchParams.get('v')) return u.searchParams.get('v') as string;
+        const parts = u.pathname.split('/').filter(Boolean);
+        return parts.pop() || 'Q3dSjSP3t8I';
+      } catch {
+        return input;
+      }
+    };
     if (activeTab === 'live') {
       if (isLive) {
         // Actually live - use the channel that's currently live
@@ -259,9 +278,9 @@ export function TradingQuickAccess() {
       }
     }
     // Featured tab - show the selected featured video
-    const videoId = featuredVideos[featuredIndex] || 'Q3dSjSP3t8I';
+    const videoId = toId(featuredVideos[featuredIndex]) || 'Q3dSjSP3t8I';
     return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&rel=0&modestbranding=1`;
-  }, [activeTab, featuredIndex, liveChannelId, isLive, tradingChannelIndex]);
+  }, [activeTab, featuredIndex, liveChannelId, isLive, tradingChannelIndex, featuredVideos]);
   
   // Unlock secret permanently on hover - stable without closing other menus
   const handleSecretHover = () => {

@@ -106,6 +106,10 @@ import { useComponentTracking, useCrashTracker } from "@/lib/CrashTracker";
 import { useScrollOptimization } from "@/hooks/useScrollOptimization";
 import { useBigDeviceScrollOptimizer } from "@/lib/bigDeviceScrollOptimizer";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
+const FeaturesLazy = dynamic(
+  () => import("@/components/features").then(mod => ({ default: mod.Features })),
+  { ssr: false, loading: () => <FeaturesSkeleton /> }
+);
 
 // Use optimized ticker for 120Hz performance - lazy load
 const LiveMarketTicker = dynamic(
@@ -115,6 +119,7 @@ const LiveMarketTicker = dynamic(
 
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useUIState } from "@/contexts/UIStateContext";
+import { DISCORD_STAGE_FEATURED_VIDEOS } from "@/components/TradingQuickAccess";
 
 const HiddenYoutubePlayer = dynamic(
   () => import("@/components/Mainpage/HiddenYoutubePlayer"),
@@ -124,6 +129,7 @@ const HiddenYoutubePlayer = dynamic(
 import { ALL_THEMES } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 import Image from "next/image";
+import Link from "next/link";
 
 // Import dev utilities
 import { useDevSkipShortcut } from "@/hooks/useDevSkipShortcut";
@@ -158,6 +164,115 @@ const TestimonialsCarousel = dynamic(
   () => import('@/components/Testimonial').then(mod => ({ default: mod.TestimonialsCarousel })),
   { ssr: true, loading: () => <CardSkeleton /> }
 );
+
+// Simple mobile-friendly YouTube embed wrapper for Discord modal videos
+const normalizeYouTubeId = (input: string) => {
+  if (!input) return 'Q3dSjSP3t8I';
+  if (!input.includes('http')) return input;
+  try {
+    const u = new URL(input);
+    if (u.searchParams.get('v')) return u.searchParams.get('v') as string;
+    const parts = u.pathname.split('/').filter(Boolean);
+    return parts.pop() || 'Q3dSjSP3t8I';
+  } catch {
+    return input;
+  }
+};
+
+function MobileDiscordHero({ sources, onOpenModal }: { sources: string[]; onOpenModal: () => void }) {
+  const [index, setIndex] = useState(0);
+  const videoId = normalizeYouTubeId(sources[index] || sources[0] || 'Q3dSjSP3t8I');
+  const embed = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&rel=0&modestbranding=1`;
+
+  return (
+    <div className="w-full max-w-5xl mx-auto px-4 py-10 pt-6 sm:pt-10 min-h-[85vh] flex items-center" data-theme-aware>
+      <div className="relative isolate overflow-hidden rounded-3xl border border-blue-500/40 bg-gradient-to-b from-[#050915]/90 via-[#050915]/95 to-black shadow-[0_0_30px_rgba(59,130,246,0.25)] backdrop-blur-xl p-5 sm:p-8 flex flex-col gap-6 mt-8 sm:mt-0 w-full">
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 20% 20%, rgba(59,130,246,0.14), transparent 40%), radial-gradient(circle at 80% 10%, rgba(147,197,253,0.12), transparent 35%)' }} />
+        <div className="absolute -inset-px rounded-3xl border border-blue-500/20 blur-[1px] pointer-events-none" />
+
+      <div className="flex flex-col gap-3 text-center">
+        <p
+          className="font-mono text-[10px] tracking-[0.18em] uppercase"
+          style={{
+            color: '#60a5fa',
+            textShadow: '0 0 5px #60a5fa, 0 0 10px #60a5fa, 0 0 20px #3b82f6, 0 0 40px #3b82f6',
+          }}
+        >
+          EST. 2024 • TRADING EXCELLENCE
+        </p>
+        <div className="space-y-1">
+          <span
+            className="block text-[clamp(1.9rem,7vw,3rem)] font-sans font-semibold tracking-tight leading-tight"
+            style={{
+              color: '#fff',
+              textShadow: '0 0 5px #fff, 0 0 10px #fff, 0 0 20px #93c5fd, 0 0 40px #60a5fa, 0 0 60px #3b82f6',
+            }}
+          >
+            The path to
+          </span>
+          <span
+            className="block text-[clamp(2.2rem,8vw,3.6rem)] font-serif italic leading-tight"
+            style={{
+              color: '#3b82f6',
+              textShadow: '0 0 5px #3b82f6, 0 0 15px #3b82f6, 0 0 30px #2563eb, 0 0 50px #1d4ed8, 0 0 70px #1e40af',
+            }}
+          >
+            consistent profit
+          </span>
+        </div>
+        <p
+          className="text-sm sm:text-base leading-relaxed max-w-2xl mx-auto"
+          style={{
+            color: 'rgba(147, 197, 253, 0.82)',
+            textShadow: '0 0 5px rgba(147, 197, 253, 0.5), 0 0 10px rgba(96, 165, 250, 0.3)',
+          }}
+        >
+          Watch the Discord stage streams and featured videos right here on mobile. No heavy 3D — just fast video and the same glow as desktop.
+        </p>
+      </div>
+
+      <div className="relative rounded-2xl overflow-hidden border border-blue-500/40 bg-black shadow-[0_0_18px_rgba(59,130,246,0.3)]">
+        <div className="relative w-full" style={{ aspectRatio: '16 / 9' }}>
+          <iframe
+            key={embed}
+            src={embed}
+            className="absolute inset-0 w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            title="BullMoney Discord Video"
+          />
+        </div>
+        <div className="absolute inset-x-0 bottom-0 flex items-center justify-between p-3 bg-black/60 backdrop-blur">
+          <button
+            onClick={() => setIndex((prev) => (prev - 1 + sources.length) % sources.length)}
+            className="px-3 py-1 text-xs font-semibold rounded-full bg-white/10 text-white hover:bg-white/20"
+          >
+            Prev
+          </button>
+          <span className="text-white/80 text-xs font-bold">
+            {index + 1} / {Math.max(1, sources.length)}
+          </span>
+          <button
+            onClick={() => setIndex((prev) => (prev + 1) % sources.length)}
+            className="px-3 py-1 text-xs font-semibold rounded-full bg-white/10 text-white hover:bg-white/20"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 mt-2 sm:mt-0">
+        <Link
+          href="https://t.me/addlist/gg09afc4lp45YjQ0"
+          className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 rounded-full border border-white/25 text-white font-semibold text-xs sm:text-sm hover:bg-white/5"
+        >
+          Join Free Community
+        </Link>
+      </div>
+      </div>
+    </div>
+  );
+}
 
 type RemoteSplineMeta = {
   id: string;
@@ -693,7 +808,7 @@ function HomeContent() {
   const [activeRemoteScene, setActiveRemoteScene] = useState<RemoteSplineMeta | null>(null);
   const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
   const splinePreloadRanRef = useRef(false);
-  const { setLoaderv2Open, setV2Unlocked, devSkipPageModeAndLoader, setDevSkipPageModeAndLoader } = useUIState();
+  const { setLoaderv2Open, setV2Unlocked, devSkipPageModeAndLoader, setDevSkipPageModeAndLoader, openDiscordStageModal } = useUIState();
 
   // Dev keyboard shortcut to skip pagemode and loader
   useDevSkipShortcut(() => {
@@ -724,6 +839,8 @@ function HomeContent() {
   const theme = activeTheme || ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   useAudioEngine(!isMuted, 'MECHANICAL');
   const canRenderMobileSections = !isMobile || allowMobileLazyRender;
+  const canRenderHeavyDesktop = !isMobile;
+  const FeaturesComponent = isMobile ? FeaturesLazy : Features;
   
   // Track FPS drops
   useEffect(() => {
@@ -941,8 +1058,21 @@ function HomeContent() {
             <div id="top" />
 
             {canRenderMobileSections && (
-              <section id="hero" className="w-full full-bleed viewport-full" data-allow-scroll data-content data-theme-aware>
-                <HeroDesktop />
+              <section
+                id="hero"
+                className="w-full full-bleed viewport-full min-h-[100dvh] flex items-center justify-center"
+                data-allow-scroll
+                data-content
+                data-theme-aware
+              >
+                {isMobile ? (
+                  <MobileDiscordHero
+                    sources={DISCORD_STAGE_FEATURED_VIDEOS}
+                    onOpenModal={openDiscordStageModal}
+                  />
+                ) : (
+                  <HeroDesktop />
+                )}
               </section>
             )}
 
@@ -954,72 +1084,75 @@ function HomeContent() {
 
             {canRenderMobileSections && (
               <section id="features" className="w-full full-bleed viewport-full" data-allow-scroll data-content data-theme-aware>
-                <Features />
+                <FeaturesComponent />
               </section>
             )}
 
-            {/* 3D Spline Section - Desktop only */}
-            <section 
-              id="experience" 
-              className="w-full max-w-7xl mx-auto px-4 py-12 md:py-16" 
-              data-allow-scroll 
-              data-content 
-              data-theme-aware 
-            >
-              <div className="relative text-center mb-8" style={{ minHeight: '80px' }}>
-                <h2 className="text-3xl md:text-4xl font-black tracking-tight neon-blue-text">
-                  TRADING TOOLS & ANALYTICS
-                </h2>
-                <p className="text-sm mt-4 neon-blue-text max-w-2xl mx-auto">Advanced market intelligence platforms covering real-time data and interactive visualizations.</p>
-                <div className="flex justify-center mt-4">
-                  <div className="w-24 h-[2px] neon-blue-border" />
+            {canRenderHeavyDesktop && (
+              <section 
+                id="experience" 
+                className="w-full max-w-7xl mx-auto px-4 py-12 md:py-16" 
+                data-allow-scroll 
+                data-content 
+                data-theme-aware 
+              >
+                <div className="relative text-center mb-8" style={{ minHeight: '80px' }}>
+                  <h2 className="text-3xl md:text-4xl font-black tracking-tight neon-blue-text">
+                    TRADING TOOLS & ANALYTICS
+                  </h2>
+                  <p className="text-sm mt-4 neon-blue-text max-w-2xl mx-auto">Advanced market intelligence platforms covering real-time data and interactive visualizations.</p>
+                  <div className="flex justify-center mt-4">
+                    <div className="w-24 h-[2px] neon-blue-border" />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <SplitExperienceCard onOpen={() => setIsSplitModalOpen(true)} />
-                {ADDITIONAL_SPLINE_PAGES.map(scene => (
-                  <RemoteSplineShowcase key={scene.id} scene={scene} onOpen={setActiveRemoteScene} />
-                ))}
-              </div>
-            </section>
-
-            {/* R4X Bot Showcase */}
-            <section
-              id="r4x-bot"
-              className="w-full full-bleed viewport-full mx-auto px-4 pb-16"
-              data-allow-scroll
-              data-content
-              data-theme-aware
-            >
-              <div className="relative text-center mb-8 flex flex-col items-center gap-3" style={{ minHeight: '70px' }}>
-                <p className="text-xs uppercase tracking-[0.3em] font-bold neon-blue-text">
-                  ▪ AI-Powered Trading
-                </p>
-                <h2 className="text-2xl md:text-3xl font-black neon-white-text">{R4X_BOT_SCENE.title}</h2>
-                {R4X_BOT_SCENE.subtitle && (
-                  <p className="text-sm neon-blue-text">{R4X_BOT_SCENE.subtitle}</p>
-                )}
-                <button
-                  onClick={() => setActiveRemoteScene(R4X_BOT_SCENE)}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold neon-white-text transition-all hover:brightness-110"
-                  style={{ 
-                    background: '#3b82f6',
-                    boxShadow: '0 0 8px #3b82f6, 0 0 16px #3b82f6'
-                  }}
-                >
-                  <span>Launch AI Bot View</span>
-                  <span>→</span>
-                </button>
-              </div>
-
-              <div className="relative rounded-3xl overflow-hidden neon-blue-border bg-black">\n                <div className="w-full" style={{ aspectRatio: R4X_BOT_SCENE.aspectRatio ?? '16 / 9' }}>
-                  <Suspense fallback={<SplineSkeleton className="w-full h-full" aspectRatio="auto" style={{ height: '100%' }} />}>
-                    <RemoteSplineFrame viewerSrc={R4X_BOT_SCENE.viewer} sceneSrc={R4X_BOT_SCENE.runtime} title={R4X_BOT_SCENE.title} />
-                  </Suspense>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <SplitExperienceCard onOpen={() => setIsSplitModalOpen(true)} />
+                  {ADDITIONAL_SPLINE_PAGES.map(scene => (
+                    <RemoteSplineShowcase key={scene.id} scene={scene} onOpen={setActiveRemoteScene} />
+                  ))}
                 </div>
-              </div>
-            </section>
+              </section>
+            )}
+
+            {canRenderHeavyDesktop && (
+              <section
+                id="r4x-bot"
+                className="w-full full-bleed viewport-full mx-auto px-4 pb-16"
+                data-allow-scroll
+                data-content
+                data-theme-aware
+              >
+                <div className="relative text-center mb-8 flex flex-col items-center gap-3" style={{ minHeight: '70px' }}>
+                  <p className="text-xs uppercase tracking-[0.3em] font-bold neon-blue-text">
+                    ▪ AI-Powered Trading
+                  </p>
+                  <h2 className="text-2xl md:text-3xl font-black neon-white-text">{R4X_BOT_SCENE.title}</h2>
+                  {R4X_BOT_SCENE.subtitle && (
+                    <p className="text-sm neon-blue-text">{R4X_BOT_SCENE.subtitle}</p>
+                  )}
+                  <button
+                    onClick={() => setActiveRemoteScene(R4X_BOT_SCENE)}
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold neon-white-text transition-all hover:brightness-110"
+                    style={{ 
+                      background: '#3b82f6',
+                      boxShadow: '0 0 8px #3b82f6, 0 0 16px #3b82f6'
+                    }}
+                  >
+                    <span>Launch AI Bot View</span>
+                    <span>→</span>
+                  </button>
+                </div>
+
+                <div className="relative rounded-3xl overflow-hidden neon-blue-border bg-black">
+                  <div className="w-full" style={{ aspectRatio: R4X_BOT_SCENE.aspectRatio ?? '16 / 9' }}>
+                    <Suspense fallback={<SplineSkeleton className="w-full h-full" aspectRatio="auto" style={{ height: '100%' }} />}>
+                      <RemoteSplineFrame viewerSrc={R4X_BOT_SCENE.viewer} sceneSrc={R4X_BOT_SCENE.runtime} title={R4X_BOT_SCENE.title} />
+                    </Suspense>
+                  </div>
+                </div>
+              </section>
+            )}
 
             {/* Mobile-only Testimonials Section */}
             {canRenderMobileSections && (
@@ -1047,12 +1180,14 @@ function HomeContent() {
               </section>
             )}
 
-            <section id="ticker" className="w-full" data-allow-scroll data-footer data-theme-aware>
-              <LiveMarketTicker />
-            </section>
+            {canRenderMobileSections && (
+              <section id="ticker" className="w-full" data-allow-scroll data-footer data-theme-aware>
+                <LiveMarketTicker />
+              </section>
+            )}
           </main>
 
-          {theme.youtubeId && (
+          {canRenderHeavyDesktop && theme.youtubeId && (
             <HiddenYoutubePlayer
               videoId={theme.youtubeId}
               isPlaying={!isMuted}
@@ -1060,10 +1195,10 @@ function HomeContent() {
             />
           )}
 
-          {canRenderMobileSections && (
+          {canRenderHeavyDesktop && (
             <SplitSceneModal open={isSplitModalOpen} onClose={() => setIsSplitModalOpen(false)} />
           )}
-          {canRenderMobileSections && (
+          {canRenderHeavyDesktop && (
             <RemoteSceneModal scene={activeRemoteScene} onClose={() => setActiveRemoteScene(null)} />
           )}
         </>
