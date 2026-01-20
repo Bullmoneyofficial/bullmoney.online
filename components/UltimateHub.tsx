@@ -4611,22 +4611,32 @@ const UnifiedFpsPill = memo(({
   onOpenPanel: () => void;
 }) => {
   const [isPinned, setIsPinned] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false); // Track if showing full content
   const [randomDelay] = useState(() => Math.random() * 5 + 5); // Random 5-10 seconds
   const unpinTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const expandTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Handle interaction to pin the button, then unpin after random delay
   const handleInteraction = useCallback(() => {
     setIsPinned(true);
+    setIsExpanded(true);
     
     // Clear any existing timeout
     if (unpinTimeoutRef.current) {
       clearTimeout(unpinTimeoutRef.current);
+    }
+    if (expandTimeoutRef.current) {
+      clearTimeout(expandTimeoutRef.current);
     }
     
     // Unpin after random 1-10 seconds
     const unpinDelay = Math.random() * 9000 + 1000; // 1-10 seconds in ms
     unpinTimeoutRef.current = setTimeout(() => {
       setIsPinned(false);
+      // Collapse slightly before fully hiding
+      expandTimeoutRef.current = setTimeout(() => {
+        setIsExpanded(false);
+      }, 300);
     }, unpinDelay);
   }, []);
   
@@ -4635,6 +4645,9 @@ const UnifiedFpsPill = memo(({
     return () => {
       if (unpinTimeoutRef.current) {
         clearTimeout(unpinTimeoutRef.current);
+      }
+      if (expandTimeoutRef.current) {
+        clearTimeout(expandTimeoutRef.current);
       }
     };
   }, []);
