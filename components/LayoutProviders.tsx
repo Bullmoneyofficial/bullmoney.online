@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, ReactNode } from "react";
+import { Suspense, ReactNode, useEffect } from "react";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 
 // ✅ IMPORT CRITICAL SEO/ANALYTICS DIRECTLY - These are lightweight and critical
@@ -68,6 +68,28 @@ interface LayoutProvidersProps {
 export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   // Only defer navbar/UltimateHub on mobile to avoid blocking first paint
   const { isMobile: isMobileViewport, shouldRender: allowMobileLazy } = useMobileLazyRender(220);
+
+  // Dev-only guard to avoid crash when React tries to remove nodes that were already moved/removed by imperative code
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development") return;
+
+    const originalRemoveChild = Node.prototype.removeChild;
+
+    const safeRemoveChild: typeof Node.prototype.removeChild = function patchedRemoveChild(this: Node, child: Node) {
+      // If the child was already detached (e.g., moved by a 3rd-party script), skip removal to prevent a NotFoundError
+      if (!child || child.parentNode !== this) {
+        console.warn("[LayoutProviders] Skipped removeChild for detached node", { parent: this, child });
+        return child;
+      }
+      return originalRemoveChild.call(this, child);
+    };
+
+    Node.prototype.removeChild = safeRemoveChild;
+
+    return () => {
+      Node.prototype.removeChild = originalRemoveChild;
+    };
+  }, []);
 
   return (
     <>

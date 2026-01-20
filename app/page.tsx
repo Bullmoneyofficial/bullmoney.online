@@ -1079,11 +1079,11 @@ function HomeContent() {
                 data-content
                 data-theme-aware
               >
-                {isMobile || useDesktopVideoVariant ? (
+                {isMobile ? (
                   <MobileDiscordHero
                     sources={DISCORD_STAGE_FEATURED_VIDEOS}
                     onOpenModal={openDiscordStageModal}
-                    variant={isMobile ? 'mobile' : 'desktop'}
+                    variant="mobile"
                   />
                 ) : (
                   <HeroDesktop />
