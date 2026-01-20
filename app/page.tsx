@@ -1015,7 +1015,7 @@ function HomeContent() {
       setCurrentView('pagemode');
     }
     setIsInitialized(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   // Mobile Check

@@ -243,14 +243,14 @@ export function usePerformanceInit() {
     };
 
     let idleHandle: number | null = null;
-    let timeoutHandle: number | null = null;
+    let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
 
     if ('requestIdleCallback' in window) {
       idleHandle = (window as any).requestIdleCallback(() => {
         initAsync();
       }, { timeout: 2000 });
     } else {
-      timeoutHandle = window.setTimeout(() => {
+      timeoutHandle = setTimeout(() => {
         initAsync();
       }, 0);
     }
