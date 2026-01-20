@@ -54,7 +54,7 @@ const nextConfig = {
     minimumCacheTTL: 60,
   },
 
-  // Headers for better caching and mobile optimization
+  // Headers - Reduced caching for fresher content
   async headers() {
     return [
       {
@@ -72,17 +72,14 @@ const nextConfig = {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
           },
-        ],
-      },
-      {
-        source: '/:all*(svg|jpg|png|webp|avif)',
-        headers: [
+          // Disable aggressive caching - always revalidate
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            value: 'no-cache, no-store, must-revalidate',
           },
         ],
       },
+      // Only cache static assets with content hashes (Next.js build outputs)
       {
         source: '/_next/static/:path*',
         headers: [

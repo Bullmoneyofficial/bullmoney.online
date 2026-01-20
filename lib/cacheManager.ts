@@ -9,6 +9,7 @@
  * - Smart cache invalidation based on version changes
  * - Device-aware storage limits
  * - Graceful migration of preserved data
+ * - Preserves user preferences & auth while clearing stale content
  */
 
 import {
@@ -18,6 +19,8 @@ import {
   PRESERVED_KEYS,
   VOLATILE_KEYS,
   MAJOR_UPDATE_CLEAR_KEYS,
+  SUPABASE_PRESERVED_PATTERNS,
+  VOLATILE_PREFIXES,
 } from './appVersion';
 
 import { detectSafari, initSafariOptimizations, checkSafariStaleBuild, safariForceReload } from './safariOptimizations';
@@ -242,31 +245,85 @@ function clearVolatileStorage(): void {
 }
 
 /**
+ * Check if a key should be preserved (not cleared)
+ */
+function shouldPreserveKey(key: string): boolean {
+  // Check exact matches in PRESERVED_KEYS
+  if (PRESERVED_KEYS.includes(key)) {
+    return true;
+  }
+  
+  // Check Supabase auth patterns (always preserve auth state)
+  for (const pattern of SUPABASE_PRESERVED_PATTERNS) {
+    if (key.startsWith(pattern) || key.includes(pattern)) {
+      return true;
+    }
+  }
+  
+  // Essential cache manager keys
+  if (key === STORAGE_KEYS.APP_VERSION || 
+      key === STORAGE_KEYS.BUILD_TIMESTAMP ||
+      key === STORAGE_KEYS.DEVICE_TIER ||
+      key === STORAGE_KEYS.STORAGE_QUOTA) {
+    return true;
+  }
+  
+  return false;
+}
+
+/**
+ * Check if a key is volatile (should always be cleared)
+ */
+function isVolatileKey(key: string): boolean {
+  // Check exact matches
+  if (VOLATILE_KEYS.includes(key)) {
+    return true;
+  }
+  
+  // Check prefix matches
+  for (const prefix of VOLATILE_PREFIXES) {
+    if (key.startsWith(prefix)) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
  * Clear all caches except preserved keys (used on major updates)
+ * PRESERVES: User preferences, auth state, analytics, device tier
+ * CLEARS: Cached content, API responses, Spline scenes
  */
 function clearAllCaches(): void {
   const preserved = new Map<string, string>();
 
-  // Backup preserved keys
-  PRESERVED_KEYS.forEach((key) => {
-    try {
-      const value = localStorage.getItem(key);
-      if (value) {
-        preserved.set(key, value);
+  // Backup ALL keys that should be preserved
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && shouldPreserveKey(key)) {
+      try {
+        const value = localStorage.getItem(key);
+        if (value) {
+          preserved.set(key, value);
+          console.log(`[CacheManager] Preserving: ${key}`);
+        }
+      } catch (e) {
+        // Ignore
       }
-    } catch (e) {
-      // Ignore
     }
-  });
+  }
 
-  // Clear all BullMoney-related keys
+  // Clear all BullMoney-related keys (except preserved ones)
   const keysToRemove: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key?.startsWith('bullmoney')) {
+    if (key?.startsWith('bullmoney') && !shouldPreserveKey(key)) {
       keysToRemove.push(key);
     }
   }
+
+  console.log(`[CacheManager] Clearing ${keysToRemove.length} stale keys, preserving ${preserved.size} keys`);
 
   keysToRemove.forEach((key) => {
     try {
@@ -285,12 +342,13 @@ function clearAllCaches(): void {
     }
   });
 
-  // Also clear sessionStorage
+  // Also clear sessionStorage (but NOT Supabase auth)
   try {
     const sessionKeysToRemove: string[] = [];
     for (let i = 0; i < sessionStorage.length; i++) {
       const key = sessionStorage.key(i);
-      if (key?.startsWith('bullmoney')) {
+      // Only clear bullmoney session keys, not Supabase
+      if (key?.startsWith('bullmoney') && !shouldPreserveKey(key)) {
         sessionKeysToRemove.push(key);
       }
     }
@@ -383,6 +441,21 @@ export function initializeCacheManager(): {
     };
   }
 
+  // === SKIP CACHE CLEARING IN DEVELOPMENT ===
+  // In dev mode, we don't want to clear caches on every hot reload
+  const isDev = process.env.NODE_ENV === 'development';
+  if (isDev) {
+    console.log('[CacheManager] 🔧 DEV MODE - Skipping cache invalidation');
+    const capabilities = detectDeviceCapabilities();
+    return {
+      cacheCleared: false,
+      isFirstVisit: false,
+      deviceTier: capabilities.tier,
+      capabilities,
+      isSafari: false,
+    };
+  }
+
   // Initialize Safari optimizations early
   const safariInfo = initSafariOptimizations();
   
@@ -411,25 +484,22 @@ export function initializeCacheManager(): {
     console.log(`[CacheManager] Safari v${safariInfo.safariVersion} detected (iOS: ${safariInfo.iosVersion})`);
   }
 
-  // Handle version mismatch
+  // Handle version mismatch - ALWAYS clear stale content on new deploy
   if (status.isStale) {
     console.log(
-      `[CacheManager] Version update detected: ${status.storedVersion} -> ${status.currentVersion}`
+      `[CacheManager] 🔄 NEW VERSION DETECTED: ${status.storedVersion} -> ${status.currentVersion}`
     );
+    console.log('[CacheManager] Clearing stale content (preserving user data)...');
 
-    if (status.requiresFullClear) {
-      console.log('[CacheManager] Performing full cache clear...');
-      clearAllCaches();
-      // Also clear browser caches for Safari
-      if (safariInfo.isSafari) {
-        clearBrowserCaches();
-      }
-    } else {
-      console.log('[CacheManager] Performing volatile cache clear...');
-      clearVolatileStorage();
-    }
-
+    // Clear localStorage caches (preserves user preferences & auth)
+    clearAllCaches();
+    
+    // ALWAYS clear browser/service worker caches on version update
+    // This ensures users get fresh assets after every deploy
+    clearBrowserCaches();
+    
     cacheCleared = true;
+    console.log('[CacheManager] ✅ Cache cleared - user will get fresh content');
   }
 
   // First visit - just enforce quota
