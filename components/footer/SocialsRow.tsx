@@ -38,7 +38,13 @@ export const SocialsRow = () => {
             onMouseEnter={() => SoundEffects.hover()}
             onClick={() => SoundEffects.click()}
             onTouchStart={() => SoundEffects.click()}
-            className="p-3 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer"
+            className="p-3 rounded-full bg-black cursor-pointer transition-all duration-300"
+            style={{
+              color: '#3b82f6',
+              border: '2px solid #3b82f6',
+              boxShadow: '0 0 4px #3b82f6, 0 0 8px rgba(59, 130, 246, 0.5)',
+              filter: 'drop-shadow(0 0 4px #3b82f6)'
+            }}
           >
             {social.icon}
           </motion.div>

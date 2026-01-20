@@ -26,32 +26,11 @@ const useIsMobile = () => {
     return isMobile;
 };
 
-// --- GLOBAL STYLES (Neon Blue Sign Style) ---
+// --- GLOBAL STYLES (Neon Blue Sign Style - STATIC for performance) ---
 const GLOBAL_STYLES = `
-  @keyframes neon-pulse {
-    0%, 100% { 
-      text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
-      filter: brightness(1);
-    }
-    50% { 
-      text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
-      filter: brightness(1.1);
-    }
-  }
-
-  @keyframes neon-glow {
-    0%, 100% { 
-      box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
-    }
-    50% { 
-      box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
-    }
-  }
-
   .neon-blue-text {
     color: #3b82f6;
     text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
-    animation: neon-pulse 2s ease-in-out infinite;
   }
 
   .neon-white-text {
@@ -70,7 +49,6 @@ const GLOBAL_STYLES = `
   .neon-blue-border {
     border: 2px solid #3b82f6;
     box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
-    animation: neon-glow 2s ease-in-out infinite;
   }
 
   .neon-blue-bg {
@@ -152,12 +130,8 @@ const HighAestheticCard = memo(({
     const isMobile = useIsMobile();
 
     return (
-        <motion.div
-            className="relative flex flex-col items-center justify-center overflow-hidden rounded-3xl py-12 md:py-16 cursor-pointer gpu-layer bg-black"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: isMobile ? 1.0 : 1.01 }}
-            whileTap={{ scale: 0.99 }}
+        <div
+            className="relative flex flex-col items-center justify-center overflow-hidden rounded-3xl py-12 md:py-16 cursor-pointer gpu-layer bg-black transition-transform hover:scale-[1.01] active:scale-[0.99]"
             onClick={onShow}
         >
             <div className="relative z-10 flex flex-col items-center justify-center text-center">
@@ -196,7 +170,7 @@ const HighAestheticCard = memo(({
                     </NeonBorder>
                 </div>
             </div>
-        </motion.div>
+        </div>
     );
 });
 HighAestheticCard.displayName = "HighAestheticCard";
@@ -284,10 +258,10 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
         {showChart && (
           <motion.div
             key="chart"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -30 }}
-            transition={{ duration: 0.4 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             className="will-change-transform"
           >
             <div className="mb-4 flex items-center justify-between">
@@ -305,10 +279,10 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
             <AnimatePresence>
               {open && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
                   className="absolute z-20 mt-2 w-64 overflow-hidden rounded-xl neon-blue-border bg-black"
                 >
                   {CHARTS.map((chart, idx) => (
@@ -585,7 +559,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                             <div className="min-w-0">
                                 <div className="flex items-center gap-2">
                                     <span className="font-black tracking-tight truncate max-w-[220px] sm:max-w-none neon-blue-text">BULLMONEY NEWSROOM</span>
-                                    <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-500 neon-blue-border">Live</span>
+                                    <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-500 border border-red-500 animate-pulse" style={{ textShadow: '0 0 8px #ef4444, 0 0 16px #ef4444', boxShadow: '0 0 8px #ef4444, 0 0 16px rgba(239,68,68,0.5), inset 0 0 8px rgba(239,68,68,0.2)' }}>Live</span>
                                 </div>
                                 <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[10px] font-mono uppercase tracking-widest neon-blue-text">
                                     <span>{marketTitle}</span>
@@ -631,15 +605,29 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                         {(["all", "crypto", "stocks", "forex", "metals"] as MarketFilter[]).map((m) => {
                             const active = m === activeMarket;
                             const label = m === "all" ? "Top" : m;
+                            // Neon color mapping for each asset type
+                            const neonColors: Record<MarketFilter, { bg: string; text: string; borderColor: string; shadow: string; textShadow: string }> = {
+                                all: { bg: 'bg-white/10', text: 'text-white', borderColor: '#ffffff', shadow: '0 0 8px #ffffff, 0 0 16px rgba(255,255,255,0.5)', textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' },
+                                crypto: { bg: 'bg-orange-500/20', text: 'text-orange-400', borderColor: '#f97316', shadow: '0 0 8px #f97316, 0 0 16px rgba(249,115,22,0.5)', textShadow: '0 0 4px #f97316, 0 0 8px #f97316' },
+                                stocks: { bg: 'bg-green-500/20', text: 'text-green-400', borderColor: '#22c55e', shadow: '0 0 8px #22c55e, 0 0 16px rgba(34,197,94,0.5)', textShadow: '0 0 4px #22c55e, 0 0 8px #22c55e' },
+                                forex: { bg: 'bg-purple-500/20', text: 'text-purple-400', borderColor: '#a855f7', shadow: '0 0 8px #a855f7, 0 0 16px rgba(168,85,247,0.5)', textShadow: '0 0 4px #a855f7, 0 0 8px #a855f7' },
+                                metals: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', borderColor: '#eab308', shadow: '0 0 8px #eab308, 0 0 16px rgba(234,179,8,0.5)', textShadow: '0 0 4px #eab308, 0 0 8px #eab308' }
+                            };
+                            const colors = neonColors[m];
                             return (
                                 <span
                                     key={m}
                                     className={cn(
-                                        "rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest",
+                                        "rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest transition-all",
                                         active
-                                            ? "neon-blue-bg neon-white-text"
-                                            : "bg-black neon-blue-text neon-blue-border"
+                                            ? `${colors.bg} ${colors.text}`
+                                            : "bg-black/50 text-gray-400"
                                     )}
+                                    style={active ? { 
+                                        border: `1px solid ${colors.borderColor}`,
+                                        boxShadow: colors.shadow, 
+                                        textShadow: colors.textShadow 
+                                    } : { border: '1px solid #4b5563' }}
                                 >
                                     {label}
                                 </span>
@@ -690,10 +678,10 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
 
                 {/* Ticker */}
                 {!error && (
-                    <div className="neon-blue-border bg-black">
+                    <div className="bg-black" style={{ border: '1px solid #ef4444', boxShadow: '0 0 8px #ef4444, 0 0 16px rgba(239,68,68,0.4), inset 0 0 8px rgba(239,68,68,0.1)' }}>
                         <div className="flex items-center gap-3 px-4 md:px-6 py-2">
-                            <span className="shrink-0 text-[10px] font-black uppercase tracking-widest text-red-300">Urgent Wire</span>
-                            <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, rgba(239,68,68,0.3) 0%, transparent 100%)' }} />
+                            <span className="shrink-0 text-[10px] font-black uppercase tracking-widest text-red-500 animate-pulse" style={{ textShadow: '0 0 8px #ef4444, 0 0 16px #ef4444, 0 0 24px #ef4444' }}>⚡ Urgent Wire</span>
+                            <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, #ef4444 0%, rgba(239,68,68,0.5) 50%, transparent 100%)', boxShadow: '0 0 8px #ef4444, 0 0 12px rgba(239,68,68,0.5)' }} />
                         </div>
                         <div className="overflow-hidden px-4 md:px-6 pb-3">
                             <div className="whitespace-nowrap text-xs neon-blue-text">
@@ -742,10 +730,10 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                 )}
 
                 {!error && (
-                    <div className="p-4 md:p-6">
-                        <div className="grid gap-6 lg:grid-cols-12">
+                    <div className="p-3 sm:p-4 md:p-6">
+                        <div className="grid gap-4 sm:gap-6 md:grid-cols-12">
                             {/* Main column */}
-                            <div className="lg:col-span-8">
+                            <div className="md:col-span-8 lg:col-span-8">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-[10px] font-black uppercase tracking-widest neon-blue-text">Featured</h3>
                                     <div className="h-px w-1/2 ml-4 hidden md:block" style={{ background: 'linear-gradient(90deg, #3b82f6 0%, transparent 100%)', boxShadow: '0 0 4px #3b82f6' }} />
@@ -824,7 +812,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                         <div className="h-px w-1/2 ml-4 hidden md:block" style={{ background: 'linear-gradient(90deg, #3b82f6 0%, transparent 100%)', boxShadow: '0 0 4px #3b82f6' }} />
                                     </div>
 
-                                    <div className="mt-3 grid gap-3 md:grid-cols-2">
+                                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
                                         {loading
                                             ? Array.from({ length: 4 }).map((_, i) => (
                                                   <div key={i} className="h-24 animate-pulse rounded-xl bg-black neon-blue-border" />
@@ -837,34 +825,37 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                                         href={item.link}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="group rounded-xl bg-black p-4 neon-blue-border transition hover:brightness-110 duration-200"
+                                                        className="group rounded-xl bg-black p-3 sm:p-4 neon-blue-border transition hover:brightness-110 duration-200"
                                                     >
-                                                        <div className="flex items-start gap-4">
-                                                            <div className="shrink-0 w-24">
+                                                        <div className="flex items-start gap-3 sm:gap-4">
+                                                            <div className="hidden xs:block shrink-0 w-16 sm:w-24">
                                                                 {previews[item.link]?.image ? (
                                                                     <img
                                                                         src={previews[item.link]?.image}
                                                                         alt=""
-                                                                        className="h-16 w-24 rounded-lg object-cover neon-blue-border"
+                                                                        className="h-12 w-16 sm:h-16 sm:w-24 rounded-lg object-cover neon-blue-border"
                                                                         loading="lazy"
                                                                         referrerPolicy="no-referrer"
                                                                     />
                                                                 ) : (
-                                                                    <div className="h-16 w-24 rounded-lg bg-black neon-blue-border animate-pulse" />
+                                                                    <div className="h-12 w-16 sm:h-16 sm:w-24 rounded-lg bg-black neon-blue-border animate-pulse" />
                                                                 )}
                                                             </div>
                                                             <div className="min-w-0 flex-1">
                                                                 <div className="text-[9px] font-black uppercase tracking-widest neon-blue-text">
                                                                     {item.source || "Unknown"} • {(item.category || "Market").toString()}
                                                                 </div>
-                                                                <div className="mt-2 line-clamp-2 text-sm font-semibold neon-blue-text group-hover:neon-white-text transition-colors">
+                                                                <div className="mt-1 sm:mt-2 line-clamp-2 text-xs sm:text-sm font-semibold neon-blue-text group-hover:neon-white-text transition-colors">
                                                                     {item.title}
                                                                 </div>
-                                                                <p className="mt-1 text-xs neon-blue-text line-clamp-2">
+                                                                <p className="hidden sm:block mt-1 text-xs neon-blue-text line-clamp-2">
                                                                     {previews[item.link]?.description || ""}
                                                                 </p>
+                                                                <div className="flex items-center justify-between mt-2 sm:hidden">
+                                                                    <span className="text-[10px] font-mono neon-blue-text">{timeAgo(item.published_at)}</span>
+                                                                </div>
                                                             </div>
-                                                            <div className="shrink-0 flex flex-col items-end gap-2">
+                                                            <div className="hidden sm:flex shrink-0 flex-col items-end gap-2">
                                                                 <div className="text-[10px] font-mono neon-blue-text">{timeAgo(item.published_at)}</div>
                                                                 <button
                                                                     type="button"
@@ -917,7 +908,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                                     <div className="flex items-start gap-3">
                                                         <span className="mt-2 h-2 w-2 rounded-full neon-blue-bg group-hover:brightness-110 transition-colors" />
                                                         <div className="min-w-0 flex-1">
-                                                            <div className="flex items-start gap-3">
+                                                            <div className="flex items-start gap-2 sm:gap-3">
                                                                 <div className="hidden sm:block shrink-0">
                                                                     {previews[n.link]?.image ? (
                                                                         <img
@@ -932,21 +923,21 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                                                     )}
                                                                 </div>
                                                                 <div className="min-w-0 flex-1">
-                                                                    <a href={n.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-start gap-2 group/link w-full">
-                                                                        <h3 className="truncate text-sm font-semibold neon-blue-text group-hover/link:neon-white-text transition-colors">{n.title}</h3>
-                                                                        <IconExternalLink className="mt-1 h-3 w-3 neon-blue-text opacity-0 transition group-hover/link:opacity-100" />
+                                                                    <a href={n.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-start gap-1 sm:gap-2 group/link w-full">
+                                                                        <h3 className="line-clamp-2 sm:truncate text-xs sm:text-sm font-semibold neon-blue-text group-hover/link:neon-white-text transition-colors">{n.title}</h3>
+                                                                        <IconExternalLink className="mt-0.5 sm:mt-1 h-3 w-3 shrink-0 neon-blue-text opacity-0 transition group-hover/link:opacity-100" />
                                                                     </a>
-                                                                    <p className="mt-1 text-xs neon-blue-text line-clamp-2">
+                                                                    <p className="hidden sm:block mt-1 text-xs neon-blue-text line-clamp-2">
                                                                         {previews[n.link]?.description || ""}
                                                                     </p>
-                                                                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] neon-blue-text font-mono uppercase">
-                                                                        {previews[n.link]?.siteName && <span>{previews[n.link]?.siteName}</span>}
-                                                                        {n.source && <span>{previews[n.link]?.siteName ? "•" : ""} {n.source}</span>}
+                                                                    <div className="mt-1 flex flex-wrap items-center gap-1 sm:gap-2 text-[9px] sm:text-[10px] neon-blue-text font-mono uppercase">
+                                                                        {previews[n.link]?.siteName && <span className="hidden sm:inline">{previews[n.link]?.siteName}</span>}
+                                                                        {n.source && <span>{previews[n.link]?.siteName ? <span className="hidden sm:inline">•</span> : ""} {n.source}</span>}
                                                                         {n.category && n.category !== "other" && <span>• {n.category}</span>}
                                                                         {n.published_at && <time dateTime={n.published_at}>• {timeAgo(n.published_at)}</time>}
                                                                     </div>
                                                                 </div>
-                                                                <div className="shrink-0">
+                                                                <div className="hidden sm:block shrink-0">
                                                                     <button
                                                                         type="button"
                                                                         onClick={(e) => {
@@ -973,8 +964,8 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                 </div>
                             </div>
 
-                            {/* Sidebar */}
-                            <div className="lg:col-span-4">
+                            {/* Sidebar - hidden on small screens, visible on medium+ */}
+                            <div className="hidden md:block md:col-span-4 lg:col-span-4">
                                 <div className="space-y-4">
                                     <div className="rounded-2xl neon-blue-border bg-black p-4">
                                         <div className="flex items-center justify-between">
@@ -1057,40 +1048,40 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: 40, opacity: 0 }}
                             transition={{ type: "spring", bounce: 0, duration: 0.35 }}
-                            className="absolute right-0 top-0 h-full w-full md:w-[48%] bg-black border-l border-white/10"
+                            className="absolute right-0 top-0 h-full w-full sm:w-[85%] md:w-[65%] lg:w-[48%] bg-black border-l border-white/10"
                             data-lenis-prevent
                             onWheel={(e) => e.stopPropagation()}
                             onTouchMove={(e) => e.stopPropagation()}
                         >
-                            <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10 bg-black/60 backdrop-blur">
-                                <div className="min-w-0">
-                                    <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">Mini Preview</div>
-                                    <div className="truncate text-sm font-semibold text-white">
+                            <div className="flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 border-b border-white/10 bg-black/60 backdrop-blur">
+                                <div className="min-w-0 flex-1">
+                                    <div className="text-[9px] sm:text-[10px] font-mono uppercase tracking-widest text-neutral-500">Mini Preview</div>
+                                    <div className="truncate text-xs sm:text-sm font-semibold text-white">
                                         {activePreview?.siteName || activePreview?.title || "Article"}
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 shrink-0">
                                     <a
                                         href={previewUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="rounded-full bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-neutral-200 ring-1 ring-white/10 hover:ring-sky-500/30"
+                                        className="rounded-full bg-white/5 px-2 sm:px-3 py-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-neutral-200 ring-1 ring-white/10 hover:ring-sky-500/30"
                                     >
                                         Open
                                     </a>
                                     <button
                                         type="button"
                                         onClick={() => setPreviewUrl(null)}
-                                        className="rounded-full bg-white/5 p-2 text-white ring-1 ring-white/10 hover:ring-sky-500/30"
+                                        className="rounded-full bg-white/5 p-1.5 sm:p-2 text-white ring-1 ring-white/10 hover:ring-sky-500/30"
                                         aria-label="Close preview"
                                     >
-                                        <X className="h-4 w-4" />
+                                        <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="h-[calc(100%-52px)] p-3">
-                                <div className="h-full overflow-hidden rounded-2xl ring-1 ring-white/10 bg-white/[0.02]">
+                            <div className="h-[calc(100%-44px)] sm:h-[calc(100%-52px)] p-2 sm:p-3">
+                                <div className="h-full overflow-hidden rounded-xl sm:rounded-2xl ring-1 ring-white/10 bg-white/[0.02]">
                                     <iframe
                                         title="News preview"
                                         src={previewUrl}
@@ -1098,7 +1089,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                         sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
                                     />
                                 </div>
-                                <p className="mt-2 text-[10px] text-neutral-600 font-mono uppercase tracking-widest">
+                                <p className="mt-1.5 sm:mt-2 text-[9px] sm:text-[10px] text-neutral-600 font-mono uppercase tracking-widest">
                                     Some sites block iframe previews (CSP/X-Frame-Options). Use “Open” if blank.
                                 </p>
                             </div>

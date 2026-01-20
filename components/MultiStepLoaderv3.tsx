@@ -296,10 +296,21 @@ const isInAppBrowser = () => {
 
 // Check if device motion/orientation is supported and available
 const checkSensorSupport = () => {
+  // Guard against SSR - these APIs only exist in the browser
+  if (typeof window === 'undefined') {
+    return {
+      motion: false,
+      orientation: false,
+      needsPermission: false,
+      isSecure: false,
+      isInAppBrowser: false,
+    };
+  }
+  
   const hasMotion = typeof DeviceMotionEvent !== 'undefined';
   const hasOrientation = typeof DeviceOrientationEvent !== 'undefined';
   const needsPermission = hasMotion && typeof (DeviceMotionEvent as any)?.requestPermission === 'function';
-  const isSecure = typeof window !== 'undefined' && (window.isSecureContext || location.protocol === 'https:');
+  const isSecure = window.isSecureContext || location.protocol === 'https:';
   const inApp = isInAppBrowser();
   
   return {

@@ -4149,22 +4149,28 @@ const MiniGoldChart = memo(() => {
     // Clear any existing content
     containerRef.current.innerHTML = '';
     
-    // Create TradingView mini widget
+    // Create TradingView advanced chart widget with candlesticks
     const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
+    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
     script.async = true;
     script.innerHTML = JSON.stringify({
       symbol: "OANDA:XAUUSD",
       width: "100%",
       height: "100%",
       locale: "en",
-      dateRange: "1D",
-      colorTheme: "dark",
-      isTransparent: true,
-      autosize: true,
-      largeChartUrl: "",
-      chartOnly: true,
-      noTimeScale: true
+      interval: "15",
+      timezone: "Etc/UTC",
+      theme: "dark",
+      style: "1", // 1 = Candlestick
+      hide_top_toolbar: true,
+      hide_legend: true,
+      hide_side_toolbar: true,
+      allow_symbol_change: false,
+      save_image: false,
+      backgroundColor: "rgba(0, 0, 0, 0)",
+      gridColor: "rgba(59, 130, 246, 0.1)",
+      hide_volume: true,
+      support_host: "https://www.tradingview.com"
     });
     
     containerRef.current.appendChild(script);
@@ -4181,8 +4187,9 @@ const MiniGoldChart = memo(() => {
       ref={containerRef} 
       className="w-full h-full overflow-hidden rounded-sm pointer-events-none"
       style={{ 
-        filter: 'saturate(0) brightness(2) sepia(1) hue-rotate(190deg) saturate(3)',
-        background: '#000000'
+        filter: 'saturate(0) brightness(1.8) sepia(1) hue-rotate(190deg) saturate(2.5) contrast(1.1)',
+        background: 'rgba(0, 0, 0, 0.9)',
+        minHeight: '100px'
       }}
     />
   );
@@ -4275,32 +4282,24 @@ const LiveSignalsViewer = memo(() => {
         {/* Header */}
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-2">
-            <motion.div
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            >
-              <Send className="w-4 h-4 text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' }} />
-            </motion.div>
+            <div className="animate-spin-slow" style={{ willChange: 'transform' }}>
+              <Send className="w-4 h-4 text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
+            </div>
             <span 
-              className="text-sm font-bold uppercase tracking-wider"
+              className="text-sm font-bold uppercase tracking-wider animate-neon-pulse-optimized"
               style={{ 
                 color: '#3b82f6',
-                textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6',
-                animation: 'neon-pulse 2s ease-in-out infinite'
+                textShadow: '0 0 4px #3b82f6',
+                willChange: 'text-shadow'
               }}
             >
               FREE SIGNALS
             </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <motion.div
-              className="w-2 h-2 rounded-full"
-              style={{ background: '#22c55e', boxShadow: '0 0 8px #22c55e' }}
-              animate={{ 
-                opacity: [1, 0.3, 1],
-                boxShadow: ['0 0 8px #22c55e', '0 0 16px #22c55e', '0 0 8px #22c55e']
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
+            <div
+              className="w-2 h-2 rounded-full animate-pulse-glow-green"
+              style={{ background: '#22c55e', willChange: 'opacity' }}
             />
             <span 
               className="text-[8px] font-semibold uppercase tracking-wider"
@@ -4319,11 +4318,12 @@ const LiveSignalsViewer = memo(() => {
           <AnimatePresence mode="wait">
             <motion.div
               key={currentMessageIndex}
-              initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, y: -20, filter: 'blur(4px)' }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
               className="space-y-2"
+              style={{ willChange: 'transform, opacity' }}
             >
               {/* Signal Card */}
               <div 
@@ -4344,8 +4344,8 @@ const LiveSignalsViewer = memo(() => {
                   >
                     {currentSignal.pair}
                   </span>
-                  <motion.span 
-                    className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
+                  <span 
+                    className={`text-[10px] font-black px-1.5 py-0.5 rounded animate-pulse-scale ${
                       currentSignal.action === 'BUY' ? 'bg-green-500/20' : 'bg-red-500/20'
                     }`}
                     style={{ 
@@ -4353,18 +4353,12 @@ const LiveSignalsViewer = memo(() => {
                       textShadow: currentSignal.action === 'BUY' 
                         ? '0 0 4px #22c55e' 
                         : '0 0 4px #ef4444',
-                      border: `1px solid ${currentSignal.action === 'BUY' ? '#22c55e' : '#ef4444'}`
+                      border: `1px solid ${currentSignal.action === 'BUY' ? '#22c55e' : '#ef4444'}`,
+                      willChange: 'transform'
                     }}
-                    animate={{ 
-                      scale: [1, 1.05, 1],
-                      boxShadow: currentSignal.action === 'BUY'
-                        ? ['0 0 4px #22c55e', '0 0 8px #22c55e', '0 0 4px #22c55e']
-                        : ['0 0 4px #ef4444', '0 0 8px #ef4444', '0 0 4px #ef4444']
-                    }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
                   >
                     {currentSignal.action}
-                  </motion.span>
+                  </span>
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -4391,26 +4385,17 @@ const LiveSignalsViewer = memo(() => {
               
               {/* Typing Indicator */}
               {isTyping && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex items-center gap-1.5 px-2"
-                >
+                <div className="flex items-center gap-1.5 px-2 animate-fade-in">
                   <MessageCircle className="w-3 h-3 text-blue-400" />
                   <div className="flex gap-1">
                     {[0, 1, 2].map((i) => (
-                      <motion.div
+                      <div
                         key={i}
-                        className="w-1 h-1 rounded-full"
-                        style={{ background: '#3b82f6', boxShadow: '0 0 4px #3b82f6' }}
-                        animate={{ 
-                          y: [0, -4, 0],
-                          opacity: [0.5, 1, 0.5]
-                        }}
-                        transition={{ 
-                          duration: 0.6, 
-                          repeat: Infinity, 
-                          delay: i * 0.15 
+                        className="w-1 h-1 rounded-full animate-bounce-dot"
+                        style={{ 
+                          background: '#3b82f6',
+                          animationDelay: `${i * 150}ms`,
+                          willChange: 'transform'
                         }}
                       />
                     ))}
@@ -4424,7 +4409,7 @@ const LiveSignalsViewer = memo(() => {
                   >
                     New signal incoming...
                   </span>
-                </motion.div>
+                </div>
               )}
             </motion.div>
           </AnimatePresence>
@@ -4442,12 +4427,9 @@ const LiveSignalsViewer = memo(() => {
             <Radio className="w-3 h-3" />
             @bullmoneywebsite
           </span>
-          <motion.div
-            animate={{ x: [0, 3, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          >
-            <ExternalLink className="w-3 h-3 text-white group-hover:text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
-          </motion.div>
+          <div className="animate-nudge-x">
+            <ExternalLink className="w-3 h-3 text-white group-hover:text-blue-400" />
+          </div>
         </div>
       </motion.div>
     </a>
@@ -4535,34 +4517,23 @@ const BreakingNewsViewer = memo(() => {
         {/* Header */}
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5">
-            <motion.div
-              animate={{ 
-                scale: [1, 1.2, 1],
-                rotate: [0, 5, -5, 0]
-              }}
-              transition={{ duration: 0.8, repeat: Infinity, repeatDelay: 2 }}
-            >
-              <AlertTriangle className="w-3.5 h-3.5 text-white" style={{ filter: 'drop-shadow(0 0 3px #ffffff) drop-shadow(0 0 6px #ffffff)' }} />
-            </motion.div>
+            <div className="animate-alert-pulse" style={{ willChange: 'transform' }}>
+              <AlertTriangle className="w-3.5 h-3.5 text-white" style={{ filter: 'drop-shadow(0 0 3px #ffffff)' }} />
+            </div>
             <span 
-              className="text-xs font-bold uppercase tracking-wider"
+              className="text-xs font-bold uppercase tracking-wider animate-neon-pulse-red"
               style={{ 
                 color: '#ef4444',
-                textShadow: '0 0 3px #ef4444, 0 0 6px #ef4444',
-                animation: 'neon-pulse 2s ease-in-out infinite'
+                textShadow: '0 0 3px #ef4444',
+                willChange: 'text-shadow'
               }}
             >
               BREAKING NEWS
             </span>
           </div>
-          <motion.div
-            className="w-1.5 h-1.5 rounded-full"
-            style={{ background: '#ef4444', boxShadow: '0 0 6px #ef4444' }}
-            animate={{ 
-              opacity: [1, 0.3, 1],
-              boxShadow: ['0 0 6px #ef4444', '0 0 12px #ef4444', '0 0 6px #ef4444']
-            }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+          <div
+            className="w-1.5 h-1.5 rounded-full animate-pulse-glow-red"
+            style={{ background: '#ef4444', willChange: 'opacity' }}
           />
         </div>
         
@@ -4571,11 +4542,12 @@ const BreakingNewsViewer = memo(() => {
           <AnimatePresence mode="wait">
             <motion.div
               key={currentMessageIndex}
-              initial={{ opacity: 0, y: 15, filter: 'blur(3px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, y: -15, filter: 'blur(3px)' }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
               className="space-y-1"
+              style={{ willChange: 'transform, opacity' }}
             >
               <p 
                 className="text-[10px] font-semibold leading-tight line-clamp-2"
@@ -4611,12 +4583,9 @@ const BreakingNewsViewer = memo(() => {
             <ShoppingBag className="w-2.5 h-2.5" />
             @Bullmoneyshop
           </span>
-          <motion.div
-            animate={{ x: [0, 2, 0] }}
-            transition={{ duration: 1.2, repeat: Infinity }}
-          >
-            <ExternalLink className="w-2.5 h-2.5 text-white group-hover:text-red-400" style={{ filter: 'drop-shadow(0 0 3px #ffffff)' }} />
-          </motion.div>
+          <div className="animate-nudge-x-sm">
+            <ExternalLink className="w-2.5 h-2.5 text-white group-hover:text-red-400" />
+          </div>
         </div>
       </motion.div>
     </a>
@@ -5093,69 +5062,46 @@ const UnifiedFpsPill = memo(({
     };
   }, []);
   
-  // Calculate scroll-based animation values - EXTREME INTENSITY
-  const scrollProgress = Math.min(scrollY / 300, 1); // Faster ramp up (0-300px)
-  const deepScrollProgress = Math.min(scrollY / 800, 1); // 0-1 over 800px for deeper scroll
-  const extremeScrollProgress = Math.min(scrollY / 1500, 1); // For the most extreme effects
+  // Calculate scroll-based animation values - OPTIMIZED with useMemo
+  // Throttle scroll progress to reduce recalculations
+  const scrollProgress = useMemo(() => Math.min(scrollY / 300, 1), [Math.floor(scrollY / 30)]);
+  const deepScrollProgress = useMemo(() => Math.min(scrollY / 800, 1), [Math.floor(scrollY / 80)]);
+  const extremeScrollProgress = useMemo(() => Math.min(scrollY / 1500, 1), [Math.floor(scrollY / 150)]);
   
-  // EXTREME glow multipliers - gets INSANE as you scroll
-  const glowIntensity = 1 + (scrollProgress * 5) + (deepScrollProgress * 8); // 1x to 14x glow!
-  const neonIntensity = 1 + (deepScrollProgress * 6) + (extremeScrollProgress * 10); // 1x to 17x!
-  const borderGlow = 4 + (scrollProgress * 30) + (deepScrollProgress * 50); // 4px to 84px!
-  const shadowSpread = 8 + (scrollProgress * 60) + (deepScrollProgress * 100); // 8px to 168px!
-  const innerGlow = 4 + (scrollProgress * 20) + (deepScrollProgress * 40); // 4px to 64px!
+  // OPTIMIZED glow multipliers - simplified calculations
+  const glowIntensity = useMemo(() => 1 + (scrollProgress * 3) + (deepScrollProgress * 4), [scrollProgress, deepScrollProgress]);
+  const neonIntensity = useMemo(() => 1 + (deepScrollProgress * 4) + (extremeScrollProgress * 6), [deepScrollProgress, extremeScrollProgress]);
   
-  // Color intensity - pure blue only, gets more intense
-  const blueOpacity = 0.9 + scrollProgress * 0.1;
-  
-  // Dynamic neon colors - PURE BLUE only
-  const neonBlue = `rgba(59, 130, 246, ${blueOpacity})`;
-  const neonBlueBright = `rgba(59, 130, 246, ${0.7 + deepScrollProgress * 0.3})`;
-  const neonBlueCore = `rgba(59, 130, 246, ${0.8 + extremeScrollProgress * 0.2})`;
-  
-  // Build INSANE dynamic box shadow - PURE BLUE only
-  const dynamicBoxShadow = `
-    0 0 ${borderGlow}px ${neonBlue},
-    0 0 ${shadowSpread}px ${neonBlue},
-    0 0 ${shadowSpread * 1.5}px ${neonBlueBright},
-    ${scrollProgress > 0.2 ? `0 0 ${shadowSpread * 2}px rgba(59, 130, 246, ${scrollProgress * 0.7}),` : ''}
-    ${scrollProgress > 0.4 ? `0 0 ${shadowSpread * 2.5}px rgba(59, 130, 246, ${scrollProgress * 0.6}),` : ''}
-    ${scrollProgress > 0.6 ? `0 0 ${shadowSpread * 3}px rgba(59, 130, 246, ${scrollProgress * 0.5}),` : ''}
-    ${deepScrollProgress > 0.3 ? `0 0 ${shadowSpread * 4}px rgba(59, 130, 246, ${deepScrollProgress * 0.5}),` : ''}
-    ${deepScrollProgress > 0.5 ? `0 0 ${shadowSpread * 5}px rgba(59, 130, 246, ${deepScrollProgress * 0.4}),` : ''}
-    ${deepScrollProgress > 0.7 ? `0 0 ${shadowSpread * 6}px rgba(59, 130, 246, ${deepScrollProgress * 0.6}),` : ''}
-    ${extremeScrollProgress > 0.5 ? `0 0 ${shadowSpread * 8}px rgba(59, 130, 246, ${extremeScrollProgress * 0.7}),` : ''}
-    inset 0 0 ${innerGlow}px ${neonBlue},
-    inset 0 0 ${innerGlow * 0.5}px rgba(59, 130, 246, 0.5)
-  `.replace(/,\s*$/, '').replace(/,\s*,/g, ',');
-  
-  // Dynamic text shadow - PURE BLUE BLINDING at max scroll
-  const dynamicTextShadow = `
-    0 0 ${6 * neonIntensity}px #3b82f6,
-    0 0 ${12 * neonIntensity}px #3b82f6,
-    0 0 ${18 * neonIntensity}px #3b82f6,
-    0 0 ${24 * neonIntensity}px rgba(59, 130, 246, ${0.5 + scrollProgress * 0.5})
-    ${scrollProgress > 0.3 ? `, 0 0 ${32 * neonIntensity}px rgba(59, 130, 246, 0.7)` : ''}
-    ${scrollProgress > 0.5 ? `, 0 0 ${40 * neonIntensity}px rgba(59, 130, 246, 0.8)` : ''}
-    ${deepScrollProgress > 0.3 ? `, 0 0 ${50 * neonIntensity}px rgba(59, 130, 246, ${deepScrollProgress * 0.6})` : ''}
-    ${deepScrollProgress > 0.6 ? `, 0 0 ${60 * neonIntensity}px rgba(59, 130, 246, 0.6)` : ''}
-    ${extremeScrollProgress > 0.5 ? `, 0 0 ${80 * neonIntensity}px rgba(59, 130, 246, 0.9)` : ''}
-  `;
-  
-  // Dynamic icon filter - PURE BLUE PLASMA GLOW at extreme scroll
-  const dynamicIconFilter = `
-    drop-shadow(0 0 ${4 * glowIntensity}px #3b82f6) 
-    drop-shadow(0 0 ${8 * glowIntensity}px #3b82f6) 
-    drop-shadow(0 0 ${12 * glowIntensity}px #3b82f6)
-    ${scrollProgress > 0.3 ? `drop-shadow(0 0 ${16 * glowIntensity}px #3b82f6)` : ''}
-    ${scrollProgress > 0.5 ? `drop-shadow(0 0 ${20 * glowIntensity}px rgba(59,130,246,0.8))` : ''}
-    ${deepScrollProgress > 0.4 ? `drop-shadow(0 0 ${30 * glowIntensity}px #3b82f6)` : ''}
-    ${deepScrollProgress > 0.7 ? `drop-shadow(0 0 ${40 * glowIntensity}px rgba(59,130,246,0.9))` : ''}
-    ${extremeScrollProgress > 0.5 ? `brightness(${1 + extremeScrollProgress * 0.3})` : ''}
-  `.trim();
-  
-  // Pulsing effect that gets faster as you scroll
-  const pulseSpeed = Math.max(2 - (deepScrollProgress * 1.5), 0.5); // 2s down to 0.5s
+  // OPTIMIZED: Use CSS custom properties for dynamic values instead of inline recalculation
+  // This reduces layout thrashing significantly
+  const dynamicStyles = useMemo(() => {
+    const borderGlow = Math.round(4 + (scrollProgress * 15) + (deepScrollProgress * 25));
+    const shadowSpread = Math.round(8 + (scrollProgress * 30) + (deepScrollProgress * 50));
+    const innerGlow = Math.round(4 + (scrollProgress * 10) + (deepScrollProgress * 20));
+    
+    // Simplified box-shadow - max 4 layers instead of 10+
+    const boxShadow = `
+      0 0 ${borderGlow}px rgba(59, 130, 246, 0.9),
+      0 0 ${shadowSpread}px rgba(59, 130, 246, 0.6),
+      ${deepScrollProgress > 0.3 ? `0 0 ${shadowSpread * 1.5}px rgba(59, 130, 246, 0.4),` : ''}
+      inset 0 0 ${innerGlow}px rgba(59, 130, 246, 0.3)
+    `.replace(/,\s*$/, '').replace(/,\s*,/g, ',');
+    
+    // Simplified text shadow - max 3 layers
+    const textShadow = `
+      0 0 ${6 * neonIntensity}px #3b82f6,
+      0 0 ${12 * neonIntensity}px #3b82f6,
+      0 0 ${20 * neonIntensity}px rgba(59, 130, 246, 0.7)
+    `;
+    
+    // Simplified icon filter - max 2 drop-shadows
+    const iconFilter = `
+      drop-shadow(0 0 ${4 * glowIntensity}px #3b82f6) 
+      drop-shadow(0 0 ${8 * glowIntensity}px #3b82f6)
+    `.trim();
+    
+    return { boxShadow, textShadow, iconFilter, borderGlow, shadowSpread, innerGlow };
+  }, [scrollProgress, deepScrollProgress, glowIntensity, neonIntensity]);
   
   return (
     <motion.div
@@ -5205,17 +5151,9 @@ const UnifiedFpsPill = memo(({
           }
           whileHover={{ 
             x: 8, 
-            scale: 1.02 + (scrollProgress * 0.03), 
+            scale: 1.02, 
             opacity: 1, 
             rotateY: 5,
-            boxShadow: `
-              0 0 ${30 + shadowSpread}px #3b82f6, 
-              0 0 ${60 + shadowSpread * 1.5}px #3b82f6, 
-              0 0 ${90 + shadowSpread * 2}px rgba(59, 130, 246, 0.8),
-              0 0 ${120 + shadowSpread * 2.5}px rgba(59, 130, 246, 0.6),
-              ${deepScrollProgress > 0.3 ? `0 0 ${150 + shadowSpread * 3}px rgba(59, 130, 246, 0.5),` : ''}
-              inset 0 0 ${30 + innerGlow}px rgba(59,130,246,0.4)
-            `.replace(/,\s*$/, '')
           }}
           transition={
             isMinimized || isPinned || isScrolling
@@ -5228,17 +5166,16 @@ const UnifiedFpsPill = memo(({
                   times: [0, 0.2, 0.8, 1]
                 }
           }
-          className="relative rounded-r-3xl transition-all duration-300 ultimate-hub-scroll-effect"
+          className="relative rounded-r-3xl ultimate-hub-scroll-effect"
           style={{
-            background: `linear-gradient(${135 + scrollProgress * 90}deg, rgba(0,0,0,${0.85 - deepScrollProgress * 0.1}) 0%, rgba(59,130,246,${0.1 + scrollProgress * 0.25 + deepScrollProgress * 0.15}) 50%, rgba(59, 130, 246, ${deepScrollProgress * 0.2}) 100%)`,
-            backdropFilter: `blur(${12 + scrollProgress * 12 + deepScrollProgress * 8}px) saturate(${1 + deepScrollProgress * 0.5})`,
-            WebkitBackdropFilter: `blur(${12 + scrollProgress * 12 + deepScrollProgress * 8}px) saturate(${1 + deepScrollProgress * 0.5})`,
-            border: `${2 + scrollProgress * 2 + deepScrollProgress}px solid rgba(59, 130, 246, ${0.8 + scrollProgress * 0.2})`,
-            boxShadow: dynamicBoxShadow,
-            transform: `perspective(1000px)`,
+            background: 'linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(59,130,246,0.15) 50%, rgba(59, 130, 246, 0.1) 100%)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '2px solid rgba(59, 130, 246, 0.8)',
+            boxShadow: dynamicStyles.boxShadow,
+            transform: 'perspective(1000px)',
             transformStyle: 'preserve-3d',
-            // Add animation speed based on scroll
-            animation: deepScrollProgress > 0.3 ? `neon-glow ${pulseSpeed}s ease-in-out infinite` : 'neon-glow 2s ease-in-out infinite',
+            willChange: 'transform',
           }}
           onClick={(e) => {
             e.preventDefault();
@@ -5264,12 +5201,12 @@ const UnifiedFpsPill = memo(({
                 exit={{ opacity: 0, scale: 0.7 }}
                 className="px-2 py-1.5 relative z-10"
               >
-                {/* Minimized: White neon icon with scroll-intensified glow */}
+                {/* Minimized: White neon icon with glow */}
                 <div className="flex items-center gap-1">
                   <TrendingUp 
                     className="w-4 h-4 text-white" 
                     style={{ 
-                      filter: `drop-shadow(0 0 ${4 * glowIntensity}px #ffffff) drop-shadow(0 0 ${8 * glowIntensity}px #ffffff) ${scrollProgress > 0.3 ? `drop-shadow(0 0 ${12 * glowIntensity}px #3b82f6)` : ''}`
+                      filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #3b82f6)'
                     }} 
                   />
                 </div>
@@ -5287,17 +5224,17 @@ const UnifiedFpsPill = memo(({
                 <div className="flex md:hidden flex-col items-center justify-center gap-1 min-w-[40px]">
                   <TrendingUp 
                     className="w-3 h-3 text-white" 
-                    style={{ filter: dynamicIconFilter }} 
+                    style={{ filter: dynamicStyles.iconFilter }} 
                   />
                   <div className="flex items-center gap-1.5">
                     <div className="flex items-center gap-0.5">
                       <Coins 
                         className="w-2.5 h-2.5 text-blue-400" 
-                        style={{ filter: `drop-shadow(0 0 ${2 * glowIntensity}px #3b82f6)` }}
+                        style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }}
                       />
                       <span 
                         className="text-[8px] font-bold text-blue-400"
-                        style={{ textShadow: `0 0 ${4 * glowIntensity}px #3b82f6` }}
+                        style={{ textShadow: '0 0 4px #3b82f6' }}
                       >
                         ${prices.xauusd}
                       </span>
@@ -5305,18 +5242,18 @@ const UnifiedFpsPill = memo(({
                     <div 
                       className="w-px h-3" 
                       style={{ 
-                        background: `rgba(59, 130, 246, ${0.5 + scrollProgress * 0.5})`,
-                        boxShadow: `0 0 ${4 * glowIntensity}px #3b82f6`
+                        background: 'rgba(59, 130, 246, 0.7)',
+                        boxShadow: '0 0 4px #3b82f6'
                       }}
                     />
                     <div className="flex items-center gap-0.5">
                       <Bitcoin 
                         className="w-2.5 h-2.5 text-blue-400" 
-                        style={{ filter: `drop-shadow(0 0 ${2 * glowIntensity}px #3b82f6)` }}
+                        style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }}
                       />
                       <span 
                         className="text-[8px] font-bold text-blue-400"
-                        style={{ textShadow: `0 0 ${4 * glowIntensity}px #3b82f6` }}
+                        style={{ textShadow: '0 0 4px #3b82f6' }}
                       >
                         ${prices.btcusd}
                       </span>
@@ -5344,21 +5281,19 @@ const UnifiedFpsPill = memo(({
                         exit={{ opacity: 0, scale: 0.9 }}
                         transition={{ duration: 0.3 }}
                         className="flex flex-col gap-4"
+                        style={{ willChange: 'transform, opacity' }}
                       >
                         {/* TRADING HUB Label */}
                         <div className="flex flex-col items-center justify-center gap-2">
                           <div className="flex items-center gap-3">
-                            <motion.div
-                              animate={{ rotate: [0, 360] }}
-                              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                            >
-                              <TrendingUp className="w-7 h-7 text-white" style={{ filter: dynamicIconFilter }} />
-                            </motion.div>
+                            <div>
+                              <TrendingUp className="w-7 h-7 text-white" style={{ filter: dynamicStyles.iconFilter }} />
+                            </div>
                             <span 
                               className="text-2xl font-black tracking-widest uppercase"
                               style={{ 
                                 color: '#3b82f6',
-                                textShadow: dynamicTextShadow,
+                                textShadow: dynamicStyles.textShadow,
                                 letterSpacing: '0.15em'
                               }}
                             >
@@ -5366,7 +5301,7 @@ const UnifiedFpsPill = memo(({
                             </span>
                           </div>
                           <div className="h-px w-48 bg-gradient-to-r from-transparent via-blue-500 to-transparent"
-                            style={{ boxShadow: `0 0 ${8 * glowIntensity}px #3b82f6` }}
+                            style={{ boxShadow: '0 0 8px #3b82f6' }}
                           />
                         </div>
                         
@@ -5374,12 +5309,12 @@ const UnifiedFpsPill = memo(({
                         <div 
                           className="w-full h-[120px] rounded-lg overflow-hidden relative"
                           style={{
-                            background: `linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(59,130,246,${0.05 + scrollProgress * 0.1}) 100%)`,
-                            border: `2px solid rgba(59, 130, 246, ${0.8 + scrollProgress * 0.2})`,
-                            boxShadow: `0 0 ${6 * glowIntensity}px #3b82f6, 0 0 ${12 * glowIntensity}px #3b82f6, inset 0 0 ${6 * glowIntensity}px #3b82f6`
+                            background: 'linear-gradient(135deg, rgba(0,0,0,0.98) 0%, rgba(59,130,246,0.15) 100%)',
+                            border: '2px solid #3b82f6',
+                            boxShadow: '0 0 8px #3b82f6, 0 0 16px rgba(59,130,246,0.5), inset 0 0 8px rgba(59,130,246,0.3)'
                           }}
                         >
-                          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-cyan-500/10" />
+                          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/15 via-transparent to-cyan-500/15 pointer-events-none z-10" />
                           <MiniGoldChart />
                         </div>
                         
@@ -5387,26 +5322,26 @@ const UnifiedFpsPill = memo(({
                         <div 
                           className="flex items-center justify-around gap-4 px-4 py-3 rounded-lg"
                           style={{
-                            background: `linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,${0.08 + scrollProgress * 0.12}) 100%)`,
-                            border: `1px solid rgba(59, 130, 246, ${0.8 + scrollProgress * 0.2})`,
-                            boxShadow: `0 0 ${4 * glowIntensity}px #3b82f6, inset 0 0 ${4 * glowIntensity}px #3b82f6`
+                            background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.12) 100%)',
+                            border: '1px solid rgba(59, 130, 246, 0.8)',
+                            boxShadow: '0 0 4px #3b82f6, inset 0 0 4px #3b82f6'
                           }}
                         >
                           <div className="flex flex-col items-center gap-1">
-                            <Coins className="w-6 h-6 text-amber-400" style={{ filter: `drop-shadow(0 0 ${6 * glowIntensity}px #fbbf24) drop-shadow(0 0 ${12 * glowIntensity}px #fbbf24)` }} />
+                            <Coins className="w-6 h-6 text-amber-400" style={{ filter: 'drop-shadow(0 0 6px #fbbf24)' }} />
                             <div className="flex flex-col items-center">
                               <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Gold</span>
-                              <span className="text-lg font-black tabular-nums" style={{ color: '#3b82f6', textShadow: `0 0 ${4 * glowIntensity}px #3b82f6, 0 0 ${8 * glowIntensity}px #3b82f6` }}>
+                              <span className="text-lg font-black tabular-nums" style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
                                 ${prices.xauusd}
                               </span>
                             </div>
                           </div>
-                          <div className="h-12 w-px bg-gradient-to-b from-transparent via-blue-500 to-transparent" style={{ boxShadow: `0 0 ${6 * glowIntensity}px #3b82f6` }} />
+                          <div className="h-12 w-px bg-gradient-to-b from-transparent via-blue-500 to-transparent" style={{ boxShadow: '0 0 6px #3b82f6' }} />
                           <div className="flex flex-col items-center gap-1">
-                            <Bitcoin className="w-6 h-6 text-orange-400" style={{ filter: `drop-shadow(0 0 ${6 * glowIntensity}px #fb923c) drop-shadow(0 0 ${12 * glowIntensity}px #fb923c)` }} />
+                            <Bitcoin className="w-6 h-6 text-orange-400" style={{ filter: 'drop-shadow(0 0 6px #fb923c)' }} />
                             <div className="flex flex-col items-center">
                               <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Bitcoin</span>
-                              <span className="text-lg font-black tabular-nums" style={{ color: '#3b82f6', textShadow: `0 0 ${4 * glowIntensity}px #3b82f6, 0 0 ${8 * glowIntensity}px #3b82f6` }}>
+                              <span className="text-lg font-black tabular-nums" style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
                                 ${prices.btcusd}
                               </span>
                             </div>
@@ -5426,30 +5361,31 @@ const UnifiedFpsPill = memo(({
                         exit={{ opacity: 0, scale: 0.9 }}
                         transition={{ duration: 0.3 }}
                         className="flex flex-col items-center justify-center gap-2 py-2"
+                        style={{ willChange: 'transform, opacity' }}
                       >
-                        <TrendingUp className="w-6 h-6 text-white" style={{ filter: dynamicIconFilter }} />
+                        <TrendingUp className="w-6 h-6 text-white" style={{ filter: dynamicStyles.iconFilter }} />
                         <div className="flex flex-col items-center gap-2">
                           <div className="flex items-center gap-1">
-                            <Coins className="w-4 h-4 text-blue-400" style={{ filter: `drop-shadow(0 0 ${3 * glowIntensity}px #3b82f6)` }} />
-                            <span className="text-sm font-bold text-blue-400" style={{ textShadow: `0 0 ${4 * glowIntensity}px #3b82f6` }}>${prices.xauusd}</span>
+                            <Coins className="w-4 h-4 text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+                            <span className="text-sm font-bold text-blue-400" style={{ textShadow: '0 0 4px #3b82f6' }}>${prices.xauusd}</span>
                           </div>
                           <div 
                             className="w-12 h-px" 
                             style={{ 
-                              background: `rgba(59, 130, 246, ${0.5 + scrollProgress * 0.5})`,
-                              boxShadow: `0 0 ${4 * glowIntensity}px #3b82f6`
+                              background: 'rgba(59, 130, 246, 0.7)',
+                              boxShadow: '0 0 4px #3b82f6'
                             }}
                           />
                           <div className="flex items-center gap-1">
-                            <Bitcoin className="w-4 h-4 text-blue-400" style={{ filter: `drop-shadow(0 0 ${3 * glowIntensity}px #3b82f6)` }} />
-                            <span className="text-sm font-bold text-blue-400" style={{ textShadow: `0 0 ${4 * glowIntensity}px #3b82f6` }}>${prices.btcusd}</span>
+                            <Bitcoin className="w-4 h-4 text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+                            <span className="text-sm font-bold text-blue-400" style={{ textShadow: '0 0 4px #3b82f6' }}>${prices.btcusd}</span>
                           </div>
                         </div>
                         <span 
                           className="text-[10px] font-bold uppercase tracking-wider mt-1"
                           style={{ 
-                            color: `rgba(96, 165, 250, ${0.7 + scrollProgress * 0.3})`,
-                            textShadow: `0 0 ${4 * glowIntensity}px #3b82f6`
+                            color: 'rgba(96, 165, 250, 0.85)',
+                            textShadow: '0 0 4px #3b82f6'
                           }}
                         >
                           Hub
@@ -5889,7 +5825,6 @@ BullMoneyTVPill.displayName = 'BullMoneyTVPill';
 export function UltimateHub() {
   const [mounted, setMounted] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [hubPanelOpen, setHubPanelOpen] = useState(false);
   
   const { fps, deviceTier } = useFpsMonitor();
   const prices = useLivePrices();
@@ -5900,30 +5835,28 @@ export function UltimateHub() {
     isAnyModalOpen, 
     isMobileMenuOpen, 
     isUltimatePanelOpen,
-    isV2Unlocked 
+    isUltimateHubOpen,
+    isAudioWidgetOpen,
+    isPagemodeOpen,
+    isLoaderv2Open,
+    isV2Unlocked,
+    setUltimateHubOpen
   } = useUIState();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Auto-close panel when other UI elements open
-  useEffect(() => {
-    if (isAnyModalOpen || isMobileMenuOpen || isUltimatePanelOpen) {
-      setHubPanelOpen(false);
-    }
-  }, [isAnyModalOpen, isMobileMenuOpen, isUltimatePanelOpen]);
-
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setHubPanelOpen(false);
+      if (e.key === 'Escape' && isUltimateHubOpen) {
+        setUltimateHubOpen(false);
       }
       // Quick open with Cmd/Ctrl + Shift + H
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'h') {
         e.preventDefault();
-        setHubPanelOpen(prev => !prev);
+        setUltimateHubOpen(!isUltimateHubOpen);
       }
       // Admin panel shortcut
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
@@ -5934,13 +5867,16 @@ export function UltimateHub() {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [isUltimateHubOpen, setUltimateHubOpen]);
 
   // Don't render until mounted and V2 unlocked
   if (!mounted || !isV2Unlocked) return null;
 
-  // Hide pill when mobile menu, panel open, or other modals
-  const shouldHidePill = isMobileMenuOpen || isUltimatePanelOpen || isAnyModalOpen || hubPanelOpen;
+  // Don't render during pagemode or loader (full-screen overlays)
+  if (isPagemodeOpen || isLoaderv2Open) return null;
+
+  // Hide pill when mobile menu, panel open, audio widget open, or other modals
+  const shouldHidePill = isMobileMenuOpen || isUltimatePanelOpen || isAudioWidgetOpen || isAnyModalOpen || isUltimateHubOpen;
 
   return (
     <>
@@ -5952,14 +5888,14 @@ export function UltimateHub() {
           prices={prices}
           isMinimized={isMinimized}
           onToggleMinimized={() => setIsMinimized(!isMinimized)}
-          onOpenPanel={() => setHubPanelOpen(true)}
+          onOpenPanel={() => setUltimateHubOpen(true)}
         />
       )}
 
       {/* Unified Hub Panel - Trading, Community, TV, Device all in one */}
       <UnifiedHubPanel
-        isOpen={hubPanelOpen}
-        onClose={() => setHubPanelOpen(false)}
+        isOpen={isUltimateHubOpen}
+        onClose={() => setUltimateHubOpen(false)}
         fps={fps}
         deviceTier={deviceTier}
         isAdmin={isAdmin}

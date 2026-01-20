@@ -18,13 +18,26 @@ const SocialIcon = ({ href, icon, alt: _alt }: { href: string; icon: React.React
       whileHover={{ scale: 1.05, y: -2 }}
       whileTap={{ scale: 0.95 }}
       className="relative flex h-12 w-16 sm:h-14 sm:w-20 md:h-16 md:w-24 shrink-0 items-center justify-center rounded-xl overflow-hidden"
+      style={{
+        background: 'black',
+        border: '1px solid #3b82f6',
+        boxShadow: '0 0 4px rgba(59, 130, 246, 0.5)'
+      }}
     >
-      <div className="absolute inset-0 bg-neutral-900 border border-blue-500/30 group-hover:border-blue-400/60 transition-all duration-300 rounded-xl" />
-      <div className="absolute inset-0 overflow-hidden rounded-xl">
-        <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent opacity-0 group-hover:opacity-100 shimmer-line shimmer-gpu transition-opacity duration-300" />
-      </div>
-      <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      <div className="relative z-10 text-neutral-400 group-hover:text-blue-400 transition-colors duration-300">
+      {/* Hover state with stronger neon glow */}
+      <motion.div 
+        className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+        style={{
+          boxShadow: '0 0 8px #3b82f6, 0 0 16px rgba(59, 130, 246, 0.5), inset 0 0 8px rgba(59, 130, 246, 0.2)'
+        }}
+      />
+      <div 
+        className="relative z-10 transition-colors duration-300"
+        style={{ 
+          color: '#3b82f6',
+          filter: 'drop-shadow(0 0 4px #3b82f6)'
+        }}
+      >
         {icon}
       </div>
     </motion.div>

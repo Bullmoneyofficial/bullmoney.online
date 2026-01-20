@@ -770,3 +770,132 @@
       0 0 160px rgba(59, 130, 246, 0.9);
   }
 }
+
+/* ============================================
+   GPU-OPTIMIZED ANIMATION CLASSES
+   These use transform-only animations for 60fps
+   ============================================ */
+
+/* Slow rotation - GPU accelerated */
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Optimized neon pulse - uses opacity only (GPU composited) */
+.animate-neon-pulse-optimized {
+  animation: neon-pulse-opt 2s ease-in-out infinite;
+  will-change: opacity;
+}
+
+@keyframes neon-pulse-opt {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+/* Red neon pulse variant */
+.animate-neon-pulse-red {
+  animation: neon-pulse-opt 2s ease-in-out infinite;
+  will-change: opacity;
+}
+
+/* Green glow pulse - opacity only */
+.animate-pulse-glow-green {
+  animation: pulse-glow-green 2s ease-in-out infinite;
+  will-change: opacity;
+}
+
+@keyframes pulse-glow-green {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px #22c55e; }
+  50% { opacity: 0.4; box-shadow: 0 0 12px #22c55e; }
+}
+
+/* Red glow pulse - opacity only */
+.animate-pulse-glow-red {
+  animation: pulse-glow-red 1.5s ease-in-out infinite;
+  will-change: opacity;
+}
+
+@keyframes pulse-glow-red {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px #ef4444; }
+  50% { opacity: 0.4; box-shadow: 0 0 10px #ef4444; }
+}
+
+/* Scale pulse - transform only (GPU) */
+.animate-pulse-scale {
+  animation: pulse-scale 1.5s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+@keyframes pulse-scale {
+  0%, 100% { transform: scale(1) translateZ(0); }
+  50% { transform: scale(1.03) translateZ(0); }
+}
+
+/* Bounce dots for typing indicator */
+.animate-bounce-dot {
+  animation: bounce-dot 0.6s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+@keyframes bounce-dot {
+  0%, 100% { transform: translateY(0) translateZ(0); opacity: 0.5; }
+  50% { transform: translateY(-4px) translateZ(0); opacity: 1; }
+}
+
+/* Nudge X animation - subtle horizontal movement */
+.animate-nudge-x {
+  animation: nudge-x 1.5s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+@keyframes nudge-x {
+  0%, 100% { transform: translateX(0) translateZ(0); }
+  50% { transform: translateX(3px) translateZ(0); }
+}
+
+/* Smaller nudge variant */
+.animate-nudge-x-sm {
+  animation: nudge-x-sm 1.2s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+@keyframes nudge-x-sm {
+  0%, 100% { transform: translateX(0) translateZ(0); }
+  50% { transform: translateX(2px) translateZ(0); }
+}
+
+/* Alert pulse - scale with transform only */
+.animate-alert-pulse {
+  animation: alert-pulse 2.8s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+@keyframes alert-pulse {
+  0%, 70%, 100% { transform: scale(1) rotate(0deg) translateZ(0); }
+  75% { transform: scale(1.15) rotate(3deg) translateZ(0); }
+  80% { transform: scale(1.1) rotate(-3deg) translateZ(0); }
+  85% { transform: scale(1) rotate(0deg) translateZ(0); }
+}
+
+/* Fade in animation */
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out forwards;
+  will-change: opacity;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

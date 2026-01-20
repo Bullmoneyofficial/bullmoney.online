@@ -10,6 +10,9 @@ import AdvancedSEO from "@/components/AdvancedSEO";
 import GoogleSEOBoost from "@/components/GoogleSEOBoost";
 import VercelAnalyticsWrapper from "@/components/VercelAnalyticsWrapper";
 
+// ✅ OFF-SCREEN ANIMATION CONTROLLER - Pauses animations we can't see
+import { OffscreenAnimationController } from "@/hooks/useOffscreenAnimationPause";
+
 // ✅ LOADING FALLBACKS - Mobile optimized
 import {
   NavbarSkeleton,
@@ -80,9 +83,12 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
         
         {/* ✅ LAZY LOADED: All performance providers bundled */}
         <ClientProviders modal={modal}>
-          <div className="page-full">
-            {children}
-          </div>
+          {/* ✅ OFF-SCREEN ANIMATION PAUSE - Saves CPU by pausing invisible animations */}
+          <OffscreenAnimationController>
+            <div className="page-full">
+              {children}
+            </div>
+          </OffscreenAnimationController>
         </ClientProviders>
       </CacheManagerProvider>
 

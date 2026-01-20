@@ -15,32 +15,11 @@ import { isMobileDevice } from "@/lib/mobileDetection";
 // ✅ LOADING FALLBACKS - Mobile optimized
 import { MinimalFallback, CardSkeleton } from "@/components/MobileLazyLoadingFallback";
 
-// --- GLOBAL NEON STYLES ---
+// --- GLOBAL NEON STYLES (STATIC - animations removed for performance) ---
 const GLOBAL_STYLES = `
-  @keyframes neon-pulse {
-    0%, 100% { 
-      text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
-      filter: brightness(1);
-    }
-    50% { 
-      text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
-      filter: brightness(1.1);
-    }
-  }
-
-  @keyframes neon-glow {
-    0%, 100% { 
-      box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
-    }
-    50% { 
-      box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
-    }
-  }
-
   .neon-blue-text {
     color: #3b82f6;
     text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
-    animation: neon-pulse 2s ease-in-out infinite;
   }
 
   .neon-white-text {
@@ -59,7 +38,6 @@ const GLOBAL_STYLES = `
   .neon-blue-border {
     border: 2px solid #3b82f6;
     box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
-    animation: neon-glow 2s ease-in-out infinite;
   }
 
   .neon-blue-bg {
@@ -164,14 +142,6 @@ export function Features() {
           style={{
             textShadow: NEON_GLOW,
           }}
-          animate={{
-            textShadow: [
-              NEON_GLOW,
-              "0 0 2px #3b82f6, 0 0 4px #3b82f6",
-              NEON_GLOW,
-            ],
-          }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
         >
           Bullmoney Prop Firms
         </motion.h2>
@@ -196,14 +166,6 @@ export function Features() {
                 NEON_TEXT_GRADIENT, "bg-clip-text text-transparent"
               )}
               style={{ textShadow: NEON_GLOW }}
-              animate={{
-                textShadow: [
-                  NEON_GLOW,
-                  "0 0 2px #3b82f6, 0 0 4px #3b82f6",
-                  NEON_GLOW,
-                ],
-              }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
             >
               JOIN US ON GOAT FUNDED
             </motion.h3>
@@ -286,14 +248,6 @@ export function Features() {
           <CardContent className="h-40">
             <motion.div
               style={{ textShadow: NEON_GLOW }}
-              animate={{
-                textShadow: [
-                  NEON_GLOW,
-                  "0 0 2px #3b82f6, 0 0 4px #3b82f6",
-                  NEON_GLOW,
-                ],
-              }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
             >
               <CardTitle className={cn(NEON_TEXT_GRADIENT, "bg-clip-text text-transparent")}>
                 Goat Funded Trader
@@ -347,14 +301,6 @@ export function Features() {
             <motion.h3 
               className={cn("font-sans text-base md:text-lg font-extrabold tracking-tight", NEON_TEXT_GRADIENT, "bg-clip-text text-transparent")}
               style={{ textShadow: NEON_GLOW }}
-              animate={{
-                textShadow: [
-                  NEON_GLOW,
-                  "0 0 2px #3b82f6, 0 0 4px #3b82f6",
-                  NEON_GLOW,
-                ],
-              }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
             >
               Find Our Links Below
             </motion.h3>
@@ -392,14 +338,6 @@ export function Features() {
           <CardContent className="h-auto">
             <motion.div
               style={{ textShadow: NEON_GLOW }}
-              animate={{
-                textShadow: [
-                  NEON_GLOW,
-                  "0 0 2px #3b82f6, 0 0 4px #3b82f6",
-                  NEON_GLOW,
-                ],
-              }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
             >
               <CardTitle className={cn(NEON_TEXT_GRADIENT, "bg-clip-text text-transparent")}>
                 FTMO
@@ -457,42 +395,27 @@ export function Features() {
 const Header = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="relative w-fit mx-auto p-4 flex items-center justify-center">
-      <motion.div
-        initial={{ width: 0, height: 0, borderRadius: 0 }}
-        whileInView={{ width: "100%", height: "100%" }}
-        style={{ transformOrigin: "top-left", boxShadow: NEON_BORDER_GLOW }}
-        transition={{ duration: 1, ease: "easeInOut" }}
+      <div
+        style={{ boxShadow: NEON_BORDER_GLOW }}
         className="absolute inset-0 h-full neon-blue-border w-full"
       >
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.1, ease: "easeInOut" }}
+        <div
           className="absolute -top-1 -left-1 h-2 w-2 bg-neutral-900 rounded-full neon-blue-border"
           style={{ boxShadow: '0 0 12px #60a5fa, 0 0 24px #3b82f6' }}
         />
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.1, ease: "easeInOut" }}
+        <div
           className="absolute -top-1 -right-1 h-2 w-2 bg-neutral-900 rounded-full neon-blue-border"
           style={{ boxShadow: '0 0 12px #60a5fa, 0 0 24px #3b82f6' }}
         />
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.1, ease: "easeInOut" }}
+        <div
           className="absolute -bottom-1 -left-1 h-2 w-2 bg-neutral-900 rounded-full neon-blue-border"
           style={{ boxShadow: '0 0 12px #60a5fa, 0 0 24px #3b82f6' }}
         />
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.1, ease: "easeInOut" }}
+        <div
           className="absolute -bottom-1 -right-1 h-2 w-2 bg-neutral-900 rounded-full neon-blue-border"
           style={{ boxShadow: '0 0 12px #60a5fa, 0 0 24px #3b82f6' }}
         />
-      </motion.div>
+      </div>
       {children}
     </div>
   );
@@ -642,22 +565,19 @@ export const SkeletonOne = () => {
           stroke="currentColor"
           strokeWidth="1"
         />
-        <motion.path
+        <path
           d="M1.00002 0.5L1.00001 29.5862C1 36.2136 6.37259 41.5862 13 41.5862H115C121.627 41.5862 127 46.9588 127 53.5862L127 75"
           stroke="url(#gradient-2)"
           strokeWidth="1"
         />
         <defs>
-          <motion.linearGradient
-            initial={{ x1: "0%", y1: "0%", x2: "0%", y2: "0%" }}
-            animate={{ x1: "100%", y1: "90%", x2: "120%", y2: "120%" }}
+          <linearGradient
+            x1="0%" y1="0%" x2="100%" y2="100%"
             id="gradient-2"
-            transition={{ duration: Math.random() * (7 - 2) + 2, ease: "linear", repeat: Infinity }}
           >
-            <stop stopColor="#93c5fd" stopOpacity={`0`} />
+            <stop stopColor="#93c5fd" stopOpacity={`0.3`} />
             <stop offset="1" stopColor="#60a5fa" />
-            <stop offset="1" stopColor="#60a5fa" stopOpacity="0" />
-          </motion.linearGradient>
+          </linearGradient>
         </defs>
       </svg>
 
@@ -674,22 +594,19 @@ export const SkeletonOne = () => {
           stroke="currentColor"
           strokeWidth="1"
         />
-        <motion.path
+        <path
           d="M1.00001 -69L1 57.5C1 64.1274 6.37258 69.5 13 69.5H49C55.6274 69.5 61 74.8726 61 81.5L61 105"
           stroke="url(#gradient-1)"
           strokeWidth="1"
         />
         <defs>
-          <motion.linearGradient
-            initial={{ x1: "0%", y1: "0%", x2: "0%", y2: "0%" }}
-            animate={{ x1: "100%", y1: "90%", x2: "120%", y2: "120%" }}
+          <linearGradient
+            x1="0%" y1="0%" x2="100%" y2="100%"
             id="gradient-1"
-            transition={{ duration: Math.random() * (7 - 2) + 2, ease: "linear", repeat: Infinity }}
           >
-            <stop stopColor="#93c5fd" stopOpacity={`0`} />
+            <stop stopColor="#93c5fd" stopOpacity={`0.3`} />
             <stop offset="1" stopColor="#60a5fa" />
-            <stop offset="1" stopColor="#60a5fa" stopOpacity="0" />
-          </motion.linearGradient>
+          </linearGradient>
         </defs>
       </svg>
 
@@ -697,9 +614,6 @@ export const SkeletonOne = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-lg mx-auto w-full relative z-30 [perspective:1000px] [transform-style:preserve-3d] p-8 sm:p-0">
         {/* 1) Partner code */}
         <Container
-          initial={{ y: 0 }}
-          animate={{ y: [0, -10, 0], rotateX: [0, 10, 0] }}
-          transition={{ duration: 2, ease: "easeInOut", repeat: Infinity, repeatDelay: 6 }}
           className="p-0 overflow-hidden rounded-lg"
         >
           <a
@@ -723,9 +637,6 @@ export const SkeletonOne = () => {
 
         {/* 2) Goat Funded logo */}
         <Container
-          initial={{ y: 0 }}
-          animate={{ y: [0, -10, 0], rotateX: [0, 10, 0] }}
-          transition={{ duration: 2, delay: 2, ease: "easeInOut", repeat: Infinity, repeatDelay: 6 }}
           className="flex items-center justify-center p-2"
         >
           <Image
@@ -739,9 +650,6 @@ export const SkeletonOne = () => {
 
         {/* 3) Bullmoney logo */}
         <Container
-          initial={{ y: 0 }}
-          animate={{ y: [0, -10, 0], rotateX: [0, 10, 0] }}
-          transition={{ duration: 2, delay: 4, ease: "easeInOut", repeat: Infinity, repeatDelay: 6 }}
           className="flex items-center justify-center p-2"
         >
           <Image
@@ -939,29 +847,16 @@ const ShimmerText = ({
   children: React.ReactNode;
   className?: string;
 }) => (
-  <motion.span
+  <span
     className={cn(
       "bg-clip-text text-transparent",
       NEON_TEXT_GRADIENT,
-      "bg-[length:200%_100%]",
       className
     )}
     style={{ textShadow: NEON_GLOW }}
-    animate={{ 
-      backgroundPositionX: ["0%", "100%"],
-      textShadow: [
-        NEON_GLOW,
-        "0 0 2px #3b82f6, 0 0 4px #3b82f6",
-        NEON_GLOW,
-      ],
-    }}
-    transition={{ 
-      backgroundPositionX: { duration: 8, repeat: Infinity, ease: "linear" },
-      textShadow: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
-    }}
   >
     {children}
-  </motion.span>
+  </span>
 );
 
 /* Fancy dropdown with framer-motion */
@@ -976,16 +871,15 @@ const SocialsDropdown = ({
 
   return (
     <div className={cn("w-full max-w-sm relative z-30", triggerClassName)}>
-      <motion.button
+      <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
           "group inline-flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold",
-          "neon-blue-border text-black transition",
+          "neon-blue-border text-black transition hover:brightness-110",
           NEON_TEXT_GRADIENT
         )}
         style={{ boxShadow: NEON_BORDER_GLOW }}
-        whileHover={{ boxShadow: "0 0 20px rgba(59, 130, 246, 0.8), 0 0 40px rgba(59, 130, 246, 0.6)" }}
         aria-expanded={open}
       >
         <span className="inline-flex items-center gap-2">
@@ -993,7 +887,7 @@ const SocialsDropdown = ({
           Official links
         </span>
         <Chevron className={cn("h-4 w-4 transition-transform", open && "rotate-180")} style={{ filter: 'drop-shadow(0 0 3px #000)' }} />
-      </motion.button>
+      </button>
 
       <motion.div
         initial={false}
@@ -1004,18 +898,13 @@ const SocialsDropdown = ({
       >
         <div className="grid grid-cols-1 gap-2">
           {items.map((it, i) => (
-            <motion.a
+            <a
               key={it.label + i}
               href={it.href}
               target="_blank"
               rel="noopener noreferrer"
-              whileHover={{ 
-                scale: 1.015,
-                boxShadow: "0 0 20px rgba(59, 130, 246, 0.8), 0 0 40px rgba(59, 130, 246, 0.6)"
-              }}
-              whileTap={{ scale: 0.98 }}
               className={cn(
-                "group relative block w-full rounded-xl px-3 py-2 text-sm font-semibold",
+                "group relative block w-full rounded-xl px-3 py-2 text-sm font-semibold transition-all hover:brightness-110",
                 "neon-blue-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400",
                 it.gradient
               )}
@@ -1030,7 +919,7 @@ const SocialsDropdown = ({
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(to_bottom,rgba(0,0,0,0)_0%,rgba(0,0,0,0.10)_25%,rgba(0,0,0,0.30)_100%)]"
               />
-            </motion.a>
+            </a>
           ))}
         </div>
       </motion.div>

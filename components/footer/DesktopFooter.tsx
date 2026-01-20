@@ -52,13 +52,22 @@ const FooterItem = ({
         onClick();
       }}
       onMouseEnter={() => SoundEffects.hover()}
-      className="relative group px-4 py-2 text-sm font-medium text-white/70 hover:text-white transition-colors duration-300 cursor-pointer"
+      className="relative group px-4 py-2 text-sm font-medium transition-colors duration-300 cursor-pointer"
+      style={{
+        color: '#3b82f6',
+        textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6'
+      }}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
     >
       {children}
-      <motion.div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-500/0 group-hover:bg-blue-500/80 transition-all duration-300" 
-        layoutId="underline"
+      {/* Static neon underline on hover */}
+      <motion.div 
+        className="absolute bottom-0 left-0 w-full h-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" 
+        style={{
+          background: '#3b82f6',
+          boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6'
+        }}
       />
     </motion.div>
   );

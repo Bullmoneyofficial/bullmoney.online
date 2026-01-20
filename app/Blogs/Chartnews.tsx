@@ -516,7 +516,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                 <div className="flex items-center gap-2">
                     <Newspaper className="h-5 w-5 text-sky-400" />
                     <span className="font-bold text-white truncate max-w-[150px] md:max-w-none animate-text-shimmer">{marketTitle}</span>
-                    <span className="ml-2 md:ml-4 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-500 hidden sm:block border border-red-500/20">Live</span>
+                    <span className="ml-2 md:ml-4 rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-500 hidden sm:block border border-red-500 animate-pulse" style={{ textShadow: '0 0 8px #ef4444, 0 0 16px #ef4444', boxShadow: '0 0 8px #ef4444, 0 0 16px rgba(239,68,68,0.5), inset 0 0 8px rgba(239,68,68,0.2)' }}>Live</span>
                 </div>
                 <div className="flex items-center gap-3">
                     {lastUpdated && <span className="text-xs text-neutral-600 hidden sm:block font-mono">{lastUpdated.toLocaleTimeString()}</span>}

@@ -18,7 +18,14 @@ export const DisclaimerSection = ({ number, title, text, isOpen, onToggle }: Dis
   const isCollapsed = !isOpen;
 
   return (
-    <div className="group relative rounded-lg xs:rounded-xl sm:rounded-xl md:rounded-xl overflow-hidden transition-all duration-300">
+    <div 
+      className="group relative rounded-lg xs:rounded-xl sm:rounded-xl md:rounded-xl overflow-hidden transition-all duration-300"
+      style={{
+        background: 'black',
+        border: '1px solid #3b82f6',
+        boxShadow: isOpen ? '0 0 8px rgba(59, 130, 246, 0.5), 0 0 16px rgba(59, 130, 246, 0.3)' : '0 0 4px rgba(59, 130, 246, 0.3)'
+      }}
+    >
       <button
         type="button"
         onClick={() => onToggle(number)}
@@ -33,34 +40,46 @@ export const DisclaimerSection = ({ number, title, text, isOpen, onToggle }: Dis
         )}
       >
         <div className={cn("flex items-center", isCollapsed ? "gap-1.5 xs:gap-2" : "gap-1.5 xs:gap-2 sm:gap-2 md:gap-3") }>
-          <span className="flex h-4 w-4 xs:h-5 xs:w-5 sm:h-5 sm:w-5 md:h-6 md:w-6 items-center justify-center rounded text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] font-bold text-blue-400 font-mono border border-blue-500/30 bg-blue-500/20 flex-shrink-0">
+          <span 
+            className="flex h-4 w-4 xs:h-5 xs:w-5 sm:h-5 sm:w-5 md:h-6 md:w-6 items-center justify-center rounded text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] font-bold font-mono flex-shrink-0"
+            style={{
+              color: '#3b82f6',
+              textShadow: '0 0 4px #3b82f6',
+              border: '1px solid #3b82f6',
+              boxShadow: '0 0 4px rgba(59, 130, 246, 0.5)',
+              background: 'rgba(59, 130, 246, 0.1)'
+            }}
+          >
             {number}
           </span>
-          <span className="line-clamp-2 text-xs xs:text-sm sm:text-sm md:text-base font-semibold text-white">
+          <span 
+            className="line-clamp-2 text-xs xs:text-sm sm:text-sm md:text-base font-semibold"
+            style={{ color: '#ffffff', textShadow: '0 0 4px rgba(255, 255, 255, 0.5)' }}
+          >
             {title}
           </span>
         </div>
         <ChevronRight
           className={cn(
-            "h-4 w-4 xs:h-5 xs:w-5 sm:h-5 sm:w-5 text-blue-400 transition-transform duration-300",
+            "h-4 w-4 xs:h-5 xs:w-5 sm:h-5 sm:w-5 transition-transform duration-300",
             isOpen ? "rotate-90" : "rotate-0"
           )}
+          style={{ 
+            color: '#3b82f6',
+            filter: 'drop-shadow(0 0 4px #3b82f6)'
+          }}
         />
       </button>
-
-      <div className="pointer-events-none absolute inset-0 bg-black border border-blue-500/20 group-hover:border-blue-500/40 rounded-lg xs:rounded-xl sm:rounded-xl md:rounded-xl transition-all duration-300" />
-      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-lg xs:rounded-xl sm:rounded-xl md:rounded-xl">
-        <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 shimmer-line shimmer-gpu transition-opacity duration-300" />
-      </div>
 
       <div
         className={cn("relative z-10 pb-1 xs:pb-1.5 sm:pb-2 md:pb-2.5", isCollapsed ? "px-3 xs:px-3.5 sm:px-4" : "px-3 xs:px-3.5 sm:px-4 md:px-5")}
       >
         <p
           className={cn(
-            "text-white font-semibold leading-tight",
+            "font-semibold leading-tight",
             isCollapsed ? "text-[10px] xs:text-xs sm:text-sm" : "text-[10px] xs:text-xs sm:text-sm md:text-base"
           )}
+          style={{ color: '#ffffff', textShadow: '0 0 4px rgba(255, 255, 255, 0.3)' }}
         >
           {title}
         </p>
@@ -75,7 +94,10 @@ export const DisclaimerSection = ({ number, title, text, isOpen, onToggle }: Dis
         className="relative z-10 px-2 pb-2 xs:px-2.5 xs:pb-2.5 sm:px-3 sm:pb-3 md:px-4 md:pb-4 overflow-hidden"
       >
         <div className="space-y-1.5" aria-hidden={!isOpen}>
-          <p className="text-neutral-400 text-[9px] xs:text-[10px] sm:text-xs md:text-sm pl-5 xs:pl-6 sm:pl-6 md:pl-7 leading-relaxed">
+          <p 
+            className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm pl-5 xs:pl-6 sm:pl-6 md:pl-7 leading-relaxed"
+            style={{ color: '#9ca3af', textShadow: '0 0 2px rgba(156, 163, 175, 0.3)' }}
+          >
             {text}
           </p>
         </div>

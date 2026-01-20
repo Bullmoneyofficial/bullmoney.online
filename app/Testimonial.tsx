@@ -7,32 +7,11 @@ import { motion, AnimatePresence  } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 
-// Neon Blue Sign Style from Chartnews
+// Neon Blue Sign Style from Chartnews (STATIC for performance)
 const NEON_STYLES = `
-  @keyframes neon-pulse {
-    0%, 100% { 
-      text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
-      filter: brightness(1);
-    }
-    50% { 
-      text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
-      filter: brightness(1.1);
-    }
-  }
-
-  @keyframes neon-glow {
-    0%, 100% { 
-      box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
-    }
-    50% { 
-      box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
-    }
-  }
-
   .neon-blue-text {
     color: #3b82f6;
     text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
-    animation: neon-pulse 2s ease-in-out infinite;
   }
 
   .neon-white-text {
@@ -51,7 +30,6 @@ const NEON_STYLES = `
   .neon-blue-border {
     border: 2px solid #3b82f6;
     box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
-    animation: neon-glow 2s ease-in-out infinite;
   }
 
   .neon-blue-bg {
@@ -174,16 +152,10 @@ export function TestimonialsCarousel() {
           <motion.div
             key={index}
             className="absolute inset-0 flex items-center justify-center"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            onDragEnd={(_e, { offset, velocity }) => {
-              if (offset.x < -50 || velocity.x < -200) nextSlide();
-              if (offset.x > 50 || velocity.x > 200) prevSlide();
-            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
           >
             <Image
               src={currentTestimonial.image}

@@ -5,6 +5,25 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Neon Blue Sign Styles (Static glow like Chartnews)
+const NEON_MODAL_STYLES = `
+  .modal-neon-blue-text {
+    color: #3b82f6;
+    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, 0 0 12px #3b82f6;
+  }
+  .modal-neon-white-text {
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
+  }
+  .modal-neon-blue-border {
+    border: 2px solid #3b82f6;
+    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, 0 0 16px #3b82f6, inset 0 0 4px rgba(59, 130, 246, 0.3);
+  }
+  .modal-neon-blue-icon {
+    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+  }
+`;
+
 export interface EnhancedModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -46,57 +65,79 @@ export const EnhancedModal = ({
   return (
     <AnimatePresence mode="wait">
       {isOpen && (
-        <motion.div
-          key="modal-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[999999] flex items-center justify-center p-2 xs:p-3 sm:p-4 md:p-6"
-        >
-          <div onClick={onClose} className="absolute inset-0 bg-black/90" />
-
+        <>
+          <style dangerouslySetInnerHTML={{ __html: NEON_MODAL_STYLES }} />
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: "spring", duration: 0.4, bounce: 0.2 }}
-            className={cn(
-              "relative w-full overflow-hidden rounded-xl xs:rounded-2xl sm:rounded-2xl md:rounded-3xl shadow-2xl shadow-blue-500/30",
-              maxWidth
-            )}
-            onClick={(e) => e.stopPropagation()}
+            key="modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[999999] flex items-center justify-center p-2 xs:p-3 sm:p-4 md:p-6"
           >
-            <div className="absolute inset-[-2px] overflow-hidden rounded-xl xs:rounded-2xl sm:rounded-2xl md:rounded-3xl pointer-events-none">
-              <div className="absolute inset-0 shimmer-spin shimmer-gpu bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_25%,#60a5fa_50%,#3b82f6_75%,#00000000_100%)] opacity-80" />
-            </div>
+            <div onClick={onClose} className="absolute inset-0 bg-black/95" />
 
-            <div className="relative z-10 m-[2px] flex max-h-[90vh] xs:max-h-[88vh] sm:max-h-[85vh] md:max-h-[82vh] lg:max-h-[80vh] flex-col rounded-xl xs:rounded-2xl sm:rounded-2xl md:rounded-3xl bg-black overflow-hidden min-h-0">
-              <div className="relative flex items-center justify-between border-b border-blue-500/30 px-3 xs:px-4 sm:px-5 md:px-6 py-2.5 xs:py-3 sm:py-3.5 md:py-4 bg-neutral-950 shrink-0">
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  <div className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-500/15 to-transparent shimmer-line shimmer-gpu" />
-                </div>
-                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-blue-400 to-transparent" />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", duration: 0.4, bounce: 0.2 }}
+              className={cn(
+                "relative w-full overflow-hidden rounded-xl xs:rounded-2xl sm:rounded-2xl md:rounded-3xl",
+                maxWidth
+              )}
+              style={{
+                boxShadow: '0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Static neon border glow */}
+              <div 
+                className="absolute inset-[-2px] rounded-xl xs:rounded-2xl sm:rounded-2xl md:rounded-3xl pointer-events-none modal-neon-blue-border"
+                style={{ background: 'transparent' }}
+              />
 
-                <div className="relative text-sm xs:text-base sm:text-lg md:text-xl font-semibold tracking-wide text-white truncate pr-3">
-                  {title}
-                </div>
-
-                <button
-                  onClick={onClose}
-                  className="relative z-[9999999] p-1.5 xs:p-2 sm:p-2 md:p-2.5 rounded-full bg-neutral-900 border border-blue-500/40 hover:border-blue-400/70 text-neutral-400 hover:text-white hover:bg-blue-500/20 transition-all duration-300 min-w-[36px] min-h-[36px] xs:min-w-[40px] xs:min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center group flex-shrink-0"
+              <div className="relative z-10 m-[2px] flex max-h-[90vh] xs:max-h-[88vh] sm:max-h-[85vh] md:max-h-[82vh] lg:max-h-[80vh] flex-col rounded-xl xs:rounded-2xl sm:rounded-2xl md:rounded-3xl bg-black overflow-hidden min-h-0">
+                {/* Header with neon styling */}
+                <div 
+                  className="relative flex items-center justify-between px-3 xs:px-4 sm:px-5 md:px-6 py-2.5 xs:py-3 sm:py-3.5 md:py-4 bg-black shrink-0"
+                  style={{ 
+                    borderBottom: '2px solid #3b82f6',
+                    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.4)'
+                  }}
                 >
-                  <X className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:h-5 sm:w-5 transition-transform group-hover:rotate-90 duration-300" />
-                </button>
-              </div>
+                  {/* Static neon line at top */}
+                  <div 
+                    className="absolute inset-x-0 top-0 h-[2px]"
+                    style={{ 
+                      background: '#3b82f6',
+                      boxShadow: '0 0 8px #3b82f6, 0 0 16px #3b82f6'
+                    }}
+                  />
 
-              <div className="flex-1 min-h-0 overflow-y-auto px-3 xs:px-4 sm:px-5 md:px-6 py-3 xs:py-4 sm:py-5 md:py-6 footer-scrollbar relative bg-neutral-950">
-                <div className="absolute inset-0 z-[-1] bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.1)_0%,transparent_60%)] pointer-events-none" />
-                {children}
+                  <div className="relative text-sm xs:text-base sm:text-lg md:text-xl font-semibold tracking-wide modal-neon-white-text truncate pr-3">
+                    {title}
+                  </div>
+
+                  <button
+                    onClick={onClose}
+                    className="relative z-[9999999] p-1.5 xs:p-2 sm:p-2 md:p-2.5 rounded-full bg-black text-white min-w-[36px] min-h-[36px] xs:min-w-[40px] xs:min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center group flex-shrink-0 transition-all duration-300"
+                    style={{
+                      border: '2px solid #3b82f6',
+                      boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6'
+                    }}
+                  >
+                    <X className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:h-5 sm:w-5 transition-transform group-hover:rotate-90 duration-300 modal-neon-blue-icon" style={{ color: '#3b82f6' }} />
+                  </button>
+                </div>
+
+                <div className="flex-1 min-h-0 overflow-y-auto px-3 xs:px-4 sm:px-5 md:px-6 py-3 xs:py-4 sm:py-5 md:py-6 footer-scrollbar relative bg-black">
+                  {children}
+                </div>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
-        </motion.div>
+        </>
       )}
     </AnimatePresence>
   );

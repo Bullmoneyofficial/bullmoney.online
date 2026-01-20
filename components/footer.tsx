@@ -14,32 +14,11 @@ import { useFpsOptimizer } from "@/lib/FpsOptimizer";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { useFooterModalsUI } from "@/contexts/UIStateContext";
 
-// Neon Blue Sign Style from Chartnews
+// Neon Blue Sign Style from Chartnews (STATIC for performance)
 const NEON_STYLES = `
-  @keyframes neon-pulse {
-    0%, 100% { 
-      text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
-      filter: brightness(1);
-    }
-    50% { 
-      text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
-      filter: brightness(1.1);
-    }
-  }
-
-  @keyframes neon-glow {
-    0%, 100% { 
-      box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
-    }
-    50% { 
-      box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
-    }
-  }
-
   .neon-blue-text {
     color: #3b82f6;
     text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
-    animation: neon-pulse 2s ease-in-out infinite;
   }
 
   .neon-white-text {
@@ -58,7 +37,6 @@ const NEON_STYLES = `
   .neon-blue-border {
     border: 2px solid #3b82f6;
     box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
-    animation: neon-glow 2s ease-in-out infinite;
   }
 
   .neon-blue-bg {
@@ -73,7 +51,7 @@ const NEON_STYLES = `
   }
 `;
 
-// Unified Modal Wrapper for Footer - Fixes display issues on all devices
+// Unified Modal Wrapper for Footer - Static Neon Style
 const FooterModal = memo(({ 
   isOpen, 
   onClose, 
@@ -118,37 +96,43 @@ const FooterModal = memo(({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-          animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
-          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-          className="fixed inset-0 z-[2147483647] flex items-center justify-center p-2 sm:p-4 bg-black/95"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[2147483647] flex items-center justify-center p-2 sm:p-4 bg-black/95 backdrop-blur-sm"
           onClick={onClose}
         >
-          {/* Modal */}
+          {/* Modal - Static Neon Border */}
           <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 50 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 50 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.2 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-lg max-h-[90vh] overflow-hidden rounded-2xl"
+            className="relative w-full max-w-lg max-h-[90vh] overflow-hidden rounded-2xl neon-blue-border"
           >
-            {/* Neon Border Effect */}
-            <div className="absolute inset-0 neon-blue-border rounded-2xl" />
-            
             {/* Inner Container */}
             <div className="relative z-10 bg-black rounded-2xl overflow-hidden">
               
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b neon-blue-border">
-                <h2 className="text-lg font-bold neon-blue-text">{title}</h2>
+              <div 
+                className="flex items-center justify-between p-4"
+                style={{
+                  borderBottom: '2px solid #3b82f6',
+                  boxShadow: '0 2px 8px #3b82f6, 0 4px 16px rgba(59, 130, 246, 0.4)'
+                }}
+              >
+                <h2 className="text-lg font-bold neon-blue-text">
+                  {title}
+                </h2>
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => { SoundEffects.click(); onClose(); }}
-                  className="p-2 rounded-full bg-black neon-blue-border neon-white-text hover:neon-blue-bg transition-all"
+                  className="p-2 rounded-full bg-black transition-all neon-blue-border"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-5 h-5 neon-white-icon" style={{ color: '#ffffff' }} />
                 </motion.button>
               </div>
               
@@ -166,7 +150,7 @@ const FooterModal = memo(({
 });
 FooterModal.displayName = 'FooterModal';
 
-// Apps & Tools Modal Content
+// Apps & Tools Modal Content - Static Neon Style
 const AppsToolsContent = memo(() => {
   const apps = [
     { name: "TradingView", icon: "📊", url: "https://tradingview.com", desc: "Advanced charting platform" },
@@ -179,23 +163,25 @@ const AppsToolsContent = memo(() => {
   return (
     <div className="space-y-3">
       {apps.map((app) => (
-        <motion.a
+        <a
           key={app.name}
           href={app.url}
           target="_blank"
           rel="noopener noreferrer"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
           onClick={() => SoundEffects.click()}
-          className="flex items-center gap-4 p-4 bg-black rounded-xl neon-blue-border transition-all hover:neon-blue-bg group"
+          className="flex items-center gap-4 p-4 bg-black rounded-xl transition-all hover:brightness-110 group neon-blue-border"
         >
           <span className="text-2xl">{app.icon}</span>
           <div className="flex-1">
-            <p className="font-medium neon-blue-text group-hover:neon-white-text transition-all">{app.name}</p>
-            <p className="text-xs text-neutral-500">{app.desc}</p>
+            <p className="font-medium transition-all neon-blue-text">
+              {app.name}
+            </p>
+            <p className="text-xs text-gray-400">
+              {app.desc}
+            </p>
           </div>
-          <ExternalLink className="w-4 h-4 neon-blue-icon" />
-        </motion.a>
+          <ExternalLink className="w-4 h-4 neon-blue-icon" style={{ color: '#3b82f6' }} />
+        </a>
       ))}
     </div>
   );
@@ -214,9 +200,6 @@ export function Footer() {
     registerComponent('footer');
     return () => unregisterComponent('footer');
   }, [registerComponent, unregisterComponent]);
-  
-  // Check if shimmer should be enabled for this component
-  const shimmerEnabled = shouldEnableShimmer('footer') && !shimmerSettings.disabled;
 
   // Use centralized UI state for mutual exclusion with other modals
   const { isAppsOpen, isDisclaimerOpen, setAppsOpen, setDisclaimerOpen } = useFooterModalsUI();
@@ -245,17 +228,13 @@ export function Footer() {
         <AppsToolsContent />
       </FooterModal>
 
-      <motion.div
+      <div
         className="relative w-full px-4 sm:px-8 py-8 sm:py-10 overflow-hidden"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
       >
-        {/* Inner Content Container */}
-        <div className="relative max-w-7xl mx-auto flex flex-col items-center gap-6 sm:gap-8 bg-black/40 backdrop-blur-2xl rounded-2xl p-4 sm:p-6 border border-blue-500/30 footer-shimmer">
-          {/* Top shimmer - LEFT TO RIGHT, FPS-aware */}
-          {shimmerEnabled && <ShimmerLine color="blue" intensity={shimmerSettings.intensity} speed={shimmerSettings.speed} />}
-          
+        {/* Inner Content Container - Static Neon Style */}
+        <div 
+          className="relative max-w-7xl mx-auto flex flex-col items-center gap-6 sm:gap-8 bg-black rounded-2xl p-4 sm:p-6 neon-blue-border"
+        >
           {/* Top: Logo */}
           <div className="scale-110 sm:scale-125 md:scale-150 origin-center p-1">
             <Logo />
@@ -270,22 +249,18 @@ export function Footer() {
 
           {/* Mobile Footer Items */}
           <div className="lg:hidden flex flex-wrap justify-center gap-2 sm:gap-3">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <button
               onClick={handleDisclaimerClick}
-              className="px-4 py-2 text-sm font-medium neon-blue-text bg-black rounded-full neon-blue-border hover:neon-blue-bg hover:neon-white-text transition-all"
+              className="px-4 py-2 text-sm font-medium bg-black rounded-full transition-all hover:brightness-110 active:scale-95 neon-blue-border neon-blue-text"
             >
               Disclaimer
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            </button>
+            <button
               onClick={handleAppsClick}
-              className="px-4 py-2 text-sm font-medium neon-blue-text bg-black rounded-full neon-blue-border hover:neon-blue-bg hover:neon-white-text transition-all"
+              className="px-4 py-2 text-sm font-medium bg-black rounded-full transition-all hover:brightness-110 active:scale-95 neon-blue-border neon-blue-text"
             >
               Apps & Tools
-            </motion.button>
+            </button>
           </div>
 
           {/* Bottom: Socials Row */}
@@ -293,12 +268,18 @@ export function Footer() {
             <SocialsRow />
           </div>
 
-          {/* Copyright */}
-          <p className="text-[10px] sm:text-xs neon-white-text font-light tracking-wide text-center mt-4 sm:mt-6">
+          {/* Copyright - Neon White Text */}
+          <p 
+            className="text-[10px] sm:text-xs font-light tracking-wide text-center mt-4 sm:mt-6"
+            style={{
+              color: '#ffffff',
+              textShadow: '0 0 4px #ffffff, 0 0 8px rgba(255, 255, 255, 0.5)'
+            }}
+          >
             &copy; {currentYear} BullMoney. All rights reserved.
           </p>
         </div>
-      </motion.div>
+      </div>
     </>
   );
 }

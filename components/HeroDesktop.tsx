@@ -549,7 +549,7 @@ const useKonamiCode = (callback: () => void) => {
 
 const PerspectiveGrid = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ perspective: '500px' }}>
-    <motion.div
+    <div
       className="absolute w-[200%] h-[200%] left-[-50%]"
       style={{
         backgroundImage: `linear-gradient(to right, rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(59, 130, 246, 0.1) 1px, transparent 1px)`,
@@ -558,8 +558,6 @@ const PerspectiveGrid = () => (
         transformOrigin: 'center top',
         top: '60%',
       }}
-      animate={{ backgroundPositionY: ['0px', '60px'] }}
-      transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
     />
   </div>
 );
@@ -580,25 +578,21 @@ const SpotlightTracking = ({ mouseX, mouseY }: { mouseX: number; mouseY: number 
 );
 
 const OrbitalParticles = () => {
-  const particles = useMemo(() => Array.from({ length: 50 }, (_, i) => ({
-    id: i, x: Math.random() * 100, y: Math.random() * 100, size: Math.random() * 3 + 1, duration: Math.random() * 20 + 10, delay: Math.random() * 5,
+  const particles = useMemo(() => Array.from({ length: 10 }, (_, i) => ({
+    id: i, x: Math.random() * 100, y: Math.random() * 100, size: Math.random() * 3 + 1,
   })), []);
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {particles.map((p) => (
-        <motion.div key={p.id} className="absolute rounded-full bg-blue-500/30" style={{ width: p.size, height: p.size, left: `${p.x}%`, top: `${p.y}%` }}
-          animate={{ y: [0, -30, 0], x: [0, Math.random() * 20 - 10, 0], opacity: [0.3, 0.7, 0.3] }}
-          transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: 'easeInOut' }} />
+        <div key={p.id} className="absolute rounded-full bg-blue-500/30" style={{ width: p.size, height: p.size, left: `${p.x}%`, top: `${p.y}%`, opacity: 0.5 }} />
       ))}
     </div>
   );
 };
 
 const AuroraBorealis = () => (
-  <motion.div className="absolute bottom-0 left-0 w-[60%] h-[60%] pointer-events-none opacity-30"
-    style={{ background: 'radial-gradient(ellipse at bottom left, rgba(59, 130, 246, 0.4) 0%, rgba(147, 51, 234, 0.2) 40%, transparent 70%)', filter: 'blur(80px)' }}
-    animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.35, 0.2] }}
-    transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }} />
+  <div className="absolute bottom-0 left-0 w-[60%] h-[60%] pointer-events-none opacity-30"
+    style={{ background: 'radial-gradient(ellipse at bottom left, rgba(59, 130, 246, 0.4) 0%, rgba(147, 51, 234, 0.2) 40%, transparent 70%)', filter: 'blur(80px)' }} />
 );
 
 const Scanlines = () => (
@@ -607,8 +601,7 @@ const Scanlines = () => (
 
 const ReflectiveBorder = ({ children, className }: { children: React.ReactNode; className?: string }) => (
   <div className={cn("relative p-[1px] rounded-2xl overflow-hidden", className)}>
-    <motion.div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), rgba(255,255,255,0.3), rgba(59, 130, 246, 0.5), transparent)', backgroundSize: '200% 100%' }}
-      animate={{ backgroundPositionX: ['0%', '200%'] }} transition={{ duration: 3, repeat: Infinity, ease: 'linear' }} />
+    <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), rgba(255,255,255,0.3), rgba(59, 130, 246, 0.5), transparent)' }} />
     <div className="relative bg-black/80 backdrop-blur-xl rounded-2xl">{children}</div>
   </div>
 );
@@ -637,7 +630,7 @@ const CornerAccents = () => (
 
 const VerticalText = () => (
   <div className="absolute left-4 top-1/2 -translate-y-1/2 z-20 hidden xl:block">
-    <motion.p 
+    <p 
       className="text-3xl font-black tracking-[0.15em]" 
       style={{ 
         writingMode: 'vertical-rl', 
@@ -652,32 +645,15 @@ const VerticalText = () => (
           0 0 80px #2563eb
         `,
       }}
-      animate={{
-        textShadow: [
-          `0 0 5px #60a5fa, 0 0 10px #60a5fa, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 60px #2563eb, 0 0 80px #2563eb`,
-          `0 0 2px #60a5fa, 0 0 5px #60a5fa, 0 0 10px #3b82f6, 0 0 20px #3b82f6, 0 0 30px #2563eb, 0 0 40px #2563eb`,
-          `0 0 5px #60a5fa, 0 0 10px #60a5fa, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 60px #2563eb, 0 0 80px #2563eb`,
-          `0 0 3px #60a5fa, 0 0 8px #60a5fa, 0 0 15px #3b82f6, 0 0 30px #3b82f6, 0 0 45px #2563eb, 0 0 60px #2563eb`,
-          `0 0 5px #60a5fa, 0 0 10px #60a5fa, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 60px #2563eb, 0 0 80px #2563eb`,
-        ],
-        opacity: [1, 0.85, 1, 0.9, 1],
-      }}
-      transition={{
-        duration: 3,
-        repeat: Infinity,
-        ease: 'easeInOut',
-        times: [0, 0.2, 0.5, 0.8, 1],
-      }}
     >
       BULLMONEY
-    </motion.p>
+    </p>
   </div>
 );
 
 const MorphingShape = () => (
-  <motion.div className="absolute right-[10%] top-[20%] w-64 h-64 bg-blue-500/10 blur-3xl pointer-events-none"
-    animate={{ borderRadius: ['30% 70% 70% 30% / 30% 30% 70% 70%', '70% 30% 30% 70% / 70% 70% 30% 30%'], scale: [1, 1.1, 1] }}
-    transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }} />
+  <div className="absolute right-[10%] top-[20%] w-64 h-64 bg-blue-500/10 blur-3xl pointer-events-none"
+    style={{ borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%' }} />
 );
 
 const CursorTrail = ({ trail }: { trail: { x: number; y: number; id: number }[] }) => (
@@ -840,9 +816,7 @@ const FloatingCoins = () => {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {coins.map((coin, i) => (
-        <motion.div key={i} className="absolute text-4xl text-blue-500/10 font-bold" style={{ left: `${20 + i * 15}%`, bottom: '-10%' }}
-          animate={{ y: [0, -800], opacity: [0, 0.3, 0], rotate: [0, 360] }}
-          transition={{ duration: 8 + i * 2, repeat: Infinity, delay: i * 2, ease: 'easeOut' }}>{coin}</motion.div>
+        <div key={i} className="absolute text-4xl text-blue-500/10 font-bold" style={{ left: `${20 + i * 15}%`, top: `${20 + i * 10}%`, opacity: 0.15 }}>{coin}</div>
       ))}
     </div>
   );
@@ -850,10 +824,9 @@ const FloatingCoins = () => {
 
 const CandlestickDecorations = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-    {Array.from({ length: 20 }).map((_, i) => (
-      <motion.div key={i} className={cn("absolute w-2 rounded-sm", i % 2 === 0 ? 'bg-green-500/30' : 'bg-red-500/30')}
-        style={{ left: `${5 + i * 5}%`, height: `${20 + Math.random() * 30}%`, bottom: `${Math.random() * 50}%` }}
-        initial={{ opacity: 0, scaleY: 0 }} animate={{ opacity: 0.3, scaleY: 1 }} transition={{ delay: i * 0.1, duration: 0.5 }} />
+    {Array.from({ length: 10 }).map((_, i) => (
+      <div key={i} className={cn("absolute w-2 rounded-sm", i % 2 === 0 ? 'bg-green-500/30' : 'bg-red-500/30')}
+        style={{ left: `${10 + i * 10}%`, height: `${20 + (i % 5) * 10}%`, bottom: `${(i % 4) * 15}%`, opacity: 0.3 }} />
     ))}
   </div>
 );
@@ -1731,12 +1704,8 @@ const HeroDesktop = () => {
         }
       `}</style>
 
-      <CustomCursor />
-      <CursorTrail trail={mouseTrail} />
-      <ScrollProgressBar />
-      <Confetti active={showConfetti} />
-      <WarpSpeed active={showWarp} />
-      <GodModeOverlay active={godMode} />
+      {/* Removed: CustomCursor, CursorTrail, ScrollProgressBar for performance */}
+      {/* Removed: Confetti, WarpSpeed, GodModeOverlay for performance */}
       {currentTheme?.youtubeId && <HiddenYoutubePlayer videoId={currentTheme.youtubeId} isPlaying={!isMuted} volume={isMuted ? 0 : 15} />}
 
       <div ref={ref} className="relative min-h-[100dvh] h-[100dvh] bg-black overflow-hidden hero-section" data-allow-scroll data-content data-theme-aware data-hero>

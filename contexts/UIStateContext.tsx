@@ -61,6 +61,7 @@ export type UIComponentType =
   | 'mobileMenu'
   | 'audioWidget'
   | 'ultimatePanel'
+  | 'ultimateHub'         // UltimateHub unified control center panel
   | 'footer'
   | 'chartnews'
   | 'analysisModal'
@@ -89,6 +90,7 @@ interface UIStateContextType {
   isMobileMenuOpen: boolean;
   isAudioWidgetOpen: boolean;
   isUltimatePanelOpen: boolean;
+  isUltimateHubOpen: boolean;      // UltimateHub unified control center
   isFooterOpen: boolean;
   isChartNewsOpen: boolean;
   isAnalysisModalOpen: boolean;
@@ -124,6 +126,7 @@ interface UIStateContextType {
   setMobileMenuOpen: (open: boolean) => void;
   setAudioWidgetOpen: (open: boolean) => void;
   setUltimatePanelOpen: (open: boolean) => void;
+  setUltimateHubOpen: (open: boolean) => void;
   setFooterOpen: (open: boolean) => void;
   setChartNewsOpen: (open: boolean) => void;
   setAnalysisModalOpen: (open: boolean) => void;
@@ -189,6 +192,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpenState] = useState(false);
   const [isAudioWidgetOpen, setIsAudioWidgetOpenState] = useState(false);
   const [isUltimatePanelOpen, setIsUltimatePanelOpenState] = useState(false);
+  const [isUltimateHubOpen, setIsUltimateHubOpenState] = useState(false);
   const [isFooterOpen, setIsFooterOpenState] = useState(false);
   const [isChartNewsOpen, setIsChartNewsOpenState] = useState(false);
   const [isAnalysisModalOpen, setIsAnalysisModalOpenState] = useState(false);
@@ -229,7 +233,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isAuthModalOpen || isBullFeedModalOpen || isPostComposerModalOpen || isHeroSceneModalOpen || isDiscordStageModalOpen;
 
   // Derived state: is any component currently open?
-  const isAnyOpen = isMobileMenuOpen || isAudioWidgetOpen || isUltimatePanelOpen || isAnyModalOpen;
+  const isAnyOpen = isMobileMenuOpen || isAudioWidgetOpen || isUltimatePanelOpen || isUltimateHubOpen || isAnyModalOpen;
 
   // Derived state: modals that DO NOT require audio widget to minimize
   // Discord Stage modal should keep audio widget visible so users can control Discord volume
@@ -239,17 +243,18 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   // True when any other UI component is open that would overlay the player
   // EXCEPTION: Audio widget stays visible during Discord Stage modal so users can control Discord volume
   // NOTE: ChartNews is explicitly included in isAnyModalOpen, so audio widget will minimize when ChartNews opens
-  const shouldMinimizeAudioWidget = isMobileMenuOpen || isUltimatePanelOpen || 
+  const shouldMinimizeAudioWidget = isMobileMenuOpen || isUltimatePanelOpen || isUltimateHubOpen ||
     (isAnyModalOpen && !shouldNotMinimizeForThisModal);
 
   // Derived state: is there UI overlaying the floating player area?
-  const hasOverlayingUI = isMobileMenuOpen || (isAnyModalOpen && !shouldNotMinimizeForThisModal);
+  const hasOverlayingUI = isMobileMenuOpen || isUltimateHubOpen || (isAnyModalOpen && !shouldNotMinimizeForThisModal);
 
   // Derived state: which component is active?
   const activeComponent: UIComponentType | null =
     isMobileMenuOpen ? 'mobileMenu' :
     isAudioWidgetOpen ? 'audioWidget' :
     isUltimatePanelOpen ? 'ultimatePanel' :
+    isUltimateHubOpen ? 'ultimateHub' :
     isPagemodeOpen ? 'pagemode' :
     isLoaderv2Open ? 'loaderv2' :
     isFooterOpen ? 'footer' :
@@ -276,6 +281,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (except !== 'mobileMenu') setIsMobileMenuOpenState(false);
     if (except !== 'audioWidget') setIsAudioWidgetOpenState(false);
     if (except !== 'ultimatePanel') setIsUltimatePanelOpenState(false);
+    if (except !== 'ultimateHub') setIsUltimateHubOpenState(false);
     if (except !== 'footer') setIsFooterOpenState(false);
     if (except !== 'chartnews') setIsChartNewsOpenState(false);
     if (except !== 'analysisModal') setIsAnalysisModalOpenState(false);
@@ -356,6 +362,16 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       trackUIStateChange('ultimatePanel', 'close');
     }
     setIsUltimatePanelOpenState(open);
+  }, [closeOthers]);
+
+  const setUltimateHubOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('ultimateHub');
+      trackUIStateChange('ultimateHub', 'open');
+    } else {
+      trackUIStateChange('ultimateHub', 'close');
+    }
+    setIsUltimateHubOpenState(open);
   }, [closeOthers]);
 
   const setFooterOpen = useCallback((open: boolean) => {
@@ -684,6 +700,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isMobileMenuOpen,
     isAudioWidgetOpen,
     isUltimatePanelOpen,
+    isUltimateHubOpen,
     isFooterOpen,
     isChartNewsOpen,
     isAnalysisModalOpen,
@@ -716,6 +733,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setMobileMenuOpen,
     setAudioWidgetOpen,
     setUltimatePanelOpen,
+    setUltimateHubOpen,
     setFooterOpen,
     setChartNewsOpen,
     setAnalysisModalOpen,
@@ -834,6 +852,30 @@ export function useUltimatePanelUI() {
   return {
     isUltimatePanelOpen,
     setUltimatePanelOpen,
+    shouldShow,
+    shouldHide,
+  };
+}
+
+export function useUltimateHubUI() {
+  const {
+    isUltimateHubOpen,
+    setUltimateHubOpen,
+    isMobileMenuOpen,
+    isUltimatePanelOpen,
+    isAudioWidgetOpen,
+    isAnyModalOpen,
+    isPagemodeOpen,
+    isLoaderv2Open,
+  } = useUIState();
+
+  // The hub should be hidden if any other UI element is open
+  const shouldHide = isMobileMenuOpen || isUltimatePanelOpen || isAudioWidgetOpen || isAnyModalOpen || isPagemodeOpen || isLoaderv2Open;
+  const shouldShow = isUltimateHubOpen && !shouldHide;
+
+  return {
+    isUltimateHubOpen,
+    setUltimateHubOpen,
     shouldShow,
     shouldHide,
   };

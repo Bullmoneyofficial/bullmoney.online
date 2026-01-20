@@ -420,27 +420,27 @@ const EvervaultCard = ({ children, className = "" }: { children: React.ReactNode
 };
 
 // ==========================================
-// 8. FAQ DETAIL COMPONENT (ADAPTED)
+// 8. FAQ DETAIL COMPONENT (ADAPTED) - Static Neon Style
 // ==========================================
 
 const FAQDetailItem = ({ item }: { item: FAQItemData }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     
     return (
-      <div className="border-b border-white/10 border-dashed last:border-0">
+      <div style={{ borderBottom: '1px dashed rgba(59, 130, 246, 0.3)' }} className="last:border-0">
         <div 
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex justify-between items-center py-4 cursor-pointer group transition-all duration-200 px-3 -mx-3 rounded hover:bg-white/5"
+          className="flex justify-between items-center py-4 cursor-pointer group transition-all duration-200 px-3 -mx-3 rounded hover:bg-blue-500/5"
         >
           <div className="flex flex-col flex-1">
              <div className="flex items-center gap-2">
-                <span className="font-medium text-sm md:text-base uppercase tracking-wider text-gray-200 group-hover:text-blue-300 transition-colors">
+                <span className="font-medium text-sm md:text-base uppercase tracking-wider transition-colors" style={{ color: '#ffffff', textShadow: '0 0 4px rgba(255, 255, 255, 0.4)' }}>
                     {item.name}
                 </span>
              </div>
           </div>
           
-          <span className="text-white/50 group-hover:text-blue-400 transition-colors">
+          <span style={{ color: '#3b82f6', filter: 'drop-shadow(0 0 4px #3b82f6)' }}>
              <ChevronDown className={cn("w-5 h-5 transition-transform", isExpanded && "rotate-180")} />
           </span>
         </div>
@@ -455,8 +455,8 @@ const FAQDetailItem = ({ item }: { item: FAQItemData }) => {
               className="overflow-hidden"
             >
               <div className="pb-6 pt-2 px-4 text-sm">
-                <div className="space-y-4 bg-white/5 p-5 rounded-xl text-gray-300 border border-white/10">
-                   <div className="leading-relaxed text-sm opacity-90">
+                <div className="space-y-4 p-5 rounded-xl" style={{ background: 'rgba(0, 0, 0, 0.5)', border: '1px solid rgba(59, 130, 246, 0.4)', boxShadow: '0 0 8px rgba(59, 130, 246, 0.2)' }}>
+                   <div className="leading-relaxed text-sm opacity-90" style={{ color: '#ffffff', textShadow: '0 0 2px rgba(255, 255, 255, 0.3)' }}>
                       {item.answer}
                    </div>
                    
@@ -464,7 +464,13 @@ const FAQDetailItem = ({ item }: { item: FAQItemData }) => {
                      href={SUPPORT_URL} 
                      target="_blank" 
                      rel="noopener noreferrer"
-                     className="block w-full text-center mt-4 py-3 text-xs font-bold uppercase tracking-widest border border-blue-500/50 text-blue-500 rounded hover:bg-blue-600 hover:text-white transition-all shadow-[0_0_15px_rgba(59,130,246,0.1)] hover:shadow-[0_0_20px_rgba(59,130,246,0.4)]"
+                     className="block w-full text-center mt-4 py-3 text-xs font-bold uppercase tracking-widest rounded transition-all"
+                     style={{
+                       border: '2px solid #3b82f6',
+                       color: '#3b82f6',
+                       textShadow: '0 0 4px #3b82f6',
+                       boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)'
+                     }}
                    >
                        Contact Support
                    </a>
@@ -478,7 +484,7 @@ const FAQDetailItem = ({ item }: { item: FAQItemData }) => {
 };
 
 // ==========================================
-// 9. CATEGORY ITEM (MARQUEE + EVERVAULT)
+// 9. CATEGORY ITEM (MARQUEE + EVERVAULT) - Static Neon Style
 // ==========================================
 
 function FAQCategoryItem({ data }: { data: FAQCategoryData }) {
@@ -521,12 +527,12 @@ function FAQCategoryItem({ data }: { data: FAQCategoryData }) {
 
   const repeatedMarqueeContent = Array.from({ length: 6 }).map((_, idx) => (
     <div key={idx} className="marquee__content">
-      <span className="marquee__text">{data.category}</span>
+      <span className="marquee__text" style={{ color: '#3b82f6', textShadow: '0 0 8px #3b82f6' }}>{data.category}</span>
     </div>
   ));
 
   return (
-    <div className="menu__item bg-black border-b border-white/10">
+    <div className="menu__item bg-black" style={{ borderBottom: '1px solid rgba(59, 130, 246, 0.3)' }}>
       <EvervaultCard className="relative overflow-hidden group">
           <div 
             ref={itemRef} 
@@ -537,11 +543,11 @@ function FAQCategoryItem({ data }: { data: FAQCategoryData }) {
           >
             <div className="menu__item-header relative z-20 px-6 py-8">
                 <span className={cn(
-                    "text-2xl md:text-4xl font-light tracking-tight transition-opacity duration-300 text-white group-hover:opacity-0"
-                )}>
+                    "text-2xl md:text-4xl font-light tracking-tight transition-opacity duration-300 group-hover:opacity-0"
+                )} style={{ color: '#ffffff', textShadow: '0 0 8px rgba(255, 255, 255, 0.5)' }}>
                   {data.category}
                 </span>
-                <div className="text-white/50 group-hover:text-blue-400 transition-colors duration-300">
+                <div style={{ color: '#3b82f6', filter: 'drop-shadow(0 0 4px #3b82f6)' }}>
                    <ChevronDown className={cn("w-6 h-6 transition-transform duration-300", isOpen && "rotate-180")} />
                 </div>
             </div>
@@ -563,9 +569,9 @@ function FAQCategoryItem({ data }: { data: FAQCategoryData }) {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.4, ease: "easeInOut" }}
-            className="overflow-hidden bg-white/5"
+            className="overflow-hidden bg-black/50"
           >
-            <div className="px-6 py-6 md:px-10 border-t border-white/5">
+            <div className="px-6 py-6 md:px-10" style={{ borderTop: '1px solid rgba(59, 130, 246, 0.3)' }}>
                 <div className="grid gap-2 max-w-4xl mx-auto">
                     {data.items.map((item, i) => (
                         <FAQDetailItem key={i} item={item} />
@@ -596,11 +602,11 @@ const FaqModalContent = ({onClose}: {onClose: () => void}) => {
             <div className="p-8 md:p-12 pb-0 md:pb-0 z-10 relative">
                 <div className="mb-12 md:mb-16">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="h-[1px] w-12 bg-blue-500"></div>
-                        <h4 className="font-serif italic text-lg text-blue-400">Knowledge Base</h4>
+                        <div className="h-[1px] w-12" style={{ background: '#3b82f6', boxShadow: '0 0 4px #3b82f6' }}></div>
+                        <h4 className="font-serif italic text-lg" style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}>Knowledge Base</h4>
                     </div>
                     
-                    <div className="text-5xl md:text-7xl font-black tracking-tighter text-white uppercase">
+                    <div className="text-5xl md:text-7xl font-black tracking-tighter uppercase" style={{ color: '#ffffff', textShadow: '0 0 8px rgba(255, 255, 255, 0.6)' }}>
                         <TrueFocus 
                            sentence="Frequently Asked Questions"
                            borderColor="#3b82f6"
@@ -612,7 +618,7 @@ const FaqModalContent = ({onClose}: {onClose: () => void}) => {
             </div>
 
             {/* Content List with Marquees */}
-            <div className="menu-wrap border-t border-white/10 relative z-10">
+            <div className="menu-wrap relative z-10" style={{ borderTop: '1px solid #3b82f6', boxShadow: '0 -1px 4px rgba(59, 130, 246, 0.3)' }}>
                 <nav className="menu flex flex-col pb-20">
                     {FAQ_CONTENT.map((cat, idx) => (
                        <FAQCategoryItem key={idx} data={cat} />
@@ -621,14 +627,14 @@ const FaqModalContent = ({onClose}: {onClose: () => void}) => {
             </div>
             
             {/* Footer Information */}
-            <div className="p-8 md:p-12 mt-4 border-t border-white/10 bg-black/50">
-               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 text-gray-500 text-xs uppercase tracking-widest">
-                   <div className="flex items-center gap-2">
-                       <ShieldAlert size={14} className="text-blue-500" />
+            <div className="p-8 md:p-12 mt-4 bg-black" style={{ borderTop: '1px solid #3b82f6', boxShadow: '0 -1px 4px rgba(59, 130, 246, 0.3)' }}>
+               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 text-xs uppercase tracking-widest">
+                   <div className="flex items-center gap-2" style={{ color: '#ffffff', textShadow: '0 0 4px rgba(255, 255, 255, 0.5)' }}>
+                       <ShieldAlert size={14} style={{ color: '#3b82f6', filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
                        <p>Trading involves high risk. No financial advice.</p>
                    </div>
                    <div className="flex gap-4">
-                       <a href={SUPPORT_URL} className="hover:text-blue-500 transition-colors flex items-center gap-2"><Send size={14}/> Telegram</a>
+                       <a href={SUPPORT_URL} className="transition-colors flex items-center gap-2" style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}><Send size={14}/> Telegram</a>
                    </div>
                </div>
             </div>
@@ -637,16 +643,23 @@ const FaqModalContent = ({onClose}: {onClose: () => void}) => {
           {/* Bottom Gradient Blur */}
           <GradualBlur position="bottom" />
           
-          {/* Fixed Footer with CTA */}
-          <div className="flex justify-end p-6 bg-black border-t border-white/10 relative z-50">
+          {/* Fixed Footer with CTA - Neon styled */}
+          <div className="flex justify-end p-6 bg-black relative z-50" style={{ borderTop: '1px solid #3b82f6', boxShadow: '0 -1px 4px rgba(59, 130, 246, 0.3)' }}>
              <a 
                href={SUPPORT_URL} 
                target="_blank" 
                rel="noopener noreferrer"
-               className="group relative inline-flex items-center gap-3 bg-white text-black px-8 py-3 rounded-full font-bold uppercase tracking-wider text-sm hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(59,130,246,0.6)]"
+               className="group relative inline-flex items-center gap-3 px-8 py-3 rounded-full font-bold uppercase tracking-wider text-sm transition-all duration-300"
+               style={{
+                 background: 'transparent',
+                 color: '#ffffff',
+                 textShadow: '0 0 4px rgba(255, 255, 255, 0.6)',
+                 border: '2px solid #3b82f6',
+                 boxShadow: '0 0 8px #3b82f6, 0 0 16px rgba(59, 130, 246, 0.4)'
+               }}
              >
                 Open Support Chat
-                <MessageSquare className="w-4 h-4 text-blue-500 group-hover:text-white transition-colors" />
+                <MessageSquare className="w-4 h-4" style={{ color: '#3b82f6', filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
              </a>
           </div>
         </>
@@ -654,7 +667,7 @@ const FaqModalContent = ({onClose}: {onClose: () => void}) => {
 }
 
 // ==========================================
-// 10. MAIN COMPONENT EXPORT
+// 10. MAIN COMPONENT EXPORT - Static Neon Style
 // ==========================================
 export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
   const [mounted, setMounted] = useState(false);
@@ -692,12 +705,13 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
           className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95"
           onClick={onClose}
         >
-          {/* Animated tap to close hints */}
+          {/* Animated tap to close hints - Neon styled */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: [0.4, 0.8, 0.4] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+            className="absolute top-4 left-1/2 -translate-x-1/2 text-xs font-medium pointer-events-none flex items-center gap-1"
+            style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}
           >
             <span>↑</span> Tap anywhere to close <span>↑</span>
           </motion.div>
@@ -705,7 +719,8 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
             initial={{ opacity: 0 }}
             animate={{ opacity: [0.4, 0.8, 0.4] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs font-medium pointer-events-none flex items-center gap-1"
+            style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}
           >
             <span>↓</span> Tap anywhere to close <span>↓</span>
           </motion.div>
@@ -713,8 +728,8 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
             initial={{ opacity: 0 }}
             animate={{ opacity: [0.4, 0.8, 0.4] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}
           >
             ← Tap to close
           </motion.div>
@@ -722,8 +737,8 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
             initial={{ opacity: 0 }}
             animate={{ opacity: [0.4, 0.8, 0.4] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}
           >
             Tap to close →
           </motion.div>
@@ -734,15 +749,23 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', stiffness: 200, damping: 25 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-[98%] md:w-[90%] max-w-6xl max-h-[90vh] bg-black border border-blue-500/20 rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.15)] overflow-hidden flex flex-col"
+            className="relative w-[98%] md:w-[90%] max-w-6xl max-h-[90vh] bg-black rounded-2xl overflow-hidden flex flex-col"
+            style={{
+              border: '2px solid #3b82f6',
+              boxShadow: '0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3)'
+            }}
           >
             <button
                 onClick={onClose}
-                className="absolute top-6 right-6 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors group"
+                className="absolute top-6 right-6 z-50 p-2 rounded-full bg-black transition-colors group"
+                style={{
+                  border: '2px solid #3b82f6',
+                  boxShadow: '0 0 4px #3b82f6, 0 0 8px rgba(59, 130, 246, 0.5)'
+                }}
                 title="Close (ESC)"
             >
-                <X className="w-5 h-5 text-white" />
-                <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-white/50 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">ESC</span>
+                <X className="w-5 h-5" style={{ color: '#ffffff', filter: 'drop-shadow(0 0 4px #ffffff)' }} />
+                <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap" style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}>ESC</span>
             </button>
             
             <FaqModalContent onClose={onClose} />

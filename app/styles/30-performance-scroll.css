@@ -24,6 +24,111 @@ article,
   contain-intrinsic-size: auto 400px;
 }
 
+/* ============================================================================
+   OFF-SCREEN ANIMATION FREEZE - Pause animations we can't see
+   Uses [data-offscreen] attribute set by IntersectionObserver
+   ============================================================================ */
+
+/* Pause ALL animations for off-screen elements */
+[data-offscreen="true"],
+[data-offscreen="true"] * {
+  animation-play-state: paused !important;
+  transition: none !important;
+}
+
+/* Specifically target common animated classes when off-screen */
+[data-offscreen="true"] [class*="animate-"],
+[data-offscreen="true"] [class*="shimmer"],
+[data-offscreen="true"] [class*="pulse"],
+[data-offscreen="true"] [class*="glow"],
+[data-offscreen="true"] [class*="spin"],
+[data-offscreen="true"] [class*="bounce"],
+[data-offscreen="true"] [class*="fade"] {
+  animation: none !important;
+  opacity: 1 !important;
+}
+
+/* Pause canvas rendering when off-screen (via CSS will-change) */
+[data-offscreen="true"] canvas {
+  will-change: auto !important;
+  content-visibility: hidden;
+}
+
+/* Pause Spline/3D scenes when off-screen */
+[data-offscreen="true"] [data-spline],
+[data-offscreen="true"] .spline-container {
+  content-visibility: hidden;
+  contain: strict;
+}
+
+/* Pause motion components (Framer Motion uses inline styles, but we can hint) */
+[data-offscreen="true"] [data-framer-motion],
+[data-offscreen="true"] [style*="transform"] {
+  will-change: auto !important;
+}
+
+/* ============================================================================
+   REDUCED MOTION PREFERENCE - Respect user accessibility settings
+   ============================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  /* Completely disable infinite animations */
+  [class*="animate-"],
+  [class*="shimmer"],
+  [class*="pulse"],
+  [class*="glow"],
+  [class*="spin"],
+  [class*="bounce"] {
+    animation: none !important;
+  }
+  
+  /* Disable Spline/3D animations */
+  [data-spline],
+  .spline-container,
+  canvas {
+    animation: none !important;
+  }
+}
+
+/* ============================================================================
+   CONTENT-VISIBILITY OPTIMIZATION - Browser auto-skips off-screen rendering
+   ============================================================================ */
+
+/* Large content sections get auto content-visibility */
+.hero-section,
+.features-section,
+.testimonials-section,
+.pricing-section,
+.footer-section,
+[data-section] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+/* Modal content - hidden until opened */
+dialog:not([open]),
+[role="dialog"]:not(.open),
+.modal:not(.open) {
+  content-visibility: hidden;
+  contain: strict;
+}
+
+/* Off-canvas elements - BUT NOT icons! 
+   Icons use aria-hidden="true" for a11y, so we must exclude them */
+section[aria-hidden="true"],
+div[aria-hidden="true"]:not(:has(svg)),
+aside[aria-hidden="true"] {
+  content-visibility: hidden;
+}
+
 /* CRITICAL: Scroll state classes - added by useUltraFpsOptimization */
 /* FIXED: Don't completely disable transitions - just pause heavy animations */
 html.is-scrolling .shimmer-line,
