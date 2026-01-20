@@ -5,6 +5,7 @@ import { LenisProvider } from '@/lib/smoothScroll';
 import { usePerformanceInit, usePerformanceCSSSync } from '@/hooks/usePerformanceInit';
 import { detectBrowser } from '@/lib/browserDetection';
 import { detectSafari, applySafariCSSFixes, applySafariMemoryOptimizations } from '@/lib/safariOptimizations';
+import { deviceMonitor } from '@/lib/deviceMonitor';
 
 // ============================================================================
 // PERFORMANCE PROVIDER - Wraps App with 120Hz Optimizations
@@ -540,8 +541,9 @@ const measureDownloadSpeed = async (
   onProgress?: (speed: number) => void
 ): Promise<SpeedTestResult> => {
   const results: number[] = [];
-  const testDuration = 5000; // 5 seconds like Ookla
-  const chunkSizes = [1_000_000, 5_000_000, 10_000_000]; // 1MB, 5MB, 10MB chunks
+  // Match Ookla closer: longer window and larger chunks
+  const testDuration = 12000; // 12 seconds
+  const chunkSizes = [5_000_000, 10_000_000, 25_000_000]; // 5MB, 10MB, 25MB chunks
   
   try {
     // Warm-up request to establish connection
@@ -591,7 +593,7 @@ const measureDownloadSpeed = async (
     };
     
     // Start multiple parallel downloads (like Ookla uses 4-8 connections)
-    const numConnections = 4;
+    const numConnections = 6;
     let chunkIndex = 0;
     
     while (performance.now() - startTime < testDuration) {
@@ -651,7 +653,8 @@ const measureUploadSpeed = async (
   onProgress?: (speed: number) => void
 ): Promise<SpeedTestResult> => {
   const results: number[] = [];
-  const testDuration = 5000; // 5 seconds
+  // Match Ookla closer: longer window and larger payloads
+  const testDuration = 12000; // 12 seconds
   
   try {
     // Create test data chunks of various sizes
@@ -678,7 +681,7 @@ const measureUploadSpeed = async (
     const startTime = performance.now();
     let totalBytes = 0;
     let lastUpdate = startTime;
-    const chunkSizes = [500_000, 1_000_000, 2_000_000]; // 500KB, 1MB, 2MB
+    const chunkSizes = [1_000_000, 2_000_000, 4_000_000]; // 1MB, 2MB, 4MB
     
     const uploadChunk = async (size: number): Promise<void> => {
       try {
@@ -706,7 +709,7 @@ const measureUploadSpeed = async (
     };
     
     // Upload with multiple parallel connections
-    const numConnections = 4;
+    const numConnections = 6;
     const activeUploads: Promise<void>[] = [];
     let chunkIndex = 0;
     
@@ -814,37 +817,78 @@ export function FPSCounter({
     return () => cancelAnimationFrame(rafId);
   }, [show]);
 
-  // Network speed measurement - Ookla style
+  // Network speed measurement - use shared speed-test APIs for accuracy
   useEffect(() => {
     if (!show) return;
 
-    const runSpeedTest = async () => {
-      setIsTesting(true);
-      
-      // Phase 1: Measure latency/ping
+    let cancelled = false;
+
+    const runFallbackSpeedTest = async () => {
       setTestPhase('ping');
       const ping = await measureLatency();
-      setLatency(ping);
-      
-      // Phase 2: Download test with live updates
+      if (!cancelled) setLatency(ping);
+
       setTestPhase('download');
       const downResult = await measureDownloadSpeed((speed) => {
-        setDownloadSpeed(speed);
+        if (!cancelled) setDownloadSpeed(speed);
       });
-      setDownloadSpeed(downResult.speed);
-      
-      // Brief pause between tests
+      if (!cancelled) setDownloadSpeed(downResult.speed);
+
       await new Promise(r => setTimeout(r, 300));
-      
-      // Phase 3: Upload test with live updates
+
       setTestPhase('upload');
       const upResult = await measureUploadSpeed((speed) => {
-        setUploadSpeed(speed);
+        if (!cancelled) setUploadSpeed(speed);
       });
-      setUploadSpeed(upResult.speed);
-      
-      setTestPhase('idle');
-      setIsTesting(false);
+      if (!cancelled) setUploadSpeed(upResult.speed);
+    };
+
+    const runSpeedTest = async () => {
+      setIsTesting(true);
+      setTestPhase('ping');
+      setDownloadSpeed(0);
+      setUploadSpeed(0);
+
+      try {
+        // Light init so DeviceMonitor can use its own speed-test API without enabling background polling
+        await deviceMonitor.start('light', { enableNetworkSpeedTest: false });
+      } catch (error) {
+        console.warn('[PerformanceProvider] deviceMonitor.start failed (non-blocking)', error);
+      }
+
+      try {
+        // Use a heavier, longer test to mirror Ookla more closely
+        const result = await deviceMonitor.runSpeedTest({
+          quick: false,
+          // Larger payloads to mirror Ookla's multi-second, multi-connection runs
+          downloadBytes: 25_000_000, // ~25MB
+          uploadBytes: 15_000_000,   // ~15MB
+          latencySamples: 8,
+        });
+        if (!cancelled && result) {
+          setLatency(Math.round(result.latency ?? 0));
+          setDownloadSpeed(result.downMbps ?? 0);
+          setUploadSpeed(result.upMbps ?? 0);
+          setTestPhase('idle');
+          setIsTesting(false);
+          return;
+        }
+      } catch (error) {
+        console.warn('[PerformanceProvider] deviceMonitor.runSpeedTest failed, using fallback', error);
+      }
+
+      if (cancelled) return;
+
+      try {
+        await runFallbackSpeedTest();
+      } catch (error) {
+        console.warn('[PerformanceProvider] Fallback speed test failed', error);
+      } finally {
+        if (!cancelled) {
+          setTestPhase('idle');
+          setIsTesting(false);
+        }
+      }
     };
 
     // Initial measurement after a short delay
@@ -854,6 +898,7 @@ export function FPSCounter({
     const interval = setInterval(runSpeedTest, 30000);
 
     return () => {
+      cancelled = true;
       clearTimeout(initialTimeout);
       clearInterval(interval);
     };

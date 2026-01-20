@@ -57,10 +57,30 @@ function DesktopSplineSceneComponent({
 }: DesktopSplineSceneProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [isBatterySaving, setIsBatterySaving] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   
   const { deviceTier, averageFps } = useUnifiedPerformance();
   const optimalDpr = getOptimalDpr();
+  
+  // Listen for battery saver events
+  useEffect(() => {
+    const handleFreeze = () => {
+      console.log('[DesktopSplineScene] 🔋 Battery saver active');
+      setIsBatterySaving(true);
+    };
+    const handleUnfreeze = () => {
+      console.log('[DesktopSplineScene] ⚡ Battery saver off');
+      setIsBatterySaving(false);
+    };
+    
+    window.addEventListener('bullmoney-freeze', handleFreeze);
+    window.addEventListener('bullmoney-unfreeze', handleUnfreeze);
+    return () => {
+      window.removeEventListener('bullmoney-freeze', handleFreeze);
+      window.removeEventListener('bullmoney-unfreeze', handleUnfreeze);
+    };
+  }, []);
   
   // Preload the scene
   useEffect(() => {
@@ -145,22 +165,34 @@ function DesktopSplineSceneComponent({
         )}
       </AnimatePresence>
       
-      {/* Spline Scene */}
-      <SplineWithAudio
-        scene={scene}
-        placeholder={placeholder}
-        onLoad={handleLoad}
-        onError={handleError}
-        className="!w-full !h-full"
-        priority={heroMode}
-        isHero={heroMode}
-        targetFPS={60}
-        maxDpr={optimalDpr}
-        minDpr={1.0}
-        audioEnabled={audioEnabled}
-        audioProfile={audioProfile}
-        audioVolume={audioVolume}
-      />
+      {/* Spline Scene - Hidden during battery save mode */}
+      {!isBatterySaving && (
+        <SplineWithAudio
+          scene={scene}
+          placeholder={placeholder}
+          onLoad={handleLoad}
+          onError={handleError}
+          className="!w-full !h-full"
+          priority={heroMode}
+          isHero={heroMode}
+          targetFPS={60}
+          maxDpr={optimalDpr}
+          minDpr={1.0}
+          audioEnabled={audioEnabled}
+          audioProfile={audioProfile}
+          audioVolume={audioVolume}
+        />
+      )}
+      
+      {/* Battery saver placeholder */}
+      {isBatterySaving && (
+        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-3xl mb-2">🔋</div>
+            <div className="text-xs text-neutral-500">Battery Saver</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

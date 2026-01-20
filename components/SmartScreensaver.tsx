@@ -15,6 +15,8 @@ interface SmartScreensaverContextType {
   isScreensaverActive: boolean;
   isScreensaverPermanent: boolean;
   isFrozen: boolean;
+  /** Whether Spline/heavy resources are being disposed for battery saving */
+  isBatterySaving: boolean;
   dismissScreensaver: () => void;
   resetActivity: () => void;
 }
@@ -23,6 +25,7 @@ const SmartScreensaverContext = createContext<SmartScreensaverContextType>({
   isScreensaverActive: false,
   isScreensaverPermanent: false,
   isFrozen: false,
+  isBatterySaving: false,
   dismissScreensaver: () => {},
   resetActivity: () => {},
 });
@@ -189,14 +192,163 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
   // FREEZE MODE - CSS-only, non-destructive
   // ========================================
   
+  // Aggressive Spline/WebGL disposal for battery saving
+  const disposeSplineContexts = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    
+    console.log('[BULLMONEY] 🔋 Disposing ALL Spline/WebGL contexts for battery saving...');
+    
+    let disposedCount = 0;
+    
+    // 1. Find ALL canvases and force WebGL context loss
+    const allCanvases = document.querySelectorAll('canvas');
+    allCanvases.forEach((canvas) => {
+      try {
+        const gl = (canvas as HTMLCanvasElement).getContext('webgl2') || 
+                   (canvas as HTMLCanvasElement).getContext('webgl');
+        if (gl) {
+          const ext = gl.getExtension('WEBGL_lose_context');
+          if (ext) {
+            ext.loseContext();
+            disposedCount++;
+            console.log('[BULLMONEY] Lost WebGL context for canvas');
+          }
+        }
+      } catch (e) {
+        // Context might already be lost
+      }
+    });
+    
+    // 2. Find spline-viewer web components and dispose their internal spline app
+    const splineViewers = document.querySelectorAll('spline-viewer');
+    console.log(`[BULLMONEY] Found ${splineViewers.length} spline-viewer elements`);
+    splineViewers.forEach((viewer: any, index) => {
+      try {
+        // Try to access the internal Spline app
+        if (viewer.spline) {
+          console.log(`[BULLMONEY] Disposing spline-viewer ${index} internal app`);
+          if (viewer.spline.stop) viewer.spline.stop();
+          if (viewer.spline.pause) viewer.spline.pause();
+          if (viewer.spline.dispose) {
+            viewer.spline.dispose();
+            disposedCount++;
+          }
+        }
+        
+        // Also try to stop the viewer itself
+        if (viewer.stop) viewer.stop();
+        if (viewer.pause) viewer.pause();
+        
+        // Find canvas inside spline-viewer and lose its context
+        const viewerCanvas = viewer.shadowRoot?.querySelector('canvas') || viewer.querySelector('canvas');
+        if (viewerCanvas) {
+          const gl = viewerCanvas.getContext('webgl2') || viewerCanvas.getContext('webgl');
+          if (gl) {
+            const ext = gl.getExtension('WEBGL_lose_context');
+            if (ext) {
+              ext.loseContext();
+              disposedCount++;
+              console.log(`[BULLMONEY] Lost spline-viewer ${index} canvas context`);
+            }
+          }
+        }
+        
+        // Hide the viewer to stop rendering
+        (viewer as HTMLElement).style.visibility = 'hidden';
+        (viewer as HTMLElement).style.display = 'none';
+      } catch (e) {
+        console.warn('[BULLMONEY] Error disposing spline-viewer:', e);
+      }
+    });
+    
+    // 3. Find iframes with spline content and remove their src
+    const splineIframes = document.querySelectorAll('iframe[src*="spline"]');
+    splineIframes.forEach((iframe: any) => {
+      try {
+        iframe.dataset.originalSrc = iframe.src;
+        iframe.src = 'about:blank';
+        disposedCount++;
+        console.log('[BULLMONEY] Blanked spline iframe');
+      } catch (e) {}
+    });
+    
+    // 4. Find any global Spline app instances
+    if ((window as any).__splineApp) {
+      try {
+        (window as any).__splineApp.stop?.();
+        (window as any).__splineApp.dispose?.();
+        (window as any).__splineApp = null;
+        disposedCount++;
+        console.log('[BULLMONEY] Disposed global __splineApp');
+      } catch (e) {}
+    }
+    
+    // 5. Cancel ALL animation frames (aggressive)
+    // Cancel up to 10000 RAF IDs as a safety measure
+    for (let i = 1; i < 10000; i++) {
+      cancelAnimationFrame(i);
+    }
+    
+    // Also cancel tracked RAFs
+    if ((window as any).__bullmoneyRAFs) {
+      (window as any).__bullmoneyRAFs.forEach((id: number) => {
+        cancelAnimationFrame(id);
+      });
+      (window as any).__bullmoneyRAFs = [];
+    }
+    
+    console.log(`[BULLMONEY] 🔋 Disposed ${disposedCount} WebGL/Spline contexts - ALL ANIMATION FRAMES CANCELLED`);
+    
+    // Dispatch event for Spline components to handle internally
+    window.dispatchEvent(new CustomEvent('bullmoney-spline-dispose', {
+      detail: { disposedCount, timestamp: Date.now() }
+    }));
+  }, []);
+
+  // Restore Spline contexts
+  const restoreSplineContexts = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    
+    console.log('[BULLMONEY] ⚡ Signaling Spline components to remount...');
+    
+    // Re-show spline-viewers
+    const splineViewers = document.querySelectorAll('spline-viewer');
+    splineViewers.forEach((viewer: any) => {
+      try {
+        (viewer as HTMLElement).style.visibility = '';
+        (viewer as HTMLElement).style.display = '';
+      } catch (e) {}
+    });
+    
+    // Restore spline iframes
+    const splineIframes = document.querySelectorAll('iframe[data-original-src]');
+    splineIframes.forEach((iframe: any) => {
+      try {
+        if (iframe.dataset.originalSrc) {
+          iframe.src = iframe.dataset.originalSrc;
+          delete iframe.dataset.originalSrc;
+        }
+      } catch (e) {}
+    });
+    
+    // Dispatch event for Spline components to remount
+    window.dispatchEvent(new CustomEvent('bullmoney-spline-restore', {
+      detail: { timestamp: Date.now() }
+    }));
+  }, []);
+  
   useEffect(() => {
     if (!isScreensaverActive) return;
     
-    console.log('[BULLMONEY] ❄️ FREEZE MODE - Pausing site (non-destructive)');
+    console.log('[BULLMONEY] ❄️ FREEZE MODE - Pausing site and disposing Spline');
     
     // Add frozen class to body
     document.body.classList.add('bullmoney-frozen');
     document.documentElement.classList.add('bullmoney-frozen');
+    
+    // IMMEDIATELY dispose Spline/WebGL when screensaver shows (not just when permanent)
+    // This is the key fix - dispose right away for battery saving
+    disposeSplineContexts();
     
     // Dispatch global freeze event
     window.dispatchEvent(new CustomEvent('bullmoney-freeze'));
@@ -215,13 +367,23 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
         transition: none !important;
       }
       
+      /* HIDE Spline and heavy elements - will be fully unmounted when permanent */
       .bullmoney-frozen video:not([data-bullmoney-overlay] video),
       .bullmoney-frozen canvas:not([data-bullmoney-overlay] canvas),
       .bullmoney-frozen .spline-container,
       .bullmoney-frozen [data-heavy],
-      .bullmoney-frozen [data-spline] {
+      .bullmoney-frozen [data-spline],
+      .bullmoney-frozen spline-viewer {
         opacity: 0 !important;
         pointer-events: none !important;
+        visibility: hidden !important;
+      }
+      
+      /* Signal to unmount Spline in permanent mode */
+      .bullmoney-frozen.bullmoney-permanent .spline-container,
+      .bullmoney-frozen.bullmoney-permanent [data-spline],
+      .bullmoney-frozen.bullmoney-permanent spline-viewer {
+        display: none !important;
       }
       
       /* HIDE TARGET CURSOR during screensaver */
@@ -304,7 +466,7 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
       document.body.classList.remove('bullmoney-frozen');
       document.documentElement.classList.remove('bullmoney-frozen');
     };
-  }, [isScreensaverActive]);
+  }, [isScreensaverActive, disposeSplineContexts]);
   
   // ========================================
   // BATTERY SAVER MODE
@@ -336,6 +498,13 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
       } catch (e) {}
     };
     
+    // Add permanent class for CSS targeting
+    document.body.classList.add('bullmoney-permanent');
+    document.documentElement.classList.add('bullmoney-permanent');
+    
+    // AGGRESSIVE: Dispose Spline/WebGL contexts when permanent
+    disposeSplineContexts();
+    
     performBatterySave();
     batterySaveIntervalRef.current = setInterval(performBatterySave, 10000);
     
@@ -343,8 +512,10 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
       if (batterySaveIntervalRef.current) {
         clearInterval(batterySaveIntervalRef.current);
       }
+      document.body.classList.remove('bullmoney-permanent');
+      document.documentElement.classList.remove('bullmoney-permanent');
     };
-  }, [isScreensaverPermanent]);
+  }, [isScreensaverPermanent, disposeSplineContexts]);
   
   // ========================================
   // DISMISS SCREENSAVER - Full restoration
@@ -362,7 +533,10 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
     
     setScreensaverFadingOut(true);
     
-    // IMMEDIATELY remove freeze
+    // IMMEDIATELY remove freeze and permanent classes
+    document.body.classList.remove('bullmoney-permanent');
+    document.documentElement.classList.remove('bullmoney-permanent');
+    
     const freezeStyle = document.getElementById('bullmoney-freeze-style');
     if (freezeStyle) {
       freezeStyle.remove();
@@ -371,6 +545,9 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
     
     const screensaverStyle = document.getElementById('bullmoney-screensaver-style');
     if (screensaverStyle) screensaverStyle.remove();
+    
+    // Signal Spline components to restore/remount
+    restoreSplineContexts();
     
     document.body.classList.remove('bullmoney-frozen');
     document.documentElement.classList.remove('bullmoney-frozen');
@@ -409,7 +586,7 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
       console.log('[BULLMONEY] ✅ Site fully resumed!');
     }, 400);
     
-  }, [isScreensaverActive]);
+  }, [isScreensaverActive, restoreSplineContexts]);
   
   // Reset activity (for external components to call)
   const resetActivity = useCallback(() => {
@@ -501,11 +678,12 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
     };
   }, [performIdleCleanup, dismissScreensaver, isScreensaverActive, isScreensaverPermanent]);
   
-  // Context value
+  // Context value - includes battery saving state (permanent = battery saving)
   const contextValue: SmartScreensaverContextType = {
     isScreensaverActive,
     isScreensaverPermanent,
     isFrozen: isScreensaverActive,
+    isBatterySaving: isScreensaverPermanent, // Battery saving mode = permanent screensaver
     dismissScreensaver,
     resetActivity,
   };

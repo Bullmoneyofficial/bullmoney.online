@@ -707,6 +707,7 @@ ProductCard.displayName = "ProductCard";
 const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { preferViewer: boolean; runtimeUrl: string; viewerUrl: string }) => {
   const viewerReady = useSplineViewerScript();
   const [forceIframeFallback, setForceIframeFallback] = useState(false);
+  const [isBatterySaving, setIsBatterySaving] = useState(false); // NEW: Battery saver state
   const [viewportSize, setViewportSize] = useState({ 
     width: typeof window !== 'undefined' ? window.innerWidth : 1920,
     height: typeof window !== 'undefined' ? window.innerHeight : 1080,
@@ -716,14 +717,55 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
   const rafRef = useRef<number | null>(null);
   const lastSizeRef = useRef({ width: 0, height: 0 });
 
+  // BATTERY SAVER - Stop all rendering when screensaver is active
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleFreeze = () => {
+      console.log('[SplineSceneEmbed] 🔋 Battery saver: stopping render');
+      setIsBatterySaving(true);
+      // Cancel the viewport monitoring RAF
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+    
+    const handleUnfreeze = () => {
+      console.log('[SplineSceneEmbed] ⚡ Battery saver: resuming render');
+      setIsBatterySaving(false);
+    };
+    
+    window.addEventListener('bullmoney-freeze', handleFreeze);
+    window.addEventListener('bullmoney-unfreeze', handleUnfreeze);
+    window.addEventListener('bullmoney-spline-dispose', handleFreeze);
+    window.addEventListener('bullmoney-spline-restore', handleUnfreeze);
+    
+    return () => {
+      window.removeEventListener('bullmoney-freeze', handleFreeze);
+      window.removeEventListener('bullmoney-unfreeze', handleUnfreeze);
+      window.removeEventListener('bullmoney-spline-dispose', handleFreeze);
+      window.removeEventListener('bullmoney-spline-restore', handleUnfreeze);
+    };
+  }, []);
+
   // REAL-TIME VIEWPORT DETECTION - Updates every frame for instant response
+  // STOPS when battery saving is active
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // Don't run RAF loop when battery saving
+    if (isBatterySaving) {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      return;
+    }
     
     let isActive = true;
     
     const updateViewportSize = () => {
-      if (!isActive) return;
+      if (!isActive || isBatterySaving) return;
       
       // Use visualViewport for accurate size in mobile browsers / in-app browsers
       const vv = window.visualViewport;
@@ -738,7 +780,9 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
       }
       
       // Schedule next check (16ms = ~60fps monitoring)
-      rafRef.current = requestAnimationFrame(updateViewportSize);
+      if (!isBatterySaving) {
+        rafRef.current = requestAnimationFrame(updateViewportSize);
+      }
     };
     
     // Start monitoring
@@ -746,6 +790,7 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
     
     // Also listen to events for immediate response
     const handleResize = () => {
+      if (isBatterySaving) return;
       const vv = window.visualViewport;
       const newWidth = Math.round(vv?.width || window.innerWidth);
       const newHeight = Math.round(vv?.height || window.innerHeight);
@@ -770,7 +815,7 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
       window.visualViewport?.removeEventListener('resize', handleResize);
       window.visualViewport?.removeEventListener('scroll', handleResize);
     };
-  }, []);
+  }, [isBatterySaving]);
 
   useEffect(() => {
     setForceIframeFallback(false);
@@ -837,8 +882,13 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
         willChange: "transform",
         touchAction: 'pan-y',
         WebkitOverflowScrolling: 'touch',
+        // BATTERY SAVER: Hide when saving
+        visibility: isBatterySaving ? 'hidden' : 'visible',
+        display: isBatterySaving ? 'none' : 'block',
       }}
     >
+      {/* BATTERY SAVER: Don't render Spline content when saving battery */}
+      {!isBatterySaving && (
       <div 
         style={{
           position: "absolute",
@@ -888,6 +938,29 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
           </div>
         )}
       </div>
+      )}
+      
+      {/* BATTERY SAVER: Show placeholder when saving */}
+      {isBatterySaving && (
+        <div 
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '14px', textAlign: 'center' }}>
+            <div style={{ fontSize: '24px', marginBottom: '8px' }}>🔋</div>
+            <div>Battery Saver Active</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 });

@@ -1227,6 +1227,34 @@ const VelocitySkewText = ({ children }: { children: React.ReactNode }) => {
 const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { preferViewer: boolean; runtimeUrl: string; viewerUrl: string }) => {
   const viewerReady = useSplineViewerScript();
   const [forceIframeFallback, setForceIframeFallback] = useState(false);
+  const [isBatterySaving, setIsBatterySaving] = useState(false); // NEW: Battery saver state
+  
+  // BATTERY SAVER - Stop rendering when screensaver is active
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleFreeze = () => {
+      console.log('[HeroDesktop SplineSceneEmbed] 🔋 Battery saver active');
+      setIsBatterySaving(true);
+    };
+    
+    const handleUnfreeze = () => {
+      console.log('[HeroDesktop SplineSceneEmbed] ⚡ Battery saver off');
+      setIsBatterySaving(false);
+    };
+    
+    window.addEventListener('bullmoney-freeze', handleFreeze);
+    window.addEventListener('bullmoney-unfreeze', handleUnfreeze);
+    window.addEventListener('bullmoney-spline-dispose', handleFreeze);
+    window.addEventListener('bullmoney-spline-restore', handleUnfreeze);
+    
+    return () => {
+      window.removeEventListener('bullmoney-freeze', handleFreeze);
+      window.removeEventListener('bullmoney-unfreeze', handleUnfreeze);
+      window.removeEventListener('bullmoney-spline-dispose', handleFreeze);
+      window.removeEventListener('bullmoney-spline-restore', handleUnfreeze);
+    };
+  }, []);
   
   useEffect(() => { setForceIframeFallback(false); }, [runtimeUrl]);
   
@@ -1242,6 +1270,33 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
   }, [preferViewer, runtimeUrl]);
   
   const shouldUseViewer = preferViewer && viewerReady && !forceIframeFallback;
+  
+  // BATTERY SAVER: Don't render Spline when saving battery
+  if (isBatterySaving) {
+    return (
+      <div 
+        className="spline-viewport-fill" 
+        style={{ 
+          position: "absolute", 
+          top: 0, 
+          left: 0, 
+          width: '100%', 
+          height: '100%', 
+          overflow: "hidden", 
+          zIndex: 0,
+          background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '14px', textAlign: 'center' }}>
+          <div style={{ fontSize: '24px', marginBottom: '8px' }}>🔋</div>
+          <div>Battery Saver Active</div>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div 

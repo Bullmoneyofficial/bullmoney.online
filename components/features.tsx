@@ -680,8 +680,38 @@ export const SkeletonTwo = () => {
 export const Globe = ({ className }: { className?: string }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showFallback, setShowFallback] = useState(false);
+  const [isBatterySaving, setIsBatterySaving] = useState(false);
+  const globeRef = useRef<ReturnType<typeof createGlobe> | null>(null);
 
   useEffect(() => {
+    const handleFreeze = () => {
+      console.log('[Globe] 🔋 Battery saver active');
+      setIsBatterySaving(true);
+      if (globeRef.current) {
+        try {
+          globeRef.current.destroy();
+          globeRef.current = null;
+        } catch (e) {
+          console.error('[Globe] Error destroying globe:', e);
+        }
+      }
+    };
+    const handleUnfreeze = () => {
+      console.log('[Globe] ⚡ Battery saver off');
+      setIsBatterySaving(false);
+    };
+    
+    window.addEventListener('bullmoney-freeze', handleFreeze);
+    window.addEventListener('bullmoney-unfreeze', handleUnfreeze);
+    return () => {
+      window.removeEventListener('bullmoney-freeze', handleFreeze);
+      window.removeEventListener('bullmoney-unfreeze', handleUnfreeze);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isBatterySaving) return;
+    
     let phi = 0;
     if (!canvasRef.current) return;
 
@@ -714,6 +744,7 @@ export const Globe = ({ className }: { className?: string }) => {
           phi += 0.01;
         },
       });
+      globeRef.current = globe;
       console.log('[Globe] Created successfully');
     } catch (e) {
       console.error('[Globe] Failed to create globe:', e);
@@ -725,12 +756,13 @@ export const Globe = ({ className }: { className?: string }) => {
       if (globe) {
         try {
           globe.destroy();
+          globeRef.current = null;
         } catch (e) {
           // Ignore destroy errors
         }
       }
     };
-  }, []);
+  }, [isBatterySaving]);
 
   // Fallback only shown if WebGL creation actually failed
   if (showFallback) {
@@ -747,11 +779,26 @@ export const Globe = ({ className }: { className?: string }) => {
   }
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ width: 600, height: 600, maxWidth: "100%", aspectRatio: 1 }}
-      className={cn("pointer-events-none", className)}
-    />
+    <>
+      {!isBatterySaving && (
+        <canvas
+          ref={canvasRef}
+          style={{ width: 600, height: 600, maxWidth: "100%", aspectRatio: 1 }}
+          className={cn("pointer-events-none", className)}
+        />
+      )}
+      {isBatterySaving && (
+        <div
+          style={{ width: 600, height: 600, maxWidth: "100%", aspectRatio: 1 }}
+          className={cn("pointer-events-none flex items-center justify-center bg-gradient-to-br from-neutral-900 to-black rounded-full", className)}
+        >
+          <div className="text-center">
+            <div className="text-4xl mb-2">🔋</div>
+            <div className="text-xs text-neutral-500">Battery Saver</div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

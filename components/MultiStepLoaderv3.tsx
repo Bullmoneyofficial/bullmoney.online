@@ -287,11 +287,63 @@ const isMobileDevice = () => {
     (navigator.maxTouchPoints > 0);
 };
 
-// Check if running in Instagram/Facebook in-app browser
+// Check if running in an in-app browser that doesn't support device sensors
 const isInAppBrowser = () => {
   if (typeof window === "undefined") return false;
-  const ua = navigator.userAgent || navigator.vendor;
-  return /FBAN|FBAV|Instagram|FB_IAB|FB4A|FBIOS|WebView/i.test(ua);
+  const ua = navigator.userAgent || navigator.vendor || (window as any).opera || '';
+  
+  // Comprehensive list of in-app browser signatures
+  const inAppPatterns = [
+    // Facebook
+    /FBAN|FBAV|FB_IAB|FB4A|FBIOS|FBSS/i,
+    // Instagram
+    /Instagram/i,
+    // Twitter/X
+    /Twitter|TwitterAndroid/i,
+    // TikTok
+    /TikTok|musical_ly|BytedanceWebview|ByteLocale/i,
+    // Snapchat
+    /Snapchat/i,
+    // LinkedIn
+    /LinkedInApp|LinkedIn/i,
+    // Pinterest
+    /Pinterest/i,
+    // WeChat
+    /MicroMessenger|WeChat/i,
+    // Line
+    /Line\//i,
+    // Telegram
+    /TelegramBot/i,
+    // Discord
+    /Discord/i,
+    // Reddit
+    /Reddit/i,
+    // Generic WebView patterns
+    /WebView|wv\)|Version\/[\d.]+ Mobile\/\w+ Safari\/[\d.]+$|; wv\)/i,
+  ];
+  
+  // Check if any pattern matches
+  const isInApp = inAppPatterns.some(pattern => pattern.test(ua));
+  
+  // Additional check: standalone mode (PWA) is NOT an in-app browser
+  const isStandalone = (window.navigator as any).standalone === true || 
+    window.matchMedia('(display-mode: standalone)').matches;
+  
+  return isInApp && !isStandalone;
+};
+
+// Check if browser can potentially support sensors (even if permission needed)
+const canPotentiallySupportSensors = () => {
+  if (typeof window === "undefined") return false;
+  
+  // Check if the APIs exist at all
+  const hasMotionAPI = typeof DeviceMotionEvent !== 'undefined';
+  const hasOrientationAPI = typeof DeviceOrientationEvent !== 'undefined';
+  
+  // Must be on a secure context
+  const isSecure = window.isSecureContext || location.protocol === 'https:';
+  
+  return (hasMotionAPI || hasOrientationAPI) && isSecure;
 };
 
 // Check if device motion/orientation is supported and available
@@ -302,23 +354,31 @@ const checkSensorSupport = () => {
       motion: false,
       orientation: false,
       needsPermission: false,
+      canRequestPermission: false,
       isSecure: false,
       isInAppBrowser: false,
+      sensorBlockedByBrowser: false,
     };
   }
   
   const hasMotion = typeof DeviceMotionEvent !== 'undefined';
   const hasOrientation = typeof DeviceOrientationEvent !== 'undefined';
   const needsPermission = hasMotion && typeof (DeviceMotionEvent as any)?.requestPermission === 'function';
+  const canRequestOrientationPermission = hasOrientation && typeof (DeviceOrientationEvent as any)?.requestPermission === 'function';
   const isSecure = window.isSecureContext || location.protocol === 'https:';
   const inApp = isInAppBrowser();
   
+  // Determine if sensors are blocked by the browser type (in-app browsers often block sensors)
+  const sensorBlockedByBrowser = inApp && !needsPermission;
+  
   return {
-    motion: hasMotion && isSecure && !inApp,
-    orientation: hasOrientation && isSecure && !inApp,
+    motion: hasMotion && isSecure,
+    orientation: hasOrientation && isSecure,
     needsPermission,
+    canRequestPermission: needsPermission || canRequestOrientationPermission,
     isSecure,
     isInAppBrowser: inApp,
+    sensorBlockedByBrowser,
   };
 };
 
@@ -1353,13 +1413,65 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     motion: boolean;
     orientation: boolean;
     needsPermission: boolean;
+    canRequestPermission: boolean;
     isSecure: boolean;
     isInAppBrowser: boolean;
-  }>({ motion: false, orientation: false, needsPermission: false, isSecure: true, isInAppBrowser: false });
+    sensorBlockedByBrowser: boolean;
+  }>({ motion: false, orientation: false, needsPermission: false, canRequestPermission: false, isSecure: true, isInAppBrowser: false, sensorBlockedByBrowser: false });
   const [sensorPermissionGranted, setSensorPermissionGranted] = useState(false);
+  const [sensorPermissionDenied, setSensorPermissionDenied] = useState(false);
+  const [showSensorPermissionPrompt, setShowSensorPermissionPrompt] = useState(false);
   
   // Sensor-based modes that need device motion/orientation
   const SENSOR_MODES: InteractionMode[] = ['shake', 'tilt', 'flip', 'compass', 'faceDown', 'stepCounter'];
+  
+  // Request sensor permissions (for iOS Safari 13+)
+  const requestSensorPermission = useCallback(async () => {
+    try {
+      let motionGranted = false;
+      let orientationGranted = false;
+      
+      // Request DeviceMotion permission
+      if (typeof (DeviceMotionEvent as any)?.requestPermission === 'function') {
+        const motionResponse = await (DeviceMotionEvent as any).requestPermission();
+        motionGranted = motionResponse === 'granted';
+      } else {
+        // Permission not needed for this API
+        motionGranted = true;
+      }
+      
+      // Request DeviceOrientation permission
+      if (typeof (DeviceOrientationEvent as any)?.requestPermission === 'function') {
+        const orientationResponse = await (DeviceOrientationEvent as any).requestPermission();
+        orientationGranted = orientationResponse === 'granted';
+      } else {
+        // Permission not needed for this API
+        orientationGranted = true;
+      }
+      
+      if (motionGranted || orientationGranted) {
+        setSensorPermissionGranted(true);
+        setSensorPermissionDenied(false);
+        setShowSensorPermissionPrompt(false);
+        // Update sensor support state
+        setSensorSupport(prev => ({
+          ...prev,
+          motion: prev.motion && motionGranted,
+          orientation: prev.orientation && orientationGranted,
+        }));
+        return true;
+      } else {
+        setSensorPermissionDenied(true);
+        setShowSensorPermissionPrompt(false);
+        return false;
+      }
+    } catch (error) {
+      console.error('Sensor permission request failed:', error);
+      setSensorPermissionDenied(true);
+      setShowSensorPermissionPrompt(false);
+      return false;
+    }
+  }, []);
   
   // Filter modes based on device type and sensor support
   const availableModes = useMemo(() => {
@@ -1369,8 +1481,20 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
       // Mobile: include mobile-only and universal, exclude desktop-only
       modes = INTERACTION_MODES.filter(mode => !mode.desktopOnly);
       
-      // If sensors not supported (in-app browser, insecure context), filter out sensor modes
-      if (!sensorSupport.motion || !sensorSupport.orientation || sensorSupport.isInAppBrowser) {
+      // Determine if we should filter out sensor modes
+      const shouldFilterSensorModes = 
+        // Blocked by in-app browser that can't request permission
+        sensorSupport.sensorBlockedByBrowser ||
+        // Permission was explicitly denied
+        sensorPermissionDenied ||
+        // No sensor APIs available at all
+        (!sensorSupport.motion && !sensorSupport.orientation) ||
+        // In-app browser without permission capability
+        (sensorSupport.isInAppBrowser && !sensorSupport.canRequestPermission);
+      
+      // If sensors need permission and permission hasn't been granted yet, 
+      // we'll still include sensor modes but will show a permission prompt when selected
+      if (shouldFilterSensorModes && !sensorPermissionGranted) {
         modes = modes.filter(mode => !SENSOR_MODES.includes(mode.mode));
       }
     } else {
@@ -1379,7 +1503,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     }
     
     return modes;
-  }, [isMobile, sensorSupport]);
+  }, [isMobile, sensorSupport, sensorPermissionGranted, sensorPermissionDenied]);
   
   // Randomly select interaction mode on mount (from available modes)
   const [currentModeIndex, setCurrentModeIndex] = useState(0);
@@ -1395,7 +1519,14 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     let modes: InteractionModeConfig[];
     if (mobile) {
       modes = INTERACTION_MODES.filter(m => !m.desktopOnly);
-      if (!sensors.motion || !sensors.orientation || sensors.isInAppBrowser) {
+      
+      // Determine if we should filter out sensor modes for initial selection
+      const shouldFilterSensorModes = 
+        sensors.sensorBlockedByBrowser ||
+        (!sensors.motion && !sensors.orientation) ||
+        (sensors.isInAppBrowser && !sensors.canRequestPermission);
+      
+      if (shouldFilterSensorModes) {
         modes = modes.filter(m => !SENSOR_MODES.includes(m.mode));
       }
     } else {
@@ -1406,6 +1537,23 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
   }, []);
   
   const currentMode = availableModes[currentModeIndex] || availableModes[0];
+  
+  // Check if current mode requires sensor permission and show prompt if needed
+  useEffect(() => {
+    if (!currentMode) return;
+    
+    const isSensorMode = SENSOR_MODES.includes(currentMode.mode);
+    const needsPermissionPrompt = 
+      isMobile &&
+      isSensorMode && 
+      sensorSupport.canRequestPermission && 
+      !sensorPermissionGranted && 
+      !sensorPermissionDenied;
+    
+    if (needsPermissionPrompt) {
+      setShowSensorPermissionPrompt(true);
+    }
+  }, [currentMode, isMobile, sensorSupport.canRequestPermission, sensorPermissionGranted, sensorPermissionDenied]);
   
   // Interaction states
   const [isHolding, setIsHolding] = useState(false);
