@@ -776,7 +776,7 @@ const measureLatency = async (): Promise<number> => {
 };
 
 export function FPSCounter({ 
-  show = process.env.NODE_ENV === 'development',
+  show = true,
   position = 'bottom-right'
 }: FPSCounterProps) {
   const [fps, setFps] = React.useState(60);
