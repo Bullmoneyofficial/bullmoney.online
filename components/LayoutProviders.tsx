@@ -75,13 +75,13 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
 
     const originalRemoveChild = Node.prototype.removeChild;
 
-    const safeRemoveChild: typeof Node.prototype.removeChild = function patchedRemoveChild(this: Node, child: Node) {
+    const safeRemoveChild: typeof Node.prototype.removeChild = function patchedRemoveChild<T extends Node>(this: Node, child: T): T {
       // If the child was already detached (e.g., moved by a 3rd-party script), skip removal to prevent a NotFoundError
       if (!child || child.parentNode !== this) {
         console.warn("[LayoutProviders] Skipped removeChild for detached node", { parent: this, child });
         return child;
       }
-      return originalRemoveChild.call(this, child);
+      return originalRemoveChild.call(this, child) as T;
     };
 
     Node.prototype.removeChild = safeRemoveChild;

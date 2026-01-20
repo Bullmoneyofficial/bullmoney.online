@@ -24,6 +24,48 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+
+// --- GLOBAL NEON BLUE STYLES (Neon Blue Sign Style) ---
+const GLOBAL_NEON_STYLES = `
+  .neon-blue-text {
+    color: #3b82f6;
+    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+  }
+
+  .neon-white-text {
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
+  }
+
+  .neon-white-icon {
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
+  }
+
+  .neon-blue-icon {
+    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+  }
+
+  .neon-blue-border {
+    border: 2px solid #3b82f6;
+    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+  }
+
+  .neon-blue-bg {
+    background: #3b82f6;
+    box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+  }
+
+  .neon-subtle-border {
+    border: 1px solid rgba(59, 130, 246, 0.8);
+    box-shadow: 0 0 4px #3b82f6, inset 0 0 4px #3b82f6;
+  }
+
+  .gpu-layer {
+    transform: translateZ(0);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+  }
+`;
 import {
   Activity,
   TrendingUp,
@@ -1526,10 +1568,10 @@ const FpsDisplay = memo(({ fps, deviceTier }: { fps: number; deviceTier: string 
         <FpsCandlestickChart fps={fps} />
         <div className="flex flex-col gap-0.5 min-w-[40px]">
           <div className="flex items-center gap-1">
-            <Activity size={10} className="text-blue-400" />
-            <span className="text-sm font-black" style={{ color: colors.text }}>{fps}</span>
+            <Activity size={10} className="text-blue-400 neon-blue-icon" />
+            <span className="text-sm font-black neon-blue-text" style={{ color: colors.text }}>{fps}</span>
           </div>
-          <div className="text-[8px] font-mono font-bold uppercase text-blue-300 tracking-wide">{deviceTier}</div>
+          <div className="text-[8px] font-mono font-bold uppercase neon-blue-text tracking-wide">{deviceTier}</div>
         </div>
       </div>
     </div>
@@ -1547,19 +1589,19 @@ const MinimizedFpsDisplay = memo(({ fps }: { fps: number }) => {
         animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
         transition={{ duration: 1.5, repeat: Infinity }}
       >
-        <Activity size={11} className="text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.9)]" />
+        <Activity size={11} className="text-blue-400 neon-blue-icon drop-shadow-[0_0_8px_rgba(59,130,246,0.9)]" />
       </motion.div>
       <div className="flex overflow-hidden rounded" style={{ background: colors.bg }}>
         {digits.map((digit, idx) => (
           <div key={idx} className="relative w-[10px] h-[16px] overflow-hidden">
-            <span className="absolute inset-0 flex items-center justify-center text-[13px] font-black tabular-nums"
+            <span className="absolute inset-0 flex items-center justify-center text-[13px] font-black tabular-nums neon-blue-text"
               style={{ color: colors.text, textShadow: `0 0 8px ${colors.glow}` }}>
               {digit}
             </span>
           </div>
         ))}
       </div>
-      <span className="text-[7px] text-blue-400/90 font-bold uppercase tracking-wider ml-0.5">fps</span>
+      <span className="text-[7px] neon-blue-text font-bold uppercase tracking-wider ml-0.5">fps</span>
     </div>
   );
 });
@@ -1790,10 +1832,10 @@ const DeviceCenterPanel = memo(({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                  <Smartphone className="w-4 h-4 text-white" />
+                  <Smartphone className="w-4 h-4 text-white neon-white-icon" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Device Center</h3>
+                  <h3 className="text-sm font-bold neon-white-text">Device Center</h3>
                   <p className="text-[9px] text-zinc-400">Real-time system info</p>
                 </div>
               </div>
@@ -1801,9 +1843,9 @@ const DeviceCenterPanel = memo(({
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={onClose}
-                className="w-8 h-8 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 border border-blue-400/30 flex items-center justify-center"
+                className="w-8 h-8 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 border border-blue-400/30 flex items-center justify-center neon-blue-border"
               >
-                <X className="w-4 h-4 text-blue-300" />
+                <X className="w-4 h-4 neon-blue-icon" />
               </motion.button>
             </div>
 
@@ -5204,7 +5246,7 @@ const UnifiedFpsPill = memo(({
                 {/* Minimized: White neon icon with glow */}
                 <div className="flex items-center gap-1">
                   <TrendingUp 
-                    className="w-4 h-4 text-white" 
+                    className="w-4 h-4 text-white neon-white-icon" 
                     style={{ 
                       filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #3b82f6)'
                     }} 
@@ -5223,17 +5265,17 @@ const UnifiedFpsPill = memo(({
                 {/* Mobile: Always compact view with prices - with scroll-intensified neons */}
                 <div className="flex md:hidden flex-col items-center justify-center gap-1 min-w-[40px]">
                   <TrendingUp 
-                    className="w-3 h-3 text-white" 
+                    className="w-3 h-3 text-white neon-white-icon" 
                     style={{ filter: dynamicStyles.iconFilter }} 
                   />
                   <div className="flex items-center gap-1.5">
                     <div className="flex items-center gap-0.5">
                       <Coins 
-                        className="w-2.5 h-2.5 text-blue-400" 
+                        className="w-2.5 h-2.5 text-blue-400 neon-blue-icon" 
                         style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }}
                       />
                       <span 
-                        className="text-[8px] font-bold text-blue-400"
+                        className="text-[8px] font-bold neon-blue-text"
                         style={{ textShadow: '0 0 4px #3b82f6' }}
                       >
                         ${prices.xauusd}
@@ -5248,11 +5290,11 @@ const UnifiedFpsPill = memo(({
                     />
                     <div className="flex items-center gap-0.5">
                       <Bitcoin 
-                        className="w-2.5 h-2.5 text-blue-400" 
+                        className="w-2.5 h-2.5 text-blue-400 neon-blue-icon" 
                         style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }}
                       />
                       <span 
-                        className="text-[8px] font-bold text-blue-400"
+                        className="text-[8px] font-bold neon-blue-text"
                         style={{ textShadow: '0 0 4px #3b82f6' }}
                       >
                         ${prices.btcusd}
@@ -5287,10 +5329,10 @@ const UnifiedFpsPill = memo(({
                         <div className="flex flex-col items-center justify-center gap-2">
                           <div className="flex items-center gap-3">
                             <div>
-                              <TrendingUp className="w-7 h-7 text-white" style={{ filter: dynamicStyles.iconFilter }} />
+                              <TrendingUp className="w-7 h-7 text-white neon-white-icon" style={{ filter: dynamicStyles.iconFilter }} />
                             </div>
                             <span 
-                              className="text-2xl font-black tracking-widest uppercase"
+                              className="text-2xl font-black tracking-widest uppercase neon-blue-text"
                               style={{ 
                                 color: '#3b82f6',
                                 textShadow: dynamicStyles.textShadow,
@@ -5320,7 +5362,7 @@ const UnifiedFpsPill = memo(({
                         
                         {/* Live Prices */}
                         <div 
-                          className="flex items-center justify-around gap-4 px-4 py-3 rounded-lg"
+                          className="flex items-center justify-around gap-4 px-4 py-3 rounded-lg neon-subtle-border"
                           style={{
                             background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.12) 100%)',
                             border: '1px solid rgba(59, 130, 246, 0.8)',
@@ -5328,20 +5370,20 @@ const UnifiedFpsPill = memo(({
                           }}
                         >
                           <div className="flex flex-col items-center gap-1">
-                            <Coins className="w-6 h-6 text-amber-400" style={{ filter: 'drop-shadow(0 0 6px #fbbf24)' }} />
+                            <Coins className="w-6 h-6 text-amber-400 neon-blue-icon" style={{ filter: 'drop-shadow(0 0 6px #fbbf24)' }} />
                             <div className="flex flex-col items-center">
                               <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Gold</span>
-                              <span className="text-lg font-black tabular-nums" style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                              <span className="text-lg font-black tabular-nums neon-blue-text" style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
                                 ${prices.xauusd}
                               </span>
                             </div>
                           </div>
                           <div className="h-12 w-px bg-gradient-to-b from-transparent via-blue-500 to-transparent" style={{ boxShadow: '0 0 6px #3b82f6' }} />
                           <div className="flex flex-col items-center gap-1">
-                            <Bitcoin className="w-6 h-6 text-orange-400" style={{ filter: 'drop-shadow(0 0 6px #fb923c)' }} />
+                            <Bitcoin className="w-6 h-6 text-orange-400 neon-blue-icon" style={{ filter: 'drop-shadow(0 0 6px #fb923c)' }} />
                             <div className="flex flex-col items-center">
                               <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Bitcoin</span>
-                              <span className="text-lg font-black tabular-nums" style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                              <span className="text-lg font-black tabular-nums neon-blue-text" style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
                                 ${prices.btcusd}
                               </span>
                             </div>
@@ -5363,11 +5405,11 @@ const UnifiedFpsPill = memo(({
                         className="flex flex-col items-center justify-center gap-2 py-2"
                         style={{ willChange: 'transform, opacity' }}
                       >
-                        <TrendingUp className="w-6 h-6 text-white" style={{ filter: dynamicStyles.iconFilter }} />
+                        <TrendingUp className="w-6 h-6 text-white neon-white-icon" style={{ filter: dynamicStyles.iconFilter }} />
                         <div className="flex flex-col items-center gap-2">
                           <div className="flex items-center gap-1">
-                            <Coins className="w-4 h-4 text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
-                            <span className="text-sm font-bold text-blue-400" style={{ textShadow: '0 0 4px #3b82f6' }}>${prices.xauusd}</span>
+                            <Coins className="w-4 h-4 text-blue-400 neon-blue-icon" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+                            <span className="text-sm font-bold neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6' }}>${prices.xauusd}</span>
                           </div>
                           <div 
                             className="w-12 h-px" 
@@ -5377,12 +5419,12 @@ const UnifiedFpsPill = memo(({
                             }}
                           />
                           <div className="flex items-center gap-1">
-                            <Bitcoin className="w-4 h-4 text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
-                            <span className="text-sm font-bold text-blue-400" style={{ textShadow: '0 0 4px #3b82f6' }}>${prices.btcusd}</span>
+                            <Bitcoin className="w-4 h-4 text-blue-400 neon-blue-icon" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+                            <span className="text-sm font-bold neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6' }}>${prices.btcusd}</span>
                           </div>
                         </div>
                         <span 
-                          className="text-[10px] font-bold uppercase tracking-wider mt-1"
+                          className="text-[10px] font-bold uppercase tracking-wider mt-1 neon-blue-text"
                           style={{ 
                             color: 'rgba(96, 165, 250, 0.85)',
                             textShadow: '0 0 4px #3b82f6'
@@ -5405,7 +5447,7 @@ const UnifiedFpsPill = memo(({
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.3, ease: "easeOut" }}
-            className="absolute -bottom-6 left-0 whitespace-nowrap sm:hidden flex items-center gap-0.5 cursor-pointer pointer-events-auto px-2 py-1 rounded-r-full"
+            className="absolute -bottom-6 left-0 whitespace-nowrap sm:hidden flex items-center gap-0.5 cursor-pointer pointer-events-auto px-2 py-1 rounded-r-full neon-subtle-border"
             style={{
               background: 'rgba(0, 0, 0, 0.5)',
               borderTop: '1px solid rgba(59, 130, 246, 0.3)',
@@ -5421,7 +5463,7 @@ const UnifiedFpsPill = memo(({
               onOpenPanel();
             }}
           >
-            <span className="text-[7px] text-blue-400/80 font-medium">Tap to open</span>
+            <span className="text-[7px] neon-blue-text font-medium">Tap to open</span>
             <svg 
               className="w-2 h-2 text-blue-400/80" 
               fill="none" 
@@ -5865,6 +5907,16 @@ export function UltimateHub() {
     isV2Unlocked,
     setUltimateHubOpen
   } = useUIState();
+
+  // Inject neon styles
+  useEffect(() => {
+    if (!document.getElementById('ultimate-hub-neon-styles')) {
+      const styleEl = document.createElement('style');
+      styleEl.id = 'ultimate-hub-neon-styles';
+      styleEl.textContent = GLOBAL_NEON_STYLES;
+      document.head.appendChild(styleEl);
+    }
+  }, []);
 
   useEffect(() => {
     setMounted(true);

@@ -107,7 +107,7 @@ export const LegalDisclaimerModal = ({ isOpen, onClose }: LegalDisclaimerModalPr
             </div>
 
             <p className="legal-neon-white-text text-[10px] xs:text-xs sm:text-sm md:text-base">
-              By accessing <span className="font-semibold legal-neon-blue-text">Bullmoney</span> (the "Site"), purchasing products from the Shop, or using our services, you acknowledge and agree to the following terms without reservation.
+              By accessing <span className="font-semibold legal-neon-blue-text">Bullmoney</span> (the &quot;Site&quot;), purchasing products from the Shop, or using our services, you acknowledge and agree to the following terms without reservation.
             </p>
 
             <div className="space-y-2 xs:space-y-2.5 sm:space-y-3 md:space-y-4">
