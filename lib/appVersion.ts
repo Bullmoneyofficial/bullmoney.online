@@ -1,26 +1,26 @@
 /**
- * App Version Configuration
+ * App Version Configuration - AUTO-VERSIONING
  *
- * This file contains the application version used for cache invalidation.
- * Update APP_VERSION whenever you deploy changes that require clearing
- * user caches to prevent stale data issues.
- *
- * Version Format: MAJOR.MINOR.PATCH-BUILD
- * - MAJOR: Breaking changes that require full cache clear
- * - MINOR: Feature updates that may need partial cache refresh
- * - PATCH: Bug fixes (usually don't need cache clear)
- * - BUILD: Build timestamp for deployments
+ * VERSION IS NOW AUTOMATIC - No manual bumping needed!
  * 
- * IMPORTANT: Caching DISABLED as of v3.1.0 - Service worker now uses
- * network-first strategy for all requests. Only essential user data saved.
+ * On every build/deploy, a unique version is generated from the build timestamp.
+ * This ensures users always get fresh content after each deploy while
+ * preserving their login sessions and preferences.
+ *
+ * HOW IT WORKS:
+ * - BUILD_TIMESTAMP is set at build time via next.config.mjs
+ * - APP_VERSION is derived from the timestamp (unique per build)
+ * - On user visit, if their stored version ≠ current version → clear stale caches
+ * - Auth/preferences are ALWAYS preserved (see PRESERVED_KEYS below)
  */
 
-// Build-time version - update this on each deployment that needs cache invalidation
-// BUMPED: 2026-01-20 - Disabled service worker caching for fresher content
-export const APP_VERSION = '3.1.0';
-
-// Build timestamp - automatically set at build time
+// Build timestamp - automatically set at build time by Next.js
+// Falls back to current time in dev mode
 export const BUILD_TIMESTAMP = process.env.NEXT_PUBLIC_BUILD_TIMESTAMP || new Date().toISOString();
+
+// AUTO-GENERATED VERSION based on build timestamp
+// This changes automatically on every deploy - no manual bumping needed!
+export const APP_VERSION = `auto-${BUILD_TIMESTAMP.replace(/[^0-9]/g, '').slice(0, 14)}`;
 
 // Version configuration
 export interface VersionConfig {

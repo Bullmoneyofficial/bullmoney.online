@@ -1,9 +1,19 @@
 /** @type {import('next').NextConfig} */
+
+// Auto-generate build timestamp for cache versioning
+const BUILD_TIMESTAMP = new Date().toISOString();
+
 const nextConfig = {
   output: 'standalone',
   reactStrictMode: false, // Disable StrictMode in prod - reduces double renders
   compress: true,
   productionBrowserSourceMaps: false,
+  
+  // Auto-versioning: Set build timestamp as env var
+  // This changes on every build, triggering cache invalidation for users
+  env: {
+    NEXT_PUBLIC_BUILD_TIMESTAMP: BUILD_TIMESTAMP,
+  },
   
   // Reduce JavaScript bundle size
   compiler: {
