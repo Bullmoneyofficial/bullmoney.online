@@ -710,24 +710,8 @@ function useRealTimeMemory(): MemoryStats {
  * Uses Navigator API, UserAgent, and Network Information API
  */
 function useBrowserInfo(): BrowserInfo {
-  const [browserInfo, setBrowserInfo] = useState<BrowserInfo>({
-    name: 'Detecting...',
-    version: '',
-    engine: 'Unknown',
-    platform: 'Unknown',
-    locale: typeof navigator !== 'undefined' ? navigator.language || 'en-US' : 'en-US',
-    onLine: typeof navigator !== 'undefined' ? navigator.onLine : true,
-    cores: 1,
-    deviceMemory: 4,
-    connection: {
-      effectiveType: '4g',
-      downlink: 10,
-      rtt: 50,
-      saveData: false,
-    },
-  });
-
-  useEffect(() => {
+  // Compute browser info synchronously
+  const computeBrowserInfo = useCallback((): BrowserInfo => {
     const ua = navigator.userAgent;
     const nav = navigator as any;
 
@@ -786,7 +770,7 @@ function useBrowserInfo(): BrowserInfo {
       saveData: connection.saveData || false,
     } : { effectiveType: '4g', downlink: 10, rtt: 50, saveData: false };
 
-    setBrowserInfo({
+    return {
       name,
       version,
       engine,
@@ -796,7 +780,14 @@ function useBrowserInfo(): BrowserInfo {
       cores,
       deviceMemory,
       connection: connectionInfo,
-    });
+    };
+  }, []);
+
+  const [browserInfo, setBrowserInfo] = useState<BrowserInfo>(computeBrowserInfo);
+
+  useEffect(() => {
+    // Update immediately with computed values
+    setBrowserInfo(computeBrowserInfo());
 
     // Listen for online/offline changes
     const handleOnline = () => setBrowserInfo(prev => ({ ...prev, onLine: true }));
@@ -809,7 +800,7 @@ function useBrowserInfo(): BrowserInfo {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [computeBrowserInfo]);
 
   return browserInfo;
 }
@@ -1130,17 +1121,8 @@ function usePerformanceStats(): PerformanceStats {
  * Hook for REAL GPU info using WebGL API
  */
 function useGpuInfo(): GpuInfo {
-  const [gpuInfo, setGpuInfo] = useState<GpuInfo>({
-    vendor: 'Detecting...',
-    renderer: 'Detecting...',
-    tier: 'medium',
-    score: 50,
-    webglVersion: 'Unknown',
-    maxTextureSize: 0,
-    maxViewportDims: [0, 0],
-  });
-
-  useEffect(() => {
+  // Compute GPU info synchronously
+  const computeGpuInfo = useCallback((): GpuInfo => {
     try {
       const canvas = document.createElement('canvas');
       const gl = canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl') as WebGLRenderingContext | null;
@@ -1188,20 +1170,36 @@ function useGpuInfo(): GpuInfo {
           score = 30;
         }
         
-        setGpuInfo({
-          vendor,
-          renderer,
+        return {
+          vendor: vendor || 'Unknown',
+          renderer: renderer || 'Unknown',
           tier,
           score,
           webglVersion,
           maxTextureSize,
           maxViewportDims: maxViewportDims as number[],
-        });
+        };
       }
     } catch (error) {
       console.warn('[useGpuInfo] GPU detection failed:', error);
     }
+
+    return {
+      vendor: 'WebGL Not Available',
+      renderer: 'Unable to detect',
+      tier: 'medium',
+      score: 50,
+      webglVersion: 'Unknown',
+      maxTextureSize: 0,
+      maxViewportDims: [0, 0],
+    };
   }, []);
+
+  const [gpuInfo, setGpuInfo] = useState<GpuInfo>(computeGpuInfo);
+
+  useEffect(() => {
+    setGpuInfo(computeGpuInfo());
+  }, [computeGpuInfo]);
 
   return gpuInfo;
 }
@@ -1268,38 +1266,29 @@ function useBatteryInfo(): BatteryInfo {
  * Hook for REAL screen info
  */
 function useScreenInfo(): ScreenInfo {
-  const [screenInfo, setScreenInfo] = useState<ScreenInfo>({
-    width: typeof window !== 'undefined' ? window.screen.width : 0,
-    height: typeof window !== 'undefined' ? window.screen.height : 0,
-    pixelRatio: typeof window !== 'undefined' ? window.devicePixelRatio : 1,
-    refreshRate: 60,
-    colorDepth: typeof window !== 'undefined' ? window.screen.colorDepth : 24,
-    orientation: 'portrait',
-    touchPoints: 0,
-    hdr: false,
-  });
+  // Compute initial screen info synchronously
+  const computeScreenInfo = useCallback((): ScreenInfo => {
+    const nav = navigator as any;
+    return {
+      width: typeof window !== 'undefined' ? window.screen.width : 0,
+      height: typeof window !== 'undefined' ? window.screen.height : 0,
+      pixelRatio: typeof window !== 'undefined' ? window.devicePixelRatio : 1,
+      refreshRate: 60,
+      colorDepth: typeof window !== 'undefined' ? window.screen.colorDepth : 24,
+      orientation: typeof window !== 'undefined' && window.screen.orientation?.type?.includes('portrait') ? 'portrait' : 'landscape',
+      touchPoints: nav.maxTouchPoints || 0,
+      hdr: typeof window !== 'undefined' ? window.matchMedia('(dynamic-range: high)').matches : false,
+    };
+  }, []);
+
+  const [screenInfo, setScreenInfo] = useState<ScreenInfo>(computeScreenInfo);
 
   useEffect(() => {
+    setScreenInfo(computeScreenInfo());
+    
     const updateScreenInfo = () => {
       const nav = navigator as any;
       
-      // Detect refresh rate (estimate based on requestAnimationFrame)
-      let refreshRate = 60;
-      let frameCount = 0;
-      let lastTime = performance.now();
-      
-      const measureRefreshRate = (timestamp: number) => {
-        frameCount++;
-        if (frameCount >= 60) {
-          const elapsed = timestamp - lastTime;
-          refreshRate = Math.round((frameCount / elapsed) * 1000);
-          setScreenInfo(prev => ({ ...prev, refreshRate: Math.min(refreshRate, 240) }));
-          return;
-        }
-        requestAnimationFrame(measureRefreshRate);
-      };
-      requestAnimationFrame(measureRefreshRate);
-
       // Check for HDR support
       const hdr = window.matchMedia('(dynamic-range: high)').matches;
       
@@ -1307,7 +1296,7 @@ function useScreenInfo(): ScreenInfo {
         width: window.screen.width,
         height: window.screen.height,
         pixelRatio: window.devicePixelRatio,
-        refreshRate,
+        refreshRate: 60,
         colorDepth: window.screen.colorDepth,
         orientation: window.screen.orientation?.type?.includes('portrait') ? 'portrait' : 'landscape',
         touchPoints: nav.maxTouchPoints || 0,
@@ -1315,11 +1304,10 @@ function useScreenInfo(): ScreenInfo {
       });
     };
 
-    updateScreenInfo();
     window.addEventListener('resize', updateScreenInfo);
     
     return () => window.removeEventListener('resize', updateScreenInfo);
-  }, []);
+  }, [computeScreenInfo]);
 
   return screenInfo;
 }
@@ -3465,10 +3453,10 @@ BrowserModal.displayName = 'BrowserModal';
 type UnifiedHubTab = 'community' | 'trading' | 'tv' | 'device';
 
 const UNIFIED_HUB_TABS: { id: UnifiedHubTab; label: string; icon: typeof TrendingUp; color: string }[] = [
-  { id: 'community', label: 'Social', icon: MessageSquare, color: 'cyan' },
+  { id: 'community', label: 'Social', icon: MessageSquare, color: 'blue' },
   { id: 'trading', label: 'Trade', icon: TrendingUp, color: 'blue' },
-  { id: 'tv', label: 'TV', icon: Play, color: 'purple' },
-  { id: 'device', label: 'Device', icon: Smartphone, color: 'emerald' },
+  { id: 'tv', label: 'TV', icon: Play, color: 'blue' },
+  { id: 'device', label: 'Device', icon: Smartphone, color: 'blue' },
 ];
 
 // ============================================================================
@@ -3531,9 +3519,10 @@ const UnifiedHubPanel = memo(({
   const performanceScore = calculate3DPerformanceScore(fps, memoryStats.percentage, gpuInfo.score, browserInfo.cores);
   const performanceGrade = getPerformanceGrade(performanceScore);
 
-  // Handle swipe to close
+  // Handle drag to close (any direction)
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (info.offset.x < -100) {
+    const distance = Math.sqrt(info.offset.x ** 2 + info.offset.y ** 2);
+    if (distance > 80) {
       SoundEffects.swoosh();
       onClose();
     }
@@ -3603,30 +3592,31 @@ const UnifiedHubPanel = memo(({
         <>
           {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0 }}
+            initial={{ opacity: 1 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[2147483640] bg-black/60 backdrop-blur-sm"
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[2147483640] bg-transparent"
             onClick={onClose}
           />
           
-          {/* Panel */}
+          {/* Panel - Centered Modal */}
           <motion.div
             ref={panelRef}
-            initial={{ x: '-100%', opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '-100%', opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={{ left: 0.3, right: 0 }}
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300, duration: 0.3 }}
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0.2, bottom: 0.2 }}
             onDragStart={() => setIsDragging(true)}
             onDragEnd={handleDragEnd}
-            className="fixed left-0 top-0 bottom-0 z-[2147483647] w-full sm:w-[380px] md:w-[420px] flex flex-col bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl border-r border-blue-500/30 shadow-2xl overflow-hidden"
+            className="fixed left-1/2 top-1/2 z-[2147483647] -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[85vh] sm:w-[80vw] sm:h-[80vh] md:w-[65vw] md:h-[65vh] max-w-sm sm:max-w-md md:max-w-xl flex flex-col bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-blue-500/30 shadow-2xl overflow-hidden rounded-2xl"
             style={{ touchAction: 'pan-y' }}
           >
             {/* Header with FPS Display */}
-            <div className="p-3 border-b border-blue-500/20 bg-gradient-to-r from-blue-600/20 via-cyan-600/10 to-purple-600/10">
+            <div className="p-3 border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.3), inset 0 0 12px rgba(59, 130, 246, 0.1)' }}>
               <div className="flex items-center justify-between gap-2">
                 {/* FPS Badge */}
                 <div className="flex items-center gap-2">
@@ -3635,24 +3625,24 @@ const UnifiedHubPanel = memo(({
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-1">
-                      <Activity size={12} className="text-blue-400" />
-                      <span className="text-lg font-black tabular-nums" style={{ color: colors.text }}>{fps}</span>
-                      <span className="text-[8px] text-blue-400 font-bold">FPS</span>
+                      <Activity size={12} className="text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                      <span className="text-lg font-black tabular-nums text-blue-300 neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>{fps}</span>
+                      <span className="text-[8px] text-blue-400 font-bold neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6' }}>FPS</span>
                     </div>
-                    <div className="text-[9px] font-mono font-bold uppercase text-blue-300 tracking-wide">{deviceTier}</div>
+                    <div className="text-[9px] font-mono font-bold uppercase text-blue-300 neon-blue-text tracking-wide" style={{ textShadow: '0 0 4px #3b82f6' }}>{deviceTier}</div>
                   </div>
                 </div>
                 
                 {/* Live Prices */}
-                <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-black border border-blue-500/30" style={{ boxShadow: '0 0 6px rgba(59, 130, 246, 0.2)' }}>
                   <div className="flex items-center gap-1">
-                    <Coins className="w-3 h-3 text-amber-400" />
-                    <span className="text-[10px] font-bold text-amber-300">${prices.xauusd}</span>
+                    <Coins className="w-3 h-3 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                    <span className="text-[10px] font-bold text-blue-300 neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6' }}>${prices.xauusd}</span>
                   </div>
                   <div className="w-px h-3 bg-blue-500/30" />
                   <div className="flex items-center gap-1">
-                    <Bitcoin className="w-3 h-3 text-orange-400" />
-                    <span className="text-[10px] font-bold text-orange-300">${prices.btcusd}</span>
+                    <Bitcoin className="w-3 h-3 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                    <span className="text-[10px] font-bold text-blue-300 neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6' }}>${prices.btcusd}</span>
                   </div>
                 </div>
                 
@@ -3661,34 +3651,29 @@ const UnifiedHubPanel = memo(({
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-blue-500/20 hover:bg-blue-500/40 border border-blue-400/40 flex items-center justify-center"
+                  className="w-8 h-8 rounded-full bg-blue-500/20 hover:bg-blue-500/40 border border-blue-400/60 flex items-center justify-center"
+                  style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}
                 >
-                  <X className="w-4 h-4 text-blue-200" />
+                  <X className="w-4 h-4 text-blue-300" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
                 </motion.button>
               </div>
               
               {/* Swipe hint for mobile */}
               <motion.div 
                 className="flex items-center justify-center gap-1 mt-2 text-[9px] text-blue-400/60 sm:hidden"
-                animate={{ x: [0, -5, 0] }}
+                animate={{ y: [0, -3, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               >
-                <ChevronRight className="w-3 h-3 rotate-180" />
-                <span>Swipe left to close</span>
+                <ChevronRight className="w-3 h-3 -rotate-90" />
+                <span>Drag to close</span>
               </motion.div>
             </div>
             
             {/* Tab Navigation */}
-            <div className="flex items-stretch border-b border-blue-500/20 bg-black/20">
+            <div className="flex items-stretch border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.3), inset 0 0 12px rgba(59, 130, 246, 0.1)' }}>
               {UNIFIED_HUB_TABS.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
-                const colorClasses = {
-                  blue: isActive ? 'bg-blue-500/30 text-blue-300 border-blue-400' : 'text-blue-400/60 border-transparent',
-                  cyan: isActive ? 'bg-cyan-500/30 text-cyan-300 border-cyan-400' : 'text-cyan-400/60 border-transparent',
-                  purple: isActive ? 'bg-purple-500/30 text-purple-300 border-purple-400' : 'text-purple-400/60 border-transparent',
-                  emerald: isActive ? 'bg-emerald-500/30 text-emerald-300 border-emerald-400' : 'text-emerald-400/60 border-transparent',
-                };
                 
                 return (
                   <motion.button
@@ -3699,10 +3684,15 @@ const UnifiedHubPanel = memo(({
                     }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 px-2 border-b-2 transition-all ${colorClasses[tab.color as keyof typeof colorClasses]}`}
+                    className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 px-2 border-b-2 transition-all ${
+                      isActive 
+                        ? 'bg-blue-500/20 text-blue-300 border-blue-400 neon-blue-text' 
+                        : 'text-blue-400/50 border-transparent hover:text-blue-300/70 hover:bg-blue-500/10'
+                    }`}
+                    style={isActive ? { textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' } : {}}
                   >
-                    <Icon className="w-4 h-4" />
-                    <span className="text-[9px] font-bold uppercase tracking-wide">{tab.label}</span>
+                    <Icon className="w-4 h-4" style={isActive ? { filter: 'drop-shadow(0 0 4px #3b82f6)' } : {}} />
+                    <span className="text-[9px] font-bold uppercase tracking-widest">{tab.label}</span>
                   </motion.button>
                 );
               })}
@@ -3721,7 +3711,7 @@ const UnifiedHubPanel = memo(({
                     className="h-full flex flex-col"
                   >
                     {/* Symbol Selector */}
-                    <div className="flex gap-1 p-2 overflow-x-auto border-b border-blue-500/10">
+                    <div className="flex gap-1 p-2 overflow-x-auto border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
                       {TRADING_SYMBOLS.map(symbol => {
                         const Icon = symbol.icon;
                         const isActive = selectedSymbol.id === symbol.id;
@@ -3733,11 +3723,12 @@ const UnifiedHubPanel = memo(({
                             whileTap={{ scale: 0.95 }}
                             className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold whitespace-nowrap transition-all ${
                               isActive
-                                ? 'bg-blue-500/30 text-blue-300 border border-blue-400/50'
-                                : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40 hover:bg-zinc-700/50'
+                                ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
+                                : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
                             }`}
+                            style={isActive ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' } : {}}
                           >
-                            <Icon className="w-3 h-3" />
+                            <Icon className="w-3 h-3" style={isActive ? { filter: 'drop-shadow(0 0 2px #3b82f6)' } : {}} />
                             <span>{symbol.abbr}</span>
                           </motion.button>
                         );
@@ -3765,18 +3756,19 @@ const UnifiedHubPanel = memo(({
                     </div>
                     
                     {/* Toggle & Filters */}
-                    <div className="p-2 space-y-2 border-t border-blue-500/20">
+                    <div className="p-2 space-y-2 border-t border-blue-500/30 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
                       <div className="flex gap-2">
                         <motion.button
                           onClick={() => setShowCalendar(!showCalendar)}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-                            showCalendar ? 'bg-blue-500/30 border border-blue-400/50' : 'bg-zinc-700 hover:bg-zinc-600 border border-blue-500/20'
+                            showCalendar ? 'bg-blue-500/30 border border-blue-400/60 text-blue-300 neon-blue-text' : 'bg-black/40 hover:bg-blue-500/15 border border-blue-500/30 text-blue-400 hover:text-blue-300'
                           }`}
+                          style={showCalendar ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' } : {}}
                         >
-                          <Calendar className="w-4 h-4 text-blue-400" />
-                          <span className="text-white">{showCalendar ? 'Show Charts' : 'Calendar'}</span>
+                          <Calendar className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                          <span>{showCalendar ? 'Show Charts' : 'Calendar'}</span>
                         </motion.button>
                         
                         {showCalendar && (
@@ -3787,11 +3779,12 @@ const UnifiedHubPanel = memo(({
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-                              showFilters ? 'bg-cyan-500/30 border border-cyan-400/50' : 'bg-zinc-700 hover:bg-zinc-600 border border-zinc-500/20'
+                              showFilters ? 'bg-blue-500/30 border border-blue-400/60 text-blue-300 neon-blue-text' : 'bg-black/40 hover:bg-blue-500/15 border border-blue-500/30 text-blue-400 hover:text-blue-300'
                             }`}
+                            style={showFilters ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' } : {}}
                           >
-                            <Filter className="w-3.5 h-3.5 text-cyan-400" />
-                            <span className="text-white">Filters</span>
+                            <Filter className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            <span>Filters</span>
                           </motion.button>
                         )}
                       </div>
@@ -3815,12 +3808,10 @@ const UnifiedHubPanel = memo(({
                                     onClick={() => setCalendarImpact(impact)}
                                     className={`flex-1 py-1 px-2 rounded text-[9px] font-semibold transition-all ${
                                       calendarImpact === impact
-                                        ? impact === 'high' ? 'bg-red-500/30 text-red-300 border border-red-500/40'
-                                        : impact === 'medium' ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
-                                        : impact === 'low' ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/40'
-                                        : 'bg-blue-500/30 text-blue-300 border border-blue-500/40'
-                                        : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40 hover:bg-zinc-700/50'
+                                        ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
+                                        : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
                                     }`}
+                            style={calendarImpact === impact ? { boxShadow: '0 0 6px rgba(59, 130, 246, 0.3)' } : {}}
                                   >
                                     {impact === 'all' ? 'All' : impact.charAt(0).toUpperCase() + impact.slice(1)}
                                   </button>
@@ -3838,9 +3829,10 @@ const UnifiedHubPanel = memo(({
                                     onClick={() => setCalendarCountry(country.id)}
                                     className={`flex items-center gap-0.5 py-1 px-1.5 rounded text-[9px] font-semibold transition-all whitespace-nowrap ${
                                       calendarCountry === country.id
-                                        ? 'bg-blue-500/30 text-blue-300 border border-blue-500/40'
-                                        : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40 hover:bg-zinc-700/50'
+                                        ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
+                                        : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
                                     }`}
+                            style={calendarCountry === country.id ? { boxShadow: '0 0 6px rgba(59, 130, 246, 0.3)' } : {}}
                                   >
                                     <span>{country.flag}</span>
                                     <span>{country.name}</span>
@@ -3868,7 +3860,7 @@ const UnifiedHubPanel = memo(({
                     className="h-full flex flex-col"
                   >
                     {/* Channel Tabs */}
-                    <div className="flex items-center gap-1 p-2 border-b border-white/10 overflow-x-auto">
+                    <div className="flex items-center gap-1 p-2 border-b border-blue-500/30 overflow-x-auto bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
                       {(Object.keys(TELEGRAM_CHANNELS) as ChannelKey[]).map(key => {
                         const ch = TELEGRAM_CHANNELS[key];
                         const Icon = ch.icon;
@@ -3881,14 +3873,12 @@ const UnifiedHubPanel = memo(({
                             onClick={() => setActiveChannel(key)}
                             className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                               isActive
-                                ? ch.color === 'amber' ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
-                                : ch.color === 'emerald' ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/40'
-                                : ch.color === 'cyan' ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/40'
-                                : 'bg-blue-500/30 text-blue-300 border border-blue-500/40'
-                                : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10'
+                                ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
+                                : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
                             }`}
+                            style={isActive ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' } : {}}
                           >
-                            <Icon className="w-3 h-3" />
+                            <Icon className="w-3 h-3" style={isActive ? { filter: 'drop-shadow(0 0 2px #3b82f6)' } : {}} />
                             <span>{ch.name}</span>
                             {isLocked && <Lock className="w-2.5 h-2.5 opacity-60" />}
                           </button>
@@ -3903,39 +3893,42 @@ const UnifiedHubPanel = memo(({
                         }}
                         className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ml-auto flex-shrink-0 ${
                           isAdmin 
-                            ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white border border-blue-400/60'
-                            : 'bg-zinc-800/80 text-zinc-300 border border-zinc-600/40'
+                            ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
+                            : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
                         }`}
+                        style={isAdmin ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' } : {}}
                       >
-                        <Shield className="w-3.5 h-3.5" />
+                        <Shield className="w-3.5 h-3.5" style={isAdmin ? { filter: 'drop-shadow(0 0 2px #3b82f6)' } : {}} />
                         <span>Admin</span>
                       </motion.button>
                     </div>
                     
                     {/* Feed */}
-                    <div className="flex-1 overflow-y-auto min-h-0 min-h-[200px]">
+                    <div className="flex-1 overflow-y-auto min-h-0 min-h-[200px] bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
                       <TelegramChannelEmbed channel={activeChannel} isVip={isVip} />
                     </div>
                     
                     {/* View All Link */}
-                    <div className="px-3 py-1.5 border-t border-blue-500/10">
+                    <div className="px-3 py-1.5 border-t border-blue-500/30 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
                       <a href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
                         target="_blank" rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-1 text-[9px] text-cyan-400 hover:text-cyan-300">
-                        <ExternalLink className="w-2.5 h-2.5" /> View all on Telegram
+                        className="flex items-center justify-center gap-1 text-[9px] text-blue-400 hover:text-blue-300 neon-blue-text transition-all"
+                        style={{ textShadow: '0 0 4px rgba(59, 130, 246, 0.5)' }}>
+                        <ExternalLink className="w-2.5 h-2.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> View all on Telegram
                       </a>
                     </div>
                     
                     {/* Social Links */}
-                    <div className="p-3 space-y-2 border-t border-cyan-500/20">
+                    <div className="p-3 space-y-2 border-t border-blue-500/30 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
                       <div className="flex gap-2">
                         <motion.button
                           onClick={handleCopyLink}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold text-xs"
+                          className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-blue-500/30 text-blue-300 font-semibold text-xs border border-blue-400/60 neon-blue-text"
+                          style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}
                         >
-                          {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          {copied ? <Check className="w-3 h-3" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> : <Copy className="w-3 h-3" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />}
                           {copied ? 'Copied!' : 'Copy Link'}
                         </motion.button>
                         
@@ -3943,9 +3936,10 @@ const UnifiedHubPanel = memo(({
                           onClick={() => window.dispatchEvent(new CustomEvent('openProductsModal'))}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-gradient-to-r from-amber-600 to-amber-500 text-white font-bold text-xs"
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-blue-500/30 text-blue-300 font-bold text-xs border border-blue-400/60 neon-blue-text"
+                          style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}
                         >
-                          <Crown className="w-3.5 h-3.5" /> Join VIP
+                          <Crown className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> Join VIP
                         </motion.button>
                       </div>
                       
@@ -3960,9 +3954,10 @@ const UnifiedHubPanel = memo(({
                               rel="noopener noreferrer"
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
-                              className={`flex flex-col items-center justify-center gap-1 py-2 px-2 rounded-lg bg-gradient-to-r ${link.color} text-white font-semibold text-[10px]`}
+                              className="flex flex-col items-center justify-center gap-1 py-2 px-2 rounded-lg bg-blue-500/30 text-blue-300 font-semibold text-[10px] border border-blue-400/60 neon-blue-text transition-all"
+                              style={{ boxShadow: '0 0 6px rgba(59, 130, 246, 0.3)' }}
                             >
-                              <Icon className="w-4 h-4" />
+                              <Icon className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
                               <span className="hidden sm:block">{link.name}</span>
                             </motion.a>
                           );
@@ -3982,7 +3977,7 @@ const UnifiedHubPanel = memo(({
                     className="h-full flex flex-col"
                   >
                     {/* TV Tabs */}
-                    <div className="flex gap-2 p-2 border-b border-purple-500/20">
+                    <div className="flex gap-2 p-2 border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
                       {(['featured', 'live'] as const).map(tab => (
                         <motion.button
                           key={tab}
@@ -3991,18 +3986,19 @@ const UnifiedHubPanel = memo(({
                           whileTap={{ scale: 0.98 }}
                           className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
                             tvTab === tab
-                              ? 'bg-purple-500/30 text-purple-300 border border-purple-400/50'
-                              : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40 hover:bg-zinc-700/50'
+                              ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
+                              : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
                           }`}
+                          style={tvTab === tab ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' } : {}}
                         >
-                          {tab === 'featured' ? <Play className="w-3.5 h-3.5" /> : <Radio className="w-3.5 h-3.5" />}
+                          {tab === 'featured' ? <Play className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> : <Radio className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />}
                           <span>{tab === 'featured' ? 'Featured' : 'Live Streams'}</span>
                         </motion.button>
                       ))}
                     </div>
                     
                     {/* Video Player */}
-                    <div className="relative aspect-video bg-black">
+                    <div className="relative aspect-video bg-black border border-blue-500/30" style={{ boxShadow: 'inset 0 0 12px rgba(59, 130, 246, 0.2)' }}>
                       <iframe
                         key={youtubeEmbedUrl}
                         src={youtubeEmbedUrl}
@@ -4025,9 +4021,10 @@ const UnifiedHubPanel = memo(({
                               whileTap={{ scale: 0.95 }}
                               className={`flex-1 py-2 rounded-lg text-xs font-semibold ${
                                 featuredIndex === idx
-                                  ? 'bg-purple-500/30 text-purple-300 border border-purple-400/50'
-                                  : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40'
+                                  ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
+                                  : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
                               }`}
+                              style={featuredIndex === idx ? { boxShadow: '0 0 6px rgba(59, 130, 246, 0.3)' } : {}}
                             >
                               Video {idx + 1}
                             </motion.button>
@@ -4045,11 +4042,12 @@ const UnifiedHubPanel = memo(({
                               whileTap={{ scale: 0.98 }}
                               className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold whitespace-nowrap ${
                                 tradingChannelIndex === idx
-                                  ? 'bg-red-500/30 text-red-300 border border-red-400/50'
-                                  : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40'
+                                  ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
+                                  : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
                               }`}
+                              style={tradingChannelIndex === idx ? { boxShadow: '0 0 6px rgba(59, 130, 246, 0.3)' } : {}}
                             >
-                              <Radio className="w-3 h-3" />
+                              <Radio className="w-3 h-3" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
                               {channel.name}
                             </motion.button>
                           ))}
@@ -4058,14 +4056,16 @@ const UnifiedHubPanel = memo(({
                     </div>
                     
                     {/* Platform Links */}
-                    <div className="flex border-t border-purple-500/20 mt-auto">
+                    <div className="flex border-t border-blue-500/30 mt-auto bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
                       <a href="https://youtube.com/@bullmoney.streams" target="_blank" rel="noopener noreferrer"
-                        className="flex-1 py-2 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-red-600/20">
-                        <Youtube className="w-4 h-4 text-red-500" /> YouTube
+                        className="flex-1 py-2 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-blue-300 hover:text-blue-200 hover:bg-blue-500/20 transition-all"
+                        style={{ textShadow: '0 0 4px rgba(59, 130, 246, 0.3)' }}>
+                        <Youtube className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> YouTube
                       </a>
                       <a href="https://discord.gg/vfxHPpCeQ" target="_blank" rel="noopener noreferrer"
-                        className="flex-1 py-2 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-[#5865F2]/20">
-                        <MessageSquare className="w-4 h-4 text-[#5865F2]" /> Discord
+                        className="flex-1 py-2 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-blue-300 hover:text-blue-200 hover:bg-blue-500/20 transition-all border-l border-blue-500/30"
+                        style={{ textShadow: '0 0 4px rgba(59, 130, 246, 0.3)' }}>
+                        <MessageSquare className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> Discord
                       </a>
                     </div>
                   </motion.div>
@@ -4078,10 +4078,11 @@ const UnifiedHubPanel = memo(({
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="p-3 space-y-3"
+                    className="p-3 space-y-3 bg-black"
+                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
                   >
                     {/* Performance Grade */}
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/10 border border-blue-500/30">
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
                       <div className="flex items-center gap-3">
                         <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-black"
                           style={{ backgroundColor: `${performanceGrade.color}20`, color: performanceGrade.color, border: `2px solid ${performanceGrade.color}40` }}>
@@ -4104,88 +4105,88 @@ const UnifiedHubPanel = memo(({
                     </div>
                     
                     {/* GPU Info */}
-                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30">
+                    <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">GPU</span>
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                          gpuInfo.tier === 'ultra' ? 'bg-emerald-500/20 text-emerald-300' :
-                          gpuInfo.tier === 'high' ? 'bg-blue-500/20 text-blue-300' :
-                          gpuInfo.tier === 'medium' ? 'bg-amber-500/20 text-amber-300' :
-                          'bg-red-500/20 text-red-300'
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${
+                          gpuInfo.tier === 'ultra' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' :
+                          gpuInfo.tier === 'high' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' :
+                          gpuInfo.tier === 'medium' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' :
+                          'bg-blue-500/20 text-blue-300 border-blue-500/30'
                         }`}>{gpuInfo.tier.toUpperCase()}</span>
                       </div>
-                      <div className="text-xs font-semibold text-white truncate">{gpuInfo.renderer}</div>
-                      <div className="text-[9px] text-zinc-500 mt-0.5">{gpuInfo.vendor} • {gpuInfo.webglVersion}</div>
+                      <div className="text-xs font-semibold text-blue-200">{gpuInfo.renderer}</div>
+                      <div className="text-[9px] text-blue-300/70 mt-0.5">{gpuInfo.vendor} • {gpuInfo.webglVersion}</div>
                     </div>
                     
                     {/* Network & Battery Row */}
                     <div className="grid grid-cols-2 gap-2">
                       {/* Network */}
-                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30">
+                      <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-[10px] font-medium text-zinc-400">Network</span>
-                          {networkStats.isOnline ? <Wifi className="w-3 h-3 text-cyan-400" /> : <WifiOff className="w-3 h-3 text-red-400" />}
+                          {networkStats.isOnline ? <Wifi className="w-3 h-3 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> : <WifiOff className="w-3 h-3 text-blue-400" />}
                         </div>
-                        <div className="text-sm font-bold text-white">{networkStats.effectiveType.toUpperCase()}</div>
-                        <div className="text-[9px] text-zinc-500">{networkStats.downlink} Mbps • {networkStats.rtt}ms</div>
+                        <div className="text-sm font-bold text-blue-200">{networkStats.effectiveType.toUpperCase()}</div>
+                        <div className="text-[9px] text-blue-300/70">{networkStats.downlink} Mbps • {networkStats.rtt}ms</div>
                       </div>
                       
                       {/* Battery */}
-                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30">
+                      <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-[10px] font-medium text-zinc-400">Battery</span>
-                          {batteryInfo.charging ? <Zap className="w-3 h-3 text-amber-400" /> : <Battery className="w-3 h-3 text-amber-400" />}
+                          {batteryInfo.charging ? <Zap className="w-3 h-3 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> : <Battery className="w-3 h-3 text-blue-400" />}
                         </div>
                         {batteryInfo.supported && batteryInfo.level >= 0 ? (
                           <>
-                            <div className="text-sm font-bold text-white">{Math.round(batteryInfo.level * 100)}%</div>
-                            <div className="text-[9px] text-zinc-500">{batteryInfo.charging ? 'Charging' : 'On Battery'}</div>
+                            <div className="text-sm font-bold text-blue-200">{Math.round(batteryInfo.level * 100)}%</div>
+                            <div className="text-[9px] text-blue-300/70">{batteryInfo.charging ? 'Charging' : 'On Battery'}</div>
                           </>
                         ) : (
-                          <div className="text-xs text-zinc-500">Not available</div>
+                          <div className="text-xs text-blue-300/70">Not available</div>
                         )}
                       </div>
                     </div>
                     
                     {/* Screen Info */}
-                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30">
+                    <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Display</span>
-                        <Monitor className="w-3.5 h-3.5 text-blue-400" />
+                        <Monitor className="w-3.5 h-3.5 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
                       </div>
-                      <div className="text-xs font-semibold text-white">{screenInfo.width} × {screenInfo.height}</div>
-                      <div className="text-[9px] text-zinc-500">
+                      <div className="text-xs font-semibold text-blue-200">{screenInfo.width} × {screenInfo.height}</div>
+                      <div className="text-[9px] text-blue-300/70">
                         {screenInfo.pixelRatio}x DPR • {screenInfo.refreshRate}Hz • {screenInfo.colorDepth}-bit
-                        {screenInfo.hdr && <span className="ml-1 text-amber-400">HDR</span>}
+                        {screenInfo.hdr && <span className="ml-1 text-blue-400">HDR</span>}
                       </div>
                     </div>
                     
                     {/* Browser Info */}
-                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-zinc-500/20 to-zinc-600/10 border border-zinc-500/30">
+                    <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Browser</span>
-                        <Globe className="w-3.5 h-3.5 text-zinc-400" />
+                        <Globe className="w-3.5 h-3.5 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
                       </div>
-                      <div className="text-xs font-semibold text-white">{browserInfo.name} {browserInfo.version.split('.')[0]}</div>
-                      <div className="text-[9px] text-zinc-500">{browserInfo.engine} • {browserInfo.platform}</div>
+                      <div className="text-xs font-semibold text-blue-200">{browserInfo.name} {browserInfo.version.split('.')[0]}</div>
+                      <div className="text-[9px] text-blue-300/70">{browserInfo.engine} • {browserInfo.platform}</div>
                     </div>
                     
                     {/* Account Info */}
                     {userId && (
-                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30">
+                      <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Account</span>
-                          <User className="w-3.5 h-3.5 text-emerald-400" />
+                          <User className="w-3.5 h-3.5 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
                         </div>
-                        <div className="text-xs font-semibold text-white truncate">{userEmail || 'Signed In'}</div>
+                        <div className="text-xs font-semibold text-blue-200 truncate">{userEmail || 'Signed In'}</div>
                         <div className="flex items-center gap-2 mt-1">
                           {isVip && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
                               <Crown className="w-2.5 h-2.5 inline mr-0.5" />VIP
                             </span>
                           )}
                           {isAdmin && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
                               <Shield className="w-2.5 h-2.5 inline mr-0.5" />Admin
                             </span>
                           )}
