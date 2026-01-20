@@ -134,6 +134,9 @@ import Link from "next/link";
 // Import dev utilities
 import { useDevSkipShortcut } from "@/hooks/useDevSkipShortcut";
 
+// Legacy flag placeholder to satisfy stale client bundles that may reference it during Fast Refresh.
+const desktopHeroVariant = "spline";
+
 // Import loaders - lazy
 const PageMode = dynamic(
   () => import("@/components/REGISTER USERS/pagemode"),
@@ -809,6 +812,9 @@ function HomeContent() {
   const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'content'>('pagemode');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  // Legacy flag retained for older bundles; default keeps desktop on 3D hero.
+  const desktopHeroVariant = 'spline';
+  const useDesktopVideoVariant = desktopHeroVariant === 'video';
   const { shouldRender: allowMobileLazyRender } = useMobileLazyRender(240);
   const [isMuted, setIsMuted] = useState(false);
   const [activeRemoteScene, setActiveRemoteScene] = useState<RemoteSplineMeta | null>(null);
@@ -1073,11 +1079,11 @@ function HomeContent() {
                 data-content
                 data-theme-aware
               >
-                {isMobile ? (
+                {isMobile || useDesktopVideoVariant ? (
                   <MobileDiscordHero
                     sources={DISCORD_STAGE_FEATURED_VIDEOS}
                     onOpenModal={openDiscordStageModal}
-                    variant="mobile"
+                    variant={isMobile ? 'mobile' : 'desktop'}
                   />
                 ) : (
                   <HeroDesktop />

@@ -22,6 +22,7 @@ import { Loader2, X, Play, ArrowRight, Volume2, VolumeX, Copy, Check } from "luc
 
 // ✅ SPLINE PRELOADER
 import { useSplinePreload, useEnsureSplineViewer } from '@/hooks/useSplinePreload';
+import { DISCORD_STAGE_FEATURED_VIDEOS } from "@/components/TradingQuickAccess";
 
 const SPLINE_VIEWER_SCRIPT_SRC = "https://unpkg.com/@splinetool/viewer@1.12.36/build/spline-viewer.js";
 
@@ -337,6 +338,20 @@ declare global {
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+const normalizeYouTubeId = (input: string): string | null => {
+  if (!input) return null;
+  if (!input.includes('http')) return input;
+  try {
+    const url = new URL(input);
+    const paramId = url.searchParams.get('v');
+    if (paramId) return paramId;
+    const parts = url.pathname.split('/').filter(Boolean);
+    return parts.pop() || null;
+  } catch {
+    return null;
+  }
+};
 
 // ============================================================================
 // HOOKS
@@ -1353,6 +1368,36 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
 });
 SplineSceneEmbed.displayName = "SplineSceneEmbed";
 
+const HeroVideoEmbed = ({ videoId, muted }: { videoId: string; muted: boolean }) => {
+  const embedUrl = useMemo(() => {
+    const params = new URLSearchParams({
+      autoplay: '1',
+      mute: muted ? '1' : '0',
+      controls: '0',
+      rel: '0',
+      modestbranding: '1',
+      playsinline: '1',
+      loop: '1',
+      playlist: videoId,
+    });
+    return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+  }, [videoId, muted]);
+
+  return (
+    <iframe
+      key={embedUrl}
+      src={embedUrl}
+      title="Featured trading video"
+      className="absolute inset-0 w-full h-full"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowFullScreen
+      frameBorder="0"
+      loading="lazy"
+      style={{ backgroundColor: 'black' }}
+    />
+  );
+};
+
 const SplineLoadingPlaceholder = () => (
   <div className="absolute inset-0 flex items-center justify-center bg-black">
     <motion.div className="w-24 h-24 border-2 border-blue-500/50" animate={{ rotateY: 360, rotateX: 360 }} transition={{ duration: 4, repeat: Infinity, ease: 'linear' }} style={{ transformStyle: 'preserve-3d' }} />
@@ -1633,35 +1678,72 @@ const HeroDesktop = () => {
   const [splineLoaded, setSplineLoaded] = useState(false);
   const [hasPlayedStartup, setHasPlayedStartup] = useState(false);
   const [isSplineFullscreen, setIsSplineFullscreen] = useState(false);
+  const heroVideoIds = useMemo(() => DISCORD_STAGE_FEATURED_VIDEOS.map((src) => normalizeYouTubeId(src)).filter(Boolean) as string[], []);
+  const [heroMediaMode, setHeroMediaMode] = useState<'spline' | 'video'>(() => (heroVideoIds.length && Math.random() < 0.5 ? 'video' : 'spline'));
+  const [activeVideoIndex, setActiveVideoIndex] = useState(() => (heroVideoIds.length ? Math.floor(Math.random() * heroVideoIds.length) : 0));
+  const activeVideoId = heroMediaMode === 'video' && heroVideoIds.length
+    ? heroVideoIds[(activeVideoIndex % heroVideoIds.length + heroVideoIds.length) % heroVideoIds.length]
+    : null;
+
+  useEffect(() => {
+    if (!heroVideoIds.length && heroMediaMode === 'video') {
+      setHeroMediaMode('spline');
+    }
+  }, [heroVideoIds.length, heroMediaMode]);
+
+  const cycleHeroMedia = useCallback((reason: string = 'auto') => {
+    const shouldShowVideo = heroVideoIds.length > 0 && Math.random() < 0.5;
+    if (shouldShowVideo) {
+      setHeroMediaMode('video');
+      setActiveVideoIndex(Math.floor(Math.random() * heroVideoIds.length));
+    } else {
+      setHeroMediaMode('spline');
+      advanceHeroSplineScene(reason);
+    }
+  }, [heroVideoIds.length, advanceHeroSplineScene]);
   
   const { playClick, playHover, playWhoosh, playSuccess, playTyping, playBassDrop, playStartup, playBuzz } = useAudioEffects(audioEnabled);
   useKonamiCode(() => { setGodMode(true); playSuccess(); setTimeout(() => setGodMode(false), 10000); });
 
   // Navigate to previous spline scene
   const goToPreviousScene = useCallback(() => {
+    if (heroMediaMode === 'video' && heroVideoIds.length) {
+      setHeroMediaMode('video');
+      setActiveVideoIndex((prev) => (prev - 1 + heroVideoIds.length) % heroVideoIds.length);
+      playWhoosh();
+      return;
+    }
     const currentIndex = HERO_SPLINE_SCENES.findIndex(s => s.id === heroSplineScene);
     const prevIndex = currentIndex <= 0 ? HERO_SPLINE_SCENES.length - 1 : currentIndex - 1;
     const prevScene = HERO_SPLINE_SCENES[prevIndex];
+    setHeroMediaMode('spline');
     setIsGlitching(true);
     playWhoosh();
     setTimeout(() => {
       setHeroSplineSceneManually(prevScene.id, 'keyboard-nav');
       setIsGlitching(false);
     }, 150);
-  }, [heroSplineScene, setHeroSplineSceneManually, playWhoosh]);
+  }, [heroMediaMode, heroVideoIds.length, heroSplineScene, setHeroSplineSceneManually, playWhoosh]);
 
   // Navigate to next spline scene
   const goToNextScene = useCallback(() => {
+    if (heroMediaMode === 'video' && heroVideoIds.length) {
+      setHeroMediaMode('video');
+      setActiveVideoIndex((prev) => (prev + 1) % heroVideoIds.length);
+      playWhoosh();
+      return;
+    }
     const currentIndex = HERO_SPLINE_SCENES.findIndex(s => s.id === heroSplineScene);
     const nextIndex = (currentIndex + 1) % HERO_SPLINE_SCENES.length;
     const nextScene = HERO_SPLINE_SCENES[nextIndex];
+    setHeroMediaMode('spline');
     setIsGlitching(true);
     playWhoosh();
     setTimeout(() => {
       setHeroSplineSceneManually(nextScene.id, 'keyboard-nav');
       setIsGlitching(false);
     }, 150);
-  }, [heroSplineScene, setHeroSplineSceneManually, playWhoosh]);
+  }, [heroMediaMode, heroVideoIds.length, heroSplineScene, setHeroSplineSceneManually, playWhoosh]);
 
   // Keyboard shortcuts - added arrow keys for spline navigation
   useKeyboardShortcuts([
@@ -1691,8 +1773,8 @@ const HeroDesktop = () => {
   }, [splineLoaded, audioEnabled, playBassDrop]);
 
   const uiStateModalChangeInitRef = useRef(false);
-  useEffect(() => { if (typeof window === "undefined") return; const interval = window.setInterval(() => advanceHeroSplineScene("interval"), 120000); return () => window.clearInterval(interval); }, [advanceHeroSplineScene]);
-  useEffect(() => { if (!uiStateModalChangeInitRef.current) { uiStateModalChangeInitRef.current = true; return; } advanceHeroSplineScene("ui-state-change"); }, [isAnyModalOpen, activeComponent, advanceHeroSplineScene]);
+  useEffect(() => { if (typeof window === "undefined") return; const interval = window.setInterval(() => cycleHeroMedia("interval"), 120000); return () => window.clearInterval(interval); }, [cycleHeroMedia]);
+  useEffect(() => { if (!uiStateModalChangeInitRef.current) { uiStateModalChangeInitRef.current = true; return; } cycleHeroMedia("ui-state-change"); }, [isAnyModalOpen, activeComponent, cycleHeroMedia]);
 
   const { activeThemeId, accentColor } = useGlobalTheme();
   const [isMuted, setIsMuted] = useState(false);
@@ -1708,6 +1790,11 @@ const HeroDesktop = () => {
   }, []);
 
   const currentTheme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
+  const isVideoMode = heroMediaMode === 'video' && !!activeVideoId;
+  const mediaLabel = isVideoMode
+    ? `Featured Video ${activeVideoIndex + 1}/${heroVideoIds.length || 1}`
+    : heroSplineSceneLabel;
+  const mediaBadge = isVideoMode ? 'VIDEO' : 'SPLINE';
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   useEffect(() => { const calcSize = () => setViewportSize({ width: window.innerWidth, height: window.innerHeight }); calcSize(); window.addEventListener('resize', calcSize); return () => window.removeEventListener('resize', calcSize); }, []);
   useEffect(() => { const timer = setTimeout(() => setSplineLoaded(true), 2000); return () => clearTimeout(timer); }, [heroSplineScene]);
@@ -1723,11 +1810,17 @@ const HeroDesktop = () => {
     return () => unsubscribe();
   }, [splineScrollProgress]);
 
-  const handleOpenScenePicker = useCallback(() => { setScenePreviewId(heroSplineScene); setHeroSceneModalOpen(true); playWhoosh(); }, [heroSplineScene, setHeroSceneModalOpen, playWhoosh]);
+  const handleOpenScenePicker = useCallback(() => {
+    setHeroMediaMode('spline');
+    setScenePreviewId(heroSplineScene);
+    setHeroSceneModalOpen(true);
+    playWhoosh();
+  }, [heroSplineScene, setHeroSceneModalOpen, playWhoosh]);
   const previewScene = useMemo(() => HERO_SPLINE_SCENES.find((s) => s.id === scenePreviewId) ?? heroSplineSource, [scenePreviewId, heroSplineSource]);
   useEffect(() => { setScenePreviewId(heroSplineScene); }, [heroSplineScene]);
   const handleSceneSelect = useCallback((sceneId: string) => {
     if (!sceneId) return;
+    setHeroMediaMode('spline');
     setIsGlitching(true); playClick();
     setTimeout(() => { setHeroSplineSceneManually(sceneId, "user-select"); setScenePreviewId(sceneId); setHeroSceneModalOpen(false); setIsGlitching(false); }, 300);
   }, [setHeroSplineSceneManually, setHeroSceneModalOpen, playClick]);
@@ -1822,12 +1915,16 @@ const HeroDesktop = () => {
 
                 <div className="lg:col-span-6 order-2 lg:order-2 mt-12 lg:mt-0">
                   <div className="relative w-full aspect-square sm:aspect-[4/3] lg:aspect-[4/3] max-h-[40vh] sm:max-h-[40vh] lg:max-h-[60vh] rounded-xl sm:rounded-2xl overflow-hidden bg-black border-2 border-blue-500/60" style={{ boxShadow: '0 0 10px rgba(59, 130, 246, 0.6), 0 0 20px rgba(59, 130, 246, 0.4), 0 0 40px rgba(59, 130, 246, 0.2), inset 0 0 20px rgba(59, 130, 246, 0.1)' }}>
-                    <SplineSceneEmbed 
-                      key={heroSplineScene} 
-                      preferViewer={heroSplineSource.preferViewer !== false} 
-                      runtimeUrl={heroSplineSource.runtimeUrl} 
-                      viewerUrl={heroSplineSource.viewerUrl} 
-                    />
+                    {isVideoMode && activeVideoId ? (
+                      <HeroVideoEmbed videoId={activeVideoId} muted={isMuted} />
+                    ) : (
+                      <SplineSceneEmbed 
+                        key={heroSplineScene} 
+                        preferViewer={heroSplineSource.preferViewer !== false} 
+                        runtimeUrl={heroSplineSource.runtimeUrl} 
+                        viewerUrl={heroSplineSource.viewerUrl} 
+                      />
+                    )}
                     
                     {/* Bottom navigation overlay */}
                     <div className="absolute inset-x-0 bottom-0 p-2 sm:p-3 bg-gradient-to-t from-black/80 via-black/50 to-transparent z-10">
@@ -1849,7 +1946,8 @@ const HeroDesktop = () => {
                           whileTap={{ scale: 0.95 }}
                         >
                           <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-blue-500 animate-pulse" style={{ boxShadow: '0 0 5px #3b82f6, 0 0 10px #3b82f6' }} />
-                          <span className="text-xs sm:text-sm font-mono truncate max-w-[100px] sm:max-w-none" style={{ color: '#60a5fa', textShadow: '0 0 5px #60a5fa, 0 0 10px #3b82f6' }}>{heroSplineSceneLabel}</span>
+                          <span className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-blue-300/80">{mediaBadge}</span>
+                          <span className="text-xs sm:text-sm font-mono truncate max-w-[120px] sm:max-w-none" style={{ color: '#60a5fa', textShadow: '0 0 5px #60a5fa, 0 0 10px #3b82f6' }}>{mediaLabel}</span>
                         </motion.button>
                         <motion.button 
                           onClick={goToNextScene} 
@@ -1926,14 +2024,18 @@ const HeroDesktop = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }} 
             exit={{ opacity: 0, y: 20, scale: 0.98 }}
           >
-            {/* Fullscreen Spline */}
+            {/* Fullscreen Spline or Video */}
             <div className="absolute inset-0">
-              <SplineSceneEmbed 
-                key={`fullscreen-${heroSplineScene}`} 
-                preferViewer={heroSplineSource.preferViewer !== false} 
-                runtimeUrl={heroSplineSource.runtimeUrl} 
-                viewerUrl={heroSplineSource.viewerUrl} 
-              />
+              {isVideoMode && activeVideoId ? (
+                <HeroVideoEmbed videoId={activeVideoId} muted={isMuted} />
+              ) : (
+                <SplineSceneEmbed 
+                  key={`fullscreen-${heroSplineScene}`} 
+                  preferViewer={heroSplineSource.preferViewer !== false} 
+                  runtimeUrl={heroSplineSource.runtimeUrl} 
+                  viewerUrl={heroSplineSource.viewerUrl} 
+                />
+              )}
             </div>
             
             {/* Top bar with scene name and controls */}
@@ -1946,7 +2048,7 @@ const HeroDesktop = () => {
               <div className="flex items-center justify-between max-w-7xl mx-auto">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <span className="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-blue-500 animate-pulse" />
-                  <span className="text-white font-mono text-sm sm:text-lg truncate max-w-[150px] sm:max-w-none">{heroSplineSceneLabel}</span>
+                  <span className="text-white font-mono text-sm sm:text-lg truncate max-w-[150px] sm:max-w-none">{mediaLabel}</span>
                 </div>
                 <motion.button 
                   onClick={() => { setIsSplineFullscreen(false); playWhoosh(); }}
@@ -1977,7 +2079,7 @@ const HeroDesktop = () => {
                   <span className="text-base sm:text-lg">←</span>
                 </motion.button>
                 <motion.button 
-                  onClick={() => { handleOpenScenePicker(); setIsSplineFullscreen(false); }}
+                  onClick={() => { setHeroMediaMode('spline'); handleOpenScenePicker(); setIsSplineFullscreen(false); }}
                   className="px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-300 text-sm sm:text-base font-medium transition-colors"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
