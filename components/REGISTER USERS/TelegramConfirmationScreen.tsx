@@ -1,0 +1,310 @@
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { Send, Loader2, Check, Gift, TrendingUp, Video, Bell, Newspaper, Lock, Unlock, Sparkles } from 'lucide-react';
+import { cn } from "@/lib/utils";
+
+const TELEGRAM_GROUP_LINK = "https://t.me/addlist/uswKuwT2JUQ4YWI8";
+const MINIMUM_WAIT_TIME = 3000; // 3 seconds minimum before unlock button is enabled
+
+const GlobalStyles = () => (
+  <style jsx global>{`
+    /* Input autofill styling override */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover, 
+    input:-webkit-autofill:focus, 
+    input:-webkit-autofill:active{
+        -webkit-box-shadow: 0 0 0 30px #171717 inset !important;
+        -webkit-text-fill-color: white !important;
+        transition: background-color 5000s ease-in-out 0s;
+    }
+    
+    @keyframes celebrate {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+    
+    @keyframes checkmark {
+      0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+      50% { transform: scale(1.2) rotate(0deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    
+    @keyframes neonPulse {
+      0%, 100% { 
+        filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
+      }
+      50% { 
+        filter: drop-shadow(0 0 6px rgba(59, 130, 246, 1)) drop-shadow(0 0 12px rgba(59, 130, 246, 0.8));
+      }
+    }
+    
+    @keyframes textGlow {
+      0%, 100% { 
+        text-shadow: 0 0 4px rgba(59, 130, 246, 0.8), 0 0 8px rgba(59, 130, 246, 0.6), 0 0 12px rgba(59, 130, 246, 0.4);
+      }
+      50% { 
+        text-shadow: 0 0 6px rgba(59, 130, 246, 1), 0 0 12px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.6);
+      }
+    }
+    
+    .celebrate-pulse {
+      animation: celebrate 0.6s ease-in-out;
+    }
+    
+    .float-animation {
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    .checkmark-pop {
+      animation: checkmark 0.4s ease-out forwards;
+    }
+    
+    .neon-icon {
+      filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.9)) drop-shadow(0 0 8px rgba(59, 130, 246, 0.7)) drop-shadow(0 0 12px rgba(59, 130, 246, 0.5));
+    }
+    
+    .neon-icon-pulse {
+      animation: neonPulse 2s ease-in-out infinite;
+    }
+    
+    .neon-text {
+      text-shadow: 0 0 4px rgba(59, 130, 246, 0.8), 0 0 8px rgba(59, 130, 246, 0.6), 0 0 12px rgba(59, 130, 246, 0.4);
+    }
+    
+    .neon-text-pulse {
+      animation: textGlow 2s ease-in-out infinite;
+    }
+    
+    .neon-border {
+      box-shadow: 0 0 5px rgba(59, 130, 246, 0.5), 0 0 10px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.2), inset 0 0 5px rgba(59, 130, 246, 0.1);
+    }
+    
+    .neon-border-strong {
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.7), 0 0 16px rgba(59, 130, 246, 0.5), 0 0 24px rgba(59, 130, 246, 0.3), inset 0 0 8px rgba(59, 130, 246, 0.15);
+    }
+    
+    .neon-container {
+      border-color: rgba(59, 130, 246, 0.5);
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.2), 0 0 30px rgba(59, 130, 246, 0.1), inset 0 0 15px rgba(59, 130, 246, 0.05);
+    }
+  `}</style>
+);
+
+// What users unlock by joining
+const UNLOCK_BENEFITS = [
+  { icon: TrendingUp, label: "Free Trades", color: "text-blue-400" },
+  { icon: Video, label: "Live Streams", color: "text-blue-400" },
+  { icon: Bell, label: "Real-time Updates", color: "text-blue-400" },
+  { icon: Newspaper, label: "Market News", color: "text-cyan-400" },
+  { icon: Gift, label: "Exclusive Groups", color: "text-blue-400" },
+];
+
+interface TelegramConfirmationScreenProps {
+  onUnlock: () => void;
+  onConfirmationClicked: () => void;
+  isXM: boolean;
+  neonIconClass: string;
+}
+
+export const TelegramConfirmationScreen: React.FC<TelegramConfirmationScreenProps> = ({
+  onUnlock,
+  onConfirmationClicked,
+  isXM,
+  neonIconClass,
+}) => {
+  const [joinedTelegram, setJoinedTelegram] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(MINIMUM_WAIT_TIME / 1000);
+  const [canUnlock, setCanUnlock] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  useEffect(() => {
+    if (!joinedTelegram) return;
+
+    const startTime = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, MINIMUM_WAIT_TIME - elapsed);
+      const secondsLeft = Math.ceil(remaining / 1000);
+      
+      setTimeRemaining(secondsLeft);
+
+      if (remaining <= 0) {
+        clearInterval(interval);
+        setCanUnlock(true);
+        setShowCelebration(true);
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [joinedTelegram]);
+
+  const handleTelegramClick = () => {
+    window.open(TELEGRAM_GROUP_LINK, '_blank');
+    setJoinedTelegram(true);
+  };
+
+  return (
+    <div className="register-container bg-black flex flex-col items-center justify-center relative px-4 py-6 md:p-4" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
+      <GlobalStyles />
+      {/* Blue shimmer background - left to right */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 shimmer-ltr opacity-30" />
+      </div>
+      
+      {/* Content wrapper */}
+      <div className="w-full max-w-xs flex flex-col items-center justify-center gap-5" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 md:w-96 h-72 md:h-96 rounded-full blur-[60px] pointer-events-none", isXM ? "bg-red-500/10" : "bg-blue-500/10")} />
+        
+        {/* Progress indicator - Almost there! */}
+        <div className="relative z-10 flex items-center gap-2 mb-2">
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8),0_0_16px_rgba(59,130,246,0.5)]" />
+            <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8),0_0_16px_rgba(59,130,246,0.5)]" />
+            <div className={cn("w-2.5 h-2.5 rounded-full transition-all duration-500", 
+              joinedTelegram 
+                ? "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8),0_0_16px_rgba(59,130,246,0.5)]" 
+                : "bg-blue-500/50 animate-pulse shadow-[0_0_6px_rgba(59,130,246,0.4)]"
+            )} />
+          </div>
+          <span className="text-xs text-blue-300/80 font-medium neon-text">Final Step!</span>
+        </div>
+
+        {/* Main heading */}
+        <div className="text-center relative z-10 space-y-1">
+          <h2 className={cn("text-xl md:text-2xl font-bold shimmer-text neon-text-pulse", isXM ? "neon-red-text" : "text-blue-400")}>
+            You're Almost In!
+          </h2>
+          <p className="text-blue-200/70 text-sm md:text-base neon-text">
+            One tap unlocks <span className="text-blue-300 font-semibold">everything</span> completely FREE
+          </p>
+        </div>
+        
+        {/* Benefits grid */}
+        <div className="relative z-10 w-full bg-neutral-900/60 backdrop-blur-sm rounded-xl border border-blue-500/40 p-4 space-y-3 neon-container">
+          <div className="flex items-center gap-2 text-center justify-center">
+            <Gift className="w-4 h-4 text-blue-400 neon-icon" />
+            <span className="text-xs md:text-sm font-semibold text-blue-300 neon-text">What You're Unlocking:</span>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2">
+            {UNLOCK_BENEFITS.map((benefit, index) => (
+              <div 
+                key={benefit.label}
+                className={cn(
+                  "flex items-center gap-2 p-2 rounded-lg bg-blue-950/30 border border-blue-500/30 transition-all duration-300 neon-border",
+                  joinedTelegram && "border-blue-400/50 bg-blue-500/10 neon-border-strong"
+                )}
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <benefit.icon className={cn("w-4 h-4 flex-shrink-0 neon-icon", benefit.color)} />
+                <span className="text-xs text-blue-200 font-medium neon-text">{benefit.label}</span>
+                {joinedTelegram && (
+                  <Check className="w-3 h-3 text-blue-400 ml-auto checkmark-pop neon-icon" />
+                )}
+              </div>
+            ))}
+          </div>
+          
+          {/* Website access highlight */}
+          <div className={cn(
+            "flex items-center justify-center gap-2 p-2.5 rounded-lg border transition-all duration-500",
+            joinedTelegram 
+              ? "bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-400/60 neon-border-strong" 
+              : "bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/40 neon-border"
+          )}>
+            {joinedTelegram ? (
+              <Unlock className="w-4 h-4 text-blue-400 neon-icon" />
+            ) : (
+              <Lock className="w-4 h-4 text-blue-400 animate-pulse neon-icon-pulse" />
+            )}
+            <span className="text-xs md:text-sm font-bold text-blue-300 neon-text">
+              {joinedTelegram ? "Website Access Unlocked!" : "+ Full Website Access"}
+            </span>
+            {joinedTelegram && <Sparkles className="w-4 h-4 text-cyan-400 neon-icon" />}
+          </div>
+        </div>
+        
+        {/* Action area */}
+        <div className="flex flex-col gap-4 items-center relative z-10 w-full">
+          {/* Telegram button with instruction */}
+          <div className="flex flex-col items-center gap-2">
+            <span className={cn(
+              "text-xs font-medium transition-all text-white neon-text",
+              !joinedTelegram && "neon-text-pulse"
+            )}>
+              {joinedTelegram ? "Telegram Opened" : "Tap to join our free community"}
+            </span>
+            
+            {/* Circle button with Telegram icon - opens group */}
+            <button
+              onClick={handleTelegramClick}
+              disabled={joinedTelegram}
+              className={cn(
+                "w-20 h-20 md:w-24 md:h-24 rounded-full border-2 flex items-center justify-center transition-all group cursor-target", 
+                joinedTelegram 
+                  ? "border-cyan-400 bg-cyan-500/20 shadow-[0_0_20px_rgba(0,200,255,0.8),0_0_40px_rgba(0,200,255,0.6),0_0_60px_rgba(0,200,255,0.4),0_0_80px_rgba(0,200,255,0.2)] celebrate-pulse" 
+                  : "border-cyan-400 bg-gradient-to-br from-blue-600/30 to-cyan-500/30 shadow-[0_0_20px_rgba(0,200,255,0.7),0_0_40px_rgba(0,200,255,0.5),0_0_60px_rgba(0,200,255,0.3),0_0_80px_rgba(0,200,255,0.15)] hover:shadow-[0_0_30px_rgba(0,200,255,0.9),0_0_60px_rgba(0,200,255,0.7),0_0_90px_rgba(0,200,255,0.5),0_0_120px_rgba(0,200,255,0.3)] hover:scale-105 animate-pulse"
+              )}
+            >
+              {joinedTelegram ? (
+                <Check className="w-10 h-10 md:w-12 md:h-12 text-white checkmark-pop drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+              ) : (
+                <Send className="w-10 h-10 md:w-12 md:h-12 text-white group-hover:text-white transition-colors drop-shadow-[0_0_10px_rgba(255,255,255,0.9)]" />
+              )}
+            </button>
+          </div>
+          
+          {/* Confirmation button */}
+          <button
+            onClick={() => {
+              onConfirmationClicked();
+              onUnlock();
+            }}
+            disabled={!canUnlock}
+            className={cn(
+              "w-full max-w-xs px-6 py-3 md:px-8 md:py-4 border-2 rounded-xl font-bold transition-all text-sm md:text-base", 
+              canUnlock 
+                ? "border-blue-400 text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.6),0_0_30px_rgba(59,130,246,0.4),0_0_45px_rgba(59,130,246,0.2)] hover:shadow-[0_0_20px_rgba(59,130,246,0.8),0_0_40px_rgba(59,130,246,0.6),0_0_60px_rgba(59,130,246,0.4)] cursor-pointer bg-blue-500/20 hover:bg-blue-500/30 celebrate-pulse neon-text" 
+                : "border-blue-500/30 text-blue-500/50 cursor-not-allowed shadow-[0_0_8px_rgba(59,130,246,0.2)] bg-transparent"
+            )}
+          >
+            {canUnlock ? (
+              <span className="flex items-center justify-center gap-2">
+                <Unlock className="w-5 h-5 neon-icon" />
+                Enter Bull Money
+              </span>
+            ) : joinedTelegram ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin neon-icon" />
+                Unlocking in {timeRemaining}s...
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <Lock className="w-4 h-4 neon-icon" />
+                Join Telegram First
+              </span>
+            )}
+          </button>
+          
+          {/* Success message */}
+          {showCelebration && (
+            <p className="text-blue-300 text-xs md:text-sm text-center neon-text-pulse">
+              Congratulations! You've unlocked full access!
+            </p>
+          )}
+        </div>
+        
+        {/* Trust indicator */}
+        <p className="text-blue-400/60 text-[10px] md:text-xs text-center relative z-10 mt-2 neon-text">
+          Join traders already in our community • 100% Free Forever
+        </p>
+      </div>
+    </div>
+  );
+};

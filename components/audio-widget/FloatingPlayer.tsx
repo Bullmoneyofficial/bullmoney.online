@@ -217,7 +217,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
   const [isPlaying, setIsPlaying] = useState(true);
   
   // Position state - left or right side of screen
-  const [playerSide, setPlayerSide] = useState<'left' | 'right'>('right');
+  const [playerSide, setPlayerSide] = useState<'left' | 'right'>('left');
   // Initialize from parent's playerMinimized prop (true on reload for pull-tab-only behavior)
   const [isMinimized, setIsMinimizedInternal] = useState(playerMinimized);
   const [isDragging, setIsDragging] = useState(false);
@@ -374,12 +374,12 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
     }
   }, [isMinimized, playerSide, open, playerHidden, props]);
 
-  // Handle swipe/drag to change sides - bidirectional
+  // Handle swipe/drag to change sides - bidirectional with smooth physics
   const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     setIsDragging(false);
-    const threshold = 80; // Lower threshold for easier swipe
+    const threshold = 50; // Lower threshold for smoother swipe detection
     const velocity = info.velocity.x;
-    const velocityThreshold = 300; // Also trigger on fast swipes
+    const velocityThreshold = 200; // More sensitive to fast swipes
     
     // Swipe right (from left side OR anywhere with right velocity)
     if (info.offset.x > threshold || velocity > velocityThreshold) {
@@ -620,156 +620,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 </motion.div>
               </motion.button>
             </motion.div>
-          ) : (
-            /* Full pull tab when no UI is overlaying - Theme-aware */
-            <motion.div
-              key="full-tab-div"
-              className="fixed pointer-events-none"
-              style={{
-                zIndex: Z_INDEX.PULL_TAB,
-                ...(typeof window !== 'undefined' && window.innerWidth < 768 ? { left: 'clamp(-50px, -50px, 50px)' } : { right: 'clamp(-50px, calc((100vw - 1600px) / 2 - 50px), 50px)' }),
-                bottom: 70,
-              }}
-            >
-              <motion.button
-                initial={{ x: playerSide === 'left' ? -200 : 200, opacity: 0, scale: 0.5 }}
-                animate={
-                  isPulltabPinned || isPlaying
-                    ? { x: 0, scale: 0.5, opacity: 1 }
-                    : {
-                        x: playerSide === 'left' 
-                          ? [-200, 0, 0, -200]
-                          : [200, 0, 0, 200],
-                        opacity: [0, 1, 1, 0],
-                        scale: [0.475, 0.5, 0.5, 0.475],
-                      }
-                }
-                transition={
-                  isPulltabPinned || isPlaying
-                    ? { duration: 0.2 }
-                    : { 
-                        duration: 10,
-                        repeat: Infinity, 
-                        ease: "easeInOut",
-                        repeatDelay: 0,
-                        times: [0, 0.05, 0.1, 0.15]
-                      }
-                }
-                onClick={() => {
-                  SoundEffects.click();
-                  handlePulltabInteraction();
-                  handleExpandPlayer();
-                }}
-                onHoverStart={() => {
-                  setHoveredButton('expand');
-                  handlePulltabInteraction();
-                }}
-                onTap={handlePulltabInteraction}
-                onMouseLeave={() => setHoveredButton(null)}
-                className={cn(
-                  "flex items-center gap-3 py-3.5",
-                  "active:scale-95",
-                  playerSide === 'left'
-                    ? "pl-3 pr-5 rounded-r-3xl"
-                    : "pr-3 pl-5 rounded-l-3xl"
-                )}
-                data-theme-aware
-                style={{
-                  background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.1) 100%)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  border: '2px solid #3b82f6',
-                  boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6',
-                  transition: 'box-shadow 0.4s ease-out',
-                }}
-                whileHover={{ scale: 0.8 }}
-                whileTap={{ scale: 0.7 }}
-              >
-                {/* Left chevron for right side */}
-                {playerSide === 'right' && (
-                  <motion.div
-                    animate={{ x: [-3, 0, -3] }}
-                    transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    <IconChevronLeft className="w-5 h-5 text-white/70" />
-                  </motion.div>
-                )}
-
-                {/* Pulsing indicator - Theme-aware */}
-                <div className="relative">
-                  <motion.div
-                    className="absolute -inset-2 rounded-2xl blur-lg"
-                    style={{ backgroundColor: 'rgba(59, 130, 246, 0.3)' }}
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
-                    transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                  <div className={cn(
-                    "relative w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden",
-                    "bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800",
-                    "border border-blue-400/50 shadow-inner"
-                  )}>
-                    <SourceIcon className="w-6 h-6 text-white/95" />
-                    <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-[3px]">
-                      {[1, 2, 3, 4].map(i => (
-                        <motion.div
-                          key={i}
-                          className="w-[3px] rounded-full origin-bottom"
-                          style={{ height: 10, backgroundColor: '#3b82f6' }}
-                          animate={{ scaleY: isPlaying ? [0.3, 1, 0.3] : 0.3 }}
-                          transition={{
-                            duration: 0.5,
-                            repeat: Infinity,
-                            delay: i * 0.08,
-                            ease: "easeInOut"
-                          }}
-                        />
-                      ))}
-                    </div>
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"
-                      animate={{ x: ['-100%', '200%'] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                    />
-                  </div>
-                </div>
-
-                {/* Text label - Theme-aware */}
-                <div className="flex flex-col">
-                  <span 
-                    className="text-[10px] font-bold text-white/90"
-                    style={{ 
-                      color: '#3b82f6',
-                      textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6'
-                    }}
-                  >{sourceLabel[musicSource]}</span>
-                  <span 
-                    className="text-[8px] font-medium"
-                    style={{ 
-                      color: '#3b82f6',
-                      textShadow: '0 0 4px #3b82f6'
-                    }}
-                  >♪ Playing</span>
-                </div>
-
-                {/* Right chevron for left side */}
-                {playerSide === 'left' && (
-                  <motion.div
-                    animate={{ x: [0, 3, 0] }}
-                    transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    <IconChevronRight className="w-5 h-5 text-white/70" />
-                  </motion.div>
-                )}
-
-                <ButtonTooltip
-                  show={hoveredButton === 'expand'}
-                  text="🎵 Tap to Expand"
-                  position={playerSide === 'left' ? 'right' : 'left'}
-                  color="blue"
-                />
-              </motion.button>
-            </motion.div>
-          )
+          ) : null
         )}
       </AnimatePresence>
 
@@ -966,13 +817,22 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               x: open ? (playerSide === 'left' ? -300 : 300) : (playerHidden ? (playerSide === 'left' ? -300 : 300) : (isWandering ? wanderPosition.x : 0)),
               y: isWandering ? wanderPosition.y : 0,
               opacity: open ? 0 : 1,
-              scale: isLocked ? 0.98 : 1,
+              scale: isLocked ? 0.98 : isDragging ? 1.03 : 1,
+              rotateZ: isDragging ? 0 : 0,
             }}
-            exit={{ x: playerSide === 'left' ? -300 : 300, opacity: 0, scale: 0.8 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            exit={{ x: playerSide === 'left' ? -300 : 300, opacity: 0, scale: 0.9 }}
+            transition={{ 
+              type: "spring", 
+              damping: 20, 
+              stiffness: 300,
+              mass: 0.8,
+              velocity: 2
+            }}
             drag="x"
-            dragConstraints={{ left: -200, right: 200 }}
-            dragElastic={0.4}
+            dragConstraints={{ left: -150, right: 150 }}
+            dragElastic={0.2}
+            dragMomentum={true}
+            dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
             onDragStart={() => setIsDragging(true)}
             onDragEnd={handleDragEnd}
             className="fixed pointer-events-auto"
@@ -1422,9 +1282,9 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
           </div>
         </div>
         
-        {/* Tutorial Slot - ABOVE the iPhone player with highest priority */}
+        {/* Tutorial Slot - ABOVE the iPhone player with highest priority - Desktop only */}
         <AnimatePresence>
-          {showCatchGameTutorial && tutorialContent && (
+          {!isMobile && showCatchGameTutorial && tutorialContent && (
             <motion.div
               initial={{ opacity: 0, y: 20, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}

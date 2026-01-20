@@ -10,6 +10,35 @@ type LinkPreview = {
   siteName?: string;
 };
 
+// In-memory cache with TTL
+const cache = new Map<string, { data: LinkPreview; expiresAt: number }>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+function getCached(url: string): LinkPreview | null {
+  const cached = cache.get(url);
+  if (!cached) return null;
+  
+  if (Date.now() > cached.expiresAt) {
+    cache.delete(url);
+    return null;
+  }
+  
+  return cached.data;
+}
+
+function setCache(url: string, data: LinkPreview): void {
+  cache.set(url, {
+    data,
+    expiresAt: Date.now() + CACHE_TTL_MS,
+  });
+  
+  // Limit cache size to prevent memory issues
+  if (cache.size > 500) {
+    const firstKey = cache.keys().next().value;
+    if (firstKey) cache.delete(firstKey);
+  }
+}
+
 function isPrivateIp(hostname: string) {
   // Very small SSRF guard for obvious IP literals.
   // Note: does not resolve DNS for hostnames.
@@ -88,6 +117,18 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Missing url" }, { status: 400 });
   }
 
+  // Check cache first
+  const cached = getCached(urlParam);
+  if (cached) {
+    return NextResponse.json(cached, {
+      status: 200,
+      headers: { 
+        "cache-control": "public, max-age=300",
+        "x-cache": "HIT"
+      },
+    });
+  }
+
   let target: URL;
   try {
     target = new URL(urlParam);
@@ -120,9 +161,13 @@ export async function GET(req: Request) {
     const contentType = res.headers.get("content-type") || "";
     if (!contentType.toLowerCase().includes("text/html")) {
       const payload: LinkPreview = { url: target.toString() };
+      setCache(urlParam, payload);
       return NextResponse.json(payload, {
         status: 200,
-        headers: { "cache-control": "public, max-age=300" },
+        headers: { 
+          "cache-control": "public, max-age=300",
+          "x-cache": "MISS"
+        },
       });
     }
 
@@ -135,15 +180,23 @@ export async function GET(req: Request) {
       ...meta,
     };
 
+    setCache(urlParam, payload);
     return NextResponse.json(payload, {
       status: 200,
-      headers: { "cache-control": "public, max-age=300" },
+      headers: { 
+        "cache-control": "public, max-age=300",
+        "x-cache": "MISS"
+      },
     });
   } catch (e: any) {
     const payload: LinkPreview = { url: target.toString() };
+    // Don't cache errors aggressively
     return NextResponse.json(payload, {
       status: 200,
-      headers: { "cache-control": "public, max-age=60" },
+      headers: { 
+        "cache-control": "public, max-age=60",
+        "x-cache": "ERROR"
+      },
     });
   } finally {
     clearTimeout(timeout);

@@ -107,6 +107,9 @@ interface MainWidgetProps {
   isWandering: boolean;
   gameStats: { gamesPlayed: number; currentScore: number; highScore: number; totalCatches: number };
   gameState: string;
+  
+  // iPhone Player control
+  setPlayerMinimized?: (v: boolean) => void;
 }
 
 export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps) {
@@ -120,7 +123,16 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
     handleStreamingSelect, handleStartCatchGame, handleStopGame,
     setMusicEmbedOpen, setShowTipsOverlay, showReturnUserHint, showFirstTimeHelp,
     iframeRef, isWandering, gameStats, gameState,
+    setPlayerMinimized,
   } = props;
+  
+  // Handler to open iPhone player (expand from minimized state)
+  const handleOpenIPhonePlayer = useCallback(() => {
+    if (setPlayerMinimized) {
+      SoundEffects.click();
+      setPlayerMinimized(false);
+    }
+  }, [setPlayerMinimized]);
 
   // Get UI state to hide widget when modals/menus are open
   const { shouldMinimizeAudioWidget } = useAudioWidgetUI();
@@ -660,6 +672,11 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                     {/* Bottom actions - Theme-aware */}
                     <div className="flex items-center justify-between pt-2 border-t border-white/5">
                       <button onClick={() => { SoundEffects.click(); setMusicEnabled(false); setMusicEmbedOpen(true); setOpen(false); }} className="text-[9px] hover:opacity-80 transition-opacity" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)' }}>🎵 Full Library</button>
+                      {streamingActive && (
+                        <button onClick={handleOpenIPhonePlayer} className="text-[9px] hover:opacity-80 transition-opacity flex items-center gap-1" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)' }}>
+                          📱 iPhone Player
+                        </button>
+                      )}
                       <button onClick={() => setShowTipsOverlay(true)} className="text-[9px] text-white/40 hover:text-white/70 transition-colors flex items-center gap-1">
                         <IconInfoCircle className="w-3 h-3" />Help
                       </button>

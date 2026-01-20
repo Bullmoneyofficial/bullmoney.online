@@ -44,20 +44,27 @@ export async function POST(request: NextRequest) {
     
     // Update session if provided
     if (session) {
-      const { error: sessionError } = await supabase
-        .from('user_sessions')
-        .upsert({
-          id: session.id,
-          started_at: new Date(session.startedAt).toISOString(),
-          device_info: session.deviceInfo,
-          page_views: session.pageViews,
-          event_count: session.eventCount,
-          error_count: session.errorCount,
-          last_activity: new Date(session.lastActivity).toISOString(),
-        }, { onConflict: 'id' });
-      
-      if (sessionError) {
-        console.error('[CrashLog API] Failed to update session:', sessionError);
+      try {
+        const { error: sessionError } = await supabase
+          .from('user_sessions')
+          .upsert({
+            id: session.id,
+            started_at: new Date(session.startedAt).toISOString(),
+            device_info: session.deviceInfo,
+            page_views: session.pageViews,
+            event_count: session.eventCount,
+            error_count: session.errorCount,
+            last_activity: new Date(session.lastActivity).toISOString(),
+          }, { onConflict: 'id' });
+        
+        if (sessionError) {
+          // Silently fail for RLS errors - not critical
+          if (sessionError.code !== '42501') {
+            console.error('[CrashLog API] Failed to update session:', sessionError);
+          }
+        }
+      } catch (sessionErr) {
+        // Silently ignore session update failures
       }
     }
     

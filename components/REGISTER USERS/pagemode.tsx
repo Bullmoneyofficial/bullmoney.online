@@ -8,7 +8,7 @@ import { trackEvent, BullMoneyAnalytics } from '@/lib/analytics';
 import {
   Check, Mail, Hash, Lock,
   ArrowRight, ChevronLeft, ExternalLink, AlertCircle,
-  Copy, Plus, Eye, EyeOff, FolderPlus, Loader2, ShieldCheck, Clock, User
+  Copy, Plus, Eye, EyeOff, FolderPlus, Loader2, ShieldCheck, Clock, User, Send
 } from 'lucide-react';
 
 import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "framer-motion";
@@ -21,7 +21,8 @@ import { ShimmerLine, ShimmerBorder, ShimmerSpinner, ShimmerRadialGlow } from '@
 import { useUIState } from "@/contexts/UIStateContext";
 
 // --- IMPORT SEPARATE LOADER COMPONENT ---
-import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader"; 
+import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader";
+import { TelegramConfirmationResponsive } from "./TelegramConfirmationResponsive"; 
 
 // --- 1. SUPABASE SETUP ---
 const TELEGRAM_GROUP_LINK = "https://t.me/addlist/uswKuwT2JUQ4YWI8";
@@ -52,7 +53,101 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-// --- 2. INTERNAL CSS FOR SCROLL LOCK & SHIMMER ANIMATION ---
+// --- 2. INTERNAL CSS FOR SCROLL LOCK & SHIMMER ANIMATION & NEON STYLES ---
+const NEON_GLOBAL_STYLES = `
+  @keyframes neon-pulse {
+    0%, 100% { 
+      text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+      filter: brightness(1);
+    }
+    50% { 
+      text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
+      filter: brightness(1.1);
+    }
+  }
+
+  @keyframes neon-glow {
+    0%, 100% { 
+      box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    }
+    50% { 
+      box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
+    }
+  }
+
+  .neon-blue-text {
+    color: #3b82f6;
+    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+    animation: neon-pulse 2s ease-in-out infinite;
+  }
+
+  .neon-white-text {
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
+  }
+
+  .neon-white-icon {
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
+  }
+
+  .neon-blue-icon {
+    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+  }
+
+  .neon-red-icon {
+    filter: drop-shadow(0 0 4px #ef4444) drop-shadow(0 0 8px #ef4444);
+  }
+
+  .neon-blue-border {
+    border: 2px solid #3b82f6;
+    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    animation: neon-glow 2s ease-in-out infinite;
+  }
+
+  .neon-blue-bg {
+    background: #3b82f6;
+    box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+  }
+
+  .neon-red-text {
+    color: #ef4444;
+    text-shadow: 0 0 4px #ef4444, 0 0 8px #ef4444;
+    animation: neon-pulse-red 2s ease-in-out infinite;
+  }
+
+  .neon-red-border {
+    border: 2px solid #ef4444;
+    box-shadow: 0 0 4px #ef4444, 0 0 8px #ef4444, inset 0 0 4px #ef4444;
+    animation: neon-glow-red 2s ease-in-out infinite;
+  }
+
+  @keyframes neon-pulse-red {
+    0%, 100% { 
+      text-shadow: 0 0 4px #ef4444, 0 0 8px #ef4444;
+      filter: brightness(1);
+    }
+    50% { 
+      text-shadow: 0 0 6px #ef4444, 0 0 12px #ef4444;
+      filter: brightness(1.1);
+    }
+  }
+
+  @keyframes neon-glow-red {
+    0%, 100% { 
+      box-shadow: 0 0 4px #ef4444, 0 0 8px #ef4444, inset 0 0 4px #ef4444;
+    }
+    50% { 
+      box-shadow: 0 0 6px #ef4444, 0 0 12px #ef4444, inset 0 0 6px #ef4444;
+    }
+  }
+
+  .gpu-layer {
+    transform: translateZ(0);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+  }
+`;
+
 const GlobalStyles = () => (
   <style jsx global>{`
     /* Input autofill styling override */
@@ -263,11 +358,20 @@ const GlobalStyles = () => (
 
 // --- LOADING STATES DATA ---
 const loadingStates = [
-  { text: "INITIALIZING..." },
+  { text: "INITIALIZING BULLMONEY" },
   { text: "RESTORING SESSION" }, 
   { text: "VERIFYING CREDENTIALS" },
-  { text: "UNLOCKING DASHBOARD" },
+  { text: "UNLOCKING TRADES" },
   { text: "WELCOME BACK" },
+];
+
+// --- PREMIUM CELEBRATION STATES (POST-V3) ---
+const celebrationStates = [
+  { text: "ACTIVATING ELITE ACCESS" },
+  { text: "UNLOCKING PREMIUM SETUPS" },
+  { text: "CONNECTING TO PRO NETWORK" },
+  { text: "GRANTING MENTOR ACCESS" },
+  { text: "WELCOME TO THE INNER CIRCLE" },
 ];
 
 interface RegisterPageProps {
@@ -283,7 +387,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [acceptedTerms, setAcceptedTerms] = useState(false); 
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [isRefresh, setIsRefresh] = useState(false);
+  const [isCelebration, setIsCelebration] = useState(false);
+  const [confirmationClicked, setConfirmationClicked] = useState(false); 
 
   const [formData, setFormData] = useState({
     email: '',
@@ -294,6 +401,17 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  
+  // --- INJECT GLOBAL NEON STYLES ---
+  useEffect(() => {
+    const styleId = 'neon-glow-styles-pagemode';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = NEON_GLOBAL_STYLES;
+      document.head.appendChild(style);
+    }
+  }, []);
   
   // --- UI STATE CONTEXT: Signal to minimize audio widget when pagemode is active ---
   const { setPagemodeOpen } = useUIState();
@@ -311,7 +429,19 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   }, [setPagemodeOpen]);
   
   const isVantage = activeBroker === 'Vantage';
+  const isXM = activeBroker === 'XM';
   const brokerCode = isVantage ? "BULLMONEY" : "X3R7P";
+  
+  // Helper to get neon classes based on active broker
+  const neonTextClass = isXM ? "neon-red-text" : "neon-blue-text";
+  const neonBorderClass = isXM ? "neon-red-border" : "neon-blue-border";
+  const neonIconClass = isXM ? "neon-red-icon" : "neon-blue-icon";
+
+  // --- PAUSE LOADER ON STEP 4 - BUTTON STAYS VISIBLE ---
+  // No auto-advance, button stays clickable indefinitely
+  useEffect(() => {
+    // Step 4 just pauses - button needs to be clicked to continue
+  }, [step]);
 
   // --- DRAFT SAVER (Auto-Save partial progress) ---
   useEffect(() => {
@@ -333,12 +463,35 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     let mounted = true;
 
     const initSession = async () => {
+      // Check if this is a celebration loader after V3 completion
+      const showCelebration = localStorage.getItem("bullmoney_show_celebration_loader");
+      
+      if (showCelebration === "true") {
+        console.log("Showing premium celebration loader after V3 completion");
+        localStorage.removeItem("bullmoney_show_celebration_loader");
+        localStorage.setItem("bullmoney_loader_completed", "true");
+        setIsRefresh(false);
+        setIsCelebration(true); // Flag for premium celebration mode
+        
+        if (mounted) {
+          // 5 seconds premium celebration experience, then show Telegram confirmation
+          setTimeout(() => {
+            setLoading(false);
+            setStep(4); // Go to Telegram confirmation instead of auto-unlocking
+          }, 5000);
+        }
+        return;
+      }
+      
       // 1. Check for completed session
       const savedSession = localStorage.getItem("bullmoney_session");
       
       if (savedSession) {
         try {
           const session = JSON.parse(savedSession);
+          // Detect if this is a refresh (user has session = returning visitor)
+          setIsRefresh(true);
+          
           // Verify ID exists in Supabase (async)
           const { data, error } = await supabase
             .from("recruits")
@@ -347,7 +500,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             .maybeSingle();
 
           if (!error && data && mounted) {
-             console.log("Session valid, auto-unlocking...");
+             console.log("Session valid, showing Telegram confirmation...");
              // Clear any old drafts since we are logged in
              localStorage.removeItem("bullmoney_draft");
              
@@ -355,10 +508,11 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
              // This prevents pagemode from showing again if session gets cleared
              localStorage.setItem("bullmoney_pagemode_completed", "true");
              
-             // FORCE LOADER TO PLAY FOR 2.5s EVEN ON SUCCESS
+             // Show Telegram confirmation instead of auto-unlocking
              setTimeout(() => {
-                 onUnlock(); 
-             }, 2500); 
+                 setLoading(false);
+                 setStep(4); // Go to Telegram confirmation
+             }, 1500); 
              return; 
           } 
           
@@ -390,15 +544,42 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
       // 3. DONE LOADING (If no session was found)
       if (mounted) {
-        // Allow the "Initializing" text to read before showing form
-        setTimeout(() => { setLoading(false); }, 1500);
+        // Allow the "Initializing" text to read before showing form (1.5 seconds for reload experience)
+        // But don't auto-exit if we're on step 4 (telegram confirmation screen)
+        if (step !== 4) {
+          setTimeout(() => { setLoading(false); }, 1500);
+        }
       }
     };
 
     initSession();
     return () => { mounted = false; };
-  }, [onUnlock]);
+  }, [onUnlock, step]);
 
+  // --- KEYBOARD SHORTCUT: CTRL+SHIFT+RIGHT ARROW TO SKIP TO STEP 4 ---
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'ArrowRight') {
+        e.preventDefault();
+        setStep(4);
+        setLoading(true); // Keep loading screen visible
+        console.log('Keyboard shortcut: Jumped to step 4');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
+
+  // --- KEEP STEP 4 VISIBLE (PREVENT AUTO-EXIT) ---
+  useEffect(() => {
+    if (step === 4 && !confirmationClicked) {
+      setLoading(true); // Ensure step 4 screen stays visible until button clicked
+    } else if (confirmationClicked) {
+      setLoading(false); // Allow exit only after confirmation
+      setConfirmationClicked(false); // Reset for next time
+    }
+  }, [step, confirmationClicked]);
 
   // === ADDED SCROLL LOCK/UNLOCK EFFECT ===
   useEffect(() => {
@@ -506,8 +687,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   };
 
   const handleRegisterSubmit = async () => {
-    setStep(4); // Loading
     setSubmitError(null);
+    setLoading(true); // Show loading during Supabase operation
     
     // Track registration attempt
     trackEvent('checkout_start', { 
@@ -573,9 +754,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         });
       }
 
-      setTimeout(() => {
-        setStep(5); // Success
-      }, 1000);
+      setLoading(false);
+      setStep(4); // Move to Telegram confirmation
 
     } catch (err: any) {
       console.error("Submission Error:", err);
@@ -591,6 +771,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         setSubmitError(err.message || "Connection failed. Please check your internet.");
       }
       setStep(3); // Go back to auth step
+      setLoading(false);
     }
   };
 
@@ -637,10 +818,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       // Track successful login
       trackEvent('login', { method: 'email', source: 'pagemode' });
 
-      setTimeout(() => {
-        setLoading(false);
-        onUnlock();
-      }, 1000); 
+      setLoading(false);
+      // Move to step 4 (Telegram confirmation) instead of directly unlocking
+      setStep(4); 
 
     } catch (err: any) {
       setLoading(false);
@@ -654,86 +834,21 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     return isVantage ? { number2: currentStep } : { number: currentStep };
   };
 
-  // --- RENDER: SUCCESS (SCREEN 5) ---
-  if (step === 5 && viewMode === 'register') {
-    return (
-      <div className="register-container bg-black flex items-center justify-center p-4 relative" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
-        <GlobalStyles />
-        
-        {/* Blue shimmer background - left to right */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute inset-0 shimmer-ltr opacity-20" />
-        </div>
-        
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black gpu-accel" />
-        
-        {/* Content wrapper matching step 0 structure */}
-        <div className="w-full flex flex-col items-center justify-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="register-card bg-black/80 border-2 border-blue-500/40 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.3)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500 mx-auto">
-            {/* Shimmer overlay effect */}
-            <div className="absolute inset-0 shimmer-ltr opacity-10 pointer-events-none rounded-2xl" />
-            
-            <div className="mx-auto w-20 h-20 md:w-24 md:h-24 relative mb-5 md:mb-6 z-10">
-              <div className="absolute inset-0 rounded-full border-2 border-blue-500/50 animate-[spin_3s_linear_infinite]" />
-              <div className="absolute inset-0 bg-blue-500 rounded-full scale-0 animate-[scale-up_0.5s_ease-out_forwards_0.2s] flex items-center justify-center">
-                <Check className="w-10 h-10 md:w-12 md:h-12 text-white stroke-[3] opacity-0 animate-[fade-in_0.3s_ease-out_forwards_0.6s]" />
-              </div>
-            </div>
-            
-            <h2 className="text-xl md:text-3xl font-bold shimmer-text mb-2 relative z-10">You&apos;re In 🚀</h2>
-            <p className="text-blue-200/70 mb-6 md:mb-8 text-sm md:text-base relative z-10">
-              Your free BullMoney access is now active.<br/>
-            </p>
-            
-            <button 
-              onClick={onUnlock}
-              className="relative z-10 w-full py-3.5 md:py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold tracking-wide transition-all shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] group flex items-center justify-center mb-4 cursor-target overflow-hidden"
-            >
-              <span className="relative z-20 flex items-center shimmer-text">
-                Go to Dashboard  
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </span>
-            </button>
-
-             <button 
-              onClick={() => window.open(TELEGRAM_GROUP_LINK, '_blank')}
-              className="relative z-10 text-sm text-blue-400/60 hover:text-blue-300 transition-colors flex items-center justify-center gap-2 mx-auto cursor-target"
-            >
-              <FolderPlus className="w-4 h-4" /> Join Free Telegram
-            </button>
-          </div>
-        </div>
-        <style jsx global>{`
-          @keyframes scale-up { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
-          @keyframes fade-in { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 1; transform: scale(1); } }
-        `}</style>
-      </div>
-    );
-  }
-
   // --- RENDER: LOADING (SCREEN 4 AFTER SUBMIT) ---
   if (step === 4) {
     return (
-      <div className="register-container bg-black flex flex-col items-center justify-center relative px-4 py-6 md:p-4" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
-        <GlobalStyles />
-        {/* Blue shimmer background - left to right */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute inset-0 shimmer-ltr opacity-30" />
-        </div>
-        
-        {/* Content wrapper */}
-        <div className="w-full flex flex-col items-center justify-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 md:w-96 h-72 md:h-96 bg-blue-500/10 rounded-full blur-[60px] pointer-events-none" />
-          <Loader2 className="w-14 h-14 md:w-16 md:h-16 text-blue-500 animate-spin mb-4 relative z-10" />
-          <h2 className="text-lg md:text-xl font-bold shimmer-text text-center relative z-10">Unlocking Platform...</h2>
-        </div>
-      </div>
+      <TelegramConfirmationResponsive 
+        onUnlock={onUnlock}
+        onConfirmationClicked={() => setConfirmationClicked(true)}
+        isXM={isXM}
+        neonIconClass={neonIconClass}
+      />
     );
   }
 
   // --- RENDER: MAIN INTERFACE ---
   return (
-    <div className="register-container bg-black px-4 py-6 md:p-4 font-sans">
+    <div className="register-container bg-black px-4 py-6 md:p-4 md:overflow-hidden md:h-screen font-sans">
       <GlobalStyles />
       
       {/* Blue shimmer background - left to right */}
@@ -750,33 +865,38 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
              style={{ height: '100dvh', minHeight: '-webkit-fill-available' }}
              // We render the loader component inside this wrapper
           >
-            <MultiStepLoader loadingStates={loadingStates} loading={loading}  />
+            <MultiStepLoader 
+              loadingStates={isCelebration ? celebrationStates : loadingStates} 
+              loading={loading} 
+              duration={isCelebration ? 1000 : 300} 
+              loop={false} 
+              isRefresh={isRefresh} 
+            />
           </div>
       )}
       {/* =========================================== */}
 
+      {/* HEADER - BULLMONEY FREE TITLE */}
+      {!loading && (
+        <div className="w-full md:fixed md:top-6 lg:top-8 md:left-0 md:right-0 flex flex-col items-center pt-6 md:pt-8 pb-4 md:pb-6 md:bg-black/60 md:backdrop-blur-md mb-8 md:mb-0 z-50" style={{ zIndex: 100 }}>
+          <div className="mb-3 md:mb-4 text-center w-full">
+             <h1 className={cn("text-3xl md:text-5xl lg:text-6xl font-black tracking-tight", neonTextClass)} style={{ animation: isXM ? 'neon-pulse-red 2s ease-in-out infinite' : 'neon-pulse 2s ease-in-out infinite' }}>
+              BULLMONEY <span className={neonTextClass} style={{ animation: isXM ? 'neon-pulse-red 2s ease-in-out infinite' : 'neon-pulse 2s ease-in-out infinite' }}>FREE</span>
+            </h1>
+          </div>
+          <div className={cn("w-full max-w-xl h-1 opacity-70 transition-all duration-500", neonBorderClass)} />
+        </div>
+      )}
+
       {/* RENDER CONTENT ONLY IF NOT LOADING */}
       <div className={cn(
         // Opacity transition for a smooth reveal after loading is done
-        "transition-opacity duration-500 w-full max-w-xl relative z-10 mx-auto flex flex-col items-center",
+        "transition-opacity duration-500 w-full max-w-xl mx-auto flex flex-col items-center md:pt-32 lg:pt-36",
         loading ? "opacity-0 pointer-events-none" : "opacity-100"
       )} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
 
         {/* Existing background elements */}
-        <div className={cn(
-          "absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-50 transition-colors duration-500",
-          isVantage ? "via-purple-900" : "via-blue-900"
-        )} />
-        <div className={cn(
-          "absolute bottom-0 right-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel",
-          isVantage ? "bg-purple-900/10" : "bg-blue-900/10"
-        )} />
-
-        <div className="mb-5 md:mb-8 text-center">
-           <h1 className="text-lg md:text-2xl font-black shimmer-text tracking-tight">
-            BULLMONEY <span className="text-blue-500">FREE</span>
-          </h1>
-        </div>
+        <div className={cn("absolute bottom-0 right-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel -z-10", isXM ? "bg-red-900/10" : "bg-blue-900/10")} />
 
         {/* ================= LOGIN VIEW ================= */}
         {viewMode === 'login' ? (
@@ -786,20 +906,20 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             className="w-full flex flex-col items-center justify-center"
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}
           >
-             <div className="register-card bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.2)] relative overflow-hidden w-full max-w-md mx-auto">
+             <div className={cn("register-card bg-black/80 backdrop-blur-xl p-5 md:p-8 rounded-2xl relative overflow-hidden w-full max-w-md mx-auto", neonBorderClass)}>
                 {/* Shimmer overlay effect */}
-                <div className="absolute inset-0 shimmer-ltr opacity-10 pointer-events-none" />
+                <div className="absolute inset-0 shimmer-ltr opacity-20 pointer-events-none" />
                 
                 <div className="absolute top-0 right-0 p-3 md:p-4 opacity-10 z-0">
-                    <Lock className="w-24 h-24 md:w-32 md:h-32 text-blue-400" />
+                    <Lock className={cn("w-24 h-24 md:w-32 md:h-32", isXM ? "text-red-400" : "text-blue-400", neonIconClass)} />
                 </div>
                 
-                <h2 className="text-xl md:text-2xl font-bold shimmer-text mb-2 relative z-10">Member Login</h2>
-                <p className="text-blue-200/60 mb-5 md:mb-6 relative z-10 text-sm md:text-base">Sign in to access the platform.</p>
+                <h2 className={cn("text-xl md:text-2xl font-bold shimmer-text mb-2 relative z-10", neonTextClass)}>Member Login</h2>
+                <p className={cn("mb-5 md:mb-6 relative z-10 text-sm md:text-base neon-white-text", isXM ? "text-red-200/60" : "text-blue-200/60")}>Sign in to access the platform.</p>
 
                 <form onSubmit={handleLoginSubmit} className="space-y-4 relative z-10" autoComplete="on">
                    <div className="relative group">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400/50 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
+                      <Mail className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-blue-400/50 group-focus-within:text-blue-400", neonIconClass)} />
                       <input
                         autoFocus
                         type="email"
@@ -809,12 +929,17 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
                         placeholder="Email Address"
-                        className="w-full bg-black/60 border-2 border-blue-500/30 rounded-xl pl-10 pr-4 py-3 md:py-4 text-white placeholder-blue-300/30 focus:outline-none focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all cursor-target text-base"
+                        className={cn("w-full bg-black/60 border-2 rounded-xl pl-10 pr-4 py-3 md:py-4 text-white transition-all cursor-target text-base", 
+                          isXM 
+                            ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
+                            : "border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]",
+                          "focus:outline-none"
+                        )}
                       />
                     </div>
 
                    <div className="relative group">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400/50 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
+                      <Lock className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-blue-400/50 group-focus-within:text-blue-400", neonIconClass)} />
                       <input
                         type={showPassword ? "text" : "password"}
                         name="password"
@@ -823,12 +948,20 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         placeholder="Password"
-                        className="w-full bg-black/60 border-2 border-blue-500/30 rounded-xl pl-10 pr-12 py-3 md:py-4 text-white placeholder-blue-300/30 focus:outline-none focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all cursor-target text-base"
+                        className={cn("w-full bg-black/60 border-2 rounded-xl pl-10 pr-12 py-3 md:py-4 text-white transition-all cursor-target text-base",
+                          isXM 
+                            ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
+                            : "border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]",
+                          "focus:outline-none"
+                        )}
                       />
                       <button 
                         type="button" 
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400/50 hover:text-blue-400 transition-colors cursor-target"
+                        className={cn("absolute right-3 top-1/2 -translate-y-1/2 transition-colors cursor-target", 
+                          isXM ? "text-red-400/50 hover:text-red-400" : "text-blue-400/50 hover:text-blue-400",
+                          neonIconClass
+                        )}
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -843,18 +976,18 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     <button
                       type="submit"
                       disabled={!loginEmail || !loginPassword}
-                      className="relative z-10 w-full py-3 md:py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-target text-base overflow-hidden"
+                      className={cn("relative z-10 w-full py-3 md:py-4 bg-black rounded-xl font-bold tracking-wide transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-target text-base overflow-hidden", neonBorderClass, neonTextClass)}
                     >
-                      <span className="relative z-20 flex items-center gap-2 shimmer-text">
+                      <span className={cn("relative z-20 flex items-center gap-2 shimmer-text", neonTextClass)}>
                         LOGIN
-                        <ArrowRight className="w-4 h-4" />
+                        <ArrowRight className={cn("w-4 h-4", neonIconClass)} />
                       </span>
                     </button>
                 </form>
 
-                <div className="mt-5 md:mt-6 text-center border-t border-blue-500/20 pt-4">
-                  <button onClick={toggleViewMode} className="text-sm text-blue-300/60 hover:text-blue-300 transition-colors cursor-target">
-                    Don&apos;t have a password? <span className="underline text-blue-400">Register Now</span>
+                <div className={cn("mt-5 md:mt-6 text-center border-t pt-4", isXM ? "border-red-500/40" : "border-blue-500/40")}>
+                  <button onClick={toggleViewMode} className={cn("text-sm transition-colors cursor-target", isXM ? "text-red-300/60 hover:text-red-300 neon-red-text" : "text-blue-300/60 hover:text-blue-300 neon-blue-text")}>
+                    Don&apos;t have a password? <span className={cn("underline", isXM ? "text-red-400 neon-red-text" : "text-blue-400 neon-blue-text")}>Register Now</span>
                   </button>
                 </div>
              </div>
@@ -872,14 +1005,14 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       onClick={() => handleBrokerSwitch(partner)}
                       className={cn(
                         "relative px-5 md:px-6 py-2 rounded-full font-semibold transition-all duration-300 z-20 cursor-target text-sm md:text-base",
-                        isActive ? "shimmer-text" : "bg-black/60 border-2 border-blue-500/20 text-blue-300/60 hover:border-blue-500/40"
+                        isActive ? "shimmer-text" : cn("bg-black/60 border-2", isXM ? "border-red-500/20 text-red-300/60 hover:border-red-500/40" : "border-blue-500/20 text-blue-300/60 hover:border-blue-500/40")
                       )}
                     >
                       {partner}
                       {isActive && (
                         <motion.span
                           layoutId="tab-pill"
-                          className="absolute inset-0 -z-10 rounded-full bg-black border-2 border-blue-500/60 shadow-[0_0_25px_rgba(59,130,246,0.4)]"
+                          className={cn("absolute inset-0 -z-10 rounded-full bg-black border-2", isXM ? "border-red-500/60 shadow-[0_0_25px_rgba(239,68,68,0.4)]" : "border-blue-500/60 shadow-[0_0_25px_rgba(59,130,246,0.4)]")}
                           transition={{ type: "spring", stiffness: 400, damping: 28 }}
                         />
                       )}
@@ -899,50 +1032,50 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
-                  className="w-full flex flex-col items-center justify-center"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}
+                  className="w-full flex flex-col items-center justify-center relative"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', zIndex: 1 }}
                  >
-                   <div className="register-card bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.2)] relative overflow-hidden text-center w-full max-w-md mx-auto">
+                   <div className={cn("register-card bg-black/80 backdrop-blur-xl p-5 md:p-8 rounded-2xl relative overflow-hidden text-center w-full max-w-md mx-auto", neonBorderClass)} style={{ zIndex: 1 }}>
                       {/* Shimmer overlay effect */}
-                      <div className="absolute inset-0 shimmer-ltr opacity-10 pointer-events-none" />
+                      <div className="absolute inset-0 shimmer-ltr opacity-20 pointer-events-none" />
                       
                       <div className="absolute top-0 right-0 p-3 md:p-4 opacity-5 z-0">
-                        <Lock className="w-24 h-24 md:w-32 md:h-32 text-blue-400" />
+                        <Lock className={cn("w-24 h-24 md:w-32 md:h-32", isXM ? "text-red-400" : "text-blue-400", neonIconClass)} />
                       </div>
 
                       <div className="mb-5 md:mb-6 flex justify-center">
-                         <div className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-black flex items-center justify-center border-2 border-blue-500/40 shadow-[0_0_30px_rgba(59,130,246,0.3)]">
-                            <ShieldCheck className="w-7 h-7 md:w-8 md:h-8 text-blue-400" />
+                         <div className={cn("h-14 w-14 md:h-16 md:w-16 rounded-full bg-black flex items-center justify-center", neonBorderClass)}>
+                            <ShieldCheck className={cn("w-7 h-7 md:w-8 md:h-8", isXM ? "text-red-400" : "text-blue-400", neonIconClass)} />
                          </div>
                       </div>
 
-                      <h2 className="text-xl md:text-3xl font-extrabold shimmer-text mb-3 relative z-10">Unlock Free BullMoney Access</h2>
-                      <p className="text-blue-200/70 text-sm md:text-base mb-6 md:mb-8 max-w-sm mx-auto leading-relaxed relative z-10">
+                      <h2 className={cn("text-xl md:text-3xl font-extrabold shimmer-text mb-3 relative z-10", neonTextClass)}>Unlock Free BullMoney Access</h2>
+                      <p className={cn("text-sm md:text-base mb-6 md:mb-8 max-w-sm mx-auto leading-relaxed relative z-10 neon-white-text", isXM ? "text-red-200/70" : "text-blue-200/70")}>
                         Get free trading setups and community access. <br/>
-                        <span className="text-blue-300/40">No payment. Takes about 2 minutes.</span>
+                        <span className={cn("text-blue-300/60", isXM ? "text-red-300/60" : "text-blue-300/60", neonTextClass)}>No payment. Takes about 2 minutes.</span>
                       </p>
 
                       <motion.button 
                         onClick={handleNext}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="relative z-10 w-full py-3 md:py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold text-base md:text-lg tracking-wide transition-all shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] flex items-center justify-center cursor-target overflow-hidden"
+                        className={cn("relative z-10 w-full py-3 md:py-4 bg-black rounded-xl font-bold text-base md:text-lg tracking-wide transition-all flex items-center justify-center cursor-target overflow-hidden", neonBorderClass, neonTextClass)}
                       >
-                        <span className="relative z-10 flex items-center shimmer-text">
-                          Start Free Access <ArrowRight className="w-5 h-5 ml-2" />
+                        <span className={cn("relative z-10 flex items-center shimmer-text", neonTextClass)}>
+                          Start Free Access <ArrowRight className={cn("w-5 h-5 ml-2", neonIconClass)} />
                         </span>
                       </motion.button>
                       
                       <div className="mt-4 space-y-3 relative z-10">
-                         <div className="flex items-center justify-center gap-2 text-xs text-blue-400/40">
-                             <Lock className="w-3 h-3" /> No credit card required
+                         <div className={cn("flex items-center justify-center gap-2 text-xs", isXM ? "text-red-400/60" : "text-blue-400/60", neonTextClass)}>
+                             <Lock className={cn("w-3 h-3", neonIconClass)} /> No credit card required
                          </div>
 
                          {/* DYNAMIC BUTTON FOR EXISTING USERS */}
                          <motion.button 
                            onClick={toggleViewMode}
                            whileHover={{ scale: 1.01 }}
-                           className="w-full py-3 rounded-lg text-sm font-semibold transition-all border-2 border-blue-500/20 mt-2 bg-black/60 text-blue-300/80 hover:bg-blue-950/30 hover:border-blue-500/40"
+                           className={cn("w-full py-3 rounded-lg text-sm font-semibold transition-all mt-2 bg-black/60", neonBorderClass, neonTextClass)}
                          >
                             Already a member? Login here
                          </motion.button>
@@ -966,30 +1099,31 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     {...getStepProps(1)}
                     title="Open Free Account"
                     className="bg-black/80 register-card w-full max-w-md mx-auto"
+                    isXM={isXM}
                     actions={
                       <div className="flex flex-col gap-2 md:gap-4">
-                        <p className="text-xs text-center text-blue-300/50 flex items-center justify-center gap-1">
-                          <Clock className="w-3 h-3" /> Takes about 1 minute • No deposit required
+                        <p className={cn("text-xs text-center flex items-center justify-center gap-1", neonTextClass)}>
+                          <Clock className={cn("w-3 h-3", neonIconClass)} /> Takes about 1 minute • No deposit required
                         </p>
                         
                         <div className="flex flex-col items-center justify-center gap-2 md:gap-3">
                            {/* COPY CODE BUTTON */}
                           <button
                             onClick={() => copyCode(brokerCode)}
-                            className="inline-flex items-center gap-2 rounded-lg px-3 py-2.5 md:py-3 text-sm font-semibold ring-2 ring-inset transition cursor-target w-full justify-center mb-1 text-blue-300 ring-blue-500/40 hover:bg-blue-500/10"
+                            className={cn("inline-flex items-center gap-2 rounded-lg px-3 py-2.5 md:py-3 text-sm font-semibold transition cursor-target w-full justify-center mb-1", neonBorderClass, neonTextClass)}
                           >
-                            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                            <span className="shimmer-text">{copied ? "Copied" : `Copy Code: ${brokerCode}`}</span>
+                            {copied ? <Check className={cn("h-4 w-4", neonIconClass)} /> : <Copy className={cn("h-4 w-4", neonIconClass)} />}
+                            <span className={cn("shimmer-text", neonTextClass)}>{copied ? "Copied" : `Copy Code: ${brokerCode}`}</span>
                           </button>
 
                            {/* EXTERNAL LINK BUTTON */}
                           <button
                             onClick={handleBrokerClick}
-                            className="w-full py-3 md:py-3.5 rounded-xl font-bold text-blue-400 shadow transition flex items-center justify-center gap-2 cursor-target text-base bg-black border-2 border-blue-500/60 hover:border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] relative overflow-hidden"
+                            className={cn("w-full py-3 md:py-3.5 rounded-xl font-bold transition flex items-center justify-center gap-2 cursor-target text-base bg-black relative overflow-hidden", neonBorderClass, neonTextClass)}
                           >
-                            <span className="relative z-10 flex items-center gap-2 shimmer-text">
+                            <span className={cn("relative z-10 flex items-center gap-2 shimmer-text", neonTextClass)}>
                               Open Free Account
-                              <ExternalLink className="h-4 w-4" />
+                              <ExternalLink className={cn("h-4 w-4", neonIconClass)} />
                             </span>
                           </button>
                         </div>
@@ -997,22 +1131,25 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         {/* DYNAMIC SECONDARY BUTTON FOR "ALREADY HAVE ACCOUNT" */}
                         <button 
                             onClick={handleNext}
-                            className="w-full py-2.5 md:py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border-2 mt-1 border-blue-500/30 text-blue-300 bg-black/60 hover:bg-blue-950/30 hover:border-blue-500/50"
+                            className={cn("w-full py-2.5 md:py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 mt-1 bg-black/60", neonBorderClass, neonTextClass)}
                         >
                             I already have an account
                         </button>
                       </div>
                     }
                   >
-                    <p className="text-sm md:text-[15px] leading-relaxed text-blue-200/70 mb-4 text-center">
+                    <p className={cn("text-sm md:text-[15px] leading-relaxed mb-4 text-center neon-white-text", isXM ? "text-red-200/70" : "text-blue-200/70")}>
                       BullMoney works with regulated brokers. <br className="hidden md:block" />
                       This free account lets us verify your access.
                     </p>
                     
                     {/* VISUAL ELEMENT (CARD) */}
-                    <div className="relative mx-auto w-full max-w-[240px] md:max-w-[280px] h-28 md:h-40 rounded-3xl border border-white/10 overflow-hidden shadow-2xl mb-2 opacity-80 hover:opacity-100 transition-opacity">
+                    <div className={cn(
+                      "relative mx-auto w-full max-w-[240px] md:max-w-[280px] h-28 md:h-40 rounded-3xl overflow-visible mb-2 opacity-80 hover:opacity-100 transition-opacity",
+                      neonBorderClass
+                    )} style={{ filter: isXM ? 'drop-shadow(0 0 20px rgba(239, 68, 68, 0.6)) drop-shadow(0 0 40px rgba(220, 38, 38, 0.4))' : 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.6)) drop-shadow(0 0 40px rgba(147, 51, 234, 0.4))' }}>
                       <IconPlusCorners />
-                      <div className="absolute inset-0 p-2">
+                      <div className="absolute inset-0 p-2 overflow-hidden rounded-3xl">
                         {isVantage ? <EvervaultCardRed text="VANTAGE" /> : <EvervaultCard text="X3R7P" />}
                       </div>
                     </div>
@@ -1036,6 +1173,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     {...getStepProps(2)}
                     title="Confirm Your Account ID"
                     className="register-card w-full max-w-md mx-auto"
+                    isXM={isXM}
                     actions={
                       <button
                         onClick={handleNext}
@@ -1043,11 +1181,11 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         className={cn(
                           "w-full py-3 md:py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
                           !formData.mt5Number 
-                            ? "opacity-50 cursor-not-allowed bg-black/60 border-2 border-blue-500/20 text-blue-300/50" 
-                            : "bg-black border-2 border-blue-500/60 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:border-blue-400 hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
+                            ? `opacity-50 cursor-not-allowed bg-black/60 border-2 ${isXM ? 'border-red-500/20 text-red-300/50' : 'border-blue-500/20 text-blue-300/50'}` 
+                            : cn("bg-black", neonBorderClass, neonTextClass)
                         )}
                       >
-                        <span className={cn("relative z-10 flex items-center gap-2", formData.mt5Number && "shimmer-text")}>
+                        <span className={cn("relative z-10 flex items-center gap-2", formData.mt5Number && cn("shimmer-text", neonTextClass))}>
                           Continue <ArrowRight className="w-4 h-4" />
                         </span>
                       </button>
@@ -1094,6 +1232,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     {...getStepProps(3)}
                     title="Create BullMoney Login"
                     className="register-card w-full max-w-md mx-auto"
+                    isXM={isXM}
                     actions={
                       <button
                         onClick={handleNext}
@@ -1101,21 +1240,21 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         className={cn(
                           "w-full py-3 md:py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
                           (!formData.email || !formData.password || !acceptedTerms) 
-                            ? "opacity-50 cursor-not-allowed bg-black/60 border-2 border-blue-500/20 text-blue-300/50" 
-                            : "bg-black border-2 border-blue-500/60 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:border-blue-400 hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
+                            ? cn("opacity-50 cursor-not-allowed bg-black/60 border-2", isXM ? "border-red-500/20 text-red-300/50" : "border-blue-500/20 text-blue-300/50")
+                            : cn("bg-black", isXM ? "neon-red-border text-red-400 neon-red-text" : "neon-blue-border text-blue-400 neon-blue-text")
                         )}
                       >
-                        <span className={cn("relative z-10 flex items-center gap-2", (formData.email && formData.password && acceptedTerms) && "shimmer-text")}>
+                        <span className={cn("relative z-10 flex items-center gap-2", (formData.email && formData.password && acceptedTerms) && cn("shimmer-text", isXM ? "neon-red-text" : "neon-blue-text"))}>
                           Unlock My Access <ArrowRight className="w-4 h-4" />
                         </span>
                       </button>
                     }
                   >
-                     <p className="text-blue-200/60 text-xs md:text-sm mb-3 md:mb-4">This lets you access <span className="shimmer-text font-medium">setups</span>, tools, and the community.</p>
+                     <p className={cn("text-xs md:text-sm mb-3 md:mb-4 neon-white-text", isXM ? "text-red-200/60" : "text-blue-200/60")}>This lets you access <span className={cn("shimmer-text font-medium", isXM ? "neon-red-text" : "neon-blue-text")}>setups</span>, tools, and the community.</p>
                     <div className="space-y-3 md:space-y-4 pt-1">
                       <div>
                         <div className="relative group">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400/50 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
+                          <Mail className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-blue-400/50 group-focus-within:text-blue-400", neonIconClass)} />
                           <input
                             autoFocus
                             type="email"
@@ -1124,15 +1263,20 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             value={formData.email}
                             onChange={handleChange}
                             placeholder="Email address"
-                            className="w-full bg-black/60 border-2 border-blue-500/30 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-blue-300/30 focus:outline-none focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all cursor-target text-base"
+                            className={cn("w-full bg-black/60 border-2 rounded-lg pl-10 pr-4 py-3.5 text-white transition-all cursor-target text-base",
+                              isXM 
+                                ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
+                                : "border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]",
+                              "focus:outline-none"
+                            )}
                           />
                         </div>
-                        <p className="text-[10px] text-blue-300/40 mt-1 ml-1">We&apos;ll send your login details here.</p>
+                        <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40 neon-red-text" : "text-blue-300/40 neon-blue-text")}>We&apos;ll send your login details here.</p>
                       </div>
 
                       <div>
                         <div className="relative group">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400/50 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
+                          <Lock className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-blue-400/50 group-focus-within:text-blue-400", neonIconClass)} />
                           <input
                             type={showPassword ? "text" : "password"}
                             name="password"
@@ -1140,48 +1284,61 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             value={formData.password}
                             onChange={handleChange}
                             placeholder="Create password (min 6 chars)"
-                            className="w-full bg-black/60 border-2 border-blue-500/30 rounded-lg pl-10 pr-12 py-3.5 text-white placeholder-blue-300/30 focus:outline-none focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all cursor-target text-base"
+                            className={cn("w-full bg-black/60 border-2 rounded-lg pl-10 pr-12 py-3.5 text-white transition-all cursor-target text-base",
+                              isXM 
+                                ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
+                                : "border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]",
+                              "focus:outline-none"
+                            )}
                           />
                           <button 
                             type="button" 
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400/50 hover:text-blue-400 transition-colors cursor-target"
+                            className={cn("absolute right-3 top-1/2 -translate-y-1/2 transition-colors cursor-target",
+                              isXM ? "text-red-400/50 hover:text-red-400" : "text-blue-400/50 hover:text-blue-400",
+                              neonIconClass
+                            )}
                           >
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
                         </div>
-                        <p className="text-[10px] text-blue-300/40 mt-1 ml-1">Must be at least 6 characters.</p>
+                        <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40 neon-red-text" : "text-blue-300/40 neon-blue-text")}>Must be at least 6 characters.</p>
                       </div>
 
                       <div>
                         <div className="relative group">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400/50 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
+                          <User className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-blue-400/50 group-focus-within:text-blue-400", neonIconClass)} />
                           <input
                             type="text"
                             name="referralCode"
                             value={formData.referralCode}
                             onChange={handleChange}
                             placeholder="Referral Code (Optional)"
-                            className="w-full bg-black/60 border-2 border-blue-500/30 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-blue-300/30 focus:outline-none focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all cursor-target text-base"
+                            className={cn("w-full bg-black/60 border-2 rounded-lg pl-10 pr-4 py-3.5 text-white transition-all cursor-target text-base",
+                              isXM 
+                                ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
+                                : "border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]",
+                              "focus:outline-none"
+                            )}
                           />
                         </div>
-                        <p className="text-[10px] text-blue-300/40 mt-1 ml-1">Leave blank if you don&apos;t have one.</p>
+                        <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40 neon-red-text" : "text-blue-300/40 neon-blue-text")}>Leave blank if you don&apos;t have one.</p>
                       </div>
 
-                        <div 
+                        <div
                         onClick={() => setAcceptedTerms(!acceptedTerms)}
-                        className="flex items-start gap-3 p-3 rounded-lg border-2 border-blue-500/20 bg-black/60 cursor-pointer hover:bg-blue-950/30 hover:border-blue-500/30 transition-colors cursor-target"
+                        className={cn("flex items-start gap-3 p-3 rounded-lg bg-black/60 cursor-pointer transition-colors cursor-target", isXM ? "neon-red-border" : "neon-blue-border")}
                       >
                         <div className={cn(
                           "w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 transition-colors shrink-0",
                           acceptedTerms 
-                            ? "bg-blue-600 border-blue-600" 
-                            : "border-blue-500/40"
+                            ? cn("border-blue-600", isXM ? "neon-red-bg" : "neon-blue-bg")
+                            : isXM ? "border-red-500/60" : "border-blue-500/60"
                         )}>
                           {acceptedTerms && <Check className="w-3.5 h-3.5 text-white" />}
                         </div>
                         <div className="flex-1">
-                          <p className="text-xs text-blue-200/70 leading-tight">
+                          <p className="text-xs text-blue-200/70 leading-tight neon-white-text">
                             I agree to the Terms of Service and understand this is educational content.
                           </p>
                         </div>
@@ -1196,7 +1353,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     )}
                   </StepCard>
 
-                  <button onClick={handleBack} className="mt-3 md:mt-4 flex items-center text-blue-300/50 hover:text-blue-300 text-sm mx-auto transition-colors cursor-target">
+                  <button onClick={handleBack} className={cn("mt-3 md:mt-4 flex items-center text-sm mx-auto transition-colors cursor-target", isXM ? "text-red-300/60 hover:text-red-300 neon-red-text" : "text-blue-300/60 hover:text-blue-300 neon-blue-text")}>
                     <ChevronLeft className="w-4 h-4 mr-1" /> Back
                   </button>
                 </motion.div>
@@ -1211,29 +1368,28 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
 // --- SUB-COMPONENTS (MEMOIZED CARDS) ---
 
-const StepCard = memo(({ number, number2, title, children, actions, className }: any) => {
+const StepCard = memo(({ number, number2, title, children, actions, className, isXM }: any) => {
   const useRed = typeof number2 === "number";
   const n = useRed ? number2 : number;
   return (
     <div className={cn(
       "group relative overflow-hidden rounded-2xl p-5 md:p-8",
-      "bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl",
-      "shadow-[0_0_40px_rgba(59,130,246,0.2)]",
+      cn("bg-black/80 backdrop-blur-xl", isXM ? "neon-red-border" : "neon-blue-border"),
       className
     )}>
       {/* Shimmer overlay effect */}
-      <div className="absolute inset-0 shimmer-ltr opacity-10 pointer-events-none rounded-2xl" />
+      <div className="absolute inset-0 shimmer-ltr opacity-20 pointer-events-none rounded-2xl" />
       
-      <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l blur-2xl from-blue-500/20 via-blue-500/10 to-transparent z-0" />
-      <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-blue-500/10 z-0" />
+      <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 blur-2xl z-0" style={{background: isXM ? 'linear-gradient(to left, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1), transparent)' : 'linear-gradient(to left, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.1), transparent)'}} />
+      <div className={cn("pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset z-0", isXM ? "ring-red-500/10" : "ring-blue-500/10")} />
       <div className="flex items-center justify-between mb-3 md:mb-6 relative z-10">
-        <span className="inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md ring-2 text-blue-300/90 ring-blue-500/30 bg-black/60">
+        <span className={cn("inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md bg-black/60", isXM ? "neon-red-border text-red-300/90 neon-red-text" : "neon-blue-border text-blue-300/90 neon-blue-text")}>
           <span className="shimmer-text">Step {n} of 3</span>
         </span>
       </div>
-      <h3 className="text-lg md:text-2xl font-extrabold shimmer-text mb-3 md:mb-4 relative z-10">{title}</h3>
+      <h3 className={cn("text-lg md:text-2xl font-extrabold shimmer-text mb-3 md:mb-4 relative z-10", isXM ? "neon-red-text" : "neon-blue-text")}>{title}</h3>
       <div className="flex-1 relative z-10">{children}</div>
-      {actions && <div className="mt-5 md:mt-8 pt-5 md:pt-6 border-t border-blue-500/20 relative z-10">{actions}</div>}
+      {actions && <div className={cn("mt-5 md:mt-8 pt-5 md:pt-6 border-t relative z-10", isXM ? "border-red-500/40" : "border-blue-500/40")}>{actions}</div>}
     </div>
   );
 });
@@ -1259,7 +1415,7 @@ const generateRandomString = (length: number) => {
   return result;
 };
 
-// --- XM Card (Blue/Green) ---
+// --- XM Card (Red Neon Glow) ---
 export const EvervaultCard = memo(({ text }: { text?: string }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -1273,13 +1429,17 @@ export const EvervaultCard = memo(({ text }: { text?: string }) => {
   }
   return (
     <div className="w-full h-full flex items-center justify-center bg-transparent" onMouseMove={onMouseMove}>
-      <div className="group/card rounded-3xl w-full h-full relative overflow-hidden bg-transparent flex items-center justify-center">
+      <div className="group/card rounded-3xl w-full h-full relative overflow-hidden bg-black/40 flex items-center justify-center" 
+           style={{ 
+             boxShadow: '0 0 30px rgba(239, 68, 68, 0.8), 0 0 60px rgba(220, 38, 38, 0.6), inset 0 0 40px rgba(239, 68, 68, 0.3)'
+           }}>
         <CardPattern mouseX={mouseX} mouseY={mouseY} randomString={randomString} />
-        <div className="relative z-10">
-          <div className="relative h-32 w-32 rounded-full flex items-center justify-center">
-            <div className="absolute inset-0 rounded-full bg-white/10 blur-md" />
-            <span className="relative z-20 font-extrabold text-2xl md:text-3xl text-white select-none">{text}</span>
-          </div>
+        <div className="relative z-10 flex items-center justify-center">
+          <span className="relative z-20 font-extrabold text-3xl md:text-4xl text-white select-none" 
+                style={{
+                  textShadow: '0 0 15px #ffffff, 0 0 30px #ffffff, 0 0 45px #ffffff, 0 0 60px #ffffff, 0 0 75px #ffffff',
+                  filter: 'drop-shadow(0 0 10px #ffffff) drop-shadow(0 0 20px #ffffff)'
+                }}>{text}</span>
         </div>
       </div>
     </div>
@@ -1288,19 +1448,29 @@ export const EvervaultCard = memo(({ text }: { text?: string }) => {
 EvervaultCard.displayName = "EvervaultCard";
 
 function CardPattern({ mouseX, mouseY, randomString }: any) {
-  const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
+  const maskImage = useMotionTemplate`radial-gradient(300px at ${mouseX}px ${mouseY}px, white, transparent)`;
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-700 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
-      <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
-        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white font-mono font-bold transition duration-500">{randomString}</p>
+      <motion.div 
+        className="absolute inset-0 bg-gradient-to-br from-red-500 via-red-600 to-rose-700 opacity-30 group-hover/card:opacity-90 backdrop-blur-xl transition duration-500" 
+        style={{
+          ...style,
+          boxShadow: '0 0 40px rgba(239, 68, 68, 0.9), 0 0 80px rgba(220, 38, 38, 0.8), 0 0 120px rgba(225, 29, 72, 0.7), inset 0 0 50px rgba(239, 68, 68, 0.6)'
+        }} 
+      />
+      <motion.div className="absolute inset-0 opacity-20 mix-blend-screen group-hover/card:opacity-60" style={style}>
+        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words font-mono font-bold transition duration-500" 
+           style={{
+             color: '#fca5a5',
+             textShadow: '0 0 8px #ef4444, 0 0 16px #dc2626, 0 0 24px #e11d48'
+           }}>{randomString}</p>
       </motion.div>
     </div>
   );
 };
 
-// --- Vantage Card (Red/Purple) ---
+// --- Vantage Card (Blue Neon Glow) ---
 export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -1314,13 +1484,17 @@ export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
   }
   return (
     <div className="w-full h-full flex items-center justify-center bg-transparent" onMouseMove={onMouseMove}>
-      <div className="group/card rounded-3xl w-full h-full relative overflow-hidden bg-transparent flex items-center justify-center">
+      <div className="group/card rounded-3xl w-full h-full relative overflow-hidden bg-black/40 flex items-center justify-center" 
+           style={{ 
+             boxShadow: '0 0 30px rgba(59, 130, 246, 0.8), 0 0 60px rgba(37, 99, 235, 0.6), inset 0 0 40px rgba(59, 130, 246, 0.3)'
+           }}>
         <CardPatternRed mouseX={mouseX} mouseY={mouseY} randomString={randomString} />
-        <div className="relative z-10">
-          <div className="relative h-32 w-32 rounded-full flex items-center justify-center">
-            <div className="absolute inset-0 rounded-full bg-white/10 blur-md" />
-            <span className="relative z-20 font-extrabold text-2xl md:text-3xl text-white select-none">{text}</span>
-          </div>
+        <div className="relative z-10 flex items-center justify-center">
+          <span className="relative z-20 font-extrabold text-3xl md:text-4xl text-white select-none" 
+                style={{
+                  textShadow: '0 0 15px #ffffff, 0 0 30px #ffffff, 0 0 45px #ffffff, 0 0 60px #ffffff, 0 0 75px #ffffff',
+                  filter: 'drop-shadow(0 0 10px #ffffff) drop-shadow(0 0 20px #ffffff)'
+                }}>{text}</span>
         </div>
       </div>
     </div>
@@ -1329,13 +1503,23 @@ export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
 EvervaultCardRed.displayName = "EvervaultCardRed";
 
 function CardPatternRed({ mouseX, mouseY, randomString }: any) {
-  const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
+  const maskImage = useMotionTemplate`radial-gradient(300px at ${mouseX}px ${mouseY}px, white, transparent)`;
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-600 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
-      <motion.div className="absolute inset-0 opacity-0 mix-blend-overlathe y group-hover/card:opacity-100" style={style}>
-        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-violet-100/90 font-mono font-bold transition duration-500">{randomString}</p>
+      <motion.div 
+        className="absolute inset-0 bg-gradient-to-br from-cyan-400 via-blue-600 to-blue-700 opacity-30 group-hover/card:opacity-90 backdrop-blur-xl transition duration-500" 
+        style={{
+          ...style,
+          boxShadow: '0 0 40px rgba(34, 211, 238, 0.9), 0 0 80px rgba(59, 130, 246, 0.8), 0 0 120px rgba(37, 99, 235, 0.7), inset 0 0 50px rgba(59, 130, 246, 0.6)'
+        }} 
+      />
+      <motion.div className="absolute inset-0 opacity-20 mix-blend-screen group-hover/card:opacity-60" style={style}>
+        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words font-mono font-bold transition duration-500" 
+           style={{
+             color: '#93c5fd',
+             textShadow: '0 0 8px #3b82f6, 0 0 16px #2563eb, 0 0 24px #1d4ed8'
+           }}>{randomString}</p>
       </motion.div>
     </div>
   );

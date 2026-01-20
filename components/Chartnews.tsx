@@ -495,9 +495,17 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
         return uniq;
     }, [top5, rest]);
 
+    // Track in-flight requests to prevent duplicates
+    const fetchingRef = useRef<Set<string>>(new Set());
+
     const fetchPreview = useCallback(async (url: string) => {
+        // Deduplicate: skip if already fetching or already have data
+        if (fetchingRef.current.has(url)) return;
+        
+        fetchingRef.current.add(url);
         try {
-            const r = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`, { cache: "no-store" });
+            // Use default cache behavior to leverage HTTP cache-control headers
+            const r = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
             const json = await r.json();
             if (!json || typeof json !== "object") return;
             const p: LinkPreview = {
@@ -510,6 +518,8 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
             setPreviews((prev) => ({ ...prev, [url]: p }));
         } catch {
             // ignore
+        } finally {
+            fetchingRef.current.delete(url);
         }
     }, []);
 

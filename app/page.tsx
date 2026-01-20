@@ -1071,10 +1071,9 @@ function HomeContent() {
       console.log('[Page] Forcing loader due to refresh policy');
       setCurrentView('loader');
     } else if (hasCompletedLoader === "true") {
-      // Skip directly to content if user has completed the full flow before
-      console.log('[Page] Skipping to content - loader previously completed');
-      setV2Unlocked(true);
-      setCurrentView('content');
+      // Skip V3 loader but show pagemode loader briefly on every reload
+      console.log('[Page] Showing pagemode loader instead of V3 - loader previously completed');
+      setCurrentView('pagemode');
     } else if (hasSession || hasCompletedPagemode === "true") {
       // Skip pagemode if user has session OR has ever completed pagemode
       console.log('[Page] Skipping to loader - session/pagemode previously completed');
@@ -1099,16 +1098,38 @@ function HomeContent() {
   const handlePageModeUnlock = () => {
     // Mark pagemode as completed so user skips it on reload
     localStorage.setItem("bullmoney_pagemode_completed", "true");
-    console.log('[Page] Pagemode completed, moving to loader');
-    setCurrentView('loader');
+    console.log('[Page] Pagemode completed, checking if should skip to content or show loader');
+    
+    // If loader was already completed, skip directly to content
+    const hasCompletedLoader = localStorage.getItem("bullmoney_loader_completed");
+    if (hasCompletedLoader === "true") {
+      console.log('[Page] Loader already completed, skipping to content');
+      setV2Unlocked(true);
+      setCurrentView('content');
+    } else {
+      console.log('[Page] Moving to V3 loader');
+      setCurrentView('loader');
+    }
   };
 
   // Called when user completes the vault
   const handleLoaderComplete = useCallback(() => {
-    // Mark loader as completed so user skips directly to content on reload
-    localStorage.setItem("bullmoney_loader_completed", "true");
-    setV2Unlocked(true);
-    setCurrentView('content');
+    // Check if this is the first time completing V3 loader
+    const hasCompletedV3Before = localStorage.getItem("bullmoney_v3_completed_once");
+    
+    if (!hasCompletedV3Before) {
+      // First time - show pagemode loader celebration before content
+      console.log('[Page] First V3 completion - showing pagemode celebration loader');
+      localStorage.setItem("bullmoney_v3_completed_once", "true");
+      localStorage.setItem("bullmoney_show_celebration_loader", "true");
+      setCurrentView('pagemode');
+    } else {
+      // Not first time - go directly to content
+      console.log('[Page] V3 completed - going to content');
+      localStorage.setItem("bullmoney_loader_completed", "true");
+      setV2Unlocked(true);
+      setCurrentView('content');
+    }
   }, [setV2Unlocked]);
 
   // Mobile Loader Deferral

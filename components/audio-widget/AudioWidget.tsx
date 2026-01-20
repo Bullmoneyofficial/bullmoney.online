@@ -83,7 +83,7 @@ const AudioWidget = function AudioWidget() {
 
       {!shouldHideAudioWidgetCompletely && (
         <MainWidget {...state} {...audioSettings} {...h} setOpen={handleSetOpen} shimmerEnabled={perf.shimmerEnabled} shimmerSettings={perf.shimmerSettings}
-          isWandering={game.isWandering} gameStats={game.gameStats} gameState={game.gameState} />
+          isWandering={game.isWandering} gameStats={game.gameStats} gameState={game.gameState} setPlayerMinimized={state.setPlayerMinimized} />
       )}
 
       {/*
