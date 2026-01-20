@@ -4150,7 +4150,7 @@ const MiniGoldChart = memo(() => {
   return (
     <div 
       ref={containerRef} 
-      className="w-[80px] h-[33.5px] overflow-hidden rounded-sm mx-auto pointer-events-none"
+      className="w-full h-full overflow-hidden rounded-sm pointer-events-none"
       style={{ 
         filter: 'saturate(0) brightness(2) sepia(1) hue-rotate(190deg) saturate(3)',
         background: '#000000'
@@ -4159,6 +4159,441 @@ const MiniGoldChart = memo(() => {
   );
 });
 MiniGoldChart.displayName = 'MiniGoldChart';
+
+// Live Signals Viewer - Animated message ticker FROM t.me/bullmoneywebsite ONLY
+const LiveSignalsViewer = memo(() => {
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
+  const [messages, setMessages] = useState<TelegramPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Fetch messages from bullmoneywebsite channel ONLY
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await fetch('/api/telegram/channel?channel=trades&t=' + Date.now(), { cache: 'no-store' });
+        const data = await response.json();
+        if (data.success && data.posts?.length) {
+          setMessages(data.posts);
+        }
+      } catch (err) {
+        console.error('Failed to fetch signals from bullmoneywebsite:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 10000); // Refresh every 10s
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Fallback sample signals if API fails
+  const liveSignals = useMemo(() => {
+    if (messages.length > 0) {
+      return messages.map((msg, idx) => ({
+        id: idx + 1,
+        pair: '📊 Signal',
+        action: msg.text.includes('BUY') || msg.text.includes('buy') ? 'BUY' : 'SELL',
+        entry: msg.text.substring(0, 50),
+        type: 'signal',
+        time: msg.date
+      }));
+    }
+    return [
+      { id: 1, pair: '🟡 GOLD/USD', action: 'BUY', entry: '@2,650', type: 'signal', time: '2m ago' },
+      { id: 2, pair: '₿ BTC/USD', action: 'SELL', entry: '@98,500', type: 'signal', time: '5m ago' },
+      { id: 3, pair: '📊 EUR/USD', action: 'BUY', entry: '@1.0850', type: 'signal', time: '8m ago' },
+      { id: 4, pair: '🟢 GBP/USD', action: 'BUY', entry: '@1.2720', type: 'signal', time: '12m ago' },
+      { id: 5, pair: '🔴 OIL/USD', action: 'SELL', entry: '@82.40', type: 'signal', time: '15m ago' },
+    ];
+  }, [messages]);
+  
+  // Cycle through messages
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsTyping(true);
+      setTimeout(() => {
+        setCurrentMessageIndex((prev) => (prev + 1) % liveSignals.length);
+        setIsTyping(false);
+      }, 300);
+    }, 3500);
+    
+    return () => clearInterval(interval);
+  }, [liveSignals.length]);
+  
+  const currentSignal = liveSignals[currentMessageIndex];
+  
+  return (
+    <a
+      href="https://t.me/bullmoneywebsite"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block group"
+    >
+      <motion.div 
+        className="px-3 py-2.5 rounded-md overflow-hidden transition-all"
+        style={{
+          background: 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(59,130,246,0.05) 100%)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          border: '1px solid #3b82f6',
+          boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6'
+        }}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center gap-2">
+            <motion.div
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            >
+              <Send className="w-4 h-4 text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' }} />
+            </motion.div>
+            <span 
+              className="text-sm font-bold uppercase tracking-wider"
+              style={{ 
+                color: '#3b82f6',
+                textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6',
+                animation: 'neon-pulse 2s ease-in-out infinite'
+              }}
+            >
+              FREE SIGNALS
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <motion.div
+              className="w-2 h-2 rounded-full"
+              style={{ background: '#22c55e', boxShadow: '0 0 8px #22c55e' }}
+              animate={{ 
+                opacity: [1, 0.3, 1],
+                boxShadow: ['0 0 8px #22c55e', '0 0 16px #22c55e', '0 0 8px #22c55e']
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <span 
+              className="text-[8px] font-semibold uppercase tracking-wider"
+              style={{ 
+                color: '#22c55e',
+                textShadow: '0 0 4px #22c55e'
+              }}
+            >
+              LIVE
+            </span>
+          </div>
+        </div>
+        
+        {/* Animated Message Display */}
+        <div className="relative h-[68px] overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentMessageIndex}
+              initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: -20, filter: 'blur(4px)' }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="space-y-2"
+            >
+              {/* Signal Card */}
+              <div 
+                className="p-2 rounded"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(0,0,0,0.8) 100%)',
+                  border: '1px solid #3b82f6',
+                  boxShadow: '0 0 2px #3b82f6, inset 0 0 2px #3b82f6'
+                }}
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span 
+                    className="text-xs font-bold"
+                    style={{ 
+                      color: '#3b82f6',
+                      textShadow: '0 0 4px #3b82f6'
+                    }}
+                  >
+                    {currentSignal.pair}
+                  </span>
+                  <motion.span 
+                    className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
+                      currentSignal.action === 'BUY' ? 'bg-green-500/20' : 'bg-red-500/20'
+                    }`}
+                    style={{ 
+                      color: currentSignal.action === 'BUY' ? '#22c55e' : '#ef4444',
+                      textShadow: currentSignal.action === 'BUY' 
+                        ? '0 0 4px #22c55e' 
+                        : '0 0 4px #ef4444',
+                      border: `1px solid ${currentSignal.action === 'BUY' ? '#22c55e' : '#ef4444'}`
+                    }}
+                    animate={{ 
+                      scale: [1, 1.05, 1],
+                      boxShadow: currentSignal.action === 'BUY'
+                        ? ['0 0 4px #22c55e', '0 0 8px #22c55e', '0 0 4px #22c55e']
+                        : ['0 0 4px #ef4444', '0 0 8px #ef4444', '0 0 4px #ef4444']
+                    }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    {currentSignal.action}
+                  </motion.span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span 
+                    className="text-[11px] font-semibold"
+                    style={{ 
+                      color: '#60a5fa',
+                      textShadow: '0 0 2px #3b82f6'
+                    }}
+                  >
+                    Entry {currentSignal.entry}
+                  </span>
+                  <span 
+                    className="text-[9px]"
+                    style={{ 
+                      color: '#3b82f6',
+                      textShadow: '0 0 2px #3b82f6'
+                    }}
+                  >
+                    {currentSignal.time}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Typing Indicator */}
+              {isTyping && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex items-center gap-1.5 px-2"
+                >
+                  <MessageCircle className="w-3 h-3 text-blue-400" />
+                  <div className="flex gap-1">
+                    {[0, 1, 2].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-1 h-1 rounded-full"
+                        style={{ background: '#3b82f6', boxShadow: '0 0 4px #3b82f6' }}
+                        animate={{ 
+                          y: [0, -4, 0],
+                          opacity: [0.5, 1, 0.5]
+                        }}
+                        transition={{ 
+                          duration: 0.6, 
+                          repeat: Infinity, 
+                          delay: i * 0.15 
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <span 
+                    className="text-[9px]"
+                    style={{ 
+                      color: '#3b82f6',
+                      textShadow: '0 0 2px #3b82f6'
+                    }}
+                  >
+                    New signal incoming...
+                  </span>
+                </motion.div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+        
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-2 mt-2 border-t border-blue-500/20">
+          <span 
+            className="text-[9px] font-medium flex items-center gap-1"
+            style={{ 
+              color: '#3b82f6',
+              textShadow: '0 0 2px #3b82f6'
+            }}
+          >
+            <Radio className="w-3 h-3" />
+            @bullmoneywebsite
+          </span>
+          <motion.div
+            animate={{ x: [0, 3, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            <ExternalLink className="w-3 h-3 text-white group-hover:text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
+          </motion.div>
+        </div>
+      </motion.div>
+    </a>
+  );
+});
+LiveSignalsViewer.displayName = 'LiveSignalsViewer';
+
+// Breaking News Viewer - Smaller, Red Neon, FROM t.me/Bullmoneyshop ONLY
+const BreakingNewsViewer = memo(() => {
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [messages, setMessages] = useState<TelegramPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Fetch messages from Bullmoneyshop channel ONLY
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await fetch('/api/telegram/channel?channel=shop&t=' + Date.now(), { cache: 'no-store' });
+        const data = await response.json();
+        if (data.success && data.posts?.length) {
+          setMessages(data.posts);
+        }
+      } catch (err) {
+        console.error('Failed to fetch news from Bullmoneyshop:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 15000); // Refresh every 15s
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Cycle through messages
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrentMessageIndex((prev) => (prev + 1) % messages.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [messages.length]);
+  
+  if (loading || messages.length === 0) {
+    return (
+      <div 
+        className="px-2 py-1.5 rounded-md text-center"
+        style={{
+          background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(239,68,68,0.05) 100%)',
+          border: '1px solid #ef4444',
+          boxShadow: '0 0 3px #ef4444, 0 0 6px #ef4444, inset 0 0 3px #ef4444'
+        }}
+      >
+        <span 
+          className="text-[9px] font-semibold"
+          style={{ color: '#ef4444', textShadow: '0 0 4px #ef4444' }}
+        >
+          Loading Breaking News...
+        </span>
+      </div>
+    );
+  }
+  
+  const currentMessage = messages[currentMessageIndex];
+  
+  return (
+    <a
+      href="https://t.me/Bullmoneyshop"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block group"
+    >
+      <motion.div 
+        className="px-2.5 py-2 rounded-md overflow-hidden transition-all"
+        style={{
+          background: 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(239,68,68,0.05) 100%)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          border: '1px solid #ef4444',
+          boxShadow: '0 0 3px #ef4444, 0 0 6px #ef4444, inset 0 0 3px #ef4444'
+        }}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1.5">
+            <motion.div
+              animate={{ 
+                scale: [1, 1.2, 1],
+                rotate: [0, 5, -5, 0]
+              }}
+              transition={{ duration: 0.8, repeat: Infinity, repeatDelay: 2 }}
+            >
+              <AlertTriangle className="w-3.5 h-3.5 text-white" style={{ filter: 'drop-shadow(0 0 3px #ffffff) drop-shadow(0 0 6px #ffffff)' }} />
+            </motion.div>
+            <span 
+              className="text-xs font-bold uppercase tracking-wider"
+              style={{ 
+                color: '#ef4444',
+                textShadow: '0 0 3px #ef4444, 0 0 6px #ef4444',
+                animation: 'neon-pulse 2s ease-in-out infinite'
+              }}
+            >
+              BREAKING NEWS
+            </span>
+          </div>
+          <motion.div
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ background: '#ef4444', boxShadow: '0 0 6px #ef4444' }}
+            animate={{ 
+              opacity: [1, 0.3, 1],
+              boxShadow: ['0 0 6px #ef4444', '0 0 12px #ef4444', '0 0 6px #ef4444']
+            }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          />
+        </div>
+        
+        {/* Animated Message */}
+        <div className="relative h-[40px] overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentMessageIndex}
+              initial={{ opacity: 0, y: 15, filter: 'blur(3px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: -15, filter: 'blur(3px)' }}
+              transition={{ duration: 0.3 }}
+              className="space-y-1"
+            >
+              <p 
+                className="text-[10px] font-semibold leading-tight line-clamp-2"
+                style={{ 
+                  color: '#fca5a5',
+                  textShadow: '0 0 2px #ef4444'
+                }}
+              >
+                {currentMessage.text.substring(0, 100)}{currentMessage.text.length > 100 ? '...' : ''}
+              </p>
+              <span 
+                className="text-[8px]"
+                style={{ 
+                  color: '#ef4444',
+                  textShadow: '0 0 2px #ef4444'
+                }}
+              >
+                {currentMessage.date}
+              </span>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+        
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-1.5 mt-1.5 border-t border-red-500/20">
+          <span 
+            className="text-[8px] font-medium flex items-center gap-1"
+            style={{ 
+              color: '#ef4444',
+              textShadow: '0 0 2px #ef4444'
+            }}
+          >
+            <ShoppingBag className="w-2.5 h-2.5" />
+            @Bullmoneyshop
+          </span>
+          <motion.div
+            animate={{ x: [0, 2, 0] }}
+            transition={{ duration: 1.2, repeat: Infinity }}
+          >
+            <ExternalLink className="w-2.5 h-2.5 text-white group-hover:text-red-400" style={{ filter: 'drop-shadow(0 0 3px #ffffff)' }} />
+          </motion.div>
+        </div>
+      </motion.div>
+    </a>
+  );
+});
+BreakingNewsViewer.displayName = 'BreakingNewsViewer';
 
 const UnifiedFpsPill = memo(({ 
   fps, 
@@ -4289,68 +4724,121 @@ const UnifiedFpsPill = memo(({
                 initial={{ opacity: 0, scale: 0.85 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.85 }}
-                className="px-3 py-2 relative z-10"
+                className="px-1.5 py-2 md:px-8 md:py-7 relative z-10"
               >
-                <div className="flex flex-col gap-1.5 min-w-[140px]">
-                  {/* TRADING HUB Label - Chartnews Neon Blue Style */}
-                  <div className="flex items-center justify-center gap-1.5">
-                    <TrendingUp className="w-3.5 h-3.5 text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' }} />
-                    <span 
-                      className="text-[11px] font-black tracking-wider uppercase"
-                      style={{ 
-                        color: '#3b82f6',
-                        textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6',
-                        animation: 'neon-pulse 2s ease-in-out infinite'
-                      }}
-                    >
-                      TRADING HUB
-                    </span>
+                <div className="flex flex-col gap-1 md:gap-4 min-w-[40px] md:min-w-[320px]">
+                  {/* Mobile: Compact view with prices */}
+                  <div className="flex md:hidden flex-col items-center justify-center gap-1">
+                    <TrendingUp className="w-3 h-3 text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #3b82f6)' }} />
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-0.5">
+                        <Coins className="w-2.5 h-2.5 text-blue-400" />
+                        <span className="text-[8px] font-bold text-blue-400">${prices.xauusd}</span>
+                      </div>
+                      <div className="w-px h-3 bg-blue-500/50" />
+                      <div className="flex items-center gap-0.5">
+                        <Bitcoin className="w-2.5 h-2.5 text-blue-400" />
+                        <span className="text-[8px] font-bold text-blue-400">${prices.btcusd}</span>
+                      </div>
+                    </div>
                   </div>
                   
-                  {/* Mini TradingView Gold Chart - Chartnews Style (Taller, Narrower) */}
+                  {/* Desktop: Full TRADING HUB Label - Premium Neon Style */}
+                  <div className="hidden md:flex flex-col items-center justify-center gap-0.5 md:gap-2">
+                    <div className="flex items-center gap-1 md:gap-3">
+                      <motion.div
+                        animate={{ rotate: [0, 360] }}
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                      >
+                        <TrendingUp className="w-3 h-3 md:w-7 md:h-7 text-white" style={{ filter: 'drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 12px #3b82f6)' }} />
+                      </motion.div>
+                      <span 
+                        className="text-[10px] md:text-2xl font-black tracking-widest uppercase"
+                        style={{ 
+                          color: '#3b82f6',
+                          textShadow: '0 0 6px #3b82f6, 0 0 12px #3b82f6, 0 0 18px #3b82f6',
+                          animation: 'neon-pulse 2s ease-in-out infinite',
+                          letterSpacing: '0.15em'
+                        }}
+                      >
+                        TRADING HUB
+                      </span>
+                    </div>
+                    <div className="h-px w-full md:w-48 bg-gradient-to-r from-transparent via-blue-500 to-transparent"
+                      style={{ boxShadow: '0 0 8px #3b82f6' }}
+                    />
+                  </div>
+                  
+                  {/* Mini TradingView Gold Chart - Premium Card - Desktop Only */}
                   <div 
-                    className="w-[80px] h-[33.5px] rounded-sm overflow-hidden mx-auto"
+                    className="hidden md:block w-full h-[24px] md:h-[120px] rounded-lg overflow-hidden relative"
                     style={{
-                      background: '#000000',
-                      border: '1px solid #3b82f6',
-                      boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6'
+                      background: 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(59,130,246,0.05) 100%)',
+                      border: '2px solid #3b82f6',
+                      boxShadow: '0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6'
                     }}
                   >
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-cyan-500/10" />
                     <MiniGoldChart />
                   </div>
                   
-                  {/* Live Prices - Chartnews Neon Blue Style */}
-                  <div className="flex items-center justify-center gap-2">
+                  {/* Live Prices - Premium Card Style - Desktop Only */}
+                  <div 
+                    className="hidden md:flex items-center justify-around gap-1 md:gap-4 px-1.5 md:px-4 py-1 md:py-3 rounded-lg"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.08) 100%)',
+                      border: '1px solid #3b82f6',
+                      boxShadow: '0 0 4px #3b82f6, inset 0 0 4px #3b82f6'
+                    }}
+                  >
                     {/* Gold Price */}
-                    <div className="flex items-center gap-1">
-                      <Coins className="w-3 h-3 text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' }} />
-                      <span 
-                        className="text-[10px] font-bold tabular-nums"
-                        style={{ 
-                          color: '#3b82f6',
-                          textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6'
-                        }}
-                      >
-                        {prices.xauusd}
-                      </span>
+                    <div className="flex flex-col items-center gap-0.5 md:gap-1">
+                      <Coins className="w-3 h-3 md:w-6 md:h-6 text-amber-400" style={{ filter: 'drop-shadow(0 0 6px #fbbf24) drop-shadow(0 0 12px #fbbf24)' }} />
+                      <div className="flex flex-col items-center">
+                        <span className="text-[7px] md:text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Gold</span>
+                        <span 
+                          className="text-[10px] md:text-lg font-black tabular-nums"
+                          style={{ 
+                            color: '#3b82f6',
+                            textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6'
+                          }}
+                        >
+                          ${prices.xauusd}
+                        </span>
+                      </div>
                     </div>
                     
                     {/* Divider */}
-                    <div className="w-px h-3" style={{ background: '#3b82f6', boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }} />
+                    <div className="h-8 md:h-12 w-px bg-gradient-to-b from-transparent via-blue-500 to-transparent" 
+                      style={{ boxShadow: '0 0 6px #3b82f6' }}
+                    />
                     
                     {/* BTC Price */}
-                    <div className="flex items-center gap-1">
-                      <Bitcoin className="w-3 h-3 text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' }} />
-                      <span 
-                        className="text-[10px] font-bold tabular-nums"
-                        style={{ 
-                          color: '#3b82f6',
-                          textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6'
-                        }}
-                      >
-                        {prices.btcusd}
-                      </span>
+                    <div className="flex flex-col items-center gap-0.5 md:gap-1">
+                      <Bitcoin className="w-3 h-3 md:w-6 md:h-6 text-orange-400" style={{ filter: 'drop-shadow(0 0 6px #fb923c) drop-shadow(0 0 12px #fb923c)' }} />
+                      <div className="flex flex-col items-center">
+                        <span className="text-[7px] md:text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Bitcoin</span>
+                        <span 
+                          className="text-[10px] md:text-lg font-black tabular-nums"
+                          style={{ 
+                            color: '#3b82f6',
+                            textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6'
+                          }}
+                        >
+                          ${prices.btcusd}
+                        </span>
+                      </div>
                     </div>
+                  </div>
+
+                  {/* Live Message Viewer - Desktop Only */}
+                  <div className="hidden md:block">
+                    <LiveSignalsViewer />
+                  </div>
+                  
+                  {/* Breaking News - Desktop Only, Below Signals */}
+                  <div className="hidden md:block">
+                    <BreakingNewsViewer />
                   </div>
                 </div>
               </motion.div>
