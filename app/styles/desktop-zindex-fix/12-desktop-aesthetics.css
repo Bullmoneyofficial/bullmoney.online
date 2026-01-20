@@ -452,13 +452,13 @@
       --hub-border-angle: 360deg;
     }
   }
+}
 
-  /* Register the custom property for animation */
-  @property --hub-border-angle {
-    syntax: '<angle>';
-    initial-value: 0deg;
-    inherits: false;
-  }
+/* Register the custom property for animation - must be at top level */
+@property --hub-border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
 }
 
 /* Global neon glow keyframes (EXTREME INTENSITY - PURE BLUE) */

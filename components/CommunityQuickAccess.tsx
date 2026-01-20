@@ -87,7 +87,7 @@ function useVipCheck(userId?: string, userEmail?: string) {
 }
 
 // Live Telegram Channel Feed Component - Fetches from API - MEMOIZED for performance
-const TelegramChannelEmbed = React.memo(({ channel = 'main', isVip = false }: { channel?: ChannelKey; isVip?: boolean }) => {
+const TelegramChannelEmbed = React.memo(function TelegramChannelEmbed({ channel = 'main', isVip = false }: { channel?: ChannelKey; isVip?: boolean }) {
   const [posts, setPosts] = useState<TelegramPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -231,7 +231,7 @@ const TelegramChannelEmbed = React.memo(({ channel = 'main', isVip = false }: { 
 });
 
 // Live Trades Ticker - Shows scrolling messages from public trades channel - MEMOIZED
-const LiveTradesTicker = React.memo(() => {
+const LiveTradesTicker = React.memo(function LiveTradesTicker() {
   const [messages, setMessages] = useState<TelegramPost[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);

@@ -289,7 +289,6 @@ function DesktopHomeContent() {
         unregisterComponent('ticker');
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentView, screenCategory]);
 
   useEffect(() => {

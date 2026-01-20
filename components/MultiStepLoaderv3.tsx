@@ -3653,7 +3653,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 textShadow: "0 0 5px rgba(59, 130, 246, 0.3)",
               }}
             >
-              "{quote}"
+              &ldquo;{quote}&rdquo;
             </p>
           </motion.div>
         )}
