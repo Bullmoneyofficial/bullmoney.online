@@ -179,14 +179,20 @@ const normalizeYouTubeId = (input: string) => {
   }
 };
 
-function MobileDiscordHero({ sources, onOpenModal }: { sources: string[]; onOpenModal: () => void }) {
+function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sources: string[]; onOpenModal: () => void; variant?: 'mobile' | 'desktop' }) {
   const [index, setIndex] = useState(0);
   const videoId = normalizeYouTubeId(sources[index] || sources[0] || 'Q3dSjSP3t8I');
   const embed = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&rel=0&modestbranding=1`;
 
+  const containerClass = variant === 'mobile'
+    ? "w-full max-w-5xl mx-auto px-4 py-10 pt-6 sm:pt-10 min-h-[85vh] flex items-center"
+    : "w-full max-w-6xl mx-auto px-6 py-12 sm:py-16 min-h-[70vh] flex items-center";
+
+  const cardMarginTop = variant === 'mobile' ? 'mt-8 sm:mt-0' : 'mt-0';
+
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 py-10 pt-6 sm:pt-10 min-h-[85vh] flex items-center" data-theme-aware>
-      <div className="relative isolate overflow-hidden rounded-3xl border border-blue-500/40 bg-gradient-to-b from-[#050915]/90 via-[#050915]/95 to-black shadow-[0_0_30px_rgba(59,130,246,0.25)] backdrop-blur-xl p-5 sm:p-8 flex flex-col gap-6 mt-8 sm:mt-0 w-full">
+    <div className={containerClass} data-theme-aware>
+      <div className={`relative isolate overflow-hidden rounded-3xl border border-blue-500/40 bg-gradient-to-b from-[#050915]/90 via-[#050915]/95 to-black shadow-[0_0_30px_rgba(59,130,246,0.25)] backdrop-blur-xl p-5 sm:p-8 flex flex-col gap-6 ${cardMarginTop} w-full`}>
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 20% 20%, rgba(59,130,246,0.14), transparent 40%), radial-gradient(circle at 80% 10%, rgba(147,197,253,0.12), transparent 35%)' }} />
         <div className="absolute -inset-px rounded-3xl border border-blue-500/20 blur-[1px] pointer-events-none" />
 
