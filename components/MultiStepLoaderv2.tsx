@@ -22,8 +22,44 @@ import { ArrowUpRight, LockOpen, Zap, TrendingUp, Sparkles, Rocket, Star, Trophy
 import Image from "next/image";
 import { trackEvent } from "@/lib/analytics";
 
-// --- IMPORT UNIFIED SHIMMER SYSTEM FOR FPS-AWARE ANIMATIONS ---
-import { useOptimizedShimmer } from "@/components/ui/UnifiedShimmer";
+// --- GLOBAL NEON STYLES (OLED BLACK + NEON BLUE) ---
+const NEON_STYLES = `
+  @keyframes neon-pulse {
+    0%, 100% { 
+      text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+      filter: brightness(1);
+    }
+    50% { 
+      text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
+      filter: brightness(1.1);
+    }
+  }
+
+  @keyframes neon-glow {
+    0%, 100% { 
+      box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    }
+    50% { 
+      box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
+    }
+  }
+
+  .loader-neon-text {
+    color: #3b82f6;
+    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+    animation: neon-pulse 2s ease-in-out infinite;
+  }
+
+  .loader-neon-border {
+    border: 2px solid #3b82f6;
+    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    animation: neon-glow 2s ease-in-out infinite;
+  }
+
+  .loader-neon-glow {
+    box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+  }
+`;
 
 // --- TYPES ---
 type AssetKey = "BTC" | "ETH" | "SOL";
@@ -60,6 +96,36 @@ const ASSETS: Record<AssetKey, { id: string; symbol: string; icon: string; color
   BTC: { id: "BTC", symbol: "BINANCE:BTCUSDT", icon: "₿", color: "#F7931A" },
   ETH: { id: "ETH", symbol: "BINANCE:ETHUSDT", icon: "Ξ", color: "#627EEA" },
   SOL: { id: "SOL", symbol: "BINANCE:SOLUSDT", icon: "◎", color: "#14F195" },
+};
+
+// ============================================================================
+// RESPONSIVE VIEWPORT BREAKPOINTS - iPhone 4 (320px) to 8K TV (7680px)
+// ============================================================================
+const BREAKPOINTS = {
+  IPHONE4: 320,      // iPhone 4/SE 1st gen
+  SMALL_MOBILE: 375, // iPhone SE 2nd gen, iPhone 6/7/8
+  MOBILE: 428,       // iPhone 14 Pro Max, large phones
+  TABLET: 768,       // iPad Mini, small tablets
+  LAPTOP: 1024,      // iPad Pro, small laptops
+  DESKTOP: 1440,     // Standard desktop monitors
+  QHD: 2560,         // 1440p monitors
+  UHD_4K: 3840,      // 4K monitors/TVs
+  UHD_5K: 5120,      // 5K iMac, ultra-wide monitors
+  UHD_8K: 7680,      // 8K TVs
+} as const;
+
+// Responsive sizing scales based on viewport
+// Desktop uses mobile-like compact sizing for cleaner look
+const getResponsiveScale = (width: number, height: number) => {
+  const shortEdge = Math.min(width, height);
+  
+  // Use mobile-like compact sizing for ALL screen sizes
+  // This gives a cleaner, more focused UI on larger screens
+  if (shortEdge >= BREAKPOINTS.TABLET) return { iconSize: 80, ringSize: 112, fontSize: 'text-3xl', gap: 4, padding: 5 };
+  if (shortEdge >= BREAKPOINTS.MOBILE) return { iconSize: 80, ringSize: 112, fontSize: 'text-3xl', gap: 4, padding: 5 };
+  if (shortEdge >= BREAKPOINTS.SMALL_MOBILE) return { iconSize: 72, ringSize: 104, fontSize: 'text-3xl', gap: 4, padding: 4 };
+  // iPhone 4 / very small screens
+  return { iconSize: 64, ringSize: 96, fontSize: 'text-2xl', gap: 3, padding: 4 };
 };
 
 // --- LIVE PRICE HOOK (ENABLED FOR ALL DEVICES) ---
@@ -465,8 +531,55 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
   const prefersReducedMotion = useReducedMotion();
   const [isMobile, setIsMobile] = useState(false);
   
+  // --- REAL-TIME VIEWPORT DETECTION - Supports iPhone 4 to 8K ---
+  const [viewportSize, setViewportSize] = useState({ 
+    width: typeof window !== 'undefined' ? window.innerWidth : 1920,
+    height: typeof window !== 'undefined' ? window.innerHeight : 1080,
+  });
+  const lastSizeRef = useRef({ width: 0, height: 0 });
+  
+  // Calculate responsive scales based on current viewport
+  const responsiveScale = useMemo(() => 
+    getResponsiveScale(viewportSize.width, viewportSize.height),
+    [viewportSize.width, viewportSize.height]
+  );
+  
   useEffect(() => {
     setIsMobile(getIsMobileOrInAppBrowser());
+    
+    // Initial viewport size
+    const vv = window.visualViewport;
+    const initialWidth = Math.round(vv?.width || window.innerWidth);
+    const initialHeight = Math.round(vv?.height || window.innerHeight);
+    setViewportSize({ width: initialWidth, height: initialHeight });
+    lastSizeRef.current = { width: initialWidth, height: initialHeight };
+  }, []);
+  
+  // Real-time viewport monitoring
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleResize = () => {
+      const vv = window.visualViewport;
+      const newWidth = Math.round(vv?.width || window.innerWidth);
+      const newHeight = Math.round(vv?.height || window.innerHeight);
+      
+      // Only update if size actually changed
+      if (newWidth !== lastSizeRef.current.width || newHeight !== lastSizeRef.current.height) {
+        lastSizeRef.current = { width: newWidth, height: newHeight };
+        setViewportSize({ width: newWidth, height: newHeight });
+      }
+    };
+    
+    window.addEventListener('resize', handleResize, { passive: true });
+    window.addEventListener('orientationchange', handleResize, { passive: true });
+    window.visualViewport?.addEventListener('resize', handleResize, { passive: true });
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+      window.visualViewport?.removeEventListener('resize', handleResize);
+    };
   }, []);
   const { price: realPrice } = useLivePrice(selectedAsset);
   const [displayPrice, setDisplayPrice] = useState(0);
@@ -478,19 +591,35 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
   }, [displayPrice, realPrice]);
   const activePriceText = isDeflating && deflateText ? deflateText : priceText;
   
-  // --- FPS-AWARE SHIMMER SETTINGS ---
-  const shimmerSettings = useOptimizedShimmer();
-  // Calculate shimmer duration based on FPS tier (slower = less CPU usage)
-  // Mobile/in-app browsers get longer duration to reduce jank
-  const shimmerDuration = useMemo(() => {
-    if (isMobile || prefersReducedMotion) return 5; // Much slower for mobile
-    switch (shimmerSettings.speed) {
-      case 'slow': return 3.5;
-      case 'normal': return 2.8;
-      case 'fast': return 2.2;
-      default: return 2.8;
+  // Inject neon styles on mount
+  useEffect(() => {
+    const styleId = 'loader-neon-styles';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = NEON_STYLES;
+      document.head.appendChild(style);
     }
-  }, [shimmerSettings.speed, isMobile, prefersReducedMotion]);
+  }, []);
+
+  // Lock body scroll when gate is visible (prevents desktop scrolling)
+  useEffect(() => {
+    if (gateVisible) {
+      const originalOverflow = document.body.style.overflow;
+      const originalHeight = document.body.style.height;
+      const originalPosition = document.body.style.position;
+      document.body.style.overflow = 'hidden';
+      document.body.style.height = '100vh';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.height = originalHeight;
+        document.body.style.position = originalPosition;
+        document.body.style.width = '';
+      };
+    }
+  }, [gateVisible]);
   
   // Reduce particle count on mobile
   const maxParticles = isMobile ? 4 : 12;
@@ -1024,21 +1153,31 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
           <motion.div
             exit={{ opacity: 0, scale: 1.05, filter: isMobile ? "none" : "blur(20px)" }}
             transition={{ duration: isMobile ? 0.5 : 0.8, ease: [0.43, 0.13, 0.23, 0.96] }}
-            className="fixed inset-0 z-[9999999] flex flex-col items-center justify-center text-white overflow-hidden select-none"
+            className="fixed inset-0 z-[9999999] flex flex-col items-center justify-center text-white select-none"
             style={{ 
               isolation: 'isolate', 
-              backgroundColor: isMobile ? '#000000' : 'rgba(0, 0, 0, 0.95)', 
-              // Disable backdrop-filter on mobile/in-app browsers to prevent black boxes
-              backdropFilter: isMobile ? 'none' : 'blur(10px)', 
-              WebkitBackdropFilter: isMobile ? 'none' : 'blur(10px)',
+              backgroundColor: '#000000', // Pure OLED black
+              backdropFilter: 'none', 
+              WebkitBackdropFilter: 'none',
               // Force GPU acceleration and prevent pull-to-refresh
               transform: 'translateZ(0)',
               willChange: 'transform',
-              // Prevent default touch behaviors for smoother holding
+              // Prevent ALL scrolling
+              overflow: 'hidden',
+              overscrollBehavior: 'none',
               touchAction: 'none',
               WebkitTouchCallout: 'none',
               WebkitUserSelect: 'none',
               userSelect: 'none',
+              // Lock viewport
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: '100vw',
+              height: '100vh',
+              maxHeight: '100vh',
             }}
             onMouseDown={!vaultUnlocked ? handleInteractionStart : undefined}
             onMouseUp={!vaultUnlocked ? handleInteractionEnd : undefined}
@@ -1048,6 +1187,8 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
             onTouchCancel={!vaultUnlocked ? handleInteractionEnd : undefined}
             // Prevent context menu on long press
             onContextMenu={(e) => e.preventDefault()}
+            // Prevent scroll events
+            onWheel={(e) => e.preventDefault()}
           >
             {/* ═══════════════════════════════════════════════════════════════════
                 VAULT DOOR OVERLAY - Appears when vault is opening
@@ -1139,48 +1280,31 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
               </div>
             )}
             
-            {/* Navbar-style shimmer overlay - LEFT TO RIGHT (FPS-aware) - MOBILE OPTIMIZED */}
-            {!prefersReducedMotion && (
+            {/* Subtle neon ambient glow - NO SHIMMER */}
+            {!prefersReducedMotion && !isMobile && (
               <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <motion.div
-                  className="absolute inset-0"
+                <div
+                  className="absolute inset-0 opacity-20"
                   style={{ 
-                    background: `linear-gradient(to right, transparent, rgba(var(--accent-rgb, 59, 130, 246), ${isMobile ? 0.15 : 0.3}), transparent)`,
-                    willChange: 'transform',
-                  }}
-                  animate={{ x: ["-100%", "100%"] }}
-                  transition={{ 
-                    duration: isMobile ? shimmerDuration * 4 : shimmerDuration * 2.5, 
-                    repeat: Infinity, 
-                    ease: "linear", 
-                    repeatDelay: isMobile ? 2 : 1 
+                    background: 'radial-gradient(ellipse at 50% 30%, rgba(59, 130, 246, 0.15), transparent 60%)',
                   }}
                 />
               </div>
             )}
 
-            {/* Trading Ticker Tape - Pure Black with theme accent border and shimmer */}
-            <div className="absolute top-0 left-0 right-0 h-10 bg-[#000000] overflow-hidden z-40" style={{ 
-              borderBottom: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)', 
-              boxShadow: isMobile ? 'none' : '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
-              transform: 'translateZ(0)',
-            }}>
-              {/* Left to right shimmer on ticker (FPS-aware) - MOBILE OPTIMIZED */}
-              {!isMobile && !prefersReducedMotion && (
-                <motion.div
-                  className="absolute inset-0"
-                  style={{ 
-                    background: `linear-gradient(to right, transparent, rgba(var(--accent-rgb, 59, 130, 246), 0.4), transparent)`,
-                    willChange: 'transform',
-                  }}
-                  animate={{ x: ["-100%", "100%"] }}
-                  transition={{ duration: shimmerDuration * 1.2, repeat: Infinity, ease: "linear" }}
-                />
-              )}
+            {/* Trading Ticker Tape - Pure OLED Black with neon border - NO SHIMMER */}
+            <div 
+              className="absolute top-0 left-0 right-0 h-10 bg-[#000000] overflow-hidden z-40"
+              style={{ 
+                borderBottom: '2px solid #3b82f6', 
+                boxShadow: '0 0 8px #3b82f6, 0 0 16px rgba(59, 130, 246, 0.4)',
+                transform: 'translateZ(0)',
+              }}
+            >
               <motion.div
                 animate={{ x: ["-100%", "0%"] }}
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="flex items-center h-full gap-8 whitespace-nowrap text-xs font-mono relative z-10"
+                className="flex items-center h-full gap-8 whitespace-nowrap font-mono relative z-10 text-xs"
               >
                 {[...Array(3)].map((_, i) => (
                   <React.Fragment key={i}>
@@ -1196,20 +1320,20 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
               </motion.div>
             </div>
 
-            {/* Radial Gradient Glow - Pure blue, subtle - MOBILE OPTIMIZED */}
-            <motion.div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: isMobile 
-                  ? `radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb, 59, 130, 246), 0.1), transparent 60%)`
-                  : `radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb, 59, 130, 246), 0.2), rgba(var(--accent-rgb, 59, 130, 246), 0.08) 40%, transparent 70%)`,
-                willChange: 'opacity',
-              }}
-              animate={{
-                opacity: isHolding ? (isMobile ? 0.5 : 0.8) : (isMobile ? 0.2 : 0.4),
-              }}
-              transition={{ duration: isMobile ? 0.6 : 0.4 }}
-            />
+            {/* Radial Gradient Glow - DESKTOP ONLY - Mobile is pure black */}
+            {!isMobile && (
+              <motion.div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: `radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb, 59, 130, 246), 0.2), rgba(var(--accent-rgb, 59, 130, 246), 0.08) 40%, transparent 70%)`,
+                  willChange: 'opacity',
+                }}
+                animate={{
+                  opacity: isHolding ? 0.8 : 0.4,
+                }}
+                transition={{ duration: 0.4 }}
+              />
+            )}
 
             {/* ═══════════════════════════════════════════════════════════════════
                 MINIMAL FLOATING ORBS - DESKTOP ONLY
@@ -1304,13 +1428,16 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
               </>
             )}
 
-            {/* Asset Selector - positioned below live ticker, lowered z-index to not overlap icon */}
-            <div className="absolute top-14 sm:top-16 left-0 right-0 z-20 pointer-events-none flex justify-center">
+            {/* Asset Selector - positioned just below live ticker (h-10=40px) */}
+            <div 
+              className="absolute left-0 right-0 z-[60] pointer-events-none flex justify-center"
+              style={{ top: '44px' }}
+            >
               <motion.div
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="flex gap-1.5 sm:gap-2 pointer-events-auto"
+                className="flex pointer-events-auto gap-2"
                 data-no-hold
               >
                 {Object.entries(ASSETS).map(([key, asset]) => (
@@ -1334,37 +1461,61 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                       setSelectedAsset(key as AssetKey);
                     }}
                     className={cn(
-                      "px-3 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-black border-2 transition-all min-w-[44px] min-h-[44px] sm:min-w-[52px] sm:min-h-[52px] flex items-center gap-1 sm:gap-1.5 shadow-lg relative overflow-hidden",
+                      "rounded-full font-black border-2 transition-all flex items-center shadow-lg relative overflow-hidden",
                       key === selectedAsset
-                        ? "text-blue-300 border-blue-500/90 shadow-[0_0_35px_rgba(59,130,246,0.7)]" + " bg-black/90"
-                        : "text-blue-200 border-blue-500/50 hover:border-blue-400/80" + " bg-black/90 hover:bg-black/95"
+                        ? "text-blue-300 border-blue-500/90 shadow-[0_0_35px_rgba(59,130,246,0.7)]" + " bg-black"
+                        : "text-blue-200 border-blue-500/50 hover:border-blue-400/80" + " bg-black hover:bg-black/95"
                     )}
                     style={{
                       touchAction: 'manipulation',
                       WebkitTapHighlightColor: 'transparent',
+                      // Responsive button sizing
+                      padding: viewportSize.width >= BREAKPOINTS.UHD_4K ? '16px 28px' :
+                               viewportSize.width >= BREAKPOINTS.QHD ? '12px 22px' :
+                               viewportSize.width >= BREAKPOINTS.DESKTOP ? '10px 18px' :
+                               viewportSize.width >= BREAKPOINTS.LAPTOP ? '8px 16px' :
+                               '8px 12px',
+                      minWidth: viewportSize.width >= BREAKPOINTS.UHD_4K ? '80px' :
+                               viewportSize.width >= BREAKPOINTS.QHD ? '68px' :
+                               viewportSize.width >= BREAKPOINTS.DESKTOP ? '60px' :
+                               '52px',
+                      minHeight: viewportSize.width >= BREAKPOINTS.UHD_4K ? '56px' :
+                                viewportSize.width >= BREAKPOINTS.QHD ? '52px' :
+                                viewportSize.width >= BREAKPOINTS.DESKTOP ? '48px' :
+                                '44px',
+                      gap: viewportSize.width >= BREAKPOINTS.UHD_4K ? '10px' :
+                           viewportSize.width >= BREAKPOINTS.QHD ? '8px' :
+                           '6px',
+                      fontSize: viewportSize.width >= BREAKPOINTS.UHD_4K ? '18px' :
+                               viewportSize.width >= BREAKPOINTS.QHD ? '16px' :
+                               viewportSize.width >= BREAKPOINTS.DESKTOP ? '14px' :
+                               '12px',
                     }}
                   >
                     {key === selectedAsset && (
                       <>
-                        {/* Blue shimmer LEFT TO RIGHT like navbar (FPS-aware) */}
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/70 to-transparent z-0 rounded-full"
-                          animate={{ x: ["-100%", "100%"] }}
-                          transition={{ duration: shimmerDuration * 0.7, repeat: Infinity, ease: "linear" }}
-                        />
+                        {/* Neon glow indicator - NO SHIMMER */}
                         <motion.div
                           layoutId="activeAsset"
-                          className="absolute inset-[1px] bg-black/95 rounded-full z-[1]"
+                          className="absolute inset-0 rounded-full z-0"
+                          style={{
+                            boxShadow: '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5), inset 0 0 8px rgba(59, 130, 246, 0.3)',
+                          }}
+                          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                        />
+                        <motion.div
+                          className="absolute inset-[1px] bg-black rounded-full z-[1]"
                           transition={{ type: "spring", stiffness: 400, damping: 25 }}
                         />
                       </>
                     )}
                     <span
-                      className="text-lg relative z-10 leading-none"
+                      className="relative z-10 leading-none"
                       style={{
                         color: asset.color,
                         textShadow: "0 0 12px rgba(0,0,0,0.45)",
                         fontFamily: '"Segoe UI Symbol", "Apple Color Emoji", "Noto Sans Symbols 2", "Noto Sans Symbols", "Arial Unicode MS", sans-serif',
+                        fontSize: '16px',
                       }}
                     >
                       {asset.icon}
@@ -1375,20 +1526,34 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
               </motion.div>
             </div>
 
-            {/* Main Content */}
+            {/* Main Content - z-30 (below asset selector z-60) - Centered like vault screen */}
             <motion.div
-              style={{ x: shakeX, y: shakeY, scale }}
-              className="relative z-30 flex flex-col items-center gap-6 w-full max-w-lg px-6 pb-16"
+              className="relative z-30 flex flex-col items-center justify-center w-full px-4 sm:px-6 md:px-8"
+              style={{
+                x: shakeX, 
+                y: shakeY, 
+                scale,
+                gap: `${responsiveScale.gap * 3}px`,
+              }}
             >
-              {/* Holdable Asset Icon */}
+              {/* Holdable Asset Icon - Responsive size */}
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: "spring", stiffness: 200, damping: 15 }}
                 className="relative select-none"
               >
-                {/* Progress Ring */}
-                <svg className="absolute inset-[-16px] w-[128px] h-[128px] -rotate-90" viewBox="0 0 128 128">
+                {/* Progress Ring - Responsive dimensions */}
+                <svg 
+                  className="absolute -rotate-90" 
+                  viewBox="0 0 128 128"
+                  style={{
+                    width: `${responsiveScale.ringSize}px`,
+                    height: `${responsiveScale.ringSize}px`,
+                    top: `${-(responsiveScale.ringSize - responsiveScale.iconSize) / 2}px`,
+                    left: `${-(responsiveScale.ringSize - responsiveScale.iconSize) / 2}px`,
+                  }}
+                >
                   <circle
                     cx="64"
                     cy="64"
@@ -1433,11 +1598,15 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                             : "0 0 40px rgba(59, 130, 246, 0.6)",
                         }
                   }
-                  style={{ rotate: isMobile ? 0 : iconRotate }}
-                  className={`relative w-24 h-24 rounded-full bg-black/90 border-2 border-blue-500/50 flex items-center justify-center text-5xl font-bold ${isMobile ? 'shadow-[0_0_30px_rgba(59,130,246,0.5)]' : 'shadow-[inset_0_0_30px_rgba(59,130,246,0.3)]'}`}
+                  style={{ 
+                    rotate: isMobile ? 0 : iconRotate,
+                    width: `${responsiveScale.iconSize}px`,
+                    height: `${responsiveScale.iconSize}px`,
+                  }}
+                  className={`relative rounded-full bg-black border-2 border-blue-500/50 flex items-center justify-center font-bold ${isMobile ? 'shadow-[0_0_30px_rgba(59,130,246,0.5)]' : 'shadow-[inset_0_0_30px_rgba(59,130,246,0.3)]'}`}
                 >
                   <span
-                    className="relative z-10 leading-none"
+                    className={`relative z-10 leading-none ${responsiveScale.fontSize}`}
                     style={{
                       color: ASSETS[selectedAsset].color,
                       textShadow: isMobile ? "none" : "0 0 16px rgba(0,0,0,0.6)",
@@ -1448,30 +1617,42 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                   </span>
                 </motion.div>
                 
-                {/* Pulse Rings - Blue theme - MOBILE OPTIMIZED */}
+                {/* Pulse Rings - Blue theme - Responsive sizing */}
                 {isHolding && !prefersReducedMotion && (
                   <>
                     <motion.div
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0, 0.6] }}
                       transition={{ duration: isMobile ? 1.5 : 1, repeat: Infinity }}
-                      className="absolute inset-[-8px] rounded-full border-2 border-blue-500"
-                      style={{ willChange: 'transform, opacity' }}
+                      className="absolute rounded-full border-2 border-blue-500"
+                      style={{ 
+                        willChange: 'transform, opacity',
+                        top: '-8px',
+                        left: '-8px',
+                        right: '-8px',
+                        bottom: '-8px',
+                      }}
                     />
                     {!isMobile && (
                       <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: [1, 1.6, 1], opacity: [0.4, 0, 0.4] }}
                         transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
-                        className="absolute inset-[-12px] rounded-full border-2 border-blue-400/60"
-                        style={{ willChange: 'transform, opacity' }}
+                        className="absolute rounded-full border-2 border-blue-400/60"
+                        style={{ 
+                          willChange: 'transform, opacity',
+                          top: '-12px',
+                          left: '-12px',
+                          right: '-12px',
+                          bottom: '-12px',
+                        }}
                       />
                     )}
                   </>
                 )}
               </motion.div>
 
-              {/* Price Display */}
+              {/* Price Display - Responsive font sizing */}
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -1487,7 +1668,14 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                     color: { duration: 0.3, ease: "easeOut" },
                     scale: { duration: 0.8, repeat: isHolding && !isMobile ? Infinity : 0, ease: "easeInOut" }
                   }}
-                  className="relative text-4xl md:text-6xl font-black tracking-tighter font-mono"
+                  className={`relative font-black tracking-tighter font-mono ${
+                    viewportSize.width >= BREAKPOINTS.UHD_4K ? 'text-8xl' :
+                    viewportSize.width >= BREAKPOINTS.QHD ? 'text-7xl' :
+                    viewportSize.width >= BREAKPOINTS.DESKTOP ? 'text-6xl' :
+                    viewportSize.width >= BREAKPOINTS.LAPTOP ? 'text-5xl' :
+                    viewportSize.width >= BREAKPOINTS.TABLET ? 'text-4xl' :
+                    'text-3xl sm:text-4xl'
+                  }`}
                   style={{
                     textShadow: isHolding && !isMobile ? "0 0 30px rgba(59, 130, 246, 1)" : "0 2px 20px rgba(0,0,0,0.8)",
                     willChange: isHolding ? 'transform' : 'auto',
@@ -1693,22 +1881,21 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                         whileHover={{ scale: 1.03, boxShadow: '0 0 45px rgba(59,130,246,0.8), inset 0 0 26px rgba(59,130,246,0.25)' }}
                         whileTap={{ scale: 0.97 }}
                       >
-                        {/* Animated shimmer sweep */}
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/25 to-transparent"
-                          animate={{ x: ["-160%", "160%"] }}
-                          transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}
-                        />
-                        
-                        {/* Pulsing glow ring */}
+                        {/* Neon pulsing glow - NO SHIMMER */}
                         <motion.div
                           className="absolute inset-0 rounded-full"
-                          style={{ border: '1px solid rgba(59, 130, 246, 0.45)' }}
-                          animate={{ 
-                            scale: [1, 1.06, 1],
-                            opacity: [0.4, 0.85, 0.4],
+                          style={{ 
+                            border: '2px solid #3b82f6',
+                            boxShadow: '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5)',
                           }}
-                          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                          animate={{ 
+                            boxShadow: [
+                              '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5)',
+                              '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.7)',
+                              '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5)',
+                            ],
+                          }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                         />
                         
                         {/* Button content */}
@@ -1734,7 +1921,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                 </div>
               </motion.div>
 
-              {/* Progress Display - Hide when vault is unlocked */}
+              {/* Progress Display - Hide when vault is unlocked - Responsive sizing */}
               <AnimatePresence>
               {!vaultUnlocked && (
               <motion.div
@@ -1742,9 +1929,21 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: -20, opacity: 0 }}
                 transition={{ delay: 0.4 }}
-                className="w-full max-w-md flex flex-col items-center gap-3"
+                className="w-full flex flex-col items-center gap-3"
+                style={{
+                  maxWidth: viewportSize.width >= BREAKPOINTS.UHD_4K ? '800px' :
+                           viewportSize.width >= BREAKPOINTS.QHD ? '640px' :
+                           viewportSize.width >= BREAKPOINTS.DESKTOP ? '520px' :
+                           viewportSize.width >= BREAKPOINTS.LAPTOP ? '440px' :
+                           '380px',
+                }}
               >
-                <div className="flex items-center gap-2 text-2xl md:text-3xl font-black tracking-tighter">
+                <div className={`flex items-center gap-2 font-black tracking-tighter ${
+                  viewportSize.width >= BREAKPOINTS.UHD_4K ? 'text-5xl' :
+                  viewportSize.width >= BREAKPOINTS.QHD ? 'text-4xl' :
+                  viewportSize.width >= BREAKPOINTS.DESKTOP ? 'text-3xl' :
+                  'text-2xl md:text-3xl'
+                }`}>
                   <motion.span
                     animate={{
                       scale: isHolding && !isMobile ? [1, 1.05, 1] : 1,
@@ -1774,18 +1973,26 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                     }}
                   >
                     <Rocket
-                      className="w-7 h-7"
+                      className={viewportSize.width >= BREAKPOINTS.UHD_4K ? 'w-12 h-12' :
+                                viewportSize.width >= BREAKPOINTS.QHD ? 'w-10 h-10' :
+                                viewportSize.width >= BREAKPOINTS.DESKTOP ? 'w-9 h-9' :
+                                'w-7 h-7'}
                       style={{
                         color: progress > 50 ? "#60a5fa" : "#ffffff",
                       }}
                     />
                   </motion.div>
                 </div>
-                {/* Progress bar with smooth spring-based width */}
+                {/* Progress bar with neon glow - Responsive height */}
                 <div 
-                  className="w-full h-2.5 bg-[#000000] border border-blue-500/50 rounded-full overflow-hidden"
+                  className="w-full bg-[#000000] rounded-full overflow-hidden"
                   style={{
-                    boxShadow: isMobile ? '0 0 10px rgba(59,130,246,0.2)' : 'inset 0 0 10px rgba(0,0,0,0.5), 0 0 20px rgba(59,130,246,0.3)',
+                    height: viewportSize.width >= BREAKPOINTS.UHD_4K ? '16px' :
+                           viewportSize.width >= BREAKPOINTS.QHD ? '12px' :
+                           viewportSize.width >= BREAKPOINTS.DESKTOP ? '10px' :
+                           '10px',
+                    border: '2px solid #3b82f6',
+                    boxShadow: '0 0 8px #3b82f6, 0 0 16px rgba(59, 130, 246, 0.4), inset 0 0 4px rgba(59, 130, 246, 0.2)',
                   }}
                 >
                   <motion.div
@@ -1793,18 +2000,10 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                     style={{ 
                       width: `${progress}%`,
                       willChange: 'width',
+                      boxShadow: '0 0 12px #3b82f6',
                     }}
                     transition={{ type: "spring", stiffness: 100, damping: 20 }}
-                  >
-                    {isHolding && !isMobile && !prefersReducedMotion && (
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                        animate={{ x: ["-100%", "100%"] }}
-                        transition={{ duration: shimmerDuration * 0.8, repeat: Infinity, ease: "linear" }}
-                        style={{ willChange: 'transform' }}
-                      />
-                    )}
-                  </motion.div>
+                  />
                 </div>
               </motion.div>
               )}
@@ -1828,35 +2027,26 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                 </motion.div>
               ))}
 
-              {/* Helper Tip - Navbar style - MOBILE OPTIMIZED */}
+              {/* Helper Tip - Neon style - NO SHIMMER */}
               <AnimatePresence>
                 {showTip && progress === 0 && (
                   <motion.div
                     initial={{ y: 12, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: -12, opacity: 0 }}
-                    className="pointer-events-none mt-6 flex items-center gap-2 text-xs text-blue-50 bg-[#000000] px-5 py-2.5 rounded-full border border-blue-500/50 relative overflow-hidden"
+                    className="pointer-events-none mt-6 flex items-center gap-2 text-xs text-blue-50 bg-[#000000] px-5 py-2.5 rounded-full relative overflow-hidden"
                     style={{
-                      // Reduce box-shadow on mobile
-                      boxShadow: isMobile ? '0 0 10px rgba(59,130,246,0.2)' : '0 0 25px rgba(59,130,246,0.4)',
+                      border: '2px solid #3b82f6',
+                      boxShadow: '0 0 8px #3b82f6, 0 0 16px rgba(59, 130, 246, 0.4)',
                       transform: 'translateZ(0)',
                     }}
                   >
-                    {/* Left to right shimmer (FPS-aware) - Skip on mobile */}
-                    {!isMobile && !prefersReducedMotion && (
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/40 to-transparent"
-                        animate={{ x: ["-100%", "100%"] }}
-                        transition={{ duration: shimmerDuration * 1.4, repeat: Infinity, ease: "linear" }}
-                        style={{ willChange: 'transform' }}
-                      />
-                    )}
-                    {/* Pulse indicator - simplified on mobile */}
+                    {/* Pulse indicator */}
                     <div className="relative flex h-2 w-2 shrink-0 z-10">
                       {!isMobile && (
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
                       )}
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" style={{ boxShadow: '0 0 6px #3b82f6' }} />
                     </div>
                     <span className="relative z-10 flex items-center gap-1 font-medium"><Diamond className="w-3 h-3" /> Hold anywhere until 100% <Rocket className="w-3 h-3" /></span>
                   </motion.div>
@@ -1864,15 +2054,15 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
               </AnimatePresence>
             </motion.div>
 
-            {/* Completion Effect - Snappy burst - MOBILE OPTIMIZED */}
+            {/* Completion Effect - Snappy burst - MOBILE: Pure white glow, DESKTOP: Blue glow */}
             {isCompleted && !prefersReducedMotion && (
               <>
-                {/* Simplified glow on mobile - no blur-3xl which causes black boxes */}
+                {/* Glow effect - white on mobile for OLED black, blue on desktop */}
                 <motion.div
                   initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: isMobile ? 2 : 2.5, opacity: [0, isMobile ? 0.6 : 0.9, 0] }}
+                  animate={{ scale: isMobile ? 2 : 2.5, opacity: [0, isMobile ? 0.3 : 0.9, 0] }}
                   transition={{ duration: isMobile ? 0.4 : 0.5 }}
-                  className={`absolute inset-0 bg-blue-500/40 rounded-full pointer-events-none ${isMobile ? '' : 'blur-3xl'}`}
+                  className={`absolute inset-0 rounded-full pointer-events-none ${isMobile ? 'bg-white/20' : 'bg-blue-500/40 blur-3xl'}`}
                   style={{ willChange: 'transform, opacity' }}
                 />
                 {/* Fewer icons on mobile - only 6 instead of 12, no rotation */}
@@ -1927,22 +2117,24 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
               touchAction: 'none',
             }}
           >
-            {/* Animated gradient background */}
-            <motion.div
-              className="absolute inset-0"
-              style={{
-                background: 'radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 70%)',
-              }}
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.5, 0.8, 0.5],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
+            {/* Animated gradient background - DESKTOP ONLY */}
+            {!isMobile && (
+              <motion.div
+                className="absolute inset-0"
+                style={{
+                  background: 'radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 70%)',
+                }}
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.5, 0.8, 0.5],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+            )}
 
             {/* Subtle grid pattern */}
             {!isMobile && (
@@ -1964,44 +2156,44 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                 transition={{ type: "spring", stiffness: 200, damping: 20 }}
                 className="relative"
               >
-                {/* Pulsing glow ring */}
-                <motion.div
-                  className="absolute inset-[-12px] rounded-full"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%)',
-                  }}
-                  animate={{
-                    scale: [1, 1.3, 1],
-                    opacity: [0.6, 0.3, 0.6],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
+                {/* Pulsing glow ring - DESKTOP ONLY */}
+                {!isMobile && (
+                  <motion.div
+                    className="absolute inset-[-12px] rounded-full"
+                    style={{
+                      background: 'radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%)',
+                    }}
+                    animate={{
+                      scale: [1, 1.3, 1],
+                      opacity: [0.6, 0.3, 0.6],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
+                )}
                 
-                {/* Logo container */}
+                {/* Logo container - NEON GLOW, NO SHIMMER */}
                 <motion.div
-                  className="relative w-20 h-20 rounded-full bg-black border-2 border-blue-500/60 flex items-center justify-center overflow-hidden"
+                  className="relative w-20 h-20 rounded-full bg-[#000000] border-2 border-blue-500 flex items-center justify-center overflow-hidden"
                   style={{
-                    boxShadow: '0 0 40px rgba(59, 130, 246, 0.5)',
+                    boxShadow: '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5), inset 0 0 8px rgba(59, 130, 246, 0.2)',
                   }}
                   animate={{
-                    borderColor: ['rgba(59, 130, 246, 0.6)', 'rgba(59, 130, 246, 0.9)', 'rgba(59, 130, 246, 0.6)'],
+                    boxShadow: [
+                      '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5), inset 0 0 8px rgba(59, 130, 246, 0.2)',
+                      '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.7), inset 0 0 12px rgba(59, 130, 246, 0.3)',
+                      '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5), inset 0 0 8px rgba(59, 130, 246, 0.2)',
+                    ],
                   }}
                   transition={{
-                    duration: 1.5,
+                    duration: 2,
                     repeat: Infinity,
                     ease: "easeInOut",
                   }}
                 >
-                  {/* Rotating shimmer */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/30 to-transparent"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  />
                   <Image
                     src="/BULL.svg"
                     alt="BullMoney"
@@ -2078,17 +2270,10 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                     className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-400 rounded-full relative"
                     style={{ 
                       width: `${transitionProgress}%`,
-                      boxShadow: '0 0 20px rgba(59, 130, 246, 0.6)',
+                      boxShadow: '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.6)',
                     }}
                     transition={{ type: "spring", stiffness: 100, damping: 20 }}
-                  >
-                    {/* Shimmer on progress bar */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
-                      animate={{ x: ["-100%", "100%"] }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    />
-                  </motion.div>
+                  />
                 </div>
                 
                 {/* Progress percentage */}
@@ -2130,13 +2315,15 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
               </motion.div>
             </div>
 
-            {/* Bottom gradient fade */}
-            <div 
-              className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
-              style={{
-                background: 'linear-gradient(to top, rgba(59, 130, 246, 0.1), transparent)',
-              }}
-            />
+            {/* Bottom gradient fade - DESKTOP ONLY */}
+            {!isMobile && (
+              <div 
+                className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
+                style={{
+                  background: 'linear-gradient(to top, rgba(59, 130, 246, 0.1), transparent)',
+                }}
+              />
+            )}
           </motion.div>
         )}
       </AnimatePresence>

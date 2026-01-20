@@ -1,0 +1,3855 @@
+"use client";
+
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import {
+  motion,
+  AnimatePresence,
+  useSpring,
+  useMotionValue,
+  useTransform,
+} from "framer-motion";
+import { 
+  Lock, 
+  Unlock, 
+  TrendingUp, 
+  Zap, 
+  Target, 
+  Timer, 
+  BarChart3,
+  ArrowUpRight,
+  ChevronUp,
+  Fingerprint,
+  Eye,
+  Grip,
+  RotateCcw,
+  RefreshCw,
+  MousePointer2,
+  Volume2,
+  Smartphone,
+  Circle,
+  Waves,
+  ArrowRight,
+  ArrowLeft,
+  Hash,
+  Repeat,
+  Sparkles,
+  Heart,
+  Star,
+  Compass,
+  Move,
+  RotateCw,
+  Maximize2,
+  Minimize2,
+  Hand,
+  Gauge,
+  Radio,
+  Navigation,
+  FlipVertical,
+  Sun,
+  Keyboard,
+  Music,
+  Gamepad2,
+  ArrowUp,
+  ArrowDown,
+  Monitor,
+  Mouse,
+  ScrollText,
+  GripHorizontal,
+  ZoomIn,
+  Footprints,
+  Sun as Brightness,
+  Layers,
+  type LucideIcon
+} from "lucide-react";
+
+// Pinch icon fallback since lucide doesn't have one
+const PinchZoomIcon = ZoomIn;
+
+// ============================================================================
+// NEON BLUE GLOW THEME - OLED BLACK BACKGROUND (MATCHING CHARTNEWS #3b82f6)
+// ============================================================================
+const NEON_BLUE = "#3b82f6";
+const NEON_BLUE_RGB = "59, 130, 246";
+
+const NEON_STYLES = `
+  @keyframes ring-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes candlestick-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  @keyframes price-ticker {
+    0% { transform: translateY(100%); opacity: 0; }
+    10% { transform: translateY(0); opacity: 1; }
+    90% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-100%); opacity: 0; }
+  }
+
+  .neon-text {
+    color: #fff;
+    text-shadow: 
+      0 0 4px #fff,
+      0 0 8px #fff,
+      0 0 12px #3b82f6,
+      0 0 20px #3b82f6;
+  }
+
+  .neon-border {
+    border: 2px solid #3b82f6;
+    box-shadow: 
+      0 0 4px #3b82f6,
+      0 0 8px #3b82f6,
+      0 0 16px #3b82f6,
+      inset 0 0 4px rgba(59, 130, 246, 0.3);
+  }
+
+  .neon-icon {
+    color: #3b82f6;
+    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+  }
+
+  .candlestick {
+    animation: candlestick-bounce 1s ease-in-out infinite;
+  }
+`;
+
+// ============================================================================
+// TYPES & CONFIG
+// ============================================================================
+type AssetKey = "BTC" | "ETH" | "SOL";
+type InteractionMode = 
+  | "hold" | "swipe" | "tap" | "rotate" | "pattern" | "shake" | "doubleTap" 
+  | "longPress" | "zigzag" | "pulse" | "breath" | "spiral" | "circle" | "scratch"
+  | "morse" | "alternate" | "countdown" | "corners" | "infinity" | "slider"
+  | "tripleTap" | "speedTap" | "tilt" | "flip" | "compass" | "proximity"
+  // New Desktop keyboard modes
+  | "konami" | "typeWord" | "piano" | "wasd" | "arrows" | "spaceMash" | "altTab"
+  // New Desktop mouse modes  
+  | "doubleClick" | "rightClick" | "scrollWheel" | "dragDrop" | "hoverZone"
+  // New Mobile sensor modes
+  | "faceDown" | "lightSensor" | "stepCounter" | "squeeze" | "multiTouch" | "pinchZoom";
+
+interface LoaderProps {
+  onFinished?: () => void;
+}
+
+const ASSETS: Record<AssetKey, { symbol: string; icon: string; color: string }> = {
+  BTC: { symbol: "BINANCE:BTCUSDT", icon: "₿", color: "#F7931A" },
+  ETH: { symbol: "BINANCE:ETHUSDT", icon: "Ξ", color: "#627EEA" },
+  SOL: { symbol: "BINANCE:SOLUSDT", icon: "◎", color: "#14F195" },
+};
+
+// Detect mobile device
+const isMobileDevice = () => {
+  if (typeof window === "undefined") return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    ('ontouchstart' in window) ||
+    (navigator.maxTouchPoints > 0);
+};
+
+interface InteractionModeConfig { 
+  mode: InteractionMode; 
+  icon: React.ComponentType<{ className?: string; size?: number }>; 
+  label: string; 
+  instruction: string;
+  tradingMetaphor: string;
+  mobileOnly?: boolean; // Only show on mobile devices
+  desktopOnly?: boolean; // Only show on desktop devices
+}
+
+const INTERACTION_MODES: InteractionModeConfig[] = [
+  // ===== UNIVERSAL MODES (work on all devices) =====
+  { 
+    mode: "hold", 
+    icon: Fingerprint, 
+    label: "HOLD", 
+    instruction: "Hold to unlock",
+    tradingMetaphor: "Diamond hands hold through volatility"
+  },
+  { 
+    mode: "swipe", 
+    icon: ChevronUp, 
+    label: "SWIPE", 
+    instruction: "Swipe up to unlock",
+    tradingMetaphor: "Ride the uptrend to profits"
+  },
+  { 
+    mode: "tap", 
+    icon: Target, 
+    label: "TAP", 
+    instruction: "Tap rapidly to unlock",
+    tradingMetaphor: "Consistent action builds wealth"
+  },
+  { 
+    mode: "rotate", 
+    icon: RotateCcw, 
+    label: "ROTATE", 
+    instruction: "Rotate clockwise to unlock",
+    tradingMetaphor: "Markets cycle - patience wins"
+  },
+  { 
+    mode: "pattern", 
+    icon: Grip, 
+    label: "PATTERN", 
+    instruction: "Draw a Z pattern",
+    tradingMetaphor: "Read the charts, follow the trend"
+  },
+  { 
+    mode: "doubleTap", 
+    icon: MousePointer2, 
+    label: "DOUBLE TAP", 
+    instruction: "Double tap quickly",
+    tradingMetaphor: "Confirm your conviction before entry"
+  },
+  { 
+    mode: "longPress", 
+    icon: Timer, 
+    label: "LONG PRESS", 
+    instruction: "Press and hold for 3 seconds",
+    tradingMetaphor: "Time in the market beats timing"
+  },
+  { 
+    mode: "zigzag", 
+    icon: Waves, 
+    label: "ZIGZAG", 
+    instruction: "Swipe left-right-left",
+    tradingMetaphor: "Navigate the market's waves"
+  },
+  { 
+    mode: "pulse", 
+    icon: Circle, 
+    label: "PULSE", 
+    instruction: "Tap to the rhythm",
+    tradingMetaphor: "Feel the market's heartbeat"
+  },
+  { 
+    mode: "breath", 
+    icon: Volume2, 
+    label: "BREATHE", 
+    instruction: "Hold, release, hold, release",
+    tradingMetaphor: "Stay calm in chaos"
+  },
+  { 
+    mode: "spiral", 
+    icon: RotateCw, 
+    label: "SPIRAL", 
+    instruction: "Draw a spiral inward",
+    tradingMetaphor: "Focus narrows toward profit"
+  },
+  { 
+    mode: "circle", 
+    icon: Circle, 
+    label: "CIRCLE", 
+    instruction: "Draw a complete circle",
+    tradingMetaphor: "Complete the cycle, reap rewards"
+  },
+  { 
+    mode: "scratch", 
+    icon: Hand, 
+    label: "SCRATCH", 
+    instruction: "Scratch the center rapidly",
+    tradingMetaphor: "Uncover hidden opportunities"
+  },
+  { 
+    mode: "morse", 
+    icon: Radio, 
+    label: "MORSE", 
+    instruction: "Tap: short-short-long",
+    tradingMetaphor: "Signal your intent clearly"
+  },
+  { 
+    mode: "alternate", 
+    icon: Repeat, 
+    label: "ALTERNATE", 
+    instruction: "Tap left and right sides",
+    tradingMetaphor: "Balance risk and reward"
+  },
+  { 
+    mode: "countdown", 
+    icon: Gauge, 
+    label: "COUNTDOWN", 
+    instruction: "Hold until countdown ends",
+    tradingMetaphor: "Patience is the key to timing"
+  },
+  { 
+    mode: "corners", 
+    icon: Maximize2, 
+    label: "CORNERS", 
+    instruction: "Tap all four corners",
+    tradingMetaphor: "Cover all your bases"
+  },
+  { 
+    mode: "infinity", 
+    icon: Repeat, 
+    label: "INFINITY", 
+    instruction: "Draw a figure-8 pattern",
+    tradingMetaphor: "Infinite possibilities await"
+  },
+  { 
+    mode: "slider", 
+    icon: ArrowRight, 
+    label: "SLIDE", 
+    instruction: "Slide from left to right",
+    tradingMetaphor: "Smooth entry, smooth profits"
+  },
+  { 
+    mode: "tripleTap", 
+    icon: Hash, 
+    label: "TRIPLE TAP", 
+    instruction: "Triple tap quickly",
+    tradingMetaphor: "Third time's the charm"
+  },
+  { 
+    mode: "speedTap", 
+    icon: Zap, 
+    label: "SPEED TAP", 
+    instruction: "Tap 20 times in 5 seconds",
+    tradingMetaphor: "Speed execution wins in volatile markets"
+  },
+  
+  // ===== MOBILE-ONLY MODES =====
+  { 
+    mode: "shake", 
+    icon: RefreshCw, 
+    label: "SHAKE", 
+    instruction: "Shake your device",
+    tradingMetaphor: "Shake off fear and doubt",
+    mobileOnly: true
+  },
+  { 
+    mode: "tilt", 
+    icon: Navigation, 
+    label: "TILT", 
+    instruction: "Tilt device forward and back",
+    tradingMetaphor: "Adjust your perspective"
+  },
+  { 
+    mode: "flip", 
+    icon: FlipVertical, 
+    label: "FLIP", 
+    instruction: "Flip device face down and back",
+    tradingMetaphor: "Sometimes you need to walk away",
+    mobileOnly: true
+  },
+  { 
+    mode: "compass", 
+    icon: Compass, 
+    label: "COMPASS", 
+    instruction: "Rotate device to face North",
+    tradingMetaphor: "Find your true direction",
+    mobileOnly: true
+  },
+  { 
+    mode: "proximity", 
+    icon: Eye, 
+    label: "PROXIMITY", 
+    instruction: "Cover and uncover the screen",
+    tradingMetaphor: "Know when to look away",
+    mobileOnly: true
+  },
+  
+  // ===== DESKTOP KEYBOARD MODES =====
+  { 
+    mode: "konami", 
+    icon: Gamepad2, 
+    label: "KONAMI CODE", 
+    instruction: "↑↑↓↓←→←→BA",
+    tradingMetaphor: "Legends know the secret moves",
+    desktopOnly: true
+  },
+  { 
+    mode: "typeWord", 
+    icon: Keyboard, 
+    label: "TYPE IT", 
+    instruction: "Type 'BULLMONEY'",
+    tradingMetaphor: "Spell out your success",
+    desktopOnly: true
+  },
+  { 
+    mode: "piano", 
+    icon: Music, 
+    label: "PIANO", 
+    instruction: "Play: A S D F G",
+    tradingMetaphor: "Trading is an art form",
+    desktopOnly: true
+  },
+  { 
+    mode: "wasd", 
+    icon: Gamepad2, 
+    label: "GAMER", 
+    instruction: "Press W A S D in order",
+    tradingMetaphor: "Navigate the markets like a pro",
+    desktopOnly: true
+  },
+  { 
+    mode: "arrows", 
+    icon: Move, 
+    label: "ARROWS", 
+    instruction: "↑→↓← in sequence",
+    tradingMetaphor: "Direction matters in trading",
+    desktopOnly: true
+  },
+  { 
+    mode: "spaceMash", 
+    icon: Keyboard, 
+    label: "SPACE MASH", 
+    instruction: "Mash SPACEBAR 15 times",
+    tradingMetaphor: "Sometimes you gotta go full send",
+    desktopOnly: true
+  },
+  { 
+    mode: "altTab", 
+    icon: Monitor, 
+    label: "ALT+TAB", 
+    instruction: "Press Ctrl+B 3 times",
+    tradingMetaphor: "Bulls always come back",
+    desktopOnly: true
+  },
+  
+  // ===== DESKTOP MOUSE MODES =====
+  { 
+    mode: "doubleClick", 
+    icon: Mouse, 
+    label: "DOUBLE CLICK", 
+    instruction: "Double-click 5 times",
+    tradingMetaphor: "Confirm before you commit",
+    desktopOnly: true
+  },
+  { 
+    mode: "rightClick", 
+    icon: Mouse, 
+    label: "RIGHT CLICK", 
+    instruction: "Right-click the center 3 times",
+    tradingMetaphor: "Explore all your options",
+    desktopOnly: true
+  },
+  { 
+    mode: "scrollWheel", 
+    icon: ScrollText, 
+    label: "SCROLL", 
+    instruction: "Scroll up to unlock",
+    tradingMetaphor: "Scroll through the charts",
+    desktopOnly: true
+  },
+  { 
+    mode: "dragDrop", 
+    icon: GripHorizontal, 
+    label: "DRAG & DROP", 
+    instruction: "Drag the coin to the vault",
+    tradingMetaphor: "Secure your profits",
+    desktopOnly: true
+  },
+  { 
+    mode: "hoverZone", 
+    icon: Target, 
+    label: "HOVER", 
+    instruction: "Hover over all 4 zones",
+    tradingMetaphor: "Scout the territory first",
+    desktopOnly: true
+  },
+  
+  // ===== MORE MOBILE SENSOR MODES =====
+  { 
+    mode: "faceDown", 
+    icon: Smartphone, 
+    label: "FACE DOWN", 
+    instruction: "Place phone face-down for 2s",
+    tradingMetaphor: "Step away and let it cook",
+    mobileOnly: true
+  },
+  { 
+    mode: "lightSensor", 
+    icon: Sun, 
+    label: "LIGHT", 
+    instruction: "Cover camera, then expose to light",
+    tradingMetaphor: "From darkness comes opportunity",
+    mobileOnly: true
+  },
+  { 
+    mode: "stepCounter", 
+    icon: Footprints, 
+    label: "WALK", 
+    instruction: "Take 5 steps",
+    tradingMetaphor: "Every journey starts with a step",
+    mobileOnly: true
+  },
+  { 
+    mode: "squeeze", 
+    icon: Hand, 
+    label: "SQUEEZE", 
+    instruction: "Squeeze both sides of phone",
+    tradingMetaphor: "Apply pressure for results",
+    mobileOnly: true
+  },
+  { 
+    mode: "multiTouch", 
+    icon: Layers, 
+    label: "MULTI-TOUCH", 
+    instruction: "Use 3 fingers at once",
+    tradingMetaphor: "Diversify your approach",
+    mobileOnly: true
+  },
+  { 
+    mode: "pinchZoom", 
+    icon: ZoomIn, 
+    label: "PINCH ZOOM", 
+    instruction: "Pinch in and out 3 times",
+    tradingMetaphor: "Zoom out to see the bigger picture",
+    mobileOnly: true
+  },
+];
+
+const TRADING_QUOTES = [
+  "Patience is the trader's greatest asset",
+  "Those who can't wait can't win",
+  "Discipline unlocks profits",
+  "Master yourself, master the market",
+  "Quick fingers lose money, patient minds make it",
+];
+
+// ============================================================================
+// UTILS
+// ============================================================================
+const formatPrice = (value: number) =>
+  `$${value.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+const cn = (...classes: (string | boolean | undefined)[]) => 
+  classes.filter(Boolean).join(" ");
+
+// ============================================================================
+// LIVE PRICE HOOK - FAST POLLING
+// ============================================================================
+const useLivePrice = (assetKey: AssetKey) => {
+  const [price, setPrice] = useState<number>(0);
+  const [change24h, setChange24h] = useState<number>(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let pollId: ReturnType<typeof setInterval> | null = null;
+    
+    const fetchPrice = async () => {
+      try {
+        const symbolParts = ASSETS[assetKey].symbol.split(":");
+        const symbol = symbolParts[1]?.toUpperCase();
+        if (!symbol) return;
+
+        const res = await fetch(
+          `https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`,
+          { signal: controller.signal }
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        const p = parseFloat(data.lastPrice);
+        const change = parseFloat(data.priceChangePercent);
+        if (!Number.isNaN(p)) setPrice(p);
+        if (!Number.isNaN(change)) setChange24h(change);
+      } catch {
+        // Silently fail
+      }
+    };
+
+    fetchPrice();
+    pollId = setInterval(fetchPrice, 3000); // Poll every 3 seconds
+
+    return () => {
+      controller.abort();
+      if (pollId) clearInterval(pollId);
+    };
+  }, [assetKey]);
+
+  return { price, change24h };
+};
+
+// ============================================================================
+// AUDIO ENGINE - MINIMAL FOR PERFORMANCE
+// ============================================================================
+const useAudioEngine = () => {
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const initAudio = useCallback(() => {
+    if (!audioCtxRef.current) {
+      try {
+        const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+        audioCtxRef.current = AudioContextClass ? new AudioContextClass() : null;
+      } catch {
+        return null;
+      }
+    }
+    const ctx = audioCtxRef.current;
+    if (ctx?.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
+    return ctx;
+  }, []);
+
+  const playTick = useCallback(() => {
+    const ctx = initAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(400, now + 0.05);
+
+    gain.gain.setValueAtTime(0.1, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.06);
+  }, [initAudio]);
+
+  const playSuccess = useCallback(() => {
+    const ctx = initAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    const frequencies = [523.25, 659.25, 783.99, 1046.5];
+    
+    frequencies.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = i === 0 ? "sine" : "triangle";
+      osc.frequency.setValueAtTime(freq, now);
+
+      const delay = i * 0.04;
+      const volume = 0.12 - (i * 0.02);
+      
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(volume, now + delay + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + delay);
+      osc.stop(now + 0.6);
+    });
+  }, [initAudio]);
+
+  return { playTick, playSuccess };
+};
+
+// ============================================================================
+// CANDLESTICK COMPONENT
+// ============================================================================
+const CandlestickBars: React.FC<{ progress: number }> = ({ progress }) => {
+  // Using consistent #3b82f6 (#3b82f6) color scheme with opacity variations
+  const bars = [
+    { delay: 0.1, color: progress > 20 ? "#3b82f6" : "rgba(59, 130, 246, 0.3)", height: 24 },
+    { delay: 0.2, color: progress > 40 ? "#3b82f6" : "rgba(59, 130, 246, 0.3)", height: 36 },
+    { delay: 0.1, color: progress > 60 ? "#3b82f6" : "rgba(59, 130, 246, 0.3)", height: 28 },
+    { delay: 0.3, color: progress > 80 ? "#3b82f6" : "rgba(59, 130, 246, 0.3)", height: 32 },
+  ];
+
+  return (
+    <div className="flex items-end justify-center gap-1 h-16">
+      {bars.map((bar, i) => (
+        <div
+          key={i}
+          className="flex flex-col items-center"
+          style={{
+            animation: `candlestick-bounce 1s ease-in-out infinite ${bar.delay}s`,
+          }}
+        >
+          <div
+            className="w-0.5 rounded-full transition-all duration-300"
+            style={{
+              height: 6,
+              backgroundColor: bar.color,
+              boxShadow: `0 0 6px ${bar.color}`,
+            }}
+          />
+          <div
+            className="w-2 rounded-sm transition-all duration-500"
+            style={{
+              height: bar.height * (0.5 + progress / 200),
+              backgroundColor: bar.color,
+              boxShadow: `0 0 10px ${bar.color}, 0 0 20px ${bar.color}`,
+            }}
+          />
+          <div
+            className="w-0.5 rounded-full transition-all duration-300"
+            style={{
+              height: 6,
+              backgroundColor: bar.color,
+              boxShadow: `0 0 6px ${bar.color}`,
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ============================================================================
+// BACKGROUND CANDLESTICKS
+// ============================================================================
+const BackgroundCandlesticks: React.FC = () => {
+  // Generate random candlestick data for background
+  const candlesticks = useMemo(() => {
+    const sticks = [];
+    for (let i = 0; i < 30; i++) {
+      const isGreen = Math.random() > 0.45;
+      const bodyHeight = 20 + Math.random() * 60;
+      const wickTop = 5 + Math.random() * 20;
+      const wickBottom = 5 + Math.random() * 20;
+      const delay = Math.random() * 2;
+      const xPos = (i / 30) * 100;
+      const yOffset = Math.random() * 40 - 20;
+      
+      sticks.push({
+        id: i,
+        isGreen,
+        bodyHeight,
+        wickTop,
+        wickBottom,
+        delay,
+        xPos,
+        yOffset,
+      });
+    }
+    return sticks;
+  }, []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ opacity: 0.08 }}>
+      <div className="absolute inset-0 flex items-center">
+        {candlesticks.map((stick) => (
+          <div
+            key={stick.id}
+            className="absolute flex flex-col items-center"
+            style={{
+              left: `${stick.xPos}%`,
+              top: `calc(50% + ${stick.yOffset}px)`,
+              transform: 'translateY(-50%)',
+              animation: `candlestick-bounce ${1.5 + stick.delay}s ease-in-out infinite ${stick.delay}s`,
+            }}
+          >
+            {/* Top wick */}
+            <div
+              className="w-0.5 rounded-full"
+              style={{
+                height: stick.wickTop,
+                backgroundColor: "#3b82f6",
+              }}
+            />
+            {/* Body */}
+            <div
+              className="w-3 rounded-sm"
+              style={{
+                height: stick.bodyHeight,
+                backgroundColor: "#3b82f6",
+                boxShadow: "0 0 10px rgba(59, 130, 246, 0.5)",
+              }}
+            />
+            {/* Bottom wick */}
+            <div
+              className="w-0.5 rounded-full"
+              style={{
+                height: stick.wickBottom,
+                backgroundColor: "#3b82f6",
+              }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// NEON RING PROGRESS
+// ============================================================================
+const NeonRing: React.FC<{ progress: number; size: number }> = ({ progress, size }) => {
+  const circumference = 2 * Math.PI * (size / 2 - 4);
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      className="absolute"
+      style={{ 
+        top: "50%", 
+        left: "50%", 
+        transform: "translate(-50%, -50%) rotate(-90deg)" 
+      }}
+    >
+      {/* Background ring */}
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={size / 2 - 4}
+        stroke="rgba(59, 130, 246, 0.1)"
+        strokeWidth="3"
+        fill="none"
+      />
+      {/* Progress ring */}
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={size / 2 - 4}
+        stroke="url(#neonGradient)"
+        strokeWidth="3"
+        fill="none"
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        strokeDashoffset={strokeDashoffset}
+        style={{
+          transition: "stroke-dashoffset 0.15s ease-out",
+          filter: "drop-shadow(0 0 6px #3b82f6) drop-shadow(0 0 12px #3b82f6)",
+        }}
+      />
+      <defs>
+        <linearGradient id="neonGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#3b82f6" />
+          <stop offset="50%" stopColor="#fff" />
+          <stop offset="100%" stopColor="#3b82f6" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+};
+
+// ============================================================================
+// MAIN LOADER COMPONENT
+// ============================================================================
+export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
+  const [progress, setProgress] = useState(0);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [gateVisible, setGateVisible] = useState(true);
+  const [quote, setQuote] = useState(TRADING_QUOTES[0]);
+  const [selectedAsset, setSelectedAsset] = useState<AssetKey>("BTC");
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Filter modes based on device type
+  const availableModes = useMemo(() => {
+    if (isMobile) {
+      // Mobile: include mobile-only and universal, exclude desktop-only
+      return INTERACTION_MODES.filter(mode => !mode.desktopOnly);
+    }
+    // Desktop: include desktop-only and universal, exclude mobile-only
+    return INTERACTION_MODES.filter(mode => !mode.mobileOnly);
+  }, [isMobile]);
+  
+  // Randomly select interaction mode on mount (from available modes)
+  const [currentModeIndex, setCurrentModeIndex] = useState(0);
+  
+  // Initialize mode after device detection
+  useEffect(() => {
+    const mobile = isMobileDevice();
+    setIsMobile(mobile);
+    const modes = mobile 
+      ? INTERACTION_MODES.filter(m => !m.desktopOnly)
+      : INTERACTION_MODES.filter(m => !m.mobileOnly);
+    setCurrentModeIndex(Math.floor(Math.random() * modes.length));
+  }, []);
+  
+  const currentMode = availableModes[currentModeIndex] || availableModes[0];
+  
+  // Interaction states
+  const [isHolding, setIsHolding] = useState(false);
+  const [tapCount, setTapCount] = useState(0);
+  const [swipeProgress, setSwipeProgress] = useState(0);
+  const [rotationAngle, setRotationAngle] = useState(0);
+  const [patternPoints, setPatternPoints] = useState<{ x: number; y: number }[]>([]);
+  const [shakeCount, setShakeCount] = useState(0);
+  
+  // New interaction states
+  const [lastTapTime, setLastTapTime] = useState(0);
+  const [longPressTimer, setLongPressTimer] = useState<ReturnType<typeof setInterval> | null>(null);
+  const [zigzagDirection, setZigzagDirection] = useState<"left" | "right" | null>(null);
+  const [zigzagCount, setZigzagCount] = useState(0);
+  const [pulseTaps, setPulseTaps] = useState<number[]>([]);
+  const [breathPhase, setBreathPhase] = useState<"hold" | "release">("hold");
+  const [breathCount, setBreathCount] = useState(0);
+  
+  // Additional states for new interactions
+  const [morseTaps, setMorseTaps] = useState<("short" | "long")[]>([]);
+  const [alternateSide, setAlternateSide] = useState<"left" | "right" | null>(null);
+  const [alternateCount, setAlternateCount] = useState(0);
+  const [cornersHit, setCornersHit] = useState<Set<string>>(new Set());
+  const [sliderProgress, setSliderProgress] = useState(0);
+  const [countdownValue, setCountdownValue] = useState(5);
+  const [speedTapCount, setSpeedTapCount] = useState(0);
+  const [speedTapStartTime, setSpeedTapStartTime] = useState(0);
+  const [tripleTapTimes, setTripleTapTimes] = useState<number[]>([]);
+  const [scratchArea, setScratchArea] = useState<Set<string>>(new Set());
+  
+  // Mobile sensor states
+  const [tiltProgress, setTiltProgress] = useState(0);
+  const [flipState, setFlipState] = useState<"normal" | "flipped" | "returned">("normal");
+  const [compassHeading, setCompassHeading] = useState(0);
+  const [proximityTriggered, setProximityTriggered] = useState(0);
+  
+  // Desktop keyboard/mouse states
+  const [konamiSequence, setKonamiSequence] = useState<string[]>([]);
+  const [typedWord, setTypedWord] = useState("");
+  const [pianoSequence, setPianoSequence] = useState<string[]>([]);
+  const [wasdSequence, setWasdSequence] = useState<string[]>([]);
+  const [arrowSequence, setArrowSequence] = useState<string[]>([]);
+  const [spaceCount, setSpaceCount] = useState(0);
+  const [ctrlBCount, setCtrlBCount] = useState(0);
+  const [doubleClickCount, setDoubleClickCount] = useState(0);
+  const [rightClickCount, setRightClickCount] = useState(0);
+  const [scrollAmount, setScrollAmount] = useState(0);
+  const [dragStartPos, setDragStartPos] = useState<{x: number, y: number} | null>(null);
+  const [dragComplete, setDragComplete] = useState(false);
+  const [hoverZones, setHoverZones] = useState<Set<string>>(new Set());
+  
+  // More mobile sensor states
+  const [faceDownTimer, setFaceDownTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [faceDownProgress, setFaceDownProgress] = useState(0);
+  const [stepCount, setStepCount] = useState(0);
+  const [touchCount, setTouchCount] = useState(0);
+  const [pinchCount, setPinchCount] = useState(0);
+  const [lastPinchDistance, setLastPinchDistance] = useState(0);
+
+  // Refs
+  const containerRef = useRef<HTMLDivElement>(null);
+  const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const lastRotationRef = useRef(0);
+  const lastShakeRef = useRef({ x: 0, y: 0, z: 0 });
+  const completedRef = useRef(false);
+  const hasInteractedRef = useRef(false);
+  const isDraggingRef = useRef(false);
+  const morseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const morseTapStartRef = useRef(0);
+
+  const { price, change24h } = useLivePrice(selectedAsset);
+  const { playTick, playSuccess } = useAudioEngine();
+  
+  // Spring animations
+  const progressSpring = useSpring(0, { stiffness: 100, damping: 20 });
+  const scaleSpring = useSpring(1, { stiffness: 200, damping: 25 });
+
+  // Inject styles
+  useEffect(() => {
+    const styleId = 'neon-loader-v3-styles';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = NEON_STYLES;
+      document.head.appendChild(style);
+    }
+  }, []);
+
+  // Lock body scroll
+  useEffect(() => {
+    if (gateVisible) {
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
+    }
+  }, [gateVisible]);
+
+  // Update spring when progress changes
+  useEffect(() => {
+    progressSpring.set(progress);
+  }, [progress, progressSpring]);
+
+  // Rotate quote periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setQuote(TRADING_QUOTES[Math.floor(Math.random() * TRADING_QUOTES.length)]);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Check completion
+  useEffect(() => {
+    if (progress >= 100 && !completedRef.current) {
+      completedRef.current = true;
+      playSuccess();
+      setIsUnlocked(true);
+      
+      setTimeout(() => {
+        setGateVisible(false);
+        onFinished?.();
+      }, 1500);
+    }
+  }, [progress, onFinished, playSuccess]);
+
+  // ============================================================================
+  // INTERACTION HANDLERS
+  // ============================================================================
+  
+  // HOLD MODE
+  const handleHoldStart = useCallback(() => {
+    if (currentMode.mode !== "hold") return;
+    setIsHolding(true);
+    hasInteractedRef.current = true;
+    scaleSpring.set(0.95);
+    
+    holdIntervalRef.current = setInterval(() => {
+      setProgress(p => {
+        const next = Math.min(p + 2, 100);
+        if (next % 10 === 0) playTick();
+        return next;
+      });
+    }, 100);
+  }, [currentMode.mode, playTick, scaleSpring]);
+
+  const handleHoldEnd = useCallback(() => {
+    setIsHolding(false);
+    scaleSpring.set(1);
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current);
+      holdIntervalRef.current = null;
+    }
+    // Progress decays slowly when not holding
+    if (progress < 100 && progress > 0) {
+      const decay = setInterval(() => {
+        setProgress(p => {
+          if (p <= 0) {
+            clearInterval(decay);
+            return 0;
+          }
+          return Math.max(p - 0.5, 0);
+        });
+      }, 50);
+      setTimeout(() => clearInterval(decay), 2000);
+    }
+  }, [progress, scaleSpring]);
+
+  // TAP MODE
+  const handleTap = useCallback(() => {
+    if (currentMode.mode !== "tap") return;
+    hasInteractedRef.current = true;
+    setTapCount(c => c + 1);
+    setProgress(p => Math.min(p + 2, 100));
+    playTick();
+    scaleSpring.set(0.9);
+    setTimeout(() => scaleSpring.set(1), 100);
+  }, [currentMode.mode, playTick, scaleSpring]);
+
+  // SWIPE MODE (touch + mouse)
+  const handlePointerStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    touchStartRef.current = { x: clientX, y: clientY };
+    isDraggingRef.current = true;
+  }, []);
+
+  const handleSwipeMove = useCallback((clientX: number, clientY: number) => {
+    if (currentMode.mode !== "swipe" || !touchStartRef.current || !isDraggingRef.current) return;
+    hasInteractedRef.current = true;
+    
+    const deltaY = touchStartRef.current.y - clientY;
+    const swipePercent = Math.min(Math.max(deltaY / 200 * 100, 0), 100);
+    setSwipeProgress(swipePercent);
+    setProgress(swipePercent);
+  }, [currentMode.mode]);
+
+  // Legacy touch handlers for compatibility
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    handlePointerStart(e);
+  }, [handlePointerStart]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    handleSwipeMove(e.touches[0].clientX, e.touches[0].clientY);
+  }, [handleSwipeMove]);
+
+  const handleTouchEnd = useCallback(() => {
+    touchStartRef.current = null;
+    isDraggingRef.current = false;
+    if (currentMode.mode === "swipe" && progress < 100) {
+      setSwipeProgress(0);
+      setProgress(0);
+    }
+  }, [currentMode.mode, progress]);
+
+  // Mouse handlers for desktop
+  const handleMouseStart = useCallback((e: React.MouseEvent) => {
+    handlePointerStart(e);
+  }, [handlePointerStart]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDraggingRef.current) return;
+    handleSwipeMove(e.clientX, e.clientY);
+  }, [handleSwipeMove]);
+
+  const handleMouseEnd = useCallback(() => {
+    touchStartRef.current = null;
+    isDraggingRef.current = false;
+    if (currentMode.mode === "swipe" && progress < 100) {
+      setSwipeProgress(0);
+      setProgress(0);
+    }
+  }, [currentMode.mode, progress]);
+
+  // ROTATE MODE
+  const handleRotateMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    if (currentMode.mode !== "rotate" || !containerRef.current) return;
+    hasInteractedRef.current = true;
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    const angle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI);
+    const normalizedAngle = angle < 0 ? angle + 360 : angle;
+    
+    // Track clockwise rotation
+    const diff = normalizedAngle - lastRotationRef.current;
+    if (diff > 0 && diff < 180) {
+      setRotationAngle(a => a + diff);
+      setProgress(p => Math.min(p + diff / 10, 100));
+      if (Math.floor(rotationAngle / 45) < Math.floor((rotationAngle + diff) / 45)) {
+        playTick();
+      }
+    }
+    lastRotationRef.current = normalizedAngle;
+  }, [currentMode.mode, playTick, rotationAngle]);
+
+  // PATTERN MODE (Z pattern) - supports touch and mouse
+  const handlePatternPoint = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    if (currentMode.mode !== "pattern") return;
+    if ('touches' in e === false && !isDraggingRef.current) return;
+    hasInteractedRef.current = true;
+
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    
+    setPatternPoints(points => {
+      const newPoints = [...points, { x, y }];
+      
+      // Check for Z pattern (simplified: 4 key points)
+      if (newPoints.length >= 4) {
+        const first = newPoints[0];
+        const second = newPoints[Math.floor(newPoints.length / 3)];
+        const third = newPoints[Math.floor(newPoints.length * 2 / 3)];
+        const last = newPoints[newPoints.length - 1];
+
+        // Z pattern: top-left → top-right → bottom-left → bottom-right
+        const isZ = 
+          first.x < second.x && // Moving right
+          second.x > third.x && second.y < third.y && // Diagonal down-left
+          third.x < last.x; // Moving right again
+
+        if (isZ) {
+          setProgress(100);
+          playTick();
+        } else {
+          setProgress(p => Math.min(p + 5, 90));
+        }
+      }
+      
+      return newPoints.slice(-20); // Keep last 20 points
+    });
+  }, [currentMode.mode, playTick]);
+
+  // SHAKE MODE - Device motion for mobile, rapid mouse movement for desktop
+  const lastMousePosRef = useRef({ x: 0, y: 0 });
+  const shakeDetectorRef = useRef<number[]>([]);
+  
+  // Desktop shake alternative: rapid mouse movements
+  const handleShakeMouseMove = useCallback((e: React.MouseEvent) => {
+    if (currentMode.mode !== "shake") return;
+    
+    const deltaX = Math.abs(e.clientX - lastMousePosRef.current.x);
+    const deltaY = Math.abs(e.clientY - lastMousePosRef.current.y);
+    const movement = deltaX + deltaY;
+    
+    // Track rapid movements
+    const now = Date.now();
+    shakeDetectorRef.current.push(now);
+    shakeDetectorRef.current = shakeDetectorRef.current.filter(t => now - t < 500);
+    
+    // If mouse moved quickly (>50px) and we have several movements in short time
+    if (movement > 50 && shakeDetectorRef.current.length > 3) {
+      hasInteractedRef.current = true;
+      setShakeCount(c => c + 1);
+      setProgress(p => Math.min(p + 3, 100));
+      playTick();
+      shakeDetectorRef.current = []; // Reset after counting
+    }
+    
+    lastMousePosRef.current = { x: e.clientX, y: e.clientY };
+  }, [currentMode.mode, playTick]);
+
+  useEffect(() => {
+    if (currentMode.mode !== "shake" || typeof window === "undefined") return;
+
+    const handleMotion = (e: DeviceMotionEvent) => {
+      const acc = e.accelerationIncludingGravity;
+      if (!acc) return;
+
+      const x = acc.x ?? 0;
+      const y = acc.y ?? 0;
+      const z = acc.z ?? 0;
+      const threshold = 15;
+
+      const deltaX = Math.abs(x - lastShakeRef.current.x);
+      const deltaY = Math.abs(y - lastShakeRef.current.y);
+      const deltaZ = Math.abs(z - lastShakeRef.current.z);
+
+      if (deltaX > threshold || deltaY > threshold || deltaZ > threshold) {
+        hasInteractedRef.current = true;
+        setShakeCount(c => c + 1);
+        setProgress(p => Math.min(p + 3, 100));
+        playTick();
+      }
+
+      lastShakeRef.current = { x, y, z };
+    };
+
+    // Request permission for iOS 13+
+    if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
+      (DeviceMotionEvent as any).requestPermission()
+        .then((response: string) => {
+          if (response === 'granted') {
+            window.addEventListener('devicemotion', handleMotion);
+          }
+        })
+        .catch(console.error);
+    } else {
+      window.addEventListener('devicemotion', handleMotion);
+    }
+
+    return () => window.removeEventListener('devicemotion', handleMotion);
+  }, [currentMode.mode, playTick]);
+
+  // DOUBLE TAP MODE
+  const handleDoubleTap = useCallback(() => {
+    if (currentMode.mode !== "doubleTap") return;
+    const now = Date.now();
+    
+    if (now - lastTapTime < 400) {
+      // Valid double tap
+      hasInteractedRef.current = true;
+      setProgress(p => Math.min(p + 10, 100));
+      playTick();
+      scaleSpring.set(0.85);
+      setTimeout(() => scaleSpring.set(1), 150);
+      setLastTapTime(0); // Reset for next double tap
+    } else {
+      setLastTapTime(now);
+    }
+  }, [currentMode.mode, lastTapTime, playTick, scaleSpring]);
+
+  // LONG PRESS MODE
+  const handleLongPressStart = useCallback(() => {
+    if (currentMode.mode !== "longPress") return;
+    hasInteractedRef.current = true;
+    setIsHolding(true);
+    scaleSpring.set(0.95);
+    
+    // Start 3-second timer
+    const timer = setInterval(() => {
+      setProgress(p => {
+        const next = Math.min(p + (100 / 30), 100); // 3 seconds = 30 intervals at 100ms
+        if (Math.floor(next / 10) > Math.floor(p / 10)) playTick();
+        return next;
+      });
+    }, 100);
+    
+    setLongPressTimer(timer);
+  }, [currentMode.mode, playTick, scaleSpring]);
+
+  const handleLongPressEnd = useCallback(() => {
+    if (currentMode.mode !== "longPress") return;
+    setIsHolding(false);
+    scaleSpring.set(1);
+    
+    if (longPressTimer) {
+      clearInterval(longPressTimer);
+      setLongPressTimer(null);
+    }
+    
+    // Reset if not complete
+    if (progress < 100) {
+      setProgress(0);
+    }
+  }, [currentMode.mode, longPressTimer, progress, scaleSpring]);
+
+  // ZIGZAG MODE - supports touch and mouse
+  const handleZigzagMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    if (currentMode.mode !== "zigzag" || !touchStartRef.current) return;
+    if ('touches' in e === false && !isDraggingRef.current) return;
+    hasInteractedRef.current = true;
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const deltaX = clientX - touchStartRef.current.x;
+    const threshold = 50;
+
+    if (Math.abs(deltaX) > threshold) {
+      const direction = deltaX > 0 ? "right" : "left";
+      
+      // Check if direction changed
+      if (zigzagDirection && direction !== zigzagDirection) {
+        setZigzagCount(c => {
+          const newCount = c + 1;
+          playTick();
+          // Need 6 direction changes (left-right-left-right-left-right)
+          setProgress(Math.min((newCount / 6) * 100, 100));
+          return newCount;
+        });
+      }
+      
+      setZigzagDirection(direction);
+      touchStartRef.current = { x: clientX, y: clientY };
+    }
+  }, [currentMode.mode, playTick, zigzagDirection]);
+
+  // PULSE MODE (rhythm tapping)
+  const handlePulseTap = useCallback(() => {
+    if (currentMode.mode !== "pulse") return;
+    hasInteractedRef.current = true;
+    
+    const now = Date.now();
+    setPulseTaps(taps => {
+      const newTaps = [...taps, now].slice(-5); // Keep last 5 taps
+      
+      if (newTaps.length >= 3) {
+        // Check if taps are rhythmic (consistent intervals ~500ms ± 150ms)
+        const intervals = [];
+        for (let i = 1; i < newTaps.length; i++) {
+          intervals.push(newTaps[i] - newTaps[i - 1]);
+        }
+        
+        const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+        const isRhythmic = intervals.every(i => 
+          i > 350 && i < 800 && Math.abs(i - avgInterval) < 200
+        );
+        
+        if (isRhythmic) {
+          playTick();
+          setProgress(p => Math.min(p + 8, 100));
+          scaleSpring.set(0.9);
+          setTimeout(() => scaleSpring.set(1), 100);
+        }
+      }
+      
+      return newTaps;
+    });
+  }, [currentMode.mode, playTick, scaleSpring]);
+
+  // BREATH MODE (hold-release-hold-release)
+  const handleBreathStart = useCallback(() => {
+    if (currentMode.mode !== "breath") return;
+    hasInteractedRef.current = true;
+    
+    if (breathPhase === "hold") {
+      setIsHolding(true);
+      scaleSpring.set(0.95);
+    }
+  }, [currentMode.mode, breathPhase, scaleSpring]);
+
+  const handleBreathEnd = useCallback(() => {
+    if (currentMode.mode !== "breath") return;
+    setIsHolding(false);
+    scaleSpring.set(1);
+    
+    if (breathPhase === "hold") {
+      setBreathPhase("release");
+      setBreathCount(c => {
+        const newCount = c + 1;
+        playTick();
+        // Need 4 complete cycles (8 phases)
+        setProgress(Math.min((newCount / 8) * 100, 100));
+        return newCount;
+      });
+    } else {
+      setBreathPhase("hold");
+      setBreathCount(c => {
+        const newCount = c + 1;
+        playTick();
+        setProgress(Math.min((newCount / 8) * 100, 100));
+        return newCount;
+      });
+    }
+  }, [currentMode.mode, breathPhase, playTick, scaleSpring]);
+
+  // ============================================================================
+  // NEW INTERACTION HANDLERS
+  // ============================================================================
+
+  // SPIRAL MODE - draw inward spiral
+  const handleSpiralMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    if (currentMode.mode !== "spiral") return;
+    if ('touches' in e === false && !isDraggingRef.current) return;
+    hasInteractedRef.current = true;
+
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    const distance = Math.sqrt(Math.pow(clientX - centerX, 2) + Math.pow(clientY - centerY, 2));
+    const maxDistance = Math.min(rect.width, rect.height) / 2;
+    
+    // Progress increases as you get closer to center
+    const newProgress = Math.max(0, Math.min(100, (1 - distance / maxDistance) * 100));
+    if (newProgress > progress) {
+      setProgress(newProgress);
+      if (Math.floor(newProgress / 10) > Math.floor(progress / 10)) playTick();
+    }
+  }, [currentMode.mode, progress, playTick]);
+
+  // CIRCLE MODE - draw complete circle
+  const [circleAnglesCovered, setCircleAnglesCovered] = useState<Set<number>>(new Set());
+  const handleCircleMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    if (currentMode.mode !== "circle") return;
+    if ('touches' in e === false && !isDraggingRef.current) return;
+    hasInteractedRef.current = true;
+
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    const angle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI);
+    const normalizedAngle = Math.floor((angle < 0 ? angle + 360 : angle) / 30); // 12 sectors
+    
+    setCircleAnglesCovered(prev => {
+      const newSet = new Set(prev);
+      if (!newSet.has(normalizedAngle)) {
+        newSet.add(normalizedAngle);
+        playTick();
+        setProgress((newSet.size / 12) * 100);
+      }
+      return newSet;
+    });
+  }, [currentMode.mode, playTick]);
+
+  // SCRATCH MODE - scratch the center area
+  const handleScratchMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    if (currentMode.mode !== "scratch") return;
+    if ('touches' in e === false && !isDraggingRef.current) return;
+    hasInteractedRef.current = true;
+
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    // Create grid of 5x5 = 25 cells in center area
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const areaSize = 150;
+    
+    const relX = clientX - (centerX - areaSize / 2);
+    const relY = clientY - (centerY - areaSize / 2);
+    
+    if (relX >= 0 && relX < areaSize && relY >= 0 && relY < areaSize) {
+      const cellX = Math.floor(relX / (areaSize / 5));
+      const cellY = Math.floor(relY / (areaSize / 5));
+      const cellKey = `${cellX}-${cellY}`;
+      
+      setScratchArea(prev => {
+        const newSet = new Set(prev);
+        if (!newSet.has(cellKey)) {
+          newSet.add(cellKey);
+          if (newSet.size % 3 === 0) playTick();
+          setProgress((newSet.size / 25) * 100);
+        }
+        return newSet;
+      });
+    }
+  }, [currentMode.mode, playTick]);
+
+  // MORSE MODE - short-short-long pattern
+  const handleMorseStart = useCallback(() => {
+    if (currentMode.mode !== "morse") return;
+    hasInteractedRef.current = true;
+    morseTapStartRef.current = Date.now();
+    setIsHolding(true);
+    scaleSpring.set(0.95);
+  }, [currentMode.mode, scaleSpring]);
+
+  const handleMorseEnd = useCallback(() => {
+    if (currentMode.mode !== "morse") return;
+    setIsHolding(false);
+    scaleSpring.set(1);
+    
+    const duration = Date.now() - morseTapStartRef.current;
+    const tapType: "short" | "long" = duration > 400 ? "long" : "short";
+    
+    setMorseTaps(prev => {
+      const newTaps = [...prev, tapType].slice(-3);
+      playTick();
+      
+      // Check for pattern: short-short-long
+      if (newTaps.length === 3) {
+        if (newTaps[0] === "short" && newTaps[1] === "short" && newTaps[2] === "long") {
+          setProgress(p => Math.min(p + 34, 100));
+        }
+        return []; // Reset after checking
+      }
+      return newTaps;
+    });
+  }, [currentMode.mode, playTick, scaleSpring]);
+
+  // ALTERNATE MODE - tap left and right sides
+  const handleAlternateTap = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    if (currentMode.mode !== "alternate") return;
+    hasInteractedRef.current = true;
+
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const clientX = 'touches' in e ? 
+      (e as React.TouchEvent).touches[0]?.clientX ?? (e as React.TouchEvent).changedTouches?.[0]?.clientX :
+      (e as React.MouseEvent).clientX;
+    const centerX = rect.left + rect.width / 2;
+    const side = clientX < centerX ? "left" : "right";
+    
+    if (alternateSide !== side) {
+      setAlternateSide(side);
+      setAlternateCount(c => {
+        const newCount = c + 1;
+        playTick();
+        setProgress(Math.min((newCount / 10) * 100, 100));
+        return newCount;
+      });
+      scaleSpring.set(0.9);
+      setTimeout(() => scaleSpring.set(1), 100);
+    }
+  }, [currentMode.mode, alternateSide, playTick, scaleSpring]);
+
+  // COUNTDOWN MODE - hold until countdown ends
+  const [countdownTimer, setCountdownTimer] = useState<ReturnType<typeof setInterval> | null>(null);
+  const handleCountdownStart = useCallback(() => {
+    if (currentMode.mode !== "countdown") return;
+    hasInteractedRef.current = true;
+    setIsHolding(true);
+    scaleSpring.set(0.95);
+    setCountdownValue(5);
+    
+    const timer = setInterval(() => {
+      setCountdownValue(v => {
+        if (v <= 1) {
+          setProgress(100);
+          playTick();
+          return 0;
+        }
+        playTick();
+        setProgress(((5 - v + 1) / 5) * 100);
+        return v - 1;
+      });
+    }, 1000);
+    
+    setCountdownTimer(timer);
+  }, [currentMode.mode, playTick, scaleSpring]);
+
+  const handleCountdownEnd = useCallback(() => {
+    if (currentMode.mode !== "countdown") return;
+    setIsHolding(false);
+    scaleSpring.set(1);
+    
+    if (countdownTimer) {
+      clearInterval(countdownTimer);
+      setCountdownTimer(null);
+    }
+    
+    if (progress < 100) {
+      setCountdownValue(5);
+      setProgress(0);
+    }
+  }, [currentMode.mode, countdownTimer, progress, scaleSpring]);
+
+  // CORNERS MODE - tap all 4 corners
+  const handleCornerTap = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    if (currentMode.mode !== "corners") return;
+    hasInteractedRef.current = true;
+
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const clientX = 'touches' in e ? 
+      (e as React.TouchEvent).touches[0]?.clientX ?? (e as React.TouchEvent).changedTouches?.[0]?.clientX :
+      (e as React.MouseEvent).clientX;
+    const clientY = 'touches' in e ? 
+      (e as React.TouchEvent).touches[0]?.clientY ?? (e as React.TouchEvent).changedTouches?.[0]?.clientY :
+      (e as React.MouseEvent).clientY;
+    
+    const cornerSize = 100;
+    let corner = "";
+    
+    if (clientX < rect.left + cornerSize && clientY < rect.top + cornerSize) corner = "tl";
+    else if (clientX > rect.right - cornerSize && clientY < rect.top + cornerSize) corner = "tr";
+    else if (clientX < rect.left + cornerSize && clientY > rect.bottom - cornerSize) corner = "bl";
+    else if (clientX > rect.right - cornerSize && clientY > rect.bottom - cornerSize) corner = "br";
+    
+    if (corner && !cornersHit.has(corner)) {
+      setCornersHit(prev => {
+        const newSet = new Set(prev);
+        newSet.add(corner);
+        playTick();
+        setProgress((newSet.size / 4) * 100);
+        return newSet;
+      });
+      scaleSpring.set(0.9);
+      setTimeout(() => scaleSpring.set(1), 100);
+    }
+  }, [currentMode.mode, cornersHit, playTick, scaleSpring]);
+
+  // INFINITY MODE - draw figure-8
+  const [infinityPhase, setInfinityPhase] = useState(0); // 0-3: 4 quadrants of figure-8
+  const handleInfinityMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    if (currentMode.mode !== "infinity") return;
+    if ('touches' in e === false && !isDraggingRef.current) return;
+    hasInteractedRef.current = true;
+
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    // Determine quadrant
+    const isLeft = clientX < centerX;
+    const isTop = clientY < centerY;
+    let quadrant = 0;
+    if (isLeft && isTop) quadrant = 0;
+    else if (!isLeft && isTop) quadrant = 1;
+    else if (!isLeft && !isTop) quadrant = 2;
+    else quadrant = 3;
+    
+    // Must visit quadrants in order: 0->1->2->3->0->3->2->1 (figure 8)
+    const expectedSequence = [0, 1, 2, 3, 0, 3, 2, 1];
+    if (quadrant === expectedSequence[infinityPhase]) {
+      setInfinityPhase(p => {
+        const next = p + 1;
+        playTick();
+        setProgress((next / 8) * 100);
+        if (next >= 8) return 0;
+        return next;
+      });
+    }
+  }, [currentMode.mode, infinityPhase, playTick]);
+
+  // SLIDER MODE - drag from left to right
+  const handleSliderMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    if (currentMode.mode !== "slider" || !touchStartRef.current) return;
+    if ('touches' in e === false && !isDraggingRef.current) return;
+    hasInteractedRef.current = true;
+
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const startX = rect.left + 50; // Start area
+    const endX = rect.right - 50; // End area
+    
+    const prog = Math.min(100, Math.max(0, ((clientX - startX) / (endX - startX)) * 100));
+    setSliderProgress(prog);
+    setProgress(prog);
+    if (Math.floor(prog / 20) > Math.floor(sliderProgress / 20)) playTick();
+  }, [currentMode.mode, sliderProgress, playTick]);
+
+  // TRIPLE TAP MODE
+  const handleTripleTap = useCallback(() => {
+    if (currentMode.mode !== "tripleTap") return;
+    const now = Date.now();
+    
+    setTripleTapTimes(prev => {
+      const newTimes = [...prev, now].filter(t => now - t < 600);
+      
+      if (newTimes.length >= 3) {
+        hasInteractedRef.current = true;
+        setProgress(p => Math.min(p + 15, 100));
+        playTick();
+        scaleSpring.set(0.85);
+        setTimeout(() => scaleSpring.set(1), 150);
+        return [];
+      }
+      return newTimes;
+    });
+  }, [currentMode.mode, playTick, scaleSpring]);
+
+  // SPEED TAP MODE - 20 taps in 5 seconds
+  const handleSpeedTap = useCallback(() => {
+    if (currentMode.mode !== "speedTap") return;
+    const now = Date.now();
+    
+    if (speedTapStartTime === 0 || now - speedTapStartTime > 5000) {
+      setSpeedTapStartTime(now);
+      setSpeedTapCount(1);
+      setProgress(5);
+    } else {
+      setSpeedTapCount(c => {
+        const newCount = c + 1;
+        hasInteractedRef.current = true;
+        setProgress(Math.min((newCount / 20) * 100, 100));
+        if (newCount % 5 === 0) playTick();
+        return newCount;
+      });
+    }
+    scaleSpring.set(0.92);
+    setTimeout(() => scaleSpring.set(1), 50);
+  }, [currentMode.mode, speedTapStartTime, playTick, scaleSpring]);
+
+  // ============================================================================
+  // MOBILE-ONLY SENSOR HANDLERS
+  // ============================================================================
+
+  // TILT MODE - device orientation
+  useEffect(() => {
+    if (currentMode.mode !== "tilt" || !isMobile) return;
+
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      const beta = e.beta ?? 0; // Front-back tilt (-180 to 180)
+      hasInteractedRef.current = true;
+      
+      // Progress based on tilting forward (positive beta)
+      const tiltAmount = Math.max(0, Math.min(beta, 45)) / 45;
+      setTiltProgress(tiltAmount * 100);
+      setProgress(tiltAmount * 100);
+    };
+
+    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+      (DeviceOrientationEvent as any).requestPermission()
+        .then((response: string) => {
+          if (response === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation);
+          }
+        })
+        .catch(console.error);
+    } else {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+
+    return () => window.removeEventListener('deviceorientation', handleOrientation);
+  }, [currentMode.mode, isMobile]);
+
+  // FLIP MODE - flip device face down and back
+  useEffect(() => {
+    if (currentMode.mode !== "flip" || !isMobile) return;
+
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      const gamma = e.gamma ?? 0; // Left-right tilt
+      const beta = e.beta ?? 0; // Front-back tilt
+      hasInteractedRef.current = true;
+      
+      // Detect face-down position (beta close to 180 or -180)
+      const isFaceDown = Math.abs(beta) > 140;
+      
+      if (flipState === "normal" && isFaceDown) {
+        setFlipState("flipped");
+        playTick();
+        setProgress(50);
+      } else if (flipState === "flipped" && !isFaceDown && Math.abs(beta) < 40) {
+        setFlipState("returned");
+        playTick();
+        setProgress(100);
+      }
+    };
+
+    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+      (DeviceOrientationEvent as any).requestPermission()
+        .then((response: string) => {
+          if (response === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation);
+          }
+        })
+        .catch(console.error);
+    } else {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+
+    return () => window.removeEventListener('deviceorientation', handleOrientation);
+  }, [currentMode.mode, isMobile, flipState, playTick]);
+
+  // COMPASS MODE - rotate to face north
+  useEffect(() => {
+    if (currentMode.mode !== "compass" || !isMobile) return;
+
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      const alpha = e.alpha ?? 0; // Compass heading (0-360)
+      hasInteractedRef.current = true;
+      setCompassHeading(alpha);
+      
+      // Progress when facing north (alpha close to 0 or 360)
+      const northness = Math.max(0, 1 - Math.min(alpha, 360 - alpha) / 30);
+      setProgress(northness * 100);
+    };
+
+    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+      (DeviceOrientationEvent as any).requestPermission()
+        .then((response: string) => {
+          if (response === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation);
+          }
+        })
+        .catch(console.error);
+    } else {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+
+    return () => window.removeEventListener('deviceorientation', handleOrientation);
+  }, [currentMode.mode, isMobile]);
+
+  // PROXIMITY MODE - cover/uncover screen (simulated with rapid light change via ambient light or touch)
+  const handleProximityTap = useCallback(() => {
+    if (currentMode.mode !== "proximity") return;
+    hasInteractedRef.current = true;
+    
+    setProximityTriggered(c => {
+      const newCount = c + 1;
+      playTick();
+      setProgress(Math.min((newCount / 6) * 100, 100));
+      return newCount;
+    });
+    scaleSpring.set(0.9);
+    setTimeout(() => scaleSpring.set(1), 100);
+  }, [currentMode.mode, playTick, scaleSpring]);
+
+  // ============================================================================
+  // DESKTOP KEYBOARD MODES
+  // ============================================================================
+  
+  // KONAMI CODE: ↑↑↓↓←→←→BA
+  const KONAMI_CODE = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "KeyB", "KeyA"];
+  
+  useEffect(() => {
+    if (currentMode.mode !== "konami") return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      hasInteractedRef.current = true;
+      const key = e.code;
+      
+      setKonamiSequence(prev => {
+        const newSeq = [...prev, key];
+        // Check if last keys match Konami code
+        const startIdx = newSeq.length - KONAMI_CODE.length;
+        if (startIdx >= 0) {
+          const match = KONAMI_CODE.every((k, i) => newSeq[startIdx + i] === k);
+          if (match) {
+            setProgress(100);
+            playTick();
+            return [];
+          }
+        }
+        // Show partial progress
+        let matchCount = 0;
+        for (let i = 0; i < Math.min(newSeq.length, KONAMI_CODE.length); i++) {
+          if (newSeq[newSeq.length - 1 - i] === KONAMI_CODE[KONAMI_CODE.length - 1 - i]) {
+            matchCount++;
+          } else break;
+        }
+        // Backwards check for partial match
+        const partialMatch = KONAMI_CODE.slice(0, newSeq.length).every((k, i) => k === newSeq[i]);
+        if (partialMatch) {
+          setProgress((newSeq.length / KONAMI_CODE.length) * 100);
+          playTick();
+        } else {
+          setProgress(0);
+          return [];
+        }
+        return newSeq.slice(-15);
+      });
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentMode.mode, playTick]);
+
+  // TYPE WORD MODE: Type "BULLMONEY"
+  const TARGET_WORD = "BULLMONEY";
+  
+  useEffect(() => {
+    if (currentMode.mode !== "typeWord") return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      hasInteractedRef.current = true;
+      const key = e.key.toUpperCase();
+      
+      if (key.length === 1 && /[A-Z]/.test(key)) {
+        setTypedWord(prev => {
+          const newWord = prev + key;
+          // Check if matches target so far
+          if (TARGET_WORD.startsWith(newWord)) {
+            playTick();
+            setProgress((newWord.length / TARGET_WORD.length) * 100);
+            if (newWord === TARGET_WORD) {
+              return TARGET_WORD;
+            }
+            return newWord;
+          } else {
+            setProgress(0);
+            return "";
+          }
+        });
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentMode.mode, playTick]);
+
+  // PIANO MODE: Press A S D F G in sequence
+  const PIANO_KEYS = ["KeyA", "KeyS", "KeyD", "KeyF", "KeyG"];
+  
+  useEffect(() => {
+    if (currentMode.mode !== "piano") return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      hasInteractedRef.current = true;
+      const key = e.code;
+      
+      if (PIANO_KEYS.includes(key)) {
+        setPianoSequence(prev => {
+          const nextExpected = PIANO_KEYS[prev.length];
+          if (key === nextExpected) {
+            playTick();
+            const newSeq = [...prev, key];
+            setProgress((newSeq.length / PIANO_KEYS.length) * 100);
+            if (newSeq.length === PIANO_KEYS.length) {
+              return [];
+            }
+            return newSeq;
+          } else {
+            setProgress(0);
+            return [];
+          }
+        });
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentMode.mode, playTick]);
+
+  // WASD MODE: W A S D in order
+  const WASD_KEYS = ["KeyW", "KeyA", "KeyS", "KeyD"];
+  
+  useEffect(() => {
+    if (currentMode.mode !== "wasd") return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      hasInteractedRef.current = true;
+      const key = e.code;
+      
+      if (WASD_KEYS.includes(key)) {
+        setWasdSequence(prev => {
+          const nextExpected = WASD_KEYS[prev.length];
+          if (key === nextExpected) {
+            playTick();
+            const newSeq = [...prev, key];
+            setProgress((newSeq.length / WASD_KEYS.length) * 100);
+            if (newSeq.length === WASD_KEYS.length) {
+              return [];
+            }
+            return newSeq;
+          } else {
+            setProgress(0);
+            return [];
+          }
+        });
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentMode.mode, playTick]);
+
+  // ARROW MODE: ↑→↓←
+  const ARROW_KEYS = ["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"];
+  
+  useEffect(() => {
+    if (currentMode.mode !== "arrows") return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      hasInteractedRef.current = true;
+      const key = e.code;
+      
+      if (ARROW_KEYS.includes(key)) {
+        e.preventDefault();
+        setArrowSequence(prev => {
+          const nextExpected = ARROW_KEYS[prev.length];
+          if (key === nextExpected) {
+            playTick();
+            const newSeq = [...prev, key];
+            setProgress((newSeq.length / ARROW_KEYS.length) * 100);
+            if (newSeq.length === ARROW_KEYS.length) {
+              return [];
+            }
+            return newSeq;
+          } else {
+            setProgress(0);
+            return [];
+          }
+        });
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentMode.mode, playTick]);
+
+  // SPACE MASH MODE: Mash space 15 times
+  useEffect(() => {
+    if (currentMode.mode !== "spaceMash") return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        hasInteractedRef.current = true;
+        setSpaceCount(prev => {
+          const newCount = prev + 1;
+          playTick();
+          scaleSpring.set(0.9);
+          setTimeout(() => scaleSpring.set(1), 50);
+          setProgress(Math.min((newCount / 15) * 100, 100));
+          return newCount;
+        });
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentMode.mode, playTick, scaleSpring]);
+
+  // CTRL+B MODE (Bulls!): Press Ctrl+B 3 times
+  useEffect(() => {
+    if (currentMode.mode !== "altTab") return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.code === "KeyB") {
+        e.preventDefault();
+        hasInteractedRef.current = true;
+        setCtrlBCount(prev => {
+          const newCount = prev + 1;
+          playTick();
+          setProgress(Math.min((newCount / 3) * 100, 100));
+          return newCount;
+        });
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentMode.mode, playTick]);
+
+  // ============================================================================
+  // DESKTOP MOUSE MODES
+  // ============================================================================
+
+  // DOUBLE CLICK MODE
+  const handleDoubleClick = useCallback((e: React.MouseEvent) => {
+    if (currentMode.mode !== "doubleClick") return;
+    hasInteractedRef.current = true;
+    setDoubleClickCount(prev => {
+      const newCount = prev + 1;
+      playTick();
+      scaleSpring.set(0.85);
+      setTimeout(() => scaleSpring.set(1), 150);
+      setProgress(Math.min((newCount / 5) * 100, 100));
+      return newCount;
+    });
+  }, [currentMode.mode, playTick, scaleSpring]);
+
+  // RIGHT CLICK MODE
+  const handleRightClick = useCallback((e: React.MouseEvent) => {
+    if (currentMode.mode !== "rightClick") return;
+    e.preventDefault();
+    hasInteractedRef.current = true;
+    setRightClickCount(prev => {
+      const newCount = prev + 1;
+      playTick();
+      scaleSpring.set(0.9);
+      setTimeout(() => scaleSpring.set(1), 100);
+      setProgress(Math.min((newCount / 3) * 100, 100));
+      return newCount;
+    });
+  }, [currentMode.mode, playTick, scaleSpring]);
+
+  // SCROLL WHEEL MODE
+  useEffect(() => {
+    if (currentMode.mode !== "scrollWheel") return;
+    
+    const handleWheel = (e: WheelEvent) => {
+      hasInteractedRef.current = true;
+      // Scroll up (negative deltaY) adds progress
+      if (e.deltaY < 0) {
+        setScrollAmount(prev => {
+          const newAmount = prev + Math.abs(e.deltaY);
+          playTick();
+          setProgress(Math.min((newAmount / 500) * 100, 100));
+          return newAmount;
+        });
+      }
+    };
+    
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, [currentMode.mode, playTick]);
+
+  // HOVER ZONE MODE
+  const handleHoverZone = useCallback((zone: string) => {
+    if (currentMode.mode !== "hoverZone") return;
+    hasInteractedRef.current = true;
+    setHoverZones(prev => {
+      const newSet = new Set(prev);
+      if (!newSet.has(zone)) {
+        newSet.add(zone);
+        playTick();
+        setProgress((newSet.size / 4) * 100);
+      }
+      return newSet;
+    });
+  }, [currentMode.mode, playTick]);
+
+  // DRAG & DROP MODE - Drag a coin to a vault
+  const handleDragDropStart = useCallback((e: React.MouseEvent) => {
+    if (currentMode.mode !== "dragDrop") return;
+    hasInteractedRef.current = true;
+    setDragStartPos({ x: e.clientX, y: e.clientY });
+  }, [currentMode.mode]);
+
+  const handleDragDropMove = useCallback((e: React.MouseEvent) => {
+    if (currentMode.mode !== "dragDrop" || !dragStartPos) return;
+    // Check if dragged to the vault area (bottom center)
+    const vaultArea = {
+      x: window.innerWidth / 2,
+      y: window.innerHeight - 150,
+      radius: 80
+    };
+    const distance = Math.hypot(e.clientX - vaultArea.x, e.clientY - vaultArea.y);
+    if (distance < vaultArea.radius) {
+      setDragComplete(true);
+      setProgress(100);
+      playTick();
+    }
+  }, [currentMode.mode, dragStartPos, playTick]);
+
+  // ============================================================================
+  // ADDITIONAL MOBILE SENSOR MODES
+  // ============================================================================
+
+  // FACE DOWN MODE
+  useEffect(() => {
+    if (currentMode.mode !== "faceDown" || !isMobile) return;
+    
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      const beta = e.beta || 0; // -180 to 180 (front-back tilt)
+      
+      // Phone is face down when beta is close to 180 or -180
+      const isFaceDown = Math.abs(Math.abs(beta) - 180) < 30;
+      
+      if (isFaceDown && !faceDownTimer) {
+        hasInteractedRef.current = true;
+        const timer = setInterval(() => {
+          setFaceDownProgress(p => {
+            const newP = p + 5;
+            if (newP >= 100) {
+              setProgress(100);
+              playTick();
+            } else {
+              setProgress(newP);
+            }
+            return Math.min(newP, 100);
+          });
+        }, 100);
+        setFaceDownTimer(timer);
+      } else if (!isFaceDown && faceDownTimer) {
+        clearInterval(faceDownTimer);
+        setFaceDownTimer(null);
+        if (faceDownProgress < 100) {
+          setFaceDownProgress(0);
+          setProgress(0);
+        }
+      }
+    };
+    
+    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+      (DeviceOrientationEvent as any).requestPermission()
+        .then((response: string) => {
+          if (response === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation);
+          }
+        })
+        .catch(console.error);
+    } else {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+    
+    return () => {
+      window.removeEventListener('deviceorientation', handleOrientation);
+      if (faceDownTimer) clearInterval(faceDownTimer);
+    };
+  }, [currentMode.mode, isMobile, faceDownTimer, faceDownProgress, playTick]);
+
+  // STEP COUNTER MODE (uses accelerometer to detect steps)
+  useEffect(() => {
+    if (currentMode.mode !== "stepCounter" || !isMobile) return;
+    
+    let lastY = 0;
+    let lastPeakTime = 0;
+    
+    const handleMotion = (e: DeviceMotionEvent) => {
+      const acc = e.accelerationIncludingGravity;
+      if (!acc?.y) return;
+      
+      const now = Date.now();
+      const y = acc.y;
+      
+      // Detect step as significant y-axis change (peak detection)
+      if (y > lastY + 3 && now - lastPeakTime > 300) {
+        hasInteractedRef.current = true;
+        lastPeakTime = now;
+        setStepCount(prev => {
+          const newCount = prev + 1;
+          playTick();
+          setProgress(Math.min((newCount / 5) * 100, 100));
+          return newCount;
+        });
+      }
+      
+      lastY = y;
+    };
+    
+    if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
+      (DeviceMotionEvent as any).requestPermission()
+        .then((response: string) => {
+          if (response === 'granted') {
+            window.addEventListener('devicemotion', handleMotion);
+          }
+        })
+        .catch(console.error);
+    } else {
+      window.addEventListener('devicemotion', handleMotion);
+    }
+    
+    return () => window.removeEventListener('devicemotion', handleMotion);
+  }, [currentMode.mode, isMobile, playTick]);
+
+  // MULTI-TOUCH MODE
+  const handleMultiTouch = useCallback((e: React.TouchEvent) => {
+    if (currentMode.mode !== "multiTouch") return;
+    
+    if (e.touches.length >= 3) {
+      hasInteractedRef.current = true;
+      setTouchCount(prev => {
+        const newCount = prev + 1;
+        playTick();
+        setProgress(Math.min((newCount / 3) * 100, 100));
+        return newCount;
+      });
+    }
+  }, [currentMode.mode, playTick]);
+
+  // PINCH ZOOM MODE
+  const handlePinchMove = useCallback((e: React.TouchEvent) => {
+    if (currentMode.mode !== "pinchZoom") return;
+    if (e.touches.length < 2) return;
+    
+    const touch1 = e.touches[0];
+    const touch2 = e.touches[1];
+    const distance = Math.hypot(
+      touch2.clientX - touch1.clientX,
+      touch2.clientY - touch1.clientY
+    );
+    
+    if (lastPinchDistance > 0) {
+      const diff = Math.abs(distance - lastPinchDistance);
+      if (diff > 50) {
+        hasInteractedRef.current = true;
+        setPinchCount(prev => {
+          const newCount = prev + 1;
+          playTick();
+          setProgress(Math.min((newCount / 6) * 100, 100));
+          return newCount;
+        });
+        setLastPinchDistance(distance);
+      }
+    } else {
+      setLastPinchDistance(distance);
+    }
+  }, [currentMode.mode, lastPinchDistance, playTick]);
+
+  // SQUEEZE MODE (detect pressure on edges via touch area)
+  const handleSqueeze = useCallback((e: React.TouchEvent) => {
+    if (currentMode.mode !== "squeeze") return;
+    
+    // Check if touches are on opposite edges
+    const touches = Array.from(e.touches);
+    if (touches.length >= 2) {
+      const xs = touches.map(t => t.clientX);
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const screenWidth = window.innerWidth;
+      
+      // Touches on opposite sides of screen
+      if (minX < screenWidth * 0.2 && maxX > screenWidth * 0.8) {
+        hasInteractedRef.current = true;
+        setProgress(100);
+        playTick();
+      }
+    }
+  }, [currentMode.mode, playTick]);
+
+  // LIGHT SENSOR MODE (ambient light API)
+  useEffect(() => {
+    if (currentMode.mode !== "lightSensor" || !isMobile) return;
+    
+    // Fallback: use camera if available or touch simulation
+    let wasDark = false;
+    
+    // Try ambient light sensor
+    if ('AmbientLightSensor' in window) {
+      try {
+        const sensor = new (window as any).AmbientLightSensor();
+        sensor.addEventListener('reading', () => {
+          const lux = sensor.illuminance;
+          hasInteractedRef.current = true;
+          
+          if (lux < 10) {
+            wasDark = true;
+            setProgress(50);
+          } else if (wasDark && lux > 100) {
+            setProgress(100);
+            playTick();
+          }
+        });
+        sensor.start();
+        return () => sensor.stop();
+      } catch {
+        // Sensor not available
+      }
+    }
+    
+    // Fallback: use touch taps like proximity
+    return undefined;
+  }, [currentMode.mode, isMobile, playTick]);
+
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+  if (!gateVisible) return null;
+
+  // Combined touch/pointer handlers based on current mode
+  const handleInteractionStart = (e: React.TouchEvent | React.MouseEvent) => {
+    // Set drag start point for mouse/touch
+    if ('touches' in e) {
+      handleTouchStart(e);
+    } else {
+      handleMouseStart(e);
+    }
+    
+    // Mode-specific start handlers
+    if (currentMode.mode === "hold") handleHoldStart();
+    else if (currentMode.mode === "longPress") handleLongPressStart();
+    else if (currentMode.mode === "breath") handleBreathStart();
+    else if (currentMode.mode === "morse") handleMorseStart();
+    else if (currentMode.mode === "countdown") handleCountdownStart();
+  };
+
+  const handleInteractionEnd = () => {
+    // Reset drag state
+    if (isDraggingRef.current) {
+      handleMouseEnd();
+    }
+    handleTouchEnd();
+    
+    // Mode-specific end handlers  
+    if (currentMode.mode === "hold") handleHoldEnd();
+    else if (currentMode.mode === "longPress") handleLongPressEnd();
+    else if (currentMode.mode === "breath") handleBreathEnd();
+    else if (currentMode.mode === "morse") handleMorseEnd();
+    else if (currentMode.mode === "countdown") handleCountdownEnd();
+  };
+
+  const handleInteractionMove = (e: React.TouchEvent | React.MouseEvent) => {
+    if ('touches' in e) {
+      handleTouchMove(e);
+      handlePatternPoint(e);
+      handleZigzagMove(e);
+    } else {
+      // Desktop mouse handling
+      handleMouseMove(e);
+      handlePatternPoint(e);
+      handleZigzagMove(e);
+      handleShakeMouseMove(e); // Desktop shake alternative
+    }
+    handleRotateMove(e);
+    handleSpiralMove(e);
+    handleCircleMove(e);
+    handleScratchMove(e);
+    handleInfinityMove(e);
+    handleSliderMove(e);
+    
+    // Mobile-specific move handlers
+    if ('touches' in e) {
+      handlePinchMove(e);
+      handleSqueeze(e);
+    }
+  };
+
+  const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
+    if (currentMode.mode === "tap") handleTap();
+    else if (currentMode.mode === "doubleTap") handleDoubleTap();
+    else if (currentMode.mode === "pulse") handlePulseTap();
+    else if (currentMode.mode === "alternate") handleAlternateTap(e);
+    else if (currentMode.mode === "corners") handleCornerTap(e);
+    else if (currentMode.mode === "tripleTap") handleTripleTap();
+    else if (currentMode.mode === "speedTap") handleSpeedTap();
+    else if (currentMode.mode === "proximity") handleProximityTap();
+    else if (currentMode.mode === "lightSensor") handleProximityTap(); // Fallback
+  };
+
+  // Touch-specific handlers for mobile modes
+  const handleTouchStartMobile = (e: React.TouchEvent) => {
+    handleInteractionStart(e);
+    handleMultiTouch(e);
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        ref={containerRef}
+        className="fixed inset-0 z-[99999] flex flex-col items-center justify-center select-none"
+        style={{ backgroundColor: "#000", cursor: "pointer" }} // OLED Black
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onTouchStart={handleTouchStartMobile}
+        onTouchMove={handleInteractionMove}
+        onTouchEnd={handleInteractionEnd}
+        onMouseDown={handleInteractionStart}
+        onMouseUp={handleInteractionEnd}
+        onMouseLeave={handleInteractionEnd}
+        onMouseMove={handleInteractionMove}
+        onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
+        onContextMenu={handleRightClick}
+      >
+        {/* Background Candlesticks */}
+        <BackgroundCandlesticks />
+
+        {/* Subtle grid background */}
+        <div 
+          className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: '40px 40px',
+          }}
+        />
+
+        {/* Live Price Ticker */}
+        <motion.div
+          className="absolute top-8 left-1/2 -translate-x-1/2"
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <div 
+            className="px-6 py-3 rounded-2xl flex flex-col items-center gap-2"
+            style={{
+              backgroundColor: "rgba(0, 0, 0, 0.8)",
+              border: "2px solid rgba(59, 130, 246, 0.4)",
+              boxShadow: "0 0 20px rgba(59, 130, 246, 0.2)",
+            }}
+          >
+            {/* Choose your crypto label */}
+            <span 
+              className="text-xs font-medium uppercase tracking-wider"
+              style={{ color: "rgba(59, 130, 246, 0.7)" }}
+            >
+              Choose your crypto
+            </span>
+            
+            <div className="flex items-center gap-4">
+            {/* Asset selector */}
+            <div className="flex gap-2">
+              {(Object.keys(ASSETS) as AssetKey[]).map((key) => (
+                <button
+                  key={key}
+                  onClick={() => setSelectedAsset(key)}
+                  className={cn(
+                    "w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold transition-all",
+                    selectedAsset === key && "scale-110"
+                  )}
+                  style={{
+                    backgroundColor: selectedAsset === key ? "rgba(59, 130, 246, 0.2)" : "transparent",
+                    border: `2px solid ${selectedAsset === key ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                    color: selectedAsset === key ? "#fff" : "#3b82f6",
+                    boxShadow: selectedAsset === key ? "0 0 10px #3b82f6" : "none",
+                  }}
+                >
+                  {ASSETS[key].icon}
+                </button>
+              ))}
+            </div>
+
+            {/* Price display */}
+            <div className="flex flex-col items-end">
+              <span 
+                className="text-lg font-bold neon-text"
+                style={{ 
+                  fontFamily: "monospace",
+                  textShadow: "0 0 10px #fff, 0 0 20px #3b82f6",
+                }}
+              >
+                {price > 0 ? formatPrice(price) : "Loading..."}
+              </span>
+              <span 
+                className="text-xs flex items-center gap-1"
+                style={{ color: change24h >= 0 ? "#22c55e" : "#ef4444" }}
+              >
+                {change24h >= 0 ? <TrendingUp size={12} /> : <ArrowUpRight size={12} className="rotate-90" />}
+                {change24h.toFixed(2)}%
+              </span>
+            </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Main Unlock Circle */}
+        <motion.div
+          className="relative flex items-center justify-center"
+          style={{ scale: scaleSpring }}
+        >
+          {/* Outer glow ring */}
+          <div 
+            className="absolute w-44 h-44 rounded-full"
+            style={{
+              background: "radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)",
+              animation: isHolding ? "none" : "ring-rotate 10s linear infinite",
+            }}
+          />
+
+          {/* Progress ring */}
+          <NeonRing progress={progress} size={160} />
+
+          {/* Center button */}
+          <motion.button
+            className="relative w-32 h-32 rounded-full flex flex-col items-center justify-center gap-2 neon-border"
+            style={{
+              backgroundColor: "rgba(0, 0, 0, 0.9)",
+            }}
+            onPointerDown={() => {
+              if (currentMode.mode === "hold") handleHoldStart();
+              else if (currentMode.mode === "longPress") handleLongPressStart();
+              else if (currentMode.mode === "breath") handleBreathStart();
+            }}
+            onPointerUp={() => {
+              if (currentMode.mode === "hold") handleHoldEnd();
+              else if (currentMode.mode === "longPress") handleLongPressEnd();
+              else if (currentMode.mode === "breath") handleBreathEnd();
+            }}
+            onPointerLeave={() => {
+              if (currentMode.mode === "hold") handleHoldEnd();
+              else if (currentMode.mode === "longPress") handleLongPressEnd();
+            }}
+            onClick={() => {
+              if (currentMode.mode === "tap") handleTap();
+              else if (currentMode.mode === "doubleTap") handleDoubleTap();
+              else if (currentMode.mode === "pulse") handlePulseTap();
+            }}
+            whileTap={["tap", "doubleTap", "pulse"].includes(currentMode.mode) ? { scale: 0.9 } : undefined}
+          >
+            {/* Icon */}
+            {isUnlocked ? (
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 200, damping: 15 }}
+              >
+                <Unlock 
+                  size={40} 
+                  className="neon-icon"
+                  style={{
+                    color: "#3b82f6",
+                    filter: "drop-shadow(0 0 10px #3b82f6) drop-shadow(0 0 20px #3b82f6)",
+                  }}
+                />
+              </motion.div>
+            ) : (
+              <div 
+                className="neon-icon"
+                style={{
+                  color: "#3b82f6",
+                  filter: "drop-shadow(0 0 8px #3b82f6) drop-shadow(0 0 15px #3b82f6)",
+                }}
+              >
+                <currentMode.icon size={36} />
+              </div>
+            )}
+
+            {/* Progress text */}
+            <span 
+              className="text-xl font-bold neon-text"
+              style={{ 
+                fontFamily: "monospace",
+                textShadow: "0 0 10px #fff, 0 0 20px #3b82f6",
+              }}
+            >
+              {Math.round(progress)}%
+            </span>
+          </motion.button>
+
+          {/* Candlestick animation */}
+          <div className="absolute -bottom-20">
+            <CandlestickBars progress={progress} />
+          </div>
+        </motion.div>
+
+        {/* Instruction text */}
+        <motion.div
+          className="mt-24 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <p 
+            className="text-xl font-bold mb-2 neon-text"
+            style={{
+              textShadow: "0 0 10px #fff, 0 0 20px #3b82f6, 0 0 40px #3b82f6",
+            }}
+          >
+            {isUnlocked ? "ACCESS GRANTED" : currentMode.mode === "breath" 
+              ? `${currentMode.instruction} (${breathPhase === "hold" ? "HOLD" : "RELEASE"})` 
+              : currentMode.instruction}
+          </p>
+          <p 
+            className="text-sm opacity-70"
+            style={{ color: "#3b82f6" }}
+          >
+            {currentMode.tradingMetaphor}
+          </p>
+        </motion.div>
+
+        {/* Current mode indicator - VIP unlock explanation */}
+        <motion.div
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-md px-4"
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.7 }}
+        >
+          <div
+            className="px-6 py-4 rounded-2xl flex flex-col items-center gap-2"
+            style={{
+              backgroundColor: "rgba(0, 0, 0, 0.9)",
+              border: "2px solid #3b82f6",
+              boxShadow: "0 0 20px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(59, 130, 246, 0.1)",
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                style={{
+                  color: "#3b82f6",
+                  filter: "drop-shadow(0 0 4px #3b82f6)",
+                }}
+              >
+                <currentMode.icon size={24} />
+              </div>
+              <span 
+                className="text-base font-bold uppercase tracking-wide"
+                style={{ color: "#fff", textShadow: "0 0 10px rgba(59, 130, 246, 0.5)" }}
+              >
+                {currentMode.label}
+              </span>
+            </div>
+            <p 
+              className="text-center text-xs"
+              style={{ color: "rgba(59, 130, 246, 0.8)" }}
+            >
+              Complete this interaction to unlock exclusive access to our
+            </p>
+            <p 
+              className="text-center text-sm font-bold neon-text"
+              style={{ textShadow: "0 0 8px #3b82f6, 0 0 16px #3b82f6" }}
+            >
+              VIP TRADING WEBSITE
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Trading wisdom quote */}
+        <motion.div
+          className="absolute bottom-28 left-1/2 -translate-x-1/2 w-full max-w-sm px-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+        >
+          <p 
+            className="text-center text-xs italic"
+            style={{ 
+              color: "rgba(59, 130, 246, 0.5)",
+              textShadow: "0 0 5px rgba(59, 130, 246, 0.3)",
+            }}
+          >
+            "{quote}"
+          </p>
+        </motion.div>
+
+        {/* Pattern trail visualization */}
+        {currentMode.mode === "pattern" && patternPoints.length > 1 && (
+          <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 10 }}>
+            <motion.path
+              d={`M ${patternPoints.map(p => `${p.x},${p.y}`).join(' L ')}`}
+              stroke="#3b82f6"
+              strokeWidth="3"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{
+                filter: "drop-shadow(0 0 5px #3b82f6) drop-shadow(0 0 10px #3b82f6)",
+              }}
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 0.1 }}
+            />
+          </svg>
+        )}
+
+        {/* Shake indicator */}
+        {currentMode.mode === "shake" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <p className="text-4xl font-bold neon-text">
+              {shakeCount}
+            </p>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>shakes</p>
+            <p className="text-xs mt-1 opacity-50" style={{ color: "#3b82f6" }}>
+              Mobile: shake device • Desktop: move mouse rapidly
+            </p>
+          </motion.div>
+        )}
+
+        {/* Tap counter */}
+        {currentMode.mode === "tap" && tapCount > 0 && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+          >
+            <p className="text-4xl font-bold neon-text">
+              {tapCount}
+            </p>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>taps</p>
+          </motion.div>
+        )}
+
+        {/* Rotation indicator */}
+        {currentMode.mode === "rotate" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <p className="text-4xl font-bold neon-text">
+              {Math.floor(rotationAngle)}°
+            </p>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>rotation</p>
+          </motion.div>
+        )}
+
+        {/* Zigzag indicator */}
+        {currentMode.mode === "zigzag" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <p className="text-4xl font-bold neon-text">
+              {zigzagCount}/6
+            </p>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>
+              {zigzagDirection ? `→ ${zigzagDirection === "right" ? "LEFT" : "RIGHT"}` : "Swipe left or right"}
+            </p>
+          </motion.div>
+        )}
+
+        {/* Pulse rhythm indicator */}
+        {currentMode.mode === "pulse" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="flex gap-2 justify-center mb-2">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-3 h-3 rounded-full"
+                  style={{
+                    backgroundColor: pulseTaps.length > i ? "#3b82f6" : "rgba(59, 130, 246, 0.3)",
+                    boxShadow: pulseTaps.length > i ? "0 0 10px #3b82f6" : "none",
+                  }}
+                  animate={pulseTaps.length === i + 1 ? { scale: [1, 1.5, 1] } : {}}
+                  transition={{ duration: 0.2 }}
+                />
+              ))}
+            </div>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Tap in rhythm (~500ms apart)</p>
+          </motion.div>
+        )}
+
+        {/* Breath phase indicator */}
+        {currentMode.mode === "breath" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.div 
+              className="w-16 h-16 mx-auto mb-2 rounded-full flex items-center justify-center"
+              style={{
+                backgroundColor: isHolding ? "rgba(59, 130, 246, 0.3)" : "transparent",
+                border: `2px solid ${isHolding ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                boxShadow: isHolding ? "0 0 20px #3b82f6" : "none",
+              }}
+              animate={isHolding ? { scale: [1, 1.1, 1] } : {}}
+              transition={{ duration: 0.5, repeat: isHolding ? Infinity : 0 }}
+            >
+              <span className="text-lg" style={{ color: "#3b82f6" }}>
+                {breathPhase === "hold" ? "⬇" : "⬆"}
+              </span>
+            </motion.div>
+            <p className="text-2xl font-bold neon-text">{breathCount}/8</p>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>cycles</p>
+          </motion.div>
+        )}
+
+        {/* Long press timer */}
+        {currentMode.mode === "longPress" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.div
+              className="w-20 h-20 mx-auto mb-2 rounded-full flex items-center justify-center"
+              style={{
+                backgroundColor: isHolding ? "rgba(59, 130, 246, 0.2)" : "transparent",
+                border: `3px solid ${isHolding ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                boxShadow: isHolding ? "0 0 30px #3b82f6, inset 0 0 20px rgba(59, 130, 246, 0.3)" : "none",
+              }}
+            >
+              <span className="text-2xl font-bold neon-text">{Math.ceil((100 - progress) / 33.3) || 0}s</span>
+            </motion.div>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>{isHolding ? "Keep holding..." : "Press and hold"}</p>
+          </motion.div>
+        )}
+
+        {/* Double tap hint */}
+        {currentMode.mode === "doubleTap" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="flex gap-4 justify-center mb-2">
+              <motion.div
+                className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{
+                  backgroundColor: lastTapTime ? "rgba(59, 130, 246, 0.3)" : "transparent",
+                  border: "2px solid rgba(59, 130, 246, 0.5)",
+                  boxShadow: lastTapTime ? "0 0 10px #3b82f6" : "none",
+                }}
+                animate={lastTapTime ? { scale: [1, 1.2, 1] } : {}}
+              >
+                <span style={{ color: "#3b82f6" }}>1</span>
+              </motion.div>
+              <motion.div
+                className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{
+                  backgroundColor: "transparent",
+                  border: "2px solid rgba(59, 130, 246, 0.3)",
+                }}
+              >
+                <span style={{ color: "rgba(59, 130, 246, 0.5)" }}>2</span>
+              </motion.div>
+            </div>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Double tap quickly!</p>
+          </motion.div>
+        )}
+
+        {/* Triple tap hint */}
+        {currentMode.mode === "tripleTap" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="flex gap-3 justify-center mb-2">
+              {[1, 2, 3].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{
+                    backgroundColor: tripleTapTimes.length >= i ? "rgba(59, 130, 246, 0.3)" : "transparent",
+                    border: `2px solid ${tripleTapTimes.length >= i ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                    boxShadow: tripleTapTimes.length >= i ? "0 0 10px #3b82f6" : "none",
+                  }}
+                >
+                  <span style={{ color: tripleTapTimes.length >= i ? "#3b82f6" : "rgba(59, 130, 246, 0.5)" }}>{i}</span>
+                </motion.div>
+              ))}
+            </div>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Triple tap quickly!</p>
+          </motion.div>
+        )}
+
+        {/* Speed tap indicator */}
+        {currentMode.mode === "speedTap" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <p className="text-5xl font-bold neon-text">{speedTapCount}</p>
+            <p className="text-sm" style={{ color: "#3b82f6" }}>/20 taps</p>
+            {speedTapStartTime > 0 && (
+              <p className="text-xs mt-1" style={{ color: "rgba(59, 130, 246, 0.7)" }}>
+                {Math.max(0, 5 - Math.floor((Date.now() - speedTapStartTime) / 1000))}s remaining
+              </p>
+            )}
+          </motion.div>
+        )}
+
+        {/* Morse code indicator */}
+        {currentMode.mode === "morse" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="flex gap-3 justify-center mb-3">
+              {["short", "short", "long"].map((expected, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-center"
+                  style={{
+                    width: expected === "long" ? 40 : 20,
+                    height: 20,
+                    backgroundColor: morseTaps[i] === expected ? "#3b82f6" : "rgba(59, 130, 246, 0.2)",
+                    borderRadius: 4,
+                    boxShadow: morseTaps[i] === expected ? "0 0 10px #3b82f6" : "none",
+                  }}
+                />
+              ))}
+            </div>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>
+              {isHolding ? "Release for short, keep holding for long..." : "Tap: • • —"}
+            </p>
+          </motion.div>
+        )}
+
+        {/* Alternate sides indicator */}
+        {currentMode.mode === "alternate" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="flex gap-8 justify-center mb-2">
+              <motion.div
+                className="w-12 h-12 rounded-lg flex items-center justify-center"
+                style={{
+                  backgroundColor: alternateSide === "left" ? "rgba(59, 130, 246, 0.3)" : "transparent",
+                  border: `2px solid ${alternateSide === "left" ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                  boxShadow: alternateSide === "left" ? "0 0 15px #3b82f6" : "none",
+                }}
+                animate={alternateSide === "left" ? { scale: [1, 1.1, 1] } : {}}
+              >
+                <ArrowLeft size={24} style={{ color: "#3b82f6" }} />
+              </motion.div>
+              <motion.div
+                className="w-12 h-12 rounded-lg flex items-center justify-center"
+                style={{
+                  backgroundColor: alternateSide === "right" ? "rgba(59, 130, 246, 0.3)" : "transparent",
+                  border: `2px solid ${alternateSide === "right" ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                  boxShadow: alternateSide === "right" ? "0 0 15px #3b82f6" : "none",
+                }}
+                animate={alternateSide === "right" ? { scale: [1, 1.1, 1] } : {}}
+              >
+                <ArrowRight size={24} style={{ color: "#3b82f6" }} />
+              </motion.div>
+            </div>
+            <p className="text-xl font-bold neon-text">{alternateCount}/10</p>
+          </motion.div>
+        )}
+
+        {/* Corners indicator */}
+        {currentMode.mode === "corners" && (
+          <>
+            {["tl", "tr", "bl", "br"].map((corner) => (
+              <motion.div
+                key={corner}
+                className="absolute w-16 h-16 rounded-lg flex items-center justify-center"
+                style={{
+                  top: corner.includes("t") ? 80 : "auto",
+                  bottom: corner.includes("b") ? 150 : "auto",
+                  left: corner.includes("l") ? 20 : "auto",
+                  right: corner.includes("r") ? 20 : "auto",
+                  backgroundColor: cornersHit.has(corner) ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                  border: `2px solid ${cornersHit.has(corner) ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                  boxShadow: cornersHit.has(corner) ? "0 0 20px #3b82f6" : "none",
+                }}
+                animate={cornersHit.has(corner) ? { scale: [1, 1.2, 1] } : {}}
+              >
+                <Target size={24} style={{ color: cornersHit.has(corner) ? "#3b82f6" : "rgba(59, 130, 246, 0.3)" }} />
+              </motion.div>
+            ))}
+          </>
+        )}
+
+        {/* Countdown indicator */}
+        {currentMode.mode === "countdown" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.div
+              className="w-24 h-24 mx-auto mb-2 rounded-full flex items-center justify-center"
+              style={{
+                backgroundColor: isHolding ? "rgba(59, 130, 246, 0.2)" : "transparent",
+                border: `4px solid ${isHolding ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                boxShadow: isHolding ? "0 0 40px #3b82f6" : "none",
+              }}
+              animate={isHolding ? { scale: [1, 1.05, 1] } : {}}
+              transition={{ duration: 1, repeat: Infinity }}
+            >
+              <span className="text-4xl font-bold neon-text">{countdownValue}</span>
+            </motion.div>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>{isHolding ? "Keep holding..." : "Press and hold"}</p>
+          </motion.div>
+        )}
+
+        {/* Slider indicator */}
+        {currentMode.mode === "slider" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 w-64"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div 
+              className="relative h-4 rounded-full overflow-hidden"
+              style={{ backgroundColor: "rgba(59, 130, 246, 0.2)", border: "2px solid rgba(59, 130, 246, 0.3)" }}
+            >
+              <motion.div
+                className="absolute left-0 top-0 bottom-0 rounded-full"
+                style={{ 
+                  width: `${sliderProgress}%`,
+                  backgroundColor: "#3b82f6",
+                  boxShadow: "0 0 15px #3b82f6",
+                }}
+              />
+            </div>
+            <div className="flex justify-between mt-1">
+              <ArrowRight size={16} style={{ color: "#3b82f6" }} />
+              <span className="text-xs" style={{ color: "#3b82f6" }}>Drag right →</span>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Spiral/Circle visual guide */}
+        {(currentMode.mode === "spiral" || currentMode.mode === "circle") && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.div
+              className="w-20 h-20 mx-auto mb-2 rounded-full flex items-center justify-center"
+              style={{
+                border: `3px dashed rgba(59, 130, 246, 0.5)`,
+              }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            >
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "#3b82f6", boxShadow: "0 0 10px #3b82f6" }} />
+            </motion.div>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>
+              {currentMode.mode === "spiral" ? "Draw inward spiral" : `${Math.round(progress)}% complete`}
+            </p>
+          </motion.div>
+        )}
+
+        {/* Scratch area visual */}
+        {currentMode.mode === "scratch" && (
+          <motion.div
+            className="absolute top-28 left-1/2 -translate-x-1/2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div 
+              className="w-36 h-36 grid grid-cols-5 gap-0.5 p-1 rounded-lg"
+              style={{ backgroundColor: "rgba(0, 0, 0, 0.5)", border: "2px solid rgba(59, 130, 246, 0.3)" }}
+            >
+              {Array.from({ length: 25 }).map((_, i) => {
+                const x = i % 5;
+                const y = Math.floor(i / 5);
+                const key = `${x}-${y}`;
+                return (
+                  <div
+                    key={i}
+                    className="rounded-sm"
+                    style={{
+                      backgroundColor: scratchArea.has(key) ? "transparent" : "rgba(59, 130, 246, 0.3)",
+                      boxShadow: scratchArea.has(key) ? "none" : "inset 0 0 5px rgba(59, 130, 246, 0.5)",
+                    }}
+                  />
+                );
+              })}
+            </div>
+            <p className="text-xs text-center mt-2" style={{ color: "#3b82f6" }}>Scratch to reveal!</p>
+          </motion.div>
+        )}
+
+        {/* Infinity/Figure-8 guide */}
+        {currentMode.mode === "infinity" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="text-4xl mb-2" style={{ color: "#3b82f6", textShadow: "0 0 10px #3b82f6" }}>∞</div>
+            <p className="text-xl font-bold neon-text">{infinityPhase}/8</p>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Draw figure-8 pattern</p>
+          </motion.div>
+        )}
+
+        {/* Mobile-only: Tilt indicator */}
+        {currentMode.mode === "tilt" && isMobile && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.div
+              className="w-16 h-16 mx-auto mb-2"
+              animate={{ rotateX: tiltProgress * 0.45 }}
+            >
+              <Smartphone size={64} style={{ color: "#3b82f6" }} />
+            </motion.div>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Tilt device forward</p>
+          </motion.div>
+        )}
+
+        {/* Mobile-only: Flip indicator */}
+        {currentMode.mode === "flip" && isMobile && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="flex gap-4 justify-center mb-2">
+              <div 
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{
+                  backgroundColor: flipState !== "normal" ? "rgba(59, 130, 246, 0.3)" : "transparent",
+                  border: `2px solid ${flipState !== "normal" ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                }}
+              >
+                <FlipVertical size={20} style={{ color: "#3b82f6" }} />
+              </div>
+              <div 
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{
+                  backgroundColor: flipState === "returned" ? "rgba(59, 130, 246, 0.3)" : "transparent",
+                  border: `2px solid ${flipState === "returned" ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                }}
+              >
+                <Smartphone size={20} style={{ color: "#3b82f6" }} />
+              </div>
+            </div>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>
+              {flipState === "normal" ? "Flip face down" : flipState === "flipped" ? "Now flip back up" : "Complete!"}
+            </p>
+          </motion.div>
+        )}
+
+        {/* Mobile-only: Compass indicator */}
+        {currentMode.mode === "compass" && isMobile && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.div
+              className="w-20 h-20 mx-auto mb-2 rounded-full flex items-center justify-center"
+              style={{
+                border: "3px solid rgba(59, 130, 246, 0.5)",
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+              }}
+              animate={{ rotate: -compassHeading }}
+            >
+              <Navigation size={32} style={{ color: "#3b82f6", transform: "rotate(-45deg)" }} />
+            </motion.div>
+            <p className="text-lg font-bold neon-text">N</p>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Rotate to face North</p>
+          </motion.div>
+        )}
+
+        {/* Mobile-only: Proximity indicator */}
+        {currentMode.mode === "proximity" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="flex gap-2 justify-center mb-2">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-4 h-4 rounded-full"
+                  style={{
+                    backgroundColor: proximityTriggered >= i ? "#3b82f6" : "rgba(59, 130, 246, 0.2)",
+                    boxShadow: proximityTriggered >= i ? "0 0 10px #3b82f6" : "none",
+                  }}
+                />
+              ))}
+            </div>
+            <Eye size={32} className="mx-auto mb-2" style={{ color: "#3b82f6" }} />
+            <p className="text-xs" style={{ color: "#3b82f6" }}>
+              {isMobile ? "Cover and uncover screen" : "Tap the center"}
+            </p>
+          </motion.div>
+        )}
+
+        {/* ===== DESKTOP KEYBOARD MODE INDICATORS ===== */}
+
+        {/* Konami Code indicator */}
+        {currentMode.mode === "konami" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="flex gap-1 justify-center mb-3 flex-wrap max-w-xs">
+              {["↑", "↑", "↓", "↓", "←", "→", "←", "→", "B", "A"].map((key, i) => (
+                <motion.div
+                  key={i}
+                  className="w-8 h-8 rounded flex items-center justify-center text-sm font-bold"
+                  style={{
+                    backgroundColor: konamiSequence.length > i ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                    border: `2px solid ${konamiSequence.length > i ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                    boxShadow: konamiSequence.length > i ? "0 0 10px #3b82f6" : "none",
+                    color: konamiSequence.length > i ? "#3b82f6" : "rgba(59, 130, 246, 0.5)",
+                  }}
+                  animate={konamiSequence.length === i + 1 ? { scale: [1, 1.2, 1] } : {}}
+                >
+                  {key}
+                </motion.div>
+              ))}
+            </div>
+            <Gamepad2 size={24} className="mx-auto mb-2" style={{ color: "#3b82f6" }} />
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Enter the legendary code!</p>
+          </motion.div>
+        )}
+
+        {/* Type Word indicator */}
+        {currentMode.mode === "typeWord" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="flex gap-1 justify-center mb-3">
+              {TARGET_WORD.split("").map((char, i) => (
+                <motion.div
+                  key={i}
+                  className="w-8 h-10 rounded flex items-center justify-center text-lg font-bold"
+                  style={{
+                    backgroundColor: typedWord.length > i ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                    border: `2px solid ${typedWord.length > i ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                    boxShadow: typedWord.length > i ? "0 0 10px #3b82f6" : "none",
+                    color: typedWord.length > i ? "#fff" : "rgba(59, 130, 246, 0.5)",
+                  }}
+                  animate={typedWord.length === i + 1 ? { scale: [1, 1.1, 1] } : {}}
+                >
+                  {typedWord.length > i ? typedWord[i] : char}
+                </motion.div>
+              ))}
+            </div>
+            <Keyboard size={24} className="mx-auto mb-2" style={{ color: "#3b82f6" }} />
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Type it out!</p>
+          </motion.div>
+        )}
+
+        {/* Piano Mode indicator */}
+        {currentMode.mode === "piano" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="flex justify-center mb-3">
+              {["A", "S", "D", "F", "G"].map((key, i) => (
+                <motion.div
+                  key={i}
+                  className="w-10 h-16 rounded-b flex items-end justify-center pb-2 text-sm font-bold mx-0.5"
+                  style={{
+                    backgroundColor: pianoSequence.length > i ? "#3b82f6" : "#fff",
+                    border: "2px solid rgba(59, 130, 246, 0.5)",
+                    boxShadow: pianoSequence.length > i ? "0 0 15px #3b82f6" : "inset 0 -5px 10px rgba(0,0,0,0.1)",
+                    color: pianoSequence.length > i ? "#fff" : "#333",
+                  }}
+                  animate={pianoSequence.length === i + 1 ? { y: [0, 5, 0] } : {}}
+                >
+                  {key}
+                </motion.div>
+              ))}
+            </div>
+            <Music size={24} className="mx-auto mb-2" style={{ color: "#3b82f6" }} />
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Play the melody!</p>
+          </motion.div>
+        )}
+
+        {/* WASD indicator */}
+        {currentMode.mode === "wasd" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="grid gap-1 mb-3">
+              <div className="flex justify-center">
+                <motion.div
+                  className="w-10 h-10 rounded flex items-center justify-center text-lg font-bold"
+                  style={{
+                    backgroundColor: wasdSequence.includes("KeyW") ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                    border: `2px solid ${wasdSequence.includes("KeyW") ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                    boxShadow: wasdSequence.includes("KeyW") ? "0 0 10px #3b82f6" : "none",
+                    color: wasdSequence.includes("KeyW") ? "#fff" : "rgba(59, 130, 246, 0.5)",
+                  }}
+                >
+                  W
+                </motion.div>
+              </div>
+              <div className="flex justify-center gap-1">
+                {["A", "S", "D"].map((key) => (
+                  <motion.div
+                    key={key}
+                    className="w-10 h-10 rounded flex items-center justify-center text-lg font-bold"
+                    style={{
+                      backgroundColor: wasdSequence.includes(`Key${key}`) ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                      border: `2px solid ${wasdSequence.includes(`Key${key}`) ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                      boxShadow: wasdSequence.includes(`Key${key}`) ? "0 0 10px #3b82f6" : "none",
+                      color: wasdSequence.includes(`Key${key}`) ? "#fff" : "rgba(59, 130, 246, 0.5)",
+                    }}
+                  >
+                    {key}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+            <Gamepad2 size={24} className="mx-auto mb-2" style={{ color: "#3b82f6" }} />
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Press in order: W → A → S → D</p>
+          </motion.div>
+        )}
+
+        {/* Arrow Keys indicator */}
+        {currentMode.mode === "arrows" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="grid gap-1 mb-3">
+              <div className="flex justify-center">
+                <motion.div
+                  className="w-10 h-10 rounded flex items-center justify-center"
+                  style={{
+                    backgroundColor: arrowSequence.includes("ArrowUp") ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                    border: `2px solid ${arrowSequence.includes("ArrowUp") ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                    boxShadow: arrowSequence.includes("ArrowUp") ? "0 0 10px #3b82f6" : "none",
+                  }}
+                >
+                  <ArrowUp size={20} style={{ color: arrowSequence.includes("ArrowUp") ? "#3b82f6" : "rgba(59, 130, 246, 0.5)" }} />
+                </motion.div>
+              </div>
+              <div className="flex justify-center gap-1">
+                <motion.div
+                  className="w-10 h-10 rounded flex items-center justify-center"
+                  style={{
+                    backgroundColor: arrowSequence.includes("ArrowLeft") ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                    border: `2px solid ${arrowSequence.includes("ArrowLeft") ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                    boxShadow: arrowSequence.includes("ArrowLeft") ? "0 0 10px #3b82f6" : "none",
+                  }}
+                >
+                  <ArrowLeft size={20} style={{ color: arrowSequence.includes("ArrowLeft") ? "#3b82f6" : "rgba(59, 130, 246, 0.5)" }} />
+                </motion.div>
+                <motion.div
+                  className="w-10 h-10 rounded flex items-center justify-center"
+                  style={{
+                    backgroundColor: arrowSequence.includes("ArrowDown") ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                    border: `2px solid ${arrowSequence.includes("ArrowDown") ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                    boxShadow: arrowSequence.includes("ArrowDown") ? "0 0 10px #3b82f6" : "none",
+                  }}
+                >
+                  <ArrowDown size={20} style={{ color: arrowSequence.includes("ArrowDown") ? "#3b82f6" : "rgba(59, 130, 246, 0.5)" }} />
+                </motion.div>
+                <motion.div
+                  className="w-10 h-10 rounded flex items-center justify-center"
+                  style={{
+                    backgroundColor: arrowSequence.includes("ArrowRight") ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                    border: `2px solid ${arrowSequence.includes("ArrowRight") ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                    boxShadow: arrowSequence.includes("ArrowRight") ? "0 0 10px #3b82f6" : "none",
+                  }}
+                >
+                  <ArrowRight size={20} style={{ color: arrowSequence.includes("ArrowRight") ? "#3b82f6" : "rgba(59, 130, 246, 0.5)" }} />
+                </motion.div>
+              </div>
+            </div>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>↑ → ↓ ← in sequence</p>
+          </motion.div>
+        )}
+
+        {/* Space Mash indicator */}
+        {currentMode.mode === "spaceMash" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.div
+              className="w-48 h-12 mx-auto mb-3 rounded flex items-center justify-center text-sm font-bold"
+              style={{
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                border: `3px solid #3b82f6`,
+                boxShadow: spaceCount > 0 ? "0 0 20px #3b82f6" : "none",
+              }}
+              animate={spaceCount > 0 ? { scale: [1, 0.95, 1] } : {}}
+              transition={{ duration: 0.1 }}
+            >
+              <span style={{ color: "#3b82f6" }}>SPACE</span>
+            </motion.div>
+            <p className="text-4xl font-bold neon-text">{spaceCount}/15</p>
+            <p className="text-xs mt-2" style={{ color: "#3b82f6" }}>MASH THAT SPACEBAR!</p>
+          </motion.div>
+        )}
+
+        {/* Ctrl+B indicator */}
+        {currentMode.mode === "altTab" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="flex gap-2 justify-center mb-3">
+              <div
+                className="px-4 py-2 rounded text-sm font-bold"
+                style={{
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                  border: "2px solid #3b82f6",
+                  color: "#3b82f6",
+                }}
+              >
+                Ctrl
+              </div>
+              <span className="text-2xl" style={{ color: "#3b82f6" }}>+</span>
+              <div
+                className="px-4 py-2 rounded text-sm font-bold"
+                style={{
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                  border: "2px solid #3b82f6",
+                  color: "#3b82f6",
+                }}
+              >
+                B
+              </div>
+            </div>
+            <div className="flex gap-2 justify-center mb-2">
+              {[1, 2, 3].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-6 h-6 rounded-full"
+                  style={{
+                    backgroundColor: ctrlBCount >= i ? "#3b82f6" : "rgba(59, 130, 246, 0.2)",
+                    boxShadow: ctrlBCount >= i ? "0 0 10px #3b82f6" : "none",
+                  }}
+                  animate={ctrlBCount === i ? { scale: [1, 1.3, 1] } : {}}
+                />
+              ))}
+            </div>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Bulls always come back! (Cmd+B on Mac)</p>
+          </motion.div>
+        )}
+
+        {/* ===== DESKTOP MOUSE MODE INDICATORS ===== */}
+
+        {/* Double Click indicator */}
+        {currentMode.mode === "doubleClick" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <Mouse size={48} className="mx-auto mb-3" style={{ color: "#3b82f6" }} />
+            <div className="flex gap-2 justify-center mb-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-4 h-4 rounded-full"
+                  style={{
+                    backgroundColor: doubleClickCount >= i ? "#3b82f6" : "rgba(59, 130, 246, 0.2)",
+                    boxShadow: doubleClickCount >= i ? "0 0 10px #3b82f6" : "none",
+                  }}
+                />
+              ))}
+            </div>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Double-click 5 times!</p>
+          </motion.div>
+        )}
+
+        {/* Right Click indicator */}
+        {currentMode.mode === "rightClick" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <Mouse size={48} className="mx-auto mb-3" style={{ color: "#3b82f6" }} />
+            <div className="flex gap-2 justify-center mb-2">
+              {[1, 2, 3].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-6 h-6 rounded-full flex items-center justify-center"
+                  style={{
+                    backgroundColor: rightClickCount >= i ? "#3b82f6" : "rgba(59, 130, 246, 0.2)",
+                    boxShadow: rightClickCount >= i ? "0 0 10px #3b82f6" : "none",
+                  }}
+                >
+                  <span style={{ color: rightClickCount >= i ? "#fff" : "rgba(59, 130, 246, 0.5)", fontSize: 12 }}>{i}</span>
+                </motion.div>
+              ))}
+            </div>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Right-click 3 times!</p>
+          </motion.div>
+        )}
+
+        {/* Scroll Wheel indicator */}
+        {currentMode.mode === "scrollWheel" && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.div
+              className="w-8 h-16 mx-auto mb-3 rounded-full relative"
+              style={{
+                border: "3px solid #3b82f6",
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+              }}
+            >
+              <motion.div
+                className="absolute w-2 h-4 left-1/2 -translate-x-1/2 rounded-full"
+                style={{
+                  backgroundColor: "#3b82f6",
+                  boxShadow: "0 0 10px #3b82f6",
+                  top: `${Math.max(4, 40 - scrollAmount / 15)}px`,
+                }}
+              />
+            </motion.div>
+            <ScrollText size={24} className="mx-auto mb-2" style={{ color: "#3b82f6" }} />
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Scroll up to unlock!</p>
+          </motion.div>
+        )}
+
+        {/* Drag & Drop indicator */}
+        {currentMode.mode === "dragDrop" && (
+          <>
+            {/* Draggable coin */}
+            <motion.div
+              className="absolute cursor-grab active:cursor-grabbing"
+              style={{
+                top: 150,
+                left: "50%",
+                transform: "translateX(-50%)",
+              }}
+              drag
+              dragConstraints={containerRef}
+              onDragStart={(e) => handleDragDropStart(e as unknown as React.MouseEvent)}
+              onDrag={(e) => handleDragDropMove(e as unknown as React.MouseEvent)}
+              animate={dragComplete ? { scale: 0, opacity: 0 } : {}}
+            >
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center text-2xl"
+                style={{
+                  backgroundColor: "rgba(59, 130, 246, 0.3)",
+                  border: "3px solid #3b82f6",
+                  boxShadow: "0 0 20px #3b82f6",
+                }}
+              >
+                💰
+              </div>
+            </motion.div>
+            
+            {/* Vault target */}
+            <motion.div
+              className="absolute bottom-40 left-1/2 -translate-x-1/2 flex flex-col items-center"
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              <div
+                className="w-24 h-20 rounded-lg flex items-center justify-center text-3xl"
+                style={{
+                  backgroundColor: dragComplete ? "rgba(59, 130, 246, 0.5)" : "rgba(0, 0, 0, 0.5)",
+                  border: `3px dashed ${dragComplete ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                  boxShadow: dragComplete ? "0 0 30px #3b82f6" : "none",
+                }}
+              >
+                🏦
+              </div>
+              <p className="text-xs mt-2" style={{ color: "#3b82f6" }}>
+                {dragComplete ? "Secured!" : "Drop here"}
+              </p>
+            </motion.div>
+          </>
+        )}
+
+        {/* Hover Zone indicator */}
+        {currentMode.mode === "hoverZone" && (
+          <>
+            {[
+              { zone: "tl", label: "1", top: 100, left: 40 },
+              { zone: "tr", label: "2", top: 100, right: 40 },
+              { zone: "bl", label: "3", bottom: 180, left: 40 },
+              { zone: "br", label: "4", bottom: 180, right: 40 },
+            ].map(({ zone, label, ...pos }) => (
+              <motion.div
+                key={zone}
+                className="absolute w-20 h-20 rounded-xl flex items-center justify-center text-2xl font-bold"
+                style={{
+                  ...pos,
+                  backgroundColor: hoverZones.has(zone) ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                  border: `3px solid ${hoverZones.has(zone) ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                  boxShadow: hoverZones.has(zone) ? "0 0 20px #3b82f6" : "none",
+                  color: hoverZones.has(zone) ? "#3b82f6" : "rgba(59, 130, 246, 0.5)",
+                }}
+                onMouseEnter={() => handleHoverZone(zone)}
+                animate={hoverZones.has(zone) ? { scale: [1, 1.1, 1] } : {}}
+              >
+                {label}
+              </motion.div>
+            ))}
+          </>
+        )}
+
+        {/* ===== ADDITIONAL MOBILE SENSOR INDICATORS ===== */}
+
+        {/* Face Down indicator */}
+        {currentMode.mode === "faceDown" && isMobile && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.div
+              className="w-16 h-24 mx-auto mb-3 rounded-xl"
+              style={{
+                backgroundColor: faceDownProgress > 0 ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                border: "3px solid #3b82f6",
+                boxShadow: faceDownProgress > 0 ? "0 0 20px #3b82f6" : "none",
+              }}
+              animate={{ rotateX: faceDownProgress > 0 ? 180 : 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="w-full h-full flex items-center justify-center">
+                <Smartphone size={32} style={{ color: "#3b82f6" }} />
+              </div>
+            </motion.div>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Place phone face-down</p>
+          </motion.div>
+        )}
+
+        {/* Step Counter indicator */}
+        {currentMode.mode === "stepCounter" && isMobile && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <Footprints size={48} className="mx-auto mb-3" style={{ color: "#3b82f6" }} />
+            <p className="text-4xl font-bold neon-text">{stepCount}/5</p>
+            <p className="text-xs mt-2" style={{ color: "#3b82f6" }}>Walk with your phone!</p>
+          </motion.div>
+        )}
+
+        {/* Multi-Touch indicator */}
+        {currentMode.mode === "multiTouch" && isMobile && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="flex gap-2 justify-center mb-3">
+              {[1, 2, 3].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{
+                    backgroundColor: touchCount >= i ? "#3b82f6" : "rgba(59, 130, 246, 0.2)",
+                    border: `2px solid ${touchCount >= i ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                    boxShadow: touchCount >= i ? "0 0 10px #3b82f6" : "none",
+                  }}
+                >
+                  <Hand size={20} style={{ color: touchCount >= i ? "#fff" : "rgba(59, 130, 246, 0.5)" }} />
+                </motion.div>
+              ))}
+            </div>
+            <Layers size={24} className="mx-auto mb-2" style={{ color: "#3b82f6" }} />
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Use 3 fingers at once!</p>
+          </motion.div>
+        )}
+
+        {/* Pinch Zoom indicator */}
+        {currentMode.mode === "pinchZoom" && isMobile && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.div
+              className="w-20 h-20 mx-auto mb-3 rounded-full flex items-center justify-center"
+              style={{
+                border: "3px dashed #3b82f6",
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+              }}
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              <ZoomIn size={32} style={{ color: "#3b82f6" }} />
+            </motion.div>
+            <p className="text-2xl font-bold neon-text">{pinchCount}/6</p>
+            <p className="text-xs mt-2" style={{ color: "#3b82f6" }}>Pinch in and out!</p>
+          </motion.div>
+        )}
+
+        {/* Squeeze indicator */}
+        {currentMode.mode === "squeeze" && isMobile && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="flex items-center justify-center gap-4 mb-3">
+              <motion.div
+                animate={{ x: [-5, 0, -5] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                <Hand size={32} style={{ color: "#3b82f6", transform: "scaleX(-1)" }} />
+              </motion.div>
+              <div
+                className="w-12 h-20 rounded-lg"
+                style={{
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                  border: "3px solid #3b82f6",
+                  boxShadow: "0 0 15px rgba(59, 130, 246, 0.3)",
+                }}
+              />
+              <motion.div
+                animate={{ x: [5, 0, 5] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                <Hand size={32} style={{ color: "#3b82f6" }} />
+              </motion.div>
+            </div>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Squeeze both sides!</p>
+          </motion.div>
+        )}
+
+        {/* Light Sensor indicator */}
+        {currentMode.mode === "lightSensor" && isMobile && (
+          <motion.div
+            className="absolute top-32 left-1/2 -translate-x-1/2 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.div
+              animate={{ opacity: [1, 0.3, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Sun size={48} className="mx-auto mb-3" style={{ color: "#3b82f6" }} />
+            </motion.div>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Cover camera, then expose to light</p>
+            <p className="text-xs mt-1 opacity-50" style={{ color: "#3b82f6" }}>(or tap to simulate)</p>
+          </motion.div>
+        )}
+
+        {/* Success overlay */}
+        <AnimatePresence>
+          {isUnlocked && (
+            <motion.div
+              className="absolute inset-0 flex items-center justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}
+            >
+              <motion.div
+                className="flex flex-col items-center gap-6"
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 200, damping: 20 }}
+              >
+                <div
+                  className="w-24 h-24 rounded-full flex items-center justify-center"
+                  style={{
+                    backgroundColor: "rgba(59, 130, 246, 0.2)",
+                    border: "3px solid #3b82f6",
+                    boxShadow: "0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 60px #3b82f6",
+                  }}
+                >
+                  <Unlock size={48} style={{ color: "#3b82f6" }} />
+                </div>
+                
+                <h2 
+                  className="text-3xl font-bold neon-text"
+                  style={{
+                    textShadow: "0 0 10px #fff, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 80px #3b82f6",
+                  }}
+                >
+                  UNLOCKED
+                </h2>
+                
+                <p 
+                  className="text-sm"
+                  style={{ color: "rgba(59, 130, 246, 0.7)" }}
+                >
+                  Welcome to Bull Money
+                </p>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </AnimatePresence>
+  );
+}

@@ -49,7 +49,7 @@ const DesktopKeyNavigator = dynamic(() => import("@/components/navigation/Deskto
 
 // Import loaders
 const PageMode = dynamic(() => import("@/components/REGISTER USERS/pagemode"), { ssr: false }) as any;
-const MultiStepLoaderv2 = dynamic(() => import("@/components/MultiStepLoaderv2"), { ssr: false }) as any;
+const TradingUnlockLoader = dynamic(() => import("@/components/MultiStepLoaderv3"), { ssr: false }) as any;
 
 // Lazy imports for 3D components - Desktop optimized
 const DraggableSplit = dynamic(() => import('@/components/DraggableSplit'), { ssr: false }) as any;
@@ -396,7 +396,7 @@ function DesktopHomeContent() {
 
       {currentView === 'loader' && (
         <div className="fixed inset-0 z-[99999] bg-black">
-          <MultiStepLoaderv2 onFinished={handleLoaderComplete} />
+          <TradingUnlockLoader onFinished={handleLoaderComplete} />
         </div>
       )}
 

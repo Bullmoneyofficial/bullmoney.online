@@ -133,9 +133,9 @@ const PageMode = dynamic(
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
-// ✅ MOBILE LAZY LOAD - MultiStepLoaderv2 deferred on mobile for better FPS
-const MultiStepLoaderv2 = dynamic(
-  () => import("@/components/MultiStepLoaderv2"),
+// ✅ NEW INTERACTIVE LOADER - Neon blue trading unlock experience
+const TradingUnlockLoader = dynamic(
+  () => import("@/components/MultiStepLoaderv3"),
   { 
     ssr: false, 
     loading: () => <MinimalFallback />,
@@ -926,9 +926,8 @@ function HomeContent() {
 
       {currentView === 'loader' && (
         <div className="fixed inset-0 z-[99999] bg-black">
-          <MultiStepLoaderv2 
+          <TradingUnlockLoader 
             onFinished={handleLoaderComplete}
-            reducedAnimations={isMobile}
           />
         </div>
       )}

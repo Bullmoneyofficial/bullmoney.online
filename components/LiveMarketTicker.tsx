@@ -209,25 +209,26 @@ export const LiveMarketTicker: React.FC = () => {
         </div>
 
         {/* Scrolling ticker */}
-        <div className="flex-1 overflow-hidden relative mask-linear-fade">
+        <div className="flex-1 overflow-hidden relative">
           <motion.div
-            className="flex gap-8" // Increased gap for better readability
+            className="flex gap-6 whitespace-nowrap"
             animate={{
-              // Adjusted calculation to be roughly 200px per item to prevent visual jumping
-              x: [0, -200 * marketData.length], 
+              // Use percentage-based animation for seamless loop
+              x: ['0%', '-50%'], 
             }}
             transition={{
-              duration: 40, // Slowed down slightly for readability
+              duration: 30, // Smooth consistent speed
               repeat: Infinity,
               ease: 'linear',
+              repeatType: 'loop',
             }}
           >
             {duplicatedData.map((coin, index) => {
               const isFlashing = flashingSymbols.has(coin.symbol);
               return (
-                <motion.div
+                <div
                   key={`${coin.symbol}-${index}`}
-                  className={`flex items-center gap-2 shrink-0 px-2 py-1 rounded-lg transition-all min-w-[140px] ${
+                  className={`flex items-center gap-2 shrink-0 px-3 py-1 rounded-lg transition-all ${
                     isFlashing
                       ? coin.isUp
                         ? 'bg-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.4)]'
@@ -235,20 +236,20 @@ export const LiveMarketTicker: React.FC = () => {
                       : ''
                   }`}
                 >
-                  <span className="text-xs font-bold text-white/80 font-mono">
+                  <span className="text-xs font-bold text-white/80 font-mono whitespace-nowrap">
                     {coin.symbol}
                   </span>
-                  <span className="text-xs text-white/60 font-mono">
+                  <span className="text-xs text-white/60 font-mono whitespace-nowrap">
                     {coin.price}
                   </span>
-                  <motion.span
-                    className={`text-xs font-bold font-mono ${
+                  <span
+                    className={`text-xs font-bold font-mono whitespace-nowrap ${
                       coin.isUp ? 'text-green-400' : 'text-red-400'
                     }`}
                   >
                     {coin.isUp ? '▲' : '▼'} {Math.abs(coin.change)}%
-                  </motion.span>
-                </motion.div>
+                  </span>
+                </div>
               );
             })}
           </motion.div>
