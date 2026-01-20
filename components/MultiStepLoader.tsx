@@ -445,10 +445,29 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
           exit={{ opacity: 0, filter: "blur(15px)", scale: 1.05 }}
           transition={{ duration: 0.8 }}
           className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#020617] overflow-hidden cursor-none font-sans h-[100dvh] w-screen"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}
         >
           {/* Custom CSS for Shimmer */}
           <style jsx global>{`
-            .loader-active { overflow: hidden !important; height: 100vh; width: 100vw; }
+            .loader-active { 
+              overflow: hidden !important; 
+              height: 100vh;
+              height: 100dvh;
+              width: 100vw; 
+            }
+            
+            /* === SAFARI LOADER CENTERING FIX === */
+            @supports (-webkit-appearance: none) {
+              .loader-active {
+                display: -webkit-box;
+                display: -webkit-flex;
+                display: flex;
+                -webkit-box-align: center;
+                -webkit-align-items: center;
+                -webkit-box-pack: center;
+                -webkit-justify-content: center;
+              }
+            }
             
             @keyframes text-shimmer {
               0% { 
@@ -493,7 +512,7 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
           <LiveChromeHeader currentAsset={selectedAsset} setAsset={setSelectedAsset} />
 
           {/* Main Content */}
-          <div className="relative z-20 flex flex-col items-center justify-center p-4 w-full h-full pointer-events-none">
+          <div className="relative z-20 flex flex-col items-center justify-center p-4 w-full h-full pointer-events-none" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitBoxAlign: 'center', WebkitBoxPack: 'center' }}>
             
             <div className="mb-6 md:mb-10 relative z-50 pointer-events-auto">
               <ReactiveLiquidLogo src="/favicon.svg" />

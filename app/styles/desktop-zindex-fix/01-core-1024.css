@@ -138,28 +138,83 @@
 
   /* Center pagemode/register flows on desktop */
   .register-container {
-    display: grid !important;
-    place-items: center !important;
-    align-content: center !important;
-    min-height: 100vh !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
     height: 100vh !important;
+    height: 100dvh !important;
+    display: -webkit-box !important;
+    display: -webkit-flex !important;
+    display: flex !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-box-direction: normal !important;
+    -webkit-flex-direction: column !important;
+    flex-direction: column !important;
+    -webkit-box-align: center !important;
+    -webkit-align-items: center !important;
+    align-items: center !important;
+    -webkit-box-pack: center !important;
+    -webkit-justify-content: center !important;
+    justify-content: center !important;
     padding: clamp(1.5rem, 4vh, 3rem) clamp(1.5rem, 3vw, 3rem) !important;
-    width: min(960px, 100vw - 48px) !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    gap: 1.5rem !important;
+    margin: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    /* Mac Safari specific */
+    -webkit-transform: translateZ(0) !important;
+    transform: translateZ(0) !important;
+  }
+
+  /* Safari (Mac & iOS) - additional centering guarantees */
+  @media not all and (min-resolution: 0.001dpcm) {
+    @supports (-webkit-appearance: none) {
+      .register-container {
+        display: -webkit-box !important;
+        display: -webkit-flex !important;
+        display: flex !important;
+        -webkit-box-align: center !important;
+        -webkit-align-items: center !important;
+        align-items: center !important;
+        -webkit-box-pack: center !important;
+        -webkit-justify-content: center !important;
+        justify-content: center !important;
+        -webkit-box-orient: vertical !important;
+        -webkit-flex-direction: column !important;
+        flex-direction: column !important;
+      }
+      
+      .register-container > *,
+      .register-card {
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+    }
   }
 
   .register-container > *,
   .register-card {
     margin-left: auto !important;
     margin-right: auto !important;
-    justify-self: center !important;
-    align-self: center !important;
+    max-width: min(720px, 90vw) !important;
+    width: 100% !important;
   }
 
-  .register-card {
-    max-width: min(720px, 90vw) !important;
+  /* Step/motion containers must also center their children */
+  .register-container [data-motion-component],
+  .register-container > div > div {
+    display: -webkit-box !important;
+    display: -webkit-flex !important;
+    display: flex !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-flex-direction: column !important;
+    flex-direction: column !important;
+    -webkit-box-align: center !important;
+    -webkit-align-items: center !important;
+    align-items: center !important;
     width: 100% !important;
   }
 

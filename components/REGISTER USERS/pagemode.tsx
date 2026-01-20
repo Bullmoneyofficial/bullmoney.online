@@ -179,16 +179,83 @@ const GlobalStyles = () => (
 
     /* In-app browser fixes */
     .register-card {
-      max-height: calc(100vh - 60px);
-      max-height: calc(100dvh - 60px);
-      overflow-y: auto;
+      max-height: none;
+      overflow-y: visible;
       -webkit-overflow-scrolling: touch;
+      margin-left: auto !important;
+      margin-right: auto !important;
+      width: 100%;
+      max-width: 28rem; /* max-w-md */
+    }
+
+    /* Step container centering for Safari */
+    [data-motion-component],
+    .step-container {
+      display: -webkit-box !important;
+      display: -webkit-flex !important;
+      display: flex !important;
+      -webkit-box-align: center !important;
+      -webkit-align-items: center !important;
+      align-items: center !important;
+      -webkit-box-pack: center !important;
+      -webkit-justify-content: center !important;
+      justify-content: center !important;
+      width: 100% !important;
     }
 
     /* Prevent zoom on input focus in iOS */
     @media screen and (max-width: 768px) {
       input, select, textarea {
         font-size: 16px !important;
+      }
+    }
+
+    /* === SAFARI FLEXBOX CENTERING FIX (Mac & iOS) === */
+    /* Safari has issues with flexbox centering on full viewport height */
+    /* This ensures content is properly centered in the middle of the view */
+    .register-container {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      display: -webkit-box !important;
+      display: -webkit-flex !important;
+      display: flex !important;
+      -webkit-box-orient: vertical !important;
+      -webkit-box-direction: normal !important;
+      -webkit-flex-direction: column !important;
+      flex-direction: column !important;
+      -webkit-box-align: center !important;
+      -webkit-align-items: center !important;
+      align-items: center !important;
+      -webkit-box-pack: center !important;
+      -webkit-justify-content: center !important;
+      justify-content: center !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: touch;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+    }
+
+    /* Mac Safari specific media query */
+    @media not all and (min-resolution: 0.001dpcm) {
+      @supports (-webkit-appearance: none) {
+        .register-container {
+          display: -webkit-box !important;
+          display: -webkit-flex !important;
+          display: flex !important;
+          -webkit-box-align: center !important;
+          -webkit-align-items: center !important;
+          align-items: center !important;
+          -webkit-box-pack: center !important;
+          -webkit-justify-content: center !important;
+          justify-content: center !important;
+        }
       }
     }
   `}</style>
@@ -580,7 +647,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // --- RENDER: SUCCESS (SCREEN 5) ---
   if (step === 5 && viewMode === 'register') {
     return (
-      <div className="register-container bg-black flex items-center justify-center p-4 relative">
+      <div className="register-container bg-black flex items-center justify-center p-4 relative" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
         <GlobalStyles />
         
         {/* Blue shimmer background - left to right */}
@@ -590,38 +657,41 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black gpu-accel" />
         
-        <div className="register-card bg-black/80 border-2 border-blue-500/40 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.3)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
-          {/* Shimmer overlay effect */}
-          <div className="absolute inset-0 shimmer-ltr opacity-10 pointer-events-none rounded-2xl" />
-          
-          <div className="mx-auto w-20 h-20 md:w-24 md:h-24 relative mb-5 md:mb-6 z-10">
-            <div className="absolute inset-0 rounded-full border-2 border-blue-500/50 animate-[spin_3s_linear_infinite]" />
-            <div className="absolute inset-0 bg-blue-500 rounded-full scale-0 animate-[scale-up_0.5s_ease-out_forwards_0.2s] flex items-center justify-center">
-              <Check className="w-10 h-10 md:w-12 md:h-12 text-white stroke-[3] opacity-0 animate-[fade-in_0.3s_ease-out_forwards_0.6s]" />
+        {/* Content wrapper matching step 0 structure */}
+        <div className="w-full flex flex-col items-center justify-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="register-card bg-black/80 border-2 border-blue-500/40 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.3)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500 mx-auto">
+            {/* Shimmer overlay effect */}
+            <div className="absolute inset-0 shimmer-ltr opacity-10 pointer-events-none rounded-2xl" />
+            
+            <div className="mx-auto w-20 h-20 md:w-24 md:h-24 relative mb-5 md:mb-6 z-10">
+              <div className="absolute inset-0 rounded-full border-2 border-blue-500/50 animate-[spin_3s_linear_infinite]" />
+              <div className="absolute inset-0 bg-blue-500 rounded-full scale-0 animate-[scale-up_0.5s_ease-out_forwards_0.2s] flex items-center justify-center">
+                <Check className="w-10 h-10 md:w-12 md:h-12 text-white stroke-[3] opacity-0 animate-[fade-in_0.3s_ease-out_forwards_0.6s]" />
+              </div>
             </div>
-          </div>
-          
-          <h2 className="text-xl md:text-3xl font-bold shimmer-text mb-2 relative z-10">You&apos;re In 🚀</h2>
-          <p className="text-blue-200/70 mb-6 md:mb-8 text-sm md:text-base relative z-10">
-            Your free BullMoney access is now active.<br/>
-          </p>
-          
-          <button 
-            onClick={onUnlock}
-            className="relative z-10 w-full py-3.5 md:py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold tracking-wide transition-all shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] group flex items-center justify-center mb-4 cursor-target overflow-hidden"
-          >
-            <span className="relative z-20 flex items-center shimmer-text">
-              Go to Dashboard  
-              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-            </span>
-          </button>
+            
+            <h2 className="text-xl md:text-3xl font-bold shimmer-text mb-2 relative z-10">You&apos;re In 🚀</h2>
+            <p className="text-blue-200/70 mb-6 md:mb-8 text-sm md:text-base relative z-10">
+              Your free BullMoney access is now active.<br/>
+            </p>
+            
+            <button 
+              onClick={onUnlock}
+              className="relative z-10 w-full py-3.5 md:py-4 bg-black border-2 border-blue-500/60 hover:border-blue-400 text-blue-400 rounded-xl font-bold tracking-wide transition-all shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)] group flex items-center justify-center mb-4 cursor-target overflow-hidden"
+            >
+              <span className="relative z-20 flex items-center shimmer-text">
+                Go to Dashboard  
+                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </button>
 
-           <button 
-            onClick={() => window.open(TELEGRAM_GROUP_LINK, '_blank')}
-            className="relative z-10 text-sm text-blue-400/60 hover:text-blue-300 transition-colors flex items-center justify-center gap-2 mx-auto cursor-target"
-          >
-            <FolderPlus className="w-4 h-4" /> Join Free Telegram
-          </button>
+             <button 
+              onClick={() => window.open(TELEGRAM_GROUP_LINK, '_blank')}
+              className="relative z-10 text-sm text-blue-400/60 hover:text-blue-300 transition-colors flex items-center justify-center gap-2 mx-auto cursor-target"
+            >
+              <FolderPlus className="w-4 h-4" /> Join Free Telegram
+            </button>
+          </div>
         </div>
         <style jsx global>{`
           @keyframes scale-up { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
@@ -634,22 +704,26 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // --- RENDER: LOADING (SCREEN 4 AFTER SUBMIT) ---
   if (step === 4) {
     return (
-      <div className="register-container bg-black flex flex-col items-center justify-center relative">
+      <div className="register-container bg-black flex flex-col items-center justify-center relative px-4 py-6 md:p-4" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
         <GlobalStyles />
         {/* Blue shimmer background - left to right */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute inset-0 shimmer-ltr opacity-30" />
         </div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 md:w-96 h-72 md:h-96 bg-blue-500/10 rounded-full blur-[60px] pointer-events-none" />
-        <Loader2 className="w-14 h-14 md:w-16 md:h-16 text-blue-500 animate-spin mb-4" />
-        <h2 className="text-lg md:text-xl font-bold shimmer-text">Unlocking Platform...</h2>
+        
+        {/* Content wrapper */}
+        <div className="w-full flex flex-col items-center justify-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 md:w-96 h-72 md:h-96 bg-blue-500/10 rounded-full blur-[60px] pointer-events-none" />
+          <Loader2 className="w-14 h-14 md:w-16 md:h-16 text-blue-500 animate-spin mb-4 relative z-10" />
+          <h2 className="text-lg md:text-xl font-bold shimmer-text text-center relative z-10">Unlocking Platform...</h2>
+        </div>
       </div>
     );
   }
 
   // --- RENDER: MAIN INTERFACE ---
   return (
-    <div className="register-container bg-black flex flex-col items-center justify-center px-4 py-6 md:p-4 relative overflow-x-hidden font-sans">
+    <div className="register-container bg-black px-4 py-6 md:p-4 font-sans">
       <GlobalStyles />
       
       {/* Blue shimmer background - left to right */}
@@ -674,9 +748,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       {/* RENDER CONTENT ONLY IF NOT LOADING */}
       <div className={cn(
         // Opacity transition for a smooth reveal after loading is done
-        "transition-opacity duration-500 w-full max-w-xl relative z-10",
+        "transition-opacity duration-500 w-full max-w-xl relative z-10 mx-auto flex flex-col items-center",
         loading ? "opacity-0 pointer-events-none" : "opacity-100"
-      )}>
+      )} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
 
         {/* Existing background elements */}
         <div className={cn(
@@ -699,9 +773,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full"
+            className="w-full flex flex-col items-center justify-center"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}
           >
-             <div className="register-card bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.2)] relative overflow-hidden">
+             <div className="register-card bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.2)] relative overflow-hidden w-full max-w-md mx-auto">
                 {/* Shimmer overlay effect */}
                 <div className="absolute inset-0 shimmer-ltr opacity-10 pointer-events-none" />
                 
@@ -814,8 +889,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
+                  className="w-full flex flex-col items-center justify-center"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}
                  >
-                   <div className="register-card bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.2)] relative overflow-hidden text-center">
+                   <div className="register-card bg-black/80 ring-2 ring-blue-500/30 backdrop-blur-xl p-5 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.2)] relative overflow-hidden text-center w-full max-w-md mx-auto">
                       {/* Shimmer overlay effect */}
                       <div className="absolute inset-0 shimmer-ltr opacity-10 pointer-events-none" />
                       
@@ -872,11 +949,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
+                  className="w-full flex flex-col items-center justify-center"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}
                 >
                   <StepCard
                     {...getStepProps(1)}
                     title="Open Free Account"
-                    className="bg-black/80 register-card"
+                    className="bg-black/80 register-card w-full max-w-md mx-auto"
                     actions={
                       <div className="flex flex-col gap-2 md:gap-4">
                         <p className="text-xs text-center text-blue-300/50 flex items-center justify-center gap-1">
@@ -940,11 +1019,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
+                  className="w-full flex flex-col items-center justify-center"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}
                 >
                   <StepCard
                     {...getStepProps(2)}
                     title="Confirm Your Account ID"
-                    className="register-card"
+                    className="register-card w-full max-w-md mx-auto"
                     actions={
                       <button
                         onClick={handleNext}
@@ -996,11 +1077,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
+                  className="w-full flex flex-col items-center justify-center"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}
                 >
                   <StepCard
                     {...getStepProps(3)}
                     title="Create BullMoney Login"
-                    className="register-card"
+                    className="register-card w-full max-w-md mx-auto"
                     actions={
                       <button
                         onClick={handleNext}

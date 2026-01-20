@@ -664,12 +664,16 @@ export default function RootLayout({
       }
     }).catch(function() {});
     
-    // Also prefetch the Spline runtime module
-    var splineRuntime = 'https://unpkg.com/@splinetool/runtime@latest/build/runtime.js';
+    // Preload the Spline runtime module with specific version for stability
+    var splineRuntime = 'https://unpkg.com/@splinetool/runtime@1.12.35/build/runtime.js';
     var link = document.createElement('link');
     link.rel = 'modulepreload';
     link.href = splineRuntime;
     link.crossOrigin = 'anonymous';
+    link.onerror = function() {
+      // Fallback: try to load from a CDN backup or local if available
+      console.warn('[CacheBuster] Spline runtime failed from primary CDN, app will load via npm import');
+    };
     document.head.appendChild(link);
   }
 })();
