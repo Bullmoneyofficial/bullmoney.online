@@ -1,0 +1,71 @@
+/* MinimizedDock - Static CSS Optimized Styles - Matching Dock neon styling */
+
+.minimized-dock-container {
+  background: black;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+  transform: translateZ(0);
+  will-change: auto;
+  contain: layout style;
+}
+
+.minimized-icon {
+  background: black;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+  transform: translateZ(0);
+  contain: layout style;
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+}
+
+.minimized-icon:hover {
+  transform: translateY(-2px) translateZ(0);
+  box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
+}
+
+.minimized-icon--xm {
+  border-color: #ef4444;
+  box-shadow: 0 0 4px #ef4444, 0 0 8px #ef4444, inset 0 0 4px #ef4444;
+}
+
+.minimized-icon--xm:hover {
+  box-shadow: 0 0 6px #ef4444, 0 0 12px #ef4444, inset 0 0 6px #ef4444;
+}
+
+.minimized-logo {
+  border: 2px solid #3b82f6;
+  box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+}
+
+.minimized-divider {
+  background: linear-gradient(to bottom, transparent, #3b82f6, transparent);
+}
+
+.minimized-expand {
+  background: black;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+}
+
+.minimized-expand:hover {
+  transform: translateY(-2px) translateZ(0);
+  box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
+}
+
+.minimized-tooltip {
+  transform: translateX(-50%) translateZ(0);
+  border: 2px solid #3b82f6;
+  box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+}
+
+/* Icon styling to match DockIcon */
+.minimized-icon-content {
+  color: #ffffff;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
+}
+
+.minimized-icon-label {
+  color: #3b82f6;
+  text-shadow: 0 0 4px #3b82f6;
+}

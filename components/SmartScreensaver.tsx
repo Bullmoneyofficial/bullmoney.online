@@ -32,8 +32,8 @@ export const useSmartScreensaver = () => useContext(SmartScreensaverContext);
 // SMART SCREENSAVER COMPONENT
 // ============================================================================
 // Standalone component that:
-// - Detects user idle (10 seconds)
-// - Shows screensaver overlay
+// - Detects user idle (5 minutes on desktop)
+// - Shows screensaver overlay only after proper idle time
 // - Freezes site (CSS-only, non-destructive)
 // - Auto-clears browser data for performance
 // - Saves battery when permanent
@@ -176,20 +176,9 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
     
     console.log(`[BULLMONEY] ⚡ Idle cleanup level ${cleanupLevel} complete`);
     
-    // Show screensaver immediately on first idle detection (10 seconds)
-    if (!isScreensaverActive) {
-      console.log('[BULLMONEY] 🖥️ Showing screensaver - user idle for 10+ seconds');
-      setIsScreensaverActive(true);
-      setIsScreensaverPermanent(false);
-      setScreensaverFadingOut(false);
-      
-      // After 3 seconds, if no interaction, make it permanent
-      screensaverTimeoutRef.current = setTimeout(() => {
-        setIsScreensaverPermanent(true);
-        console.log('[BULLMONEY] 🖥️ Screensaver mode activated - battery saver on');
-      }, 3000);
-    }
-  }, [isScreensaverActive]);
+    // NOTE: Screensaver activation is now handled separately in the idle check interval
+    // to ensure proper idle time threshold is met before showing screensaver
+  }, []);
   
   // ========================================
   // FREEZE MODE - CSS-only, non-destructive
@@ -450,31 +439,46 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
     idleCheckIntervalRef.current = setInterval(() => {
       const now = Date.now();
       const idleTime = now - lastActivityRef.current;
-      const IDLE_THRESHOLD = 300000; // 5 minutes (300 seconds)
+      const IDLE_THRESHOLD = 300000; // 5 minutes (300 seconds) - desktop users need longer time
       
       if (idleTime >= IDLE_THRESHOLD && !isScreensaverActive) {
         console.log('[BULLMONEY] User idle detected - triggering cleanup and screensaver');
         performIdleCleanup();
+        
+        // Only show screensaver after the actual idle threshold is met
+        console.log('[BULLMONEY] 🖥️ Showing screensaver - user idle for 5+ minutes');
+        setIsScreensaverActive(true);
+        setIsScreensaverPermanent(false);
+        setScreensaverFadingOut(false);
+        
+        // After 10 seconds, if no interaction, make it permanent
+        screensaverTimeoutRef.current = setTimeout(() => {
+          setIsScreensaverPermanent(true);
+          console.log('[BULLMONEY] 🖥️ Screensaver mode activated - battery saver on');
+        }, 10000);
       }
     }, 5000);
     
-    // Initial check after mount
+    // Initial check after mount - only run cleanup, not screensaver
+    // Screensaver will only activate through the interval check after real idle time
     const initialCheckTimeout = setTimeout(() => {
-      const now = Date.now();
-      const idleTime = now - lastActivityRef.current;
-      if (idleTime >= 300000 && !isScreensaverActive) {
-        console.log('[BULLMONEY] Initial idle check - triggering screensaver');
-        performIdleCleanup();
-      }
-    }, 300000);
+      // Just reset the activity timestamp on mount to start fresh
+      lastActivityRef.current = Date.now();
+    }, 1000);
     
-    // Page visibility handler
+    // Page visibility handler - only run light cleanup when hidden, never show screensaver
     const handleVisibilityChange = () => {
       if (document.hidden) {
+        // Only perform light cleanup when tab is hidden, don't trigger screensaver
         performIdleCleanup();
       } else {
+        // Reset activity when user returns to the page
         lastActivityRef.current = Date.now();
         idleCleanupCountRef.current = 0;
+        // If screensaver was showing when returning, dismiss it
+        if (isScreensaverActive) {
+          dismissScreensaver();
+        }
       }
     };
     

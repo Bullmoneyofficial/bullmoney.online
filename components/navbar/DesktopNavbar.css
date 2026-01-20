@@ -1,0 +1,38 @@
+/* DesktopNavbar - Static CSS Optimized Styles */
+
+.desktop-navbar-logo {
+  transform: translateZ(0);
+  contain: layout style;
+}
+
+/* Smooth dock transitions */
+.desktop-dock-wrapper {
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+
+.desktop-dock-wrapper--hidden {
+  opacity: 0;
+  transform: translateY(-10px) translateX(-50%) translateZ(0);
+  pointer-events: none;
+}
+
+.desktop-dock-wrapper--visible {
+  opacity: 1;
+  transform: translateY(0) translateX(-50%) translateZ(0);
+}
+
+/* Minimized dock specific transitions */
+.desktop-minimized-wrapper {
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+
+.desktop-minimized-wrapper--hidden {
+  opacity: 0;
+  transform: translateY(10px) translateX(-50%) translateZ(0);
+  pointer-events: none;
+}
+
+.desktop-minimized-wrapper--visible {
+  opacity: 1;
+  transform: translateY(0) translateX(-50%) translateZ(0);
+}

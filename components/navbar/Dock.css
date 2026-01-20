@@ -1,0 +1,25 @@
+/* Dock - Static CSS Optimized Styles */
+
+.dock-container {
+  background: black;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+  transform: translateZ(0);
+  will-change: auto;
+  contain: layout style;
+}
+
+.dock-item {
+  transform: translateZ(0);
+  contain: layout style;
+  transition: transform 0.1s ease-out;
+}
+
+.dock-item:hover {
+  transform: translateY(-2px) translateZ(0);
+}
+
+.dock-tooltip {
+  contain: layout style paint;
+  transform: translateX(-50%) translateZ(0);
+}

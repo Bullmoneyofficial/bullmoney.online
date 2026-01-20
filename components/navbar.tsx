@@ -332,36 +332,52 @@ export const Navbar = memo(() => {
     }
   }, [isMobile, open, scrollDirection]);
 
-  // Desktop scroll minimization
+  // Desktop scroll minimization - more responsive
   useEffect(() => {
     if (isMobile) return;
     
-    // Get current scroll position from window
-    const currentScrollY = window.scrollY;
-    
-    // Minimize on scroll down past 100px
-    if (currentScrollY > 100 && scrollDirection === 'down') {
-      if (!isDesktopScrollMinimized) {
-        setIsDesktopScrollMinimized(true);
+    // Direct scroll listener for immediate response
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = currentScrollY - lastDesktopScrollY.current;
+      
+      // Minimize immediately when scrolling down past 50px
+      if (currentScrollY > 50 && scrollDelta > 5) {
+        if (!isDesktopScrollMinimized) {
+          setIsDesktopScrollMinimized(true);
+        }
+        
+        // Reset timeout on continued scrolling
+        if (desktopScrollTimeoutRef.current) {
+          clearTimeout(desktopScrollTimeoutRef.current);
+        }
+        
+        desktopScrollTimeoutRef.current = setTimeout(() => {
+          setIsDesktopScrollMinimized(false);
+        }, 1500);
       }
       
-      if (desktopScrollTimeoutRef.current) {
-        clearTimeout(desktopScrollTimeoutRef.current);
-      }
-      
-      desktopScrollTimeoutRef.current = setTimeout(() => {
+      // Immediately expand when scrolled back to top or scrolling up significantly
+      if (currentScrollY < 30 || (scrollDelta < -20 && currentScrollY < 200)) {
         setIsDesktopScrollMinimized(false);
-      }, 2000);
-    }
+        if (desktopScrollTimeoutRef.current) {
+          clearTimeout(desktopScrollTimeoutRef.current);
+        }
+      }
+      
+      lastDesktopScrollY.current = currentScrollY;
+    };
     
-    // Immediately expand when scrolled back to top
-    if (currentScrollY < 50) {
-      setIsDesktopScrollMinimized(false);
+    // Use passive listener for better scroll performance
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
       if (desktopScrollTimeoutRef.current) {
         clearTimeout(desktopScrollTimeoutRef.current);
       }
-    }
-  }, [isMobile, scrollDirection]);
+    };
+  }, [isMobile, isDesktopScrollMinimized]);
 
   // Reset minimized state when menu opens
   useEffect(() => {
