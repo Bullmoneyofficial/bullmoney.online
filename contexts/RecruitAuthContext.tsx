@@ -96,8 +96,22 @@ export function RecruitAuthProvider({ children }: { children: React.ReactNode })
                 email: data.email
               }));
             }
-          } else {
-            // Invalid session, clear both storage keys
+            
+            // Ensure pagemode_completed is set for users with older sessions
+            localStorage.setItem('bullmoney_pagemode_completed', 'true');
+          } else if (error) {
+            // Only clear on actual errors (not network issues)
+            // Network errors should preserve session for retry
+            const isNetworkError = error.message?.includes('fetch') || 
+                                   error.message?.includes('network') ||
+                                   error.code === 'NETWORK_ERROR';
+            if (!isNetworkError) {
+              // User not found or invalid - clear session
+              localStorage.removeItem(RECRUIT_STORAGE_KEY);
+              localStorage.removeItem(PAGEMODE_SESSION_KEY);
+            }
+          } else if (!data) {
+            // No data returned but no error - user not found
             localStorage.removeItem(RECRUIT_STORAGE_KEY);
             localStorage.removeItem(PAGEMODE_SESSION_KEY);
           }

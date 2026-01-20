@@ -351,6 +351,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
              // Clear any old drafts since we are logged in
              localStorage.removeItem("bullmoney_draft");
              
+             // Ensure pagemode_completed is set for users with older sessions
+             // This prevents pagemode from showing again if session gets cleared
+             localStorage.setItem("bullmoney_pagemode_completed", "true");
+             
              // FORCE LOADER TO PLAY FOR 2.5s EVEN ON SUCCESS
              setTimeout(() => {
                  onUnlock(); 
