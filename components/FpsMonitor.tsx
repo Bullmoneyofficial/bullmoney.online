@@ -64,7 +64,7 @@ const FpsMonitor = ({ show = false }: { show?: boolean }) => {
         ? nav.getBattery().then((b: any) => b.level < 0.3)
         : Promise.resolve(false);
 
-      lowBattery.then((isLowBattery) => {
+      lowBattery.then((isLowBattery: boolean) => {
         // Get optimal config for this device
         const config = selectOptimalMeasurementConfig(
           capabilities,
