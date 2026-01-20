@@ -206,7 +206,7 @@ export const Dock = memo(React.forwardRef<HTMLDivElement, DockProps>(
         ref={dockRef || ref}
         onMouseEnter={() => onHoverChange?.(true)}
         onMouseLeave={() => onHoverChange?.(false)}
-        className={cn("dock-container mx-auto flex h-24 items-center gap-5 rounded-3xl px-6", className)}
+        className={cn("dock-container mx-auto flex h-16 items-center gap-3 rounded-3xl px-6", className)}
         data-navbar
         data-theme-aware
       >

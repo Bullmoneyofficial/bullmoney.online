@@ -5686,6 +5686,8 @@ const FpsPill = memo(({
   onToggleMinimized: () => void;
   onOpenDevicePanel: () => void;
 }) => {
+  const { jankScore = 0 } = useFpsMonitor();
+  
   return (
     <motion.div
       initial={{ x: 100, opacity: 0 }}

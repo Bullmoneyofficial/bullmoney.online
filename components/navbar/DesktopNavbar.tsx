@@ -128,25 +128,34 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
     }
 
     return (
-      <div ref={ref} className="hidden lg:flex w-full max-w-7xl mx-auto items-center justify-center h-24 relative">
+      <div ref={ref} className="hidden lg:flex w-full max-w-7xl mx-auto items-center justify-center h-16 relative">
         {/* Logo - fades out when minimized */}
         <div 
-          className="desktop-navbar-logo absolute left-0 pointer-events-auto z-50 flex items-center justify-center h-23 w-23 overflow-hidden"
+          className="desktop-navbar-logo absolute left-0 pointer-events-auto z-50 flex items-center gap-2 h-16 overflow-visible pl-0 pr-4"
           style={{
             opacity: isScrollMinimized ? 0 : 1,
             transform: isScrollMinimized ? 'scale(0.8) translateZ(0)' : 'scale(1) translateZ(0)',
             transition: 'opacity 0.2s ease-out, transform 0.2s ease-out',
             pointerEvents: isScrollMinimized ? 'none' : 'auto',
+            marginLeft: '0',
+            width: 'auto',
           }}
         >
-          <Link href="/" className="relative w-full h-full block">
+          <Link href="/" className="relative flex-shrink-0 w-20 h-20 block">
             <Image
-              src="/BULL.svg"
+              src="/svgs/file.svg"
               alt="BullMoney"
               fill
               className="object-cover"
               priority
             />
+          </Link>
+          <Link href="/" className="flex-shrink-0 text-3xl font-bold tracking-wider" style={{
+            color: '#3b82f6',
+            textShadow: '0 0 10px #3b82f6, 0 0 20px #3b82f6, 0 0 30px #3b82f6',
+            letterSpacing: '0.1em'
+          }}>
+            bullmoney
           </Link>
         </div>
         

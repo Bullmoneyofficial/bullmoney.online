@@ -105,10 +105,10 @@ export const MinimizedDock = memo(({
   return (
     <div className="minimized-dock-container relative flex items-center gap-2 px-3 py-2 rounded-2xl">
       {/* Logo pill */}
-      <div className="minimized-logo relative w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
+      <div className="minimized-logo relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
         <Link href="/" className="relative w-full h-full block">
           <Image
-            src="/BULL.svg"
+            src="/svgs/file.svg"
             alt="BullMoney"
             fill
             className="object-cover"

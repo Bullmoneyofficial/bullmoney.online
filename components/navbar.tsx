@@ -491,12 +491,24 @@ export const Navbar = memo(() => {
 
         {/* MOBILE NAVBAR */}
         <div className="lg:hidden flex flex-col items-center w-full gap-2 pointer-events-auto">
-          {/* Floating Glowing BULLMONEY Text - Mobile Only */}
+          {/* Floating Glowing BULLMONEY Logo + Text - Mobile Only */}
           <motion.div
             animate={{ y: [0, -8, 0] }}
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            className="flex flex-col items-center"
+            className="flex items-center gap-2 justify-center"
           >
+            {/* Logo */}
+            <Link href="/" className="relative flex-shrink-0 w-10 h-10 block">
+              <Image
+                src="/svgs/file.svg"
+                alt="BullMoney"
+                fill
+                className="object-cover"
+                priority
+              />
+            </Link>
+            
+            {/* BULLMONEY Text */}
             <motion.h1
               animate={{ 
                 scale: [1, 1.05, 1],
