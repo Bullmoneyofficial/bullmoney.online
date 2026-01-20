@@ -103,6 +103,7 @@ import {
   HardDrive,
   Wifi,
   WifiOff,
+  Signal,
   Smartphone,
   Battery,
   Clock,
@@ -911,19 +912,42 @@ function useRealTimeCache(): CacheStats {
  * Hook for REAL network speed testing using Resource Timing API
  */
 function useNetworkStats(): NetworkStats {
-  const [networkStats, setNetworkStats] = useState<NetworkStats>({
-    latency: 0,
-    downloadSpeed: 0,
-    uploadSpeed: 0,
-    effectiveType: '4g',
-    downlink: 10,
-    rtt: 50,
-    saveData: false,
-    isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
-    connectionType: 'unknown',
-    testing: false,
-    lastTest: 0,
-  });
+  // Compute initial network info synchronously
+  const computeNetworkInfo = useCallback((): NetworkStats => {
+    const nav = navigator as any;
+    const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
+    
+    // Get connection type with proper WiFi/cellular detection
+    let connectionType = 'unknown';
+    let effectiveType = '4g';
+    let downlink = 10;
+    let rtt = 50;
+    let saveData = false;
+    
+    if (connection) {
+      effectiveType = connection.effectiveType || '4g';
+      downlink = connection.downlink || 10;
+      rtt = connection.rtt || 50;
+      saveData = connection.saveData || false;
+      connectionType = connection.type || 'unknown'; // 'wifi', '4g', '3g', 'cellular', 'ethernet', 'bluetooth', etc.
+    }
+    
+    return {
+      latency: 0,
+      downloadSpeed: 0,
+      uploadSpeed: 0,
+      effectiveType,
+      downlink,
+      rtt,
+      saveData,
+      isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+      connectionType,
+      testing: false,
+      lastTest: 0,
+    };
+  }, []);
+
+  const [networkStats, setNetworkStats] = useState<NetworkStats>(computeNetworkInfo);
 
   const runSpeedTest = useCallback(async () => {
     setNetworkStats(prev => ({ ...prev, testing: true }));
@@ -969,32 +993,16 @@ function useNetworkStats(): NetworkStats {
   }, []);
 
   useEffect(() => {
-    // Initial connection info
+    // Set initial values with real connection info
+    setNetworkStats(computeNetworkInfo());
+
     const nav = navigator as any;
     const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
     
-    if (connection) {
-      setNetworkStats(prev => ({
-        ...prev,
-        effectiveType: connection.effectiveType || '4g',
-        downlink: connection.downlink || 10,
-        rtt: connection.rtt || 50,
-        saveData: connection.saveData || false,
-        connectionType: connection.type || 'unknown',
-      }));
-    }
-
     // Listen for connection changes
     const handleChange = () => {
-      if (connection) {
-        setNetworkStats(prev => ({
-          ...prev,
-          effectiveType: connection.effectiveType || '4g',
-          downlink: connection.downlink || 10,
-          rtt: connection.rtt || 50,
-          saveData: connection.saveData || false,
-        }));
-      }
+      const updated = computeNetworkInfo();
+      setNetworkStats(updated);
     };
 
     const handleOnline = () => setNetworkStats(prev => ({ ...prev, isOnline: true }));
@@ -1009,7 +1017,7 @@ function useNetworkStats(): NetworkStats {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [computeNetworkInfo]);
 
   return { ...networkStats, runSpeedTest } as NetworkStats & { runSpeedTest: () => Promise<void> };
 }
@@ -1310,6 +1318,279 @@ function useScreenInfo(): ScreenInfo {
   }, [computeScreenInfo]);
 
   return screenInfo;
+}
+
+/**
+ * Interface for console log entries
+ */
+interface ConsoleEntry {
+  id: string;
+  timestamp: number;
+  level: 'log' | 'info' | 'warn' | 'error' | 'debug';
+  message: string;
+  args: any[];
+}
+
+/**
+ * Hook for capturing console logs and errors in real-time
+ */
+function useConsoleLogs(maxLogs: number = 100): { logs: ConsoleEntry[]; clearLogs: () => void } {
+  const [logs, setLogs] = useState<ConsoleEntry[]>([]);
+  const logsRef = useRef<ConsoleEntry[]>([]);
+
+  useEffect(() => {
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+    const originalInfo = console.info;
+    const originalDebug = console.debug;
+
+    const captureLog = (level: 'log' | 'info' | 'warn' | 'error' | 'debug', ...args: any[]) => {
+      const entry: ConsoleEntry = {
+        id: `${Date.now()}-${Math.random()}`,
+        timestamp: Date.now(),
+        level,
+        message: args.map(arg => {
+          if (typeof arg === 'object') {
+            try {
+              return JSON.stringify(arg, null, 2);
+            } catch {
+              return String(arg);
+            }
+          }
+          return String(arg);
+        }).join(' '),
+        args,
+      };
+
+      logsRef.current = [entry, ...logsRef.current].slice(0, maxLogs);
+      setLogs([...logsRef.current]);
+    };
+
+    // Override console methods
+    console.log = (...args) => {
+      originalLog(...args);
+      captureLog('log', ...args);
+    };
+
+    console.error = (...args) => {
+      originalError(...args);
+      captureLog('error', ...args);
+    };
+
+    console.warn = (...args) => {
+      originalWarn(...args);
+      captureLog('warn', ...args);
+    };
+
+    console.info = (...args) => {
+      originalInfo(...args);
+      captureLog('info', ...args);
+    };
+
+    console.debug = (...args) => {
+      originalDebug(...args);
+      captureLog('debug', ...args);
+    };
+
+    // Capture uncaught errors
+    const handleError = (event: ErrorEvent) => {
+      captureLog('error', `${event.error?.name || 'Error'}: ${event.error?.message || event.message}`);
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      captureLog('error', `Unhandled Promise Rejection: ${event.reason}`);
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    // Restore original console methods on cleanup
+    return () => {
+      console.log = originalLog;
+      console.error = originalError;
+      console.warn = originalWarn;
+      console.info = originalInfo;
+      console.debug = originalDebug;
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, [maxLogs]);
+
+  const clearLogs = useCallback(() => {
+    logsRef.current = [];
+    setLogs([]);
+  }, []);
+
+  return { logs, clearLogs };
+}
+
+/**
+ * Hook for detecting REAL browser capabilities and features
+ */
+interface BrowserCapabilities {
+  webgl2: boolean;
+  webgpu: boolean;
+  serviceWorker: boolean;
+  localStorage: boolean;
+  sessionStorage: boolean;
+  indexedDb: boolean;
+  sharedArrayBuffer: boolean;
+  webWorker: boolean;
+  webAssembly: boolean;
+  audioContext: boolean;
+  mediaRecorder: boolean;
+  mediaDevices: boolean;
+  geolocation: boolean;
+  vibration: boolean;
+  accelerometer: boolean;
+  gyroscope: boolean;
+  magnetometer: boolean;
+  ambientLight: boolean;
+  proximity: boolean;
+  pushNotification: boolean;
+  notifications: boolean;
+  camera: boolean;
+  microphone: boolean;
+  usb: boolean;
+  bluetooth: boolean;
+  serialPort: boolean;
+  fileSystem: boolean;
+  clipboardAccess: boolean;
+  screenCapture: boolean;
+  vr: boolean;
+  ar: boolean;
+  videoCodecs: string[];
+  audioCodecs: string[];
+}
+
+function useBrowserCapabilities(): BrowserCapabilities {
+  const computeCapabilities = useCallback((): BrowserCapabilities => {
+    const nav = navigator as any;
+    
+    // Test WebGL versions
+    const webgl2 = (() => {
+      try {
+        const canvas = document.createElement('canvas');
+        return !!canvas.getContext('webgl2');
+      } catch { return false; }
+    })();
+
+    // Test WebGPU
+    const webgpu = 'gpu' in navigator;
+
+    // Test storage APIs
+    const localStorage = (() => {
+      try {
+        return typeof window !== 'undefined' && 'localStorage' in window;
+      } catch { return false; }
+    })();
+
+    const sessionStorage = (() => {
+      try {
+        return typeof window !== 'undefined' && 'sessionStorage' in window;
+      } catch { return false; }
+    })();
+
+    const indexedDb = !!window.indexedDB;
+    const sharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
+    const webWorker = typeof Worker !== 'undefined';
+    const webAssembly = typeof WebAssembly !== 'undefined';
+    
+    // Test audio/media
+    const audioContext = !!(window.AudioContext || (window as any).webkitAudioContext);
+    const mediaRecorder = typeof MediaRecorder !== 'undefined';
+    const mediaDevices = !!nav.mediaDevices;
+    
+    // Test sensors
+    const accelerometer = 'Accelerometer' in window;
+    const gyroscope = 'Gyroscope' in window;
+    const magnetometer = 'Magnetometer' in window;
+    const ambientLight = 'AmbientLightSensor' in window;
+    const proximity = 'ProximitySensor' in window;
+    
+    // Test permissions/APIs
+    const geolocation = 'geolocation' in nav;
+    const vibration = 'vibrate' in nav;
+    const pushNotification = 'serviceWorker' in nav && 'PushManager' in window;
+    const notifications = 'Notification' in window;
+    const serviceWorker = 'serviceWorker' in nav;
+    const usb = 'usb' in nav;
+    const bluetooth = 'bluetooth' in nav;
+    const serialPort = 'serial' in nav;
+    const fileSystem = 'storage' in nav && 'getDirectory' in (nav.storage as any);
+    const clipboardAccess = !!(nav.clipboard && nav.clipboard.read);
+    const screenCapture = !!(nav.mediaDevices && nav.mediaDevices.getDisplayMedia);
+    
+    // Test XR capabilities
+    const vr = 'xr' in nav && 'isSessionSupported' in (nav.xr as any);
+    const ar = vr; // Same XR API for AR
+    
+    // Detect camera and microphone
+    const camera = !!mediaDevices;
+    const microphone = !!mediaDevices;
+
+    // Test video and audio codec support
+    const video = document.createElement('video');
+    const videoCodecs = [];
+    const audioCodecs = [];
+    
+    if (video.canPlayType) {
+      if (video.canPlayType('video/mp4; codecs="avc1.42E01E"')) videoCodecs.push('H.264');
+      if (video.canPlayType('video/mp4; codecs="hev1.1.6.L93.B0"')) videoCodecs.push('H.265');
+      if (video.canPlayType('video/webm; codecs="vp8, vorbis"')) videoCodecs.push('VP8');
+      if (video.canPlayType('video/webm; codecs="vp9"')) videoCodecs.push('VP9');
+      if (video.canPlayType('video/mp4; codecs="av01.0.12M.08"')) videoCodecs.push('AV1');
+    }
+
+    const audio = document.createElement('audio');
+    if (audio.canPlayType) {
+      if (audio.canPlayType('audio/mpeg')) audioCodecs.push('MP3');
+      if (audio.canPlayType('audio/wav')) audioCodecs.push('WAV');
+      if (audio.canPlayType('audio/ogg')) audioCodecs.push('Vorbis');
+      if (audio.canPlayType('audio/aac')) audioCodecs.push('AAC');
+      if (audio.canPlayType('audio/flac')) audioCodecs.push('FLAC');
+      if (audio.canPlayType('audio/webm')) audioCodecs.push('WebM');
+    }
+
+    return {
+      webgl2,
+      webgpu,
+      serviceWorker,
+      localStorage,
+      sessionStorage,
+      indexedDb,
+      sharedArrayBuffer,
+      webWorker,
+      webAssembly,
+      audioContext,
+      mediaRecorder,
+      mediaDevices,
+      geolocation,
+      vibration,
+      accelerometer,
+      gyroscope,
+      magnetometer,
+      ambientLight,
+      proximity,
+      pushNotification,
+      notifications,
+      camera,
+      microphone,
+      usb,
+      bluetooth,
+      serialPort,
+      fileSystem,
+      clipboardAccess,
+      screenCapture,
+      vr,
+      ar,
+      videoCodecs,
+      audioCodecs,
+    };
+  }, []);
+
+  return useMemo(() => computeCapabilities(), [computeCapabilities]);
 }
 
 /**
@@ -3450,13 +3731,14 @@ BrowserModal.displayName = 'BrowserModal';
 // UNIFIED HUB TAB TYPE - All features in one pill
 // ============================================================================
 
-type UnifiedHubTab = 'community' | 'trading' | 'tv' | 'device';
+type UnifiedHubTab = 'community' | 'trading' | 'tv' | 'device' | 'logs';
 
 const UNIFIED_HUB_TABS: { id: UnifiedHubTab; label: string; icon: typeof TrendingUp; color: string }[] = [
   { id: 'community', label: 'Social', icon: MessageSquare, color: 'blue' },
   { id: 'trading', label: 'Trade', icon: TrendingUp, color: 'blue' },
   { id: 'tv', label: 'TV', icon: Play, color: 'blue' },
   { id: 'device', label: 'Device', icon: Smartphone, color: 'blue' },
+  { id: 'logs', label: 'Logs', icon: AlertTriangle, color: 'blue' },
 ];
 
 // ============================================================================
@@ -3514,10 +3796,116 @@ const UnifiedHubPanel = memo(({
   const gpuInfo = useGpuInfo();
   const batteryInfo = useBatteryInfo();
   const screenInfo = useScreenInfo();
+  const browserCapabilities = useBrowserCapabilities();
+  const { logs: consoleLogs, clearLogs } = useConsoleLogs(100);
   
   // Calculate 3D Performance Score
   const performanceScore = calculate3DPerformanceScore(fps, memoryStats.percentage, gpuInfo.score, browserInfo.cores);
   const performanceGrade = getPerformanceGrade(performanceScore);
+
+  // Copy device snapshot to clipboard
+  const handleCopyDeviceSnapshot = useCallback(async () => {
+    const snapshot = `
+=== BULLMONEY DEVICE SNAPSHOT ===
+Generated: ${new Date().toLocaleString()}
+
+--- PERFORMANCE ---
+FPS: ${fps}
+Performance Grade: ${performanceGrade.grade} (${performanceGrade.label})
+Performance Score: ${performanceScore}/100
+
+--- DEVICE INFO ---
+CPU Cores: ${browserInfo.cores}
+Device RAM: ${browserInfo.deviceMemory}GB
+JS Heap Used: ${memoryStats.jsHeapUsed}MB / ${memoryStats.jsHeapLimit}MB (${memoryStats.percentage}%)
+
+--- GPU ---
+Vendor: ${gpuInfo.vendor}
+Renderer: ${gpuInfo.renderer}
+WebGL: ${gpuInfo.webglVersion}
+Tier: ${gpuInfo.tier.toUpperCase()}
+Score: ${gpuInfo.score}/100
+
+--- DISPLAY ---
+Resolution: ${screenInfo.width}x${screenInfo.height}
+Pixel Ratio: ${screenInfo.pixelRatio}x
+Refresh Rate: ${screenInfo.refreshRate}Hz
+Color Depth: ${screenInfo.colorDepth}-bit
+Orientation: ${screenInfo.orientation}
+HDR: ${screenInfo.hdr ? 'Yes' : 'No'}
+
+--- NETWORK ---
+Connection Type: ${networkStats.connectionType === 'wifi' ? 'WiFi' : networkStats.connectionType.toUpperCase()}
+Effective Type: ${networkStats.effectiveType.toUpperCase()}
+Downlink: ${networkStats.downlink}Mbps
+RTT: ${networkStats.rtt}ms
+Online: ${networkStats.isOnline ? 'Yes' : 'No'}
+
+--- BATTERY ---
+Supported: ${batteryInfo.supported ? 'Yes' : 'No'}
+${batteryInfo.supported ? `Level: ${Math.round(batteryInfo.level * 100)}%\nCharging: ${batteryInfo.charging ? 'Yes' : 'No'}` : 'Not available'}
+
+--- BROWSER ---
+Name: ${browserInfo.name}
+Version: ${browserInfo.version}
+Engine: ${browserInfo.engine}
+Platform: ${browserInfo.platform}
+Language: ${browserInfo.locale}
+
+--- BROWSER CAPABILITIES ---
+Graphics:
+  WebGL 2: ${browserCapabilities.webgl2 ? '✓' : '✗'}
+  WebGPU: ${browserCapabilities.webgpu ? '✓' : '✗'}
+
+Storage:
+  IndexedDB: ${browserCapabilities.indexedDb ? '✓' : '✗'}
+  LocalStorage: ${browserCapabilities.localStorage ? '✓' : '✗'}
+  SessionStorage: ${browserCapabilities.sessionStorage ? '✓' : '✗'}
+
+Processing:
+  Web Workers: ${browserCapabilities.webWorker ? '✓' : '✗'}
+  SharedArrayBuffer: ${browserCapabilities.sharedArrayBuffer ? '✓' : '✗'}
+  WebAssembly: ${browserCapabilities.webAssembly ? '✓' : '✗'}
+
+Media:
+  AudioContext: ${browserCapabilities.audioContext ? '✓' : '✗'}
+  MediaRecorder: ${browserCapabilities.mediaRecorder ? '✓' : '✗'}
+  MediaDevices: ${browserCapabilities.mediaDevices ? '✓' : '✗'}
+
+Sensors:
+  Accelerometer: ${browserCapabilities.accelerometer ? '✓' : '✗'}
+  Gyroscope: ${browserCapabilities.gyroscope ? '✓' : '✗'}
+  Magnetometer: ${browserCapabilities.magnetometer ? '✓' : '✗'}
+
+Hardware:
+  Bluetooth: ${browserCapabilities.bluetooth ? '✓' : '✗'}
+  USB: ${browserCapabilities.usb ? '✓' : '✗'}
+  Serial Port: ${browserCapabilities.serialPort ? '✓' : '✗'}
+
+XR:
+  VR: ${browserCapabilities.vr ? '✓' : '✗'}
+  AR: ${browserCapabilities.ar ? '✓' : '✗'}
+
+${browserCapabilities.videoCodecs.length > 0 ? `Video Codecs: ${browserCapabilities.videoCodecs.join(', ')}` : ''}
+${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilities.audioCodecs.join(', ')}` : ''}
+===================================
+    `.trim();
+
+    try {
+      await navigator.clipboard.writeText(snapshot);
+      alert('Device snapshot copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy device snapshot:', error);
+      // Fallback for browsers that don't support clipboard API
+      const textarea = document.createElement('textarea');
+      textarea.value = snapshot;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      alert('Device snapshot copied to clipboard!');
+    }
+  }, [fps, performanceGrade, performanceScore, browserInfo, memoryStats, gpuInfo, screenInfo, networkStats, batteryInfo, browserCapabilities]);
 
   // Handle drag to close (any direction)
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
@@ -4078,9 +4466,23 @@ const UnifiedHubPanel = memo(({
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="p-3 space-y-3 bg-black"
+                    className="p-3 space-y-3 bg-black flex flex-col h-full"
                     style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
                   >
+                    {/* Copy Button */}
+                    <motion.button
+                      onClick={handleCopyDeviceSnapshot}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-blue-500/30 text-blue-300 font-semibold text-xs border border-blue-400/60 neon-blue-text w-full"
+                      style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}
+                    >
+                      <Copy className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                      Copy Snapshot
+                    </motion.button>
+
+                    {/* Scrollable Content */}
+                    <div className="flex-1 overflow-y-auto min-h-0 space-y-3 pr-1">
                     {/* Performance Grade */}
                     <div className="flex items-center justify-between p-3 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
                       <div className="flex items-center gap-3">
@@ -4125,9 +4527,17 @@ const UnifiedHubPanel = memo(({
                       <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-[10px] font-medium text-zinc-400">Network</span>
-                          {networkStats.isOnline ? <Wifi className="w-3 h-3 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> : <WifiOff className="w-3 h-3 text-blue-400" />}
+                          {networkStats.connectionType === 'wifi' ? (
+                            <Wifi className="w-3 h-3 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                          ) : !networkStats.isOnline ? (
+                            <WifiOff className="w-3 h-3 text-red-400" />
+                          ) : (
+                            <Signal className="w-3 h-3 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                          )}
                         </div>
-                        <div className="text-sm font-bold text-blue-200">{networkStats.effectiveType.toUpperCase()}</div>
+                        <div className="text-sm font-bold text-blue-200">
+                          {networkStats.connectionType === 'wifi' ? 'WiFi' : networkStats.connectionType === 'cellular' || networkStats.connectionType === '4g' || networkStats.connectionType === '3g' ? 'Cellular' : networkStats.effectiveType.toUpperCase()}
+                        </div>
                         <div className="text-[9px] text-blue-300/70">{networkStats.downlink} Mbps • {networkStats.rtt}ms</div>
                       </div>
                       
@@ -4193,6 +4603,171 @@ const UnifiedHubPanel = memo(({
                         </div>
                       </div>
                     )}
+
+                    {/* Browser Capabilities */}
+                    <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Browser Features</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {/* Graphics */}
+                        <div className="text-[9px]">
+                          <div className="font-bold text-blue-300 mb-1">Graphics</div>
+                          <div className="space-y-0.5 text-blue-400/70">
+                            <div>✓ WebGL 2: {browserCapabilities.webgl2 ? '✓' : '✗'}</div>
+                            <div>✓ WebGPU: {browserCapabilities.webgpu ? '✓' : '✗'}</div>
+                          </div>
+                        </div>
+                        {/* Storage */}
+                        <div className="text-[9px]">
+                          <div className="font-bold text-blue-300 mb-1">Storage</div>
+                          <div className="space-y-0.5 text-blue-400/70">
+                            <div>✓ IndexedDB: {browserCapabilities.indexedDb ? '✓' : '✗'}</div>
+                            <div>✓ LocalStorage: {browserCapabilities.localStorage ? '✓' : '✗'}</div>
+                          </div>
+                        </div>
+                        {/* Workers & APIs */}
+                        <div className="text-[9px]">
+                          <div className="font-bold text-blue-300 mb-1">Workers</div>
+                          <div className="space-y-0.5 text-blue-400/70">
+                            <div>✓ WebWorker: {browserCapabilities.webWorker ? '✓' : '✗'}</div>
+                            <div>✓ SharedArrayBuffer: {browserCapabilities.sharedArrayBuffer ? '✓' : '✗'}</div>
+                          </div>
+                        </div>
+                        {/* Media */}
+                        <div className="text-[9px]">
+                          <div className="font-bold text-blue-300 mb-1">Media</div>
+                          <div className="space-y-0.5 text-blue-400/70">
+                            <div>✓ AudioContext: {browserCapabilities.audioContext ? '✓' : '✗'}</div>
+                            <div>✓ MediaRecorder: {browserCapabilities.mediaRecorder ? '✓' : '✗'}</div>
+                          </div>
+                        </div>
+                        {/* Sensors */}
+                        <div className="text-[9px]">
+                          <div className="font-bold text-blue-300 mb-1">Sensors</div>
+                          <div className="space-y-0.5 text-blue-400/70">
+                            <div>✓ Accel: {browserCapabilities.accelerometer ? '✓' : '✗'}</div>
+                            <div>✓ Gyro: {browserCapabilities.gyroscope ? '✓' : '✗'}</div>
+                          </div>
+                        </div>
+                        {/* Hardware */}
+                        <div className="text-[9px]">
+                          <div className="font-bold text-blue-300 mb-1">Hardware</div>
+                          <div className="space-y-0.5 text-blue-400/70">
+                            <div>✓ Bluetooth: {browserCapabilities.bluetooth ? '✓' : '✗'}</div>
+                            <div>✓ USB: {browserCapabilities.usb ? '✓' : '✗'}</div>
+                          </div>
+                        </div>
+                        {/* XR */}
+                        <div className="text-[9px]">
+                          <div className="font-bold text-blue-300 mb-1">XR</div>
+                          <div className="space-y-0.5 text-blue-400/70">
+                            <div>✓ VR: {browserCapabilities.vr ? '✓' : '✗'}</div>
+                            <div>✓ AR: {browserCapabilities.ar ? '✓' : '✗'}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Codecs */}
+                      {(browserCapabilities.videoCodecs.length > 0 || browserCapabilities.audioCodecs.length > 0) && (
+                        <div className="mt-2 pt-2 border-t border-blue-500/30">
+                          <div className="text-[9px]">
+                            {browserCapabilities.videoCodecs.length > 0 && (
+                              <div className="mb-1">
+                                <span className="font-bold text-blue-300">Video: </span>
+                                <span className="text-blue-400/70">{browserCapabilities.videoCodecs.join(', ')}</span>
+                              </div>
+                            )}
+                            {browserCapabilities.audioCodecs.length > 0 && (
+                              <div>
+                                <span className="font-bold text-blue-300">Audio: </span>
+                                <span className="text-blue-400/70">{browserCapabilities.audioCodecs.join(', ')}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* LOGS TAB */}
+                {activeTab === 'logs' && (
+                  <motion.div
+                    key="logs"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="p-3 space-y-3 bg-black flex flex-col h-full"
+                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
+                  >
+                    {/* Controls */}
+                    <div className="flex gap-2">
+                      <motion.button
+                        onClick={clearLogs}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-red-500/30 text-red-300 font-semibold text-xs border border-red-400/60"
+                        style={{ boxShadow: '0 0 8px rgba(239, 68, 68, 0.3)' }}
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #ef4444)' }} />
+                        Clear Logs
+                      </motion.button>
+                      <motion.button
+                        onClick={() => {
+                          const logsText = consoleLogs.map(log => `[${new Date(log.timestamp).toLocaleTimeString()}] ${log.level.toUpperCase()}: ${log.message}`).join('\n');
+                          navigator.clipboard.writeText(logsText).catch(() => {
+                            const textarea = document.createElement('textarea');
+                            textarea.value = logsText;
+                            document.body.appendChild(textarea);
+                            textarea.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(textarea);
+                          });
+                          alert('Console logs copied!');
+                        }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-blue-500/30 text-blue-300 font-semibold text-xs border border-blue-400/60"
+                        style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}
+                      >
+                        <Copy className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        Copy Logs
+                      </motion.button>
+                    </div>
+
+                    {/* Log Count */}
+                    <div className="text-[9px] text-blue-400/70 px-1">
+                      Total Logs: {consoleLogs.length}
+                    </div>
+
+                    {/* Logs Container */}
+                    <div className="flex-1 overflow-y-auto min-h-0 bg-black/50 rounded-lg border border-blue-500/20 p-2 font-mono text-[8px] space-y-1">
+                      {consoleLogs.length === 0 ? (
+                        <div className="text-blue-400/50 text-center py-4">No logs captured yet</div>
+                      ) : (
+                        consoleLogs.map(log => (
+                          <div key={log.id} className={`flex gap-2 pb-1 border-b border-blue-500/10 ${
+                            log.level === 'error' ? 'text-red-400' :
+                            log.level === 'warn' ? 'text-yellow-400' :
+                            log.level === 'info' ? 'text-cyan-400' :
+                            log.level === 'debug' ? 'text-purple-400' :
+                            'text-blue-300'
+                          }`}>
+                            <span className="text-blue-500/70 flex-shrink-0 w-16">
+                              {new Date(log.timestamp).toLocaleTimeString()}
+                            </span>
+                            <span className="font-bold flex-shrink-0 w-12 uppercase">
+                              [{log.level}]
+                            </span>
+                            <span className="flex-1 break-words whitespace-pre-wrap">
+                              {log.message}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
