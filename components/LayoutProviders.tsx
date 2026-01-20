@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { Suspense, ReactNode } from "react";
+import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 
 // ✅ IMPORT CRITICAL SEO/ANALYTICS DIRECTLY - These are lightweight and critical
 import WebVitalsEnhanced from "@/components/WebVitalsEnhanced";
@@ -65,6 +66,9 @@ interface LayoutProvidersProps {
  * Handles all lazy-loaded providers and components with ssr: false
  */
 export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
+  // Only defer navbar/UltimateHub on mobile to avoid blocking first paint
+  const { isMobile: isMobileViewport, shouldRender: allowMobileLazy } = useMobileLazyRender(220);
+
   return (
     <>
       {/* Global Shimmer Styles - ensures all shimmers are synchronized */}
@@ -73,13 +77,13 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
       {/* Cache Manager - Handles version-based cache invalidation */}
       <CacheManagerProvider>
         {/* Navbar rendered outside ClientProviders for fixed positioning */}
-        <Navbar />
+        {(allowMobileLazy || !isMobileViewport) && <Navbar />}
         
         {/* ✅ ULTIMATE HUB - All-in-one unified component
             - Left side: Trading pill (prices), Community pill (Telegram), TV pill
             - Right side: FPS pill with Device Center Panel (4 tabs: Overview, Network, Performance, Account)
             - All real device data from browser APIs */}
-        <UltimateHub />
+        {(allowMobileLazy || !isMobileViewport) && <UltimateHub />}
         
         {/* ✅ LAZY LOADED: All performance providers bundled */}
         <ClientProviders modal={modal}>

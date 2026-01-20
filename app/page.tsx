@@ -105,6 +105,7 @@ import { useUnifiedPerformance, useVisibility, useObserver, useComponentLifecycl
 import { useComponentTracking, useCrashTracker } from "@/lib/CrashTracker";
 import { useScrollOptimization } from "@/hooks/useScrollOptimization";
 import { useBigDeviceScrollOptimizer } from "@/lib/bigDeviceScrollOptimizer";
+import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 
 // Use optimized ticker for 120Hz performance - lazy load
 const LiveMarketTicker = dynamic(
@@ -687,6 +688,7 @@ function HomeContent() {
   const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'content'>('pagemode');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const { shouldRender: allowMobileLazyRender } = useMobileLazyRender(240);
   const [isMuted, setIsMuted] = useState(false);
   const [activeRemoteScene, setActiveRemoteScene] = useState<RemoteSplineMeta | null>(null);
   const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
@@ -721,6 +723,7 @@ function HomeContent() {
   // Fallback theme lookup
   const theme = activeTheme || ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   useAudioEngine(!isMuted, 'MECHANICAL');
+  const canRenderMobileSections = !isMobile || allowMobileLazyRender;
   
   // Track FPS drops
   useEffect(() => {
@@ -937,17 +940,23 @@ function HomeContent() {
           <main className="min-h-screen flex flex-col w-full" data-allow-scroll data-scrollable data-content data-theme-aware style={{ overflow: 'visible', height: 'auto' }}>
             <div id="top" />
 
-            <section id="hero" className="w-full full-bleed viewport-full" data-allow-scroll data-content data-theme-aware>
-              <HeroDesktop />
-            </section>
+            {canRenderMobileSections && (
+              <section id="hero" className="w-full full-bleed viewport-full" data-allow-scroll data-content data-theme-aware>
+                <HeroDesktop />
+              </section>
+            )}
 
-            <section id="cta" className="w-full full-bleed viewport-full" data-allow-scroll data-content data-theme-aware>
-              <CTA />
-            </section>
+            {canRenderMobileSections && (
+              <section id="cta" className="w-full full-bleed viewport-full" data-allow-scroll data-content data-theme-aware>
+                <CTA />
+              </section>
+            )}
 
-            <section id="features" className="w-full full-bleed viewport-full" data-allow-scroll data-content data-theme-aware>
-              <Features />
-            </section>
+            {canRenderMobileSections && (
+              <section id="features" className="w-full full-bleed viewport-full" data-allow-scroll data-content data-theme-aware>
+                <Features />
+              </section>
+            )}
 
             {/* 3D Spline Section - Desktop only */}
             <section 
@@ -1013,28 +1022,30 @@ function HomeContent() {
             </section>
 
             {/* Mobile-only Testimonials Section */}
-            <section id="testimonials" className="w-full max-w-5xl mx-auto px-4 py-12 md:hidden" data-allow-scroll data-content data-theme-aware style={{ touchAction: 'pan-y' }}>
-              <div className="relative text-center mb-6">
-                <h2 className="text-lg font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #3b82f6), white)', filter: 'drop-shadow(0 0 15px rgba(var(--accent-rgb, 59, 130, 246), 0.5))' }}>
-                  What Traders Say
-                </h2>
-                <div className="flex justify-center gap-1 mt-3">
-                  <ShimmerDot color="blue" delay={0} />
-                  <ShimmerDot color="blue" delay={0.2} />
-                  <ShimmerDot color="blue" delay={0.4} />
+            {canRenderMobileSections && (
+              <section id="testimonials" className="w-full max-w-5xl mx-auto px-4 py-12 md:hidden" data-allow-scroll data-content data-theme-aware style={{ touchAction: 'pan-y' }}>
+                <div className="relative text-center mb-6">
+                  <h2 className="text-lg font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #3b82f6), white)', filter: 'drop-shadow(0 0 15px rgba(var(--accent-rgb, 59, 130, 246), 0.5))' }}>
+                    What Traders Say
+                  </h2>
+                  <div className="flex justify-center gap-1 mt-3">
+                    <ShimmerDot color="blue" delay={0} />
+                    <ShimmerDot color="blue" delay={0.2} />
+                    <ShimmerDot color="blue" delay={0.4} />
+                  </div>
                 </div>
-              </div>
-              
-              <div className="relative rounded-2xl overflow-hidden">
-                <ShimmerBorder color="blue" intensity="low" speed="slow" />
                 
-                <div className="relative z-10 bg-black rounded-2xl overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.2)', borderWidth: '1px', borderStyle: 'solid' }}>
-                  <Suspense fallback={<LoadingSkeleton variant="card" height={320} />}>
-                    <TestimonialsCarousel />
-                  </Suspense>
+                <div className="relative rounded-2xl overflow-hidden">
+                  <ShimmerBorder color="blue" intensity="low" speed="slow" />
+                  
+                  <div className="relative z-10 bg-black rounded-2xl overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.2)', borderWidth: '1px', borderStyle: 'solid' }}>
+                    <Suspense fallback={<LoadingSkeleton variant="card" height={320} />}>
+                      <TestimonialsCarousel />
+                    </Suspense>
+                  </div>
                 </div>
-              </div>
-            </section>
+              </section>
+            )}
 
             <section id="ticker" className="w-full" data-allow-scroll data-footer data-theme-aware>
               <LiveMarketTicker />
@@ -1049,8 +1060,12 @@ function HomeContent() {
             />
           )}
 
-          <SplitSceneModal open={isSplitModalOpen} onClose={() => setIsSplitModalOpen(false)} />
-          <RemoteSceneModal scene={activeRemoteScene} onClose={() => setActiveRemoteScene(null)} />
+          {canRenderMobileSections && (
+            <SplitSceneModal open={isSplitModalOpen} onClose={() => setIsSplitModalOpen(false)} />
+          )}
+          {canRenderMobileSections && (
+            <RemoteSceneModal scene={activeRemoteScene} onClose={() => setActiveRemoteScene(null)} />
+          )}
         </>
       )}
     </>

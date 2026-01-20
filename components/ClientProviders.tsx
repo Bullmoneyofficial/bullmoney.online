@@ -5,6 +5,7 @@ import { ReactNode, Suspense, memo } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useUIState } from "@/contexts/UIStateContext";
+import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 
 // ✅ LOADING FALLBACKS - Mobile optimized
 import { MinimalFallback, FooterSkeleton } from "@/components/MobileLazyLoadingFallback";
@@ -180,6 +181,9 @@ const LazyGlobalModals = memo(function LazyGlobalModals() {
 });
 
 export function ClientProviders({ children, modal }: ClientProvidersProps) {
+  const { isMobile: isMobileViewport, shouldRender: allowMobileLazy } = useMobileLazyRender(240);
+  const allowMobileComponents = allowMobileLazy || !isMobileViewport;
+
   return (
     <ErrorBoundary>
       <AuthProvider>
@@ -196,8 +200,8 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
               <FpsMonitor show={false} />
               {/* NOTE: ClientCursor moved to LayoutProviders - rendered LAST in DOM */}
               {/* AudioWidget stays mounted - NOT lazy unmounted - for audio persistence */}
-              <AudioWidget />
-              <AutoRefreshPrompt />
+              {allowMobileComponents && <AudioWidget />}
+              {allowMobileComponents && <AutoRefreshPrompt />}
               {modal}
               
               {/* 
@@ -238,7 +242,7 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
                 >
                   {children}
                 </main>
-                <FooterComponent />
+                {allowMobileComponents && <FooterComponent />}
               </div>
               <FPSCounter />
               
@@ -249,7 +253,7 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
                 - Delayed unmount allows exit animations
                 - EXCEPTION: AudioWidget stays mounted for audio persistence
               */}
-              <LazyGlobalModals />
+              {allowMobileComponents && <LazyGlobalModals />}
               
               {/* 
                 ADMIN VIP PANEL PROVIDER:

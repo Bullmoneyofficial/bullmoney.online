@@ -29,6 +29,7 @@ import { useStudio } from "@/context/StudioContext";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useCacheContext } from "@/components/CacheManagerProvider";
 import { useMobileMenu, useNavbarModals } from "@/contexts/UIStateContext";
+import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 
 // ✅ MOBILE DETECTION - For conditional lazy loading
 import { isMobileDevice } from "@/lib/mobileDetection";
@@ -202,6 +203,7 @@ export const Navbar = memo(() => {
   const { isXMUser, activeTheme, isAppLoading, isMobile } = useGlobalTheme();
   const { tipsMuted } = useAudioSettings();
   const { deviceTier, isSafari } = useCacheContext();
+  const { shouldRender: allowMobileLazy } = useMobileLazyRender(200);
   
   // Unified UI State - handles mutual exclusion between mobile menu, modals, audio widget, etc.
   const { isMobileMenuOpen, setIsMobileMenuOpen } = useMobileMenu();
@@ -445,7 +447,9 @@ export const Navbar = memo(() => {
       <LazyAdminModal isOpen={isAdminOpen} onClose={closeNavbarModal} />
       <LazyFaqModal isOpen={isFaqOpen} onClose={closeNavbarModal} />
       <LazyAffiliateModal isOpen={isAffiliateOpen} onClose={closeNavbarModal} />
-      <ThemeSelectorModal isOpen={isThemeSelectorOpen} onClose={closeNavbarModal} />
+      {(!isMobile || allowMobileLazy) && (
+        <ThemeSelectorModal isOpen={isThemeSelectorOpen} onClose={closeNavbarModal} />
+      )}
       
       {/* Desktop Moving Trading Tips */}
       {mounted && showTip && !isDockHovered && (
@@ -614,19 +618,21 @@ export const Navbar = memo(() => {
       </motion.div>
       
       {/* Mobile Dropdown Menu */}
-      <MobileDropdownMenu
-        open={open}
-        onClose={() => setOpen(false)}
-        isXMUser={isXMUser}
-        hasReward={hasReward}
-        isAdmin={isAdmin}
-        isAuthenticated={isAuthenticated}
-        onAffiliateClick={() => { trackClick('affiliate_nav', { source: 'mobile_menu' }); openAffiliateModal(); }}
-        onFaqClick={() => { trackClick('faq_nav', { source: 'mobile_menu' }); openFaqModal(); }}
-        onAdminClick={() => { trackClick('admin_nav', { source: 'mobile_menu' }); openAdminModal(); }}
-        onThemeClick={() => { trackClick('theme_nav', { source: 'mobile_menu' }); openThemeSelectorModal(); }}
-        onAnalysisClick={() => { trackClick('analysis_nav', { source: 'mobile_menu' }); openAnalysisModal(); }}
-      />
+      {isMobile && allowMobileLazy && (
+        <MobileDropdownMenu
+          open={open}
+          onClose={() => setOpen(false)}
+          isXMUser={isXMUser}
+          hasReward={hasReward}
+          isAdmin={isAdmin}
+          isAuthenticated={isAuthenticated}
+          onAffiliateClick={() => { trackClick('affiliate_nav', { source: 'mobile_menu' }); openAffiliateModal(); }}
+          onFaqClick={() => { trackClick('faq_nav', { source: 'mobile_menu' }); openFaqModal(); }}
+          onAdminClick={() => { trackClick('admin_nav', { source: 'mobile_menu' }); openAdminModal(); }}
+          onThemeClick={() => { trackClick('theme_nav', { source: 'mobile_menu' }); openThemeSelectorModal(); }}
+          onAnalysisClick={() => { trackClick('analysis_nav', { source: 'mobile_menu' }); openAnalysisModal(); }}
+        />
+      )}
     </>
   );
 });

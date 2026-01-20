@@ -547,7 +547,7 @@ const INTERACTION_MODES: InteractionModeConfig[] = [
     mode: "shake", 
     icon: RefreshCw, 
     label: "SHAKE", 
-    instruction: "Shake your device",
+    instruction: "Tap fast (or shake if supported)",
     tradingMetaphor: "Shake off fear and doubt",
     mobileOnly: true
   },
@@ -562,7 +562,7 @@ const INTERACTION_MODES: InteractionModeConfig[] = [
     mode: "flip", 
     icon: FlipVertical, 
     label: "FLIP", 
-    instruction: "Flip device face down and back",
+    instruction: "Tap to flip down, tap again to flip up",
     tradingMetaphor: "Sometimes you need to walk away",
     mobileOnly: true
   },
@@ -688,7 +688,7 @@ const INTERACTION_MODES: InteractionModeConfig[] = [
     mode: "faceDown", 
     icon: Smartphone, 
     label: "FACE DOWN", 
-    instruction: "Place phone face-down for 2s",
+    instruction: "Press and hold to mimic face-down",
     tradingMetaphor: "Step away and let it cook",
     mobileOnly: true
   },
@@ -704,7 +704,7 @@ const INTERACTION_MODES: InteractionModeConfig[] = [
     mode: "stepCounter", 
     icon: Footprints, 
     label: "WALK", 
-    instruction: "Take 5 steps",
+    instruction: "Tap fingers at walking pace",
     tradingMetaphor: "Every journey starts with a step",
     mobileOnly: true
   },
@@ -1423,7 +1423,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
   const [showSensorPermissionPrompt, setShowSensorPermissionPrompt] = useState(false);
   
   // Sensor-based modes that need device motion/orientation
-  const SENSOR_MODES: InteractionMode[] = ['shake', 'tilt', 'flip', 'compass', 'faceDown', 'stepCounter'];
+  const SENSOR_MODES: InteractionMode[] = ['tilt', 'compass'];
   
   // Request sensor permissions (for iOS Safari 13+)
   const requestSensorPermission = useCallback(async () => {
@@ -1606,9 +1606,9 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
   const [hoverZones, setHoverZones] = useState<Set<string>>(new Set());
   
   // More mobile sensor states
-  const [faceDownTimer, setFaceDownTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [faceDownProgress, setFaceDownProgress] = useState(0);
   const [stepCount, setStepCount] = useState(0);
+  const [stepTapTimes, setStepTapTimes] = useState<number[]>([]);
   const [touchCount, setTouchCount] = useState(0);
   const [pinchCount, setPinchCount] = useState(0);
   const [lastPinchDistance, setLastPinchDistance] = useState(0);
@@ -1663,6 +1663,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const faceDownHoldIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const lastRotationRef = useRef(0);
   const lastShakeRef = useRef({ x: 0, y: 0, z: 0 });
@@ -1710,6 +1711,12 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
   useEffect(() => {
     progressSpring.set(progress);
   }, [progress, progressSpring]);
+
+  useEffect(() => () => {
+    if (faceDownHoldIntervalRef.current) {
+      clearInterval(faceDownHoldIntervalRef.current);
+    }
+  }, []);
 
   // Rotate quote periodically
   useEffect(() => {
@@ -1820,6 +1827,10 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     setFlipState("normal");
     setCompassHeading(0);
     setProximityTriggered(0);
+    if (faceDownHoldIntervalRef.current) {
+      clearInterval(faceDownHoldIntervalRef.current);
+      faceDownHoldIntervalRef.current = null;
+    }
     setKonamiSequence([]);
     setTypedWord("");
     setPianoSequence([]);
@@ -1835,6 +1846,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     setHoverZones(new Set());
     setFaceDownProgress(0);
     setStepCount(0);
+    setStepTapTimes([]);
     setTouchCount(0);
     setPinchCount(0);
     lastProgressRef.current = 0;
@@ -2373,6 +2385,16 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     return () => window.removeEventListener('devicemotion', handleMotion);
   }, [currentMode.mode, playTick]);
 
+  // SHAKE MODE - tap fallback
+  const handleShakeTap = useCallback(() => {
+    if (currentMode.mode !== "shake") return;
+    hasInteractedRef.current = true;
+    setShakeCount(c => c + 1);
+    setShakeIntensity(12);
+    setProgress(p => Math.min(p + 6, 100));
+    playTick();
+  }, [currentMode.mode, playTick]);
+
   // DOUBLE TAP MODE
   const handleDoubleTap = useCallback(() => {
     if (currentMode.mode !== "doubleTap") return;
@@ -2463,28 +2485,28 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     
     const now = Date.now();
     setPulseTaps(taps => {
-      const newTaps = [...taps, now].slice(-5); // Keep last 5 taps
-      
+      const newTaps = [...taps, now].slice(-6); // Keep last few taps for rhythm check
+
       if (newTaps.length >= 3) {
-        // Check if taps are rhythmic (consistent intervals ~500ms ± 150ms)
-        const intervals = [];
+        const intervals = [] as number[];
         for (let i = 1; i < newTaps.length; i++) {
           intervals.push(newTaps[i] - newTaps[i - 1]);
         }
-        
-        const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-        const isRhythmic = intervals.every(i => 
-          i > 350 && i < 800 && Math.abs(i - avgInterval) < 200
-        );
-        
+
+        const recent = intervals.slice(-3); // focus on most recent rhythm
+        const avgInterval = recent.reduce((a, b) => a + b, 0) / recent.length;
+        const lower = 280; // easier entry window
+        const upper = 950;
+        const isRhythmic = recent.every(i => i >= lower && i <= upper && Math.abs(i - avgInterval) <= avgInterval * 0.25);
+
         if (isRhythmic) {
           playTick();
-          setProgress(p => Math.min(p + 8, 100));
+          setProgress(p => Math.min(p + 12, 100));
           scaleSpring.set(0.9);
-          setTimeout(() => scaleSpring.set(1), 100);
+          setTimeout(() => scaleSpring.set(1), 120);
         }
       }
-      
+
       return newTaps;
     });
   }, [currentMode.mode, playTick, scaleSpring]);
@@ -2532,7 +2554,6 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
   // SPIRAL MODE - draw inward spiral
   const handleSpiralMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     if (currentMode.mode !== "spiral") return;
-    if ('touches' in e === false && !isDraggingRef.current) return;
     hasInteractedRef.current = true;
 
     const rect = containerRef.current?.getBoundingClientRect();
@@ -2548,11 +2569,12 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     
     // Progress increases as you get closer to center
     const newProgress = Math.max(0, Math.min(100, (1 - distance / maxDistance) * 100));
-    if (newProgress > progress) {
-      setProgress(newProgress);
-      if (Math.floor(newProgress / 10) > Math.floor(progress / 10)) playTick();
-    }
-  }, [currentMode.mode, progress, playTick]);
+    setProgress(prev => {
+      if (newProgress <= prev) return prev;
+      if (Math.floor(newProgress / 10) > Math.floor(prev / 10)) playTick();
+      return newProgress;
+    });
+  }, [currentMode.mode, playTick]);
 
   // CIRCLE MODE - draw complete circle
   const [circleAnglesCovered, setCircleAnglesCovered] = useState<Set<number>>(new Set());
@@ -2729,24 +2751,36 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     if (!rect) return;
 
     const clientX = 'touches' in e ? 
-      (e as React.TouchEvent).touches[0]?.clientX ?? (e as React.TouchEvent).changedTouches?.[0]?.clientX :
+      (e as React.TouchEvent).touches[0]?.clientX ?? (e as React.TouchEvent).changedTouches?.[0]?.clientX ?? 0 :
       (e as React.MouseEvent).clientX;
     const clientY = 'touches' in e ? 
-      (e as React.TouchEvent).touches[0]?.clientY ?? (e as React.TouchEvent).changedTouches?.[0]?.clientY :
+      (e as React.TouchEvent).touches[0]?.clientY ?? (e as React.TouchEvent).changedTouches?.[0]?.clientY ?? 0 :
       (e as React.MouseEvent).clientY;
-    
-    const cornerSize = 100;
-    let corner = "";
-    
-    if (clientX < rect.left + cornerSize && clientY < rect.top + cornerSize) corner = "tl";
-    else if (clientX > rect.right - cornerSize && clientY < rect.top + cornerSize) corner = "tr";
-    else if (clientX < rect.left + cornerSize && clientY > rect.bottom - cornerSize) corner = "bl";
-    else if (clientX > rect.right - cornerSize && clientY > rect.bottom - cornerSize) corner = "br";
-    
-    if (corner && !cornersHit.has(corner)) {
+
+    const padding = 28;
+    const boxSize = Math.min(96, Math.min(rect.width, rect.height) * 0.25);
+    const centers: Record<string, { x: number; y: number }> = {
+      tl: { x: rect.left + padding + boxSize / 2, y: rect.top + padding + boxSize / 2 },
+      tr: { x: rect.right - padding - boxSize / 2, y: rect.top + padding + boxSize / 2 },
+      bl: { x: rect.left + padding + boxSize / 2, y: rect.bottom - padding - boxSize / 2 },
+      br: { x: rect.right - padding - boxSize / 2, y: rect.bottom - padding - boxSize / 2 },
+    };
+
+    let corner: string | null = null;
+    let nearestDist = Infinity;
+    Object.entries(centers).forEach(([key, pos]) => {
+      const dist = Math.hypot(clientX - pos.x, clientY - pos.y);
+      if (dist < nearestDist) {
+        nearestDist = dist;
+        corner = key;
+      }
+    });
+
+    const hitRadius = Math.max(boxSize * 0.75, 80);
+    if (corner && nearestDist <= hitRadius && !cornersHit.has(corner)) {
       setCornersHit(prev => {
         const newSet = new Set(prev);
-        newSet.add(corner);
+        newSet.add(corner as string);
         playTick();
         setProgress((newSet.size / 4) * 100);
         return newSet;
@@ -2911,43 +2945,25 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     return () => window.removeEventListener('deviceorientation', handleOrientation);
   }, [currentMode.mode, isMobile]);
 
-  // FLIP MODE - flip device face down and back
-  useEffect(() => {
-    if (currentMode.mode !== "flip" || !isMobile) return;
+  // FLIP MODE - tap down then up
+  const handleFlipTap = useCallback(() => {
+    if (currentMode.mode !== "flip") return;
+    hasInteractedRef.current = true;
 
-    const handleOrientation = (e: DeviceOrientationEvent) => {
-      const gamma = e.gamma ?? 0; // Left-right tilt
-      const beta = e.beta ?? 0; // Front-back tilt
-      hasInteractedRef.current = true;
-      
-      // Detect face-down position (beta close to 180 or -180)
-      const isFaceDown = Math.abs(beta) > 140;
-      
-      if (flipState === "normal" && isFaceDown) {
-        setFlipState("flipped");
+    setFlipState(state => {
+      if (state === "normal") {
         playTick();
         setProgress(50);
-      } else if (flipState === "flipped" && !isFaceDown && Math.abs(beta) < 40) {
-        setFlipState("returned");
+        return "flipped";
+      }
+      if (state === "flipped") {
         playTick();
         setProgress(100);
+        return "returned";
       }
-    };
-
-    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-      (DeviceOrientationEvent as any).requestPermission()
-        .then((response: string) => {
-          if (response === 'granted') {
-            window.addEventListener('deviceorientation', handleOrientation);
-          }
-        })
-        .catch(console.error);
-    } else {
-      window.addEventListener('deviceorientation', handleOrientation);
-    }
-
-    return () => window.removeEventListener('deviceorientation', handleOrientation);
-  }, [currentMode.mode, isMobile, flipState, playTick]);
+      return state;
+    });
+  }, [currentMode.mode, playTick]);
 
   // COMPASS MODE - rotate to face north
   useEffect(() => {
@@ -3331,102 +3347,66 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
   // ADDITIONAL MOBILE SENSOR MODES
   // ============================================================================
 
-  // FACE DOWN MODE
-  useEffect(() => {
-    if (currentMode.mode !== "faceDown" || !isMobile) return;
-    
-    const handleOrientation = (e: DeviceOrientationEvent) => {
-      const beta = e.beta || 0; // -180 to 180 (front-back tilt)
-      
-      // Phone is face down when beta is close to 180 or -180
-      const isFaceDown = Math.abs(Math.abs(beta) - 180) < 30;
-      
-      if (isFaceDown && !faceDownTimer) {
-        hasInteractedRef.current = true;
-        const timer = setInterval(() => {
-          setFaceDownProgress(p => {
-            const newP = p + 5;
-            if (newP >= 100) {
-              setProgress(100);
-              playTick();
-            } else {
-              setProgress(newP);
-            }
-            return Math.min(newP, 100);
-          });
-        }, 100);
-        setFaceDownTimer(timer);
-      } else if (!isFaceDown && faceDownTimer) {
-        clearInterval(faceDownTimer);
-        setFaceDownTimer(null);
-        if (faceDownProgress < 100) {
-          setFaceDownProgress(0);
-          setProgress(0);
-        }
-      }
-    };
-    
-    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-      (DeviceOrientationEvent as any).requestPermission()
-        .then((response: string) => {
-          if (response === 'granted') {
-            window.addEventListener('deviceorientation', handleOrientation);
-          }
-        })
-        .catch(console.error);
-    } else {
-      window.addEventListener('deviceorientation', handleOrientation);
-    }
-    
-    return () => {
-      window.removeEventListener('deviceorientation', handleOrientation);
-      if (faceDownTimer) clearInterval(faceDownTimer);
-    };
-  }, [currentMode.mode, isMobile, faceDownTimer, faceDownProgress, playTick]);
+  // FACE DOWN MODE - touch hold fallback
+  const startFaceDownHold = useCallback(() => {
+    if (currentMode.mode !== "faceDown") return;
+    hasInteractedRef.current = true;
 
-  // STEP COUNTER MODE (uses accelerometer to detect steps)
-  useEffect(() => {
-    if (currentMode.mode !== "stepCounter" || !isMobile) return;
-    
-    let lastY = 0;
-    let lastPeakTime = 0;
-    
-    const handleMotion = (e: DeviceMotionEvent) => {
-      const acc = e.accelerationIncludingGravity;
-      if (!acc?.y) return;
-      
-      const now = Date.now();
-      const y = acc.y;
-      
-      // Detect step as significant y-axis change (peak detection)
-      if (y > lastY + 3 && now - lastPeakTime > 300) {
-        hasInteractedRef.current = true;
-        lastPeakTime = now;
-        setStepCount(prev => {
-          const newCount = prev + 1;
+    if (faceDownHoldIntervalRef.current) {
+      clearInterval(faceDownHoldIntervalRef.current);
+    }
+
+    faceDownHoldIntervalRef.current = setInterval(() => {
+      setFaceDownProgress(p => {
+        const next = Math.min(p + 6, 100);
+        setProgress(next);
+        if (next >= 100) {
           playTick();
-          setProgress(Math.min((newCount / 5) * 100, 100));
-          return newCount;
+          if (faceDownHoldIntervalRef.current) {
+            clearInterval(faceDownHoldIntervalRef.current);
+            faceDownHoldIntervalRef.current = null;
+          }
+        }
+        return next;
+      });
+    }, 120);
+  }, [currentMode.mode, playTick]);
+
+  const stopFaceDownHold = useCallback(() => {
+    if (currentMode.mode !== "faceDown") return;
+    if (faceDownHoldIntervalRef.current) {
+      clearInterval(faceDownHoldIntervalRef.current);
+      faceDownHoldIntervalRef.current = null;
+    }
+    if (faceDownProgress < 100) {
+      setFaceDownProgress(0);
+      setProgress(0);
+    }
+  }, [currentMode.mode, faceDownProgress]);
+
+  // STEP COUNTER MODE - tap at walking pace
+  const handleStepTap = useCallback(() => {
+    if (currentMode.mode !== "stepCounter") return;
+    hasInteractedRef.current = true;
+
+    const now = Date.now();
+
+    setStepTapTimes(prev => {
+      const last = prev[prev.length - 1];
+      const withinWalkingPace = !last || (now - last >= 300 && now - last <= 1200);
+
+      if (withinWalkingPace) {
+        setStepCount(c => {
+          const next = Math.min(c + 1, 5);
+          setProgress(Math.min((next / 5) * 100, 100));
+          playTick();
+          return next;
         });
       }
-      
-      lastY = y;
-    };
-    
-    if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
-      (DeviceMotionEvent as any).requestPermission()
-        .then((response: string) => {
-          if (response === 'granted') {
-            window.addEventListener('devicemotion', handleMotion);
-          }
-        })
-        .catch(console.error);
-    } else {
-      window.addEventListener('devicemotion', handleMotion);
-    }
-    
-    return () => window.removeEventListener('devicemotion', handleMotion);
-  }, [currentMode.mode, isMobile, playTick]);
+
+      return [...prev.slice(-4), now];
+    });
+  }, [currentMode.mode, playTick]);
 
   // MULTI-TOUCH MODE
   const handleMultiTouch = useCallback((e: React.TouchEvent) => {
@@ -3547,6 +3527,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     else if (currentMode.mode === "breath") handleBreathStart();
     else if (currentMode.mode === "morse") handleMorseStart();
     else if (currentMode.mode === "countdown") handleCountdownStart();
+    else if (currentMode.mode === "faceDown") startFaceDownHold();
   };
 
   const handleInteractionEnd = () => {
@@ -3562,6 +3543,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     else if (currentMode.mode === "breath") handleBreathEnd();
     else if (currentMode.mode === "morse") handleMorseEnd();
     else if (currentMode.mode === "countdown") handleCountdownEnd();
+    else if (currentMode.mode === "faceDown") stopFaceDownHold();
   };
 
   const handleInteractionMove = (e: React.TouchEvent | React.MouseEvent) => {
@@ -3608,6 +3590,9 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     else if (currentMode.mode === "corners") handleCornerTap(e);
     else if (currentMode.mode === "tripleTap") handleTripleTap();
     else if (currentMode.mode === "speedTap") handleSpeedTap();
+    else if (currentMode.mode === "stepCounter") handleStepTap();
+    else if (currentMode.mode === "shake") handleShakeTap();
+    else if (currentMode.mode === "flip") handleFlipTap();
     else if (currentMode.mode === "proximity") handleProximityTap();
     else if (currentMode.mode === "lightSensor") handleProximityTap(); // Fallback
   };
@@ -4638,7 +4623,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             </p>
             <p className="text-xs" style={{ color: "#3b82f6" }}>shakes</p>
             <p className="text-xs mt-1 opacity-50" style={{ color: "#3b82f6" }}>
-              Mobile: shake device • Desktop: move mouse rapidly
+              Tap quickly (or shake if your browser supports it)
             </p>
           </motion.div>
         )}
@@ -5163,7 +5148,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               </div>
             </div>
             <p className="text-xs" style={{ color: "#3b82f6" }}>
-              {flipState === "normal" ? "Flip face down" : flipState === "flipped" ? "Now flip back up" : "Complete!"}
+              {flipState === "normal" ? "Tap to flip down" : flipState === "flipped" ? "Tap again to flip up" : "Complete!"}
             </p>
           </motion.div>
         )}
@@ -5659,7 +5644,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 <Smartphone size={32} style={{ color: "#3b82f6" }} />
               </div>
             </motion.div>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Place phone face-down</p>
+            <p className="text-xs" style={{ color: "#3b82f6" }}>Press and hold to finish</p>
           </motion.div>
         )}
 
@@ -5672,7 +5657,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
           >
             <Footprints size={48} className="mx-auto mb-3" style={{ color: "#3b82f6" }} />
             <p className="text-4xl font-bold neon-text">{stepCount}/5</p>
-            <p className="text-xs mt-2" style={{ color: "#3b82f6" }}>Walk with your phone!</p>
+            <p className="text-xs mt-2" style={{ color: "#3b82f6" }}>Tap like you’re walking</p>
           </motion.div>
         )}
 
