@@ -554,6 +554,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           email: formData.email
         }));
         
+        // Mark pagemode as completed - user should NEVER see pagemode again
+        localStorage.setItem("bullmoney_pagemode_completed", "true");
+        
         // Clear draft
         localStorage.removeItem("bullmoney_draft");
         
@@ -623,6 +626,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         recruitId: data.id,
         email: loginEmail
       }));
+      
+      // Mark pagemode as completed - user should NEVER see pagemode again
+      localStorage.setItem("bullmoney_pagemode_completed", "true");
       
       // Track successful login
       trackEvent('login', { method: 'email', source: 'pagemode' });

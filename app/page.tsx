@@ -989,10 +989,13 @@ function HomeContent() {
     preloadSplineEngine();
   }, [deviceTier, currentView]);
 
-  // Session Check
+  // Session Check - Skip pagemode if user has EVER completed it
   useEffect(() => {
     const hasSession = localStorage.getItem("bullmoney_session");
-    if (hasSession) {
+    const hasCompletedPagemode = localStorage.getItem("bullmoney_pagemode_completed");
+    
+    // Skip pagemode if user has session OR has ever completed pagemode
+    if (hasSession || hasCompletedPagemode === "true") {
       setCurrentView('loader');
     } else {
       setCurrentView('pagemode');
