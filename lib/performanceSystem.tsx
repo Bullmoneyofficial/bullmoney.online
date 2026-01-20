@@ -305,12 +305,32 @@ export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: 
     'bottom-right': 'bottom-2 right-2',
   };
 
-  const fpsColor = fps >= 55 ? 'text-green-400' : fps >= 30 ? 'text-yellow-400' : 'text-red-400';
+  // Neon blue and red color scheme
+  const fpsColor = fps >= 55 ? 'text-blue-400' : fps >= 30 ? 'text-yellow-400' : 'text-red-500';
+  const glowColor = fps >= 55 ? 'rgba(59, 130, 246, 0.5)' : fps >= 30 ? 'rgba(250, 204, 21, 0.3)' : 'rgba(239, 68, 68, 0.6)';
+  const pulsAnimation = fps >= 55 ? `
+    @keyframes fps-pulse-blue {
+      0%, 100% { text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6; }
+      50% { text-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6; }
+    }
+    .fps-monitor { animation: fps-pulse-blue 1.5s ease-in-out infinite; }
+  ` : fps >= 30 ? '' : `
+    @keyframes fps-pulse-red {
+      0%, 100% { text-shadow: 0 0 4px #ef4444, 0 0 8px #ef4444; }
+      50% { text-shadow: 0 0 8px #ef4444, 0 0 16px #ef4444; }
+    }
+    .fps-monitor { animation: fps-pulse-red 0.8s ease-in-out infinite; }
+  `;
 
   return (
-    <div className={`fixed ${positionClasses[position]} z-[99999] px-2 py-1 bg-black/80 rounded text-xs font-mono ${fpsColor}`}>
-      {fps} FPS
-    </div>
+    <>
+      <style>{pulsAnimation}</style>
+      <div className={`fixed ${positionClasses[position]} z-[99999] px-3 py-1.5 bg-black/90 border border-blue-500/40 rounded-lg text-xs font-mono font-bold ${fpsColor} fps-monitor`} style={{
+        boxShadow: `0 0 8px ${glowColor}`
+      }}>
+        ● {fps} FPS
+      </div>
+    </>
   );
 });
 FPSMonitor.displayName = 'FPSMonitor';

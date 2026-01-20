@@ -822,6 +822,7 @@ export function TradingQuickAccess() {
     <>
       {/* Live Price Pill - Positioned below Browser Switch Tab */}
       <motion.div
+        data-trading-panel="true"
         initial={{ x: -300, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: -300, opacity: 0 }}
@@ -939,6 +940,7 @@ export function TradingQuickAccess() {
           {/* Trading Tip - Matching Price Pill Style */}
           {!isExpanded && (
             <motion.div
+              data-trading-tip="true"
               initial={{ opacity: 0, y: -8, x: -20 }}
               animate={{ opacity: 1, y: 0, x: 0 }}
               exit={{ opacity: 0, y: -8, x: -20 }}

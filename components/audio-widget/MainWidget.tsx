@@ -224,16 +224,16 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
         <AnimatePresence mode="wait">
         {widgetHidden && !isScrollMinimized && (
           <motion.div
-            className="fixed left-0 bottom-16 z-[100200] pointer-events-none"
+            className="fixed right-0 bottom-[70px] z-[100200] pointer-events-none"
           >
             <motion.button
               key="normal-pull-tab"
-              initial={{ x: -60, opacity: 0 }}
+              initial={{ x: 60, opacity: 0 }}
               animate={
                 isPulltabPinned 
                   ? { x: 0, scale: 1, opacity: 1 }
                   : {
-                      x: [-60, 0, 0, -60],
+                      x: [60, 0, 0, 60],
                       opacity: [0, 1, 1, 0],
                       scale: [0.95, 1, 1, 0.95],
                     }
@@ -256,19 +256,19 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               }}
               onHoverStart={handlePulltabInteraction}
               onTap={handlePulltabInteraction}
-              className="relative flex items-center justify-center h-10 w-10 rounded-r-full transition-all pointer-events-auto"
+              className="relative flex items-center justify-center h-7 w-7 rounded-l-full transition-all pointer-events-auto"
               data-theme-aware
               style={{
-                background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.1) 100%)',
+                background: 'rgba(0, 0, 0, 0.85)',
                 backdropFilter: 'blur(12px)',
                 WebkitBackdropFilter: 'blur(12px)',
-                border: '2px solid #3b82f6',
-                boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6',
+                border: '1px solid #0066ff',
+                boxShadow: '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <IconMusic className="w-4 h-4" style={{ color: 'var(--accent-color, #93c5fd)', filter: 'drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6)' }} />
+              <IconMusic className="w-3 h-3" style={{ color: '#0066ff', filter: 'drop-shadow(0 0 5px #0066ff) drop-shadow(0 0 10px #0066ff)' }} />
             </motion.button>
           </motion.div>
         )}
@@ -276,16 +276,16 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
         {/* Minimized pull tab on scroll when widget is hidden */}
         {widgetHidden && isScrollMinimized && (
           <motion.div
-            className="fixed left-0 bottom-16 z-[100200] pointer-events-none"
+            className="fixed right-0 bottom-[70px] z-[100200] pointer-events-none"
           >
             <motion.button
               key="minimized-pull-tab"
-              initial={{ x: -60, opacity: 0 }}
+              initial={{ x: 60, opacity: 0 }}
               animate={
                 isPulltabPinned 
                   ? { x: 0, scale: 1, opacity: 1 }
                   : {
-                      x: [-60, 0, 0, -60],
+                      x: [60, 0, 0, 60],
                       opacity: [0, 1, 1, 0],
                       scale: [0.95, 1, 1, 0.95],
                     }
@@ -308,14 +308,14 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               }}
               onHoverStart={handlePulltabInteraction}
               onTap={handlePulltabInteraction}
-              className="relative flex items-center justify-center h-10 w-10 rounded-r-full transition-all pointer-events-auto"
+              className="relative flex items-center justify-center h-7 w-7 rounded-l-full transition-all pointer-events-auto"
               data-theme-aware
               style={{
-                background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.1) 100%)',
+                background: 'rgba(0, 0, 0, 0.85)',
                 backdropFilter: 'blur(12px)',
                 WebkitBackdropFilter: 'blur(12px)',
-                border: '2px solid #3b82f6',
-                boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6',
+                border: '1px solid #0066ff',
+                boxShadow: '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -354,16 +354,16 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
             {/* MINIMIZED PILL STATE - Cool Music icon with animated wave bars */}
             {isScrollMinimized && !open && (
               <motion.div
-                className="fixed left-3 bottom-14 z-[100200] pointer-events-none"
+                className="fixed right-3 bottom-[70px] z-[100200] pointer-events-none"
               >
                 <motion.button
                   key="minimized-audio"
-                  initial={{ x: -100, opacity: 0 }}
+                  initial={{ x: 100, opacity: 0 }}
                   animate={
                     isPulltabPinned 
                       ? { x: 0, scale: 1, opacity: 1 }
                       : {
-                          x: [-100, 0, 0, -100],
+                          x: [100, 0, 0, 100],
                           opacity: [0, 1, 1, 0],
                           scale: [0.95, 1, 1, 0.95],
                         }
@@ -386,14 +386,14 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                   }}
                   onHoverStart={handlePulltabInteraction}
                   onTap={handlePulltabInteraction}
-                  className="relative flex items-center justify-center h-10 w-10 rounded-full transition-all pointer-events-auto"
+                  className="relative flex items-center justify-center h-7 w-7 rounded-full transition-all pointer-events-auto"
                   data-theme-aware
                   style={{
-                    background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.1) 100%)',
+                    background: 'rgba(0, 0, 0, 0.85)',
                     backdropFilter: 'blur(12px)',
                     WebkitBackdropFilter: 'blur(12px)',
-                    border: '2px solid #3b82f6',
-                    boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6',
+                    border: '1px solid #0066ff',
+                    boxShadow: '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
                   }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -407,10 +407,10 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                     className="relative"
                   >
                     <IconMusic 
-                      className="w-4 h-4"
+                      className="w-3 h-3"
                       style={{ 
-                        color: isMusicPlaying || streamingActive ? 'var(--accent-color, #93c5fd)' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)',
-                        filter: isMusicPlaying || streamingActive ? 'drop-shadow(0 0 6px rgba(var(--accent-rgb, 96, 165, 250), 0.8))' : 'none'
+                        color: isMusicPlaying || streamingActive ? '#0066ff' : 'rgba(0, 102, 255, 0.7)',
+                        filter: isMusicPlaying || streamingActive ? 'drop-shadow(0 0 5px #0066ff) drop-shadow(0 0 10px #0066ff)' : 'none'
                       }}
                     />
                     {/* Playing indicator dot */}
@@ -436,9 +436,9 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.25 }}
-                className="fixed left-3 bottom-14 z-[100200] pointer-events-auto"
+                className="fixed right-3 bottom-[70px] z-[100200] pointer-events-auto"
                 drag="x"
-                dragConstraints={{ left: -150, right: 0 }}
+                dragConstraints={{ left: 0, right: 150 }}
                 dragElastic={0.1}
                 onDragEnd={handleWidgetDragEnd}
                 style={{ x: widgetX, opacity: widgetOpacity }}
@@ -451,10 +451,10 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                   initial={{ opacity: 0, y: 20, scale: 0.8 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  className="absolute left-0 bottom-[calc(100%+8px)] z-50 pointer-events-none"
+                  className="absolute right-0 bottom-[calc(100%+8px)] z-50 pointer-events-none"
                 >
                   <div className="relative p-2.5 rounded-xl bg-gradient-to-br from-blue-600/90 to-blue-800/90 border border-blue-400/50 shadow-xl backdrop-blur-md">
-                    <div className="absolute -bottom-2 left-6 w-3 h-3 bg-blue-700/90 rotate-45 border-b border-r border-blue-400/50" />
+                    <div className="absolute -bottom-2 right-6 w-3 h-3 bg-blue-700/90 rotate-45 border-b border-r border-blue-400/50" />
                     <div className="flex items-center gap-2 whitespace-nowrap">
                       <motion.div 
                         animate={{ scale: [1, 1.15, 1] }} 
@@ -479,13 +479,14 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               data-audio-widget
               data-theme-aware
               className={cn(
-                "relative rounded-2xl bg-black/95 backdrop-blur-2xl shadow-2xl",
+                "relative rounded-2xl backdrop-blur-2xl shadow-2xl",
                 "text-white/90 overflow-hidden audio-shimmer",
                 open ? "w-[280px] sm:w-[320px]" : "w-auto"
               )}
               style={{
-                border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
-                boxShadow: '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.15)',
+                background: 'rgba(0, 0, 0, 0.85)',
+                border: '1px solid #0066ff',
+                boxShadow: '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
                 transition: 'border-color 0.4s ease-out, box-shadow 0.4s ease-out',
                 transitionDelay: '0.05s',
                 zIndex: open ? 2147483700 : 'auto',
@@ -503,29 +504,29 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                   }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.95 }}
-                  className="relative px-4 h-10 rounded-full flex items-center justify-center gap-2 transition-all"
+                  className="relative px-3 h-7 rounded-full flex items-center justify-center gap-2 transition-all"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.1) 100%)',
+                    background: 'rgba(0, 0, 0, 0.85)',
                     backdropFilter: 'blur(12px)',
                     WebkitBackdropFilter: 'blur(12px)',
-                    border: '2px solid #3b82f6',
-                    boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6',
+                    border: '1px solid #0066ff',
+                    boxShadow: '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
                   }}
                 >
                   <div className="flex items-center justify-center gap-2">
                     <IconMusic 
-                      className="w-5 h-5"
+                      className="w-3 h-3"
                       style={{ 
-                        color: 'var(--accent-color, #93c5fd)',
-                        filter: 'drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6)'
+                        color: '#0066ff',
+                        filter: 'drop-shadow(0 0 5px #0066ff) drop-shadow(0 0 10px #0066ff)'
                       }}
                     />
                     <motion.div 
                       animate={{ rotate: open ? 180 : 0 }} 
                       transition={{ duration: 0.3 }}
-                      style={{ color: 'var(--accent-color, #93c5fd)' }}
+                      style={{ color: '#0066ff', filter: 'drop-shadow(0 0 5px #0066ff)' }}
                     >
-                      <IconChevronUp className="h-5 w-5" />
+                      <IconChevronUp className="h-3 w-3" />
                     </motion.div>
                   </div>
                 </motion.button>

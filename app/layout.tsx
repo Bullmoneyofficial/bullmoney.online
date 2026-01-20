@@ -27,6 +27,9 @@ import { RecruitAuthProvider } from "@/contexts/RecruitAuthContext";
 import { ViewportStateProvider } from "@/contexts/ViewportStateContext";
 import { ShopProvider } from "@/components/ShopContext";
 
+// ✅ SMART SCREENSAVER - Idle detection, cleanup, and battery saver
+import { SmartScreensaverProvider } from "@/components/SmartScreensaver";
+
 // ✅ LAYOUT PROVIDERS - Client component wrapper for dynamic imports
 import { LayoutProviders } from "@/components/LayoutProviders";
 
@@ -1007,9 +1010,11 @@ export default function RootLayout({
                     <StudioProvider>
                       {/* ✅ ShopProvider with LayoutProviders wrapper */}
                       <ShopProvider>
-                        <LayoutProviders modal={modal}>
-                          {children}
-                        </LayoutProviders>
+                        <SmartScreensaverProvider>
+                          <LayoutProviders modal={modal}>
+                            {children}
+                          </LayoutProviders>
+                        </SmartScreensaverProvider>
                       </ShopProvider>
                     </StudioProvider>
                   </AudioSettingsProvider>
