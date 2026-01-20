@@ -357,21 +357,30 @@ function DesktopHomeContent() {
     const hasCompletedPagemode = localStorage.getItem("bullmoney_pagemode_completed");
     const hasCompletedLoader = localStorage.getItem("bullmoney_loader_completed");
     
+    console.log('[Desktop] Session check:', { hasSession: !!hasSession, hasCompletedPagemode, hasCompletedLoader });
+    
     // Skip directly to content if user has completed the full flow before
     if (hasCompletedLoader === "true") {
+      console.log('[Desktop] Skipping to content - loader previously completed');
       setV2Unlocked(true);
       setCurrentView('content');
     } else if (hasSession || hasCompletedPagemode === "true") {
       // Skip pagemode if user has session OR has ever completed pagemode
+      console.log('[Desktop] Skipping to loader - session/pagemode previously completed');
       setCurrentView('loader');
     } else {
       // First time visitor - show pagemode
+      console.log('[Desktop] First time visitor - showing pagemode');
       setCurrentView('pagemode');
     }
     setIsInitialized(true);
-  }, [setV2Unlocked]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handlePageModeUnlock = () => {
+    // Mark pagemode as completed so user skips it on reload
+    localStorage.setItem("bullmoney_pagemode_completed", "true");
+    console.log('[Desktop] Pagemode completed, moving to loader');
     setCurrentView('loader');
   };
 
