@@ -310,28 +310,8 @@ export const Navbar = memo(() => {
 
   // Mobile scroll minimization
   useEffect(() => {
-    if (!isMobile) return;
-    
-    // Only minimize when scrolling DOWN and menu is closed
-    if (scrollDirection === 'down' && !open) {
-      setIsScrollMinimized(true);
-      
-      // Clear existing timeout
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-      
-      // Set timeout to expand back after scroll stops
-      scrollTimeoutRef.current = setTimeout(() => {
-        setIsScrollMinimized(false);
-      }, 1000); // Expand back 1s after scroll stops
-    } else if (scrollDirection === 'up' || scrollDirection === 'idle') {
-      // Expand on scroll up
-      setIsScrollMinimized(false);
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-    }
+    // Disable scroll-based minimization on mobile completely
+    return;
   }, [isMobile, open, scrollDirection]);
 
   // Desktop scroll minimization - more responsive

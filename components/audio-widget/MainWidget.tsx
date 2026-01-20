@@ -224,7 +224,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
         <AnimatePresence mode="wait">
         {widgetHidden && !isScrollMinimized && (
           <motion.div
-            className="fixed bottom-[70px] z-[100200] pointer-events-none md:left-3 md:right-auto right-[max(0px,calc((100vw-1600px)/2))]"
+            className="fixed bottom-[70px] z-[100200] pointer-events-none left-[max(0px,12px)] md:left-3 md:right-auto"
           >
             <motion.button
               key="normal-pull-tab"
@@ -276,7 +276,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
         {/* Minimized pull tab on scroll when widget is hidden */}
         {widgetHidden && isScrollMinimized && (
           <motion.div
-            className="fixed bottom-[70px] z-[100200] pointer-events-none md:left-3 md:right-auto right-[clamp(0px,calc((100vw-1600px)/2),100px)]"
+            className="fixed bottom-[70px] z-[100200] pointer-events-none left-[clamp(0px,12px,100px)] md:left-3 md:right-auto"
           >
             <motion.button
               key="minimized-pull-tab"
@@ -354,7 +354,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
             {/* MINIMIZED PILL STATE - Cool Music icon with animated wave bars */}
             {isScrollMinimized && !open && (
               <motion.div
-                className="fixed bottom-[70px] z-[100200] pointer-events-none md:left-3 md:right-auto right-[clamp(12px,calc((100vw-1600px)/2+12px),112px)]"
+                className="fixed bottom-[70px] z-[100200] pointer-events-none right-[clamp(12px,calc((100vw-1600px)/2+12px),112px)] md:left-3 md:right-auto"
               >
                 <motion.button
                   key="minimized-audio"
@@ -436,7 +436,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.25 }}
-                className="fixed bottom-[70px] z-[100200] pointer-events-auto md:left-3 md:right-auto right-[clamp(12px,calc((100vw-1600px)/2+12px),112px)]"
+                className="fixed bottom-[70px] z-[100200] pointer-events-auto right-[clamp(12px,calc((100vw-1600px)/2+12px),112px)] md:left-3 md:right-auto"
                 drag="x"
                 dragConstraints={{ left: 0, right: 150 }}
                 dragElastic={0.1}

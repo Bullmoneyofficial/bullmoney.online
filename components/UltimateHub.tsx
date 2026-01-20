@@ -4929,6 +4929,11 @@ const UnifiedFpsPill = memo(({
   useEffect(() => {
     const isMobileDevice = window.innerWidth < 768;
     
+    // On mobile, disable scroll effects completely
+    if (isMobileDevice) {
+      return;
+    }
+    
     // Detect if user is likely using a trackpad (MacBooks, etc)
     const isLikelyTrackpad = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent) && !isMobileDevice;
     
@@ -4983,16 +4988,13 @@ const UnifiedFpsPill = memo(({
       setIsScrolling(true);
       
       // Device-specific thresholds
-      // Mobile: requires REALLY fast scrolling (flicking hard)
       // Desktop trackpad: responsive to fast swipe gestures
       // Desktop mouse: responsive for fast wheel flicks
-      const FAST_SCROLL_THRESHOLD = isMobileDevice 
-        ? 4 
-        : isLikelyTrackpad 
+      const FAST_SCROLL_THRESHOLD = isLikelyTrackpad 
           ? 0.8  // Lower threshold for trackpads (they report lower velocities)
           : 1.2; // Mouse wheel threshold
-      const FAST_SCROLL_CONFIRM = isMobileDevice ? 6 : 2; // Desktop: only 2 consecutive fast scrolls needed
-      const COOLDOWN_MS = isMobileDevice ? 15000 : 5000; // 15 second cooldown on mobile, 5 on desktop
+      const FAST_SCROLL_CONFIRM = 2; // Desktop: only 2 consecutive fast scrolls needed
+      const COOLDOWN_MS = 5000; // 5 second cooldown on desktop
       
       // Check if we're in cooldown period
       const timeSinceLastOverlay = now - lastOverlayTime.current;

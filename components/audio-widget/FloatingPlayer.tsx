@@ -627,7 +627,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               className="fixed pointer-events-none"
               style={{
                 zIndex: Z_INDEX.PULL_TAB,
-                right: 'clamp(-50px, calc((100vw - 1600px) / 2 - 50px), 50px)',
+                ...(typeof window !== 'undefined' && window.innerWidth < 768 ? { left: 'clamp(-50px, -50px, 50px)' } : { right: 'clamp(-50px, calc((100vw - 1600px) / 2 - 50px), 50px)' }),
                 bottom: 70,
               }}
             >
@@ -936,20 +936,23 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
       {/* Pull tab when hidden (original hide feature) */}
       {playerHidden && !open && !isMinimized && (
         <motion.button
-          initial={{ x: 30, opacity: 0 }}
+          initial={{ x: -30, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          exit={{ x: 30, opacity: 0 }}
+          exit={{ x: -30, opacity: 0 }}
           onClick={() => { SoundEffects.click(); setPlayerHidden(false); }}
           className={cn(
-            "fixed flex items-center py-8 pr-0.5 pl-2 rounded-l-2xl backdrop-blur-md transition-colors",
-            "bg-gradient-to-l from-slate-800/95 to-slate-700/95 hover:from-slate-700/95 hover:to-slate-600/95",
-            "border-l border-y border-slate-500/40 shadow-xl"
+            "fixed flex flex-col items-center justify-center gap-1 py-2 px-1.5 rounded-lg backdrop-blur-md transition-colors",
+            "bg-gradient-to-br from-blue-600/60 via-blue-500/40 to-cyan-500/30 hover:from-blue-500/70 hover:to-cyan-500/50",
+            "border border-blue-400/70 shadow-lg hover:shadow-blue-500/50"
           )}
-          style={{ bottom: 70, zIndex: Z_INDEX.PULL_TAB, right: 'clamp(0px, calc((100vw - 1600px) / 2), 100px)' }}
+          style={{ bottom: 200, zIndex: Z_INDEX.PULL_TAB, left: '8px' }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <motion.div animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
-            <IconGripVertical className="w-4 h-4 text-white/70" />
+          <motion.div animate={{ y: [0, 2, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
+            <IconGripVertical className="w-3 h-3 text-white/80" style={{ filter: 'drop-shadow(0 0 3px #3b82f6)' }} />
           </motion.div>
+          <span className="text-[7px] font-bold text-blue-100 whitespace-nowrap" style={{ textShadow: '0 0 4px #3b82f6' }}>iPhone</span>
         </motion.button>
       )}
       
