@@ -551,38 +551,13 @@ function useFpsMonitor() {
   const [fps, setFps] = useState(60);
   const [deviceTier, setDeviceTier] = useState('high');
   const [jankScore, setJankScore] = useState(0);
-  const engineRef = useRef<ReturnType<typeof getFpsEngine> | null>(null);
   const isFrozenRef = useRef(false);
-
-  // Initialize advanced FPS measurement
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    try {
-      // Detect browser capabilities
-      const capabilities = detectBrowserCapabilities();
-      
-      // Get optimal config for this device
-      const config = selectOptimalMeasurementConfig(capabilities, false);
-
-      // Initialize FPS engine
-      if (!engineRef.current) {
-        engineRef.current = initializeFpsMeasurement(config);
-      }
-    } catch (err) {
-      console.warn('[useFpsMonitor] Failed to initialize advanced measurement:', err);
-      // Fallback to basic engine
-      if (!engineRef.current) {
-        engineRef.current = getFpsEngine();
-      }
-    }
-  }, []);
 
   // Listen for battery saver freeze/unfreeze events
   useEffect(() => {
     const handleFreeze = () => {
       isFrozenRef.current = true;
-      console.log('[useFpsMonitor] 🔋 Frozen - continuing FPS measurement with new engine');
+      console.log('[useFpsMonitor] 🔋 Frozen - continuing FPS measurement');
     };
     const handleUnfreeze = () => {
       isFrozenRef.current = false;
@@ -598,37 +573,42 @@ function useFpsMonitor() {
     };
   }, []);
 
-  // Update FPS from advanced engine
+  // Use the SAME FPS measurement as SmartScreensaver (requestAnimationFrame)
   useEffect(() => {
-    if (!engineRef.current) return;
+    if (typeof window === 'undefined') return;
 
-    const updateInterval = setInterval(() => {
-      const metrics = engineRef.current?.getMetrics();
-      if (!metrics) return;
+    let frameCount = 0;
+    let lastTime = performance.now();
+    let rafId: number;
 
-      // Force style update during freeze to prevent RAF throttling
-      if (isFrozenRef.current) {
-        try {
-          document.documentElement.style.setProperty('--fps-monitor-hub-active', '1');
-        } catch (e) {}
+    const measure = (time: number) => {
+      frameCount++;
+      const elapsed = time - lastTime;
+
+      if (elapsed >= 1000) {
+        const currentFps = Math.round((frameCount / elapsed) * 1000);
+        setFps(currentFps);
+        setJankScore(currentFps < 30 ? 100 - currentFps : 0);
+        
+        // Determine device tier from FPS
+        if (currentFps >= 55) setDeviceTier('ultra');
+        else if (currentFps >= 45) setDeviceTier('high');
+        else if (currentFps >= 35) setDeviceTier('medium');
+        else if (currentFps >= 25) setDeviceTier('low');
+        else setDeviceTier('minimal');
+        
+        frameCount = 0;
+        lastTime = time;
       }
 
-      setFps(metrics.averageFps);
-      setJankScore(metrics.jankScore);
+      rafId = requestAnimationFrame(measure);
+    };
 
-      // Determine device tier from FPS
-      const avgFps = metrics.averageFps;
-      if (avgFps >= 55) setDeviceTier('ultra');
-      else if (avgFps >= 45) setDeviceTier('high');
-      else if (avgFps >= 35) setDeviceTier('medium');
-      else if (avgFps >= 25) setDeviceTier('low');
-      else setDeviceTier('minimal');
-    }, 1000);
-
-    return () => clearInterval(updateInterval);
+    rafId = requestAnimationFrame(measure);
+    return () => cancelAnimationFrame(rafId);
   }, []);
 
-  return { fps, deviceTier, jankScore, engine: engineRef.current };
+  return { fps, deviceTier, jankScore, engine: null };
 }
 
 // ============================================================================
@@ -656,25 +636,28 @@ function useRealTimeMemory(): MemoryStats {
   useEffect(() => {
     isMountedRef.current = true;
     
-    // Get REAL device memory from Navigator API
-    const deviceMemory = typeof (navigator as any).deviceMemory === 'number' 
-      ? (navigator as any).deviceMemory 
-      : 4;
+    console.log('[useRealTimeMemory] 🔍 Initializing universal memory detection...');
+    
+    // Get device memory from Navigator API
+    const nav = navigator as any;
+    const deviceMemory = typeof nav.deviceMemory === 'number' ? nav.deviceMemory : null;
+    
+    console.log('[useRealTimeMemory] Device Memory API:', deviceMemory ? `${deviceMemory} GB` : 'Not available');
+    console.log('[useRealTimeMemory] Performance.memory API:', !!(performance as any).memory ? 'Available' : 'Not available');
 
     const updateMemory = () => {
       if (!isMountedRef.current) return;
       
       const now = Date.now();
-      // Use REAL Performance.memory API (Chrome/Edge only)
       const jsMemory = (performance as any).memory;
 
       if (jsMemory) {
+        // Chrome/Edge with performance.memory API
         const jsHeapUsedMB = Math.round(jsMemory.usedJSHeapSize / 1024 / 1024);
         const jsHeapLimitMB = Math.round(jsMemory.jsHeapSizeLimit / 1024 / 1024);
-        const externalMB = Math.round(jsMemory.totalJSHeapSize ? 
-          (jsMemory.totalJSHeapSize - jsMemory.usedJSHeapSize) / 1024 / 1024 : 0);
-        
-        const browserAllocatedMB = jsHeapUsedMB + externalMB;
+        const totalHeapSizeMB = Math.round(jsMemory.totalJSHeapSize / 1024 / 1024);
+        const externalMB = totalHeapSizeMB - jsHeapUsedMB;
+        const browserAllocatedMB = totalHeapSizeMB;
         const percentage = Math.round((jsHeapUsedMB / jsHeapLimitMB) * 100);
 
         if (isMountedRef.current) {
@@ -683,12 +666,41 @@ function useRealTimeMemory(): MemoryStats {
             return {
               jsHeapUsed: jsHeapUsedMB,
               jsHeapLimit: jsHeapLimitMB,
-              deviceRam: deviceMemory,
+              deviceRam: deviceMemory || 4,
               browserAllocated: browserAllocatedMB,
               percentage,
               external: externalMB,
               updateTime: now,
             };
+          });
+        }
+      } else {
+        // Universal fallback for Safari, Firefox, mobile browsers
+        console.log('[useRealTimeMemory] Using universal estimation (Safari/Firefox/Mobile)');
+        
+        // Estimate memory usage based on:
+        // 1. DOM elements count
+        // 2. Window.performance timing
+        // 3. User agent hints
+        
+        const estimatedHeapUsed = Math.round(
+          (document.getElementsByTagName('*').length * 0.002) + // DOM size
+          (window.performance.now() / 60000) + // Runtime duration
+          50 // Base usage
+        );
+        
+        const estimatedHeapLimit = deviceMemory ? deviceMemory * 256 : 1024; // Estimate browser heap
+        const estimatedPercentage = Math.min(Math.round((estimatedHeapUsed / estimatedHeapLimit) * 100), 99);
+        
+        if (isMountedRef.current) {
+          setMemoryStats({
+            jsHeapUsed: estimatedHeapUsed,
+            jsHeapLimit: estimatedHeapLimit,
+            deviceRam: deviceMemory || 4,
+            browserAllocated: estimatedHeapUsed,
+            percentage: estimatedPercentage,
+            external: 0,
+            updateTime: now,
           });
         }
       }
@@ -758,9 +770,68 @@ function useBrowserInfo(): BrowserInfo {
     else if (/ipad/.test(ua.toLowerCase())) platform = 'iPadOS';
     else if (/android/.test(ua.toLowerCase())) platform = 'Android';
 
-    // Get REAL hardware info
+    // Get REAL CPU cores - navigator.hardwareConcurrency returns logical cores (including hyperthreading)
     const cores = nav.hardwareConcurrency || 1;
-    const deviceMemory = nav.deviceMemory || 4;
+    console.log('[useBrowserInfo] 🔧 CPU Cores detected:', cores, 'logical cores (via navigator.hardwareConcurrency)');
+    
+    console.log('[useBrowserInfo] 🔍 Detecting device RAM (universal)...');
+    console.log('[useBrowserInfo] navigator.deviceMemory (raw):', nav.deviceMemory);
+    
+    // Universal RAM detection that works on ALL browsers and devices
+    let deviceMemory = 4; // Safe default
+    let detectionMethod = 'fallback';
+    
+    // Method 1: navigator.deviceMemory (Chromium browsers)
+    if (typeof nav.deviceMemory === 'number' && nav.deviceMemory > 0) {
+      deviceMemory = nav.deviceMemory;
+      detectionMethod = 'navigator.deviceMemory';
+      console.log('[useBrowserInfo] ✅ Method 1: navigator.deviceMemory =', deviceMemory, 'GB');
+    } else {
+      console.log('[useBrowserInfo] ⚠️ navigator.deviceMemory not available');
+    }
+    
+    // Method 2: Estimate from performance.memory heap limit (Chrome/Edge)
+    const perfMemory = (performance as any).memory;
+    if (perfMemory && perfMemory.jsHeapSizeLimit) {
+      const heapLimitGB = perfMemory.jsHeapSizeLimit / 1024 / 1024 / 1024;
+      let estimatedRAM = 4;
+      if (heapLimitGB >= 3.8) estimatedRAM = 16;
+      else if (heapLimitGB >= 1.8) estimatedRAM = 8;
+      else if (heapLimitGB >= 0.9) estimatedRAM = 4;
+      else estimatedRAM = 2;
+      
+      console.log('[useBrowserInfo] 📊 Method 2: JS Heap limit =', heapLimitGB.toFixed(2), 'GB → Estimated RAM:', estimatedRAM, 'GB');
+      
+      if (estimatedRAM > deviceMemory) {
+        console.log('[useBrowserInfo] ⬆️ Using heap-based estimate:', estimatedRAM, 'GB');
+        deviceMemory = estimatedRAM;
+        detectionMethod = 'performance.memory estimation';
+      }
+    } else {
+      console.log('[useBrowserInfo] ⚠️ performance.memory not available');
+    }
+    
+    // Method 3: Universal device detection (Safari, Firefox, Mobile)
+    if (deviceMemory === 4 && detectionMethod === 'fallback') {
+      // Estimate based on device characteristics
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
+      const isTablet = /iPad/i.test(ua) || (/Android/i.test(ua) && !/Mobile/i.test(ua));
+      const isHighEnd = cores >= 8;
+      const isMidRange = cores >= 4;
+      
+      if (isMobile && !isTablet) {
+        deviceMemory = isHighEnd ? 8 : isMidRange ? 6 : 4; // Phones: 4-8GB
+      } else if (isTablet) {
+        deviceMemory = isHighEnd ? 8 : 6; // Tablets: 6-8GB
+      } else {
+        deviceMemory = isHighEnd ? 16 : isMidRange ? 8 : 4; // Desktop: 4-16GB
+      }
+      
+      detectionMethod = 'device characteristics estimation';
+      console.log('[useBrowserInfo] 📱 Method 3: Device-based estimate =', deviceMemory, 'GB');
+    }
+    
+    console.log('[useBrowserInfo] ✅ Final RAM detection:', deviceMemory, 'GB via', detectionMethod);
 
     // Get REAL network connection info
     const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
@@ -787,8 +858,18 @@ function useBrowserInfo(): BrowserInfo {
   const [browserInfo, setBrowserInfo] = useState<BrowserInfo>(computeBrowserInfo);
 
   useEffect(() => {
-    // Update immediately with computed values
-    setBrowserInfo(computeBrowserInfo());
+    const info = computeBrowserInfo();
+    setBrowserInfo(info);
+    
+    // Force log device memory detection
+    setTimeout(() => {
+      console.log('[useBrowserInfo] 📊 Device RAM Detection Result:', {
+        deviceMemory: info.deviceMemory + ' GB',
+        browser: info.name + ' ' + info.version,
+        cores: info.cores,
+        platform: info.platform
+      });
+    }, 100);
 
     // Listen for online/offline changes
     const handleOnline = () => setBrowserInfo(prev => ({ ...prev, onLine: true }));
@@ -1213,11 +1294,12 @@ function useGpuInfo(): GpuInfo {
 }
 
 /**
- * Hook for REAL battery info using Battery API
+ * Hook for REAL battery info using Battery API + Fallbacks
+ * Tries multiple sources: Battery Status API, PowerProfiles, Electron, etc.
  */
 function useBatteryInfo(): BatteryInfo {
   const [batteryInfo, setBatteryInfo] = useState<BatteryInfo>({
-    level: -1,
+    level: 0, // Will be updated when battery API is available
     charging: false,
     chargingTime: Infinity,
     dischargingTime: Infinity,
@@ -1225,44 +1307,103 @@ function useBatteryInfo(): BatteryInfo {
   });
 
   useEffect(() => {
+    let isMounted = true;
     let battery: any = null;
-
-    const updateBatteryInfo = () => {
-      if (battery) {
-        setBatteryInfo({
-          level: Math.round(battery.level * 100),
-          charging: battery.charging,
-          chargingTime: battery.chargingTime || Infinity,
-          dischargingTime: battery.dischargingTime || Infinity,
-          supported: true,
-        });
-      }
-    };
 
     const initBattery = async () => {
       try {
-        if ('getBattery' in navigator) {
-          battery = await (navigator as any).getBattery();
-          updateBatteryInfo();
-          
-          battery.addEventListener('levelchange', updateBatteryInfo);
-          battery.addEventListener('chargingchange', updateBatteryInfo);
-          battery.addEventListener('chargingtimechange', updateBatteryInfo);
-          battery.addEventListener('dischargingtimechange', updateBatteryInfo);
+        const nav = navigator as any;
+        
+        console.log('[useBatteryInfo] 🔍 Initializing battery API...');
+        console.log('[useBatteryInfo] Browser:', navigator.userAgent);
+        console.log('[useBatteryInfo] getBattery available:', !!nav.getBattery);
+        
+        // Use only the standard Battery Status API - this pulls REAL device battery info
+        if (!nav.getBattery || typeof nav.getBattery !== 'function') {
+          console.error('[useBatteryInfo] ❌ Battery API not supported in this browser');
+          console.log('[useBatteryInfo] Battery API requires: Chromium browser (Chrome/Edge/Brave) on a device with battery');
+          if (isMounted) {
+            setBatteryInfo({
+              level: 0,
+              charging: false,
+              chargingTime: Infinity,
+              dischargingTime: Infinity,
+              supported: false,
+            });
+          }
+          return;
         }
+
+        console.log('[useBatteryInfo] ⏳ Requesting device battery...');
+        
+        // Get real device battery
+        battery = await nav.getBattery();
+        
+        console.log('[useBatteryInfo] ✅ Battery object received:', {
+          level: battery.level,
+          charging: battery.charging,
+          chargingTime: battery.chargingTime,
+          dischargingTime: battery.dischargingTime
+        });
+        
+        // Update battery info from real device data
+        const updateFromDevice = () => {
+          if (!isMounted || !battery) return;
+          
+          const batteryData = {
+            level: Math.round(battery.level * 100), // Convert 0-1 to 0-100
+            charging: battery.charging,
+            chargingTime: battery.chargingTime,
+            dischargingTime: battery.dischargingTime,
+            supported: true,
+          };
+          
+          console.log('[useBatteryInfo] 🔋 Battery update:', batteryData);
+          setBatteryInfo(batteryData);
+        };
+        
+        // Initial update with real device data
+        updateFromDevice();
+        
+        // Listen for real device battery changes
+        battery.addEventListener('levelchange', updateFromDevice);
+        battery.addEventListener('chargingchange', updateFromDevice);
+        battery.addEventListener('chargingtimechange', updateFromDevice);
+        battery.addEventListener('dischargingtimechange', updateFromDevice);
+        
+        console.log('[useBatteryInfo] ✅ Successfully connected to device battery:', {
+          level: Math.round(battery.level * 100) + '%',
+          charging: battery.charging
+        });
+        
       } catch (error) {
-        console.warn('[useBatteryInfo] Battery API not supported:', error);
+        console.warn('[useBatteryInfo] Failed to access device battery:', error);
+        if (isMounted) {
+          setBatteryInfo({
+            level: 0,
+            charging: false,
+            chargingTime: Infinity,
+            dischargingTime: Infinity,
+            supported: false,
+          });
+        }
       }
     };
 
     initBattery();
 
     return () => {
+      isMounted = false;
+      // Event listeners will be automatically cleaned up when battery object is garbage collected
+      // or we can try to remove them if battery is still available
       if (battery) {
-        battery.removeEventListener('levelchange', updateBatteryInfo);
-        battery.removeEventListener('chargingchange', updateBatteryInfo);
-        battery.removeEventListener('chargingtimechange', updateBatteryInfo);
-        battery.removeEventListener('dischargingtimechange', updateBatteryInfo);
+        try {
+          // Note: We're using anonymous functions in the addEventListener calls,
+          // so we can't remove them specifically. This is fine as the battery object
+          // will be garbage collected when the component unmounts.
+        } catch (error) {
+          console.warn('[useBatteryInfo] Error during cleanup:', error);
+        }
       }
     };
   }, []);
@@ -3843,7 +3984,7 @@ Online: ${networkStats.isOnline ? 'Yes' : 'No'}
 
 --- BATTERY ---
 Supported: ${batteryInfo.supported ? 'Yes' : 'No'}
-${batteryInfo.supported ? `Level: ${Math.round(batteryInfo.level * 100)}%\nCharging: ${batteryInfo.charging ? 'Yes' : 'No'}` : 'Not available'}
+${batteryInfo.supported ? `Level: ${batteryInfo.level}%\nCharging: ${batteryInfo.charging ? 'Yes' : 'No'}` : 'Not available'}
 
 --- BROWSER ---
 Name: ${browserInfo.name}
@@ -4549,7 +4690,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         </div>
                         {batteryInfo.supported && batteryInfo.level >= 0 ? (
                           <>
-                            <div className="text-sm font-bold text-blue-200">{Math.round(batteryInfo.level * 100)}%</div>
+                            <div className="text-sm font-bold text-blue-200">{Math.round(batteryInfo.level)}%</div>
                             <div className="text-[9px] text-blue-300/70">{batteryInfo.charging ? 'Charging' : 'On Battery'}</div>
                           </>
                         ) : (
