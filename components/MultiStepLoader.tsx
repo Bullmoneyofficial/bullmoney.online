@@ -237,7 +237,8 @@ const LiveChromeHeader = memo(({
       initial={{ y: -50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.4, duration: 0.8 }}
-      className="absolute top-0 left-0 right-0 z-50 flex justify-between items-start p-5 md:p-8 w-full max-w-[100vw] pointer-events-auto"
+      className="absolute top-0 left-0 right-0 z-50 flex justify-between items-start p-5 md:p-8 w-full max-w-[100vw] pointer-events-auto box-border"
+      style={{ left: 0, right: 0, marginLeft: 'auto', marginRight: 'auto' }}
     >
       {/* LEFT: Asset Buttons */}
       <div className="flex gap-4">
@@ -444,8 +445,8 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, filter: "blur(15px)", scale: 1.05 }}
           transition={{ duration: 0.8 }}
-          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#020617] overflow-hidden cursor-none font-sans h-[100dvh] w-screen"
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#020617] overflow-hidden cursor-none font-sans"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', minWidth: '100vw', height: '100dvh', width: '100vw', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
         >
           {/* Custom CSS for Shimmer */}
           <style jsx global>{`
@@ -453,7 +454,12 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
               overflow: hidden !important; 
               height: 100vh;
               height: 100dvh;
-              width: 100vw; 
+              width: 100vw;
+              position: fixed !important;
+              top: 0 !important;
+              left: 0 !important;
+              right: 0 !important;
+              bottom: 0 !important;
             }
             
             /* === SAFARI LOADER CENTERING FIX === */
@@ -466,6 +472,15 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
                 -webkit-align-items: center;
                 -webkit-box-pack: center;
                 -webkit-justify-content: center;
+              }
+            }
+            
+            /* === DESKTOP CENTERING FIX === */
+            @media (min-width: 768px) {
+              .loader-active {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
               }
             }
             
@@ -512,7 +527,7 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
           <LiveChromeHeader currentAsset={selectedAsset} setAsset={setSelectedAsset} />
 
           {/* Main Content */}
-          <div className="relative z-20 flex flex-col items-center justify-center p-4 w-full h-full pointer-events-none" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitBoxAlign: 'center', WebkitBoxPack: 'center' }}>
+          <div className="relative z-20 flex flex-col items-center justify-center p-4 w-full pointer-events-none mx-auto" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitBoxAlign: 'center', WebkitBoxPack: 'center', maxWidth: '100vw', flex: '1 1 auto', marginTop: 'auto', marginBottom: 'auto' }}>
             
             <div className="mb-6 md:mb-10 relative z-50 pointer-events-auto">
               <ReactiveLiquidLogo src="/favicon.svg" />
@@ -527,9 +542,9 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
               </span>
             </div>
 
-            <div className="relative w-full max-w-[400px] flex flex-col items-center justify-center">
+            <div className="relative w-full max-w-[400px] flex flex-col items-center justify-center mx-auto">
               {/* Sonar Rings */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] flex items-center justify-center pointer-events-none [transform:perspective(800px)_rotateX(75deg)]">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] flex items-center justify-center pointer-events-none" style={{ transform: 'translate(-50%, -50%) perspective(800px) rotateX(75deg)' }}>
                 {[1, 2, 3].map((ring) => (
                   <motion.div
                     key={ring}

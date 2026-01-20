@@ -999,20 +999,23 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               <div className="flex justify-center gap-2 md:gap-3 mb-6 md:mb-8">
                 {(["Vantage", "XM"] as const).map((partner) => {
                   const isActive = activeBroker === partner;
+                  const isPartnerXM = partner === 'XM';
                   return (
                     <button
                       key={partner}
                       onClick={() => handleBrokerSwitch(partner)}
                       className={cn(
                         "relative px-5 md:px-6 py-2 rounded-full font-semibold transition-all duration-300 z-20 cursor-target text-sm md:text-base",
-                        isActive ? "shimmer-text" : cn("bg-black/60 border-2", isXM ? "border-red-500/20 text-red-300/60 hover:border-red-500/40" : "border-blue-500/20 text-blue-300/60 hover:border-blue-500/40")
+                        isActive 
+                          ? cn("shimmer-text", isPartnerXM ? "text-red-400 neon-red-text" : "text-blue-400 neon-blue-text")
+                          : cn("bg-black/60 border-2", isPartnerXM ? "border-red-500/20 text-red-300/60 hover:border-red-500/40" : "border-blue-500/20 text-blue-300/60 hover:border-blue-500/40")
                       )}
                     >
                       {partner}
                       {isActive && (
                         <motion.span
                           layoutId="tab-pill"
-                          className={cn("absolute inset-0 -z-10 rounded-full bg-black border-2", isXM ? "border-red-500/60 shadow-[0_0_25px_rgba(239,68,68,0.4)]" : "border-blue-500/60 shadow-[0_0_25px_rgba(59,130,246,0.4)]")}
+                          className={cn("absolute inset-0 -z-10 rounded-full bg-black border-2", isPartnerXM ? "border-red-500/60 shadow-[0_0_25px_rgba(239,68,68,0.4)]" : "border-blue-500/60 shadow-[0_0_25px_rgba(59,130,246,0.4)]")}
                           transition={{ type: "spring", stiffness: 400, damping: 28 }}
                         />
                       )}
