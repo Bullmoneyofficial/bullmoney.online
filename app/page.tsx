@@ -187,21 +187,23 @@ function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sourc
   const videoId = normalizeYouTubeId(sources[index] || sources[0] || 'Q3dSjSP3t8I');
   const embed = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&rel=0&modestbranding=1&loop=1&playlist=${videoId}&playsinline=1`;
 
+  // Responsive container: auto-adjusts from smallest (320px) to largest mobile views
+  // On mobile, content fills entire available space from top to bottom
   const containerClass = variant === 'mobile'
-    ? "w-full max-w-5xl mx-auto px-4 py-10 pt-6 sm:pt-10 min-h-[85vh] flex items-center"
+    ? "w-full max-w-5xl mx-auto px-2 xs:px-3 sm:px-4 h-full flex flex-col"
     : "w-full max-w-6xl mx-auto px-6 py-12 sm:py-16 min-h-[70vh] flex items-center";
 
-  const cardMarginTop = variant === 'mobile' ? 'mt-8 sm:mt-0' : 'mt-0';
+  const cardMarginTop = variant === 'mobile' ? '' : 'mt-0';
 
   return (
     <div className={containerClass} data-theme-aware>
-      <div className={`relative isolate overflow-hidden rounded-3xl border border-blue-500/40 bg-gradient-to-b from-[#050915]/90 via-[#050915]/95 to-black shadow-[0_0_30px_rgba(59,130,246,0.25)] backdrop-blur-xl p-5 sm:p-8 flex flex-col gap-6 ${cardMarginTop} w-full`}>
+      <div className={`relative isolate overflow-hidden rounded-2xl xs:rounded-3xl border border-blue-500/40 bg-gradient-to-b from-[#050915]/90 via-[#050915]/95 to-black shadow-[0_0_30px_rgba(59,130,246,0.25)] backdrop-blur-xl p-3 xs:p-4 sm:p-5 md:p-8 flex flex-col gap-2 xs:gap-3 sm:gap-4 ${cardMarginTop} w-full h-full`}>
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 20% 20%, rgba(59,130,246,0.14), transparent 40%), radial-gradient(circle at 80% 10%, rgba(147,197,253,0.12), transparent 35%)' }} />
-        <div className="absolute -inset-px rounded-3xl border border-blue-500/20 blur-[1px] pointer-events-none" />
+        <div className="absolute -inset-px rounded-2xl xs:rounded-3xl border border-blue-500/20 blur-[1px] pointer-events-none" />
 
-      <div className="flex flex-col gap-3 text-center">
+      <div className="flex flex-col gap-1 xs:gap-2 text-center flex-shrink-0">
         <p
-          className="font-mono text-[10px] tracking-[0.18em] uppercase"
+          className="font-mono text-[8px] xs:text-[9px] sm:text-[10px] tracking-[0.12em] xs:tracking-[0.15em] sm:tracking-[0.18em] uppercase"
           style={{
             color: '#60a5fa',
             textShadow: '0 0 5px #60a5fa, 0 0 10px #60a5fa, 0 0 20px #3b82f6, 0 0 40px #3b82f6',
@@ -209,9 +211,9 @@ function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sourc
         >
           EST. 2024 • TRADING EXCELLENCE
         </p>
-        <div className="space-y-1">
+        <div className="space-y-0.5 xs:space-y-1">
           <span
-            className="block text-[clamp(1.9rem,7vw,3rem)] font-sans font-semibold tracking-tight leading-tight"
+            className="block text-[clamp(1.4rem,6vw,3rem)] font-sans font-semibold tracking-tight leading-tight"
             style={{
               color: '#fff',
               textShadow: '0 0 5px #fff, 0 0 10px #fff, 0 0 20px #93c5fd, 0 0 40px #60a5fa, 0 0 60px #3b82f6',
@@ -220,7 +222,7 @@ function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sourc
             The path to
           </span>
           <span
-            className="block text-[clamp(2.2rem,8vw,3.6rem)] font-serif italic leading-tight"
+            className="block text-[clamp(1.6rem,7vw,3.6rem)] font-serif italic leading-tight"
             style={{
               color: '#3b82f6',
               textShadow: '0 0 5px #3b82f6, 0 0 15px #3b82f6, 0 0 30px #2563eb, 0 0 50px #1d4ed8, 0 0 70px #1e40af',
@@ -230,7 +232,7 @@ function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sourc
           </span>
         </div>
         <p
-          className="text-sm sm:text-base leading-relaxed max-w-2xl mx-auto"
+          className="text-xs xs:text-sm sm:text-base leading-relaxed max-w-2xl mx-auto px-1"
           style={{
             color: 'rgba(147, 197, 253, 0.82)',
             textShadow: '0 0 5px rgba(147, 197, 253, 0.5), 0 0 10px rgba(96, 165, 250, 0.3)',
@@ -240,8 +242,8 @@ function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sourc
         </p>
       </div>
 
-      <div className="relative rounded-2xl overflow-hidden border border-blue-500/40 bg-black shadow-[0_0_18px_rgba(59,130,246,0.3)]">
-        <div className="relative w-full" style={{ aspectRatio: '16 / 9' }}>
+      <div className="relative rounded-xl xs:rounded-2xl overflow-hidden border border-blue-500/40 bg-black shadow-[0_0_18px_rgba(59,130,246,0.3)] flex-1 min-h-[120px]">
+        <div className="relative w-full h-full">
           <iframe
             key={embed}
             src={embed}
@@ -251,29 +253,29 @@ function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sourc
             title="BullMoney Discord Video"
           />
         </div>
-        <div className="absolute inset-x-0 bottom-0 flex items-center justify-between p-3 bg-black/60 backdrop-blur">
+        <div className="absolute inset-x-0 bottom-0 flex items-center justify-between p-2 xs:p-3 bg-black/60 backdrop-blur">
           <button
             onClick={() => setIndex((prev) => (prev - 1 + sources.length) % sources.length)}
-            className="px-3 py-1 text-xs font-semibold rounded-full bg-white/10 text-white hover:bg-white/20"
+            className="px-2 xs:px-3 py-1 text-[10px] xs:text-xs font-semibold rounded-full bg-white/10 text-white hover:bg-white/20"
           >
             Prev
           </button>
-          <span className="text-white/80 text-xs font-bold">
+          <span className="text-white/80 text-[10px] xs:text-xs font-bold">
             {index + 1} / {Math.max(1, sources.length)}
           </span>
           <button
             onClick={() => setIndex((prev) => (prev + 1) % sources.length)}
-            className="px-3 py-1 text-xs font-semibold rounded-full bg-white/10 text-white hover:bg-white/20"
+            className="px-2 xs:px-3 py-1 text-[10px] xs:text-xs font-semibold rounded-full bg-white/10 text-white hover:bg-white/20"
           >
             Next
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 mt-2 sm:mt-0">
+      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 flex-shrink-0">
         <Link
           href="https://t.me/addlist/gg09afc4lp45YjQ0"
-          className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 rounded-full border border-white/25 text-white font-semibold text-xs sm:text-sm hover:bg-white/5"
+          className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-3 xs:px-4 py-1.5 xs:py-2 rounded-full border border-white/25 text-white font-semibold text-[10px] xs:text-xs sm:text-sm hover:bg-white/5"
         >
           Join Free Community
         </Link>
@@ -1187,8 +1189,17 @@ function HomeContent() {
               <section
                 id="hero"
                 className={isMobile
-                  ? "w-full full-bleed viewport-full min-h-[100dvh] flex items-center justify-center"
+                  ? "w-full full-bleed flex items-end justify-center overflow-hidden"
                   : "w-full full-bleed viewport-full"}
+                style={isMobile ? {
+                  // Fill from under navbar+static helper to bottom of viewport
+                  // This ensures content stretches to fill on taller screens
+                  height: 'calc(100dvh - env(safe-area-inset-bottom, 0px))',
+                  paddingTop: 'calc(110px + env(safe-area-inset-top, 0px))',
+                  paddingBottom: '12px',
+                  display: 'flex',
+                  flexDirection: 'column' as const,
+                } : undefined}
                 data-allow-scroll
                 data-content
                 data-theme-aware

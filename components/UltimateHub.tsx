@@ -4137,6 +4137,9 @@ const UnifiedHubPanel = memo(({
   userEmail?: string;
   prices: { xauusd: string; btcusd: string };
 }) => {
+  // Mobile detection for smoother, more subtle animations
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  
   const [activeTab, setActiveTab] = useState<UnifiedHubTab>('community');
   const [isDragging, setIsDragging] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -4362,10 +4365,13 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
           {/* Panel - Centered Modal */}
           <motion.div
             ref={panelRef}
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300, duration: 0.3 }}
+            initial={isMobile ? { opacity: 0, y: 30 } : { scale: 0.95, opacity: 0, y: 20 }}
+            animate={isMobile ? { opacity: 1, y: 0 } : { scale: 1, opacity: 1, y: 0 }}
+            exit={isMobile ? { opacity: 0, y: 30 } : { scale: 0.95, opacity: 0, y: 20 }}
+            transition={isMobile 
+              ? { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] } 
+              : { type: 'spring', damping: 25, stiffness: 300, duration: 0.3 }
+            }
             drag="y"
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0.2, bottom: 0.2 }}
@@ -4429,11 +4435,11 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                 )}
               </div>
               
-              {/* Swipe hint for mobile */}
+              {/* Swipe hint for mobile - subtle, slower animation */}
               <motion.div 
                 className="flex items-center justify-center gap-1 mt-2 text-[9px] text-blue-400/60 sm:hidden"
-                animate={{ y: [0, -3, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
+                animate={{ y: [0, -2, 0] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
               >
                 <ChevronRight className="w-3 h-3 -rotate-90" />
                 <span>Drag to close</span>
@@ -6136,15 +6142,19 @@ const UnifiedFpsPill = memo(({
         x: 0, 
         opacity: 1, 
         scale: isMinimized ? 0.9 : 1,
-        y: isScrolling ? (scrollDirection === 'down' ? -5 : 5) : 0,
+        // Disable scroll-based y movement on mobile to reduce FPS drops
+        y: isMobile ? 0 : (isScrolling ? (scrollDirection === 'down' ? -5 : 5) : 0),
       }}
-      transition={{ y: { duration: 0.2, ease: "easeOut" } }}
+      transition={isMobile 
+        ? { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }
+        : { y: { duration: 0.2, ease: "easeOut" } }
+      }
       className="fixed left-0 z-[999999999] pointer-events-none"
       style={{ 
         top: '15%', 
         paddingLeft: 'calc(env(safe-area-inset-left, 0px))',
-        // Add screen bloom effect at extreme scroll
-        filter: extremeScrollProgress > 0.7 ? `brightness(${1 + (extremeScrollProgress - 0.7) * 0.3})` : undefined,
+        // Disable screen bloom effect on mobile
+        filter: (!isMobile && extremeScrollProgress > 0.7) ? `brightness(${1 + (extremeScrollProgress - 0.7) * 0.3})` : undefined,
       }}
     >
       <motion.div
@@ -6156,51 +6166,62 @@ const UnifiedFpsPill = memo(({
         <motion.div
           initial={{ x: -60, opacity: 0 }}
           animate={
-            isMinimized 
-              ? { x: -70, scale: 0.95, opacity: 0.1, rotateY: 0 }
-              : isPinned 
-                ? { x: 0, scale: 1, opacity: 1, rotateY: 0 }
-                : isScrolling
-                  ? { 
-                      x: scrollDirection === 'down' ? -40 : -20, 
-                      scale: 0.98 + (scrollProgress * 0.04), // Slight scale up with scroll
-                      opacity: 0.8 + (scrollProgress * 0.2),
-                      rotateY: scrollDirection === 'down' ? -15 : 15,
-                    }
-                  : {
-                      x: [-60, 0, 0, -60],
-                      opacity: [0, 1, 1, 0],
-                      scale: [0.95, 1, 1, 0.95],
-                      rotateY: 0,
-                    }
+            // Mobile: Always visible, no peek-in/peek-out animation
+            isMobile
+              ? isMinimized 
+                ? { x: -70, opacity: 0.1 }
+                : { x: 0, opacity: 1 }  // Always visible on mobile
+              // Desktop: Keep full animations
+              : isMinimized 
+                ? { x: -70, scale: 0.95, opacity: 0.1, rotateY: 0 }
+                : isPinned 
+                  ? { x: 0, scale: 1, opacity: 1, rotateY: 0 }
+                  : isScrolling
+                    ? { 
+                        x: scrollDirection === 'down' ? -40 : -20, 
+                        scale: 0.98 + (scrollProgress * 0.04),
+                        opacity: 0.8 + (scrollProgress * 0.2),
+                        rotateY: scrollDirection === 'down' ? -15 : 15,
+                      }
+                    : {
+                        x: [-60, 0, 0, -60],
+                        opacity: [0, 1, 1, 0],
+                        scale: [0.95, 1, 1, 0.95],
+                        rotateY: 0,
+                      }
           }
-          whileHover={{ 
+          whileHover={isMobile ? { x: 4, opacity: 1 } : { 
             x: 8, 
             scale: 1.02, 
             opacity: 1, 
             rotateY: 5,
           }}
           transition={
-            isMinimized || isPinned || isScrolling
-              ? { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
-              : { 
-                  duration: 2.5,
-                  repeat: Infinity, 
-                  ease: "easeInOut",
-                  repeatDelay: 0.5,
-                  times: [0, 0.2, 0.8, 1]
-                }
+            isMobile
+              ? { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }
+              : isMinimized || isPinned || isScrolling
+                ? { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
+                : { 
+                    duration: 2.5,
+                    repeat: Infinity, 
+                    ease: "easeInOut",
+                    repeatDelay: 0.5,
+                    times: [0, 0.2, 0.8, 1]
+                  }
           }
           className="relative rounded-r-3xl ultimate-hub-scroll-effect"
           style={{
             background: 'linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(59,130,246,0.15) 50%, rgba(59, 130, 246, 0.1) 100%)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
+            // Reduce blur on mobile for better performance
+            backdropFilter: isMobile ? 'blur(8px)' : 'blur(12px)',
+            WebkitBackdropFilter: isMobile ? 'blur(8px)' : 'blur(12px)',
             border: '2px solid rgba(59, 130, 246, 0.8)',
             boxShadow: dynamicStyles.boxShadow,
-            transform: 'perspective(1000px)',
-            transformStyle: 'preserve-3d',
-            willChange: 'transform',
+            // Disable 3D transforms on mobile to prevent FPS drops
+            transform: isMobile ? undefined : 'perspective(1000px)',
+            transformStyle: isMobile ? undefined : 'preserve-3d',
+            // Only use will-change on desktop
+            willChange: isMobile ? 'auto' : 'transform',
           }}
           onClick={(e) => {
             e.preventDefault();
@@ -6221,9 +6242,10 @@ const UnifiedFpsPill = memo(({
             {isMinimized ? (
               <motion.div
                 key="minimized"
-                initial={{ opacity: 0, scale: 0.7 }}
+                initial={{ opacity: 0, scale: isMobile ? 0.9 : 0.7 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.7 }}
+                exit={{ opacity: 0, scale: isMobile ? 0.9 : 0.7 }}
+                transition={isMobile ? { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] } : undefined}
                 className="px-2 py-1.5 relative z-10"
               >
                 {/* Minimized: White neon icon with glow */}
@@ -6239,10 +6261,13 @@ const UnifiedFpsPill = memo(({
             ) : (
               <motion.div
                 key="full"
-                initial={{ opacity: 0, scale: 0.85 }}
+                initial={{ opacity: 0, scale: isMobile ? 0.95 : 0.85 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.85 }}
-                transition={{ duration: 0.4, ease: "easeInOut" }}
+                exit={{ opacity: 0, scale: isMobile ? 0.95 : 0.85 }}
+                transition={isMobile 
+                  ? { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }
+                  : { duration: 0.4, ease: "easeInOut" }
+                }
                 className="px-1 py-1.5 md:px-4 md:py-4 relative z-10"
               >
                 {/* Mobile: Always compact view with prices - with scroll-intensified neons */}
