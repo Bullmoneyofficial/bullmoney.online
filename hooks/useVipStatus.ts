@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface UseVipStatusOptions {
   userId?: string;
+  userEmail?: string;
   enabled?: boolean;
   pollingInterval?: number; // in milliseconds
 }
@@ -17,6 +18,7 @@ interface VipStatus {
 
 export function useVipStatus({
   userId,
+  userEmail,
   enabled = true,
   pollingInterval = 5000, // 5 seconds default
 }: UseVipStatusOptions = {}): VipStatus {
@@ -27,14 +29,20 @@ export function useVipStatus({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const checkVipStatus = useCallback(async () => {
-    if (!userId) {
+    // Need either userId or userEmail to check VIP status
+    if (!userId && !userEmail) {
       setLoading(false);
       setIsVip(false);
       return;
     }
 
     try {
-      const response = await fetch(`/api/vip/status?userId=${encodeURIComponent(userId)}`, {
+      // IMPORTANT: Prefer email for VIP check since recruits table uses email as identifier
+      // The userId from Supabase auth is a UUID but recruits.id is BIGSERIAL (numeric)
+      const params = userEmail 
+        ? `email=${encodeURIComponent(userEmail)}` 
+        : `userId=${encodeURIComponent(userId!)}`;
+      const response = await fetch(`/api/vip/status?${params}`, {
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -56,10 +64,10 @@ export function useVipStatus({
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, userEmail]);
 
   useEffect(() => {
-    if (!enabled || !userId) {
+    if (!enabled || (!userId && !userEmail)) {
       setLoading(false);
       return;
     }
@@ -84,6 +92,7 @@ export function useVipStatus({
 // Hook to get the current user's VIP status from Supabase session
 export function useCurrentUserVipStatus(pollingInterval = 5000) {
   const [userId, setUserId] = useState<string | undefined>();
+  const [userEmail, setUserEmail] = useState<string | undefined>();
   const [sessionLoading, setSessionLoading] = useState(true);
 
   useEffect(() => {
@@ -94,6 +103,7 @@ export function useCurrentUserVipStatus(pollingInterval = 5000) {
         if (response.ok) {
           const data = await response.json();
           setUserId(data.user?.id);
+          setUserEmail(data.user?.email);
         }
       } catch (error) {
         console.error('Session check error:', error);
@@ -107,13 +117,15 @@ export function useCurrentUserVipStatus(pollingInterval = 5000) {
 
   const vipStatus = useVipStatus({
     userId,
-    enabled: !sessionLoading && !!userId,
+    userEmail,
+    enabled: !sessionLoading && (!!userId || !!userEmail),
     pollingInterval,
   });
 
   return {
     ...vipStatus,
     userId,
+    userEmail,
     sessionLoading,
   };
 }

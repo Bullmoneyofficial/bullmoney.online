@@ -1996,7 +1996,11 @@ function useVipCheck(userId?: string, userEmail?: string) {
     }
     
     try {
-      const params = userId ? `userId=${userId}` : `email=${encodeURIComponent(userEmail!)}`;
+      // IMPORTANT: Always prefer email for VIP check since recruits table uses email as identifier
+      // The userId from Supabase auth is a UUID but recruits.id is BIGSERIAL (numeric)
+      const params = userEmail 
+        ? `email=${encodeURIComponent(userEmail)}` 
+        : `userId=${userId}`;
       const res = await fetch(`/api/vip/status?${params}`, { cache: 'no-store' });
       const data = await res.json();
       setIsVip(data.isVip ?? false);
@@ -6151,7 +6155,9 @@ const UnifiedFpsPill = memo(({
       }
       className="fixed left-0 z-[999999999] pointer-events-none"
       style={{ 
-        top: '15%', 
+        // Mobile: center vertically (50%), Desktop: near top (15%)
+        top: isMobile ? '50%' : '15%', 
+        transform: isMobile ? 'translateY(-50%)' : undefined,
         paddingLeft: 'calc(env(safe-area-inset-left, 0px))',
         // Disable screen bloom effect on mobile
         filter: (!isMobile && extremeScrollProgress > 0.7) ? `brightness(${1 + (extremeScrollProgress - 0.7) * 0.3})` : undefined,
