@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence  } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 // Neon Blue Sign Style from Chartnews (STATIC for performance)
 const NEON_STYLES = `
@@ -131,6 +132,7 @@ const testimonials = [
 
 export function TestimonialsCarousel() {
   const [index, setIndex] = useState(0);
+  const { isMobile, shouldSkipHeavyEffects, shouldDisableBackdropBlur, animations } = useMobilePerformance();
 
   const nextSlide = () => setIndex((index + 1) % testimonials.length);
   const prevSlide = () => setIndex((index - 1 + testimonials.length) % testimonials.length);
@@ -138,16 +140,28 @@ export function TestimonialsCarousel() {
   const currentTestimonial = testimonials[index];
   if (!currentTestimonial) return null;
 
+  // Simpler fade animation for mobile
+  const mobileFade = {
+    initial: { opacity: 0 },
+    whileInView: { opacity: 1 },
+    viewport: { once: true, amount: 0.25 },
+    transition: { duration: 0.2 },
+  };
+
   return (
     <motion.section
-      {...fade}
+      {...(shouldSkipHeavyEffects ? mobileFade : fade)}
       className="relative mt-16 w-full max-w-4xl mx-auto"
     >
-      <h2 className="text-xl font-extrabold neon-blue-text text-center mb-8">
+      <h2 className={cn("text-xl font-extrabold text-center mb-8", shouldSkipHeavyEffects ? "text-blue-400" : "neon-blue-text")}>
         Testimonials
       </h2>
 
-      <div className="relative h-[320px] overflow-hidden rounded-3xl neon-blue-border bg-black backdrop-blur-md shadow-lg">
+      <div className={cn(
+        "relative h-[320px] overflow-hidden rounded-3xl bg-black shadow-lg",
+        shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border",
+        shouldDisableBackdropBlur ? "" : "backdrop-blur-md"
+      )}>
         <AnimatePresence mode="wait">
           <motion.div
             key={index}
@@ -155,7 +169,7 @@ export function TestimonialsCarousel() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: shouldSkipHeavyEffects ? 0.15 : 0.3 }}
           >
             <Image
               src={currentTestimonial.image}
@@ -166,7 +180,7 @@ export function TestimonialsCarousel() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
             <div className="absolute bottom-10 left-8 text-white max-w-sm space-y-3">
               <div className="flex items-center gap-3">
-                <div className="relative w-10 h-10 rounded-full overflow-hidden neon-blue-border bg-black">
+                <div className={cn("relative w-10 h-10 rounded-full overflow-hidden bg-black", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")}>
                   <Image
                     src={currentTestimonial.icon}
                     alt={`${currentTestimonial.name} icon`}
@@ -174,9 +188,9 @@ export function TestimonialsCarousel() {
                     className="object-contain p-1.5"
                   />
                 </div>
-                <p className="text-lg font-semibold neon-blue-text">{currentTestimonial.name}</p>
+                <p className={cn("text-lg font-semibold", shouldSkipHeavyEffects ? "text-blue-400" : "neon-blue-text")}>{currentTestimonial.name}</p>
               </div>
-              <p className="text-sm neon-white-text italic leading-relaxed">
+              <p className={cn("text-sm italic leading-relaxed", shouldSkipHeavyEffects ? "text-white" : "neon-white-text")}>
                 &ldquo;{currentTestimonial.text}&rdquo;
               </p>
             </div>
@@ -186,13 +200,19 @@ export function TestimonialsCarousel() {
         {/* Navigation Arrows */}
         <button
           onClick={prevSlide}
-          className="absolute left-3 top-1/2 -translate-y-1/2 bg-black neon-blue-border hover:neon-blue-bg p-2 rounded-full neon-white-text transition-all"
+          className={cn(
+            "absolute left-3 top-1/2 -translate-y-1/2 bg-black p-2 rounded-full transition-all",
+            shouldSkipHeavyEffects ? "border border-blue-500/50 text-white hover:bg-blue-500/20" : "neon-blue-border hover:neon-blue-bg neon-white-text"
+          )}
         >
           <ChevronLeft size={20} />
         </button>
         <button
           onClick={nextSlide}
-          className="absolute right-3 top-1/2 -translate-y-1/2 bg-black neon-blue-border hover:neon-blue-bg p-2 rounded-full neon-white-text transition-all"
+          className={cn(
+            "absolute right-3 top-1/2 -translate-y-1/2 bg-black p-2 rounded-full transition-all",
+            shouldSkipHeavyEffects ? "border border-blue-500/50 text-white hover:bg-blue-500/20" : "neon-blue-border hover:neon-blue-bg neon-white-text"
+          )}
         >
           <ChevronRight size={20} />
         </button>
@@ -204,11 +224,12 @@ export function TestimonialsCarousel() {
           <button
             key={i}
             onClick={() => setIndex(i)}
-            className={`h-2 w-2 rounded-full transition-all ${
+            className={cn(
+              "h-2 w-2 rounded-full transition-all",
               i === index
-                ? "neon-blue-bg w-4"
+                ? (shouldSkipHeavyEffects ? "bg-blue-500 w-4" : "neon-blue-bg w-4")
                 : "bg-white/30 hover:bg-white/50"
-            }`}
+            )}
           />
         ))}
       </div>

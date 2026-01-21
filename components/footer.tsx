@@ -13,6 +13,7 @@ import { ShimmerLine, ShimmerBorder, useOptimizedShimmer } from "@/components/ui
 import { useFpsOptimizer } from "@/lib/FpsOptimizer";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { useFooterModalsUI } from "@/contexts/UIStateContext";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 // Neon Blue Sign Style from Chartnews (STATIC for performance)
 const NEON_STYLES = `
@@ -191,6 +192,9 @@ AppsToolsContent.displayName = 'AppsToolsContent';
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
+  // Mobile performance optimization
+  const { isMobile, shouldSkipHeavyEffects, shouldDisableBackdropBlur, animations } = useMobilePerformance();
+
   // FPS Optimizer integration for component lifecycle tracking
   const { registerComponent, unregisterComponent, shouldEnableShimmer } = useFpsOptimizer();
   const shimmerSettings = useOptimizedShimmer();
@@ -216,7 +220,8 @@ export function Footer() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: NEON_STYLES }} />
+      {/* Only inject neon styles on desktop for performance */}
+      {!shouldSkipHeavyEffects && <style dangerouslySetInnerHTML={{ __html: NEON_STYLES }} />}
       {/* Modal Components */}
       <BullMoneyModal isOpen={isDisclaimerOpen} onClose={() => setDisclaimerOpen(false)} />
 
@@ -231,9 +236,9 @@ export function Footer() {
       <div
         className="relative w-full px-4 sm:px-8 py-8 sm:py-10 overflow-hidden"
       >
-        {/* Inner Content Container - Static Neon Style */}
+        {/* Inner Content Container - Static Neon Style on desktop, simplified on mobile */}
         <div 
-          className="relative max-w-7xl mx-auto flex flex-col items-center gap-6 sm:gap-8 bg-black rounded-2xl p-4 sm:p-6 neon-blue-border"
+          className={`relative max-w-7xl mx-auto flex flex-col items-center gap-6 sm:gap-8 bg-black rounded-2xl p-4 sm:p-6 ${shouldSkipHeavyEffects ? 'border border-blue-500/50' : 'neon-blue-border'}`}
         >
           {/* Top: Logo */}
           <div className="scale-110 sm:scale-125 md:scale-150 origin-center p-1">
@@ -251,13 +256,13 @@ export function Footer() {
           <div className="lg:hidden flex flex-wrap justify-center gap-2 sm:gap-3">
             <button
               onClick={handleDisclaimerClick}
-              className="px-4 py-2 text-sm font-medium bg-black rounded-full transition-all hover:brightness-110 active:scale-95 neon-blue-border neon-blue-text"
+              className={`px-4 py-2 text-sm font-medium bg-black rounded-full transition-all hover:brightness-110 active:scale-95 ${shouldSkipHeavyEffects ? 'border border-blue-500/50 text-blue-400' : 'neon-blue-border neon-blue-text'}`}
             >
               Disclaimer
             </button>
             <button
               onClick={handleAppsClick}
-              className="px-4 py-2 text-sm font-medium bg-black rounded-full transition-all hover:brightness-110 active:scale-95 neon-blue-border neon-blue-text"
+              className={`px-4 py-2 text-sm font-medium bg-black rounded-full transition-all hover:brightness-110 active:scale-95 ${shouldSkipHeavyEffects ? 'border border-blue-500/50 text-blue-400' : 'neon-blue-border neon-blue-text'}`}
             >
               Apps & Tools
             </button>
@@ -268,12 +273,12 @@ export function Footer() {
             <SocialsRow />
           </div>
 
-          {/* Copyright - Neon White Text */}
+          {/* Copyright - Neon White Text on desktop, regular on mobile */}
           <p 
             className="text-[10px] sm:text-xs font-light tracking-wide text-center mt-4 sm:mt-6"
             style={{
               color: '#ffffff',
-              textShadow: '0 0 4px #ffffff, 0 0 8px rgba(255, 255, 255, 0.5)'
+              textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 4px #ffffff, 0 0 8px rgba(255, 255, 255, 0.5)'
             }}
           >
             &copy; {currentYear} BullMoney. All rights reserved.

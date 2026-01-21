@@ -8,6 +8,7 @@ import { IconExternalLink, IconRefresh } from "@tabler/icons-react";
 import { ChevronDown, ChartBar, Newspaper, X, ArrowRight } from "lucide-react";
 import { useComponentTracking } from "@/lib/CrashTracker";
 import { useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 // --- UTILS ---
 function cn(...classes: (string | undefined | null | false)[]) {
@@ -130,6 +131,12 @@ const HelperTip = ({ label, className }: { label: string; className?: string }) 
   </motion.div>
 );
 
+// Mobile-optimized HelperTip that skips on low-end devices
+const MobileOptimizedHelperTip = ({ label, className, shouldSkipHeavyEffects }: { label: string; className?: string; shouldSkipHeavyEffects: boolean }) => {
+  if (shouldSkipHeavyEffects) return null;
+  return <HelperTip label={label} className={className} />;
+};
+
 /* --------------------------- OPTIMIZED HIGH AESTHETIC CARD --------------------------- */
 
 const HighAestheticCard = memo(({ 
@@ -139,7 +146,8 @@ const HighAestheticCard = memo(({
     onShow, 
     isChart = false,
     showTip = false,
-    tipLabel = "Click Here"
+    tipLabel = "Click Here",
+    shouldSkipHeavyEffects = false
 }: { 
     title: string, 
     subtitle: string, 
@@ -147,53 +155,65 @@ const HighAestheticCard = memo(({
     onShow: () => void,
     isChart?: boolean,
     showTip?: boolean,
-    tipLabel?: string
+    tipLabel?: string,
+    shouldSkipHeavyEffects?: boolean
 }) => {
     const isMobile = useIsMobile();
 
     return (
         <motion.div
             className="relative flex flex-col items-center justify-center overflow-hidden rounded-3xl py-12 md:py-16 cursor-pointer gpu-layer bg-black"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: shouldSkipHeavyEffects ? 0 : 10 }}
             animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: isMobile ? 1.0 : 1.01 }}
-            whileTap={{ scale: 0.99 }}
+            whileHover={shouldSkipHeavyEffects ? {} : { scale: isMobile ? 1.0 : 1.01 }}
+            whileTap={shouldSkipHeavyEffects ? {} : { scale: 0.99 }}
             onClick={onShow}
         >
             <div className="relative z-10 flex flex-col items-center justify-center text-center">
-                {/* TIP FOR CARD ICON/TITLE */}
-                <AnimatePresence>
-                    {showTip && isChart && (
-                         <HelperTip label={tipLabel} className="-top-8" />
-                    )}
-                </AnimatePresence>
+                {/* TIP FOR CARD ICON/TITLE - skip on mobile */}
+                {!shouldSkipHeavyEffects && (
+                  <AnimatePresence>
+                      {showTip && isChart && (
+                           <HelperTip label={tipLabel} className="-top-8" />
+                      )}
+                  </AnimatePresence>
+                )}
 
-                <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-black mb-4 neon-blue-border">
-                    <Icon className="h-8 w-8 text-white neon-white-icon" />
+                <div className={cn("flex h-16 w-16 items-center justify-center rounded-xl bg-black mb-4", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")}>
+                    <Icon className={cn("h-8 w-8 text-white", shouldSkipHeavyEffects ? "" : "neon-white-icon")} />
                 </div>
 
-                <h2 className="mt-2 text-3xl font-black tracking-tight md:text-4xl neon-blue-text">
+                <h2 className={cn("mt-2 text-3xl font-black tracking-tight md:text-4xl", shouldSkipHeavyEffects ? "text-blue-400" : "neon-blue-text")}>
                     {title}
                 </h2>
                 
-                <p className="mt-2 text-sm neon-blue-text max-w-sm px-4">
+                <p className={cn("mt-2 text-sm max-w-sm px-4", shouldSkipHeavyEffects ? "text-blue-400" : "neon-blue-text")}>
                     {subtitle}
                 </p>
 
                 <div className="mt-8 relative">
-                    {/* TIP FOR LAUNCH BUTTON */}
-                    <AnimatePresence>
-                        {showTip && !isChart && (
-                             <HelperTip label={tipLabel} className="-top-12 left-1/2 -translate-x-1/2" />
-                        )}
-                    </AnimatePresence>
+                    {/* TIP FOR LAUNCH BUTTON - skip on mobile */}
+                    {!shouldSkipHeavyEffects && (
+                      <AnimatePresence>
+                          {showTip && !isChart && (
+                               <HelperTip label={tipLabel} className="-top-12 left-1/2 -translate-x-1/2" />
+                          )}
+                      </AnimatePresence>
+                    )}
 
-                    <NeonBorder borderRadius="rounded-full">
-                        <div className="relative z-10 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-bold neon-blue-bg transition-all duration-300 group hover:brightness-110">
-                            <span className="neon-white-text">Launch Terminal</span>
-                            <ArrowRight className="h-4 w-4 neon-white-text transition-transform group-hover:translate-x-1" />
-                        </div>
-                    </NeonBorder>
+                    {shouldSkipHeavyEffects ? (
+                      <div className="relative z-10 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-bold bg-blue-500 transition-all duration-300 group hover:brightness-110">
+                          <span className="text-white">Launch Terminal</span>
+                          <ArrowRight className="h-4 w-4 text-white transition-transform group-hover:translate-x-1" />
+                      </div>
+                    ) : (
+                      <NeonBorder borderRadius="rounded-full">
+                          <div className="relative z-10 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-bold neon-blue-bg transition-all duration-300 group hover:brightness-110">
+                              <span className="neon-white-text">Launch Terminal</span>
+                              <ArrowRight className="h-4 w-4 neon-white-text transition-transform group-hover:translate-x-1" />
+                          </div>
+                      </NeonBorder>
+                    )}
                 </div>
             </div>
         </motion.div>
@@ -256,7 +276,8 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
   const [open, setOpen] = useState(false);
   const [showChart, setShowChart] = useState(false);
   const isMobile = useIsMobile();
-    const chartHeight = isMobile ? 300 : 680;
+  const { shouldSkipHeavyEffects, shouldDisableBackdropBlur } = useMobilePerformance();
+  const chartHeight = isMobile ? 300 : 680;
 
   const handleSelect = useCallback((chart: any) => {
     setSelected(chart);
@@ -267,7 +288,7 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
   if (!selected) return null;
 
   return (
-    <div className="relative mx-auto w-full max-w-screen-xl rounded-3xl neon-blue-border bg-black p-4 md:p-6">
+    <div className={cn("relative mx-auto w-full max-w-screen-xl rounded-3xl bg-black p-4 md:p-6", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")}>
       {!showChart && (
         <HighAestheticCard
             title="Show Live Market Charts"
@@ -275,8 +296,9 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
             icon={ChartBar}
             onShow={() => setShowChart(true)}
             isChart={true}
-            showTip={showTip}
+            showTip={showTip && !shouldSkipHeavyEffects}
             tipLabel="Open Charts"
+            shouldSkipHeavyEffects={shouldSkipHeavyEffects}
         />
       )}
 
@@ -284,40 +306,52 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
         {showChart && (
           <motion.div
             key="chart"
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: shouldSkipHeavyEffects ? 0 : 30 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -30 }}
-            transition={{ duration: 0.4 }}
-            className="will-change-transform"
+            exit={{ opacity: 0, y: shouldSkipHeavyEffects ? 0 : -30 }}
+            transition={{ duration: shouldSkipHeavyEffects ? 0.15 : 0.4 }}
+            className={shouldSkipHeavyEffects ? "" : "will-change-transform"}
           >
             <div className="mb-4 flex items-center justify-between">
-                <NeonBorder borderRadius="rounded-full">
-                    <button
-                      onClick={() => setOpen((p) => !p)}
-                      className="group relative flex items-center gap-3 rounded-full bg-black px-6 py-2 text-sm font-semibold neon-white-text"
-                    >
-                      <span className="relative z-10">{selected.label}</span>
-                      <ChevronDown className={`h-4 w-4 relative z-10 neon-blue-text transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
-                    </button>
-                </NeonBorder>
+                {shouldSkipHeavyEffects ? (
+                  <button
+                    onClick={() => setOpen((p) => !p)}
+                    className="group relative flex items-center gap-3 rounded-full bg-black px-6 py-2 text-sm font-semibold text-white border border-blue-500/50"
+                  >
+                    <span className="relative z-10">{selected.label}</span>
+                    <ChevronDown className={`h-4 w-4 relative z-10 text-blue-400 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
+                  </button>
+                ) : (
+                  <NeonBorder borderRadius="rounded-full">
+                      <button
+                        onClick={() => setOpen((p) => !p)}
+                        className="group relative flex items-center gap-3 rounded-full bg-black px-6 py-2 text-sm font-semibold neon-white-text"
+                      >
+                        <span className="relative z-10">{selected.label}</span>
+                        <ChevronDown className={`h-4 w-4 relative z-10 neon-blue-text transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
+                      </button>
+                  </NeonBorder>
+                )}
             </div>
 
             <AnimatePresence>
               {open && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
+                  initial={{ opacity: 0, y: shouldSkipHeavyEffects ? 0 : -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute z-20 mt-2 w-64 overflow-hidden rounded-xl neon-blue-border bg-black"
+                  exit={{ opacity: 0, y: shouldSkipHeavyEffects ? 0 : -10 }}
+                  transition={{ duration: shouldSkipHeavyEffects ? 0.1 : 0.2 }}
+                  className={cn("absolute z-20 mt-2 w-64 overflow-hidden rounded-xl bg-black", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")}
                 >
                   {CHARTS.map((chart, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleSelect(chart)}
                       className={cn(
-                        "block w-full px-4 py-3 text-left text-sm neon-blue-text transition-all duration-200 hover:neon-white-text",
-                        selected.label === chart.label && "neon-white-text neon-blue-bg font-bold"
+                        "block w-full px-4 py-3 text-left text-sm transition-all duration-200",
+                        shouldSkipHeavyEffects 
+                          ? (selected.label === chart.label ? "text-white bg-blue-500 font-bold" : "text-blue-400 hover:text-white")
+                          : cn("neon-blue-text hover:neon-white-text", selected.label === chart.label && "neon-white-text neon-blue-bg font-bold")
                       )}
                     >
                       {chart.label}
@@ -327,14 +361,14 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
               )}
             </AnimatePresence>
 
-            <div className="relative mt-4 w-full rounded-2xl neon-blue-border bg-black p-1 md:p-2" style={{ minHeight: chartHeight }}>
+            <div className={cn("relative mt-4 w-full rounded-2xl bg-black p-1 md:p-2", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")} style={{ minHeight: chartHeight }}>
               <TradingViewMarketOverview height={chartHeight} tabs={selected.tabConfig} />
             </div>
 
             <div className="mt-6 flex justify-center">
                 <button
                     onClick={() => { setOpen(false); setShowChart(false); }}
-                    className="text-xs neon-blue-text hover:neon-white-text uppercase tracking-widest transition-colors py-2"
+                    className={cn("text-xs uppercase tracking-widest transition-colors py-2", shouldSkipHeavyEffects ? "text-blue-400 hover:text-white" : "neon-blue-text hover:neon-white-text")}
                 >
                     Close Chart Viewer
                 </button>

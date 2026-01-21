@@ -8,6 +8,7 @@ import createGlobe from "cobe";
 import { detectBrowser } from "@/lib/browserDetection";
 import { useComponentTracking } from "@/lib/CrashTracker";
 import { useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 // ✅ MOBILE DETECTION - For conditional lazy loading
 import { isMobileDevice } from "@/lib/mobileDetection";
@@ -89,6 +90,9 @@ const HelperTip = ({ label, className }: { label: string; className?: string }) 
 export function Features() {
   const [copied, setCopied] = React.useState(false);
   
+  // --- MOBILE PERFORMANCE ---
+  const { isMobile, shouldSkipHeavyEffects, shouldDisableBackdropBlur, animations } = useMobilePerformance();
+  
   // --- INJECT GLOBAL NEON STYLES ---
   useEffect(() => {
     const styleId = 'neon-glow-styles';
@@ -100,16 +104,17 @@ export function Features() {
     }
   }, []);
   
-  // --- TIP LOGIC ---
+  // --- TIP LOGIC (skip cycling on mobile for performance) ---
   const [activeTipIndex, setActiveTipIndex] = useState(0);
 
-  // Cycle tips every 4 seconds
+  // Cycle tips every 4 seconds - skip on mobile
   useEffect(() => {
+    if (shouldSkipHeavyEffects) return; // Don't cycle tips on mobile
     const interval = setInterval(() => {
         setActiveTipIndex(prev => (prev + 1) % 3);
     }, 4000); 
     return () => clearInterval(interval);
-  }, []);
+  }, [shouldSkipHeavyEffects]);
 
   const copyPartnerCode = async () => {
     try {
@@ -133,30 +138,30 @@ export function Features() {
       id="features"
       className="w-full full-bleed viewport-full mx-auto bg-black dark:bg-black py-20 px-4 md:px-8"
     >
-      <Header>
+      <Header shouldSkipHeavyEffects={shouldSkipHeavyEffects}>
         <motion.h2
           className={cn(
             "font-sans text-bold text-xl text-center md:text-4xl w-fit mx-auto font-bold tracking-tight",
             NEON_TEXT_GRADIENT, "bg-clip-text text-transparent"
           )}
           style={{
-            textShadow: NEON_GLOW,
+            textShadow: shouldSkipHeavyEffects ? 'none' : NEON_GLOW,
           }}
         >
           Bullmoney Prop Firms
         </motion.h2>
       </Header>
 
-      <p className="max-w-lg text-sm text-center mx-auto mt-4 neon-white-text">
+      <p className={cn("max-w-lg text-sm text-center mx-auto mt-4", shouldSkipHeavyEffects ? "text-white" : "neon-white-text")}>
         Trade With The Bull, Funded By The Goats.
       </p>
 
       <div className="mt-20 grid cols-1 md:grid-cols-5 gap-4 md:auto-rows-[25rem] max-w-7xl mx-auto">
         
         {/* Left – 3 cols :: JOIN US */}
-        <Card className="flex flex-col justify-between md:col-span-3 bg-gradient-to-br from-black via-neutral-950 to-black neon-blue-border" style={{ boxShadow: NEON_CARD_GLOW }}>
+        <Card className={cn("flex flex-col justify-between md:col-span-3 bg-gradient-to-br from-black via-neutral-950 to-black", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")} style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : NEON_CARD_GLOW }}>
           <CardSkeletonBody>
-            <SkeletonOne />
+            <SkeletonOne shouldSkipHeavyEffects={shouldSkipHeavyEffects} />
           </CardSkeletonBody>
 
           <CardContent className="h-40 [&_*]:font-extrabold relative">
@@ -165,38 +170,41 @@ export function Features() {
                 "font-sans text-base md:text-lg font-extrabold tracking-tight",
                 NEON_TEXT_GRADIENT, "bg-clip-text text-transparent"
               )}
-              style={{ textShadow: NEON_GLOW }}
+              style={{ textShadow: shouldSkipHeavyEffects ? 'none' : NEON_GLOW }}
             >
               JOIN US ON GOAT FUNDED
             </motion.h3>
 
-            <div className="mt-2 text-sm leading-relaxed font-extrabold" style={{ color: '#fff', textShadow: '0 0 4px #fff, 0 0 8px #93c5fd' }}>
+            <div className="mt-2 text-sm leading-relaxed font-extrabold" style={{ color: '#fff', textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 4px #fff, 0 0 8px #93c5fd' }}>
               Trade With Our Community Using Partner Code{" "}
               <span className="relative inline-block">
-                  {/* TIP 0: Partner Code */}
-                  <AnimatePresence>
-                    {activeTipIndex === 0 && (
-                        <HelperTip label="Click to Copy" className="-top-10 left-1/2 -translate-x-1/2" />
-                    )}
-                  </AnimatePresence>
+                  {/* TIP 0: Partner Code - Skip on mobile */}
+                  {!shouldSkipHeavyEffects && (
+                    <AnimatePresence>
+                      {activeTipIndex === 0 && (
+                          <HelperTip label="Click to Copy" className="-top-10 left-1/2 -translate-x-1/2" />
+                      )}
+                    </AnimatePresence>
+                  )}
                   
                   <motion.button
                     type="button"
                     onClick={copyPartnerCode}
                     className={cn(
                       "inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-xs md:text-sm font-bold",
-                      "neon-blue-border text-black transition",
+                      shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border",
+                      "text-black transition",
                       NEON_TEXT_GRADIENT
                     )}
-                    style={{ boxShadow: NEON_BORDER_GLOW }}
-                    whileHover={{ boxShadow: "0 0 12px rgba(59, 130, 246, 0.8), 0 0 24px rgba(59, 130, 246, 0.6)" }}
+                    style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : NEON_BORDER_GLOW }}
+                    whileHover={shouldSkipHeavyEffects ? {} : { boxShadow: "0 0 12px rgba(59, 130, 246, 0.8), 0 0 24px rgba(59, 130, 246, 0.6)" }}
                   >
                     BM15
                     <span
                       className={`ml-1 inline-block h-2 w-2 rounded-full ${
                         copied ? "bg-green-400" : "bg-blue-400"
                       }`}
-                      style={{ boxShadow: copied ? '0 0 4px #4ade80' : '0 0 4px #60a5fa' }}
+                      style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : (copied ? '0 0 4px #4ade80' : '0 0 4px #60a5fa') }}
                     />
                   </motion.button>
               </span>
@@ -212,12 +220,12 @@ export function Features() {
                   "inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold text-black",
                   NEON_TEXT_GRADIENT
                 )}
-                style={{ boxShadow: NEON_BORDER_GLOW }}
-                whileHover={{ 
+                style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : NEON_BORDER_GLOW }}
+                whileHover={shouldSkipHeavyEffects ? {} : { 
                   boxShadow: "0 0 12px rgba(59, 130, 246, 0.8), 0 0 24px rgba(59, 130, 246, 0.6)",
                   scale: 1.02
                 }}
-                whileTap={{ scale: 0.98 }}
+                whileTap={shouldSkipHeavyEffects ? {} : { scale: 0.98 }}
               >
                 Open with code <span className="font-mono font-semibold">BM15</span>
               </motion.a>
@@ -225,17 +233,17 @@ export function Features() {
               <motion.button
                 type="button"
                 onClick={copyPartnerCode}
-                className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-semibold neon-blue-border hover:bg-blue-500/10 transition"
+                className={cn("inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-semibold hover:bg-blue-500/10 transition", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")}
                 style={{ 
                   color: '#60a5fa', 
-                  textShadow: NEON_GLOW,
-                  boxShadow: NEON_BORDER_GLOW 
+                  textShadow: shouldSkipHeavyEffects ? 'none' : NEON_GLOW,
+                  boxShadow: shouldSkipHeavyEffects ? 'none' : NEON_BORDER_GLOW 
                 }}
-                whileHover={{ 
+                whileHover={shouldSkipHeavyEffects ? {} : { 
                   boxShadow: "0 0 12px rgba(59, 130, 246, 0.8), 0 0 24px rgba(59, 130, 246, 0.6)",
                   scale: 1.02
                 }}
-                whileTap={{ scale: 0.98 }}
+                whileTap={shouldSkipHeavyEffects ? {} : { scale: 0.98 }}
               >
                 {copied ? "Copied!" : "Copy code"}
               </motion.button>
@@ -243,11 +251,12 @@ export function Features() {
           </CardContent>
         </Card>
 
+
         {/* Top-right – 2 cols :: Goat Funded info */}
-        <Card className="flex flex-col justify-between md:col-span-2 bg-gradient-to-br from-black via-neutral-950 to-black neon-blue-border" style={{ boxShadow: NEON_CARD_GLOW }}>
+        <Card className={cn("flex flex-col justify-between md:col-span-2 bg-gradient-to-br from-black via-neutral-950 to-black", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")} style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : NEON_CARD_GLOW }}>
           <CardContent className="h-40">
             <motion.div
-              style={{ textShadow: NEON_GLOW }}
+              style={{ textShadow: shouldSkipHeavyEffects ? 'none' : NEON_GLOW }}
             >
               <CardTitle className={cn(NEON_TEXT_GRADIENT, "bg-clip-text text-transparent")}>
                 Goat Funded Trader
@@ -257,33 +266,37 @@ export function Features() {
             <CardDescription className="!max-w-none">
               <div className="group/line inline-block font-semibold">
                 <motion.span
-                  whileHover={{ scale: 1.01, filter: "brightness(1.08)" }}
-                  transition={{ type: "spring", stiffness: 260, damping: 22 }}
+                  whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.01, filter: "brightness(1.08)" }}
+                  transition={shouldSkipHeavyEffects ? {} : { type: "spring", stiffness: 260, damping: 22 }}
                   className="text-sm md:text-[15px] leading-snug"
-                  style={{ color: '#fff', textShadow: '0 0 4px #fff, 0 0 8px #93c5fd' }}
+                  style={{ color: '#fff', textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 4px #fff, 0 0 8px #93c5fd' }}
                 >
-                  <ShimmerText className="font-extrabold">
+                  <ShimmerText className="font-extrabold" shouldSkipHeavyEffects={shouldSkipHeavyEffects}>
                     Become a funded trader with Goat Funded
                   </ShimmerText>{" "}
                   pass a multi‑step challenge, trade company capital, and keep a high profit
                   split with flexible trading conditions.
                 </motion.span>
-                <motion.span 
-                  className={cn("mt-1 block h-[2px] w-0 rounded-full transition-all duration-500 group-hover/line:w-full", NEON_TEXT_GRADIENT)} 
-                  style={{ boxShadow: '0 0 4px #3b82f6' }}
-                />
+                {!shouldSkipHeavyEffects && (
+                  <motion.span 
+                    className={cn("mt-1 block h-[2px] w-0 rounded-full transition-all duration-500 group-hover/line:w-full", NEON_TEXT_GRADIENT)} 
+                    style={{ boxShadow: '0 0 4px #3b82f6' }}
+                  />
+                )}
               </div>
             </CardDescription>
           </CardContent>
 
           <CardSkeletonBody>
-            <div className="w-full h-full p-4 rounded-lg bg-neutral-950 neon-blue-border ml-6 mt-2 flex items-center justify-center relative" style={{ boxShadow: NEON_BORDER_GLOW }}>
-               {/* TIP 1: Goat Logo */}
-               <AnimatePresence>
-                    {activeTipIndex === 1 && (
-                        <HelperTip label="Our Partner" className="top-2" />
-                    )}
-                </AnimatePresence>
+            <div className={cn("w-full h-full p-4 rounded-lg bg-neutral-950 ml-6 mt-2 flex items-center justify-center relative", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")} style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : NEON_BORDER_GLOW }}>
+               {/* TIP 1: Goat Logo - skip on mobile */}
+               {!shouldSkipHeavyEffects && (
+                 <AnimatePresence>
+                      {activeTipIndex === 1 && (
+                          <HelperTip label="Our Partner" className="top-2" />
+                      )}
+                  </AnimatePresence>
+               )}
               <Image
                 src="/GTFLOGO.png"
                 alt="Goat Funded Trader Logo"
@@ -296,21 +309,22 @@ export function Features() {
         </Card>
 
         {/* Bottom-left – 2 cols :: Community links */}
-        <Card className="flex flex-col justify-between md:col-span-2 bg-gradient-to-br from-black via-neutral-950 to-black neon-blue-border" style={{ boxShadow: NEON_CARD_GLOW }}>
+        <Card className={cn("flex flex-col justify-between md:col-span-2 bg-gradient-to-br from-black via-neutral-950 to-black", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")} style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : NEON_CARD_GLOW }}>
           <CardContent className="h-40">
             <motion.h3 
               className={cn("font-sans text-base md:text-lg font-extrabold tracking-tight", NEON_TEXT_GRADIENT, "bg-clip-text text-transparent")}
-              style={{ textShadow: NEON_GLOW }}
+              style={{ textShadow: shouldSkipHeavyEffects ? 'none' : NEON_GLOW }}
             >
               Find Our Links Below
             </motion.h3>
 
-            <p className="mt-2 text-sm leading-snug font-semibold" style={{ color: '#fff', textShadow: '0 0 4px #fff, 0 0 8px #93c5fd' }}>
+            <p className="mt-2 text-sm leading-snug font-semibold" style={{ color: '#fff', textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 4px #fff, 0 0 8px #93c5fd' }}>
               Explore official communities, updates and live content from Goat Funded and FTMO.
             </p>
 
             <SocialsDropdown
               triggerClassName="mt-3"
+              shouldSkipHeavyEffects={shouldSkipHeavyEffects}
               items={[
                 {
                   label: "Goat Funded Trader",
@@ -334,10 +348,10 @@ export function Features() {
         </Card>
 
         {/* Bottom-right – 3 cols :: FTMO info */}
-        <Card className="flex flex-col justify-between md:col-span-3 bg-gradient-to-br from-black via-neutral-950 to-black neon-blue-border" style={{ boxShadow: NEON_CARD_GLOW }}>
+        <Card className={cn("flex flex-col justify-between md:col-span-3 bg-gradient-to-br from-black via-neutral-950 to-black", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")} style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : NEON_CARD_GLOW }}>
           <CardContent className="h-auto">
             <motion.div
-              style={{ textShadow: NEON_GLOW }}
+              style={{ textShadow: shouldSkipHeavyEffects ? 'none' : NEON_GLOW }}
             >
               <CardTitle className={cn(NEON_TEXT_GRADIENT, "bg-clip-text text-transparent")}>
                 FTMO
@@ -347,32 +361,36 @@ export function Features() {
             <CardDescription className="!max-w-none">
               <div className="group/line inline-block font-semibold">
                 <motion.span
-                  whileHover={{ scale: 1.01, filter: "brightness(1.08)" }}
-                  transition={{ type: "spring", stiffness: 260, damping: 22 }}
+                  whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.01, filter: "brightness(1.08)" }}
+                  transition={shouldSkipHeavyEffects ? {} : { type: "spring", stiffness: 260, damping: 22 }}
                   className="text-sm md:text-[15px] leading-snug"
-                  style={{ color: '#fff', textShadow: '0 0 4px #fff, 0 0 8px #93c5fd' }}
+                  style={{ color: '#fff', textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 4px #fff, 0 0 8px #93c5fd' }}
                 >
-                  <ShimmerText className="font-extrabold">
+                  <ShimmerText className="font-extrabold" shouldSkipHeavyEffects={shouldSkipHeavyEffects}>
                     Take the FTMO Challenge 
                   </ShimmerText>{" "}
                   validate your trading strategy, access funded company capital, and earn profit shares while using advanced professional tools trusted by a global community of successful traders.
                 </motion.span>
-                <motion.span 
-                  className={cn("mt-1 block h-[2px] w-0 rounded-full transition-all duration-500 group-hover/line:w-full", NEON_TEXT_GRADIENT)} 
-                  style={{ boxShadow: '0 0 4px #3b82f6' }}
-                />
+                {!shouldSkipHeavyEffects && (
+                  <motion.span 
+                    className={cn("mt-1 block h-[2px] w-0 rounded-full transition-all duration-500 group-hover/line:w-full", NEON_TEXT_GRADIENT)} 
+                    style={{ boxShadow: '0 0 4px #3b82f6' }}
+                  />
+                )}
               </div>
             </CardDescription>
           </CardContent>
 
           <CardSkeletonBody>
-            <div className="w-full h-full p-4 rounded-lg bg-neutral-950 neon-blue-border ml-6 mt-2 flex items-center justify-center relative" style={{ boxShadow: NEON_BORDER_GLOW }}>
-               {/* TIP 2: FTMO Logo */}
-               <AnimatePresence>
+            <div className={cn("w-full h-full p-4 rounded-lg bg-neutral-950 ml-6 mt-2 flex items-center justify-center relative", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")} style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : NEON_BORDER_GLOW }}>
+               {/* TIP 2: FTMO Logo - skip on mobile */}
+               {!shouldSkipHeavyEffects && (
+                 <AnimatePresence>
                     {activeTipIndex === 2 && (
                         <HelperTip label="Top Tier Firm" className="top-2" />
                     )}
                 </AnimatePresence>
+               )}
               <Image
                 src="/FTMO_LOGO.png"
                 alt="FTMO Logo"
@@ -392,29 +410,34 @@ export function Features() {
    Header
 ===================================================================================== */
 
-const Header = ({ children }: { children: React.ReactNode }) => {
+const Header = ({ children, shouldSkipHeavyEffects = false }: { children: React.ReactNode; shouldSkipHeavyEffects?: boolean }) => {
   return (
     <div className="relative w-fit mx-auto p-4 flex items-center justify-center">
       <div
-        style={{ boxShadow: NEON_BORDER_GLOW }}
-        className="absolute inset-0 h-full neon-blue-border w-full"
+        style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : NEON_BORDER_GLOW }}
+        className={cn("absolute inset-0 h-full w-full", shouldSkipHeavyEffects ? "border border-blue-500/50 rounded" : "neon-blue-border")}
       >
-        <div
-          className="absolute -top-1 -left-1 h-2 w-2 bg-neutral-900 rounded-full neon-blue-border"
-          style={{ boxShadow: '0 0 12px #60a5fa, 0 0 24px #3b82f6' }}
-        />
-        <div
-          className="absolute -top-1 -right-1 h-2 w-2 bg-neutral-900 rounded-full neon-blue-border"
-          style={{ boxShadow: '0 0 12px #60a5fa, 0 0 24px #3b82f6' }}
-        />
-        <div
-          className="absolute -bottom-1 -left-1 h-2 w-2 bg-neutral-900 rounded-full neon-blue-border"
-          style={{ boxShadow: '0 0 12px #60a5fa, 0 0 24px #3b82f6' }}
-        />
-        <div
-          className="absolute -bottom-1 -right-1 h-2 w-2 bg-neutral-900 rounded-full neon-blue-border"
-          style={{ boxShadow: '0 0 12px #60a5fa, 0 0 24px #3b82f6' }}
-        />
+        {/* Skip corner decorations on mobile for performance */}
+        {!shouldSkipHeavyEffects && (
+          <>
+            <div
+              className="absolute -top-1 -left-1 h-2 w-2 bg-neutral-900 rounded-full neon-blue-border"
+              style={{ boxShadow: '0 0 12px #60a5fa, 0 0 24px #3b82f6' }}
+            />
+            <div
+              className="absolute -top-1 -right-1 h-2 w-2 bg-neutral-900 rounded-full neon-blue-border"
+              style={{ boxShadow: '0 0 12px #60a5fa, 0 0 24px #3b82f6' }}
+            />
+            <div
+              className="absolute -bottom-1 -left-1 h-2 w-2 bg-neutral-900 rounded-full neon-blue-border"
+              style={{ boxShadow: '0 0 12px #60a5fa, 0 0 24px #3b82f6' }}
+            />
+            <div
+              className="absolute -bottom-1 -right-1 h-2 w-2 bg-neutral-900 rounded-full neon-blue-border"
+              style={{ boxShadow: '0 0 12px #60a5fa, 0 0 24px #3b82f6' }}
+            />
+          </>
+        )}
       </div>
       {children}
     </div>
@@ -532,7 +555,7 @@ export const generateRandomString = (length: number) => {
    SkeletonOne
 ===================================================================================== */
 
-export const SkeletonOne = () => {
+export const SkeletonOne = ({ shouldSkipHeavyEffects = false }: { shouldSkipHeavyEffects?: boolean }) => {
   const Container = ({
     children,
     ...props
@@ -552,66 +575,70 @@ export const SkeletonOne = () => {
 
   return (
     <div className="relative flex items-center justify-center w-full h-full">
-      {/* decorative paths */}
-      <svg
-        width="128"
-        height="69"
-        viewBox="0 0 128 69"
-        fill="none"
-        className="absolute left-1/2 -translate-x-[90%] -top-2 text-neutral-800"
-      >
-        <path
-          d="M1.00002 0.5L1.00001 29.5862C1 36.2136 6.37259 41.5862 13 41.5862H115C121.627 41.5862 127 46.9588 127 53.5862L127 75"
-          stroke="currentColor"
-          strokeWidth="1"
-        />
-        <path
-          d="M1.00002 0.5L1.00001 29.5862C1 36.2136 6.37259 41.5862 13 41.5862H115C121.627 41.5862 127 46.9588 127 53.5862L127 75"
-          stroke="url(#gradient-2)"
-          strokeWidth="1"
-        />
-        <defs>
-          <linearGradient
-            x1="0%" y1="0%" x2="100%" y2="100%"
-            id="gradient-2"
+      {/* decorative paths - skip on mobile */}
+      {!shouldSkipHeavyEffects && (
+        <>
+          <svg
+            width="128"
+            height="69"
+            viewBox="0 0 128 69"
+            fill="none"
+            className="absolute left-1/2 -translate-x-[90%] -top-2 text-neutral-800"
           >
-            <stop stopColor="#93c5fd" stopOpacity={`0.3`} />
-            <stop offset="1" stopColor="#60a5fa" />
-          </linearGradient>
-        </defs>
-      </svg>
+            <path
+              d="M1.00002 0.5L1.00001 29.5862C1 36.2136 6.37259 41.5862 13 41.5862H115C121.627 41.5862 127 46.9588 127 53.5862L127 75"
+              stroke="currentColor"
+              strokeWidth="1"
+            />
+            <path
+              d="M1.00002 0.5L1.00001 29.5862C1 36.2136 6.37259 41.5862 13 41.5862H115C121.627 41.5862 127 46.9588 127 53.5862L127 75"
+              stroke="url(#gradient-2)"
+              strokeWidth="1"
+            />
+            <defs>
+              <linearGradient
+                x1="0%" y1="0%" x2="100%" y2="100%"
+                id="gradient-2"
+              >
+                <stop stopColor="#93c5fd" stopOpacity={`0.3`} />
+                <stop offset="1" stopColor="#60a5fa" />
+              </linearGradient>
+            </defs>
+          </svg>
 
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="62"
-        height="105"
-        viewBox="0 0 62 105"
-        fill="none"
-        className="absolute left-1/2 -translate-x-0 -bottom-2 text-neutral-800"
-      >
-        <path
-          d="M1.00001 -69L1 57.5C1 64.1274 6.37258 69.5 13 69.5H49C55.6274 69.5 61 74.8726 61 81.5L61 105"
-          stroke="currentColor"
-          strokeWidth="1"
-        />
-        <path
-          d="M1.00001 -69L1 57.5C1 64.1274 6.37258 69.5 13 69.5H49C55.6274 69.5 61 74.8726 61 81.5L61 105"
-          stroke="url(#gradient-1)"
-          strokeWidth="1"
-        />
-        <defs>
-          <linearGradient
-            x1="0%" y1="0%" x2="100%" y2="100%"
-            id="gradient-1"
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="62"
+            height="105"
+            viewBox="0 0 62 105"
+            fill="none"
+            className="absolute left-1/2 -translate-x-0 -bottom-2 text-neutral-800"
           >
-            <stop stopColor="#93c5fd" stopOpacity={`0.3`} />
-            <stop offset="1" stopColor="#60a5fa" />
-          </linearGradient>
-        </defs>
-      </svg>
+            <path
+              d="M1.00001 -69L1 57.5C1 64.1274 6.37258 69.5 13 69.5H49C55.6274 69.5 61 74.8726 61 81.5L61 105"
+              stroke="currentColor"
+              strokeWidth="1"
+            />
+            <path
+              d="M1.00001 -69L1 57.5C1 64.1274 6.37258 69.5 13 69.5H49C55.6274 69.5 61 74.8726 61 81.5L61 105"
+              stroke="url(#gradient-1)"
+              strokeWidth="1"
+            />
+            <defs>
+              <linearGradient
+                x1="0%" y1="0%" x2="100%" y2="100%"
+                id="gradient-1"
+              >
+                <stop stopColor="#93c5fd" stopOpacity={`0.3`} />
+                <stop offset="1" stopColor="#60a5fa" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </>
+      )}
 
       {/* The three tiles */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-lg mx-auto w-full relative z-30 [perspective:1000px] [transform-style:preserve-3d] p-8 sm:p-0">
+      <div className={cn("grid grid-cols-1 md:grid-cols-3 gap-4 max-w-lg mx-auto w-full relative z-30 p-8 sm:p-0", !shouldSkipHeavyEffects && "[perspective:1000px] [transform-style:preserve-3d]")}>
         {/* 1) Partner code */}
         <Container
           className="p-0 overflow-hidden rounded-lg"
@@ -622,13 +649,23 @@ export const SkeletonOne = () => {
             rel="noopener noreferrer"
             className="block w-full h-full"
           >
-            <div className="relative w-full h-full rounded-lg neon-blue-border overflow-hidden flex items-center justify-center bg-black" style={{ boxShadow: NEON_BORDER_GLOW }}>
-              <Icon className="absolute h-6 w-6 -top-3 -left-3 neon-blue-icon" />
-              <Icon className="absolute h-6 w-6 -bottom-3 -left-3 neon-blue-icon" />
-              <Icon className="absolute h-6 w-6 -top-3 -right-3 neon-blue-icon" />
-              <Icon className="absolute h-6 w-6 -bottom-3 -right-3 neon-blue-icon" />
+            <div className={cn("relative w-full h-full rounded-lg overflow-hidden flex items-center justify-center bg-black", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")} style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : NEON_BORDER_GLOW }}>
+              {/* Skip corner icons on mobile */}
+              {!shouldSkipHeavyEffects && (
+                <>
+                  <Icon className="absolute h-6 w-6 -top-3 -left-3 neon-blue-icon" />
+                  <Icon className="absolute h-6 w-6 -bottom-3 -left-3 neon-blue-icon" />
+                  <Icon className="absolute h-6 w-6 -top-3 -right-3 neon-blue-icon" />
+                  <Icon className="absolute h-6 w-6 -bottom-3 -right-3 neon-blue-icon" />
+                </>
+              )}
               <div className="w-full h-full flex items-center justify-center">
-                <EvervaultCard text="BM15" />
+                {/* Skip EvervaultCard on mobile - show simple text instead */}
+                {shouldSkipHeavyEffects ? (
+                  <span className="text-blue-400 font-bold text-xl">BM15</span>
+                ) : (
+                  <EvervaultCard text="BM15" />
+                )}
               </div>
               <span className="sr-only">Open Goat funded Challenge code BM15</span>
             </div>
@@ -890,9 +927,11 @@ const Card = ({
 const ShimmerText = ({
   children,
   className = "",
+  shouldSkipHeavyEffects = false,
 }: {
   children: React.ReactNode;
   className?: string;
+  shouldSkipHeavyEffects?: boolean;
 }) => (
   <span
     className={cn(
@@ -900,7 +939,7 @@ const ShimmerText = ({
       NEON_TEXT_GRADIENT,
       className
     )}
-    style={{ textShadow: NEON_GLOW }}
+    style={{ textShadow: shouldSkipHeavyEffects ? 'none' : NEON_GLOW }}
   >
     {children}
   </span>
@@ -910,9 +949,11 @@ const ShimmerText = ({
 const SocialsDropdown = ({
   items,
   triggerClassName = "",
+  shouldSkipHeavyEffects = false,
 }: {
   items: { label: string; href: string; icon: React.ReactNode; gradient: string }[];
   triggerClassName?: string;
+  shouldSkipHeavyEffects?: boolean;
 }) => {
   const [open, setOpen] = React.useState(false);
 
@@ -923,23 +964,24 @@ const SocialsDropdown = ({
         onClick={() => setOpen((o) => !o)}
         className={cn(
           "group inline-flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold",
-          "neon-blue-border text-black transition hover:brightness-110",
+          shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border",
+          "text-black transition hover:brightness-110",
           NEON_TEXT_GRADIENT
         )}
-        style={{ boxShadow: NEON_BORDER_GLOW }}
+        style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : NEON_BORDER_GLOW }}
         aria-expanded={open}
       >
         <span className="inline-flex items-center gap-2">
-          <Sparkle className="h-4 w-4" style={{ filter: 'drop-shadow(0 0 3px #000)' }} />
+          <Sparkle className="h-4 w-4" style={{ filter: shouldSkipHeavyEffects ? 'none' : 'drop-shadow(0 0 3px #000)' }} />
           Official links
         </span>
-        <Chevron className={cn("h-4 w-4 transition-transform", open && "rotate-180")} style={{ filter: 'drop-shadow(0 0 3px #000)' }} />
+        <Chevron className={cn("h-4 w-4 transition-transform", open && "rotate-180")} style={{ filter: shouldSkipHeavyEffects ? 'none' : 'drop-shadow(0 0 3px #000)' }} />
       </button>
 
       <motion.div
         initial={false}
         animate={{ height: open ? "auto" : 0, opacity: open ? 1 : 0 }}
-        transition={{ duration: 0.28, ease: "easeOut" }}
+        transition={{ duration: shouldSkipHeavyEffects ? 0.15 : 0.28, ease: "easeOut" }}
         style={{ overflow: "hidden" }}
         className="mt-2"
       >
@@ -952,20 +994,25 @@ const SocialsDropdown = ({
               rel="noopener noreferrer"
               className={cn(
                 "group relative block w-full rounded-xl px-3 py-2 text-sm font-semibold transition-all hover:brightness-110",
-                "neon-blue-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400",
+                shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400",
                 it.gradient
               )}
-              style={{ boxShadow: NEON_BORDER_GLOW }}
+              style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : NEON_BORDER_GLOW }}
             >
               <span className="inline-flex items-center gap-2">
                 {it.icon}
                 <span>{it.label}</span>
               </span>
-              <span className="pointer-events-none absolute inset-y-0 right-0 w-1/4 rounded-xl bg-blue-400/10 blur-md" />
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(to_bottom,rgba(0,0,0,0)_0%,rgba(0,0,0,0.10)_25%,rgba(0,0,0,0.30)_100%)]"
-              />
+              {!shouldSkipHeavyEffects && (
+                <>
+                  <span className="pointer-events-none absolute inset-y-0 right-0 w-1/4 rounded-xl bg-blue-400/10 blur-md" />
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(to_bottom,rgba(0,0,0,0)_0%,rgba(0,0,0,0.10)_25%,rgba(0,0,0,0.30)_100%)]"
+                  />
+                </>
+              )}
             </a>
           ))}
         </div>
