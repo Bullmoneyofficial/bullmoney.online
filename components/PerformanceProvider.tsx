@@ -910,6 +910,17 @@ export function FPSCounter({
 
   if (!show) return null;
 
+  // Detect mobile for smaller sizing (20-30% smaller)
+  // Use state to prevent SSR mismatch and fix scroll enlargement issue
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  const scaleFactor = isMobile ? 0.65 : 1; // 35% smaller on mobile (fixed, not affected by scroll)
+
   const positionStyles = {
     'top-left': { top: 10, left: 10 },
     'top-right': { top: 10, right: 10 },
@@ -980,9 +991,9 @@ export function FPSCounter({
       {/* FPS Pill */}
       <div
         style={{
-          padding: '3px 8px',
+          padding: isMobile ? '2px 5px' : '3px 8px',
           borderRadius: 20,
-          fontSize: 10,
+          fontSize: isMobile ? 7 : 10,
           fontFamily: 'monospace',
           fontWeight: 'bold',
           backgroundColor: 'rgba(0, 0, 0, 0.85)',
@@ -992,6 +1003,8 @@ export function FPSCounter({
           boxShadow: fpsStyle.boxShadow,
           letterSpacing: '0.5px',
           textAlign: 'center',
+          transform: `scale(${scaleFactor})`,
+          transformOrigin: position.includes('right') ? 'top right' : 'top left',
         }}
       >
         {fps} FPS
@@ -1000,17 +1013,19 @@ export function FPSCounter({
       {/* Network Speed Pill - Download | Upload | Ping */}
       <div
         style={{
-          padding: '3px 8px',
+          padding: isMobile ? '2px 5px' : '3px 8px',
           borderRadius: 20,
-          fontSize: 9,
+          fontSize: isMobile ? 6 : 9,
           fontFamily: 'monospace',
           fontWeight: 'bold',
           backgroundColor: 'rgba(0, 0, 0, 0.85)',
           border: '1px solid rgba(255, 255, 255, 0.2)',
           display: 'flex',
-          gap: '5px',
+          gap: isMobile ? '2px' : '5px',
           alignItems: 'center',
           justifyContent: 'center',
+          transform: `scale(${scaleFactor})`,
+          transformOrigin: position.includes('right') ? 'top right' : 'top left',
         }}
       >
         {/* Unit label on left */}

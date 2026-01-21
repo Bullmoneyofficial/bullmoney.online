@@ -486,6 +486,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       // 1. Check for completed session
       const savedSession = localStorage.getItem("bullmoney_session");
       
+      // ALSO check if telegram was already shown/confirmed - skip it on reload
+      const telegramAlreadyConfirmed = localStorage.getItem("bullmoney_telegram_confirmed") === "true";
+      
       if (savedSession) {
         try {
           const session = JSON.parse(savedSession);
@@ -500,7 +503,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             .maybeSingle();
 
           if (!error && data && mounted) {
-             console.log("Session valid, showing Telegram confirmation...");
+             console.log("Session valid, user authenticated");
              // Clear any old drafts since we are logged in
              localStorage.removeItem("bullmoney_draft");
              
@@ -508,7 +511,38 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
              // This prevents pagemode from showing again if session gets cleared
              localStorage.setItem("bullmoney_pagemode_completed", "true");
              
-             // Show Telegram confirmation instead of auto-unlocking
+             // If telegram was already confirmed, skip directly to unlock (no telegram screen)
+             if (telegramAlreadyConfirmed) {
+               console.log("Telegram already confirmed, skipping to unlock");
+               // Random chance to show loaders on reload:
+               // - 5% chance: V3 celebration loader (rare, special)
+               // - 35% chance: Regular MultiStepLoader (more common, smooth experience)
+               // - 60% chance: Instant unlock (most common, fast)
+               const loaderRoll = Math.random();
+               
+               if (loaderRoll < 0.05 && mounted) {
+                 // 5% - Show V3 celebration loader (rare)
+                 setIsCelebration(true);
+                 setTimeout(() => {
+                   setLoading(false);
+                   onUnlock();
+                 }, 2000); // Short V3 experience
+               } else if (loaderRoll < 0.40 && mounted) {
+                 // 35% - Show regular MultiStepLoader (common)
+                 setIsRefresh(true);
+                 setTimeout(() => {
+                   setLoading(false);
+                   onUnlock();
+                 }, 1500); // Standard loader duration
+               } else if (mounted) {
+                 // 60% - Instant unlock (most common)
+                 setLoading(false);
+                 onUnlock();
+               }
+               return;
+             }
+             
+             // Show Telegram confirmation ONLY if not already confirmed
              setTimeout(() => {
                  setLoading(false);
                  setStep(4); // Go to Telegram confirmation
@@ -814,6 +848,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       
       // Mark pagemode as completed - user should NEVER see pagemode again
       localStorage.setItem("bullmoney_pagemode_completed", "true");
+      
+      // Mark telegram as confirmed for existing users logging in
+      // This ensures Telegram screen NEVER shows for login route, only for new signups
+      localStorage.setItem("bullmoney_telegram_confirmed", "true");
       
       // Track successful login
       trackEvent('login', { method: 'email', source: 'pagemode' });

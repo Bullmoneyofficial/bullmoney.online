@@ -143,21 +143,21 @@ const MobileMenuControls = memo(({
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         className={cn(
-          "rounded-full transition-colors flex items-center justify-center gap-0.5",
+          "rounded-full transition-colors flex items-center justify-center gap-1",
           isScrollMinimized 
-            ? "p-0.5 min-w-[26px] min-h-[26px]" 
-            : "p-0.5 xs:p-1 sm:p-1.5 min-w-[32px] xs:min-w-[36px] sm:min-w-[40px] min-h-[32px] xs:min-h-[36px] sm:min-h-[40px]"
+            ? "p-1 min-w-[32px] min-h-[32px]" 
+            : "p-1 xs:p-1.5 sm:p-2 min-w-[40px] xs:min-w-[44px] sm:min-w-[48px] min-h-[40px] xs:min-h-[44px] sm:min-h-[48px]"
         )}
         style={{ color: 'var(--accent-color, #93c5fd)' }}
         title="Theme Selector"
       >
-        <IconPalette className={isScrollMinimized ? "h-2.5 w-2.5" : "h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4"} />
-        <span className="text-[7px] xs:text-[8px] sm:text-xs font-bold whitespace-nowrap">Theme</span>
+        <IconPalette className={isScrollMinimized ? "h-4 w-4" : "h-5 w-5 xs:h-6 xs:w-6 sm:h-6 sm:w-6"} />
+        <span className="text-[11px] xs:text-xs sm:text-base font-bold whitespace-nowrap">Theme</span>
       </motion.button>
 
       {/* Divider - Theme-aware */}
       <div 
-        className={cn(isScrollMinimized ? "h-3 w-[1px]" : "h-4 xs:h-5 w-[1px]")}
+        className={cn(isScrollMinimized ? "h-4 w-[1px]" : "h-6 xs:h-7 w-[1px]")}
         style={{ background: 'linear-gradient(to bottom, rgba(var(--accent-rgb, 59, 130, 246), 0.2), rgba(var(--accent-rgb, 59, 130, 246), 0.5), rgba(var(--accent-rgb, 59, 130, 246), 0.2))' }}
       />
 
@@ -169,19 +169,19 @@ const MobileMenuControls = memo(({
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         className={cn(
-          "rounded-full transition-colors flex items-center justify-center gap-0.5",
+          "rounded-full transition-colors flex items-center justify-center gap-1",
           isScrollMinimized 
-            ? "p-0.5 min-w-[26px] min-h-[26px]" 
-            : "p-0.5 xs:p-1 sm:p-1.5 min-w-[32px] xs:min-w-[36px] sm:min-w-[40px] min-h-[32px] xs:min-h-[36px] sm:min-h-[40px]"
+            ? "p-1 min-w-[32px] min-h-[32px]" 
+            : "p-1 xs:p-1.5 sm:p-2 min-w-[40px] xs:min-w-[44px] sm:min-w-[48px] min-h-[40px] xs:min-h-[44px] sm:min-h-[48px]"
         )}
         style={{ color: 'var(--accent-color, #93c5fd)' }}
         title={open ? 'Close menu' : 'Open menu'}
       >
         <div className="relative flex items-center justify-center">
           {open ? (
-            <IconX className={isScrollMinimized ? "h-2.5 w-2.5" : "h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4"} />
+            <IconX className={isScrollMinimized ? "h-4 w-4" : "h-5 w-5 xs:h-6 xs:w-6 sm:h-6 sm:w-6"} />
           ) : (
-            <IconMenu2 className={isScrollMinimized ? "h-2.5 w-2.5" : "h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4"} />
+            <IconMenu2 className={isScrollMinimized ? "h-4 w-4" : "h-5 w-5 xs:h-6 xs:w-6 sm:h-6 sm:w-6"} />
           )}
           {hasReward && !open && (
             <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
@@ -190,7 +190,7 @@ const MobileMenuControls = memo(({
             </span>
           )}
         </div>
-        <span className="text-[7px] xs:text-[8px] sm:text-xs font-bold whitespace-nowrap">{open ? 'Close' : 'Menu'}</span>
+        <span className="text-[11px] xs:text-xs sm:text-base font-bold whitespace-nowrap">{open ? 'Close' : 'Menu'}</span>
       </motion.button>
     </motion.div>
   </motion.div>
@@ -498,7 +498,7 @@ export const Navbar = memo(() => {
             className="flex items-center gap-2 justify-center"
           >
             {/* Logo */}
-            <Link href="/" className="relative flex-shrink-0 w-10 h-10 block">
+            <Link href="/" className="relative flex-shrink-0 w-12 h-12 block">
               <Image
                 src="/svgs/file.svg"
                 alt="BullMoney"
@@ -515,7 +515,7 @@ export const Navbar = memo(() => {
                 opacity: [0.8, 1, 0.8]
               }}
               transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-              className="text-2xl font-black tracking-wider bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 bg-clip-text text-transparent pointer-events-none"
+              className="text-3xl font-black tracking-wider bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 bg-clip-text text-transparent pointer-events-none"
               style={{
                 textShadow: '0 0 20px rgba(59, 130, 246, 1), 0 0 40px rgba(59, 130, 246, 0.8), 0 0 60px rgba(59, 130, 246, 0.6)',
                 filter: 'drop-shadow(0 0 10px rgba(59,130,246,0.9)) drop-shadow(0 0 20px rgba(59,130,246,0.6))',

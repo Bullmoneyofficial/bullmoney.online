@@ -302,7 +302,7 @@ const TELEGRAM_CHANNELS = {
   trades: { name: 'FREE TRADES', handle: 'bullmoneywebsite', icon: TrendingUp, color: 'cyan', requiresVip: false },
   main: { name: 'LIVESTREAMS', handle: 'bullmoneyfx', icon: MessageCircle, color: 'blue', requiresVip: false },
   shop: { name: 'NEWS', handle: 'Bullmoneyshop', icon: ShoppingBag, color: 'emerald', requiresVip: false },
-  vip: { name: 'VIP TRADES', handle: 'bullmoneyvip', icon: Crown, color: 'amber', requiresVip: true },
+  vip: { name: 'VIP TRADES', handle: '+yW5jIfxJpv9hNmY0', icon: Crown, color: 'amber', requiresVip: true, isPrivate: true },
 } as const;
 
 const BROWSERS = [
@@ -4415,6 +4415,18 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                 >
                   <X className="w-4 h-4 text-blue-300" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
                 </motion.button>
+                
+                {/* Hidden Admin Button - Triple tap on header to open (Mobile friendly) */}
+                {isAdmin && (
+                  <motion.button
+                    onTap={() => {
+                      window.dispatchEvent(new CustomEvent('openAdminVIPPanel'));
+                      onClose();
+                    }}
+                    className="absolute top-0 right-12 w-10 h-10 opacity-0"
+                    aria-label="Admin Panel"
+                  />
+                )}
               </div>
               
               {/* Swipe hint for mobile */}
@@ -6231,29 +6243,29 @@ const UnifiedFpsPill = memo(({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.85 }}
                 transition={{ duration: 0.4, ease: "easeInOut" }}
-                className="px-1.5 py-2 md:px-4 md:py-4 relative z-10"
+                className="px-1 py-1.5 md:px-4 md:py-4 relative z-10"
               >
                 {/* Mobile: Always compact view with prices - with scroll-intensified neons */}
-                <div className="flex md:hidden flex-col items-center justify-center gap-1 min-w-[40px]">
+                <div className="flex md:hidden flex-col items-center justify-center gap-0.5 min-w-[36px]">
                   <TrendingUp 
-                    className="w-3 h-3 text-white neon-white-icon" 
+                    className="w-2.5 h-2.5 text-white neon-white-icon" 
                     style={{ filter: dynamicStyles.iconFilter }} 
                   />
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
                     <div className="flex items-center gap-0.5">
                       <Coins 
-                        className="w-2.5 h-2.5 text-blue-400 neon-blue-icon" 
+                        className="w-2 h-2 text-blue-400 neon-blue-icon" 
                         style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }}
                       />
                       <span 
-                        className="text-[8px] font-bold neon-blue-text"
+                        className="text-[7px] font-bold neon-blue-text"
                         style={{ textShadow: '0 0 4px #3b82f6' }}
                       >
                         ${prices.xauusd}
                       </span>
                     </div>
                     <div 
-                      className="w-px h-3" 
+                      className="w-px h-2.5" 
                       style={{ 
                         background: 'rgba(59, 130, 246, 0.7)',
                         boxShadow: '0 0 4px #3b82f6'
@@ -6261,11 +6273,11 @@ const UnifiedFpsPill = memo(({
                     />
                     <div className="flex items-center gap-0.5">
                       <Bitcoin 
-                        className="w-2.5 h-2.5 text-blue-400 neon-blue-icon" 
+                        className="w-2 h-2 text-blue-400 neon-blue-icon" 
                         style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }}
                       />
                       <span 
-                        className="text-[8px] font-bold neon-blue-text"
+                        className="text-[7px] font-bold neon-blue-text"
                         style={{ textShadow: '0 0 4px #3b82f6' }}
                       >
                         ${prices.btcusd}
@@ -6418,7 +6430,7 @@ const UnifiedFpsPill = memo(({
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.3, ease: "easeOut" }}
-            className="absolute -bottom-6 left-0 whitespace-nowrap sm:hidden flex items-center gap-0.5 cursor-pointer pointer-events-auto px-2 py-1 rounded-r-full neon-subtle-border"
+            className="absolute -bottom-5 left-0 whitespace-nowrap sm:hidden flex items-center gap-0.5 cursor-pointer pointer-events-auto px-1.5 py-0.5 rounded-r-full neon-subtle-border"
             style={{
               background: 'rgba(0, 0, 0, 0.5)',
               borderTop: '1px solid rgba(59, 130, 246, 0.3)',
@@ -6434,9 +6446,9 @@ const UnifiedFpsPill = memo(({
               onOpenPanel();
             }}
           >
-            <span className="text-[7px] neon-blue-text font-medium">Tap to open</span>
+            <span className="text-[6px] neon-blue-text font-medium">Tap to open</span>
             <svg 
-              className="w-2 h-2 text-blue-400/80" 
+              className="w-1.5 h-1.5 text-blue-400/80" 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
@@ -6946,8 +6958,9 @@ export function UltimateHub() {
   // Don't render during pagemode or loader (full-screen overlays)
   if (isPagemodeOpen || isLoaderv2Open) return null;
 
-  // Hide pill when mobile menu, panel open, audio widget open, or other modals
-  const shouldHidePill = isMobileMenuOpen || isUltimatePanelOpen || isAudioWidgetOpen || isAnyModalOpen || isUltimateHubOpen;
+  // Hide pill when mobile menu, panel open, or other modals (NOT audio widget - they can coexist)
+  // Audio widget is on left side, UltimateHub pill is on right side - no overlap
+  const shouldHidePill = isMobileMenuOpen || isUltimatePanelOpen || isAnyModalOpen || isUltimateHubOpen;
 
   return (
     <>

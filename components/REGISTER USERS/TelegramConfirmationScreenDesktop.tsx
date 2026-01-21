@@ -309,6 +309,8 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
             {/* Confirmation button */}
             <button
               onClick={() => {
+                // Mark telegram as confirmed so it never shows again on reloads
+                localStorage.setItem("bullmoney_telegram_confirmed", "true");
                 onConfirmationClicked();
                 onUnlock();
               }}

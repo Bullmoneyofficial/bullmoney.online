@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo, memo, useCallback } from 'react';
 import { MOBILE_HELPER_TIPS } from './navbar.utils';
-import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
 import { useComponentLifecycle } from '@/lib/UnifiedPerformanceSystem';
@@ -18,50 +17,9 @@ export const MobileStaticHelper = memo(() => {
   const [isVisible, setIsVisible] = useState(true);
   const [isScrollMinimized, setIsScrollMinimized] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
-  const [topPosition, setTopPosition] = useState(192); // Default ~12rem in px
-  const soundPlayedRef = useRef(false);
+  // Removed topPosition - now fixed at bottom via CSS
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const unpinTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Space-aware positioning - detect UltimateHub pill and position below it
-  useEffect(() => {
-    let positionTimeout: NodeJS.Timeout | null = null;
-    
-    const calculatePosition = () => {
-      // Find the UltimateHub pill element
-      const ultimateHubPill = document.querySelector('.ultimate-hub-scroll-effect');
-      
-      if (ultimateHubPill) {
-        const rect = ultimateHubPill.getBoundingClientRect();
-        // Position 32px below the UltimateHub pill (extra spacing)
-        const newTop = rect.bottom + 32;
-        // Only update if position changed significantly (prevents micro-flickering)
-        setTopPosition(prev => Math.abs(prev - newTop) > 2 ? newTop : prev);
-      } else {
-        // Fallback: position at 15% + estimated pill height + gap
-        const viewportHeight = window.innerHeight;
-        const fallbackTop = (viewportHeight * 0.15) + 80 + 32; // 15% + pill height + gap
-        setTopPosition(fallbackTop);
-      }
-    };
-    
-    // Initial calculation with slight delay to ensure DOM is ready
-    const initialTimeout = setTimeout(calculatePosition, 100);
-    
-    // Debounced recalculation on resize only (not scroll - too frequent)
-    const handleResize = () => {
-      if (positionTimeout) clearTimeout(positionTimeout);
-      positionTimeout = setTimeout(calculatePosition, 150);
-    };
-    
-    window.addEventListener('resize', handleResize, { passive: true });
-    
-    return () => {
-      clearTimeout(initialTimeout);
-      if (positionTimeout) clearTimeout(positionTimeout);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
   
   // Handle interaction to pin the helper, then unpin after random delay
   const handleInteraction = useCallback(() => {
@@ -144,12 +102,7 @@ export const MobileStaticHelper = memo(() => {
       timeoutId = setTimeout(() => {
         setTipIndex((prev) => (prev + 1) % MOBILE_HELPER_TIPS.length);
         setIsVisible(true);
-        // Play sound only after first render
-        if (soundPlayedRef.current) {
-          if (!tipsMuted) SoundEffects.tipChange();
-        } else {
-          soundPlayedRef.current = true;
-        }
+        // Sound removed - tips now rotate silently
       }, 250);
     }, 4500);
     
@@ -166,7 +119,7 @@ export const MobileStaticHelper = memo(() => {
       className={`mobile-static-tip lg:hidden ${isScrollMinimized ? 'mobile-tip-scrolling' : ''}`}
       style={{ 
         filter: themeFilter,
-        top: `${topPosition}px`,
+        // Positioned at bottom via CSS, no top position needed
       }}
     >
       <div

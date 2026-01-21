@@ -268,7 +268,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               }}
               onHoverStart={handlePulltabInteraction}
               onTap={handlePulltabInteraction}
-              className="relative flex items-center justify-center h-7 w-7 rounded-l-full transition-all pointer-events-auto"
+              className="relative flex items-center justify-center h-6 w-6 sm:h-7 sm:w-7 rounded-l-full transition-all pointer-events-auto"
               data-theme-aware
               style={{
                 background: 'rgba(0, 0, 0, 0.85)',
@@ -280,7 +280,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <IconMusic className="w-3 h-3" style={{ color: '#0066ff', filter: 'drop-shadow(0 0 5px #0066ff) drop-shadow(0 0 10px #0066ff)' }} />
+              <IconMusic className="w-2.5 h-2.5 sm:w-3 sm:h-3" style={{ color: '#0066ff', filter: 'drop-shadow(0 0 5px #0066ff) drop-shadow(0 0 10px #0066ff)' }} />
             </motion.button>
           </motion.div>
         )}
@@ -398,7 +398,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                   }}
                   onHoverStart={handlePulltabInteraction}
                   onTap={handlePulltabInteraction}
-                  className="relative flex items-center justify-center h-7 w-7 rounded-full transition-all pointer-events-auto"
+                  className="relative flex items-center justify-center h-6 w-6 sm:h-7 sm:w-7 rounded-full transition-all pointer-events-auto"
                   data-theme-aware
                   style={{
                     background: 'rgba(0, 0, 0, 0.85)',
@@ -419,7 +419,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                     className="relative"
                   >
                     <IconMusic 
-                      className="w-3 h-3"
+                      className="w-2.5 h-2.5 sm:w-3 sm:h-3"
                       style={{ 
                         color: isMusicPlaying || streamingActive ? '#0066ff' : 'rgba(0, 102, 255, 0.7)',
                         filter: isMusicPlaying || streamingActive ? 'drop-shadow(0 0 5px #0066ff) drop-shadow(0 0 10px #0066ff)' : 'none'
@@ -493,7 +493,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               className={cn(
                 "relative rounded-2xl backdrop-blur-2xl shadow-2xl",
                 "text-white/90 overflow-hidden audio-shimmer",
-                open ? "w-[280px] sm:w-[320px]" : "w-auto"
+                open ? "w-[252px] sm:w-[320px]" : "w-auto"
               )}
               style={{
                 background: 'rgba(0, 0, 0, 0.85)',
@@ -507,7 +507,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               {shimmerEnabled && <ShimmerLine color="blue" intensity={shimmerSettings.intensity as any} speed={shimmerSettings.speed as any} />}
 
               {/* Single Neon Blue Button - Trading Hub Style */}
-              <div className="relative p-2">
+              <div className="relative p-1.5 sm:p-2">
                 <motion.button
                   onClick={() => {
                     SoundEffects.click();
@@ -516,7 +516,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                   }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.95 }}
-                  className="relative px-3 h-7 rounded-full flex items-center justify-center gap-2 transition-all"
+                  className="relative px-2.5 sm:px-3 h-6 sm:h-7 rounded-full flex items-center justify-center gap-1.5 sm:gap-2 transition-all"
                   style={{
                     background: 'rgba(0, 0, 0, 0.85)',
                     backdropFilter: 'blur(12px)',
@@ -525,9 +525,9 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                     boxShadow: '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
                   }}
                 >
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-1.5 sm:gap-2">
                     <IconMusic 
-                      className="w-3 h-3"
+                      className="w-2.5 h-2.5 sm:w-3 sm:h-3"
                       style={{ 
                         color: '#0066ff',
                         filter: 'drop-shadow(0 0 5px #0066ff) drop-shadow(0 0 10px #0066ff)'
@@ -538,7 +538,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                       transition={{ duration: 0.3 }}
                       style={{ color: '#0066ff', filter: 'drop-shadow(0 0 5px #0066ff)' }}
                     >
-                      <IconChevronUp className="h-3 w-3" />
+                      <IconChevronUp className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                     </motion.div>
                   </div>
                 </motion.button>

@@ -242,12 +242,14 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   // Derived state: should audio widget minimize (not unmount)?
   // True when any other UI component is open that would overlay the player
   // EXCEPTION: Audio widget stays visible during Discord Stage modal so users can control Discord volume
+  // EXCEPTION: UltimateHub should NOT close/minimize audio widget - they can coexist
   // NOTE: ChartNews is explicitly included in isAnyModalOpen, so audio widget will minimize when ChartNews opens
-  const shouldMinimizeAudioWidget = isMobileMenuOpen || isUltimatePanelOpen || isUltimateHubOpen ||
+  const shouldMinimizeAudioWidget = isMobileMenuOpen || isUltimatePanelOpen ||
     (isAnyModalOpen && !shouldNotMinimizeForThisModal);
 
   // Derived state: is there UI overlaying the floating player area?
-  const hasOverlayingUI = isMobileMenuOpen || isUltimateHubOpen || (isAnyModalOpen && !shouldNotMinimizeForThisModal);
+  // UltimateHub doesn't overlay audio widget - they coexist on different sides of the screen
+  const hasOverlayingUI = isMobileMenuOpen || (isAnyModalOpen && !shouldNotMinimizeForThisModal);
 
   // Derived state: which component is active?
   const activeComponent: UIComponentType | null =

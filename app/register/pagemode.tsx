@@ -618,6 +618,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         recruitId: data.id,
         email: loginEmail
       }));
+      
+      // Mark telegram as confirmed for existing users logging in
+      // This ensures Telegram screen NEVER shows for login route, only for new signups
+      localStorage.setItem("bullmoney_telegram_confirmed", "true");
 
       setTimeout(() => {
         setLoading(false);

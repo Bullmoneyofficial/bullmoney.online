@@ -1,17 +1,17 @@
 /* MobileStaticHelper CSS - Neon Blue Sign Style */
-/* Space-aware: Positioned below UltimateHub button on left side */
+/* Positioned right under mobile navbar as a small pill */
 
 .mobile-static-tip {
   position: fixed;
-  z-index: 30;
+  z-index: 50;
   pointer-events: none;
-  left: 0;
-  /* top is set dynamically via inline style based on UltimateHub position */
-  padding-left: env(safe-area-inset-left, 0px);
-  transform: translateZ(0);
+  left: 50%;
+  transform: translateX(-50%) translateZ(0);
+  /* Position right under navbar (navbar is typically at top, ~60-70px height) */
+  top: calc(98px + env(safe-area-inset-top, 0px));
   contain: layout style;
   will-change: auto;
-  transition: top 0.3s ease-out, opacity 0.25s ease-out;
+  transition: opacity 0.25s ease-out, top 0.2s ease-out;
 }
 
 /* Hide on desktop */
@@ -21,24 +21,23 @@
   }
 }
 
-/* When scrolling - slightly more transparent */
+/* When scrolling - slightly more transparent but stays in place */
 .mobile-static-tip.mobile-tip-scrolling {
-  opacity: 0.8;
+  opacity: 0.7;
+  top: calc(98px + env(safe-area-inset-top, 0px));
 }
 
-/* Main container - neon glow */
+/* Main container - small centered pill */
 .mobile-static-tip-container {
   position: relative;
-  padding: 6px 12px;
-  border-radius: 0 12px 12px 0;
-  background: rgba(0, 0, 0, 0.95);
-  border: 2px solid #3b82f6;
-  border-left: none;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid #3b82f6;
   box-shadow: 
     0 0 4px #3b82f6,
-    0 0 8px #3b82f6,
-    0 0 12px rgba(59, 130, 246, 0.4),
-    inset 0 0 4px rgba(59, 130, 246, 0.3);
+    0 0 8px rgba(59, 130, 246, 0.5),
+    inset 0 0 4px rgba(59, 130, 246, 0.2);
   overflow: hidden;
   cursor: pointer;
   pointer-events: auto;
