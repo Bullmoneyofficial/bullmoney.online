@@ -185,7 +185,7 @@ const normalizeYouTubeId = (input: string) => {
 function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sources: string[]; onOpenModal: () => void; variant?: 'mobile' | 'desktop' }) {
   const [index, setIndex] = useState(0);
   const videoId = normalizeYouTubeId(sources[index] || sources[0] || 'Q3dSjSP3t8I');
-  const embed = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&rel=0&modestbranding=1`;
+  const embed = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&rel=0&modestbranding=1&loop=1&playlist=${videoId}&playsinline=1`;
 
   const containerClass = variant === 'mobile'
     ? "w-full max-w-5xl mx-auto px-4 py-10 pt-6 sm:pt-10 min-h-[85vh] flex items-center"
