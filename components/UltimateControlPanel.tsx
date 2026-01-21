@@ -414,6 +414,7 @@ function FpsPerformancePanel({ deviceInfo }: { deviceInfo: DeviceInfo | null }) 
     enable3D,
     targetFrameRate,
   } = useFpsOptimizer();
+  const { shouldSkipHeavyEffects } = useMobilePerformance();
 
   const getColorClass = (fpsValue: number) => {
     if (fpsValue >= 58) return 'text-green-300';
