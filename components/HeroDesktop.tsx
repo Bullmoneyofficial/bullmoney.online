@@ -1159,11 +1159,10 @@ const LiveTickerTape = ({ tickerData, skipHeavyEffects = false }: { tickerData: 
 
 const BullPulse = () => {
   const { shouldSkipHeavyEffects } = useMobilePerformance();
-  const skipHeavyEffects = shouldSkipHeavyEffects();
   return (
     <svg className="absolute left-0 right-0 h-8 top-1/2 -translate-y-1/2 opacity-20" preserveAspectRatio="none">
       <motion.path d="M0,20 L50,20 L60,5 L70,35 L80,15 L90,25 L100,20 L150,20 L160,5 L170,35 L180,15 L190,25 L200,20 L250,20"
-        fill="none" stroke="rgba(59, 130, 246, 0.5)" strokeWidth="2" initial={{ pathLength: 0 }} animate={{ pathLength: [0, 1] }} transition={skipHeavyEffects ? {} : { duration: 2, repeat: Infinity }} />
+        fill="none" stroke="rgba(59, 130, 246, 0.5)" strokeWidth="2" initial={{ pathLength: 0 }} animate={{ pathLength: [0, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity }} />
     </svg>
   );
 };
