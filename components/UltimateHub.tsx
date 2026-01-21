@@ -4788,14 +4788,16 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     </div>
                     
                     {/* View All Link */}
-                    <div className="px-3 py-1.5 border-t border-blue-500/30 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
-                      <a href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
-                        target="_blank" rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-1 text-[9px] text-blue-400 hover:text-blue-300 neon-blue-text transition-all"
-                        style={{ textShadow: '0 0 4px rgba(59, 130, 246, 0.5)' }}>
-                        <ExternalLink className="w-2.5 h-2.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> {activeChannel === 'vip' ? 'Join VIP Channel' : 'View all on Telegram'}
-                      </a>
-                    </div>
+                    {activeChannel !== 'vip' && (
+                      <div className="px-3 py-1.5 border-t border-blue-500/30 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
+                        <a href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-1 text-[9px] text-blue-400 hover:text-blue-300 neon-blue-text transition-all"
+                          style={{ textShadow: '0 0 4px rgba(59, 130, 246, 0.5)' }}>
+                          <ExternalLink className="w-2.5 h-2.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> View all on Telegram
+                        </a>
+                      </div>
+                    )}
                     
                     {/* Social Links */}
                     <div className="p-3 space-y-2 border-t border-blue-500/30 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
@@ -4811,15 +4813,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           {copied ? 'Copied!' : 'Copy Link'}
                         </motion.button>
                         
-                        <motion.button
-                          onClick={() => window.dispatchEvent(new CustomEvent('openProductsModal'))}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-blue-500/30 text-blue-300 font-bold text-xs border border-blue-400/60 neon-blue-text"
-                          style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}
-                        >
-                          <Crown className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> Join VIP
-                        </motion.button>
+                        <div className="flex-1" />
                       </div>
                       
                       <div className="grid grid-cols-4 gap-1.5">
