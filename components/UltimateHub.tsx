@@ -3135,17 +3135,6 @@ const DeviceCenterPanel = memo(({
                       </motion.button>
                     )}
 
-                    {!isVip && (
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => window.dispatchEvent(new CustomEvent('openProductsModal'))}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-bold text-xs"
-                      >
-                        <Crown className="w-4 h-4" />
-                        Upgrade to VIP
-                      </motion.button>
-                    )}
 
                     {isAdmin && (
                       <motion.button
@@ -3215,7 +3204,6 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channe
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [messageSource, setMessageSource] = useState<string | null>(null);
   
   const channelConfig = TELEGRAM_CHANNELS[channel];
   const requiresVip = channelConfig.requiresVip && !isVip;
@@ -3242,38 +3230,10 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channe
           setPosts(data.posts); 
           setError(false);
           setStatusMessage(null);
-          setMessageSource(data.source || 'telegram');
         } else {
-          // If VIP channel is empty, try database fallback (webhook stored messages)
-          if (channel === 'vip') {
-            try {
-              const vipResponse = await fetch(`/api/vip/messages?limit=10&t=${Date.now()}`, { cache: 'no-store' });
-              const vipData = await vipResponse.json();
-              if (vipData.success && Array.isArray(vipData.messages) && vipData.messages.length > 0) {
-                const mapped = vipData.messages.map((message: any) => ({
-                  id: (message.telegram_message_id || message.id)?.toString() || String(message.id),
-                  text: message.message || (message.has_media ? '📷 Media post' : ''),
-                  date: message.created_at ? new Date(message.created_at).toLocaleString() : 'Recently',
-                  views: undefined,
-                  hasMedia: !!message.has_media,
-                  channel: TELEGRAM_CHANNELS.vip.handle,
-                  channelName: TELEGRAM_CHANNELS.vip.name,
-                }));
-                setPosts(mapped);
-                setError(false);
-                setStatusMessage(null);
-                setMessageSource('vip_messages_db');
-                return;
-              }
-            } catch (vipErr) {
-              console.error('[TelegramChannelEmbed] VIP DB fallback error:', vipErr);
-            }
-          }
-
           setPosts([]);
           setError(false);
           setStatusMessage(data.message || 'No messages yet');
-          setMessageSource(data.source || null);
         }
       } catch (err) { 
         console.error('[TelegramChannelEmbed] Fetch error:', err);
@@ -3298,15 +3258,6 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channe
         <p className="text-[10px] text-zinc-400 mb-4 max-w-[200px]">
           Upgrade to VIP to access exclusive signals and premium content.
         </p>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => window.dispatchEvent(new CustomEvent('openProductsModal'))}
-          className="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-amber-500/30 flex items-center gap-2"
-        >
-          <Crown className="w-3.5 h-3.5" />
-          Unlock VIP Access
-        </motion.button>
       </div>
     );
   }
@@ -3345,12 +3296,6 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channe
             <span className="text-[9px] text-emerald-400 font-bold">VIP ACCESS UNLOCKED</span>
           </div>
         )}
-        {isVipChannel && messageSource && (
-          <div className="flex items-center gap-1 mb-2 px-2 py-1 bg-blue-500/10 rounded-full">
-            <Info className="w-3 h-3 text-blue-400" />
-            <span className="text-[9px] text-blue-400 font-bold">SOURCE: {messageSource}</span>
-          </div>
-        )}
         <p className="text-[11px] text-zinc-400 mb-1 text-center">
           {isVipChannel && isVip 
             ? 'VIP signals syncing from Telegram...' 
@@ -3365,21 +3310,19 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channe
               ? 'Join the VIP Telegram channel for live trading signals and premium analysis.'
               : 'Messages will appear here once available.'}
         </p>
-        <motion.a 
-          href={telegramUrl} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${
-            isVipChannel 
-              ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg shadow-amber-500/30'
-              : 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
-          }`}
-        >
-          <ExternalLink className="w-3.5 h-3.5" />
-          {isVipChannel ? 'Open VIP Channel' : 'Open in Telegram'}
-        </motion.a>
+        {!isVipChannel && (
+          <motion.a 
+            href={telegramUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 bg-blue-500/20 text-blue-400 border border-blue-500/40"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            Open in Telegram
+          </motion.a>
+        )}
       </div>
     );
   }
@@ -3396,14 +3339,6 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channe
 
   return (
     <div className="space-y-2 p-2">
-      {channel === 'vip' && messageSource && (
-        <div className="flex items-center justify-end">
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/10">
-            <Info className="w-3 h-3 text-blue-400" />
-            <span className="text-[8px] text-blue-400 font-bold">SOURCE: {messageSource}</span>
-          </div>
-        </div>
-      )}
       {posts.map((post, idx) => (
         <motion.a
           key={post.id}
@@ -3932,13 +3867,15 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
       </div>
 
       {/* View All Link */}
-      <div className="px-3 py-1.5 border-t border-blue-500/10">
-        <a href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
-          target="_blank" rel="noopener noreferrer"
-          className="flex items-center justify-center gap-1 text-[9px] text-blue-400 hover:text-blue-300">
-          <ExternalLink className="w-2.5 h-2.5" /> {activeChannel === 'vip' ? 'Join VIP Channel' : 'View all on Telegram'}
-        </a>
-      </div>
+      {activeChannel !== 'vip' && (
+        <div className="px-3 py-1.5 border-t border-blue-500/10">
+          <a href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
+            target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center gap-1 text-[9px] text-blue-400 hover:text-blue-300">
+            <ExternalLink className="w-2.5 h-2.5" /> View all on Telegram
+          </a>
+        </div>
+      )}
 
       {/* Social Links */}
       <div className="p-3 space-y-1.5 border-t border-blue-500/20">
@@ -3974,14 +3911,6 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
           })}
         </div>
         
-        <motion.button
-          onClick={() => window.dispatchEvent(new CustomEvent('openProductsModal'))}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold text-xs"
-        >
-          <Crown className="w-3.5 h-3.5" /> Join VIP
-        </motion.button>
       </div>
     </ModalWrapper>
   );

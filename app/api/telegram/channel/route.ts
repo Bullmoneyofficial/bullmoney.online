@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 
 interface TelegramPost {
   id: string;
@@ -23,8 +22,6 @@ const CHANNELS = {
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const VIP_CHANNEL_ID = process.env.VIP_CHANNEL_ID;
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // In-memory cache for VIP messages (persists during server runtime)
 let vipMessagesCache: TelegramPost[] = [];
@@ -33,34 +30,6 @@ const CACHE_DURATION = 10000; // 10 seconds
 
 // Track last update ID for getUpdates
 // (currently unused but reserved for future incremental polling)
-
-async function fetchVipMessagesFromDatabase(limit: number = 10): Promise<TelegramPost[]> {
-  if (!supabaseUrl || !supabaseServiceKey) {
-    return [];
-  }
-
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
-  const { data, error } = await supabase
-    .from('vip_messages')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(limit);
-
-  if (error || !data) {
-    console.error('[TG VIP] Supabase error:', error);
-    return [];
-  }
-
-  return data.map((message: any) => ({
-    id: (message.telegram_message_id || message.id)?.toString() || String(message.id),
-    text: message.message || (message.has_media ? '📷 Media post' : ''),
-    date: formatDate(message.created_at || new Date().toISOString()),
-    views: undefined,
-    hasMedia: !!message.has_media,
-    channel: '+yW5jIfxJpv9hNmY0',
-    channelName: 'VIP Trades',
-  }));
-}
 
 async function getWebhookStatus() {
   try {
@@ -96,11 +65,6 @@ async function fetchVIPMessagesFromTelegram(): Promise<TelegramPost[]> {
     if (webhookStatus.active) {
       console.warn('[TG VIP] Webhook is active:', webhookStatus.url);
       // When webhook is active, getUpdates will not return messages.
-      // Fall back to database messages stored by the webhook handler.
-      const dbMessages = await fetchVipMessagesFromDatabase(10);
-      if (dbMessages.length > 0) {
-        return dbMessages;
-      }
       return vipMessagesCache;
     }
     
@@ -248,23 +212,6 @@ async function getVIPMessagesDirectFromTelegram(channelUsername: string, channel
     console.log('[VIP Direct] Got', posts.length, 'messages from Telegram');
     
     if (posts.length === 0) {
-      // Secondary fallback: try database regardless of webhook status
-      const dbPosts = await fetchVipMessagesFromDatabase(10);
-      if (dbPosts.length > 0) {
-        return NextResponse.json({
-          success: true,
-          posts: dbPosts,
-          channel: channelUsername,
-          channelName: channelName,
-          lastUpdated: new Date().toISOString(),
-          source: 'vip_messages_db',
-        }, {
-          headers: {
-            'Cache-Control': 'private, no-cache',
-          },
-        });
-      }
-
       return NextResponse.json({
         success: true,
         posts: [],
