@@ -977,6 +977,7 @@ export function FPSCounter({
         }
       `}</style>
       <div
+        data-dev-fps
         style={{
           position: 'fixed',
           ...positionStyles[position],

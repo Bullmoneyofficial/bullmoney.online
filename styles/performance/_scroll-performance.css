@@ -48,7 +48,7 @@ html.is-scrolling [data-parallax] {
 
 /* Disable Framer Motion hover effects during scroll */
 html.is-scrolling [data-framer-component-type],
-html.is-scrolling [style*="transform"]:not(.fps-chart-container *) {
+html.is-scrolling [style*="transform"]:not(.fps-chart-container *):not([data-dev-fps]):not([data-dev-fps] *) {
   transform: none !important;
   transition: none !important;
 }

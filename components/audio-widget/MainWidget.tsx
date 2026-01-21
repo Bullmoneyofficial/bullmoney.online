@@ -171,7 +171,19 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
     };
   }, []);
   
+  // Track if we're on mobile
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
   useEffect(() => {
+    const checkMobile = () => setIsMobileDevice(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    // DISABLED on mobile - no scroll minimization to prevent size changes
+    if (isMobileDevice) return;
+    
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       const scrollDelta = Math.abs(currentScrollY - lastScrollY.current);
@@ -206,7 +218,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
         clearTimeout(scrollTimeoutRef.current);
       }
     };
-  }, [open, setIsScrollMinimized]);
+  }, [open, setIsScrollMinimized, isMobileDevice]);
 
   // Reset minimized state when widget opens
   useEffect(() => {
