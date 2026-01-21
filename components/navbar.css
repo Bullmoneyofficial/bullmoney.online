@@ -722,16 +722,22 @@ body {
 
 /* Enable full shimmer on Apple mobile navbar */
 @media (max-width: 768px) {
-  /* Apple premium - full quality shimmer on navbar */
+  /* Premium browsers - full quality shimmer on navbar */
   html.apple-premium .navbar-shimmer,
-  html.instagram-premium .navbar-shimmer {
+  html.instagram-premium .navbar-shimmer,
+  html.safari-premium .navbar-shimmer,
+  html.chrome-premium .navbar-shimmer,
+  html.mobile-premium .navbar-shimmer {
     overflow: hidden !important;
     position: relative;
   }
   
   /* Mobile controls glass - ANIMATED BACKGROUND instead of black */
   html.apple-premium .mobile-controls-glass,
-  html.instagram-premium .mobile-controls-glass {
+  html.instagram-premium .mobile-controls-glass,
+  html.safari-premium .mobile-controls-glass,
+  html.chrome-premium .mobile-controls-glass,
+  html.mobile-premium .mobile-controls-glass {
     background: linear-gradient(
       90deg,
       rgba(0, 0, 0, 0.95) 0%,
@@ -751,7 +757,10 @@ body {
   
   /* Inner container also gets animated bg */
   html.apple-premium .navbar-shimmer > div,
-  html.instagram-premium .navbar-shimmer > div {
+  html.instagram-premium .navbar-shimmer > div,
+  html.safari-premium .navbar-shimmer > div,
+  html.chrome-premium .navbar-shimmer > div,
+  html.mobile-premium .navbar-shimmer > div {
     background: linear-gradient(
       90deg,
       rgba(0, 0, 0, 0.95) 0%,
@@ -768,7 +777,10 @@ body {
   
   /* BACKGROUND SHIMMER - sweeps left to right across entire navbar */
   html.apple-premium .navbar-shimmer::before,
-  html.instagram-premium .navbar-shimmer::before {
+  html.instagram-premium .navbar-shimmer::before,
+  html.safari-premium .navbar-shimmer::before,
+  html.chrome-premium .navbar-shimmer::before,
+  html.mobile-premium .navbar-shimmer::before {
     content: '';
     position: absolute;
     top: 0;
@@ -801,14 +813,32 @@ body {
   html.instagram-premium .navbar-shimmer a,
   html.instagram-premium .navbar-shimmer svg,
   html.instagram-premium .navbar-shimmer [role="button"],
-  html.instagram-premium .navbar-shimmer .nav-button {
+  html.instagram-premium .navbar-shimmer .nav-button,
+  html.safari-premium .navbar-shimmer button,
+  html.safari-premium .navbar-shimmer a,
+  html.safari-premium .navbar-shimmer svg,
+  html.safari-premium .navbar-shimmer [role="button"],
+  html.safari-premium .navbar-shimmer .nav-button,
+  html.chrome-premium .navbar-shimmer button,
+  html.chrome-premium .navbar-shimmer a,
+  html.chrome-premium .navbar-shimmer svg,
+  html.chrome-premium .navbar-shimmer [role="button"],
+  html.chrome-premium .navbar-shimmer .nav-button,
+  html.mobile-premium .navbar-shimmer button,
+  html.mobile-premium .navbar-shimmer a,
+  html.mobile-premium .navbar-shimmer svg,
+  html.mobile-premium .navbar-shimmer [role="button"],
+  html.mobile-premium .navbar-shimmer .nav-button {
     position: relative;
     z-index: 5 !important;
   }
   
   /* Icons - color aware with blue tint and glow */
   html.apple-premium .navbar-shimmer svg,
-  html.instagram-premium .navbar-shimmer svg {
+  html.instagram-premium .navbar-shimmer svg,
+  html.safari-premium .navbar-shimmer svg,
+  html.chrome-premium .navbar-shimmer svg,
+  html.mobile-premium .navbar-shimmer svg {
     z-index: 10 !important;
     color: rgba(147, 197, 253, 1) !important;
     filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.5));
@@ -819,14 +849,23 @@ body {
   html.apple-premium .navbar-shimmer button:active svg,
   html.apple-premium .navbar-shimmer a:active svg,
   html.instagram-premium .navbar-shimmer button:active svg,
-  html.instagram-premium .navbar-shimmer a:active svg {
+  html.instagram-premium .navbar-shimmer a:active svg,
+  html.safari-premium .navbar-shimmer button:active svg,
+  html.safari-premium .navbar-shimmer a:active svg,
+  html.chrome-premium .navbar-shimmer button:active svg,
+  html.chrome-premium .navbar-shimmer a:active svg,
+  html.mobile-premium .navbar-shimmer button:active svg,
+  html.mobile-premium .navbar-shimmer a:active svg {
     color: rgba(255, 255, 255, 1) !important;
     filter: drop-shadow(0 0 8px rgba(147, 197, 253, 0.9)) drop-shadow(0 0 15px rgba(59, 130, 246, 0.6));
   }
   
   /* Pulse glow animation on icons when shimmer passes */
   html.apple-premium .navbar-shimmer svg,
-  html.instagram-premium .navbar-shimmer svg {
+  html.instagram-premium .navbar-shimmer svg,
+  html.safari-premium .navbar-shimmer svg,
+  html.chrome-premium .navbar-shimmer svg,
+  html.mobile-premium .navbar-shimmer svg {
     animation: iconPulseGlow 5s ease-in-out infinite;
   }
 }
@@ -852,7 +891,10 @@ body {
 /* Top border shimmer line - bright accent */
 @media (max-width: 768px) {
   html.apple-premium .navbar-shimmer::after,
-  html.instagram-premium .navbar-shimmer::after {
+  html.instagram-premium .navbar-shimmer::after,
+  html.safari-premium .navbar-shimmer::after,
+  html.chrome-premium .navbar-shimmer::after,
+  html.mobile-premium .navbar-shimmer::after {
     content: '';
     position: absolute;
     top: 0;
@@ -873,16 +915,22 @@ body {
     pointer-events: none;
   }
   
-  /* Nav buttons glow on Apple mobile */
+  /* Nav buttons glow on premium mobile */
   html.apple-premium .nav-button,
-  html.instagram-premium .nav-button {
+  html.instagram-premium .nav-button,
+  html.safari-premium .nav-button,
+  html.chrome-premium .nav-button,
+  html.mobile-premium .nav-button {
     box-shadow: 0 0 15px rgba(59, 130, 246, 0.3) !important;
     position: relative;
     z-index: 2;
   }
   
   html.apple-premium .nav-button:active,
-  html.instagram-premium .nav-button:active {
+  html.instagram-premium .nav-button:active,
+  html.safari-premium .nav-button:active,
+  html.chrome-premium .nav-button:active,
+  html.mobile-premium .nav-button:active {
     box-shadow: 0 0 25px rgba(59, 130, 246, 0.5) !important;
   }
 }

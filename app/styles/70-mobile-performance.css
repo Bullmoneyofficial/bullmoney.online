@@ -176,6 +176,50 @@ html.is-in-app-browser .spline-container {
 }
 
 /* ============================================================================
+   PREMIUM MOBILE OVERRIDES (2026.1 Update)
+   Safari, Chrome mobile, and all mobile browsers get premium experience
+   These override the restrictive in-app-browser rules above
+   ============================================================================ */
+
+/* Re-enable animations for premium mobile browsers */
+html.mobile-premium *,
+html.mobile-premium *::before,
+html.mobile-premium *::after,
+html.safari-premium *,
+html.safari-premium *::before,
+html.safari-premium *::after,
+html.chrome-premium *,
+html.chrome-premium *::before,
+html.chrome-premium *::after,
+html.instagram-premium *,
+html.instagram-premium *::before,
+html.instagram-premium *::after {
+  animation: unset;
+  transition-duration: unset;
+}
+
+/* Reset animation CSS variables for premium */
+html.mobile-premium,
+html.safari-premium,
+html.chrome-premium,
+html.instagram-premium {
+  --animations-enabled: 1;
+  --animation-duration-fast: 0.15s;
+  --animation-duration-normal: 0.25s;
+  --animation-duration-slow: 0.4s;
+}
+
+/* Allow blur effects on premium browsers */
+html.mobile-premium [class*="backdrop-blur"],
+html.safari-premium [class*="backdrop-blur"],
+html.chrome-premium [class*="backdrop-blur"],
+html.instagram-premium [class*="backdrop-blur"] {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* ============================================================================
    PERFORMANCE TIER OPTIMIZATIONS
    Based on data-performance-tier attribute on html
    ============================================================================ */

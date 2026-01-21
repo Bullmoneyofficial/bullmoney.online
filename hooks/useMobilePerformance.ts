@@ -311,13 +311,18 @@ function buildProfile(): MobilePerformanceProfile {
     ? effectiveType 
     : (connection?.type === 'wifi' ? 'wifi' : 'unknown')) as MobilePerformanceProfile['connectionType'];
   
-  // Performance classification
+  // UPDATED 2026.1: Detect mainstream mobile browsers for premium experience
+  const isSafariMobile = isSafari && (isIOS || isMobile);
+  const isChromeMobile = /chrome/i.test(ua) && isMobile && !isInAppBrowser;
+  const isPremiumMobileBrowser = isSafariMobile || isChromeMobile || (isInAppBrowser && /instagram/i.test(ua));
+
+  // Performance classification - UPDATED: Don't mark premium mobile browsers as low-end
   const isLowEnd = (
-    memory <= 2 || 
-    cores <= 2 || 
-    isSlowConnection || 
-    isInAppBrowser ||
-    (isIOS && memory <= 3)
+    memory <= 2 ||
+    cores <= 2 ||
+    isSlowConnection ||
+    (isInAppBrowser && !isPremiumMobileBrowser) ||
+    (isIOS && memory <= 3 && !isPremiumMobileBrowser)
   );
   
   const isHighEnd = (
@@ -332,7 +337,7 @@ function buildProfile(): MobilePerformanceProfile {
   
   if (prefersReducedMotion) {
     performanceTier = 'minimal';
-  } else if (isLowEnd || (isMobile && isInAppBrowser)) {
+  } else if (isLowEnd || (isMobile && isInAppBrowser && !isPremiumMobileBrowser)) {
     performanceTier = 'low';
   } else if (isMobile) {
     // Mobile devices: check memory and connection

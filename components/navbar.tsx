@@ -609,7 +609,7 @@ export const Navbar = memo(() => {
             shimmerEnabled={shimmerEnabled}
             shimmerSettings={shimmerSettings}
             isScrollMinimized={isScrollMinimized}
-            skipHeavyEffects={shouldSkipHeavyEffects}
+            skipHeavyEffects={shouldSkipHeavyEffects()}
           />
           </div>
         </div>

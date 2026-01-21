@@ -38,9 +38,13 @@ export const detectBrowserCapabilities = () => {
   const isIOS = /iphone|ipad|ipod/i.test(ua);
   const isMac = /macintosh|mac os x/i.test(ua);
   const isAppleDevice = isIOS || isMac;
-  
+
   // Instagram detection - now gets full features
   const isInstagram = /instagram|ig_/i.test(ua);
+
+  // Safari and Chrome mobile detection - premium experience for all major browsers
+  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+  const isChromeMobile = /chrome/i.test(ua) && isMobile;
   
   // In-app browser detection - UPDATED: Exclude Instagram and Apple devices
   const isInAppBrowserRaw = 
@@ -102,14 +106,20 @@ const applyPerformanceClasses = (capabilities: ReturnType<typeof detectBrowserCa
   const isAppleDevice = isIOS || isMac;
   const isInstagram = ua.includes('instagram') || ua.includes('ig_');
   
+  // Safari and Chrome detection for premium
+  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+  const isChromeMobile = /chrome/i.test(ua) && /android|iphone|ipad|ipod|mobile/i.test(ua);
+
   // Clear existing performance classes
   html.classList.remove(
-    'desktop-optimized', 'high-performance', 'mobile-optimized', 
-    'in-app-browser', 'display-120hz', 'apple-premium', 'instagram-premium'
+    'desktop-optimized', 'high-performance', 'mobile-optimized',
+    'in-app-browser', 'display-120hz', 'apple-premium', 'instagram-premium',
+    'safari-premium', 'chrome-premium', 'mobile-premium'
   );
   body.classList.remove(
-    'desktop-optimized', 'high-performance', 'mobile-optimized', 
-    'in-app-browser', 'apple-premium', 'instagram-premium'
+    'desktop-optimized', 'high-performance', 'mobile-optimized',
+    'in-app-browser', 'apple-premium', 'instagram-premium',
+    'safari-premium', 'chrome-premium', 'mobile-premium'
   );
   
   // UPDATED 2026: Add Apple premium and Instagram premium classes
@@ -124,7 +134,28 @@ const applyPerformanceClasses = (capabilities: ReturnType<typeof detectBrowserCa
     body.classList.add('instagram-premium');
     console.log('[PerformanceSystem] Instagram detected - premium experience enabled');
   }
-  
+
+  // UPDATED 2026.1: Safari premium for mobile Safari browsers
+  if (isSafari && !isInstagram) {
+    html.classList.add('safari-premium');
+    body.classList.add('safari-premium');
+    console.log('[PerformanceSystem] Safari detected - premium experience enabled');
+  }
+
+  // UPDATED 2026.1: Chrome mobile premium
+  if (isChromeMobile && !isInstagram) {
+    html.classList.add('chrome-premium');
+    body.classList.add('chrome-premium');
+    console.log('[PerformanceSystem] Chrome Mobile detected - premium experience enabled');
+  }
+
+  // UPDATED 2026.1: Generic mobile-premium for all mobile browsers
+  if (/android|iphone|ipad|ipod|mobile/i.test(ua)) {
+    html.classList.add('mobile-premium');
+    body.classList.add('mobile-premium');
+    console.log('[PerformanceSystem] Mobile browser detected - premium experience enabled');
+  }
+
   if (capabilities.isDesktop) {
     html.classList.add('desktop-optimized');
     body.classList.add('desktop-optimized');

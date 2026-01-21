@@ -219,6 +219,30 @@ export function PerformanceProvider({
         }
         // Continue with detection but don't return early
       }
+
+      // UPDATED 2026.1: Safari and Chrome mobile also get premium experience
+      const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+      const isChromeMobile = /chrome/i.test(ua) && mobile;
+
+      if (isSafari && !isInstagram) {
+        document.documentElement.classList.add('safari-premium', 'high-performance');
+        document.body?.classList.add('safari-premium', 'high-performance');
+        console.log('[PerformanceProvider] Safari detected - premium experience enabled');
+        setIsHighEndDesktop(true);
+      }
+
+      if (isChromeMobile && !isInstagram) {
+        document.documentElement.classList.add('chrome-premium', 'high-performance');
+        document.body?.classList.add('chrome-premium', 'high-performance');
+        console.log('[PerformanceProvider] Chrome Mobile detected - premium experience enabled');
+        setIsHighEndDesktop(true);
+      }
+
+      // Generic mobile-premium for all mobile browsers
+      if (mobile) {
+        document.documentElement.classList.add('mobile-premium');
+        document.body?.classList.add('mobile-premium');
+      }
       
       if (browserInfo.isInAppBrowser && !hasPremiumExperience) {
         console.log('[PerformanceProvider] In-app browser detected:', browserInfo.browserName);
