@@ -243,11 +243,28 @@ async function getVIPMessagesDirectFromTelegram(channelUsername: string, channel
     const webhookStatus = await getWebhookStatus();
     
     // Fetch messages from Telegram (or DB fallback if webhook is active)
-    const posts = await fetchVIPMessagesFromTelegram();
+    let posts = await fetchVIPMessagesFromTelegram();
     
     console.log('[VIP Direct] Got', posts.length, 'messages from Telegram');
     
     if (posts.length === 0) {
+      // Secondary fallback: try database regardless of webhook status
+      const dbPosts = await fetchVipMessagesFromDatabase(10);
+      if (dbPosts.length > 0) {
+        return NextResponse.json({
+          success: true,
+          posts: dbPosts,
+          channel: channelUsername,
+          channelName: channelName,
+          lastUpdated: new Date().toISOString(),
+          source: 'vip_messages_db',
+        }, {
+          headers: {
+            'Cache-Control': 'private, no-cache',
+          },
+        });
+      }
+
       return NextResponse.json({
         success: true,
         posts: [],

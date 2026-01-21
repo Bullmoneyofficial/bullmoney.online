@@ -3215,6 +3215,7 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channe
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [messageSource, setMessageSource] = useState<string | null>(null);
   
   const channelConfig = TELEGRAM_CHANNELS[channel];
   const requiresVip = channelConfig.requiresVip && !isVip;
@@ -3241,6 +3242,7 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channe
           setPosts(data.posts); 
           setError(false);
           setStatusMessage(null);
+          setMessageSource(data.source || 'telegram');
         } else {
           // If VIP channel is empty, try database fallback (webhook stored messages)
           if (channel === 'vip') {
@@ -3260,6 +3262,7 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channe
                 setPosts(mapped);
                 setError(false);
                 setStatusMessage(null);
+                setMessageSource('vip_messages_db');
                 return;
               }
             } catch (vipErr) {
@@ -3270,6 +3273,7 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channe
           setPosts([]);
           setError(false);
           setStatusMessage(data.message || 'No messages yet');
+          setMessageSource(data.source || null);
         }
       } catch (err) { 
         console.error('[TelegramChannelEmbed] Fetch error:', err);
@@ -3341,6 +3345,12 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channe
             <span className="text-[9px] text-emerald-400 font-bold">VIP ACCESS UNLOCKED</span>
           </div>
         )}
+        {isVipChannel && messageSource && (
+          <div className="flex items-center gap-1 mb-2 px-2 py-1 bg-blue-500/10 rounded-full">
+            <Info className="w-3 h-3 text-blue-400" />
+            <span className="text-[9px] text-blue-400 font-bold">SOURCE: {messageSource}</span>
+          </div>
+        )}
         <p className="text-[11px] text-zinc-400 mb-1 text-center">
           {isVipChannel && isVip 
             ? 'VIP signals syncing from Telegram...' 
@@ -3386,6 +3396,14 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channe
 
   return (
     <div className="space-y-2 p-2">
+      {channel === 'vip' && messageSource && (
+        <div className="flex items-center justify-end">
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/10">
+            <Info className="w-3 h-3 text-blue-400" />
+            <span className="text-[8px] text-blue-400 font-bold">SOURCE: {messageSource}</span>
+          </div>
+        </div>
+      )}
       {posts.map((post, idx) => (
         <motion.a
           key={post.id}
