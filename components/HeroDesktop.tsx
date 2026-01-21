@@ -1403,10 +1403,10 @@ const HeroVideoEmbed = ({ videoId, muted }: { videoId: string; muted: boolean })
 };
 
 const SplineLoadingPlaceholder = () => {
-  const { skipHeavyEffects } = useMobilePerformance();
+  const { shouldSkipHeavyEffects } = useMobilePerformance();
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black">
-      <motion.div className="w-24 h-24 border-2 border-blue-500/50" animate={{ rotateY: 360, rotateX: 360 }} transition={skipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: 'linear' }} style={{ transformStyle: 'preserve-3d' }} />
+      <motion.div className="w-24 h-24 border-2 border-blue-500/50" animate={{ rotateY: 360, rotateX: 360 }} transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: 'linear' }} style={{ transformStyle: 'preserve-3d' }} />
     </div>
   );
 };
@@ -1590,13 +1590,13 @@ const useAudioEffects = (enabled: boolean) => {
 };
 
 const MuteToggle = ({ muted, onToggle }: { muted: boolean; onToggle: () => void }) => {
-  const { skipHeavyEffects } = useMobilePerformance();
+  const { shouldSkipHeavyEffects } = useMobilePerformance();
   return (
     <button onClick={onToggle} className="relative p-3 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
       {muted ? <VolumeX className="w-5 h-5 text-white/40" /> : (
         <><Volume2 className="w-5 h-5 text-blue-400" />
           <div className="absolute -top-1 -right-1 flex gap-[2px]">
-            {[...Array(3)].map((_, i) => <motion.div key={i} className="w-[2px] bg-blue-400 rounded-full" animate={{ height: [4, 8, 4] }} transition={skipHeavyEffects ? {} : { duration: 0.5, repeat: Infinity, delay: i * 0.1 }} />)}
+            {[...Array(3)].map((_, i) => <motion.div key={i} className="w-[2px] bg-blue-400 rounded-full" animate={{ height: [4, 8, 4] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.5, repeat: Infinity, delay: i * 0.1 }} />)}
           </div>
         </>
       )}
