@@ -10,8 +10,9 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { gsap } from 'gsap';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type TargetAndTransition } from 'framer-motion';
 import Image from 'next/image';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 // IMPORT YOUR CONTEXT
 // Ensure these match your actual exports in StudioContext
@@ -112,6 +113,7 @@ export const ModalTrigger = ({ children, className }: { children: React.ReactNod
 export const ModalBody = ({ children, className }: { children: React.ReactNode; className?: string }) => {
   const { open, setOpen } = useModal();
   const [mounted, setMounted] = useState(false);
+  const { isMobile, animations, shouldDisableBackdropBlur } = useMobilePerformance();
   
   useEffect(() => {
     setMounted(true);
@@ -131,19 +133,19 @@ export const ModalBody = ({ children, className }: { children: React.ReactNode; 
       {open && (
         <motion.div 
           key="modal-backdrop"
-          initial={{ opacity: 0 }} 
-          animate={{ opacity: 1, backdropFilter: 'blur(10px)' }} 
-          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }} 
-          className="fixed inset-0 z-[9999] flex items-center justify-center h-full w-full bg-zinc-100/10 dark:bg-black/40"
+          initial={animations.modalBackdrop.initial as TargetAndTransition}
+          animate={animations.modalBackdrop.animate as TargetAndTransition}
+          exit={animations.modalBackdrop.exit as TargetAndTransition}
+          className={`fixed inset-0 z-[9999] flex items-center justify-center h-full w-full bg-zinc-100/10 dark:bg-black/40 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'}`}
         >
           <div className={cn('absolute inset-0 z-[-1] bg-transparent')} onClick={() => setOpen(false)} />
           <motion.div 
             key="modal-content"
-            initial={{ opacity: 0, scale: 0.9, y: 20 }} 
-            animate={{ opacity: 1, scale: 1, y: 0 }} 
-            exit={{ opacity: 0, scale: 0.9, y: 20 }} 
-            transition={{ type: 'spring', stiffness: 260, damping: 20 }} 
-            className={cn('relative w-[95%] md:w-[90%] max-w-5xl max-h-[90%] bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col', className)}
+            initial={animations.modalContent.initial as TargetAndTransition}
+            animate={animations.modalContent.animate as TargetAndTransition}
+            exit={animations.modalContent.exit as TargetAndTransition}
+            transition={animations.modalContent.transition}
+            className={cn(`relative w-[95%] md:w-[90%] max-w-5xl max-h-[90%] bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden flex flex-col ${isMobile ? '' : 'shadow-2xl'}`, className)}
           >
             <button onClick={() => setOpen(false)} className="absolute top-4 right-4 z-50 p-2 rounded-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 transition-colors shadow-sm"><CloseIcon className="w-4 h-4 text-black dark:text-white" /></button>
             {children}

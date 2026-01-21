@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type TargetAndTransition } from 'framer-motion';
 import { IconPalette, IconX } from '@tabler/icons-react';
 import { ThemeSelector } from '@/components/Mainpage/ThemeSelector';
 import { ThemeCategory, SoundProfile, ALL_THEMES } from '@/constants/theme-data';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 interface ThemeSelectorModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface ThemeSelectorModalProps {
 
 export const ThemeSelectorModal = ({ isOpen, onClose }: ThemeSelectorModalProps) => {
   const { activeThemeId: globalThemeId, setTheme } = useGlobalTheme();
+  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
   
   // Default to BullMoney Blue if no theme is set
   const [activeThemeId, setActiveThemeId] = useState(globalThemeId || 'bullmoney-blue');
@@ -68,57 +70,70 @@ export const ThemeSelectorModal = ({ isOpen, onClose }: ThemeSelectorModalProps)
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+        initial={animations.modalBackdrop.initial}
+        animate={animations.modalBackdrop.animate as TargetAndTransition}
+        exit={animations.modalBackdrop.exit}
+        transition={animations.modalBackdrop.transition}
+        className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95 ${
+          shouldDisableBackdropBlur ? '' : 'backdrop-blur-sm'
+        }`}
         onClick={onClose}
       >
-        {/* Animated tap to close hints */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
-        >
-          <span>↑</span> Tap anywhere to close <span>↑</span>
-        </motion.div>
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
-        >
-          <span>↓</span> Tap anywhere to close <span>↓</span>
-        </motion.div>
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
-          className="absolute left-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-          style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-        >
-          ← Tap to close
-        </motion.div>
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-          style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-        >
-          Tap to close →
-        </motion.div>
+        {/* Animated tap to close hints - skip on mobile */}
+        {!shouldSkipHeavyEffects && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+          >
+            <span>↑</span> Tap anywhere to close <span>↑</span>
+          </motion.div>
+        )}
+        {!shouldSkipHeavyEffects && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+          >
+            <span>↓</span> Tap anywhere to close <span>↓</span>
+          </motion.div>
+        )}
+        {!shouldSkipHeavyEffects && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+          >
+            ← Tap to close
+          </motion.div>
+        )}
+        {!shouldSkipHeavyEffects && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+          >
+            Tap to close →
+          </motion.div>
+        )}
         
         {/* Modal container - Theme-aware styling */}
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          transition={{ type: "spring", duration: 0.5 }}
+          initial={animations.modalContent.initial}
+          animate={animations.modalContent.animate as TargetAndTransition}
+          exit={animations.modalContent.exit}
+          transition={animations.modalContent.transition}
           onClick={(e) => e.stopPropagation()}
           className="relative w-full max-w-4xl max-h-[85vh] rounded-2xl overflow-hidden"
-          style={{
+          style={shouldSkipHeavyEffects ? {
+            border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+          } : {
             border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
             boxShadow: '0 0 60px rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
           }}

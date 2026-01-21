@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type TargetAndTransition } from 'framer-motion';
 import { 
   X, 
   Plus,
@@ -26,6 +26,7 @@ import { useUserStore } from '@/stores/userStore';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { calculateHotScore, calculateBullScore, sortByHot, sortByTopRated, filterSmartMoney, sortByFresh } from '@/lib/bullAlgo';
 import type { Analysis, ReactionType, MarketType, ContentType } from '@/types/feed';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 // Modal Context
 interface ModalState {
@@ -120,6 +121,7 @@ const BullFeedContent = memo(() => {
   const { setIsOpen: setAuthModalOpen } = useAuthModalUI();
   const { setIsOpen: setPostComposerOpen } = usePostComposerModalUI();
   const { setIsOpen: setAnalysisModalOpen } = useAnalysisModalUI();
+  const { isMobile: isMobileDevice, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
   
   // Zustand stores
   const { 
@@ -302,31 +304,36 @@ const BullFeedContent = memo(() => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-      animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
-      exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-      className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/95"
+      initial={animations.modalBackdrop.initial}
+      animate={animations.modalBackdrop.animate as TargetAndTransition}
+      exit={animations.modalBackdrop.exit}
+      transition={animations.modalBackdrop.transition}
+      className={`fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/95 ${
+        shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'
+      }`}
     >
       {/* Click overlay - transparent, just for click handling */}
       <div className="absolute inset-0 bg-transparent" onClick={handleClose} />
       
       {/* Modal */}
       <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 50 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 50 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        initial={animations.modalContent.initial}
+        animate={animations.modalContent.animate as TargetAndTransition}
+        exit={animations.modalContent.exit}
+        transition={animations.modalContent.transition}
         onClick={(e) => e.stopPropagation()}
         className="relative w-full h-full max-w-6xl max-h-[95vh] m-2 sm:m-4 overflow-hidden rounded-2xl"
       >
-        {/* Shimmer Border */}
-        <div className="absolute inset-[-2px] overflow-hidden rounded-2xl pointer-events-none z-0">
-          <ShimmerBorder color="blue" intensity="low" />
-        </div>
+        {/* Shimmer Border - skip on mobile */}
+        {!shouldSkipHeavyEffects && (
+          <div className="absolute inset-[-2px] overflow-hidden rounded-2xl pointer-events-none z-0">
+            <ShimmerBorder color="blue" intensity="low" />
+          </div>
+        )}
         
         {/* Inner Container */}
         <div className="relative z-10 h-full bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-blue-500/30 overflow-hidden flex flex-col">
-          <ShimmerLine color="blue" />
+          {!shouldSkipHeavyEffects && <ShimmerLine color="blue" />}
           
           {/* Header */}
           <div className="flex-shrink-0 p-4 border-b border-neutral-800">
@@ -342,7 +349,7 @@ const BullFeedContent = memo(() => {
               <div className="flex items-center gap-2">
                 {/* Create Post Button */}
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={isMobileDevice ? {} : { scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleCreatePost}
                   className="hidden sm:flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-xl font-medium text-sm"

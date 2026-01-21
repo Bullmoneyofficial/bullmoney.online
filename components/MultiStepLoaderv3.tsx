@@ -8,6 +8,7 @@ import {
   useMotionValue,
   useTransform,
 } from "framer-motion";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 import { 
   Lock, 
   Unlock, 
@@ -1403,6 +1404,7 @@ const NeonRing: React.FC<{ progress: number; size: number }> = ({ progress, size
 // MAIN LOADER COMPONENT
 // ============================================================================
 export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
+  const { shouldSkipHeavyEffects } = useMobilePerformance();
   const [progress, setProgress] = useState(0);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [gateVisible, setGateVisible] = useState(true);
@@ -3718,7 +3720,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                       rotate: comboCount >= 10 ? [0, 360] : 0,
                       scale: [1, 1.2, 1],
                     }}
-                    transition={{ 
+                    transition={shouldSkipHeavyEffects ? {} : { 
                       rotate: { duration: 2, repeat: Infinity, ease: 'linear' },
                       scale: { duration: 0.5, repeat: Infinity },
                     }}
@@ -4011,7 +4013,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               scale: [1, 1.1, 1],
               opacity: [0.5, 0.8, 0.5],
             }}
-            transition={{
+            transition={shouldSkipHeavyEffects ? {} : {
               duration: 1,
               repeat: Infinity,
               ease: "easeInOut",
@@ -4128,7 +4130,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 >
                   <motion.div
                     animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 1, repeat: Infinity }}
+                    transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
                   >
                     <Timer size={14} style={{ color: "#60a5fa" }} />
                   </motion.div>
@@ -4231,7 +4233,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                         opacity: [0, 1, 0],
                         scale: [0, 1.5, 0],
                       }}
-                      transition={{
+                      transition={shouldSkipHeavyEffects ? {} : {
                         duration: 2 + Math.random() * 2,
                         repeat: Infinity,
                         delay: Math.random() * 2,
@@ -4257,7 +4259,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                         scale: [1, 1.2, 1], 
                         opacity: [0.3, 0.1, 0.3],
                       }}
-                      transition={{
+                      transition={shouldSkipHeavyEffects ? {} : {
                         duration: 3,
                         repeat: Infinity,
                         delay: ring * 0.3,
@@ -4292,7 +4294,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                         opacity: [0.5, 1, 0.5],
                         scale: [1.8, 2.2, 1.8],
                       }}
-                      transition={{
+                      transition={shouldSkipHeavyEffects ? {} : {
                         duration: 2,
                         repeat: Infinity,
                       }}
@@ -4315,7 +4317,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                           'drop-shadow(0 0 15px #3b82f6) drop-shadow(0 0 30px #3b82f6) drop-shadow(0 0 45px rgba(59, 130, 246, 0.5))',
                         ],
                       }}
-                      transition={{
+                      transition={shouldSkipHeavyEffects ? {} : {
                         duration: 2,
                         repeat: Infinity,
                       }}
@@ -4342,7 +4344,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                           '0 0 10px #fff, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 60px rgba(59, 130, 246, 0.5)',
                         ],
                       }}
-                      transition={{ duration: 2, repeat: Infinity }}
+                      transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity }}
                     >
                       ACCESS GRANTED
                     </motion.h2>
@@ -4421,19 +4423,19 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                       className="w-2 h-2 rounded-full"
                       style={{ backgroundColor: '#3b82f6', boxShadow: '0 0 10px #3b82f6' }}
                       animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-                      transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+                      transition={shouldSkipHeavyEffects ? {} : { duration: 0.6, repeat: Infinity, delay: 0 }}
                     />
                     <motion.div
                       className="w-2 h-2 rounded-full"
                       style={{ backgroundColor: '#3b82f6', boxShadow: '0 0 10px #3b82f6' }}
                       animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-                      transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
+                      transition={shouldSkipHeavyEffects ? {} : { duration: 0.6, repeat: Infinity, delay: 0.2 }}
                     />
                     <motion.div
                       className="w-2 h-2 rounded-full"
                       style={{ backgroundColor: '#3b82f6', boxShadow: '0 0 10px #3b82f6' }}
                       animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-                      transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
+                      transition={shouldSkipHeavyEffects ? {} : { duration: 0.6, repeat: Infinity, delay: 0.4 }}
                     />
                   </motion.div>
                 </motion.div>
@@ -4736,7 +4738,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                   scale: [1, 1.3, 1],
                   opacity: [1, 0.5, 1],
                 }}
-                transition={{
+                transition={shouldSkipHeavyEffects ? {} : {
                   duration: 0.5, // 500ms rhythm
                   repeat: Infinity,
                   ease: 'easeInOut',
@@ -5001,7 +5003,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 boxShadow: isHolding ? "0 0 40px #3b82f6" : "none",
               }}
               animate={isHolding ? { scale: [1, 1.05, 1] } : {}}
-              transition={{ duration: 1, repeat: Infinity }}
+              transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
             >
               <span className="text-4xl font-bold neon-text">{countdownValue}</span>
             </motion.div>
@@ -5049,7 +5051,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 border: `3px dashed rgba(59, 130, 246, 0.5)`,
               }}
               animate={{ rotate: 360 }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              transition={shouldSkipHeavyEffects ? {} : { duration: 3, repeat: Infinity, ease: "linear" }}
             >
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "#3b82f6", boxShadow: "0 0 10px #3b82f6" }} />
             </motion.div>
@@ -5574,7 +5576,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             <motion.div
               className="absolute bottom-40 left-1/2 -translate-x-1/2 flex flex-col items-center"
               animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
+              transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity }}
             >
               <div
                 className="w-24 h-20 rounded-lg flex items-center justify-center text-3xl"
@@ -5702,7 +5704,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 backgroundColor: "rgba(0, 0, 0, 0.5)",
               }}
               animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
+              transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity }}
             >
               <ZoomIn size={32} style={{ color: "#3b82f6" }} />
             </motion.div>
@@ -5721,7 +5723,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             <div className="flex items-center justify-center gap-4 mb-3">
               <motion.div
                 animate={{ x: [-5, 0, -5] }}
-                transition={{ duration: 1, repeat: Infinity }}
+                transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
               >
                 <Hand size={32} style={{ color: "#3b82f6", transform: "scaleX(-1)" }} />
               </motion.div>
@@ -5735,7 +5737,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               />
               <motion.div
                 animate={{ x: [5, 0, 5] }}
-                transition={{ duration: 1, repeat: Infinity }}
+                transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
               >
                 <Hand size={32} style={{ color: "#3b82f6" }} />
               </motion.div>
@@ -5753,7 +5755,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
           >
             <motion.div
               animate={{ opacity: [1, 0.3, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
+              transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity }}
             >
               <Sun size={48} className="mx-auto mb-3" style={{ color: "#3b82f6" }} />
             </motion.div>

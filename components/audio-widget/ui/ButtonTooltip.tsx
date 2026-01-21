@@ -2,6 +2,7 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Z_INDEX } from "../constants/zIndex";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 interface ButtonTooltipProps {
   show: boolean;
@@ -16,6 +17,7 @@ export const ButtonTooltip = React.memo(function ButtonTooltip({
   position = "right",
   color = "blue"
 }: ButtonTooltipProps) {
+  const { shouldSkipHeavyEffects } = useMobilePerformance();
   const colorClasses = {
     blue: "from-blue-600/95 via-cyan-500/95 to-blue-600/95 border-blue-400/50 shadow-blue-500/30",
     purple: "from-purple-600/95 via-pink-500/95 to-purple-600/95 border-purple-400/50 shadow-purple-500/30",
@@ -43,12 +45,13 @@ export const ButtonTooltip = React.memo(function ButtonTooltip({
           style={{ zIndex: Z_INDEX.TOOLTIPS }}
         >
           <div className={cn(
-            "px-3 py-2 rounded-xl text-white text-[10px] font-semibold shadow-xl backdrop-blur-md border bg-gradient-to-r",
+            "px-3 py-2 rounded-xl text-white text-[10px] font-semibold shadow-xl border bg-gradient-to-r",
+            shouldSkipHeavyEffects ? '' : 'backdrop-blur-md',
             colorClasses[color]
           )}>
             <motion.span
               animate={{ opacity: [1, 0.7, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
+              transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity }}
             >
               {text}
             </motion.span>

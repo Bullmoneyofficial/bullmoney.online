@@ -12,7 +12,8 @@ import { createPortal } from 'react-dom';
 import { gsap } from 'gsap';
 import { 
   motion, 
-  AnimatePresence 
+  AnimatePresence,
+  type TargetAndTransition
 } from 'framer-motion';
 import {
   Zap,
@@ -22,6 +23,7 @@ import {
   ShieldAlert,
   MessageSquare
 } from 'lucide-react';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 // ==========================================
 // 0. CONFIGURATION & CONSTANTS
@@ -671,6 +673,7 @@ const FaqModalContent = ({onClose}: {onClose: () => void}) => {
 // ==========================================
 export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
   const [mounted, setMounted] = useState(false);
+  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
 
   useEffect(() => {
     setMounted(true);
@@ -699,60 +702,64 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1, backdropFilter: 'blur(10px)' }}
-          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-          className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+          initial={animations.modalBackdrop.initial as TargetAndTransition}
+          animate={animations.modalBackdrop.animate as TargetAndTransition}
+          exit={animations.modalBackdrop.exit as TargetAndTransition}
+          className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'}`}
           onClick={onClose}
         >
-          {/* Animated tap to close hints - Neon styled */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0.4, 0.8, 0.4] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-4 left-1/2 -translate-x-1/2 text-xs font-medium pointer-events-none flex items-center gap-1"
-            style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}
-          >
-            <span>↑</span> Tap anywhere to close <span>↑</span>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0.4, 0.8, 0.4] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs font-medium pointer-events-none flex items-center gap-1"
-            style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}
-          >
-            <span>↓</span> Tap anywhere to close <span>↓</span>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0.4, 0.8, 0.4] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}
-          >
-            ← Tap to close
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0.4, 0.8, 0.4] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}
-          >
-            Tap to close →
-          </motion.div>
+          {/* Animated tap to close hints - Skip on mobile for performance */}
+          {!shouldSkipHeavyEffects && (
+            <>
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0.4, 0.8, 0.4] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute top-4 left-1/2 -translate-x-1/2 text-xs font-medium pointer-events-none flex items-center gap-1"
+                style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}
+              >
+                <span>↑</span> Tap anywhere to close <span>↑</span>
+              </motion.div>
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0.4, 0.8, 0.4] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs font-medium pointer-events-none flex items-center gap-1"
+                style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}
+              >
+                <span>↓</span> Tap anywhere to close <span>↓</span>
+              </motion.div>
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0.4, 0.8, 0.4] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
+                className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+                style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}
+              >
+                ← Tap to close
+              </motion.div>
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0.4, 0.8, 0.4] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+                style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}
+              >
+                Tap to close →
+              </motion.div>
+            </>
+          )}
           
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+            initial={animations.modalContent.initial as TargetAndTransition}
+            animate={animations.modalContent.animate as TargetAndTransition}
+            exit={animations.modalContent.exit as TargetAndTransition}
+            transition={animations.modalContent.transition}
             onClick={(e) => e.stopPropagation()}
             className="relative w-[98%] md:w-[90%] max-w-6xl max-h-[90vh] bg-black rounded-2xl overflow-hidden flex flex-col"
             style={{
               border: '2px solid #3b82f6',
-              boxShadow: '0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3)'
+              boxShadow: isMobile ? 'none' : '0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3)'
             }}
           >
             <button
@@ -760,11 +767,11 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
                 className="absolute top-6 right-6 z-50 p-2 rounded-full bg-black transition-colors group"
                 style={{
                   border: '2px solid #3b82f6',
-                  boxShadow: '0 0 4px #3b82f6, 0 0 8px rgba(59, 130, 246, 0.5)'
+                  boxShadow: isMobile ? 'none' : '0 0 4px #3b82f6, 0 0 8px rgba(59, 130, 246, 0.5)'
                 }}
                 title="Close (ESC)"
             >
-                <X className="w-5 h-5" style={{ color: '#ffffff', filter: 'drop-shadow(0 0 4px #ffffff)' }} />
+                <X className="w-5 h-5" style={{ color: '#ffffff', filter: isMobile ? 'none' : 'drop-shadow(0 0 4px #ffffff)' }} />
                 <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap" style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}>ESC</span>
             </button>
             

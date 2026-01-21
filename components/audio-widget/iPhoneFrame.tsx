@@ -5,6 +5,7 @@ import {
   IconCamera, IconInfoCircle, IconChevronUp, IconPlayerPlay, 
   IconPlayerPause 
 } from "@tabler/icons-react";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 import { cn } from "@/lib/utils";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { ButtonTooltip } from "./ui/ButtonTooltip";
@@ -37,6 +38,7 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
   onMinimize,
   onOpenCamera,
 }: IPhoneFrameProps) {
+  const { shouldSkipHeavyEffects } = useMobilePerformance();
   const [volume, setVolume] = useState(70);
   const [isMuted, setIsMuted] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
@@ -83,7 +85,7 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
         className={cn(
           "relative rounded-[40px] overflow-hidden transition-all duration-500",
           "bg-gradient-to-b from-[#2d2d32] via-[#1c1c21] to-[#0c0c10]",
-          "shadow-[0_0_80px_rgba(0,0,0,0.9),0_20px_60px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.08)]",
+          shouldSkipHeavyEffects ? "shadow-lg" : "shadow-[0_0_80px_rgba(0,0,0,0.9),0_20px_60px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.08)]",
           "border-[4px] border-slate-600/40",
           isLocked && "opacity-60"
         )}
@@ -96,8 +98,8 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
         {/* Reflective shimmer on frame */}
         <motion.div
           className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/3 pointer-events-none rounded-[36px]"
-          animate={{ opacity: [0.5, 0.8, 0.5] }}
-          transition={{ duration: 3, repeat: Infinity }}
+          animate={shouldSkipHeavyEffects ? {} : { opacity: [0.5, 0.8, 0.5] }}
+          transition={shouldSkipHeavyEffects ? {} : { duration: 3, repeat: Infinity }}
         />
         
         {/* Dynamic Island / Notch */}
@@ -121,8 +123,8 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
               <div className="absolute inset-[2px] rounded-full bg-gradient-to-br from-blue-900/60 to-purple-900/60" />
               <motion.div 
                 className="absolute inset-0 rounded-full bg-blue-400/30"
-                animate={{ opacity: [0.2, 0.5, 0.2] }}
-                transition={{ duration: 2, repeat: Infinity }}
+                animate={shouldSkipHeavyEffects ? {} : { opacity: [0.2, 0.5, 0.2] }}
+                transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity }}
               />
               <ButtonTooltip show={hoveredButton === 'camera'} text="📷 Open Camera" position="bottom" color="purple" />
             </div>
@@ -142,8 +144,8 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
                       <motion.div
                         key={i}
                         className="w-[2px] bg-green-400 rounded-full"
-                        animate={{ height: [3, 10, 3] }}
-                        transition={{ duration: 0.4, repeat: Infinity, delay: i * 0.08 }}
+                        animate={shouldSkipHeavyEffects ? { height: 6 } : { height: [3, 10, 3] }}
+                        transition={shouldSkipHeavyEffects ? {} : { duration: 0.4, repeat: Infinity, delay: i * 0.08 }}
                       />
                     ))}
                   </div>
@@ -224,7 +226,7 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
               className="absolute top-14 left-1/2 -translate-x-1/2 pointer-events-none"
               style={{ zIndex: Z_INDEX.VOLUME_SLIDER }}
             >
-              <div className="bg-black/90 backdrop-blur-xl rounded-2xl px-5 py-3 flex items-center gap-3 border border-white/10 shadow-2xl">
+              <div className={`bg-black/90 rounded-2xl px-5 py-3 flex items-center gap-3 border border-white/10 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-xl shadow-2xl'}`}>
                 {isMuted ? <IconVolumeOff className="w-5 h-5 text-white" /> : <IconVolume className="w-5 h-5 text-white" />}
                 <div className="w-28 h-2 bg-white/20 rounded-full overflow-hidden">
                   <motion.div 
@@ -246,11 +248,11 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/95 backdrop-blur-lg flex flex-col items-center justify-center rounded-[36px]"
+              className={`absolute inset-0 bg-black/95 flex flex-col items-center justify-center rounded-[36px] ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-lg'}`}
               style={{ zIndex: Z_INDEX.LOCK_SCREEN }}
               onClick={(e) => { e.stopPropagation(); handlePower(); }}
             >
-              <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+              <motion.div animate={shouldSkipHeavyEffects ? {} : { y: [0, -8, 0] }} transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity }}>
                 <IconLock className="w-14 h-14 text-white/50 mb-4" />
               </motion.div>
               <p className="text-white/60 text-sm font-medium">Tap to Wake</p>
@@ -282,7 +284,7 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
           </div>
 
           {/* Player Header */}
-          <div className="relative flex items-center justify-between px-3 py-2.5 bg-gradient-to-r from-slate-900/90 to-slate-800/90 rounded-t-2xl border-b border-white/5 backdrop-blur-sm mt-2">
+          <div className={`relative flex items-center justify-between px-3 py-2.5 bg-gradient-to-r from-slate-900/90 to-slate-800/90 rounded-t-2xl border-b border-white/5 mt-2 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-sm'}`}>
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-xl bg-gradient-to-br from-blue-500/30 to-purple-500/30 shadow-inner">
                 {SourceIcon && <SourceIcon className="w-5 h-5 text-sky-300" />}
@@ -292,9 +294,9 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
                 <span className="text-[8px] text-white/50">Now Playing</span>
               </div>
               <div className="flex gap-[2px] ml-1">
-                <motion.div className="w-[2px] h-2 bg-blue-400 rounded-full" animate={{ scaleY: [1, 2, 1] }} transition={{ duration: 0.35, repeat: Infinity }} />
-                <motion.div className="w-[2px] h-2.5 bg-cyan-400 rounded-full" animate={{ scaleY: [1, 0.4, 1] }} transition={{ duration: 0.35, repeat: Infinity, delay: 0.1 }} />
-                <motion.div className="w-[2px] h-2 bg-blue-400 rounded-full" animate={{ scaleY: [1, 1.6, 1] }} transition={{ duration: 0.35, repeat: Infinity, delay: 0.2 }} />
+                <motion.div className="w-[2px] h-2 bg-blue-400 rounded-full" animate={shouldSkipHeavyEffects ? {} : { scaleY: [1, 2, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.35, repeat: Infinity }} />
+                <motion.div className="w-[2px] h-2.5 bg-cyan-400 rounded-full" animate={shouldSkipHeavyEffects ? {} : { scaleY: [1, 0.4, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.35, repeat: Infinity, delay: 0.1 }} />
+                <motion.div className="w-[2px] h-2 bg-blue-400 rounded-full" animate={shouldSkipHeavyEffects ? {} : { scaleY: [1, 1.6, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.35, repeat: Infinity, delay: 0.2 }} />
               </div>
             </div>
             <motion.button
@@ -311,11 +313,13 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
             className="relative bg-black rounded-b-2xl overflow-hidden"
             style={{ height: musicSource === 'YOUTUBE' ? '180px' : '110px' }}
           >
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none z-10"
-              animate={{ x: ['-100%', '200%'] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-            />
+            {!shouldSkipHeavyEffects && (
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none z-10"
+                animate={{ x: ['-100%', '200%'] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+              />
+            )}
             
             <iframe
               ref={iframeRef}
@@ -341,7 +345,7 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
               <motion.button
                 whileTap={{ scale: 0.85 }}
                 onClick={(e) => { e.stopPropagation(); setIsPlaying(!isPlaying); SoundEffects.click(); }}
-                className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-lg shadow-white/20"
+                className={`w-14 h-14 rounded-full bg-white flex items-center justify-center ${shouldSkipHeavyEffects ? '' : 'shadow-lg shadow-white/20'}`}
               >
                 {isPlaying ? <IconPlayerPause className="w-6 h-6 text-black" /> : <IconPlayerPlay className="w-6 h-6 text-black ml-0.5" />}
               </motion.button>

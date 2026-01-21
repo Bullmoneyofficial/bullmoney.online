@@ -23,6 +23,7 @@ import dynamic from "next/dynamic";
 
 import { useCalEmbed } from "@/app/hooks/useCalEmbed";
 import { CONSTANTS } from "@/constants/links";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 // --- IMPORT CONTEXT ---
 import { useStudio } from "@/context/StudioContext";
@@ -98,13 +99,14 @@ const MobileMenuControls = memo(({
   shimmerEnabled = true,
   shimmerSettings = { intensity: 'medium' as const, speed: 'normal' as const },
   isScrollMinimized = false,
+  skipHeavyEffects = false,
 }: any) => (
   <motion.div 
-    animate={{
+    animate={skipHeavyEffects ? {} : {
       y: [0, -8, 0],
       scale: [1, 1.02, 1],
     }}
-    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+    transition={skipHeavyEffects ? {} : { duration: 3, repeat: Infinity, ease: 'easeInOut' }}
     className="relative group rounded-full overflow-visible z-50 flex items-center flex-grow"
     data-theme-aware
     data-navbar
@@ -113,14 +115,14 @@ const MobileMenuControls = memo(({
       maxWidth: isScrollMinimized ? '7rem' : 'none',
       transition: 'border-color 0.4s ease-out, box-shadow 0.4s ease-out, filter 0.4s ease-out, height 0.4s ease-out, max-width 0.4s ease-out',
       transitionDelay: '0.35s',
-      filter: 'drop-shadow(0 0 12px rgba(59,130,246,1)) drop-shadow(0 0 24px rgba(59,130,246,0.8)) drop-shadow(0 0 36px rgba(59,130,246,0.6))',
+      filter: skipHeavyEffects ? 'none' : 'drop-shadow(0 0 12px rgba(59,130,246,1)) drop-shadow(0 0 24px rgba(59,130,246,0.8)) drop-shadow(0 0 36px rgba(59,130,246,0.6))',
     }}
   >
     {/* UNIFIED SHIMMER - Border glow effect, theme-aware via CSS variables */}
-    {shimmerEnabled && !isScrollMinimized && <ShimmerBorder />}
+    {shimmerEnabled && !isScrollMinimized && !skipHeavyEffects && <ShimmerBorder />}
     
     {/* UNIFIED SHIMMER - Background glow effect */}
-    {shimmerEnabled && !isScrollMinimized && (
+    {shimmerEnabled && !isScrollMinimized && !skipHeavyEffects && (
       <div className="shimmer-glow shimmer-gpu absolute inset-0 rounded-full pointer-events-none" />
     )}
 
@@ -132,7 +134,7 @@ const MobileMenuControls = memo(({
       )}
       style={{
         border: '2px solid rgba(59, 130, 246, 0.9)',
-        boxShadow: '0 0 10px rgba(59, 130, 246, 0.8), inset 0 0 10px rgba(59, 130, 246, 0.3)',
+        boxShadow: skipHeavyEffects ? 'none' : '0 0 10px rgba(59, 130, 246, 0.8), inset 0 0 10px rgba(59, 130, 246, 0.3)',
       }}
     >
       {/* Theme Selector Button - With text label */}
@@ -140,7 +142,7 @@ const MobileMenuControls = memo(({
         onClick={() => { SoundEffects.click(); onThemeClick(); }}
         onMouseEnter={() => SoundEffects.hover()}
         onTouchStart={() => SoundEffects.click()}
-        whileHover={{ scale: 1.1 }}
+        whileHover={skipHeavyEffects ? {} : { scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         className={cn(
           "rounded-full transition-colors flex items-center justify-center gap-1",
@@ -166,7 +168,7 @@ const MobileMenuControls = memo(({
         onClick={() => { SoundEffects.click(); onToggle(); }}
         onMouseEnter={() => SoundEffects.hover()}
         onTouchStart={() => SoundEffects.click()}
-        whileHover={{ scale: 1.1 }}
+        whileHover={skipHeavyEffects ? {} : { scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         className={cn(
           "rounded-full transition-colors flex items-center justify-center gap-1",
@@ -185,7 +187,7 @@ const MobileMenuControls = memo(({
           )}
           {hasReward && !open && (
             <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
-              <span className="shimmer-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: 'var(--accent-color, #3b82f6)' }}></span>
+              <span className={cn("absolute inline-flex h-full w-full rounded-full opacity-75", skipHeavyEffects ? "" : "shimmer-ping")} style={{ backgroundColor: 'var(--accent-color, #3b82f6)' }}></span>
               <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: 'var(--accent-color, #3b82f6)' }}></span>
             </span>
           )}
@@ -204,6 +206,7 @@ export const Navbar = memo(() => {
   const { tipsMuted } = useAudioSettings();
   const { deviceTier, isSafari } = useCacheContext();
   const { shouldRender: allowMobileLazy } = useMobileLazyRender(200);
+  const { shouldSkipHeavyEffects } = useMobilePerformance();
   
   // Unified UI State - handles mutual exclusion between mobile menu, modals, audio widget, etc.
   const { isMobileMenuOpen, setIsMobileMenuOpen } = useMobileMenu();
@@ -493,8 +496,8 @@ export const Navbar = memo(() => {
         <div className="lg:hidden flex flex-col items-center w-full gap-2 pointer-events-auto">
           {/* Floating Glowing BULLMONEY Logo + Text - Mobile Only */}
           <motion.div
-            animate={{ y: [0, -8, 0] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            animate={shouldSkipHeavyEffects ? {} : { y: [0, -8, 0] }}
+            transition={shouldSkipHeavyEffects ? {} : { duration: 3, repeat: Infinity, ease: 'easeInOut' }}
             className="flex items-center gap-2 justify-center"
           >
             {/* Logo */}
@@ -510,15 +513,15 @@ export const Navbar = memo(() => {
             
             {/* BULLMONEY Text */}
             <motion.h1
-              animate={{ 
+              animate={shouldSkipHeavyEffects ? {} : { 
                 scale: [1, 1.05, 1],
                 opacity: [0.8, 1, 0.8]
               }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+              transition={shouldSkipHeavyEffects ? {} : { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
               className="text-3xl font-black tracking-wider bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 bg-clip-text text-transparent pointer-events-none"
               style={{
-                textShadow: '0 0 20px rgba(59, 130, 246, 1), 0 0 40px rgba(59, 130, 246, 0.8), 0 0 60px rgba(59, 130, 246, 0.6)',
-                filter: 'drop-shadow(0 0 10px rgba(59,130,246,0.9)) drop-shadow(0 0 20px rgba(59,130,246,0.6))',
+                textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 20px rgba(59, 130, 246, 1), 0 0 40px rgba(59, 130, 246, 0.8), 0 0 60px rgba(59, 130, 246, 0.6)',
+                filter: shouldSkipHeavyEffects ? 'none' : 'drop-shadow(0 0 10px rgba(59,130,246,0.9)) drop-shadow(0 0 20px rgba(59,130,246,0.6))',
               }}
             >
               BULLMONEY
@@ -567,24 +570,26 @@ export const Navbar = memo(() => {
                     <span 
                       className="text-lg font-black tracking-tight bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 bg-clip-text text-transparent"
                       style={{
-                        textShadow: '0 0 20px rgba(59, 130, 246, 0.5)',
+                        textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 20px rgba(59, 130, 246, 0.5)',
                       }}
                     >
                       BULLMONEY
                     </span>
                     {/* Shimmer overlay */}
-                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                      <motion.div
-                        className="absolute inset-y-0 w-[60%] bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                        animate={{ x: ['-100%', '200%'] }}
-                        transition={{
-                          duration: 2.5,
-                          repeat: Infinity,
-                          repeatDelay: 1,
-                          ease: 'easeInOut',
-                        }}
-                      />
-                    </div>
+                    {!shouldSkipHeavyEffects && (
+                      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        <motion.div
+                          className="absolute inset-y-0 w-[60%] bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                          animate={{ x: ['-100%', '200%'] }}
+                          transition={{
+                            duration: 2.5,
+                            repeat: Infinity,
+                            repeatDelay: 1,
+                            ease: 'easeInOut',
+                          }}
+                        />
+                      </div>
+                    )}
                   </Link>
                 </motion.div>
               )}
@@ -604,6 +609,7 @@ export const Navbar = memo(() => {
             shimmerEnabled={shimmerEnabled}
             shimmerSettings={shimmerSettings}
             isScrollMinimized={isScrollMinimized}
+            skipHeavyEffects={shouldSkipHeavyEffects}
           />
           </div>
         </div>

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { IconHandFinger, IconArrowLeft, IconArrowRight, IconPlayerPlay, IconInfoCircle, IconVolume, IconChevronUp, IconMusic, IconTrophy, IconFlame, IconBolt, IconZzz, IconPlayerPause, IconPlayerStop, IconX } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { ShimmerLine } from "@/components/ui/UnifiedShimmer";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 // Game color palette - BLUE ONLY (per design requirement)
 const GAME_COLORS = {
@@ -51,10 +52,12 @@ export const BoredPopup = React.memo(function BoredPopup({
   show,
   onDismiss,
   onStartGame,
+  skipHeavyEffects = false,
 }: {
   show: boolean;
   onDismiss: () => void;
   onStartGame?: () => void;
+  skipHeavyEffects?: boolean;
 }) {
   if (!show) return null;
 
@@ -65,10 +68,14 @@ export const BoredPopup = React.memo(function BoredPopup({
         opacity: 1, 
         scale: 1, 
         y: 0, 
-        rotate: [0, 2, -2, 0],
+        rotate: skipHeavyEffects ? 0 : [0, 2, -2, 0],
       }}
       exit={{ opacity: 0, scale: 0.8, y: -10 }}
-      transition={{ 
+      transition={skipHeavyEffects ? { 
+        type: "spring", 
+        stiffness: 400, 
+        damping: 15
+      } : { 
         type: "spring", 
         stiffness: 400, 
         damping: 15,
@@ -87,8 +94,8 @@ export const BoredPopup = React.memo(function BoredPopup({
           <div className="relative flex items-center gap-3">
             <motion.div
               className="p-1.5 rounded-xl bg-white/15 border border-white/25"
-              animate={{ opacity: [0.85, 1, 0.85] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              animate={skipHeavyEffects ? {} : { opacity: [0.85, 1, 0.85] }}
+              transition={skipHeavyEffects ? {} : { duration: 2, repeat: Infinity, ease: "easeInOut" }}
               aria-hidden
             >
               <IconZzz className="w-6 h-6 text-sky-200" />
@@ -228,13 +235,13 @@ export const QuickGameTutorial = React.memo(function QuickGameTutorial({
             <motion.div
               className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white/60"
               animate={{ x: [0, 210, 40, 210] }}
-              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+              transition={{ duration: 3.2, repeat: 3, ease: "easeInOut" }}
               aria-hidden
             />
             <motion.div
               className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-sky-300"
               animate={{ x: [30, 150, 10, 170] }}
-              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: 0.15 }}
+              transition={{ duration: 3.2, repeat: 3, ease: "easeInOut", delay: 0.15 }}
               aria-hidden
             />
             <div className="absolute inset-x-2 bottom-1 text-[9px] text-white/45">Try to catch it before it escapes</div>
@@ -345,7 +352,7 @@ export const QuickGameTutorialDemo = React.memo(function QuickGameTutorialDemo({
                 <motion.div
                   className="absolute top-6 left-6 w-4 h-4 rounded-full bg-sky-300 shadow-[0_0_18px_rgba(56,189,248,0.45)]"
                   animate={{ x: [0, 220, 80, 240], y: [0, 10, 40, 20] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  transition={{ duration: 4, repeat: 3, ease: "easeInOut" }}
                   aria-hidden
                 />
 
@@ -353,7 +360,7 @@ export const QuickGameTutorialDemo = React.memo(function QuickGameTutorialDemo({
                 <motion.div
                   className="absolute top-14 left-10 w-3 h-3 rounded-full bg-white/75"
                   animate={{ x: [0, 170, 110, 200], y: [0, -10, 20, -5] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.15 }}
+                  transition={{ duration: 4, repeat: 3, ease: "easeInOut", delay: 0.15 }}
                   aria-hidden
                 />
 
@@ -361,7 +368,7 @@ export const QuickGameTutorialDemo = React.memo(function QuickGameTutorialDemo({
                 <motion.div
                   className="absolute top-14 left-10 w-10 h-10 rounded-full border border-white/25"
                   animate={{ opacity: [0, 0, 0.8, 0], scale: [0.8, 0.8, 1.6, 2.1] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeOut", times: [0, 0.55, 0.7, 1] }}
+                  transition={{ duration: 4, repeat: 3, ease: "easeOut", times: [0, 0.55, 0.7, 1] }}
                   aria-hidden
                 />
 
@@ -414,6 +421,7 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
   onPause,
   onStop,
   variant = "panel",
+  skipHeavyEffects = false,
 }: {
   energy?: number;
   score?: number;
@@ -427,6 +435,7 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
   onPause?: () => void;
   onStop?: () => void;
   variant?: "panel" | "attached";
+  skipHeavyEffects?: boolean;
 }) {
   const getEnergyGradient = useCallback(() => {
     // Blue-only gradient: energy just shifts brightness
@@ -489,8 +498,8 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
           <div className="flex items-center gap-1">
             {score >= highScore && score > 0 && (
               <motion.div
-                animate={variant === "attached" ? {} : { rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
-                transition={variant === "attached" ? { duration: 0 } : { duration: 1, repeat: Infinity, repeatDelay: 2 }}
+                animate={(variant === "attached" || skipHeavyEffects) ? {} : { rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
+                transition={(variant === "attached" || skipHeavyEffects) ? { duration: 0 } : { duration: 1, repeat: Infinity, repeatDelay: 2 }}
               >
                 <IconTrophy className="w-3.5 h-3.5 text-sky-200" />
               </motion.div>
@@ -533,8 +542,8 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
               tirednessLevel === "exhausted" ? "text-blue-200/75" :
               tirednessLevel === "tired" ? "text-sky-200/75" : "text-sky-200/70"
             )}
-            animate={isFleeing ? { scale: [1, 1.06, 1] } : {}}
-            transition={isFleeing ? { duration: 0.8, repeat: Infinity } : { duration: 0 }}
+            animate={(isFleeing && !skipHeavyEffects) ? { scale: [1, 1.06, 1] } : {}}
+            transition={(isFleeing && !skipHeavyEffects) ? { duration: 0.8, repeat: Infinity } : { duration: 0 }}
           >
             {isFleeing ? "Fleeing" :
              isReturning ? "Returning" :
@@ -651,15 +660,19 @@ export const SparkleBurst = React.memo(function SparkleBurst({
 export const FloatingParticles = React.memo(function FloatingParticles({
   count = 3,
   color = "purple",
+  skipHeavyEffects = false,
 }: {
   count?: number;
   color?: "blue" | "purple" | "red";
+  skipHeavyEffects?: boolean;
 }) {
   const colorClass = {
     blue: "bg-sky-400/30",
     purple: "bg-sky-400/30",
     red: "bg-sky-400/30",
   };
+
+  if (skipHeavyEffects) return null;
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -697,12 +710,14 @@ export const PulseRing = React.memo(function PulseRing({
   active = false,
   color = "purple",
   size = "md",
+  skipHeavyEffects = false,
 }: {
   active?: boolean;
   color?: "blue" | "purple" | "red";
   size?: "sm" | "md" | "lg";
+  skipHeavyEffects?: boolean;
 }) {
-  if (!active) return null;
+  if (!active || skipHeavyEffects) return null;
   
   const colorMap = {
     blue: "border-sky-300",
@@ -741,12 +756,14 @@ export const MotionTrail = React.memo(function MotionTrail({
   show = false,
   direction = 1, // 1 for right, -1 for left
   color = "purple",
+  skipHeavyEffects = false,
 }: {
   show?: boolean;
   direction?: number;
   color?: "blue" | "purple" | "red";
+  skipHeavyEffects?: boolean;
 }) {
-  if (!show) return null;
+  if (!show || skipHeavyEffects) return null;
   
   const colorMap = {
     blue: "from-sky-300/60 to-transparent",
@@ -773,11 +790,13 @@ export const MotionTrail = React.memo(function MotionTrail({
 export const BounceDots = React.memo(function BounceDots({
   active = false,
   color = "purple",
+  skipHeavyEffects = false,
 }: {
   active?: boolean;
   color?: "blue" | "purple" | "red";
+  skipHeavyEffects?: boolean;
 }) {
-  if (!active) return null;
+  if (!active || skipHeavyEffects) return null;
   
   const colorMap = {
     blue: "bg-sky-300",
@@ -870,11 +889,13 @@ export const GlitchEffect = React.memo(function GlitchEffect({
 export const EnergyWave = React.memo(function EnergyWave({
   active = false,
   color = "purple",
+  skipHeavyEffects = false,
 }: {
   active?: boolean;
   color?: "blue" | "purple" | "red";
+  skipHeavyEffects?: boolean;
 }) {
-  if (!active) return null;
+  if (!active || skipHeavyEffects) return null;
   
   const colorMap = {
     blue: "bg-sky-400/30",
@@ -934,8 +955,10 @@ export const ConfettiBurst = React.memo(function ConfettiBurst({
 // 8. Loading Spinner with game colors
 export const GameSpinner = React.memo(function GameSpinner({
   size = "md",
+  skipHeavyEffects = false,
 }: {
   size?: "sm" | "md" | "lg";
+  skipHeavyEffects?: boolean;
 }) {
   const sizeMap = {
     sm: "w-4 h-4",
@@ -949,8 +972,8 @@ export const GameSpinner = React.memo(function GameSpinner({
         "rounded-full border-2 border-transparent border-t-sky-400 border-r-blue-500",
         sizeMap[size]
       )}
-      animate={{ rotate: 360 }}
-      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+      animate={skipHeavyEffects ? {} : { rotate: 360 }}
+      transition={skipHeavyEffects ? {} : { duration: 1, repeat: Infinity, ease: "linear" }}
     />
   );
 });
@@ -959,9 +982,11 @@ export const GameSpinner = React.memo(function GameSpinner({
 export const StatusBadge = React.memo(function StatusBadge({
   status,
   animate = true,
+  skipHeavyEffects = false,
 }: {
   status: "playing" | "paused" | "idle" | "caught" | "escaped";
   animate?: boolean;
+  skipHeavyEffects?: boolean;
 }) {
   const statusConfig = {
     playing: { color: "bg-blue-600", text: "Playing" },
@@ -980,10 +1005,10 @@ export const StatusBadge = React.memo(function StatusBadge({
         config.color,
         status === "escaped" && "ring-1 ring-sky-300/40"
       )}
-      animate={animate ? { scale: [1, 1.05, 1] } : {}}
-      transition={{ duration: 2, repeat: Infinity }}
+      animate={(animate && !skipHeavyEffects) ? { scale: [1, 1.05, 1] } : {}}
+      transition={skipHeavyEffects ? {} : { duration: 2, repeat: Infinity }}
     >
-      {status === "escaped" && (
+      {status === "escaped" && !skipHeavyEffects && (
         <motion.div
           className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent"
           animate={{ x: ["-120%", "220%"] }}
@@ -1001,11 +1026,13 @@ export const StatusBadge = React.memo(function StatusBadge({
 export const OrbitParticles = React.memo(function OrbitParticles({
   active = false,
   count = 3,
+  skipHeavyEffects = false,
 }: {
   active?: boolean;
   count?: number;
+  skipHeavyEffects?: boolean;
 }) {
-  if (!active) return null;
+  if (!active || skipHeavyEffects) return null;
 
   const colors = ["bg-sky-300", "bg-blue-300", "bg-cyan-300"];
 
@@ -1048,6 +1075,7 @@ export const AnimatedTip = React.memo(function AnimatedTip({
   show = true,
   variant = "default",
   pulse = false,
+  skipHeavyEffects = false,
 }: {
   text: string;
   icon?: "tap" | "swipe-left" | "swipe-right" | "play" | "info" | "drag" | "close" | "step";
@@ -1055,6 +1083,7 @@ export const AnimatedTip = React.memo(function AnimatedTip({
   show?: boolean;
   variant?: "default" | "success" | "warning" | "numbered";
   pulse?: boolean;
+  skipHeavyEffects?: boolean;
 }) {
   const icons = useMemo(
     () => ({
@@ -1092,15 +1121,15 @@ export const AnimatedTip = React.memo(function AnimatedTip({
           "flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-[10px] font-medium",
           variants[variant]
         )}
-        animate={pulse ? { scale: [1, 1.02, 1] } : {}}
-        transition={pulse ? { duration: 2, repeat: Infinity } : {}}
+        animate={(pulse && !skipHeavyEffects) ? { scale: [1, 1.02, 1] } : {}}
+        transition={(pulse && !skipHeavyEffects) ? { duration: 2, repeat: Infinity } : {}}
       >
         <motion.span
-          animate={{
+          animate={skipHeavyEffects ? {} : {
             scale: [1, 1.15, 1],
             rotate: icon === "tap" ? [0, -10, 10, 0] : 0,
           }}
-          transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1 }}
+          transition={skipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity, repeatDelay: 1 }}
         >
           {icons[icon as keyof typeof icons] || icons.tap}
         </motion.span>
@@ -1122,6 +1151,7 @@ export const StepGuide = React.memo(function StepGuide({
   description,
   onNext,
   onSkip,
+  skipHeavyEffects = false,
 }: {
   step: number;
   totalSteps: number;
@@ -1129,6 +1159,7 @@ export const StepGuide = React.memo(function StepGuide({
   description: string;
   onNext: () => void;
   onSkip: () => void;
+  skipHeavyEffects?: boolean;
 }) {
   return (
     <motion.div
@@ -1146,8 +1177,8 @@ export const StepGuide = React.memo(function StepGuide({
         <div className="flex items-center gap-2">
           <motion.div
             className="w-6 h-6 rounded-full bg-blue-500/30 border border-blue-400/50 flex items-center justify-center text-[11px] font-bold text-blue-200"
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+            animate={skipHeavyEffects ? {} : { scale: [1, 1.1, 1] }}
+            transition={skipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity }}
           >
             {step}
           </motion.div>
@@ -1175,8 +1206,8 @@ export const StepGuide = React.memo(function StepGuide({
                 "w-2 h-2 rounded-full transition-colors",
                 i + 1 === step ? "bg-blue-400" : i + 1 < step ? "bg-blue-400/50" : "bg-white/20"
               )}
-              animate={i + 1 === step ? { scale: [1, 1.3, 1] } : {}}
-              transition={{ duration: 1, repeat: Infinity }}
+              animate={(i + 1 === step && !skipHeavyEffects) ? { scale: [1, 1.3, 1] } : {}}
+              transition={skipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
             />
           ))}
         </div>
@@ -1198,10 +1229,12 @@ export const ActionHint = React.memo(function ActionHint({
   text,
   position = "bottom",
   show = true,
+  skipHeavyEffects = false,
 }: {
   text: string;
   position?: "top" | "bottom" | "left" | "right";
   show?: boolean;
+  skipHeavyEffects?: boolean;
 }) {
   if (!show) return null;
 
@@ -1227,8 +1260,8 @@ export const ActionHint = React.memo(function ActionHint({
       className={cn("absolute z-50 pointer-events-none", positionClasses[position])}
     >
       <motion.div
-        animate={{ y: position === "top" || position === "bottom" ? [0, -3, 0] : 0, x: position === "left" || position === "right" ? [0, -3, 0] : 0 }}
-        transition={{ duration: 1.5, repeat: Infinity }}
+        animate={skipHeavyEffects ? {} : { y: position === "top" || position === "bottom" ? [0, -3, 0] : 0, x: position === "left" || position === "right" ? [0, -3, 0] : 0 }}
+        transition={skipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity }}
         className="relative"
       >
         <div className="px-2.5 py-1.5 rounded-lg bg-blue-500/20 border border-blue-400/30 backdrop-blur-sm text-[9px] text-blue-200 font-medium whitespace-nowrap">
@@ -1366,14 +1399,7 @@ export const EnergyBar = React.memo(function EnergyBar({
             style={{ animationDuration: "3s" }}
           />
         )}
-        {/* Pulse when low energy */}
-        {percentage <= 20 && (
-          <motion.div
-            className="absolute inset-0 bg-blue-500/20"
-            animate={{ opacity: [0, 0.5, 0] }}
-            transition={{ duration: 0.8, repeat: Infinity }}
-          />
-        )}
+        {/* Pulse when low energy - disabled on mobile for performance */}
       </div>
     </div>
   );
@@ -1387,6 +1413,7 @@ export const GameStats = React.memo(function GameStats({
   combo,
   gamesPlayed,
   compact = false,
+  skipHeavyEffects = false,
 }: {
   highScore: number;
   currentScore: number;
@@ -1394,6 +1421,7 @@ export const GameStats = React.memo(function GameStats({
   combo: number;
   gamesPlayed: number;
   compact?: boolean;
+  skipHeavyEffects?: boolean;
 }) {
   const isNewHighScore = currentScore > 0 && currentScore >= highScore;
 
@@ -1448,8 +1476,8 @@ export const GameStats = React.memo(function GameStats({
             className="mb-3 py-2 px-3 rounded-lg bg-gradient-to-r from-sky-500/20 to-cyan-500/20 border border-sky-400/30 text-center"
           >
             <motion.span
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 0.5, repeat: Infinity }}
+              animate={skipHeavyEffects ? {} : { scale: [1, 1.1, 1] }}
+              transition={skipHeavyEffects ? {} : { duration: 0.5, repeat: Infinity }}
               className="text-[11px] font-bold text-sky-200"
             >
               NEW HIGH SCORE
@@ -1495,6 +1523,7 @@ export const GameHUD = React.memo(function GameHUD({
   isReturning,
   tirednessLevel,
   isMobile,
+  skipHeavyEffects = false,
 }: {
   energy: number;
   score: number;
@@ -1504,6 +1533,7 @@ export const GameHUD = React.memo(function GameHUD({
   isReturning: boolean;
   tirednessLevel: "fresh" | "active" | "tired" | "exhausted";
   isMobile: boolean;
+  skipHeavyEffects?: boolean;
 }) {
   const statusText = isFleeing ? "Fleeing!" : isReturning ? "Coming back..." :
     tirednessLevel === "fresh" ? "Full energy!" :
@@ -1534,8 +1564,8 @@ export const GameHUD = React.memo(function GameHUD({
                 "inline-block w-2 h-2 rounded-full",
                 isFleeing ? "bg-sky-300" : isReturning ? "bg-cyan-300" : "bg-white/40"
               )}
-              animate={isFleeing || isReturning ? { opacity: [0.5, 1, 0.5] } : {}}
-              transition={{ duration: 1, repeat: isFleeing || isReturning ? Infinity : 0 }}
+              animate={((isFleeing || isReturning) && !skipHeavyEffects) ? { opacity: [0.5, 1, 0.5] } : {}}
+              transition={skipHeavyEffects ? {} : { duration: 1, repeat: (isFleeing || isReturning) ? Infinity : 0 }}
               aria-hidden
             />
             <span className={cn(
@@ -1578,8 +1608,8 @@ export const GameHUD = React.memo(function GameHUD({
 
             {score >= highScore && score > 0 && (
               <motion.div
-                animate={{ rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
+                animate={skipHeavyEffects ? {} : { rotate: [0, 5, -5, 0] }}
+                transition={skipHeavyEffects ? {} : { duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
               >
                 <IconTrophy className="w-4 h-4 text-sky-300" />
               </motion.div>
@@ -1609,11 +1639,13 @@ export const GameHUD = React.memo(function GameHUD({
 export const TouchIndicator = React.memo(function TouchIndicator({
   position,
   isActive,
+  skipHeavyEffects = false,
 }: {
   position: { x: number; y: number } | null;
   isActive: boolean;
+  skipHeavyEffects?: boolean;
 }) {
-  if (!position || !isActive) return null;
+  if (!position || !isActive || skipHeavyEffects) return null;
 
   return (
     <motion.div
@@ -1648,6 +1680,7 @@ export const GameOverScreen = React.memo(function GameOverScreen({
   wasCaught,
   onPlayAgain,
   onClose,
+  skipHeavyEffects = false,
 }: {
   score: number;
   highScore: number;
@@ -1655,6 +1688,7 @@ export const GameOverScreen = React.memo(function GameOverScreen({
   wasCaught: boolean;
   onPlayAgain: () => void;
   onClose: () => void;
+  skipHeavyEffects?: boolean;
 }) {
   return (
     <motion.div
@@ -1677,7 +1711,7 @@ export const GameOverScreen = React.memo(function GameOverScreen({
       >
         {!wasCaught && <GameShimmer colors="blue" speed="fast" />}
         {/* Confetti for high score */}
-        {isNewHighScore && (
+        {isNewHighScore && !skipHeavyEffects && (
           <>
             {[...Array(12)].map((_, i) => (
               <motion.div
@@ -1760,8 +1794,8 @@ export const GameOverScreen = React.memo(function GameOverScreen({
               className="mb-4 py-2 px-4 rounded-xl bg-gradient-to-r from-sky-500/20 to-cyan-500/20 border border-sky-400/30 text-center"
             >
               <motion.div
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
+                animate={skipHeavyEffects ? {} : { scale: [1, 1.05, 1] }}
+                transition={skipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
               >
                 <IconTrophy className="w-5 h-5 mx-auto mb-1 text-sky-300" />
                 <span className="text-sm font-bold text-sky-200">New High Score!</span>

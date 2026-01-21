@@ -17,8 +17,10 @@ import {
   AnimatePresence, 
   useMotionValue, 
   useMotionTemplate, 
-  useTransform 
+  useTransform,
+  type TargetAndTransition
 } from 'framer-motion';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 // IMPORT YOUR CONTEXT HERE
 // Adjust the path to where you saved the 'StudioContext.tsx' file
@@ -140,6 +142,7 @@ export const ModalBody = ({
 }) => {
   const { open, setOpen } = useModal();
   const [mounted, setMounted] = useState(false);
+  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
 
   useEffect(() => {
     setMounted(true);
@@ -156,19 +159,19 @@ export const ModalBody = ({
     <AnimatePresence>
       {open && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1, backdropFilter: 'blur(10px)' }}
-          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center h-full w-full bg-zinc-100/10 dark:bg-black/40"
+          initial={animations.modalBackdrop.initial as TargetAndTransition}
+          animate={animations.modalBackdrop.animate as TargetAndTransition}
+          exit={animations.modalBackdrop.exit as TargetAndTransition}
+          className={`fixed inset-0 z-[9999] flex items-center justify-center h-full w-full bg-zinc-100/10 dark:bg-black/40 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'}`}
         >
           <Overlay />
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+            initial={animations.modalContent.initial as TargetAndTransition}
+            animate={animations.modalContent.animate as TargetAndTransition}
+            exit={animations.modalContent.exit as TargetAndTransition}
+            transition={animations.modalContent.transition}
             className={cn(
-              'relative w-[90%] md:w-[80%] max-w-4xl max-h-[90%] bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col',
+              `relative w-[90%] md:w-[80%] max-w-4xl max-h-[90%] bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden flex flex-col ${isMobile ? '' : 'shadow-2xl'}`,
               className
             )}
           >

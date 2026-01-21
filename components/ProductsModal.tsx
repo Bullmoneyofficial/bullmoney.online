@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, memo, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type TargetAndTransition } from 'framer-motion';
 import { 
   X, 
   Search, 
@@ -16,6 +16,7 @@ import { ShimmerLine, ShimmerBorder } from '@/components/ui/UnifiedShimmer';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useShop, Product, Category } from '@/components/ShopContext';
 import { useProductsModalUI } from '@/contexts/UIStateContext';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 // Modal Context
 interface ModalState {
@@ -192,6 +193,7 @@ ProductCard.displayName = 'ProductCard';
 const ProductsContent = memo(() => {
   const { setIsOpen } = useModalState();
   const { state: { products, categories } } = useShop();
+  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
   
   const [filters, setFilters] = useState<Filters>({
     search: "",
@@ -233,30 +235,38 @@ const ProductsContent = memo(() => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-      animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
-      exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-      className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+      initial={animations.modalBackdrop.initial}
+      animate={animations.modalBackdrop.animate as TargetAndTransition}
+      exit={animations.modalBackdrop.exit}
+      transition={animations.modalBackdrop.transition}
+      className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95 ${
+        shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'
+      }`}
       onClick={handleClose}
     >
-      {/* Animated tap to close hints */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.4, 0.8, 0.4] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
-      >
-        <span>↑</span> Tap anywhere to close <span>↑</span>
-      </motion.div>
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.4, 0.8, 0.4] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-        className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
-      >
-        <span>↓</span> Tap anywhere to close <span>↓</span>
-      </motion.div>
-      <motion.div 
+      {/* Animated tap to close hints - skip on mobile */}
+      {!shouldSkipHeavyEffects && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+        >
+          <span>↑</span> Tap anywhere to close <span>↑</span>
+        </motion.div>
+      )}
+      {!shouldSkipHeavyEffects && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+        >
+          <span>↓</span> Tap anywhere to close <span>↓</span>
+        </motion.div>
+      )}
+      {!shouldSkipHeavyEffects && (
+        <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: [0.4, 0.8, 0.4] }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
@@ -265,6 +275,8 @@ const ProductsContent = memo(() => {
       >
         ← Tap to close
       </motion.div>
+      )}
+      {!shouldSkipHeavyEffects && (
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: [0.4, 0.8, 0.4] }}
@@ -274,24 +286,27 @@ const ProductsContent = memo(() => {
       >
         Tap to close →
       </motion.div>
+      )}
       
       {/* Modal */}
       <motion.div
-        initial={{ scale: 0.9, opacity: 0, y: 50 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.9, opacity: 0, y: 50 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        initial={animations.modalContent.initial}
+        animate={animations.modalContent.animate as TargetAndTransition}
+        exit={animations.modalContent.exit}
+        transition={animations.modalContent.transition}
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-2xl"
       >
-        {/* Shimmer Border */}
-        <div className="absolute inset-[-2px] overflow-hidden rounded-2xl pointer-events-none z-0">
-          <ShimmerBorder color="blue" intensity="low" />
-        </div>
+        {/* Shimmer Border - skip on mobile */}
+        {!shouldSkipHeavyEffects && (
+          <div className="absolute inset-[-2px] overflow-hidden rounded-2xl pointer-events-none z-0">
+            <ShimmerBorder color="blue" intensity="low" />
+          </div>
+        )}
         
         {/* Inner Container */}
         <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-indigo-500/30 overflow-hidden max-h-[90vh] flex flex-col">
-          <ShimmerLine color="blue" />
+          {!shouldSkipHeavyEffects && <ShimmerLine color="blue" />}
           
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-indigo-500/20 flex-shrink-0">
@@ -304,7 +319,7 @@ const ProductsContent = memo(() => {
             </div>
             
             <motion.button
-              whileHover={{ scale: 1.1 }}
+              whileHover={isMobile ? {} : { scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleClose}
               className="p-2 rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition-colors group relative"

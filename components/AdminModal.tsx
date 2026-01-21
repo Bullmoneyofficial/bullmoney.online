@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type TargetAndTransition } from "framer-motion";
 import { 
   X, Trash2, Plus, Loader2, Save, Eye, EyeOff,
   Video, Radio, Youtube, Tv, Settings, LogOut,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase";
 import { useShop } from "@/components/ShopContext";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 // Types
 interface LiveStreamVideo {
@@ -1207,6 +1208,7 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
 export default function AdminModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { state } = useShop();
   const [authenticated, setAuthenticated] = useState(false);
+  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
 
   // Check if already admin from shop state
   useEffect(() => {
@@ -1219,47 +1221,58 @@ export default function AdminModal({ isOpen, onClose }: { isOpen: boolean; onClo
     <AnimatePresence>
       {isOpen && (
         <motion.div 
-          initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-          animate={{ opacity: 1, backdropFilter: 'blur(16px)' }}
-          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-          className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+          initial={animations.modalBackdrop.initial}
+          animate={animations.modalBackdrop.animate as TargetAndTransition}
+          exit={animations.modalBackdrop.exit}
+          transition={animations.modalBackdrop.transition}
+          className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95 ${
+            shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'
+          }`}
           onClick={onClose}
         >
-          {/* Animated tap to close hints */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0.4, 0.8, 0.4] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
-          >
-            <span>↑</span> Tap anywhere to close <span>↑</span>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0.4, 0.8, 0.4] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
-          >
-            <span>↓</span> Tap anywhere to close <span>↓</span>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0.4, 0.8, 0.4] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-          >
-            ← Tap to close
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0.4, 0.8, 0.4] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-          >
-            Tap to close →
-          </motion.div>
+          {/* Animated tap to close hints - skip on mobile */}
+          {!shouldSkipHeavyEffects && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.4, 0.8, 0.4] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+            >
+              <span>↑</span> Tap anywhere to close <span>↑</span>
+            </motion.div>
+          )}
+          {!shouldSkipHeavyEffects && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.4, 0.8, 0.4] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+            >
+              <span>↓</span> Tap anywhere to close <span>↓</span>
+            </motion.div>
+          )}
+          {!shouldSkipHeavyEffects && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.4, 0.8, 0.4] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+              style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+            >
+              ← Tap to close
+            </motion.div>
+          )}
+          {!shouldSkipHeavyEffects && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.4, 0.8, 0.4] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+              style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+            >
+              Tap to close →
+            </motion.div>
+          )}
           
           <div onClick={(e) => e.stopPropagation()}>
             {!authenticated ? (

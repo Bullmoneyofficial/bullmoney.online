@@ -6,6 +6,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useUIState } from "@/contexts/UIStateContext";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
+import { MobilePerformanceProvider } from "@/contexts/MobilePerformanceProvider";
 
 // ✅ LOADING FALLBACKS - Mobile optimized
 import { MinimalFallback, FooterSkeleton } from "@/components/MobileLazyLoadingFallback";
@@ -186,18 +187,19 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
 
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        {/* NOTE: UIStateProvider is already provided by MobileMenuProvider in layout.tsx */}
-        {/* NOTE: RecruitAuthProvider is now in layout.tsx to wrap Navbar */}
+      <MobilePerformanceProvider>
+        <AuthProvider>
+          {/* NOTE: UIStateProvider is already provided by MobileMenuProvider in layout.tsx */}
+          {/* NOTE: RecruitAuthProvider is now in layout.tsx to wrap Navbar */}
 
-        {/* CRITICAL: FPS Scroll Optimizer - pauses animations during scroll */}
-        <FpsScrollOptimizer />
+          {/* CRITICAL: FPS Scroll Optimizer - pauses animations during scroll */}
+          <FpsScrollOptimizer />
       
-        <UnifiedPerformanceProvider startDelay={2000}>
-          <CrashTrackerProvider>
-            <FpsOptimizerProvider enableMonitoring={true} monitoringInterval={500} startDelay={1000}>
-              <PerformanceProvider enableSmoothScroll={true}>
-              <FpsMonitor show={false} />
+          <UnifiedPerformanceProvider startDelay={2000}>
+            <CrashTrackerProvider>
+              <FpsOptimizerProvider enableMonitoring={true} monitoringInterval={500} startDelay={1000}>
+                <PerformanceProvider enableSmoothScroll={true}>
+                <FpsMonitor show={false} />
               {/* NOTE: ClientCursor moved to LayoutProviders - rendered LAST in DOM */}
               {/* AudioWidget stays mounted - NOT lazy unmounted - for audio persistence */}
               {allowMobileComponents && <AudioWidget />}
@@ -270,11 +272,12 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
                 - Opens the Admin VIP Panel
               */}
               <AdminButton />
-              </PerformanceProvider>
-            </FpsOptimizerProvider>
-          </CrashTrackerProvider>
-        </UnifiedPerformanceProvider>
-      </AuthProvider>
+                </PerformanceProvider>
+              </FpsOptimizerProvider>
+            </CrashTrackerProvider>
+          </UnifiedPerformanceProvider>
+        </AuthProvider>
+      </MobilePerformanceProvider>
     </ErrorBoundary>
   );
 }

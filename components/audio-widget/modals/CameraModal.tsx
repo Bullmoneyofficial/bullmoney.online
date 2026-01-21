@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { IconX, IconFlare, IconSwitchHorizontal } from "@tabler/icons-react";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { Z_INDEX } from "../constants/zIndex";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 interface CameraModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ export const CameraModal = React.memo(function CameraModal({
   isOpen,
   onClose,
 }: CameraModalProps) {
+  const { shouldSkipHeavyEffects } = useMobilePerformance();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [flashActive, setFlashActive] = useState(false);
@@ -98,7 +100,7 @@ export const CameraModal = React.memo(function CameraModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 flex items-center justify-center bg-black/90 backdrop-blur-md"
+          className={`fixed inset-0 flex items-center justify-center bg-black/90 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-md'}`}
           style={{ zIndex: Z_INDEX.CAMERA_MODAL }}
           onClick={onClose}
         >
@@ -130,7 +132,7 @@ export const CameraModal = React.memo(function CameraModal({
               <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30">
                 <div className="bg-black rounded-full px-6 py-2 flex items-center gap-3">
                   <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 ring-1 ring-slate-600">
-                    <motion.div className="w-full h-full rounded-full bg-green-500/40" animate={{ opacity: [0.4, 0.8, 0.4] }} transition={{ duration: 1.5, repeat: Infinity }} />
+                    <motion.div className="w-full h-full rounded-full bg-green-500/40" animate={{ opacity: [0.4, 0.8, 0.4] }} transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity }} />
                   </div>
                   <span className="text-[9px] text-white/60 font-medium">Recording</span>
                 </div>
@@ -142,7 +144,7 @@ export const CameraModal = React.memo(function CameraModal({
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/8 to-transparent z-20 pointer-events-none"
                   animate={{ x: ['-100%', '200%'] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
                 />
                 
                 {/* Video Feed */}
@@ -178,7 +180,7 @@ export const CameraModal = React.memo(function CameraModal({
                     <motion.button
                       whileTap={{ scale: 0.9 }}
                       onClick={onClose}
-                      className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/10"
+                      className={`w-10 h-10 rounded-full bg-black/60 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-md'} flex items-center justify-center border border-white/10`}
                     >
                       <IconX className="w-5 h-5 text-white" />
                     </motion.button>
@@ -189,7 +191,7 @@ export const CameraModal = React.memo(function CameraModal({
                           key={f}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => setFilter(f)}
-                          className={`w-9 h-9 rounded-full backdrop-blur-md flex items-center justify-center text-[7px] font-bold uppercase border ${
+                          className={`w-9 h-9 rounded-full ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-md'} flex items-center justify-center text-[7px] font-bold uppercase border ${
                             filter === f 
                               ? "bg-blue-500 text-white border-blue-400" 
                               : "bg-black/60 text-white/70 border-white/10"
@@ -208,13 +210,13 @@ export const CameraModal = React.memo(function CameraModal({
                         scale: [1, 1.03, 1],
                         borderColor: ['rgba(255,255,255,0.2)', 'rgba(59,130,246,0.5)', 'rgba(255,255,255,0.2)']
                       }}
-                      transition={{ duration: 2, repeat: Infinity }}
+                      transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity }}
                       className="w-40 h-40 rounded-full border-2 flex items-center justify-center"
                     >
                       <motion.div 
                         className="w-2 h-2 rounded-full bg-white/60"
                         animate={{ scale: [1, 1.5, 1] }}
-                        transition={{ duration: 1, repeat: Infinity }}
+                        transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
                       />
                     </motion.div>
                   </div>
@@ -225,7 +227,7 @@ export const CameraModal = React.memo(function CameraModal({
                     <motion.button
                       whileTap={{ scale: 0.9 }}
                       onClick={() => setFacingMode(f => f === 'user' ? 'environment' : 'user')}
-                      className="w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/10"
+                      className={`w-12 h-12 rounded-full bg-black/60 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-md'} flex items-center justify-center border border-white/10`}
                     >
                       <IconSwitchHorizontal className="w-5 h-5 text-white" />
                     </motion.button>
@@ -245,7 +247,7 @@ export const CameraModal = React.memo(function CameraModal({
                     {/* Flash Toggle */}
                     <motion.button
                       whileTap={{ scale: 0.9 }}
-                      className="w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/10"
+                      className={`w-12 h-12 rounded-full bg-black/60 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-md'} flex items-center justify-center border border-white/10`}
                     >
                       <IconFlare className="w-5 h-5 text-yellow-400" />
                     </motion.button>

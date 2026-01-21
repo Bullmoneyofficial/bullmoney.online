@@ -2,13 +2,14 @@
 
 import React, { useState, useCallback, memo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type TargetAndTransition } from 'framer-motion';
 import { X, Mail, Lock, User, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { ShimmerLine, ShimmerBorder } from '@/components/ui/UnifiedShimmer';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { useAuthModalUI } from '@/contexts/UIStateContext';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 type AuthView = 'login' | 'signup' | 'forgot-password';
 
@@ -49,6 +50,7 @@ interface AuthContentProps {
 const AuthContent = memo(({ onClose }: AuthContentProps) => {
   const { signIn, signUp, isLoading: authLoading } = useAuth();
   const { signIn: recruitSignIn, isAuthenticated: isRecruitAuthenticated, recruit } = useRecruitAuth();
+  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
   const [view, setView] = useState<AuthView>('login');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -180,38 +182,43 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-      animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
-      exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-      className="fixed inset-0 z-[2147483647] flex items-center justify-center p-4 bg-black/95"
+      initial={animations.modalBackdrop.initial}
+      animate={animations.modalBackdrop.animate as TargetAndTransition}
+      exit={animations.modalBackdrop.exit}
+      transition={animations.modalBackdrop.transition}
+      className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-4 bg-black/95 ${
+        shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'
+      }`}
     >
       {/* Click overlay - transparent, just for click handling */}
       <div className="absolute inset-0 bg-transparent" onClick={handleClose} />
 
       {/* Modal */}
       <motion.div
-        initial={{ scale: 0.9, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.9, opacity: 0, y: 20 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        initial={animations.modalContent.initial}
+        animate={animations.modalContent.animate as TargetAndTransition}
+        exit={animations.modalContent.exit}
+        transition={animations.modalContent.transition}
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-md overflow-hidden rounded-2xl"
       >
-        {/* Shimmer Border */}
-        <div className="absolute inset-[-2px] overflow-hidden rounded-2xl pointer-events-none z-0">
-          <ShimmerBorder color="blue" intensity="low" />
-        </div>
+        {/* Shimmer Border - skip on mobile */}
+        {!shouldSkipHeavyEffects && (
+          <div className="absolute inset-[-2px] overflow-hidden rounded-2xl pointer-events-none z-0">
+            <ShimmerBorder color="blue" intensity="low" />
+          </div>
+        )}
 
         {/* Inner Container */}
         <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-blue-500/30 overflow-hidden">
-          <ShimmerLine color="blue" />
+          {!shouldSkipHeavyEffects && <ShimmerLine color="blue" />}
 
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-blue-500/20">
             <div className="flex items-center gap-3">
               {view !== 'login' && (
                 <motion.button
-                  whileHover={{ scale: 1.1 }}
+                  whileHover={isMobile ? {} : { scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleViewChange('login')}
                   className="p-1 rounded-full text-neutral-400 hover:text-white transition-colors"
@@ -234,7 +241,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
             </div>
 
             <motion.button
-              whileHover={{ scale: 1.1 }}
+              whileHover={isMobile ? {} : { scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleClose}
               className="p-2 rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition-colors"

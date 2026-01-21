@@ -7,6 +7,7 @@ import { ButtonTooltip } from "./ui/ButtonTooltip";
 import { Z_INDEX } from "./constants/zIndex";
 import { sourceLabel, sourceIcons } from "./constants";
 import type { MusicSource } from "@/contexts/AudioSettingsProvider";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 interface MinimizedPlayerProps {
   isMinimized: boolean;
@@ -37,6 +38,7 @@ export function MinimizedPlayer({
   onExpand,
   renderHiddenIframe = true,
 }: MinimizedPlayerProps) {
+  const { shouldSkipHeavyEffects } = useMobilePerformance();
   const SourceIcon = sourceIcons[musicSource];
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -104,7 +106,8 @@ export function MinimizedPlayer({
             onMouseEnter={() => setHoveredButton('expand')}
             onMouseLeave={() => setHoveredButton(null)}
             className={cn(
-              "fixed flex items-center backdrop-blur-2xl overflow-hidden",
+              "fixed flex items-center overflow-hidden",
+              shouldSkipHeavyEffects ? "" : "backdrop-blur-2xl",
               "bg-gradient-to-br from-slate-900/98 via-gray-900/98 to-black/98",
               "border-2 border-slate-500/60 shadow-2xl",
               "hover:shadow-green-500/40 hover:border-green-400/60 hover:scale-105",
@@ -125,9 +128,11 @@ export function MinimizedPlayer({
               bottom: 70, 
               zIndex: Z_INDEX.PULL_TAB,
               right: playerSide === 'right' ? 'clamp(0px, calc((100vw - 1600px) / 2), 100px)' : undefined,
-              boxShadow: isPlaying 
-                ? '0 0 30px rgba(34, 197, 94, 0.3), 0 10px 40px rgba(0,0,0,0.5)' 
-                : '0 10px 40px rgba(0,0,0,0.5)',
+              boxShadow: shouldSkipHeavyEffects 
+                ? 'none' 
+                : (isPlaying 
+                  ? '0 0 30px rgba(34, 197, 94, 0.3), 0 10px 40px rgba(0,0,0,0.5)' 
+                  : '0 10px 40px rgba(0,0,0,0.5)'),
             }}
           >
             {playerSide === 'right' && (
@@ -137,7 +142,7 @@ export function MinimizedPlayer({
                   opacity: isScrolling ? 0 : 1,
                   width: isScrolling ? 0 : 'auto',
                 }}
-                transition={{ duration: isScrolling ? 0.2 : 1.2, repeat: isScrolling ? 0 : Infinity, ease: "easeInOut" }}
+                transition={shouldSkipHeavyEffects ? {} : { duration: isScrolling ? 0.2 : 1.2, repeat: isScrolling ? 0 : Infinity, ease: "easeInOut" }}
                 style={{ overflow: 'hidden' }}
               >
                 <IconChevronLeft className="w-5 h-5 text-white/70" />
@@ -154,12 +159,15 @@ export function MinimizedPlayer({
               transition={{ type: "spring", damping: 25, stiffness: 350 }}
             >
               <motion.div
-                className="absolute -inset-2 bg-green-500/25 rounded-2xl blur-lg"
-                animate={{ 
+                className={cn(
+                  "absolute -inset-2 bg-green-500/25 rounded-2xl",
+                  shouldSkipHeavyEffects ? "" : "blur-lg"
+                )}
+                animate={shouldSkipHeavyEffects ? {} : { 
                   scale: [1, 1.2, 1], 
                   opacity: isScrolling ? [0.2, 0.4, 0.2] : [0.4, 0.7, 0.4] 
                 }}
-                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                transition={shouldSkipHeavyEffects ? {} : { duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
               />
               <motion.div
                 layout
@@ -227,11 +235,13 @@ export function MinimizedPlayer({
                 </motion.div>
                 
                 {/* Shimmer effect */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"
-                  animate={{ x: ['-100%', '200%'] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                />
+                {!shouldSkipHeavyEffects && (
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"
+                    animate={{ x: ['-100%', '200%'] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  />
+                )}
               </motion.div>
             </motion.div>
             
@@ -258,7 +268,7 @@ export function MinimizedPlayer({
                   opacity: isScrolling ? 0 : 1,
                   width: isScrolling ? 0 : 'auto',
                 }}
-                transition={{ duration: isScrolling ? 0.2 : 1.2, repeat: isScrolling ? 0 : Infinity, ease: "easeInOut" }}
+                transition={shouldSkipHeavyEffects ? {} : { duration: isScrolling ? 0.2 : 1.2, repeat: isScrolling ? 0 : Infinity, ease: "easeInOut" }}
                 style={{ overflow: 'hidden' }}
               >
                 <IconChevronRight className="w-5 h-5 text-white/70" />

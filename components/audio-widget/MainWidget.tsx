@@ -14,6 +14,7 @@ import {
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 import { BlueShimmer, Slider, GameOverScreen, GameControls, GameShimmer, BounceDots, StatusBadge, QuickGameTutorial, QuickGameTutorialDemo } from "@/components/audio-widget/ui";
 import { ShimmerLine } from "@/components/ui/UnifiedShimmer";
 import { sourceLabel, streamingOptions, sourceIcons } from "./constants";
@@ -54,6 +55,7 @@ function MusicWaveBars({ isPlaying, isActive = false }: { isPlaying: boolean; is
             ease: "easeInOut",
             delay: i * 0.08,
           } : { duration: 0.2 }}
+          /* Note: MusicWaveBars uses local animation - parent handles shouldSkipHeavyEffects */
         />
       ))}
     </div>
@@ -126,6 +128,9 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
     setPlayerMinimized,
   } = props;
   
+  // Mobile performance optimization
+  const { shouldSkipHeavyEffects } = useMobilePerformance();
+
   // Handler to open iPhone player (expand from minimized state)
   const handleOpenIPhonePlayer = useCallback(() => {
     if (setPlayerMinimized) {
@@ -263,6 +268,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                     }
               }
               transition={
+                shouldSkipHeavyEffects ? {} :
                 isPulltabPinned 
                   ? { duration: 0.2 }
                   : { 
@@ -284,15 +290,15 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               data-theme-aware
               style={{
                 background: 'rgba(0, 0, 0, 0.85)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
+                backdropFilter: shouldSkipHeavyEffects ? 'none' : 'blur(12px)',
+                WebkitBackdropFilter: shouldSkipHeavyEffects ? 'none' : 'blur(12px)',
                 border: '1px solid #0066ff',
-                boxShadow: '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
+                boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <IconMusic className="w-2.5 h-2.5 sm:w-3 sm:h-3" style={{ color: '#0066ff', filter: 'drop-shadow(0 0 5px #0066ff) drop-shadow(0 0 10px #0066ff)' }} />
+              <IconMusic className="w-2.5 h-2.5 sm:w-3 sm:h-3" style={{ color: '#0066ff', filter: shouldSkipHeavyEffects ? 'none' : 'drop-shadow(0 0 5px #0066ff) drop-shadow(0 0 10px #0066ff)' }} />
             </motion.button>
           </motion.div>
         )}
@@ -315,6 +321,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                     }
               }
               transition={
+                shouldSkipHeavyEffects ? {} :
                 isPulltabPinned 
                   ? { duration: 0.2 }
                   : { 
@@ -336,10 +343,10 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               data-theme-aware
               style={{
                 background: 'rgba(0, 0, 0, 0.85)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
+                backdropFilter: shouldSkipHeavyEffects ? 'none' : 'blur(12px)',
+                WebkitBackdropFilter: shouldSkipHeavyEffects ? 'none' : 'blur(12px)',
                 border: '1px solid #0066ff',
-                boxShadow: '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
+                boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -348,22 +355,22 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                 animate={isMusicPlaying || streamingActive ? { 
                   scale: [1, 1.1, 1],
                 } : {}}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                 className="relative"
               >
                 <IconMusic 
                   className="w-4 h-4"
                   style={{ 
                     color: isMusicPlaying || streamingActive ? 'var(--accent-color, #93c5fd)' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)',
-                    filter: isMusicPlaying || streamingActive ? 'drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6)' : 'drop-shadow(0 0 4px #3b82f6)'
+                    filter: shouldSkipHeavyEffects ? 'none' : (isMusicPlaying || streamingActive ? 'drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6)' : 'drop-shadow(0 0 4px #3b82f6)')
                   }}
                 />
                 {(isMusicPlaying || streamingActive) && (
                   <motion.div
                     animate={{ scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
-                    transition={{ duration: 1, repeat: Infinity }}
+                    transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
                     className="absolute -top-0.5 -right-0.5 w-1 h-1 rounded-full bg-green-400"
-                    style={{ boxShadow: "0 0 3px rgba(74, 222, 128, 0.8)" }}
+                    style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : "0 0 3px rgba(74, 222, 128, 0.8)" }}
                   />
                 )}
               </motion.div>
@@ -393,6 +400,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                         }
                   }
                   transition={
+                    shouldSkipHeavyEffects ? {} :
                     isPulltabPinned 
                       ? { duration: 0.2 }
                       : { 
@@ -414,10 +422,10 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                   data-theme-aware
                   style={{
                     background: 'rgba(0, 0, 0, 0.85)',
-                    backdropFilter: 'blur(12px)',
-                    WebkitBackdropFilter: 'blur(12px)',
+                    backdropFilter: shouldSkipHeavyEffects ? 'none' : 'blur(12px)',
+                    WebkitBackdropFilter: shouldSkipHeavyEffects ? 'none' : 'blur(12px)',
                     border: '1px solid #0066ff',
-                    boxShadow: '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
+                    boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
                   }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -427,23 +435,23 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                     animate={isMusicPlaying || streamingActive ? { 
                       scale: [1, 1.1, 1],
                     } : {}}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                    transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                     className="relative"
                   >
                     <IconMusic 
                       className="w-2.5 h-2.5 sm:w-3 sm:h-3"
                       style={{ 
                         color: isMusicPlaying || streamingActive ? '#0066ff' : 'rgba(0, 102, 255, 0.7)',
-                        filter: isMusicPlaying || streamingActive ? 'drop-shadow(0 0 5px #0066ff) drop-shadow(0 0 10px #0066ff)' : 'none'
+                        filter: shouldSkipHeavyEffects ? 'none' : (isMusicPlaying || streamingActive ? 'drop-shadow(0 0 5px #0066ff) drop-shadow(0 0 10px #0066ff)' : 'none')
                       }}
                     />
                     {/* Playing indicator dot */}
                     {(isMusicPlaying || streamingActive) && (
                       <motion.div
                         animate={{ scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
-                        transition={{ duration: 1, repeat: Infinity }}
+                        transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
                         className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-green-400"
-                        style={{ boxShadow: "0 0 4px rgba(74, 222, 128, 0.8)" }}
+                        style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : "0 0 4px rgba(74, 222, 128, 0.8)" }}
                       />
                     )}
                   </motion.div>
@@ -477,12 +485,12 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                   exit={{ opacity: 0, scale: 0.8 }}
                   className="absolute right-0 bottom-[calc(100%+8px)] z-50 pointer-events-none"
                 >
-                  <div className="relative p-2.5 rounded-xl bg-gradient-to-br from-blue-600/90 to-blue-800/90 border border-blue-400/50 shadow-xl backdrop-blur-md">
+                  <div className={`relative p-2.5 rounded-xl bg-gradient-to-br from-blue-600/90 to-blue-800/90 border border-blue-400/50 shadow-xl ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-md'}`}>
                     <div className="absolute -bottom-2 right-6 w-3 h-3 bg-blue-700/90 rotate-45 border-b border-r border-blue-400/50" />
                     <div className="flex items-center gap-2 whitespace-nowrap">
                       <motion.div 
                         animate={{ scale: [1, 1.15, 1] }} 
-                        transition={{ repeat: Infinity, duration: 1.5 }}
+                        transition={shouldSkipHeavyEffects ? {} : { repeat: Infinity, duration: 1.5 }}
                         className="flex items-center justify-center w-6 h-6 rounded-full bg-white/20"
                       >
                         <IconPlayerPlay className="w-4 h-4 text-white fill-white" />
@@ -503,14 +511,15 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               data-audio-widget
               data-theme-aware
               className={cn(
-                "relative rounded-2xl backdrop-blur-2xl shadow-2xl",
+                "relative rounded-2xl shadow-2xl",
                 "text-white/90 overflow-hidden audio-shimmer",
+                !shouldSkipHeavyEffects && "backdrop-blur-2xl",
                 open ? "w-[252px] sm:w-[320px]" : "w-auto"
               )}
               style={{
                 background: 'rgba(0, 0, 0, 0.85)',
                 border: '1px solid #0066ff',
-                boxShadow: '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
+                boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
                 transition: 'border-color 0.4s ease-out, box-shadow 0.4s ease-out',
                 transitionDelay: '0.05s',
                 zIndex: 2147483700,
@@ -531,10 +540,10 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                   className="relative px-2.5 sm:px-3 h-6 sm:h-7 rounded-full flex items-center justify-center gap-1.5 sm:gap-2 transition-all"
                   style={{
                     background: 'rgba(0, 0, 0, 0.85)',
-                    backdropFilter: 'blur(12px)',
-                    WebkitBackdropFilter: 'blur(12px)',
+                    backdropFilter: shouldSkipHeavyEffects ? 'none' : 'blur(12px)',
+                    WebkitBackdropFilter: shouldSkipHeavyEffects ? 'none' : 'blur(12px)',
                     border: '1px solid #0066ff',
-                    boxShadow: '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
+                    boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
                   }}
                 >
                   <div className="flex items-center justify-center gap-1.5 sm:gap-2">
@@ -542,13 +551,13 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                       className="w-2.5 h-2.5 sm:w-3 sm:h-3"
                       style={{ 
                         color: '#0066ff',
-                        filter: 'drop-shadow(0 0 5px #0066ff) drop-shadow(0 0 10px #0066ff)'
+                        filter: shouldSkipHeavyEffects ? 'none' : 'drop-shadow(0 0 5px #0066ff) drop-shadow(0 0 10px #0066ff)'
                       }}
                     />
                     <motion.div 
                       animate={{ rotate: open ? 180 : 0 }} 
                       transition={{ duration: 0.3 }}
-                      style={{ color: '#0066ff', filter: 'drop-shadow(0 0 5px #0066ff)' }}
+                      style={{ color: '#0066ff', filter: shouldSkipHeavyEffects ? 'none' : 'drop-shadow(0 0 5px #0066ff)' }}
                     >
                       <IconChevronUp className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                     </motion.div>
@@ -571,9 +580,9 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-2 px-2 py-1.5 rounded-lg bg-white/15 border border-white/25 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="flex gap-0.5 h-3 items-end">
-                            <motion.div className="w-0.5 rounded-full" style={{ backgroundColor: 'var(--accent-color, #60a5fa)' }} animate={{ height: [4, 12, 4] }} transition={{ duration: 0.5, repeat: Infinity }} />
-                            <motion.div className="w-0.5 rounded-full" style={{ backgroundColor: 'var(--accent-color, #60a5fa)' }} animate={{ height: [10, 5, 10] }} transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }} />
-                            <motion.div className="w-0.5 rounded-full" style={{ backgroundColor: 'var(--accent-color, #60a5fa)' }} animate={{ height: [6, 10, 6] }} transition={{ duration: 0.5, repeat: Infinity, delay: 0.2 }} />
+                            <motion.div className="w-0.5 rounded-full" style={{ backgroundColor: 'var(--accent-color, #60a5fa)' }} animate={{ height: [4, 12, 4] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.5, repeat: Infinity }} />
+                            <motion.div className="w-0.5 rounded-full" style={{ backgroundColor: 'var(--accent-color, #60a5fa)' }} animate={{ height: [10, 5, 10] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.5, repeat: Infinity, delay: 0.1 }} />
+                            <motion.div className="w-0.5 rounded-full" style={{ backgroundColor: 'var(--accent-color, #60a5fa)' }} animate={{ height: [6, 10, 6] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.5, repeat: Infinity, delay: 0.2 }} />
                           </div>
                           <span className="text-[10px] text-white/80 font-medium">{sourceLabel[musicSource]}</span>
                         </div>
@@ -608,7 +617,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                               {opt.icon}
                               <span>{opt.label}</span>
                               {isActive && (
-                                <motion.div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-current" animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 1, repeat: Infinity }} />
+                                <motion.div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-current" animate={{ scale: [1, 1.3, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }} />
                               )}
                             </motion.button>
                           );
@@ -646,7 +655,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                           </div>
                           <div className="flex items-center gap-1.5">
                             {gameStats.currentScore > 0 && gameStats.currentScore >= gameStats.highScore && (
-                              <motion.span animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 1, repeat: Infinity }} className="text-sky-300 font-bold text-[9px]">🏆 Best!</motion.span>
+                              <motion.span animate={{ scale: [1, 1.1, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }} className="text-sky-300 font-bold text-[9px]">🏆 Best!</motion.span>
                             )}
                             <StatusBadge status={isWandering ? "playing" : gameState === "caught" ? "caught" : gameState === "escaped" ? "escaped" : "idle"} animate={isWandering} />
                           </div>

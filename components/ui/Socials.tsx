@@ -10,8 +10,9 @@ import React, {
   useContext,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type TargetAndTransition } from 'framer-motion';
 import Lenis from 'lenis';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 // --- IMPORTS ---
 import ProfileCard from "@/components/ProfileCard";
@@ -276,6 +277,7 @@ export const SimpleModalTrigger = ({ children, className }: { children: React.Re
 export const ModalBody = ({ children, className }: { children: React.ReactNode; className?: string }) => {
   const { open, setOpen } = useModal();
   const [mounted, setMounted] = useState(false);
+  const { isMobile, animations, shouldDisableBackdropBlur } = useMobilePerformance();
 
   useEffect(() => {
     setMounted(true);
@@ -292,19 +294,19 @@ export const ModalBody = ({ children, className }: { children: React.ReactNode; 
     <AnimatePresence>
       {open && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1, backdropFilter: 'blur(10px)' }}
-          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center h-full w-full bg-zinc-100/10 dark:bg-black/40"
+          initial={animations.modalBackdrop.initial as TargetAndTransition}
+          animate={animations.modalBackdrop.animate as TargetAndTransition}
+          exit={animations.modalBackdrop.exit as TargetAndTransition}
+          className={`fixed inset-0 z-[9999] flex items-center justify-center h-full w-full bg-zinc-100/10 dark:bg-black/40 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'}`}
         >
           <Overlay />
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+            initial={animations.modalContent.initial as TargetAndTransition}
+            animate={animations.modalContent.animate as TargetAndTransition}
+            exit={animations.modalContent.exit as TargetAndTransition}
+            transition={animations.modalContent.transition}
             className={cn(
-              'relative w-[95%] md:w-[500px] h-[85vh] bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col',
+              `relative w-[95%] md:w-[500px] h-[85vh] bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden flex flex-col ${isMobile ? '' : 'shadow-2xl'}`,
               className
             )}
           >

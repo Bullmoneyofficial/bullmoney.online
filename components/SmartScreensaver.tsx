@@ -6,6 +6,7 @@ import { FPSCounter } from './PerformanceProvider';
 import { useBrowserDetection } from '@/lib/browserDetection';
 import { getFpsEngine, initializeFpsMeasurement } from '@/lib/FpsMeasurement';
 import { detectBrowserCapabilities, selectOptimalMeasurementConfig } from '@/lib/FpsCompatibility';
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 // ============================================================================
 // SMART SCREENSAVER CONTEXT
@@ -53,6 +54,9 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
   // Get browser detection for reduce animations preference
   const browserInfo = useBrowserDetection();
   const shouldReduceAnimations = browserInfo.shouldReduceAnimations;
+  
+  // Mobile performance hook
+  const { shouldSkipHeavyEffects } = useMobilePerformance();
   
   const idleCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const screensaverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -721,7 +725,7 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
             }}
           >
             {/* Subtle ambient glow - disabled when reduce animations is on */}
-            {!shouldReduceAnimations && (
+            {!shouldReduceAnimations && !shouldSkipHeavyEffects && (
               <motion.div 
                 className="absolute inset-0"
                 animate={{
@@ -731,7 +735,7 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                     'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.08) 0%, transparent 60%)',
                   ]
                 }}
-                transition={{
+                transition={shouldSkipHeavyEffects ? {} : {
                   duration: 4,
                   repeat: Infinity,
                   ease: 'easeInOut',
@@ -800,20 +804,21 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                 ) : (
                   <motion.span 
                     className="relative text-4xl sm:text-6xl md:text-7xl font-black tracking-widest"
-                    animate={{
+                    animate={shouldSkipHeavyEffects ? {} : {
                       textShadow: [
                         '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.3)',
                         '0 0 30px #3b82f6, 0 0 60px rgba(59, 130, 246, 0.7), 0 0 90px rgba(59, 130, 246, 0.4)',
                         '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.3)',
                       ],
                     }}
-                    transition={{
+                    transition={shouldSkipHeavyEffects ? {} : {
                       duration: 3,
                       repeat: Infinity,
                       ease: 'easeInOut',
                     }}
                     style={{
                       color: '#3b82f6',
+                      textShadow: shouldSkipHeavyEffects ? '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.6)' : undefined,
                     }}
                   >
                     BULLMONEY
@@ -835,7 +840,7 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                 <motion.div
                   initial={{ scale: shouldReduceAnimations ? 1 : 0 }}
                   animate={{ scale: screensaverFadingOut ? 0 : 1 }}
-                  transition={shouldReduceAnimations 
+                  transition={(shouldReduceAnimations || shouldSkipHeavyEffects)
                     ? { duration: 0.1 } 
                     : { duration: 0.4, delay: 0.3, type: 'spring', stiffness: 200 }
                   }
@@ -843,7 +848,7 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                   style={{
                     background: 'rgba(59, 130, 246, 0.15)',
                     border: '2px solid rgba(59, 130, 246, 0.4)',
-                    boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)',
+                    boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 20px rgba(59, 130, 246, 0.3)',
                   }}
                 >
                   <svg 
@@ -883,10 +888,10 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                 </span>
                 
                 <motion.span
-                  animate={shouldReduceAnimations ? {} : {
+                  animate={(shouldReduceAnimations || shouldSkipHeavyEffects) ? {} : {
                     opacity: [0.5, 0.8, 0.5],
                   }}
-                  transition={shouldReduceAnimations ? {} : {
+                  transition={(shouldReduceAnimations || shouldSkipHeavyEffects) ? {} : {
                     duration: 2,
                     repeat: Infinity,
                     ease: 'easeInOut',
@@ -894,6 +899,7 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                   className="text-sm sm:text-base font-medium tracking-wider uppercase mt-3"
                   style={{
                     color: 'rgba(59, 130, 246, 0.7)',
+                    opacity: shouldSkipHeavyEffects ? 0.7 : undefined,
                   }}
                 >
                   {isScreensaverPermanent ? 'tap anywhere to continue' : 'saving battery...'}
@@ -909,10 +915,10 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                   className="absolute bottom-[-80px] flex items-center gap-2"
                 >
                   <motion.div
-                    animate={shouldReduceAnimations ? {} : {
+                    animate={(shouldReduceAnimations || shouldSkipHeavyEffects) ? {} : {
                       opacity: [0.4, 0.7, 0.4],
                     }}
-                    transition={shouldReduceAnimations ? {} : {
+                    transition={(shouldReduceAnimations || shouldSkipHeavyEffects) ? {} : {
                       duration: 2,
                       repeat: Infinity,
                       ease: 'easeInOut',
@@ -921,7 +927,7 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                     style={{
                       background: 'rgba(59, 130, 246, 0.1)',
                       border: '1px solid rgba(59, 130, 246, 0.2)',
-                      opacity: shouldReduceAnimations ? 0.6 : undefined,
+                      opacity: (shouldReduceAnimations || shouldSkipHeavyEffects) ? 0.6 : undefined,
                     }}
                   >
                     <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 24 24">

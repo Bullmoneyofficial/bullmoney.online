@@ -1,0 +1,393 @@
+/* ============================================================================
+   MOBILE PERFORMANCE OPTIMIZATIONS
+   Critical CSS for smooth 60fps performance on mobile devices
+   ============================================================================ */
+
+/* ============================================================================
+   CSS CUSTOM PROPERTIES FOR PERFORMANCE CONTROL
+   ============================================================================ */
+
+:root {
+  /* Animation timing - will be overridden for mobile */
+  --animation-duration-fast: 0.15s;
+  --animation-duration-normal: 0.3s;
+  --animation-duration-slow: 0.5s;
+  
+  /* Transform scale for animations */
+  --animation-scale: 0.95;
+  
+  /* Blur values */
+  --backdrop-blur: blur(20px);
+  --backdrop-blur-light: blur(10px);
+  
+  /* Shadow intensity */
+  --shadow-intensity: 1;
+  
+  /* Animation enabled flag (1 = on, 0 = off) */
+  --animations-enabled: 1;
+}
+
+/* ============================================================================
+   MOBILE DEVICE OPTIMIZATIONS
+   Applied when html.is-mobile class is present
+   ============================================================================ */
+
+html.is-mobile {
+  /* Faster animations on mobile */
+  --animation-duration-fast: 0.1s;
+  --animation-duration-normal: 0.15s;
+  --animation-duration-slow: 0.25s;
+  
+  /* Skip scale transforms on mobile - just use opacity */
+  --animation-scale: 1;
+  
+  /* Reduce blur intensity on mobile */
+  --backdrop-blur: blur(8px);
+  --backdrop-blur-light: blur(4px);
+  
+  /* Reduce shadow intensity */
+  --shadow-intensity: 0.5;
+}
+
+/* Force GPU acceleration for common animated elements on mobile */
+html.is-mobile .modal,
+html.is-mobile [role="dialog"],
+html.is-mobile dialog,
+html.is-mobile [data-modal],
+html.is-mobile .overlay,
+html.is-mobile .backdrop {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: opacity;
+}
+
+/* Disable expensive backdrop-blur on mobile */
+html.is-mobile .backdrop-blur,
+html.is-mobile .backdrop-blur-sm,
+html.is-mobile .backdrop-blur-md,
+html.is-mobile .backdrop-blur-lg,
+html.is-mobile .backdrop-blur-xl,
+html.is-mobile .backdrop-blur-2xl,
+html.is-mobile .backdrop-blur-3xl,
+html.is-mobile [class*="backdrop-blur"] {
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+}
+
+/* Simplify box shadows on mobile */
+html.is-mobile [class*="shadow-lg"],
+html.is-mobile [class*="shadow-xl"],
+html.is-mobile [class*="shadow-2xl"] {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Disable glow effects on mobile */
+html.is-mobile [class*="glow"],
+html.is-mobile [style*="box-shadow"][style*="rgba"] {
+  box-shadow: none !important;
+}
+
+/* Reduce gradient complexity on mobile */
+html.is-mobile [class*="bg-gradient"] {
+  background-size: 100% 100% !important;
+  animation: none !important;
+}
+
+/* ============================================================================
+   LOW-END DEVICE OPTIMIZATIONS
+   Applied when html.is-low-end class is present
+   ============================================================================ */
+
+html.is-low-end {
+  --animation-duration-fast: 0.05s;
+  --animation-duration-normal: 0.1s;
+  --animation-duration-slow: 0.15s;
+  --animations-enabled: 0;
+  --backdrop-blur: none;
+  --backdrop-blur-light: none;
+  --shadow-intensity: 0;
+}
+
+/* Disable ALL backdrop-blur on low-end devices */
+html.is-low-end [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Disable all animations on low-end devices */
+html.is-low-end *,
+html.is-low-end *::before,
+html.is-low-end *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.05s !important;
+}
+
+/* Disable complex transforms on low-end */
+html.is-low-end [class*="animate-"],
+html.is-low-end [class*="transition-transform"] {
+  transform: none !important;
+  animation: none !important;
+}
+
+/* Disable shimmer effects completely */
+html.is-low-end .shimmer-line,
+html.is-low-end .shimmer-border,
+html.is-low-end [data-shimmer],
+html.is-low-end [class*="shimmer"] {
+  display: none !important;
+}
+
+/* Simplify all shadows */
+html.is-low-end [class*="shadow"] {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ============================================================================
+   IN-APP BROWSER OPTIMIZATIONS (Instagram, Facebook, TikTok, etc.)
+   These browsers have severe performance limitations
+   ============================================================================ */
+
+html.is-in-app-browser {
+  --animations-enabled: 0;
+  --backdrop-blur: none;
+  --backdrop-blur-light: none;
+}
+
+html.is-in-app-browser [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: rgba(0, 0, 0, 0.9) !important;
+}
+
+html.is-in-app-browser *,
+html.is-in-app-browser *::before,
+html.is-in-app-browser *::after {
+  animation: none !important;
+  transition-duration: 0.1s !important;
+}
+
+/* Hide Spline/3D content in in-app browsers */
+html.is-in-app-browser [data-spline],
+html.is-in-app-browser .spline-container {
+  display: none !important;
+}
+
+/* ============================================================================
+   PERFORMANCE TIER OPTIMIZATIONS
+   Based on data-performance-tier attribute on html
+   ============================================================================ */
+
+/* Minimal tier - instant everything */
+html[data-performance-tier="minimal"] * {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Low tier - very fast transitions only */
+html[data-performance-tier="low"] * {
+  animation-duration: 0.1s !important;
+  transition-duration: 0.1s !important;
+}
+
+/* Medium tier - standard mobile optimizations */
+html[data-performance-tier="medium"] * {
+  animation-duration: 0.2s !important;
+  transition-duration: 0.15s !important;
+}
+
+/* ============================================================================
+   MODAL-SPECIFIC OPTIMIZATIONS
+   ============================================================================ */
+
+/* Modal backdrop - use opacity only, no blur on mobile */
+html.is-mobile .modal-backdrop,
+html.is-mobile [data-modal-backdrop] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  transition: opacity 0.15s ease-out !important;
+}
+
+/* Modal content - optimize transforms */
+html.is-mobile .modal-content,
+html.is-mobile [data-modal-content] {
+  transform: translateZ(0);
+  will-change: opacity, transform;
+  transition: opacity 0.15s ease-out, transform 0.15s ease-out !important;
+}
+
+/* Entering modal state */
+html.is-mobile .modal-content[data-state="entering"],
+html.is-mobile [data-modal-content][data-state="entering"] {
+  opacity: 0;
+  transform: translateY(10px) translateZ(0);
+}
+
+/* Entered/open modal state */
+html.is-mobile .modal-content[data-state="entered"],
+html.is-mobile .modal-content[data-state="open"],
+html.is-mobile [data-modal-content][data-state="entered"],
+html.is-mobile [data-modal-content][data-state="open"] {
+  opacity: 1;
+  transform: translateY(0) translateZ(0);
+}
+
+/* ============================================================================
+   SCROLL OPTIMIZATIONS
+   ============================================================================ */
+
+/* Enable momentum scrolling on iOS */
+html.is-ios .modal-content,
+html.is-ios [data-modal-content],
+html.is-ios .scroll-container,
+html.is-ios [data-scroll] {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Optimize scrolling containers */
+html.is-mobile .overflow-y-auto,
+html.is-mobile .overflow-y-scroll,
+html.is-mobile .overflow-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-behavior: auto; /* Disable smooth scroll on mobile for performance */
+}
+
+/* During scroll, pause animations */
+html.is-mobile.is-scrolling [class*="animate-"],
+html.is-mobile.is-scrolling .shimmer-line,
+html.is-mobile.is-scrolling .shimmer-border {
+  animation-play-state: paused !important;
+}
+
+/* ============================================================================
+   TOUCH FEEDBACK OPTIMIZATIONS
+   ============================================================================ */
+
+/* Disable hover effects on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover state completely */
+  button:hover,
+  a:hover,
+  [role="button"]:hover {
+    transform: none !important;
+    box-shadow: inherit !important;
+    background-color: inherit !important;
+  }
+  
+  /* Add active state for touch feedback */
+  button:active,
+  a:active,
+  [role="button"]:active {
+    opacity: 0.8;
+    transform: scale(0.98) !important;
+    transition: transform 0.1s ease-out, opacity 0.1s ease-out !important;
+  }
+}
+
+/* ============================================================================
+   CANVAS/WEBGL OPTIMIZATIONS
+   ============================================================================ */
+
+html.is-mobile canvas,
+html.is-mobile [data-spline] canvas {
+  /* Hint to browser about rendering priority */
+  contain: strict;
+  content-visibility: auto;
+}
+
+/* Reduce canvas quality on low-end */
+html.is-low-end canvas {
+  image-rendering: optimizeSpeed;
+}
+
+/* ============================================================================
+   UTILITY CLASSES FOR MOBILE PERFORMANCE
+   ============================================================================ */
+
+/* Skip animation on mobile */
+.mobile-no-animate {
+  animation: none !important;
+  transition: none !important;
+}
+html.is-mobile .mobile-no-animate {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Simple fade only on mobile */
+.mobile-fade-only {
+  transform: none !important;
+}
+html.is-mobile .mobile-fade-only {
+  transform: none !important;
+}
+
+/* Force no blur on mobile */
+.mobile-no-blur {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html.is-mobile .mobile-no-blur {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Force simple background on mobile */
+.mobile-simple-bg {
+  background: rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: none !important;
+}
+html.is-mobile .mobile-simple-bg {
+  background: rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: none !important;
+}
+
+/* GPU hint class */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Performance container - isolates repaints */
+.perf-container {
+  contain: layout style paint;
+  isolation: isolate;
+}
+
+/* ============================================================================
+   FRAMER MOTION OVERRIDES
+   Target framer-motion generated elements
+   ============================================================================ */
+
+/* Override framer-motion spring animations on mobile */
+html.is-mobile [style*="spring"],
+html.is-mobile [style*="bounce"] {
+  transition-timing-function: ease-out !important;
+}
+
+/* Force opacity-only transitions for motion elements on low-end */
+html.is-low-end [data-framer-component-type],
+html.is-low-end [style*="transform"] {
+  transform: none !important;
+  will-change: opacity !important;
+}
+
+/* ============================================================================
+   SAFE AREA HANDLING (iPhone notch, etc.)
+   ============================================================================ */
+
+html.is-ios .modal-content,
+html.is-ios [data-modal-content] {
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+html.is-ios .fixed-bottom,
+html.is-ios [data-fixed-bottom] {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}

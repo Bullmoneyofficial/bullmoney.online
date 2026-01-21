@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type TargetAndTransition } from "framer-motion";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 export interface AdminLoginModalProps {
   isOpen?: boolean;
@@ -19,6 +20,7 @@ export const AdminLoginModal = ({
   const modalOpen = isOpen ?? open ?? false;
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const { isMobile, animations, shouldDisableBackdropBlur } = useMobilePerformance();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,17 +33,23 @@ export const AdminLoginModal = ({
     <AnimatePresence>
       {modalOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          initial={animations.modalBackdrop.initial}
+          animate={animations.modalBackdrop.animate as TargetAndTransition}
+          exit={animations.modalBackdrop.exit}
+          transition={animations.modalBackdrop.transition}
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/80 ${
+            shouldDisableBackdropBlur ? '' : 'backdrop-blur-sm'
+          }`}
           onClick={onClose}
         >
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-gray-900 rounded-lg p-8 max-w-md w-full mx-4"
+            initial={animations.modalContent.initial}
+            animate={animations.modalContent.animate as TargetAndTransition}
+            exit={animations.modalContent.exit}
+            transition={animations.modalContent.transition}
+            className={`bg-gray-900 rounded-lg p-8 max-w-md w-full mx-4 ${
+              isMobile ? '' : 'shadow-2xl'
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-2xl font-bold text-white mb-6">Admin Login</h2>

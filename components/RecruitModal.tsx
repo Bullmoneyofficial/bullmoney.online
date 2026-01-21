@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, TargetAndTransition } from 'framer-motion';
 import { X } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 // Dynamically import the RecruitPage to avoid SSR issues
 const RecruitPage = dynamic(() => import('@/app/recruit/RecruitPage'), {
@@ -23,6 +24,12 @@ interface RecruitModalProps {
 
 export default function RecruitModal({ isOpen, onClose }: RecruitModalProps) {
   const [mounted, setMounted] = useState(false);
+  const { 
+    isMobile, 
+    animations, 
+    shouldDisableBackdropBlur,
+    performanceTier 
+  } = useMobilePerformance();
 
   useEffect(() => {
     setMounted(true);
@@ -50,24 +57,31 @@ export default function RecruitModal({ isOpen, onClose }: RecruitModalProps) {
 
   if (!mounted) return null;
 
+  // Use mobile-optimized backdrop styles
+  const backdropClass = shouldDisableBackdropBlur 
+    ? 'bg-black/80' 
+    : 'bg-black/60';
+
   return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1, backdropFilter: 'blur(10px)' }}
-          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center h-full w-full bg-black/60"
+          initial={animations.modalBackdrop.initial as TargetAndTransition}
+          animate={animations.modalBackdrop.animate as TargetAndTransition}
+          exit={animations.modalBackdrop.exit as TargetAndTransition}
+          transition={animations.modalBackdrop.transition}
+          className={`fixed inset-0 z-[9999] flex items-center justify-center h-full w-full ${backdropClass} mobile-no-blur`}
+          data-performance-tier={performanceTier}
         >
           {/* Overlay */}
           <div className="absolute inset-0 bg-transparent" onClick={onClose} />
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-            className="relative w-[98%] md:w-[90%] max-w-2xl max-h-[95vh] bg-[#050B14] border border-blue-500/20 rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.15)] overflow-hidden flex flex-col"
+            initial={animations.modalContent.initial as TargetAndTransition}
+            animate={animations.modalContent.animate as TargetAndTransition}
+            exit={animations.modalContent.exit as TargetAndTransition}
+            transition={animations.modalContent.transition}
+            className={`relative w-[98%] md:w-[90%] max-w-2xl max-h-[95vh] bg-[#050B14] border border-blue-500/20 rounded-2xl ${isMobile ? '' : 'shadow-[0_0_50px_rgba(59,130,246,0.15)]'} overflow-hidden flex flex-col gpu-accelerated`}
           >
             {/* Close Button */}
             <button
@@ -78,7 +92,7 @@ export default function RecruitModal({ isOpen, onClose }: RecruitModalProps) {
             </button>
 
             {/* Modal Content - RecruitPage wrapped to work in modal context */}
-            <div className="overflow-y-auto max-h-[95vh] recruit-modal-content">
+            <div className="overflow-y-auto max-h-[95vh] recruit-modal-content" style={{ WebkitOverflowScrolling: 'touch' }}>
               <RecruitPage onUnlock={handleUnlock} />
             </div>
           </motion.div>

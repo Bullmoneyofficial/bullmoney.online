@@ -43,6 +43,8 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 // --- UTILS: MOBILE DETECTION HOOK ---
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
+
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -336,8 +338,9 @@ interface FormData {
   referralCode: string;
 }
 
-// --- StepCard Component ---
+// --- StepCard Component (Mobile Optimized) ---
 const StepCard = memo(({ number, number2, title, children, actions, className, isXM = false }: any) => {
+  const { isMobile: isMobileDevice, shouldSkipHeavyEffects } = useMobilePerformance();
   const useRed = typeof number2 === "number";
   const n = useRed ? number2 : number;
   const ringColor = isXM ? 'ring-red-500/30' : 'ring-blue-500/30';
@@ -351,17 +354,28 @@ const StepCard = memo(({ number, number2, title, children, actions, className, i
   return (
     <div className={cn(
       "group relative overflow-hidden rounded-2xl p-6 md:p-8",
-      "bg-black/80 ring-2 backdrop-blur-xl",
+      "bg-black/80 ring-2",
+      // Skip backdrop-blur on mobile for performance
+      !isMobileDevice && "backdrop-blur-xl",
+      isMobileDevice && "mobile-simple-bg",
       ringColor,
-      shadowColor,
+      // Skip heavy shadows on mobile
+      !shouldSkipHeavyEffects && shadowColor,
       className
     )}>
-      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
-        <span className={cn("absolute inset-[-100%] animate-[spin_8s_linear_infinite] opacity-10", gradientColor)} />
-      </div>
+      {/* Skip decorative animations on mobile */}
+      {!shouldSkipHeavyEffects && (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+          <span className={cn("absolute inset-[-100%] animate-[spin_8s_linear_infinite] opacity-10", gradientColor)} />
+        </div>
+      )}
       
-      <div className={cn("pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l blur-2xl to-transparent", glowColor)} />
-      <div className={cn("pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset", innerRing)} />
+      {!shouldSkipHeavyEffects && (
+        <>
+          <div className={cn("pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l blur-2xl to-transparent", glowColor)} />
+          <div className={cn("pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset", innerRing)} />
+        </>
+      )}
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <span className={cn("inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md ring-2 bg-black/60", textColor, ringColor)}>
           Step {n} of 3

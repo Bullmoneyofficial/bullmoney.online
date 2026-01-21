@@ -23,7 +23,8 @@ import React, {
   memo
 } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import { motion, AnimatePresence, PanInfo, type TargetAndTransition } from 'framer-motion';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 import { getFpsEngine, initializeFpsMeasurement } from '@/lib/FpsMeasurement';
 import { detectBrowserCapabilities, selectOptimalMeasurementConfig } from '@/lib/FpsCompatibility';
 
@@ -3526,6 +3527,8 @@ const ModalWrapper = memo(({
   maxWidth?: string;
   color?: 'blue' | 'purple' | 'cyan';
 }) => {
+  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
+  
   const colorClasses = {
     blue: 'border-blue-500/30 shadow-blue-900/20',
     purple: 'border-purple-500/50 shadow-purple-900/50',
@@ -3536,14 +3539,14 @@ const ModalWrapper = memo(({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-          animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
-          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-          className="fixed inset-0 z-[2147483645] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+          initial={animations.modalBackdrop.initial as TargetAndTransition}
+          animate={animations.modalBackdrop.animate as TargetAndTransition}
+          exit={animations.modalBackdrop.exit as TargetAndTransition}
+          className={`fixed inset-0 z-[2147483645] flex items-center justify-center p-3 sm:p-6 bg-black/95 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'}`}
           onClick={onClose}
         >
-          {/* Tap hints */}
-          {['top', 'bottom', 'left', 'right'].map(pos => (
+          {/* Tap hints - Skip on mobile for performance */}
+          {!shouldSkipHeavyEffects && ['top', 'bottom', 'left', 'right'].map(pos => (
             <motion.div
               key={pos}
               initial={{ opacity: 0 }}
@@ -3565,12 +3568,12 @@ const ModalWrapper = memo(({
           ))}
 
           <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+            initial={animations.modalContent.initial as TargetAndTransition}
+            animate={animations.modalContent.animate as TargetAndTransition}
+            exit={animations.modalContent.exit as TargetAndTransition}
+            transition={animations.modalContent.transition}
             onClick={e => e.stopPropagation()}
-            className={`relative w-full max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl border shadow-2xl ${colorClasses[color]}`}
+            className={`relative w-full max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'} ${colorClasses[color]}`}
             style={{ maxWidth }}
           >
             {children}
@@ -7046,6 +7049,7 @@ export function UltimateHub() {
     isV2Unlocked,
     setUltimateHubOpen
   } = useUIState();
+  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
 
   // Inject neon styles
   useEffect(() => {

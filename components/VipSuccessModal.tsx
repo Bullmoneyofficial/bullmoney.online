@@ -1,19 +1,44 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, type TargetAndTransition } from 'framer-motion';
 import { Unlock, CheckCircle } from 'lucide-react';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
-export const VipSuccessModal = ({ onClose }: { onClose: () => void }) => (
+export const VipSuccessModal = ({ onClose }: { onClose: () => void }) => {
+    const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
+
+    return (
     <motion.div
         key="vip-success-modal"
-        initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100001] flex items-center justify-center bg-black/95 backdrop-blur-xl p-6"
+        initial={animations.modalBackdrop.initial}
+        animate={animations.modalBackdrop.animate as TargetAndTransition}
+        exit={animations.modalBackdrop.exit}
+        transition={animations.modalBackdrop.transition}
+        className={`fixed inset-0 z-[100001] flex items-center justify-center bg-black/95 p-6 ${
+            shouldDisableBackdropBlur ? '' : 'backdrop-blur-xl'
+        }`}
     >
-        <div className="w-full max-w-md p-8 border border-cyan-500/50 bg-black rounded-3xl text-center shadow-[0_0_80px_rgba(6,182,212,0.2)] relative overflow-hidden">
-            <div className="absolute inset-0 bg-[url('https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif')] opacity-5 mix-blend-screen bg-cover pointer-events-none" />
+        <motion.div
+            initial={animations.modalContent.initial}
+            animate={animations.modalContent.animate as TargetAndTransition}
+            exit={animations.modalContent.exit}
+            transition={animations.modalContent.transition}
+            className={`w-full max-w-md p-8 border border-cyan-500/50 bg-black rounded-3xl text-center relative overflow-hidden ${
+                isMobile ? '' : 'shadow-[0_0_80px_rgba(6,182,212,0.2)]'
+            }`}
+        >
+            {!shouldSkipHeavyEffects && (
+                <div className="absolute inset-0 bg-[url('https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif')] opacity-5 mix-blend-screen bg-cover pointer-events-none" />
+            )}
             <div className="relative z-10">
-                <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="inline-block mb-6">
-                    <Unlock className="w-16 h-16 text-cyan-400" />
-                </motion.div>
+                {shouldSkipHeavyEffects ? (
+                    <div className="inline-block mb-6">
+                        <Unlock className="w-16 h-16 text-cyan-400" />
+                    </div>
+                ) : (
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="inline-block mb-6">
+                        <Unlock className="w-16 h-16 text-cyan-400" />
+                    </motion.div>
+                )}
                 
                 <h2 className="text-4xl font-black text-white uppercase tracking-tighter mb-2">SECRET FOUND</h2>
                 <p className="text-cyan-400 font-mono text-xs tracking-[0.3em] uppercase mb-8">INITIATING SECURE CONTACT</p>
@@ -32,7 +57,9 @@ export const VipSuccessModal = ({ onClose }: { onClose: () => void }) => (
                     href="https://ig.me/m/bullmoney.shop" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-bold uppercase tracking-[0.2em] rounded-xl transition-all active:scale-95 shadow-[0_0_30px_rgba(6,182,212,0.4)] block text-center"
+                    className={`w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-bold uppercase tracking-[0.2em] rounded-xl transition-all active:scale-95 block text-center ${
+                        isMobile ? '' : 'shadow-[0_0_30px_rgba(6,182,212,0.4)]'
+                    }`}
                 >
                     AUTO DM @BULLMONEY.SHOP
                 </a>
@@ -44,6 +71,7 @@ export const VipSuccessModal = ({ onClose }: { onClose: () => void }) => (
                     Close
                 </button>
             </div>
-        </div>
+        </motion.div>
     </motion.div>
 );
+};

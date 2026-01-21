@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, TargetAndTransition } from 'framer-motion';
 import { 
   X, 
   Play, 
@@ -41,6 +41,7 @@ import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useShop } from '@/components/ShopContext';
 import { createSupabaseClient } from '@/lib/supabase';
 import { useLiveStreamModalUI } from '@/contexts/UIStateContext';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 // YouTube thumbnail helper
 const getYouTubeThumbnail = (videoId: string, quality: 'default' | 'mq' | 'hq' | 'sd' | 'maxres' = 'mq') => {
@@ -341,6 +342,13 @@ const LiveStreamContent = memo(() => {
   const { setIsOpen } = useModalState();
   const { state } = useShop();
   const { isAdmin } = state;
+  const { 
+    isMobile, 
+    animations, 
+    shouldDisableBackdropBlur,
+    shouldSkipHeavyEffects,
+    performanceTier 
+  } = useMobilePerformance();
   
   const [videos, setVideos] = useState<LiveStreamVideo[]>([]);
   const [config, setConfig] = useState<LiveStreamConfig | null>(null);
@@ -1141,56 +1149,69 @@ const LiveStreamContent = memo(() => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-      animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
-      exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-      className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+      initial={animations.modalBackdrop.initial as TargetAndTransition}
+      animate={animations.modalBackdrop.animate as TargetAndTransition}
+      exit={animations.modalBackdrop.exit as TargetAndTransition}
+      transition={animations.modalBackdrop.transition}
+      className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 ${shouldDisableBackdropBlur ? 'bg-black/95' : 'bg-black/90'} mobile-no-blur`}
       onClick={handleClose}
+      data-performance-tier={performanceTier}
     >
-      {/* Animated tap to close hints */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.4, 0.8, 0.4] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
-      >
-        <span>↑</span> Tap anywhere to close <span>↑</span>
-      </motion.div>
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.4, 0.8, 0.4] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-        className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
-      >
-        <span>↓</span> Tap anywhere to close <span>↓</span>
-      </motion.div>
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.4, 0.8, 0.4] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
-        className="absolute left-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-        style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-      >
-        ← Tap to close
-      </motion.div>
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.4, 0.8, 0.4] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
-        className="absolute right-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-        style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-      >
-        Tap to close →
-      </motion.div>
+      {/* Animated tap to close hints - Skip on mobile/low-end for performance */}
+      {!shouldSkipHeavyEffects && (
+        <>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+          >
+            <span>↑</span> Tap anywhere to close <span>↑</span>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+          >
+            <span>↓</span> Tap anywhere to close <span>↓</span>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+          >
+            ← Tap to close
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+          >
+            Tap to close →
+          </motion.div>
+        </>
+      )}
+      
+      {/* Mobile: Simple static hint */}
+      {isMobile && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 text-white/50 text-xs font-medium pointer-events-none">
+          Tap outside to close
+        </div>
+      )}
       
       {/* Modal Container - Contained modal with Netflix styling */}
       <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 20 }}
-        transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+        initial={animations.modalContent.initial as TargetAndTransition}
+        animate={animations.modalContent.animate as TargetAndTransition}
+        exit={animations.modalContent.exit as TargetAndTransition}
+        transition={animations.modalContent.transition}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-neutral-900 border border-white/10 shadow-2xl shadow-black/50"
+        className={`relative w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-neutral-900 border border-white/10 ${isMobile ? '' : 'shadow-2xl shadow-black/50'} gpu-accelerated`}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0 bg-black/40">

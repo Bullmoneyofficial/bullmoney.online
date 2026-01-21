@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type TargetAndTransition } from 'framer-motion';
 import {
   X,
   TrendingUp,
@@ -35,6 +35,7 @@ import { TradingViewWidget } from './TradingViewWidget';
 import { ConfidenceMeter } from './ConfidenceMeter';
 import { SentimentBadge } from './SentimentBadge';
 import { AttachmentCarousel } from './AttachmentCarousel';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 import type { Analysis, ReactionType, Attachment, ContentType, MarketType, Direction, ChartConfig } from '@/types/feed';
 
 // Dynamically import other components to avoid circular dependencies
@@ -263,6 +264,7 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
   const { state } = useShop();
   const { isAdmin } = state;
   const { activeTab, setActiveTab } = useModalState();
+  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
   
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -482,65 +484,78 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-      animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
-      exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-      className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+      initial={animations.modalBackdrop.initial}
+      animate={animations.modalBackdrop.animate as TargetAndTransition}
+      exit={animations.modalBackdrop.exit}
+      transition={animations.modalBackdrop.transition}
+      className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95 ${
+        shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'
+      }`}
       onClick={handleClose}
     >
-      {/* Animated tap to close hints */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.4, 0.8, 0.4] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
-      >
-        <span>↑</span> Tap anywhere to close <span>↑</span>
-      </motion.div>
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.4, 0.8, 0.4] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-        className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
-      >
-        <span>↓</span> Tap anywhere to close <span>↓</span>
-      </motion.div>
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.4, 0.8, 0.4] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
-        className="absolute left-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-        style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-      >
-        ← Tap to close
-      </motion.div>
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.4, 0.8, 0.4] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
-        className="absolute right-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-        style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-      >
-        Tap to close →
-      </motion.div>
+      {/* Animated tap to close hints - skip on mobile */}
+      {!shouldSkipHeavyEffects && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+        >
+          <span>↑</span> Tap anywhere to close <span>↑</span>
+        </motion.div>
+      )}
+      {!shouldSkipHeavyEffects && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+        >
+          <span>↓</span> Tap anywhere to close <span>↓</span>
+        </motion.div>
+      )}
+      {!shouldSkipHeavyEffects && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
+          className="absolute left-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+          style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+        >
+          ← Tap to close
+        </motion.div>
+      )}
+      {!shouldSkipHeavyEffects && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
+          style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+        >
+          Tap to close →
+        </motion.div>
+      )}
       
       {/* Modal */}
       <motion.div
-        initial={{ scale: 0.9, opacity: 0, y: 50 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.9, opacity: 0, y: 50 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        initial={animations.modalContent.initial}
+        animate={animations.modalContent.animate as TargetAndTransition}
+        exit={animations.modalContent.exit}
+        transition={animations.modalContent.transition}
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-4xl max-h-[95vh] overflow-hidden rounded-2xl"
       >
-        {/* Shimmer Border */}
-        <div className="absolute inset-[-2px] overflow-hidden rounded-2xl pointer-events-none z-0">
-          <ShimmerBorder color="blue" intensity="medium" />
-        </div>
+        {/* Shimmer Border - skip on mobile */}
+        {!shouldSkipHeavyEffects && (
+          <div className="absolute inset-[-2px] overflow-hidden rounded-2xl pointer-events-none z-0">
+            <ShimmerBorder color="blue" intensity="medium" />
+          </div>
+        )}
         
         {/* Inner Container */}
         <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-blue-500/30 overflow-hidden max-h-[95vh] flex flex-col">
-          <ShimmerLine color="blue" />
+          {!shouldSkipHeavyEffects && <ShimmerLine color="blue" />}
           
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-blue-500/20 flex-shrink-0">
@@ -565,7 +580,7 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
             <div className="flex items-center gap-2">
               {isAdmin && viewMode === 'view' && activeTab === 'analysis' && (
                 <motion.button
-                  whileHover={{ scale: 1.1 }}
+                  whileHover={isMobile ? {} : { scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => { SoundEffects.click(); startEdit(null); }}
                   className="p-2 rounded-full bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"

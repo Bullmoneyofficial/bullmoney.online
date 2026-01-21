@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, type TargetAndTransition } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 // Neon Blue Sign Styles (Static glow like Chartnews)
 const NEON_MODAL_STYLES = `
@@ -24,6 +25,22 @@ const NEON_MODAL_STYLES = `
   }
 `;
 
+// Mobile-optimized styles (no glows)
+const MOBILE_MODAL_STYLES = `
+  .modal-neon-blue-text {
+    color: #3b82f6;
+  }
+  .modal-neon-white-text {
+    color: #ffffff;
+  }
+  .modal-neon-blue-border {
+    border: 2px solid #3b82f6;
+  }
+  .modal-neon-blue-icon {
+    color: #3b82f6;
+  }
+`;
+
 export interface EnhancedModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -39,6 +56,8 @@ export const EnhancedModal = ({
   children,
   maxWidth = "max-w-3xl",
 }: EnhancedModalProps) => {
+  const { isMobile, animations, shouldSkipHeavyEffects } = useMobilePerformance();
+  
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -66,54 +85,58 @@ export const EnhancedModal = ({
     <AnimatePresence mode="wait">
       {isOpen && (
         <>
-          <style dangerouslySetInnerHTML={{ __html: NEON_MODAL_STYLES }} />
+          <style dangerouslySetInnerHTML={{ __html: shouldSkipHeavyEffects ? MOBILE_MODAL_STYLES : NEON_MODAL_STYLES }} />
           <motion.div
             key="modal-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            initial={animations.modalBackdrop.initial}
+            animate={animations.modalBackdrop.animate as TargetAndTransition}
+            exit={animations.modalBackdrop.exit}
+            transition={animations.modalBackdrop.transition}
             className="fixed inset-0 z-[999999] flex items-center justify-center p-2 xs:p-3 sm:p-4 md:p-6"
           >
             <div onClick={onClose} className="absolute inset-0 bg-black/95" />
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: "spring", duration: 0.4, bounce: 0.2 }}
+              initial={animations.modalContent.initial}
+              animate={animations.modalContent.animate as TargetAndTransition}
+              exit={animations.modalContent.exit}
+              transition={animations.modalContent.transition}
               className={cn(
                 "relative w-full overflow-hidden rounded-xl xs:rounded-2xl sm:rounded-2xl md:rounded-3xl",
                 maxWidth
               )}
-              style={{
+              style={shouldSkipHeavyEffects ? {} : {
                 boxShadow: '0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3)'
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Static neon border glow */}
-              <div 
-                className="absolute inset-[-2px] rounded-xl xs:rounded-2xl sm:rounded-2xl md:rounded-3xl pointer-events-none modal-neon-blue-border"
-                style={{ background: 'transparent' }}
-              />
+              {/* Static neon border glow - skip on mobile */}
+              {!shouldSkipHeavyEffects && (
+                <div 
+                  className="absolute inset-[-2px] rounded-xl xs:rounded-2xl sm:rounded-2xl md:rounded-3xl pointer-events-none modal-neon-blue-border"
+                  style={{ background: 'transparent' }}
+                />
+              )}
 
               <div className="relative z-10 m-[2px] flex max-h-[90vh] xs:max-h-[88vh] sm:max-h-[85vh] md:max-h-[82vh] lg:max-h-[80vh] flex-col rounded-xl xs:rounded-2xl sm:rounded-2xl md:rounded-3xl bg-black overflow-hidden min-h-0">
                 {/* Header with neon styling */}
                 <div 
                   className="relative flex items-center justify-between px-3 xs:px-4 sm:px-5 md:px-6 py-2.5 xs:py-3 sm:py-3.5 md:py-4 bg-black shrink-0"
-                  style={{ 
+                  style={shouldSkipHeavyEffects ? { borderBottom: '2px solid #3b82f6' } : { 
                     borderBottom: '2px solid #3b82f6',
                     boxShadow: '0 2px 8px rgba(59, 130, 246, 0.4)'
                   }}
                 >
-                  {/* Static neon line at top */}
-                  <div 
-                    className="absolute inset-x-0 top-0 h-[2px]"
-                    style={{ 
-                      background: '#3b82f6',
-                      boxShadow: '0 0 8px #3b82f6, 0 0 16px #3b82f6'
-                    }}
-                  />
+                  {/* Static neon line at top - skip on mobile */}
+                  {!shouldSkipHeavyEffects && (
+                    <div 
+                      className="absolute inset-x-0 top-0 h-[2px]"
+                      style={{ 
+                        background: '#3b82f6',
+                        boxShadow: '0 0 8px #3b82f6, 0 0 16px #3b82f6'
+                      }}
+                    />
+                  )}
 
                   <div className="relative text-sm xs:text-base sm:text-lg md:text-xl font-semibold tracking-wide modal-neon-white-text truncate pr-3">
                     {title}

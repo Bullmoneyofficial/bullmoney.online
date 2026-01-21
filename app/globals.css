@@ -10,5 +10,6 @@
 @import "./styles/40-theme-overlays.css";
 @import "./styles/50-fps-overrides.css";
 @import "./styles/60-desktop-zindex-fix.css";
+@import "./styles/70-mobile-performance.css";
 
 

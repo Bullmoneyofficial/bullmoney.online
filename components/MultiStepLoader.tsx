@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import GhostLoaderCursor from "@/components/Mainpage/GhostCursor";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 import { detectBrowser } from "@/lib/browserDetection";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 // --- GLOBAL ASSET CONFIGURATION ---
 const ASSETS = {
@@ -385,6 +386,7 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
   const [progress, setProgress] = useState(0);
   const [selectedAsset, setSelectedAsset] = useState<AssetKey>("BTC");
   const { sfxVolume } = useAudioSettings();
+  const { shouldSkipHeavyEffects } = useMobilePerformance();
   
   // Scroll Lock
   useEffect(() => {
@@ -543,18 +545,20 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
             </div>
 
             <div className="relative w-full max-w-[400px] flex flex-col items-center justify-center mx-auto">
-              {/* Sonar Rings */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] flex items-center justify-center pointer-events-none" style={{ transform: 'translate(-50%, -50%) perspective(800px) rotateX(75deg)' }}>
-                {[1, 2, 3].map((ring) => (
-                  <motion.div
-                    key={ring}
-                    initial={{ width: "100px", height: "100px", opacity: 0, border: "1px solid #1E40AF" }}
-                    animate={{ width: ["100px", "600px"], height: ["100px", "600px"], opacity: [0.5, 0], borderWidth: ["3px", "0px"] }}
-                    transition={{ duration: 2.5, repeat: Infinity, delay: ring * 0.6, ease: "easeOut" }}
-                    className="absolute rounded-full border-blue-600/50 shadow-[0_0_30px_rgba(37,99,235,0.2)] bg-blue-900/5"
-                  />
-                ))}
-              </div>
+              {/* Sonar Rings - Conditionally disabled on mobile for performance */}
+              {!shouldSkipHeavyEffects && (
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] flex items-center justify-center pointer-events-none" style={{ transform: 'translate(-50%, -50%) perspective(800px) rotateX(75deg)' }}>
+                  {[1, 2, 3].map((ring) => (
+                    <motion.div
+                      key={ring}
+                      initial={{ width: "100px", height: "100px", opacity: 0, border: "1px solid #1E40AF" }}
+                      animate={{ width: ["100px", "600px"], height: ["100px", "600px"], opacity: [0.5, 0], borderWidth: ["3px", "0px"] }}
+                      transition={{ duration: 2.5, repeat: Infinity, delay: ring * 0.6, ease: "easeOut" }}
+                      className="absolute rounded-full border-blue-600/50 shadow-[0_0_30px_rgba(37,99,235,0.2)] bg-blue-900/5"
+                    />
+                  ))}
+                </div>
+              )}
 
               {/* Shimmering Percentage */}
               <div className="relative z-30 flex flex-col items-center mb-6">

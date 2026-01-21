@@ -23,6 +23,7 @@ import { Loader2, X, Play, ArrowRight, Volume2, VolumeX, Copy, Check } from "luc
 // ✅ SPLINE PRELOADER
 import { useSplinePreload, useEnsureSplineViewer } from '@/hooks/useSplinePreload';
 import { DISCORD_STAGE_FEATURED_VIDEOS } from "@/components/TradingQuickAccess";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 const SPLINE_VIEWER_SCRIPT_SRC = "https://unpkg.com/@splinetool/viewer@1.12.36/build/spline-viewer.js";
 
@@ -585,10 +586,10 @@ const NoiseTexture = () => (
   <div className="absolute inset-0 pointer-events-none z-20 mix-blend-overlay opacity-[0.05]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
 );
 
-const SpotlightTracking = ({ mouseX, mouseY }: { mouseX: number; mouseY: number }) => (
+const SpotlightTracking = ({ mouseX, mouseY, skipHeavyEffects = false }: { mouseX: number; mouseY: number; skipHeavyEffects?: boolean }) => (
   <motion.div
     className="absolute pointer-events-none z-5"
-    style={{ width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)', x: mouseX - 300, y: mouseY - 300, filter: 'blur(40px)' }}
+    style={{ width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)', x: mouseX - 300, y: mouseY - 300, filter: skipHeavyEffects ? 'none' : 'blur(40px)' }}
   />
 );
 
@@ -605,19 +606,19 @@ const OrbitalParticles = () => {
   );
 };
 
-const AuroraBorealis = () => (
+const AuroraBorealis = ({ skipHeavyEffects = false }: { skipHeavyEffects?: boolean }) => (
   <div className="absolute bottom-0 left-0 w-[60%] h-[60%] pointer-events-none opacity-30"
-    style={{ background: 'radial-gradient(ellipse at bottom left, rgba(59, 130, 246, 0.4) 0%, rgba(147, 51, 234, 0.2) 40%, transparent 70%)', filter: 'blur(80px)' }} />
+    style={{ background: 'radial-gradient(ellipse at bottom left, rgba(59, 130, 246, 0.4) 0%, rgba(147, 51, 234, 0.2) 40%, transparent 70%)', filter: skipHeavyEffects ? 'none' : 'blur(80px)' }} />
 );
 
 const Scanlines = () => (
   <div className="absolute inset-0 pointer-events-none z-30 opacity-[0.03]" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px)' }} />
 );
 
-const ReflectiveBorder = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+const ReflectiveBorder = ({ children, className, skipHeavyEffects = false }: { children: React.ReactNode; className?: string; skipHeavyEffects?: boolean }) => (
   <div className={cn("relative p-[1px] rounded-2xl overflow-hidden", className)}>
     <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), rgba(255,255,255,0.3), rgba(59, 130, 246, 0.5), transparent)' }} />
-    <div className="relative bg-black/80 backdrop-blur-xl rounded-2xl">{children}</div>
+    <div className={cn("relative bg-black/80 rounded-2xl", !skipHeavyEffects && "backdrop-blur-xl")}>{children}</div>
   </div>
 );
 
@@ -643,7 +644,7 @@ const CornerAccents = () => (
   </>
 );
 
-const VerticalText = () => (
+const VerticalText = ({ skipHeavyEffects = false }: { skipHeavyEffects?: boolean }) => (
   <div className="absolute left-4 top-1/2 -translate-y-1/2 z-20 hidden xl:block">
     <p 
       className="text-3xl font-black tracking-[0.15em]" 
@@ -651,7 +652,7 @@ const VerticalText = () => (
         writingMode: 'vertical-rl', 
         textOrientation: 'mixed', 
         color: '#60a5fa',
-        textShadow: `
+        textShadow: skipHeavyEffects ? 'none' : `
           0 0 5px #60a5fa,
           0 0 10px #60a5fa,
           0 0 20px #3b82f6,
@@ -666,8 +667,8 @@ const VerticalText = () => (
   </div>
 );
 
-const MorphingShape = () => (
-  <div className="absolute right-[10%] top-[20%] w-64 h-64 bg-blue-500/10 blur-3xl pointer-events-none"
+const MorphingShape = ({ skipHeavyEffects = false }: { skipHeavyEffects?: boolean }) => (
+  <div className={cn("absolute right-[10%] top-[20%] w-64 h-64 bg-blue-500/10 pointer-events-none", !skipHeavyEffects && "blur-3xl")}
     style={{ borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%' }} />
 );
 
@@ -726,7 +727,7 @@ const KeybindHint = ({ keyChar, label }: { keyChar: string; label: string }) => 
   </span>
 );
 
-const Tooltip = ({ children, content }: { children: React.ReactNode; content: React.ReactNode }) => {
+const Tooltip = ({ children, content, skipHeavyEffects = false }: { children: React.ReactNode; content: React.ReactNode; skipHeavyEffects?: boolean }) => {
   const [show, setShow] = useState(false);
   return (
     <div className="relative inline-block" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
@@ -734,7 +735,7 @@ const Tooltip = ({ children, content }: { children: React.ReactNode; content: Re
       <AnimatePresence>
         {show && (
           <motion.div
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-black/90 backdrop-blur-xl border border-white/10 whitespace-nowrap z-50"
+            className={cn("absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-black/90 border border-white/10 whitespace-nowrap z-50", !skipHeavyEffects && "backdrop-blur-xl")}
             initial={{ opacity: 0, y: 10, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 5, scale: 0.95 }}
@@ -999,7 +1000,7 @@ const DataAnnotation = ({ text, position }: { text: string; position: 'top' | 'b
 // CATEGORY C: BUTTONS & INTERACTIONS
 // ============================================================================
 
-const LevitatingButton = ({ children, onClick, className, sound }: { children: React.ReactNode; onClick?: () => void; className?: string; sound?: () => void }) => {
+const LevitatingButton = ({ children, onClick, className, sound, skipHeavyEffects = false }: { children: React.ReactNode; onClick?: () => void; className?: string; sound?: () => void; skipHeavyEffects?: boolean }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [ripples, setRipples] = useState<{ x: number; y: number; id: number }[]>([]);
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -1010,29 +1011,29 @@ const LevitatingButton = ({ children, onClick, className, sound }: { children: R
   };
   return (
     <motion.button className={cn("relative overflow-hidden px-8 py-4 rounded-full font-semibold text-lg bg-gradient-to-r from-blue-600 to-blue-500 text-white border border-blue-400/30", className)}
-      animate={{ y: [0, -8, 0] }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-      whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+      animate={skipHeavyEffects ? {} : { y: [0, -8, 0] }} transition={skipHeavyEffects ? {} : { duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+      whileHover={skipHeavyEffects ? {} : { scale: 1.05 }} whileTap={{ scale: 0.95 }}
       onHoverStart={() => setIsHovered(true)} onHoverEnd={() => setIsHovered(false)} onClick={handleClick}>
       <motion.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent" style={{ transform: 'skewX(-20deg)' }}
-        animate={{ x: ['-200%', '200%'] }} transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }} />
+        animate={skipHeavyEffects ? {} : { x: ['-200%', '200%'] }} transition={skipHeavyEffects ? {} : { duration: 3, repeat: Infinity, repeatDelay: 2 }} />
       <motion.div className="absolute inset-0 bg-blue-400" initial={{ y: '100%' }} animate={{ y: isHovered ? '0%' : '100%' }} transition={{ duration: 0.3 }} />
       {ripples.map(r => <motion.span key={r.id} className="absolute rounded-full bg-blue-300/50" style={{ left: r.x, top: r.y }}
         initial={{ width: 0, height: 0, x: 0, y: 0 }} animate={{ width: 300, height: 300, x: -150, y: -150, opacity: 0 }} transition={{ duration: 0.6 }} />)}
-      <motion.span className="relative z-10 flex items-center gap-2" animate={{ scale: [1, 1.03, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+      <motion.span className="relative z-10 flex items-center gap-2" animate={skipHeavyEffects ? {} : { scale: [1, 1.03, 1] }} transition={skipHeavyEffects ? {} : { duration: 2, repeat: Infinity }}>
         {children}<motion.span animate={{ x: isHovered ? [0, 5, -20, 0] : 0 }} transition={{ duration: 0.4 }}><ArrowRight className="w-5 h-5" /></motion.span>
       </motion.span>
     </motion.button>
   );
 };
 
-const NeonBorderButton = ({ children, onClick, className }: { children: React.ReactNode; onClick?: () => void; className?: string }) => (
-  <motion.button className={cn("relative px-6 py-3 rounded-full font-semibold bg-transparent text-white border border-blue-500/50 hover:border-blue-400 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] transition-all duration-300", className)}
-    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={onClick}>{children}</motion.button>
+const NeonBorderButton = ({ children, onClick, className, skipHeavyEffects = false }: { children: React.ReactNode; onClick?: () => void; className?: string; skipHeavyEffects?: boolean }) => (
+  <motion.button className={cn("relative px-6 py-3 rounded-full font-semibold bg-transparent text-white border border-blue-500/50 hover:border-blue-400 transition-all duration-300", !skipHeavyEffects && "hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]", className)}
+    whileHover={skipHeavyEffects ? {} : { scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={onClick}>{children}</motion.button>
 );
 
-const GlassButton = ({ children, onClick, className }: { children: React.ReactNode; onClick?: () => void; className?: string }) => (
-  <motion.button className={cn("relative px-6 py-3 rounded-full font-semibold bg-white/5 backdrop-blur-xl text-white border border-white/20 hover:bg-white/10 hover:border-white/40 transition-all duration-300", className)}
-    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={onClick}>{children}</motion.button>
+const GlassButton = ({ children, onClick, className, skipHeavyEffects = false }: { children: React.ReactNode; onClick?: () => void; className?: string; skipHeavyEffects?: boolean }) => (
+  <motion.button className={cn("relative px-6 py-3 rounded-full font-semibold bg-white/5 text-white border border-white/20 hover:bg-white/10 hover:border-white/40 transition-all duration-300", !skipHeavyEffects && "backdrop-blur-xl", className)}
+    whileHover={skipHeavyEffects ? {} : { scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={onClick}>{children}</motion.button>
 );
 
 const MagneticButton = ({ children, className }: { children: React.ReactNode; className?: string }) => {
@@ -1100,7 +1101,7 @@ const DraggableButton = ({ children, onClick, className }: { children: React.Rea
 // CATEGORY D: TRADING-SPECIFIC VISUALS
 // ============================================================================
 
-const LiveTickerTape = ({ tickerData }: { tickerData: TickerItem[] }) => {
+const LiveTickerTape = ({ tickerData, skipHeavyEffects = false }: { tickerData: TickerItem[]; skipHeavyEffects?: boolean }) => {
   const tickerRef = React.useRef<HTMLDivElement>(null);
   
   React.useEffect(() => {
@@ -1133,7 +1134,7 @@ const LiveTickerTape = ({ tickerData }: { tickerData: TickerItem[] }) => {
       className="w-full overflow-hidden bg-black rounded-lg sm:rounded-xl"
       style={{ 
         border: '2px solid rgba(59, 130, 246, 0.6)',
-        boxShadow: '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3), 0 0 30px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(59, 130, 246, 0.1)',
+        boxShadow: skipHeavyEffects ? 'none' : '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3), 0 0 30px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(59, 130, 246, 0.1)',
       }}
     >
       <div 
@@ -1143,11 +1144,11 @@ const LiveTickerTape = ({ tickerData }: { tickerData: TickerItem[] }) => {
       >
         {[...tickerData, ...tickerData].map((item, i) => (
           <span key={i} className="mx-8 flex items-center gap-2 text-sm font-mono">
-            <span style={{ color: '#60a5fa', textShadow: '0 0 5px #60a5fa, 0 0 10px #3b82f6' }}>{item.symbol}</span>
-            <span style={{ color: '#fff', textShadow: '0 0 5px #fff, 0 0 10px #93c5fd' }}>${item.price}</span>
+            <span style={{ color: '#60a5fa', textShadow: skipHeavyEffects ? 'none' : '0 0 5px #60a5fa, 0 0 10px #3b82f6' }}>{item.symbol}</span>
+            <span style={{ color: '#fff', textShadow: skipHeavyEffects ? 'none' : '0 0 5px #fff, 0 0 10px #93c5fd' }}>${item.price}</span>
             <span style={{ 
               color: item.positive ? '#4ade80' : '#f87171', 
-              textShadow: item.positive ? '0 0 5px #4ade80, 0 0 10px #22c55e' : '0 0 5px #f87171, 0 0 10px #ef4444' 
+              textShadow: skipHeavyEffects ? 'none' : (item.positive ? '0 0 5px #4ade80, 0 0 10px #22c55e' : '0 0 5px #f87171, 0 0 10px #ef4444')
             }}>{item.change}</span>
           </span>
         ))}
@@ -1199,8 +1200,8 @@ const ExecutionSpeed = () => (
 // CATEGORY E: GLASS COMPONENTS
 // ============================================================================
 
-const GlassCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-  <div className={cn("relative rounded-2xl overflow-hidden bg-white/5 backdrop-blur-[20px] backdrop-saturate-[180%] border border-white/10 shadow-[inset_0_0_20px_rgba(59,130,246,0.2)]", className)}>
+const GlassCard = ({ children, className, skipHeavyEffects = false }: { children: React.ReactNode; className?: string; skipHeavyEffects?: boolean }) => (
+  <div className={cn("relative rounded-2xl overflow-hidden bg-white/5 border border-white/10", !skipHeavyEffects && "backdrop-blur-[20px] backdrop-saturate-[180%] shadow-[inset_0_0_20px_rgba(59,130,246,0.2)]", className)}>
     <div className="absolute inset-0 rounded-2xl p-[1px] pointer-events-none"><div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/20 via-transparent to-purple-500/20" /></div>
     {children}
   </div>
@@ -1654,6 +1655,9 @@ import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 // ============================================================================
 
 const HeroDesktop = () => {
+  // Mobile performance optimization
+  const { shouldSkipHeavyEffects, shouldDisableBackdropBlur, shouldDisableBoxShadows } = useMobilePerformance();
+  
   const sceneUrls = useMemo(() => HERO_SPLINE_SCENES.map(s => s.runtimeUrl), []);
   useSplinePreload({ sceneUrls, priority: 'high', delay: 0 });
   useEnsureSplineViewer();
@@ -1873,7 +1877,7 @@ const HeroDesktop = () => {
                         className="font-mono text-[10px] sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase mb-1 sm:mb-4"
                         style={{
                           color: '#60a5fa',
-                          textShadow: `0 0 5px #60a5fa, 0 0 10px #60a5fa, 0 0 20px #3b82f6, 0 0 40px #3b82f6`,
+                          textShadow: shouldSkipHeavyEffects ? 'none' : `0 0 5px #60a5fa, 0 0 10px #60a5fa, 0 0 20px #3b82f6, 0 0 40px #3b82f6`,
                         }}
                       >
                         EST. 2024 • TRADING EXCELLENCE
@@ -1885,7 +1889,7 @@ const HeroDesktop = () => {
                           className="block text-[clamp(2rem,5vw,4.5rem)] font-sans font-normal tracking-tight leading-tight"
                           style={{
                             color: '#fff',
-                            textShadow: `0 0 5px #fff, 0 0 10px #fff, 0 0 20px #93c5fd, 0 0 40px #60a5fa, 0 0 60px #3b82f6`,
+                            textShadow: shouldSkipHeavyEffects ? 'none' : `0 0 5px #fff, 0 0 10px #fff, 0 0 20px #93c5fd, 0 0 40px #60a5fa, 0 0 60px #3b82f6`,
                           }}
                         >
                           The path to
@@ -1894,7 +1898,7 @@ const HeroDesktop = () => {
                           className="block text-[clamp(2.25rem,6vw,5.5rem)] font-serif italic mt-1 sm:mt-2 leading-tight"
                           style={{ 
                             color: '#3b82f6',
-                            textShadow: `0 0 5px #3b82f6, 0 0 15px #3b82f6, 0 0 30px #2563eb, 0 0 50px #1d4ed8, 0 0 70px #1e40af`,
+                            textShadow: shouldSkipHeavyEffects ? 'none' : `0 0 5px #3b82f6, 0 0 15px #3b82f6, 0 0 30px #2563eb, 0 0 50px #1d4ed8, 0 0 70px #1e40af`,
                           }}
                         >
                           consistent profit
@@ -1906,15 +1910,15 @@ const HeroDesktop = () => {
                     className="mt-2 sm:mt-6 text-xs sm:text-base md:text-lg max-w-md leading-relaxed hidden sm:block mx-auto lg:mx-0"
                     style={{
                       color: 'rgba(147, 197, 253, 0.8)',
-                      textShadow: `0 0 5px rgba(147, 197, 253, 0.5), 0 0 10px rgba(96, 165, 250, 0.3)`,
+                      textShadow: shouldSkipHeavyEffects ? 'none' : `0 0 5px rgba(147, 197, 253, 0.5), 0 0 10px rgba(96, 165, 250, 0.3)`,
                     }}
                   >
-                    Join <span className="font-semibold" style={{ color: '#fff', textShadow: '0 0 5px #fff, 0 0 10px #93c5fd' }}>500+</span> profitable traders. Real-time Trades, expert analysis, and a community built for success.
+                    Join <span className="font-semibold" style={{ color: '#fff', textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #fff, 0 0 10px #93c5fd' }}>500+</span> profitable traders. Real-time Trades, expert analysis, and a community built for success.
                   </p>
                 </div>
 
                 <div className="lg:col-span-6 order-2 lg:order-2 mt-12 lg:mt-0">
-                  <div className="relative w-full aspect-square sm:aspect-[4/3] lg:aspect-[4/3] max-h-[40vh] sm:max-h-[40vh] lg:max-h-[60vh] rounded-xl sm:rounded-2xl overflow-hidden bg-black border-2 border-blue-500/60" style={{ boxShadow: '0 0 10px rgba(59, 130, 246, 0.6), 0 0 20px rgba(59, 130, 246, 0.4), 0 0 40px rgba(59, 130, 246, 0.2), inset 0 0 20px rgba(59, 130, 246, 0.1)' }}>
+                  <div className="relative w-full aspect-square sm:aspect-[4/3] lg:aspect-[4/3] max-h-[40vh] sm:max-h-[40vh] lg:max-h-[60vh] rounded-xl sm:rounded-2xl overflow-hidden bg-black border-2 border-blue-500/60" style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 10px rgba(59, 130, 246, 0.6), 0 0 20px rgba(59, 130, 246, 0.4), 0 0 40px rgba(59, 130, 246, 0.2), inset 0 0 20px rgba(59, 130, 246, 0.1)' }}>
                     {isVideoMode && activeVideoId ? (
                       <HeroVideoEmbed videoId={activeVideoId} muted={isMuted} />
                     ) : (
@@ -1932,38 +1936,38 @@ const HeroDesktop = () => {
                         <motion.button 
                           onClick={goToPreviousScene} 
                           className="p-1.5 sm:p-2 rounded-lg bg-black/50 border border-blue-500/50 transition-colors"
-                          style={{ boxShadow: '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.2)' }}
-                          whileHover={{ boxShadow: '0 0 15px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.5), inset 0 0 15px rgba(59, 130, 246, 0.3)' }}
+                          style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.2)' }}
+                          whileHover={shouldSkipHeavyEffects ? {} : { boxShadow: '0 0 15px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.5), inset 0 0 15px rgba(59, 130, 246, 0.3)' }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <span className="text-xs sm:text-sm" style={{ color: '#60a5fa', textShadow: '0 0 5px #60a5fa, 0 0 10px #3b82f6' }}>←</span>
+                          <span className="text-xs sm:text-sm" style={{ color: '#60a5fa', textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #60a5fa, 0 0 10px #3b82f6' }}>←</span>
                         </motion.button>
                         <motion.button 
                           onClick={() => { setIsSplineFullscreen(true); playClick(); }} 
                           className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-black/50 border border-blue-500/50 transition-colors flex items-center gap-1.5 sm:gap-2"
-                          style={{ boxShadow: '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.2)' }}
-                          whileHover={{ boxShadow: '0 0 15px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.5), inset 0 0 15px rgba(59, 130, 246, 0.3)' }}
+                          style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.2)' }}
+                          whileHover={shouldSkipHeavyEffects ? {} : { boxShadow: '0 0 15px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.5), inset 0 0 15px rgba(59, 130, 246, 0.3)' }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-blue-500 animate-pulse" style={{ boxShadow: '0 0 5px #3b82f6, 0 0 10px #3b82f6' }} />
+                          <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-blue-500 animate-pulse" style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #3b82f6, 0 0 10px #3b82f6' }} />
                           <span className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-blue-300/80">{mediaBadge}</span>
-                          <span className="text-xs sm:text-sm font-mono truncate max-w-[120px] sm:max-w-none" style={{ color: '#60a5fa', textShadow: '0 0 5px #60a5fa, 0 0 10px #3b82f6' }}>{mediaLabel}</span>
+                          <span className="text-xs sm:text-sm font-mono truncate max-w-[120px] sm:max-w-none" style={{ color: '#60a5fa', textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #60a5fa, 0 0 10px #3b82f6' }}>{mediaLabel}</span>
                         </motion.button>
                         <motion.button 
                           onClick={goToNextScene} 
                           className="p-1.5 sm:p-2 rounded-lg bg-black/50 border border-blue-500/50 transition-colors"
-                          style={{ boxShadow: '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.2)' }}
-                          whileHover={{ boxShadow: '0 0 15px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.5), inset 0 0 15px rgba(59, 130, 246, 0.3)' }}
+                          style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.2)' }}
+                          whileHover={shouldSkipHeavyEffects ? {} : { boxShadow: '0 0 15px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.5), inset 0 0 15px rgba(59, 130, 246, 0.3)' }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <span className="text-xs sm:text-sm" style={{ color: '#60a5fa', textShadow: '0 0 5px #60a5fa, 0 0 10px #3b82f6' }}>→</span>
+                          <span className="text-xs sm:text-sm" style={{ color: '#60a5fa', textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #60a5fa, 0 0 10px #3b82f6' }}>→</span>
                         </motion.button>
                       </div>
                     </div>
                   </div>
                   {/* Live ticker under spline */}
                   <div className="w-full mt-2">
-                    <LiveTickerTape tickerData={tickerData} />
+                    <LiveTickerTape tickerData={tickerData} skipHeavyEffects={shouldSkipHeavyEffects} />
                   </div>
                 </div>
               </div>
@@ -1974,11 +1978,11 @@ const HeroDesktop = () => {
 
       <AnimatePresence>
         {isHeroSceneModalOpen && (
-          <motion.div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4 py-6"
+          <motion.div className={cn("fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 px-4 py-6", !shouldSkipHeavyEffects && "backdrop-blur-sm")}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setHeroSceneModalOpen(false); playWhoosh(); }}>
             <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="relative w-full max-w-4xl bg-neutral-950/90 backdrop-blur-xl text-white border border-white/10 rounded-3xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-              <ReflectiveBorder className="rounded-3xl">
+              className={cn("relative w-full max-w-4xl bg-neutral-950/90 text-white border border-white/10 rounded-3xl shadow-2xl overflow-hidden", !shouldSkipHeavyEffects && "backdrop-blur-xl")} onClick={(e) => e.stopPropagation()}>
+              <ReflectiveBorder className="rounded-3xl" skipHeavyEffects={shouldSkipHeavyEffects}>
                 <div className="p-1">
                   <div className="flex flex-col lg:flex-row">
                     <div className="w-full lg:w-1/2 p-6 border-b lg:border-b-0 lg:border-r border-white/10 max-h-[50vh] lg:max-h-[70vh] overflow-y-auto">
@@ -1987,8 +1991,9 @@ const HeroDesktop = () => {
                         {HERO_SPLINE_SCENES.map((scene) => (
                           <motion.button key={scene.id} onClick={() => setScenePreviewId(scene.id)} onHoverStart={playHover}
                             className={cn('w-full flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-all',
-                              scenePreviewId === scene.id ? 'bg-blue-500/20 text-white border-blue-500/50 shadow-[0_0_20px_rgba(59,130,246,0.3)]' : 'bg-white/5 text-white/80 border-white/10 hover:border-blue-500/30')}
-                            whileHover={{ x: 4 }}>
+                              scenePreviewId === scene.id ? 'bg-blue-500/20 text-white border-blue-500/50' : 'bg-white/5 text-white/80 border-white/10 hover:border-blue-500/30',
+                              scenePreviewId === scene.id && !shouldSkipHeavyEffects && 'shadow-[0_0_20px_rgba(59,130,246,0.3)]')}
+                            whileHover={shouldSkipHeavyEffects ? {} : { x: 4 }}>
                             <div><p className="font-semibold text-sm">{scene.label}</p><p className="text-xs text-white/40 font-mono">{scene.id}</p></div>
                             {scenePreviewId === scene.id && <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />}
                           </motion.button>
@@ -1999,8 +2004,8 @@ const HeroDesktop = () => {
                       <div className="flex items-center justify-between mb-4">
                         <div><p className="text-xs uppercase text-white/40 tracking-[0.3em]">Previewing</p><p className="text-lg font-semibold">{previewScene?.label}</p></div>
                         <div className="flex gap-2">
-                          <motion.button onClick={() => handleSceneSelect(scenePreviewId)} className="px-4 py-2 rounded-full bg-blue-500 text-white font-semibold text-sm hover:bg-blue-400 transition-colors" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Set Scene</motion.button>
-                          <motion.button onClick={() => { setHeroSceneModalOpen(false); playWhoosh(); }} className="px-4 py-2 rounded-full border border-white/20 text-sm hover:bg-white/10 transition-colors" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Close</motion.button>
+                          <motion.button onClick={() => handleSceneSelect(scenePreviewId)} className="px-4 py-2 rounded-full bg-blue-500 text-white font-semibold text-sm hover:bg-blue-400 transition-colors" whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }} whileTap={{ scale: 0.95 }}>Set Scene</motion.button>
+                          <motion.button onClick={() => { setHeroSceneModalOpen(false); playWhoosh(); }} className="px-4 py-2 rounded-full border border-white/20 text-sm hover:bg-white/10 transition-colors" whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }} whileTap={{ scale: 0.95 }}>Close</motion.button>
                         </div>
                       </div>
                       <div className="relative flex-1 min-h-[300px] rounded-2xl bg-black border border-white/10 overflow-hidden">
@@ -2053,7 +2058,7 @@ const HeroDesktop = () => {
                 <motion.button 
                   onClick={() => { setIsSplineFullscreen(false); playWhoosh(); }}
                   className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2"
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <span>✕</span>
@@ -2073,7 +2078,7 @@ const HeroDesktop = () => {
                 <motion.button 
                   onClick={() => { goToPreviousScene(); playClick(); }}
                   className="p-2 sm:p-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-colors"
-                  whileHover={{ scale: 1.1 }}
+                  whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
                   <span className="text-base sm:text-lg">←</span>
@@ -2081,7 +2086,7 @@ const HeroDesktop = () => {
                 <motion.button 
                   onClick={() => { setHeroMediaMode('spline'); handleOpenScenePicker(); setIsSplineFullscreen(false); }}
                   className="px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-300 text-sm sm:text-base font-medium transition-colors"
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <span className="hidden sm:inline">Browse Scenes</span>
@@ -2090,7 +2095,7 @@ const HeroDesktop = () => {
                 <motion.button 
                   onClick={() => { goToNextScene(); playClick(); }}
                   className="p-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-colors"
-                  whileHover={{ scale: 1.1 }}
+                  whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
                   <span className="text-lg">→</span>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type TargetAndTransition } from 'framer-motion';
 import { 
   TrendingUp,
   ChevronRight,
@@ -14,6 +14,7 @@ import {
   X
 } from 'lucide-react';
 import { useUIState } from '@/contexts/UIStateContext';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 // Trading symbols configuration
 const symbols = [
@@ -160,6 +161,7 @@ export function TradingQuickAccess() {
     isDiscordStageModalOpen,
     setDiscordStageModalOpen
   } = useUIState();
+  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
   
   // Wait for client-side mount to prevent hydration mismatch
   useEffect(() => {
@@ -462,68 +464,73 @@ export function TradingQuickAccess() {
     <AnimatePresence>
       {isDiscordStageModalOpen && (
         <motion.div
-          initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-          animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
-          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-          className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+          initial={animations.modalBackdrop.initial as TargetAndTransition}
+          animate={animations.modalBackdrop.animate as TargetAndTransition}
+          exit={animations.modalBackdrop.exit as TargetAndTransition}
+          className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'}`}
         >
           {/* Click overlay - transparent, just for click handling */}
           <div className="absolute inset-0 bg-transparent" onClick={() => setDiscordStageModalOpen(false)} />
           
-          {/* Tap to close hints - Top */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
-            transition={{ opacity: { duration: 2, repeat: Infinity }, y: { duration: 0.3 } }}
-            className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-purple-300/50 text-xs sm:text-sm pointer-events-none"
-          >
-            <span>↑</span>
-            <span>Tap anywhere to close</span>
-            <span>↑</span>
-          </motion.div>
+          {/* Tap to close hints - Skip on mobile for performance */}
+          {!shouldSkipHeavyEffects && (
+            <>
+              {/* Tap to close hints - Top */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
+                transition={{ opacity: { duration: 2, repeat: Infinity }, y: { duration: 0.3 } }}
+                className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-purple-300/50 text-xs sm:text-sm pointer-events-none"
+              >
+                <span>↑</span>
+                <span>Tap anywhere to close</span>
+                <span>↑</span>
+              </motion.div>
 
-          {/* Tap to close hints - Bottom */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
-            transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.5 }, y: { duration: 0.3 } }}
-            className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-purple-300/50 text-xs sm:text-sm pointer-events-none"
-          >
-            <span>↓</span>
-            <span>Tap anywhere to close</span>
-            <span>↓</span>
-          </motion.div>
+              {/* Tap to close hints - Bottom */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
+                transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.5 }, y: { duration: 0.3 } }}
+                className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-purple-300/50 text-xs sm:text-sm pointer-events-none"
+              >
+                <span>↓</span>
+                <span>Tap anywhere to close</span>
+                <span>↓</span>
+              </motion.div>
 
-          {/* Tap to close hints - Left */}
-          <motion.div
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
-            transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.25 }, x: { duration: 0.3 } }}
-            className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-purple-300/40 text-[10px] sm:text-xs pointer-events-none"
-          >
-            <span>←</span>
-            <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Tap to close</span>
-          </motion.div>
+              {/* Tap to close hints - Left */}
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
+                transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.25 }, x: { duration: 0.3 } }}
+                className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-purple-300/40 text-[10px] sm:text-xs pointer-events-none"
+              >
+                <span>←</span>
+                <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Tap to close</span>
+              </motion.div>
 
-          {/* Tap to close hints - Right */}
-          <motion.div
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
-            transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.75 }, x: { duration: 0.3 } }}
-            className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-purple-300/40 text-[10px] sm:text-xs pointer-events-none"
-          >
-            <span>→</span>
-            <span style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
-          </motion.div>
+              {/* Tap to close hints - Right */}
+              <motion.div
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
+                transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.75 }, x: { duration: 0.3 } }}
+                className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-purple-300/40 text-[10px] sm:text-xs pointer-events-none"
+              >
+                <span>→</span>
+                <span style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
+              </motion.div>
+            </>
+          )}
           
           {/* Centered Modal Panel */}
           <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+            initial={animations.modalContent.initial as TargetAndTransition}
+            animate={animations.modalContent.animate as TargetAndTransition}
+            exit={animations.modalContent.exit as TargetAndTransition}
+            transition={animations.modalContent.transition}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-purple-950/98 via-purple-900/95 to-zinc-900/98 backdrop-blur-2xl border border-purple-500/50 shadow-2xl shadow-purple-900/50"
+            className={`relative w-full max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-purple-950/98 via-purple-900/95 to-zinc-900/98 border border-purple-500/50 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-purple-900/50'}`}
           >
               {/* Header */}
               <div className="p-3 sm:p-4 border-b border-purple-500/30 bg-purple-900/40">
@@ -538,7 +545,7 @@ export function TradingQuickAccess() {
                     {isLive && (
                       <motion.div
                         className="flex items-center gap-1 px-1.5 py-0.5 bg-red-500/20 rounded-full"
-                        animate={{ opacity: [1, 0.7, 1] }}
+                        animate={shouldSkipHeavyEffects ? {} : { opacity: [1, 0.7, 1] }}
                         transition={{ duration: 1, repeat: Infinity }}
                       >
                         <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
@@ -1081,67 +1088,72 @@ export function TradingQuickAccess() {
       <AnimatePresence>
         {isExpanded && (
           <motion.div
-            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-            animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
-            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-            className="fixed inset-0 z-[2147483645] flex items-center justify-center p-3 sm:p-6 bg-black/95"
+            initial={animations.modalBackdrop.initial as TargetAndTransition}
+            animate={animations.modalBackdrop.animate as TargetAndTransition}
+            exit={animations.modalBackdrop.exit as TargetAndTransition}
+            className={`fixed inset-0 z-[2147483645] flex items-center justify-center p-3 sm:p-6 bg-black/95 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'}`}
             onClick={() => setIsExpanded(false)}
           >
-            {/* Tap to close hints - Top */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
-              transition={{ opacity: { duration: 2, repeat: Infinity }, y: { duration: 0.3 } }}
-              className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-blue-300/50 text-xs sm:text-sm pointer-events-none"
-            >
-              <span>↑</span>
-              <span>Tap anywhere to close</span>
-              <span>↑</span>
-            </motion.div>
+            {/* Tap to close hints - Skip on mobile for performance */}
+            {!shouldSkipHeavyEffects && (
+              <>
+                {/* Tap to close hints - Top */}
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
+                  transition={{ opacity: { duration: 2, repeat: Infinity }, y: { duration: 0.3 } }}
+                  className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-blue-300/50 text-xs sm:text-sm pointer-events-none"
+                >
+                  <span>↑</span>
+                  <span>Tap anywhere to close</span>
+                  <span>↑</span>
+                </motion.div>
 
-            {/* Tap to close hints - Bottom */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
-              transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.5 }, y: { duration: 0.3 } }}
-              className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-blue-300/50 text-xs sm:text-sm pointer-events-none"
-            >
-              <span>↓</span>
-              <span>Tap anywhere to close</span>
-              <span>↓</span>
-            </motion.div>
+                {/* Tap to close hints - Bottom */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
+                  transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.5 }, y: { duration: 0.3 } }}
+                  className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-blue-300/50 text-xs sm:text-sm pointer-events-none"
+                >
+                  <span>↓</span>
+                  <span>Tap anywhere to close</span>
+                  <span>↓</span>
+                </motion.div>
 
-            {/* Tap to close hints - Left */}
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
-              transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.25 }, x: { duration: 0.3 } }}
-              className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-blue-300/40 text-[10px] sm:text-xs pointer-events-none"
-            >
-              <span>←</span>
-              <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Tap to close</span>
-            </motion.div>
+                {/* Tap to close hints - Left */}
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
+                  transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.25 }, x: { duration: 0.3 } }}
+                  className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-blue-300/40 text-[10px] sm:text-xs pointer-events-none"
+                >
+                  <span>←</span>
+                  <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Tap to close</span>
+                </motion.div>
 
-            {/* Tap to close hints - Right */}
-            <motion.div
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
-              transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.75 }, x: { duration: 0.3 } }}
-              className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-blue-300/40 text-[10px] sm:text-xs pointer-events-none"
-            >
-              <span>→</span>
-              <span style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
-            </motion.div>
+                {/* Tap to close hints - Right */}
+                <motion.div
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
+                  transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.75 }, x: { duration: 0.3 } }}
+                  className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-blue-300/40 text-[10px] sm:text-xs pointer-events-none"
+                >
+                  <span>→</span>
+                  <span style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
+                </motion.div>
+              </>
+            )}
 
             {/* Centered Modal */}
             <motion.div
               ref={panelRef}
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+              initial={animations.modalContent.initial as TargetAndTransition}
+              animate={animations.modalContent.animate as TargetAndTransition}
+              exit={animations.modalContent.exit as TargetAndTransition}
+              transition={animations.modalContent.transition}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-[520px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl border border-blue-500/30 shadow-2xl shadow-blue-900/20"
+              className={`relative w-full max-w-[520px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-blue-500/30 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-blue-900/20'}`}
             >
                 {/* Header */}
                 <div className="p-2 sm:p-3 md:p-4 border-b border-blue-500/20 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 flex-shrink-0">
@@ -1151,7 +1163,7 @@ export function TradingQuickAccess() {
                       <h3 className="text-[11px] sm:text-xs md:text-sm font-bold text-white truncate">Trading Quick Access</h3>
                     </div>
                     <motion.button
-                      whileHover={{ scale: 1.1, rotate: 90 }}
+                      whileHover={isMobile ? {} : { scale: 1.1, rotate: 90 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => setIsExpanded(false)}
                       className="flex items-center gap-1 p-1.5 sm:p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 border border-blue-400/30 transition-colors group"
