@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSplineAudio, useSplineAudioHandlers, SplineAudioProfile } from '@/app/hooks/useSplineAudio';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 import type { SplineWrapperProps } from '@/lib/spline-wrapper';
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 // Dynamic import for the heavy Spline runtime
 const SplineBase = dynamic<SplineWrapperProps>(() => import('@/lib/spline-wrapper') as any, { 
@@ -88,6 +89,9 @@ function SplineWithAudioComponent({
   
   // Get global theme for potential audio profile syncing
   const { activeTheme } = useGlobalTheme();
+  
+  // Mobile performance optimization
+  const { shouldSkipHeavyEffects } = useMobilePerformance();
   
   // Determine audio profile based on theme or prop
   const effectiveAudioProfile: SplineAudioProfile = (() => {
@@ -520,7 +524,7 @@ function SplineWithAudioComponent({
               <div 
                 className="text-2xl font-bold"
                 style={{
-                  filter: `drop-shadow(0 0 10px ${isScrubbing 
+                  filter: shouldSkipHeavyEffects ? 'none' : `drop-shadow(0 0 10px ${isScrubbing 
                     ? (dragVelocity.x < 0 ? 'rgba(255, 100, 100, 0.9)' : 'rgba(100, 255, 100, 0.9)')
                     : 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)'})`,
                   transform: isScrubbing ? 'none' : 'scaleX(1.5)',
@@ -585,14 +589,14 @@ function SplineWithAudioComponent({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ 
-              opacity: [0.3, 0.6, 0.3],
+              opacity: shouldSkipHeavyEffects ? 0.4 : [0.3, 0.6, 0.3],
             }}
-            transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+            transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity, ease: 'easeInOut' }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 z-[4] pointer-events-none rounded-xl"
             style={{
               border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
-              boxShadow: '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+              boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
             }}
           />
         )}
@@ -627,12 +631,12 @@ function SplineWithAudioComponent({
             className="absolute bottom-24 md:bottom-32 left-1/2 transform -translate-x-1/2 z-[20] pointer-events-none"
           >
             <div 
-              className="px-5 py-2.5 rounded-full backdrop-blur-xl text-sm font-semibold shadow-2xl flex items-center gap-2"
+              className={`px-5 py-2.5 rounded-full text-sm font-semibold shadow-2xl flex items-center gap-2 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-xl'}`}
               style={{
-                background: 'rgba(0, 0, 0, 0.75)',
+                background: shouldSkipHeavyEffects ? 'rgba(0, 0, 0, 0.9)' : 'rgba(0, 0, 0, 0.75)',
                 border: '1.5px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
                 color: 'rgba(var(--accent-rgb, 59, 130, 246), 1)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.2)',
+                boxShadow: shouldSkipHeavyEffects ? 'none' : '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.2)',
               }}
             >
               {interactionHint}
@@ -650,9 +654,9 @@ function SplineWithAudioComponent({
           className="absolute top-4 left-4 z-[15] pointer-events-none"
         >
           <div 
-            className="flex items-center gap-2 px-3 py-2 rounded-full backdrop-blur-xl"
+            className={`flex items-center gap-2 px-3 py-2 rounded-full ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-xl'}`}
             style={{
-              background: 'rgba(0, 0, 0, 0.6)',
+              background: shouldSkipHeavyEffects ? 'rgba(0, 0, 0, 0.85)' : 'rgba(0, 0, 0, 0.6)',
               border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.35)',
             }}
           >
@@ -687,11 +691,11 @@ function SplineWithAudioComponent({
             className="absolute bottom-28 left-1/2 -translate-x-1/2 z-[25]"
           >
           <div 
-            className="flex items-center gap-3 px-4 py-3 rounded-2xl backdrop-blur-xl"
+            className={`flex items-center gap-3 px-4 py-3 rounded-2xl ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-xl'}`}
             style={{
-              background: 'rgba(0, 0, 0, 0.85)',
+              background: shouldSkipHeavyEffects ? 'rgba(0, 0, 0, 0.95)' : 'rgba(0, 0, 0, 0.85)',
               border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
-              boxShadow: '0 4px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.15)',
+              boxShadow: shouldSkipHeavyEffects ? 'none' : '0 4px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.15)',
             }}
           >
             {/* Rotate Left Button */}
@@ -810,16 +814,16 @@ function SplineWithAudioComponent({
                 scale: [1, 1.05, 1],
               }}
               transition={{ duration: 2, repeat: 2, ease: 'easeInOut' }}
-              className="px-6 py-3 rounded-2xl backdrop-blur-xl flex items-center gap-3 shadow-2xl"
+              className={`px-6 py-3 rounded-2xl flex items-center gap-3 shadow-2xl ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-xl'}`}
               style={{
-                background: 'rgba(0, 0, 0, 0.8)',
+                background: shouldSkipHeavyEffects ? 'rgba(0, 0, 0, 0.95)' : 'rgba(0, 0, 0, 0.8)',
                 border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.6)',
-                boxShadow: '0 0 40px rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+                boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 40px rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
               }}
             >
               <motion.span 
-                animate={{ rotate: [0, 15, -15, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
+                animate={shouldSkipHeavyEffects ? {} : { rotate: [0, 15, -15, 0] }}
+                transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity }}
                 className="text-2xl"
               >
                 🖐️
@@ -888,11 +892,11 @@ function SplineWithAudioComponent({
             className="absolute bottom-20 md:bottom-24 left-1/2 -translate-x-1/2 z-[25] pointer-events-none"
           >
             <div 
-              className="px-6 py-3 rounded-2xl backdrop-blur-xl"
+              className={`px-6 py-3 rounded-2xl ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-xl'}`}
               style={{
-                background: 'rgba(0, 0, 0, 0.85)',
+                background: shouldSkipHeavyEffects ? 'rgba(0, 0, 0, 0.95)' : 'rgba(0, 0, 0, 0.85)',
                 border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.7)',
-                boxShadow: '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
+                boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
               }}
             >
               {/* Progress bar */}

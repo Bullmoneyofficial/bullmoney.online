@@ -483,7 +483,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                       }
                 }
                 transition={
-                  isPulltabPinned 
+                  shouldSkipHeavyEffects ? {} : (isPulltabPinned 
                     ? { duration: 0.2 }
                     : { 
                         duration: 2.5,
@@ -491,7 +491,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                         ease: "easeInOut",
                         repeatDelay: 0.5,
                         times: [0, 0.2, 0.8, 1]
-                      }
+                      })
                 }
                 onClick={() => {
                   SoundEffects.click();

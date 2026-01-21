@@ -60,6 +60,7 @@ import { useRealTimeMemory } from '@/hooks/useRealTimeMemory';
 import { useBrowserInfo } from '@/hooks/useBrowserInfo';
 import { useStorageInfo } from '@/hooks/useStorageInfo';
 import { useRealTimeCache } from '@/hooks/useRealTimeCache';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 // --- IMPORT NAVBAR CSS FOR CONSISTENT THEMING ---
 import './navbar.css';
@@ -468,7 +469,7 @@ function FpsPerformancePanel({ deviceInfo }: { deviceInfo: DeviceInfo | null }) 
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
           <motion.div 
             animate={{ x: ['0%', '200%'] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
             className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-green-500/0 via-green-400/40 to-green-500/0 opacity-100"
           />
         </div>
@@ -520,7 +521,7 @@ function FpsPerformancePanel({ deviceInfo }: { deviceInfo: DeviceInfo | null }) 
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
           <motion.div 
             animate={{ x: ['0%', '200%'] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
             className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/40 to-blue-500/0 opacity-100"
           />
         </div>
@@ -610,6 +611,9 @@ export function UltimateControlPanel({
   const browserInfo = useBrowserInfo();
   const storageInfo = useStorageInfo();
   const cacheStats = useRealTimeCache();
+  
+  // Mobile performance optimization
+  const { shouldSkipHeavyEffects } = useMobilePerformance();
   
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'network' | 'performance' | 'account'>('overview');
@@ -1024,8 +1028,8 @@ export function UltimateControlPanel({
                   minimized: { x: 2, scale: 0.95 }
                 }}
                 transition={{ type: 'spring', damping: 28, stiffness: 500, mass: 0.8 }}
-                className="relative rounded-l-3xl bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-slate-900/40 backdrop-blur-2xl border-y border-l border-blue-500/50 transition-colors duration-200 hover:border-blue-400/70 shadow-2xl hover:shadow-blue-600/40 hover:shadow-xl"
-                whileHover={{ boxShadow: "0 0 40px rgba(59, 130, 246, 0.6), inset 0 0 20px rgba(59, 130, 246, 0.15)" }}
+                className={`relative rounded-l-3xl bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-slate-900/40 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-2xl'} border-y border-l border-blue-500/50 transition-colors duration-200 hover:border-blue-400/70 shadow-2xl hover:shadow-blue-600/40 hover:shadow-xl`}
+                whileHover={shouldSkipHeavyEffects ? {} : { boxShadow: "0 0 40px rgba(59, 130, 246, 0.6), inset 0 0 20px rgba(59, 130, 246, 0.15)" }}
               >
                 {/* FPS Display - Animated between full and minimized pill states */}
                 <AnimatePresence mode="popLayout" initial={false}>
@@ -1067,11 +1071,11 @@ export function UltimateControlPanel({
                     >
                       <div className="flex items-center gap-1">
                         <motion.div
-                          animate={{ 
+                          animate={shouldSkipHeavyEffects ? {} : { 
                             scale: [1, 1.2, 1],
                             opacity: [0.7, 1, 0.7],
                           }}
-                          transition={{ 
+                          transition={shouldSkipHeavyEffects ? {} : { 
                             duration: 1.5, 
                             repeat: Infinity, 
                             ease: 'easeInOut' 
@@ -1079,7 +1083,7 @@ export function UltimateControlPanel({
                         >
                           <Activity 
                             size={11} 
-                            className="text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.9)]"
+                            className={`text-blue-400 ${shouldSkipHeavyEffects ? '' : 'drop-shadow-[0_0_8px_rgba(59,130,246,0.9)]'}`}
                           />
                         </motion.div>
                         <MinimizedFpsNumber />
@@ -1331,7 +1335,7 @@ export function UltimateControlPanel({
                 e.stopPropagation();
                 onOpenChange(false);
               }}
-              className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-[249999]"
+              className={`fixed inset-0 bg-black/20 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-[2px]'} z-[249999]`}
               style={{ touchAction: 'manipulation' }}
             />
 
@@ -1348,7 +1352,7 @@ export function UltimateControlPanel({
               onDrag={handlePanelDrag}
               onDragEnd={handlePanelDragEnd}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed right-0 top-0 bottom-0 z-[250000] w-full max-w-md overflow-hidden bg-black/60 backdrop-blur-3xl border-l border-blue-500/30 shadow-2xl shadow-blue-900/20 control-panel-themed"
+              className={`fixed right-0 top-0 bottom-0 z-[250000] w-full max-w-md overflow-hidden bg-black/60 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-3xl'} border-l border-blue-500/30 shadow-2xl shadow-blue-900/20 control-panel-themed`}
               style={{
                 paddingRight: 'env(safe-area-inset-right, 0px)',
                 paddingBottom: 'env(safe-area-inset-bottom, 0px)'
@@ -1416,12 +1420,12 @@ export function UltimateControlPanel({
                         {/* Animated glow effect */}
                         <motion.div
                           className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500/0 via-cyan-500/20 to-cyan-500/0"
-                          animate={{ x: ['-100%', '100%'] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                          animate={shouldSkipHeavyEffects ? {} : { x: ['-100%', '100%'] }}
+                          transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity, ease: 'linear' }}
                         />
                         <ChevronDown
                           size={18}
-                          className="text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.6)] relative z-10 group-hover:text-cyan-200"
+                          className={`text-cyan-300 ${shouldSkipHeavyEffects ? '' : 'drop-shadow-[0_0_6px_rgba(34,211,238,0.6)]'} relative z-10 group-hover:text-cyan-200`}
                         />
                       </motion.button>
                     )}
@@ -1764,13 +1768,13 @@ export function UltimateControlPanel({
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
                             className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/40 to-blue-500/0 opacity-100"
                           />
                         </div>
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl" />
                         <div className="relative z-10 flex items-center gap-3">
-                          <Wifi size={24} className="text-blue-400 drop-shadow-lg" />
+                          <Wifi size={24} className={`text-blue-400 ${shouldSkipHeavyEffects ? '' : 'drop-shadow-lg'}`} />
                           <div className="flex-1">
                             <div className="text-sm text-blue-200/60">Connection</div>
                               <div className="text-lg font-bold text-white drop-shadow-lg">
@@ -1794,7 +1798,7 @@ export function UltimateControlPanel({
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
                             className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/40 to-blue-500/0 opacity-100"
                           />
                         </div>
@@ -1869,7 +1873,7 @@ export function UltimateControlPanel({
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
                             className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-purple-500/0 via-purple-400/40 to-purple-500/0 opacity-100"
                           />
                         </div>
@@ -1877,7 +1881,7 @@ export function UltimateControlPanel({
                         <div className="relative z-10 flex items-start justify-between gap-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <MapPin size={18} className="text-purple-400 drop-shadow-lg" />
+                              <MapPin size={18} className={`text-purple-400 ${shouldSkipHeavyEffects ? '' : 'drop-shadow-lg'}`} />
                               <span className="text-sm text-blue-200/60">Location</span>
                             </div>
                             <div className="text-white font-semibold mb-1 drop-shadow-lg">
@@ -1948,7 +1952,7 @@ export function UltimateControlPanel({
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
                             className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/40 to-blue-500/0 opacity-100"
                           />
                         </div>
@@ -1972,7 +1976,7 @@ export function UltimateControlPanel({
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
                             className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-purple-400/40 to-purple-500/0 opacity-100"
                           />
                         </div>
@@ -2002,7 +2006,7 @@ export function UltimateControlPanel({
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
                             className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-orange-500/0 via-orange-400/40 to-orange-500/0 opacity-100"
                           />
                         </div>
@@ -2046,7 +2050,7 @@ export function UltimateControlPanel({
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
                             className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-purple-400/40 to-purple-500/0 opacity-100"
                           />
                         </div>

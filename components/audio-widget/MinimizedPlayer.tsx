@@ -187,11 +187,11 @@ export function MinimizedPlayer({
                     <motion.div
                       key="wave"
                       initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 1, scale: [1, 1.1, 1] }}
+                      animate={{ opacity: 1, scale: shouldSkipHeavyEffects ? 1 : [1, 1.1, 1] }}
                       exit={{ opacity: 0, scale: 0.5 }}
                       transition={{ 
                         opacity: { duration: 0.15 },
-                        scale: { duration: 0.8, repeat: Infinity, ease: "easeInOut" }
+                        scale: shouldSkipHeavyEffects ? { duration: 0.15 } : { duration: 0.8, repeat: Infinity, ease: "easeInOut" }
                       }}
                     >
                       <IconMusic className="w-4 h-4 text-green-400" />
@@ -222,8 +222,8 @@ export function MinimizedPlayer({
                     <motion.div
                       key={i}
                       className="w-[3px] bg-green-400 rounded-full origin-bottom"
-                      animate={{ scaleY: isPlaying ? [0.3, 1, 0.3] : 0.3 }}
-                      transition={{ 
+                      animate={{ scaleY: isPlaying && !shouldSkipHeavyEffects ? [0.3, 1, 0.3] : 0.3 }}
+                      transition={shouldSkipHeavyEffects ? { duration: 0.15 } : { 
                         duration: 0.5, 
                         repeat: Infinity, 
                         delay: i * 0.08,

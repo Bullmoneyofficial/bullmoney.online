@@ -71,15 +71,11 @@ export const BoredPopup = React.memo(function BoredPopup({
         rotate: skipHeavyEffects ? 0 : [0, 2, -2, 0],
       }}
       exit={{ opacity: 0, scale: 0.8, y: -10 }}
-      transition={skipHeavyEffects ? { 
-        type: "spring", 
-        stiffness: 400, 
-        damping: 15
-      } : { 
+      transition={{ 
         type: "spring", 
         stiffness: 400, 
         damping: 15,
-        rotate: { duration: 2, repeat: Infinity, repeatDelay: 1 }
+        ...(skipHeavyEffects ? {} : { rotate: { duration: 2, repeat: Infinity, repeatDelay: 1 } })
       }}
       className="absolute left-0 right-0 mx-auto w-max pointer-events-auto"
       style={{ zIndex: 999965, top: 0 }}

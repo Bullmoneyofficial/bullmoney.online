@@ -1157,12 +1157,15 @@ const LiveTickerTape = ({ tickerData, skipHeavyEffects = false }: { tickerData: 
   );
 };
 
-const BullPulse = () => (
-  <svg className="absolute left-0 right-0 h-8 top-1/2 -translate-y-1/2 opacity-20" preserveAspectRatio="none">
-    <motion.path d="M0,20 L50,20 L60,5 L70,35 L80,15 L90,25 L100,20 L150,20 L160,5 L170,35 L180,15 L190,25 L200,20 L250,20"
-      fill="none" stroke="rgba(59, 130, 246, 0.5)" strokeWidth="2" initial={{ pathLength: 0 }} animate={{ pathLength: [0, 1] }} transition={{ duration: 2, repeat: Infinity }} />
-  </svg>
-);
+const BullPulse = () => {
+  const { skipHeavyEffects } = useMobilePerformance();
+  return (
+    <svg className="absolute left-0 right-0 h-8 top-1/2 -translate-y-1/2 opacity-20" preserveAspectRatio="none">
+      <motion.path d="M0,20 L50,20 L60,5 L70,35 L80,15 L90,25 L100,20 L150,20 L160,5 L170,35 L180,15 L190,25 L200,20 L250,20"
+        fill="none" stroke="rgba(59, 130, 246, 0.5)" strokeWidth="2" initial={{ pathLength: 0 }} animate={{ pathLength: [0, 1] }} transition={skipHeavyEffects ? {} : { duration: 2, repeat: Infinity }} />
+    </svg>
+  );
+};
 
 const LiveUserCount = () => {
   const [count, setCount] = useState(() => Math.floor(Math.random() * 30) + 10); // Start between 10-40
@@ -1399,11 +1402,14 @@ const HeroVideoEmbed = ({ videoId, muted }: { videoId: string; muted: boolean })
   );
 };
 
-const SplineLoadingPlaceholder = () => (
-  <div className="absolute inset-0 flex items-center justify-center bg-black">
-    <motion.div className="w-24 h-24 border-2 border-blue-500/50" animate={{ rotateY: 360, rotateX: 360 }} transition={{ duration: 4, repeat: Infinity, ease: 'linear' }} style={{ transformStyle: 'preserve-3d' }} />
-  </div>
-);
+const SplineLoadingPlaceholder = () => {
+  const { skipHeavyEffects } = useMobilePerformance();
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-black">
+      <motion.div className="w-24 h-24 border-2 border-blue-500/50" animate={{ rotateY: 360, rotateX: 360 }} transition={skipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: 'linear' }} style={{ transformStyle: 'preserve-3d' }} />
+    </div>
+  );
+};
 
 const SceneGlitchOverlay = ({ active }: { active: boolean }) => (
   <AnimatePresence>
@@ -1583,17 +1589,20 @@ const useAudioEffects = (enabled: boolean) => {
   return { playClick, playHover, playWhoosh, playSuccess, playTyping, playBassDrop, playStartup, playBuzz };
 };
 
-const MuteToggle = ({ muted, onToggle }: { muted: boolean; onToggle: () => void }) => (
-  <button onClick={onToggle} className="relative p-3 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
-    {muted ? <VolumeX className="w-5 h-5 text-white/40" /> : (
-      <><Volume2 className="w-5 h-5 text-blue-400" />
-        <div className="absolute -top-1 -right-1 flex gap-[2px]">
-          {[...Array(3)].map((_, i) => <motion.div key={i} className="w-[2px] bg-blue-400 rounded-full" animate={{ height: [4, 8, 4] }} transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }} />)}
-        </div>
-      </>
-    )}
-  </button>
-);
+const MuteToggle = ({ muted, onToggle }: { muted: boolean; onToggle: () => void }) => {
+  const { skipHeavyEffects } = useMobilePerformance();
+  return (
+    <button onClick={onToggle} className="relative p-3 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
+      {muted ? <VolumeX className="w-5 h-5 text-white/40" /> : (
+        <><Volume2 className="w-5 h-5 text-blue-400" />
+          <div className="absolute -top-1 -right-1 flex gap-[2px]">
+            {[...Array(3)].map((_, i) => <motion.div key={i} className="w-[2px] bg-blue-400 rounded-full" animate={{ height: [4, 8, 4] }} transition={skipHeavyEffects ? {} : { duration: 0.5, repeat: Infinity, delay: i * 0.1 }} />)}
+          </div>
+        </>
+      )}
+    </button>
+  );
+};
 
 // ============================================================================
 // CATEGORY J: OVER THE TOP

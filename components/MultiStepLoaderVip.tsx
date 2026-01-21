@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 // ADJUST THIS PATH IF NEEDED:
 import GhostLoaderCursor from "@/components/Mainpage/GhostCursor";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 import { detectBrowser } from "@/lib/browserDetection";
 
 // --- GLOBAL ASSET CONFIGURATION ---
@@ -252,9 +253,9 @@ const LiveChromeHeader = memo(({
               key={key}
               onClick={() => setAsset(key as AssetKey)}
               className={cn(
-                "group relative flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 border backdrop-blur-md cursor-pointer overflow-hidden",
+                "group relative flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 border cursor-pointer overflow-hidden",
                 isActive 
-                  ? "bg-purple-900/40 border-purple-500/50 shadow-[0_0_25px_rgba(168,85,247,0.4)]" 
+                  ? "bg-purple-900/40 border-purple-500/50" 
                   : "bg-black/20 border-white/5 hover:bg-purple-900/20 hover:border-purple-500/20"
               )}
             >
@@ -388,6 +389,7 @@ export const MultiStepLoaderVip = ({ loadingStates, loading }: { loadingStates: 
   const [progress, setProgress] = useState(0);
   const [selectedAsset, setSelectedAsset] = useState<AssetKey>("BTC");
   const { sfxVolume } = useAudioSettings();
+  const { shouldSkipHeavyEffects } = useMobilePerformance();
   
   // Scroll Lock
   useEffect(() => {
@@ -507,7 +509,10 @@ export const MultiStepLoaderVip = ({ loadingStates, loading }: { loadingStates: 
             </div>
 
             <div className="relative text-center mb-8 md:mb-12">
-              <h1 className="text-5xl md:text-7xl lg:text-9xl font-black tracking-tighter animate-text-shimmer-vip drop-shadow-[0_0_40px_rgba(168,85,247,0.4)]">
+              <h1 className={cn(
+                "text-5xl md:text-7xl lg:text-9xl font-black tracking-tighter animate-text-shimmer-vip",
+                !shouldSkipHeavyEffects && "drop-shadow-[0_0_40px_rgba(168,85,247,0.4)]"
+              )}>
                 BULLMONEY
               </h1>
               <span className="block text-sm md:text-lg tracking-[0.5em] text-purple-400/50 uppercase font-bold mt-2">
@@ -516,18 +521,20 @@ export const MultiStepLoaderVip = ({ loadingStates, loading }: { loadingStates: 
             </div>
 
             <div className="relative w-full max-w-[400px] flex flex-col items-center justify-center">
-              {/* Purple Sonar Rings */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] flex items-center justify-center pointer-events-none [transform:perspective(800px)_rotateX(75deg)]">
-                {[1, 2, 3].map((ring) => (
-                  <motion.div
-                    key={ring}
-                    initial={{ width: "100px", height: "100px", opacity: 0, border: "1px solid #7C3AED" }}
-                    animate={{ width: ["100px", "600px"], height: ["100px", "600px"], opacity: [0.5, 0], borderWidth: ["3px", "0px"] }}
-                    transition={{ duration: 2.5, repeat: Infinity, delay: ring * 0.6, ease: "easeOut" }}
-                    className="absolute rounded-full border-purple-600/60 shadow-[0_0_30px_rgba(147,51,234,0.4)] bg-purple-900/5"
-                  />
-                ))}
-              </div>
+              {/* Purple Sonar Rings - Skip on mobile for performance */}
+              {!shouldSkipHeavyEffects && (
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] flex items-center justify-center pointer-events-none [transform:perspective(800px)_rotateX(75deg)]">
+                  {[1, 2, 3].map((ring) => (
+                    <motion.div
+                      key={ring}
+                      initial={{ width: "100px", height: "100px", opacity: 0, border: "1px solid #7C3AED" }}
+                      animate={{ width: ["100px", "600px"], height: ["100px", "600px"], opacity: [0.5, 0], borderWidth: ["3px", "0px"] }}
+                      transition={{ duration: 2.5, repeat: Infinity, delay: ring * 0.6, ease: "easeOut" }}
+                      className="absolute rounded-full border-purple-600/60 shadow-[0_0_30px_rgba(147,51,234,0.4)] bg-purple-900/5"
+                    />
+                  ))}
+                </div>
+              )}
 
               {/* Shimmering Percentage */}
               <div className="relative z-30 flex flex-col items-center mb-6">
@@ -537,7 +544,10 @@ export const MultiStepLoaderVip = ({ loadingStates, loading }: { loadingStates: 
               </div>
 
               {/* Status Pill */}
-              <div className="relative z-30 flex items-center justify-center bg-[#1e1b4b]/60 backdrop-blur-xl px-6 py-2 rounded-full border border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.25)]">
+              <div className={cn(
+                "relative z-30 flex items-center justify-center bg-[#1e1b4b]/60 px-6 py-2 rounded-full border border-purple-500/30",
+                !shouldSkipHeavyEffects && "backdrop-blur-xl shadow-[0_0_30px_rgba(168,85,247,0.25)]"
+              )}>
                 <span className="relative flex h-2 w-2 md:h-3 md:w-3 mr-4">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-500 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-full w-full bg-purple-600"></span>

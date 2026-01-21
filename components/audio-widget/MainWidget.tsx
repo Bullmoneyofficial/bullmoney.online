@@ -27,10 +27,16 @@ import type { MusicSource } from "@/contexts/AudioSettingsProvider";
  * THEME-AWARE: Uses CSS variables for dynamic theming
  */
 function MusicWaveBars({ isPlaying, isActive = false }: { isPlaying: boolean; isActive?: boolean }) {
+  // Mobile performance optimization
+  const { shouldSkipHeavyEffects } = useMobilePerformance();
+  
   // When active/playing, use a brighter green, otherwise use theme accent color
   const barStyle = isActive 
     ? { backgroundColor: '#34d399', boxShadow: '0 0 4px rgba(52, 211, 153, 0.6)' }
     : { backgroundColor: 'var(--accent-color, #60a5fa)', boxShadow: '0 0 4px rgba(var(--accent-rgb, 96, 165, 250), 0.6)' };
+  
+  // Skip infinite animation on mobile for battery savings
+  const shouldAnimate = isPlaying && !shouldSkipHeavyEffects;
   
   return (
     <div className="flex items-end gap-[2px] h-[14px]">
@@ -39,7 +45,7 @@ function MusicWaveBars({ isPlaying, isActive = false }: { isPlaying: boolean; is
           key={i}
           className="w-[3px] rounded-full origin-bottom"
           style={barStyle}
-          animate={isPlaying ? {
+          animate={shouldAnimate ? {
             height: [
               4 + Math.random() * 4,
               8 + Math.random() * 6,
@@ -47,15 +53,14 @@ function MusicWaveBars({ isPlaying, isActive = false }: { isPlaying: boolean; is
               10 + Math.random() * 4,
               5 + Math.random() * 3,
             ],
-          } : { height: 4 }}
-          transition={isPlaying ? {
+          } : { height: isPlaying ? 8 : 4 }}
+          transition={shouldAnimate ? {
             duration: 0.4 + i * 0.05,
             repeat: Infinity,
             repeatType: "reverse",
             ease: "easeInOut",
             delay: i * 0.08,
           } : { duration: 0.2 }}
-          /* Note: MusicWaveBars uses local animation - parent handles shouldSkipHeavyEffects */
         />
       ))}
     </div>
